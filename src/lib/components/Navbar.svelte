@@ -1,10 +1,9 @@
 <script lang="ts">
-	// For internationalization with Paraglide
-	import { languageTag, setLanguageTag, availableLanguageTags } from '$lib/paraglide/runtime';
-	import * as m from '$lib/paraglide/messages';
+	// This is the correct import statement based on your runtime.js file.
+	import { getLocale, setLocale, locales } from '$lib/paraglide/runtime.js';
 
-	// For active link styling
 	import { page } from '$app/stores';
+	import * as m from '$lib/paraglide/messages';
 </script>
 
 <nav class="bg-gray-800 text-white shadow-md">
@@ -35,12 +34,13 @@
 		</ul>
 
 		<div class="flex items-center space-x-3 text-sm">
-			{#each availableLanguageTags as tag}
+			{#each locales as tag}
 				<button
-					on:click={() => setLanguageTag(tag)}
+					type="button"
+					on:click={() => setLocale(tag)}
 					class="uppercase transition-colors hover:text-green-300"
-					class:font-bold={tag === languageTag()}
-					class:text-gray-400={tag !== languageTag()}
+					class:font-bold={tag === getLocale()}
+					class:text-gray-400={tag !== getLocale()}
 				>
 					{tag}
 				</button>
