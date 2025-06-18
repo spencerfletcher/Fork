@@ -1,18 +1,12 @@
 
-import type {Ingredient, Recipe} from '$lib/types';
-export const ingredients: Ingredient[] = [
-	// Placeholder for initial ingredients
-	{id: 1, name: 'Spaghetti', quantity: '200g'},
-	{id: 2, name: 'Eggs', quantity: '2'},
-	{id: 3, name: 'Pancetta', quantity: '100g'}
-];
+import type {Recipe} from '$lib/types';
 
 export const recipes: Recipe[] = [
 	{
 		id: 1,
 		title: 'Spaghetti Carbonara',
 		description: 'A classic Italian pasta dish made with eggs, cheese, pancetta, and pepper.',
-		ingredients: ingredients,
+		ingredients: ["Spaghetti", "Eggs", "Pancetta", "Parmesan cheese", "Black pepper"],
 		instructions: ['Cook spaghetti, fry pancetta, mix with eggs and cheese.']
 	},
 	{
@@ -20,14 +14,14 @@ export const recipes: Recipe[] = [
 		title: 'Chicken Tikka Masala',
 		description:
 			'A popular Indian dish consisting of roasted marinated chicken in a spiced curry sauce.',
-		ingredients: ingredients,
+		ingredients: ["Chicken", "Yogurt", "Tomato sauce", "Spices", "Cream"],
 		instructions: ['Marinate chicken, grill, and serve with sauce.']
 	},
 	{
 		id: 3,
 		title: 'Beef Stroganoff',
 		description: 'A Russian dish of sautéed pieces of beef served in a sauce with sour cream.',
-		ingredients: ingredients,
+		ingredients: ["Beef", "Mushrooms", "Sour cream", "Onions", "Egg noodles"],
 		instructions: ['Sauté beef, add mushrooms and sour cream, serve over noodles.']
 	}
 ];
