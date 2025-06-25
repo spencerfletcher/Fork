@@ -1,20 +1,18 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import { page } from '$app/stores';
-	let { data } = $props();
+	import RecipeCard from '$lib/components/RecipeCard.svelte';
 
-	/*onMount(async () => {
-		const response = await fetch('/api/recipes');
-		if (response.ok) {
-			recipes = await response.json();
-		} else {
-			console.error('Failed to fetch recipes');
-		}
-	});*/
+	// This receives the { recipes: [...] } object from your updated load function
+	let { data } = $props();
 </script>
 
-{#each data.summaries as { id, title }}
-	<div class="recipe-card">
-		<h2><a href="/recipes/{id}">{title}</a></h2>
+<div class="p-4 sm:p-6 lg:p-8">
+	<div class="container mx-auto">
+		<h1 class="text-3xl font-bold text-gray-900">All Recipes</h1>
+
+		<div class="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+			{#each data.recipes as recipe (recipe.id)}
+				<RecipeCard {recipe} />
+			{/each}
+		</div>
 	</div>
-{/each}
+</div>
