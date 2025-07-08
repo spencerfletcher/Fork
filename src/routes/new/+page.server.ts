@@ -20,8 +20,8 @@ export const actions: Actions = {
 		const servings = Number(formData.get('servings'));
 
 		// Basic validation
-		if (!title || !ingredients || !instructions) {
-			return error(400, {message: 'Title, ingredients, and instructions are required.'});
+		if (!title) {
+			return error(400, {message: 'A title is required.'});
 		}
 
 		// Create a new recipe object matching the Drizzle insert type
