@@ -3,5 +3,6 @@
 	"hello_world": "Hello, {name} from en!",
 	"app_title": "RecipeBook",
 	"navbar_recipes": "Recipes",
-	"navbar_about": "About"
+	"navbar_about": "About",
+	"navbar_new": "New Recipe"
 }

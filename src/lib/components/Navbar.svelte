@@ -1,10 +1,10 @@
 <!-- This is the Navbar component that displays the application navigation -->
 <script lang="ts">
 	// This is the correct import statement based on your runtime.js file.
-	import { getLocale, setLocale, locales } from '$lib/paraglide/runtime.js';
+	import { getLocale, setLocale, locales } from '../../paraglide/runtime.js';
 
 	import { page } from '$app/stores';
-	import * as m from '$lib/paraglide/messages';
+	import * as m from '../../paraglide/messages';
 </script>
 
 <nav class="bg-gray-800 text-white shadow-md">
@@ -30,6 +30,11 @@
 					class:font-bold={$page.url.pathname === '/about'}
 				>
 					{m.navbar_about()}
+				</a>
+			</li>
+			<li>
+				<a href="/new" class="hover:text-green-300" class:font-bold={$page.url.pathname === '/new'}>
+					{m.navbar_new()}
 				</a>
 			</li>
 		</ul>
