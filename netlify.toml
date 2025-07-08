@@ -1,0 +1,8 @@
+# netlify.toml
+
+[build]
+  command = "pnpm build"
+  publish = "build"
+
+[functions]
+  directory = ".netlify/functions-internal"
