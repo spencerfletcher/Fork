@@ -1,3 +1,4 @@
+<!-- This is the Navbar component that displays the application navigation -->
 <script lang="ts">
 	// This is the correct import statement based on your runtime.js file.
 	import { getLocale, setLocale, locales } from '$lib/paraglide/runtime.js';

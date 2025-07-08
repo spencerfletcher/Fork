@@ -1,5 +1,4 @@
 <script lang="ts">
-	// We import your specific Recipe type
 	import type { Recipe } from '$lib/types';
 
 	let { recipe }: { recipe: Recipe } = $props();
@@ -9,6 +8,7 @@
 	href={`/recipes/${recipe.id}`}
 	class="group flex h-full flex-col overflow-hidden transition-shadow"
 >
+	<!-- This is the RecipeCard component that displays a recipe with an image, title, and description -->
 	<div class="aspect-video overflow-hidden border-b border-gray-200">
 		<img
 			src={recipe.imageUrl ? recipe.imageUrl : '/None.png'}
