@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Recipe } from '$lib/types';
+	import type { Recipe } from '$lib/server/db/schema';
 
 	let { recipe }: { recipe: Recipe } = $props();
 </script>

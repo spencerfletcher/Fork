@@ -1,4 +1,5 @@
 import {pgTable, serial, text, integer, timestamp} from 'drizzle-orm/pg-core';
+import type {InferSelectModel, InferInsertModel} from 'drizzle-orm';
 
 export const recipes = pgTable('recipes', {
 	id: serial('id').primaryKey(),
@@ -15,3 +16,9 @@ export const recipes = pgTable('recipes', {
 	createdAt: timestamp('created_at').defaultNow(),
 	updatedAt: timestamp('updated_at').defaultNow(),
 });
+
+// Type for SELECT queries
+export type Recipe = InferSelectModel<typeof recipes>;
+
+// Type for INSERT queries
+export type NewRecipe = InferInsertModel<typeof recipes>;
