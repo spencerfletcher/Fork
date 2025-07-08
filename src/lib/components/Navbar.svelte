@@ -9,36 +9,23 @@
 
 <nav class="bg-gray-800 text-white shadow-md">
 	<div class="container mx-auto flex h-16 items-center justify-between px-4">
-		<a href="/" class="text-xl font-bold text-green-400 hover:text-green-300">
-			{m.app_title()}
-		</a>
+		<div class="flex items-center gap-8">
+			<a href="/" class="text-xl font-bold text-green-400 hover:text-green-300">
+				{m.app_title()}
+			</a>
 
-		<ul class="hidden items-center space-x-6 md:flex">
-			<li>
-				<a
-					href="/recipes"
-					class="hover:text-green-300"
-					class:font-bold={$page.url.pathname.startsWith('/recipes')}
-				>
-					{m.navbar_recipes()}
-				</a>
-			</li>
-			<li>
-				<a
-					href="/about"
-					class="hover:text-green-300"
-					class:font-bold={$page.url.pathname === '/about'}
-				>
-					{m.navbar_about()}
-				</a>
-			</li>
-			<li>
-				<a href="/new" class="hover:text-green-300" class:font-bold={$page.url.pathname === '/new'}>
-					{m.navbar_new()}
-				</a>
-			</li>
-		</ul>
-
+			<ul class="hidden items-center space-x-6 md:flex">
+				<li>
+					<a
+						href="/new"
+						class="hover:text-green-300"
+						class:font-bold={$page.url.pathname === '/new'}
+					>
+						{m.navbar_new()}
+					</a>
+				</li>
+			</ul>
+		</div>
 		<div class="flex items-center space-x-3 text-sm">
 			{#each locales as tag}
 				<button
