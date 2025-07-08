@@ -4,8 +4,8 @@
 	"version": "0.0.1",
 	"type": "module",
 	"scripts": {
-		"dev": "vite dev",
-		"build": "vite build",
+		"dev": "pnpm compile:force && vite dev",
+		"build": "pnpm compile:force && vite build",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
@@ -21,7 +21,8 @@
 		"storybook": "storybook dev -p 6006",
 		"build-storybook": "storybook build",
 		"machine-translate": "inlang machine translate --project project.inlang",
-		"db:seed": "tsx src/lib/server/db/seed.ts"
+		"db:seed": "tsx src/lib/server/db/seed.ts",
+		"compile:force": "paraglide-js compile --outdir ./src/lib/paraglide"
 	},
 	"devDependencies": {
 		"@chromatic-com/storybook": "^4.0.0",
@@ -77,6 +78,7 @@
 	},
 	"pnpm": {
 		"onlyBuiltDependencies": [
+			"@tailwindcss/oxide",
 			"esbuild"
 		]
 	}
