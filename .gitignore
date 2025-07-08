@@ -28,3 +28,5 @@ src/lib/paraglide
 
 *storybook.log
 storybook-static
+
+data.ts
