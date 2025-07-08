@@ -8,9 +8,6 @@ importers:
 
   .:
     dependencies:
-      '@inlang/paraglide-js':
-        specifier: ^2.1.0
-        version: 2.2.0
       '@supabase/supabase-js':
         specifier: ^2.50.3
         version: 2.50.3
@@ -42,6 +39,9 @@ importers:
       '@inlang/cli':
         specifier: ^3.0.0
         version: 3.0.12
+      '@inlang/paraglide-js':
+        specifier: 2.1.0
+        version: 2.1.0
       '@playwright/test':
         specifier: ^1.53.0
         version: 1.53.2
@@ -739,8 +739,8 @@ packages:
     engines: {node: '>=18.0.0'}
     hasBin: true
 
-  '@inlang/paraglide-js@2.2.0':
-    resolution: {integrity: sha512-pkpXu1LanvpcAbvpVPf7PgF11Uq7DliSEBngrcUN36l4ZOOpzn3QBTvVr/tJxvks0O67WseQgiMHet8KH7Oz5A==}
+  '@inlang/paraglide-js@2.1.0':
+    resolution: {integrity: sha512-hpj5AglQphR91IH2qXPRp78fTkRVdhlNl09rZZBTtB18fcmJpCScDFckUEaR0UhOARySd4SiH/7/GbVenFcrbQ==}
     hasBin: true
 
   '@inlang/recommend-sherlock@0.2.1':
@@ -3380,7 +3380,7 @@ snapshots:
     transitivePeerDependencies:
       - babel-plugin-macros
 
-  '@inlang/paraglide-js@2.2.0':
+  '@inlang/paraglide-js@2.1.0':
     dependencies:
       '@inlang/recommend-sherlock': 0.2.1
       '@inlang/sdk': 2.4.9
