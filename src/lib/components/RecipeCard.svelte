@@ -1,7 +1,6 @@
 <script lang="ts">
 	// We import your specific Recipe type
 	import type { Recipe } from '$lib/types';
-	import ClockSvg from './ClockSVG.svelte';
 
 	let { recipe }: { recipe: Recipe } = $props();
 </script>
@@ -24,14 +23,5 @@
 		<p class="mt-2 line-clamp-3 flex-grow text-sm text-gray-600 group-hover:text-gray-500">
 			{recipe.description}
 		</p>
-
-		<div class="flex items-center space-x-4 pt-3 text-sm text-gray-500 group-hover:text-gray-500">
-			{#if recipe.cookTimeMinutes}
-				<div class="flex items-center gap-1.5">
-					<ClockSvg />
-					<span>{recipe.cookTimeMinutes} min</span>
-				</div>
-			{/if}
-		</div>
 	</div>
 </a>
