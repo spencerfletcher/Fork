@@ -1,5 +1,6 @@
 <script lang="ts">
 	import ClockSvg from '$lib/components/ClockSvg.svelte';
+	import PersonSvg from '$lib/components/PersonSvg.svelte';
 
 	// This receives the { recipe } object from your +page.server.ts load function
 	let { data } = $props();
@@ -22,57 +23,19 @@
 	<div class="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-gray-500">
 		{#if recipe.prepTimeMinutes}
 			<div class="flex items-center gap-1.5">
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					width="14"
-					height="14"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="2"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-					><path d="M4 12V4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8"></path><path d="M2 12h20"></path><path
-						d="M17.5 12a4.5 4.5 0 0 1-4.5 4.5v0a4.5 4.5 0 0 1-4.5-4.5"
-					></path><path d="M8.5 16.5v6"></path></svg
-				>
+				<ClockSvg />
 				<span>Prep: {recipe.prepTimeMinutes} min</span>
 			</div>
 		{/if}
 		{#if recipe.cookTimeMinutes}
 			<div class="flex items-center gap-1.5">
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					width="14"
-					height="14"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="2"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-					><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"
-					></polyline></svg
-				>
+				<ClockSvg />
 				<span>Cook: {recipe.cookTimeMinutes} min</span>
 			</div>
 		{/if}
 		{#if recipe.servings}
 			<div class="flex items-center gap-1.5">
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					width="14"
-					height="14"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="2"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-					><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"
-					></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"
-					></path></svg
-				>
+				<PersonSvg />
 				<span>Serves {recipe.servings}</span>
 			</div>
 		{/if}
