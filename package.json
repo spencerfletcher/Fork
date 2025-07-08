@@ -22,7 +22,8 @@
 		"build-storybook": "storybook build",
 		"machine-translate": "inlang machine translate --project project.inlang",
 		"db:seed": "tsx src/lib/server/db/seed.ts",
-		"compile:force": "paraglide-js compile --outdir ./src/lib/paraglide"
+		"compile:force": "paraglide-js compile --outdir ./src/lib/paraglide",
+		"db:types": "supabase gen types typescript --project-id nqcqdpcczabsadfowrxd --schema public > src/lib/types/database.types.ts"
 	},
 	"devDependencies": {
 		"@chromatic-com/storybook": "^4.0.0",
@@ -68,6 +69,7 @@
 		"vitest": "^3.2.4"
 	},
 	"dependencies": {
+		"@supabase/ssr": "^0.6.1",
 		"@supabase/supabase-js": "^2.50.3",
 		"@tailwindcss/container-queries": "^0.1.1",
 		"@tailwindcss/forms": "^0.5.10",
