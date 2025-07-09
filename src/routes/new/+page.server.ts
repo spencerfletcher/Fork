@@ -3,14 +3,12 @@ import type {Actions} from './$types';
 import {db} from '$lib/server/db';
 import {recipes, type NewRecipe} from '$lib/server/db/schema';
 
-// The 'load' function that checked for a session has been completely removed.
-// The page is now public.
-
 export const actions: Actions = {
-	default: async ({request}) => {
+	default: async ({request, locals: {session}}) => {
 		const formData = await request.formData();
 
 		const title = formData.get('title') as string;
+		const userId = session?.user.id ?? null; // Assuming session contains user info
 		const description = formData.get('description') as string;
 		const imageUrl = formData.get('imageUrl') as string;
 		const ingredients = formData.get('ingredients') as string;
@@ -27,6 +25,7 @@ export const actions: Actions = {
 		// Create a new recipe object matching the Drizzle insert type
 		const newRecipe: NewRecipe = {
 			title,
+			userId: userId,
 			description,
 			imageUrl,
 			ingredients,
