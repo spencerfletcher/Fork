@@ -30,7 +30,7 @@
 
 		<!-- Right side: Language Switcher and Auth Status -->
 		<div class="flex items-center gap-6">
-			<!-- Language Switcher -->
+			<!-- Language Switcher 
 			<div class="flex items-center space-x-3 text-sm">
 				{#each locales as tag}
 					<button
@@ -44,6 +44,7 @@
 					</button>
 				{/each}
 			</div>
+			-->
 
 			<!-- Auth Status -->
 			<div class="flex items-center space-x-4 text-sm">
