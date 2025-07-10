@@ -8,8 +8,8 @@
 
 	// Since we stored ingredients and instructions as single strings in the database,
 	// we need to split them back into arrays to loop over them.
-	const ingredientsList = recipe.ingredients.split(', ');
-	const instructionsList = recipe.instructions.split('|');
+	const ingredientsList = recipe.ingredients.split('\n');
+	const instructionsList = recipe.instructions.split('\n');
 </script>
 
 <article class="container mx-auto max-w-4xl px-4 py-8">
