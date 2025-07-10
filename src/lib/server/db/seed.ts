@@ -4,6 +4,8 @@ import {config} from 'dotenv';
 
 // Import your recipes table schema
 import {recipes} from './schema';
+import {serverAsyncLocalStorage} from '$lib/paraglide/runtime';
+import {isNull} from 'drizzle-orm';
 
 // Load environment variables from your .env file
 config({path: '.env'});
@@ -21,6 +23,9 @@ const seedData = [
 		ingredients: ["Spaghetti", "Eggs", "Pancetta", "Parmesan cheese", "Black pepper"].join('\n'),
 		instructions: ['Cook spaghetti', 'Fry pancetta', 'Mix with eggs and cheese'].join('\n'),
 		imageUrl: 'https://nqcqdpcczabsadfowrxd.supabase.co/storage/v1/object/public/recipe-images//Carbonara.webp',
+		servings: 4,
+		prepTimeMinutes: 10,
+		cookTimeMinutes: 20,
 	},
 	{
 		title: 'Chicken Tikka Masala',
@@ -63,7 +68,7 @@ async function seed() {
 
 	// Clear existing data to ensure a clean slate
 	console.log('Clearing existing recipes...');
-	await db.delete(recipes);
+	await db.delete(recipes).where(isNull(recipes.userId));
 
 	// Insert the new data
 	console.log('Inserting new seed data...');
