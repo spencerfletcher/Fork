@@ -4,7 +4,6 @@ import {config} from 'dotenv';
 
 // Import your recipes table schema
 import {recipes} from './schema';
-import {serverAsyncLocalStorage} from '$lib/paraglide/runtime';
 import {isNull} from 'drizzle-orm';
 
 // Load environment variables from your .env file
