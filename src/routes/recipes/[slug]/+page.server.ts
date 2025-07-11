@@ -16,6 +16,13 @@ export const load: PageServerLoad = async ({params}) => {
 	// 2. Query the database for the first recipe that matches the ID
 	const recipe = await db.query.recipes.findFirst({
 		where: eq(recipes.id, recipeId),
+		with: {
+			recipesToTags: {
+				with: {
+					tag: true,
+				},
+			},
+		},
 	});
 
 	// 3. If no recipe is found, throw a 404 error

@@ -10,6 +10,7 @@
 	// we need to split them back into arrays to loop over them.
 	const ingredientsList = recipe.ingredients.split('\n');
 	const instructionsList = recipe.instructions.split('\n');
+	const tags = recipe.recipesToTags.map((item) => item.tag);
 </script>
 
 <article class="container mx-auto max-w-4xl px-4 py-8">
@@ -19,6 +20,20 @@
 			<p class="mx-auto mt-4 max-w-2xl text-lg text-gray-600">{recipe.description}</p>
 		{/if}
 	</div>
+
+	{#if tags.length > 0}
+		<div class="my-6 flex flex-wrap items-center justify-center gap-2">
+			<!-- Corrected loop variable and property access -->
+			{#each tags as tag}
+				<a
+					href={`/tags/${tag.id}`}
+					class="rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-700 hover:bg-gray-200"
+				>
+					{tag.name}
+				</a>
+			{/each}
+		</div>
+	{/if}
 
 	<div class="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-gray-500">
 		{#if recipe.prepTimeMinutes}
