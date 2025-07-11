@@ -5,11 +5,7 @@ import {tags, recipes, recipesToTags} from '$lib/server/db/schema';
 import type {PageServerLoad} from './$types';
 
 export const load: PageServerLoad = async ({params, locals: {session}}) => {
-	const tagId = parseInt(params.slug, 10);
-
-	if (isNaN(tagId)) {
-		throw error(404, 'Tag not found');
-	}
+	const tagName = params.name;
 
 	// First, get the tag's name to display on the page
 	const tag = await db.query.tags.findFirst({
@@ -17,7 +13,7 @@ export const load: PageServerLoad = async ({params, locals: {session}}) => {
 			id: true,
 			name: true,
 		},
-		where: eq(tags.id, tagId),
+		where: eq(tags.name, tagName),
 	});
 
 	if (!tag) {
@@ -31,7 +27,7 @@ export const load: PageServerLoad = async ({params, locals: {session}}) => {
 		.leftJoin(recipesToTags, eq(recipes.id, recipesToTags.recipeId))
 		.where(
 			and(
-				eq(recipesToTags.tagId, tagId),
+				eq(recipesToTags.tagId, tag.id),
 				session
 					? or(eq(recipes.userId, session.user.id), isNull(recipes.userId))
 					: isNull(recipes.userId)
