@@ -2,15 +2,18 @@ import {pgTable, serial, text, integer, timestamp} from 'drizzle-orm/pg-core';
 import type {InferSelectModel, InferInsertModel} from 'drizzle-orm';
 
 export const recipes = pgTable('recipes', {
+	// Database info
 	id: serial('id').primaryKey(),
 	userId: text('user_id'), // Assuming userId is a string, adjust as necessary
+
+	// Recipe info
 	title: text('title').notNull(),
-	description: text('description'),
+	imageUrl: text('image_url'),
+	rating: integer('rating').default(0).notNull(),
+	servings: integer('servings'),
 	prepTimeMinutes: integer('prep_time_minutes'),
 	cookTimeMinutes: integer('cook_time_minutes'),
-	servings: integer('servings'),
-	imageUrl: text('image_url'),
-	// Storing ingredients and instructions as text for now
+	description: text('description'),
 	ingredients: text('ingredients').notNull(),
 	instructions: text('instructions').notNull(),
 	createdAt: timestamp('created_at').defaultNow(),
