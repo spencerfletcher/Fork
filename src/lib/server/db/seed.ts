@@ -79,9 +79,9 @@ async function seed() {
 	console.log('Inserting new recipe data...');
 	await db.insert(recipes).values(recipeData);
 
-	// Insert the new data
+	// Insert the new data if there isn't already a category with the same name
 	console.log('Inserting new category data...');
-	await db.insert(categories).values(categoriesData);
+	await db.insert(categories).values(categoriesData).onConflictDoNothing();
 
 	console.log('Seeding complete.');
 
