@@ -20,7 +20,7 @@ export const load: PageServerLoad = async ({params}) => {
 
 	// 3. If no recipe is found, throw a 404 error
 	if (!recipe) {
-		throw error(404, 'Not found');
+		throw error(404, 'Recipe not found');
 	}
 
 	// 4. Return the found recipe
