@@ -24,6 +24,7 @@ export const recipes = pgTable('recipes', {
 export const tags = pgTable('tags', {
 	id: serial('id').primaryKey(),
 	name: text('name').notNull().unique(),
+	slug: text('slug').notNull().unique(),
 });
 
 export const recipesToTags = pgTable('recipes_to_tags', {
