@@ -88,7 +88,8 @@ async function seed() {
 	console.log('Inserting new category data...');
 	const insertedCategories = await db
 		.insert(categories)
-		.values(categoriesData).onConflictDoNothing()
+		.values(categoriesData)
+		.onConflictDoUpdate({target: categories.name, set: {name: categories.name}})
 		.returning({id: categories.id, name: categories.name});
 
 	// Helper to find IDs from the returned data
