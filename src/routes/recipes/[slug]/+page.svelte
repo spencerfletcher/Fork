@@ -26,7 +26,7 @@
 			<!-- Corrected loop variable and property access -->
 			{#each tags as tag}
 				<a
-					href={`/tags/${tag.id}`}
+					href={`/tags/${tag.name}`}
 					class="rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-700 hover:bg-gray-200"
 				>
 					{tag.name}
