@@ -5,15 +5,11 @@ import {tags, recipes, recipesToTags} from '$lib/server/db/schema';
 import type {PageServerLoad} from './$types';
 
 export const load: PageServerLoad = async ({params, locals: {session}}) => {
-	const tagName = params.name;
+	const tagSlug = params.slug;
 
 	// First, get the tag's name to display on the page
 	const tag = await db.query.tags.findFirst({
-		columns: {
-			id: true,
-			name: true,
-		},
-		where: eq(tags.name, tagName),
+		where: eq(tags.slug, tagSlug),
 	});
 
 	if (!tag) {
