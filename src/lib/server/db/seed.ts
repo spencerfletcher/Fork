@@ -3,7 +3,7 @@ import postgres from 'postgres';
 import {config} from 'dotenv';
 
 // Import your recipes table schema
-import {recipes, categories, recipesToCategories} from './schema';
+import {recipes, tags, recipesToTags} from './schema';
 import {isNull} from 'drizzle-orm';
 
 // Load environment variables from your .env file
@@ -58,7 +58,7 @@ const recipeData = [
 	}
 ];
 
-const categoriesData = [
+const tagsData = [
 	{name: 'Italian'},
 	{name: 'Indian'},
 	{name: 'Russian'},
@@ -84,24 +84,24 @@ async function seed() {
 		.values(recipeData)
 		.returning({id: recipes.id, title: recipes.title});
 
-	// Insert the new data if there isn't already a category with the same name
-	console.log('Inserting new category data...');
-	const insertedCategories = await db
-		.insert(categories)
-		.values(categoriesData)
-		.onConflictDoUpdate({target: categories.name, set: {name: categories.name}})
-		.returning({id: categories.id, name: categories.name});
+	// Insert the new data if there isn't already a tag with the same name
+	console.log('Inserting new tag data...');
+	const insertedTags = await db
+		.insert(tags)
+		.values(tagsData)
+		.onConflictDoUpdate({target: tags.name, set: {name: tags.name}})
+		.returning({id: tags.id, name: tags.name});
 
 	// Helper to find IDs from the returned data
-	const categoryId = (name: string) => insertedCategories.find(c => c.name === name)!.id;
+	const tagId = (name: string) => insertedTags.find(t => t.name === name)!.id;
 	const recipeId = (title: string) => insertedRecipes.find(r => r.title === title)!.id;
 
-	await db.insert(recipesToCategories).values([
-		{recipeId: recipeId('Spaghetti Carbonara'), categoryId: categoryId('Italian')},
-		{recipeId: recipeId('Chicken Tikka Masala'), categoryId: categoryId('Indian')},
-		{recipeId: recipeId('Beef Stroganoff'), categoryId: categoryId('Russian')},
-		{recipeId: recipeId('Vegetable Stir Fry'), categoryId: categoryId('Vegetarian')},
-		{recipeId: recipeId('Chocolate Chip Cookies'), categoryId: categoryId('Dessert')},
+	await db.insert(recipesToTags).values([
+		{recipeId: recipeId('Spaghetti Carbonara'), tagId: tagId('Italian')},
+		{recipeId: recipeId('Chicken Tikka Masala'), tagId: tagId('Indian')},
+		{recipeId: recipeId('Beef Stroganoff'), tagId: tagId('Russian')},
+		{recipeId: recipeId('Vegetable Stir Fry'), tagId: tagId('Vegetarian')},
+		{recipeId: recipeId('Chocolate Chip Cookies'), tagId: tagId('Dessert')},
 	]);
 
 	console.log('Seeding complete.');

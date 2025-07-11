@@ -21,36 +21,36 @@ export const recipes = pgTable('recipes', {
 	updatedAt: timestamp('updated_at').defaultNow(),
 });
 
-export const categories = pgTable('categories', {
+export const tags = pgTable('tags', {
 	id: serial('id').primaryKey(),
 	name: text('name').notNull().unique(),
 });
 
-export const recipesToCategories = pgTable('recipes_to_categories', {
+export const recipesToTags = pgTable('recipes_to_tags', {
 	recipeId: integer('recipe_id').notNull().references(() => recipes.id),
-	categoryId: integer('category_id').notNull().references(() => categories.id),
+	tagId: integer('tag_id').notNull().references(() => tags.id),
 }, (table) => [
-	primaryKey({columns: [table.recipeId, table.categoryId]}),
+	primaryKey({columns: [table.recipeId, table.tagId]}),
 ]);
 
 // Define the relationships for easy querying
 export const recipesRelations = relations(recipes, ({many}) => ({
-	recipesToCategories: many(recipesToCategories),
+	recipesToTags: many(recipesToTags),
 }));
 
 // Define the relationships for easy querying
-export const categoriesRelations = relations(categories, ({many}) => ({
-	recipesToCategories: many(recipesToCategories),
+export const tagsRelations = relations(tags, ({many}) => ({
+	recipesToTags: many(recipesToTags),
 }));
 
-export const recipesToCategoriesRelations = relations(recipesToCategories, ({one}) => ({
+export const recipesToTagsRelations = relations(recipesToTags, ({one}) => ({
 	recipe: one(recipes, {
-		fields: [recipesToCategories.recipeId],
+		fields: [recipesToTags.recipeId],
 		references: [recipes.id],
 	}),
-	category: one(categories, {
-		fields: [recipesToCategories.categoryId],
-		references: [categories.id],
+	tag: one(tags, {
+		fields: [recipesToTags.tagId],
+		references: [tags.id],
 	}),
 }));
 
