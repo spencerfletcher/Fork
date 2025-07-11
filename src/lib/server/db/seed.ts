@@ -3,7 +3,7 @@ import postgres from 'postgres';
 import {config} from 'dotenv';
 
 // Import your recipes table schema
-import {recipes, categories} from './schema';
+import {recipes, categories, recipesToCategories} from './schema';
 import {isNull} from 'drizzle-orm';
 
 // Load environment variables from your .env file
@@ -62,6 +62,8 @@ const categoriesData = [
 	{name: 'Italian'},
 	{name: 'Indian'},
 	{name: 'Russian'},
+	{name: 'Vegetarian'},
+	{name: 'Dessert'},
 ]
 
 async function seed() {
@@ -77,11 +79,29 @@ async function seed() {
 
 	// Insert the new data
 	console.log('Inserting new recipe data...');
-	await db.insert(recipes).values(recipeData);
+	const insertedRecipes = await db
+		.insert(recipes)
+		.values(recipeData)
+		.returning({id: recipes.id, title: recipes.title});
 
 	// Insert the new data if there isn't already a category with the same name
 	console.log('Inserting new category data...');
-	await db.insert(categories).values(categoriesData).onConflictDoNothing();
+	const insertedCategories = await db
+		.insert(categories)
+		.values(categoriesData).onConflictDoNothing()
+		.returning({id: categories.id, name: categories.name});
+
+	// Helper to find IDs from the returned data
+	const categoryId = (name: string) => insertedCategories.find(c => c.name === name)!.id;
+	const recipeId = (title: string) => insertedRecipes.find(r => r.title === title)!.id;
+
+	await db.insert(recipesToCategories).values([
+		{recipeId: recipeId('Spaghetti Carbonara'), categoryId: categoryId('Italian')},
+		{recipeId: recipeId('Chicken Tikka Masala'), categoryId: categoryId('Indian')},
+		{recipeId: recipeId('Beef Stroganoff'), categoryId: categoryId('Russian')},
+		{recipeId: recipeId('Vegetable Stir Fry'), categoryId: categoryId('Vegetarian')},
+		{recipeId: recipeId('Chocolate Chip Cookies'), categoryId: categoryId('Dessert')},
+	]);
 
 	console.log('Seeding complete.');
 
