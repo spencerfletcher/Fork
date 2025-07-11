@@ -3,7 +3,7 @@ import postgres from 'postgres';
 import {config} from 'dotenv';
 
 // Import your recipes table schema
-import {recipes} from './schema';
+import {recipes, categories} from './schema';
 import {isNull} from 'drizzle-orm';
 
 // Load environment variables from your .env file
@@ -14,7 +14,7 @@ if (!process.env.DATABASE_URL) {
 }
 
 // The new seed data, based on your input
-const seedData = [
+const recipeData = [
 	{
 		title: 'Spaghetti Carbonara',
 		description: 'A classic Italian pasta dish made with eggs, cheese, pancetta, and pepper.',
@@ -58,6 +58,12 @@ const seedData = [
 	}
 ];
 
+const categoriesData = [
+	{name: 'Italian'},
+	{name: 'Indian'},
+	{name: 'Russian'},
+]
+
 async function seed() {
 	console.log('Seeding database...');
 
@@ -70,8 +76,12 @@ async function seed() {
 	await db.delete(recipes).where(isNull(recipes.userId));
 
 	// Insert the new data
-	console.log('Inserting new seed data...');
-	await db.insert(recipes).values(seedData);
+	console.log('Inserting new recipe data...');
+	await db.insert(recipes).values(recipeData);
+
+	// Insert the new data
+	console.log('Inserting new category data...');
+	await db.insert(categories).values(categoriesData);
 
 	console.log('Seeding complete.');
 
