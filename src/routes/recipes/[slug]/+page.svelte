@@ -14,7 +14,7 @@
 </script>
 
 <article class="container mx-auto max-w-4xl px-4 py-8">
-	<div class="mb-8 text-center">
+	<div class="text-center">
 		<h1 class="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">{recipe.title}</h1>
 		{#if recipe.description}
 			<p class="mx-auto mt-4 max-w-2xl text-lg text-gray-600">{recipe.description}</p>
@@ -22,7 +22,7 @@
 	</div>
 
 	{#if tags.length > 0}
-		<div class="my-6 flex flex-wrap items-center justify-center gap-2">
+		<div class="my-4 flex flex-wrap items-center justify-center gap-2">
 			<!-- Corrected loop variable and property access -->
 			{#each tags as tag}
 				<a
@@ -57,7 +57,7 @@
 	</div>
 
 	{#if recipe.imageUrl}
-		<div class="my-8 overflow-hidden rounded-lg shadow-xl">
+		<div class="mb-4 overflow-hidden rounded-lg shadow-xl">
 			<img
 				src={recipe.imageUrl}
 				alt={recipe.title}
