@@ -35,7 +35,9 @@
 		</div>
 	{/if}
 
-	<div class="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-gray-500">
+	<div
+		class="mb-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-gray-500"
+	>
 		{#if recipe.prepTimeMinutes}
 			<div class="flex items-center gap-1.5">
 				<ClockSvg />
