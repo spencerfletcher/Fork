@@ -5,19 +5,11 @@ import {config} from 'dotenv';
 // Import your recipes table schema
 import {recipes, tags, recipesToTags} from './schema';
 import {isNull} from 'drizzle-orm';
+import {slugify} from '$lib/helpers';
 
 // Load environment variables from your .env file
 config({path: '.env'});
 
-// Helper function to create a URL-friendly slug
-const slugify = (text: string) => {
-	return text
-		.toLowerCase()
-		.replace(/ & /g, ' ')       // Replace " & " with a space
-		.replace(/[^\w\s-]/g, '')   // Remove all non-word, non-space, non-hyphen chars
-		.replace(/[\s_-]+/g, '-')   // Replace spaces and underscores with a single hyphen
-		.replace(/^-+|-+$/g, '');   // Trim leading/trailing hyphens
-};
 
 if (!process.env.DATABASE_URL) {
 	throw new Error('DATABASE_URL environment variable is not set');
