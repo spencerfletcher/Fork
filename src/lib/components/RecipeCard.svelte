@@ -5,7 +5,7 @@
 </script>
 
 <a
-	href={`/recipes/${recipe.id}`}
+	href={`/recipes/${recipe.slug}`}
 	class="group flex h-full flex-col overflow-hidden transition-shadow"
 >
 	<!-- This is the RecipeCard component that displays a recipe with an image, title, and description -->

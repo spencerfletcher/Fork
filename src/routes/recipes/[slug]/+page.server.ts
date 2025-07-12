@@ -6,16 +6,11 @@ import type {PageServerLoad} from './$types';
 
 export const load: PageServerLoad = async ({params}) => {
 	// 1. Get the ID from the URL and convert it to a number
-	const recipeId = parseInt(params.slug, 10);
-
-	// Handle cases where the ID is not a valid number
-	if (isNaN(recipeId)) {
-		throw error(404, 'Recipe not found');
-	}
+	const recipeSlug = params.slug;
 
 	// 2. Query the database for the first recipe that matches the ID
 	const recipe = await db.query.recipes.findFirst({
-		where: eq(recipes.id, recipeId),
+		where: eq(recipes.slug, recipeSlug),
 		with: {
 			recipesToTags: {
 				with: {

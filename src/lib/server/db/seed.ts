@@ -4,7 +4,7 @@ import {config} from 'dotenv';
 
 // Import your recipes table schema
 import {recipes, tags, recipesToTags} from './schema';
-import {isNull} from 'drizzle-orm';
+import {isNull, eq} from 'drizzle-orm';
 import {slugify} from '$lib/helpers';
 
 // Load environment variables from your .env file
@@ -56,7 +56,6 @@ const recipeData = [
 		description: 'Classic cookies with chocolate chips, perfect for any occasion.',
 		ingredients: ["Flour", "Sugar", "Butter", "Chocolate chips", "Eggs", "Vanilla extract"].join('\n'),
 		instructions: ['Mix ingredients', 'Form cookies', 'Bake until golden'].join('\n'),
-		// Note: The image path here was the same as Beef Stroganoff in your example
 	}
 ];
 
@@ -91,6 +90,13 @@ async function seed() {
 		.insert(recipes)
 		.values(recipeData)
 		.returning({id: recipes.id, title: recipes.title});
+
+	// Update the slug for each recipe based on its title
+	console.log('Updating recipes with generated slugs...');
+	for (const recipe of insertedRecipes) {
+		const slug = `${slugify(recipe.title)}-${recipe.id}`;
+		await db.update(recipes).set({slug}).where(eq(recipes.id, recipe.id));
+	}
 
 	// Insert the new data if there isn't already a tag with the same name
 	console.log('Inserting new tag data...');
