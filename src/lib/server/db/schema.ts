@@ -6,7 +6,7 @@ export const recipes = pgTable('recipes', {
 	// Database info
 	id: serial('id').primaryKey(),
 	userId: text('user_id'), // Assuming userId is a string, adjust as necessary
-
+	slug: text('slug').unique(),
 	// Recipe info
 	title: text('title').notNull(),
 	imageUrl: text('image_url'),
