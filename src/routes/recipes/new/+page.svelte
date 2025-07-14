@@ -1,8 +1,9 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import type { PageData } from './$types';
 
 	// This prop will contain any data returned from the form action, like errors
-	let { form } = $props();
+	let { data, form } = $props<{ data: PageData; form: any }>();
 </script>
 
 <div class="container mx-auto max-w-2xl px-4 py-8">
@@ -28,6 +29,29 @@
 				rows="3"
 				class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
 			></textarea>
+		</div>
+
+		<div>
+			<label for="tags" class="block text-sm font-medium text-gray-700">Tags</label>
+			<p class="text-xs text-gray-500">
+				Enter tags separated by commas (e.g., Dinner, Italian, Quick & Easy)
+			</p>
+			<input
+				type="text"
+				name="tags"
+				id="tags"
+				class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+			/>
+			{#if data.allTags.length > 0}
+				<div class="mt-2 flex flex-wrap gap-2">
+					<span class="text-xs font-semibold text-gray-500">Available:</span>
+					{#each data.allTags as tag}
+						<span class="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
+							{tag.name}
+						</span>
+					{/each}
+				</div>
+			{/if}
 		</div>
 
 		<div>

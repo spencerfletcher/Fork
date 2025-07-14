@@ -1,15 +1,26 @@
 import {redirect, error} from '@sveltejs/kit';
-import type {Actions} from './$types';
+import type {Actions, PageServerLoad} from './$types';
 import {db} from '$lib/server/db';
-import {recipes} from '$lib/server/db/schema';
+import {recipes, tags, recipesToTags} from '$lib/server/db/schema';
 import {slugify} from '$lib/helpers';
-import {eq} from 'drizzle-orm';
+import {eq, inArray} from 'drizzle-orm';
+
+export const load: PageServerLoad = async () => {
+	// Fetch all existing tags to display them on the page
+	const allTags = await db.query.tags.findMany({
+		orderBy: (tags, {asc}) => [asc(tags.name)],
+	});
+
+	return {allTags};
+};
 
 export const actions: Actions = {
 	default: async ({request, locals: {session}}) => {
 		const formData = await request.formData();
 
 		const title = formData.get('title') as string;
+		const tagString = formData.get('tags') as string;
+		const tagNames = tagString ? tagString.split(',').map(tag => tag.trim()) : [];
 		const userId = session?.user.id ?? null; // Assuming session contains user info
 		const description = formData.get('description') as string;
 		const imageUrl = formData.get('imageUrl') as string;
@@ -52,8 +63,27 @@ export const actions: Actions = {
 					.where(eq(recipes.id, newRecipe.insertedId));
 
 				newRecipeSlug = slug;
-			});
 
+				if (tagNames.length > 0) {
+					// Attempt to insert all tags. Existing tags will be ignored.
+					await tx.insert(tags)
+						.values(tagNames.map(name => ({name, slug: slugify(name)})))
+						.onConflictDoNothing();
+
+					// Select all the tags needed to get their IDs.
+					const relevantTags = await tx.query.tags.findMany({
+						where: inArray(tags.name, tagNames)
+					});
+
+					// Create the links in the join table
+					await tx.insert(recipesToTags).values(
+						relevantTags.map(tag => ({
+							recipeId: newRecipe.insertedId,
+							tagId: tag.id
+						}))
+					);
+				}
+			});
 		} catch (e) {
 			console.error(e);
 			return error(500, {message: 'Something went wrong while creating your recipe.'});

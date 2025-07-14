@@ -30,9 +30,9 @@
 			<ul class="hidden items-center space-x-6 md:flex">
 				<li>
 					<a
-						href="/new"
+						href="/recipes/new"
 						class="hover:text-green-300"
-						class:font-bold={$page.url.pathname === '/new'}
+						class:font-bold={$page.url.pathname === '/recipes/new'}
 					>
 						{m.navbar_new()}
 					</a>
@@ -107,7 +107,7 @@
 			<ul class="space-y-1 px-2 pt-2 pb-3">
 				<li>
 					<a
-						href="/new"
+						href="/recipes/new"
 						onclick={closeMenu}
 						class="block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
 					>
