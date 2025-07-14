@@ -13,7 +13,6 @@
 		isMenuOpen = !isMenuOpen;
 	}
 
-	// Close the menu when a link is clicked
 	function closeMenu() {
 		isMenuOpen = false;
 	}
