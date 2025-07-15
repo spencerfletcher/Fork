@@ -9,7 +9,7 @@ export const recipes = pgTable('recipes', {
 	slug: text().unique(),
 	// Recipe info
 	title: text().notNull(),
-	imageUrl: text(),
+	imageUrl: text('image_url'),
 	rating: numeric({precision: 2, scale: 1}),
 	servings: integer(),
 	prepTimeMinutes: integer('prep_time_minutes'),
