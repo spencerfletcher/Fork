@@ -1,30 +1,30 @@
-import {pgTable, serial, text, integer, timestamp, primaryKey} from 'drizzle-orm/pg-core';
+import {pgTable, serial, text, integer, timestamp, primaryKey, numeric} from 'drizzle-orm/pg-core';
 import {relations} from 'drizzle-orm';
 import type {InferSelectModel, InferInsertModel} from 'drizzle-orm';
 
 export const recipes = pgTable('recipes', {
 	// Database info
-	id: serial('id').primaryKey(),
+	id: serial().primaryKey(),
 	userId: text('user_id'), // Assuming userId is a string, adjust as necessary
-	slug: text('slug').unique(),
+	slug: text().unique(),
 	// Recipe info
-	title: text('title').notNull(),
-	imageUrl: text('image_url'),
-	rating: integer('rating').default(0).notNull(),
-	servings: integer('servings'),
+	title: text().notNull(),
+	imageUrl: text(),
+	rating: numeric({precision: 2, scale: 1}),
+	servings: integer(),
 	prepTimeMinutes: integer('prep_time_minutes'),
 	cookTimeMinutes: integer('cook_time_minutes'),
-	description: text('description'),
-	ingredients: text('ingredients').notNull(),
-	instructions: text('instructions').notNull(),
+	description: text(),
+	ingredients: text().notNull(),
+	instructions: text().notNull(),
 	createdAt: timestamp('created_at').defaultNow(),
 	updatedAt: timestamp('updated_at').defaultNow(),
 });
 
 export const tags = pgTable('tags', {
-	id: serial('id').primaryKey(),
-	name: text('name').notNull().unique(),
-	slug: text('slug').notNull().unique(),
+	id: serial().primaryKey(),
+	name: text().notNull().unique(),
+	slug: text().notNull().unique(),
 });
 
 export const recipesToTags = pgTable('recipes_to_tags', {
