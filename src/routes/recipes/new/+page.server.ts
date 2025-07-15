@@ -21,7 +21,7 @@ export const actions: Actions = {
 		const title = formData.get('title') as string;
 		const tagString = formData.get('tags') as string;
 		const tagNames = tagString ? tagString.split(',').map(tag => tag.trim()) : [];
-		const rating = formData.get('rating') as string; // Assuming rating is a string, adjust if needed
+		const rating = formData.get('rating') as string;
 		const userId = session?.user.id ?? null; // Assuming session contains user info
 		const description = formData.get('description') as string;
 		const imageUrl = formData.get('imageUrl') as string;
@@ -50,7 +50,7 @@ export const actions: Actions = {
 						imageUrl,
 						ingredients,
 						instructions,
-						rating: isNaN(Number(rating)) ? 0 : Number(rating),
+						rating,
 						cookTimeMinutes: isNaN(cookTimeMinutes) ? null : cookTimeMinutes,
 						prepTimeMinutes: isNaN(prepTimeMinutes) ? null : prepTimeMinutes,
 						servings: isNaN(servings) ? null : servings,
