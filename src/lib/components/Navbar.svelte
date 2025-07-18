@@ -36,6 +36,15 @@
 						{m.navbar_new()}
 					</a>
 				</li>
+				<li>
+					<a
+						href="/recipes"
+						class="hover:text-green-300"
+						class:font-bold={$page.url.pathname.startsWith('/recipes')}
+					>
+						{m.navbar_recipes()}
+					</a>
+				</li>
 			</ul>
 		</div>
 
@@ -111,6 +120,15 @@
 						class="block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
 					>
 						{m.navbar_new()}
+					</a>
+				</li>
+				<li>
+					<a
+						href="/recipes"
+						onclick={closeMenu}
+						class="block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
+					>
+						{m.navbar_recipes()}
 					</a>
 				</li>
 			</ul>
