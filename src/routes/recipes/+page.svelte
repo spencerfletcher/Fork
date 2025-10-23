@@ -1,29 +1,45 @@
 <script lang="ts">
 	import RecipeCard from '$lib/components/RecipeCard.svelte';
+	import type { PageData } from './$types';
 
-	// This receives the { recipes: [...] } object from your updated load function
-	let { data } = $props();
+	let { data }: { data: PageData } = $props();
 </script>
 
-<div class="p-4 sm:p-6 lg:p-8">
+<div class="bg-white p-4 sm:p-6 lg:p-8">
 	<div class="container mx-auto">
 		{#if data.session?.user}
-			<div class="mt-2 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-				{#if data.recipes != null}
-					{#each data.recipes.filter((recipe) => recipe.userId === data.session?.user.id) as recipe (recipe.id)}
+			<div class="mb-12 text-center">
+				<h1 class="text-brand-gray-dark text-4xl font-bold tracking-tight">My Cookbook</h1>
+				<p class="text-brand-gray-medium mx-auto mt-4 max-w-2xl text-lg">
+					Your personal collection of recipes.
+				</p>
+			</div>
+
+			<div class="grid grid-cols-1 gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
+				{#if data.recipes && data.recipes.length > 0}
+					{#each data.recipes as recipe (recipe.id)}
 						<RecipeCard {recipe} />
 					{/each}
 				{:else}
-					<p class="col-span-full text-gray-500">
+					<p class="text-brand-gray-medium col-span-full text-center">
 						You have no recipes yet. Start by
-						<a href="/new" class="text-blue-500 hover:underline">adding one!</a>
+						<a href="/recipes/new" class="text-brand-blue hover:text-brand-blue-dark font-semibold"
+							>adding one!</a
+						>
 					</p>
 				{/if}
 			</div>
 		{:else}
-			<p class="text-gray-500">
-				Please <a href="/login" class="text-blue-500 hover:underline">log in</a> to see your recipes.
-			</p>
+			<div class="text-center">
+				<h1 class="text-brand-gray-dark text-4xl font-bold tracking-tight">
+					Welcome to the Cookbook
+				</h1>
+				<p class="text-brand-gray-medium mt-4 text-lg">
+					Please <a href="/login" class="text-brand-blue hover:text-brand-blue-dark font-semibold"
+						>log in</a
+					> to see your recipes.
+				</p>
+			</div>
 		{/if}
 	</div>
 </div>
