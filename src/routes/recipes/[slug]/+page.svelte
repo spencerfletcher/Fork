@@ -23,7 +23,6 @@
 
 	{#if tags.length > 0}
 		<div class="my-4 flex flex-wrap items-center justify-center gap-2">
-			<!-- Corrected loop variable and property access -->
 			{#each tags as tag}
 				<a
 					href={`/tags/${tag.slug}`}
@@ -79,8 +78,8 @@
 		</div>
 
 		<div class="prose max-w-none lg:col-span-2">
-			<h2>Instructions</h2>
-			<ol>
+			<h2 class="text-2xl font-bold text-gray-800">Instructions</h2>
+			<ol class="mt-4 list-decimal space-y-4 pl-5 text-gray-700">
 				{#each instructionsList as instruction}
 					<li>{instruction}</li>
 				{/each}
