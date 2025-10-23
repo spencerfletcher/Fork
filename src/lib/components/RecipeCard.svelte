@@ -2,26 +2,38 @@
 	import type { Recipe } from '$lib/server/db/schema';
 
 	let { recipe }: { recipe: Recipe } = $props();
+	let isClicked = $state(false);
 </script>
 
 <a
 	href={`/recipes/${recipe.slug}`}
-	class="group flex h-full flex-col overflow-hidden transition-shadow"
+	class="group block"
+	onmouseenter={() => (isClicked = true)}
+	onmouseleave={() => (isClicked = false)}
 >
-	<!-- This is the RecipeCard component that displays a recipe with an image, title, and description -->
-	<div class="aspect-video overflow-hidden border-b border-gray-200">
+	<!-- Image Section with a subtle zoom-on-hover effect -->
+	<div class="aspect-[4/3] overflow-hidden">
 		<img
 			src={recipe.imageUrl ? recipe.imageUrl : '/None.png'}
 			alt={recipe.title}
-			class="h-full w-full object-cover transition-transform duration-300"
+			class="group-hover: h-full w-full object-cover transition-transform duration-300"
+			class:mouse-over={isClicked}
 		/>
 	</div>
 
-	<div class="group flex flex-grow flex-col p-4">
-		<h3 class="text-lg font-semibold text-gray-900 group-hover:text-gray-500">{recipe.title}</h3>
-
-		<p class="mt-2 line-clamp-3 flex-grow text-sm text-gray-600 group-hover:text-gray-500">
-			{recipe.description}
-		</p>
+	<!-- Text Content Section -->
+	<div class="pt-4">
+		<h3 class="text-brand-gray-dark group-hover:text-brand-blue text-lg font-semibold">
+			{recipe.title}
+		</h3>
+		<p class="text-brand-gray-medium mt-1 text-sm">{recipe.description}</p>
 	</div>
 </a>
+
+<style>
+	.mouse-over {
+		outline-style: solid;
+		outline-color: rgb(0, 238, 255);
+		outline-width: 2px;
+	}
+</style>
