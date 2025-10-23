@@ -1,23 +1,26 @@
-@import 'tailwindcss';
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
 
-@plugin '@tailwindcss/forms';
-@plugin '@tailwindcss/typography';
-/* @plugin '@tailwindcss/aspect-ratio'; */
-@plugin '@tailwindcss/container-queries';
-
-@theme {
-	--font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
-		'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
-	--breakpoint-xs: 475px;
-	--breakpoint-3xl: 1920px;
-}
+/* Use the new Tailwind v4 import */
+@import "tailwindcss";
 
 @layer base {
-
-	html,
-	body,
-	body>div {
+	html, body, body>div {
 		height: 100%;
+	}
+
+	body {
+		/* Instead of @apply, we use standard CSS with the theme() function */
+		background-color: theme('colors.white');
+		color: grey;
+		font-family: 'Inter', sans-serif;
+	}
+
+	h1, h2, h3, h4, h5, h6 {
+		color: rgb(0, 0, 75);
+	}
+
+	p {
+		color: black;
 	}
 
 	h1 {
