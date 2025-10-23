@@ -40,7 +40,7 @@
 					<a
 						href="/recipes"
 						class="hover:text-green-300"
-						class:font-bold={$page.url.pathname.startsWith('/recipes')}
+						class:font-bold={$page.url.pathname === '/recipes'}
 					>
 						{m.navbar_recipes()}
 					</a>
