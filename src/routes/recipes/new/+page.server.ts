@@ -2,8 +2,8 @@ import {redirect, error} from '@sveltejs/kit';
 import type {Actions, PageServerLoad} from './$types';
 import {db} from '$lib/server/db';
 import {recipes, tags, recipesToTags} from '$lib/server/db/schema';
-import {slugify} from '$lib/helpers';
 import {eq, inArray} from 'drizzle-orm';
+import slugify from 'slugify';
 
 export const load: PageServerLoad = async () => {
 	// Fetch all existing tags to display them on the page

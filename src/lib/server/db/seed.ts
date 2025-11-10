@@ -5,7 +5,7 @@ import {config} from 'dotenv';
 // Import your recipes table schema
 import {recipes, tags, recipesToTags} from './schema';
 import {isNull, eq} from 'drizzle-orm';
-import {slugify} from '$lib/helpers';
+import slugify from 'slugify';
 
 // Load environment variables from your .env file
 config({path: '.env'});
