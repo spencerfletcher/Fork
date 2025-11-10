@@ -31,9 +31,69 @@ export const actions: Actions = {
 		const prepTimeMinutes = Number(formData.get('prepTimeMinutes'));
 		const servings = Number(formData.get('servings'));
 
-		// Basic validation
-		if (!title) {
-			throw error(400, {message: 'A title is required.'});
+		const MAX_TITLE_LENGTH = 200;
+		const MAX_DESCRIPTION_LENGTH = 1000;
+		const MAX_INGREDIENTS_LENGTH = 5000;
+		const MAX_INSTRUCTIONS_LENGTH = 10000;
+
+		// Comprehensive validation
+		if (!title || typeof title !== 'string') {
+			return error(400, {message: 'A title is required.'});
+		}
+
+		if (title.trim().length === 0) {
+			return error(400, {message: 'Title cannot be empty.'});
+		}
+
+		if (title.length > MAX_TITLE_LENGTH) {
+			return error(400, {message: `Title must be less than ${MAX_TITLE_LENGTH} characters.`});
+		}
+
+		if (description && description.length > MAX_DESCRIPTION_LENGTH) {
+			return error(400, {message: 'Description is too long.'});
+		}
+
+		if (!ingredients || typeof ingredients !== 'string' || ingredients.trim().length === 0) {
+			return error(400, {message: 'Ingredients are required.'});
+		}
+
+		if (ingredients.length > MAX_INGREDIENTS_LENGTH) {
+			return error(400, {message: 'Ingredients are too long.'});
+		}
+
+		if (!instructions || typeof instructions !== 'string' || instructions.trim().length === 0) {
+			return error(400, {message: 'Instructions are required.'});
+		}
+
+		if (instructions.length > MAX_INSTRUCTIONS_LENGTH) {
+			return error(400, {message: 'Instructions are too long.'});
+		}
+
+		// URL validation (if provided)
+		if (imageUrl && imageUrl.trim().length > 0) {
+			try {
+				new URL(imageUrl);
+				// Optionally check for allowed protocols
+				if (!imageUrl.startsWith('http://') && !imageUrl.startsWith('https://')) {
+					return error(400, {message: 'Image URL must start with http:// or https://'});
+				}
+			} catch {
+				return error(400, {message: 'Invalid image URL format.'});
+			}
+		}
+
+		// Numeric validation (already safe from SQL injection via parameterized queries)
+		// But good to validate ranges
+		if (!isNaN(cookTimeMinutes) && cookTimeMinutes < 0) {
+			return error(400, {message: 'Cook time cannot be negative.'});
+		}
+
+		if (!isNaN(prepTimeMinutes) && prepTimeMinutes < 0) {
+			return error(400, {message: 'Prep time cannot be negative.'});
+		}
+
+		if (!isNaN(servings) && servings <= 0) {
+			return error(400, {message: 'Servings must be positive.'});
 		}
 
 		let newRecipeSlug: string | null = null;
