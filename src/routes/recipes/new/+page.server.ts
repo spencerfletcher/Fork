@@ -1,4 +1,4 @@
-import {redirect, error} from '@sveltejs/kit';
+import {redirect, fail, error} from '@sveltejs/kit';
 import type {Actions, PageServerLoad} from './$types';
 import {db} from '$lib/server/db';
 import {recipes, tags, recipesToTags} from '$lib/server/db/schema';
@@ -26,10 +26,10 @@ export const actions: Actions = {
 		const title = formData.get('title') as string;
 		const tagString = formData.get('tags') as string;
 		const tagNames = tagString ? tagString.split(',').map(tag => tag.trim()) : [];
-		const rating = formData.get('rating') as string;
+		const rating = Number(formData.get('rating'));
 		const userId = user?.id ?? null;
 		const description = formData.get('description') as string;
-		const imageUrl = formData.get('image_url') as string;
+		const imageUrl = formData.get('imageUrl') as string;
 		const ingredients = formData.get('ingredients') as string;
 		const instructions = formData.get('instructions') as string;
 		const cookTimeMinutes = Number(formData.get('cookTimeMinutes'));
@@ -43,35 +43,35 @@ export const actions: Actions = {
 
 		// Comprehensive validation
 		if (!title || typeof title !== 'string') {
-			return error(400, {message: 'A title is required.'});
+			return fail(400, {message: 'A title is required.'});
 		}
 
 		if (title.trim().length === 0) {
-			return error(400, {message: 'Title cannot be empty.'});
+			return fail(400, {message: 'Title cannot be empty.'});
 		}
 
 		if (title.length > MAX_TITLE_LENGTH) {
-			return error(400, {message: `Title must be less than ${MAX_TITLE_LENGTH} characters.`});
+			return fail(400, {message: `Title must be less than ${MAX_TITLE_LENGTH} characters.`});
 		}
 
 		if (description && description.length > MAX_DESCRIPTION_LENGTH) {
-			return error(400, {message: 'Description is too long.'});
+			return fail(400, {message: 'Description is too long.'});
 		}
 
 		if (!ingredients || typeof ingredients !== 'string' || ingredients.trim().length === 0) {
-			return error(400, {message: 'Ingredients are required.'});
+			return fail(400, {message: 'Ingredients are required.'});
 		}
 
 		if (ingredients.length > MAX_INGREDIENTS_LENGTH) {
-			return error(400, {message: 'Ingredients are too long.'});
+			return fail(400, {message: 'Ingredients are too long.'});
 		}
 
 		if (!instructions || typeof instructions !== 'string' || instructions.trim().length === 0) {
-			return error(400, {message: 'Instructions are required.'});
+			return fail(400, {message: 'Instructions are required.'});
 		}
 
 		if (instructions.length > MAX_INSTRUCTIONS_LENGTH) {
-			return error(400, {message: 'Instructions are too long.'});
+			return fail(400, {message: 'Instructions are too long.'});
 		}
 
 		// URL validation (if provided)
@@ -80,25 +80,25 @@ export const actions: Actions = {
 				new URL(imageUrl);
 				// Optionally check for allowed protocols
 				if (!imageUrl.startsWith('http://') && !imageUrl.startsWith('https://')) {
-					return error(400, {message: 'Image URL must start with http:// or https://'});
+					return fail(400, {message: 'Image URL must start with http:// or https://'});
 				}
 			} catch {
-				return error(400, {message: 'Invalid image URL format.'});
+				return fail(400, {message: 'Invalid image URL format.'});
 			}
 		}
 
 		// Numeric validation (already safe from SQL injection via parameterized queries)
 		// But good to validate ranges
 		if (!isNaN(cookTimeMinutes) && cookTimeMinutes < 0) {
-			return error(400, {message: 'Cook time cannot be negative.'});
+			return fail(400, {message: 'Cook time cannot be negative.'});
 		}
 
 		if (!isNaN(prepTimeMinutes) && prepTimeMinutes < 0) {
-			return error(400, {message: 'Prep time cannot be negative.'});
+			return fail(400, {message: 'Prep time cannot be negative.'});
 		}
 
-		if (!isNaN(servings) && servings <= 0) {
-			return error(400, {message: 'Servings must be positive.'});
+		if (!isNaN(servings) && servings < 0) {
+			return fail(400, {message: 'Servings cannot be negative.'});
 		}
 
 		let newRecipeSlug: string | null = null;
@@ -115,7 +115,7 @@ export const actions: Actions = {
 						imageUrl,
 						ingredients,
 						instructions,
-						rating,
+						rating: isNaN(rating) ? null : rating.toString(),
 						cookTimeMinutes: isNaN(cookTimeMinutes) ? null : cookTimeMinutes,
 						prepTimeMinutes: isNaN(prepTimeMinutes) ? null : prepTimeMinutes,
 						servings: isNaN(servings) ? null : servings,

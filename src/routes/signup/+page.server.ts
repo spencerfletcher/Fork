@@ -1,4 +1,4 @@
-import {error, redirect} from '@sveltejs/kit';
+import {redirect, fail} from '@sveltejs/kit';
 import type {Actions, PageServerLoad} from './$types';
 
 // Redirect users who are already logged in away from the signup page.
@@ -15,7 +15,7 @@ export const actions: Actions = {
 		const password = formData.get('password') as string;
 
 		if (!email || !password) {
-			throw error(400, {message: 'Email and password are required.'});
+			return fail(400, {message: 'Email and password are required.'});
 		}
 
 		// Use the Supabase client to sign up a new user
@@ -25,7 +25,7 @@ export const actions: Actions = {
 		});
 
 		if (err) {
-			throw error(err.status || 500, {message: err.message});
+			return fail(err.status || 500, {message: err.message});
 		}
 
 		// By default, Supabase sends a confirmation email.
