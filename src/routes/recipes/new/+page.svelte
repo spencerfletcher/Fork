@@ -9,6 +9,18 @@
 <div class="container mx-auto max-w-2xl px-4 py-8">
 	<h1 class="text-3xl font-bold text-gray-900">Create a New Recipe</h1>
 
+	{#if form?.message}
+		<div class="mt-4 rounded-md bg-red-50 p-4">
+			<div class="flex">
+				<div class="ml-3">
+					<h3 class="text-sm font-medium text-red-800">
+						{form.message}
+					</h3>
+				</div>
+			</div>
+		</div>
+	{/if}
+
 	<form method="POST" use:enhance class="mt-8 space-y-6">
 		<div>
 			<label for="title" class="block text-sm font-medium text-gray-700">Title</label>
