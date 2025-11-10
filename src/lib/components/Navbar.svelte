@@ -2,9 +2,9 @@
 	import { page } from '$app/stores';
 	import * as m from '$lib/paraglide/messages.js';
 	import { enhance, applyAction } from '$app/forms';
-	import type { Session } from '@supabase/supabase-js';
+	import type { User } from '@supabase/supabase-js';
 
-	let { session }: { session: Session | null } = $props();
+	let { user }: { user: User | null } = $props();
 
 	// This variable will control the visibility of the mobile menu
 	let isMenuOpen = $state(false);
@@ -22,7 +22,11 @@
 	<div class="relative z-50 container mx-auto flex h-16 items-center justify-between px-4">
 		<!-- Left side: Title and Navigation Links -->
 		<div class="flex items-center gap-12">
-			<a href="/" class="font-serif text-2xl font-bold text-amber-900 hover:text-amber-700" onclick={closeMenu}>
+			<a
+				href="/"
+				class="font-serif text-2xl font-bold text-amber-900 hover:text-amber-700"
+				onclick={closeMenu}
+			>
 				{m.app_title()}
 			</a>
 			<!-- Desktop Navigation Links -->
@@ -30,7 +34,7 @@
 				<li>
 					<a
 						href="/recipes/new"
-						class="text-sm font-medium text-gray-700 hover:text-amber-700 transition-colors"
+						class="text-sm font-medium text-gray-700 transition-colors hover:text-amber-700"
 						class:text-amber-700={$page.url.pathname === '/recipes/new'}
 						class:font-semibold={$page.url.pathname === '/recipes/new'}
 					>
@@ -40,7 +44,7 @@
 				<li>
 					<a
 						href="/recipes"
-						class="text-sm font-medium text-gray-700 hover:text-amber-700 transition-colors"
+						class="text-sm font-medium text-gray-700 transition-colors hover:text-amber-700"
 						class:text-amber-700={$page.url.pathname === '/recipes'}
 						class:font-semibold={$page.url.pathname === '/recipes'}
 					>
@@ -54,16 +58,21 @@
 		<div class="flex items-center gap-4">
 			<!-- Desktop Auth Status -->
 			<div class="hidden items-center space-x-4 text-sm md:flex">
-				{#if session}
-					<span class="hidden text-gray-600 sm:inline">{session.user.email}</span>
+				{#if user}
+					<span class="hidden text-gray-600 sm:inline">{user.email}</span>
 					<form action="/logout" method="POST" use:enhance>
-						<button type="submit" class="cursor-pointer text-gray-700 hover:text-amber-700 transition-colors">Logout</button>
+						<button
+							type="submit"
+							class="cursor-pointer text-gray-700 transition-colors hover:text-amber-700"
+							>Logout</button
+						>
 					</form>
 				{:else}
-					<a href="/login" class="text-gray-700 hover:text-amber-700 transition-colors">Login</a>
+					<a href="/login" class="text-gray-700 transition-colors hover:text-amber-700">Login</a>
 					<a
 						href="/signup"
-						class="rounded-md bg-amber-800 px-4 py-2 text-white hover:bg-amber-900 transition-colors font-medium">Sign Up</a
+						class="rounded-md bg-amber-800 px-4 py-2 font-medium text-white transition-colors hover:bg-amber-900"
+						>Sign Up</a
 					>
 				{/if}
 			</div>
@@ -72,7 +81,7 @@
 			<button
 				type="button"
 				onclick={toggleMenu}
-				class="inline-flex items-center justify-center rounded-md p-2 text-gray-600 hover:bg-amber-50 hover:text-amber-700 focus:ring-2 focus:ring-amber-700 focus:outline-none focus:ring-inset md:hidden transition-colors"
+				class="inline-flex items-center justify-center rounded-md p-2 text-gray-600 transition-colors hover:bg-amber-50 hover:text-amber-700 focus:ring-2 focus:ring-amber-700 focus:outline-none focus:ring-inset md:hidden"
 				aria-controls="mobile-menu"
 				aria-expanded={isMenuOpen}
 			>
@@ -113,13 +122,16 @@
 		<div class="fixed inset-0 bg-black/20" onclick={closeMenu} aria-hidden="true"></div>
 
 		<!-- Mobile Menu Dropdown -->
-		<div class="absolute w-full bg-white border-t border-amber-100 md:hidden shadow-lg" id="mobile-menu">
+		<div
+			class="absolute w-full border-t border-amber-100 bg-white shadow-lg md:hidden"
+			id="mobile-menu"
+		>
 			<ul class="space-y-1 px-2 pt-2 pb-3">
 				<li>
 					<a
 						href="/recipes/new"
 						onclick={closeMenu}
-						class="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-amber-50 hover:text-amber-700 transition-colors"
+						class="block rounded-md px-3 py-2 text-base font-medium text-gray-700 transition-colors hover:bg-amber-50 hover:text-amber-700"
 					>
 						{m.navbar_new()}
 					</a>
@@ -128,7 +140,7 @@
 					<a
 						href="/recipes"
 						onclick={closeMenu}
-						class="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-amber-50 hover:text-amber-700 transition-colors"
+						class="block rounded-md px-3 py-2 text-base font-medium text-gray-700 transition-colors hover:bg-amber-50 hover:text-amber-700"
 					>
 						{m.navbar_recipes()}
 					</a>
@@ -136,9 +148,9 @@
 			</ul>
 			<!-- Mobile Auth Links -->
 			<div class="border-t border-amber-100 pt-4 pb-3">
-				{#if session}
+				{#if user}
 					<div class="flex items-center px-5">
-						<div class="text-base font-medium text-gray-900">{session.user.email}</div>
+						<div class="text-base font-medium text-gray-900">{user.email}</div>
 					</div>
 					<div class="mt-3 space-y-1 px-2">
 						<form
@@ -158,7 +170,7 @@
 						>
 							<button
 								type="submit"
-								class="block w-full cursor-pointer rounded-md px-3 py-2 text-left text-base font-medium text-gray-700 hover:bg-amber-50 hover:text-amber-700 transition-colors"
+								class="block w-full cursor-pointer rounded-md px-3 py-2 text-left text-base font-medium text-gray-700 transition-colors hover:bg-amber-50 hover:text-amber-700"
 							>
 								Logout
 							</button>
@@ -169,13 +181,13 @@
 						<a
 							href="/login"
 							onclick={closeMenu}
-							class="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-amber-50 hover:text-amber-700 transition-colors"
+							class="block rounded-md px-3 py-2 text-base font-medium text-gray-700 transition-colors hover:bg-amber-50 hover:text-amber-700"
 							>Login</a
 						>
 						<a
 							href="/signup"
 							onclick={closeMenu}
-							class="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-amber-50 hover:text-amber-700 transition-colors"
+							class="block rounded-md px-3 py-2 text-base font-medium text-gray-700 transition-colors hover:bg-amber-50 hover:text-amber-700"
 							>Sign Up</a
 						>
 					</div>

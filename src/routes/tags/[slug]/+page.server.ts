@@ -4,7 +4,7 @@ import {eq, and, or, isNull, inArray} from 'drizzle-orm';
 import {tags, recipes, recipesToTags} from '$lib/server/db/schema';
 import type {PageServerLoad} from './$types';
 
-export const load: PageServerLoad = async ({params, locals: {session}}) => {
+export const load: PageServerLoad = async ({params, locals: {user}}) => {
 	const tagSlug = params.slug.toLowerCase();
 
 	// First, get the tag's name to display on the page
@@ -24,8 +24,8 @@ export const load: PageServerLoad = async ({params, locals: {session}}) => {
 		.where(
 			and(
 				eq(recipesToTags.tagId, tag.id),
-				session
-					? or(eq(recipes.userId, session.user.id), isNull(recipes.userId))
+				user
+					? or(eq(recipes.userId, user.id), isNull(recipes.userId))
 					: isNull(recipes.userId)
 			)
 		);

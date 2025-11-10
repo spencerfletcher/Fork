@@ -4,7 +4,7 @@ import {recipes} from '$lib/server/db/schema';
 import {eq} from 'drizzle-orm';
 import type {PageServerLoad} from './$types';
 
-export const load: PageServerLoad = async ({params, locals: {session}}) => {
+export const load: PageServerLoad = async ({params, locals: {user}}) => {
 	// 1. Get the ID from the URL and convert it to a number
 	const recipeSlug = params.slug;
 
@@ -27,7 +27,7 @@ export const load: PageServerLoad = async ({params, locals: {session}}) => {
 
 	if (recipe.userId !== null) {
 		// This is a private recipe
-		if (!session || recipe.userId !== session.user.id) {
+		if (!user || recipe.userId !== user.id) {
 			throw error(403, 'You do not have permission to view this recipe');
 		}
 	}

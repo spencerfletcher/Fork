@@ -2,8 +2,8 @@ import {error, redirect} from '@sveltejs/kit';
 import type {Actions, PageServerLoad} from './$types';
 
 // Redirect users who are already logged in away from the signup page.
-export const load: PageServerLoad = async ({locals: {session}}) => {
-	if (session) {
+export const load: PageServerLoad = async ({locals: {user}}) => {
+	if (user) {
 		throw redirect(303, '/');
 	}
 };

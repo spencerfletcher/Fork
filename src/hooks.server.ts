@@ -28,6 +28,12 @@ export const handle: Handle = async ({event, resolve}) => {
 	} = await event.locals.supabase.auth.getSession()
 	event.locals.session = session
 
+	// Get the verified user from Supabase (this is verified and safe to use)
+	const {
+		data: {user},
+	} = await event.locals.supabase.auth.getUser()
+	event.locals.user = user
+
 	// --- 2. Paraglide i18n Logic (runs second) ---
 	return paraglideMiddleware(event.request, ({request, locale}) => {
 		event.request = request

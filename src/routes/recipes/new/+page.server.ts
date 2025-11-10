@@ -5,9 +5,9 @@ import {recipes, tags, recipesToTags} from '$lib/server/db/schema';
 import {eq, inArray} from 'drizzle-orm';
 import slugify from 'slugify';
 
-export const load: PageServerLoad = async ({locals: {session}}) => {
+export const load: PageServerLoad = async ({locals: {user}}) => {
 	// Redirect unauthenticated users to login
-	if (!session) {
+	if (!user) {
 		throw redirect(303, '/login');
 	}
 
@@ -20,14 +20,14 @@ export const load: PageServerLoad = async ({locals: {session}}) => {
 };
 
 export const actions: Actions = {
-	default: async ({request, locals: {session}}) => {
+	default: async ({request, locals: {user}}) => {
 		const formData = await request.formData();
 
 		const title = formData.get('title') as string;
 		const tagString = formData.get('tags') as string;
 		const tagNames = tagString ? tagString.split(',').map(tag => tag.trim()) : [];
 		const rating = formData.get('rating') as string;
-		const userId = session?.user.id ?? null; // Assuming session contains user info
+		const userId = user?.id ?? null;
 		const description = formData.get('description') as string;
 		const imageUrl = formData.get('image_url') as string;
 		const ingredients = formData.get('ingredients') as string;

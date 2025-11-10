@@ -4,8 +4,8 @@ import type {Actions, PageServerLoad} from './$types';
 // Add a load function to redirect logged-in users away from the login page.
 // If a user with an active session tries to visit /login, they'll be
 // sent to their profile page instead.
-export const load: PageServerLoad = async ({locals: {session}}) => {
-	if (session) {
+export const load: PageServerLoad = async ({locals: {user}}) => {
+	if (user) {
 		throw redirect(303, '/'); // Or wherever you want logged-in users to go
 	}
 };

@@ -6,13 +6,17 @@
 </script>
 
 <div class="min-h-screen bg-gradient-to-b from-amber-50 to-white">
-	{#if data.session?.user}
+	{#if data.user}
 		<!-- Header Section -->
 		<section class="border-b border-amber-100 py-16 sm:py-24">
 			<div class="container mx-auto px-4 text-center">
-				<h1 class="font-serif text-5xl sm:text-6xl font-bold text-amber-900 mb-4">My Cookbook</h1>
-				<p class="text-lg text-gray-600 max-w-2xl mx-auto">
-					Your personal collection of recipes. <a href="/recipes/new" class="text-amber-700 font-semibold hover:text-amber-800 transition-colors">Create new recipe</a>
+				<h1 class="mb-4 font-serif text-5xl font-bold text-amber-900 sm:text-6xl">My Cookbook</h1>
+				<p class="mx-auto max-w-2xl text-lg text-gray-600">
+					Your personal collection of recipes. <a
+						href="/recipes/new"
+						class="font-semibold text-amber-700 transition-colors hover:text-amber-800"
+						>Create new recipe</a
+					>
 				</p>
 			</div>
 		</section>
@@ -27,10 +31,15 @@
 						{/each}
 					</div>
 				{:else}
-					<div class="text-center py-16">
-						<h2 class="text-2xl font-serif text-gray-800 mb-4">No recipes yet</h2>
-						<p class="text-gray-600 mb-8">Start building your personal cookbook by creating your first recipe.</p>
-						<a href="/recipes/new" class="inline-block bg-amber-800 text-white px-6 py-3 rounded-md hover:bg-amber-900 transition-colors font-medium">
+					<div class="py-16 text-center">
+						<h2 class="mb-4 font-serif text-2xl text-gray-800">No recipes yet</h2>
+						<p class="mb-8 text-gray-600">
+							Start building your personal cookbook by creating your first recipe.
+						</p>
+						<a
+							href="/recipes/new"
+							class="inline-block rounded-md bg-amber-800 px-6 py-3 font-medium text-white transition-colors hover:bg-amber-900"
+						>
 							Create Your First Recipe
 						</a>
 					</div>
@@ -38,19 +47,23 @@
 			</div>
 		</section>
 	{:else}
-		<div class="min-h-screen flex items-center justify-center">
-			<div class="text-center max-w-md">
-				<h1 class="font-serif text-4xl font-bold text-gray-900 mb-4">
-					Welcome
-				</h1>
-				<p class="text-gray-600 mb-8">
+		<div class="flex min-h-screen items-center justify-center">
+			<div class="max-w-md text-center">
+				<h1 class="mb-4 font-serif text-4xl font-bold text-gray-900">Welcome</h1>
+				<p class="mb-8 text-gray-600">
 					Sign in to your account to view and manage your personal recipe collection.
 				</p>
 				<div class="flex gap-4">
-					<a href="/login" class="flex-1 bg-amber-800 text-white px-6 py-3 rounded-lg font-medium hover:bg-amber-900 transition-colors">
+					<a
+						href="/login"
+						class="flex-1 rounded-lg bg-amber-800 px-6 py-3 font-medium text-white transition-colors hover:bg-amber-900"
+					>
 						Sign In
 					</a>
-					<a href="/signup" class="flex-1 border border-amber-800 text-amber-800 px-6 py-3 rounded-lg font-medium hover:bg-amber-50 transition-colors">
+					<a
+						href="/signup"
+						class="flex-1 rounded-lg border border-amber-800 px-6 py-3 font-medium text-amber-800 transition-colors hover:bg-amber-50"
+					>
 						Sign Up
 					</a>
 				</div>
