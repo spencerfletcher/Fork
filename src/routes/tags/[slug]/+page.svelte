@@ -11,7 +11,7 @@
 	<div class="container mx-auto">
 		<h1 class="text-3xl font-bold text-gray-900">
 			Recipes tagged with:
-			<span class="text-green-600">{data.tag.name}</span>
+			<span class="text-amber-700">{data.tag.name}</span>
 		</h1>
 
 		{#if recipes.length > 0}
