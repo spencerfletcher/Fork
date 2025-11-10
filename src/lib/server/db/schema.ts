@@ -1,4 +1,4 @@
-import {pgTable, serial, text, integer, timestamp, primaryKey, numeric} from 'drizzle-orm/pg-core';
+import {pgTable, serial, text, integer, timestamp, primaryKey, numeric, index} from 'drizzle-orm/pg-core';
 import {relations} from 'drizzle-orm';
 import type {InferSelectModel, InferInsertModel} from 'drizzle-orm';
 
@@ -19,7 +19,9 @@ export const recipes = pgTable('recipes', {
 	instructions: text().notNull(),
 	createdAt: timestamp('created_at').defaultNow(),
 	updatedAt: timestamp('updated_at').defaultNow().$onUpdate(() => new Date()),
-});
+}, (table) => [
+	index('idx_recipes_user_id').on(table.userId),
+]);
 
 export const tags = pgTable('tags', {
 	id: serial().primaryKey(),
