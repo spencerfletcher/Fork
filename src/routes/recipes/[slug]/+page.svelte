@@ -8,8 +8,8 @@
 
 	// Since we stored ingredients and instructions as single strings in the database,
 	// we need to split them back into arrays to loop over them.
-	const ingredientsList = recipe.ingredients.split('\n');
-	const instructionsList = recipe.instructions.split('\n');
+	const ingredientsList = recipe.ingredients.split('\n').filter((s) => s.trim());
+	const instructionsList = recipe.instructions.split('\n').filter((s) => s.trim());
 	const tags = recipe.recipesToTags.map((item) => item.tag);
 </script>
 
