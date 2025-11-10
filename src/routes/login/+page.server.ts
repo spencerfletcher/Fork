@@ -13,8 +13,14 @@ export const load: PageServerLoad = async ({locals: {session}}) => {
 export const actions: Actions = {
 	default: async ({request, locals: {supabase}}) => {
 		const formData = await request.formData();
-		const email = formData.get('email') as string;
-		const password = formData.get('password') as string;
+		const email = formData.get('email');
+		if (typeof email !== 'string' || !email || !email.includes('@')) {
+			return error(400, {message: 'Valid email is required'});
+		}
+		const password = formData.get('password');
+		if (typeof password !== 'string' || !password) {
+			return error(400, {message: 'Password is required'});
+		}
 
 		// Basic validation
 		if (!email || !password) {
