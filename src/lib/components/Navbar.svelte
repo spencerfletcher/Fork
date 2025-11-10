@@ -57,7 +57,7 @@
 				{#if session}
 					<span class="hidden text-gray-600 sm:inline">{session.user.email}</span>
 					<form action="/logout" method="POST" use:enhance>
-						<button type="submit" class="text-gray-700 hover:text-amber-700 transition-colors">Logout</button>
+						<button type="submit" class="cursor-pointer text-gray-700 hover:text-amber-700 transition-colors">Logout</button>
 					</form>
 				{:else}
 					<a href="/login" class="text-gray-700 hover:text-amber-700 transition-colors">Login</a>
@@ -158,7 +158,7 @@
 						>
 							<button
 								type="submit"
-								class="block w-full rounded-md px-3 py-2 text-left text-base font-medium text-gray-700 hover:bg-amber-50 hover:text-amber-700 transition-colors"
+								class="block w-full cursor-pointer rounded-md px-3 py-2 text-left text-base font-medium text-gray-700 hover:bg-amber-50 hover:text-amber-700 transition-colors"
 							>
 								Logout
 							</button>
