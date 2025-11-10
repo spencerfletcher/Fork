@@ -5,7 +5,12 @@ import {recipes, tags, recipesToTags} from '$lib/server/db/schema';
 import {eq, inArray} from 'drizzle-orm';
 import slugify from 'slugify';
 
-export const load: PageServerLoad = async () => {
+export const load: PageServerLoad = async ({locals: {session}}) => {
+	// Redirect unauthenticated users to login
+	if (!session) {
+		throw redirect(303, '/login');
+	}
+
 	// Fetch all existing tags to display them on the page
 	const allTags = await db.query.tags.findMany({
 		orderBy: (tags, {asc}) => [asc(tags.name)],
