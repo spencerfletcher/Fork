@@ -25,8 +25,11 @@ export const load: PageServerLoad = async ({params, locals: {session}}) => {
 		throw error(404, 'Recipe not found');
 	}
 
-	if (recipe.userId && (!session || recipe.userId !== session.user.id)) {
-		throw error(403, 'Unauthorized');
+	if (recipe.userId !== null) {
+		// This is a private recipe
+		if (!session || recipe.userId !== session.user.id) {
+			throw error(403, 'You do not have permission to view this recipe');
+		}
 	}
 
 	// 4. Return the found recipe
