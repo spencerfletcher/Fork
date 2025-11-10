@@ -28,8 +28,8 @@ export const tags = pgTable('tags', {
 });
 
 export const recipesToTags = pgTable('recipes_to_tags', {
-	recipeId: integer('recipe_id').notNull().references(() => recipes.id),
-	tagId: integer('tag_id').notNull().references(() => tags.id),
+	recipeId: integer('recipe_id').notNull().references(() => recipes.id, {onDelete: 'cascade'}),
+	tagId: integer('tag_id').notNull().references(() => tags.id, {onDelete: 'cascade'}),
 }, (table) => [
 	primaryKey({columns: [table.recipeId, table.tagId]}),
 ]);
