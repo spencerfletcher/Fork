@@ -7,33 +7,24 @@
 
 <a
 	href={`/recipes/${recipe.slug}`}
-	class="group block"
+	class="group block rounded-lg overflow-hidden"
 	onmouseenter={() => (isClicked = true)}
 	onmouseleave={() => (isClicked = false)}
 >
 	<!-- Image Section with a subtle zoom-on-hover effect -->
-	<div class="aspect-[4/3] overflow-hidden">
+	<div class="aspect-[4/3] overflow-hidden bg-gray-100">
 		<img
 			src={recipe.imageUrl ? recipe.imageUrl : '/None.png'}
 			alt={recipe.title}
-			class="group-hover: h-full w-full object-cover transition-transform duration-300"
-			class:mouse-over={isClicked}
+			class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
 		/>
 	</div>
 
 	<!-- Text Content Section -->
-	<div class="pt-4">
-		<h3 class="text-brand-gray-dark group-hover:text-brand-blue text-lg font-semibold">
+	<div class="pt-5 pb-4 px-4">
+		<h3 class="text-gray-900 group-hover:text-amber-700 text-lg font-serif font-semibold transition-colors duration-200">
 			{recipe.title}
 		</h3>
-		<p class="text-brand-gray-medium mt-1 text-sm">{recipe.description}</p>
+		<p class="text-gray-600 mt-2 text-sm line-clamp-2">{recipe.description || 'A delicious recipe'}</p>
 	</div>
 </a>
-
-<style>
-	.mouse-over {
-		outline-style: solid;
-		outline-color: rgb(0, 238, 255);
-		outline-width: 2px;
-	}
-</style>
