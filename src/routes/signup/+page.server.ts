@@ -15,7 +15,7 @@ export const actions: Actions = {
 		const password = formData.get('password') as string;
 
 		if (!email || !password) {
-			return error(400, {message: 'Email and password are required.'});
+			throw error(400, {message: 'Email and password are required.'});
 		}
 
 		// Use the Supabase client to sign up a new user
@@ -25,7 +25,7 @@ export const actions: Actions = {
 		});
 
 		if (err) {
-			return error(err.status || 500, {message: err.message});
+			throw error(err.status || 500, {message: err.message});
 		}
 
 		// By default, Supabase sends a confirmation email.

@@ -18,7 +18,7 @@ export const actions: Actions = {
 
 		// Basic validation
 		if (!email || !password) {
-			return error(400, {message: 'Email and password are required.'});
+			throw error(400, {message: 'Email and password are required.'});
 		}
 
 		// Use the Supabase client to sign the user in
@@ -30,7 +30,7 @@ export const actions: Actions = {
 		// If Supabase returns an error (e.g., wrong password),
 		// send it back to the page to be displayed to the user.
 		if (err) {
-			return error(401, {message: err.message});
+			throw error(401, {message: err.message});
 		}
 
 		// If login is successful, redirect the user to the homepage or their dashboard

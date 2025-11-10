@@ -33,7 +33,7 @@ export const actions: Actions = {
 
 		// Basic validation
 		if (!title) {
-			return error(400, {message: 'A title is required.'});
+			throw error(400, {message: 'A title is required.'});
 		}
 
 		let newRecipeSlug: string | null = null;
@@ -88,11 +88,11 @@ export const actions: Actions = {
 			});
 		} catch (e) {
 			console.error(e);
-			return error(500, {message: 'Something went wrong while creating your recipe.'});
+			throw error(500, {message: 'Something went wrong while creating your recipe.'});
 		}
 
 		if (!newRecipeSlug) {
-			return error(500, {message: 'Failed to create recipe slug.'});
+			throw error(500, {message: 'Failed to create recipe slug.'});
 		}
 
 		throw redirect(303, `/recipes/${newRecipeSlug}`);
