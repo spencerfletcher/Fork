@@ -122,7 +122,7 @@ export const actions: Actions = {
 					})
 					.returning({insertedId: recipes.id});
 
-				const slug = `${slugify(title)}-${newRecipe.insertedId}`;
+				const slug = `${slugify(title, { lower: true })}-${newRecipe.insertedId}`;
 
 				await tx
 					.update(recipes)
@@ -134,7 +134,7 @@ export const actions: Actions = {
 				if (tagNames.length > 0) {
 					// Attempt to insert all tags. Existing tags will be ignored.
 					await tx.insert(tags)
-						.values(tagNames.map(name => ({name, slug: slugify(name)})))
+						.values(tagNames.map(name => ({name, slug: slugify(name, { lower: true })})))
 						.onConflictDoNothing();
 
 					// Select all the tags needed to get their IDs.
