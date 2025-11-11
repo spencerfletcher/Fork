@@ -14,6 +14,7 @@
 	const ingredientsList = recipe.ingredients.split('\n').filter((s) => s.trim());
 	const instructionsList = recipe.instructions.split('\n').filter((s) => s.trim());
 	const tags = recipe.recipesToTags.map((item) => item.tag);
+	const isOwner = data.user && data.user.id === recipe.userId;
 </script>
 
 <article class="min-h-screen bg-white">
@@ -77,7 +78,7 @@
 						<span>Rating: <span class="font-semibold text-gray-500">Not rated</span></span>
 					</div>
 				{/if}
-				{#if data.user && data.user.id === recipe.userId}
+				{#if data.user}
 					<div class="ml-auto flex items-center gap-2">
 						<form
 							method="POST"
@@ -107,81 +108,21 @@
 								{/if}
 							</button>
 						</form>
-						<a
-							href="/recipes/{recipe.slug}/edit"
-							class="rounded bg-blue-100 px-3 py-1 text-xs font-medium text-blue-900 transition-colors hover:bg-blue-200"
-						>
-							Edit
-						</a>
-						<button
-							type="button"
-							onclick={() => (showDeleteConfirm = true)}
-							class="rounded bg-red-100 px-3 py-1 text-xs font-medium text-red-900 transition-colors hover:bg-red-200"
-						>
-							Delete
-						</button>
-					</div>
-				{:else if !data.user}
-					<div class="ml-auto flex items-center gap-2">
-						<form
-							method="POST"
-							action="?/toggleFavorite"
-							class="inline"
-							use:enhance={() => {
-								return async ({ result }) => {
-									if (result.type === 'success' && result.data) {
-										isFavorited = (result.data as { isFavorited: boolean }).isFavorited;
-									}
-								};
-							}}
-						>
-							<button
-								type="submit"
-								class="p-1 transition-colors"
-								title={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
+						{#if isOwner}
+							<a
+								href="/recipes/{recipe.slug}/edit"
+								class="rounded bg-blue-100 px-3 py-1 text-xs font-medium text-blue-900 transition-colors hover:bg-blue-200"
 							>
-								{#if isFavorited}
-									<svg class="h-5 w-5 fill-current text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-										<path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-									</svg>
-								{:else}
-									<svg class="h-5 w-5 stroke-2 stroke-current text-gray-400 hover:fill-yellow-100" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
-										<path stroke-linecap="round" stroke-linejoin="round" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-									</svg>
-								{/if}
-							</button>
-						</form>
-					</div>
-				{:else}
-					<div class="ml-auto flex items-center gap-2">
-						<form
-							method="POST"
-							action="?/toggleFavorite"
-							class="inline"
-							use:enhance={() => {
-								return async ({ result }) => {
-									if (result.type === 'success' && result.data) {
-										isFavorited = (result.data as { isFavorited: boolean }).isFavorited;
-									}
-								};
-							}}
-						>
+								Edit
+							</a>
 							<button
-								type="submit"
-								class="p-1 transition-colors"
-								title={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
+								type="button"
+								onclick={() => (showDeleteConfirm = true)}
+								class="rounded bg-red-100 px-3 py-1 text-xs font-medium text-red-900 transition-colors hover:bg-red-200"
 							>
-								{#if isFavorited}
-									<svg class="h-5 w-5 fill-current text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-										<path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-									</svg>
-								{:else}
-									<svg class="h-5 w-5 stroke-2 stroke-current text-gray-400 hover:fill-yellow-100" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
-										<path stroke-linecap="round" stroke-linejoin="round" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-									</svg>
-								{/if}
+								Delete
 							</button>
-						</form>
+						{/if}
 					</div>
 				{/if}
 			</div>
@@ -236,7 +177,7 @@
 	</div>
 </article>
 
-{#if showDeleteConfirm && data.user && data.user.id === recipe.userId}
+{#if showDeleteConfirm && isOwner}
 	<div
 		class="fixed inset-0 z-50 flex items-center justify-center"
 		style="background-color: rgba(107, 114, 128, 0.3);"
