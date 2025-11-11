@@ -9,9 +9,10 @@
 	<!-- Hero Section -->
 	<section class="border-b border-amber-100 py-16 sm:py-24">
 		<div class="container mx-auto px-4 text-center">
-			<h1 class="font-serif text-5xl sm:text-6xl font-bold text-amber-900 mb-4">Your Cookbook</h1>
-			<p class="text-lg text-gray-600 max-w-2xl mx-auto">
-				Discover and share delicious recipes. Build your personal collection of culinary inspiration.
+			<h1 class="mb-4 font-serif text-5xl font-bold text-amber-900 sm:text-6xl">Our Cookbook</h1>
+			<p class="mx-auto max-w-2xl text-lg text-gray-600">
+				Discover and share delicious recipes. Build your personal collection of culinary
+				inspiration.
 			</p>
 		</div>
 	</section>
@@ -26,10 +27,15 @@
 					{/each}
 				</div>
 			{:else}
-				<div class="text-center py-16">
-					<h2 class="text-2xl font-serif text-gray-800 mb-4">No recipes yet</h2>
-					<p class="text-gray-600 mb-8">Start building your cookbook by creating your first recipe.</p>
-					<a href="/recipes/new" class="inline-block bg-amber-800 text-white px-6 py-3 rounded-md hover:bg-amber-900 transition-colors font-medium">
+				<div class="py-16 text-center">
+					<h2 class="mb-4 font-serif text-2xl text-gray-800">No recipes yet</h2>
+					<p class="mb-8 text-gray-600">
+						Start building your cookbook by creating your first recipe.
+					</p>
+					<a
+						href="/recipes/new"
+						class="inline-block rounded-md bg-amber-800 px-6 py-3 font-medium text-white transition-colors hover:bg-amber-900"
+					>
 						Create Recipe
 					</a>
 				</div>
