@@ -108,7 +108,7 @@
 						</form>
 						<button
 							type="button"
-							on:click={() => (showDeleteConfirm = true)}
+							onclick={() => (showDeleteConfirm = true)}
 							class="ml-2 rounded bg-red-100 px-3 py-1 text-xs font-medium text-red-900 transition-colors hover:bg-red-200"
 						>
 							Delete
@@ -193,7 +193,7 @@
 			<div class="flex justify-end gap-3">
 				<button
 					type="button"
-					on:click={() => (showDeleteConfirm = false)}
+					onclick={() => (showDeleteConfirm = false)}
 					class="rounded border border-gray-300 px-4 py-2 font-medium text-gray-700 transition-colors hover:bg-gray-50"
 				>
 					Cancel
