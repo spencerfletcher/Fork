@@ -1,12 +1,13 @@
-import {pgTable, serial, text, integer, timestamp, primaryKey, numeric, index} from 'drizzle-orm/pg-core';
+import {pgTable, serial, text, integer, timestamp, primaryKey, numeric, index, boolean} from 'drizzle-orm/pg-core';
 import {relations} from 'drizzle-orm';
 import type {InferSelectModel, InferInsertModel} from 'drizzle-orm';
 
 export const recipes = pgTable('recipes', {
 	// Database info
 	id: serial().primaryKey(),
-	userId: text('user_id'), // Assuming userId is a string, adjust as necessary
+	userId: text('user_id').notNull(), // All recipes must have an owner
 	slug: text().unique(),
+	public: boolean().notNull().default(false), // Whether the recipe is public
 	// Recipe info
 	title: text().notNull(),
 	imageUrl: text('image_url'),

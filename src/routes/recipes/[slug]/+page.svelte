@@ -1,10 +1,11 @@
 <script lang="ts">
 	import ClockSvg from '$lib/components/ClockSvg.svelte';
 	import PersonSvg from '$lib/components/PersonSvg.svelte';
+	import { enhance } from '$app/forms';
 
 	// This receives the { recipe } object from your +page.server.ts load function
 	let { data } = $props();
-	let recipe = data.recipe;
+	let recipe = $state(data.recipe);
 
 	// Since we stored ingredients and instructions as single strings in the database,
 	// we need to split them back into arrays to loop over them.
@@ -64,6 +65,44 @@
 				{:else}
 					<div class="flex items-center gap-2">
 						<span>Rating: <span class="font-semibold text-gray-500">Not rated</span></span>
+					</div>
+				{/if}
+				{#if data.user && data.user.id === recipe.userId}
+					<div class="flex items-center gap-2 ml-auto">
+						<span class={`font-semibold ${recipe.public ? 'text-green-700' : 'text-gray-700'}`}>
+							{recipe.public ? 'Public' : 'Private'}
+						</span>
+						<form
+							method="POST"
+							action="?/togglePublic"
+							class="inline"
+							use:enhance={() => {
+								return async ({ result }) => {
+									if (result.type === 'success' && result.data) {
+										recipe.public = (result.data as { public: boolean }).public;
+									}
+								};
+							}}
+						>
+							<button
+								type="submit"
+								class="ml-2 px-3 py-1 rounded bg-amber-200 hover:bg-amber-300 text-amber-900 font-medium transition-colors text-xs"
+							>
+								Make {recipe.public ? 'Private' : 'Public'}
+							</button>
+						</form>
+					</div>
+				{:else if !data.user}
+					<div class="flex items-center gap-2 ml-auto">
+						<span class={`font-semibold ${recipe.public ? 'text-green-700' : 'text-gray-700'}`}>
+							{recipe.public ? 'Public' : 'Private'}
+						</span>
+					</div>
+				{:else}
+					<div class="flex items-center gap-2 ml-auto">
+						<span class={`font-semibold ${recipe.public ? 'text-green-700' : 'text-gray-700'}`}>
+							{recipe.public ? 'Public' : 'Private'}
+						</span>
 					</div>
 				{/if}
 			</div>

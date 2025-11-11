@@ -4,7 +4,7 @@ import {config} from 'dotenv';
 
 // Import your recipes table schema
 import {recipes, tags, recipesToTags} from './schema';
-import {isNull, eq} from 'drizzle-orm';
+import {eq} from 'drizzle-orm';
 import slugify from 'slugify';
 
 // Load environment variables from your .env file
@@ -15,9 +15,14 @@ if (!process.env.DATABASE_URL) {
 	throw new Error('DATABASE_URL environment variable is not set');
 }
 
+// Use a fixed seed user ID for development/demo recipes
+// This should be set to an actual user ID in production
+const SEED_USER_ID = process.env.SEED_USER_ID || '00000000-0000-0000-0000-000000000000';
+
 // The new seed data, based on your input
 const recipeData = [
 	{
+		userId: SEED_USER_ID,
 		title: 'Spaghetti Carbonara',
 		description: 'A classic Italian pasta dish made with eggs, cheese, pancetta, and pepper.',
 		// The arrays are joined into single strings to fit the 'text' column type
@@ -27,35 +32,44 @@ const recipeData = [
 		servings: 4,
 		prepTimeMinutes: 10,
 		cookTimeMinutes: 20,
+		public: true,
 	},
 	{
+		userId: SEED_USER_ID,
 		title: 'Chicken Tikka Masala',
 		description:
 			'A popular Indian dish consisting of roasted marinated chicken in a spiced curry sauce.',
 		ingredients: ["Chicken", "Yogurt", "Tomato sauce", "Spices", "Cream"].join('\n'),
 		instructions: ['Marinate chicken', 'Grill chicken', 'Serve with sauce'].join('\n'),
 		imageUrl: 'https://nqcqdpcczabsadfowrxd.supabase.co/storage/v1/object/public/recipe-images//Chicken.jpg',
+		public: true,
 	},
 	{
+		userId: SEED_USER_ID,
 		title: 'Beef Stroganoff',
 		description: 'A Russian dish of sautéed pieces of beef served in a sauce with sour cream.',
 		ingredients: ["Beef", "Mushrooms", "Sour cream", "Onions", "Egg noodles"].join('\n'),
 		instructions: ['Sauté beef', 'Add mushrooms and sour cream', 'Serve over noodles'].join('\n'),
 		imageUrl: 'https://nqcqdpcczabsadfowrxd.supabase.co/storage/v1/object/public/recipe-images//Beef.jpg',
+		public: true,
 	},
 	{
+		userId: SEED_USER_ID,
 		title: 'Vegetable Stir Fry',
 		description: 'A quick and healthy dish made with a variety of vegetables stir-fried in a wok.',
 		ingredients: ["Broccoli", "Bell peppers", "Carrots", "Soy sauce", "Garlic"].join('\n'),
 		instructions: ['Stir-fry vegetables in a wok with soy sauce and garlic.'].join('\n'),
 		// Note: The image path here was the same as Beef Stroganoff in your example
 		imageUrl: 'https://nqcqdpcczabsadfowrxd.supabase.co/storage/v1/object/public/recipe-images//Beef.jpg',
+		public: true,
 	},
 	{
+		userId: SEED_USER_ID,
 		title: 'Chocolate Chip Cookies',
 		description: 'Classic cookies with chocolate chips, perfect for any occasion.',
 		ingredients: ["Flour", "Sugar", "Butter", "Chocolate chips", "Eggs", "Vanilla extract"].join('\n'),
 		instructions: ['Mix ingredients', 'Form cookies', 'Bake until golden'].join('\n'),
+		public: true,
 	}
 ];
 
@@ -80,9 +94,9 @@ async function seed() {
 	const client = postgres(process.env.DATABASE_URL!, {max: 1});
 	const db = drizzle(client);
 
-	// Clear existing data to ensure a clean slate
-	console.log('Clearing existing recipes...');
-	await db.delete(recipes).where(isNull(recipes.userId));
+	// Clear existing seed data to ensure a clean slate
+	console.log('Clearing existing seed recipes...');
+	await db.delete(recipes).where(eq(recipes.userId, SEED_USER_ID));
 
 	// Insert the new data
 	console.log('Inserting new recipe data...');
