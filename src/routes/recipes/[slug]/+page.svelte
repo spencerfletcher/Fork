@@ -72,6 +72,12 @@
 						<span class={`font-semibold ${recipe.public ? 'text-green-700' : 'text-gray-700'}`}>
 							{recipe.public ? 'Public' : 'Private'}
 						</span>
+						<a
+							href="/recipes/{recipe.slug}/edit"
+							class="px-3 py-1 rounded bg-blue-100 hover:bg-blue-200 text-blue-900 font-medium transition-colors text-xs"
+						>
+							Edit
+						</a>
 						<form
 							method="POST"
 							action="?/togglePublic"

@@ -3,12 +3,31 @@ import type {Actions, PageServerLoad} from './$types';
 import {db} from '$lib/server/db';
 import {recipes, tags, recipesToTags} from '$lib/server/db/schema';
 import {eq, inArray, count, desc} from 'drizzle-orm';
-import slugify from 'slugify';
 
-export const load: PageServerLoad = async ({locals: {user}}) => {
-	// Redirect unauthenticated users to login
+export const load: PageServerLoad = async ({params, locals: {user}}) => {
 	if (!user) {
 		throw redirect(303, '/login');
+	}
+
+	// Get the recipe
+	const recipe = await db.query.recipes.findFirst({
+		where: eq(recipes.slug, params.slug),
+		with: {
+			recipesToTags: {
+				with: {
+					tag: true,
+				},
+			},
+		},
+	});
+
+	if (!recipe) {
+		throw error(404, 'Recipe not found');
+	}
+
+	// Check ownership
+	if (recipe.userId !== user.id) {
+		throw error(403, 'You do not have permission to edit this recipe');
 	}
 
 	// Fetch top 10 tags sorted by popularity (count of recipes using each tag)
@@ -25,13 +44,29 @@ export const load: PageServerLoad = async ({locals: {user}}) => {
 		.orderBy(({ recipeCount }) => desc(recipeCount))
 		.limit(10);
 
-	return {allTags};
+	return {
+		recipe,
+		allTags,
+	};
 };
 
 export const actions: Actions = {
-	default: async ({request, locals: {user}}) => {
+	default: async ({params, request, locals: {user}}) => {
 		if (!user) {
 			throw redirect(303, '/login');
+		}
+
+		// Get the recipe to check ownership
+		const recipe = await db.query.recipes.findFirst({
+			where: eq(recipes.slug, params.slug),
+		});
+
+		if (!recipe) {
+			throw error(404, 'Recipe not found');
+		}
+
+		if (recipe.userId !== user.id) {
+			throw error(403, 'You do not have permission to edit this recipe');
 		}
 
 		const formData = await request.formData();
@@ -40,7 +75,6 @@ export const actions: Actions = {
 		const tagString = formData.get('tags') as string;
 		const tagNames = tagString ? tagString.split(',').map(tag => tag.trim()) : [];
 		const rating = Number(formData.get('rating'));
-		const userId = user.id;
 		const description = formData.get('description') as string;
 		const imageUrl = formData.get('imageUrl') as string;
 		const ingredients = formData.get('ingredients') as string;
@@ -48,6 +82,7 @@ export const actions: Actions = {
 		const cookTimeMinutes = Number(formData.get('cookTimeMinutes'));
 		const prepTimeMinutes = Number(formData.get('prepTimeMinutes'));
 		const servings = Number(formData.get('servings'));
+		const isPublic = formData.get('public') === 'on';
 
 		const MAX_TITLE_LENGTH = 200;
 		const MAX_DESCRIPTION_LENGTH = 1000;
@@ -100,8 +135,7 @@ export const actions: Actions = {
 			}
 		}
 
-		// Numeric validation (already safe from SQL injection via parameterized queries)
-		// But good to validate ranges
+		// Numeric validation
 		if (!isNaN(cookTimeMinutes) && cookTimeMinutes < 0) {
 			return fail(400, {message: 'Cook time cannot be negative.'});
 		}
@@ -114,15 +148,13 @@ export const actions: Actions = {
 			return fail(400, {message: 'Servings cannot be negative.'});
 		}
 
-		let newRecipeSlug: string | null = null;
-
 		try {
-			// Use a transaction to ensure both steps (creating the recipe and creating the slug) succeed or fail together
+			// Use a transaction to ensure all updates succeed or fail together
 			await db.transaction(async (tx) => {
-				const [newRecipe] = await tx
-					.insert(recipes)
-					.values({
-						userId,
+				// Update the recipe
+				await tx
+					.update(recipes)
+					.set({
 						title,
 						description,
 						imageUrl,
@@ -132,22 +164,18 @@ export const actions: Actions = {
 						cookTimeMinutes: isNaN(cookTimeMinutes) ? null : cookTimeMinutes,
 						prepTimeMinutes: isNaN(prepTimeMinutes) ? null : prepTimeMinutes,
 						servings: isNaN(servings) ? null : servings,
+						public: isPublic,
 					})
-					.returning({insertedId: recipes.id});
+					.where(eq(recipes.id, recipe.id));
 
-				const slug = `${slugify(title, { lower: true })}-${newRecipe.insertedId}`;
+				// Remove all existing tags for this recipe
+				await tx.delete(recipesToTags).where(eq(recipesToTags.recipeId, recipe.id));
 
-				await tx
-					.update(recipes)
-					.set({slug: slug})
-					.where(eq(recipes.id, newRecipe.insertedId));
-
-				newRecipeSlug = slug;
-
+				// Add new tags if any
 				if (tagNames.length > 0) {
 					// Attempt to insert all tags. Existing tags will be ignored.
 					await tx.insert(tags)
-						.values(tagNames.map(name => ({name, slug: slugify(name, { lower: true })})))
+						.values(tagNames.map(name => ({name, slug: name.toLowerCase().replace(/\s+/g, '-')})))
 						.onConflictDoNothing();
 
 					// Select all the tags needed to get their IDs.
@@ -158,7 +186,7 @@ export const actions: Actions = {
 					// Create the links in the join table
 					await tx.insert(recipesToTags).values(
 						relevantTags.map(tag => ({
-							recipeId: newRecipe.insertedId,
+							recipeId: recipe.id,
 							tagId: tag.id
 						}))
 					);
@@ -166,13 +194,9 @@ export const actions: Actions = {
 			});
 		} catch (e) {
 			console.error(e);
-			throw error(500, {message: 'Something went wrong while creating your recipe.'});
+			throw error(500, {message: 'Something went wrong while updating your recipe.'});
 		}
 
-		if (!newRecipeSlug) {
-			throw error(500, {message: 'Failed to create recipe slug.'});
-		}
-
-		throw redirect(303, `/recipes/${newRecipeSlug}`);
+		throw redirect(303, `/recipes/${recipe.slug}`);
 	}
 };
