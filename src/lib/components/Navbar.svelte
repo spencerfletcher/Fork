@@ -51,6 +51,18 @@
 						{m.navbar_recipes()}
 					</a>
 				</li>
+				{#if user}
+					<li>
+						<a
+							href="/favorites"
+							class="text-sm font-medium text-gray-700 transition-colors hover:text-amber-700"
+							class:text-amber-700={$page.url.pathname === '/favorites'}
+							class:font-semibold={$page.url.pathname === '/favorites'}
+						>
+							Favorites
+						</a>
+					</li>
+				{/if}
 			</ul>
 		</div>
 
@@ -145,6 +157,17 @@
 						{m.navbar_recipes()}
 					</a>
 				</li>
+				{#if user}
+					<li>
+						<a
+							href="/favorites"
+							onclick={closeMenu}
+							class="block rounded-md px-3 py-2 text-base font-medium text-gray-700 transition-colors hover:bg-amber-50 hover:text-amber-700"
+						>
+							Favorites
+						</a>
+					</li>
+				{/if}
 			</ul>
 			<!-- Mobile Auth Links -->
 			<div class="border-t border-amber-100 pt-4 pb-3">

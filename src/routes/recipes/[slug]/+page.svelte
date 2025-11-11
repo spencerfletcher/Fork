@@ -6,6 +6,7 @@
 	// This receives the { recipe } object from your +page.server.ts load function
 	let { data } = $props();
 	let recipe = $state(data.recipe);
+	let isFavorited = $state(data.isFavorited);
 	let showDeleteConfirm = $state(false);
 
 	// Since we stored ingredients and instructions as single strings in the database,
@@ -106,6 +107,34 @@
 								Make {recipe.public ? 'Private' : 'Public'}
 							</button>
 						</form>
+						<form
+							method="POST"
+							action="?/toggleFavorite"
+							class="inline"
+							use:enhance={() => {
+								return async ({ result }) => {
+									if (result.type === 'success' && result.data) {
+										isFavorited = (result.data as { isFavorited: boolean }).isFavorited;
+									}
+								};
+							}}
+						>
+							<button
+								type="submit"
+								class="ml-2 p-1 transition-colors"
+								title={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
+							>
+								{#if isFavorited}
+									<svg class="h-5 w-5 fill-current text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+										<path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+									</svg>
+								{:else}
+									<svg class="h-5 w-5 stroke-2 stroke-current text-gray-400 hover:fill-yellow-100" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+										<path stroke-linecap="round" stroke-linejoin="round" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+									</svg>
+								{/if}
+							</button>
+						</form>
 						<button
 							type="button"
 							onclick={() => (showDeleteConfirm = true)}
@@ -119,12 +148,68 @@
 						<span class={`font-semibold ${recipe.public ? 'text-green-700' : 'text-gray-700'}`}>
 							{recipe.public ? 'Public' : 'Private'}
 						</span>
+						<form
+							method="POST"
+							action="?/toggleFavorite"
+							class="inline"
+							use:enhance={() => {
+								return async ({ result }) => {
+									if (result.type === 'success' && result.data) {
+										isFavorited = (result.data as { isFavorited: boolean }).isFavorited;
+									}
+								};
+							}}
+						>
+							<button
+								type="submit"
+								class="ml-2 p-1 transition-colors"
+								title={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
+							>
+								{#if isFavorited}
+									<svg class="h-5 w-5 fill-current text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+										<path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+									</svg>
+								{:else}
+									<svg class="h-5 w-5 stroke-2 stroke-current text-gray-400 hover:fill-yellow-100" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+										<path stroke-linecap="round" stroke-linejoin="round" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+									</svg>
+								{/if}
+							</button>
+						</form>
 					</div>
 				{:else}
 					<div class="ml-auto flex items-center gap-2">
 						<span class={`font-semibold ${recipe.public ? 'text-green-700' : 'text-gray-700'}`}>
 							{recipe.public ? 'Public' : 'Private'}
 						</span>
+						<form
+							method="POST"
+							action="?/toggleFavorite"
+							class="inline"
+							use:enhance={() => {
+								return async ({ result }) => {
+									if (result.type === 'success' && result.data) {
+										isFavorited = (result.data as { isFavorited: boolean }).isFavorited;
+									}
+								};
+							}}
+						>
+							<button
+								type="submit"
+								class="ml-2 p-1 transition-colors"
+								title={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
+							>
+								{#if isFavorited}
+									<svg class="h-5 w-5 fill-current text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+										<path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+									</svg>
+								{:else}
+									<svg class="h-5 w-5 stroke-2 stroke-current text-gray-400 hover:fill-yellow-100" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+										<path stroke-linecap="round" stroke-linejoin="round" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+									</svg>
+								{/if}
+							</button>
+						</form>
 					</div>
 				{/if}
 			</div>

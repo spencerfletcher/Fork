@@ -1,7 +1,7 @@
 import {error, redirect} from '@sveltejs/kit';
 import {db} from '$lib/server/db';
-import {recipes} from '$lib/server/db/schema';
-import {eq} from 'drizzle-orm';
+import {recipes, favorites} from '$lib/server/db/schema';
+import {eq, and} from 'drizzle-orm';
 import type {PageServerLoad, Actions} from './$types';
 
 export const load: PageServerLoad = async ({params, locals: {user}}) => {
@@ -32,10 +32,23 @@ export const load: PageServerLoad = async ({params, locals: {user}}) => {
 		}
 	}
 
-	// 4. Return the found recipe with user info
+	// Check if current user has favorited this recipe
+	let isFavorited = false;
+	if (user) {
+		const favorite = await db.query.favorites.findFirst({
+			where: and(
+				eq(favorites.userId, user.id),
+				eq(favorites.recipeId, recipe.id)
+			),
+		});
+		isFavorited = !!favorite;
+	}
+
+	// 4. Return the found recipe with user info and favorite status
 	return {
 		recipe,
 		user,
+		isFavorited,
 	};
 };
 
@@ -99,5 +112,54 @@ export const actions: Actions = {
 
 		// Redirect to recipes page
 		throw redirect(303, '/recipes');
+	},
+
+	toggleFavorite: async ({params, locals: {user}}) => {
+		// Check if user is authenticated
+		if (!user) {
+			throw error(401, 'You must be logged in to favorite a recipe');
+		}
+
+		// Get the recipe
+		const recipe = await db.query.recipes.findFirst({
+			where: eq(recipes.slug, params.slug),
+		});
+
+		// Check if recipe exists
+		if (!recipe) {
+			throw error(404, 'Recipe not found');
+		}
+
+		// Check if recipe is already favorited
+		const existingFavorite = await db.query.favorites.findFirst({
+			where: and(
+				eq(favorites.userId, user.id),
+				eq(favorites.recipeId, recipe.id)
+			),
+		});
+
+		let isFavorited = false;
+
+		if (existingFavorite) {
+			// Remove from favorites
+			await db.delete(favorites).where(
+				and(
+					eq(favorites.userId, user.id),
+					eq(favorites.recipeId, recipe.id)
+				)
+			);
+			isFavorited = false;
+		} else {
+			// Add to favorites
+			await db.insert(favorites).values({
+				userId: user.id,
+				recipeId: recipe.id,
+			});
+			isFavorited = true;
+		}
+
+		return {
+			isFavorited,
+		};
 	},
 };

@@ -58,6 +58,22 @@ export const recipesToTagsRelations = relations(recipesToTags, ({one}) => ({
 	}),
 }));
 
+export const favorites = pgTable('favorites', {
+	userId: text('user_id').notNull(),
+	recipeId: integer('recipe_id').notNull().references(() => recipes.id, {onDelete: 'cascade'}),
+	createdAt: timestamp('created_at').defaultNow(),
+}, (table) => [
+	primaryKey({columns: [table.userId, table.recipeId]}),
+	index('idx_favorites_user_id').on(table.userId),
+]);
+
+export const favoritesRelations = relations(favorites, ({one}) => ({
+	recipe: one(recipes, {
+		fields: [favorites.recipeId],
+		references: [recipes.id],
+	}),
+}));
+
 // Type for SELECT queries
 export type Recipe = InferSelectModel<typeof recipes>;
 
