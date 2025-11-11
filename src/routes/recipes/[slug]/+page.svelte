@@ -79,34 +79,6 @@
 				{/if}
 				{#if data.user && data.user.id === recipe.userId}
 					<div class="ml-auto flex items-center gap-2">
-						<span class={`font-semibold ${recipe.public ? 'text-green-700' : 'text-gray-700'}`}>
-							{recipe.public ? 'Public' : 'Private'}
-						</span>
-						<a
-							href="/recipes/{recipe.slug}/edit"
-							class="rounded bg-blue-100 px-3 py-1 text-xs font-medium text-blue-900 transition-colors hover:bg-blue-200"
-						>
-							Edit
-						</a>
-						<form
-							method="POST"
-							action="?/togglePublic"
-							class="inline"
-							use:enhance={() => {
-								return async ({ result }) => {
-									if (result.type === 'success' && result.data) {
-										recipe.public = (result.data as { public: boolean }).public;
-									}
-								};
-							}}
-						>
-							<button
-								type="submit"
-								class="ml-2 rounded bg-amber-200 px-3 py-1 text-xs font-medium text-amber-900 transition-colors hover:bg-amber-300"
-							>
-								Make {recipe.public ? 'Private' : 'Public'}
-							</button>
-						</form>
 						<form
 							method="POST"
 							action="?/toggleFavorite"
@@ -121,7 +93,7 @@
 						>
 							<button
 								type="submit"
-								class="ml-2 p-1 transition-colors"
+								class="p-1 transition-colors"
 								title={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
 							>
 								{#if isFavorited}
@@ -135,19 +107,22 @@
 								{/if}
 							</button>
 						</form>
+						<a
+							href="/recipes/{recipe.slug}/edit"
+							class="rounded bg-blue-100 px-3 py-1 text-xs font-medium text-blue-900 transition-colors hover:bg-blue-200"
+						>
+							Edit
+						</a>
 						<button
 							type="button"
 							onclick={() => (showDeleteConfirm = true)}
-							class="ml-2 rounded bg-red-100 px-3 py-1 text-xs font-medium text-red-900 transition-colors hover:bg-red-200"
+							class="rounded bg-red-100 px-3 py-1 text-xs font-medium text-red-900 transition-colors hover:bg-red-200"
 						>
 							Delete
 						</button>
 					</div>
 				{:else if !data.user}
 					<div class="ml-auto flex items-center gap-2">
-						<span class={`font-semibold ${recipe.public ? 'text-green-700' : 'text-gray-700'}`}>
-							{recipe.public ? 'Public' : 'Private'}
-						</span>
 						<form
 							method="POST"
 							action="?/toggleFavorite"
@@ -162,7 +137,7 @@
 						>
 							<button
 								type="submit"
-								class="ml-2 p-1 transition-colors"
+								class="p-1 transition-colors"
 								title={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
 							>
 								{#if isFavorited}
@@ -179,9 +154,6 @@
 					</div>
 				{:else}
 					<div class="ml-auto flex items-center gap-2">
-						<span class={`font-semibold ${recipe.public ? 'text-green-700' : 'text-gray-700'}`}>
-							{recipe.public ? 'Public' : 'Private'}
-						</span>
 						<form
 							method="POST"
 							action="?/toggleFavorite"
@@ -196,7 +168,7 @@
 						>
 							<button
 								type="submit"
-								class="ml-2 p-1 transition-colors"
+								class="p-1 transition-colors"
 								title={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
 							>
 								{#if isFavorited}
