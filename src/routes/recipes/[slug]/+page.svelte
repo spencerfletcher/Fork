@@ -6,6 +6,7 @@
 	// This receives the { recipe } object from your +page.server.ts load function
 	let { data } = $props();
 	let recipe = $state(data.recipe);
+	let showDeleteConfirm = $state(false);
 
 	// Since we stored ingredients and instructions as single strings in the database,
 	// we need to split them back into arrays to loop over them.
@@ -16,15 +17,15 @@
 
 <article class="min-h-screen bg-white">
 	<!-- Hero Section -->
-	<div class="bg-gradient-to-b from-amber-50 to-white border-b border-amber-100 py-12">
+	<div class="border-b border-amber-100 bg-gradient-to-b from-amber-50 to-white py-12">
 		<div class="container mx-auto max-w-4xl px-4">
 			<div class="mb-8">
 				{#if tags.length > 0}
-					<div class="flex flex-wrap gap-2 mb-6">
+					<div class="mb-6 flex flex-wrap gap-2">
 						{#each tags as tag}
 							<a
 								href={`/tags/${tag.slug}`}
-								class="rounded-full bg-amber-100 hover:bg-amber-200 px-3 py-1 text-sm font-medium text-amber-900 transition-colors"
+								class="rounded-full bg-amber-100 px-3 py-1 text-sm font-medium text-amber-900 transition-colors hover:bg-amber-200"
 							>
 								{tag.name}
 							</a>
@@ -32,24 +33,32 @@
 					</div>
 				{/if}
 
-				<h1 class="font-serif text-5xl sm:text-6xl font-bold text-gray-900 mb-4">{recipe.title}</h1>
+				<h1 class="mb-4 font-serif text-5xl font-bold text-gray-900 sm:text-6xl">{recipe.title}</h1>
 				{#if recipe.description}
-					<p class="text-lg text-gray-600 max-w-3xl">{recipe.description}</p>
+					<p class="max-w-3xl text-lg text-gray-600">{recipe.description}</p>
 				{/if}
 			</div>
 
 			<!-- Meta Information -->
-			<div class="flex flex-wrap items-center gap-6 text-sm text-gray-600 border-t border-amber-100 pt-6">
+			<div
+				class="flex flex-wrap items-center gap-6 border-t border-amber-100 pt-6 text-sm text-gray-600"
+			>
 				{#if recipe.prepTimeMinutes}
 					<div class="flex items-center gap-2">
 						<ClockSvg />
-						<span>Prep: <span class="font-semibold text-gray-900">{recipe.prepTimeMinutes} min</span></span>
+						<span
+							>Prep: <span class="font-semibold text-gray-900">{recipe.prepTimeMinutes} min</span
+							></span
+						>
 					</div>
 				{/if}
 				{#if recipe.cookTimeMinutes}
 					<div class="flex items-center gap-2">
 						<ClockSvg />
-						<span>Cook: <span class="font-semibold text-gray-900">{recipe.cookTimeMinutes} min</span></span>
+						<span
+							>Cook: <span class="font-semibold text-gray-900">{recipe.cookTimeMinutes} min</span
+							></span
+						>
 					</div>
 				{/if}
 				{#if recipe.servings}
@@ -68,13 +77,13 @@
 					</div>
 				{/if}
 				{#if data.user && data.user.id === recipe.userId}
-					<div class="flex items-center gap-2 ml-auto">
+					<div class="ml-auto flex items-center gap-2">
 						<span class={`font-semibold ${recipe.public ? 'text-green-700' : 'text-gray-700'}`}>
 							{recipe.public ? 'Public' : 'Private'}
 						</span>
 						<a
 							href="/recipes/{recipe.slug}/edit"
-							class="px-3 py-1 rounded bg-blue-100 hover:bg-blue-200 text-blue-900 font-medium transition-colors text-xs"
+							class="rounded bg-blue-100 px-3 py-1 text-xs font-medium text-blue-900 transition-colors hover:bg-blue-200"
 						>
 							Edit
 						</a>
@@ -92,20 +101,27 @@
 						>
 							<button
 								type="submit"
-								class="ml-2 px-3 py-1 rounded bg-amber-200 hover:bg-amber-300 text-amber-900 font-medium transition-colors text-xs"
+								class="ml-2 rounded bg-amber-200 px-3 py-1 text-xs font-medium text-amber-900 transition-colors hover:bg-amber-300"
 							>
 								Make {recipe.public ? 'Private' : 'Public'}
 							</button>
 						</form>
+						<button
+							type="button"
+							on:click={() => (showDeleteConfirm = true)}
+							class="ml-2 rounded bg-red-100 px-3 py-1 text-xs font-medium text-red-900 transition-colors hover:bg-red-200"
+						>
+							Delete
+						</button>
 					</div>
 				{:else if !data.user}
-					<div class="flex items-center gap-2 ml-auto">
+					<div class="ml-auto flex items-center gap-2">
 						<span class={`font-semibold ${recipe.public ? 'text-green-700' : 'text-gray-700'}`}>
 							{recipe.public ? 'Public' : 'Private'}
 						</span>
 					</div>
 				{:else}
-					<div class="flex items-center gap-2 ml-auto">
+					<div class="ml-auto flex items-center gap-2">
 						<span class={`font-semibold ${recipe.public ? 'text-green-700' : 'text-gray-700'}`}>
 							{recipe.public ? 'Public' : 'Private'}
 						</span>
@@ -120,11 +136,7 @@
 		<div class="border-b border-amber-100">
 			<div class="container mx-auto max-w-4xl px-4 py-12">
 				<div class="overflow-hidden rounded-lg shadow-lg">
-					<img
-						src={recipe.imageUrl}
-						alt={recipe.title}
-						class="w-full h-96 object-cover"
-					/>
+					<img src={recipe.imageUrl} alt={recipe.title} class="h-96 w-full object-cover" />
 				</div>
 			</div>
 		</div>
@@ -135,11 +147,11 @@
 		<div class="grid grid-cols-1 gap-12 lg:grid-cols-3">
 			<!-- Ingredients Sidebar -->
 			<div class="lg:col-span-1">
-				<div class="sticky top-24 bg-amber-50 rounded-lg border border-amber-100 p-6">
-					<h2 class="font-serif text-2xl font-bold text-gray-900 mb-6">Ingredients</h2>
+				<div class="sticky top-24 rounded-lg border border-amber-100 bg-amber-50 p-6">
+					<h2 class="mb-6 font-serif text-2xl font-bold text-gray-900">Ingredients</h2>
 					<ul class="space-y-3">
 						{#each ingredientsList as ingredient}
-							<li class="text-gray-700 pb-3 border-b border-amber-100 last:border-b-0">
+							<li class="border-b border-amber-100 pb-3 text-gray-700 last:border-b-0">
 								{ingredient}
 							</li>
 						{/each}
@@ -149,14 +161,16 @@
 
 			<!-- Instructions Main Content -->
 			<div class="lg:col-span-2">
-				<h2 class="font-serif text-2xl font-bold text-gray-900 mb-8">Instructions</h2>
+				<h2 class="mb-8 font-serif text-2xl font-bold text-gray-900">Instructions</h2>
 				<ol class="space-y-6">
 					{#each instructionsList as instruction, index}
 						<li class="flex gap-4">
-							<span class="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-amber-100 text-amber-900 font-semibold">
+							<span
+								class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-amber-100 font-semibold text-amber-900"
+							>
 								{index + 1}
 							</span>
-							<span class="text-gray-700 pt-1">{instruction}</span>
+							<span class="pt-1 text-gray-700">{instruction}</span>
 						</li>
 					{/each}
 				</ol>
@@ -164,3 +178,35 @@
 		</div>
 	</div>
 </article>
+
+{#if showDeleteConfirm && data.user && data.user.id === recipe.userId}
+	<div
+		class="fixed inset-0 z-50 flex items-center justify-center"
+		style="background-color: rgba(107, 114, 128, 0.3);"
+	>
+		<div class="mx-4 max-w-sm rounded-lg bg-white p-6 shadow-lg">
+			<h2 class="mb-4 text-xl font-bold text-gray-900">Delete Recipe?</h2>
+			<p class="mb-6 text-gray-600">
+				Are you sure you want to delete <span class="font-semibold">{recipe.title}</span>? This
+				action cannot be undone.
+			</p>
+			<div class="flex justify-end gap-3">
+				<button
+					type="button"
+					on:click={() => (showDeleteConfirm = false)}
+					class="rounded border border-gray-300 px-4 py-2 font-medium text-gray-700 transition-colors hover:bg-gray-50"
+				>
+					Cancel
+				</button>
+				<form method="POST" action="?/delete" class="inline">
+					<button
+						type="submit"
+						class="rounded bg-red-600 px-4 py-2 font-medium text-white transition-colors hover:bg-red-700"
+					>
+						Delete Recipe
+					</button>
+				</form>
+			</div>
+		</div>
+	</div>
+{/if}

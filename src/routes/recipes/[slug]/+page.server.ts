@@ -1,4 +1,4 @@
-import {error} from '@sveltejs/kit';
+import {error, redirect} from '@sveltejs/kit';
 import {db} from '$lib/server/db';
 import {recipes} from '$lib/server/db/schema';
 import {eq} from 'drizzle-orm';
@@ -71,5 +71,33 @@ export const actions: Actions = {
 		return {
 			public: updatedRecipe[0].public,
 		};
+	},
+
+	delete: async ({params, locals: {user}}) => {
+		// Check if user is authenticated
+		if (!user) {
+			throw error(401, 'You must be logged in to delete a recipe');
+		}
+
+		// Get the recipe
+		const recipe = await db.query.recipes.findFirst({
+			where: eq(recipes.slug, params.slug),
+		});
+
+		// Check if recipe exists
+		if (!recipe) {
+			throw error(404, 'Recipe not found');
+		}
+
+		// Check if user owns the recipe
+		if (recipe.userId !== user.id) {
+			throw error(403, 'You do not have permission to delete this recipe');
+		}
+
+		// Delete the recipe (cascade will handle recipesToTags)
+		await db.delete(recipes).where(eq(recipes.id, recipe.id));
+
+		// Redirect to recipes page
+		throw redirect(303, '/recipes');
 	},
 };
