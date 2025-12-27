@@ -55,3 +55,86 @@
 11. Predict fork success - Analyze suggested changes and warn "This combination might not work" or "This is a great substitution based on X other successful forks".
 12. Recipe summary generation - Auto-generate a one-line description if user doesn't provide one: "Quick 15-minute pasta with fresh tomatoes and basil"
 13. Duplicate detection - "This recipe is very similar to [recipe] by [user]" - helps catch accidental reposts or plagiarism.
+
+## Pages
+
+### Home
+
+The landing page for authenticated users. Displays a personalized feed of recipes based on:
+
+- Recipes from users you follow
+- Trending recipes in the community
+- Recently updated recipes
+- Personalized recommendations based on your favorites and cooking history
+
+Includes a search bar and filters for quick navigation.
+
+### New Recipe
+
+Form-based page for creating or forking a recipe. Features:
+
+- Title, description, ingredients, and instructions input fields
+- Option to fork from an existing recipe (showing the original as a base)
+- Auto-generated summary if not provided
+- Visibility toggle (public/private)
+- Tags and collections assignment
+- Draft saving functionality
+- Duplicate detection warning if similar recipes exist
+
+### Recipe View
+
+The main recipe display page showing:
+
+- Recipe title, description, and ingredients list
+- Step-by-step instructions
+- Metadata: author, creation date, prep/cook time, servings, estimated cost, macros
+- Recipe lineage (original creator → forks/modifications)
+- Community stats: favorites count, fork count, ratings
+- Comments section for discussion
+- Action buttons: Fork, Favorite, Share, Report
+- History tab showing past versions and changes
+- Related recipes and "Users who liked this also loved..." suggestions
+
+### "My Recipes"
+
+Personal dashboard for recipe management:
+
+- Sorted list of all your created recipes (with filters: public, private, drafts)
+- Quick stats: total recipes, total forks created, total favorites received
+- Edit/delete/view options for each recipe
+- Sorting options: newest, most forked, most favorited, most recent activity
+- Bulk actions for privacy settings and collections
+
+### Favorites
+
+A personalized collection page showing:
+
+- All recipes you've favorited
+- Filter and sort options (by cuisine, difficulty, time, date added)
+- Collections of favorited recipes (e.g., "Quick Weeknight Dinners")
+- Export functionality for your favorite recipes
+- Share collections with other users
+
+### Account Management
+
+User profile and settings page:
+
+- Profile information: username, bio, avatar, location
+- Privacy settings (who can see your recipes, follow you, etc.)
+- Notification preferences
+- Connected accounts and integrations
+- Dietary preferences and allergies (for personalized recommendations)
+- Password and security settings
+- Option to download/export your data
+- Account deletion option
+
+### Tags
+
+A browsable directory of all recipe tags in the community:
+
+- Popular tags (trending)
+- All tags (A-Z listing)
+- Tag details page showing recipes with that tag
+- Filter by tag combinations
+- Tag suggestions for recipe discovery
+- Community-contributed tag descriptions
