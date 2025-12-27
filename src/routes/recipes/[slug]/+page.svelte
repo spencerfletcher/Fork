@@ -1,85 +1,36 @@
 <script lang="ts">
-	import ClockSvg from '$lib/components/ClockSvg.svelte';
-	import PersonSvg from '$lib/components/PersonSvg.svelte';
 	import { enhance } from '$app/forms';
 
-	// This receives the { recipe } object from your +page.server.ts load function
 	let { data } = $props();
 	let recipe = $state(data.recipe);
 	let isFavorited = $state(data.isFavorited);
+	let isHovered = $state(false);
 	let showDeleteConfirm = $state(false);
 
-	// Since we stored ingredients and instructions as single strings in the database,
-	// we need to split them back into arrays to loop over them.
 	const ingredientsList = recipe.ingredients.split('\n').filter((s) => s.trim());
 	const instructionsList = recipe.instructions.split('\n').filter((s) => s.trim());
-	const tags = recipe.recipesToTags.map((item) => item.tag);
 	const isOwner = data.user && data.user.id === recipe.userId;
+	const rating = recipe.rating ? parseFloat(recipe.rating) : null;
 </script>
 
-<article class="min-h-screen bg-white">
-	<!-- Hero Section -->
-	<div class="border-b border-amber-100 bg-gradient-to-b from-amber-50 to-white py-12">
-		<div class="container mx-auto max-w-4xl px-4">
-			<div class="mb-8">
-				{#if tags.length > 0}
-					<div class="mb-6 flex flex-wrap gap-2">
-						{#each tags as tag}
-							<a
-								href={`/tags/${tag.slug}`}
-								class="rounded-full bg-amber-100 px-3 py-1 text-sm font-medium text-amber-900 transition-colors hover:bg-amber-200"
-							>
-								{tag.name}
-							</a>
-						{/each}
-					</div>
-				{/if}
+<div>
+	<!-- Hero Section with Image -->
+	<div class="relative h-[60vh] bg-gray-900">
+		<img
+			src={recipe.imageUrl || '/None.png'}
+			alt={recipe.title}
+			class="h-full w-full object-cover opacity-90"
+		/>
+	</div>
 
-				<h1 class="mb-4 font-serif text-5xl font-bold text-gray-900 sm:text-6xl">{recipe.title}</h1>
-				{#if recipe.description}
-					<p class="max-w-3xl text-lg text-gray-600">{recipe.description}</p>
-				{/if}
-			</div>
-
-			<!-- Meta Information -->
-			<div
-				class="flex flex-wrap items-center gap-6 border-t border-amber-100 pt-6 text-sm text-gray-600"
-			>
-				{#if recipe.prepTimeMinutes}
-					<div class="flex items-center gap-2">
-						<ClockSvg />
-						<span
-							>Prep: <span class="font-semibold text-gray-900">{recipe.prepTimeMinutes} min</span
-							></span
-						>
-					</div>
-				{/if}
-				{#if recipe.cookTimeMinutes}
-					<div class="flex items-center gap-2">
-						<ClockSvg />
-						<span
-							>Cook: <span class="font-semibold text-gray-900">{recipe.cookTimeMinutes} min</span
-							></span
-						>
-					</div>
-				{/if}
-				{#if recipe.servings}
-					<div class="flex items-center gap-2">
-						<PersonSvg />
-						<span>Serves: <span class="font-semibold text-gray-900">{recipe.servings}</span></span>
-					</div>
-				{/if}
-				{#if recipe.rating}
-					<div class="flex items-center gap-2">
-						<span>Rating: <span class="font-semibold text-amber-700">{recipe.rating}</span>/5</span>
-					</div>
-				{:else}
-					<div class="flex items-center gap-2">
-						<span>Rating: <span class="font-semibold text-gray-500">Not rated</span></span>
-					</div>
-				{/if}
-				{#if data.user}
-					<div class="ml-auto flex items-center gap-2">
+	<!-- Content -->
+	<div class="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
+		<!-- Header -->
+		<div class="mb-8">
+			<div class="mb-4 flex items-start justify-between">
+				<h1 class="flex-1 text-4xl">{recipe.title}</h1>
+				<div class="flex flex-shrink-0 items-center gap-2">
+					{#if data.user}
 						<form
 							method="POST"
 							action="?/toggleFavorite"
@@ -93,19 +44,26 @@
 							}}
 						>
 							<button
+								aria-label={isFavorited ? 'Unfavorite' : 'Favorite'}
 								type="submit"
-								class="p-1 transition-colors"
-								title={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
+								class="rounded-full p-2 transition-colors hover:bg-gray-100"
+								onmouseenter={() => (isHovered = true)}
+								onmouseleave={() => (isHovered = false)}
 							>
-								{#if isFavorited}
-									<svg class="h-5 w-5 fill-current text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-										<path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-									</svg>
-								{:else}
-									<svg class="h-5 w-5 stroke-2 stroke-current text-gray-400 hover:fill-yellow-100" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
-										<path stroke-linecap="round" stroke-linejoin="round" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-									</svg>
-								{/if}
+								<svg
+									xmlns="http://www.w3.org/2000/svg"
+									viewBox="0 0 24 24"
+									fill={isFavorited || isHovered ? 'currentColor' : 'none'}
+									stroke="currentColor"
+									stroke-width="2"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									class="h-6 w-6 {isFavorited || isHovered ? 'text-yellow-500' : ''}"
+								>
+									<polygon
+										points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
+									/>
+								</svg>
 							</button>
 						</form>
 						{#if isOwner}
@@ -123,59 +81,134 @@
 								Delete
 							</button>
 						{/if}
+					{/if}
+				</div>
+			</div>
+
+			{#if recipe.description}
+				<p class="mb-6 text-xl text-gray-600">{recipe.description}</p>
+			{/if}
+
+			<div class="flex items-center gap-6 border-b pb-6 text-sm text-gray-600">
+				{#if recipe.prepTimeMinutes}
+					<div class="flex items-center gap-2">
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="2"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							class="h-4 w-4"
+						>
+							<circle cx="12" cy="12" r="10" />
+							<polyline points="12 6 12 12 16 14" />
+						</svg>
+						<span>Prep: {recipe.prepTimeMinutes} min</span>
+					</div>
+				{/if}
+
+				{#if recipe.cookTimeMinutes}
+					<div class="flex items-center gap-2">
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="2"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							class="h-4 w-4"
+						>
+							<circle cx="12" cy="12" r="10" />
+							<polyline points="12 6 12 12 16 14" />
+						</svg>
+						<span>Cook: {recipe.cookTimeMinutes} min</span>
+					</div>
+				{/if}
+
+				{#if recipe.servings}
+					<div class="flex items-center gap-2">
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="2"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							class="h-4 w-4"
+						>
+							<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+							<circle cx="12" cy="7" r="4" />
+						</svg>
+						<span>{recipe.servings} servings</span>
+					</div>
+				{/if}
+
+				{#if rating}
+					<div class="flex items-center gap-2">
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							viewBox="0 0 24 24"
+							fill="currentColor"
+							class="h-4 w-4 text-yellow-500"
+						>
+							<polygon
+								points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
+							/>
+						</svg>
+						<span>{rating.toFixed(1)}</span>
 					</div>
 				{/if}
 			</div>
 		</div>
-	</div>
 
-	<!-- Image Section -->
-	{#if recipe.imageUrl}
-		<div class="border-b border-amber-100">
-			<div class="container mx-auto max-w-4xl px-4 py-12">
-				<div class="overflow-hidden rounded-lg shadow-lg">
-					<img src={recipe.imageUrl} alt={recipe.title} class="h-96 w-full object-cover" />
-				</div>
-			</div>
-		</div>
-	{/if}
+		<!-- Two Column Layout -->
+		<div class="grid gap-12 md:grid-cols-[1fr_2fr]">
+			<!-- Ingredients -->
+			<div>
+				<div class="sticky top-24">
+					<h2 class="mb-6 text-2xl">Ingredients</h2>
 
-	<!-- Content Section -->
-	<div class="container mx-auto max-w-4xl px-4 py-12">
-		<div class="grid grid-cols-1 gap-12 lg:grid-cols-3">
-			<!-- Ingredients Sidebar -->
-			<div class="lg:col-span-1">
-				<div class="sticky top-24 rounded-lg border border-amber-100 bg-amber-50 p-6">
-					<h2 class="mb-6 font-serif text-2xl font-bold text-gray-900">Ingredients</h2>
 					<ul class="space-y-3">
-						{#each ingredientsList as ingredient}
-							<li class="border-b border-amber-100 pb-3 text-gray-700 last:border-b-0">
-								{ingredient}
+						{#each ingredientsList as ingredient, index}
+							<li class="flex items-start gap-3">
+								<input
+									type="checkbox"
+									id="ingredient-{index}"
+									class="mt-1 h-4 w-4 rounded border-gray-300"
+								/>
+								<label for="ingredient-{index}" class="flex-1 cursor-pointer text-gray-900">
+									{ingredient}
+								</label>
 							</li>
 						{/each}
 					</ul>
 				</div>
 			</div>
 
-			<!-- Instructions Main Content -->
-			<div class="lg:col-span-2">
-				<h2 class="mb-8 font-serif text-2xl font-bold text-gray-900">Instructions</h2>
+			<!-- Instructions -->
+			<div>
+				<h2 class="mb-6 text-2xl">Preparation</h2>
+
 				<ol class="space-y-6">
 					{#each instructionsList as instruction, index}
 						<li class="flex gap-4">
-							<span
-								class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-amber-100 font-semibold text-amber-900"
+							<div
+								class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gray-900 text-sm text-white"
 							>
 								{index + 1}
-							</span>
-							<span class="pt-1 text-gray-700">{instruction}</span>
+							</div>
+							<p class="flex-1 pt-1 text-gray-700">{instruction}</p>
 						</li>
 					{/each}
 				</ol>
 			</div>
 		</div>
 	</div>
-</article>
+</div>
 
 {#if showDeleteConfirm && isOwner}
 	<div

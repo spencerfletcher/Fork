@@ -9,6 +9,8 @@ describe('/+page.svelte', () => {
 			props: {
 				data: {
 					recipes: [],
+					tags: [],
+					recipesToTags: [],
 					user: null
 				}
 			}

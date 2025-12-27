@@ -1,27 +1,35 @@
 <script lang="ts">
-	import RecipeCard from '$lib/components/RecipeCard.svelte';
+	import RecipeGrid from '$lib/components/RecipeGrid.svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
-
-	const recipes = data.recipes;
 </script>
 
-<div class="bg-gray-50 p-4 sm:p-6 lg:p-8">
-	<div class="container mx-auto">
-		<h1 class="text-3xl font-bold text-gray-900">
-			Recipes tagged with:
-			<span class="text-amber-700">{data.tag.name}</span>
-		</h1>
+<div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+	<!-- Hero Section -->
+	<section class="mb-6">
+		<h2 class="mb-3 text-5xl">{data.tag.name}</h2>
+		<p class="max-w-3xl text-xl text-gray-600">
+			Explore all recipes tagged with {data.tag.name.toLowerCase()}.
+		</p>
+	</section>
 
-		{#if recipes.length > 0}
-			<div class="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-				{#each recipes as recipe (recipe.id)}
-					<RecipeCard {recipe} />
-				{/each}
-			</div>
-		{:else}
-			<p class="mt-8 text-center text-gray-500">There are no recipes with this tag yet.</p>
-		{/if}
-	</div>
+	{#if data.recipes.length > 0}
+		<!-- Recipe Grid -->
+		<RecipeGrid recipes={data.recipes} />
+	{:else}
+		<!-- Empty State -->
+		<div class="py-20 text-center">
+			<h3 class="mb-4 text-2xl text-gray-800">No recipes found</h3>
+			<p class="mb-8 text-gray-600">
+				There are no recipes with this tag yet. Check back later or explore other recipes.
+			</p>
+			<a
+				href="/"
+				class="inline-block rounded-md bg-gray-900 px-6 py-3 font-medium text-white transition-colors hover:bg-gray-800"
+			>
+				Explore All Recipes
+			</a>
+		</div>
+	{/if}
 </div>

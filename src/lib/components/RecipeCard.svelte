@@ -21,10 +21,10 @@
 	</div>
 
 	<!-- Text Content Section -->
-	<div class="pt-5 pb-4 px-4">
-		<h3 class="text-gray-900 group-hover:text-amber-700 text-lg font-serif font-semibold transition-colors duration-200">
+	<div class="pt-4">
+		<h3 class="mb-2 font-serif text-xl font-medium text-gray-900 transition-colors duration-200">
 			{recipe.title}
 		</h3>
-		<p class="text-gray-600 mt-2 text-sm line-clamp-2">{recipe.description || 'A delicious recipe'}</p>
+		<p class="text-base text-gray-600 line-clamp-2">{recipe.description || 'A delicious recipe'}</p>
 	</div>
 </a>

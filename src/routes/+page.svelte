@@ -1,45 +1,20 @@
 <script lang="ts">
-	import RecipeCard from '$lib/components/RecipeCard.svelte';
+	import RecipeGrid from '$lib/components/RecipeGrid.svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
 </script>
 
-<div class="min-h-screen bg-gradient-to-b from-amber-50 to-white">
+<div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
 	<!-- Hero Section -->
-	<section class="border-b border-amber-100 py-16 sm:py-24">
-		<div class="container mx-auto px-4 text-center">
-			<h1 class="mb-4 font-serif text-5xl font-bold text-amber-900 sm:text-6xl">Our Cookbook</h1>
-			<p class="mx-auto max-w-2xl text-lg text-gray-600">
-				Discover and share delicious recipes. Build your personal collection of culinary
-				inspiration.
-			</p>
-		</div>
+	<section class="mb-6">
+		<h2 class="mb-3 text-5xl">What to Cook This Week</h2>
+		<p class="max-w-3xl text-xl text-gray-600">
+			Discover our curated collection of recipes, from quick weeknight dinners to impressive
+			weekend projects. Each recipe has been tested and perfected by our team of culinary experts.
+		</p>
 	</section>
 
-	<!-- Recipes Grid -->
-	<section class="py-16 sm:py-20">
-		<div class="container mx-auto px-4">
-			{#if data.recipes.length > 0}
-				<div class="grid grid-cols-1 gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
-					{#each data.recipes as recipe (recipe.id)}
-						<RecipeCard {recipe} />
-					{/each}
-				</div>
-			{:else}
-				<div class="py-16 text-center">
-					<h2 class="mb-4 font-serif text-2xl text-gray-800">No recipes yet</h2>
-					<p class="mb-8 text-gray-600">
-						Start building your cookbook by creating your first recipe.
-					</p>
-					<a
-						href="/recipes/new"
-						class="inline-block rounded-md bg-amber-800 px-6 py-3 font-medium text-white transition-colors hover:bg-amber-900"
-					>
-						Create Recipe
-					</a>
-				</div>
-			{/if}
-		</div>
-	</section>
+	<!-- Recipe Grid -->
+	<RecipeGrid recipes={data.recipes} />
 </div>

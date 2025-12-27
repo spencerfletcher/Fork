@@ -5,3 +5,12 @@
 
 /* Import custom theme with warm colors */
 @import "./theme.css";
+
+@theme {
+	--font-serif: 'Merriweather', serif;
+	--font-sans: 'Inter', sans-serif;
+	--font-weight-normal: 300;
+	--font-weight-medium: 400;
+	--font-weight-semibold: 500;
+	--font-weight-bold: 600;
+}

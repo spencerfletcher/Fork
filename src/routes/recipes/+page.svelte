@@ -1,73 +1,39 @@
 <script lang="ts">
-	import RecipeCard from '$lib/components/RecipeCard.svelte';
+	import RecipeGrid from '$lib/components/RecipeGrid.svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
 </script>
 
-<div class="min-h-screen bg-gradient-to-b from-amber-50 to-white">
-	{#if data.user}
-		<!-- Header Section -->
-		<section class="border-b border-amber-100 py-16 sm:py-24">
-			<div class="container mx-auto px-4 text-center">
-				<h1 class="mb-4 font-serif text-5xl font-bold text-amber-900 sm:text-6xl">My Cookbook</h1>
-				<p class="mx-auto max-w-2xl text-lg text-gray-600">
-					Your personal collection of recipes. <a
-						href="/recipes/new"
-						class="font-semibold text-amber-700 transition-colors hover:text-amber-800"
-						>Create new recipe</a
-					>
-				</p>
-			</div>
-		</section>
+<div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+	<!-- Hero Section -->
+	<section class="mb-6">
+		<h2 class="mb-3 text-5xl">My Cookbook</h2>
+		<p class="max-w-3xl text-xl text-gray-600">
+			Your personal collection of recipes. <a
+				href="/recipes/new"
+				class="font-semibold text-gray-900 underline transition-colors hover:text-gray-700"
+				>Create new recipe</a
+			>
+		</p>
+	</section>
 
-		<!-- Recipes Grid -->
-		<section class="py-16 sm:py-20">
-			<div class="container mx-auto px-4">
-				{#if data.recipes && data.recipes.length > 0}
-					<div class="grid grid-cols-1 gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
-						{#each data.recipes as recipe (recipe.id)}
-							<RecipeCard {recipe} />
-						{/each}
-					</div>
-				{:else}
-					<div class="py-16 text-center">
-						<h2 class="mb-4 font-serif text-2xl text-gray-800">No recipes yet</h2>
-						<p class="mb-8 text-gray-600">
-							Start building your personal cookbook by creating your first recipe.
-						</p>
-						<a
-							href="/recipes/new"
-							class="inline-block rounded-md bg-amber-800 px-6 py-3 font-medium text-white transition-colors hover:bg-amber-900"
-						>
-							Create Your First Recipe
-						</a>
-					</div>
-				{/if}
-			</div>
-		</section>
+	{#if data.recipes && data.recipes.length > 0}
+		<!-- Recipe Grid -->
+		<RecipeGrid recipes={data.recipes} />
 	{:else}
-		<div class="flex min-h-screen items-center justify-center">
-			<div class="max-w-md text-center">
-				<h1 class="mb-4 font-serif text-4xl font-bold text-gray-900">Welcome</h1>
-				<p class="mb-8 text-gray-600">
-					Sign in to your account to view and manage your personal recipe collection.
-				</p>
-				<div class="flex gap-4">
-					<a
-						href="/login"
-						class="flex-1 rounded-lg bg-amber-800 px-6 py-3 font-medium text-white transition-colors hover:bg-amber-900"
-					>
-						Sign In
-					</a>
-					<a
-						href="/signup"
-						class="flex-1 rounded-lg border border-amber-800 px-6 py-3 font-medium text-amber-800 transition-colors hover:bg-amber-50"
-					>
-						Sign Up
-					</a>
-				</div>
-			</div>
+		<!-- Empty State -->
+		<div class="py-20 text-center">
+			<h3 class="mb-4 text-2xl text-gray-800">No recipes yet</h3>
+			<p class="mb-8 text-gray-600">
+				Start building your personal cookbook by creating your first recipe.
+			</p>
+			<a
+				href="/recipes/new"
+				class="inline-block rounded-md bg-gray-900 px-6 py-3 font-medium text-white transition-colors hover:bg-gray-800"
+			>
+				Create Your First Recipe
+			</a>
 		</div>
 	{/if}
 </div>
