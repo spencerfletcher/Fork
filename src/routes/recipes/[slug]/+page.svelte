@@ -46,7 +46,7 @@
 							<button
 								aria-label={isFavorited ? 'Unfavorite' : 'Favorite'}
 								type="submit"
-								class="rounded-full p-2 transition-colors hover:bg-gray-100"
+								class="w-auto rounded-full border-0 bg-transparent p-2 text-gray-900 transition-colors hover:bg-gray-100"
 								onmouseenter={() => (isHovered = true)}
 								onmouseleave={() => (isHovered = false)}
 							>

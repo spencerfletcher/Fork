@@ -38,7 +38,6 @@
 							required
 							placeholder="e.g., Classic Chocolate Chip Cookies"
 							value={recipe.title}
-							class="w-full"
 						/>
 					</div>
 
@@ -50,7 +49,7 @@
 							id="description"
 							rows="3"
 							placeholder="Tell the story behind this recipe..."
-							class="w-full">{recipe.description || ''}</textarea
+						>{recipe.description || ''}</textarea
 						>
 					</div>
 
@@ -62,7 +61,6 @@
 							id="imageUrl"
 							placeholder="https://example.com/image.jpg"
 							value={recipe.imageUrl || ''}
-							class="w-full"
 						/>
 					</div>
 
@@ -75,7 +73,6 @@
 							min="0"
 							max="5"
 							step="0.1"
-							class="w-full"
 							placeholder="4.5"
 							value={recipe.rating || ''}
 						/>
@@ -89,7 +86,6 @@
 							id="tags"
 							placeholder="e.g., Dinner, Italian, Quick & Easy"
 							value={currentTags}
-							class="w-full"
 						/>
 						<p class="mt-2 text-xs text-gray-500">Separate tags with commas</p>
 						{#if data.allTags.length > 0}
@@ -127,7 +123,6 @@
 							id="prepTimeMinutes"
 							placeholder="15"
 							value={recipe.prepTimeMinutes || ''}
-							class="w-full"
 						/>
 					</div>
 					<div>
@@ -140,7 +135,6 @@
 							id="cookTimeMinutes"
 							placeholder="30"
 							value={recipe.cookTimeMinutes || ''}
-							class="w-full"
 						/>
 					</div>
 					<div>
@@ -151,7 +145,6 @@
 							id="servings"
 							placeholder="4"
 							value={recipe.servings || ''}
-							class="w-full"
 						/>
 					</div>
 				</div>
@@ -194,7 +187,7 @@
 							id="ingredients"
 							rows="8"
 							placeholder="1 cup flour&#10;2 eggs&#10;1/2 cup sugar&#10;..."
-							class="w-full">{recipe.ingredients}</textarea
+						>{recipe.ingredients}</textarea
 						>
 						<p class="mt-2 text-xs text-gray-500">Enter each ingredient on a new line</p>
 					</div>
@@ -208,7 +201,7 @@
 							id="instructions"
 							rows="10"
 							placeholder="1. Preheat oven to 350°F&#10;2. Mix dry ingredients&#10;3. Add wet ingredients&#10;..."
-							class="w-full">{recipe.instructions}</textarea
+						>{recipe.instructions}</textarea
 						>
 						<p class="mt-2 text-xs text-gray-500">Enter each step on a new line</p>
 					</div>
@@ -217,12 +210,7 @@
 
 			<!-- Submit Button -->
 			<div class="flex gap-4 border-t border-amber-100 pt-8">
-				<button
-					type="submit"
-					class="flex-1 rounded-lg bg-amber-800 px-6 py-3 font-medium text-white shadow-sm transition-colors hover:bg-amber-900"
-				>
-					Save Changes
-				</button>
+				<button type="submit" class="flex-1">Save Changes</button>
 				<a
 					href="/recipes/{recipe.slug}"
 					class="flex-1 rounded-lg border border-gray-300 px-6 py-3 text-center font-medium text-gray-700 transition-colors hover:bg-gray-50"

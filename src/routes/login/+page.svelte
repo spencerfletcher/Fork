@@ -48,12 +48,7 @@
 					/>
 				</div>
 
-				<button
-					type="submit"
-					class="w-full rounded-lg bg-amber-800 px-6 py-3 font-medium text-white transition-colors hover:bg-amber-900"
-				>
-					Sign In
-				</button>
+				<button type="submit">Sign In</button>
 			</form>
 
 			<!-- Sign Up Link -->

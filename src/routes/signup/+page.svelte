@@ -46,12 +46,7 @@
 					/>
 				</div>
 
-				<button
-					type="submit"
-					class="w-full bg-amber-800 text-white px-6 py-3 rounded-lg font-medium hover:bg-amber-900 transition-colors"
-				>
-					Create Account
-				</button>
+				<button type="submit">Create Account</button>
 			</form>
 
 			<!-- Log In Link -->

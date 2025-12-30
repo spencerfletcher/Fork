@@ -196,6 +196,12 @@
 		font-weight: var(--font-weight-medium);
 		line-height: 1.5;
 		font-family: 'Inter', sans-serif;
+		cursor: pointer;
+	}
+
+	button[type='submit'] {
+		@apply w-full rounded-lg bg-amber-800 px-6 py-3 font-medium text-white transition-colors;
+		@apply hover:bg-amber-900;
 	}
 
 	input,

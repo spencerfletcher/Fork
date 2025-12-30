@@ -79,7 +79,10 @@
 						<span class="hidden sm:inline">{user.email}</span>
 					</button>
 					<form action="/logout" method="POST" use:enhance>
-						<button type="submit" class="text-gray-700 transition-colors hover:text-gray-900">
+						<button
+							type="submit"
+							class="w-auto rounded-none border-none bg-transparent px-0 py-0 text-gray-700 transition-colors hover:bg-transparent hover:text-gray-900"
+						>
 							Logout
 						</button>
 					</form>

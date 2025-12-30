@@ -171,12 +171,7 @@
 
 			<!-- Submit Button -->
 			<div class="flex gap-4 border-t border-amber-100 pt-8">
-				<button
-					type="submit"
-					class="flex-1 rounded-lg bg-amber-800 px-6 py-3 font-medium text-white shadow-sm transition-colors hover:bg-amber-900"
-				>
-					Publish Recipe
-				</button>
+				<button type="submit" class="flex-1">Publish Recipe</button>
 				<a
 					href="/recipes"
 					class="flex-1 rounded-lg border border-gray-300 px-6 py-3 text-center font-medium text-gray-700 transition-colors hover:bg-gray-50"
