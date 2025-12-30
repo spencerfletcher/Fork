@@ -5,27 +5,29 @@
 	let { form } = $props<{ form: any }>();
 </script>
 
-<div class="min-h-screen bg-gradient-to-b from-amber-50 to-white flex items-center justify-center px-4">
+<div
+	class="flex min-h-screen items-center justify-center bg-gradient-to-b from-amber-50 to-white px-4"
+>
 	<div class="w-full max-w-md">
 		<!-- Card Container -->
-		<div class="bg-white rounded-lg border border-amber-100 shadow-md p-8">
+		<div class="rounded-lg border border-amber-100 bg-white p-8 shadow-md">
 			<!-- Header -->
-			<div class="text-center mb-8">
-				<h1 class="font-serif text-4xl font-bold text-amber-900 mb-2">Welcome Back</h1>
+			<div class="mb-8 text-center">
+				<h1 class="mb-2 font-serif text-4xl font-bold text-amber-900">Welcome Back</h1>
 				<p class="text-gray-600">Sign in to access your cookbook</p>
 			</div>
 
 			<!-- Error Message -->
 			{#if form?.message}
-				<div class="mb-6 rounded-lg bg-amber-50 border border-amber-200 p-4">
-					<p class="text-amber-900 font-medium">{form.message}</p>
+				<div class="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-4">
+					<p class="font-medium text-amber-900">{form.message}</p>
 				</div>
 			{/if}
 
 			<!-- Login Form -->
 			<form method="POST" use:enhance class="space-y-6">
 				<div>
-					<label for="email" class="block font-medium text-gray-900 mb-2">Email</label>
+					<label for="email" class="mb-2 block font-medium text-gray-900">Email</label>
 					<input
 						id="email"
 						name="email"
@@ -37,7 +39,7 @@
 				</div>
 
 				<div>
-					<label for="password" class="block font-medium text-gray-900 mb-2">Password</label>
+					<label for="password" class="mb-2 block font-medium text-gray-900">Password</label>
 					<input
 						id="password"
 						name="password"
@@ -50,16 +52,19 @@
 
 				<button
 					type="submit"
-					class="w-full bg-amber-800 text-white px-6 py-3 rounded-lg font-medium hover:bg-amber-900 transition-colors"
+					class="w-full rounded-lg bg-amber-800 px-6 py-3 font-medium text-white transition-colors hover:bg-amber-900"
 				>
 					Sign In
 				</button>
 			</form>
 
 			<!-- Sign Up Link -->
-			<p class="text-center text-gray-600 mt-6">
+			<p class="mt-6 text-center text-gray-600">
 				Don't have an account?
-				<a href="/signup" class="font-semibold text-amber-700 hover:text-amber-800 transition-colors">
+				<a
+					href="/signup"
+					class="font-semibold text-amber-700 transition-colors hover:text-amber-800"
+				>
 					Create one
 				</a>
 			</p>
