@@ -31,7 +31,6 @@
 						type="email"
 						required
 						placeholder="you@example.com"
-						class="w-full"
 					/>
 				</div>
 
@@ -44,7 +43,6 @@
 						required
 						minlength="6"
 						placeholder="At least 6 characters"
-						class="w-full"
 					/>
 				</div>
 

@@ -207,6 +207,18 @@
 		font-family: 'Inter', sans-serif;
 	}
 
+	input[type='text'],
+	input[type='email'],
+	input[type='password'],
+	input[type='search'],
+	input[type='url'],
+	input[type='tel'],
+	input[type='number'],
+	textarea {
+		@apply w-full rounded-md border border-border bg-input-background px-4 py-2 transition-colors;
+		@apply focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none;
+	}
+
 	a {
 		color: var(--primary);
 		text-decoration: none;

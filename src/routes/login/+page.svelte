@@ -34,7 +34,6 @@
 						type="email"
 						required
 						placeholder="you@example.com"
-						class="w-full"
 					/>
 				</div>
 
@@ -46,7 +45,6 @@
 						type="password"
 						required
 						placeholder="••••••••"
-						class="w-full"
 					/>
 				</div>
 

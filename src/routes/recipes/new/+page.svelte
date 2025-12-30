@@ -34,7 +34,6 @@
 							id="title"
 							required
 							placeholder="e.g., Classic Chocolate Chip Cookies"
-							class="w-full"
 						/>
 					</div>
 
@@ -46,7 +45,6 @@
 							id="description"
 							rows="3"
 							placeholder="Tell the story behind this recipe..."
-							class="w-full"
 						></textarea>
 					</div>
 
@@ -57,7 +55,6 @@
 							name="imageUrl"
 							id="imageUrl"
 							placeholder="https://example.com/image.jpg"
-							class="w-full"
 						/>
 					</div>
 
@@ -70,7 +67,6 @@
 							min="1"
 							max="5"
 							step="0.1"
-							class="w-full"
 							placeholder="4.5"
 						/>
 					</div>
@@ -82,7 +78,6 @@
 							name="tags"
 							id="tags"
 							placeholder="e.g., Dinner, Italian, Quick & Easy"
-							class="w-full"
 						/>
 						<p class="mt-2 text-xs text-gray-500">Separate tags with commas</p>
 						{#if data.allTags.length > 0}
@@ -119,7 +114,6 @@
 							name="prepTimeMinutes"
 							id="prepTimeMinutes"
 							placeholder="15"
-							class="w-full"
 						/>
 					</div>
 					<div>
@@ -131,12 +125,11 @@
 							name="cookTimeMinutes"
 							id="cookTimeMinutes"
 							placeholder="30"
-							class="w-full"
 						/>
 					</div>
 					<div>
 						<label for="servings" class="mb-2 block font-medium text-gray-900">Servings</label>
-						<input type="number" name="servings" id="servings" placeholder="4" class="w-full" />
+						<input type="number" name="servings" id="servings" placeholder="4" />
 					</div>
 				</div>
 			</section>
@@ -157,7 +150,6 @@
 							id="ingredients"
 							rows="8"
 							placeholder="1 cup flour&#10;2 eggs&#10;1/2 cup sugar&#10;..."
-							class="w-full"
 						></textarea>
 						<p class="mt-2 text-xs text-gray-500">Enter each ingredient on a new line</p>
 					</div>
@@ -171,7 +163,6 @@
 							id="instructions"
 							rows="10"
 							placeholder="1. Preheat oven to 350°F&#10;2. Mix dry ingredients&#10;3. Add wet ingredients&#10;..."
-							class="w-full"
 						></textarea>
 						<p class="mt-2 text-xs text-gray-500">Enter each step on a new line</p>
 					</div>
