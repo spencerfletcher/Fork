@@ -5,7 +5,7 @@
 	let { data }: { data: PageData } = $props();
 </script>
 
-<div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+<div class="mx-auto max-w-7xl px-6 py-8 sm:px-8 lg:px-10">
 	<!-- Hero Section -->
 	<section class="mb-6">
 		<h2 class="mb-3 text-5xl">{data.tag.name}</h2>

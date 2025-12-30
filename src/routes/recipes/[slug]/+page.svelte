@@ -24,7 +24,7 @@
 	</div>
 
 	<!-- Content -->
-	<div class="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
+	<div class="mx-auto max-w-4xl px-6 py-12 sm:px-8 lg:px-10">
 		<!-- Header -->
 		<div class="mb-8">
 			<div class="mb-4 flex items-start justify-between">

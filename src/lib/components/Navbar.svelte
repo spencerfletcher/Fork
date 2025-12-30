@@ -20,7 +20,7 @@
 
 <nav class="sticky top-0 z-10 border-b bg-white">
 	<div
-		class="relative z-50 mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8"
+		class="relative z-50 mx-auto flex h-16 max-w-7xl items-center justify-between px-6 sm:px-8 lg:px-10"
 	>
 		<!-- Left side: Title and Navigation Links -->
 		<div class="flex items-center gap-8">
