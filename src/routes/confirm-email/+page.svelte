@@ -20,6 +20,11 @@
 			</svg>
 		</div>
 
+		<!-- TODO: 
+		 - Add a link to allow users to request a resend of the email
+		 - Add text saying what the email is
+		 - Don't allow the user to access the page without an email param (i.e. they shouldn't be able to just type in the URL)
+		-->
 		<h1 class="mt-4 text-2xl font-bold text-gray-900">Confirm your email</h1>
 		<p class="mt-2 text-gray-600">
 			We've sent a confirmation link to your email address. Please click the link in the email to
