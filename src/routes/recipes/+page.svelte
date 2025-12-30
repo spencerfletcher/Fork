@@ -1,5 +1,6 @@
 <script lang="ts">
 	import RecipeGrid from '$lib/components/RecipeGrid.svelte';
+	import Hero from '$lib/components/Hero.svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -7,16 +8,10 @@
 
 <div class="mx-auto max-w-7xl px-6 py-8 sm:px-8 lg:px-10">
 	<!-- Hero Section -->
-	<section class="mb-6">
-		<h2 class="mb-3 text-5xl">My Cookbook</h2>
-		<p class="max-w-3xl text-xl text-gray-600">
-			Your personal collection of recipes. <a
-				href="/recipes/new"
-				class="font-semibold text-gray-900 underline transition-colors hover:text-gray-700"
-				>Create new recipe</a
-			>
-		</p>
-	</section>
+	<Hero
+		title="My Cookbook"
+		body="Your personal collection of recipes. Keep track of your favorite dishes and culinary creations."
+	/>
 
 	{#if data.recipes && data.recipes.length > 0}
 		<!-- Recipe Grid -->
