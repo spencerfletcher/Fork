@@ -184,7 +184,7 @@
 						>
 							<button
 								type="submit"
-								class="block w-full cursor-pointer rounded-md px-3 py-2 text-left text-base font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+								class="block w-auto cursor-pointer rounded-md border-none bg-transparent px-3 py-2 text-left text-base font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
 							>
 								Logout
 							</button>
