@@ -6,53 +6,41 @@
 </script>
 
 <div
-	class="flex min-h-screen items-center justify-center bg-gradient-to-b from-amber-50 to-white px-4"
+	class="from-secondary flex min-h-screen items-center justify-center bg-gradient-to-b to-white px-4"
 >
 	<div class="w-full max-w-md">
 		<!-- Card Container -->
-		<div class="rounded-lg border border-amber-100 bg-white p-8 shadow-md">
+		<div class="border-border rounded-lg border bg-white p-8 shadow-md">
 			<!-- Header -->
 			<div class="mb-8 text-center">
-				<h1 class="mb-2 font-serif text-4xl font-bold text-amber-900">Welcome Back</h1>
-				<p class="text-gray-600">Sign in to access your cookbook</p>
+				<h1 class="text-foreground mb-2 font-serif text-4xl font-bold">Welcome Back</h1>
+				<p class="text-muted-foreground">Sign in to access your cookbook</p>
 			</div>
 
 			<!-- Error Message -->
 			{#if form?.message}
-				<div class="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-4">
-					<p class="font-medium text-amber-900">{form.message}</p>
+				<div class="border-border bg-secondary mb-6 rounded-lg border p-4">
+					<p class="text-foreground font-medium">{form.message}</p>
 				</div>
 			{/if}
 
 			<!-- Login Form -->
 			<form method="POST" use:enhance class="space-y-6">
 				<div>
-					<label for="email" class="mb-2 block font-medium text-gray-900">Email</label>
-					<input
-						id="email"
-						name="email"
-						type="email"
-						required
-						placeholder="you@example.com"
-					/>
+					<label for="email" class="text-foreground mb-2 block font-medium">Email</label>
+					<input id="email" name="email" type="email" required placeholder="you@example.com" />
 				</div>
 
 				<div>
-					<label for="password" class="mb-2 block font-medium text-gray-900">Password</label>
-					<input
-						id="password"
-						name="password"
-						type="password"
-						required
-						placeholder="••••••••"
-					/>
+					<label for="password" class="text-foreground mb-2 block font-medium">Password</label>
+					<input id="password" name="password" type="password" required placeholder="••••••••" />
 				</div>
 
 				<button type="submit">Sign In</button>
 			</form>
 
 			<!-- Sign Up Link -->
-			<p class="mt-6 text-center text-gray-600">
+			<p class="text-muted-foreground mt-6 text-center">
 				Don't have an account?
 				<a
 					href="/signup"

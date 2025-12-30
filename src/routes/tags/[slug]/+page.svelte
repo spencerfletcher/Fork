@@ -8,8 +8,8 @@
 <div class="mx-auto max-w-7xl px-6 py-8 sm:px-8 lg:px-10">
 	<!-- Hero Section -->
 	<section class="mb-6">
-		<h2 class="mb-3 text-5xl">{data.tag.name}</h2>
-		<p class="max-w-3xl text-xl text-gray-600">
+		<h2 class="text-foreground mb-3 text-5xl">{data.tag.name}</h2>
+		<p class="text-muted-foreground max-w-3xl text-xl">
 			Explore all recipes tagged with {data.tag.name.toLowerCase()}.
 		</p>
 	</section>
@@ -20,8 +20,8 @@
 	{:else}
 		<!-- Empty State -->
 		<div class="py-20 text-center">
-			<h3 class="mb-4 text-2xl text-gray-800">No recipes found</h3>
-			<p class="mb-8 text-gray-600">
+			<h3 class="text-foreground mb-4 text-2xl">No recipes found</h3>
+			<p class="text-muted-foreground mb-8">
 				There are no recipes with this tag yet. Check back later or explore other recipes.
 			</p>
 			<a

@@ -1,7 +1,7 @@
-<div class="flex min-h-[60vh] items-center justify-center bg-gradient-to-b from-amber-50 to-white">
-	<div class="max-w-md rounded-lg border border-amber-100 bg-white p-8 text-center shadow-md">
+<div class="from-secondary flex min-h-[60vh] items-center justify-center bg-gradient-to-b to-white">
+	<div class="border-border max-w-md rounded-lg border bg-white p-8 text-center shadow-md">
 		<!-- Email Icon -->
-		<div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-amber-100">
+		<div class="bg-secondary mx-auto flex h-12 w-12 items-center justify-center rounded-full">
 			<svg
 				xmlns="http://www.w3.org/2000/svg"
 				width="24"
@@ -12,7 +12,7 @@
 				stroke-width="2"
 				stroke-linecap="round"
 				stroke-linejoin="round"
-				class="h-6 w-6 text-amber-800"
+				class="text-primary h-6 w-6"
 			>
 				<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"
 				></path>
@@ -25,8 +25,8 @@
 		 - Add text saying what the email is
 		 - Don't allow the user to access the page without an email param (i.e. they shouldn't be able to just type in the URL)
 		-->
-		<h1 class="mt-4 font-serif text-2xl font-bold text-amber-900">Confirm your email</h1>
-		<p class="mt-2 text-gray-600">
+		<h1 class="text-foreground mt-4 font-serif text-2xl font-bold">Confirm your email</h1>
+		<p class="text-muted-foreground mt-2">
 			We've sent a confirmation link to your email address. Please click the link in the email to
 			complete your registration and log in.
 		</p>

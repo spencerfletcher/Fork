@@ -18,7 +18,7 @@
 	}
 </script>
 
-<nav class="sticky top-0 z-10 border-b bg-white">
+<nav class="sticky top-0 z-10 border-b border-border bg-white">
 	<div
 		class="relative z-50 mx-auto flex h-16 max-w-7xl items-center justify-between px-6 sm:px-8 lg:px-10"
 	>
@@ -26,7 +26,7 @@
 		<div class="flex items-center gap-8">
 			<a
 				href="/"
-				class="cursor-pointer text-2xl tracking-tight transition-colors hover:text-gray-700"
+				class="cursor-pointer text-2xl tracking-tight text-foreground transition-colors hover:text-muted-foreground"
 				onclick={closeMenu}
 			>
 				RecipeBook
@@ -35,8 +35,8 @@
 			<nav class="hidden gap-6 md:flex">
 				<a
 					href="/recipes"
-					class="text-gray-700 transition-colors hover:text-gray-900"
-					class:text-gray-900={$page.url.pathname === '/recipes'}
+					class="text-muted-foreground transition-colors hover:text-foreground"
+					class:text-foreground={$page.url.pathname === '/recipes'}
 					class:font-semibold={$page.url.pathname === '/recipes'}
 				>
 					My Recipes
@@ -44,8 +44,8 @@
 				{#if user}
 					<a
 						href="/favorites"
-						class="text-gray-700 transition-colors hover:text-gray-900"
-						class:text-gray-900={$page.url.pathname === '/favorites'}
+						class="text-muted-foreground transition-colors hover:text-foreground"
+						class:text-foreground={$page.url.pathname === '/favorites'}
 						class:font-semibold={$page.url.pathname === '/favorites'}
 					>
 						Favorites
@@ -60,7 +60,7 @@
 			<div class="hidden items-center gap-3 md:flex">
 				{#if user}
 					<button
-						class="flex items-center gap-2 text-gray-700 transition-colors hover:text-gray-900"
+						class="flex items-center gap-2 text-muted-foreground transition-colors hover:text-foreground"
 					>
 						<!-- User Icon -->
 						<svg
@@ -81,16 +81,16 @@
 					<form action="/logout" method="POST" use:enhance>
 						<button
 							type="submit"
-							class="w-auto rounded-none border-none bg-transparent px-0 py-0 text-gray-700 transition-colors hover:bg-transparent hover:text-gray-900"
+							class="w-auto rounded-none border-none bg-transparent px-0 py-0 text-muted-foreground transition-colors hover:bg-transparent hover:text-foreground"
 						>
 							Logout
 						</button>
 					</form>
 				{:else}
-					<a href="/login" class="text-gray-700 transition-colors hover:text-gray-900">Log In</a>
+					<a href="/login" class="text-muted-foreground transition-colors hover:text-foreground">Log In</a>
 					<a
 						href="/signup"
-						class="rounded-md bg-gray-900 px-4 py-2 text-white transition-colors hover:bg-gray-800"
+						class="rounded-md bg-foreground px-4 py-2 text-white transition-colors hover:bg-[color:var(--foreground)]"
 					>
 						Sign Up
 					</a>
@@ -101,7 +101,7 @@
 			<button
 				type="button"
 				onclick={toggleMenu}
-				class="inline-flex items-center justify-center rounded-md p-2 text-gray-600 transition-colors outline-none hover:bg-gray-50 hover:text-gray-900 focus:ring-2 focus:ring-gray-900 focus:ring-inset md:hidden"
+				class="inline-flex items-center justify-center rounded-md p-2 text-muted-foreground transition-colors outline-none hover:bg-secondary hover:text-foreground focus:ring-2 focus:ring-foreground focus:ring-inset md:hidden"
 				aria-controls="mobile-menu"
 				aria-expanded={isMenuOpen}
 			>
@@ -142,13 +142,13 @@
 		<div class="fixed inset-0 bg-black/20" onclick={closeMenu} aria-hidden="true"></div>
 
 		<!-- Mobile Menu Dropdown -->
-		<div class="absolute w-full border-t bg-white shadow-lg md:hidden" id="mobile-menu">
+		<div class="absolute w-full border-t border-border bg-white shadow-lg md:hidden" id="mobile-menu">
 			<ul class="space-y-1 px-2 pt-2 pb-3">
 				<li>
 					<a
 						href="/recipes"
 						onclick={closeMenu}
-						class="block rounded-md px-3 py-2 text-base font-medium text-gray-700 transition-colors hover:bg-gray-50 hover:text-gray-900"
+						class="block rounded-md px-3 py-2 text-base font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
 					>
 						My Recipes
 					</a>
@@ -158,7 +158,7 @@
 						<a
 							href="/favorites"
 							onclick={closeMenu}
-							class="block rounded-md px-3 py-2 text-base font-medium text-gray-700 transition-colors hover:bg-gray-50 hover:text-gray-900"
+							class="block rounded-md px-3 py-2 text-base font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
 						>
 							Favorites
 						</a>
@@ -166,10 +166,10 @@
 				{/if}
 			</ul>
 			<!-- Mobile Auth Links -->
-			<div class="border-t pt-4 pb-3">
+			<div class="border-t border-border pt-4 pb-3">
 				{#if user}
 					<div class="flex items-center px-5">
-						<div class="text-base font-medium text-gray-900">{user.email}</div>
+						<div class="text-base font-medium text-foreground">{user.email}</div>
 					</div>
 					<div class="mt-3 space-y-1 px-2">
 						<form
@@ -184,7 +184,7 @@
 						>
 							<button
 								type="submit"
-								class="block w-full cursor-pointer rounded-md px-3 py-2 text-left text-base font-medium text-gray-700 transition-colors hover:bg-gray-50 hover:text-gray-900"
+								class="block w-full cursor-pointer rounded-md px-3 py-2 text-left text-base font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
 							>
 								Logout
 							</button>
@@ -195,13 +195,13 @@
 						<a
 							href="/login"
 							onclick={closeMenu}
-							class="block rounded-md px-3 py-2 text-base font-medium text-gray-700 transition-colors hover:bg-gray-50 hover:text-gray-900"
+							class="block rounded-md px-3 py-2 text-base font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
 							>Log In</a
 						>
 						<a
 							href="/signup"
 							onclick={closeMenu}
-							class="block rounded-md px-3 py-2 text-base font-medium text-gray-700 transition-colors hover:bg-gray-50 hover:text-gray-900"
+							class="block rounded-md px-3 py-2 text-base font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
 							>Sign Up</a
 						>
 					</div>

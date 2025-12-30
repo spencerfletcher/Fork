@@ -28,7 +28,7 @@
 		<!-- Header -->
 		<div class="mb-8">
 			<div class="mb-4 flex items-start justify-between">
-				<h1 class="flex-1 text-4xl">{recipe.title}</h1>
+				<h1 class="flex-1 text-4xl text-foreground">{recipe.title}</h1>
 				<div class="flex flex-shrink-0 items-center gap-2">
 					{#if data.user}
 						<form
@@ -86,10 +86,10 @@
 			</div>
 
 			{#if recipe.description}
-				<p class="mb-6 text-xl text-gray-600">{recipe.description}</p>
+				<p class="mb-6 text-xl text-muted-foreground">{recipe.description}</p>
 			{/if}
 
-			<div class="flex items-center gap-6 border-b pb-6 text-sm text-gray-600">
+			<div class="flex items-center gap-6 border-b border-border pb-6 text-sm text-muted-foreground">
 				{#if recipe.prepTimeMinutes}
 					<div class="flex items-center gap-2">
 						<svg
@@ -180,7 +180,7 @@
 									id="ingredient-{index}"
 									class="mt-1 h-4 w-4 rounded border-gray-300"
 								/>
-								<label for="ingredient-{index}" class="flex-1 cursor-pointer text-gray-900">
+								<label for="ingredient-{index}" class="flex-1 cursor-pointer text-foreground">
 									{ingredient}
 								</label>
 							</li>
@@ -197,11 +197,11 @@
 					{#each instructionsList as instruction, index}
 						<li class="flex gap-4">
 							<div
-								class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gray-900 text-sm text-white"
+								class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-foreground text-sm text-white"
 							>
 								{index + 1}
 							</div>
-							<p class="flex-1 pt-1 text-gray-700">{instruction}</p>
+							<p class="flex-1 pt-1 text-muted-foreground">{instruction}</p>
 						</li>
 					{/each}
 				</ol>
@@ -216,8 +216,8 @@
 		style="background-color: rgba(107, 114, 128, 0.3);"
 	>
 		<div class="mx-4 max-w-sm rounded-lg bg-white p-6 shadow-lg">
-			<h2 class="mb-4 text-xl font-bold text-gray-900">Delete Recipe?</h2>
-			<p class="mb-6 text-gray-600">
+			<h2 class="mb-4 text-xl font-bold text-foreground">Delete Recipe?</h2>
+			<p class="mb-6 text-muted-foreground">
 				Are you sure you want to delete <span class="font-semibold">{recipe.title}</span>? This
 				action cannot be undone.
 			</p>
@@ -225,7 +225,7 @@
 				<button
 					type="button"
 					onclick={() => (showDeleteConfirm = false)}
-					class="rounded border border-gray-300 px-4 py-2 font-medium text-gray-700 transition-colors hover:bg-gray-50"
+					class="rounded border border-border px-4 py-2 font-medium text-muted-foreground transition-colors hover:bg-secondary"
 				>
 					Cancel
 				</button>
