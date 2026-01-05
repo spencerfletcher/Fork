@@ -26,7 +26,7 @@
 		<div class="flex items-center gap-8">
 			<a
 				href="/"
-				class="cursor-pointer text-2xl tracking-tight text-foreground transition-colors hover:text-muted-foreground"
+				class="text-foreground hover:text-muted-foreground cursor-pointer font-serif text-2xl tracking-tight transition-colors"
 				onclick={closeMenu}
 			>
 				RecipeBook
