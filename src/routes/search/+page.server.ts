@@ -1,27 +1,27 @@
 import { db } from '$lib/server/db';
 import { recipes, tags, recipesToTags } from '$lib/server/db/schema';
-import { eq, and, ilike, inArray } from 'drizzle-orm';
+import { ilike, eq, and, or, inArray, sql } from 'drizzle-orm';
 import type { PageServerLoad } from './$types';
-import { redirect } from '@sveltejs/kit';
 
 export const load: PageServerLoad = async ({ url, locals: { user } }) => {
-	if (!user) {
-		throw redirect(303, '/login');
-	}
-
 	const searchQuery = url.searchParams.get('q') || '';
 	const tagSlugs = url.searchParams.get('tags')?.split(',').filter(Boolean) || [];
 
-	// Build WHERE conditions - always filter by userId
-	let conditions = [eq(recipes.userId, user.id)];
+	let conditions = [];
 
-	// Add text search if provided
+	// Text search on title (case-insensitive)
 	if (searchQuery) {
 		conditions.push(ilike(recipes.title, `%${searchQuery}%`));
 	}
 
+	// Public filter (show public recipes, or user's own recipes if authenticated)
+	conditions.push(
+		user ? or(eq(recipes.public, true), eq(recipes.userId, user.id)) : eq(recipes.public, true)
+	);
+
 	// Tag filtering with OR logic and sorting by match count
 	if (tagSlugs.length > 0) {
+		// First get tag IDs from slugs
 		const selectedTags = await db.select().from(tags).where(inArray(tags.slug, tagSlugs));
 		const tagIds = selectedTags.map((t) => t.id);
 
@@ -37,13 +37,14 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 			if (recipeIds.length > 0) {
 				conditions.push(inArray(recipes.id, recipeIds));
 
-				const displayedRecipes = await db
+				// Execute query
+				const filteredRecipes = await db
 					.select()
 					.from(recipes)
-					.where(and(...conditions));
+					.where(conditions.length > 0 ? and(...conditions) : undefined);
 
 				// Count tag matches for each recipe
-				const recipesWithMatchCount = displayedRecipes.map((recipe) => {
+				const recipesWithMatchCount = filteredRecipes.map((recipe) => {
 					const matchCount = mappings.filter((m) => m.recipeId === recipe.id).length;
 					return { ...recipe, matchCount };
 				});
@@ -61,26 +62,22 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 				};
 			} else {
 				// No recipes match these tags
-				return {
-					recipes: [],
-					allTags: [],
-					searchQuery,
-					selectedTags: tagSlugs
-				};
+				return { recipes: [], allTags: [], searchQuery, selectedTags: tagSlugs };
 			}
 		}
 	}
 
-	const displayedRecipes = await db
+	// Execute query without tag filtering
+	const filteredRecipes = await db
 		.select()
 		.from(recipes)
-		.where(and(...conditions));
+		.where(conditions.length > 0 ? and(...conditions) : undefined);
 
-	// Get all tags for filter UI
+	// Fetch all tags for the filter UI
 	const allTags = await db.select().from(tags);
 
 	return {
-		recipes: displayedRecipes,
+		recipes: filteredRecipes,
 		allTags,
 		searchQuery,
 		selectedTags: tagSlugs
