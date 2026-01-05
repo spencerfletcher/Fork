@@ -76,6 +76,7 @@ export const favoritesRelations = relations(favorites, ({one}) => ({
 
 // Type for SELECT queries
 export type Recipe = InferSelectModel<typeof recipes>;
+export type Tag = InferSelectModel<typeof tags>;
 
 // Type for INSERT queries
 export type NewRecipe = InferInsertModel<typeof recipes>;
