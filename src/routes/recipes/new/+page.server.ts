@@ -1,100 +1,123 @@
-import {redirect, error} from '@sveltejs/kit';
-import type {Actions, PageServerLoad} from './$types';
-import {db} from '$lib/server/db';
-import {recipes, tags, recipesToTags} from '$lib/server/db/schema';
-import {slugify} from '$lib/helpers';
-import {eq, inArray} from 'drizzle-orm';
+import { redirect, error } from '@sveltejs/kit';
+import type { Actions, PageServerLoad } from './$types';
+import { db } from '$lib/server/db';
+import { recipes, recipeVersions, tags, recipesToTags, profiles } from '$lib/server/db/schema';
+import { slugify } from '$lib/helpers';
+import { eq, inArray } from 'drizzle-orm';
+import { nanoid } from 'nanoid';
 
-export const load: PageServerLoad = async () => {
-	// Fetch all existing tags to display them on the page
+export const load: PageServerLoad = async ({ locals: { user } }) => {
+	if (!user) throw redirect(303, '/login');
+
 	const allTags = await db.query.tags.findMany({
-		orderBy: (tags, {asc}) => [asc(tags.name)],
+		orderBy: (t, { asc }) => [asc(t.name)],
 	});
 
-	return {allTags};
+	return { allTags };
 };
 
 export const actions: Actions = {
-	default: async ({request, locals: {session}}) => {
+	default: async ({ request, locals: { user, supabase } }) => {
+		if (!user) throw error(401, 'Login required');
+
 		const formData = await request.formData();
+		const title = (formData.get('title') as string)?.trim();
+		const description = (formData.get('description') as string)?.trim() || null;
+		const servings = parseInt(formData.get('servings') as string) || null;
+		const prepTimeMinutes = parseInt(formData.get('prepTimeMinutes') as string) || null;
+		const cookTimeMinutes = parseInt(formData.get('cookTimeMinutes') as string) || null;
+		const isPublic = formData.get('isPublic') === 'on';
+		const selectedTagNames = formData.getAll('tags') as string[];
+		const ingredientsRaw = formData.get('ingredients') as string;
+		const stepsRaw = formData.get('steps') as string;
 
-		const title = formData.get('title') as string;
-		const tagString = formData.get('tags') as string;
-		const tagNames = tagString ? tagString.split(',').map(tag => tag.trim()) : [];
-		const rating = formData.get('rating') as string;
-		const userId = session?.user.id ?? null; // Assuming session contains user info
-		const description = formData.get('description') as string;
-		const imageUrl = formData.get('image_url') as string;
-		const ingredients = formData.get('ingredients') as string;
-		const instructions = formData.get('instructions') as string;
-		const cookTimeMinutes = Number(formData.get('cookTimeMinutes'));
-		const prepTimeMinutes = Number(formData.get('prepTimeMinutes'));
-		const servings = Number(formData.get('servings'));
+		if (!title) throw error(400, 'Title is required');
 
-		// Basic validation
-		if (!title) {
-			return error(400, {message: 'A title is required.'});
+		// Handle image upload to Supabase Storage
+		let imageUrl: string | null = null;
+		const imageFile = formData.get('image') as File | null;
+		if (imageFile && imageFile.size > 0) {
+			const ext = imageFile.name.split('.').pop()?.toLowerCase() ?? 'jpg';
+			const filename = `${user.id}/${nanoid()}.${ext}`;
+			const { error: uploadError } = await supabase.storage
+				.from('recipe-images')
+				.upload(filename, imageFile, { contentType: imageFile.type, upsert: false });
+			if (!uploadError) {
+				const { data: { publicUrl } } = supabase.storage
+					.from('recipe-images')
+					.getPublicUrl(filename);
+				imageUrl = publicUrl;
+			}
+			// If upload fails, imageUrl stays null — recipe is created without an image
 		}
 
-		let newRecipeSlug: string | null = null;
-
+		let ingredients, steps;
 		try {
-			// Use a transaction to ensure both steps (creating the recipe and creating the slug) succeed or fail together
-			await db.transaction(async (tx) => {
-				const [newRecipe] = await tx
-					.insert(recipes)
-					.values({
-						userId,
-						title,
-						description,
-						imageUrl,
-						ingredients,
-						instructions,
-						rating,
-						cookTimeMinutes: isNaN(cookTimeMinutes) ? null : cookTimeMinutes,
-						prepTimeMinutes: isNaN(prepTimeMinutes) ? null : prepTimeMinutes,
-						servings: isNaN(servings) ? null : servings,
-					})
-					.returning({insertedId: recipes.id});
+			ingredients = JSON.parse(ingredientsRaw);
+			steps = JSON.parse(stepsRaw);
+		} catch {
+			throw error(400, 'Invalid ingredient or step data');
+		}
 
-				const slug = `${slugify(title)}-${newRecipe.insertedId}`;
+		if (!Array.isArray(ingredients) || ingredients.length === 0) {
+			throw error(400, 'At least one ingredient is required');
+		}
+		if (!Array.isArray(steps) || steps.length === 0) {
+			throw error(400, 'At least one step is required');
+		}
 
+		steps = steps.map((s: { text: string }, i: number) => ({ step: i + 1, text: s.text }));
+
+		// Upsert profile for creator
+		await db
+			.insert(profiles)
+			.values({ id: user.id, username: user.email?.split('@')[0] ?? user.id })
+			.onConflictDoNothing();
+
+		const slug = `${slugify(title)}-${nanoid(6)}`;
+
+		await db.transaction(async (tx) => {
+			const [newRecipe] = await tx
+				.insert(recipes)
+				.values({
+					slug,
+					title,
+					description,
+					imageUrl,
+					servings,
+					prepTimeMinutes,
+					cookTimeMinutes,
+					isPublic,
+					authorId: user.id,
+				})
+				.returning({ id: recipes.id });
+
+			// Sync tags
+			if (selectedTagNames.length > 0) {
 				await tx
-					.update(recipes)
-					.set({slug: slug})
-					.where(eq(recipes.id, newRecipe.insertedId));
-
-				newRecipeSlug = slug;
-
-				if (tagNames.length > 0) {
-					// Attempt to insert all tags. Existing tags will be ignored.
-					await tx.insert(tags)
-						.values(tagNames.map(name => ({name, slug: slugify(name)})))
-						.onConflictDoNothing();
-
-					// Select all the tags needed to get their IDs.
-					const relevantTags = await tx.query.tags.findMany({
-						where: inArray(tags.name, tagNames)
-					});
-
-					// Create the links in the join table
+					.insert(tags)
+					.values(selectedTagNames.map(name => ({ name, slug: slugify(name) })))
+					.onConflictDoNothing();
+				const relevantTags = await tx.query.tags.findMany({
+					where: inArray(tags.name, selectedTagNames),
+				});
+				if (relevantTags.length > 0) {
 					await tx.insert(recipesToTags).values(
-						relevantTags.map(tag => ({
-							recipeId: newRecipe.insertedId,
-							tagId: tag.id
-						}))
+						relevantTags.map(t => ({ recipeId: newRecipe.id, tagId: t.id }))
 					);
 				}
+			}
+
+			await tx.insert(recipeVersions).values({
+				recipeId: newRecipe.id,
+				versionNumber: 1,
+				commitMessage: 'Initial recipe',
+				ingredients,
+				steps,
+				createdBy: user.id,
 			});
-		} catch (e) {
-			console.error(e);
-			return error(500, {message: 'Something went wrong while creating your recipe.'});
-		}
+		});
 
-		if (!newRecipeSlug) {
-			return error(500, {message: 'Failed to create recipe slug.'});
-		}
-
-		throw redirect(303, `/recipes/${newRecipeSlug}`);
-	}
+		throw redirect(303, `/recipes/${slug}`);
+	},
 };
