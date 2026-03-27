@@ -1,45 +1,60 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 
-	let { form } = $props();
+	let { form } = $props<{ form: any }>();
 </script>
 
-<div class="container mx-auto max-w-sm px-4 py-8">
-	<h1 class="text-2xl font-bold text-gray-900">Create an Account</h1>
+<div
+	class="from-secondary flex min-h-screen items-center justify-center bg-gradient-to-b to-white px-4"
+>
+	<div class="w-full max-w-md">
+		<!-- Card Container -->
+		<div class="border-border rounded-lg border bg-white p-8 shadow-md">
+			<!-- Header -->
+			<div class="mb-8 text-center">
+				<h1 class="text-foreground mb-2 font-serif text-4xl font-bold">Join Us</h1>
+				<p class="text-muted-foreground">Start building your personal cookbook</p>
+			</div>
 
-	<form method="POST" use:enhance class="mt-6 space-y-4">
-		<div>
-			<label for="email" class="block text-sm font-medium text-gray-700">Email</label>
-			<input
-				id="email"
-				name="email"
-				type="email"
-				required
-				class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-			/>
+			<!-- Error Message -->
+			{#if form?.message}
+				<div class="bg-secondary border-border mb-6 rounded-lg border p-4">
+					<p class="text-foreground font-medium">{form.message}</p>
+				</div>
+			{/if}
+
+			<!-- Sign Up Form -->
+			<form method="POST" use:enhance class="space-y-6">
+				<div>
+					<label for="email" class="text-foreground mb-2 block font-medium">Email</label>
+					<input id="email" name="email" type="email" required placeholder="you@example.com" />
+				</div>
+
+				<div>
+					<label for="password" class="text-foreground mb-2 block font-medium">Password</label>
+					<input
+						id="password"
+						name="password"
+						type="password"
+						required
+						minlength="6"
+						placeholder="At least 6 characters"
+					/>
+				</div>
+
+				<button type="submit">Create Account</button>
+			</form>
+
+			<!-- Log In Link -->
+			<p class="text-muted-foreground mt-6 text-center">
+				Already have an account?
+				<a
+					href="/login"
+					class="font-semibold text-amber-700 transition-colors hover:text-amber-800"
+				>
+					Sign in
+				</a>
+			</p>
 		</div>
-
-		<div>
-			<label for="password" class="block text-sm font-medium text-gray-700">Password</label>
-			<input
-				id="password"
-				name="password"
-				type="password"
-				required
-				minlength="6"
-				class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-			/>
-		</div>
-
-		<button
-			type="submit"
-			class="w-full rounded-md bg-green-600 py-2 text-white shadow-sm hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:outline-none"
-		>
-			Create Account
-		</button>
-		<p class="text-center text-sm text-gray-600">
-			Already have an account?
-			<a href="/login" class="font-medium text-green-600 hover:underline">Log in</a>
-		</p>
-	</form>
+	</div>
 </div>
