@@ -20,7 +20,7 @@ test.describe('Tag pages', () => {
 
 	test('tag page shows its tag name', async ({ page }) => {
 		await page.goto('/tags/dessert');
-		await expect(page.getByText(/dessert/i)).toBeVisible();
+		await expect(page.getByRole('heading', { name: /dessert/i })).toBeVisible();
 	});
 
 	test('tag page shows recipes with that tag', async ({ page }) => {

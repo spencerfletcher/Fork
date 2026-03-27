@@ -45,7 +45,12 @@
 		{#if tags.length > 0}
 			<div class="card-tags">
 				{#each tags.slice(0, 3) as tag}
-					<span class="tag">{tag.name}</span>
+					<!-- svelte-ignore a11y_no_static_element_interactions -->
+					<a
+						href="/tags/{tag.slug}"
+						class="tag"
+						onclick={(e) => e.stopPropagation()}
+					>{tag.name}</a>
 				{/each}
 			</div>
 		{/if}
