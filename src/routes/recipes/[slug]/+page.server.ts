@@ -19,9 +19,9 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 			parent: { with: { author: true } },
 			versions: {
 				orderBy: [desc(recipeVersions.versionNumber)],
-				with: { creator: true },
-			},
-		},
+				with: { creator: true }
+			}
+		}
 	});
 
 	if (!recipe) throw error(404, 'Recipe not found');
@@ -31,7 +31,7 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 	let isViewingHistory = false;
 
 	if (requestedVersion !== null) {
-		const found = recipe.versions.find(v => v.versionNumber === requestedVersion);
+		const found = recipe.versions.find((v) => v.versionNumber === requestedVersion);
 		if (!found) throw error(404, 'Version not found');
 		currentVersion = found;
 		isViewingHistory = found.versionNumber !== recipe.versions[0]?.versionNumber;
@@ -41,7 +41,7 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 	let isFavorited = false;
 	if (user) {
 		const existing = await db.query.favorites.findFirst({
-			where: and(eq(favorites.userId, user.id), eq(favorites.recipeId, recipe.id)),
+			where: and(eq(favorites.userId, user.id), eq(favorites.recipeId, recipe.id))
 		});
 		isFavorited = !!existing;
 	}
@@ -51,7 +51,7 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 		currentVersion,
 		allVersions: recipe.versions,
 		isViewingHistory,
-		isFavorited,
+		isFavorited
 	};
 };
 
@@ -60,18 +60,18 @@ export const actions: Actions = {
 		if (!user) throw error(401, 'Login required');
 
 		const recipe = await db.query.recipes.findFirst({
-			where: eq(recipes.slug, params.slug),
+			where: eq(recipes.slug, params.slug)
 		});
 		if (!recipe) throw error(404, 'Recipe not found');
 
 		const existing = await db.query.favorites.findFirst({
-			where: and(eq(favorites.userId, user.id), eq(favorites.recipeId, recipe.id)),
+			where: and(eq(favorites.userId, user.id), eq(favorites.recipeId, recipe.id))
 		});
 
 		if (existing) {
-			await db.delete(favorites).where(
-				and(eq(favorites.userId, user.id), eq(favorites.recipeId, recipe.id))
-			);
+			await db
+				.delete(favorites)
+				.where(and(eq(favorites.userId, user.id), eq(favorites.recipeId, recipe.id)));
 		} else {
 			await db.insert(favorites).values({ userId: user.id, recipeId: recipe.id });
 		}
@@ -88,8 +88,8 @@ export const actions: Actions = {
 			where: eq(recipes.slug, params.slug),
 			with: {
 				versions: { orderBy: [desc(recipeVersions.versionNumber)], limit: 1 },
-				recipesToTags: true,
-			},
+				recipesToTags: true
+			}
 		});
 
 		if (!source) throw error(404, 'Source recipe not found');
@@ -102,7 +102,7 @@ export const actions: Actions = {
 			.insert(profiles)
 			.values({
 				id: user.id,
-				username: user.email?.split('@')[0] ?? user.id.slice(0, 8),
+				username: user.email?.split('@')[0] ?? user.id.slice(0, 8)
 			})
 			.onConflictDoNothing();
 
@@ -124,16 +124,16 @@ export const actions: Actions = {
 					cookTimeMinutes: source.cookTimeMinutes,
 					isPublic: source.isPublic,
 					parentId: source.id,
-					forkedAt: new Date(),
+					forkedAt: new Date()
 				})
 				.returning();
 
 			// Copy tags
 			if (source.recipesToTags.length > 0) {
 				await tx.insert(recipesToTags).values(
-					source.recipesToTags.map(rt => ({
+					source.recipesToTags.map((rt) => ({
 						recipeId: newRecipe.id,
-						tagId: rt.tagId,
+						tagId: rt.tagId
 					}))
 				);
 			}
@@ -145,12 +145,12 @@ export const actions: Actions = {
 				commitMessage,
 				ingredients: latestVersion.ingredients,
 				steps: latestVersion.steps,
-				createdBy: user.id,
+				createdBy: user.id
 			});
 
 			newSlug = newRecipe.slug;
 		});
 
 		throw redirect(303, `/recipes/${newSlug}/edit`);
-	},
+	}
 };

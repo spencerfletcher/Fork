@@ -1,10 +1,10 @@
-import {redirect} from '@sveltejs/kit';
-import {db} from '$lib/server/db';
-import {recipes, favorites, tags, recipesToTags} from '$lib/server/db/schema';
-import {eq, and, ilike, inArray} from 'drizzle-orm';
-import type {PageServerLoad} from './$types';
+import { redirect } from '@sveltejs/kit';
+import { db } from '$lib/server/db';
+import { recipes, favorites, tags, recipesToTags } from '$lib/server/db/schema';
+import { eq, and, ilike, inArray } from 'drizzle-orm';
+import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({url, locals: {user}}) => {
+export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 	if (!user) {
 		throw redirect(303, '/login');
 	}
@@ -14,7 +14,7 @@ export const load: PageServerLoad = async ({url, locals: {user}}) => {
 
 	// Get base favorited recipe IDs
 	const favoriteMappings = await db
-		.select({recipeId: favorites.recipeId})
+		.select({ recipeId: favorites.recipeId })
 		.from(favorites)
 		.where(eq(favorites.userId, user.id));
 
@@ -37,7 +37,7 @@ export const load: PageServerLoad = async ({url, locals: {user}}) => {
 		if (tagIds.length > 0) {
 			// Get recipe IDs that have ANY of these tags (OR logic)
 			const taggedRecipes = await db
-				.select({recipeId: recipesToTags.recipeId})
+				.select({ recipeId: recipesToTags.recipeId })
 				.from(recipesToTags)
 				.where(inArray(recipesToTags.tagId, tagIds));
 
@@ -77,7 +77,7 @@ export const load: PageServerLoad = async ({url, locals: {user}}) => {
 			// Count tag matches for each recipe
 			const recipesWithMatchCount = filteredRecipes.map((recipe) => {
 				const matchCount = taggedRecipes.filter((r) => r.recipeId === recipe.id).length;
-				return {...recipe, matchCount};
+				return { ...recipe, matchCount };
 			});
 
 			// Sort by match count descending

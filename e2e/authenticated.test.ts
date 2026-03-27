@@ -87,7 +87,7 @@ test.describe('New recipe page', () => {
 		const recipeUrl = page.url().split('?')[0];
 		await page.request.post(`${recipeUrl}/edit?/deleteRecipe`, {
 			headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-			data: '',
+			data: ''
 		});
 	});
 });

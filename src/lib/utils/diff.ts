@@ -22,8 +22,8 @@ export interface StepDiffRow {
 export function diffIngredients(from: Ingredient[], to: Ingredient[]): IngredientDiffRow[] {
 	const result: IngredientDiffRow[] = [];
 
-	const fromMap = new Map(from.map(i => [i.name.toLowerCase(), i]));
-	const toMap = new Map(to.map(i => [i.name.toLowerCase(), i]));
+	const fromMap = new Map(from.map((i) => [i.name.toLowerCase(), i]));
+	const toMap = new Map(to.map((i) => [i.name.toLowerCase(), i]));
 
 	// Removed: in from but not in to
 	for (const [key, ingredient] of fromMap) {
@@ -41,8 +41,7 @@ export function diffIngredients(from: Ingredient[], to: Ingredient[]): Ingredien
 		} else {
 			// Same name — check if amount or unit changed
 			const unchanged =
-				fromIngredient.amount === ingredient.amount &&
-				fromIngredient.unit === ingredient.unit;
+				fromIngredient.amount === ingredient.amount && fromIngredient.unit === ingredient.unit;
 			if (unchanged) {
 				result.push({ status: 'unchanged', ingredient });
 			} else {
@@ -67,8 +66,8 @@ export function diffIngredients(from: Ingredient[], to: Ingredient[]): Ingredien
 export function diffSteps(from: Step[], to: Step[]): StepDiffRow[] {
 	const result: StepDiffRow[] = [];
 
-	const fromMap = new Map(from.map(s => [s.step, s]));
-	const toMap = new Map(to.map(s => [s.step, s]));
+	const fromMap = new Map(from.map((s) => [s.step, s]));
+	const toMap = new Map(to.map((s) => [s.step, s]));
 
 	const allStepNumbers = new Set([...fromMap.keys(), ...toMap.keys()]);
 	const sorted = [...allStepNumbers].sort((a, b) => a - b);

@@ -12,9 +12,9 @@ export const load: PageServerLoad = async ({ locals: { user } }) => {
 		where: eq(recipes.authorId, user.id),
 		with: {
 			recipesToTags: { with: { tag: true } },
-			author: true,
+			author: true
 		},
-		orderBy: (r, { desc }) => [desc(r.updatedAt)],
+		orderBy: (r, { desc }) => [desc(r.updatedAt)]
 	});
 
 	return { recipes: userRecipes };

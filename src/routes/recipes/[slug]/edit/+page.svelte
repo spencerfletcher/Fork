@@ -7,15 +7,13 @@
 
 	const { recipe, allTags } = $derived(data);
 
-	const currentTagNames = $derived(recipe.recipesToTags?.map(r => r.tag.name) ?? []);
+	const currentTagNames = $derived(recipe.recipesToTags?.map((r) => r.tag.name) ?? []);
 
 	// Content editor state — initialized once from server data (edit page, not reactive to server changes)
 	let ingredients = $state<Ingredient[]>(
 		data.latestVersion?.ingredients ?? [{ amount: '', unit: '', name: '' }]
 	);
-	let steps = $state<Step[]>(
-		data.latestVersion?.steps ?? [{ step: 1, text: '' }]
-	);
+	let steps = $state<Step[]>(data.latestVersion?.steps ?? [{ step: 1, text: '' }]);
 
 	// Drag-to-reorder state
 	let dragIngredientIndex = $state<number | null>(null);
@@ -93,7 +91,9 @@
 
 				<div class="field">
 					<label for="description">Description</label>
-					<textarea id="description" name="description" rows="3">{recipe.description ?? ''}</textarea>
+					<textarea id="description" name="description" rows="3"
+						>{recipe.description ?? ''}</textarea
+					>
 				</div>
 
 				<div class="field">
@@ -104,15 +104,33 @@
 				<div class="field-row">
 					<div class="field">
 						<label for="servings">Servings</label>
-						<input id="servings" name="servings" type="number" min="1" value={recipe.servings ?? ''} />
+						<input
+							id="servings"
+							name="servings"
+							type="number"
+							min="1"
+							value={recipe.servings ?? ''}
+						/>
 					</div>
 					<div class="field">
 						<label for="prepTimeMinutes">Prep time (min)</label>
-						<input id="prepTimeMinutes" name="prepTimeMinutes" type="number" min="0" value={recipe.prepTimeMinutes ?? ''} />
+						<input
+							id="prepTimeMinutes"
+							name="prepTimeMinutes"
+							type="number"
+							min="0"
+							value={recipe.prepTimeMinutes ?? ''}
+						/>
 					</div>
 					<div class="field">
 						<label for="cookTimeMinutes">Cook time (min)</label>
-						<input id="cookTimeMinutes" name="cookTimeMinutes" type="number" min="0" value={recipe.cookTimeMinutes ?? ''} />
+						<input
+							id="cookTimeMinutes"
+							name="cookTimeMinutes"
+							type="number"
+							min="0"
+							value={recipe.cookTimeMinutes ?? ''}
+						/>
 					</div>
 				</div>
 
@@ -152,7 +170,13 @@
 			<h3>Recipe content</h3>
 			<p class="section-desc">Creates a new version snapshot. Describe what changed.</p>
 
-			<form method="POST" action="?/saveVersion" use:enhance onsubmit={serializeContent} class="form">
+			<form
+				method="POST"
+				action="?/saveVersion"
+				use:enhance
+				onsubmit={serializeContent}
+				class="form"
+			>
 				<!-- Hidden JSON inputs -->
 				<input type="hidden" name="ingredients" bind:this={ingredientsInput} />
 				<input type="hidden" name="steps" bind:this={stepsInput} />
@@ -167,7 +191,9 @@
 								role="listitem"
 								draggable="true"
 								ondragstart={() => onIngredientDragStart(i)}
-								ondragover={(e) => { e.preventDefault(); }}
+								ondragover={(e) => {
+									e.preventDefault();
+								}}
 								ondrop={() => onIngredientDrop(i)}
 							>
 								<span class="drag-handle" title="Drag to reorder">⠿</span>
@@ -193,12 +219,17 @@
 									type="button"
 									onclick={() => removeIngredient(i)}
 									class="remove-btn"
-									aria-label="Remove ingredient"
-								>×</button>
+									aria-label="Remove ingredient">×</button
+								>
 							</div>
 						{/each}
 					</div>
-					<button type="button" onclick={addIngredient} class="btn-ghost" style="margin-top: var(--space-3);">
+					<button
+						type="button"
+						onclick={addIngredient}
+						class="btn-ghost"
+						style="margin-top: var(--space-3);"
+					>
 						+ Add ingredient
 					</button>
 				</div>
@@ -213,7 +244,9 @@
 								role="listitem"
 								draggable="true"
 								ondragstart={() => onStepDragStart(i)}
-								ondragover={(e) => { e.preventDefault(); }}
+								ondragover={(e) => {
+									e.preventDefault();
+								}}
 								ondrop={() => onStepDrop(i)}
 							>
 								<span class="step-num-badge">{i + 1}</span>
@@ -228,12 +261,17 @@
 									type="button"
 									onclick={() => removeStep(i)}
 									class="remove-btn"
-									aria-label="Remove step"
-								>×</button>
+									aria-label="Remove step">×</button
+								>
 							</div>
 						{/each}
 					</div>
-					<button type="button" onclick={addStep} class="btn-ghost" style="margin-top: var(--space-3);">
+					<button
+						type="button"
+						onclick={addStep}
+						class="btn-ghost"
+						style="margin-top: var(--space-3);"
+					>
 						+ Add step
 					</button>
 				</div>
@@ -382,9 +420,15 @@
 		padding: 0 var(--space-1);
 	}
 
-	.input-amount { max-width: 80px; }
-	.input-unit   { max-width: 80px; }
-	.input-name   { flex: 1; }
+	.input-amount {
+		max-width: 80px;
+	}
+	.input-unit {
+		max-width: 80px;
+	}
+	.input-name {
+		flex: 1;
+	}
 
 	.remove-btn {
 		background: none;
@@ -412,7 +456,7 @@
 		width: 28px;
 		height: 28px;
 		background: var(--color-accent);
-		color: #FDFAF4;
+		color: #fdfaf4;
 		border-radius: 50%;
 		display: flex;
 		align-items: center;

@@ -19,17 +19,13 @@
 	<div class="mt-8">
 		{#if data.recipes.length === 0 && (data.searchQuery || data.selectedTags.length > 0)}
 			<div class="py-20 text-center">
-				<h3 class="mb-4 text-2xl text-foreground">No recipes found</h3>
-				<p class="text-muted-foreground">
-					Try adjusting your search or clearing some filters.
-				</p>
+				<h3 class="text-foreground mb-4 text-2xl">No recipes found</h3>
+				<p class="text-muted-foreground">Try adjusting your search or clearing some filters.</p>
 			</div>
 		{:else if data.recipes.length === 0}
 			<div class="py-20 text-center">
-				<h3 class="mb-4 text-2xl text-foreground">Start searching</h3>
-				<p class="text-muted-foreground">
-					Enter a recipe name or select tags to find recipes.
-				</p>
+				<h3 class="text-foreground mb-4 text-2xl">Start searching</h3>
+				<p class="text-muted-foreground">Enter a recipe name or select tags to find recipes.</p>
 			</div>
 		{:else}
 			<RecipeGrid recipes={data.recipes} />

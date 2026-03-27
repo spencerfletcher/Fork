@@ -28,7 +28,7 @@ setup('authenticate as seed user', async ({ page }) => {
 		fs.writeFileSync(AUTH_FILE, JSON.stringify({ cookies: [], origins: [] }));
 		console.warn(
 			'\n⚠️  E2E_USER_EMAIL / E2E_USER_PASSWORD not set — authenticated tests will be skipped.\n' +
-			'   Add them to your .env (see .env.example) and re-run to include them.\n'
+				'   Add them to your .env (see .env.example) and re-run to include them.\n'
 		);
 		return;
 	}

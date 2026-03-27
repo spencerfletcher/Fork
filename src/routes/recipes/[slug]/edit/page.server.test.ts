@@ -7,21 +7,21 @@ const { findRecipeMock, dbInsert, transactionMock } = vi.hoisted(() => ({
 	findRecipeMock: vi.fn(),
 	dbInsert: vi.fn().mockReturnValue({
 		values: vi.fn().mockReturnValue({
-			onConflictDoNothing: vi.fn().mockResolvedValue(undefined),
-		}),
+			onConflictDoNothing: vi.fn().mockResolvedValue(undefined)
+		})
 	}),
-	transactionMock: vi.fn(),
+	transactionMock: vi.fn()
 }));
 
 vi.mock('$lib/server/db', () => ({
 	db: {
 		query: {
 			recipes: { findFirst: findRecipeMock },
-			tags: { findMany: vi.fn().mockResolvedValue([]) },
+			tags: { findMany: vi.fn().mockResolvedValue([]) }
 		},
 		insert: dbInsert,
-		transaction: transactionMock,
-	},
+		transaction: transactionMock
+	}
 }));
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -39,7 +39,7 @@ function chain(resolved: unknown = undefined) {
 		catch: p.catch.bind(p),
 		finally: p.finally.bind(p),
 		onConflictDoNothing: vi.fn().mockReturnValue(Promise.resolve()),
-		returning: vi.fn().mockReturnValue(p),
+		returning: vi.fn().mockReturnValue(p)
 	};
 	for (const m of ['values', 'set', 'from', 'where']) {
 		c[m] = vi.fn().mockReturnValue(c);
@@ -64,13 +64,18 @@ function makeTx(opts: { maxVer?: number; insertedRows?: unknown[] } = {}) {
 		insertChain,
 		updateChain,
 		deleteChain,
-		selectChain,
+		selectChain
 	};
 }
 
 /** Calls a SvelteKit action and returns whatever it throws (or returns). */
-async function invoke(action: (...args: unknown[]) => unknown, event: unknown): Promise<Record<string, unknown>> {
-	return (action(event as never) as Promise<unknown>).catch((e: unknown) => e) as Promise<Record<string, unknown>>;
+async function invoke(
+	action: (...args: unknown[]) => unknown,
+	event: unknown
+): Promise<Record<string, unknown>> {
+	return (action(event as never) as Promise<unknown>).catch((e: unknown) => e) as Promise<
+		Record<string, unknown>
+	>;
 }
 
 /** Builds a minimal SvelteKit RequestEvent-like object. */
@@ -87,7 +92,7 @@ function makeEvent(opts: {
 	return {
 		params: opts.params ?? { slug: 'test-slug' },
 		request: { formData: vi.fn().mockResolvedValue(fd) },
-		locals: { user: opts.user ?? null },
+		locals: { user: opts.user ?? null }
 	};
 }
 
@@ -136,7 +141,11 @@ describe('saveMeta', () => {
 
 		const result = await invoke(
 			actions.saveMeta as never,
-			makeEvent({ user: OWNER, params: { slug: 'test-slug' }, fields: { title: 'New Title', isPublic: 'on' } })
+			makeEvent({
+				user: OWNER,
+				params: { slug: 'test-slug' },
+				fields: { title: 'New Title', isPublic: 'on' }
+			})
 		);
 
 		expect(result.status).toBe(303);
@@ -156,15 +165,19 @@ describe('saveMeta', () => {
 					title: 'Banana Bread',
 					description: 'Moist and delicious',
 					servings: '8',
-					isPublic: 'on',
-				},
+					isPublic: 'on'
+				}
 			})
 		);
 
 		expect(tx.update).toHaveBeenCalled();
 		// .set() is called on the chain returned by .update()
 		const setCall = tx.updateChain.set.mock.calls[0][0];
-		expect(setCall).toMatchObject({ title: 'Banana Bread', description: 'Moist and delicious', servings: 8 });
+		expect(setCall).toMatchObject({
+			title: 'Banana Bread',
+			description: 'Moist and delicious',
+			servings: 8
+		});
 	});
 
 	test('calls tx.delete to clear old tags before re-inserting', async () => {
@@ -209,7 +222,7 @@ describe('saveVersion', () => {
 			actions.saveVersion as never,
 			makeEvent({
 				user: OWNER,
-				fields: { commitMessage: '  ', ingredients: VALID_INGREDIENTS, steps: VALID_STEPS },
+				fields: { commitMessage: '  ', ingredients: VALID_INGREDIENTS, steps: VALID_STEPS }
 			})
 		);
 		expect(result.status).toBe(400);
@@ -221,7 +234,7 @@ describe('saveVersion', () => {
 			actions.saveVersion as never,
 			makeEvent({
 				user: OWNER,
-				fields: { commitMessage: 'fix', ingredients: 'not-json', steps: VALID_STEPS },
+				fields: { commitMessage: 'fix', ingredients: 'not-json', steps: VALID_STEPS }
 			})
 		);
 		expect(result.status).toBe(400);
@@ -233,7 +246,7 @@ describe('saveVersion', () => {
 			actions.saveVersion as never,
 			makeEvent({
 				user: OWNER,
-				fields: { commitMessage: 'fix', ingredients: '[]', steps: VALID_STEPS },
+				fields: { commitMessage: 'fix', ingredients: '[]', steps: VALID_STEPS }
 			})
 		);
 		expect(result.status).toBe(400);
@@ -245,7 +258,7 @@ describe('saveVersion', () => {
 			actions.saveVersion as never,
 			makeEvent({
 				user: OWNER,
-				fields: { commitMessage: 'fix', ingredients: VALID_INGREDIENTS, steps: '[]' },
+				fields: { commitMessage: 'fix', ingredients: VALID_INGREDIENTS, steps: '[]' }
 			})
 		);
 		expect(result.status).toBe(400);
@@ -261,7 +274,7 @@ describe('saveVersion', () => {
 			makeEvent({
 				user: OWNER,
 				params: { slug: 'test-slug' },
-				fields: { commitMessage: 'Add cream', ingredients: VALID_INGREDIENTS, steps: VALID_STEPS },
+				fields: { commitMessage: 'Add cream', ingredients: VALID_INGREDIENTS, steps: VALID_STEPS }
 			})
 		);
 
@@ -278,7 +291,11 @@ describe('saveVersion', () => {
 			actions.saveVersion as never,
 			makeEvent({
 				user: OWNER,
-				fields: { commitMessage: 'Adjust spices', ingredients: VALID_INGREDIENTS, steps: VALID_STEPS },
+				fields: {
+					commitMessage: 'Adjust spices',
+					ingredients: VALID_INGREDIENTS,
+					steps: VALID_STEPS
+				}
 			})
 		);
 
@@ -296,14 +313,14 @@ describe('saveVersion', () => {
 
 		const messedUpSteps = JSON.stringify([
 			{ step: 5, text: 'First' },
-			{ step: 10, text: 'Second' },
+			{ step: 10, text: 'Second' }
 		]);
 
 		await invoke(
 			actions.saveVersion as never,
 			makeEvent({
 				user: OWNER,
-				fields: { commitMessage: 'fix steps', ingredients: VALID_INGREDIENTS, steps: messedUpSteps },
+				fields: { commitMessage: 'fix steps', ingredients: VALID_INGREDIENTS, steps: messedUpSteps }
 			})
 		);
 

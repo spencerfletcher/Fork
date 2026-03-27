@@ -8,9 +8,9 @@ export const load: PageServerLoad = async () => {
 		where: eq(recipes.isPublic, true),
 		with: {
 			recipesToTags: { with: { tag: true } },
-			author: true,
+			author: true
 		},
-		orderBy: (r, { desc }) => [desc(r.createdAt)],
+		orderBy: (r, { desc }) => [desc(r.createdAt)]
 	});
 
 	return { recipes: displayedRecipes };

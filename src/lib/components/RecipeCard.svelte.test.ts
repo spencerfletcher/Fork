@@ -54,7 +54,9 @@ describe('RecipeCard', () => {
 	});
 
 	test('shows combined total time when both prep and cook time are set', () => {
-		render(RecipeCard, { props: { recipe: makeRecipe({ prepTimeMinutes: 20, cookTimeMinutes: 30 }) } });
+		render(RecipeCard, {
+			props: { recipe: makeRecipe({ prepTimeMinutes: 20, cookTimeMinutes: 30 }) }
+		});
 		expect(screen.getByText('50 min')).toBeInTheDocument();
 	});
 
@@ -69,7 +71,9 @@ describe('RecipeCard', () => {
 	});
 
 	test('shows description when present', () => {
-		render(RecipeCard, { props: { recipe: makeRecipe({ description: 'A rich and moist cake.' }) } });
+		render(RecipeCard, {
+			props: { recipe: makeRecipe({ description: 'A rich and moist cake.' }) }
+		});
 		expect(screen.getByText('A rich and moist cake.')).toBeInTheDocument();
 	});
 
@@ -86,7 +90,7 @@ describe('RecipeCard', () => {
 				{ tag: { id: 1, name: 'Dessert', slug: 'dessert' } },
 				{ tag: { id: 2, name: 'Baking', slug: 'baking' } },
 				{ tag: { id: 3, name: 'American', slug: 'american' } },
-				{ tag: { id: 4, name: 'Snack', slug: 'snack' } }, // 4th should be hidden
+				{ tag: { id: 4, name: 'Snack', slug: 'snack' } } // 4th should be hidden
 			]
 		};
 		render(RecipeCard, { props: { recipe } });

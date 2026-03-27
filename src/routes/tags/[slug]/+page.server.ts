@@ -8,7 +8,7 @@ export const load: PageServerLoad = async ({ params }) => {
 	const tagSlug = params.slug.toLowerCase();
 
 	const tag = await db.query.tags.findFirst({
-		where: eq(tags.slug, tagSlug),
+		where: eq(tags.slug, tagSlug)
 	});
 
 	if (!tag) throw error(404, 'Tag not found');
@@ -19,7 +19,7 @@ export const load: PageServerLoad = async ({ params }) => {
 		.leftJoin(recipesToTags, eq(recipes.id, recipesToTags.recipeId))
 		.where(and(eq(recipesToTags.tagId, tag.id), eq(recipes.isPublic, true)));
 
-	const ids = recipeIdsResult.map(item => item.id);
+	const ids = recipeIdsResult.map((item) => item.id);
 
 	if (ids.length === 0) {
 		return { tag, recipes: [] };
@@ -29,8 +29,8 @@ export const load: PageServerLoad = async ({ params }) => {
 		where: inArray(recipes.id, ids),
 		with: {
 			recipesToTags: { with: { tag: true } },
-			author: true,
-		},
+			author: true
+		}
 	});
 
 	return { tag, recipes: recipesData };

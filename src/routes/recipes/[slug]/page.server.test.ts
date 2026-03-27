@@ -8,20 +8,20 @@ const { findRecipeMock, dbInsert, transactionMock } = vi.hoisted(() => ({
 	// db.insert is called at the top level (profile upsert) before the transaction
 	dbInsert: vi.fn().mockReturnValue({
 		values: vi.fn().mockReturnValue({
-			onConflictDoNothing: vi.fn().mockResolvedValue(undefined),
-		}),
+			onConflictDoNothing: vi.fn().mockResolvedValue(undefined)
+		})
 	}),
-	transactionMock: vi.fn(),
+	transactionMock: vi.fn()
 }));
 
 vi.mock('$lib/server/db', () => ({
 	db: {
 		query: {
-			recipes: { findFirst: findRecipeMock },
+			recipes: { findFirst: findRecipeMock }
 		},
 		insert: dbInsert,
-		transaction: transactionMock,
-	},
+		transaction: transactionMock
+	}
 }));
 
 // nanoid must be deterministic so we can predict slugs
@@ -37,7 +37,7 @@ function chain(resolved: unknown = undefined) {
 		catch: p.catch.bind(p),
 		finally: p.finally.bind(p),
 		onConflictDoNothing: vi.fn().mockReturnValue(Promise.resolve()),
-		returning: vi.fn().mockReturnValue(p),
+		returning: vi.fn().mockReturnValue(p)
 	};
 	for (const m of ['values', 'set', 'from', 'where']) {
 		c[m] = vi.fn().mockReturnValue(c);
@@ -46,7 +46,10 @@ function chain(resolved: unknown = undefined) {
 }
 
 function makeTx(opts: { newRecipeId?: number; newRecipeSlug?: string } = {}) {
-	const newRecipe = { id: opts.newRecipeId ?? 99, slug: opts.newRecipeSlug ?? 'forked-slug-abc123' };
+	const newRecipe = {
+		id: opts.newRecipeId ?? 99,
+		slug: opts.newRecipeSlug ?? 'forked-slug-abc123'
+	};
 	const insertChain = chain([newRecipe]);
 	const updateChain = chain();
 	const deleteChain = chain();
@@ -57,12 +60,17 @@ function makeTx(opts: { newRecipeId?: number; newRecipeSlug?: string } = {}) {
 		delete: vi.fn().mockReturnValue(deleteChain),
 		query: { tags: { findMany: vi.fn().mockResolvedValue([]) } },
 		insertChain,
-		updateChain,
+		updateChain
 	};
 }
 
-async function invoke(action: (...args: unknown[]) => unknown, event: unknown): Promise<Record<string, unknown>> {
-	return (action(event as never) as Promise<unknown>).catch((e: unknown) => e) as Promise<Record<string, unknown>>;
+async function invoke(
+	action: (...args: unknown[]) => unknown,
+	event: unknown
+): Promise<Record<string, unknown>> {
+	return (action(event as never) as Promise<unknown>).catch((e: unknown) => e) as Promise<
+		Record<string, unknown>
+	>;
 }
 
 function makeEvent(opts: {
@@ -75,7 +83,7 @@ function makeEvent(opts: {
 	return {
 		params: opts.params ?? { slug: 'source-recipe' },
 		request: { formData: vi.fn().mockResolvedValue(fd) },
-		locals: { user: opts.user ?? null },
+		locals: { user: opts.user ?? null }
 	};
 }
 
@@ -103,10 +111,10 @@ const SOURCE_RECIPE = {
 			versionNumber: 1,
 			commitMessage: 'Initial recipe',
 			ingredients: [{ amount: '2', unit: 'cups', name: 'flour' }],
-			steps: [{ step: 1, text: 'Mix.' }],
-		},
+			steps: [{ step: 1, text: 'Mix.' }]
+		}
 	],
-	recipesToTags: [{ tagId: 7 }],
+	recipesToTags: [{ tagId: 7 }]
 };
 
 // ─── fork action ──────────────────────────────────────────────────────────────
@@ -139,7 +147,8 @@ describe('fork', () => {
 		await invoke(actions.fork as never, makeEvent({ user: FORKER }));
 
 		expect(dbInsert).toHaveBeenCalled();
-		const profileValues = (dbInsert.mock.results[0].value.values as ReturnType<typeof vi.fn>).mock.calls[0][0];
+		const profileValues = (dbInsert.mock.results[0].value.values as ReturnType<typeof vi.fn>).mock
+			.calls[0][0];
 		expect(profileValues.id).toBe(FORKER.id);
 	});
 

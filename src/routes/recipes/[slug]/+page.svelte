@@ -8,7 +8,7 @@
 	const { recipe, currentVersion, allVersions, isViewingHistory } = $derived(data);
 	const user = $derived(data.user);
 
-	const tags = $derived(recipe.recipesToTags?.map(r => r.tag) ?? []);
+	const tags = $derived(recipe.recipesToTags?.map((r) => r.tag) ?? []);
 	const isOwner = $derived(user?.id === recipe.authorId);
 	const canFork = $derived(!!user && !isOwner && !isViewingHistory);
 	const canFavorite = $derived(!!user && !isViewingHistory);
@@ -20,7 +20,11 @@
 
 	function formatDate(date: Date | string | null) {
 		if (!date) return '';
-		return new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+		return new Date(date).toLocaleDateString('en-US', {
+			month: 'short',
+			day: 'numeric',
+			year: 'numeric'
+		});
 	}
 </script>
 
@@ -33,7 +37,6 @@
 	{/if}
 
 	<div class="content-column">
-
 		<!-- Viewing history banner -->
 		{#if isViewingHistory && currentVersion}
 			<div class="history-banner">
@@ -88,13 +91,32 @@
 		<!-- Actions -->
 		<div class="actions-row">
 			{#if canFavorite}
-				<form method="POST" action="?/toggleFavorite" use:enhance={() => {
-					isFavorited = !isFavorited;
-					return async ({ update }) => update({ reset: false });
-				}}>
-					<button type="submit" class="btn-ghost favorite-btn" aria-label={isFavorited ? 'Unfavorite' : 'Favorite'}>
-						<svg class="heart-icon" class:filled={isFavorited} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-							<path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+				<form
+					method="POST"
+					action="?/toggleFavorite"
+					use:enhance={() => {
+						isFavorited = !isFavorited;
+						return async ({ update }) => update({ reset: false });
+					}}
+				>
+					<button
+						type="submit"
+						class="btn-ghost favorite-btn"
+						aria-label={isFavorited ? 'Unfavorite' : 'Favorite'}
+					>
+						<svg
+							class="heart-icon"
+							class:filled={isFavorited}
+							xmlns="http://www.w3.org/2000/svg"
+							viewBox="0 0 24 24"
+							stroke-width="1.8"
+							stroke="currentColor"
+						>
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"
+							/>
 						</svg>
 						{isFavorited ? 'Saved' : 'Save'}
 					</button>
@@ -111,16 +133,20 @@
 							<Dialog.Description class="dialog-desc">
 								A copy will be added to your recipes. You can edit it independently.
 							</Dialog.Description>
-							<form method="POST" action="?/fork" use:enhance={() => {
-								return async ({ result, update }) => {
-									if (result.type === 'redirect') {
-										window.location.href = result.location;
-									} else {
-										await update();
-									}
-									forkDialogOpen = false;
-								};
-							}}>
+							<form
+								method="POST"
+								action="?/fork"
+								use:enhance={() => {
+									return async ({ result, update }) => {
+										if (result.type === 'redirect') {
+											window.location.href = result.location;
+										} else {
+											await update();
+										}
+										forkDialogOpen = false;
+									};
+								}}
+							>
 								<div class="dialog-field">
 									<label for="fork-commit" class="dialog-label">Initial commit message</label>
 									<input
@@ -156,7 +182,9 @@
 					<ul class="ingredient-list">
 						{#each currentVersion.ingredients as ingredient}
 							<li class="ingredient-item">
-								{ingredient.amount} {ingredient.unit} {ingredient.name}
+								{ingredient.amount}
+								{ingredient.unit}
+								{ingredient.name}
 							</li>
 						{/each}
 					</ul>
@@ -175,7 +203,9 @@
 				</section>
 			</div>
 		{:else}
-			<p style="color: var(--color-text-3);">No recipe content yet. <a href="/recipes/{recipe.slug}/edit">Add content →</a></p>
+			<p style="color: var(--color-text-3);">
+				No recipe content yet. <a href="/recipes/{recipe.slug}/edit">Add content →</a>
+			</p>
 		{/if}
 
 		<!-- Version history -->
@@ -184,7 +214,9 @@
 				<details class="version-history">
 					<summary>
 						<span class="version-history-label">Version History</span>
-						<span class="version-count">{allVersions.length} version{allVersions.length !== 1 ? 's' : ''}</span>
+						<span class="version-count"
+							>{allVersions.length} version{allVersions.length !== 1 ? 's' : ''}</span
+						>
 					</summary>
 					<div class="version-list">
 						{#each allVersions as version}
@@ -202,12 +234,16 @@
 									</div>
 								</div>
 								<div class="version-actions">
-									<a href="/recipes/{recipe.slug}?version={version.versionNumber}" class="btn-ghost-sm">View</a>
+									<a
+										href="/recipes/{recipe.slug}?version={version.versionNumber}"
+										class="btn-ghost-sm">View</a
+									>
 									{#if version.versionNumber > 1}
 										<a
-											href="/recipes/{recipe.slug}/diff?from={version.versionNumber - 1}&to={version.versionNumber}"
-											class="btn-ghost-sm"
-										>Compare</a>
+											href="/recipes/{recipe.slug}/diff?from={version.versionNumber -
+												1}&to={version.versionNumber}"
+											class="btn-ghost-sm">Compare</a
+										>
 									{/if}
 								</div>
 							</div>
@@ -216,7 +252,6 @@
 				</details>
 			</section>
 		{/if}
-
 	</div>
 </article>
 
@@ -313,7 +348,9 @@
 		width: 18px;
 		height: 18px;
 		fill: none;
-		transition: fill 0.15s ease, color 0.15s ease;
+		transition:
+			fill 0.15s ease,
+			color 0.15s ease;
 	}
 
 	.heart-icon.filled {
@@ -393,7 +430,7 @@
 		width: 32px;
 		height: 32px;
 		background: var(--color-accent);
-		color: #FDFAF4;
+		color: #fdfaf4;
 		border-radius: 50%;
 		display: flex;
 		align-items: center;
@@ -426,8 +463,12 @@
 	}
 
 	/* Hide the default disclosure triangle in all browsers */
-	.version-history summary::-webkit-details-marker { display: none; }
-	.version-history summary::marker { display: none; }
+	.version-history summary::-webkit-details-marker {
+		display: none;
+	}
+	.version-history summary::marker {
+		display: none;
+	}
 
 	.version-history-label {
 		font-size: 0.7rem;

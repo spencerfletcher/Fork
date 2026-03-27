@@ -20,7 +20,9 @@ test.describe('Auth pages', () => {
 
 	test('signup page has a submit button', async ({ page }) => {
 		await page.goto('/signup');
-		await expect(page.getByRole('button', { name: /sign up|create account|register/i })).toBeVisible();
+		await expect(
+			page.getByRole('button', { name: /sign up|create account|register/i })
+		).toBeVisible();
 	});
 
 	test('new recipe page redirects unauthenticated users to login', async ({ page }) => {
@@ -28,7 +30,10 @@ test.describe('Auth pages', () => {
 		// Should either redirect to /login or show an error — not the new recipe form
 		const url = page.url();
 		const isRedirected = url.includes('/login');
-		const hasForm = await page.locator('input[name="title"]').isVisible().catch(() => false);
+		const hasForm = await page
+			.locator('input[name="title"]')
+			.isVisible()
+			.catch(() => false);
 		// Either redirected OR no recipe form visible
 		expect(isRedirected || !hasForm).toBe(true);
 	});

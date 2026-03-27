@@ -12,21 +12,21 @@ export const load: PageServerLoad = async ({ params, locals: { user } }) => {
 		where: eq(recipes.slug, params.slug),
 		with: {
 			recipesToTags: { with: { tag: true } },
-			versions: { orderBy: [desc(recipeVersions.versionNumber)], limit: 1 },
-		},
+			versions: { orderBy: [desc(recipeVersions.versionNumber)], limit: 1 }
+		}
 	});
 
 	if (!recipe) throw error(404, 'Recipe not found');
 	if (recipe.authorId !== user.id) throw error(403, 'You do not own this recipe');
 
 	const allTags = await db.query.tags.findMany({
-		orderBy: (t, { asc }) => [asc(t.name)],
+		orderBy: (t, { asc }) => [asc(t.name)]
 	});
 
 	return {
 		recipe,
 		latestVersion: recipe.versions[0] ?? null,
-		allTags,
+		allTags
 	};
 };
 
@@ -36,7 +36,7 @@ export const actions: Actions = {
 		if (!user) throw error(401, 'Login required');
 
 		const recipe = await db.query.recipes.findFirst({
-			where: eq(recipes.slug, params.slug),
+			where: eq(recipes.slug, params.slug)
 		});
 		if (!recipe) throw error(404, 'Recipe not found');
 		if (recipe.authorId !== user.id) throw error(403, 'Not authorized');
@@ -56,7 +56,16 @@ export const actions: Actions = {
 		await db.transaction(async (tx) => {
 			await tx
 				.update(recipes)
-				.set({ title, description, imageUrl, servings, prepTimeMinutes, cookTimeMinutes, isPublic, updatedAt: new Date() })
+				.set({
+					title,
+					description,
+					imageUrl,
+					servings,
+					prepTimeMinutes,
+					cookTimeMinutes,
+					isPublic,
+					updatedAt: new Date()
+				})
 				.where(eq(recipes.id, recipe.id));
 
 			// Sync tags
@@ -65,15 +74,15 @@ export const actions: Actions = {
 				// Upsert any new tags
 				await tx
 					.insert(tags)
-					.values(selectedTagNames.map(name => ({ name, slug: slugify(name) })))
+					.values(selectedTagNames.map((name) => ({ name, slug: slugify(name) })))
 					.onConflictDoNothing();
 				const relevantTags = await tx.query.tags.findMany({
-					where: inArray(tags.name, selectedTagNames),
+					where: inArray(tags.name, selectedTagNames)
 				});
 				if (relevantTags.length > 0) {
-					await tx.insert(recipesToTags).values(
-						relevantTags.map(t => ({ recipeId: recipe.id, tagId: t.id }))
-					);
+					await tx
+						.insert(recipesToTags)
+						.values(relevantTags.map((t) => ({ recipeId: recipe.id, tagId: t.id })));
 				}
 			}
 		});
@@ -86,7 +95,7 @@ export const actions: Actions = {
 		if (!user) throw error(401, 'Login required');
 
 		const recipe = await db.query.recipes.findFirst({
-			where: eq(recipes.slug, params.slug),
+			where: eq(recipes.slug, params.slug)
 		});
 		if (!recipe) throw error(404, 'Recipe not found');
 		if (recipe.authorId !== user.id) throw error(403, 'Not authorized');
@@ -131,13 +140,10 @@ export const actions: Actions = {
 				commitMessage,
 				ingredients,
 				steps,
-				createdBy: user.id,
+				createdBy: user.id
 			});
 
-			await tx
-				.update(recipes)
-				.set({ updatedAt: new Date() })
-				.where(eq(recipes.id, recipe.id));
+			await tx.update(recipes).set({ updatedAt: new Date() }).where(eq(recipes.id, recipe.id));
 		});
 
 		throw redirect(303, `/recipes/${params.slug}`);
@@ -148,7 +154,7 @@ export const actions: Actions = {
 		if (!user) throw error(401, 'Login required');
 
 		const recipe = await db.query.recipes.findFirst({
-			where: eq(recipes.slug, params.slug),
+			where: eq(recipes.slug, params.slug)
 		});
 		if (!recipe) throw error(404, 'Recipe not found');
 		if (recipe.authorId !== user.id) throw error(403, 'Not authorized');
@@ -157,5 +163,5 @@ export const actions: Actions = {
 		await db.delete(recipes).where(eq(recipes.id, recipe.id));
 
 		throw redirect(303, '/recipes');
-	},
+	}
 };

@@ -13,8 +13,8 @@ export default defineConfig({
 			onwarn(warning, defaultHandler) {
 				if (warning.code === 'UNUSED_EXTERNAL_IMPORT' && warning.exporter === 'drizzle-orm') return;
 				defaultHandler(warning);
-			},
-		},
+			}
+		}
 	},
 	plugins: [
 		tailwindcss(),

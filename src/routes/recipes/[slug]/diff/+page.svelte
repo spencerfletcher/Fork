@@ -288,7 +288,7 @@
 		width: 22px;
 		height: 22px;
 		background: var(--color-accent);
-		color: #FDFAF4;
+		color: #fdfaf4;
 		border-radius: 50%;
 		font-size: 0.7rem;
 		font-weight: 600;

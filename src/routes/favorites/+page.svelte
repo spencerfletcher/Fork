@@ -29,18 +29,16 @@
 			<!-- Empty State -->
 			<div class="py-20 text-center">
 				{#if data.searchQuery || data.selectedTags?.length > 0}
-					<h3 class="mb-4 text-2xl text-foreground">No favorites match your filters</h3>
-					<p class="mb-8 text-muted-foreground">
-						Try adjusting your search or clearing filters.
-					</p>
+					<h3 class="text-foreground mb-4 text-2xl">No favorites match your filters</h3>
+					<p class="text-muted-foreground mb-8">Try adjusting your search or clearing filters.</p>
 				{:else}
-					<h3 class="mb-4 text-2xl text-foreground">No favorites yet</h3>
-					<p class="mb-8 text-muted-foreground">
+					<h3 class="text-foreground mb-4 text-2xl">No favorites yet</h3>
+					<p class="text-muted-foreground mb-8">
 						Start exploring recipes and save your favorites for easy access later.
 					</p>
 					<a
 						href="/"
-						class="inline-block rounded-md bg-foreground px-6 py-3 font-medium text-white transition-colors hover:bg-[color:var(--foreground)]"
+						class="bg-foreground inline-block rounded-md px-6 py-3 font-medium text-white transition-colors hover:bg-[color:var(--foreground)]"
 					>
 						Explore Recipes
 					</a>

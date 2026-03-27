@@ -11,13 +11,13 @@ export const load: PageServerLoad = async ({ locals: { user } }) => {
 };
 
 export const actions: Actions = {
-	default: async ({request, locals: {supabase}}) => {
+	default: async ({ request, locals: { supabase } }) => {
 		const formData = await request.formData();
 		const email = formData.get('email') as string;
 		const password = formData.get('password') as string;
 
 		if (!email || !password) {
-			return error(400, {message: 'Email and password are required.'});
+			return error(400, { message: 'Email and password are required.' });
 		}
 
 		// Use the Supabase client to sign up a new user
@@ -33,12 +33,12 @@ export const actions: Actions = {
 				.insert(profiles)
 				.values({
 					id: data.user.id,
-					username: email.split('@')[0],
+					username: email.split('@')[0]
 				})
 				.onConflictDoNothing();
 		}
 
 		// By default, Supabase sends a confirmation email.
 		throw redirect(303, '/confirm-email');
-	},
+	}
 };

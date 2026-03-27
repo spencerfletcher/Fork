@@ -14,7 +14,9 @@
 		const file = (e.target as HTMLInputElement).files?.[0];
 		if (file) {
 			const reader = new FileReader();
-			reader.onload = () => { imagePreview = reader.result as string; };
+			reader.onload = () => {
+				imagePreview = reader.result as string;
+			};
 			reader.readAsDataURL(file);
 		} else {
 			imagePreview = null;
@@ -84,7 +86,13 @@
 			<h1>New Recipe</h1>
 		</div>
 
-		<form method="POST" use:enhance onsubmit={serializeContent} class="form" enctype="multipart/form-data">
+		<form
+			method="POST"
+			use:enhance
+			onsubmit={serializeContent}
+			class="form"
+			enctype="multipart/form-data"
+		>
 			<!-- Hidden JSON inputs -->
 			<input type="hidden" name="ingredients" bind:this={ingredientsInput} />
 			<input type="hidden" name="steps" bind:this={stepsInput} />
@@ -108,9 +116,12 @@
 						<button
 							type="button"
 							class="remove-image"
-							onclick={() => { imagePreview = null; (document.getElementById('image') as HTMLInputElement).value = ''; }}
-							aria-label="Remove image"
-						>×</button>
+							onclick={() => {
+								imagePreview = null;
+								(document.getElementById('image') as HTMLInputElement).value = '';
+							}}
+							aria-label="Remove image">×</button
+						>
 					</div>
 				{/if}
 				<input
@@ -162,7 +173,9 @@
 							role="listitem"
 							draggable="true"
 							ondragstart={() => onIngredientDragStart(i)}
-							ondragover={(e) => { e.preventDefault(); }}
+							ondragover={(e) => {
+								e.preventDefault();
+							}}
 							ondrop={() => onIngredientDrop(i)}
 						>
 							<span class="drag-handle" title="Drag to reorder">⠿</span>
@@ -188,12 +201,17 @@
 								type="button"
 								onclick={() => removeIngredient(i)}
 								class="remove-btn"
-								aria-label="Remove ingredient"
-							>×</button>
+								aria-label="Remove ingredient">×</button
+							>
 						</div>
 					{/each}
 				</div>
-				<button type="button" onclick={addIngredient} class="btn-ghost" style="margin-top: var(--space-3);">
+				<button
+					type="button"
+					onclick={addIngredient}
+					class="btn-ghost"
+					style="margin-top: var(--space-3);"
+				>
 					+ Add ingredient
 				</button>
 			</div>
@@ -208,7 +226,9 @@
 							role="listitem"
 							draggable="true"
 							ondragstart={() => onStepDragStart(i)}
-							ondragover={(e) => { e.preventDefault(); }}
+							ondragover={(e) => {
+								e.preventDefault();
+							}}
 							ondrop={() => onStepDrop(i)}
 						>
 							<span class="step-num-badge">{i + 1}</span>
@@ -223,12 +243,17 @@
 								type="button"
 								onclick={() => removeStep(i)}
 								class="remove-btn"
-								aria-label="Remove step"
-							>×</button>
+								aria-label="Remove step">×</button
+							>
 						</div>
 					{/each}
 				</div>
-				<button type="button" onclick={addStep} class="btn-ghost" style="margin-top: var(--space-3);">
+				<button
+					type="button"
+					onclick={addStep}
+					class="btn-ghost"
+					style="margin-top: var(--space-3);"
+				>
 					+ Add step
 				</button>
 			</div>
@@ -268,7 +293,8 @@
 		gap: var(--space-2);
 	}
 
-	.field label, .field-legend {
+	.field label,
+	.field-legend {
 		font-size: 0.875rem;
 		font-weight: 500;
 		color: var(--color-text-2);
@@ -318,7 +344,7 @@
 		position: absolute;
 		top: var(--space-2);
 		right: var(--space-2);
-		background: rgba(0,0,0,0.55);
+		background: rgba(0, 0, 0, 0.55);
 		color: white;
 		border: none;
 		border-radius: 50%;
@@ -373,9 +399,15 @@
 		padding: 0 var(--space-1);
 	}
 
-	.input-amount { max-width: 80px; }
-	.input-unit   { max-width: 80px; }
-	.input-name   { flex: 1; }
+	.input-amount {
+		max-width: 80px;
+	}
+	.input-unit {
+		max-width: 80px;
+	}
+	.input-name {
+		flex: 1;
+	}
 
 	.remove-btn {
 		background: none;
@@ -403,7 +435,7 @@
 		width: 28px;
 		height: 28px;
 		background: var(--color-accent);
-		color: #FDFAF4;
+		color: #fdfaf4;
 		border-radius: 50%;
 		display: flex;
 		align-items: center;

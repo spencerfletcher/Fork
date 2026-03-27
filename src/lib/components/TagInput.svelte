@@ -1,5 +1,7 @@
 <script lang="ts">
-	let { allTags }: {
+	let {
+		allTags
+	}: {
 		allTags: Array<{ id: number; name: string; slug: string }>;
 	} = $props();
 
@@ -10,16 +12,17 @@
 	let rootEl: HTMLDivElement;
 
 	const suggestions = $derived(
-		allTags.filter(t =>
-			!selected.includes(t.name) &&
-			(query.trim() === '' || t.name.toLowerCase().includes(query.toLowerCase().trim()))
+		allTags.filter(
+			(t) =>
+				!selected.includes(t.name) &&
+				(query.trim() === '' || t.name.toLowerCase().includes(query.toLowerCase().trim()))
 		)
 	);
 
 	const canCreate = $derived(
 		query.trim().length > 0 &&
-		!allTags.some(t => t.name.toLowerCase() === query.trim().toLowerCase()) &&
-		!selected.includes(query.trim())
+			!allTags.some((t) => t.name.toLowerCase() === query.trim().toLowerCase()) &&
+			!selected.includes(query.trim())
 	);
 
 	const showDropdown = $derived(open && (suggestions.length > 0 || canCreate));
@@ -32,7 +35,7 @@
 	}
 
 	function remove(name: string) {
-		selected = selected.filter(s => s !== name);
+		selected = selected.filter((s) => s !== name);
 	}
 
 	function handleKeydown(e: KeyboardEvent) {
@@ -100,12 +103,20 @@
 						<button
 							type="button"
 							class="option"
-							onmousedown={(e) => { e.preventDefault(); pick(tag.name); }}
+							onmousedown={(e) => {
+								e.preventDefault();
+								pick(tag.name);
+							}}
 						>
 							<!-- Price-tag icon -->
 							<svg class="tag-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-								<path d="M2 2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 0 1.414l-4.586 4.586a1 1 0 0 1-1.414 0L2.293 8.293A1 1 0 0 1 2 7.586V2Z" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round"/>
-								<circle cx="5.5" cy="5.5" r="1" fill="currentColor"/>
+								<path
+									d="M2 2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 0 1.414l-4.586 4.586a1 1 0 0 1-1.414 0L2.293 8.293A1 1 0 0 1 2 7.586V2Z"
+									stroke="currentColor"
+									stroke-width="1.25"
+									stroke-linejoin="round"
+								/>
+								<circle cx="5.5" cy="5.5" r="1" fill="currentColor" />
 							</svg>
 							{tag.name}
 						</button>
@@ -117,10 +128,18 @@
 						<button
 							type="button"
 							class="option create"
-							onmousedown={(e) => { e.preventDefault(); pick(query.trim()); }}
+							onmousedown={(e) => {
+								e.preventDefault();
+								pick(query.trim());
+							}}
 						>
 							<svg class="tag-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-								<path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+								<path
+									d="M8 3v10M3 8h10"
+									stroke="currentColor"
+									stroke-width="1.5"
+									stroke-linecap="round"
+								/>
 							</svg>
 							Create "<strong>{query.trim()}</strong>"
 						</button>

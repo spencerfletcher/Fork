@@ -19,7 +19,7 @@ describe('diffIngredients', () => {
 		const list = [ing('flour'), ing('sugar'), ing('butter')];
 		const result = diffIngredients(list, list);
 		expect(result).toHaveLength(3);
-		expect(result.every(r => r.status === 'unchanged')).toBe(true);
+		expect(result.every((r) => r.status === 'unchanged')).toBe(true);
 	});
 
 	test('empty lists produce empty diff', () => {
@@ -71,8 +71,8 @@ describe('diffIngredients', () => {
 		const from = [ing('flour'), ing('sugar')];
 		const to = [ing('butter'), ing('eggs')];
 		const result = diffIngredients(from, to);
-		const removed = result.filter(r => r.status === 'removed');
-		const added = result.filter(r => r.status === 'added');
+		const removed = result.filter((r) => r.status === 'removed');
+		const added = result.filter((r) => r.status === 'added');
 		expect(removed).toHaveLength(2);
 		expect(added).toHaveLength(2);
 	});
@@ -81,9 +81,7 @@ describe('diffIngredients', () => {
 		const from = [ing('a'), ing('b')];
 		const to = [ing('b'), ing('a'), ing('c')];
 		const result = diffIngredients(from, to);
-		const outputNames = result
-			.filter(r => r.status !== 'removed')
-			.map(r => r.ingredient.name);
+		const outputNames = result.filter((r) => r.status !== 'removed').map((r) => r.ingredient.name);
 		expect(outputNames).toEqual(['b', 'a', 'c']);
 	});
 });
@@ -95,7 +93,7 @@ describe('diffSteps', () => {
 		const list = [step(1, 'Mix'), step(2, 'Bake'), step(3, 'Cool')];
 		const result = diffSteps(list, list);
 		expect(result).toHaveLength(3);
-		expect(result.every(r => r.status === 'unchanged')).toBe(true);
+		expect(result.every((r) => r.status === 'unchanged')).toBe(true);
 	});
 
 	test('empty lists produce empty diff', () => {
@@ -129,7 +127,7 @@ describe('diffSteps', () => {
 		const from = [step(1, 'A'), step(3, 'C')];
 		const to = [step(1, 'A'), step(2, 'B'), step(3, 'C')];
 		const result = diffSteps(from, to);
-		const stepNums = result.map(r => r.step.step);
+		const stepNums = result.map((r) => r.step.step);
 		expect(stepNums).toEqual([1, 2, 3]);
 	});
 

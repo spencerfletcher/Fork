@@ -10,7 +10,7 @@ export const load: PageServerLoad = async ({ locals: { user } }) => {
 	if (!user) throw redirect(303, '/login');
 
 	const allTags = await db.query.tags.findMany({
-		orderBy: (t, { asc }) => [asc(t.name)],
+		orderBy: (t, { asc }) => [asc(t.name)]
 	});
 
 	return { allTags };
@@ -43,9 +43,9 @@ export const actions: Actions = {
 				.from('recipe-images')
 				.upload(filename, imageFile, { contentType: imageFile.type, upsert: false });
 			if (!uploadError) {
-				const { data: { publicUrl } } = supabase.storage
-					.from('recipe-images')
-					.getPublicUrl(filename);
+				const {
+					data: { publicUrl }
+				} = supabase.storage.from('recipe-images').getPublicUrl(filename);
 				imageUrl = publicUrl;
 			}
 			// If upload fails, imageUrl stays null — recipe is created without an image
@@ -88,7 +88,7 @@ export const actions: Actions = {
 					prepTimeMinutes,
 					cookTimeMinutes,
 					isPublic,
-					authorId: user.id,
+					authorId: user.id
 				})
 				.returning({ id: recipes.id });
 
@@ -96,15 +96,15 @@ export const actions: Actions = {
 			if (selectedTagNames.length > 0) {
 				await tx
 					.insert(tags)
-					.values(selectedTagNames.map(name => ({ name, slug: slugify(name) })))
+					.values(selectedTagNames.map((name) => ({ name, slug: slugify(name) })))
 					.onConflictDoNothing();
 				const relevantTags = await tx.query.tags.findMany({
-					where: inArray(tags.name, selectedTagNames),
+					where: inArray(tags.name, selectedTagNames)
 				});
 				if (relevantTags.length > 0) {
-					await tx.insert(recipesToTags).values(
-						relevantTags.map(t => ({ recipeId: newRecipe.id, tagId: t.id }))
-					);
+					await tx
+						.insert(recipesToTags)
+						.values(relevantTags.map((t) => ({ recipeId: newRecipe.id, tagId: t.id })));
 				}
 			}
 
@@ -114,10 +114,10 @@ export const actions: Actions = {
 				commitMessage: 'Initial recipe',
 				ingredients,
 				steps,
-				createdBy: user.id,
+				createdBy: user.id
 			});
 		});
 
 		throw redirect(303, `/recipes/${slug}`);
-	},
+	}
 };

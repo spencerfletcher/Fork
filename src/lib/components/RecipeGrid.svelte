@@ -13,7 +13,7 @@
 
 {#if recipes.length === 0}
 	<div class="py-20 text-center">
-		<p class="text-xl text-muted-foreground">No recipes found. Try a different search.</p>
+		<p class="text-muted-foreground text-xl">No recipes found. Try a different search.</p>
 	</div>
 {:else}
 	<div class="grid grid-cols-1 gap-x-8 gap-y-4 md:grid-cols-2 lg:grid-cols-3">

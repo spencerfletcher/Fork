@@ -26,11 +26,7 @@
 			</a>
 			<ul class="navbar-links">
 				<li>
-					<a
-						href="/search"
-						class="navbar-link"
-						class:active={$page.url.pathname === '/search'}
-					>
+					<a href="/search" class="navbar-link" class:active={$page.url.pathname === '/search'}>
 						Search
 					</a>
 				</li>
@@ -47,21 +43,22 @@
 					<a
 						href="/recipes"
 						class="navbar-link"
-						class:active={$page.url.pathname.startsWith('/recipes') && $page.url.pathname !== '/recipes/new'}
+						class:active={$page.url.pathname.startsWith('/recipes') &&
+							$page.url.pathname !== '/recipes/new'}
 					>
 						{m.navbar_recipes()}
 					</a>
 				</li>
 				{#if user}
-				<li>
-					<a
-						href="/favorites"
-						class="navbar-link"
-						class:active={$page.url.pathname === '/favorites'}
-					>
-						Favorites
-					</a>
-				</li>
+					<li>
+						<a
+							href="/favorites"
+							class="navbar-link"
+							class:active={$page.url.pathname === '/favorites'}
+						>
+							Favorites
+						</a>
+					</li>
 				{/if}
 			</ul>
 		</div>
@@ -76,7 +73,9 @@
 					</form>
 				{:else}
 					<a href="/login" class="navbar-link">Login</a>
-					<a href="/signup" class="btn-primary" style="padding: 8px 16px; font-size: 0.85rem;">Sign Up</a>
+					<a href="/signup" class="btn-primary" style="padding: 8px 16px; font-size: 0.85rem;"
+						>Sign Up</a
+					>
 				{/if}
 			</div>
 
@@ -89,12 +88,30 @@
 			>
 				<span class="sr-only">Open main menu</span>
 				{#if isMenuOpen}
-					<svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+					<svg
+						class="icon"
+						xmlns="http://www.w3.org/2000/svg"
+						fill="none"
+						viewBox="0 0 24 24"
+						stroke-width="1.5"
+						stroke="currentColor"
+					>
 						<path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
 					</svg>
 				{:else}
-					<svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-						<path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+					<svg
+						class="icon"
+						xmlns="http://www.w3.org/2000/svg"
+						fill="none"
+						viewBox="0 0 24 24"
+						stroke-width="1.5"
+						stroke="currentColor"
+					>
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
+						/>
 					</svg>
 				{/if}
 			</button>
@@ -115,21 +132,30 @@
 					<a href="/recipes" onclick={closeMenu} class="mobile-link">{m.navbar_recipes()}</a>
 				</li>
 				{#if user}
-				<li>
-					<a href="/favorites" onclick={closeMenu} class="mobile-link">Favorites</a>
-				</li>
+					<li>
+						<a href="/favorites" onclick={closeMenu} class="mobile-link">Favorites</a>
+					</li>
 				{/if}
 			</ul>
 			<div class="mobile-auth">
 				{#if user}
 					<p class="auth-email">{user.email}</p>
-					<form action="/logout" method="POST" use:enhance={() => {
-						return async ({ result }) => {
-							await applyAction(result);
-							closeMenu();
-						};
-					}}>
-						<button type="submit" class="mobile-link" style="width: 100%; text-align: left; background: none; border: none; cursor: pointer;">Logout</button>
+					<form
+						action="/logout"
+						method="POST"
+						use:enhance={() => {
+							return async ({ result }) => {
+								await applyAction(result);
+								closeMenu();
+							};
+						}}
+					>
+						<button
+							type="submit"
+							class="mobile-link"
+							style="width: 100%; text-align: left; background: none; border: none; cursor: pointer;"
+							>Logout</button
+						>
 					</form>
 				{:else}
 					<a href="/login" onclick={closeMenu} class="mobile-link">Login</a>

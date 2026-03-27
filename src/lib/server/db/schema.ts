@@ -1,4 +1,13 @@
-import { pgTable, serial, text, integer, timestamp, primaryKey, boolean, jsonb } from 'drizzle-orm/pg-core';
+import {
+	pgTable,
+	serial,
+	text,
+	integer,
+	timestamp,
+	primaryKey,
+	boolean,
+	jsonb
+} from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import type { InferSelectModel, InferInsertModel } from 'drizzle-orm';
 
@@ -8,7 +17,7 @@ export const profiles = pgTable('profiles', {
 	id: text().primaryKey(), // Supabase auth user ID
 	username: text().notNull().unique(),
 	avatarUrl: text('avatar_url'),
-	createdAt: timestamp('created_at').defaultNow(),
+	createdAt: timestamp('created_at').defaultNow()
 });
 
 // ─── Recipes ─────────────────────────────────────────────────────────────────
@@ -30,7 +39,7 @@ export const recipes = pgTable('recipes', {
 	// Visibility
 	isPublic: boolean('is_public').notNull().default(true),
 	createdAt: timestamp('created_at').defaultNow(),
-	updatedAt: timestamp('updated_at').defaultNow(),
+	updatedAt: timestamp('updated_at').defaultNow()
 });
 
 // ─── Tags ─────────────────────────────────────────────────────────────────────
@@ -38,96 +47,110 @@ export const recipes = pgTable('recipes', {
 export const tags = pgTable('tags', {
 	id: serial().primaryKey(),
 	name: text().notNull().unique(),
-	slug: text().notNull().unique(),
+	slug: text().notNull().unique()
 });
 
-export const recipesToTags = pgTable('recipes_to_tags', {
-	recipeId: integer('recipe_id').notNull().references(() => recipes.id, { onDelete: 'cascade' }),
-	tagId: integer('tag_id').notNull().references(() => tags.id, { onDelete: 'cascade' }),
-}, (table) => [
-	primaryKey({ columns: [table.recipeId, table.tagId] }),
-]);
+export const recipesToTags = pgTable(
+	'recipes_to_tags',
+	{
+		recipeId: integer('recipe_id')
+			.notNull()
+			.references(() => recipes.id, { onDelete: 'cascade' }),
+		tagId: integer('tag_id')
+			.notNull()
+			.references(() => tags.id, { onDelete: 'cascade' })
+	},
+	(table) => [primaryKey({ columns: [table.recipeId, table.tagId] })]
+);
 
 // ─── Favorites ────────────────────────────────────────────────────────────────
 
-export const favorites = pgTable('favorites', {
-	userId: text('user_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }),
-	recipeId: integer('recipe_id').notNull().references(() => recipes.id, { onDelete: 'cascade' }),
-	createdAt: timestamp('created_at').defaultNow(),
-}, (table) => [
-	primaryKey({ columns: [table.userId, table.recipeId] }),
-]);
+export const favorites = pgTable(
+	'favorites',
+	{
+		userId: text('user_id')
+			.notNull()
+			.references(() => profiles.id, { onDelete: 'cascade' }),
+		recipeId: integer('recipe_id')
+			.notNull()
+			.references(() => recipes.id, { onDelete: 'cascade' }),
+		createdAt: timestamp('created_at').defaultNow()
+	},
+	(table) => [primaryKey({ columns: [table.userId, table.recipeId] })]
+);
 
 // ─── Recipe Versions ──────────────────────────────────────────────────────────
 
 export const recipeVersions = pgTable('recipe_versions', {
 	id: serial().primaryKey(),
-	recipeId: integer('recipe_id').notNull().references(() => recipes.id, { onDelete: 'cascade' }),
+	recipeId: integer('recipe_id')
+		.notNull()
+		.references(() => recipes.id, { onDelete: 'cascade' }),
 	versionNumber: integer('version_number').notNull(),
 	commitMessage: text('commit_message').notNull(),
 	ingredients: jsonb().notNull().$type<Ingredient[]>(),
 	steps: jsonb().notNull().$type<Step[]>(),
 	createdAt: timestamp('created_at').defaultNow(),
-	createdBy: text('created_by').references(() => profiles.id, { onDelete: 'set null' }),
+	createdBy: text('created_by').references(() => profiles.id, { onDelete: 'set null' })
 });
 
 // ─── Relations ────────────────────────────────────────────────────────────────
 
 export const profilesRelations = relations(profiles, ({ many }) => ({
 	recipes: many(recipes),
-	versions: many(recipeVersions),
+	versions: many(recipeVersions)
 }));
 
 export const recipesRelations = relations(recipes, ({ one, many }) => ({
 	author: one(profiles, {
 		fields: [recipes.authorId],
-		references: [profiles.id],
+		references: [profiles.id]
 	}),
 	parent: one(recipes, {
 		fields: [recipes.parentId],
 		references: [recipes.id],
-		relationName: 'forks',
+		relationName: 'forks'
 	}),
 	forks: many(recipes, { relationName: 'forks' }),
 	recipesToTags: many(recipesToTags),
-	versions: many(recipeVersions),
+	versions: many(recipeVersions)
 }));
 
 export const tagsRelations = relations(tags, ({ many }) => ({
-	recipesToTags: many(recipesToTags),
+	recipesToTags: many(recipesToTags)
 }));
 
 export const recipesToTagsRelations = relations(recipesToTags, ({ one }) => ({
 	recipe: one(recipes, {
 		fields: [recipesToTags.recipeId],
-		references: [recipes.id],
+		references: [recipes.id]
 	}),
 	tag: one(tags, {
 		fields: [recipesToTags.tagId],
-		references: [tags.id],
-	}),
+		references: [tags.id]
+	})
 }));
 
 export const favoritesRelations = relations(favorites, ({ one }) => ({
 	user: one(profiles, {
 		fields: [favorites.userId],
-		references: [profiles.id],
+		references: [profiles.id]
 	}),
 	recipe: one(recipes, {
 		fields: [favorites.recipeId],
-		references: [recipes.id],
-	}),
+		references: [recipes.id]
+	})
 }));
 
 export const recipeVersionsRelations = relations(recipeVersions, ({ one }) => ({
 	recipe: one(recipes, {
 		fields: [recipeVersions.recipeId],
-		references: [recipes.id],
+		references: [recipes.id]
 	}),
 	creator: one(profiles, {
 		fields: [recipeVersions.createdBy],
-		references: [profiles.id],
-	}),
+		references: [profiles.id]
+	})
 }));
 
 // ─── Types ────────────────────────────────────────────────────────────────────

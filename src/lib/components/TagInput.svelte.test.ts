@@ -7,7 +7,7 @@ import TagInput from './TagInput.svelte';
 const allTags = [
 	{ id: 1, name: 'Dessert', slug: 'dessert' },
 	{ id: 2, name: 'Baking', slug: 'baking' },
-	{ id: 3, name: 'Dinner', slug: 'dinner' },
+	{ id: 3, name: 'Dinner', slug: 'dinner' }
 ];
 
 function getInput() {
@@ -73,8 +73,8 @@ describe('TagInput', () => {
 		await fireEvent.focus(getInput());
 		// Dessert should no longer appear in the dropdown list options
 		const options = screen.getAllByRole('option');
-		const optionTexts = options.map(o => o.textContent ?? '');
-		expect(optionTexts.some(t => t.trim() === 'Dessert')).toBe(false);
+		const optionTexts = options.map((o) => o.textContent ?? '');
+		expect(optionTexts.some((t) => t.trim() === 'Dessert')).toBe(false);
 	});
 
 	test('removing a pill deselects the tag', async () => {

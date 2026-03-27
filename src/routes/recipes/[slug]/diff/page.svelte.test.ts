@@ -8,20 +8,35 @@ import DiffPage from './+page.svelte';
 vi.mock('$app/navigation', () => ({ goto: vi.fn() }));
 
 vi.mock('$app/stores', () => ({
-	page: readable({ url: new URL('http://localhost/'), params: {}, route: { id: null } }),
+	page: readable({ url: new URL('http://localhost/'), params: {}, route: { id: null } })
 }));
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const RECIPE = { id: 1, slug: 'classic-cookies', title: 'Classic Chocolate Chip Cookies' };
 
-const V1 = { versionNumber: 1, commitMessage: 'Initial recipe', creator: null, createdAt: new Date() };
-const V2 = { versionNumber: 2, commitMessage: 'Added espresso powder', creator: null, createdAt: new Date() };
+const V1 = {
+	versionNumber: 1,
+	commitMessage: 'Initial recipe',
+	creator: null,
+	createdAt: new Date()
+};
+const V2 = {
+	versionNumber: 2,
+	commitMessage: 'Added espresso powder',
+	creator: null,
+	createdAt: new Date()
+};
 
-function makeData(overrides: {
-	ingredientDiff?: { status: string; ingredient: { amount: string; unit: string; name: string } }[];
-	stepDiff?: { status: string; step: { step: number; text: string } }[];
-} = {}) {
+function makeData(
+	overrides: {
+		ingredientDiff?: {
+			status: string;
+			ingredient: { amount: string; unit: string; name: string };
+		}[];
+		stepDiff?: { status: string; step: { step: number; text: string } }[];
+	} = {}
+) {
 	return {
 		recipe: RECIPE,
 		fromVersion: V1,
@@ -29,7 +44,7 @@ function makeData(overrides: {
 		allVersions: [V1, V2],
 		ingredientDiff: overrides.ingredientDiff ?? [],
 		stepDiff: overrides.stepDiff ?? [],
-		user: null,
+		user: null
 	} as never;
 }
 
@@ -54,7 +69,9 @@ describe('Diff page', () => {
 
 	test('renders "+" prefix for added ingredients', () => {
 		const data = makeData({
-			ingredientDiff: [{ status: 'added', ingredient: { amount: '1', unit: 'tsp', name: 'espresso powder' } }],
+			ingredientDiff: [
+				{ status: 'added', ingredient: { amount: '1', unit: 'tsp', name: 'espresso powder' } }
+			]
 		});
 		const { container } = render(DiffPage, { props: { data } });
 		const content = container.querySelector('.diff-added .diff-content');
@@ -64,7 +81,9 @@ describe('Diff page', () => {
 
 	test('renders "−" prefix for removed ingredients', () => {
 		const data = makeData({
-			ingredientDiff: [{ status: 'removed', ingredient: { amount: '2', unit: 'cups', name: 'butter' } }],
+			ingredientDiff: [
+				{ status: 'removed', ingredient: { amount: '2', unit: 'cups', name: 'butter' } }
+			]
 		});
 		const { container } = render(DiffPage, { props: { data } });
 		const content = container.querySelector('.diff-removed .diff-content');
@@ -74,7 +93,9 @@ describe('Diff page', () => {
 
 	test('added row has diff-added class', () => {
 		const data = makeData({
-			ingredientDiff: [{ status: 'added', ingredient: { amount: '1', unit: 'tsp', name: 'vanilla' } }],
+			ingredientDiff: [
+				{ status: 'added', ingredient: { amount: '1', unit: 'tsp', name: 'vanilla' } }
+			]
 		});
 		const { container } = render(DiffPage, { props: { data } });
 		expect(container.querySelector('.diff-added')).not.toBeNull();
@@ -82,7 +103,9 @@ describe('Diff page', () => {
 
 	test('removed row has diff-removed class', () => {
 		const data = makeData({
-			ingredientDiff: [{ status: 'removed', ingredient: { amount: '1', unit: 'tsp', name: 'vanilla' } }],
+			ingredientDiff: [
+				{ status: 'removed', ingredient: { amount: '1', unit: 'tsp', name: 'vanilla' } }
+			]
 		});
 		const { container } = render(DiffPage, { props: { data } });
 		expect(container.querySelector('.diff-removed')).not.toBeNull();
@@ -90,7 +113,9 @@ describe('Diff page', () => {
 
 	test('unchanged row has diff-unchanged class', () => {
 		const data = makeData({
-			ingredientDiff: [{ status: 'unchanged', ingredient: { amount: '2', unit: 'cups', name: 'flour' } }],
+			ingredientDiff: [
+				{ status: 'unchanged', ingredient: { amount: '2', unit: 'cups', name: 'flour' } }
+			]
 		});
 		const { container } = render(DiffPage, { props: { data } });
 		expect(container.querySelector('.diff-unchanged')).not.toBeNull();
@@ -105,7 +130,7 @@ describe('Diff page', () => {
 
 	test('added step row shows the step number', () => {
 		const data = makeData({
-			stepDiff: [{ status: 'added', step: { step: 3, text: 'Stir in chips.' } }],
+			stepDiff: [{ status: 'added', step: { step: 3, text: 'Stir in chips.' } }]
 		});
 		const { container } = render(DiffPage, { props: { data } });
 		// Step number circle should render inside the diff row
@@ -116,7 +141,7 @@ describe('Diff page', () => {
 
 	test('removed step row does not show a step number circle', () => {
 		const data = makeData({
-			stepDiff: [{ status: 'removed', step: { step: 2, text: 'Old step.' } }],
+			stepDiff: [{ status: 'removed', step: { step: 2, text: 'Old step.' } }]
 		});
 		const { container } = render(DiffPage, { props: { data } });
 		// Per the component: {#if row.status !== 'removed'}<span class="step-num">

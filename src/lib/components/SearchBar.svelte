@@ -58,7 +58,7 @@
 				stroke-width="2"
 				stroke-linecap="round"
 				stroke-linejoin="round"
-				class="h-4 w-4 text-muted-foreground"
+				class="text-muted-foreground h-4 w-4"
 			>
 				<circle cx="11" cy="11" r="8" />
 				<path d="m21 21-4.35-4.35" />
@@ -71,7 +71,7 @@
 			value={searchValue}
 			oninput={handleInput}
 			{placeholder}
-			class="w-full rounded-md border border-border bg-white py-2 pl-10 pr-3 text-sm text-foreground placeholder-muted-foreground transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+			class="border-border text-foreground placeholder-muted-foreground focus:border-primary focus:ring-primary/20 w-full rounded-md border bg-white py-2 pr-3 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none"
 		/>
 	</div>
 </form>

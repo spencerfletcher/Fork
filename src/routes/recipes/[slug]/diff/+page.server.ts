@@ -11,10 +11,10 @@ export const load: PageServerLoad = async ({ params, url }) => {
 		with: {
 			versions: {
 				orderBy: [asc(recipeVersions.versionNumber)],
-				with: { creator: true },
+				with: { creator: true }
 			},
-			author: true,
-		},
+			author: true
+		}
 	});
 
 	if (!recipe) throw error(404, 'Recipe not found');
@@ -28,19 +28,19 @@ export const load: PageServerLoad = async ({ params, url }) => {
 	const fromNum = fromParam ? parseInt(fromParam) : allVersions[0].versionNumber;
 	const toNum = toParam ? parseInt(toParam) : allVersions[allVersions.length - 1].versionNumber;
 
-	const fromVersion = allVersions.find(v => v.versionNumber === fromNum);
-	const toVersion = allVersions.find(v => v.versionNumber === toNum);
+	const fromVersion = allVersions.find((v) => v.versionNumber === fromNum);
+	const toVersion = allVersions.find((v) => v.versionNumber === toNum);
 
 	if (!fromVersion) throw error(400, `Version ${fromNum} not found`);
 	if (!toVersion) throw error(400, `Version ${toNum} not found`);
 
 	const ingredientDiff = diffIngredients(
 		fromVersion.ingredients as Parameters<typeof diffIngredients>[0],
-		toVersion.ingredients as Parameters<typeof diffIngredients>[0],
+		toVersion.ingredients as Parameters<typeof diffIngredients>[0]
 	);
 	const stepDiff = diffSteps(
 		fromVersion.steps as Parameters<typeof diffSteps>[0],
-		toVersion.steps as Parameters<typeof diffSteps>[0],
+		toVersion.steps as Parameters<typeof diffSteps>[0]
 	);
 
 	return {
@@ -49,6 +49,6 @@ export const load: PageServerLoad = async ({ params, url }) => {
 		toVersion,
 		ingredientDiff,
 		stepDiff,
-		allVersions,
+		allVersions
 	};
 };

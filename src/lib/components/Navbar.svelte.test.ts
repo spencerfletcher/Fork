@@ -17,7 +17,7 @@ function makeUser(email: string): User {
 		app_metadata: {},
 		user_metadata: {},
 		aud: 'authenticated',
-		created_at: new Date().toISOString(),
+		created_at: new Date().toISOString()
 	} as User;
 }
 

@@ -29,7 +29,9 @@ test.describe('Recipe detail page', () => {
 		await expect(page.getByRole('heading', { name: /^steps$/i })).toBeVisible();
 	});
 
-	test('"Classic Chocolate Chip Cookies" shows version history with 2 versions', async ({ page }) => {
+	test('"Classic Chocolate Chip Cookies" shows version history with 2 versions', async ({
+		page
+	}) => {
 		await page.goto('/');
 		// Find the cookie recipe card by title
 		await page.getByText('Classic Chocolate Chip Cookies').click();
@@ -69,7 +71,10 @@ test.describe('Recipe detail page', () => {
 		// Open version history
 		await page.locator('details.version-history summary').click();
 		// Click Compare on v2
-		await page.getByRole('link', { name: /compare/i }).first().click();
+		await page
+			.getByRole('link', { name: /compare/i })
+			.first()
+			.click();
 		await expect(page).toHaveURL(/\/diff/);
 		await expect(page.locator('h1')).toContainText(/compare/i);
 	});

@@ -8,7 +8,7 @@
 
 	let { recipe }: { recipe: CardRecipe } = $props();
 
-	const tags = recipe.recipesToTags?.map(r => r.tag) ?? [];
+	const tags = recipe.recipesToTags?.map((r) => r.tag) ?? [];
 	const href = `/recipes/${recipe.slug}`;
 </script>
 
@@ -21,11 +21,7 @@
 	onkeydown={(e) => e.key === 'Enter' && goto(href)}
 >
 	<div class="card-image">
-		<img
-			src={recipe.imageUrl ?? '/None.png'}
-			alt={recipe.title}
-			loading="lazy"
-		/>
+		<img src={recipe.imageUrl ?? '/None.png'} alt={recipe.title} loading="lazy" />
 	</div>
 
 	<div class="card-body">
@@ -71,7 +67,9 @@
 		overflow: hidden;
 		text-decoration: none;
 		cursor: pointer;
-		transition: box-shadow 0.2s ease, transform 0.2s ease;
+		transition:
+			box-shadow 0.2s ease,
+			transform 0.2s ease;
 	}
 
 	.recipe-card:hover {
