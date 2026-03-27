@@ -102,10 +102,9 @@
 
 	.forked-badge {
 		display: inline-block;
-		font-size: 0.7rem;
-		font-weight: 600;
-		text-transform: uppercase;
-		letter-spacing: 0.06em;
+		font-family: var(--font-mono);
+		font-size: 0.65rem;
+		font-weight: 500;
 		background: var(--color-accent-pale);
 		color: var(--color-accent);
 		border-radius: var(--radius-pill);
@@ -114,12 +113,9 @@
 	}
 
 	.card-meta {
-		font-family: var(--font-sans);
-		font-size: 0.75rem;
-		font-weight: 600;
-		text-transform: uppercase;
-		letter-spacing: 0.08em;
-		color: var(--color-text-2);
+		font-family: var(--font-mono);
+		font-size: 0.72rem;
+		color: var(--color-text-3);
 		margin: 0;
 	}
 

@@ -7,10 +7,20 @@
 
 <div class="page">
 	<div class="page-inner">
-		<div class="page-header">
-			<h1>Fork</h1>
-			<p class="page-subtitle">Recipes worth forking.</p>
-		</div>
+		<header class="page-header">
+			<div class="header-main">
+				<h1 class="site-title">Fork</h1>
+				<p class="site-tagline">Recipes worth forking.</p>
+			</div>
+			<div class="header-meta">
+				{#if data.recipes.length > 0}
+					<span class="recipe-count">{data.recipes.length} recipe{data.recipes.length !== 1 ? 's' : ''}</span>
+				{/if}
+				<a href="/recipes/new" class="btn-primary header-cta">New Recipe</a>
+			</div>
+		</header>
+
+		<hr class="section-rule" />
 
 		{#if data.recipes.length > 0}
 			<div class="recipe-grid">
@@ -35,13 +45,51 @@
 	}
 
 	.page-header {
-		margin-bottom: var(--space-7);
+		display: flex;
+		align-items: flex-end;
+		justify-content: space-between;
+		gap: var(--space-5);
+		margin-bottom: var(--space-6);
+		flex-wrap: wrap;
 	}
 
-	.page-subtitle {
-		font-size: 1.1rem;
+	.site-title {
+		font-size: clamp(2.5rem, 5vw, 4rem);
+		letter-spacing: -0.02em;
+		margin: 0 0 var(--space-2);
+		line-height: 1;
+	}
+
+	.site-tagline {
+		font-family: var(--font-serif);
+		font-style: italic;
+		font-size: 1.15rem;
+		font-weight: 400;
 		color: var(--color-text-2);
-		margin: var(--space-2) 0 0;
+		margin: 0;
+	}
+
+	.header-meta {
+		display: flex;
+		align-items: center;
+		gap: var(--space-4);
+		flex-shrink: 0;
+	}
+
+	.recipe-count {
+		font-family: var(--font-mono);
+		font-size: 0.8rem;
+		color: var(--color-text-3);
+	}
+
+	.header-cta {
+		white-space: nowrap;
+	}
+
+	.section-rule {
+		border: none;
+		border-top: 1px solid var(--color-border);
+		margin: 0 0 var(--space-7);
 	}
 
 	.recipe-grid {

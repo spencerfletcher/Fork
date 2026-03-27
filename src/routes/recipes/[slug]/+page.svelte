@@ -282,7 +282,8 @@
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-md);
 		padding: var(--space-3) var(--space-4);
-		font-size: 0.875rem;
+		font-family: var(--font-mono);
+		font-size: 0.8rem;
 		color: var(--color-text-2);
 		margin-bottom: var(--space-5);
 		display: flex;
@@ -480,9 +481,9 @@
 	}
 
 	.version-count {
-		font-size: 0.8rem;
+		font-size: 0.75rem;
 		color: var(--color-text-3);
-		font-family: var(--font-sans);
+		font-family: var(--font-mono);
 	}
 
 	.version-list {
@@ -526,23 +527,29 @@
 	}
 
 	.version-num {
-		font-family: var(--font-sans);
-		font-weight: 600;
+		font-family: var(--font-mono);
+		font-size: 0.8rem;
+		font-weight: 500;
 		color: var(--color-accent);
 		flex-shrink: 0;
 	}
 
 	.version-msg {
+		font-family: var(--font-mono);
+		font-size: 0.82rem;
 		color: var(--color-text);
 	}
 
 	.version-date {
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
 		color: var(--color-text-3);
 	}
 
 	.version-author {
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
 		color: var(--color-text-3);
-		font-style: italic;
 	}
 
 	.version-actions {
