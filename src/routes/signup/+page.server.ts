@@ -1,9 +1,11 @@
-import {error, redirect} from '@sveltejs/kit';
-import type {Actions, PageServerLoad} from './$types';
+import { error, redirect } from '@sveltejs/kit';
+import type { Actions, PageServerLoad } from './$types';
+import { db } from '$lib/server/db';
+import { profiles } from '$lib/server/db/schema';
 
 // Redirect users who are already logged in away from the signup page.
-export const load: PageServerLoad = async ({locals: {session}}) => {
-	if (session) {
+export const load: PageServerLoad = async ({ locals: { user } }) => {
+	if (user) {
 		throw redirect(303, '/');
 	}
 };
@@ -19,17 +21,24 @@ export const actions: Actions = {
 		}
 
 		// Use the Supabase client to sign up a new user
-		const {error: err} = await supabase.auth.signUp({
-			email,
-			password,
-		});
+		const { data, error: err } = await supabase.auth.signUp({ email, password });
 
 		if (err) {
-			return error(err.status || 500, {message: err.message});
+			return error(err.status || 500, { message: err.message });
+		}
+
+		// Create a profile row for the new user (best-effort; email may not be confirmed yet)
+		if (data.user) {
+			await db
+				.insert(profiles)
+				.values({
+					id: data.user.id,
+					username: email.split('@')[0],
+				})
+				.onConflictDoNothing();
 		}
 
 		// By default, Supabase sends a confirmation email.
-		// Redirect to a page that tells the user to check their email.
 		throw redirect(303, '/confirm-email');
 	},
 };

@@ -12,11 +12,11 @@
 	// Make the Supabase client and session available to all child components
 	// through Svelte's context API.
 	setContext('supabase', data.supabase);
-	setContext('session', data.session);
+	setContext('user', data.user);
 </script>
 
 <div class="flex min-h-screen flex-col">
-	<Navbar session={data.session} />
+	<Navbar user={data.user} />
 
 	<main class="flex-grow">
 		{@render children()}

@@ -24,9 +24,9 @@ export const handle: Handle = async ({event, resolve}) => {
 	);
 
 	const {
-		data: {session},
-	} = await event.locals.supabase.auth.getSession()
-	event.locals.session = session
+		data: { user },
+	} = await event.locals.supabase.auth.getUser()
+	event.locals.user = user ?? null
 
 	// --- 2. Paraglide i18n Logic (runs second) ---
 	return paraglideMiddleware(event.request, ({request, locale}) => {

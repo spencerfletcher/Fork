@@ -2,11 +2,10 @@
 	import { page } from '$app/stores';
 	import * as m from '$lib/paraglide/messages.js';
 	import { enhance, applyAction } from '$app/forms';
-	import type { Session } from '@supabase/supabase-js';
+	import type { User } from '@supabase/supabase-js';
 
-	let { session }: { session: Session | null } = $props();
+	let { user }: { user: User | null } = $props();
 
-	// This variable will control the visibility of the mobile menu
 	let isMenuOpen = $state(false);
 
 	function toggleMenu() {
@@ -18,20 +17,19 @@
 	}
 </script>
 
-<nav class="relative bg-gray-800 text-white shadow-md">
-	<div class="relative z-50 container mx-auto flex h-16 items-center justify-between px-4">
-		<!-- Left side: Title and Navigation Links -->
-		<div class="flex items-center gap-8">
-			<a href="/" class="text-xl font-bold text-green-400 hover:text-green-300" onclick={closeMenu}>
+<nav class="navbar">
+	<div class="navbar-inner">
+		<!-- Logo + nav links -->
+		<div class="navbar-left">
+			<a href="/" class="navbar-logo" onclick={closeMenu}>
 				{m.app_title()}
 			</a>
-			<!-- Desktop Navigation Links -->
-			<ul class="hidden items-center space-x-6 md:flex">
+			<ul class="navbar-links">
 				<li>
 					<a
 						href="/recipes/new"
-						class="hover:text-green-300"
-						class:font-bold={$page.url.pathname === '/recipes/new'}
+						class="navbar-link"
+						class:active={$page.url.pathname === '/recipes/new'}
 					>
 						{m.navbar_new()}
 					</a>
@@ -39,8 +37,8 @@
 				<li>
 					<a
 						href="/recipes"
-						class="hover:text-green-300"
-						class:font-bold={$page.url.pathname.startsWith('/recipes')}
+						class="navbar-link"
+						class:active={$page.url.pathname.startsWith('/recipes') && $page.url.pathname !== '/recipes/new'}
 					>
 						{m.navbar_recipes()}
 					</a>
@@ -48,137 +46,242 @@
 			</ul>
 		</div>
 
-		<!-- Right side: Auth Status and Mobile Menu Button -->
-		<div class="flex items-center gap-4">
-			<!-- Desktop Auth Status -->
-			<div class="hidden items-center space-x-4 text-sm md:flex">
-				{#if session}
-					<span class="hidden sm:inline">{session.user.email}</span>
+		<!-- Auth + hamburger -->
+		<div class="navbar-right">
+			<div class="auth-desktop">
+				{#if user}
+					<span class="auth-email">{user.email}</span>
 					<form action="/logout" method="POST" use:enhance>
-						<button type="submit" class="hover:text-green-300">Logout</button>
+						<button type="submit" class="navbar-link">Logout</button>
 					</form>
 				{:else}
-					<a href="/login" class="hover:text-green-300">Login</a>
-					<a
-						href="/signup"
-						class="rounded-md bg-green-600 px-3 py-1.5 text-white hover:bg-green-700">Sign Up</a
-					>
+					<a href="/login" class="navbar-link">Login</a>
+					<a href="/signup" class="btn-primary" style="padding: 8px 16px; font-size: 0.85rem;">Sign Up</a>
 				{/if}
 			</div>
 
-			<!-- Hamburger Menu Button -->
 			<button
 				type="button"
 				onclick={toggleMenu}
-				class="inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:bg-gray-700 hover:text-white focus:ring-2 focus:ring-white focus:outline-none focus:ring-inset md:hidden"
+				class="hamburger"
 				aria-controls="mobile-menu"
 				aria-expanded={isMenuOpen}
 			>
 				<span class="sr-only">Open main menu</span>
 				{#if isMenuOpen}
-					<!-- Close Icon (X) -->
-					<svg
-						class="h-6 w-6"
-						xmlns="http://www.w3.org/2000/svg"
-						fill="none"
-						viewBox="0 0 24 24"
-						stroke-width="1.5"
-						stroke="currentColor"
-						><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg
-					>
+					<svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+						<path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+					</svg>
 				{:else}
-					<!-- Hamburger Icon -->
-					<svg
-						class="h-6 w-6"
-						xmlns="http://www.w3.org/2000/svg"
-						fill="none"
-						viewBox="0 0 24 24"
-						stroke-width="1.5"
-						stroke="currentColor"
-						><path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
-						/></svg
-					>
+					<svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+						<path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+					</svg>
 				{/if}
 			</button>
 		</div>
 	</div>
 
-	<!-- Mobile Menu Dropdown & Backdrop -->
 	{#if isMenuOpen}
-		<div class="fixed inset-0 bg-black/50" onclick={closeMenu} aria-hidden="true"></div>
-
-		<!-- Mobile Menu Dropdown -->
-		<div class="absolute w-full bg-gray-800 md:hidden" id="mobile-menu">
-			<ul class="space-y-1 px-2 pt-2 pb-3">
+		<div class="mobile-backdrop" onclick={closeMenu} aria-hidden="true"></div>
+		<div class="mobile-menu" id="mobile-menu">
+			<ul class="mobile-links">
 				<li>
-					<a
-						href="/recipes/new"
-						onclick={closeMenu}
-						class="block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
-					>
-						{m.navbar_new()}
-					</a>
+					<a href="/recipes/new" onclick={closeMenu} class="mobile-link">{m.navbar_new()}</a>
 				</li>
 				<li>
-					<a
-						href="/recipes"
-						onclick={closeMenu}
-						class="block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
-					>
-						{m.navbar_recipes()}
-					</a>
+					<a href="/recipes" onclick={closeMenu} class="mobile-link">{m.navbar_recipes()}</a>
 				</li>
 			</ul>
-			<!-- Mobile Auth Links -->
-			<div class="border-t border-gray-700 pt-4 pb-3">
-				{#if session}
-					<div class="flex items-center px-5">
-						<div class="text-base font-medium text-white">{session.user.email}</div>
-					</div>
-					<div class="mt-3 space-y-1 px-2">
-						<form
-							action="/logout"
-							method="POST"
-							use:enhance={() => {
-								// This function runs before the submission.
-								// We must return the `update` function.
-								return async ({ result }) => {
-									// This function runs after the server action completes.
-									// `applyAction` tells SvelteKit to update the page state.
-									await applyAction(result);
-									// Now that the action is applied, we can safely close the menu.
-									closeMenu();
-								};
-							}}
-						>
-							<button
-								type="submit"
-								class="block w-full rounded-md px-3 py-2 text-left text-base font-medium text-gray-400 hover:bg-gray-700 hover:text-white"
-							>
-								Logout
-							</button>
-						</form>
-					</div>
+			<div class="mobile-auth">
+				{#if user}
+					<p class="auth-email">{user.email}</p>
+					<form action="/logout" method="POST" use:enhance={() => {
+						return async ({ result }) => {
+							await applyAction(result);
+							closeMenu();
+						};
+					}}>
+						<button type="submit" class="mobile-link" style="width: 100%; text-align: left; background: none; border: none; cursor: pointer;">Logout</button>
+					</form>
 				{:else}
-					<div class="space-y-1 px-2">
-						<a
-							href="/login"
-							onclick={closeMenu}
-							class="block rounded-md px-3 py-2 text-base font-medium text-gray-400 hover:bg-gray-700 hover:text-white"
-							>Login</a
-						>
-						<a
-							href="/signup"
-							onclick={closeMenu}
-							class="block rounded-md px-3 py-2 text-base font-medium text-gray-400 hover:bg-gray-700 hover:text-white"
-							>Sign Up</a
-						>
-					</div>
+					<a href="/login" onclick={closeMenu} class="mobile-link">Login</a>
+					<a href="/signup" onclick={closeMenu} class="mobile-link">Sign Up</a>
 				{/if}
 			</div>
 		</div>
 	{/if}
 </nav>
+
+<style>
+	.navbar {
+		position: relative;
+		background: var(--color-surface);
+		border-bottom: 1px solid var(--color-border);
+		z-index: 50;
+	}
+
+	.navbar-inner {
+		max-width: var(--max-width);
+		margin: 0 auto;
+		padding: 0 var(--space-5);
+		height: 60px;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+	}
+
+	.navbar-left {
+		display: flex;
+		align-items: center;
+		gap: var(--space-7);
+	}
+
+	.navbar-logo {
+		font-family: var(--font-serif);
+		font-size: 1.4rem;
+		font-weight: 600;
+		color: var(--color-accent);
+		text-decoration: none;
+	}
+
+	.navbar-logo:hover {
+		color: var(--color-accent-mid);
+	}
+
+	.navbar-links {
+		display: none;
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		gap: var(--space-6);
+	}
+
+	@media (min-width: 768px) {
+		.navbar-links {
+			display: flex;
+		}
+	}
+
+	.navbar-link {
+		font-family: var(--font-sans);
+		font-size: 0.9rem;
+		font-weight: 500;
+		color: var(--color-text-2);
+		text-decoration: none;
+		background: none;
+		border: none;
+		cursor: pointer;
+		padding: 0;
+		transition: color 0.15s ease;
+	}
+
+	.navbar-link:hover,
+	.navbar-link.active {
+		color: var(--color-accent);
+	}
+
+	.navbar-right {
+		display: flex;
+		align-items: center;
+		gap: var(--space-4);
+	}
+
+	.auth-desktop {
+		display: none;
+		align-items: center;
+		gap: var(--space-4);
+	}
+
+	@media (min-width: 768px) {
+		.auth-desktop {
+			display: flex;
+		}
+	}
+
+	.auth-email {
+		font-size: 0.85rem;
+		color: var(--color-text-3);
+	}
+
+	.hamburger {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: none;
+		border: none;
+		cursor: pointer;
+		padding: var(--space-2);
+		color: var(--color-text-2);
+		border-radius: var(--radius-sm);
+	}
+
+	.hamburger:hover {
+		background: var(--color-surface-2);
+		color: var(--color-text);
+	}
+
+	@media (min-width: 768px) {
+		.hamburger {
+			display: none;
+		}
+	}
+
+	.icon {
+		width: 24px;
+		height: 24px;
+	}
+
+	.mobile-backdrop {
+		position: fixed;
+		inset: 0;
+		background: rgba(0, 0, 0, 0.3);
+	}
+
+	.mobile-menu {
+		position: absolute;
+		top: 100%;
+		left: 0;
+		right: 0;
+		background: var(--color-surface);
+		border-bottom: 1px solid var(--color-border);
+		z-index: 100;
+	}
+
+	.mobile-links {
+		list-style: none;
+		margin: 0;
+		padding: var(--space-2);
+	}
+
+	.mobile-link {
+		display: block;
+		padding: var(--space-3) var(--space-4);
+		font-family: var(--font-sans);
+		font-size: 0.95rem;
+		font-weight: 500;
+		color: var(--color-text-2);
+		text-decoration: none;
+		border-radius: var(--radius-sm);
+	}
+
+	.mobile-link:hover {
+		background: var(--color-surface-2);
+		color: var(--color-text);
+	}
+
+	.mobile-auth {
+		border-top: 1px solid var(--color-border);
+		padding: var(--space-4) var(--space-2);
+	}
+
+	.sr-only {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		margin: -1px;
+		overflow: hidden;
+		clip: rect(0, 0, 0, 0);
+		border: 0;
+	}
+</style>
