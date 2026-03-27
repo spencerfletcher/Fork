@@ -2,37 +2,53 @@
 
 :root {
 	/* Backgrounds */
-	--color-bg: #f5f0e8;
-	--color-surface: #fdfaf4;
-	--color-surface-2: #ede8dc;
+	--color-bg: #faf4e8;       /* warm cream — page background */
+	--color-surface: #ffffff;  /* white — sidebar cards, dialogs */
+	--color-surface-2: #faf4e8; /* cream — stat tiles inside cards */
+	--color-hero-bg: #1a1408;  /* deep espresso — recipe hero */
+	--color-navbar-bg: #2e1f0f; /* mid espresso — navbar (subtly lighter) */
 
-	/* Text */
-	--color-text: #1a1a1a;
-	--color-text-2: #4a4a4a;
-	--color-text-3: #888880;
+	/* Text on light backgrounds */
+	--color-text: #1a1408;     /* espresso body text */
+	--color-text-2: #6b5a3a;   /* dark bronze — secondary labels */
+	--color-text-3: #8b7355;   /* mid brown — muted labels, italic notes */
 
-	/* Accent (forest green) */
-	--color-accent: #3d5a3e;
-	--color-accent-mid: #6b8f71;
-	--color-accent-pale: #c8d5b9;
+	/* Text on dark backgrounds */
+	--color-text-cream: #faf4e8;  /* hero title, nav brand */
+	--color-text-tan: #b8a880;    /* nav links */
+	--color-text-bronze: #8b7a5a; /* breadcrumb user, meta */
 
-	/* Borders */
-	--color-border: #d6d0c4;
-	--color-border-2: #c2bbb0;
+	/* Accent — saffron gold (interactive / structural) */
+	--color-accent: #e8a83a;
+	--color-accent-mid: #c8961e;
+	--color-accent-pale: #fdf0d0;
+
+	/* Named accents with distinct jobs */
+	--color-sienna: #a84a28;   /* burnt sienna — ingredient quantities */
+	--color-paprika: #c45a38;  /* paprika — time / heat tags */
+
+	/* Tag system (golden) */
+	--color-tag: #e8a83a;
+	--color-tag-pale: #fdf0d0;
+
+	/* Borders / surfaces */
+	--color-border: #eee4d0;   /* pale linen — ingredient / step dividers */
+	--color-border-2: #e0d0b0; /* warm sand — sidebar card borders */
+	--color-dot-inactive: #c8b890; /* aged gold — inactive version dots */
 
 	/* Semantic diff colors */
-	--color-add: #3d5a3e;
-	--color-remove: #8b3a3a;
-	--color-add-bg: #e8f0e4;
-	--color-remove-bg: #f5e4e4;
+	--color-add: #e8a83a;
+	--color-remove: #c45a38;
+	--color-add-bg: #fdf5e0;
+	--color-remove-bg: #fae8e0;
 
 	/* Elevation */
-	--shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
-	--shadow-raised: 0 4px 12px rgba(0, 0, 0, 0.08);
+	--shadow-card: 0 1px 3px rgba(26, 20, 8, 0.08), 0 1px 2px rgba(26, 20, 8, 0.05);
+	--shadow-raised: 0 4px 16px rgba(26, 20, 8, 0.12);
 
 	/* Typography */
 	--font-serif: 'Lora', Georgia, serif;
-	--font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+	--font-sans: 'Instrument Sans', -apple-system, BlinkMacSystemFont, sans-serif;
 	--font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
 
 	/* Spacing (8px base unit) */
@@ -57,21 +73,31 @@
 }
 
 [data-theme='dark'] {
-	--color-bg: #1a1c1a;
-	--color-surface: #222520;
-	--color-surface-2: #2a2e28;
-	--color-text: #ede8dc;
-	--color-text-2: #a8a89e;
-	--color-text-3: #66665e;
-	--color-accent: #6b8f71;
-	--color-accent-mid: #8faf94;
-	--color-accent-pale: #2a3d2b;
-	--color-border: #333630;
-	--color-border-2: #44473f;
-	--color-add-bg: #1f2e20;
-	--color-remove-bg: #2e1f1f;
-	--shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3);
-	--shadow-raised: 0 4px 12px rgba(0, 0, 0, 0.4);
+	--color-bg: #1a1408;
+	--color-surface: #2a1e10;
+	--color-surface-2: #221808;
+	--color-hero-bg: #0e0c06;
+	--color-navbar-bg: #1a1408;
+	--color-text: #faf4e8;
+	--color-text-2: #c8b890;
+	--color-text-3: #8b7a5a;
+	--color-text-cream: #faf4e8;
+	--color-text-tan: #b8a880;
+	--color-text-bronze: #8b7a5a;
+	--color-accent: #e8a83a;
+	--color-accent-mid: #c8961e;
+	--color-accent-pale: #3a2a08;
+	--color-sienna: #c45a38;
+	--color-paprika: #e06040;
+	--color-tag: #e8a83a;
+	--color-tag-pale: #3a2a08;
+	--color-border: #38281a;
+	--color-border-2: #4a3820;
+	--color-dot-inactive: #6b5a3a;
+	--color-add-bg: #2a2010;
+	--color-remove-bg: #2e1810;
+	--shadow-card: 0 1px 3px rgba(0, 0, 0, 0.4);
+	--shadow-raised: 0 4px 16px rgba(0, 0, 0, 0.5);
 }
 
 @layer base {
@@ -217,8 +243,8 @@
 	font-family: var(--font-sans);
 	font-size: 0.75rem;
 	font-weight: 500;
-	color: var(--color-accent);
-	background: var(--color-accent-pale);
+	color: var(--color-tag);
+	background: var(--color-tag-pale);
 	border-radius: var(--radius-pill);
 	padding: 3px 10px;
 	display: inline-block;

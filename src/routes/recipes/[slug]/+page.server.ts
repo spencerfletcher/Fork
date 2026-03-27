@@ -1,7 +1,7 @@
 import { error, redirect } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { recipes, recipeVersions, recipesToTags, profiles, favorites } from '$lib/server/db/schema';
-import { eq, desc, and } from 'drizzle-orm';
+import { eq, desc, and, count } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { slugify } from '$lib/helpers';
 import type { PageServerLoad, Actions } from './$types';
@@ -46,12 +46,20 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 		isFavorited = !!existing;
 	}
 
+	// Count how many times this recipe has been forked
+	const [forkRow] = await db
+		.select({ value: count() })
+		.from(recipes)
+		.where(eq(recipes.parentId, recipe.id));
+	const forkCount = forkRow?.value ?? 0;
+
 	return {
 		recipe,
 		currentVersion,
 		allVersions: recipe.versions,
 		isViewingHistory,
-		isFavorited
+		isFavorited,
+		forkCount
 	};
 };
 

@@ -22,21 +22,12 @@
 		<!-- Logo + nav links -->
 		<div class="navbar-left">
 			<a href="/" class="navbar-logo" onclick={closeMenu}>
-				{m.app_title()}
+				{m.app_title()}<span class="logo-dot">.</span>
 			</a>
 			<ul class="navbar-links">
 				<li>
 					<a href="/search" class="navbar-link" class:active={$page.url.pathname === '/search'}>
 						Search
-					</a>
-				</li>
-				<li>
-					<a
-						href="/recipes/new"
-						class="navbar-link"
-						class:active={$page.url.pathname === '/recipes/new'}
-					>
-						{m.navbar_new()}
 					</a>
 				</li>
 				<li>
@@ -63,20 +54,25 @@
 			</ul>
 		</div>
 
-		<!-- Auth + hamburger -->
+		<!-- Auth + CTA + hamburger -->
 		<div class="navbar-right">
 			<div class="auth-desktop">
 				{#if user}
 					<span class="auth-email">{user.email}</span>
 					<form action="/logout" method="POST" use:enhance>
-						<button type="submit" class="navbar-link">Logout</button>
+						<button type="submit" class="navbar-link logout-btn">Logout</button>
 					</form>
 				{:else}
 					<a href="/login" class="navbar-link">Login</a>
-					<a href="/signup" class="btn-primary" style="padding: 8px 16px; font-size: 0.85rem;"
-						>Sign Up</a
-					>
+					<a href="/signup" class="navbar-link">Sign Up</a>
 				{/if}
+				<a
+					href="/recipes/new"
+					class="navbar-cta"
+					class:active={$page.url.pathname === '/recipes/new'}
+				>
+					+ {m.navbar_new()}
+				</a>
 			</div>
 
 			<button
@@ -122,24 +118,16 @@
 		<div class="mobile-backdrop" onclick={closeMenu} aria-hidden="true"></div>
 		<div class="mobile-menu" id="mobile-menu">
 			<ul class="mobile-links">
-				<li>
-					<a href="/search" onclick={closeMenu} class="mobile-link">Search</a>
-				</li>
-				<li>
-					<a href="/recipes/new" onclick={closeMenu} class="mobile-link">{m.navbar_new()}</a>
-				</li>
-				<li>
-					<a href="/recipes" onclick={closeMenu} class="mobile-link">{m.navbar_recipes()}</a>
-				</li>
+				<li><a href="/search" onclick={closeMenu} class="mobile-link">Search</a></li>
+				<li><a href="/recipes/new" onclick={closeMenu} class="mobile-link">{m.navbar_new()}</a></li>
+				<li><a href="/recipes" onclick={closeMenu} class="mobile-link">{m.navbar_recipes()}</a></li>
 				{#if user}
-					<li>
-						<a href="/favorites" onclick={closeMenu} class="mobile-link">Favorites</a>
-					</li>
+					<li><a href="/favorites" onclick={closeMenu} class="mobile-link">Favorites</a></li>
 				{/if}
 			</ul>
 			<div class="mobile-auth">
 				{#if user}
-					<p class="auth-email">{user.email}</p>
+					<p class="auth-email mobile-email">{user.email}</p>
 					<form
 						action="/logout"
 						method="POST"
@@ -169,8 +157,8 @@
 <style>
 	.navbar {
 		position: relative;
-		background: var(--color-surface);
-		border-bottom: 1px solid var(--color-border);
+		background: var(--color-navbar-bg);
+		border-bottom: none;
 		z-index: 50;
 	}
 
@@ -193,13 +181,19 @@
 	.navbar-logo {
 		font-family: var(--font-serif);
 		font-size: 1.4rem;
-		font-weight: 600;
-		color: var(--color-accent);
+		font-weight: 700;
+		color: var(--color-text-cream);
 		text-decoration: none;
+		letter-spacing: -0.01em;
 	}
 
 	.navbar-logo:hover {
-		color: var(--color-accent-mid);
+		color: var(--color-text-cream);
+		opacity: 0.9;
+	}
+
+	.logo-dot {
+		color: var(--color-accent); /* saffron gold */
 	}
 
 	.navbar-links {
@@ -219,8 +213,8 @@
 	.navbar-link {
 		font-family: var(--font-sans);
 		font-size: 0.9rem;
-		font-weight: 500;
-		color: var(--color-text-2);
+		font-weight: 400;
+		color: var(--color-text-tan);
 		text-decoration: none;
 		background: none;
 		border: none;
@@ -231,7 +225,29 @@
 
 	.navbar-link:hover,
 	.navbar-link.active {
-		color: var(--color-accent);
+		color: var(--color-text-cream);
+	}
+
+	.logout-btn {
+		font-size: 0.9rem;
+	}
+
+	.navbar-cta {
+		font-family: var(--font-sans);
+		font-size: 0.85rem;
+		font-weight: 600;
+		background: var(--color-accent);
+		color: var(--color-hero-bg);
+		border-radius: var(--radius-pill);
+		padding: 7px 16px;
+		text-decoration: none;
+		transition: opacity 0.15s ease;
+		white-space: nowrap;
+	}
+
+	.navbar-cta:hover {
+		opacity: 0.88;
+		color: var(--color-hero-bg);
 	}
 
 	.navbar-right {
@@ -253,8 +269,8 @@
 	}
 
 	.auth-email {
-		font-size: 0.85rem;
-		color: var(--color-text-3);
+		font-size: 0.8rem;
+		color: var(--color-text-bronze);
 	}
 
 	.hamburger {
@@ -265,13 +281,12 @@
 		border: none;
 		cursor: pointer;
 		padding: var(--space-2);
-		color: var(--color-text-2);
+		color: var(--color-text-tan);
 		border-radius: var(--radius-sm);
 	}
 
 	.hamburger:hover {
-		background: var(--color-surface-2);
-		color: var(--color-text);
+		color: var(--color-text-cream);
 	}
 
 	@media (min-width: 768px) {
@@ -288,7 +303,7 @@
 	.mobile-backdrop {
 		position: fixed;
 		inset: 0;
-		background: rgba(0, 0, 0, 0.3);
+		background: rgba(0, 0, 0, 0.5);
 	}
 
 	.mobile-menu {
@@ -296,8 +311,8 @@
 		top: 100%;
 		left: 0;
 		right: 0;
-		background: var(--color-surface);
-		border-bottom: 1px solid var(--color-border);
+		background: var(--color-navbar-bg);
+		border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 		z-index: 100;
 	}
 
@@ -312,20 +327,27 @@
 		padding: var(--space-3) var(--space-4);
 		font-family: var(--font-sans);
 		font-size: 0.95rem;
-		font-weight: 500;
-		color: var(--color-text-2);
+		font-weight: 400;
+		color: var(--color-text-tan);
 		text-decoration: none;
 		border-radius: var(--radius-sm);
 	}
 
 	.mobile-link:hover {
-		background: var(--color-surface-2);
-		color: var(--color-text);
+		background: rgba(255, 255, 255, 0.06);
+		color: var(--color-text-cream);
 	}
 
 	.mobile-auth {
-		border-top: 1px solid var(--color-border);
+		border-top: 1px solid rgba(255, 255, 255, 0.08);
 		padding: var(--space-4) var(--space-2);
+	}
+
+	.mobile-email {
+		padding: var(--space-3) var(--space-4);
+		font-size: 0.8rem;
+		color: var(--color-text-bronze);
+		margin: 0;
 	}
 
 	.sr-only {

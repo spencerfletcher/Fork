@@ -161,9 +161,17 @@ export type Ingredient = {
 	name: string;
 };
 
+export type StepAnnotationType = 'tip' | 'warning' | 'substitution';
+
+export type StepAnnotation = {
+	type: StepAnnotationType;
+	text: string;
+};
+
 export type Step = {
 	step: number;
 	text: string;
+	annotation?: StepAnnotation;
 };
 
 export type Profile = InferSelectModel<typeof profiles>;
