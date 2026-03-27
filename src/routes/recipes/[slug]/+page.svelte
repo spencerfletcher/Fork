@@ -173,12 +173,16 @@
 						{#each allVersions as version}
 							<div class="version-row">
 								<div class="version-info">
-									<span class="version-num">v{version.versionNumber}</span>
-									<span class="version-msg">{version.commitMessage}</span>
-									<span class="version-date">{formatDate(version.createdAt)}</span>
-									{#if version.creator}
-										<span class="version-author">@{version.creator.username}</span>
-									{/if}
+									<div class="version-main">
+										<span class="version-num">v{version.versionNumber}</span>
+										<span class="version-msg">{version.commitMessage}</span>
+									</div>
+									<div class="version-sub">
+										<span class="version-date">{formatDate(version.createdAt)}</span>
+										{#if version.creator}
+											<span class="version-author">@{version.creator.username}</span>
+										{/if}
+									</div>
 								</div>
 								<div class="version-actions">
 									<a href="/recipes/{recipe.slug}?version={version.versionNumber}" class="btn-ghost-sm">View</a>
@@ -416,8 +420,8 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		flex-wrap: wrap;
-		gap: var(--space-3);
+		/* No flex-wrap — actions always stay pinned to the right */
+		gap: var(--space-4);
 		padding: var(--space-3) 0;
 		border-bottom: 1px solid var(--color-border);
 	}
@@ -427,18 +431,29 @@
 	}
 
 	.version-info {
+		flex: 1;
+		min-width: 0; /* lets long text wrap instead of pushing actions off */
+	}
+
+	.version-main {
 		display: flex;
-		align-items: center;
-		flex-wrap: wrap;
+		align-items: baseline;
 		gap: var(--space-3);
 		font-size: 0.875rem;
+	}
+
+	.version-sub {
+		display: flex;
+		gap: var(--space-3);
+		margin-top: var(--space-1);
+		font-size: 0.8rem;
 	}
 
 	.version-num {
 		font-family: var(--font-sans);
 		font-weight: 600;
 		color: var(--color-accent);
-		min-width: 28px;
+		flex-shrink: 0;
 	}
 
 	.version-msg {
