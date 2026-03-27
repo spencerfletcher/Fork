@@ -142,4 +142,20 @@ export const actions: Actions = {
 
 		throw redirect(303, `/recipes/${params.slug}`);
 	},
+
+	// Delete this recipe entirely
+	deleteRecipe: async ({ params, locals: { user } }) => {
+		if (!user) throw error(401, 'Login required');
+
+		const recipe = await db.query.recipes.findFirst({
+			where: eq(recipes.slug, params.slug),
+		});
+		if (!recipe) throw error(404, 'Recipe not found');
+		if (recipe.authorId !== user.id) throw error(403, 'Not authorized');
+
+		// recipeVersions and recipesToTags cascade-delete via FK
+		await db.delete(recipes).where(eq(recipes.id, recipe.id));
+
+		throw redirect(303, '/recipes');
+	},
 };

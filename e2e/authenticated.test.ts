@@ -82,6 +82,12 @@ test.describe('New recipe page', () => {
 		// Should redirect to the new recipe's detail page
 		await page.waitForURL(/\/recipes\//);
 		await expect(page.locator('h1')).toContainText('E2E Test Recipe');
+
+		// Clean up — delete the recipe we just created so it doesn't accumulate
+		const recipeUrl = page.url().split('?')[0];
+		await page.goto(`${recipeUrl}/edit`);
+		await page.waitForURL(/\/edit/);
+		await page.request.post(`${recipeUrl}/edit?/deleteRecipe`);
 	});
 });
 
