@@ -17,7 +17,7 @@
 		"lint": "prettier --check . && eslint .",
 
 		"// ── Testing ─────────────────────────────────────────────────": "",
-		"test": "pnpm test:unit -- --run && pnpm test:e2e",
+		"test": "pnpm test:unit run && pnpm test:e2e",
 		"test:unit": "vitest",
 		"test:e2e": "playwright test",
 
