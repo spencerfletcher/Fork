@@ -1,6 +1,9 @@
-import { describe, test, expect } from 'vitest';
-import { render, screen } from '@testing-library/svelte';
+import { describe, test, expect, vi } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/svelte';
 import RecipeCard from './RecipeCard.svelte';
+
+const { mockGoto } = vi.hoisted(() => ({ mockGoto: vi.fn() }));
+vi.mock('$app/navigation', () => ({ goto: mockGoto }));
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -32,10 +35,12 @@ describe('RecipeCard', () => {
 		expect(screen.getByText('Banana Bread')).toBeInTheDocument();
 	});
 
-	test('links to the recipe slug', () => {
+	test('navigates to the recipe slug on click', async () => {
+		mockGoto.mockClear();
 		render(RecipeCard, { props: { recipe: makeRecipe({ slug: 'banana-bread-xyz' }) } });
-		const link = screen.getByRole('link');
-		expect(link).toHaveAttribute('href', '/recipes/banana-bread-xyz');
+		// The card is a div[role="link"] — clicking it calls goto()
+		fireEvent.click(screen.getByRole('link'));
+		expect(mockGoto).toHaveBeenCalledWith('/recipes/banana-bread-xyz');
 	});
 
 	test('shows "Forked" badge when parentId is set', () => {
