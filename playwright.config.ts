@@ -1,5 +1,9 @@
 import { defineConfig, devices } from '@playwright/test';
 import path from 'path';
+import { config as loadEnv } from 'dotenv';
+
+// Load .env so E2E_USER_EMAIL / E2E_USER_PASSWORD are available to the test runner
+loadEnv();
 
 const AUTH_FILE = path.join('e2e', '.auth', 'user.json');
 
