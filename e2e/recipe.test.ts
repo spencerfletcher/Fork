@@ -19,13 +19,14 @@ test.describe('Recipe detail page', () => {
 	test('recipe detail shows Ingredients section', async ({ page }) => {
 		await page.goto('/');
 		await page.locator('a.recipe-card').first().click();
-		await expect(page.getByText(/ingredients/i)).toBeVisible();
+		// Use heading role to avoid matching ingredient names that contain "ingredients"
+		await expect(page.getByRole('heading', { name: /^ingredients$/i })).toBeVisible();
 	});
 
 	test('recipe detail shows Steps section', async ({ page }) => {
 		await page.goto('/');
 		await page.locator('a.recipe-card').first().click();
-		await expect(page.getByText(/steps/i)).toBeVisible();
+		await expect(page.getByRole('heading', { name: /^steps$/i })).toBeVisible();
 	});
 
 	test('"Classic Chocolate Chip Cookies" shows version history with 2 versions', async ({ page }) => {

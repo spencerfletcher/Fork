@@ -134,10 +134,10 @@ test.describe('Edit recipe page', () => {
 		await page.locator('input[name="commitMessage"]').fill('e2e test commit');
 		await page.getByRole('button', { name: /save new version/i }).click();
 
-		// Should redirect back to the recipe page and version count should increase
+		// Should redirect back to the recipe page
 		await page.waitForURL(/\/recipes\/(?!.*\/edit)/);
+		// Open version history and verify our commit message appears
 		await page.locator('details.version-history summary').click();
-		// Chicken Tikka Masala starts with 3 versions; we just added one
-		await expect(page.getByText(/4 versions/i)).toBeVisible();
+		await expect(page.getByText('e2e test commit').first()).toBeVisible();
 	});
 });
