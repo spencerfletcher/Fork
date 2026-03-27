@@ -8,13 +8,13 @@ test.describe('Home page', () => {
 
 	test('shows at least one recipe card', async ({ page }) => {
 		await page.goto('/');
-		const cards = page.locator('a.recipe-card');
+		const cards = page.locator('div.recipe-card');
 		await expect(cards.first()).toBeVisible();
 	});
 
 	test('recipe cards have a title', async ({ page }) => {
 		await page.goto('/');
-		const firstCard = page.locator('a.recipe-card').first();
+		const firstCard = page.locator('div.recipe-card').first();
 		await expect(firstCard.locator('h3')).toBeVisible();
 	});
 

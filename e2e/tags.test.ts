@@ -31,7 +31,7 @@ test.describe('Tag pages', () => {
 
 	test('clicking a recipe card on a tag page navigates to the recipe', async ({ page }) => {
 		await page.goto('/tags/dessert');
-		await page.locator('a.recipe-card').first().click();
+		await page.locator('div.recipe-card').first().click();
 		await expect(page).toHaveURL(/\/recipes\//);
 		await expect(page.locator('h1')).toBeVisible();
 	});

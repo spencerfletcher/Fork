@@ -8,7 +8,7 @@ import { expect, test } from '@playwright/test';
 test.describe('Recipe detail page', () => {
 	test('recipe cards on the home page link to detail pages', async ({ page }) => {
 		await page.goto('/');
-		const cards = page.locator('a.recipe-card');
+		const cards = page.locator('div.recipe-card');
 		await expect(cards.first()).toBeVisible();
 		// Clicking the first card navigates to a recipe detail
 		await cards.first().click();
@@ -18,14 +18,14 @@ test.describe('Recipe detail page', () => {
 
 	test('recipe detail shows Ingredients section', async ({ page }) => {
 		await page.goto('/');
-		await page.locator('a.recipe-card').first().click();
+		await page.locator('div.recipe-card').first().click();
 		// Use heading role to avoid matching ingredient names that contain "ingredients"
 		await expect(page.getByRole('heading', { name: /^ingredients$/i })).toBeVisible();
 	});
 
 	test('recipe detail shows Steps section', async ({ page }) => {
 		await page.goto('/');
-		await page.locator('a.recipe-card').first().click();
+		await page.locator('div.recipe-card').first().click();
 		await expect(page.getByRole('heading', { name: /^steps$/i })).toBeVisible();
 	});
 
