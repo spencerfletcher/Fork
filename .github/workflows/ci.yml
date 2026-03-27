@@ -6,6 +6,12 @@ on:
   pull_request:
     branches: [master, main]
 
+# Placeholder values so svelte-kit can generate $env/static/public types.
+# These are not secrets — they're only used for type generation, not runtime.
+env:
+  PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+  PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
+
 jobs:
   check:
     name: Type check & lint
@@ -19,10 +25,13 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
+
+      # Compile paraglide i18n (output is gitignored, must be generated in CI)
+      - run: pnpm compile:force
 
       # Generates .svelte-kit/types so svelte-check can resolve $types
       - run: pnpm exec svelte-kit sync
@@ -45,10 +54,13 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
+
+      # Compile paraglide i18n (output is gitignored, must be generated in CI)
+      - run: pnpm compile:force
 
       - run: pnpm exec svelte-kit sync
 
