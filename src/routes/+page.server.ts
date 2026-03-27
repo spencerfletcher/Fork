@@ -1,15 +1,17 @@
-import {db} from '$lib/server/db';
-import {recipes} from '$lib/server/db/schema';
-import {isNull} from 'drizzle-orm';
-import type {PageServerLoad} from './$types';
+import { db } from '$lib/server/db';
+import { recipes } from '$lib/server/db/schema';
+import { eq } from 'drizzle-orm';
+import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async () => {
-	const displayedRecipes = await db
-		.select()
-		.from(recipes)
-		.where(isNull(recipes.userId));
+	const displayedRecipes = await db.query.recipes.findMany({
+		where: eq(recipes.isPublic, true),
+		with: {
+			recipesToTags: { with: { tag: true } },
+			author: true,
+		},
+		orderBy: (r, { desc }) => [desc(r.createdAt)],
+	});
 
-	return {
-		recipes: displayedRecipes,
-	};
+	return { recipes: displayedRecipes };
 };
