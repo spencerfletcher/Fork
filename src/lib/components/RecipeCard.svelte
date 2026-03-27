@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import type { Recipe } from '$lib/server/db/schema';
 
 	interface CardRecipe extends Recipe {
@@ -8,9 +9,17 @@
 	let { recipe }: { recipe: CardRecipe } = $props();
 
 	const tags = recipe.recipesToTags?.map(r => r.tag) ?? [];
+	const href = `/recipes/${recipe.slug}`;
 </script>
 
-<a href={`/recipes/${recipe.slug}`} class="recipe-card">
+<!-- Use div + JS navigation so tag <a> links inside are valid HTML (no nested anchors) -->
+<div
+	class="recipe-card"
+	role="link"
+	tabindex="0"
+	onclick={() => goto(href)}
+	onkeydown={(e) => e.key === 'Enter' && goto(href)}
+>
 	<div class="card-image">
 		<img
 			src={recipe.imageUrl ?? '/None.png'}
@@ -45,17 +54,12 @@
 		{#if tags.length > 0}
 			<div class="card-tags">
 				{#each tags.slice(0, 3) as tag}
-					<!-- svelte-ignore a11y_no_static_element_interactions -->
-					<a
-						href="/tags/{tag.slug}"
-						class="tag"
-						onclick={(e) => e.stopPropagation()}
-					>{tag.name}</a>
+					<a href="/tags/{tag.slug}" class="tag">{tag.name}</a>
 				{/each}
 			</div>
 		{/if}
 	</div>
-</a>
+</div>
 
 <style>
 	.recipe-card {
@@ -66,6 +70,7 @@
 		box-shadow: var(--shadow-card);
 		overflow: hidden;
 		text-decoration: none;
+		cursor: pointer;
 		transition: box-shadow 0.2s ease, transform 0.2s ease;
 	}
 

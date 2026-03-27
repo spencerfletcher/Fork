@@ -5,6 +5,17 @@ import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
+	build: {
+		rollupOptions: {
+			// drizzle-orm re-exports `sql` at the package root; rollup incorrectly
+			// flags every file that imports from drizzle-orm as "importing sql but
+			// never using it". Suppress this known false-positive.
+			onwarn(warning, defaultHandler) {
+				if (warning.code === 'UNUSED_EXTERNAL_IMPORT' && warning.exporter === 'drizzle-orm') return;
+				defaultHandler(warning);
+			},
+		},
+	},
 	plugins: [
 		tailwindcss(),
 		sveltekit(),

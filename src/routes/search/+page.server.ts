@@ -1,6 +1,6 @@
 import { db } from '$lib/server/db';
 import { recipes, tags, recipesToTags } from '$lib/server/db/schema';
-import { ilike, eq, and, or, inArray, sql } from 'drizzle-orm';
+import { ilike, eq, and, or, inArray } from 'drizzle-orm';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ url, locals: { user } }) => {
