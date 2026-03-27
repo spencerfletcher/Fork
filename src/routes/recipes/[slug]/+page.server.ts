@@ -1,7 +1,7 @@
 import { error, redirect } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
-import { recipes, recipeVersions, recipesToTags, profiles } from '$lib/server/db/schema';
-import { eq, desc, inArray } from 'drizzle-orm';
+import { recipes, recipeVersions, recipesToTags, profiles, favorites } from '$lib/server/db/schema';
+import { eq, desc, inArray, and } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { slugify } from '$lib/helpers';
 import type { PageServerLoad, Actions } from './$types';
@@ -37,15 +37,46 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 		isViewingHistory = found.versionNumber !== recipe.versions[0]?.versionNumber;
 	}
 
+	// Check if the current user has favorited this recipe
+	let isFavorited = false;
+	if (user) {
+		const existing = await db.query.favorites.findFirst({
+			where: and(eq(favorites.userId, user.id), eq(favorites.recipeId, recipe.id)),
+		});
+		isFavorited = !!existing;
+	}
+
 	return {
 		recipe,
 		currentVersion,
 		allVersions: recipe.versions,
 		isViewingHistory,
+		isFavorited,
 	};
 };
 
 export const actions: Actions = {
+	toggleFavorite: async ({ params, locals: { user } }) => {
+		if (!user) throw error(401, 'Login required');
+
+		const recipe = await db.query.recipes.findFirst({
+			where: eq(recipes.slug, params.slug),
+		});
+		if (!recipe) throw error(404, 'Recipe not found');
+
+		const existing = await db.query.favorites.findFirst({
+			where: and(eq(favorites.userId, user.id), eq(favorites.recipeId, recipe.id)),
+		});
+
+		if (existing) {
+			await db.delete(favorites).where(
+				and(eq(favorites.userId, user.id), eq(favorites.recipeId, recipe.id))
+			);
+		} else {
+			await db.insert(favorites).values({ userId: user.id, recipeId: recipe.id });
+		}
+	},
+
 	fork: async ({ params, locals: { user }, request }) => {
 		if (!user) throw error(401, 'Login required to fork a recipe');
 

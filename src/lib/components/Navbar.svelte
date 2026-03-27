@@ -27,6 +27,15 @@
 			<ul class="navbar-links">
 				<li>
 					<a
+						href="/search"
+						class="navbar-link"
+						class:active={$page.url.pathname === '/search'}
+					>
+						Search
+					</a>
+				</li>
+				<li>
+					<a
 						href="/recipes/new"
 						class="navbar-link"
 						class:active={$page.url.pathname === '/recipes/new'}
@@ -43,6 +52,17 @@
 						{m.navbar_recipes()}
 					</a>
 				</li>
+				{#if user}
+				<li>
+					<a
+						href="/favorites"
+						class="navbar-link"
+						class:active={$page.url.pathname === '/favorites'}
+					>
+						Favorites
+					</a>
+				</li>
+				{/if}
 			</ul>
 		</div>
 
@@ -86,11 +106,19 @@
 		<div class="mobile-menu" id="mobile-menu">
 			<ul class="mobile-links">
 				<li>
+					<a href="/search" onclick={closeMenu} class="mobile-link">Search</a>
+				</li>
+				<li>
 					<a href="/recipes/new" onclick={closeMenu} class="mobile-link">{m.navbar_new()}</a>
 				</li>
 				<li>
 					<a href="/recipes" onclick={closeMenu} class="mobile-link">{m.navbar_recipes()}</a>
 				</li>
+				{#if user}
+				<li>
+					<a href="/favorites" onclick={closeMenu} class="mobile-link">Favorites</a>
+				</li>
+				{/if}
 			</ul>
 			<div class="mobile-auth">
 				{#if user}
