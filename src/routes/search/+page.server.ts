@@ -16,7 +16,7 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 
 	// Public filter (show public recipes, or user's own recipes if authenticated)
 	conditions.push(
-		user ? or(eq(recipes.public, true), eq(recipes.userId, user.id)) : eq(recipes.public, true)
+		user ? or(eq(recipes.isPublic, true), eq(recipes.authorId, user.id)) : eq(recipes.isPublic, true)
 	);
 
 	// Tag filtering with OR logic and sorting by match count

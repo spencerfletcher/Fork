@@ -5,7 +5,7 @@ import Page from './+page.svelte';
 
 describe('/+page.svelte', () => {
 	test('renders the site heading', () => {
-		render(Page, { props: { data: { recipes: [], user: null, supabase: null as never } } });
+		render(Page, { props: { data: { recipes: [], user: null } } });
 		expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
 	});
 });

@@ -61,8 +61,8 @@ function makeTx(opts: { newRecipeId?: number; newRecipeSlug?: string } = {}) {
 	};
 }
 
-async function invoke(action: (...args: unknown[]) => unknown, event: unknown) {
-	return action(event as never).catch((e: unknown) => e);
+async function invoke(action: (...args: unknown[]) => unknown, event: unknown): Promise<Record<string, unknown>> {
+	return (action(event as never) as Promise<unknown>).catch((e: unknown) => e) as Promise<Record<string, unknown>>;
 }
 
 function makeEvent(opts: {
@@ -115,19 +115,19 @@ describe('fork', () => {
 	beforeEach(() => vi.clearAllMocks());
 
 	test('throws 401 when not logged in', async () => {
-		const result = await invoke(actions.fork, makeEvent({ user: null }));
+		const result = await invoke(actions.fork as never, makeEvent({ user: null }));
 		expect(result.status).toBe(401);
 	});
 
 	test('throws 404 when source recipe does not exist', async () => {
 		findRecipeMock.mockResolvedValue(null);
-		const result = await invoke(actions.fork, makeEvent({ user: FORKER }));
+		const result = await invoke(actions.fork as never, makeEvent({ user: FORKER }));
 		expect(result.status).toBe(404);
 	});
 
 	test('throws 400 when source recipe has no versions', async () => {
 		findRecipeMock.mockResolvedValue({ ...SOURCE_RECIPE, versions: [] });
-		const result = await invoke(actions.fork, makeEvent({ user: FORKER }));
+		const result = await invoke(actions.fork as never, makeEvent({ user: FORKER }));
 		expect(result.status).toBe(400);
 	});
 
@@ -136,7 +136,7 @@ describe('fork', () => {
 		const tx = makeTx({ newRecipeSlug: 'classic-cookies-abc123' });
 		transactionMock.mockImplementationOnce(async (cb: Function) => cb(tx));
 
-		await invoke(actions.fork, makeEvent({ user: FORKER }));
+		await invoke(actions.fork as never, makeEvent({ user: FORKER }));
 
 		expect(dbInsert).toHaveBeenCalled();
 		const profileValues = (dbInsert.mock.results[0].value.values as ReturnType<typeof vi.fn>).mock.calls[0][0];
@@ -149,7 +149,7 @@ describe('fork', () => {
 		transactionMock.mockImplementationOnce(async (cb: Function) => cb(tx));
 
 		const result = await invoke(
-			actions.fork,
+			actions.fork as never,
 			makeEvent({ user: FORKER, fields: { commitMessage: 'Forked!' } })
 		);
 
@@ -162,7 +162,7 @@ describe('fork', () => {
 		const tx = makeTx({ newRecipeSlug: 'classic-cookies-abc123' });
 		transactionMock.mockImplementationOnce(async (cb: Function) => cb(tx));
 
-		await invoke(actions.fork, makeEvent({ user: FORKER }));
+		await invoke(actions.fork as never, makeEvent({ user: FORKER }));
 
 		// First tx.insert call is the recipes table
 		const recipeValues = tx.insertChain.values.mock.calls[0][0];
@@ -177,7 +177,7 @@ describe('fork', () => {
 		transactionMock.mockImplementationOnce(async (cb: Function) => cb(tx));
 
 		await invoke(
-			actions.fork,
+			actions.fork as never,
 			makeEvent({ user: FORKER, fields: { commitMessage: 'My fork' } })
 		);
 
@@ -195,7 +195,7 @@ describe('fork', () => {
 		const tx = makeTx({ newRecipeId: 99, newRecipeSlug: 'classic-cookies-abc123' });
 		transactionMock.mockImplementationOnce(async (cb: Function) => cb(tx));
 
-		await invoke(actions.fork, makeEvent({ user: FORKER }));
+		await invoke(actions.fork as never, makeEvent({ user: FORKER }));
 
 		// Second tx.insert call is recipesToTags
 		const tagValues = tx.insertChain.values.mock.calls[1][0];
@@ -207,7 +207,7 @@ describe('fork', () => {
 		const tx = makeTx({ newRecipeSlug: 'classic-cookies-abc123' });
 		transactionMock.mockImplementationOnce(async (cb: Function) => cb(tx));
 
-		await invoke(actions.fork, makeEvent({ user: FORKER, fields: { commitMessage: '' } }));
+		await invoke(actions.fork as never, makeEvent({ user: FORKER, fields: { commitMessage: '' } }));
 
 		const versionValues = tx.insertChain.values.mock.calls[2][0];
 		expect(versionValues.commitMessage).toBe('Forked recipe');

@@ -69,8 +69,8 @@ function makeTx(opts: { maxVer?: number; insertedRows?: unknown[] } = {}) {
 }
 
 /** Calls a SvelteKit action and returns whatever it throws (or returns). */
-async function invoke(action: (...args: unknown[]) => unknown, event: unknown) {
-	return action(event as never).catch((e: unknown) => e);
+async function invoke(action: (...args: unknown[]) => unknown, event: unknown): Promise<Record<string, unknown>> {
+	return (action(event as never) as Promise<unknown>).catch((e: unknown) => e) as Promise<Record<string, unknown>>;
 }
 
 /** Builds a minimal SvelteKit RequestEvent-like object. */
@@ -104,26 +104,26 @@ describe('saveMeta', () => {
 	beforeEach(() => vi.clearAllMocks());
 
 	test('throws 401 when not logged in', async () => {
-		const result = await invoke(actions.saveMeta, makeEvent({ user: null }));
+		const result = await invoke(actions.saveMeta as never, makeEvent({ user: null }));
 		expect(result.status).toBe(401);
 	});
 
 	test('throws 404 when recipe is not found', async () => {
 		findRecipeMock.mockResolvedValue(null);
-		const result = await invoke(actions.saveMeta, makeEvent({ user: OWNER }));
+		const result = await invoke(actions.saveMeta as never, makeEvent({ user: OWNER }));
 		expect(result.status).toBe(404);
 	});
 
 	test('throws 403 when user does not own recipe', async () => {
 		findRecipeMock.mockResolvedValue(RECIPE);
-		const result = await invoke(actions.saveMeta, makeEvent({ user: OTHER }));
+		const result = await invoke(actions.saveMeta as never, makeEvent({ user: OTHER }));
 		expect(result.status).toBe(403);
 	});
 
 	test('throws 400 when title is missing', async () => {
 		findRecipeMock.mockResolvedValue(RECIPE);
 		const result = await invoke(
-			actions.saveMeta,
+			actions.saveMeta as never,
 			makeEvent({ user: OWNER, fields: { title: '   ' } })
 		);
 		expect(result.status).toBe(400);
@@ -135,7 +135,7 @@ describe('saveMeta', () => {
 		transactionMock.mockImplementationOnce(async (cb: Function) => cb(tx));
 
 		const result = await invoke(
-			actions.saveMeta,
+			actions.saveMeta as never,
 			makeEvent({ user: OWNER, params: { slug: 'test-slug' }, fields: { title: 'New Title', isPublic: 'on' } })
 		);
 
@@ -149,7 +149,7 @@ describe('saveMeta', () => {
 		transactionMock.mockImplementationOnce(async (cb: Function) => cb(tx));
 
 		await invoke(
-			actions.saveMeta,
+			actions.saveMeta as never,
 			makeEvent({
 				user: OWNER,
 				fields: {
@@ -173,7 +173,7 @@ describe('saveMeta', () => {
 		transactionMock.mockImplementationOnce(async (cb: Function) => cb(tx));
 
 		await invoke(
-			actions.saveMeta,
+			actions.saveMeta as never,
 			makeEvent({ user: OWNER, fields: { title: 'Any Title', isPublic: 'on' } })
 		);
 
@@ -187,26 +187,26 @@ describe('saveVersion', () => {
 	beforeEach(() => vi.clearAllMocks());
 
 	test('throws 401 when not logged in', async () => {
-		const result = await invoke(actions.saveVersion, makeEvent({ user: null }));
+		const result = await invoke(actions.saveVersion as never, makeEvent({ user: null }));
 		expect(result.status).toBe(401);
 	});
 
 	test('throws 404 when recipe is not found', async () => {
 		findRecipeMock.mockResolvedValue(null);
-		const result = await invoke(actions.saveVersion, makeEvent({ user: OWNER }));
+		const result = await invoke(actions.saveVersion as never, makeEvent({ user: OWNER }));
 		expect(result.status).toBe(404);
 	});
 
 	test('throws 403 when user does not own recipe', async () => {
 		findRecipeMock.mockResolvedValue(RECIPE);
-		const result = await invoke(actions.saveVersion, makeEvent({ user: OTHER }));
+		const result = await invoke(actions.saveVersion as never, makeEvent({ user: OTHER }));
 		expect(result.status).toBe(403);
 	});
 
 	test('throws 400 when commit message is empty', async () => {
 		findRecipeMock.mockResolvedValue(RECIPE);
 		const result = await invoke(
-			actions.saveVersion,
+			actions.saveVersion as never,
 			makeEvent({
 				user: OWNER,
 				fields: { commitMessage: '  ', ingredients: VALID_INGREDIENTS, steps: VALID_STEPS },
@@ -218,7 +218,7 @@ describe('saveVersion', () => {
 	test('throws 400 when ingredients JSON is invalid', async () => {
 		findRecipeMock.mockResolvedValue(RECIPE);
 		const result = await invoke(
-			actions.saveVersion,
+			actions.saveVersion as never,
 			makeEvent({
 				user: OWNER,
 				fields: { commitMessage: 'fix', ingredients: 'not-json', steps: VALID_STEPS },
@@ -230,7 +230,7 @@ describe('saveVersion', () => {
 	test('throws 400 when ingredients array is empty', async () => {
 		findRecipeMock.mockResolvedValue(RECIPE);
 		const result = await invoke(
-			actions.saveVersion,
+			actions.saveVersion as never,
 			makeEvent({
 				user: OWNER,
 				fields: { commitMessage: 'fix', ingredients: '[]', steps: VALID_STEPS },
@@ -242,7 +242,7 @@ describe('saveVersion', () => {
 	test('throws 400 when steps array is empty', async () => {
 		findRecipeMock.mockResolvedValue(RECIPE);
 		const result = await invoke(
-			actions.saveVersion,
+			actions.saveVersion as never,
 			makeEvent({
 				user: OWNER,
 				fields: { commitMessage: 'fix', ingredients: VALID_INGREDIENTS, steps: '[]' },
@@ -257,7 +257,7 @@ describe('saveVersion', () => {
 		transactionMock.mockImplementationOnce(async (cb: Function) => cb(tx));
 
 		const result = await invoke(
-			actions.saveVersion,
+			actions.saveVersion as never,
 			makeEvent({
 				user: OWNER,
 				params: { slug: 'test-slug' },
@@ -275,7 +275,7 @@ describe('saveVersion', () => {
 		transactionMock.mockImplementationOnce(async (cb: Function) => cb(tx));
 
 		await invoke(
-			actions.saveVersion,
+			actions.saveVersion as never,
 			makeEvent({
 				user: OWNER,
 				fields: { commitMessage: 'Adjust spices', ingredients: VALID_INGREDIENTS, steps: VALID_STEPS },
@@ -300,7 +300,7 @@ describe('saveVersion', () => {
 		]);
 
 		await invoke(
-			actions.saveVersion,
+			actions.saveVersion as never,
 			makeEvent({
 				user: OWNER,
 				fields: { commitMessage: 'fix steps', ingredients: VALID_INGREDIENTS, steps: messedUpSteps },

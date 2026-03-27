@@ -29,7 +29,8 @@ function makeData(overrides: {
 		allVersions: [V1, V2],
 		ingredientDiff: overrides.ingredientDiff ?? [],
 		stepDiff: overrides.stepDiff ?? [],
-	};
+		user: null,
+	} as never;
 }
 
 // ─── Tests ────────────────────────────────────────────────────────────────────

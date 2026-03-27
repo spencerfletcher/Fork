@@ -48,6 +48,16 @@ export const recipesToTags = pgTable('recipes_to_tags', {
 	primaryKey({ columns: [table.recipeId, table.tagId] }),
 ]);
 
+// ─── Favorites ────────────────────────────────────────────────────────────────
+
+export const favorites = pgTable('favorites', {
+	userId: text('user_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }),
+	recipeId: integer('recipe_id').notNull().references(() => recipes.id, { onDelete: 'cascade' }),
+	createdAt: timestamp('created_at').defaultNow(),
+}, (table) => [
+	primaryKey({ columns: [table.userId, table.recipeId] }),
+]);
+
 // ─── Recipe Versions ──────────────────────────────────────────────────────────
 
 export const recipeVersions = pgTable('recipe_versions', {
@@ -98,6 +108,17 @@ export const recipesToTagsRelations = relations(recipesToTags, ({ one }) => ({
 	}),
 }));
 
+export const favoritesRelations = relations(favorites, ({ one }) => ({
+	user: one(profiles, {
+		fields: [favorites.userId],
+		references: [profiles.id],
+	}),
+	recipe: one(recipes, {
+		fields: [favorites.recipeId],
+		references: [recipes.id],
+	}),
+}));
+
 export const recipeVersionsRelations = relations(recipeVersions, ({ one }) => ({
 	recipe: one(recipes, {
 		fields: [recipeVersions.recipeId],
@@ -132,3 +153,6 @@ export type RecipeVersion = InferSelectModel<typeof recipeVersions>;
 export type NewRecipeVersion = InferInsertModel<typeof recipeVersions>;
 
 export type Tag = InferSelectModel<typeof tags>;
+
+export type Favorite = InferSelectModel<typeof favorites>;
+export type NewFavorite = InferInsertModel<typeof favorites>;

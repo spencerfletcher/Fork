@@ -9,9 +9,7 @@
 	// We destructure BOTH `data` and `children` from the top-level props.
 	let { data, children }: { data: LayoutData; children: Snippet } = $props();
 
-	// Make the Supabase client and session available to all child components
-	// through Svelte's context API.
-	setContext('supabase', data.supabase);
+	// Make the user available to all child components through Svelte's context API.
 	setContext('user', data.user);
 </script>
 
