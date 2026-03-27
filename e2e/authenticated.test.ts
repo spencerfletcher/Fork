@@ -65,30 +65,41 @@ test.describe('New recipe page', () => {
 	});
 
 	test('creates a recipe and redirects to its detail page', async ({ page }) => {
-		await page.goto('/recipes/new');
+		let createdRecipeUrl: string | null = null;
 
-		await page.locator('input[name="title"]').fill('E2E Test Recipe');
+		try {
+			await page.goto('/recipes/new');
 
-		// Fill first ingredient row
-		await page.locator('input[placeholder="Amount"]').first().fill('2');
-		await page.locator('input[placeholder="Unit"]').first().fill('cups');
-		await page.locator('input[placeholder="Ingredient name"]').first().fill('flour');
+			await page.locator('input[name="title"]').fill('E2E Test Recipe');
 
-		// Fill first step
-		await page.locator('textarea[placeholder*="step"]').first().fill('Mix all ingredients.');
+			// Fill first ingredient row
+			await page.locator('input[placeholder="Amount"]').first().fill('2');
+			await page.locator('input[placeholder="Unit"]').first().fill('cups');
+			await page.locator('input[placeholder="Ingredient name"]').first().fill('flour');
 
-		await page.getByRole('button', { name: /create recipe/i }).click();
+			// Fill first step
+			await page.locator('textarea[placeholder*="step"]').first().fill('Mix all ingredients.');
 
-		// Should redirect to the new recipe's detail page
-		await page.waitForURL(/\/recipes\//);
-		await expect(page.locator('h1')).toContainText('E2E Test Recipe');
+			await page.getByRole('button', { name: /create recipe/i }).click();
 
-		// Clean up — delete the recipe we just created so it doesn't accumulate
-		const recipeUrl = page.url().split('?')[0];
-		await page.request.post(`${recipeUrl}/edit?/deleteRecipe`, {
-			headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-			data: ''
-		});
+			// Should redirect to the new recipe's detail page
+			await page.waitForURL(/\/recipes\//);
+			await expect(page.locator('h1')).toContainText('E2E Test Recipe');
+
+			createdRecipeUrl = page.url().split('?')[0];
+		} finally {
+			// Always clean up — use page.evaluate so the browser sets the correct
+			// Origin header and SvelteKit's CSRF check passes.
+			if (createdRecipeUrl) {
+				await page.evaluate(async (url) => {
+					await fetch(`${url}/edit?/deleteRecipe`, {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+						body: ''
+					});
+				}, createdRecipeUrl);
+			}
+		}
 	});
 });
 
