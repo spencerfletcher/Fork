@@ -4,26 +4,37 @@
 	"version": "0.0.1",
 	"type": "module",
 	"scripts": {
+		"// ── Dev ───────────────────────────────────────────────────────": "",
 		"dev": "pnpm compile:force && vite dev",
 		"build": "pnpm compile:force && vite build",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
+
+		"// ── Code Quality ────────────────────────────────────────────": "",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"format": "prettier --write .",
 		"lint": "prettier --check . && eslint .",
+
+		"// ── Testing ─────────────────────────────────────────────────": "",
+		"test": "pnpm test:unit -- --run && pnpm test:e2e",
 		"test:unit": "vitest",
-		"test": "npm run test:unit -- --run && npm run test:e2e",
 		"test:e2e": "playwright test",
+
+		"// ── Database ─────────────────────────────────────────────────": "",
 		"db:push": "drizzle-kit push",
 		"db:migrate": "drizzle-kit migrate",
 		"db:studio": "drizzle-kit studio",
-		"storybook": "storybook dev -p 6006",
-		"build-storybook": "storybook build",
-		"machine-translate": "inlang machine translate --project project.inlang",
 		"db:seed": "tsx src/lib/server/db/seed.ts",
+		"db:types": "supabase gen types typescript --project-id nqcqdpcczabsadfowrxd --schema public > src/lib/types/database.types.ts",
+
+		"// ── i18n ─────────────────────────────────────────────────────": "",
 		"compile:force": "paraglide-js compile --outdir ./src/lib/paraglide",
-		"db:types": "supabase gen types typescript --project-id nqcqdpcczabsadfowrxd --schema public > src/lib/types/database.types.ts"
+		"machine-translate": "inlang machine translate --project project.inlang",
+
+		"// ── Storybook ────────────────────────────────────────────────": "",
+		"storybook": "storybook dev -p 6006",
+		"build-storybook": "storybook build"
 	},
 	"devDependencies": {
 		"@chromatic-com/storybook": "^4.0.0",

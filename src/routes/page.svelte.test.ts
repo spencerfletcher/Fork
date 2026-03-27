@@ -4,8 +4,8 @@ import { render, screen } from '@testing-library/svelte';
 import Page from './+page.svelte';
 
 describe('/+page.svelte', () => {
-	test('should render h1', () => {
-		render(Page);
+	test('renders the site heading', () => {
+		render(Page, { props: { data: { recipes: [], user: null, supabase: null as never } } });
 		expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
 	});
 });
