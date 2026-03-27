@@ -1,29 +1,93 @@
 <script lang="ts">
 	import RecipeCard from '$lib/components/RecipeCard.svelte';
+	import type { PageData } from './$types';
 
-	// This receives the { recipes: [...] } object from your updated load function
-	let { data } = $props();
+	let { data }: { data: PageData } = $props();
 </script>
 
-<div class="p-4 sm:p-6 lg:p-8">
-	<div class="container mx-auto">
-		{#if data.session?.user}
-			<div class="mt-2 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-				{#if data.recipes != null}
-					{#each data.recipes.filter((recipe) => recipe.userId === data.session?.user.id) as recipe (recipe.id)}
+<div class="page">
+	<div class="page-inner">
+		{#if data.user}
+			<div class="page-header">
+				<h1>My Recipes</h1>
+				<p class="page-subtitle">Your personal collection.</p>
+			</div>
+
+			{#if data.recipes && data.recipes.length > 0}
+				<div class="recipe-grid">
+					{#each data.recipes as recipe (recipe.id)}
 						<RecipeCard {recipe} />
 					{/each}
-				{:else}
-					<p class="col-span-full text-gray-500">
-						You have no recipes yet. Start by
-						<a href="/new" class="text-blue-500 hover:underline">adding one!</a>
-					</p>
-				{/if}
-			</div>
+				</div>
+			{:else}
+				<div class="empty-state">
+					<p>You have no recipes yet.</p>
+					<a href="/recipes/new" class="btn-primary">Create your first recipe</a>
+				</div>
+			{/if}
 		{:else}
-			<p class="text-gray-500">
-				Please <a href="/login" class="text-blue-500 hover:underline">log in</a> to see your recipes.
-			</p>
+			<div class="auth-prompt">
+				<h1>My Recipes</h1>
+				<p>Please <a href="/login">log in</a> to see your recipes.</p>
+			</div>
 		{/if}
 	</div>
 </div>
+
+<style>
+	.page {
+		padding: var(--space-7) var(--space-5);
+	}
+
+	.page-inner {
+		max-width: var(--max-width);
+		margin: 0 auto;
+	}
+
+	.page-header {
+		margin-bottom: var(--space-7);
+	}
+
+	.page-subtitle {
+		font-size: 1.1rem;
+		color: var(--color-text-2);
+		margin: var(--space-2) 0 0;
+	}
+
+	.recipe-grid {
+		display: grid;
+		grid-template-columns: 1fr;
+		gap: var(--space-6);
+	}
+
+	@media (min-width: 640px) {
+		.recipe-grid {
+			grid-template-columns: repeat(2, 1fr);
+		}
+	}
+
+	@media (min-width: 1024px) {
+		.recipe-grid {
+			grid-template-columns: repeat(3, 1fr);
+		}
+	}
+
+	.empty-state {
+		text-align: center;
+		padding: var(--space-8) 0;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: var(--space-5);
+	}
+
+	.empty-state p {
+		color: var(--color-text-2);
+		font-size: 1.1rem;
+	}
+
+	.auth-prompt {
+		text-align: center;
+		padding: var(--space-8) 0;
+	}
+</style>
