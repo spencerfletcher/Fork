@@ -7,7 +7,7 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 	const searchQuery = url.searchParams.get('q') || '';
 	const tagSlugs = url.searchParams.get('tags')?.split(',').filter(Boolean) || [];
 
-	let conditions = [];
+	const conditions = [];
 
 	// Text search on title (case-insensitive)
 	if (searchQuery) {

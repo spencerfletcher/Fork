@@ -2,7 +2,7 @@
 	import { enhance } from '$app/forms';
 
 	// This `form` prop will receive any error messages returned from the action
-	let { form } = $props<{ form: any }>();
+	let { form } = $props<{ form: { message?: string } | null }>();
 </script>
 
 <div

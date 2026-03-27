@@ -137,7 +137,7 @@
 				<fieldset class="field field-tags">
 					<legend class="field-legend">Tags</legend>
 					<div class="tag-checkboxes">
-						{#each allTags as tag}
+						{#each allTags as tag (tag.id)}
 							<label class="tag-checkbox">
 								<input
 									type="checkbox"
@@ -185,7 +185,7 @@
 				<div class="field">
 					<h4 style="margin-bottom: var(--space-3);">Ingredients</h4>
 					<div class="editor-list" role="list">
-						{#each ingredients as ingredient, i}
+						{#each ingredients as ingredient, i (i)}
 							<div
 								class="editor-row"
 								role="listitem"
@@ -238,7 +238,7 @@
 				<div class="field">
 					<h4 style="margin-bottom: var(--space-3);">Steps</h4>
 					<div class="editor-list" role="list">
-						{#each steps as step, i}
+						{#each steps as step, i (i)}
 							<div
 								class="step-editor-row"
 								role="listitem"

@@ -11,6 +11,7 @@
 		onSubmit?: () => void;
 	} = $props();
 
+	// eslint-disable-next-line svelte/prefer-writable-derived
 	let searchValue = $state(value);
 	let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 

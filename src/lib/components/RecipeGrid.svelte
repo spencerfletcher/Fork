@@ -4,11 +4,9 @@
 
 	interface Props {
 		recipes: Recipe[];
-		getRecipeTags?: (recipeId: number) => string[];
-		onTagClick?: (tag: string) => void;
 	}
 
-	let { recipes, getRecipeTags, onTagClick }: Props = $props();
+	let { recipes }: Props = $props();
 </script>
 
 {#if recipes.length === 0}

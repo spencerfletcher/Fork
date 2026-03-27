@@ -63,7 +63,7 @@
 		<!-- Tags -->
 		{#if tags.length > 0}
 			<div class="tags-row">
-				{#each tags as tag}
+				{#each tags as tag (tag.id)}
 					<a href="/tags/{tag.slug}" class="tag">{tag.name}</a>
 				{/each}
 			</div>
@@ -180,7 +180,7 @@
 				<section class="ingredients-section">
 					<h4 class="section-heading">Ingredients</h4>
 					<ul class="ingredient-list">
-						{#each currentVersion.ingredients as ingredient}
+						{#each currentVersion.ingredients as ingredient (ingredient.name)}
 							<li class="ingredient-item">
 								{ingredient.amount}
 								{ingredient.unit}
@@ -193,7 +193,7 @@
 				<section class="steps-section">
 					<h4 class="section-heading">Steps</h4>
 					<ol class="step-list">
-						{#each currentVersion.steps as step}
+						{#each currentVersion.steps as step (step.step)}
 							<li class="step-item">
 								<span class="step-number">{step.step}</span>
 								<p class="step-text">{step.text}</p>
@@ -219,7 +219,7 @@
 						>
 					</summary>
 					<div class="version-list">
-						{#each allVersions as version}
+						{#each allVersions as version (version.id)}
 							<div class="version-row">
 								<div class="version-info">
 									<div class="version-main">

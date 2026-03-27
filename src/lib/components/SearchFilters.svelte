@@ -58,16 +58,6 @@
 		// Apply filters immediately when a tag is toggled
 		applyFilters();
 	}
-
-	function clearFilters() {
-		searchQuery = '';
-		selectedTags = [];
-		goto(window.location.pathname, {
-			replaceState: false,
-			keepFocus: true,
-			noScroll: true
-		});
-	}
 </script>
 
 <div class="border-border space-y-4 rounded-lg border bg-white p-4">

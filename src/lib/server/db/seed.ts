@@ -6,7 +6,6 @@ import { nanoid } from 'nanoid';
 
 import { recipes, tags, recipesToTags, recipeVersions, profiles } from './schema';
 import { slugify } from '$lib/helpers';
-import { eq } from 'drizzle-orm';
 
 config({ path: '.env' });
 

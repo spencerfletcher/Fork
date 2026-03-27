@@ -49,7 +49,7 @@
 
 		{#if tags.length > 0}
 			<div class="card-tags">
-				{#each tags.slice(0, 3) as tag}
+				{#each tags.slice(0, 3) as tag (tag.id)}
 					<a href="/tags/{tag.slug}" class="tag">{tag.name}</a>
 				{/each}
 			</div>

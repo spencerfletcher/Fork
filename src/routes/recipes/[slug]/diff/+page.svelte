@@ -33,7 +33,7 @@
 			<div class="selector-group">
 				<label for="from-select" class="selector-label">From</label>
 				<select id="from-select" bind:value={fromSelect} onchange={navigate} class="version-select">
-					{#each allVersions as v}
+					{#each allVersions as v (v.versionNumber)}
 						<option value={v.versionNumber}>v{v.versionNumber}: {v.commitMessage}</option>
 					{/each}
 				</select>
@@ -42,7 +42,7 @@
 			<div class="selector-group">
 				<label for="to-select" class="selector-label">To</label>
 				<select id="to-select" bind:value={toSelect} onchange={navigate} class="version-select">
-					{#each allVersions as v}
+					{#each allVersions as v (v.versionNumber)}
 						<option value={v.versionNumber}>v{v.versionNumber}: {v.commitMessage}</option>
 					{/each}
 				</select>
@@ -72,7 +72,7 @@
 		<section class="diff-section">
 			<h3 class="diff-heading">Ingredients</h3>
 			<div class="diff-list">
-				{#each ingredientDiff as row}
+				{#each ingredientDiff as row (row.ingredient.name + row.status)}
 					<div class="diff-row diff-{row.status}">
 						<span class="diff-prefix">
 							{#if row.status === 'added'}+{:else if row.status === 'removed'}−{:else}&nbsp;{/if}
@@ -94,7 +94,7 @@
 		<section class="diff-section">
 			<h3 class="diff-heading">Steps</h3>
 			<div class="diff-list">
-				{#each stepDiff as row}
+				{#each stepDiff as row (row.step.step + row.status)}
 					<div class="diff-row diff-{row.status}">
 						<span class="diff-prefix">
 							{#if row.status === 'added'}+{:else if row.status === 'removed'}−{:else}&nbsp;{/if}

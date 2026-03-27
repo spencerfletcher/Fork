@@ -142,7 +142,9 @@ describe('fork', () => {
 	test('upserts a profile for the forking user before the transaction', async () => {
 		findRecipeMock.mockResolvedValue(SOURCE_RECIPE);
 		const tx = makeTx({ newRecipeSlug: 'classic-cookies-abc123' });
-		transactionMock.mockImplementationOnce(async (cb: Function) => cb(tx));
+		transactionMock.mockImplementationOnce(
+			async (cb: (tx: ReturnType<typeof makeTx>) => Promise<void>) => cb(tx)
+		);
 
 		await invoke(actions.fork as never, makeEvent({ user: FORKER }));
 
@@ -155,7 +157,9 @@ describe('fork', () => {
 	test('redirects to /edit of the new forked recipe on success', async () => {
 		findRecipeMock.mockResolvedValue(SOURCE_RECIPE);
 		const tx = makeTx({ newRecipeSlug: 'classic-cookies-abc123' });
-		transactionMock.mockImplementationOnce(async (cb: Function) => cb(tx));
+		transactionMock.mockImplementationOnce(
+			async (cb: (tx: ReturnType<typeof makeTx>) => Promise<void>) => cb(tx)
+		);
 
 		const result = await invoke(
 			actions.fork as never,
@@ -169,7 +173,9 @@ describe('fork', () => {
 	test('inserts new recipe row with parentId pointing at source', async () => {
 		findRecipeMock.mockResolvedValue(SOURCE_RECIPE);
 		const tx = makeTx({ newRecipeSlug: 'classic-cookies-abc123' });
-		transactionMock.mockImplementationOnce(async (cb: Function) => cb(tx));
+		transactionMock.mockImplementationOnce(
+			async (cb: (tx: ReturnType<typeof makeTx>) => Promise<void>) => cb(tx)
+		);
 
 		await invoke(actions.fork as never, makeEvent({ user: FORKER }));
 
@@ -183,7 +189,9 @@ describe('fork', () => {
 	test('inserts version 1 copying ingredients and steps from source', async () => {
 		findRecipeMock.mockResolvedValue(SOURCE_RECIPE);
 		const tx = makeTx({ newRecipeId: 99, newRecipeSlug: 'classic-cookies-abc123' });
-		transactionMock.mockImplementationOnce(async (cb: Function) => cb(tx));
+		transactionMock.mockImplementationOnce(
+			async (cb: (tx: ReturnType<typeof makeTx>) => Promise<void>) => cb(tx)
+		);
 
 		await invoke(
 			actions.fork as never,
@@ -202,7 +210,9 @@ describe('fork', () => {
 	test('copies tags from the source recipe', async () => {
 		findRecipeMock.mockResolvedValue(SOURCE_RECIPE);
 		const tx = makeTx({ newRecipeId: 99, newRecipeSlug: 'classic-cookies-abc123' });
-		transactionMock.mockImplementationOnce(async (cb: Function) => cb(tx));
+		transactionMock.mockImplementationOnce(
+			async (cb: (tx: ReturnType<typeof makeTx>) => Promise<void>) => cb(tx)
+		);
 
 		await invoke(actions.fork as never, makeEvent({ user: FORKER }));
 
@@ -214,7 +224,9 @@ describe('fork', () => {
 	test('uses a default commit message when none is provided', async () => {
 		findRecipeMock.mockResolvedValue(SOURCE_RECIPE);
 		const tx = makeTx({ newRecipeSlug: 'classic-cookies-abc123' });
-		transactionMock.mockImplementationOnce(async (cb: Function) => cb(tx));
+		transactionMock.mockImplementationOnce(
+			async (cb: (tx: ReturnType<typeof makeTx>) => Promise<void>) => cb(tx)
+		);
 
 		await invoke(actions.fork as never, makeEvent({ user: FORKER, fields: { commitMessage: '' } }));
 

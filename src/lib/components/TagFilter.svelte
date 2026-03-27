@@ -36,7 +36,7 @@
 
 	{#if availableTags.length > 0}
 		<div class="flex flex-wrap gap-2">
-			{#each availableTags as tag}
+			{#each availableTags as tag (tag.slug)}
 				{@const isSelected = selectedTagSlugs.includes(tag.slug)}
 				<button
 					type="button"

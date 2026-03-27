@@ -61,14 +61,14 @@
 
 <div class="tag-input-root" bind:this={rootEl}>
 	<!-- Hidden inputs consumed by the form action -->
-	{#each selected as tag}
+	{#each selected as tag (tag)}
 		<input type="hidden" name="tags" value={tag} />
 	{/each}
 
 	<!-- Selected pills -->
 	{#if selected.length > 0}
 		<div class="pills">
-			{#each selected as tag}
+			{#each selected as tag (tag)}
 				<span class="pill">
 					{tag}
 					<button type="button" onclick={() => remove(tag)} aria-label="Remove {tag}">×</button>
@@ -98,7 +98,7 @@
 
 		{#if showDropdown}
 			<ul class="dropdown" role="listbox" id="tag-listbox">
-				{#each suggestions as tag}
+				{#each suggestions as tag (tag.id)}
 					<li role="option" aria-selected="false">
 						<button
 							type="button"

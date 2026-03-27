@@ -3,7 +3,7 @@ import type { Actions, PageServerLoad } from './$types';
 import { db } from '$lib/server/db';
 import { recipes, recipeVersions, tags, recipesToTags, profiles } from '$lib/server/db/schema';
 import { slugify } from '$lib/helpers';
-import { eq, inArray } from 'drizzle-orm';
+import { inArray } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 
 export const load: PageServerLoad = async ({ locals: { user } }) => {

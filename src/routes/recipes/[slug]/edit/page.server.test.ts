@@ -137,7 +137,9 @@ describe('saveMeta', () => {
 	test('redirects to recipe page on success', async () => {
 		findRecipeMock.mockResolvedValue(RECIPE);
 		const tx = makeTx();
-		transactionMock.mockImplementationOnce(async (cb: Function) => cb(tx));
+		transactionMock.mockImplementationOnce(
+			async (cb: (tx: ReturnType<typeof makeTx>) => Promise<void>) => cb(tx)
+		);
 
 		const result = await invoke(
 			actions.saveMeta as never,
@@ -155,7 +157,9 @@ describe('saveMeta', () => {
 	test('calls tx.update with the submitted fields', async () => {
 		findRecipeMock.mockResolvedValue(RECIPE);
 		const tx = makeTx();
-		transactionMock.mockImplementationOnce(async (cb: Function) => cb(tx));
+		transactionMock.mockImplementationOnce(
+			async (cb: (tx: ReturnType<typeof makeTx>) => Promise<void>) => cb(tx)
+		);
 
 		await invoke(
 			actions.saveMeta as never,
@@ -183,7 +187,9 @@ describe('saveMeta', () => {
 	test('calls tx.delete to clear old tags before re-inserting', async () => {
 		findRecipeMock.mockResolvedValue(RECIPE);
 		const tx = makeTx();
-		transactionMock.mockImplementationOnce(async (cb: Function) => cb(tx));
+		transactionMock.mockImplementationOnce(
+			async (cb: (tx: ReturnType<typeof makeTx>) => Promise<void>) => cb(tx)
+		);
 
 		await invoke(
 			actions.saveMeta as never,
@@ -267,7 +273,9 @@ describe('saveVersion', () => {
 	test('redirects to recipe page on success', async () => {
 		findRecipeMock.mockResolvedValue(RECIPE);
 		const tx = makeTx({ maxVer: 1 });
-		transactionMock.mockImplementationOnce(async (cb: Function) => cb(tx));
+		transactionMock.mockImplementationOnce(
+			async (cb: (tx: ReturnType<typeof makeTx>) => Promise<void>) => cb(tx)
+		);
 
 		const result = await invoke(
 			actions.saveVersion as never,
@@ -285,7 +293,9 @@ describe('saveVersion', () => {
 	test('inserts a new version with versionNumber = maxVer + 1', async () => {
 		findRecipeMock.mockResolvedValue(RECIPE);
 		const tx = makeTx({ maxVer: 2 }); // existing max is 2 → next should be 3
-		transactionMock.mockImplementationOnce(async (cb: Function) => cb(tx));
+		transactionMock.mockImplementationOnce(
+			async (cb: (tx: ReturnType<typeof makeTx>) => Promise<void>) => cb(tx)
+		);
 
 		await invoke(
 			actions.saveVersion as never,
@@ -309,7 +319,9 @@ describe('saveVersion', () => {
 	test('normalizes step numbers to be sequential', async () => {
 		findRecipeMock.mockResolvedValue(RECIPE);
 		const tx = makeTx({ maxVer: 0 });
-		transactionMock.mockImplementationOnce(async (cb: Function) => cb(tx));
+		transactionMock.mockImplementationOnce(
+			async (cb: (tx: ReturnType<typeof makeTx>) => Promise<void>) => cb(tx)
+		);
 
 		const messedUpSteps = JSON.stringify([
 			{ step: 5, text: 'First' },
