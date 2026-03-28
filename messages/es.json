@@ -1,8 +1,8 @@
 {
 	"$schema": "https://inlang.com/schema/inlang-message-format",
 	"hello_world": "Hello, {name} from es!",
-	"app_title": "RecipeBook",
+	"app_title": "Fork",
 	"navbar_recipes": "Recipes",
 	"navbar_about": "About",
-	"navbar_new": "New Recipe"
+	"navbar_new": "Fork recipe"
 }

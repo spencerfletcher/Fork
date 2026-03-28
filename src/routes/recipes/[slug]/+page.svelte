@@ -329,7 +329,7 @@
 	/* ── Hero ── */
 	.recipe-hero {
 		background: var(--color-hero-bg);
-		padding: var(--space-6) var(--space-5) var(--space-7);
+		padding: var(--space-7) var(--space-5) var(--space-7);
 	}
 
 	.hero-inner {
@@ -361,7 +361,7 @@
 		font-family: var(--font-mono);
 		font-size: 0.78rem;
 		color: var(--color-text-bronze);
-		margin-bottom: var(--space-4);
+		margin-bottom: var(--space-6);
 		display: flex;
 		align-items: center;
 		gap: var(--space-2);
@@ -393,7 +393,7 @@
 		font-size: clamp(2.4rem, 5vw, 4rem);
 		font-weight: 700;
 		color: var(--color-text-cream);
-		margin: 0 0 var(--space-5);
+		margin: 0 0 var(--space-6);
 		line-height: 1.05;
 		letter-spacing: -0.02em;
 	}
@@ -602,7 +602,9 @@
 		background: var(--color-accent) !important;
 		color: var(--color-hero-bg) !important;
 		border-color: var(--color-accent) !important;
+		border-radius: var(--radius-pill) !important;
 		font-weight: 600 !important;
+		padding: 12px 20px !important;
 	}
 
 	:global(.action-btn-primary:hover) {

@@ -160,12 +160,12 @@
 		background: var(--color-navbar-bg);
 		border-bottom: none;
 		z-index: 50;
+		padding: 0 var(--space-5);
 	}
 
 	.navbar-inner {
 		max-width: var(--max-width);
 		margin: 0 auto;
-		padding: 0 var(--space-5);
 		height: 60px;
 		display: flex;
 		align-items: center;
