@@ -39,9 +39,9 @@ describe('Navbar', () => {
 		expect(screen.queryByRole('button', { name: /logout/i })).not.toBeInTheDocument();
 	});
 
-	test('shows user email when logged in', () => {
+	test('shows Logout button when user is logged in', () => {
 		render(Navbar, { props: { user: makeUser('chef@example.com') } });
-		expect(screen.getAllByText('chef@example.com').length).toBeGreaterThanOrEqual(1);
+		expect(screen.getByRole('button', { name: /logout/i })).toBeInTheDocument();
 	});
 
 	test('shows Logout button when logged in', () => {
@@ -56,18 +56,37 @@ describe('Navbar', () => {
 
 	test('logo links to the home page', () => {
 		render(Navbar, { props: { user: null } });
-		const logo = screen.getByRole('link', { name: /recipebook/i });
-		expect(logo).toHaveAttribute('href', '/');
+		// Use getAllByRole since "Fork" also matches the CTA link text
+		const links = screen.getAllByRole('link', { name: /fork/i });
+		const logo = links.find((l) => l.getAttribute('href') === '/');
+		expect(logo).toBeInTheDocument();
 	});
 
-	test('has a link to New Recipe', () => {
+	test('has a link to Fork recipe', () => {
 		render(Navbar, { props: { user: null } });
 		// Multiple links with this name exist (desktop + mobile) — just check presence
-		expect(screen.getAllByRole('link', { name: /new recipe/i }).length).toBeGreaterThanOrEqual(1);
+		expect(screen.getAllByRole('link', { name: /fork recipe/i }).length).toBeGreaterThanOrEqual(1);
 	});
 
 	test('has a link to Recipes', () => {
 		render(Navbar, { props: { user: null } });
 		expect(screen.getAllByRole('link', { name: /^recipes$/i }).length).toBeGreaterThanOrEqual(1);
+	});
+
+	test('shows @username link to profile when logged in with profile', () => {
+		const profile = {
+			id: 'user-abc',
+			username: 'chefmaria',
+			avatarUrl: null,
+			createdAt: new Date()
+		};
+		render(Navbar, { props: { user: makeUser('chef@example.com'), profile } });
+		const link = screen.getByRole('link', { name: '@chefmaria' });
+		expect(link).toHaveAttribute('href', '/users/chefmaria');
+	});
+
+	test('does not show username link when no profile', () => {
+		render(Navbar, { props: { user: makeUser('chef@example.com'), profile: null } });
+		expect(screen.queryByText(/@chefmaria/)).not.toBeInTheDocument();
 	});
 });

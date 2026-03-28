@@ -32,6 +32,15 @@ Live at recipes.spencerfletcher.com.
 - Return consistent error shapes: `{ error: string, code: string }`
 - Auth-gated endpoints need explicit permission checks — don't rely on route structure alone
 
+## Testing
+
+- Every new feature must have tests before it's marked done — no exceptions
+- Order: server logic tests first (Vitest, Node env), then component tests, then e2e
+- Unit test files live next to the source file: `Foo.svelte` → `Foo.svelte.test.ts`, `page.server.ts` → `page.server.test.ts`
+- Use `@testing-library/svelte` for component tests; match existing `makeX()` helper patterns
+- Use `vi.hoisted()` for any mock function used inside `vi.mock()` factory
+- Run `pnpm test:unit` before committing; don't commit with failing unit tests
+
 ## Deployment
 
 - This is a live site — flag anything that would cause downtime or data loss

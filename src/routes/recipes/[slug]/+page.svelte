@@ -100,7 +100,7 @@
 				{/if}
 				{#if recipe.author}
 					<span class="hero-meta-sep">·</span>
-					<span class="hero-meta-text">{recipe.author.username}</span>
+					<a href="/users/{recipe.author.username}" class="hero-meta-author">@{recipe.author.username}</a>
 				{/if}
 			</div>
 
@@ -302,7 +302,7 @@
 											v{version.versionNumber} — {version.commitMessage}
 										</span>
 										<span class="version-meta">
-											{version.creator?.username ?? 'unknown'} · {formatRelativeTime(version.createdAt)}
+											@{version.creator?.username ?? 'unknown'} · {formatRelativeTime(version.createdAt)}
 										</span>
 										{#if version.versionNumber > 1 && !isViewingHistory}
 											<a
@@ -461,6 +461,18 @@
 	.hero-meta-text {
 		font-size: 0.9rem;
 		color: var(--color-text-bronze);
+	}
+
+	.hero-meta-author {
+		font-family: var(--font-mono);
+		font-size: 0.85rem;
+		color: var(--color-text-bronze);
+		text-decoration: none;
+		transition: color 0.15s;
+	}
+
+	.hero-meta-author:hover {
+		color: var(--color-accent);
 	}
 
 	.hero-meta-sep {

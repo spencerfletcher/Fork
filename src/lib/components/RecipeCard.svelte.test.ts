@@ -105,4 +105,19 @@ describe('RecipeCard', () => {
 		// Should render without throwing; title is visible
 		expect(screen.getByText('Chocolate Cake')).toBeInTheDocument();
 	});
+
+	test('shows @username link when author is present', () => {
+		const recipe = {
+			...makeRecipe(),
+			author: { id: 'user-1', username: 'chefmaria' }
+		};
+		render(RecipeCard, { props: { recipe } });
+		const link = screen.getByRole('link', { name: '@chefmaria' });
+		expect(link).toHaveAttribute('href', '/users/chefmaria');
+	});
+
+	test('does not show author link when author is absent', () => {
+		render(RecipeCard, { props: { recipe: makeRecipe() } });
+		expect(screen.queryByText(/^@/)).not.toBeInTheDocument();
+	});
 });
