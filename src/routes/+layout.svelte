@@ -14,7 +14,7 @@
 </script>
 
 <div class="flex min-h-screen flex-col">
-	<Navbar user={data.user} />
+	<Navbar user={data.user} profile={data.profile} />
 
 	<main class="flex-grow">
 		{@render children()}

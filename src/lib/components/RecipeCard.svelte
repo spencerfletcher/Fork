@@ -4,6 +4,7 @@
 
 	interface CardRecipe extends Recipe {
 		recipesToTags?: { tag: { id: number; name: string; slug: string } }[];
+		author?: { id: string; username: string } | null;
 	}
 
 	let { recipe }: { recipe: CardRecipe } = $props();
@@ -55,13 +56,22 @@
 			<p class="card-description">{recipe.description}</p>
 		{/if}
 
-		{#if tags.length > 0}
-			<div class="card-tags">
-				{#each tags.slice(0, 3) as tag (tag.id)}
-					<a href="/tags/{tag.slug}" class="tag">{tag.name}</a>
-				{/each}
-			</div>
-		{/if}
+		<div class="card-footer">
+			{#if recipe.author}
+				<a
+					href="/users/{recipe.author.username}"
+					class="card-author"
+					onclick={(e) => e.stopPropagation()}
+				>@{recipe.author.username}</a>
+			{/if}
+			{#if tags.length > 0}
+				<div class="card-tags">
+					{#each tags.slice(0, 3) as tag (tag.id)}
+						<a href="/tags/{tag.slug}" class="tag" onclick={(e) => e.stopPropagation()}>{tag.name}</a>
+					{/each}
+				</div>
+			{/if}
+		</div>
 	</div>
 </div>
 
@@ -161,10 +171,28 @@
 		overflow: hidden;
 	}
 
+	.card-footer {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-1);
+		margin-top: var(--space-1);
+	}
+
+	.card-author {
+		font-family: var(--font-mono);
+		font-size: 0.72rem;
+		color: var(--color-text-3);
+		text-decoration: none;
+		transition: color 0.15s;
+	}
+
+	.card-author:hover {
+		color: var(--color-accent);
+	}
+
 	.card-tags {
 		display: flex;
 		flex-wrap: wrap;
 		gap: var(--space-1);
-		margin-top: var(--space-1);
 	}
 </style>

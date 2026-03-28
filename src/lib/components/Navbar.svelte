@@ -3,8 +3,9 @@
 	import * as m from '$lib/paraglide/messages.js';
 	import { enhance, applyAction } from '$app/forms';
 	import type { User } from '@supabase/supabase-js';
+	import type { Profile } from '$lib/server/db/schema';
 
-	let { user }: { user: User | null } = $props();
+	let { user, profile = null }: { user: User | null; profile?: Profile | null } = $props();
 
 	let isMenuOpen = $state(false);
 
@@ -58,7 +59,9 @@
 		<div class="navbar-right">
 			<div class="auth-desktop">
 				{#if user}
-					<span class="auth-email">{user.email}</span>
+					{#if profile}
+						<a href="/users/{profile.username}" class="auth-username">@{profile.username}</a>
+					{/if}
 					<form action="/logout" method="POST" use:enhance>
 						<button type="submit" class="navbar-link logout-btn">Logout</button>
 					</form>
@@ -271,6 +274,18 @@
 	.auth-email {
 		font-size: 0.8rem;
 		color: var(--color-text-bronze);
+	}
+
+	.auth-username {
+		font-family: var(--font-mono);
+		font-size: 0.8rem;
+		color: var(--color-text-tan);
+		text-decoration: none;
+		transition: color 0.15s;
+	}
+
+	.auth-username:hover {
+		color: var(--color-accent);
 	}
 
 	.hamburger {
