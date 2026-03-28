@@ -7,6 +7,12 @@
 	let { data }: { data: PageData } = $props();
 
 	const { recipe, currentVersion, allVersions, isViewingHistory, forkCount } = $derived(data);
+
+	const VERSIONS_SHOWN = 3;
+	let showAllVersions = $state(false);
+	const visibleVersions = $derived(
+		showAllVersions ? allVersions : allVersions.slice(0, VERSIONS_SHOWN)
+	);
 	const user = $derived(data.user);
 
 	const tags = $derived(recipe.recipesToTags?.map((r) => r.tag) ?? []);
@@ -280,7 +286,7 @@
 					<div class="sidebar-card">
 						<h4 class="card-label">Version History</h4>
 						<div class="version-list">
-							{#each allVersions as version (version.id)}
+							{#each visibleVersions as version (version.id)}
 								{@const isCurrent = version.versionNumber === currentVersion?.versionNumber}
 								<div
 									class="version-row"
@@ -311,6 +317,16 @@
 								</div>
 							{/each}
 						</div>
+					{#if allVersions.length > VERSIONS_SHOWN}
+						<button
+							class="version-toggle"
+							onclick={() => (showAllVersions = !showAllVersions)}
+						>
+							{showAllVersions
+								? 'Show less'
+								: `Show ${allVersions.length - VERSIONS_SHOWN} older version${allVersions.length - VERSIONS_SHOWN === 1 ? '' : 's'}`}
+						</button>
+					{/if}
 					</div>
 				{/if}
 
@@ -642,6 +658,24 @@
 	.version-row:last-child {
 		border-bottom: none;
 		padding-bottom: 0;
+	}
+
+	.version-toggle {
+		width: 100%;
+		margin-top: var(--space-3);
+		padding: var(--space-2) 0;
+		background: none;
+		border: none;
+		font-family: var(--font-sans);
+		font-size: 0.78rem;
+		color: var(--color-text-3);
+		cursor: pointer;
+		text-align: left;
+		transition: color 0.15s;
+	}
+
+	.version-toggle:hover {
+		color: var(--color-accent);
 	}
 
 	.version-row:hover {
