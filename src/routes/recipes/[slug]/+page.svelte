@@ -69,7 +69,7 @@
 			<!-- Breadcrumb -->
 			<nav class="breadcrumb" aria-label="Recipe location">
 				{#if recipe.author}
-					<span class="breadcrumb-user">@{recipe.author.username}</span>
+					<a href="/users/{recipe.author.username}" class="breadcrumb-user">@{recipe.author.username}</a>
 					<span class="breadcrumb-sep">/</span>
 				{/if}
 				<span class="breadcrumb-slug">{recipe.slug}</span>
@@ -381,6 +381,15 @@
 		display: flex;
 		align-items: center;
 		gap: var(--space-2);
+	}
+
+	.breadcrumb-user {
+		color: var(--color-text-bronze);
+		text-decoration: none;
+	}
+
+	.breadcrumb-user:hover {
+		color: var(--color-text-tan);
 	}
 
 	.breadcrumb-sep {
