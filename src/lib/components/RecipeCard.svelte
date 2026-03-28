@@ -26,7 +26,15 @@
 
 	<div class="card-body">
 		{#if recipe.parentId}
-			<span class="forked-badge">Forked</span>
+			<span class="forked-badge">
+				<svg class="fork-icon" viewBox="0 0 12 14" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+					<circle cx="2" cy="2" r="1.5" stroke="currentColor" stroke-width="1"/>
+					<circle cx="10" cy="2" r="1.5" stroke="currentColor" stroke-width="1"/>
+					<circle cx="6" cy="12" r="1.5" stroke="currentColor" stroke-width="1"/>
+					<path d="M2 3.5V6C2 7.1 2.9 8 4 8H6M10 3.5V6C10 7.1 9.1 8 8 8H6M6 8V10.5" stroke="currentColor" stroke-width="1" stroke-linecap="round"/>
+				</svg>
+				Forked
+			</span>
 		{/if}
 
 		{#if recipe.prepTimeMinutes || recipe.cookTimeMinutes}
@@ -101,15 +109,24 @@
 	}
 
 	.forked-badge {
-		display: inline-block;
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
 		font-family: var(--font-mono);
 		font-size: 0.65rem;
-		font-weight: 500;
+		font-weight: 600;
 		background: var(--color-accent-pale);
 		color: var(--color-accent);
+		border: 1px solid rgba(232, 168, 58, 0.35);
 		border-radius: var(--radius-pill);
-		padding: 2px 8px;
+		padding: 3px 8px;
 		align-self: flex-start;
+	}
+
+	.fork-icon {
+		width: 9px;
+		height: 10px;
+		flex-shrink: 0;
 	}
 
 	.card-meta {

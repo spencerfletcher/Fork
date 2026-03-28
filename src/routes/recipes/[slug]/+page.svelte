@@ -470,8 +470,8 @@
 
 	/* ── Commit bar ── */
 	.commit-bar {
-		background: rgba(255, 255, 255, 0.05);
-		border: 1px solid rgba(255, 255, 255, 0.1);
+		background: rgba(0, 0, 0, 0.25);
+		border: 1px solid rgba(200, 184, 144, 0.25);
 		border-radius: var(--radius-md);
 		padding: var(--space-3) var(--space-4);
 		display: flex;
@@ -770,8 +770,8 @@
 
 	.ingredient-row {
 		display: grid;
-		grid-template-columns: 110px 1fr;
-		gap: var(--space-5);
+		grid-template-columns: 90px 1fr;
+		gap: var(--space-3);
 		padding: var(--space-3) 0;
 		border-bottom: 1px solid var(--color-border);
 		align-items: baseline;

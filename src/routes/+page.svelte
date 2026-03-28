@@ -36,7 +36,7 @@
 
 <style>
 	.page {
-		padding: var(--space-7) var(--space-5);
+		padding: var(--space-5) var(--space-5) var(--space-7);
 	}
 
 	.page-inner {
@@ -46,24 +46,24 @@
 
 	.page-header {
 		display: flex;
-		align-items: flex-end;
+		align-items: center;
 		justify-content: space-between;
 		gap: var(--space-5);
-		margin-bottom: var(--space-6);
+		margin-bottom: var(--space-4);
 		flex-wrap: wrap;
 	}
 
 	.site-title {
-		font-size: clamp(2.5rem, 5vw, 4rem);
+		font-size: clamp(1.6rem, 3vw, 2.2rem);
 		letter-spacing: -0.02em;
-		margin: 0 0 var(--space-2);
+		margin: 0 0 var(--space-1);
 		line-height: 1;
 	}
 
 	.site-tagline {
 		font-family: var(--font-serif);
 		font-style: italic;
-		font-size: 1.15rem;
+		font-size: 1rem;
 		font-weight: 400;
 		color: var(--color-text-2);
 		margin: 0;
@@ -89,7 +89,7 @@
 	.section-rule {
 		border: none;
 		border-top: 1px solid var(--color-border);
-		margin: 0 0 var(--space-7);
+		margin: 0 0 var(--space-5);
 	}
 
 	.recipe-grid {
