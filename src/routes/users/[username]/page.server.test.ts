@@ -22,7 +22,13 @@ vi.mock('$lib/server/db', () => ({
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function makeProfile(overrides = {}) {
-	return { id: 'user-1', username: 'chefmaria', avatarUrl: null, createdAt: new Date(), ...overrides };
+	return {
+		id: 'user-1',
+		username: 'chefmaria',
+		avatarUrl: null,
+		createdAt: new Date(),
+		...overrides
+	};
 }
 
 function makeLoadEvent(username: string) {
@@ -51,7 +57,7 @@ describe('users/[username] load', () => {
 		findProfileMock.mockResolvedValue(makeProfile());
 		findRecipesMock.mockResolvedValue([]);
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		const result = await load(makeLoadEvent('chefmaria')) as any;
+		const result = (await load(makeLoadEvent('chefmaria'))) as any;
 		expect(result.profile.username).toBe('chefmaria');
 	});
 
@@ -63,7 +69,7 @@ describe('users/[username] load', () => {
 		];
 		findRecipesMock.mockResolvedValue(recipes);
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		const result = await load(makeLoadEvent('chefmaria')) as any;
+		const result = (await load(makeLoadEvent('chefmaria'))) as any;
 		expect(result.recipes).toHaveLength(2);
 	});
 
@@ -76,7 +82,7 @@ describe('users/[username] load', () => {
 			})
 		});
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		const result = await load(makeLoadEvent('chefmaria')) as any;
+		const result = (await load(makeLoadEvent('chefmaria'))) as any;
 		expect(result.commitCount).toBe(7);
 	});
 });

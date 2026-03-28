@@ -48,17 +48,13 @@
 		return String(n).padStart(2, '0');
 	}
 
-	const totalMinutes = $derived(
-		(recipe.prepTimeMinutes ?? 0) + (recipe.cookTimeMinutes ?? 0)
-	);
+	const totalMinutes = $derived((recipe.prepTimeMinutes ?? 0) + (recipe.cookTimeMinutes ?? 0));
 </script>
 
 <article class="recipe-article">
-
 	<!-- ── Dark hero header ───────────────────────────────────────────── -->
 	<header class="recipe-hero">
 		<div class="hero-inner">
-
 			{#if isViewingHistory && currentVersion}
 				<div class="history-banner">
 					Viewing v{currentVersion.versionNumber}: "{currentVersion.commitMessage}"
@@ -69,7 +65,9 @@
 			<!-- Breadcrumb -->
 			<nav class="breadcrumb" aria-label="Recipe location">
 				{#if recipe.author}
-					<a href="/users/{recipe.author.username}" class="breadcrumb-user">@{recipe.author.username}</a>
+					<a href="/users/{recipe.author.username}" class="breadcrumb-user"
+						>@{recipe.author.username}</a
+					>
 					<span class="breadcrumb-sep">/</span>
 				{/if}
 				<span class="breadcrumb-slug">{recipe.slug}</span>
@@ -100,7 +98,9 @@
 				{/if}
 				{#if recipe.author}
 					<span class="hero-meta-sep">·</span>
-					<a href="/users/{recipe.author.username}" class="hero-meta-author">@{recipe.author.username}</a>
+					<a href="/users/{recipe.author.username}" class="hero-meta-author"
+						>@{recipe.author.username}</a
+					>
 				{/if}
 			</div>
 
@@ -122,7 +122,6 @@
 
 	<!-- ── Two-column content ─────────────────────────────────────────── -->
 	<div class="content-layout">
-
 		<!-- Left: ingredients + method -->
 		<div class="content-main">
 			{#if currentVersion}
@@ -132,7 +131,9 @@
 					<ul class="ingredient-list">
 						{#each currentVersion.ingredients as ingredient (ingredient.name)}
 							<li class="ingredient-row">
-								<span class="ingredient-qty">{ingredient.amount}{ingredient.unit ? ' ' + ingredient.unit : ''}</span>
+								<span class="ingredient-qty"
+									>{ingredient.amount}{ingredient.unit ? ' ' + ingredient.unit : ''}</span
+								>
 								<span class="ingredient-name">{ingredient.name}</span>
 							</li>
 						{/each}
@@ -169,7 +170,6 @@
 		<!-- Right: sticky sidebar -->
 		<aside class="content-sidebar">
 			<div class="sidebar-sticky">
-
 				<!-- Details card -->
 				{#if recipe.prepTimeMinutes || recipe.cookTimeMinutes || recipe.servings}
 					<div class="sidebar-card">
@@ -209,7 +209,11 @@
 									return async ({ update }) => update({ reset: false });
 								}}
 							>
-								<button type="submit" class="action-btn" aria-label={isFavorited ? 'Unsave' : 'Save'}>
+								<button
+									type="submit"
+									class="action-btn"
+									aria-label={isFavorited ? 'Unsave' : 'Save'}
+								>
 									<svg
 										class="action-icon"
 										class:filled={isFavorited}
@@ -294,7 +298,9 @@
 									role="link"
 									tabindex="0"
 									onclick={() => goto(`/recipes/${recipe.slug}?version=${version.versionNumber}`)}
-									onkeydown={(e) => e.key === 'Enter' && goto(`/recipes/${recipe.slug}?version=${version.versionNumber}`)}
+									onkeydown={(e) =>
+										e.key === 'Enter' &&
+										goto(`/recipes/${recipe.slug}?version=${version.versionNumber}`)}
 								>
 									<span class="version-dot" class:current={isCurrent}></span>
 									<div class="version-info">
@@ -302,11 +308,14 @@
 											v{version.versionNumber} — {version.commitMessage}
 										</span>
 										<span class="version-meta">
-											@{version.creator?.username ?? 'unknown'} · {formatRelativeTime(version.createdAt)}
+											@{version.creator?.username ?? 'unknown'} · {formatRelativeTime(
+												version.createdAt
+											)}
 										</span>
 										{#if version.versionNumber > 1 && !isViewingHistory}
 											<a
-												href="/recipes/{recipe.slug}/diff?from={version.versionNumber - 1}&to={version.versionNumber}"
+												href="/recipes/{recipe.slug}/diff?from={version.versionNumber -
+													1}&to={version.versionNumber}"
 												class="version-diff-link"
 												onclick={(e) => e.stopPropagation()}
 											>
@@ -317,19 +326,15 @@
 								</div>
 							{/each}
 						</div>
-					{#if allVersions.length > VERSIONS_SHOWN}
-						<button
-							class="version-toggle"
-							onclick={() => (showAllVersions = !showAllVersions)}
-						>
-							{showAllVersions
-								? 'Show less'
-								: `Show ${allVersions.length - VERSIONS_SHOWN} older version${allVersions.length - VERSIONS_SHOWN === 1 ? '' : 's'}`}
-						</button>
-					{/if}
+						{#if allVersions.length > VERSIONS_SHOWN}
+							<button class="version-toggle" onclick={() => (showAllVersions = !showAllVersions)}>
+								{showAllVersions
+									? 'Show less'
+									: `Show ${allVersions.length - VERSIONS_SHOWN} older version${allVersions.length - VERSIONS_SHOWN === 1 ? '' : 's'}`}
+							</button>
+						{/if}
 					</div>
 				{/if}
-
 			</div>
 		</aside>
 	</div>
@@ -627,7 +632,9 @@
 		cursor: pointer;
 		text-decoration: none;
 		text-align: center;
-		transition: border-color 0.15s, color 0.15s;
+		transition:
+			border-color 0.15s,
+			color 0.15s;
 	}
 
 	.action-btn:hover {

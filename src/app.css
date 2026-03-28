@@ -2,20 +2,20 @@
 
 :root {
 	/* Backgrounds */
-	--color-bg: #faf4e8;       /* warm cream — page background */
-	--color-surface: #ffffff;  /* white — sidebar cards, dialogs */
+	--color-bg: #faf4e8; /* warm cream — page background */
+	--color-surface: #ffffff; /* white — sidebar cards, dialogs */
 	--color-surface-2: #faf4e8; /* cream — stat tiles inside cards */
-	--color-hero-bg: #1a1408;  /* deep espresso — recipe hero */
+	--color-hero-bg: #1a1408; /* deep espresso — recipe hero */
 	--color-navbar-bg: #2e1f0f; /* mid espresso — navbar (subtly lighter) */
 
 	/* Text on light backgrounds */
-	--color-text: #1a1408;     /* espresso body text */
-	--color-text-2: #6b5a3a;   /* dark bronze — secondary labels */
-	--color-text-3: #8b7355;   /* mid brown — muted labels, italic notes */
+	--color-text: #1a1408; /* espresso body text */
+	--color-text-2: #6b5a3a; /* dark bronze — secondary labels */
+	--color-text-3: #8b7355; /* mid brown — muted labels, italic notes */
 
 	/* Text on dark backgrounds */
-	--color-text-cream: #faf4e8;  /* hero title, nav brand */
-	--color-text-tan: #b8a880;    /* nav links */
+	--color-text-cream: #faf4e8; /* hero title, nav brand */
+	--color-text-tan: #b8a880; /* nav links */
 	--color-text-bronze: #8b7a5a; /* breadcrumb user, meta */
 
 	/* Accent — saffron gold (interactive / structural) */
@@ -24,15 +24,15 @@
 	--color-accent-pale: #fdf0d0;
 
 	/* Named accents with distinct jobs */
-	--color-sienna: #a84a28;   /* burnt sienna — ingredient quantities */
-	--color-paprika: #c45a38;  /* paprika — time / heat tags */
+	--color-sienna: #a84a28; /* burnt sienna — ingredient quantities */
+	--color-paprika: #c45a38; /* paprika — time / heat tags */
 
 	/* Tag system (golden) */
 	--color-tag: #e8a83a;
 	--color-tag-pale: #fdf0d0;
 
 	/* Borders / surfaces */
-	--color-border: #eee4d0;   /* pale linen — ingredient / step dividers */
+	--color-border: #eee4d0; /* pale linen — ingredient / step dividers */
 	--color-border-2: #e0d0b0; /* warm sand — sidebar card borders */
 	--color-dot-inactive: #c8b890; /* aged gold — inactive version dots */
 

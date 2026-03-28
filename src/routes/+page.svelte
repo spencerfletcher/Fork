@@ -14,7 +14,9 @@
 			</div>
 			<div class="header-meta">
 				{#if data.recipes.length > 0}
-					<span class="recipe-count">{data.recipes.length} recipe{data.recipes.length !== 1 ? 's' : ''}</span>
+					<span class="recipe-count"
+						>{data.recipes.length} recipe{data.recipes.length !== 1 ? 's' : ''}</span
+					>
 				{/if}
 				<a href="/recipes/new" class="btn-primary header-cta">New Recipe</a>
 			</div>

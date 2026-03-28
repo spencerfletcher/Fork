@@ -23,24 +23,21 @@ test.describe('Recipe detail page', () => {
 		await expect(page.getByRole('heading', { name: /^ingredients$/i })).toBeVisible();
 	});
 
-	test('recipe detail shows Steps section', async ({ page }) => {
+	test('recipe detail shows Method section', async ({ page }) => {
 		await page.goto('/');
 		await page.locator('div.recipe-card').first().click();
-		await expect(page.getByRole('heading', { name: /^steps$/i })).toBeVisible();
+		await expect(page.getByRole('heading', { name: /^method$/i })).toBeVisible();
 	});
 
 	test('"Classic Chocolate Chip Cookies" shows version history with 2 versions', async ({
 		page
 	}) => {
 		await page.goto('/');
-		// Find the cookie recipe card by title
 		await page.getByText('Classic Chocolate Chip Cookies').click();
 		await expect(page).toHaveURL(/\/recipes\//);
-		// Version history is inside a <details> — open it
-		const summary = page.locator('details.version-history summary');
-		await summary.click();
-		// Should show "2 versions"
-		await expect(page.getByText(/2 versions/i)).toBeVisible();
+		// Version history is in the sidebar — all versions visible without expanding
+		const versionRows = page.locator('.version-row');
+		await expect(versionRows).toHaveCount(2);
 	});
 
 	test('"Brown Butter Chocolate Chip Cookies" shows fork attribution', async ({ page }) => {
@@ -60,17 +57,16 @@ test.describe('Recipe detail page', () => {
 		const recipeUrl = page.url().split('?')[0];
 		await page.goto(`${recipeUrl}?version=1`);
 		await page.waitForLoadState('networkidle');
-		// Banner: "Viewing v1: "..." — View current version →"
+		// Banner: "Viewing v1: "..." — Current version →"
 		await expect(page.locator('.history-banner')).toBeVisible();
-		await expect(page.getByRole('link', { name: /view current version/i })).toBeVisible();
+		await expect(page.getByRole('link', { name: /current version/i })).toBeVisible();
 	});
 
 	test('Compare link on v2 navigates to diff page', async ({ page }) => {
 		await page.goto('/');
 		await page.getByText('Classic Chocolate Chip Cookies').click();
-		// Open version history
-		await page.locator('details.version-history summary').click();
-		// Click Compare on v2
+		await expect(page).toHaveURL(/\/recipes\//);
+		// Version history is visible in the sidebar — click the first Compare link
 		await page
 			.getByRole('link', { name: /compare/i })
 			.first()

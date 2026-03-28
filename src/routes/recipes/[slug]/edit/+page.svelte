@@ -48,6 +48,7 @@
 	function removeAnnotation(i: number) {
 		steps = steps.map((s, idx) => {
 			if (idx !== i) return s;
+			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 			const { annotation: _removed, ...rest } = s;
 			return rest;
 		});
@@ -292,15 +293,15 @@
 											<button
 												type="button"
 												onclick={() => removeAnnotation(i)}
-												class="annotation-remove-btn"
-											>Remove note</button>
+												class="annotation-remove-btn">Remove note</button
+											>
 										</div>
 									{:else}
 										<button
 											type="button"
 											onclick={() => addAnnotation(i)}
-											class="add-annotation-btn"
-										>+ Add note</button>
+											class="add-annotation-btn">+ Add note</button
+										>
 									{/if}
 								</div>
 								<button

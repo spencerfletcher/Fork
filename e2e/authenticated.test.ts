@@ -14,9 +14,9 @@ test.skip(!hasAuth, 'Set E2E_USER_EMAIL and E2E_USER_PASSWORD in .env to run aut
 // ─── Navbar (logged in) ───────────────────────────────────────────────────────
 
 test.describe('Navbar when logged in', () => {
-	test('shows the user email and a Logout button', async ({ page }) => {
+	test('shows the username link and a Logout button', async ({ page }) => {
 		await page.goto('/');
-		await expect(page.getByText('spencer@fork.dev')).toBeVisible();
+		await expect(page.getByRole('link', { name: '@spencerfletcher' })).toBeVisible();
 		await expect(page.getByRole('button', { name: /logout/i })).toBeVisible();
 	});
 
@@ -154,8 +154,7 @@ test.describe('Edit recipe page', () => {
 
 		// Should redirect back to the recipe page
 		await page.waitForURL(/\/recipes\/(?!.*\/edit)/);
-		// Open version history and verify our commit message appears
-		await page.locator('details.version-history summary').click();
+		// Version history is visible in the sidebar — verify our commit message appears
 		await expect(page.getByText('e2e test commit').first()).toBeVisible();
 	});
 });
