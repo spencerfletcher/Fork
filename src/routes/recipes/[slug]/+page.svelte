@@ -39,6 +39,10 @@
 		<!-- Right: sticky sidebar -->
 		<aside class="content-sidebar">
 			<div class="sidebar-sticky">
+				{#if recipe.imageUrl}
+					<img src={recipe.imageUrl} alt={recipe.title} class="sidebar-image" />
+				{/if}
+
 				<!-- Details card -->
 				<Details {recipe} />
 
@@ -107,5 +111,13 @@
 		color: var(--color-text-3);
 		font-size: 1rem;
 		padding: var(--space-7) 0;
+	}
+
+	.sidebar-image {
+		width: 100%;
+		aspect-ratio: 4 / 3;
+		object-fit: cover;
+		border-radius: var(--radius-lg);
+		border: 1px solid var(--color-border-2);
 	}
 </style>
