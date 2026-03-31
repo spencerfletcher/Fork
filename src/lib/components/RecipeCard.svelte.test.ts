@@ -35,22 +35,26 @@ describe('RecipeCard', () => {
 		expect(screen.getByText('Banana Bread')).toBeInTheDocument();
 	});
 
-	test('navigates to the recipe slug on click', async () => {
-		mockGoto.mockClear();
+	test('card links to the recipe slug', () => {
 		render(RecipeCard, { props: { recipe: makeRecipe({ slug: 'banana-bread-xyz' }) } });
-		// The card is a div[role="link"] — clicking it calls goto()
-		fireEvent.click(screen.getByRole('link'));
-		expect(mockGoto).toHaveBeenCalledWith('/recipes/banana-bread-xyz');
+		// Card uses a stretched <a> with aria-label matching the recipe title
+		const link = screen.getByRole('link', { name: /chocolate cake/i });
+		expect(link).toHaveAttribute('href', '/recipes/banana-bread-xyz');
 	});
 
 	test('shows "Forked" badge when parentId is set', () => {
 		render(RecipeCard, { props: { recipe: makeRecipe({ parentId: 42 }) } });
-		expect(screen.getByText('Forked')).toBeInTheDocument();
+		const badge = screen.getByText('Forked').closest('.forked-badge');
+		expect(badge).not.toHaveClass('forked-badge--hidden');
+		expect(badge).not.toHaveAttribute('aria-hidden', 'true');
 	});
 
-	test('does not show "Forked" badge when parentId is null', () => {
+	test('hides "Forked" badge when parentId is null', () => {
 		render(RecipeCard, { props: { recipe: makeRecipe({ parentId: null }) } });
-		expect(screen.queryByText('Forked')).not.toBeInTheDocument();
+		// Badge stays in DOM (preserves layout) but is visually hidden and aria-hidden
+		const badge = screen.getByText('Forked').closest('.forked-badge');
+		expect(badge).toHaveClass('forked-badge--hidden');
+		expect(badge).toHaveAttribute('aria-hidden', 'true');
 	});
 
 	test('shows combined total time when both prep and cook time are set', () => {

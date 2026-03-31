@@ -62,10 +62,10 @@ describe('Navbar', () => {
 		expect(logo).toBeInTheDocument();
 	});
 
-	test('has a link to Fork recipe', () => {
+	test('has a link to New Recipe', () => {
 		render(Navbar, { props: { user: null } });
 		// Multiple links with this name exist (desktop + mobile) — just check presence
-		expect(screen.getAllByRole('link', { name: /fork recipe/i }).length).toBeGreaterThanOrEqual(1);
+		expect(screen.getAllByRole('link', { name: /new recipe/i }).length).toBeGreaterThanOrEqual(1);
 	});
 
 	test('has a link to Recipes', () => {
