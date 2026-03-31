@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
 	import type { Recipe } from '$lib/server/db/schema';
 
 	interface CardRecipe extends Recipe {
@@ -13,21 +12,40 @@
 	const href = `/recipes/${recipe.slug}`;
 </script>
 
-<!-- Use div + JS navigation so tag <a> links inside are valid HTML (no nested anchors) -->
-<div
-	class="recipe-card"
-	role="link"
-	tabindex="0"
-	onclick={() => goto(href)}
-	onkeydown={(e) => e.key === 'Enter' && goto(href)}
->
+<div class="recipe-card">
+	<a {href} class="card-stretched-link" aria-label={recipe.title} tabindex="0"></a>
+
 	<div class="card-image">
 		<img src={recipe.imageUrl ?? '/None.png'} alt={recipe.title} loading="lazy" />
 	</div>
 
 	<div class="card-body">
-		{#if recipe.parentId}
-			<span class="forked-badge">
+		<div class="card-meta-row">
+			<div class="card-meta-left">
+				{#if recipe.author}
+					<a href="/users/{recipe.author.username}" class="card-author">@{recipe.author.username}</a
+					>
+				{/if}
+				{#if recipe.author && (recipe.prepTimeMinutes || recipe.cookTimeMinutes)}
+					<span class="card-meta-sep">·</span>
+				{/if}
+				{#if recipe.prepTimeMinutes || recipe.cookTimeMinutes}
+					<span class="card-meta">
+						{#if recipe.prepTimeMinutes && recipe.cookTimeMinutes}
+							{recipe.prepTimeMinutes + recipe.cookTimeMinutes} min
+						{:else if recipe.prepTimeMinutes}
+							{recipe.prepTimeMinutes} min prep
+						{:else if recipe.cookTimeMinutes}
+							{recipe.cookTimeMinutes} min cook
+						{/if}
+					</span>
+				{/if}
+			</div>
+			<span
+				class="forked-badge"
+				class:forked-badge--hidden={!recipe.parentId}
+				aria-hidden={!recipe.parentId}
+			>
 				<svg
 					class="fork-icon"
 					viewBox="0 0 12 14"
@@ -47,19 +65,7 @@
 				</svg>
 				Forked
 			</span>
-		{/if}
-
-		{#if recipe.prepTimeMinutes || recipe.cookTimeMinutes}
-			<p class="card-meta">
-				{#if recipe.prepTimeMinutes && recipe.cookTimeMinutes}
-					{recipe.prepTimeMinutes + recipe.cookTimeMinutes} min
-				{:else if recipe.prepTimeMinutes}
-					{recipe.prepTimeMinutes} min prep
-				{:else if recipe.cookTimeMinutes}
-					{recipe.cookTimeMinutes} min cook
-				{/if}
-			</p>
-		{/if}
+		</div>
 
 		<h3 class="card-title">{recipe.title}</h3>
 
@@ -67,45 +73,44 @@
 			<p class="card-description">{recipe.description}</p>
 		{/if}
 
-		<div class="card-footer">
-			{#if recipe.author}
-				<a
-					href="/users/{recipe.author.username}"
-					class="card-author"
-					onclick={(e) => e.stopPropagation()}>@{recipe.author.username}</a
-				>
-			{/if}
-			{#if tags.length > 0}
-				<div class="card-tags">
-					{#each tags.slice(0, 3) as tag (tag.id)}
-						<a href="/tags/{tag.slug}" class="tag" onclick={(e) => e.stopPropagation()}
-							>{tag.name}</a
-						>
-					{/each}
-				</div>
-			{/if}
-		</div>
+		{#if tags.length > 0}
+			<div class="card-tags">
+				{#each tags.slice(0, 3) as tag (tag.id)}
+					<a href="/tags/{tag.slug}" class="tag">{tag.name}</a>
+				{/each}
+			</div>
+		{/if}
 	</div>
 </div>
 
 <style>
 	.recipe-card {
+		position: relative;
 		display: block;
 		background: var(--color-surface);
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-lg);
 		box-shadow: var(--shadow-card);
 		overflow: hidden;
-		text-decoration: none;
-		cursor: pointer;
 		transition:
 			box-shadow 0.2s ease,
 			transform 0.2s ease;
 	}
 
+	/* Stretched link covers the whole card; inner <a> tags sit above it via z-index */
+	.card-stretched-link {
+		position: absolute;
+		inset: 0;
+		z-index: 1;
+	}
+
 	.recipe-card:hover {
 		box-shadow: var(--shadow-raised);
 		transform: translateY(-2px);
+	}
+
+	.recipe-card:has(.card-stretched-link:hover) .card-title {
+		color: var(--color-accent);
 	}
 
 	.card-image {
@@ -120,12 +125,12 @@
 		transition: transform 0.3s ease;
 	}
 
-	.recipe-card:hover .card-image img {
+	.recipe-card:has(.card-stretched-link:hover) .card-image img {
 		transform: scale(1.03);
 	}
 
 	.card-body {
-		padding: var(--space-5);
+		padding: 20px;
 		display: flex;
 		flex-direction: column;
 		gap: var(--space-2);
@@ -146,10 +151,20 @@
 		align-self: flex-start;
 	}
 
+	.forked-badge--hidden {
+		visibility: hidden;
+	}
+
 	.fork-icon {
 		width: 9px;
 		height: 10px;
 		flex-shrink: 0;
+	}
+
+	.card-meta-row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
 	}
 
 	.card-meta {
@@ -168,10 +183,6 @@
 		line-height: 1.3;
 	}
 
-	.recipe-card:hover .card-title {
-		color: var(--color-accent);
-	}
-
 	.card-description {
 		font-size: 0.875rem;
 		color: var(--color-text-2);
@@ -184,14 +195,21 @@
 		overflow: hidden;
 	}
 
-	.card-footer {
+	.card-meta-left {
 		display: flex;
-		flex-direction: column;
-		gap: var(--space-1);
-		margin-top: var(--space-1);
+		align-items: center;
+		gap: var(--space-2);
+	}
+
+	.card-meta-sep {
+		font-family: var(--font-mono);
+		font-size: 0.72rem;
+		color: var(--color-text-3);
 	}
 
 	.card-author {
+		position: relative;
+		z-index: 2;
 		font-family: var(--font-mono);
 		font-size: 0.72rem;
 		color: var(--color-text-3);
@@ -204,6 +222,8 @@
 	}
 
 	.card-tags {
+		position: relative;
+		z-index: 2;
 		display: flex;
 		flex-wrap: wrap;
 		gap: var(--space-1);
