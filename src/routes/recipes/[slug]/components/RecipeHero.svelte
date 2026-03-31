@@ -175,7 +175,7 @@
 
 	.recipe-version {
 		font-family: var(--font-mono);
-		font-size: 1rem;
+		font-size: 1.8rem;
 		font-weight: 500;
 		color: var(--color-accent);
 		flex-shrink: 0;

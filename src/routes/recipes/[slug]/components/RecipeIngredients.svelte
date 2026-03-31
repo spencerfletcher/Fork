@@ -136,6 +136,5 @@
 	.ingredient-qty {
 		font-weight: 500;
 		color: var(--color-sienna);
-		margin-right: var(--space-1);
 	}
 </style>
