@@ -6,7 +6,7 @@
 
 	let { data }: { data: PageData } = $props();
 
-	const { recipe, currentVersion, allVersions, isViewingHistory, forkCount } = $derived(data);
+	const { recipe, currentVersion, allVersions, isViewingHistory } = $derived(data);
 
 	const VERSIONS_SHOWN = 3;
 	let showAllVersions = $state(false);
@@ -23,6 +23,49 @@
 	let isFavorited = $state(data.isFavorited);
 	let forkDialogOpen = $state(false);
 	let forkCommitMessage = $state('');
+
+	let crossedIngredients = $state(new Set<string>());
+	let crossedSteps = $state(new Set<number>());
+
+	let showGrams = $state(false);
+	let gramCache = $state<(number | null)[] | null>(null);
+	let gramsLoading = $state(false);
+
+	$effect(() => {
+		// Reset when version changes (history navigation). void suppresses no-unused-expressions.
+		void currentVersion;
+		gramCache = null;
+		showGrams = false;
+	});
+
+	async function toggleGrams() {
+		showGrams = !showGrams;
+		if (showGrams && gramCache === null && currentVersion) {
+			gramsLoading = true;
+			const res = await fetch('/api/convert-to-grams', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ ingredients: currentVersion.ingredients })
+			});
+			const { results } = await res.json();
+			gramCache = results;
+			gramsLoading = false;
+		}
+	}
+
+	function toggleIngredient(name: string) {
+		crossedIngredients = new Set(
+			crossedIngredients.has(name)
+				? [...crossedIngredients].filter((k) => k !== name)
+				: [...crossedIngredients, name]
+		);
+	}
+
+	function toggleStep(step: number) {
+		crossedSteps = new Set(
+			crossedSteps.has(step) ? [...crossedSteps].filter((k) => k !== step) : [...crossedSteps, step]
+		);
+	}
 
 	function formatTime(minutes: number): string {
 		if (minutes < 60) return `${minutes} min`;
@@ -83,7 +126,12 @@
 			{/if}
 
 			<!-- Title -->
-			<h1 class="recipe-title">{recipe.title}</h1>
+			<div class="title-row">
+				<h1 class="recipe-title">{recipe.title}</h1>
+				{#if currentVersion}
+					<span class="recipe-version">v{currentVersion.versionNumber}</span>
+				{/if}
+			</div>
 
 			<!-- Badges row -->
 			<div class="hero-badges">
@@ -103,20 +151,6 @@
 					>
 				{/if}
 			</div>
-
-			<!-- Commit bar -->
-			{#if currentVersion}
-				<div class="commit-bar">
-					<div class="commit-left">
-						<span class="commit-version">v{currentVersion.versionNumber}</span>
-						<span class="commit-dot">·</span>
-						<span class="commit-message">"{currentVersion.commitMessage}"</span>
-					</div>
-					{#if forkCount > 0}
-						<span class="commit-forks">↓ {forkCount} fork{forkCount !== 1 ? 's' : ''}</span>
-					{/if}
-				</div>
-			{/if}
 		</div>
 	</header>
 
@@ -127,14 +161,33 @@
 			{#if currentVersion}
 				<!-- Ingredients -->
 				<section class="recipe-section">
-					<h4 class="section-label">Ingredients</h4>
+					<div class="section-label-row">
+						<h4 class="section-label">Ingredients</h4>
+						<button class="unit-toggle" onclick={toggleGrams} disabled={gramsLoading}>
+							{gramsLoading ? '…' : showGrams ? 'original' : 'g'}
+						</button>
+					</div>
 					<ul class="ingredient-list">
-						{#each currentVersion.ingredients as ingredient (ingredient.name)}
-							<li class="ingredient-row">
-								<span class="ingredient-qty"
-									>{ingredient.amount}{ingredient.unit ? ' ' + ingredient.unit : ''}</span
-								>
-								<span class="ingredient-name">{ingredient.name}</span>
+						{#each currentVersion.ingredients as ingredient, i (ingredient.name)}
+							<li
+								class="ingredient-row"
+								class:crossed={crossedIngredients.has(ingredient.name)}
+								onclick={() => toggleIngredient(ingredient.name)}
+								role="checkbox"
+								aria-checked={crossedIngredients.has(ingredient.name)}
+								tabindex="0"
+								onkeydown={(e) => e.key === ' ' && toggleIngredient(ingredient.name)}
+							>
+								<span class="ingredient-qty">
+									{#if showGrams && gramCache}
+										{gramCache[i] !== null
+											? `${Math.round(gramCache[i]!)}g`
+											: `${ingredient.amount}${ingredient.unit ? ' ' + ingredient.unit : ''}`}
+									{:else}
+										{ingredient.amount}{ingredient.unit ? ' ' + ingredient.unit : ''}
+									{/if}
+								</span>
+								{ingredient.name}
 							</li>
 						{/each}
 					</ul>
@@ -145,7 +198,15 @@
 					<h4 class="section-label">Method</h4>
 					<ol class="step-list">
 						{#each currentVersion.steps as step (step.step)}
-							<li class="step-item">
+							<li
+								class="step-item"
+								class:crossed={crossedSteps.has(step.step)}
+								onclick={() => toggleStep(step.step)}
+								role="checkbox"
+								aria-checked={crossedSteps.has(step.step)}
+								tabindex="0"
+								onkeydown={(e) => e.key === ' ' && toggleStep(step.step)}
+							>
 								<span class="step-number">{zeroPad(step.step)}</span>
 								<div class="step-content">
 									<p class="step-text">{step.text}</p>
@@ -174,26 +235,26 @@
 				{#if recipe.prepTimeMinutes || recipe.cookTimeMinutes || recipe.servings}
 					<div class="sidebar-card">
 						<h4 class="card-label">Details</h4>
-						<div class="details-grid">
+						<dl class="details-list">
 							{#if recipe.prepTimeMinutes}
-								<div class="detail-tile">
-									<span class="detail-label">Prep</span>
-									<span class="detail-value">{formatTime(recipe.prepTimeMinutes)}</span>
+								<div class="detail-row">
+									<dt class="detail-label">Prep</dt>
+									<dd class="detail-value">{formatTime(recipe.prepTimeMinutes)}</dd>
 								</div>
 							{/if}
 							{#if recipe.cookTimeMinutes}
-								<div class="detail-tile">
-									<span class="detail-label">Cook</span>
-									<span class="detail-value">{formatTime(recipe.cookTimeMinutes)}</span>
+								<div class="detail-row">
+									<dt class="detail-label">Cook</dt>
+									<dd class="detail-value">{formatTime(recipe.cookTimeMinutes)}</dd>
 								</div>
 							{/if}
 							{#if recipe.servings}
-								<div class="detail-tile">
-									<span class="detail-label">Serves</span>
-									<span class="detail-value">{recipe.servings}</span>
+								<div class="detail-row">
+									<dt class="detail-label">Serves</dt>
+									<dd class="detail-value">{recipe.servings}</dd>
 								</div>
 							{/if}
-						</div>
+						</dl>
 					</div>
 				{/if}
 
@@ -350,12 +411,18 @@
 	/* ── Hero ── */
 	.recipe-hero {
 		background: var(--color-hero-bg);
-		padding: var(--space-7) var(--space-5) var(--space-7);
+		padding: var(--space-6) var(--space-5) var(--space-6);
+		width: 100%;
+		box-sizing: border-box;
 	}
 
 	.hero-inner {
 		max-width: var(--max-width);
 		margin: 0 auto;
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-5);
 	}
 
 	.history-banner {
@@ -366,7 +433,6 @@
 		font-family: var(--font-mono);
 		font-size: 0.8rem;
 		color: var(--color-text-tan);
-		margin-bottom: var(--space-5);
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
@@ -382,7 +448,6 @@
 		font-family: var(--font-mono);
 		font-size: 0.78rem;
 		color: var(--color-text-bronze);
-		margin-bottom: var(--space-6);
 		display: flex;
 		align-items: center;
 		gap: var(--space-2);
@@ -411,11 +476,19 @@
 		font-style: italic;
 		font-size: 0.9rem;
 		color: var(--color-text-bronze);
-		margin: 0 0 var(--space-3);
+		margin: 0;
 	}
 
 	.fork-credit a {
 		color: var(--color-accent);
+	}
+
+	.title-row {
+		display: flex;
+		align-items: baseline;
+		gap: var(--space-4);
+		margin: 0;
+		flex-wrap: wrap;
 	}
 
 	.recipe-title {
@@ -423,9 +496,17 @@
 		font-size: clamp(2.4rem, 5vw, 4rem);
 		font-weight: 700;
 		color: var(--color-text-cream);
-		margin: 0 0 var(--space-6);
+		margin: 0;
 		line-height: 1.05;
 		letter-spacing: -0.02em;
+	}
+
+	.recipe-version {
+		font-family: var(--font-mono);
+		font-size: 1rem;
+		font-weight: 500;
+		color: var(--color-accent);
+		flex-shrink: 0;
 	}
 
 	/* ── Hero badges ── */
@@ -434,7 +515,6 @@
 		flex-wrap: wrap;
 		align-items: center;
 		gap: var(--space-2);
-		margin-bottom: var(--space-5);
 	}
 
 	.badge-tag {
@@ -485,53 +565,6 @@
 		opacity: 0.4;
 	}
 
-	/* ── Commit bar ── */
-	.commit-bar {
-		background: rgba(0, 0, 0, 0.25);
-		border: 1px solid rgba(200, 184, 144, 0.25);
-		border-radius: var(--radius-md);
-		padding: var(--space-3) var(--space-4);
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		gap: var(--space-4);
-		font-family: var(--font-mono);
-		font-size: 0.8rem;
-	}
-
-	.commit-left {
-		display: flex;
-		align-items: center;
-		gap: 0;
-		flex-wrap: wrap;
-		min-width: 0;
-	}
-
-	.commit-version {
-		color: var(--color-accent);
-		font-weight: 500;
-	}
-
-	.commit-dot {
-		color: var(--color-text-tan);
-		opacity: 0.5;
-		margin: 0 var(--space-2);
-	}
-
-	.commit-message {
-		color: var(--color-text-tan);
-		font-style: italic;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-
-	.commit-forks {
-		color: var(--color-accent);
-		font-size: 0.75rem;
-		flex-shrink: 0;
-	}
-
 	/* ── Two-column layout ── */
 	.content-layout {
 		max-width: var(--max-width);
@@ -543,9 +576,19 @@
 		align-items: start; /* critical for sticky */
 	}
 
+	.content-main,
+	.content-sidebar {
+		min-width: 0;
+	}
+
 	@media (max-width: 860px) {
 		.content-layout {
 			grid-template-columns: 1fr;
+			padding: var(--space-5);
+		}
+
+		.content-sidebar {
+			order: -1;
 		}
 	}
 
@@ -577,35 +620,34 @@
 	}
 
 	/* ── Details 2×2 grid ── */
-	.details-grid {
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		gap: var(--space-2);
-	}
-
-	.detail-tile {
-		background: var(--color-surface-2);
-		border-radius: var(--radius-md);
-		padding: var(--space-3) var(--space-4);
+	.details-list {
+		margin: 0;
+		padding: 0;
 		display: flex;
 		flex-direction: column;
-		gap: 2px;
+		gap: var(--space-3);
+	}
+
+	.detail-row {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: var(--space-3);
 	}
 
 	.detail-label {
 		font-family: var(--font-sans);
-		font-size: 0.6rem;
-		font-weight: 700;
-		letter-spacing: 0.1em;
-		text-transform: uppercase;
+		font-size: 0.75rem;
+		font-weight: 500;
 		color: var(--color-text-3);
 	}
 
 	.detail-value {
-		font-family: var(--font-sans);
-		font-size: 1.05rem;
-		font-weight: 600;
+		font-family: var(--font-mono);
+		font-size: 0.85rem;
+		font-weight: 500;
 		color: var(--color-text);
+		margin: 0;
 	}
 
 	/* ── Sidebar actions ── */
@@ -649,6 +691,7 @@
 		border-radius: var(--radius-pill) !important;
 		font-weight: 600 !important;
 		padding: 12px 20px !important;
+		cursor: pointer !important;
 	}
 
 	:global(.action-btn-primary:hover) {
@@ -681,6 +724,7 @@
 		border-bottom: 1px solid var(--color-border);
 		text-decoration: none;
 		transition: opacity 0.15s;
+		cursor: pointer;
 	}
 
 	.version-row:last-child {
@@ -708,6 +752,10 @@
 
 	.version-row:hover {
 		opacity: 0.8;
+	}
+
+	.version-row:hover .version-label {
+		color: var(--color-accent);
 	}
 
 	.version-dot {
@@ -766,7 +814,16 @@
 
 	/* ── Ingredients ── */
 	.recipe-section {
-		margin-bottom: var(--space-8);
+		margin-bottom: var(--space-3);
+	}
+
+	.section-label-row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		border-top: 2px solid var(--color-text);
+		padding-top: var(--space-3);
+		margin-bottom: var(--space-1);
 	}
 
 	.section-label {
@@ -776,9 +833,38 @@
 		letter-spacing: 0.12em;
 		text-transform: uppercase;
 		color: var(--color-text-3);
-		margin: 0 0 var(--space-5);
+		margin: 0 0 var(--space-1);
 		border-top: 2px solid var(--color-text);
 		padding-top: var(--space-3);
+	}
+
+	.section-label-row .section-label {
+		border-top: none;
+		padding-top: 0;
+		margin-bottom: 0;
+	}
+
+	.unit-toggle {
+		font-family: var(--font-mono);
+		font-size: 0.72rem;
+		font-weight: 600;
+		color: var(--color-text-3);
+		background: none;
+		border: 1px solid var(--color-border-2);
+		border-radius: var(--radius-pill);
+		padding: 3px 10px;
+		transition:
+			color 0.15s,
+			border-color 0.15s;
+	}
+
+	.unit-toggle:hover:not(:disabled) {
+		color: var(--color-accent);
+		border-color: var(--color-accent);
+	}
+
+	.unit-toggle:disabled {
+		opacity: 0.5;
 	}
 
 	.ingredient-list {
@@ -788,29 +874,26 @@
 	}
 
 	.ingredient-row {
-		display: grid;
-		grid-template-columns: 90px 1fr;
-		gap: var(--space-3);
 		padding: var(--space-3) 0;
 		border-bottom: 1px solid var(--color-border);
-		align-items: baseline;
+		font-size: 1rem;
+		color: var(--color-text);
+		cursor: pointer;
+		user-select: none;
 	}
 
 	.ingredient-row:last-child {
 		border-bottom: none;
 	}
 
-	.ingredient-qty {
-		font-family: var(--font-mono);
-		font-size: 0.85rem;
-		font-weight: 500;
-		color: var(--color-sienna);
+	.ingredient-row.crossed {
+		opacity: 0.4;
+		text-decoration: line-through;
 	}
 
-	.ingredient-name {
-		font-family: var(--font-sans);
-		font-size: 1rem;
-		color: var(--color-text);
+	.ingredient-qty {
+		font-weight: 500;
+		color: var(--color-sienna);
 	}
 
 	/* ── Method / Steps ── */
@@ -829,10 +912,17 @@
 		align-items: flex-start;
 		padding: var(--space-5) 0;
 		border-bottom: 1px solid var(--color-border);
+		cursor: pointer;
+		user-select: none;
 	}
 
 	.step-item:last-child {
 		border-bottom: none;
+	}
+
+	.step-item.crossed {
+		opacity: 0.4;
+		text-decoration: line-through;
 	}
 
 	.step-number {

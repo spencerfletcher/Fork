@@ -183,6 +183,7 @@ Base unit: **8px**. All spacing, padding, gap, and margin values should be multi
 	--space-2: 8px;
 	--space-3: 12px;
 	--space-4: 16px;
+	--space-45: 16px;
 	--space-5: 24px;
 	--space-6: 32px;
 	--space-7: 48px;
