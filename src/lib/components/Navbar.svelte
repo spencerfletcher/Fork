@@ -178,12 +178,12 @@
 	.navbar-left {
 		display: flex;
 		align-items: center;
-		gap: var(--space-7);
+		gap: var(--space-6);
 	}
 
 	.navbar-logo {
 		font-family: var(--font-serif);
-		font-size: 1.4rem;
+		font-size: 1.65rem;
 		font-weight: 700;
 		color: var(--color-text-cream);
 		text-decoration: none;
