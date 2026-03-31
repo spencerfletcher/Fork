@@ -66,9 +66,9 @@
 	.step-item {
 		display: grid;
 		grid-template-columns: 48px 1fr;
-		gap: var(--space-5);
+		gap: var(--space-2);
 		align-items: flex-start;
-		padding: var(--space-5) 0;
+		padding: var(--space-4) 0;
 		border-bottom: 1px solid var(--color-border);
 		cursor: pointer;
 		user-select: none;
@@ -87,7 +87,7 @@
 		font-family: var(--font-mono);
 		font-size: 1.5rem;
 		font-weight: 500;
-		color: var(--color-accent);
+		color: var(--color-sienna);
 		line-height: 1.6;
 		padding-top: 2px;
 	}

@@ -88,13 +88,13 @@
 
 	.unit-toggle {
 		font-family: var(--font-mono);
-		font-size: 0.72rem;
+		font-size: 0.8rem;
 		font-weight: 600;
 		color: var(--color-text-3);
 		background: none;
 		border: 1px solid var(--color-border-2);
 		border-radius: var(--radius-pill);
-		padding: 3px 10px;
+		padding: 4px 12px;
 		transition:
 			color 0.15s,
 			border-color 0.15s;
@@ -116,7 +116,7 @@
 	}
 
 	.ingredient-row {
-		padding: var(--space-3) 0;
+		padding: var(--space-2) 0;
 		border-bottom: 1px solid var(--color-border);
 		font-size: 1rem;
 		color: var(--color-text);
