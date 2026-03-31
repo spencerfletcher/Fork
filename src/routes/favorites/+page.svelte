@@ -1,49 +1,47 @@
 <script lang="ts">
-	import RecipeGrid from '$lib/components/RecipeGrid.svelte';
-	import Hero from '$lib/components/Hero.svelte';
+	import RecipeCard from '$lib/components/RecipeCard.svelte';
 	import SearchFilters from '$lib/components/SearchFilters.svelte';
 	import type { PageData } from './$types';
 
-	let { data } = $props<{ data: PageData }>();
+	let { data }: { data: PageData } = $props();
 </script>
 
-<div class="mx-auto max-w-7xl px-6 py-8 sm:px-8 lg:px-10">
-	<!-- Hero Section -->
-	<Hero
-		title="My Favorites"
-		body="Recipes you've saved for later. Keep track of your must-try dishes and family favorites."
-	/>
+<div class="page">
+	<div class="page-inner">
+		<div class="page-header">
+			<h1>Favorites</h1>
+			<p class="page-subtitle">Recipes you've saved.</p>
+		</div>
 
-	<!-- Search Filters -->
-	<SearchFilters
-		initialQuery={data.searchQuery}
-		initialTags={data.selectedTags}
-		availableTags={data.allTags}
-	/>
+		<SearchFilters
+			initialQuery={data.searchQuery}
+			initialTags={data.selectedTags}
+			availableTags={data.allTags}
+		/>
 
-	<div class="mt-8">
 		{#if data.favoriteRecipes.length > 0}
-			<!-- Recipe Grid -->
-			<RecipeGrid recipes={data.favoriteRecipes} />
-		{:else}
-			<!-- Empty State -->
-			<div class="py-20 text-center">
-				{#if data.searchQuery || data.selectedTags?.length > 0}
-					<h3 class="text-foreground mb-4 text-2xl">No favorites match your filters</h3>
-					<p class="text-muted-foreground mb-8">Try adjusting your search or clearing filters.</p>
-				{:else}
-					<h3 class="text-foreground mb-4 text-2xl">No favorites yet</h3>
-					<p class="text-muted-foreground mb-8">
-						Start exploring recipes and save your favorites for easy access later.
-					</p>
-					<a
-						href="/"
-						class="bg-foreground inline-block rounded-md px-6 py-3 font-medium text-white transition-colors hover:bg-[color:var(--foreground)]"
-					>
-						Explore Recipes
-					</a>
-				{/if}
+			<div class="recipe-grid">
+				{#each data.favoriteRecipes as recipe (recipe.id)}
+					<RecipeCard {recipe} />
+				{/each}
 			</div>
+		{:else if data.searchQuery || data.selectedTags?.length > 0}
+			<p class="empty-state">No favorites match your filters. Try adjusting your search.</p>
+		{:else}
+			<p class="empty-state">No favorites yet. <a href="/">Explore recipes →</a></p>
 		{/if}
 	</div>
 </div>
+
+<style>
+	.recipe-grid {
+		margin-top: var(--space-5);
+	}
+
+	.empty-state {
+		color: var(--color-text-3);
+		text-align: center;
+		padding: var(--space-8) 0;
+		margin-top: var(--space-5);
+	}
+</style>

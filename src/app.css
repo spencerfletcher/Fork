@@ -2,21 +2,32 @@
 
 :root {
 	/* Backgrounds */
-	--color-bg: #faf4e8; /* warm cream — page background */
-	--color-surface: #ffffff; /* white — sidebar cards, dialogs */
-	--color-surface-2: #faf4e8; /* cream — stat tiles inside cards */
-	--color-hero-bg: #1a1408; /* deep espresso — recipe hero */
-	--color-navbar-bg: #2e1f0f; /* mid espresso — navbar (subtly lighter) */
+	--color-bg: #faf4e8;
+	/* warm cream — page background */
+	--color-surface: #ffffff;
+	/* white — sidebar cards, dialogs */
+	--color-surface-2: #faf4e8;
+	/* cream — stat tiles inside cards */
+	--color-hero-bg: #1a1408;
+	/* deep espresso — recipe hero */
+	--color-navbar-bg: #2e1f0f;
+	/* mid espresso — navbar (subtly lighter) */
 
 	/* Text on light backgrounds */
-	--color-text: #1a1408; /* espresso body text */
-	--color-text-2: #6b5a3a; /* dark bronze — secondary labels */
-	--color-text-3: #8b7355; /* mid brown — muted labels, italic notes */
+	--color-text: #1a1408;
+	/* espresso body text */
+	--color-text-2: #6b5a3a;
+	/* dark bronze — secondary labels */
+	--color-text-3: #8b7355;
+	/* mid brown — muted labels, italic notes */
 
 	/* Text on dark backgrounds */
-	--color-text-cream: #faf4e8; /* hero title, nav brand */
-	--color-text-tan: #b8a880; /* nav links */
-	--color-text-bronze: #8b7a5a; /* breadcrumb user, meta */
+	--color-text-cream: #faf4e8;
+	/* hero title, nav brand */
+	--color-text-tan: #b8a880;
+	/* nav links */
+	--color-text-bronze: #8b7a5a;
+	/* breadcrumb user, meta */
 
 	/* Accent — saffron gold (interactive / structural) */
 	--color-accent: #e8a83a;
@@ -24,17 +35,22 @@
 	--color-accent-pale: #fdf0d0;
 
 	/* Named accents with distinct jobs */
-	--color-sienna: #a84a28; /* burnt sienna — ingredient quantities */
-	--color-paprika: #c45a38; /* paprika — time / heat tags */
+	--color-sienna: #a84a28;
+	/* burnt sienna — ingredient quantities */
+	--color-paprika: #c45a38;
+	/* paprika — time / heat tags */
 
 	/* Tag system (golden) */
 	--color-tag: #e8a83a;
 	--color-tag-pale: #fdf0d0;
 
 	/* Borders / surfaces */
-	--color-border: #eee4d0; /* pale linen — ingredient / step dividers */
-	--color-border-2: #e0d0b0; /* warm sand — sidebar card borders */
-	--color-dot-inactive: #c8b890; /* aged gold — inactive version dots */
+	--color-border: #eee4d0;
+	/* pale linen — ingredient / step dividers */
+	--color-border-2: #e0d0b0;
+	/* warm sand — sidebar card borders */
+	--color-dot-inactive: #c8b890;
+	/* aged gold — inactive version dots */
 
 	/* Semantic diff colors */
 	--color-add: #e8a83a;
@@ -158,6 +174,13 @@
 		color: var(--color-accent-mid);
 	}
 
+	button,
+	[role='link'],
+	[role='button'],
+	[role='checkbox'] {
+		cursor: pointer;
+	}
+
 	input,
 	textarea,
 	select {
@@ -183,22 +206,22 @@
 /* Reusable component classes */
 .btn-primary {
 	font-family: var(--font-sans);
-	font-weight: 500;
+	font-weight: 600;
 	font-size: 0.9rem;
 	background: var(--color-accent);
-	color: #fdfaf4;
+	color: var(--color-hero-bg);
 	border: none;
-	border-radius: var(--radius-md);
+	border-radius: var(--radius-pill);
 	padding: 10px 20px;
 	cursor: pointer;
-	transition: background 0.15s ease;
+	transition: opacity 0.15s ease;
 	display: inline-block;
 	text-align: center;
 }
 
 .btn-primary:hover {
-	background: var(--color-accent-mid);
-	color: #fdfaf4;
+	opacity: 0.88;
+	color: var(--color-hero-bg);
 }
 
 .btn-ghost {
@@ -239,6 +262,44 @@
 	background: var(--color-accent-pale);
 }
 
+/* ── Page layout ── */
+.page {
+	padding: var(--space-5) var(--space-5) var(--space-7);
+}
+
+.page-inner {
+	max-width: var(--max-width);
+	margin: 0 auto;
+}
+
+.page-header {
+	margin-bottom: var(--space-4);
+}
+
+.page-subtitle {
+	font-size: 1.1rem;
+	color: var(--color-text-2);
+	margin: var(--space-2) 0 0;
+}
+
+.recipe-grid {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: var(--space-6);
+}
+
+@media (min-width: 640px) {
+	.recipe-grid {
+		grid-template-columns: repeat(2, 1fr);
+	}
+}
+
+@media (min-width: 1024px) {
+	.recipe-grid {
+		grid-template-columns: repeat(3, 1fr);
+	}
+}
+
 .tag {
 	font-family: var(--font-sans);
 	font-size: 0.75rem;
@@ -248,4 +309,10 @@
 	border-radius: var(--radius-pill);
 	padding: 3px 10px;
 	display: inline-block;
+	transition: background 0.15s;
+}
+
+a.tag:hover {
+	background: var(--color-accent);
+	color: var(--color-hero-bg);
 }

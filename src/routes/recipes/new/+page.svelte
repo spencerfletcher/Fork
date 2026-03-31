@@ -264,10 +264,6 @@
 </div>
 
 <style>
-	.page {
-		padding: var(--space-7) var(--space-5);
-	}
-
 	.page-inner {
 		max-width: var(--content-width);
 		margin: 0 auto;

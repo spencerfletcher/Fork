@@ -1,34 +1,49 @@
 <script lang="ts">
-	import RecipeGrid from '$lib/components/RecipeGrid.svelte';
-	import Hero from '$lib/components/Hero.svelte';
+	import RecipeCard from '$lib/components/RecipeCard.svelte';
 	import SearchFilters from '$lib/components/SearchFilters.svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
 </script>
 
-<div class="mx-auto max-w-7xl px-6 py-8 sm:px-8 lg:px-10">
-	<Hero title="Search Recipes" body="Search through our collection of recipes by title and tags" />
+<div class="page">
+	<div class="page-inner">
+		<div class="page-header">
+			<h1>Search</h1>
+			<p class="page-subtitle">Find recipes by name or tag.</p>
+		</div>
 
-	<SearchFilters
-		initialQuery={data.searchQuery}
-		initialTags={data.selectedTags}
-		availableTags={data.allTags}
-	/>
+		<SearchFilters
+			initialQuery={data.searchQuery}
+			initialTags={data.selectedTags}
+			availableTags={data.allTags}
+		/>
 
-	<div class="mt-8">
 		{#if data.recipes.length === 0 && (data.searchQuery || data.selectedTags.length > 0)}
-			<div class="py-20 text-center">
-				<h3 class="text-foreground mb-4 text-2xl">No recipes found</h3>
-				<p class="text-muted-foreground">Try adjusting your search or clearing some filters.</p>
-			</div>
+			<p class="empty-state">
+				No recipes found. Try adjusting your search or clearing some filters.
+			</p>
 		{:else if data.recipes.length === 0}
-			<div class="py-20 text-center">
-				<h3 class="text-foreground mb-4 text-2xl">Start searching</h3>
-				<p class="text-muted-foreground">Enter a recipe name or select tags to find recipes.</p>
-			</div>
+			<p class="empty-state">Enter a recipe name or select tags to find recipes.</p>
 		{:else}
-			<RecipeGrid recipes={data.recipes} />
+			<div class="recipe-grid">
+				{#each data.recipes as recipe (recipe.id)}
+					<RecipeCard {recipe} />
+				{/each}
+			</div>
 		{/if}
 	</div>
 </div>
+
+<style>
+	.recipe-grid {
+		margin-top: var(--space-5);
+	}
+
+	.empty-state {
+		color: var(--color-text-3);
+		text-align: center;
+		padding: var(--space-8) 0;
+		margin-top: var(--space-5);
+	}
+</style>
