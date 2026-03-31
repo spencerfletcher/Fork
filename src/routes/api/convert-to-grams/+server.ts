@@ -1,5 +1,5 @@
 import { json } from '@sveltejs/kit';
-import { SPOONACULAR_API_KEY } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 import { lookupGrams } from '$lib/server/ingredientDensities';
 import type { RequestHandler } from './$types';
 
@@ -35,14 +35,14 @@ async function convertViaSpoonacular(
 	unit: string,
 	name: string
 ): Promise<number | null> {
-	if (!SPOONACULAR_API_KEY) return null;
+	if (!env.SPOONACULAR_API_KEY) return null;
 	try {
 		const params = new URLSearchParams({
 			ingredientName: name,
 			sourceAmount: String(amount),
 			sourceUnit: unit,
 			targetUnit: 'grams',
-			apiKey: SPOONACULAR_API_KEY
+			apiKey: env.SPOONACULAR_API_KEY
 		});
 		const res = await fetch(`https://api.spoonacular.com/recipes/convert?${params}`);
 		if (!res.ok) return null;

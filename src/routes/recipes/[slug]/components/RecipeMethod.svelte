@@ -18,9 +18,9 @@
 
 <section class="recipe-section">
 	<h4 class="eyebrow-label section-label-standalone">Method</h4>
-	<ol class="step-list">
+	<div class="step-list" role="list">
 		{#each steps as step (step.step)}
-			<li
+			<div
 				class="step-item"
 				class:crossed={crossedSteps.has(step.step)}
 				onclick={() => toggleStep(step.step)}
@@ -38,9 +38,9 @@
 						</p>
 					{/if}
 				</div>
-			</li>
+			</div>
 		{/each}
-	</ol>
+	</div>
 </section>
 
 <style>

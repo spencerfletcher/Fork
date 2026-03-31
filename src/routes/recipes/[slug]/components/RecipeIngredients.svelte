@@ -46,9 +46,9 @@
 			{gramsLoading ? '…' : showGrams ? 'original' : 'g'}
 		</button>
 	</div>
-	<ul class="ingredient-list">
+	<div class="ingredient-list" role="list">
 		{#each currentVersion.ingredients as ingredient, i (ingredient.name)}
-			<li
+			<div
 				class="ingredient-row"
 				class:crossed={crossedIngredients.has(ingredient.name)}
 				onclick={() => toggleIngredient(ingredient.name)}
@@ -67,9 +67,9 @@
 					{/if}
 				</span>
 				{ingredient.name}
-			</li>
+			</div>
 		{/each}
-	</ul>
+	</div>
 </section>
 
 <style>

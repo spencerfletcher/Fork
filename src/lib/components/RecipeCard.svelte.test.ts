@@ -1,5 +1,5 @@
 import { describe, test, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/svelte';
+import { render, screen } from '@testing-library/svelte';
 import RecipeCard from './RecipeCard.svelte';
 
 const { mockGoto } = vi.hoisted(() => ({ mockGoto: vi.fn() }));

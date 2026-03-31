@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Recipe, RecipeVersion, Tag } from '$lib/server/db/schema';
+	import { formatTime } from '$lib/helpers';
 
 	interface RecipeWithRelations extends Recipe {
 		author?: { id: string; username: string } | null;
@@ -11,15 +12,13 @@
 		currentVersion,
 		isViewingHistory,
 		tags,
-		totalMinutes,
-		formatTime
+		totalMinutes
 	}: {
 		recipe: RecipeWithRelations;
 		currentVersion: RecipeVersion | null;
 		isViewingHistory: boolean;
 		tags: Tag[];
 		totalMinutes: number;
-		formatTime: (minutes: number) => string;
 	} = $props();
 </script>
 
@@ -41,6 +40,14 @@
 			<span class="breadcrumb-slug">{recipe.slug}</span>
 		</nav>
 
+		<!-- Title + version -->
+		<div class="title-row">
+			<h1 class="recipe-title">{recipe.title}</h1>
+			{#if currentVersion}
+				<span class="recipe-version">v{currentVersion.versionNumber}</span>
+			{/if}
+		</div>
+
 		<!-- Fork attribution -->
 		{#if recipe.parent}
 			<p class="fork-credit">
@@ -49,14 +56,6 @@
 				{#if recipe.parent.author}by @{recipe.parent.author.username}{/if}
 			</p>
 		{/if}
-
-		<!-- Title + version -->
-		<div class="title-row">
-			<h1 class="recipe-title">{recipe.title}</h1>
-			{#if currentVersion}
-				<span class="recipe-version">v{currentVersion.versionNumber}</span>
-			{/if}
-		</div>
 
 		<!-- Badges row -->
 		<div class="hero-badges">
