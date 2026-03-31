@@ -70,7 +70,7 @@
 
 		<!-- Ingredients diff -->
 		<section class="diff-section">
-			<h3 class="diff-heading">Ingredients</h3>
+			<h3 class="eyebrow-label diff-heading">Ingredients</h3>
 			<div class="diff-list">
 				{#each ingredientDiff as row (row.ingredient.name + row.status)}
 					<div class="diff-row diff-{row.status}">
@@ -92,7 +92,7 @@
 
 		<!-- Steps diff -->
 		<section class="diff-section">
-			<h3 class="diff-heading">Steps</h3>
+			<h3 class="eyebrow-label diff-heading">Steps</h3>
 			<div class="diff-list">
 				{#each stepDiff as row (row.step.step + row.status)}
 					<div class="diff-row diff-{row.status}">
@@ -114,28 +114,9 @@
 </div>
 
 <style>
-	.page {
-		padding: var(--space-7) var(--space-5);
-	}
-
 	.page-inner {
 		max-width: var(--content-width);
 		margin: 0 auto;
-	}
-
-	.page-header {
-		margin-bottom: var(--space-6);
-	}
-
-	.back-link {
-		font-size: 0.875rem;
-		color: var(--color-text-3);
-		display: block;
-		margin-bottom: var(--space-3);
-	}
-
-	.back-link:hover {
-		color: var(--color-accent);
 	}
 
 	h1 {
@@ -230,11 +211,6 @@
 	}
 
 	.diff-heading {
-		font-size: 0.7rem;
-		font-weight: 700;
-		text-transform: uppercase;
-		letter-spacing: 0.1em;
-		color: var(--color-text-3);
 		margin: 0 0 var(--space-3);
 	}
 
