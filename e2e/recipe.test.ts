@@ -33,7 +33,8 @@ test.describe('Recipe detail page', () => {
 		page
 	}) => {
 		await page.goto('/');
-		await page.getByText('Classic Chocolate Chip Cookies').click();
+		// Click the stretched link (aria-label) rather than the h3 text node
+		await page.getByRole('link', { name: /classic chocolate chip cookies/i }).first().click();
 		await expect(page).toHaveURL(/\/recipes\//);
 		// Version history is in the sidebar — all versions visible without expanding
 		const versionRows = page.locator('.version-row');
@@ -42,7 +43,7 @@ test.describe('Recipe detail page', () => {
 
 	test('"Brown Butter Chocolate Chip Cookies" shows fork attribution', async ({ page }) => {
 		await page.goto('/');
-		await page.getByText('Brown Butter Chocolate Chip Cookies').click();
+		await page.getByRole('link', { name: /brown butter chocolate chip cookies/i }).first().click();
 		await expect(page).toHaveURL(/\/recipes\//);
 		await expect(page.getByText(/forked from/i)).toBeVisible();
 		await expect(page.getByText(/Classic Chocolate Chip Cookies/i)).toBeVisible();
@@ -50,8 +51,7 @@ test.describe('Recipe detail page', () => {
 
 	test('viewing a specific version shows the history banner', async ({ page }) => {
 		await page.goto('/');
-		// Click through to Classic Chocolate Chip Cookies
-		await page.getByText('Classic Chocolate Chip Cookies').first().click();
+		await page.getByRole('link', { name: /classic chocolate chip cookies/i }).first().click();
 		await page.waitForURL(/\/recipes\//);
 		// Append ?version=1 to the current recipe URL
 		const recipeUrl = page.url().split('?')[0];
@@ -64,7 +64,7 @@ test.describe('Recipe detail page', () => {
 
 	test('Compare link on v2 navigates to diff page', async ({ page }) => {
 		await page.goto('/');
-		await page.getByText('Classic Chocolate Chip Cookies').click();
+		await page.getByRole('link', { name: /classic chocolate chip cookies/i }).first().click();
 		await expect(page).toHaveURL(/\/recipes\//);
 		// Version history is visible in the sidebar — click the first Compare link
 		await page

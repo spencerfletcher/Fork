@@ -16,6 +16,7 @@ export default defineConfig({
 	},
 
 	testDir: 'e2e',
+	timeout: 10000,
 
 	projects: [
 		// ── 1. Auth setup — runs first, logs in and saves storage state ──────────

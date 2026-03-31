@@ -181,7 +181,7 @@
 		cursor: pointer;
 	}
 
-	input,
+	input:not([type='checkbox']),
 	textarea,
 	select {
 		background: var(--color-surface);

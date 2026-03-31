@@ -20,8 +20,8 @@ test.describe('Home page', () => {
 
 	test('forked recipes show a "Forked" badge', async ({ page }) => {
 		await page.goto('/');
-		// At least one card should have the Forked badge (Brown Butter cookies is seeded as a fork)
-		await expect(page.locator('.forked-badge').first()).toBeVisible();
+		// Non-forked cards keep .forked-badge in DOM (for layout) but with .forked-badge--hidden
+		await expect(page.locator('.forked-badge:not(.forked-badge--hidden)').first()).toBeVisible();
 	});
 
 	test('navbar shows Login link when not authenticated', async ({ page }) => {
