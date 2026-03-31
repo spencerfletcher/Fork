@@ -1,10 +1,10 @@
 <script lang="ts">
 	import type { PageData } from './$types';
-	import RecipeHero from '$lib/components/RecipeHero.svelte';
-	import RecipeIngredients from '$lib/components/RecipeIngredients.svelte';
-	import RecipeMethod from '$lib/components/RecipeMethod.svelte';
-	import RecipeActions from '$lib/components/RecipeActions.svelte';
-	import VersionHistory from '$lib/components/VersionHistory.svelte';
+	import RecipeHero from './components/RecipeHero.svelte';
+	import RecipeIngredients from './components/RecipeIngredients.svelte';
+	import RecipeMethod from './components/RecipeMethod.svelte';
+	import RecipeActions from './components/RecipeActions.svelte';
+	import VersionHistory from './components/VersionHistory.svelte';
 
 	let { data }: { data: PageData } = $props();
 
