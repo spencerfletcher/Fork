@@ -37,7 +37,7 @@
 				<a href="/users/{recipe.author.username}" class="hero-link">@{recipe.author.username}</a>
 				<span class="breadcrumb-sep">/</span>
 			{/if}
-			<span class="breadcrumb-slug">{recipe.slug}</span>
+			<span class="breadcrumb-slug">{recipe.slug.split('-').slice(0, -1).join('-')}</span>
 		</nav>
 
 		<!-- Title + version -->
@@ -81,7 +81,6 @@
 <style>
 	.recipe-hero {
 		background: var(--color-hero-bg);
-		padding: var(--space-6) var(--space-5);
 		width: 100%;
 		box-sizing: border-box;
 	}
@@ -90,9 +89,10 @@
 		max-width: var(--max-width);
 		margin: 0 auto;
 		min-width: 0;
+		padding: var(--space-6) var(--space-5);
 		display: flex;
 		flex-direction: column;
-		gap: var(--space-5);
+		gap: var(--space-4);
 	}
 
 	.history-banner {
@@ -148,7 +148,7 @@
 		font-style: italic;
 		font-size: 0.9rem;
 		color: var(--color-text-bronze);
-		margin: 0;
+		margin: calc(var(--space-4) * -1) 0 0;
 	}
 
 	.fork-credit a {
@@ -165,7 +165,7 @@
 
 	.recipe-title {
 		font-family: var(--font-serif);
-		font-size: clamp(2.4rem, 5vw, 4rem);
+		font-size: clamp(1.9rem, 4vw, 3.2rem);
 		font-weight: 700;
 		color: var(--color-text-cream);
 		margin: 0;
