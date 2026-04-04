@@ -23,8 +23,9 @@
 		<div class="card-meta-row">
 			<div class="card-meta-left">
 				{#if recipe.author}
-					<a href="/users/{recipe.author.username}" class="card-author">@{recipe.author.username}</a
-					>
+					<a href="/users/{recipe.author.username}" class="card-author"
+						>@{recipe.author.username}
+					</a>
 				{/if}
 				{#if recipe.author && (recipe.prepTimeMinutes || recipe.cookTimeMinutes)}
 					<span class="card-meta-sep">·</span>
@@ -227,5 +228,6 @@
 		display: flex;
 		flex-wrap: wrap;
 		gap: var(--space-1);
+		align-self: flex-start;
 	}
 </style>
