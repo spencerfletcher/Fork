@@ -6,9 +6,18 @@ import {
 	timestamp,
 	primaryKey,
 	boolean,
-	jsonb
+	jsonb,
+	customType,
+	index
 } from 'drizzle-orm/pg-core';
-import { relations } from 'drizzle-orm';
+import { relations, sql } from 'drizzle-orm';
+
+// tsvector is a native Postgres type not built into Drizzle
+const tsvector = customType<{ data: string }>({
+	dataType() {
+		return 'tsvector';
+	}
+});
 import type { InferSelectModel, InferInsertModel } from 'drizzle-orm';
 
 // ─── Profiles ────────────────────────────────────────────────────────────────
@@ -39,8 +48,15 @@ export const recipes = pgTable('recipes', {
 	// Visibility
 	isPublic: boolean('is_public').notNull().default(true),
 	createdAt: timestamp('created_at').defaultNow(),
-	updatedAt: timestamp('updated_at').defaultNow()
-});
+	updatedAt: timestamp('updated_at').defaultNow(),
+	// Full-text search vector: title (weight A) + description (weight B)
+	// Generated automatically by Postgres — never set manually
+	fts: tsvector('fts').generatedAlwaysAs(
+		sql`setweight(to_tsvector('english', coalesce(title, '')), 'A') || setweight(to_tsvector('english', coalesce(description, '')), 'B')`
+	)
+}, (table) => [
+	index('recipes_fts_idx').using('gin', table.fts)
+]);
 
 // ─── Tags ─────────────────────────────────────────────────────────────────────
 

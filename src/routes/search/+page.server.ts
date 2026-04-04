@@ -1,87 +1,112 @@
 import { db } from '$lib/server/db';
-import { recipes, tags, recipesToTags } from '$lib/server/db/schema';
-import { ilike, eq, and, or, inArray } from 'drizzle-orm';
+import { recipes, tags, recipesToTags, recipeVersions } from '$lib/server/db/schema';
+import { eq, and, or, inArray, desc, sql } from 'drizzle-orm';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ url, locals: { user } }) => {
-	const searchQuery = url.searchParams.get('q') || '';
+	const searchQuery = url.searchParams.get('q')?.trim() || '';
 	const tagSlugs = url.searchParams.get('tags')?.split(',').filter(Boolean) || [];
 
-	const conditions = [];
+	// ── Visibility: public recipes, or the user's own ────────────────────────
+	const visibilityCondition = user
+		? or(eq(recipes.isPublic, true), eq(recipes.authorId, user.id))
+		: eq(recipes.isPublic, true);
 
-	// Text search on title (case-insensitive)
-	if (searchQuery) {
-		conditions.push(ilike(recipes.title, `%${searchQuery}%`));
-	}
+	// ── Fetch tags up front — always needed for the filter UI ────────────────
+	const allTags = await db.select().from(tags);
 
-	// Public filter (show public recipes, or user's own recipes if authenticated)
-	conditions.push(
-		user
-			? or(eq(recipes.isPublic, true), eq(recipes.authorId, user.id))
-			: eq(recipes.isPublic, true)
-	);
+	// ── Tag filter: collect matching recipe IDs up front ─────────────────────
+	let tagFilteredIds: number[] | null = null;
+	let tagMappings: { recipeId: number }[] = [];
 
-	// Tag filtering with OR logic and sorting by match count
 	if (tagSlugs.length > 0) {
-		// First get tag IDs from slugs
-		const selectedTags = await db.select().from(tags).where(inArray(tags.slug, tagSlugs));
+		const selectedTags = allTags.filter((t) => tagSlugs.includes(t.slug));
 		const tagIds = selectedTags.map((t) => t.id);
 
 		if (tagIds.length > 0) {
-			// Get recipe IDs that have ANY of these tags (OR logic)
-			const mappings = await db
+			tagMappings = await db
 				.select({ recipeId: recipesToTags.recipeId })
 				.from(recipesToTags)
 				.where(inArray(recipesToTags.tagId, tagIds));
+			tagFilteredIds = [...new Set(tagMappings.map((m) => m.recipeId))];
+		}
 
-			const recipeIds = [...new Set(mappings.map((m) => m.recipeId))];
-
-			if (recipeIds.length > 0) {
-				conditions.push(inArray(recipes.id, recipeIds));
-
-				// Execute query
-				const filteredRecipes = await db
-					.select()
-					.from(recipes)
-					.where(conditions.length > 0 ? and(...conditions) : undefined);
-
-				// Count tag matches for each recipe
-				const recipesWithMatchCount = filteredRecipes.map((recipe) => {
-					const matchCount = mappings.filter((m) => m.recipeId === recipe.id).length;
-					return { ...recipe, matchCount };
-				});
-
-				// Sort by match count descending
-				recipesWithMatchCount.sort((a, b) => b.matchCount - a.matchCount);
-
-				const allTags = await db.select().from(tags);
-
-				return {
-					recipes: recipesWithMatchCount,
-					allTags,
-					searchQuery,
-					selectedTags: tagSlugs
-				};
-			} else {
-				// No recipes match these tags
-				return { recipes: [], allTags: [], searchQuery, selectedTags: tagSlugs };
-			}
+		// Tags specified but nothing matched — short-circuit
+		if (!tagFilteredIds || tagFilteredIds.length === 0) {
+			return { recipes: [], allTags, searchQuery, selectedTags: tagSlugs };
 		}
 	}
 
-	// Execute query without tag filtering
-	const filteredRecipes = await db
-		.select()
-		.from(recipes)
-		.where(conditions.length > 0 ? and(...conditions) : undefined);
+	const baseConditions = [visibilityCondition!];
+	if (tagFilteredIds !== null) {
+		baseConditions.push(inArray(recipes.id, tagFilteredIds));
+	}
 
-	// Fetch all tags for the filter UI
-	const allTags = await db.select().from(tags);
+	// ── Search ───────────────────────────────────────────────────────────────
+	let results: (typeof recipes.$inferSelect)[];
 
-	return {
-		recipes: filteredRecipes,
-		allTags,
-		searchQuery,
-		selectedTags: tagSlugs
-	};
+	if (searchQuery) {
+		const tsQuery = sql`websearch_to_tsquery('english', ${searchQuery})`;
+
+		// Pass 1: title + description FTS (ranked by ts_rank, highest first)
+		const titleDescMatches = await db
+			.select()
+			.from(recipes)
+			.where(and(...baseConditions, sql`${recipes.fts} @@ ${tsQuery}`))
+			.orderBy(sql`ts_rank(${recipes.fts}, ${tsQuery}) DESC`, desc(recipes.createdAt));
+
+		const titleDescIds = new Set(titleDescMatches.map((r) => r.id));
+
+		// Pass 2: ingredient name FTS against recipe_versions JSONB
+		// Extracts ingredient names from each version and searches them.
+		// Only surfaces recipes not already in pass 1.
+		const ingredientRows = await db
+			.select({ recipeId: recipeVersions.recipeId })
+			.from(recipeVersions)
+			.where(
+				sql`to_tsvector('english', (
+					SELECT coalesce(string_agg(ing->>'name', ' '), '')
+					FROM jsonb_array_elements(${recipeVersions.ingredients}) AS ing
+				)) @@ ${tsQuery}`
+			);
+
+		const ingredientOnlyIds = [
+			...new Set(
+				ingredientRows
+					.map((r) => r.recipeId)
+					.filter((id): id is number => id !== null && !titleDescIds.has(id))
+			)
+		];
+
+		let ingredientOnlyRecipes: (typeof recipes.$inferSelect)[] = [];
+		if (ingredientOnlyIds.length > 0) {
+			ingredientOnlyRecipes = await db
+				.select()
+				.from(recipes)
+				.where(and(...baseConditions, inArray(recipes.id, ingredientOnlyIds)))
+				.orderBy(desc(recipes.createdAt));
+		}
+
+		// Title/description hits first, ingredient-only hits appended after
+		results = [...titleDescMatches, ...ingredientOnlyRecipes];
+	} else {
+		// No search query — return all visible/tag-filtered recipes
+		results = await db
+			.select()
+			.from(recipes)
+			.where(and(...baseConditions))
+			.orderBy(desc(recipes.createdAt));
+	}
+
+	// ── Tag match count: sort by how many selected tags match ─────────────────
+	// Only applied when not searching (FTS rank takes priority when searching)
+	if (!searchQuery && tagMappings.length > 0) {
+		results.sort((a, b) => {
+			const countA = tagMappings.filter((m) => m.recipeId === a.id).length;
+			const countB = tagMappings.filter((m) => m.recipeId === b.id).length;
+			return countB - countA;
+		});
+	}
+
+	return { recipes: results, allTags, searchQuery, selectedTags: tagSlugs };
 };
