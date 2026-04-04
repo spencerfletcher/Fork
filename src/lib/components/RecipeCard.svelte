@@ -20,6 +20,12 @@
 	</div>
 
 	<div class="card-body">
+		<h3 class="card-title">{recipe.title}</h3>
+
+		{#if recipe.description}
+			<p class="card-description">{recipe.description}</p>
+		{/if}
+
 		<div class="card-meta-row">
 			<div class="card-meta-left">
 				{#if recipe.author}
@@ -67,12 +73,6 @@
 				Forked
 			</span>
 		</div>
-
-		<h3 class="card-title">{recipe.title}</h3>
-
-		{#if recipe.description}
-			<p class="card-description">{recipe.description}</p>
-		{/if}
 
 		{#if tags.length > 0}
 			<div class="card-tags">
