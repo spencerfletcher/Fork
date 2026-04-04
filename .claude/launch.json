@@ -1,0 +1,29 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "SvelteKit Dev",
+      "runtimeExecutable": "/bin/zsh",
+      "runtimeArgs": ["-c", "PATH=/Users/spfle/.nvm/versions/node/v24.14.0/bin:/opt/homebrew/bin:$PATH pnpm dev"],
+      "port": 5173
+    },
+    {
+      "name": "Vite Preview",
+      "runtimeExecutable": "/bin/zsh",
+      "runtimeArgs": ["-c", "PATH=/Users/spfle/.nvm/versions/node/v24.14.0/bin:/opt/homebrew/bin:$PATH pnpm preview"],
+      "port": 4173
+    },
+    {
+      "name": "Storybook",
+      "runtimeExecutable": "/bin/zsh",
+      "runtimeArgs": ["-c", "PATH=/Users/spfle/.nvm/versions/node/v24.14.0/bin:/opt/homebrew/bin:$PATH pnpm storybook"],
+      "port": 6006
+    },
+    {
+      "name": "Drizzle Studio",
+      "runtimeExecutable": "/bin/zsh",
+      "runtimeArgs": ["-c", "PATH=/Users/spfle/.nvm/versions/node/v24.14.0/bin:/opt/homebrew/bin:$PATH pnpm db:studio"],
+      "port": 4983
+    }
+  ]
+}

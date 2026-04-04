@@ -7,7 +7,10 @@ import { nanoid } from 'nanoid';
 import { recipes, tags, recipesToTags, recipeVersions, profiles } from './schema';
 import { slugify } from '$lib/helpers';
 
-config({ path: '.env' });
+// Load .env.local with override so it wins even over shell env vars,
+// then fill in any remaining vars from .env
+config({ path: '.env.local', override: true });
+config({ path: '.env', override: false });
 
 const DATABASE_URL = process.env.DATABASE_URL;
 const SUPABASE_URL = process.env.PUBLIC_SUPABASE_URL;
