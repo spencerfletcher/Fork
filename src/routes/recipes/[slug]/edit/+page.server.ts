@@ -44,7 +44,19 @@ export const actions: Actions = {
 		const formData = await request.formData();
 		const title = (formData.get('title') as string)?.trim();
 		const description = (formData.get('description') as string)?.trim() || null;
-		const imageUrl = (formData.get('imageUrl') as string)?.trim() || null;
+		const rawImageUrl = (formData.get('imageUrl') as string)?.trim() || null;
+		if (rawImageUrl) {
+			let parsedUrl: URL;
+			try {
+				parsedUrl = new URL(rawImageUrl);
+			} catch {
+				throw error(400, 'Invalid image URL');
+			}
+			if (parsedUrl.protocol !== 'https:' && parsedUrl.protocol !== 'http:') {
+				throw error(400, 'Image URL must use http or https');
+			}
+		}
+		const imageUrl = rawImageUrl;
 		const servings = parseInt(formData.get('servings') as string) || null;
 		const prepTimeMinutes = parseInt(formData.get('prepTimeMinutes') as string) || null;
 		const cookTimeMinutes = parseInt(formData.get('cookTimeMinutes') as string) || null;

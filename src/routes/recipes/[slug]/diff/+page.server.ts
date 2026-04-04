@@ -5,7 +5,7 @@ import { eq, asc } from 'drizzle-orm';
 import { diffIngredients, diffSteps } from '$lib/utils/diff';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ params, url }) => {
+export const load: PageServerLoad = async ({ params, url, locals }) => {
 	const recipe = await db.query.recipes.findFirst({
 		where: eq(recipes.slug, params.slug),
 		with: {
@@ -18,6 +18,7 @@ export const load: PageServerLoad = async ({ params, url }) => {
 	});
 
 	if (!recipe) throw error(404, 'Recipe not found');
+	if (!recipe.isPublic && recipe.authorId !== locals.user?.id) throw error(404, 'Recipe not found');
 	if (recipe.versions.length < 2) throw error(400, 'Need at least two versions to compare');
 
 	const allVersions = recipe.versions;
@@ -25,8 +26,8 @@ export const load: PageServerLoad = async ({ params, url }) => {
 	const fromParam = url.searchParams.get('from');
 	const toParam = url.searchParams.get('to');
 
-	const fromNum = fromParam ? parseInt(fromParam) : allVersions[0].versionNumber;
-	const toNum = toParam ? parseInt(toParam) : allVersions[allVersions.length - 1].versionNumber;
+	const fromNum = fromParam ? parseInt(fromParam, 10) : allVersions[0].versionNumber;
+	const toNum = toParam ? parseInt(toParam, 10) : allVersions[allVersions.length - 1].versionNumber;
 
 	const fromVersion = allVersions.find((v) => v.versionNumber === fromNum);
 	const toVersion = allVersions.find((v) => v.versionNumber === toNum);
