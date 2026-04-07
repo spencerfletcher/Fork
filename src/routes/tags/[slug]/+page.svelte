@@ -19,15 +19,9 @@
 				{/each}
 			</div>
 		{:else}
-			<p class="empty-state">No recipes with this tag yet. <a href="/">Explore all →</a></p>
+			<p class="py-8 text-center text-text-3">
+				No recipes with this tag yet. <a href="/">Explore all →</a>
+			</p>
 		{/if}
 	</div>
 </div>
-
-<style>
-	.empty-state {
-		color: var(--color-text-3);
-		text-align: center;
-		padding: var(--space-8) 0;
-	}
-</style>

@@ -12,7 +12,7 @@
 			<p class="page-subtitle">Recipes worth forking.</p>
 		</div>
 
-		<hr class="section-rule" />
+		<hr class="mb-5 border-0 border-t border-border" />
 
 		{#if data.recipes.length > 0}
 			<div class="recipe-grid">
@@ -21,21 +21,9 @@
 				{/each}
 			</div>
 		{:else}
-			<p class="empty-state">No recipes yet. <a href="/recipes/new">Create the first one →</a></p>
+			<p class="py-8 text-center text-text-3">
+				No recipes yet. <a href="/recipes/new">Create the first one →</a>
+			</p>
 		{/if}
 	</div>
 </div>
-
-<style>
-	.section-rule {
-		border: none;
-		border-top: 1px solid var(--color-border);
-		margin: 0 0 var(--space-5);
-	}
-
-	.empty-state {
-		color: var(--color-text-3);
-		text-align: center;
-		padding: var(--space-8) 0;
-	}
-</style>

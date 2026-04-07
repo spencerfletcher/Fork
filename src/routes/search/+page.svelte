@@ -20,13 +20,15 @@
 		/>
 
 		{#if data.recipes.length === 0 && (data.searchQuery || data.selectedTags.length > 0)}
-			<p class="empty-state">
+			<p class="mt-5 py-8 text-center text-text-3">
 				No recipes found. Try adjusting your search or clearing some filters.
 			</p>
 		{:else if data.recipes.length === 0}
-			<p class="empty-state">Enter a recipe name or select tags to find recipes.</p>
+			<p class="mt-5 py-8 text-center text-text-3">
+				Enter a recipe name or select tags to find recipes.
+			</p>
 		{:else}
-			<div class="recipe-grid">
+			<div class="recipe-grid mt-5">
 				{#each data.recipes as recipe (recipe.id)}
 					<RecipeCard {recipe} />
 				{/each}
@@ -34,16 +36,3 @@
 		{/if}
 	</div>
 </div>
-
-<style>
-	.recipe-grid {
-		margin-top: var(--space-5);
-	}
-
-	.empty-state {
-		color: var(--color-text-3);
-		text-align: center;
-		padding: var(--space-8) 0;
-		margin-top: var(--space-5);
-	}
-</style>

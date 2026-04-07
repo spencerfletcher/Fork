@@ -11,23 +11,21 @@
 		onTagToggle: (tagSlug: string) => void;
 	} = $props();
 
-	function toggleTag(tagSlug: string) {
-		onTagToggle(tagSlug);
-	}
-
 	function clearAllTags() {
 		selectedTagSlugs.forEach((slug) => onTagToggle(slug));
 	}
 </script>
 
-<div class="space-y-3">
+<div class="flex flex-col gap-3">
 	<div class="flex items-center justify-between">
-		<span class="text-foreground text-sm font-medium">Filter by Tags</span>
+		<span class="text-[0.8rem] font-semibold uppercase tracking-[0.08em] text-text-3"
+			>Filter by tag</span
+		>
 		{#if selectedTagSlugs.length > 0}
 			<button
 				type="button"
 				onclick={clearAllTags}
-				class="text-primary text-xs transition-colors hover:text-[color:var(--primary)]"
+				class="cursor-pointer border-none bg-transparent p-0 font-sans text-[0.8rem] text-text-3 transition-colors duration-150 hover:text-accent"
 			>
 				Clear all
 			</button>
@@ -35,21 +33,21 @@
 	</div>
 
 	{#if availableTags.length > 0}
-		<div class="flex flex-wrap gap-2">
+		<div class="flex flex-wrap gap-1">
 			{#each availableTags as tag (tag.slug)}
 				{@const isSelected = selectedTagSlugs.includes(tag.slug)}
 				<button
 					type="button"
-					onclick={() => toggleTag(tag.slug)}
-					class="rounded-full px-3 py-1 text-xs font-medium transition-colors {isSelected
-						? 'bg-primary text-white'
-						: 'border-border bg-secondary text-foreground hover:bg-border border'}"
+					onclick={() => onTagToggle(tag.slug)}
+					class={isSelected
+						? 'cursor-pointer rounded-pill border-none bg-accent px-3 py-1 font-sans text-[0.75rem] font-medium text-hero-bg transition-[background,color] duration-150 hover:bg-accent-mid'
+						: 'cursor-pointer rounded-pill border-none bg-tag-pale px-3 py-1 font-sans text-[0.75rem] font-medium text-tag transition-[background,color] duration-150 hover:bg-accent hover:text-hero-bg'}
 				>
 					{tag.name}
 				</button>
 			{/each}
 		</div>
 	{:else}
-		<p class="text-muted-foreground text-sm">No tags available</p>
+		<p class="m-0 text-sm text-text-3">No tags available</p>
 	{/if}
 </div>
