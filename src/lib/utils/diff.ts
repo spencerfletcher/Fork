@@ -1,15 +1,26 @@
+import { diffWords } from 'diff';
 import type { Ingredient, Step } from '$lib/server/db/schema';
 
-export type DiffStatus = 'added' | 'removed' | 'unchanged';
+export type DiffStatus = 'added' | 'removed' | 'unchanged' | 'modified';
 
-export interface IngredientDiffRow {
-	status: DiffStatus;
-	ingredient: Ingredient;
+export interface InlineSegment {
+	type: 'added' | 'removed' | 'unchanged';
+	text: string;
 }
 
-export interface StepDiffRow {
-	status: DiffStatus;
-	step: Step;
+export type IngredientDiffRow =
+	| { status: 'added' | 'removed' | 'unchanged'; ingredient: Ingredient }
+	| { status: 'modified'; segments: InlineSegment[] };
+
+export type StepDiffRow =
+	| { status: 'added' | 'removed' | 'unchanged'; step: Step }
+	| { status: 'modified'; stepNumber: number; segments: InlineSegment[] };
+
+export function diffInline(a: string, b: string): InlineSegment[] {
+	return diffWords(a, b).map((part) => ({
+		type: part.added ? 'added' : part.removed ? 'removed' : 'unchanged',
+		text: part.value,
+	}));
 }
 
 /**
@@ -17,7 +28,6 @@ export interface StepDiffRow {
  *
  * Known v1 limitations:
  * - Renamed ingredients show as removed+added (no fuzzy matching).
- * - Changed amount/unit on the same name emits a removed+added pair.
  */
 export function diffIngredients(from: Ingredient[], to: Ingredient[]): IngredientDiffRow[] {
 	const result: IngredientDiffRow[] = [];
@@ -32,22 +42,21 @@ export function diffIngredients(from: Ingredient[], to: Ingredient[]): Ingredien
 		}
 	}
 
-	// Added or unchanged: iterate to in original order
+	// Added or unchanged/modified: iterate to in original order
 	for (const ingredient of to) {
 		const key = ingredient.name.toLowerCase();
 		const fromIngredient = fromMap.get(key);
 		if (!fromIngredient) {
 			result.push({ status: 'added', ingredient });
 		} else {
-			// Same name — check if amount or unit changed
 			const unchanged =
 				fromIngredient.amount === ingredient.amount && fromIngredient.unit === ingredient.unit;
 			if (unchanged) {
 				result.push({ status: 'unchanged', ingredient });
 			} else {
-				// Emit removed (old) then added (new)
-				result.push({ status: 'removed', ingredient: fromIngredient });
-				result.push({ status: 'added', ingredient });
+				const fromStr = `${fromIngredient.amount} ${fromIngredient.unit} ${fromIngredient.name}`;
+				const toStr = `${ingredient.amount} ${ingredient.unit} ${ingredient.name}`;
+				result.push({ status: 'modified', segments: diffInline(fromStr, toStr) });
 			}
 		}
 	}
@@ -84,8 +93,11 @@ export function diffSteps(from: Step[], to: Step[]): StepDiffRow[] {
 			if (fromStep.text === toStep.text) {
 				result.push({ status: 'unchanged', step: toStep });
 			} else {
-				result.push({ status: 'removed', step: fromStep });
-				result.push({ status: 'added', step: toStep });
+				result.push({
+					status: 'modified',
+					stepNumber: toStep.step,
+					segments: diffInline(fromStep.text, toStep.text),
+				});
 			}
 		}
 	}

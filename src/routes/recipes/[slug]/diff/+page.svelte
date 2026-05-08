@@ -6,12 +6,9 @@
 
 	const { recipe, ingredientDiff, stepDiff, allVersions } = $derived(data);
 
-	// Local state for the selectors — initialized once from server data.
-	// Navigating via goto() will cause the server to reload with new params.
 	let fromSelect = $state(data.fromVersion.versionNumber);
 	let toSelect = $state(data.toVersion.versionNumber);
 
-	// Derive display values from current data (updated after navigation)
 	const fromVersion = $derived(data.fromVersion);
 	const toVersion = $derived(data.toVersion);
 
@@ -21,27 +18,37 @@
 </script>
 
 <div class="page">
-	<div class="page-inner">
+	<div class="mx-auto max-w-[720px]">
 		<div class="page-header">
 			<a href="/recipes/{recipe.slug}" class="back-link">← Back to recipe</a>
-			<h1>Compare versions</h1>
-			<p class="recipe-title">{recipe.title}</p>
+			<h1 class="m-0 mb-1">Compare versions</h1>
+			<p class="text-text-2 m-0 text-base">{recipe.title}</p>
 		</div>
 
 		<!-- Version selectors -->
-		<div class="version-selectors">
-			<div class="selector-group">
-				<label for="from-select" class="selector-label">From</label>
-				<select id="from-select" bind:value={fromSelect} onchange={navigate} class="version-select">
+		<div class="mb-6 flex items-end gap-4">
+			<div class="flex flex-1 flex-col gap-1">
+				<label
+					for="from-select"
+					class="text-text-3 text-[0.75rem] font-semibold tracking-[0.05em] uppercase"
+				>
+					From
+				</label>
+				<select id="from-select" bind:value={fromSelect} onchange={navigate}>
 					{#each allVersions as v (v.versionNumber)}
 						<option value={v.versionNumber}>v{v.versionNumber}: {v.commitMessage}</option>
 					{/each}
 				</select>
 			</div>
-			<span class="arrow">→</span>
-			<div class="selector-group">
-				<label for="to-select" class="selector-label">To</label>
-				<select id="to-select" bind:value={toSelect} onchange={navigate} class="version-select">
+			<span class="text-text-3 pb-2 text-[1.25rem]">→</span>
+			<div class="flex flex-1 flex-col gap-1">
+				<label
+					for="to-select"
+					class="text-text-3 text-[0.75rem] font-semibold tracking-[0.05em] uppercase"
+				>
+					To
+				</label>
+				<select id="to-select" bind:value={toSelect} onchange={navigate}>
 					{#each allVersions as v (v.versionNumber)}
 						<option value={v.versionNumber}>v{v.versionNumber}: {v.commitMessage}</option>
 					{/each}
@@ -50,242 +57,144 @@
 		</div>
 
 		<!-- Commit context -->
-		<div class="commit-context">
-			<div class="commit-row from">
-				<span class="version-badge">v{fromVersion.versionNumber}</span>
-				<span class="commit-msg">{fromVersion.commitMessage}</span>
+		<div class="border-border bg-surface-2 mb-7 flex flex-col gap-2 rounded-md border p-4">
+			<div class="flex items-center gap-3 text-sm">
+				<span class="text-accent font-mono text-[0.8rem] font-semibold">
+					v{fromVersion.versionNumber}
+				</span>
+				<span>{fromVersion.commitMessage}</span>
 				{#if fromVersion.creator}
-					<span class="commit-author">by @{fromVersion.creator.username}</span>
+					<span class="text-text-3 text-[0.8rem]">by @{fromVersion.creator.username}</span>
 				{/if}
 			</div>
-			<div class="commit-arrow">↓</div>
-			<div class="commit-row to">
-				<span class="version-badge">v{toVersion.versionNumber}</span>
-				<span class="commit-msg">{toVersion.commitMessage}</span>
+			<div class="text-text-3 pl-3 text-sm">↓</div>
+			<div class="flex items-center gap-3 text-sm">
+				<span class="text-accent font-mono text-[0.8rem] font-semibold">
+					v{toVersion.versionNumber}
+				</span>
+				<span>{toVersion.commitMessage}</span>
 				{#if toVersion.creator}
-					<span class="commit-author">by @{toVersion.creator.username}</span>
+					<span class="text-text-3 text-[0.8rem]">by @{toVersion.creator.username}</span>
 				{/if}
 			</div>
 		</div>
 
 		<!-- Ingredients diff -->
-		<section class="diff-section">
-			<h3 class="eyebrow-label diff-heading">Ingredients</h3>
-			<div class="diff-list">
-				{#each ingredientDiff as row (row.ingredient.name + row.status)}
-					<div class="diff-row diff-{row.status}">
-						<span class="diff-prefix">
-							{#if row.status === 'added'}+{:else if row.status === 'removed'}−{:else}&nbsp;{/if}
-						</span>
-						<span class="diff-content">
-							{row.ingredient.amount}
-							{row.ingredient.unit}
-							{row.ingredient.name}
-						</span>
-					</div>
+		<section class="mb-7">
+			<h3 class="eyebrow-label mb-3">Ingredients</h3>
+			<div class="border-border overflow-hidden rounded-md border font-mono text-sm">
+				{#each ingredientDiff as row, i (i)}
+					{#if row.status === 'added' || row.status === 'removed' || row.status === 'unchanged'}
+						<div
+							class="border-border flex items-baseline gap-3 border-b px-4 py-2 [&:last-child]:border-b-0"
+							class:diff-added={row.status === 'added'}
+							class:text-add={row.status === 'added'}
+							class:diff-removed={row.status === 'removed'}
+							class:bg-remove-bg={row.status === 'removed'}
+							class:text-remove={row.status === 'removed'}
+							class:line-through={row.status === 'removed'}
+							class:opacity-85={row.status === 'removed'}
+							class:diff-unchanged={row.status === 'unchanged'}
+							class:text-text-2={row.status === 'unchanged'}
+						>
+							<span class="w-[1ch] shrink-0 font-bold select-none">
+								{#if row.status === 'added'}+{:else if row.status === 'removed'}−{:else}&nbsp;{/if}
+							</span>
+							<span class="diff-content flex-1 leading-[1.5]">
+								{row.ingredient.amount}
+								{row.ingredient.unit}
+								{row.ingredient.name}
+							</span>
+						</div>
+					{:else}
+						<div
+							class="border-border diff-modified text-text-2 flex items-baseline gap-3 border-b px-4 py-2 [&:last-child]:border-b-0"
+						>
+							<span class="text-text-3 w-[1ch] shrink-0 font-bold select-none">~</span>
+							<span class="diff-content flex-1 leading-[1.5]">
+								{#each row.segments as seg}
+									{#if seg.type === 'added'}<span class="diff-added text-add">{seg.text}</span>
+									{:else if seg.type === 'removed'}
+										<span class="diff-removed bg-remove-bg text-remove line-through">
+											{seg.text}
+										</span>
+									{:else}
+										{seg.text}
+									{/if}
+									<span> </span>
+								{/each}
+							</span>
+						</div>
+					{/if}
 				{/each}
 				{#if ingredientDiff.length === 0}
-					<p class="no-changes">No changes</p>
+					<p class="text-text-3 m-0 p-4 text-center text-sm">No changes</p>
 				{/if}
 			</div>
 		</section>
 
 		<!-- Steps diff -->
-		<section class="diff-section">
-			<h3 class="eyebrow-label diff-heading">Steps</h3>
-			<div class="diff-list">
-				{#each stepDiff as row (row.step.step + row.status)}
-					<div class="diff-row diff-{row.status}">
-						<span class="diff-prefix">
-							{#if row.status === 'added'}+{:else if row.status === 'removed'}−{:else}&nbsp;{/if}
-						</span>
-						{#if row.status !== 'removed'}
-							<span class="step-num">{row.step.step}</span>
-						{/if}
-						<span class="diff-content">{row.step.text}</span>
-					</div>
+		<section class="mb-7">
+			<h3 class="eyebrow-label mb-3">Steps</h3>
+			<div class="border-border overflow-hidden rounded-md border font-mono text-sm">
+				{#each stepDiff as row, i (i)}
+					{#if row.status === 'added' || row.status === 'removed' || row.status === 'unchanged'}
+						<div
+							class="border-border flex items-baseline gap-3 border-b px-4 py-2 [&:last-child]:border-b-0"
+							class:diff-added={row.status === 'added'}
+							class:text-add={row.status === 'added'}
+							class:diff-removed={row.status === 'removed'}
+							class:bg-remove-bg={row.status === 'removed'}
+							class:text-remove={row.status === 'removed'}
+							class:line-through={row.status === 'removed'}
+							class:opacity-85={row.status === 'removed'}
+							class:diff-unchanged={row.status === 'unchanged'}
+							class:text-text-2={row.status === 'unchanged'}
+						>
+							<span class="w-[1ch] shrink-0 font-bold select-none">
+								{#if row.status === 'added'}+{:else if row.status === 'removed'}−{:else}&nbsp;{/if}
+							</span>
+							{#if row.status !== 'removed'}
+								<span
+									class="step-num bg-accent inline-flex size-[22px] shrink-0 items-center justify-center rounded-full font-sans text-[0.7rem] font-semibold text-[#fdfaf4]"
+								>
+									{row.step.step}
+								</span>
+							{/if}
+							<span class="diff-content flex-1 leading-[1.5]">{row.step.text}</span>
+						</div>
+					{:else}
+						<div
+							class="border-border diff-modified text-text-2 flex items-baseline gap-3 border-b px-4 py-2 [&:last-child]:border-b-0"
+						>
+							<span class="text-text-3 w-[1ch] shrink-0 font-bold select-none">~</span>
+							<span
+								class="step-num bg-accent inline-flex size-[22px] shrink-0 items-center justify-center rounded-full font-sans text-[0.7rem] font-semibold text-[#fdfaf4]"
+							>
+								{row.stepNumber}
+							</span>
+							<span class="diff-content flex-1 leading-[1.5]">
+								{#each row.segments as seg}
+									{#if seg.type === 'added'}
+										<span class="diff-added text-add">
+											{seg.text}
+										</span>
+									{:else if seg.type === 'removed'}
+										<span class="diff-removed bg-remove-bg text-remove line-through">
+											{seg.text}
+										</span>
+									{:else}
+										{seg.text}
+									{/if}
+								{/each}</span
+							>
+						</div>
+					{/if}
 				{/each}
 				{#if stepDiff.length === 0}
-					<p class="no-changes">No changes</p>
+					<p class="text-text-3 m-0 p-4 text-center text-sm">No changes</p>
 				{/if}
 			</div>
 		</section>
 	</div>
 </div>
-
-<style>
-	.page-inner {
-		max-width: var(--content-width);
-		margin: 0 auto;
-	}
-
-	h1 {
-		margin: 0 0 var(--space-1);
-	}
-
-	.recipe-title {
-		color: var(--color-text-2);
-		font-size: 1rem;
-		margin: 0;
-	}
-
-	.version-selectors {
-		display: flex;
-		align-items: flex-end;
-		gap: var(--space-4);
-		margin-bottom: var(--space-6);
-	}
-
-	.selector-group {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-1);
-		flex: 1;
-	}
-
-	.selector-label {
-		font-size: 0.75rem;
-		font-weight: 600;
-		text-transform: uppercase;
-		letter-spacing: 0.05em;
-		color: var(--color-text-3);
-	}
-
-	.version-select {
-		padding: var(--space-2) var(--space-3);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-md);
-		background: var(--color-surface);
-		color: var(--color-text-1);
-		font-size: 0.875rem;
-	}
-
-	.arrow {
-		font-size: 1.25rem;
-		color: var(--color-text-3);
-		padding-bottom: var(--space-2);
-	}
-
-	.commit-context {
-		background: var(--color-surface-2);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-md);
-		padding: var(--space-4);
-		margin-bottom: var(--space-7);
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-2);
-	}
-
-	.commit-row {
-		display: flex;
-		align-items: center;
-		gap: var(--space-3);
-		font-size: 0.875rem;
-	}
-
-	.commit-arrow {
-		color: var(--color-text-3);
-		padding-left: var(--space-3);
-		font-size: 0.875rem;
-	}
-
-	.version-badge {
-		font-weight: 600;
-		color: var(--color-accent);
-		font-size: 0.8rem;
-		font-family: monospace;
-	}
-
-	.commit-msg {
-		color: var(--color-text-1);
-	}
-
-	.commit-author {
-		color: var(--color-text-3);
-		font-size: 0.8rem;
-	}
-
-	.diff-section {
-		margin-bottom: var(--space-7);
-	}
-
-	.diff-heading {
-		margin: 0 0 var(--space-3);
-	}
-
-	.diff-list {
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-md);
-		overflow: hidden;
-		font-family: monospace;
-		font-size: 0.875rem;
-	}
-
-	.diff-row {
-		display: flex;
-		align-items: baseline;
-		gap: var(--space-3);
-		padding: var(--space-2) var(--space-4);
-		border-bottom: 1px solid var(--color-border);
-	}
-
-	.diff-row:last-child {
-		border-bottom: none;
-	}
-
-	.diff-added {
-		background: var(--color-add-bg);
-		color: var(--color-add);
-	}
-
-	.diff-removed {
-		background: var(--color-remove-bg);
-		color: var(--color-remove);
-		text-decoration: line-through;
-		opacity: 0.85;
-	}
-
-	.diff-unchanged {
-		color: var(--color-text-2);
-	}
-
-	.diff-prefix {
-		font-weight: 700;
-		width: 1ch;
-		flex-shrink: 0;
-		user-select: none;
-	}
-
-	.step-num {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		width: 22px;
-		height: 22px;
-		background: var(--color-accent);
-		color: #fdfaf4;
-		border-radius: 50%;
-		font-size: 0.7rem;
-		font-weight: 600;
-		flex-shrink: 0;
-		font-family: var(--font-sans);
-	}
-
-	.diff-removed .step-num {
-		background: var(--color-remove);
-	}
-
-	.diff-content {
-		flex: 1;
-		line-height: 1.5;
-	}
-
-	.no-changes {
-		color: var(--color-text-3);
-		font-size: 0.875rem;
-		padding: var(--space-4);
-		text-align: center;
-		margin: 0;
-	}
-</style>
