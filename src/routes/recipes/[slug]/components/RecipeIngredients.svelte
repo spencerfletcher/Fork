@@ -39,25 +39,30 @@
 	}
 </script>
 
-<section class="recipe-section">
-	<div class="section-label-row">
+<section class="mb-3">
+	<div class="mb-1 flex items-center justify-between border-t-2 border-text pt-3">
 		<h4 class="eyebrow-label">Ingredients</h4>
-		<button class="unit-toggle" onclick={toggleGrams} disabled={gramsLoading}>
+		<button
+			class="rounded-pill border border-border-2 bg-transparent px-3 py-1 font-mono text-[0.8rem] font-semibold text-text-3 transition-[color,border-color] duration-150 hover:border-accent hover:text-accent disabled:opacity-50"
+			onclick={toggleGrams}
+			disabled={gramsLoading}
+		>
 			{gramsLoading ? '…' : showGrams ? 'original' : 'g'}
 		</button>
 	</div>
-	<div class="ingredient-list" role="list">
+	<div class="m-0 p-0" role="list">
 		{#each currentVersion.ingredients as ingredient, i (ingredient.name)}
 			<div
-				class="ingredient-row"
-				class:crossed={crossedIngredients.has(ingredient.name)}
+				class="cursor-pointer select-none border-b border-border py-2 text-base text-text [&:last-child]:border-b-0"
+				class:opacity-40={crossedIngredients.has(ingredient.name)}
+				class:line-through={crossedIngredients.has(ingredient.name)}
 				onclick={() => toggleIngredient(ingredient.name)}
 				role="checkbox"
 				aria-checked={crossedIngredients.has(ingredient.name)}
 				tabindex="0"
 				onkeydown={(e) => e.key === ' ' && toggleIngredient(ingredient.name)}
 			>
-				<span class="ingredient-qty">
+				<span class="font-medium text-sienna">
 					{#if showGrams && gramCache}
 						{gramCache[i] !== null
 							? `${Math.round(gramCache[i]!)}g`
@@ -71,70 +76,3 @@
 		{/each}
 	</div>
 </section>
-
-<style>
-	.recipe-section {
-		margin-bottom: var(--space-3);
-	}
-
-	.section-label-row {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		border-top: 2px solid var(--color-text);
-		padding-top: var(--space-3);
-		margin-bottom: var(--space-1);
-	}
-
-	.unit-toggle {
-		font-family: var(--font-mono);
-		font-size: 0.8rem;
-		font-weight: 600;
-		color: var(--color-text-3);
-		background: none;
-		border: 1px solid var(--color-border-2);
-		border-radius: var(--radius-pill);
-		padding: 4px 12px;
-		transition:
-			color 0.15s,
-			border-color 0.15s;
-	}
-
-	.unit-toggle:hover:not(:disabled) {
-		color: var(--color-accent);
-		border-color: var(--color-accent);
-	}
-
-	.unit-toggle:disabled {
-		opacity: 0.5;
-	}
-
-	.ingredient-list {
-		list-style: none;
-		padding: 0;
-		margin: 0;
-	}
-
-	.ingredient-row {
-		padding: var(--space-2) 0;
-		border-bottom: 1px solid var(--color-border);
-		font-size: 1rem;
-		color: var(--color-text);
-		cursor: pointer;
-		user-select: none;
-	}
-
-	.ingredient-row:last-child {
-		border-bottom: none;
-	}
-
-	.ingredient-row.crossed {
-		opacity: 0.4;
-		text-decoration: line-through;
-	}
-
-	.ingredient-qty {
-		font-weight: 500;
-		color: var(--color-sienna);
-	}
-</style>

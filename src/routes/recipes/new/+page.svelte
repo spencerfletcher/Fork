@@ -37,7 +37,7 @@
 </script>
 
 <div class="page">
-	<div class="page-inner">
+	<div class="mx-auto max-w-[720px]">
 		<div class="page-header">
 			<h1>New Recipe</h1>
 		</div>
@@ -65,11 +65,11 @@
 			<div class="field">
 				<label for="image">Photo</label>
 				{#if imagePreview}
-					<div class="image-preview">
-						<img src={imagePreview} alt="Preview" />
+					<div class="relative w-full overflow-hidden rounded-md border border-border">
+						<img src={imagePreview} alt="Preview" class="block h-[220px] w-full object-cover" />
 						<button
 							type="button"
-							class="remove-image"
+							class="absolute right-2 top-2 flex size-7 items-center justify-center rounded-full border-none bg-black/55 text-[1.1rem] leading-none text-white"
 							onclick={() => {
 								imagePreview = null;
 								(document.getElementById('image') as HTMLInputElement).value = '';
@@ -83,7 +83,7 @@
 					name="image"
 					type="file"
 					accept="image/jpeg,image/png,image/webp,image/gif"
-					class="file-input"
+					class="cursor-pointer rounded-md border border-dashed border-border bg-surface-2 p-2 text-sm hover:border-accent"
 					onchange={onImageChange}
 				/>
 			</div>
@@ -124,57 +124,3 @@
 		</form>
 	</div>
 </div>
-
-<style>
-	.page-inner {
-		max-width: var(--content-width);
-		margin: 0 auto;
-	}
-
-	.file-input {
-		font-size: 0.875rem;
-		padding: var(--space-2);
-		border: 1px dashed var(--color-border);
-		border-radius: var(--radius-md);
-		cursor: pointer;
-		background: var(--color-surface-2);
-	}
-
-	.file-input:hover {
-		border-color: var(--color-accent);
-	}
-
-	.image-preview {
-		position: relative;
-		width: 100%;
-		max-height: 220px;
-		border-radius: var(--radius-md);
-		overflow: hidden;
-		border: 1px solid var(--color-border);
-	}
-
-	.image-preview img {
-		width: 100%;
-		height: 220px;
-		object-fit: cover;
-		display: block;
-	}
-
-	.remove-image {
-		position: absolute;
-		top: var(--space-2);
-		right: var(--space-2);
-		background: rgba(0, 0, 0, 0.55);
-		color: white;
-		border: none;
-		border-radius: 50%;
-		width: 28px;
-		height: 28px;
-		font-size: 1.1rem;
-		line-height: 1;
-		cursor: pointer;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-	}
-</style>

@@ -59,7 +59,7 @@
 	}
 </script>
 
-<div class="tag-input-root" bind:this={rootEl}>
+<div class="flex flex-col gap-2" bind:this={rootEl}>
 	<!-- Hidden inputs consumed by the form action -->
 	{#each selected as tag (tag)}
 		<input type="hidden" name="tags" value={tag} />
@@ -67,18 +67,27 @@
 
 	<!-- Selected pills -->
 	{#if selected.length > 0}
-		<div class="pills">
+		<div class="flex flex-wrap gap-2">
 			{#each selected as tag (tag)}
-				<span class="pill">
+				<span
+					class="inline-flex items-center gap-1 rounded-full bg-accent-pale px-3 py-[2px] text-[0.8rem] font-medium text-accent"
+				>
 					{tag}
-					<button type="button" onclick={() => remove(tag)} aria-label="Remove {tag}">×</button>
+					<button
+						type="button"
+						onclick={() => remove(tag)}
+						class="w-auto cursor-pointer border-none bg-transparent p-0 text-base leading-none text-inherit opacity-70 hover:opacity-100"
+						aria-label="Remove {tag}"
+					>
+						×
+					</button>
 				</span>
 			{/each}
 		</div>
 	{/if}
 
 	<!-- Combobox input -->
-	<div class="input-wrapper">
+	<div class="relative">
 		<input
 			bind:this={inputEl}
 			type="text"
@@ -97,19 +106,22 @@
 		/>
 
 		{#if showDropdown}
-			<ul class="dropdown" role="listbox" id="tag-listbox">
+			<ul
+				class="absolute left-0 right-0 top-[calc(100%+4px)] z-50 m-0 max-h-[240px] list-none overflow-y-auto rounded-lg border border-border bg-surface p-0 py-1 shadow-raised"
+				role="listbox"
+				id="tag-listbox"
+			>
 				{#each suggestions as tag (tag.id)}
-					<li role="option" aria-selected="false">
+					<li class="border-b border-border [&:last-child]:border-b-0" role="option" aria-selected="false">
 						<button
 							type="button"
-							class="option"
+							class="flex w-full cursor-pointer items-center gap-3 rounded-none border-none bg-transparent px-4 py-3 text-left text-[0.9rem] text-text hover:bg-surface-2"
 							onmousedown={(e) => {
 								e.preventDefault();
 								pick(tag.name);
 							}}
 						>
-							<!-- Price-tag icon -->
-							<svg class="tag-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+							<svg class="size-4 shrink-0 text-text-3" viewBox="0 0 16 16" fill="none" aria-hidden="true">
 								<path
 									d="M2 2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 0 1.414l-4.586 4.586a1 1 0 0 1-1.414 0L2.293 8.293A1 1 0 0 1 2 7.586V2Z"
 									stroke="currentColor"
@@ -124,16 +136,16 @@
 				{/each}
 
 				{#if canCreate}
-					<li role="option" aria-selected="false" class="create-row">
+					<li class="border-t border-border" role="option" aria-selected="false">
 						<button
 							type="button"
-							class="option create"
+							class="flex w-full cursor-pointer items-center gap-3 rounded-none border-none bg-transparent px-4 py-3 text-left text-[0.9rem] text-accent hover:bg-surface-2"
 							onmousedown={(e) => {
 								e.preventDefault();
 								pick(query.trim());
 							}}
 						>
-							<svg class="tag-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+							<svg class="size-4 shrink-0 text-accent" viewBox="0 0 16 16" fill="none" aria-hidden="true">
 								<path
 									d="M8 3v10M3 8h10"
 									stroke="currentColor"
@@ -149,117 +161,3 @@
 		{/if}
 	</div>
 </div>
-
-<style>
-	.tag-input-root {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-2);
-	}
-
-	.pills {
-		display: flex;
-		flex-wrap: wrap;
-		gap: var(--space-2);
-	}
-
-	.pill {
-		display: inline-flex;
-		align-items: center;
-		gap: var(--space-1);
-		background: var(--color-accent-pale);
-		color: var(--color-accent);
-		border-radius: var(--radius-full);
-		padding: 2px var(--space-3) 2px var(--space-3);
-		font-size: 0.8rem;
-		font-weight: 500;
-	}
-
-	.pill button {
-		background: none;
-		border: none;
-		color: inherit;
-		cursor: pointer;
-		font-size: 1rem;
-		line-height: 1;
-		padding: 0;
-		width: auto;
-		opacity: 0.7;
-	}
-
-	.pill button:hover {
-		opacity: 1;
-	}
-
-	.input-wrapper {
-		position: relative;
-	}
-
-	.input-wrapper input {
-		width: 100%;
-	}
-
-	.dropdown {
-		position: absolute;
-		top: calc(100% + 4px);
-		left: 0;
-		right: 0;
-		background: var(--color-surface);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-lg);
-		box-shadow: var(--shadow-raised);
-		list-style: none;
-		padding: var(--space-1) 0;
-		margin: 0;
-		z-index: 50;
-		max-height: 240px;
-		overflow-y: auto;
-	}
-
-	.dropdown li {
-		border-bottom: 1px solid var(--color-border);
-	}
-
-	.dropdown li:last-child {
-		border-bottom: none;
-	}
-
-	.option {
-		display: flex;
-		align-items: center;
-		gap: var(--space-3);
-		width: 100%;
-		padding: var(--space-3) var(--space-4);
-		background: none;
-		border: none;
-		text-align: left;
-		font-size: 0.9rem;
-		color: var(--color-text);
-		cursor: pointer;
-		border-radius: 0;
-		width: 100%;
-	}
-
-	.option:hover {
-		background: var(--color-surface-2);
-	}
-
-	.tag-icon {
-		width: 16px;
-		height: 16px;
-		flex-shrink: 0;
-		color: var(--color-text-3);
-	}
-
-	.create-row {
-		border-top: 1px solid var(--color-border);
-	}
-
-	.option.create {
-		color: var(--color-accent);
-	}
-
-	.option.create .tag-icon {
-		color: var(--color-accent);
-	}
-</style>

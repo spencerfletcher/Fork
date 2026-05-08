@@ -19,33 +19,33 @@
 	const totalMinutes = $derived((recipe.prepTimeMinutes ?? 0) + (recipe.cookTimeMinutes ?? 0));
 </script>
 
-<article class="recipe-article">
+<article class="min-h-screen">
 	<RecipeHero {recipe} {currentVersion} {isViewingHistory} {tags} {totalMinutes} />
 
+	<!-- Two-column layout: kept in scoped CSS because of fixed 320px sidebar + responsive reorder -->
 	<div class="content-layout">
-		<!-- Left: ingredients + method -->
-		<div class="content-main">
+		<div class="min-w-0">
 			{#if currentVersion}
 				<RecipeIngredients {currentVersion} />
 				<RecipeMethod steps={currentVersion.steps} />
 			{:else}
-				<p class="empty-content">
+				<p class="py-7 text-base text-text-3">
 					No recipe content yet.
 					{#if isOwner}<a href="/recipes/{recipe.slug}/edit">Add content →</a>{/if}
 				</p>
 			{/if}
 		</div>
 
-		<!-- Right: sticky sidebar -->
-		<aside class="content-sidebar">
+		<aside class="min-w-0">
 			<div class="sidebar-sticky">
 				{#if recipe.imageUrl}
-					<img src={recipe.imageUrl} alt={recipe.title} class="sidebar-image" />
+					<img
+						src={recipe.imageUrl}
+						alt={recipe.title}
+						class="w-full rounded-lg border border-border-2 object-cover [aspect-ratio:4/3]"
+					/>
 				{/if}
-
-				<!-- Details card -->
 				<Details {recipe} />
-
 				<RecipeActions
 					{recipe}
 					{canFork}
@@ -54,7 +54,6 @@
 					{isViewingHistory}
 					initialFavorited={data.isFavorited}
 				/>
-
 				<VersionHistory
 					{allVersions}
 					{currentVersion}
@@ -67,11 +66,7 @@
 </article>
 
 <style>
-	.recipe-article {
-		min-height: 100vh;
-	}
-
-	/* ── Two-column layout ── */
+	/* Fixed sidebar width + responsive column flip can't be expressed as Tailwind utilities */
 	.content-layout {
 		max-width: var(--max-width);
 		margin: 0 auto;
@@ -82,42 +77,22 @@
 		align-items: start;
 	}
 
-	.content-main,
-	.content-sidebar {
-		min-width: 0;
-	}
-
 	@media (max-width: 860px) {
 		.content-layout {
 			grid-template-columns: 1fr;
 			padding: var(--space-5);
 		}
 
-		.content-sidebar {
+		.content-layout aside {
 			order: -1;
 		}
 	}
 
-	/* ── Sticky sidebar ── */
 	.sidebar-sticky {
 		position: sticky;
 		top: 76px;
 		display: flex;
 		flex-direction: column;
 		gap: var(--space-4);
-	}
-
-	.empty-content {
-		color: var(--color-text-3);
-		font-size: 1rem;
-		padding: var(--space-7) 0;
-	}
-
-	.sidebar-image {
-		width: 100%;
-		aspect-ratio: 4 / 3;
-		object-fit: cover;
-		border-radius: var(--radius-lg);
-		border: 1px solid var(--color-border-2);
 	}
 </style>

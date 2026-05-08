@@ -18,16 +18,24 @@
 	}
 </script>
 
-<nav class="navbar">
-	<div class="navbar-inner">
+<nav class="relative z-50 bg-navbar-bg px-5">
+	<div class="mx-auto flex h-[60px] max-w-[1200px] items-center justify-between">
 		<!-- Logo + nav links -->
-		<div class="navbar-left">
-			<a href="/" class="navbar-logo" onclick={closeMenu}>
-				{m.app_title()}<span class="logo-dot">.</span>
+		<div class="flex items-center gap-6">
+			<a
+				href="/"
+				class="font-serif text-[1.65rem] font-bold tracking-[-0.01em] text-text-cream no-underline transition-opacity hover:text-text-cream hover:opacity-90"
+				onclick={closeMenu}
+			>
+				{m.app_title()}<span class="text-accent">.</span>
 			</a>
-			<ul class="navbar-links">
+			<ul class="navbar-links m-0 hidden list-none gap-6 p-0 md:flex">
 				<li>
-					<a href="/search" class="navbar-link" class:active={$page.url.pathname === '/search'}>
+					<a
+						href="/search"
+						class="navbar-link"
+						class:active={$page.url.pathname === '/search'}
+					>
 						Search
 					</a>
 				</li>
@@ -56,11 +64,16 @@
 		</div>
 
 		<!-- Auth + CTA + hamburger -->
-		<div class="navbar-right">
-			<div class="auth-desktop">
+		<div class="flex items-center gap-4">
+			<div class="hidden items-center gap-4 md:flex">
 				{#if user}
 					{#if profile}
-						<a href="/users/{profile.username}" class="auth-username">@{profile.username}</a>
+						<a
+							href="/users/{profile.username}"
+							class="font-mono text-[0.8rem] text-text-tan no-underline transition-colors hover:text-accent"
+						>
+							@{profile.username}
+						</a>
 					{/if}
 					<form action="/logout" method="POST" use:enhance>
 						<button type="submit" class="navbar-link logout-btn">Logout</button>
@@ -71,8 +84,8 @@
 				{/if}
 				<a
 					href="/recipes/new"
-					class="navbar-cta"
-					class:active={$page.url.pathname === '/recipes/new'}
+					class="whitespace-nowrap rounded-pill bg-accent px-4 py-[7px] font-sans text-[0.85rem] font-semibold text-hero-bg no-underline transition-opacity hover:text-hero-bg hover:opacity-88"
+					class:opacity-75={$page.url.pathname === '/recipes/new'}
 				>
 					+ {m.navbar_new()}
 				</a>
@@ -81,14 +94,14 @@
 			<button
 				type="button"
 				onclick={toggleMenu}
-				class="hamburger"
+				class="flex items-center justify-center rounded-sm border-none bg-transparent p-2 text-text-tan transition-colors hover:text-text-cream md:hidden"
 				aria-controls="mobile-menu"
 				aria-expanded={isMenuOpen}
 			>
 				<span class="sr-only">Open main menu</span>
 				{#if isMenuOpen}
 					<svg
-						class="icon"
+						class="size-6"
 						xmlns="http://www.w3.org/2000/svg"
 						fill="none"
 						viewBox="0 0 24 24"
@@ -99,7 +112,7 @@
 					</svg>
 				{:else}
 					<svg
-						class="icon"
+						class="size-6"
 						xmlns="http://www.w3.org/2000/svg"
 						fill="none"
 						viewBox="0 0 24 24"
@@ -118,19 +131,30 @@
 	</div>
 
 	{#if isMenuOpen}
-		<div class="mobile-backdrop" onclick={closeMenu} aria-hidden="true"></div>
-		<div class="mobile-menu" id="mobile-menu">
-			<ul class="mobile-links">
+		<div
+			class="fixed inset-0 bg-black/50"
+			onclick={closeMenu}
+			aria-hidden="true"
+		></div>
+		<div
+			class="absolute left-0 right-0 top-full z-[100] border-b border-white/[0.08] bg-navbar-bg"
+			id="mobile-menu"
+		>
+			<ul class="m-0 list-none p-2">
 				<li><a href="/search" onclick={closeMenu} class="mobile-link">Search</a></li>
-				<li><a href="/recipes/new" onclick={closeMenu} class="mobile-link">{m.navbar_new()}</a></li>
-				<li><a href="/recipes" onclick={closeMenu} class="mobile-link">{m.navbar_recipes()}</a></li>
+				<li>
+					<a href="/recipes/new" onclick={closeMenu} class="mobile-link">{m.navbar_new()}</a>
+				</li>
+				<li>
+					<a href="/recipes" onclick={closeMenu} class="mobile-link">{m.navbar_recipes()}</a>
+				</li>
 				{#if user}
 					<li><a href="/favorites" onclick={closeMenu} class="mobile-link">Favorites</a></li>
 				{/if}
 			</ul>
-			<div class="mobile-auth">
+			<div class="border-t border-white/[0.08] px-2 py-4">
 				{#if user}
-					<p class="auth-email mobile-email">{user.email}</p>
+					<p class="m-0 px-4 py-3 text-[0.8rem] text-text-bronze">{user.email}</p>
 					<form
 						action="/logout"
 						method="POST"
@@ -143,10 +167,10 @@
 					>
 						<button
 							type="submit"
-							class="mobile-link"
-							style="width: 100%; text-align: left; background: none; border: none; cursor: pointer;"
-							>Logout</button
+							class="mobile-link w-full border-none bg-transparent text-left"
 						>
+							Logout
+						</button>
 					</form>
 				{:else}
 					<a href="/login" onclick={closeMenu} class="mobile-link">Login</a>
@@ -158,61 +182,7 @@
 </nav>
 
 <style>
-	.navbar {
-		position: relative;
-		background: var(--color-navbar-bg);
-		border-bottom: none;
-		z-index: 50;
-		padding: 0 var(--space-5);
-	}
-
-	.navbar-inner {
-		max-width: var(--max-width);
-		margin: 0 auto;
-		height: 60px;
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-	}
-
-	.navbar-left {
-		display: flex;
-		align-items: center;
-		gap: var(--space-6);
-	}
-
-	.navbar-logo {
-		font-family: var(--font-serif);
-		font-size: 1.65rem;
-		font-weight: 700;
-		color: var(--color-text-cream);
-		text-decoration: none;
-		letter-spacing: -0.01em;
-	}
-
-	.navbar-logo:hover {
-		color: var(--color-text-cream);
-		opacity: 0.9;
-	}
-
-	.logo-dot {
-		color: var(--color-accent); /* saffron gold */
-	}
-
-	.navbar-links {
-		display: none;
-		list-style: none;
-		margin: 0;
-		padding: 0;
-		gap: var(--space-6);
-	}
-
-	@media (min-width: 768px) {
-		.navbar-links {
-			display: flex;
-		}
-	}
-
+	/* Shared link style used for both desktop nav links and logout button */
 	.navbar-link {
 		font-family: var(--font-sans);
 		font-size: 0.9rem;
@@ -235,108 +205,7 @@
 		font-size: 0.9rem;
 	}
 
-	.navbar-cta {
-		font-family: var(--font-sans);
-		font-size: 0.85rem;
-		font-weight: 600;
-		background: var(--color-accent);
-		color: var(--color-hero-bg);
-		border-radius: var(--radius-pill);
-		padding: 7px 16px;
-		text-decoration: none;
-		transition: opacity 0.15s ease;
-		white-space: nowrap;
-	}
-
-	.navbar-cta:hover {
-		opacity: 0.88;
-		color: var(--color-hero-bg);
-	}
-
-	.navbar-right {
-		display: flex;
-		align-items: center;
-		gap: var(--space-4);
-	}
-
-	.auth-desktop {
-		display: none;
-		align-items: center;
-		gap: var(--space-4);
-	}
-
-	@media (min-width: 768px) {
-		.auth-desktop {
-			display: flex;
-		}
-	}
-
-	.auth-email {
-		font-size: 0.8rem;
-		color: var(--color-text-bronze);
-	}
-
-	.auth-username {
-		font-family: var(--font-mono);
-		font-size: 0.8rem;
-		color: var(--color-text-tan);
-		text-decoration: none;
-		transition: color 0.15s;
-	}
-
-	.auth-username:hover {
-		color: var(--color-accent);
-	}
-
-	.hamburger {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		background: none;
-		border: none;
-		cursor: pointer;
-		padding: var(--space-2);
-		color: var(--color-text-tan);
-		border-radius: var(--radius-sm);
-	}
-
-	.hamburger:hover {
-		color: var(--color-text-cream);
-	}
-
-	@media (min-width: 768px) {
-		.hamburger {
-			display: none;
-		}
-	}
-
-	.icon {
-		width: 24px;
-		height: 24px;
-	}
-
-	.mobile-backdrop {
-		position: fixed;
-		inset: 0;
-		background: rgba(0, 0, 0, 0.5);
-	}
-
-	.mobile-menu {
-		position: absolute;
-		top: 100%;
-		left: 0;
-		right: 0;
-		background: var(--color-navbar-bg);
-		border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-		z-index: 100;
-	}
-
-	.mobile-links {
-		list-style: none;
-		margin: 0;
-		padding: var(--space-2);
-	}
-
+	/* Mobile link style */
 	.mobile-link {
 		display: block;
 		padding: var(--space-3) var(--space-4);
@@ -351,28 +220,5 @@
 	.mobile-link:hover {
 		background: rgba(255, 255, 255, 0.06);
 		color: var(--color-text-cream);
-	}
-
-	.mobile-auth {
-		border-top: 1px solid rgba(255, 255, 255, 0.08);
-		padding: var(--space-4) var(--space-2);
-	}
-
-	.mobile-email {
-		padding: var(--space-3) var(--space-4);
-		font-size: 0.8rem;
-		color: var(--color-text-bronze);
-		margin: 0;
-	}
-
-	.sr-only {
-		position: absolute;
-		width: 1px;
-		height: 1px;
-		padding: 0;
-		margin: -1px;
-		overflow: hidden;
-		clip: rect(0, 0, 0, 0);
-		border: 0;
 	}
 </style>

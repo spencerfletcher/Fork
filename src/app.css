@@ -63,10 +63,14 @@
 
 /* Spacing overrides: align p-5..p-8 with the project's --space-5..--space-8 */
 @theme {
-	--spacing-5: 1.5rem; /* 24px */
-	--spacing-6: 2rem; /* 32px */
-	--spacing-7: 3rem; /* 48px */
-	--spacing-8: 4rem; /* 64px */
+	--spacing-5: 1.5rem;
+	/* 24px */
+	--spacing-6: 2rem;
+	/* 32px */
+	--spacing-7: 3rem;
+	/* 48px */
+	--spacing-8: 4rem;
+	/* 64px */
 }
 
 :root {
@@ -122,9 +126,10 @@
 	/* aged gold — inactive version dots */
 
 	/* Semantic diff colors */
-	--color-add: #e8a83a;
+	--color-add: #87ae73;
+	/* 258020;*/
 	--color-remove: #c45a38;
-	--color-add-bg: #fdf5e0;
+	--color-add-bg: #fdfdfd00;
 	--color-remove-bg: #fae8e0;
 
 	/* Elevation */
@@ -186,9 +191,10 @@
 }
 
 @layer base {
+
 	html,
 	body,
-	body > div {
+	body>div {
 		height: 100%;
 	}
 

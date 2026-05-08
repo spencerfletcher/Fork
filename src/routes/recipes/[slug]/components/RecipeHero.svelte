@@ -22,213 +22,83 @@
 	} = $props();
 </script>
 
-<header class="recipe-hero">
-	<div class="hero-inner">
+<header class="w-full bg-hero-bg box-border">
+	<div class="mx-auto flex min-w-0 max-w-[1200px] flex-col gap-4 px-5 py-6">
 		{#if isViewingHistory && currentVersion}
-			<div class="history-banner">
+			<div
+				class="flex flex-wrap items-center justify-between gap-3 rounded-md border border-white/[0.12] bg-white/[0.08] px-4 py-3 font-mono text-[0.8rem] text-text-tan"
+			>
 				Viewing v{currentVersion.versionNumber}: "{currentVersion.commitMessage}"
-				<a href="/recipes/{recipe.slug}">Current version →</a>
+				<a href="/recipes/{recipe.slug}" class="text-accent">Current version →</a>
 			</div>
 		{/if}
 
 		<!-- Breadcrumb -->
-		<nav class="breadcrumb" aria-label="Recipe location">
+		<nav class="flex items-center gap-2 font-mono text-[0.78rem] text-text-bronze" aria-label="Recipe location">
 			{#if recipe.author}
-				<a href="/users/{recipe.author.username}" class="hero-link">@{recipe.author.username}</a>
-				<span class="breadcrumb-sep">/</span>
+				<a
+					href="/users/{recipe.author.username}"
+					class="text-text-bronze no-underline transition-colors duration-150 hover:text-text-tan"
+				>
+					@{recipe.author.username}
+				</a>
+				<span class="opacity-50">/</span>
 			{/if}
-			<span class="breadcrumb-slug">{recipe.slug.split('-').slice(0, -1).join('-')}</span>
+			<span class="text-accent">{recipe.slug.split('-').slice(0, -1).join('-')}</span>
 		</nav>
 
 		<!-- Title + version -->
-		<div class="title-row">
-			<h1 class="recipe-title">{recipe.title}</h1>
+		<div class="flex flex-wrap items-baseline gap-4">
+			<!-- clamp() for fluid typography must stay inline -->
+			<h1
+				class="m-0 font-serif font-bold leading-[1.05] tracking-[-0.02em] text-text-cream"
+				style="font-size: clamp(1.9rem, 4vw, 3.2rem)"
+			>
+				{recipe.title}
+			</h1>
 			{#if currentVersion}
-				<span class="recipe-version">v{currentVersion.versionNumber}</span>
+				<span class="shrink-0 font-mono text-[1.8rem] font-medium text-accent">
+					v{currentVersion.versionNumber}
+				</span>
 			{/if}
 		</div>
 
 		<!-- Fork attribution -->
 		{#if recipe.parent}
-			<p class="fork-credit">
+			<p class="-mt-4 m-0 font-serif italic text-[0.9rem] text-text-bronze">
 				Forked from
-				<a href="/recipes/{recipe.parent.slug}">{recipe.parent.title}</a>
+				<a href="/recipes/{recipe.parent.slug}" class="text-accent">{recipe.parent.title}</a>
 				{#if recipe.parent.author}by @{recipe.parent.author.username}{/if}
 			</p>
 		{/if}
 
 		<!-- Badges row -->
-		<div class="hero-badges">
+		<div class="flex flex-wrap items-center gap-2">
 			{#each tags as tag (tag.id)}
-				<a href="/tags/{tag.slug}" class="hero-badge badge-tag">{tag.name}</a>
+				<a
+					href="/tags/{tag.slug}"
+					class="rounded-pill bg-accent px-3 py-1 font-sans text-[0.78rem] font-semibold text-hero-bg no-underline transition-opacity duration-150 hover:opacity-85"
+				>
+					{tag.name}
+				</a>
 			{/each}
 			{#if totalMinutes > 0}
-				<span class="hero-badge badge-time">{formatTime(totalMinutes)}</span>
+				<span class="rounded-pill bg-paprika px-3 py-1 font-sans text-[0.78rem] font-semibold text-text-cream">
+					{formatTime(totalMinutes)}
+				</span>
 			{/if}
 			{#if recipe.servings}
-				<span class="hero-meta-text">Serves {recipe.servings}</span>
+				<span class="text-[0.9rem] text-text-bronze">Serves {recipe.servings}</span>
 			{/if}
 			{#if recipe.author}
-				<span class="hero-meta-sep">·</span>
-				<a href="/users/{recipe.author.username}" class="hero-link hero-meta-author"
-					>@{recipe.author.username}</a
+				<span class="text-text-bronze opacity-40">·</span>
+				<a
+					href="/users/{recipe.author.username}"
+					class="font-mono text-[0.85rem] text-text-bronze no-underline transition-colors duration-150 hover:text-accent"
 				>
+					@{recipe.author.username}
+				</a>
 			{/if}
 		</div>
 	</div>
 </header>
-
-<style>
-	.recipe-hero {
-		background: var(--color-hero-bg);
-		width: 100%;
-		box-sizing: border-box;
-	}
-
-	.hero-inner {
-		max-width: var(--max-width);
-		margin: 0 auto;
-		min-width: 0;
-		padding: var(--space-6) var(--space-5);
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-4);
-	}
-
-	.history-banner {
-		background: rgba(255, 255, 255, 0.08);
-		border: 1px solid rgba(255, 255, 255, 0.12);
-		border-radius: var(--radius-md);
-		padding: var(--space-3) var(--space-4);
-		font-family: var(--font-mono);
-		font-size: 0.8rem;
-		color: var(--color-text-tan);
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		gap: var(--space-3);
-		flex-wrap: wrap;
-	}
-
-	.history-banner a {
-		color: var(--color-accent);
-	}
-
-	.breadcrumb {
-		font-family: var(--font-mono);
-		font-size: 0.78rem;
-		color: var(--color-text-bronze);
-		display: flex;
-		align-items: center;
-		gap: var(--space-2);
-	}
-
-	/* Shared style for monospace bronze links in the hero */
-	.hero-link {
-		color: var(--color-text-bronze);
-		text-decoration: none;
-		transition: color 0.15s;
-	}
-
-	.hero-link:hover {
-		color: var(--color-text-tan);
-	}
-
-	.breadcrumb-sep {
-		color: var(--color-text-bronze);
-		opacity: 0.5;
-	}
-
-	.breadcrumb-slug {
-		color: var(--color-accent);
-	}
-
-	.fork-credit {
-		font-family: var(--font-serif);
-		font-style: italic;
-		font-size: 0.9rem;
-		color: var(--color-text-bronze);
-		margin: calc(var(--space-4) * -1) 0 0;
-	}
-
-	.fork-credit a {
-		color: var(--color-accent);
-	}
-
-	.title-row {
-		display: flex;
-		align-items: baseline;
-		gap: var(--space-4);
-		margin: 0;
-		flex-wrap: wrap;
-	}
-
-	.recipe-title {
-		font-family: var(--font-serif);
-		font-size: clamp(1.9rem, 4vw, 3.2rem);
-		font-weight: 700;
-		color: var(--color-text-cream);
-		margin: 0;
-		line-height: 1.05;
-		letter-spacing: -0.02em;
-	}
-
-	.recipe-version {
-		font-family: var(--font-mono);
-		font-size: 1.8rem;
-		font-weight: 500;
-		color: var(--color-accent);
-		flex-shrink: 0;
-	}
-
-	.hero-badges {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		gap: var(--space-2);
-	}
-
-	/* Shared base for pill badges */
-	.hero-badge {
-		font-family: var(--font-sans);
-		font-size: 0.78rem;
-		font-weight: 600;
-		border-radius: var(--radius-pill);
-		padding: 4px 12px;
-		text-decoration: none;
-	}
-
-	.badge-tag {
-		background: var(--color-accent);
-		color: var(--color-hero-bg);
-		transition: opacity 0.15s;
-	}
-
-	.badge-tag:hover {
-		opacity: 0.85;
-	}
-
-	.badge-time {
-		background: var(--color-paprika);
-		color: var(--color-text-cream);
-	}
-
-	.hero-meta-text {
-		font-size: 0.9rem;
-		color: var(--color-text-bronze);
-	}
-
-	.hero-meta-author {
-		font-family: var(--font-mono);
-		font-size: 0.85rem;
-	}
-
-	.hero-meta-author:hover {
-		color: var(--color-accent);
-	}
-
-	.hero-meta-sep {
-		color: var(--color-text-bronze);
-		opacity: 0.4;
-	}
-</style>

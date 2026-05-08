@@ -28,7 +28,7 @@
 </script>
 
 <div class="field">
-	<h4 class="editor-section-heading">Ingredients</h4>
+	<h4 class="m-0 mb-2">Ingredients</h4>
 	<div class="editor-list" role="list">
 		{#each ingredients as ingredient, i (i)}
 			<div
@@ -40,19 +40,9 @@
 				ondrop={() => onDrop(i)}
 			>
 				<span class="drag-handle" title="Drag to reorder">⠿</span>
-				<input
-					type="text"
-					placeholder="Amount"
-					bind:value={ingredient.amount}
-					class="input-amount"
-				/>
-				<input type="text" placeholder="Unit" bind:value={ingredient.unit} class="input-unit" />
-				<input
-					type="text"
-					placeholder="Ingredient name"
-					bind:value={ingredient.name}
-					class="input-name"
-				/>
+				<input type="text" placeholder="Amount" bind:value={ingredient.amount} />
+				<input type="text" placeholder="Unit" bind:value={ingredient.unit} />
+				<input type="text" placeholder="Ingredient name" bind:value={ingredient.name} />
 				<button
 					type="button"
 					onclick={() => remove(i)}
@@ -62,27 +52,5 @@
 			</div>
 		{/each}
 	</div>
-	<button type="button" onclick={add} class="btn-ghost add-btn">+ Add ingredient</button>
+	<button type="button" onclick={add} class="btn-ghost mt-1">+ Add ingredient</button>
 </div>
-
-<style>
-	.editor-section-heading {
-		margin: 0 0 var(--space-2);
-	}
-
-	.add-btn {
-		margin-top: var(--space-1);
-	}
-
-	.input-amount {
-		max-width: 80px;
-	}
-
-	.input-unit {
-		max-width: 80px;
-	}
-
-	.input-name {
-		flex: 1;
-	}
-</style>

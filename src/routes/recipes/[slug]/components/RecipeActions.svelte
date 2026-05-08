@@ -25,7 +25,7 @@
 </script>
 
 {#if canFavorite || canFork || (isOwner && !isViewingHistory)}
-	<div class="sidebar-actions">
+	<div class="flex flex-col gap-2">
 		{#if canFavorite}
 			<form
 				method="POST"
@@ -35,10 +35,16 @@
 					return async ({ update }) => update({ reset: false });
 				}}
 			>
-				<button type="submit" class="action-btn" aria-label={isFavorited ? 'Unsave' : 'Save'}>
+				<button
+					type="submit"
+					class="flex w-full cursor-pointer items-center justify-center gap-2 rounded-pill border-[1.5px] border-accent bg-transparent px-4 py-3 text-center font-sans text-[0.9rem] font-semibold text-accent no-underline transition-opacity duration-150 hover:opacity-75"
+					aria-label={isFavorited ? 'Unsave' : 'Save'}
+				>
 					<svg
-						class="action-icon"
-						class:filled={isFavorited}
+						class="size-4 transition-[fill] duration-150"
+						class:fill-accent={isFavorited}
+						class:fill-none={!isFavorited}
+						class:text-accent={isFavorited}
 						xmlns="http://www.w3.org/2000/svg"
 						viewBox="0 0 24 24"
 						stroke-width="1.8"
@@ -57,7 +63,7 @@
 
 		{#if canFork}
 			<Dialog.Root bind:open={forkDialogOpen}>
-				<Dialog.Trigger class="action-btn action-btn-primary">Fork this recipe</Dialog.Trigger>
+				<Dialog.Trigger class="btn-primary w-full py-3">Fork this recipe</Dialog.Trigger>
 				<Dialog.Portal>
 					<Dialog.Overlay class="dialog-overlay" />
 					<Dialog.Content class="dialog-content">
@@ -79,8 +85,10 @@
 								};
 							}}
 						>
-							<div class="dialog-field">
-								<label for="fork-commit" class="dialog-label">Initial commit message</label>
+							<div class="mb-5">
+								<label for="fork-commit" class="mb-2 block text-[0.85rem] font-medium text-text-2">
+									Initial commit message
+								</label>
 								<input
 									id="fork-commit"
 									name="commitMessage"
@@ -100,123 +108,12 @@
 		{/if}
 
 		{#if isOwner && !isViewingHistory}
-			<a href="/recipes/{recipe.slug}/edit" class="action-btn">Edit recipe</a>
+			<a
+				href="/recipes/{recipe.slug}/edit"
+				class="flex w-full cursor-pointer items-center justify-center gap-2 rounded-pill border-[1.5px] border-accent bg-transparent px-4 py-3 text-center font-sans text-[0.9rem] font-semibold text-accent no-underline transition-opacity duration-150 hover:opacity-75"
+			>
+				Edit recipe
+			</a>
 		{/if}
 	</div>
 {/if}
-
-<style>
-	.sidebar-actions {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-2);
-	}
-
-	.action-btn {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		gap: var(--space-2);
-		width: 100%;
-		padding: var(--space-3) var(--space-4);
-		font-family: var(--font-sans);
-		font-size: 0.9rem;
-		font-weight: 600;
-		color: var(--color-accent);
-		background: transparent;
-		border: 1.5px solid var(--color-accent);
-		border-radius: var(--radius-pill);
-		cursor: pointer;
-		text-decoration: none;
-		text-align: center;
-		transition: opacity 0.15s;
-	}
-
-	.action-btn:hover {
-		opacity: 0.75;
-	}
-
-	:global(.action-btn-primary) {
-		background: var(--color-accent) !important;
-		color: var(--color-hero-bg) !important;
-		border: 1.5px solid var(--color-accent) !important;
-		border-radius: var(--radius-pill) !important;
-		font-family: var(--font-sans) !important;
-		font-size: 0.9rem !important;
-		font-weight: 600 !important;
-		padding: var(--space-3) var(--space-4) !important;
-		cursor: pointer !important;
-		transition: opacity 0.15s !important;
-	}
-
-	:global(.action-btn-primary:hover) {
-		opacity: 0.88;
-	}
-
-	.action-icon {
-		width: 16px;
-		height: 16px;
-		fill: none;
-		transition: fill 0.15s;
-	}
-
-	.action-icon.filled {
-		fill: var(--color-accent);
-		color: var(--color-accent);
-	}
-
-	/* ── Fork dialog ── */
-	:global(.dialog-overlay) {
-		position: fixed;
-		inset: 0;
-		background: rgba(26, 20, 8, 0.5);
-		z-index: 100;
-	}
-
-	:global(.dialog-content) {
-		position: fixed;
-		top: 50%;
-		left: 50%;
-		transform: translate(-50%, -50%);
-		background: var(--color-surface);
-		border: 1px solid var(--color-border-2);
-		border-radius: var(--radius-lg);
-		box-shadow: var(--shadow-raised);
-		padding: var(--space-6);
-		width: min(480px, calc(100vw - 48px));
-		z-index: 101;
-	}
-
-	:global(.dialog-title) {
-		font-family: var(--font-serif);
-		font-size: 1.4rem;
-		font-weight: 600;
-		color: var(--color-text);
-		margin: 0 0 var(--space-3);
-	}
-
-	:global(.dialog-desc) {
-		font-size: 0.9rem;
-		color: var(--color-text-2);
-		margin: 0 0 var(--space-5);
-		line-height: 1.6;
-	}
-
-	:global(.dialog-actions) {
-		display: flex;
-		justify-content: flex-end;
-		gap: var(--space-3);
-	}
-
-	.dialog-field {
-		margin-bottom: var(--space-5);
-	}
-
-	.dialog-label {
-		display: block;
-		font-size: 0.85rem;
-		font-weight: 500;
-		color: var(--color-text-2);
-		margin-bottom: var(--space-2);
-	}
-</style>

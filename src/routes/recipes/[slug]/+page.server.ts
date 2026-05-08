@@ -25,6 +25,7 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 	});
 
 	if (!recipe) throw error(404, 'Recipe not found');
+	if (!recipe.isPublic && recipe.authorId !== user?.id) throw error(404, 'Recipe not found');
 
 	// Resolve which version's content to display
 	let currentVersion = recipe.versions[0] ?? null;
@@ -71,6 +72,7 @@ export const actions: Actions = {
 			where: eq(recipes.slug, params.slug)
 		});
 		if (!recipe) throw error(404, 'Recipe not found');
+		if (!recipe.isPublic && recipe.authorId !== user.id) throw error(404, 'Recipe not found');
 
 		const existing = await db.query.favorites.findFirst({
 			where: and(eq(favorites.userId, user.id), eq(favorites.recipeId, recipe.id))
@@ -101,6 +103,7 @@ export const actions: Actions = {
 		});
 
 		if (!source) throw error(404, 'Source recipe not found');
+		if (!source.isPublic && source.authorId !== user.id) throw error(404, 'Source recipe not found');
 
 		const latestVersion = source.versions[0];
 		if (!latestVersion) throw error(400, 'Source recipe has no versions');

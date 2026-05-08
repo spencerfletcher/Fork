@@ -42,31 +42,40 @@
 </script>
 
 {#if allVersions.length > 0}
-	<div class="sidebar-card">
-		<h4 class="eyebrow-label card-label">Version History</h4>
-		<div class="version-list">
+	<div class="rounded-lg border border-border-2 bg-surface p-5">
+		<h4 class="eyebrow-label m-0 mb-4">Version History</h4>
+		<div class="flex flex-col">
 			{#each visibleVersions as version (version.id)}
 				{@const isCurrent = version.versionNumber === currentVersion?.versionNumber}
 				<div
-					class="version-row"
-					class:version-current={isCurrent}
+					class="group flex cursor-pointer gap-3 items-start border-b border-border py-3 transition-opacity duration-150 [&:last-child]:border-b-0 [&:last-child]:pb-0 hover:opacity-80"
 					role="link"
 					tabindex="0"
 					onclick={() => goto(`/recipes/${recipeSlug}?version=${version.versionNumber}`)}
 					onkeydown={(e) =>
 						e.key === 'Enter' && goto(`/recipes/${recipeSlug}?version=${version.versionNumber}`)}
 				>
-					<span class="version-dot" class:current={isCurrent}></span>
-					<div class="version-info">
-						<span class="version-label">v{version.versionNumber} — {version.commitMessage}</span>
-						<span class="version-meta">
+					<span
+						class="mt-[5px] size-[9px] shrink-0 rounded-full transition-[background] duration-150"
+						class:bg-accent={isCurrent}
+						class:bg-dot-inactive={!isCurrent}
+					></span>
+					<div class="flex min-w-0 flex-col gap-[2px] font-mono">
+						<span
+							class="overflow-hidden text-ellipsis whitespace-nowrap text-[0.8rem] font-medium transition-colors duration-150 group-hover:text-accent"
+							class:text-accent={isCurrent}
+							class:text-text={!isCurrent}
+						>
+							v{version.versionNumber} — {version.commitMessage}
+						</span>
+						<span class="text-[0.72rem] text-text-3">
 							@{version.creator?.username ?? 'unknown'} · {formatRelativeTime(version.createdAt)}
 						</span>
 						{#if version.versionNumber > 1 && !isViewingHistory}
 							<a
 								href="/recipes/{recipeSlug}/diff?from={version.versionNumber -
 									1}&to={version.versionNumber}"
-								class="version-diff-link"
+								class="mt-[2px] inline-block text-[0.7rem] text-text-3 no-underline hover:text-accent"
 								onclick={(e) => e.stopPropagation()}
 							>
 								Compare ↗
@@ -77,7 +86,10 @@
 			{/each}
 		</div>
 		{#if allVersions.length > VERSIONS_SHOWN}
-			<button class="version-toggle" onclick={() => (showAllVersions = !showAllVersions)}>
+			<button
+				class="mt-3 w-full cursor-pointer border-none bg-transparent py-2 text-left font-sans text-[0.78rem] text-text-3 transition-colors duration-150 hover:text-accent"
+				onclick={() => (showAllVersions = !showAllVersions)}
+			>
 				{showAllVersions
 					? 'Show less'
 					: `Show ${allVersions.length - VERSIONS_SHOWN} older version${allVersions.length - VERSIONS_SHOWN === 1 ? '' : 's'}`}
@@ -85,116 +97,3 @@
 		{/if}
 	</div>
 {/if}
-
-<style>
-	.sidebar-card {
-		background: var(--color-surface);
-		border: 1px solid var(--color-border-2);
-		border-radius: var(--radius-lg);
-		padding: var(--space-5);
-	}
-
-	.card-label {
-		margin: 0 0 var(--space-4);
-	}
-
-	.version-list {
-		display: flex;
-		flex-direction: column;
-	}
-
-	.version-row {
-		display: flex;
-		gap: var(--space-3);
-		align-items: flex-start;
-		padding: var(--space-3) 0;
-		border-bottom: 1px solid var(--color-border);
-		cursor: pointer;
-		transition: opacity 0.15s;
-	}
-
-	.version-row:last-child {
-		border-bottom: none;
-		padding-bottom: 0;
-	}
-
-	.version-row:hover {
-		opacity: 0.8;
-	}
-
-	.version-row:hover .version-label {
-		color: var(--color-accent);
-	}
-
-	.version-toggle {
-		width: 100%;
-		margin-top: var(--space-3);
-		padding: var(--space-2) 0;
-		background: none;
-		border: none;
-		font-family: var(--font-sans);
-		font-size: 0.78rem;
-		color: var(--color-text-3);
-		cursor: pointer;
-		text-align: left;
-		transition: color 0.15s;
-	}
-
-	.version-toggle:hover {
-		color: var(--color-accent);
-	}
-
-	.version-dot {
-		width: 9px;
-		height: 9px;
-		border-radius: 50%;
-		background: var(--color-dot-inactive);
-		flex-shrink: 0;
-		margin-top: 5px;
-		transition: background 0.15s;
-	}
-
-	.version-dot.current {
-		background: var(--color-accent);
-	}
-
-	/* version-info uses font-family on the parent to avoid repeating it per child */
-	.version-info {
-		font-family: var(--font-mono);
-		display: flex;
-		flex-direction: column;
-		gap: 2px;
-		min-width: 0;
-	}
-
-	.version-label {
-		font-size: 0.8rem;
-		font-weight: 500;
-		color: var(--color-text);
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		transition: color 0.15s;
-	}
-
-	.version-current .version-label {
-		color: var(--color-accent);
-	}
-
-	.version-meta {
-		font-size: 0.72rem;
-		color: var(--color-text-3);
-	}
-
-	.version-diff-link {
-		font-size: 0.7rem;
-		color: var(--color-text-3);
-		text-decoration: none;
-		margin-top: 2px;
-		display: inline-block;
-	}
-
-	.version-diff-link:hover {
-		color: var(--color-accent);
-	}
-</style>
