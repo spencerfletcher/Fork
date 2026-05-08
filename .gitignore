@@ -35,6 +35,7 @@ data.ts
 # Supabase local development files
 supabase/.temp/
 supabase/.DS_Store
+supabase/snippets/
 
 # Playwright auth state (contains session tokens — never commit)
 e2e/.auth/
