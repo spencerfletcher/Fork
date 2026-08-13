@@ -38,28 +38,16 @@ export const handle: Handle = async ({ event, resolve }) => {
 		});
 	});
 
-	/* --- 4. Security Headers ---
+	// --- 4. Security Headers ---
+	// Content-Security-Policy is NOT set here — it lives in svelte.config.js so
+	// SvelteKit can nonce its own inline bootstrap script.
 	response.headers.set('X-Content-Type-Options', 'nosniff');
 	response.headers.set('X-Frame-Options', 'DENY');
 	response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
 	response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
-	response.headers.set(
-		'Content-Security-Policy',
-		[
-			"default-src 'self'",
-			"script-src 'self'",
-			"style-src 'self' 'unsafe-inline'",
-			"img-src 'self' data: https:",
-			"connect-src 'self' https://*.supabase.co",
-			"frame-ancestors 'none'",
-			"base-uri 'self'",
-			"form-action 'self'"
-		].join('; ')
-	);
 	if (event.url.protocol === 'https:') {
 		response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
 	}
-		*/
 
 	return response;
 };
