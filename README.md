@@ -4,7 +4,7 @@ A recipe platform that treats recipes the way git treats code: every edit is a v
 
 **Live:** [recipes.spencerfletcher.com](https://recipes.spencerfletcher.com) · **Stack:** SvelteKit · TypeScript · PostgreSQL · Supabase
 
-<!-- SCREENSHOTS: add docs/screenshots/{home,recipe,diff}.png and link them here. -->
+![The recipe feed, showing a forked recipe badged as such](docs/screenshots/home.png)
 
 ## Why
 
@@ -18,9 +18,13 @@ This is the core of the project, so it's worth being precise about what it does 
 - **Forking.** Any public recipe can be forked into your own account. The fork records `parent_id` and `forked_at`, so attribution survives, and the recipe page shows a fork count and a link back to the source.
 - **Diffing.** Any two versions of a recipe can be compared side by side. Ingredients are matched by name; steps are matched by position. Changed lines get a word-level inline diff so you can see `¾ cup` become `½ cup` without re-reading the row.
 
+![Comparing v1 and v2 of a recipe: a changed vanilla measurement shown as a word-level inline diff, and an added espresso powder row](docs/screenshots/diff.png)
+
 **There is no branching and no merging.** History is a straight line per recipe, and a fork is a copy with a pointer home — not a branch that can be merged back. Pull requests are on the roadmap below, not in the codebase.
 
 A deliberate split in the schema supports this: recipe _metadata_ (title, description, image, times, servings) lives on the `recipes` row and is edited in place, while the _content_ that people actually iterate on (ingredients and steps) is versioned as JSONB in `recipe_versions`. Renaming a typo in the title shouldn't create a new version; swapping butter for oil should.
+
+![A recipe page showing the current version, its ingredients and method, and a version history sidebar](docs/screenshots/recipe.png)
 
 ## Built
 
