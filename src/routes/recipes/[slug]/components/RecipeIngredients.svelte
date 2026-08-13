@@ -32,9 +32,15 @@
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ ingredients: currentVersion.ingredients })
 			});
+			gramsLoading = false;
+			if (!res.ok) {
+				// Rate limited or rejected — fall back to the original units
+				// rather than rendering an empty column.
+				showGrams = false;
+				return;
+			}
 			const { results } = await res.json();
 			gramCache = results;
-			gramsLoading = false;
 		}
 	}
 </script>

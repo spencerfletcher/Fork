@@ -9,6 +9,49 @@ interface IngredientInput {
 	name: string;
 }
 
+// No recipe needs more than this, and each entry can cost a Spoonacular call
+// against a 150/day quota.
+const MAX_INGREDIENTS = 50;
+const MAX_FIELD_LENGTH = 200;
+
+const RATE_LIMIT_MAX = 30;
+const RATE_LIMIT_WINDOW_MS = 60_000;
+
+// Fixed-window counter per address. This is per-instance state, so on a
+// serverless host it bounds abuse per warm instance rather than globally —
+// enough to protect the Spoonacular quota from a single caller.
+const hits = new Map<string, { count: number; resetAt: number }>();
+
+function rateLimit(address: string, now: number): { ok: boolean; retryAfter: number } {
+	for (const [key, entry] of hits) {
+		if (entry.resetAt <= now) hits.delete(key);
+	}
+
+	const entry = hits.get(address);
+	if (!entry || entry.resetAt <= now) {
+		hits.set(address, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+		return { ok: true, retryAfter: 0 };
+	}
+
+	entry.count += 1;
+	if (entry.count > RATE_LIMIT_MAX) {
+		return { ok: false, retryAfter: Math.ceil((entry.resetAt - now) / 1000) };
+	}
+	return { ok: true, retryAfter: 0 };
+}
+
+function isIngredientInput(value: unknown): value is IngredientInput {
+	if (typeof value !== 'object' || value === null) return false;
+	const { amount, unit, name } = value as Record<string, unknown>;
+	return [amount, unit, name].every(
+		(field) => typeof field === 'string' && field.length <= MAX_FIELD_LENGTH
+	);
+}
+
+function fail(code: string, message: string, status: number, headers?: Record<string, string>) {
+	return json({ error: message, code }, { status, headers });
+}
+
 function parseAmount(amount: string): number {
 	const vulgar: Record<string, number> = {
 		'½': 0.5,
@@ -53,8 +96,38 @@ async function convertViaSpoonacular(
 	}
 }
 
-export const POST: RequestHandler = async ({ request }) => {
-	const { ingredients }: { ingredients: IngredientInput[] } = await request.json();
+// Deliberately unauthenticated: the gram toggle sits on public recipe pages,
+// so guests need it. Abuse is bounded by the rate limit and the size caps.
+export const POST: RequestHandler = async ({ request, getClientAddress }) => {
+	const limit = rateLimit(getClientAddress(), Date.now());
+	if (!limit.ok) {
+		return fail('RATE_LIMITED', 'Too many requests. Try again shortly.', 429, {
+			'Retry-After': String(limit.retryAfter)
+		});
+	}
+
+	let body: unknown;
+	try {
+		body = await request.json();
+	} catch {
+		return fail('INVALID_JSON', 'Request body must be valid JSON.', 400);
+	}
+
+	const ingredients = (body as { ingredients?: unknown } | null)?.ingredients;
+
+	if (!Array.isArray(ingredients)) {
+		return fail('INVALID_INGREDIENTS', 'Expected an "ingredients" array.', 400);
+	}
+	if (ingredients.length > MAX_INGREDIENTS) {
+		return fail('TOO_MANY_INGREDIENTS', `At most ${MAX_INGREDIENTS} ingredients per request.`, 400);
+	}
+	if (!ingredients.every(isIngredientInput)) {
+		return fail(
+			'INVALID_INGREDIENTS',
+			'Each ingredient needs string amount, unit, and name fields.',
+			400
+		);
+	}
 
 	const results = await Promise.all(
 		ingredients.map(async (ingredient) => {
