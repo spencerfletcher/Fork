@@ -65,3 +65,61 @@ jobs:
       - run: pnpm exec svelte-kit sync
 
       - run: pnpm test:unit run
+
+  e2e:
+    name: End-to-end tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      # Applies supabase/migrations in order against an empty database, so this
+      # job also proves the migration chain still builds the schema from scratch.
+      - run: supabase start
+
+      # Publish the generated local keys and database URL to later steps.
+      - name: Export Supabase environment
+        run: |
+          eval "$(supabase status -o env)"
+          {
+            echo "PUBLIC_SUPABASE_URL=$API_URL"
+            echo "PUBLIC_SUPABASE_ANON_KEY=$ANON_KEY"
+            echo "SUPABASE_SECRET_KEY=$SERVICE_ROLE_KEY"
+            echo "DATABASE_URL=$DB_URL"
+            echo "SEED_USER_PASSWORD=Fork-Demo-2025!"
+            echo "E2E_USER_EMAIL=spencer@fork.dev"
+            echo "E2E_USER_PASSWORD=Fork-Demo-2025!"
+          } >> "$GITHUB_ENV"
+
+      - run: pnpm compile:force
+
+      - run: pnpm exec svelte-kit sync
+
+      - run: pnpm db:seed
+
+      - run: pnpm exec playwright install --with-deps chromium
+
+      - run: pnpm test:e2e
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7

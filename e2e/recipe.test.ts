@@ -39,8 +39,9 @@ test.describe('Recipe detail page', () => {
 			.first()
 			.click();
 		await expect(page).toHaveURL(/\/recipes\//);
-		// Version history is in the sidebar — all versions visible without expanding
-		const versionRows = page.locator('.version-row');
+		// Version history is in the sidebar — all versions visible without expanding.
+		// Each row is a div with an explicit role="link"; nothing else on the page uses one.
+		const versionRows = page.locator('[role="link"]').filter({ hasText: /v\d+ — / });
 		await expect(versionRows).toHaveCount(2);
 	});
 
@@ -67,7 +68,7 @@ test.describe('Recipe detail page', () => {
 		await page.goto(`${recipeUrl}?version=1`);
 		await page.waitForLoadState('networkidle');
 		// Banner: "Viewing v1: "..." — Current version →"
-		await expect(page.locator('.history-banner')).toBeVisible();
+		await expect(page.getByText(/viewing v\d+:/i)).toBeVisible();
 		await expect(page.getByRole('link', { name: /current version/i })).toBeVisible();
 	});
 
@@ -78,11 +79,9 @@ test.describe('Recipe detail page', () => {
 			.first()
 			.click();
 		await expect(page).toHaveURL(/\/recipes\//);
-		// Version history is visible in the sidebar — click the first Compare link
-		await page
-			.getByRole('link', { name: /compare/i })
-			.first()
-			.click();
+		// Target the Compare anchor by href. Matching on the accessible name would
+		// also match the version row it sits inside, which navigates elsewhere.
+		await page.locator('a[href*="/diff?from="]').first().click();
 		await expect(page).toHaveURL(/\/diff/);
 		await expect(page.locator('h1')).toContainText(/compare/i);
 	});
