@@ -1,140 +1,123 @@
-# RecipeBook
+# Fork
 
-## Feature Roadmap
+A recipe platform that treats recipes the way git treats code: every edit is a version with a commit message, any recipe can be forked, and any two versions can be diffed.
 
-### MVP (Foundation)
+**Live:** [recipes.spencerfletcher.com](https://recipes.spencerfletcher.com) · **Stack:** SvelteKit · TypeScript · PostgreSQL · Supabase
 
-- Basic git-like: history, forks, comments
-- Social: favorites, public/private, follow
+<!-- SCREENSHOTS: add docs/screenshots/{home,recipe,diff}.png and link them here. -->
 
-### Phase 2 (Community Growth)
+## Why
 
-- Pull requests, lineage tracking
-- Collections, tips
+Home cooks modify recipes constantly and have no structured way to record what changed, why it changed, or who they got it from. Fork borrows the parts of version control that actually fit cooking — a history you can read, a fork that credits its source, and a diff that shows exactly which ingredient moved — and leaves out the parts that don't.
 
-### Phase 3 (AI & Intelligence)
+## The version control model
 
-- Price estimation, macros, recommendations
-- Smart search, duplicate detection
+This is the core of the project, so it's worth being precise about what it does and doesn't do:
 
-## Features
+- **Linear versioning.** Each recipe has an append-only list of versions numbered `1..n`. Saving an edit writes a new `recipe_versions` row with a required commit message. Past versions are never mutated.
+- **Forking.** Any public recipe can be forked into your own account. The fork records `parent_id` and `forked_at`, so attribution survives, and the recipe page shows a fork count and a link back to the source.
+- **Diffing.** Any two versions of a recipe can be compared side by side. Ingredients are matched by name; steps are matched by position. Changed lines get a word-level inline diff so you can see `¾ cup` become `½ cup` without re-reading the row.
 
-### Git-like functionality
+**There is no branching and no merging.** History is a straight line per recipe, and a fork is a copy with a pointer home — not a branch that can be merged back. Pull requests are on the roadmap below, not in the codebase.
 
-In this app, users will have the ability to:
+A deliberate split in the schema supports this: recipe _metadata_ (title, description, image, times, servings) lives on the `recipes` row and is edited in place, while the _content_ that people actually iterate on (ingredients and steps) is versioned as JSONB in `recipe_versions`. Renaming a typo in the title shouldn't create a new version; swapping butter for oil should.
 
-1. See the history of changes made to recipes. These changes can have comments, e.g. "Switched to butter for better flavor" vs just seeing the ingredient changes.
-2. Allow creation of "forks" from recipes, i.e. create a new version of someone else's (or their own recipe). For example, a user might want to create a low carb version of a cookie recipe by swapping out flour for almond flour and sugar for stevia.
-3. Pull requests/recipe suggestions. Users can suggest improvements to someone else's recipes (add a note about what changed and why). E.g. "I made this with oat flour instead and it turned out great! Here's the updated ratio: ...".
-4. Recipe lineage – See "Original by Sarah → Modified by Mike (less sugar) → Simplified by Anna". Proper credit to original creator even through multiple forks.
-5. Maybe have some sort of functionality where you can see the original of a recipe or see the "best" version or the "healthiest" version. Based on community voting.
+## Built
 
-### Social Features
+| Area       | What works                                                                                               |
+| ---------- | -------------------------------------------------------------------------------------------------------- |
+| Versioning | Version history per recipe, required commit messages, collapsible history UI, version-to-version compare |
+| Diffing    | Ingredient and step diffs with word-level inline highlighting                                            |
+| Forking    | Fork any public recipe, lineage via `parent_id`, fork counts, attribution on the recipe page             |
+| Recipes    | Create, edit, image upload to Supabase Storage, public/private visibility                                |
+| Discovery  | Postgres full-text search (`tsvector` + GIN) ranked with ingredient matching, tag pages, tag filtering   |
+| Social     | Favorites, user profile pages with public recipes and a commit count                                     |
+| Auth       | Email/password via Supabase Auth, SSR session handling, auth-gated routes and actions                    |
+| Utility    | Ingredient-to-grams conversion from a local density table, with an optional Spoonacular fallback         |
+| i18n       | English and Spanish message catalogs via Paraglide                                                       |
 
-1. Users can curate themed collections: "Easy Weeknight Dinners", "Holiday Treats", "Meal Prep". Can like/save collections, not just individual recipes.
-2. Follow favorite cooks/friends to see new recipes they create/fork.
-3. Crowd sourced tags – let users tag recipes as quick, intermediate, show off dinner. Filter by time.
+## Not built
 
-### Knowledge Sharing
+Listed here so the roadmap isn't mistaken for the feature set. None of this exists in the codebase:
 
-1. Tips – not changes to the original recipe, but might add specificity, e.g. "Make sure eggs are at room temperature". This might just be merged into forks, as it adds a bit of redundancy/confusion.
-2. Ingredient substitutions database. For any given recipe, you can search its forks for ingredient swaps/changes. Helps w allergies/dietary restrictions/regional availability.
+pull requests / recipe suggestions · merging · multi-hop lineage graphs · comments · following · collections · ratings · macros and price estimation · pantry search · any AI feature · recipe export
 
-### AI Features
+## Stack
 
-1. Estimation of recipe price.
-2. Suggestions for what to change/add to a recipe.
-3. Can generate recipes from a short blurb. Any recipes fully generated by AI (i.e. no significant changes by user) are tagged as AI generated and can be filtered out by users.
-4. Can modify recipes from a short blurb, e.g. "Make this recipe vegan".
-5. Ingredient standardization – 1 cup flour = 100g flour = 3.5 oz flour.
-6. Estimation of recipe macros.
-7. Users who liked this recipe also loved.. based on ingredients, techniques, user history.
-8. Seasonal recipe suggestions (based on location).
-9. Pantry-based search – I have eggs, milk, butter, and flour, find me a recipe.
-10. Have a tips section – "Many users added salt to this recipe", "You might want to add an egg wash".
-11. Predict fork success - Analyze suggested changes and warn "This combination might not work" or "This is a great substitution based on X other successful forks".
-12. Recipe summary generation - Auto-generate a one-line description if user doesn't provide one: "Quick 15-minute pasta with fresh tomatoes and basil"
-13. Duplicate detection - "This recipe is very similar to [recipe] by [user]" - helps catch accidental reposts or plagiarism.
+| Layer          | Choice                                          |
+| -------------- | ----------------------------------------------- |
+| Framework      | SvelteKit 2 (Svelte 5 runes), TypeScript strict |
+| Database       | PostgreSQL (Supabase)                           |
+| ORM            | Drizzle                                         |
+| Auth & Storage | Supabase Auth, Supabase Storage                 |
+| Styling        | Tailwind CSS v4, Bits UI primitives             |
+| i18n           | Paraglide (inlang)                              |
+| Testing        | Vitest + Testing Library, Playwright            |
+| Hosting        | Netlify                                         |
 
-## Pages
+## Architecture
 
-### Home
+```
+src/
+  routes/
+    +page.server.ts            public recipe feed
+    recipes/
+      [slug]/                  recipe detail, colocated presentational components
+      [slug]/edit/             edit form; writes a new version on save
+      [slug]/diff/             version comparison
+      new/                     create + image upload
+    search/                    full-text search
+    tags/[slug]/               recipes by tag
+    users/[username]/          public profile
+    api/convert-to-grams/      ingredient unit conversion
+  lib/
+    server/db/schema.ts        Drizzle schema — single source of truth
+    server/db/seed.ts          demo data
+    utils/diff.ts              pure diff logic (unit tested in isolation)
+    validation/                server-side input validation
+    components/                shared components
+```
 
-The landing page for authenticated users. Displays a personalized feed of recipes based on:
+Load functions and form actions do the data work; `hooks.server.ts` attaches the Supabase client and the user to `event.locals` on every request. The diff engine in `lib/utils/diff.ts` is deliberately free of framework and database dependencies, which is why it's the most heavily tested file in the repo.
 
-- Recipes from users you follow
-- Trending recipes in the community
-- Recently updated recipes
-- Personalized recommendations based on your favorites and cooking history
+Tables: `profiles`, `recipes`, `recipe_versions`, `tags`, `recipes_to_tags`, `favorites`.
 
-Includes a search bar and filters for quick navigation.
+## Running locally
 
-### New Recipe
+**Prerequisites:** Node 22, pnpm 10, Docker (for local Supabase).
 
-Form-based page for creating or forking a recipe. Features:
+```bash
+git clone https://github.com/spencerfletcher/Fork.git
+cd Fork
+pnpm install
+cp .env.example .env
+```
 
-- Title, description, ingredients, and instructions input fields
-- Option to fork from an existing recipe (showing the original as a base)
-- Auto-generated summary if not provided
-- Visibility toggle (public/private)
-- Tags and collections assignment
-- Draft saving functionality
-- Duplicate detection warning if similar recipes exist
+Start Supabase and apply the schema:
 
-### Recipe View
+```bash
+supabase start                 # prints your local API URL, anon key, and service role key
+# paste those into .env, then:
+pnpm db:push                   # apply the Drizzle schema
+pnpm db:seed                   # demo user + three recipes, one a fork with two versions
+pnpm dev
+```
 
-The main recipe display page showing:
+The app runs at `http://localhost:5173`. The seeded account is `spencer@fork.dev` with the password from `SEED_USER_PASSWORD` (default `Fork-Demo-2025!`).
 
-- Recipe title, description, and ingredients list
-- Step-by-step instructions
-- Metadata: author, creation date, prep/cook time, servings, estimated cost, macros
-- Recipe lineage (original creator → forks/modifications)
-- Community stats: favorites count, fork count, ratings
-- Comments section for discussion
-- Action buttons: Fork, Favorite, Share, Report
-- History tab showing past versions and changes
-- Related recipes and "Users who liked this also loved..." suggestions
+To point at a hosted Supabase project instead, skip `supabase start` and fill `.env` from your project's dashboard — `DATABASE_URL` should be the **pooler** connection string (port 6543), not the direct one, since serverless functions exhaust direct connections.
 
-### "My Recipes"
+## Testing
 
-Personal dashboard for recipe management:
+```bash
+pnpm test:unit run   # 132 unit + component tests (Vitest)
+pnpm test:e2e        # Playwright; requires a seeded database
+pnpm check           # svelte-check
+pnpm lint            # eslint + prettier
+```
 
-- Sorted list of all your created recipes (with filters: public, private, drafts)
-- Quick stats: total recipes, total forks created, total favorites received
-- Edit/delete/view options for each recipe
-- Sorting options: newest, most forked, most favorited, most recent activity
-- Bulk actions for privacy settings and collections
+Unit tests live next to their source (`Foo.svelte` → `Foo.svelte.test.ts`). Server logic runs in a Node environment, component tests in jsdom; the split is configured in `vitest.workspace.ts`. CI runs type checking, linting, and the unit suite on every push. The Playwright suite needs a live seeded database and is currently run locally rather than in CI.
 
-### Favorites
+## License
 
-A personalized collection page showing:
-
-- All recipes you've favorited
-- Filter and sort options (by cuisine, difficulty, time, date added)
-- Collections of favorited recipes (e.g., "Quick Weeknight Dinners")
-- Export functionality for your favorite recipes
-- Share collections with other users
-
-### Account Management
-
-User profile and settings page:
-
-- Profile information: username, bio, avatar, location
-- Privacy settings (who can see your recipes, follow you, etc.)
-- Notification preferences
-- Connected accounts and integrations
-- Dietary preferences and allergies (for personalized recommendations)
-- Password and security settings
-- Option to download/export your data
-- Account deletion option
-
-### Tags
-
-A browsable directory of all recipe tags in the community:
-
-- Popular tags (trending)
-- All tags (A-Z listing)
-- Tag details page showing recipes with that tag
-- Filter by tag combinations
-- Tag suggestions for recipe discovery
-- Community-contributed tag descriptions
+MIT — see [LICENSE](LICENSE).
