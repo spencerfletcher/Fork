@@ -6,6 +6,38 @@
 		<title>Fork</title>
 		<link rel="icon" href="%sveltekit.assets%/favicon.png" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+		<!-- Site-wide defaults. Individual pages do not override these yet, so a
+		     shared recipe link previews as the site rather than the recipe. -->
+		<meta
+			name="description"
+			content="A recipe platform that treats recipes the way git treats code: every edit is a version with a commit message, any recipe can be forked, and any two versions can be diffed."
+		/>
+		<link rel="canonical" href="https://recipes.spencerfletcher.com" />
+
+		<meta property="og:type" content="website" />
+		<meta property="og:site_name" content="Fork" />
+		<meta property="og:url" content="https://recipes.spencerfletcher.com" />
+		<meta property="og:title" content="Fork — git-style version control for recipes" />
+		<meta
+			property="og:description"
+			content="Every edit is a version with a commit message, any recipe can be forked, and any two versions can be diffed."
+		/>
+		<meta property="og:image" content="https://recipes.spencerfletcher.com/og.jpg" />
+		<meta property="og:image:width" content="2400" />
+		<meta property="og:image:height" content="1260" />
+		<meta
+			property="og:image:alt"
+			content="The Fork recipe feed, showing three recipes with one marked as a fork"
+		/>
+
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:title" content="Fork — git-style version control for recipes" />
+		<meta
+			name="twitter:description"
+			content="Every edit is a version with a commit message, any recipe can be forked, and any two versions can be diffed."
+		/>
+		<meta name="twitter:image" content="https://recipes.spencerfletcher.com/og.jpg" />
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 		<link

@@ -1,5 +1,7 @@
 # Fork
 
+[![CI](https://github.com/spencerfletcher/Fork/actions/workflows/ci.yml/badge.svg)](https://github.com/spencerfletcher/Fork/actions/workflows/ci.yml)
+
 A recipe platform that treats recipes the way git treats code: every edit is a version with a commit message, any recipe can be forked, and any two versions can be diffed.
 
 **Live:** [recipes.spencerfletcher.com](https://recipes.spencerfletcher.com) · **Stack:** SvelteKit · TypeScript · PostgreSQL · Supabase
