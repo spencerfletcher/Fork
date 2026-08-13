@@ -16,8 +16,11 @@ test.skip(!hasAuth, 'Set E2E_USER_EMAIL and E2E_USER_PASSWORD in .env to run aut
 test.describe('Navbar when logged in', () => {
 	test('shows the username link and a Logout button', async ({ page }) => {
 		await page.goto('/');
-		await expect(page.getByRole('link', { name: '@spencerfletcher' })).toBeVisible();
-		await expect(page.getByRole('button', { name: /logout/i })).toBeVisible();
+		// Scope to the navbar: recipe cards also link to the author's profile, and
+		// the mobile menu duplicates the navbar link.
+		const navbar = page.getByRole('navigation').first();
+		await expect(navbar.getByRole('link', { name: '@spencerfletcher' }).first()).toBeVisible();
+		await expect(page.getByRole('button', { name: /logout/i }).first()).toBeVisible();
 	});
 
 	test('does not show the Login link', async ({ page }) => {
@@ -34,7 +37,10 @@ test.describe('Fork dialog', () => {
 		// is hidden for owned recipes and visible for others.
 		// Since the seed user owns all seeded recipes, we verify the button is absent.
 		await page.goto('/');
-		await page.getByText('Classic Chocolate Chip Cookies').first().click();
+		await page
+			.getByRole('link', { name: /classic chocolate chip cookies/i })
+			.first()
+			.click();
 		await page.waitForURL(/\/recipes\//);
 		// Owner should see Edit, not Fork
 		await expect(page.getByRole('link', { name: /edit recipe/i })).toBeVisible();
@@ -108,7 +114,10 @@ test.describe('New recipe page', () => {
 test.describe('Edit recipe page', () => {
 	test('is accessible for a recipe the user owns', async ({ page }) => {
 		await page.goto('/');
-		await page.getByText('Classic Chocolate Chip Cookies').first().click();
+		await page
+			.getByRole('link', { name: /classic chocolate chip cookies/i })
+			.first()
+			.click();
 		await page.waitForURL(/\/recipes\//);
 		await page.getByRole('link', { name: /edit recipe/i }).click();
 		await page.waitForURL(/\/edit/);
@@ -117,7 +126,10 @@ test.describe('Edit recipe page', () => {
 
 	test('can update the recipe title', async ({ page }) => {
 		await page.goto('/');
-		await page.getByText('Classic Chocolate Chip Cookies').first().click();
+		await page
+			.getByRole('link', { name: /classic chocolate chip cookies/i })
+			.first()
+			.click();
 		await page.waitForURL(/\/recipes\//);
 		const recipeUrl = page.url();
 
@@ -138,7 +150,10 @@ test.describe('Edit recipe page', () => {
 
 	test('can save a new version with a commit message', async ({ page }) => {
 		await page.goto('/');
-		await page.getByText('Chicken Tikka Masala').first().click();
+		await page
+			.getByRole('link', { name: /chicken tikka masala/i })
+			.first()
+			.click();
 		await page.waitForURL(/\/recipes\//);
 
 		await page.getByRole('link', { name: /edit recipe/i }).click();
