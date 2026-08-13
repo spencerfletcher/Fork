@@ -1,4 +1,4 @@
-# RecipeBook Testing Guide
+# Fork Testing Guide
 
 ## Overview
 
@@ -324,7 +324,7 @@ await page.waitForSelector('text=Success');
 ```typescript
 await expect(page.locator('text=Error')).toBeVisible();
 await expect(page.locator('input[name="email"]')).toBeFocused();
-await expect(page).toHaveTitle('RecipeBook');
+await expect(page).toHaveTitle('Fork');
 ```
 
 ## Debugging Tests

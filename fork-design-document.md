@@ -1,6 +1,6 @@
 # Fork – Git-Style Recipe Platform
 
-## Design Document for Claude Code
+## Design Document
 
 ---
 
@@ -9,7 +9,7 @@
 **Name:** Fork  
 **Tagline:** Git-style recipe platform  
 **Live URL:** recipes.spencerfletcher.com  
-**GitHub:** github.com/spencerfletcher/RecipeBook  
+**GitHub:** github.com/spencerfletcher/Fork  
 **Started:** October 2025
 
 Fork is a full-stack recipe platform where the core differentiator is **git-style version control applied to cooking**. Users can create recipes, track modifications over time, fork other users' recipes into their own collection, see diffs between versions, and browse a public feed with proper attribution and lineage. Think GitHub, but the repos are recipes.

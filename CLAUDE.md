@@ -1,4 +1,4 @@
-# Fork / RecipeBook — Project CLAUDE.md
+# Fork — Project CLAUDE.md
 
 ## Project Overview
 
