@@ -1,7 +1,9 @@
 <script lang="ts">
 	import type { Recipe } from '$lib/server/db/schema';
 
-	interface CardRecipe extends Recipe {
+	// `fts` is a Postgres-generated search vector — never read by the card, and
+	// callers building fixtures shouldn't have to supply one.
+	interface CardRecipe extends Omit<Recipe, 'fts'> {
 		recipesToTags?: { tag: { id: number; name: string; slug: string } }[];
 		author?: { id: string; username: string } | null;
 	}
@@ -20,12 +22,12 @@
 	</div>
 
 	<div class="flex flex-col gap-2 p-5">
-		<h3 class="card-title m-0 font-serif text-[1.2rem] font-normal leading-[1.3] text-text">
+		<h3 class="card-title text-text m-0 font-serif text-[1.2rem] leading-[1.3] font-normal">
 			{recipe.title}
 		</h3>
 
 		{#if recipe.description}
-			<p class="card-desc m-0 text-sm leading-[1.5] text-text-2">{recipe.description}</p>
+			<p class="card-desc text-text-2 m-0 text-sm leading-[1.5]">{recipe.description}</p>
 		{/if}
 
 		<div class="flex items-center justify-between">
@@ -33,16 +35,16 @@
 				{#if recipe.author}
 					<a
 						href="/users/{recipe.author.username}"
-						class="relative z-[2] font-mono text-[0.72rem] text-text-3 no-underline transition-colors duration-150 hover:text-accent"
+						class="text-text-3 hover:text-accent relative z-[2] font-mono text-[0.72rem] no-underline transition-colors duration-150"
 					>
 						@{recipe.author.username}
 					</a>
 				{/if}
 				{#if recipe.author && (recipe.prepTimeMinutes || recipe.cookTimeMinutes)}
-					<span class="font-mono text-[0.72rem] text-text-3">·</span>
+					<span class="text-text-3 font-mono text-[0.72rem]">·</span>
 				{/if}
 				{#if recipe.prepTimeMinutes || recipe.cookTimeMinutes}
-					<span class="font-mono text-[0.72rem] text-text-3">
+					<span class="text-text-3 font-mono text-[0.72rem]">
 						{#if recipe.prepTimeMinutes && recipe.cookTimeMinutes}
 							{recipe.prepTimeMinutes + recipe.cookTimeMinutes} min
 						{:else if recipe.prepTimeMinutes}
@@ -59,7 +61,7 @@
 				aria-hidden={!recipe.parentId}
 			>
 				<svg
-					class="w-[9px] h-[10px] shrink-0"
+					class="h-[10px] w-[9px] shrink-0"
 					viewBox="0 0 12 14"
 					fill="none"
 					xmlns="http://www.w3.org/2000/svg"

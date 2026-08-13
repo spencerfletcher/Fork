@@ -84,7 +84,26 @@
 			<h3 class="eyebrow-label mb-3">Ingredients</h3>
 			<div class="border-border overflow-hidden rounded-md border font-mono text-sm">
 				{#each ingredientDiff as row, i (i)}
-					{#if row.status === 'added' || row.status === 'removed' || row.status === 'unchanged'}
+					{#if row.status === 'modified'}
+						<div
+							class="border-border diff-modified text-text-2 flex items-baseline gap-3 border-b px-4 py-2 [&:last-child]:border-b-0"
+						>
+							<span class="text-text-3 w-[1ch] shrink-0 font-bold select-none">~</span>
+							<span class="diff-content flex-1 leading-[1.5]">
+								{#each row.segments as seg, si (si)}
+									{#if seg.type === 'added'}<span class="diff-added text-add">{seg.text}</span>
+									{:else if seg.type === 'removed'}
+										<span class="diff-removed bg-remove-bg text-remove line-through">
+											{seg.text}
+										</span>
+									{:else}
+										{seg.text}
+									{/if}
+									<span> </span>
+								{/each}
+							</span>
+						</div>
+					{:else}
 						<div
 							class="border-border flex items-baseline gap-3 border-b px-4 py-2 [&:last-child]:border-b-0"
 							class:diff-added={row.status === 'added'}
@@ -106,25 +125,6 @@
 								{row.ingredient.name}
 							</span>
 						</div>
-					{:else}
-						<div
-							class="border-border diff-modified text-text-2 flex items-baseline gap-3 border-b px-4 py-2 [&:last-child]:border-b-0"
-						>
-							<span class="text-text-3 w-[1ch] shrink-0 font-bold select-none">~</span>
-							<span class="diff-content flex-1 leading-[1.5]">
-								{#each row.segments as seg}
-									{#if seg.type === 'added'}<span class="diff-added text-add">{seg.text}</span>
-									{:else if seg.type === 'removed'}
-										<span class="diff-removed bg-remove-bg text-remove line-through">
-											{seg.text}
-										</span>
-									{:else}
-										{seg.text}
-									{/if}
-									<span> </span>
-								{/each}
-							</span>
-						</div>
 					{/if}
 				{/each}
 				{#if ingredientDiff.length === 0}
@@ -138,7 +138,33 @@
 			<h3 class="eyebrow-label mb-3">Steps</h3>
 			<div class="border-border overflow-hidden rounded-md border font-mono text-sm">
 				{#each stepDiff as row, i (i)}
-					{#if row.status === 'added' || row.status === 'removed' || row.status === 'unchanged'}
+					{#if row.status === 'modified'}
+						<div
+							class="border-border diff-modified text-text-2 flex items-baseline gap-3 border-b px-4 py-2 [&:last-child]:border-b-0"
+						>
+							<span class="text-text-3 w-[1ch] shrink-0 font-bold select-none">~</span>
+							<span
+								class="step-num bg-accent inline-flex size-[22px] shrink-0 items-center justify-center rounded-full font-sans text-[0.7rem] font-semibold text-[#fdfaf4]"
+							>
+								{row.stepNumber}
+							</span>
+							<span class="diff-content flex-1 leading-[1.5]">
+								{#each row.segments as seg, si (si)}
+									{#if seg.type === 'added'}
+										<span class="diff-added text-add">
+											{seg.text}
+										</span>
+									{:else if seg.type === 'removed'}
+										<span class="diff-removed bg-remove-bg text-remove line-through">
+											{seg.text}
+										</span>
+									{:else}
+										{seg.text}
+									{/if}
+								{/each}</span
+							>
+						</div>
+					{:else}
 						<div
 							class="border-border flex items-baseline gap-3 border-b px-4 py-2 [&:last-child]:border-b-0"
 							class:diff-added={row.status === 'added'}
@@ -162,32 +188,6 @@
 								</span>
 							{/if}
 							<span class="diff-content flex-1 leading-[1.5]">{row.step.text}</span>
-						</div>
-					{:else}
-						<div
-							class="border-border diff-modified text-text-2 flex items-baseline gap-3 border-b px-4 py-2 [&:last-child]:border-b-0"
-						>
-							<span class="text-text-3 w-[1ch] shrink-0 font-bold select-none">~</span>
-							<span
-								class="step-num bg-accent inline-flex size-[22px] shrink-0 items-center justify-center rounded-full font-sans text-[0.7rem] font-semibold text-[#fdfaf4]"
-							>
-								{row.stepNumber}
-							</span>
-							<span class="diff-content flex-1 leading-[1.5]">
-								{#each row.segments as seg}
-									{#if seg.type === 'added'}
-										<span class="diff-added text-add">
-											{seg.text}
-										</span>
-									{:else if seg.type === 'removed'}
-										<span class="diff-removed bg-remove-bg text-remove line-through">
-											{seg.text}
-										</span>
-									{:else}
-										{seg.text}
-									{/if}
-								{/each}</span
-							>
 						</div>
 					{/if}
 				{/each}
