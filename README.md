@@ -78,7 +78,6 @@ src/
     server/db/schema.ts        Drizzle schema — single source of truth
     server/db/seed.ts          demo data
     utils/diff.ts              pure diff logic (unit tested in isolation)
-    validation/                server-side input validation
     components/                shared components
 ```
 
@@ -114,7 +113,7 @@ To point at a hosted Supabase project instead, skip `supabase start` and fill `.
 ## Testing
 
 ```bash
-pnpm test:unit run   # 132 unit + component tests (Vitest)
+pnpm test:unit run   # 110 unit + component tests (Vitest)
 pnpm test:e2e        # Playwright; requires a seeded database
 pnpm check           # svelte-check
 pnpm lint            # eslint + prettier
