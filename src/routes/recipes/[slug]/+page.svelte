@@ -29,7 +29,7 @@
 				<RecipeIngredients {currentVersion} />
 				<RecipeMethod steps={currentVersion.steps} />
 			{:else}
-				<p class="py-7 text-base text-text-3">
+				<p class="text-text-3 py-7 text-base">
 					No recipe content yet.
 					{#if isOwner}<a href="/recipes/{recipe.slug}/edit">Add content →</a>{/if}
 				</p>
@@ -42,7 +42,7 @@
 					<img
 						src={recipe.imageUrl}
 						alt={recipe.title}
-						class="w-full rounded-lg border border-border-2 object-cover [aspect-ratio:4/3]"
+						class="border-border-2 [aspect-ratio:4/3] w-full rounded-lg border object-cover"
 					/>
 				{/if}
 				<Details {recipe} />

@@ -37,7 +37,7 @@
 			>
 				<button
 					type="submit"
-					class="flex w-full cursor-pointer items-center justify-center gap-2 rounded-pill border-[1.5px] border-accent bg-transparent px-4 py-3 text-center font-sans text-[0.9rem] font-semibold text-accent no-underline transition-opacity duration-150 hover:opacity-75"
+					class="rounded-pill border-accent text-accent flex w-full cursor-pointer items-center justify-center gap-2 border-[1.5px] bg-transparent px-4 py-3 text-center font-sans text-[0.9rem] font-semibold no-underline transition-opacity duration-150 hover:opacity-75"
 					aria-label={isFavorited ? 'Unsave' : 'Save'}
 				>
 					<svg
@@ -86,7 +86,7 @@
 							}}
 						>
 							<div class="mb-5">
-								<label for="fork-commit" class="mb-2 block text-[0.85rem] font-medium text-text-2">
+								<label for="fork-commit" class="text-text-2 mb-2 block text-[0.85rem] font-medium">
 									Initial commit message
 								</label>
 								<input
@@ -110,7 +110,7 @@
 		{#if isOwner && !isViewingHistory}
 			<a
 				href="/recipes/{recipe.slug}/edit"
-				class="flex w-full cursor-pointer items-center justify-center gap-2 rounded-pill border-[1.5px] border-accent bg-transparent px-4 py-3 text-center font-sans text-[0.9rem] font-semibold text-accent no-underline transition-opacity duration-150 hover:opacity-75"
+				class="rounded-pill border-accent text-accent flex w-full cursor-pointer items-center justify-center gap-2 border-[1.5px] bg-transparent px-4 py-3 text-center font-sans text-[0.9rem] font-semibold no-underline transition-opacity duration-150 hover:opacity-75"
 			>
 				Edit recipe
 			</a>

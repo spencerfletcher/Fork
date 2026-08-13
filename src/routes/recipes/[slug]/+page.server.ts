@@ -103,7 +103,8 @@ export const actions: Actions = {
 		});
 
 		if (!source) throw error(404, 'Source recipe not found');
-		if (!source.isPublic && source.authorId !== user.id) throw error(404, 'Source recipe not found');
+		if (!source.isPublic && source.authorId !== user.id)
+			throw error(404, 'Source recipe not found');
 
 		const latestVersion = source.versions[0];
 		if (!latestVersion) throw error(400, 'Source recipe has no versions');

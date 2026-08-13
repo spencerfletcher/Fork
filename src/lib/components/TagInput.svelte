@@ -70,7 +70,7 @@
 		<div class="flex flex-wrap gap-2">
 			{#each selected as tag (tag)}
 				<span
-					class="inline-flex items-center gap-1 rounded-full bg-accent-pale px-3 py-[2px] text-[0.8rem] font-medium text-accent"
+					class="bg-accent-pale text-accent inline-flex items-center gap-1 rounded-full px-3 py-[2px] text-[0.8rem] font-medium"
 				>
 					{tag}
 					<button
@@ -107,21 +107,30 @@
 
 		{#if showDropdown}
 			<ul
-				class="absolute left-0 right-0 top-[calc(100%+4px)] z-50 m-0 max-h-[240px] list-none overflow-y-auto rounded-lg border border-border bg-surface p-0 py-1 shadow-raised"
+				class="border-border bg-surface shadow-raised absolute top-[calc(100%+4px)] right-0 left-0 z-50 m-0 max-h-[240px] list-none overflow-y-auto rounded-lg border p-0 py-1"
 				role="listbox"
 				id="tag-listbox"
 			>
 				{#each suggestions as tag (tag.id)}
-					<li class="border-b border-border [&:last-child]:border-b-0" role="option" aria-selected="false">
+					<li
+						class="border-border border-b [&:last-child]:border-b-0"
+						role="option"
+						aria-selected="false"
+					>
 						<button
 							type="button"
-							class="flex w-full cursor-pointer items-center gap-3 rounded-none border-none bg-transparent px-4 py-3 text-left text-[0.9rem] text-text hover:bg-surface-2"
+							class="text-text hover:bg-surface-2 flex w-full cursor-pointer items-center gap-3 rounded-none border-none bg-transparent px-4 py-3 text-left text-[0.9rem]"
 							onmousedown={(e) => {
 								e.preventDefault();
 								pick(tag.name);
 							}}
 						>
-							<svg class="size-4 shrink-0 text-text-3" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+							<svg
+								class="text-text-3 size-4 shrink-0"
+								viewBox="0 0 16 16"
+								fill="none"
+								aria-hidden="true"
+							>
 								<path
 									d="M2 2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 0 1.414l-4.586 4.586a1 1 0 0 1-1.414 0L2.293 8.293A1 1 0 0 1 2 7.586V2Z"
 									stroke="currentColor"
@@ -136,16 +145,21 @@
 				{/each}
 
 				{#if canCreate}
-					<li class="border-t border-border" role="option" aria-selected="false">
+					<li class="border-border border-t" role="option" aria-selected="false">
 						<button
 							type="button"
-							class="flex w-full cursor-pointer items-center gap-3 rounded-none border-none bg-transparent px-4 py-3 text-left text-[0.9rem] text-accent hover:bg-surface-2"
+							class="text-accent hover:bg-surface-2 flex w-full cursor-pointer items-center gap-3 rounded-none border-none bg-transparent px-4 py-3 text-left text-[0.9rem]"
 							onmousedown={(e) => {
 								e.preventDefault();
 								pick(query.trim());
 							}}
 						>
-							<svg class="size-4 shrink-0 text-accent" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+							<svg
+								class="text-accent size-4 shrink-0"
+								viewBox="0 0 16 16"
+								fill="none"
+								aria-hidden="true"
+							>
 								<path
 									d="M8 3v10M3 8h10"
 									stroke="currentColor"

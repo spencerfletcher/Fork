@@ -35,7 +35,7 @@
 		<!-- ─── Form 1: Recipe info (metadata) ──────────────────────────── -->
 		<section class="mb-6">
 			<h3>Recipe info</h3>
-			<p class="mb-5 mt-1 text-sm text-text-3">
+			<p class="text-text-3 mt-1 mb-5 text-sm">
 				Updates the recipe directly. No version snapshot created.
 			</p>
 
@@ -123,7 +123,7 @@
 		<!-- ─── Form 2: Recipe content (version bump) ────────────────────── -->
 		<section class="mb-6">
 			<h3>Recipe content</h3>
-			<p class="mb-5 mt-1 text-sm text-text-3">
+			<p class="text-text-3 mt-1 mb-5 text-sm">
 				Creates a new version snapshot. Describe what changed.
 			</p>
 

@@ -70,7 +70,9 @@ describe('diffIngredients', () => {
 		expect(result).toHaveLength(1);
 		expect(result[0].status).toBe('modified');
 		if (result[0].status === 'modified') {
-			expect(result[0].segments.some((s) => s.type === 'removed' && s.text.includes('1'))).toBe(true);
+			expect(result[0].segments.some((s) => s.type === 'removed' && s.text.includes('1'))).toBe(
+				true
+			);
 			expect(result[0].segments.some((s) => s.type === 'added' && s.text.includes('2'))).toBe(true);
 		}
 	});
@@ -82,8 +84,12 @@ describe('diffIngredients', () => {
 		expect(result).toHaveLength(1);
 		expect(result[0].status).toBe('modified');
 		if (result[0].status === 'modified') {
-			expect(result[0].segments.some((s) => s.type === 'removed' && s.text.includes('cup'))).toBe(true);
-			expect(result[0].segments.some((s) => s.type === 'added' && s.text.includes('tbsp'))).toBe(true);
+			expect(result[0].segments.some((s) => s.type === 'removed' && s.text.includes('cup'))).toBe(
+				true
+			);
+			expect(result[0].segments.some((s) => s.type === 'added' && s.text.includes('tbsp'))).toBe(
+				true
+			);
 		}
 	});
 
@@ -111,8 +117,9 @@ describe('diffIngredients', () => {
 		const to = [ing('b'), ing('a'), ing('c')];
 		const result = diffIngredients(from, to);
 		const outputNames = result
-			.filter((r): r is { status: 'unchanged' | 'added'; ingredient: Ingredient } =>
-				r.status === 'unchanged' || r.status === 'added'
+			.filter(
+				(r): r is { status: 'unchanged' | 'added'; ingredient: Ingredient } =>
+					r.status === 'unchanged' || r.status === 'added'
 			)
 			.map((r) => r.ingredient.name);
 		expect(outputNames).toEqual(['b', 'a', 'c']);
@@ -155,8 +162,12 @@ describe('diffSteps', () => {
 		expect(result[0].status).toBe('modified');
 		if (result[0].status === 'modified') {
 			expect(result[0].stepNumber).toBe(1);
-			expect(result[0].segments.some((s) => s.type === 'removed' && s.text.includes('350'))).toBe(true);
-			expect(result[0].segments.some((s) => s.type === 'added' && s.text.includes('375'))).toBe(true);
+			expect(result[0].segments.some((s) => s.type === 'removed' && s.text.includes('350'))).toBe(
+				true
+			);
+			expect(result[0].segments.some((s) => s.type === 'added' && s.text.includes('375'))).toBe(
+				true
+			);
 		}
 	});
 

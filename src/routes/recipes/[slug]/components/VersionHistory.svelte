@@ -42,13 +42,13 @@
 </script>
 
 {#if allVersions.length > 0}
-	<div class="rounded-lg border border-border-2 bg-surface p-5">
+	<div class="border-border-2 bg-surface rounded-lg border p-5">
 		<h4 class="eyebrow-label m-0 mb-4">Version History</h4>
 		<div class="flex flex-col">
 			{#each visibleVersions as version (version.id)}
 				{@const isCurrent = version.versionNumber === currentVersion?.versionNumber}
 				<div
-					class="group flex cursor-pointer gap-3 items-start border-b border-border py-3 transition-opacity duration-150 [&:last-child]:border-b-0 [&:last-child]:pb-0 hover:opacity-80"
+					class="group border-border flex cursor-pointer items-start gap-3 border-b py-3 transition-opacity duration-150 hover:opacity-80 [&:last-child]:border-b-0 [&:last-child]:pb-0"
 					role="link"
 					tabindex="0"
 					onclick={() => goto(`/recipes/${recipeSlug}?version=${version.versionNumber}`)}
@@ -62,20 +62,20 @@
 					></span>
 					<div class="flex min-w-0 flex-col gap-[2px] font-mono">
 						<span
-							class="overflow-hidden text-ellipsis whitespace-nowrap text-[0.8rem] font-medium transition-colors duration-150 group-hover:text-accent"
+							class="group-hover:text-accent overflow-hidden text-[0.8rem] font-medium text-ellipsis whitespace-nowrap transition-colors duration-150"
 							class:text-accent={isCurrent}
 							class:text-text={!isCurrent}
 						>
 							v{version.versionNumber} — {version.commitMessage}
 						</span>
-						<span class="text-[0.72rem] text-text-3">
+						<span class="text-text-3 text-[0.72rem]">
 							@{version.creator?.username ?? 'unknown'} · {formatRelativeTime(version.createdAt)}
 						</span>
 						{#if version.versionNumber > 1 && !isViewingHistory}
 							<a
 								href="/recipes/{recipeSlug}/diff?from={version.versionNumber -
 									1}&to={version.versionNumber}"
-								class="mt-[2px] inline-block text-[0.7rem] text-text-3 no-underline hover:text-accent"
+								class="text-text-3 hover:text-accent mt-[2px] inline-block text-[0.7rem] no-underline"
 								onclick={(e) => e.stopPropagation()}
 							>
 								Compare ↗
@@ -87,7 +87,7 @@
 		</div>
 		{#if allVersions.length > VERSIONS_SHOWN}
 			<button
-				class="mt-3 w-full cursor-pointer border-none bg-transparent py-2 text-left font-sans text-[0.78rem] text-text-3 transition-colors duration-150 hover:text-accent"
+				class="text-text-3 hover:text-accent mt-3 w-full cursor-pointer border-none bg-transparent py-2 text-left font-sans text-[0.78rem] transition-colors duration-150"
 				onclick={() => (showAllVersions = !showAllVersions)}
 			>
 				{showAllVersions

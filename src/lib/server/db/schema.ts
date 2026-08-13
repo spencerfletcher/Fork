@@ -31,32 +31,34 @@ export const profiles = pgTable('profiles', {
 
 // ─── Recipes ─────────────────────────────────────────────────────────────────
 
-export const recipes = pgTable('recipes', {
-	id: serial().primaryKey(),
-	authorId: text('author_id').references(() => profiles.id, { onDelete: 'set null' }),
-	slug: text().notNull().unique(),
-	// Metadata (edited directly, not versioned)
-	title: text().notNull(),
-	description: text(),
-	imageUrl: text('image_url'),
-	servings: integer(),
-	prepTimeMinutes: integer('prep_time_minutes'),
-	cookTimeMinutes: integer('cook_time_minutes'),
-	// Fork lineage
-	parentId: integer('parent_id'), // self-referential FK added below via relations
-	forkedAt: timestamp('forked_at'),
-	// Visibility
-	isPublic: boolean('is_public').notNull().default(true),
-	createdAt: timestamp('created_at').defaultNow(),
-	updatedAt: timestamp('updated_at').defaultNow(),
-	// Full-text search vector: title (weight A) + description (weight B)
-	// Generated automatically by Postgres — never set manually
-	fts: tsvector('fts').generatedAlwaysAs(
-		sql`setweight(to_tsvector('english', coalesce(title, '')), 'A') || setweight(to_tsvector('english', coalesce(description, '')), 'B')`
-	)
-}, (table) => [
-	index('recipes_fts_idx').using('gin', table.fts)
-]);
+export const recipes = pgTable(
+	'recipes',
+	{
+		id: serial().primaryKey(),
+		authorId: text('author_id').references(() => profiles.id, { onDelete: 'set null' }),
+		slug: text().notNull().unique(),
+		// Metadata (edited directly, not versioned)
+		title: text().notNull(),
+		description: text(),
+		imageUrl: text('image_url'),
+		servings: integer(),
+		prepTimeMinutes: integer('prep_time_minutes'),
+		cookTimeMinutes: integer('cook_time_minutes'),
+		// Fork lineage
+		parentId: integer('parent_id'), // self-referential FK added below via relations
+		forkedAt: timestamp('forked_at'),
+		// Visibility
+		isPublic: boolean('is_public').notNull().default(true),
+		createdAt: timestamp('created_at').defaultNow(),
+		updatedAt: timestamp('updated_at').defaultNow(),
+		// Full-text search vector: title (weight A) + description (weight B)
+		// Generated automatically by Postgres — never set manually
+		fts: tsvector('fts').generatedAlwaysAs(
+			sql`setweight(to_tsvector('english', coalesce(title, '')), 'A') || setweight(to_tsvector('english', coalesce(description, '')), 'B')`
+		)
+	},
+	(table) => [index('recipes_fts_idx').using('gin', table.fts)]
+);
 
 // ─── Tags ─────────────────────────────────────────────────────────────────────
 

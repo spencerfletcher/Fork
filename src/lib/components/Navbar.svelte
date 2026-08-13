@@ -18,24 +18,20 @@
 	}
 </script>
 
-<nav class="relative z-50 bg-navbar-bg px-5">
+<nav class="bg-navbar-bg relative z-50 px-5">
 	<div class="mx-auto flex h-[60px] max-w-[1200px] items-center justify-between">
 		<!-- Logo + nav links -->
 		<div class="flex items-center gap-6">
 			<a
 				href="/"
-				class="font-serif text-[1.65rem] font-bold tracking-[-0.01em] text-text-cream no-underline transition-opacity hover:text-text-cream hover:opacity-90"
+				class="text-text-cream hover:text-text-cream font-serif text-[1.65rem] font-bold tracking-[-0.01em] no-underline transition-opacity hover:opacity-90"
 				onclick={closeMenu}
 			>
 				{m.app_title()}<span class="text-accent">.</span>
 			</a>
 			<ul class="navbar-links m-0 hidden list-none gap-6 p-0 md:flex">
 				<li>
-					<a
-						href="/search"
-						class="navbar-link"
-						class:active={$page.url.pathname === '/search'}
-					>
+					<a href="/search" class="navbar-link" class:active={$page.url.pathname === '/search'}>
 						Search
 					</a>
 				</li>
@@ -70,7 +66,7 @@
 					{#if profile}
 						<a
 							href="/users/{profile.username}"
-							class="font-mono text-[0.8rem] text-text-tan no-underline transition-colors hover:text-accent"
+							class="text-text-tan hover:text-accent font-mono text-[0.8rem] no-underline transition-colors"
 						>
 							@{profile.username}
 						</a>
@@ -84,7 +80,7 @@
 				{/if}
 				<a
 					href="/recipes/new"
-					class="whitespace-nowrap rounded-pill bg-accent px-4 py-[7px] font-sans text-[0.85rem] font-semibold text-hero-bg no-underline transition-opacity hover:text-hero-bg hover:opacity-88"
+					class="rounded-pill bg-accent text-hero-bg hover:text-hero-bg px-4 py-[7px] font-sans text-[0.85rem] font-semibold whitespace-nowrap no-underline transition-opacity hover:opacity-88"
 					class:opacity-75={$page.url.pathname === '/recipes/new'}
 				>
 					+ {m.navbar_new()}
@@ -94,7 +90,7 @@
 			<button
 				type="button"
 				onclick={toggleMenu}
-				class="flex items-center justify-center rounded-sm border-none bg-transparent p-2 text-text-tan transition-colors hover:text-text-cream md:hidden"
+				class="text-text-tan hover:text-text-cream flex items-center justify-center rounded-sm border-none bg-transparent p-2 transition-colors md:hidden"
 				aria-controls="mobile-menu"
 				aria-expanded={isMenuOpen}
 			>
@@ -131,13 +127,9 @@
 	</div>
 
 	{#if isMenuOpen}
+		<div class="fixed inset-0 bg-black/50" onclick={closeMenu} aria-hidden="true"></div>
 		<div
-			class="fixed inset-0 bg-black/50"
-			onclick={closeMenu}
-			aria-hidden="true"
-		></div>
-		<div
-			class="absolute left-0 right-0 top-full z-[100] border-b border-white/[0.08] bg-navbar-bg"
+			class="bg-navbar-bg absolute top-full right-0 left-0 z-[100] border-b border-white/[0.08]"
 			id="mobile-menu"
 		>
 			<ul class="m-0 list-none p-2">
@@ -154,7 +146,7 @@
 			</ul>
 			<div class="border-t border-white/[0.08] px-2 py-4">
 				{#if user}
-					<p class="m-0 px-4 py-3 text-[0.8rem] text-text-bronze">{user.email}</p>
+					<p class="text-text-bronze m-0 px-4 py-3 text-[0.8rem]">{user.email}</p>
 					<form
 						action="/logout"
 						method="POST"
@@ -165,10 +157,7 @@
 							};
 						}}
 					>
-						<button
-							type="submit"
-							class="mobile-link w-full border-none bg-transparent text-left"
-						>
+						<button type="submit" class="mobile-link w-full border-none bg-transparent text-left">
 							Logout
 						</button>
 					</form>

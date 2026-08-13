@@ -12,7 +12,7 @@
 			<p class="page-subtitle">Recipes worth forking.</p>
 		</div>
 
-		<hr class="mb-5 border-0 border-t border-border" />
+		<hr class="border-border mb-5 border-0 border-t" />
 
 		{#if data.recipes.length > 0}
 			<div class="recipe-grid">
@@ -21,7 +21,7 @@
 				{/each}
 			</div>
 		{:else}
-			<p class="py-8 text-center text-text-3">
+			<p class="text-text-3 py-8 text-center">
 				No recipes yet. <a href="/recipes/new">Create the first one →</a>
 			</p>
 		{/if}

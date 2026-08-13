@@ -21,7 +21,7 @@
 				</div>
 			{:else}
 				<div class="flex flex-col items-center gap-5 py-8 text-center">
-					<p class="text-[1.1rem] text-text-2">You have no recipes yet.</p>
+					<p class="text-text-2 text-[1.1rem]">You have no recipes yet.</p>
 					<a href="/recipes/new" class="btn-primary">Create your first recipe</a>
 				</div>
 			{/if}

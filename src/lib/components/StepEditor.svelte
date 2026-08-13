@@ -66,7 +66,7 @@
 					></textarea>
 					{#if annotations}
 						{#if step.annotation}
-							<div class="flex flex-col gap-2 rounded-md bg-accent-pale p-3">
+							<div class="bg-accent-pale flex flex-col gap-2 rounded-md p-3">
 								<select
 									bind:value={step.annotation.type}
 									class="w-auto text-[0.8rem]"
@@ -85,7 +85,7 @@
 								<button
 									type="button"
 									onclick={() => removeAnnotation(i)}
-									class="w-auto self-start border-none bg-transparent p-0 text-[0.75rem] text-remove underline"
+									class="text-remove w-auto self-start border-none bg-transparent p-0 text-[0.75rem] underline"
 								>
 									Remove note
 								</button>
@@ -94,18 +94,15 @@
 							<button
 								type="button"
 								onclick={() => addAnnotation(i)}
-								class="w-auto cursor-pointer self-start rounded-sm border border-dashed border-border-2 bg-transparent px-[10px] py-[3px] text-[0.8rem] text-text-3 hover:border-accent hover:text-accent"
+								class="border-border-2 text-text-3 hover:border-accent hover:text-accent w-auto cursor-pointer self-start rounded-sm border border-dashed bg-transparent px-[10px] py-[3px] text-[0.8rem]"
 							>
 								+ Add note
 							</button>
 						{/if}
 					{/if}
 				</div>
-				<button
-					type="button"
-					onclick={() => remove(i)}
-					class="remove-btn"
-					aria-label="Remove step">×</button
+				<button type="button" onclick={() => remove(i)} class="remove-btn" aria-label="Remove step"
+					>×</button
 				>
 			</div>
 		{/each}

@@ -19,7 +19,7 @@
 				{/each}
 			</div>
 		{:else}
-			<p class="py-8 text-center text-text-3">
+			<p class="text-text-3 py-8 text-center">
 				No recipes with this tag yet. <a href="/">Explore all →</a>
 			</p>
 		{/if}

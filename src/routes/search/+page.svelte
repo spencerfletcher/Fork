@@ -20,11 +20,11 @@
 		/>
 
 		{#if data.recipes.length === 0 && (data.searchQuery || data.selectedTags.length > 0)}
-			<p class="mt-5 py-8 text-center text-text-3">
+			<p class="text-text-3 mt-5 py-8 text-center">
 				No recipes found. Try adjusting your search or clearing some filters.
 			</p>
 		{:else if data.recipes.length === 0}
-			<p class="mt-5 py-8 text-center text-text-3">
+			<p class="text-text-3 mt-5 py-8 text-center">
 				Enter a recipe name or select tags to find recipes.
 			</p>
 		{:else}

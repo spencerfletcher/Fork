@@ -65,11 +65,11 @@
 			<div class="field">
 				<label for="image">Photo</label>
 				{#if imagePreview}
-					<div class="relative w-full overflow-hidden rounded-md border border-border">
+					<div class="border-border relative w-full overflow-hidden rounded-md border">
 						<img src={imagePreview} alt="Preview" class="block h-[220px] w-full object-cover" />
 						<button
 							type="button"
-							class="absolute right-2 top-2 flex size-7 items-center justify-center rounded-full border-none bg-black/55 text-[1.1rem] leading-none text-white"
+							class="absolute top-2 right-2 flex size-7 items-center justify-center rounded-full border-none bg-black/55 text-[1.1rem] leading-none text-white"
 							onclick={() => {
 								imagePreview = null;
 								(document.getElementById('image') as HTMLInputElement).value = '';
@@ -83,7 +83,7 @@
 					name="image"
 					type="file"
 					accept="image/jpeg,image/png,image/webp,image/gif"
-					class="cursor-pointer rounded-md border border-dashed border-border bg-surface-2 p-2 text-sm hover:border-accent"
+					class="border-border bg-surface-2 hover:border-accent cursor-pointer rounded-md border border-dashed p-2 text-sm"
 					onchange={onImageChange}
 				/>
 			</div>

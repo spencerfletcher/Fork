@@ -19,7 +19,7 @@ export type StepDiffRow =
 export function diffInline(a: string, b: string): InlineSegment[] {
 	return diffWords(a, b).map((part) => ({
 		type: part.added ? 'added' : part.removed ? 'removed' : 'unchanged',
-		text: part.value,
+		text: part.value
 	}));
 }
 
@@ -96,7 +96,7 @@ export function diffSteps(from: Step[], to: Step[]): StepDiffRow[] {
 				result.push({
 					status: 'modified',
 					stepNumber: toStep.step,
-					segments: diffInline(fromStep.text, toStep.text),
+					segments: diffInline(fromStep.text, toStep.text)
 				});
 			}
 		}

@@ -40,10 +40,10 @@
 </script>
 
 <section class="mb-3">
-	<div class="mb-1 flex items-center justify-between border-t-2 border-text pt-3">
+	<div class="border-text mb-1 flex items-center justify-between border-t-2 pt-3">
 		<h4 class="eyebrow-label">Ingredients</h4>
 		<button
-			class="rounded-pill border border-border-2 bg-transparent px-3 py-1 font-mono text-[0.8rem] font-semibold text-text-3 transition-[color,border-color] duration-150 hover:border-accent hover:text-accent disabled:opacity-50"
+			class="rounded-pill border-border-2 text-text-3 hover:border-accent hover:text-accent border bg-transparent px-3 py-1 font-mono text-[0.8rem] font-semibold transition-[color,border-color] duration-150 disabled:opacity-50"
 			onclick={toggleGrams}
 			disabled={gramsLoading}
 		>
@@ -53,7 +53,7 @@
 	<div class="m-0 p-0" role="list">
 		{#each currentVersion.ingredients as ingredient, i (ingredient.name)}
 			<div
-				class="cursor-pointer select-none border-b border-border py-2 text-base text-text [&:last-child]:border-b-0"
+				class="border-border text-text cursor-pointer border-b py-2 text-base select-none [&:last-child]:border-b-0"
 				class:opacity-40={crossedIngredients.has(ingredient.name)}
 				class:line-through={crossedIngredients.has(ingredient.name)}
 				onclick={() => toggleIngredient(ingredient.name)}
@@ -62,7 +62,7 @@
 				tabindex="0"
 				onkeydown={(e) => e.key === ' ' && toggleIngredient(ingredient.name)}
 			>
-				<span class="font-medium text-sienna">
+				<span class="text-sienna font-medium">
 					{#if showGrams && gramCache}
 						{gramCache[i] !== null
 							? `${Math.round(gramCache[i]!)}g`
