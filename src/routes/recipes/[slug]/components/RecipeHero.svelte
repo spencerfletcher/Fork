@@ -47,7 +47,7 @@
 				</a>
 				<span class="opacity-50">/</span>
 			{/if}
-			<span class="text-accent">{recipe.title}</span>
+			<span class="text-text-tan">{recipe.title}</span>
 		</nav>
 
 		<!-- Title + version -->

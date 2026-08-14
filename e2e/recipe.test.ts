@@ -259,6 +259,19 @@ test.describe('Recipe detail page', () => {
 		const time = page.getByText(/^\d+\s*(min|h)/).first();
 		const timeBg = await time.evaluate((el) => getComputedStyle(el).backgroundColor);
 		expect(['rgba(0, 0, 0, 0)', 'transparent']).toContain(timeBg);
+
+		// Amber text is a fill too, just on glyphs instead of a background —
+		// the rule is "amber means action or version identity", so the same
+		// audit has to catch a color:accent breadcrumb as much as a bg:accent one.
+		// Measured directly on the classic (non-fork) recipe: only the "v2"
+		// version badge (span.text-accent, "v2") is amber text. The breadcrumb
+		// title used to also be text-accent and has been demoted to quiet text.
+		const coloredText = await hero.evaluate(
+			(el, a) =>
+				[...el.querySelectorAll('*')].filter((n) => getComputedStyle(n).color === a).length,
+			accent
+		);
+		expect(coloredText).toBe(1);
 	});
 
 	test('the forked badge reads as an outline, not a fill', async ({ page }) => {
