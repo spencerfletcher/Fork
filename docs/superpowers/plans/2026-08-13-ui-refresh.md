@@ -23,6 +23,19 @@
 - Amber (`--color-accent`) means **action or version identity**. Nothing else may use it.
 - **Visual tasks assert absolutes, not just relative positions.** "A above B" holds true in many broken layouts. Any task that changes layout or colour must also assert that the page fits its viewport (`scrollWidth <= clientWidth`) at 390px, and that colour changes leave text readable. Six regressions in Task 1 passed every relative-position test that existed at the time.
 - Run e2e by file, never by `-g` name filter. Test names change during implementation, and a stale filter matches nothing and passes vacuously.
+- **Never hardcode a recipe slug in an e2e test.** `seed.ts` builds slugs as `` `classic-chocolate-chip-cookies-${nanoid(6)}` ``, so the suffix differs on every seed run and in CI. A hardcoded slug 404s there, every locator times out, and the failure looks like a layout bug rather than a bad URL. Navigate from the feed instead, via the helper at the top of `e2e/recipe.test.ts`:
+
+```ts
+/** Slugs carry a random nanoid suffix, so reach the recipe by name, not URL. */
+async function gotoClassicCookies(page: Page) {
+	await page.goto('/');
+	await page
+		.getByRole('link', { name: /classic chocolate chip cookies/i })
+		.first()
+		.click();
+	await page.waitForURL(/\/recipes\//);
+}
+```
 
 ---
 
@@ -47,7 +60,7 @@ Add to `e2e/recipe.test.ts` inside the `Recipe detail page` describe block:
 ```ts
 test('on mobile, ingredients come before the details box', async ({ page }) => {
 	await page.setViewportSize({ width: 390, height: 900 });
-	await page.goto('/recipes/classic-chocolate-chip-cookies-0bNW21');
+	await gotoClassicCookies(page);
 
 	// Compare document order of the two section headings.
 	const order = await page.evaluate(() => {
@@ -596,7 +609,7 @@ Add to `e2e/recipe.test.ts`:
 
 ```ts
 test('tags stay readable on both the card and the hero surfaces', async ({ page }) => {
-	await page.goto('/recipes/classic-chocolate-chip-cookies-0bNW21');
+	await gotoClassicCookies(page);
 
 	// Relative luminance per WCAG, from a computed rgb() string.
 	const contrast = (fg: string, bg: string) => {
@@ -730,7 +743,7 @@ Expected: success. Tailwind fails loudly on an unknown utility, so a surviving `
 
 ```ts
 test('the hero demotes metadata and keeps one accent element', async ({ page }) => {
-	await page.goto('/recipes/classic-chocolate-chip-cookies-0bNW21');
+	await gotoClassicCookies(page);
 	const hero = page.locator('header').first();
 	await hero.waitFor();
 
@@ -1264,7 +1277,7 @@ A horizontally scrolling row of `flex-shrink: 0` items is a classic source of pa
 ```ts
 test('the version strip scrolls without widening the page', async ({ page }) => {
 	await page.setViewportSize({ width: 390, height: 900 });
-	await page.goto('/recipes/classic-chocolate-chip-cookies-0bNW21');
+	await gotoClassicCookies(page);
 
 	const strip = page.locator('.version-strip');
 	await strip.waitFor();
