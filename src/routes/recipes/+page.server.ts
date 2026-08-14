@@ -1,6 +1,7 @@
 import { db } from '$lib/server/db';
 import { recipes } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
+import { attachRecipeCounts } from '$lib/server/recipeCounts';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals: { user } }) => {
@@ -17,5 +18,7 @@ export const load: PageServerLoad = async ({ locals: { user } }) => {
 		orderBy: (r, { desc }) => [desc(r.updatedAt)]
 	});
 
-	return { recipes: userRecipes };
+	const withCounts = await attachRecipeCounts(userRecipes);
+
+	return { recipes: withCounts };
 };

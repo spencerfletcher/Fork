@@ -2,6 +2,7 @@ import { error } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { eq, and, inArray } from 'drizzle-orm';
 import { tags, recipes, recipesToTags } from '$lib/server/db/schema';
+import { attachRecipeCounts } from '$lib/server/recipeCounts';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params }) => {
@@ -33,5 +34,7 @@ export const load: PageServerLoad = async ({ params }) => {
 		}
 	});
 
-	return { tag, recipes: recipesData };
+	const withCounts = await attachRecipeCounts(recipesData);
+
+	return { tag, recipes: withCounts };
 };

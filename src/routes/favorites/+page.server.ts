@@ -2,6 +2,7 @@ import { redirect } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { recipes, favorites, tags, recipesToTags } from '$lib/server/db/schema';
 import { eq, and, ilike, inArray } from 'drizzle-orm';
+import { attachRecipeCounts } from '$lib/server/recipeCounts';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ url, locals: { user } }) => {
@@ -84,9 +85,10 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 			recipesWithMatchCount.sort((a, b) => b.matchCount - a.matchCount);
 
 			const allTags = await db.select().from(tags);
+			const withCounts = await attachRecipeCounts(recipesWithMatchCount);
 
 			return {
-				favoriteRecipes: recipesWithMatchCount,
+				favoriteRecipes: withCounts,
 				allTags,
 				searchQuery,
 				selectedTags: tagSlugs
@@ -114,9 +116,10 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 	});
 
 	const allTags = await db.select().from(tags);
+	const withCounts = await attachRecipeCounts(filteredRecipes);
 
 	return {
-		favoriteRecipes: filteredRecipes,
+		favoriteRecipes: withCounts,
 		allTags,
 		searchQuery,
 		selectedTags: tagSlugs

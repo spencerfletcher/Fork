@@ -11,6 +11,16 @@ test.describe('Search results', () => {
 		expect(await card.locator('.tag').count()).toBeGreaterThan(0);
 	});
 
+	test('cards carry a version badge, like the feed', async ({ page }) => {
+		await page.goto('/search?q=cookies');
+		const card = page.locator('div.recipe-card').first();
+		await card.waitFor();
+
+		// versionCount/forkCount used to be attached only on "/" — search cards
+		// rendered without the "v{n}" badge even though every recipe has a version.
+		await expect(card.getByText(/^v\d+$/)).toBeVisible();
+	});
+
 	test('tags that match no recipe are not offered as filters', async ({ page }) => {
 		await page.goto('/search');
 		// "Filter by tag" sits in its own row; the tag buttons are a sibling row

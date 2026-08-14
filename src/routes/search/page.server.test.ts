@@ -60,7 +60,9 @@ describe('search load', () => {
 		selectDistinctMock.mockReturnValue(chain([])); // tags for the filter UI
 		selectMock
 			.mockReturnValueOnce(chain([{ id: 2 }, { id: 1 }])) // pass 1: ranked FTS hits
-			.mockReturnValueOnce(chain([])); // pass 2: no ingredient-only matches
+			.mockReturnValueOnce(chain([])) // pass 2: no ingredient-only matches
+			.mockReturnValueOnce(chain([])) // attachRecipeCounts: version counts
+			.mockReturnValueOnce(chain([])); // attachRecipeCounts: fork counts
 		findManyMock.mockResolvedValue([
 			{ id: 1, title: 'One', author: { id: 'u1', username: 'a' }, recipesToTags: [] },
 			{ id: 2, title: 'Two', author: { id: 'u1', username: 'a' }, recipesToTags: [] }
@@ -89,7 +91,9 @@ describe('search load', () => {
 		selectDistinctMock.mockReturnValue(chain([])); // tags for the filter UI
 		selectMock
 			.mockReturnValueOnce(chain([{ id: 2 }, { id: 1 }])) // pass 1: ranked FTS hits
-			.mockReturnValueOnce(chain([])); // pass 2: no ingredient-only matches
+			.mockReturnValueOnce(chain([])) // pass 2: no ingredient-only matches
+			.mockReturnValueOnce(chain([])) // attachRecipeCounts: version counts
+			.mockReturnValueOnce(chain([])); // attachRecipeCounts: fork counts
 		findManyMock.mockResolvedValue([
 			{ id: 1, title: 'One', author: null, recipesToTags: [] },
 			{ id: 2, title: 'Two', author: null, recipesToTags: [] }
@@ -104,7 +108,9 @@ describe('search load', () => {
 		selectDistinctMock.mockReturnValue(chain([])); // tags for the filter UI
 		selectMock
 			.mockReturnValueOnce(chain([{ id: 1 }])) // pass 1: ranked FTS hits
-			.mockReturnValueOnce(chain([])); // pass 2: no ingredient-only matches
+			.mockReturnValueOnce(chain([])) // pass 2: no ingredient-only matches
+			.mockReturnValueOnce(chain([])) // attachRecipeCounts: version counts
+			.mockReturnValueOnce(chain([])); // attachRecipeCounts: fork counts
 		findManyMock.mockResolvedValue([{ id: 1, author: null, recipesToTags: [] }]);
 
 		await loadResult(makeEvent('cookie'));

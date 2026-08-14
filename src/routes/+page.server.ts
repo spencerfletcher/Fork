@@ -1,7 +1,8 @@
 import { db } from '$lib/server/db';
 import { recipes, recipeVersions } from '$lib/server/db/schema';
-import { and, count, desc, eq, inArray, isNotNull } from 'drizzle-orm';
+import { desc, eq } from 'drizzle-orm';
 import { diffIngredients, diffSteps } from '$lib/utils/diff';
+import { attachRecipeCounts } from '$lib/server/recipeCounts';
 import type { PageServerLoad } from './$types';
 
 /**
@@ -21,35 +22,7 @@ export const load: PageServerLoad = async ({ locals: { user } }) => {
 		orderBy: (r, { desc }) => [desc(r.createdAt)]
 	});
 
-	// Two grouped aggregates for the whole page — never one query per card.
-	const displayedIds = displayedRecipes.map((r) => r.id);
-
-	// recipe_versions is append-only — a row per edit, forever — so this aggregate
-	// must never full-scan it. Scoped to the recipes actually being displayed.
-	const versionCounts =
-		displayedIds.length > 0
-			? await db
-					.select({ recipeId: recipeVersions.recipeId, count: count() })
-					.from(recipeVersions)
-					.where(inArray(recipeVersions.recipeId, displayedIds))
-					.groupBy(recipeVersions.recipeId)
-			: [];
-
-	const forkCounts = await db
-		.select({ parentId: recipes.parentId, count: count() })
-		.from(recipes)
-		// Public feed, no auth: a private fork must not inflate a public recipe's count.
-		.where(and(isNotNull(recipes.parentId), eq(recipes.isPublic, true)))
-		.groupBy(recipes.parentId);
-
-	const versionsById = new Map(versionCounts.map((r) => [r.recipeId, Number(r.count)]));
-	const forksById = new Map(forkCounts.map((r) => [r.parentId, Number(r.count)]));
-
-	const withCounts = displayedRecipes.map((r) => ({
-		...r,
-		versionCount: versionsById.get(r.id) ?? 0,
-		forkCount: forksById.get(r.id) ?? 0
-	}));
+	const withCounts = await attachRecipeCounts(displayedRecipes);
 
 	// A real diff from real rows. If no recipe has two versions the section is
 	// omitted rather than fabricated — the landing page must not claim more

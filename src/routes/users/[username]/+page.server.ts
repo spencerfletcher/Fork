@@ -2,6 +2,7 @@ import { db } from '$lib/server/db';
 import { profiles, recipes, recipeVersions } from '$lib/server/db/schema';
 import { and, count, eq } from 'drizzle-orm';
 import { error } from '@sveltejs/kit';
+import { attachRecipeCounts } from '$lib/server/recipeCounts';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params }) => {
@@ -25,9 +26,11 @@ export const load: PageServerLoad = async ({ params }) => {
 			.where(eq(recipeVersions.createdBy, profile.id))
 	]);
 
+	const withCounts = await attachRecipeCounts(publicRecipes);
+
 	return {
 		profile,
-		recipes: publicRecipes,
+		recipes: withCounts,
 		commitCount: commitResult[0]?.commitCount ?? 0
 	};
 };

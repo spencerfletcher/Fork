@@ -1,5 +1,5 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
-import { and, eq, isNotNull } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import { recipes } from '$lib/server/db/schema';
 
 const { findManyMock, selectMock, recipeVersionsFindManyMock } = vi.hoisted(() => ({
@@ -103,7 +103,7 @@ describe('homepage load', () => {
 		// or the wrong literal — not just if `.where` was called at all.
 		const whereMock = forkChain.where as ReturnType<typeof vi.fn>;
 		const whereArg = whereMock.mock.calls[0][0];
-		expect(whereArg).toEqual(and(isNotNull(recipes.parentId), eq(recipes.isPublic, true)));
+		expect(whereArg).toEqual(and(inArray(recipes.parentId, [1]), eq(recipes.isPublic, true)));
 	});
 
 	test('returns feed mode for a logged-in user', async () => {

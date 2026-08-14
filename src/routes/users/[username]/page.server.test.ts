@@ -35,17 +35,29 @@ function makeLoadEvent(username: string) {
 	return { params: { username } } as Parameters<typeof load>[0];
 }
 
+/** Drizzle-compatible chainable mock — thenable, and every chain method returns itself. */
+function chain(resolved: unknown = []) {
+	const p = Promise.resolve(resolved);
+	const c: Record<string, unknown> = {
+		then: p.then.bind(p),
+		catch: p.catch.bind(p),
+		finally: p.finally.bind(p)
+	};
+	for (const m of ['from', 'where', 'groupBy']) {
+		c[m] = vi.fn().mockReturnValue(c);
+	}
+	return c;
+}
+
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
 describe('users/[username] load', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
-		// Default: select returns count 0
-		selectMock.mockReturnValue({
-			from: vi.fn().mockReturnValue({
-				where: vi.fn().mockResolvedValue([{ commitCount: 0 }])
-			})
-		});
+		// Default: commitCount query resolves to 0, and the version/fork count
+		// aggregates (attachRecipeCounts) resolve to empty — same mock shape
+		// serves both since `.groupBy()` is just another link in the chain.
+		selectMock.mockReturnValue(chain([{ commitCount: 0 }]));
 	});
 
 	test('throws 404 when profile is not found', async () => {

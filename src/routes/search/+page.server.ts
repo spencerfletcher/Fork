@@ -1,6 +1,7 @@
 import { db } from '$lib/server/db';
 import { recipes, tags, recipesToTags, recipeVersions } from '$lib/server/db/schema';
 import { eq, and, or, inArray, desc, sql } from 'drizzle-orm';
+import { attachRecipeCounts } from '$lib/server/recipeCounts';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ url, locals: { user } }) => {
@@ -135,5 +136,7 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 	const byId = new Map(rows.map((r) => [r.id, r]));
 	const hydrated = rankedIds.map((id) => byId.get(id)).filter((r) => r !== undefined);
 
-	return { recipes: hydrated, allTags, searchQuery, selectedTags: tagSlugs };
+	const withCounts = await attachRecipeCounts(hydrated);
+
+	return { recipes: withCounts, allTags, searchQuery, selectedTags: tagSlugs };
 };
