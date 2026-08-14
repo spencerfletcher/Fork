@@ -78,10 +78,7 @@
 		<!-- Badges row -->
 		<div class="flex flex-wrap items-center gap-2">
 			{#each tags as tag (tag.id)}
-				<a
-					href="/tags/{tag.slug}"
-					class="rounded-pill bg-accent text-hero-bg px-3 py-1 font-sans text-[0.78rem] font-semibold no-underline transition-opacity duration-150 hover:opacity-85"
-				>
+				<a href="/tags/{tag.slug}" class="tag tag--on-dark no-underline">
 					{tag.name}
 				</a>
 			{/each}

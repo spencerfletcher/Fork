@@ -201,4 +201,41 @@ test.describe('Recipe detail page', () => {
 		expect(detailsBox!.x).toBeGreaterThan(ingredientsBox!.x + ingredientsBox!.width - 1);
 		expect(Math.abs(detailsBox!.y - ingredientsBox!.y)).toBeLessThan(300);
 	});
+
+	test('tags stay readable on both the card and the hero surfaces', async ({ page }) => {
+		await gotoClassicCookies(page);
+
+		// Relative luminance per WCAG, from a computed rgb() string.
+		const contrast = (fg: string, bg: string) => {
+			const lum = (c: string) => {
+				const [r, g, b] = c
+					.match(/\d+(\.\d+)?/g)!
+					.slice(0, 3)
+					.map(Number);
+				const f = (v: number) => {
+					const s = v / 255;
+					return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+				};
+				return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+			};
+			const [a, b] = [lum(fg), lum(bg)].sort((x, y) => y - x);
+			return (a + 0.05) / (b + 0.05);
+		};
+
+		const heroTag = page.locator('header .tag').first();
+		await heroTag.waitFor();
+		const hero = await heroTag.evaluate((el) => {
+			const cs = getComputedStyle(el);
+			// Walk up for the first non-transparent background.
+			let node: HTMLElement | null = el as HTMLElement;
+			let bg = 'rgba(0, 0, 0, 0)';
+			while (node && (bg === 'rgba(0, 0, 0, 0)' || bg === 'transparent')) {
+				bg = getComputedStyle(node).backgroundColor;
+				node = node.parentElement;
+			}
+			return { color: cs.color, bg, borderColor: cs.borderColor };
+		});
+
+		expect(contrast(hero.color, hero.bg)).toBeGreaterThanOrEqual(4.5);
+	});
 });
