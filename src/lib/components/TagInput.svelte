@@ -69,9 +69,7 @@
 	{#if selected.length > 0}
 		<div class="flex flex-wrap gap-2">
 			{#each selected as tag (tag)}
-				<span
-					class="bg-accent-pale text-accent inline-flex items-center gap-1 rounded-full px-3 py-[2px] text-[0.8rem] font-medium"
-				>
+				<span class="tag inline-flex items-center gap-1">
 					{tag}
 					<button
 						type="button"
