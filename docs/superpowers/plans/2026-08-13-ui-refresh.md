@@ -723,14 +723,28 @@ In `RecipeHero.svelte`, replace the time pill block:
 
 It now sits alongside `Serves {recipe.servings}` in the same visual register rather than competing with the tags.
 
-- [ ] **Step 2: Confirm paprika is dead**
+- [ ] **Step 2: Check paprika's remaining consumers**
 
 Run: `grep -rn "paprika" src/`
-Expected: matches only in `src/app.css`. If any component still uses it, stop and reassess — the spec assumed a single consumer.
 
-- [ ] **Step 3: Delete the token**
+This step resolved during implementation: the token has a **second live consumer** —
+`RecipeMethod.svelte:20` maps `warning: 'text-paprika'` for step annotations. An earlier
+draft of this plan claimed the time pill was its only use and told the implementer to delete
+the token; that claim came from a grep that errored out and never searched `src/`. Deleting
+it would have rendered step warning annotations with an undefined colour.
 
-Remove all three `--color-paprika` declarations from `src/app.css`: the `@theme inline` registration, the `:root` value, and the `[data-theme='dark']` override.
+- [ ] **Step 3: Keep the token, fix its comment**
+
+`--color-paprika` stays. It is not the accent, so a semantic warning colour does not violate
+the hierarchy rule. Only its comment is stale — "time / heat tags" no longer describes
+anything, since cook time is no longer a pill and there are no heat tags:
+
+```css
+--color-paprika: #c45a38;
+/* paprika — warning annotations on recipe steps (RecipeMethod) */
+```
+
+Leave the `@theme inline` registration and the `[data-theme='dark']` override untouched.
 
 - [ ] **Step 4: Verify the build still resolves**
 

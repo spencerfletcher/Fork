@@ -66,9 +66,14 @@ registration, the `:root` light value, and the `[data-theme='dark']` override at
 `app.css:183` — and all three must go together, along with its two consumers below. A
 dangling reference renders `transparent` silently.
 
-`--color-paprika` (`#c45a38`) has exactly one consumer: `bg-paprika` on the time pill at
-`RecipeHero.svelte:90`. Removing that pill makes the token dead, so delete it — from the
-registration, the `:root` value, and the `[data-theme='dark']` override at `app.css:181`.
+`--color-paprika` (`#c45a38`) is **kept**. An earlier draft of this spec claimed it had a
+single consumer — `bg-paprika` on the time pill at `RecipeHero.svelte:90` — and should be
+deleted once that pill went. That was wrong: the grep it rested on errored out and never
+searched `src/`. `RecipeMethod.svelte:20` also maps `warning: 'text-paprika'` for step
+annotations, so deleting the token would have rendered those with an undefined colour.
+
+Paprika is not the accent, so a semantic warning colour does not violate the hierarchy rule.
+Only its comment changes, since "time / heat tags" no longer describes anything.
 
 ### Component changes
 
