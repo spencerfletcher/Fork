@@ -39,11 +39,13 @@
 		<aside class="min-w-0">
 			<div class="sidebar-sticky">
 				{#if recipe.imageUrl}
-					<img
-						src={recipe.imageUrl}
-						alt={recipe.title}
-						class="border-border-2 [aspect-ratio:4/3] w-full rounded-lg border object-cover"
-					/>
+					<div class="recipe-photo">
+						<img
+							src={recipe.imageUrl}
+							alt={recipe.title}
+							class="border-border-2 [aspect-ratio:4/3] w-full rounded-lg border object-cover"
+						/>
+					</div>
 				{/if}
 				<Details {recipe} />
 				<RecipeActions
@@ -83,7 +85,16 @@
 			padding: var(--space-5);
 		}
 
-		.content-layout aside {
+		/* Promote the sidebar's children to grid items so the photo can lead on its
+		   own. <aside> follows the main column in the DOM, so everything else falls
+		   into the right order without an explicit rule. Desktop is untouched:
+		   the aside stays a normal sticky block there. */
+		.content-layout > aside,
+		.sidebar-sticky {
+			display: contents;
+		}
+
+		.recipe-photo {
 			order: -1;
 		}
 	}

@@ -85,4 +85,40 @@ test.describe('Recipe detail page', () => {
 		await expect(page).toHaveURL(/\/diff/);
 		await expect(page.locator('h1')).toContainText(/compare/i);
 	});
+
+	test('on mobile, ingredients render above the details box', async ({ page }) => {
+		await page.setViewportSize({ width: 390, height: 900 });
+		await page.goto('/recipes/classic-chocolate-chip-cookies-0bNW21');
+
+		const ingredients = page.getByRole('heading', { name: /ingredients/i }).first();
+		const details = page.getByRole('heading', { name: /details/i }).first();
+		await ingredients.waitFor();
+		await details.waitFor();
+
+		const ingredientsBox = await ingredients.boundingBox();
+		const detailsBox = await details.boundingBox();
+
+		// CSS `order` changes visual position, not DOM position — assert geometry.
+		expect(ingredientsBox).not.toBeNull();
+		expect(detailsBox).not.toBeNull();
+		expect(ingredientsBox!.y).toBeLessThan(detailsBox!.y);
+	});
+
+	test('on desktop, the sidebar sits beside the recipe, not below it', async ({ page }) => {
+		await page.setViewportSize({ width: 1440, height: 1000 });
+		await page.goto('/recipes/classic-chocolate-chip-cookies-0bNW21');
+
+		const ingredients = page.getByRole('heading', { name: /ingredients/i }).first();
+		const details = page.getByRole('heading', { name: /details/i }).first();
+		await ingredients.waitFor();
+		await details.waitFor();
+
+		const ingredientsBox = await ingredients.boundingBox();
+		const detailsBox = await details.boundingBox();
+
+		expect(ingredientsBox).not.toBeNull();
+		expect(detailsBox).not.toBeNull();
+		// Two columns: the sidebar starts to the right of the main column.
+		expect(detailsBox!.x).toBeGreaterThan(ingredientsBox!.x + ingredientsBox!.width - 1);
+	});
 });
