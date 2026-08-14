@@ -41,7 +41,10 @@ describe('search load', () => {
 	});
 
 	test('returns recipes carrying author and tag relations', async () => {
-		selectMock.mockReturnValue(chain([{ id: 2 }, { id: 1 }]));
+		selectMock
+			.mockReturnValueOnce(chain([])) // tags for the filter UI
+			.mockReturnValueOnce(chain([{ id: 2 }, { id: 1 }])) // pass 1: ranked FTS hits
+			.mockReturnValueOnce(chain([])); // pass 2: no ingredient-only matches
 		findManyMock.mockResolvedValue([
 			{ id: 1, title: 'One', author: { id: 'u1', username: 'a' }, recipesToTags: [] },
 			{ id: 2, title: 'Two', author: { id: 'u1', username: 'a' }, recipesToTags: [] }
@@ -58,7 +61,10 @@ describe('search load', () => {
 
 	test('preserves ranked order, not database order', async () => {
 		// Ranking puts 2 before 1; findMany returns them the other way round.
-		selectMock.mockReturnValue(chain([{ id: 2 }, { id: 1 }]));
+		selectMock
+			.mockReturnValueOnce(chain([])) // tags for the filter UI
+			.mockReturnValueOnce(chain([{ id: 2 }, { id: 1 }])) // pass 1: ranked FTS hits
+			.mockReturnValueOnce(chain([])); // pass 2: no ingredient-only matches
 		findManyMock.mockResolvedValue([
 			{ id: 1, title: 'One', author: null, recipesToTags: [] },
 			{ id: 2, title: 'Two', author: null, recipesToTags: [] }
@@ -70,7 +76,10 @@ describe('search load', () => {
 	});
 
 	test('hydrates with a single relational query', async () => {
-		selectMock.mockReturnValue(chain([{ id: 1 }]));
+		selectMock
+			.mockReturnValueOnce(chain([])) // tags for the filter UI
+			.mockReturnValueOnce(chain([{ id: 1 }])) // pass 1: ranked FTS hits
+			.mockReturnValueOnce(chain([])); // pass 2: no ingredient-only matches
 		findManyMock.mockResolvedValue([{ id: 1, author: null, recipesToTags: [] }]);
 
 		await load(makeEvent('cookie'));

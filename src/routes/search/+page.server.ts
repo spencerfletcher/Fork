@@ -112,7 +112,7 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 	// The ranking above works on bare recipe rows. RecipeCard needs author and
 	// tags, so re-fetch the ranked ids with relations and restore the order —
 	// Postgres does not preserve inArray ordering.
-	const rankedIds = [...new Set(results.map((r) => r.id))];
+	const rankedIds = results.map((r) => r.id);
 
 	let hydrated: Awaited<ReturnType<typeof db.query.recipes.findMany>> = [];
 	if (rankedIds.length > 0) {
