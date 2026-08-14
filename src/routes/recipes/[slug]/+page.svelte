@@ -4,8 +4,8 @@
 	import RecipeIngredients from './components/RecipeIngredients.svelte';
 	import RecipeMethod from './components/RecipeMethod.svelte';
 	import RecipeActions from './components/RecipeActions.svelte';
-	import VersionHistory from './components/VersionHistory.svelte';
 	import Details from './components/Details.svelte';
+	import VersionStrip from '$lib/components/VersionStrip.svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -21,6 +21,15 @@
 
 <article class="min-h-screen">
 	<RecipeHero {recipe} {currentVersion} {isViewingHistory} {tags} {totalMinutes} />
+
+	{#if allVersions.length > 0}
+		<VersionStrip
+			versions={allVersions}
+			currentVersionNumber={currentVersion?.versionNumber ?? 0}
+			recipeSlug={recipe.slug}
+			{isViewingHistory}
+		/>
+	{/if}
 
 	<!-- Two-column layout: kept in scoped CSS because of fixed 320px sidebar + responsive reorder -->
 	<div class="content-layout">
@@ -55,12 +64,6 @@
 					{isOwner}
 					{isViewingHistory}
 					initialFavorited={data.isFavorited}
-				/>
-				<VersionHistory
-					{allVersions}
-					{currentVersion}
-					recipeSlug={recipe.slug}
-					{isViewingHistory}
 				/>
 			</div>
 		</aside>
@@ -109,9 +112,9 @@
 
 		/* <aside class="min-w-0"> supplied this before display:contents removed its
 		   box; without it, nowrap content in the sidebar blows out the grid column.
-		   :global() is required because Details/RecipeActions/VersionHistory are
-		   separate components — their root elements don't carry this file's
-		   scoped-CSS hash, so an un-globaled `*` would silently never match them. */
+		   :global() is required because Details/RecipeActions are separate
+		   components — their root elements don't carry this file's scoped-CSS
+		   hash, so an un-globaled `*` would silently never match them. */
 		.sidebar-sticky > :global(*) {
 			min-width: 0;
 		}

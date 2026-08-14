@@ -49,10 +49,9 @@ test.describe('Recipe detail page', () => {
 			.first()
 			.click();
 		await expect(page).toHaveURL(/\/recipes\//);
-		// Version history is in the sidebar — all versions visible without expanding.
-		// Each row is a div with an explicit role="link"; nothing else on the page uses one.
-		const versionRows = page.locator('[role="link"]').filter({ hasText: /v\d+ — / });
-		await expect(versionRows).toHaveCount(2);
+		// Version history is the strip under the hero — all versions visible without expanding.
+		const versionEntries = page.locator('.version-strip .version-entry');
+		await expect(versionEntries).toHaveCount(2);
 	});
 
 	test('"Brown Butter Chocolate Chip Cookies" shows fork attribution', async ({ page }) => {
@@ -272,6 +271,24 @@ test.describe('Recipe detail page', () => {
 			accent
 		);
 		expect(coloredText).toBe(1);
+	});
+
+	test('the version strip scrolls without widening the page', async ({ page }) => {
+		await page.setViewportSize({ width: 390, height: 900 });
+		await gotoClassicCookies(page);
+
+		const strip = page.locator('.version-strip');
+		await strip.waitFor();
+
+		const doc = await page.evaluate(() => ({
+			scrollWidth: document.documentElement.scrollWidth,
+			clientWidth: document.documentElement.clientWidth
+		}));
+		expect(doc.scrollWidth).toBeLessThanOrEqual(doc.clientWidth);
+
+		// The strip itself may scroll; it must not exceed its container.
+		const box = await strip.boundingBox();
+		expect(box!.width).toBeLessThanOrEqual(390);
 	});
 
 	test('the forked badge reads as an outline, not a fill', async ({ page }) => {
