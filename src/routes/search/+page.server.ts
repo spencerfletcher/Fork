@@ -13,7 +13,14 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 		: eq(recipes.isPublic, true);
 
 	// ── Fetch tags up front — always needed for the filter UI ────────────────
-	const allTags = await db.select().from(tags);
+	// Only tags that actually match something; a filter chip that leads to an
+	// empty page is worse than no chip. Tags drop off this list on their own
+	// when their last recipe goes away.
+	const allTags = await db
+		.selectDistinct({ id: tags.id, name: tags.name, slug: tags.slug })
+		.from(tags)
+		.innerJoin(recipesToTags, eq(recipesToTags.tagId, tags.id))
+		.orderBy(tags.name);
 
 	// ── Tag filter: collect matching recipe IDs up front ─────────────────────
 	let tagFilteredIds: number[] | null = null;

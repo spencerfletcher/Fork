@@ -8,6 +8,7 @@ const { selectMock, findManyMock } = vi.hoisted(() => ({
 vi.mock('$lib/server/db', () => ({
 	db: {
 		select: selectMock,
+		selectDistinct: selectMock,
 		query: { recipes: { findMany: findManyMock } }
 	}
 }));
@@ -99,5 +100,19 @@ describe('search load', () => {
 		await loadResult(makeEvent('cookie'));
 
 		expect(findManyMock).toHaveBeenCalledTimes(1);
+	});
+
+	test('offers only tags that have at least one recipe', async () => {
+		// The tag query is the first db.select call; it must join through
+		// recipes_to_tags rather than selecting the whole table.
+		selectMock.mockReturnValue(chain([{ id: 1, name: 'Dessert', slug: 'dessert' }]));
+		findManyMock.mockResolvedValue([]);
+
+		const result = await loadResult(makeEvent(''));
+
+		expect(result.allTags).toEqual([{ id: 1, name: 'Dessert', slug: 'dessert' }]);
+		// A bare select().from(tags) takes no join; the fixed query must.
+		const firstCall = selectMock.mock.results[0].value;
+		expect(firstCall.innerJoin).toHaveBeenCalled();
 	});
 });
