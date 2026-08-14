@@ -4,7 +4,7 @@
 
 <section class="bg-hero-bg text-text-cream">
 	<div class="mx-auto max-w-[900px] px-6 py-16 sm:py-20">
-		<h1 class="m-0 font-serif text-[2.75rem] leading-[1.1] sm:text-[3.5rem]">
+		<h1 class="text-text-cream m-0 font-serif text-[2.75rem] leading-[1.1] sm:text-[3.5rem]">
 			Recipes, under version control.
 		</h1>
 		<p class="text-text-tan mt-5 mb-8 max-w-[46ch] text-[1.05rem] leading-[1.6]">
@@ -13,7 +13,7 @@
 		</p>
 		<div class="flex flex-wrap items-center gap-4">
 			<a
-				href="/recipes"
+				href="/search"
 				class="bg-accent text-hero-bg rounded-pill px-6 py-3 font-sans text-[0.95rem] font-semibold no-underline transition-opacity duration-150 hover:opacity-90"
 			>
 				Browse recipes

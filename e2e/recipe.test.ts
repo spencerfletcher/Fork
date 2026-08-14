@@ -334,7 +334,12 @@ test.describe('Recipe detail page', () => {
 test.describe('Landing page (logged out)', () => {
 	test('logged-out visitors see the premise and a diff', async ({ page }) => {
 		await page.goto('/');
-		await expect(page.getByRole('link', { name: /browse recipes/i })).toBeVisible();
+		const browseLink = page.getByRole('link', { name: /browse recipes/i });
+		await expect(browseLink).toBeVisible();
+		// The primary CTA must lead to the actual public recipe index, not the
+		// auth-gated "My Recipes" page — /search with no query lists every
+		// visible recipe for a guest.
+		await expect(browseLink).toHaveAttribute('href', '/search');
 		await expect(page.locator('.diff-content').first()).toBeVisible();
 	});
 
@@ -349,5 +354,52 @@ test.describe('Landing page (logged out)', () => {
 		}));
 
 		expect(scrollWidth).toBeLessThanOrEqual(clientWidth);
+	});
+
+	test('the hero headline is readable against the hero background', async ({ page }) => {
+		await page.goto('/');
+
+		// Relative luminance per WCAG, from a computed rgb() string — same
+		// formula as the tag-contrast test above.
+		const contrast = (fg: string, bg: string) => {
+			const lum = (c: string) => {
+				const [r, g, b] = c
+					.match(/\d+(\.\d+)?/g)!
+					.slice(0, 3)
+					.map(Number);
+				const f = (v: number) => {
+					const s = v / 255;
+					return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+				};
+				return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+			};
+			const [a, b] = [lum(fg), lum(bg)].sort((x, y) => y - x);
+			return (a + 0.05) / (b + 0.05);
+		};
+
+		const headline = page.locator('section h1').first();
+		await headline.waitFor();
+		const style = await headline.evaluate((el) => {
+			const cs = getComputedStyle(el);
+			let node: HTMLElement | null = el as HTMLElement;
+			let bg = 'rgba(0, 0, 0, 0)';
+			while (node && (bg === 'rgba(0, 0, 0, 0)' || bg === 'transparent')) {
+				bg = getComputedStyle(node).backgroundColor;
+				node = node.parentElement;
+			}
+			return { color: cs.color, bg };
+		});
+
+		// A direct element rule (`h1 { color: ... }` in app.css) can silently
+		// beat a text-color utility class applied to the same element — assert
+		// the property that actually matters (contrast), not just presence.
+		expect(style.color).not.toBe(style.bg);
+		expect(contrast(style.color, style.bg)).toBeGreaterThanOrEqual(4.5);
+	});
+
+	test('the sample diff shows an actual change, not just unchanged rows', async ({ page }) => {
+		await page.goto('/');
+		const changedRow = page.locator('.diff-added, .diff-removed, .diff-modified').first();
+		await expect(changedRow).toBeVisible();
 	});
 });

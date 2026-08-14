@@ -127,4 +127,48 @@ describe('homepage load', () => {
 
 		expect(result.mode).toBe('landing');
 	});
+
+	test('skips a recipe whose latest two versions are identical, in favor of one that actually differs', async () => {
+		// B has more history than a recipe needs to qualify, but its latest two
+		// versions are a no-op commit (e.g. re-saved with no changes) — the
+		// landing page must not show "A real change, diffed" over an empty diff.
+		// C's latest two versions do differ, so C should be picked instead.
+		findManyMock.mockResolvedValue([
+			{ id: 1, title: 'B', slug: 'b', recipesToTags: [], author: null },
+			{ id: 2, title: 'C', slug: 'c', recipesToTags: [], author: null }
+		]);
+		selectMock.mockReturnValueOnce(
+			chain([
+				{ recipeId: 1, count: 2 },
+				{ recipeId: 2, count: 2 }
+			])
+		);
+		selectMock.mockReturnValueOnce(chain([]));
+
+		const sameIngredients = [{ amount: '1', unit: 'cup', name: 'flour' }];
+		const sameSteps = [{ step: 1, text: 'Mix.' }];
+
+		recipeVersionsFindManyMock
+			// Called for candidate B first (withCounts preserves findMany order)
+			.mockResolvedValueOnce([
+				{ ingredients: sameIngredients, steps: sameSteps },
+				{ ingredients: sameIngredients, steps: sameSteps }
+			])
+			// Then for candidate C
+			.mockResolvedValueOnce([
+				{ ingredients: [{ amount: '2', unit: 'cup', name: 'flour' }], steps: sameSteps },
+				{ ingredients: sameIngredients, steps: sameSteps }
+			]);
+
+		const result = await loadResult({
+			locals: { user: null }
+		} as unknown as Parameters<typeof load>[0]);
+
+		expect(result.sampleDiff?.recipeTitle).toBe('C');
+		expect(recipeVersionsFindManyMock).toHaveBeenCalledTimes(2);
+		const hasVisibleChange =
+			result.sampleDiff?.ingredientDiff.some((r) => r.status !== 'unchanged') ||
+			result.sampleDiff?.stepDiff.some((r) => r.status !== 'unchanged');
+		expect(hasVisibleChange).toBe(true);
+	});
 });

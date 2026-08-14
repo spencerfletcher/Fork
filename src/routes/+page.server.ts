@@ -47,30 +47,40 @@ export const load: PageServerLoad = async ({ locals: { user } }) => {
 	} | null = null;
 
 	if (!user) {
-		const best = withCounts
-			.filter((r) => r.versionCount >= 2)
-			.sort((a, b) => b.versionCount - a.versionCount)[0];
+		// Pick the newest version pair that actually differs — "most versions" is not
+		// the same as "has a visible change", and repeated no-op commits are common.
+		const candidates = withCounts.filter((r) => r.versionCount >= 2);
 
-		if (best) {
-			const latestTwo = await db.query.recipeVersions.findMany({
-				where: eq(recipeVersions.recipeId, best.id),
+		for (const candidate of candidates) {
+			const versions = await db.query.recipeVersions.findMany({
+				where: eq(recipeVersions.recipeId, candidate.id),
 				orderBy: [desc(recipeVersions.versionNumber)],
 				limit: 2
 			});
-			const [to, from] = latestTwo; // ordered newest first
-			if (from && to) {
+			const [to, from] = versions;
+			if (!from || !to) continue;
+
+			const ingredientDiff = diffIngredients(
+				from.ingredients as Parameters<typeof diffIngredients>[0],
+				to.ingredients as Parameters<typeof diffIngredients>[0]
+			);
+			const stepDiff = diffSteps(
+				from.steps as Parameters<typeof diffSteps>[0],
+				to.steps as Parameters<typeof diffSteps>[0]
+			);
+
+			const hasChange =
+				ingredientDiff.some((r) => r.status !== 'unchanged') ||
+				stepDiff.some((r) => r.status !== 'unchanged');
+
+			if (hasChange) {
 				sampleDiff = {
-					recipeTitle: best.title,
-					recipeSlug: best.slug,
-					ingredientDiff: diffIngredients(
-						from.ingredients as Parameters<typeof diffIngredients>[0],
-						to.ingredients as Parameters<typeof diffIngredients>[0]
-					),
-					stepDiff: diffSteps(
-						from.steps as Parameters<typeof diffSteps>[0],
-						to.steps as Parameters<typeof diffSteps>[0]
-					)
+					recipeTitle: candidate.title,
+					recipeSlug: candidate.slug,
+					ingredientDiff,
+					stepDiff
 				};
+				break;
 			}
 		}
 	}

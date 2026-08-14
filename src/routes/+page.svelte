@@ -23,7 +23,9 @@
 <div class="page">
 	<div class="page-inner">
 		<div class="page-header">
-			<h1>Recipes</h1>
+			<!-- Landing mode already has an h1 in the hero above — this heading is
+			     demoted to h2 there so the page has exactly one h1. -->
+			<svelte:element this={data.mode === 'landing' ? 'h2' : 'h1'}>Recipes</svelte:element>
 			<p class="page-subtitle">Recipes worth forking.</p>
 		</div>
 
