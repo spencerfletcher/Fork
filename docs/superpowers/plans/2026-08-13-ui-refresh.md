@@ -18,9 +18,11 @@
 - Unit test files sit next to their source: `Foo.svelte` → `Foo.svelte.test.ts`, `+page.server.ts` → `page.server.test.ts`.
 - Use `vi.hoisted()` for any mock function referenced inside a `vi.mock()` factory.
 - `RecipeCard.svelte.test.ts` asserts on the `.forked-badge` and `.forked-badge--hidden` class names. They must survive every restyle in this plan.
-- Run `pnpm test:unit run` before every commit. Do not commit with failing unit tests.
+- Before every commit, all three CI gates must pass: `pnpm test:unit run`, `pnpm check`, and `pnpm lint`. CI runs all three as blocking jobs, and `pnpm test:unit` does **not** type-check — a task that only runs the unit suite can ship a red build.
 - Run `pnpm exec prettier --write <files>` before committing; CI fails on formatting.
 - Amber (`--color-accent`) means **action or version identity**. Nothing else may use it.
+- **Visual tasks assert absolutes, not just relative positions.** "A above B" holds true in many broken layouts. Any task that changes layout or colour must also assert that the page fits its viewport (`scrollWidth <= clientWidth`) at 390px, and that colour changes leave text readable. Six regressions in Task 1 passed every relative-position test that existed at the time.
+- Run e2e by file, never by `-g` name filter. Test names change during implementation, and a stale filter matches nothing and passes vacuously.
 
 ---
 
@@ -586,6 +588,53 @@ Expected: PASS unchanged — `RecipeCard` uses `class="tag"` and the class name 
 Run: `grep -rn "tag-pale" src/`
 Expected: no output. If anything matches, fix it before committing.
 
+- [ ] **Step 6b: Prove the tags are actually readable on both surfaces**
+
+The component tests assert text content, not colour, and jsdom does not apply `app.css` — so a tag rendered dark-brown-on-near-black would pass every existing test. The hero sits on `--color-hero-bg` (`#1a1408`); a `.tag--on-dark` variant that fails to apply leaves `--color-tag` (`#6b5a3a`) on it. This step exists to catch exactly that.
+
+Add to `e2e/recipe.test.ts`:
+
+```ts
+test('tags stay readable on both the card and the hero surfaces', async ({ page }) => {
+	await page.goto('/recipes/classic-chocolate-chip-cookies-0bNW21');
+
+	// Relative luminance per WCAG, from a computed rgb() string.
+	const contrast = (fg: string, bg: string) => {
+		const lum = (c: string) => {
+			const [r, g, b] = c
+				.match(/\d+(\.\d+)?/g)!
+				.slice(0, 3)
+				.map(Number);
+			const f = (v: number) => {
+				const s = v / 255;
+				return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+			};
+			return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+		};
+		const [a, b] = [lum(fg), lum(bg)].sort((x, y) => y - x);
+		return (a + 0.05) / (b + 0.05);
+	};
+
+	const heroTag = page.locator('header .tag').first();
+	await heroTag.waitFor();
+	const hero = await heroTag.evaluate((el) => {
+		const cs = getComputedStyle(el);
+		// Walk up for the first non-transparent background.
+		let node: HTMLElement | null = el as HTMLElement;
+		let bg = 'rgba(0, 0, 0, 0)';
+		while (node && (bg === 'rgba(0, 0, 0, 0)' || bg === 'transparent')) {
+			bg = getComputedStyle(node).backgroundColor;
+			node = node.parentElement;
+		}
+		return { color: cs.color, bg, borderColor: cs.borderColor };
+	});
+
+	expect(contrast(hero.color, hero.bg)).toBeGreaterThanOrEqual(4.5);
+});
+```
+
+`4.5` is the WCAG AA threshold for body text. Demonstrate RED by temporarily removing `tag--on-dark` from the hero markup — the dark-on-dark result should fall far below it — then restore.
+
 - [ ] **Step 7: Commit**
 
 ```bash
@@ -675,9 +724,56 @@ Remove all three `--color-paprika` declarations from `src/app.css`: the `@theme 
 Run: `pnpm exec vite build`
 Expected: success. Tailwind fails loudly on an unknown utility, so a surviving `bg-paprika` would break here.
 
-- [ ] **Step 5: Verify the hero visually**
+- [ ] **Step 5: Assert the demotion, do not eyeball it**
 
-Load a recipe. The hero shows outline tags, then `26 min · Serves 48` as quiet metadata, and exactly one amber element: the version number.
+"Exactly one amber element" is this task's whole point, so assert it. `--color-accent` is `#e8a83a`, which computes to `rgb(232, 168, 58)`. Add to `e2e/recipe.test.ts`:
+
+```ts
+test('the hero demotes metadata and keeps one accent element', async ({ page }) => {
+	await page.goto('/recipes/classic-chocolate-chip-cookies-0bNW21');
+	const hero = page.locator('header').first();
+	await hero.waitFor();
+
+	const accent = 'rgb(232, 168, 58)';
+
+	// Nothing in the hero may use the accent as a fill any more.
+	const filled = await hero.evaluate(
+		(el, a) =>
+			[...el.querySelectorAll('*')].filter((n) => getComputedStyle(n).backgroundColor === a).length,
+		accent
+	);
+	expect(filled).toBe(0);
+
+	// Cook time is metadata, not a pill: no background of its own.
+	const time = page.getByText(/^\d+\s*(min|h)/).first();
+	const timeBg = await time.evaluate((el) => getComputedStyle(el).backgroundColor);
+	expect(['rgba(0, 0, 0, 0)', 'transparent']).toContain(timeBg);
+});
+```
+
+Demonstrate RED before Step 1 (the filled time pill and filled tags should both trip it), then GREEN after.
+
+- [ ] **Step 5b: Confirm the Forked badge is still visible**
+
+An outline restyle can render a badge invisible while its class names — which the component tests assert on — survive untouched. Add to `e2e/recipe.test.ts`:
+
+```ts
+test('the forked badge reads as an outline, not a fill', async ({ page }) => {
+	await page.goto('/');
+	const badge = page.locator('.forked-badge:not(.forked-badge--hidden)').first();
+	await badge.waitFor();
+
+	const style = await badge.evaluate((el) => {
+		const cs = getComputedStyle(el);
+		return { bg: cs.backgroundColor, border: cs.borderStyle, width: cs.borderTopWidth };
+	});
+
+	expect(['rgba(0, 0, 0, 0)', 'transparent']).toContain(style.bg);
+	expect(style.border).toBe('solid');
+	expect(parseFloat(style.width)).toBeGreaterThan(0);
+	await expect(badge).toBeVisible();
+});
+```
 
 - [ ] **Step 6: Commit**
 
@@ -1153,10 +1249,39 @@ Expected: PASS (4 tests)
 
 In `src/routes/recipes/[slug]/+page.svelte`, render `<VersionStrip … />` directly below the hero and above `.content-layout`. Remove `<VersionHistory>` from the sidebar and delete the component file if nothing else imports it — check with `grep -rn "VersionHistory" src/`.
 
-- [ ] **Step 6: Re-check mobile order**
+- [ ] **Step 6: Re-check the whole recipe-page layout suite**
 
-Run: `pnpm exec playwright test --project=chromium -g "ingredients come before"`
-Expected: PASS. The strip sits above `.content-layout`, so Task 1's ordering is unaffected — confirm rather than assume.
+Run the file, not a name filter — Task 1's tests were renamed during implementation and a stale `-g` pattern matches nothing and passes vacuously:
+
+`DATABASE_URL="postgresql://postgres@127.0.0.1:55432/forkdev" pnpm exec playwright test --project=chromium e2e/recipe.test.ts`
+
+Expected: all pass, including Task 1's mobile order, desktop two-column, no-photo, and no-horizontal-scroll tests. The strip sits above `.content-layout`, so ordering should be unaffected — confirm rather than assume.
+
+- [ ] **Step 6b: Prove the strip does not overflow the page**
+
+A horizontally scrolling row of `flex-shrink: 0` items is a classic source of page-level overflow — Task 1 shipped exactly that bug via a different route. The strip must scroll _within itself_ without widening the document.
+
+```ts
+test('the version strip scrolls without widening the page', async ({ page }) => {
+	await page.setViewportSize({ width: 390, height: 900 });
+	await page.goto('/recipes/classic-chocolate-chip-cookies-0bNW21');
+
+	const strip = page.locator('.version-strip');
+	await strip.waitFor();
+
+	const doc = await page.evaluate(() => ({
+		scrollWidth: document.documentElement.scrollWidth,
+		clientWidth: document.documentElement.clientWidth
+	}));
+	expect(doc.scrollWidth).toBeLessThanOrEqual(doc.clientWidth);
+
+	// The strip itself may scroll; it must not exceed its container.
+	const box = await strip.boundingBox();
+	expect(box!.width).toBeLessThanOrEqual(390);
+});
+```
+
+Add it to `e2e/recipe.test.ts`. Demonstrate RED by temporarily removing `overflow-x: auto` from `.version-strip`, then restore.
 
 - [ ] **Step 7: Commit**
 
