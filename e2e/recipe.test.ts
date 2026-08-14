@@ -104,6 +104,22 @@ test.describe('Recipe detail page', () => {
 		expect(ingredientsBox!.y).toBeLessThan(detailsBox!.y);
 	});
 
+	test('the recipe page does not scroll sideways on mobile', async ({ page }) => {
+		await page.setViewportSize({ width: 390, height: 900 });
+		await page.goto('/recipes/classic-chocolate-chip-cookies-0bNW21');
+		await page
+			.getByRole('heading', { name: /ingredients/i })
+			.first()
+			.waitFor();
+
+		const { scrollWidth, clientWidth } = await page.evaluate(() => ({
+			scrollWidth: document.documentElement.scrollWidth,
+			clientWidth: document.documentElement.clientWidth
+		}));
+
+		expect(scrollWidth).toBeLessThanOrEqual(clientWidth);
+	});
+
 	test('on mobile, the photo leads above the recipe', async ({ page }) => {
 		await page.setViewportSize({ width: 390, height: 900 });
 		await page.goto('/recipes/classic-chocolate-chip-cookies-0bNW21');

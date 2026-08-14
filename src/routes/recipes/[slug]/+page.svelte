@@ -107,6 +107,15 @@
 			display: contents;
 		}
 
+		/* <aside class="min-w-0"> supplied this before display:contents removed its
+		   box; without it, nowrap content in the sidebar blows out the grid column.
+		   :global() is required because Details/RecipeActions/VersionHistory are
+		   separate components — their root elements don't carry this file's
+		   scoped-CSS hash, so an un-globaled `*` would silently never match them. */
+		.sidebar-sticky > :global(*) {
+			min-width: 0;
+		}
+
 		.recipe-photo {
 			order: -1;
 		}
