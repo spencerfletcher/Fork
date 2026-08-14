@@ -83,11 +83,7 @@
 				</a>
 			{/each}
 			{#if totalMinutes > 0}
-				<span
-					class="rounded-pill bg-paprika text-text-cream px-3 py-1 font-sans text-[0.78rem] font-semibold"
-				>
-					{formatTime(totalMinutes)}
-				</span>
+				<span class="text-text-bronze font-mono text-[0.85rem]">{formatTime(totalMinutes)}</span>
 			{/if}
 			{#if recipe.servings}
 				<span class="text-text-bronze text-[0.9rem]">Serves {recipe.servings}</span>

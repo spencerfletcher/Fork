@@ -238,4 +238,42 @@ test.describe('Recipe detail page', () => {
 
 		expect(contrast(hero.color, hero.bg)).toBeGreaterThanOrEqual(4.5);
 	});
+
+	test('the hero demotes metadata and keeps one accent element', async ({ page }) => {
+		await gotoClassicCookies(page);
+		const hero = page.locator('header').first();
+		await hero.waitFor();
+
+		const accent = 'rgb(232, 168, 58)';
+
+		// Nothing in the hero may use the accent as a fill any more.
+		const filled = await hero.evaluate(
+			(el, a) =>
+				[...el.querySelectorAll('*')].filter((n) => getComputedStyle(n).backgroundColor === a)
+					.length,
+			accent
+		);
+		expect(filled).toBe(0);
+
+		// Cook time is metadata, not a pill: no background of its own.
+		const time = page.getByText(/^\d+\s*(min|h)/).first();
+		const timeBg = await time.evaluate((el) => getComputedStyle(el).backgroundColor);
+		expect(['rgba(0, 0, 0, 0)', 'transparent']).toContain(timeBg);
+	});
+
+	test('the forked badge reads as an outline, not a fill', async ({ page }) => {
+		await page.goto('/');
+		const badge = page.locator('.forked-badge:not(.forked-badge--hidden)').first();
+		await badge.waitFor();
+
+		const style = await badge.evaluate((el) => {
+			const cs = getComputedStyle(el);
+			return { bg: cs.backgroundColor, border: cs.borderStyle, width: cs.borderTopWidth };
+		});
+
+		expect(['rgba(0, 0, 0, 0)', 'transparent']).toContain(style.bg);
+		expect(style.border).toBe('solid');
+		expect(parseFloat(style.width)).toBeGreaterThan(0);
+		await expect(badge).toBeVisible();
+	});
 });
