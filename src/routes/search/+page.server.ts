@@ -114,18 +114,19 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 	// Postgres does not preserve inArray ordering.
 	const rankedIds = results.map((r) => r.id);
 
-	let hydrated: Awaited<ReturnType<typeof db.query.recipes.findMany>> = [];
-	if (rankedIds.length > 0) {
-		const rows = await db.query.recipes.findMany({
-			where: inArray(recipes.id, rankedIds),
-			with: {
-				recipesToTags: { with: { tag: true } },
-				author: true
-			}
-		});
-		const byId = new Map(rows.map((r) => [r.id, r]));
-		hydrated = rankedIds.map((id) => byId.get(id)).filter((r) => r !== undefined);
-	}
+	const rows =
+		rankedIds.length > 0
+			? await db.query.recipes.findMany({
+					where: inArray(recipes.id, rankedIds),
+					with: {
+						recipesToTags: { with: { tag: true } },
+						author: true
+					}
+				})
+			: [];
+
+	const byId = new Map(rows.map((r) => [r.id, r]));
+	const hydrated = rankedIds.map((id) => byId.get(id)).filter((r) => r !== undefined);
 
 	return { recipes: hydrated, allTags, searchQuery, selectedTags: tagSlugs };
 };

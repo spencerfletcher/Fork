@@ -13,6 +13,7 @@ vi.mock('$lib/server/db', () => ({
 }));
 
 import { load } from './+page.server';
+import type { PageData } from './$types';
 
 /** Drizzle-compatible chainable mock. */
 function chain(resolved: unknown = []) {
@@ -35,6 +36,19 @@ function makeEvent(query = '') {
 	} as unknown as Parameters<typeof load>[0];
 }
 
+/**
+ * `load` is annotated with the generic `PageServerLoad` interface, whose
+ * default `OutputData` includes `Record<string, any>` — so `ReturnType<typeof load>`
+ * types every property as `any`, and may also be `void`. The framework's own
+ * `PageData` (derived from the real implementation via SvelteKit's generated
+ * proxy module) is the precise type; narrow to it once here.
+ */
+async function loadResult(event: Parameters<typeof load>[0]): Promise<PageData> {
+	const result = await load(event);
+	if (!result) throw new Error('load returned no data');
+	return result as PageData;
+}
+
 describe('search load', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
@@ -50,7 +64,7 @@ describe('search load', () => {
 			{ id: 2, title: 'Two', author: { id: 'u1', username: 'a' }, recipesToTags: [] }
 		]);
 
-		const result = await load(makeEvent('cookie'));
+		const result = await loadResult(makeEvent('cookie'));
 
 		expect(result.recipes.length).toBe(2);
 		for (const r of result.recipes) {
@@ -70,7 +84,7 @@ describe('search load', () => {
 			{ id: 2, title: 'Two', author: null, recipesToTags: [] }
 		]);
 
-		const result = await load(makeEvent('cookie'));
+		const result = await loadResult(makeEvent('cookie'));
 
 		expect(result.recipes.map((r) => r.id)).toEqual([2, 1]);
 	});
@@ -82,7 +96,7 @@ describe('search load', () => {
 			.mockReturnValueOnce(chain([])); // pass 2: no ingredient-only matches
 		findManyMock.mockResolvedValue([{ id: 1, author: null, recipesToTags: [] }]);
 
-		await load(makeEvent('cookie'));
+		await loadResult(makeEvent('cookie'));
 
 		expect(findManyMock).toHaveBeenCalledTimes(1);
 	});
