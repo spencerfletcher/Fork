@@ -79,6 +79,8 @@
 		align-items: start;
 	}
 
+	/* Keep this above the max-width:860px block: that block overrides `display`
+	   at equal specificity, so it only wins by source order. */
 	.sidebar-sticky {
 		position: sticky;
 		top: 76px;
@@ -91,6 +93,9 @@
 		.content-layout {
 			grid-template-columns: 1fr;
 			padding: var(--space-5);
+			/* .sidebar-sticky's own 16px gap stops applying once it becomes
+			   display: contents, so the grid supplies the rhythm instead. */
+			row-gap: var(--space-4);
 		}
 
 		/* Promote the sidebar's children to grid items so the photo can lead on its

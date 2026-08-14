@@ -137,5 +137,28 @@ test.describe('Recipe detail page', () => {
 		expect(detailsBox).not.toBeNull();
 		// Two columns: the sidebar starts to the right of the main column.
 		expect(detailsBox!.x).toBeGreaterThan(ingredientsBox!.x + ingredientsBox!.width - 1);
+		// x alone passed while the sidebar sat 667px too low — assert top alignment too.
+		expect(Math.abs(detailsBox!.y - ingredientsBox!.y)).toBeLessThan(300);
+	});
+
+	test('layout survives a recipe with no photo', async ({ page }) => {
+		await page.setViewportSize({ width: 1440, height: 1000 });
+		await page.goto('/recipes/classic-chocolate-chip-cookies-0bNW21');
+
+		const ingredients = page.getByRole('heading', { name: /ingredients/i }).first();
+		await ingredients.waitFor();
+
+		// The {#if recipe.imageUrl} branch is equivalent to the node being absent.
+		await page.evaluate(() => document.querySelector('.recipe-photo')?.remove());
+
+		const details = page.getByRole('heading', { name: /details/i }).first();
+		const ingredientsBox = await ingredients.boundingBox();
+		const detailsBox = await details.boundingBox();
+
+		expect(ingredientsBox).not.toBeNull();
+		expect(detailsBox).not.toBeNull();
+		// Sidebar stays in the right-hand column, top-aligned — not pushed down the page.
+		expect(detailsBox!.x).toBeGreaterThan(ingredientsBox!.x + ingredientsBox!.width - 1);
+		expect(Math.abs(detailsBox!.y - ingredientsBox!.y)).toBeLessThan(300);
 	});
 });
