@@ -8,7 +8,11 @@
 </script>
 
 {#if data.mode === 'landing'}
-	<LandingHero sampleSlug={data.sampleDiff?.recipeSlug} />
+	<LandingHero
+		sampleSlug={data.sampleDiff?.recipeSlug}
+		fromVersion={data.sampleDiff?.fromVersion}
+		toVersion={data.sampleDiff?.toVersion}
+	/>
 	{#if data.sampleDiff}
 		<section class="mx-auto max-w-[900px] px-6 py-10">
 			<h2 class="eyebrow-label mb-3">A real change, diffed</h2>

@@ -57,6 +57,8 @@ export const load: PageServerLoad = async ({ locals: { user } }) => {
 	let sampleDiff: {
 		recipeTitle: string;
 		recipeSlug: string;
+		fromVersion: number;
+		toVersion: number;
 		ingredientDiff: ReturnType<typeof diffIngredients>;
 		stepDiff: ReturnType<typeof diffSteps>;
 	} | null = null;
@@ -100,6 +102,8 @@ export const load: PageServerLoad = async ({ locals: { user } }) => {
 				sampleDiff = {
 					recipeTitle: candidate.title,
 					recipeSlug: candidate.slug,
+					fromVersion: from.versionNumber,
+					toVersion: to.versionNumber,
 					ingredientDiff,
 					stepDiff
 				};

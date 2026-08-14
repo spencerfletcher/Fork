@@ -1,5 +1,13 @@
 <script lang="ts">
-	let { sampleSlug = null }: { sampleSlug?: string | null } = $props();
+	let {
+		sampleSlug = null,
+		fromVersion = null,
+		toVersion = null
+	}: {
+		sampleSlug?: string | null;
+		fromVersion?: number | null;
+		toVersion?: number | null;
+	} = $props();
 </script>
 
 <section class="bg-hero-bg text-text-cream">
@@ -20,7 +28,7 @@
 			</a>
 			{#if sampleSlug}
 				<a
-					href="/recipes/{sampleSlug}/diff"
+					href="/recipes/{sampleSlug}/diff?from={fromVersion}&to={toVersion}"
 					class="text-text-cream rounded-pill border border-white/25 px-6 py-3 font-sans text-[0.95rem] no-underline transition-colors duration-150 hover:border-white/50"
 				>
 					See a diff →
