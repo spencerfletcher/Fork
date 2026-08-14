@@ -1,6 +1,6 @@
 import { db } from '$lib/server/db';
 import { recipes, recipeVersions } from '$lib/server/db/schema';
-import { and, count, desc, eq, isNotNull } from 'drizzle-orm';
+import { and, count, desc, eq, inArray, isNotNull } from 'drizzle-orm';
 import { diffIngredients, diffSteps } from '$lib/utils/diff';
 import type { PageServerLoad } from './$types';
 
@@ -22,10 +22,18 @@ export const load: PageServerLoad = async ({ locals: { user } }) => {
 	});
 
 	// Two grouped aggregates for the whole page — never one query per card.
-	const versionCounts = await db
-		.select({ recipeId: recipeVersions.recipeId, count: count() })
-		.from(recipeVersions)
-		.groupBy(recipeVersions.recipeId);
+	const displayedIds = displayedRecipes.map((r) => r.id);
+
+	// recipe_versions is append-only — a row per edit, forever — so this aggregate
+	// must never full-scan it. Scoped to the recipes actually being displayed.
+	const versionCounts =
+		displayedIds.length > 0
+			? await db
+					.select({ recipeId: recipeVersions.recipeId, count: count() })
+					.from(recipeVersions)
+					.where(inArray(recipeVersions.recipeId, displayedIds))
+					.groupBy(recipeVersions.recipeId)
+			: [];
 
 	const forkCounts = await db
 		.select({ parentId: recipes.parentId, count: count() })
