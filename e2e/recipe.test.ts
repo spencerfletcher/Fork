@@ -1,9 +1,19 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 
 // These tests assume the DB has been seeded with the demo data:
 // - "Classic Chocolate Chip Cookies" (2 versions)
 // - "Brown Butter Chocolate Chip Cookies" (forked, 1 version)
 // - "Chicken Tikka Masala" (3 versions)
+
+/** Slugs carry a random nanoid suffix, so reach the recipe by name, not URL. */
+async function gotoClassicCookies(page: Page) {
+	await page.goto('/');
+	await page
+		.getByRole('link', { name: /classic chocolate chip cookies/i })
+		.first()
+		.click();
+	await page.waitForURL(/\/recipes\//);
+}
 
 test.describe('Recipe detail page', () => {
 	test('recipe cards on the home page link to detail pages', async ({ page }) => {
@@ -88,7 +98,7 @@ test.describe('Recipe detail page', () => {
 
 	test('on mobile, ingredients render above the details box', async ({ page }) => {
 		await page.setViewportSize({ width: 390, height: 900 });
-		await page.goto('/recipes/classic-chocolate-chip-cookies-0bNW21');
+		await gotoClassicCookies(page);
 
 		const ingredients = page.getByRole('heading', { name: /ingredients/i }).first();
 		const details = page.getByRole('heading', { name: /details/i }).first();
@@ -106,7 +116,7 @@ test.describe('Recipe detail page', () => {
 
 	test('the recipe page does not scroll sideways on mobile', async ({ page }) => {
 		await page.setViewportSize({ width: 390, height: 900 });
-		await page.goto('/recipes/classic-chocolate-chip-cookies-0bNW21');
+		await gotoClassicCookies(page);
 		await page
 			.getByRole('heading', { name: /ingredients/i })
 			.first()
@@ -122,7 +132,7 @@ test.describe('Recipe detail page', () => {
 
 	test('on mobile, the photo leads above the recipe', async ({ page }) => {
 		await page.setViewportSize({ width: 390, height: 900 });
-		await page.goto('/recipes/classic-chocolate-chip-cookies-0bNW21');
+		await gotoClassicCookies(page);
 
 		const photo = page.locator('.recipe-photo img').first();
 		const ingredients = page.getByRole('heading', { name: /ingredients/i }).first();
@@ -139,7 +149,7 @@ test.describe('Recipe detail page', () => {
 
 	test('on desktop, the sidebar sits beside the recipe, not below it', async ({ page }) => {
 		await page.setViewportSize({ width: 1440, height: 1000 });
-		await page.goto('/recipes/classic-chocolate-chip-cookies-0bNW21');
+		await gotoClassicCookies(page);
 
 		const ingredients = page.getByRole('heading', { name: /ingredients/i }).first();
 		const details = page.getByRole('heading', { name: /details/i }).first();
@@ -159,7 +169,7 @@ test.describe('Recipe detail page', () => {
 
 	test('layout survives a recipe with no photo', async ({ page }) => {
 		await page.setViewportSize({ width: 1440, height: 1000 });
-		await page.goto('/recipes/classic-chocolate-chip-cookies-0bNW21');
+		await gotoClassicCookies(page);
 
 		const ingredients = page.getByRole('heading', { name: /ingredients/i }).first();
 		await ingredients.waitFor();
