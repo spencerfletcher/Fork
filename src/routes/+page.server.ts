@@ -1,6 +1,6 @@
 import { db } from '$lib/server/db';
 import { recipes, recipeVersions } from '$lib/server/db/schema';
-import { count, eq, isNotNull } from 'drizzle-orm';
+import { and, count, eq, isNotNull } from 'drizzle-orm';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async () => {
@@ -22,7 +22,8 @@ export const load: PageServerLoad = async () => {
 	const forkCounts = await db
 		.select({ parentId: recipes.parentId, count: count() })
 		.from(recipes)
-		.where(isNotNull(recipes.parentId))
+		// Public feed, no auth: a private fork must not inflate a public recipe's count.
+		.where(and(isNotNull(recipes.parentId), eq(recipes.isPublic, true)))
 		.groupBy(recipes.parentId);
 
 	const versionsById = new Map(versionCounts.map((r) => [r.recipeId, Number(r.count)]));

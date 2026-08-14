@@ -1,4 +1,6 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
+import { and, eq, isNotNull } from 'drizzle-orm';
+import { recipes } from '$lib/server/db/schema';
 
 const { findManyMock, selectMock } = vi.hoisted(() => ({
 	findManyMock: vi.fn(),
@@ -65,5 +67,29 @@ describe('homepage load', () => {
 		expect(result.recipes[2].versionCount).toBe(0);
 		// Two aggregates total, regardless of how many recipes came back.
 		expect(selectMock).toHaveBeenCalledTimes(2);
+	});
+
+	test('scopes the fork-count aggregate to public recipes', async () => {
+		// This is the anonymous homepage feed — no auth check. A private fork
+		// must not inflate a public parent's fork count for every visitor.
+		findManyMock.mockResolvedValue([{ id: 1, title: 'A', recipesToTags: [], author: null }]);
+		const versionChain = chain([]);
+		const forkChain = chain([{ parentId: 1, count: 3 }]);
+		selectMock.mockReturnValueOnce(versionChain).mockReturnValueOnce(forkChain);
+
+		const result = await loadResult({
+			locals: { user: null }
+		} as unknown as Parameters<typeof load>[0]);
+
+		expect(result.recipes[0].forkCount).toBe(3);
+
+		// Structural assertion, not a decorative "was .where called" check: this
+		// compares the exact condition object the loader passed to `.where()`
+		// against the same condition built directly from drizzle-orm here, so it
+		// fails if the loader drops the `isPublic` filter, uses the wrong column,
+		// or the wrong literal — not just if `.where` was called at all.
+		const whereMock = forkChain.where as ReturnType<typeof vi.fn>;
+		const whereArg = whereMock.mock.calls[0][0];
+		expect(whereArg).toEqual(and(isNotNull(recipes.parentId), eq(recipes.isPublic, true)));
 	});
 });
