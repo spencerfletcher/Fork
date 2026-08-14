@@ -167,6 +167,20 @@ test.describe('Recipe detail page', () => {
 		expect(Math.abs(detailsBox!.y - ingredientsBox!.y)).toBeLessThan(300);
 	});
 
+	test('the hero names the recipe once and the author once', async ({ page }) => {
+		await gotoClassicCookies(page);
+		const hero = page.locator('header').first();
+		await hero.waitFor();
+
+		// The breadcrumb shows the title, not the URL slug.
+		await expect(hero).toContainText('Classic Chocolate Chip Cookies');
+		await expect(hero).not.toContainText('classic-chocolate-chip-cookies');
+
+		// The author is named exactly once in the hero.
+		const authorLinks = hero.getByRole('link', { name: /@spencerfletcher/i });
+		await expect(authorLinks).toHaveCount(1);
+	});
+
 	test('layout survives a recipe with no photo', async ({ page }) => {
 		await page.setViewportSize({ width: 1440, height: 1000 });
 		await gotoClassicCookies(page);

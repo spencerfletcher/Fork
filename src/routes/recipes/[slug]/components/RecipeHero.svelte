@@ -47,7 +47,7 @@
 				</a>
 				<span class="opacity-50">/</span>
 			{/if}
-			<span class="text-accent">{recipe.slug.split('-').slice(0, -1).join('-')}</span>
+			<span class="text-accent">{recipe.title}</span>
 		</nav>
 
 		<!-- Title + version -->
@@ -94,15 +94,6 @@
 			{/if}
 			{#if recipe.servings}
 				<span class="text-text-bronze text-[0.9rem]">Serves {recipe.servings}</span>
-			{/if}
-			{#if recipe.author}
-				<span class="text-text-bronze opacity-40">·</span>
-				<a
-					href="/users/{recipe.author.username}"
-					class="text-text-bronze hover:text-accent font-mono text-[0.85rem] no-underline transition-colors duration-150"
-				>
-					@{recipe.author.username}
-				</a>
 			{/if}
 		</div>
 	</div>
