@@ -108,5 +108,24 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 		});
 	}
 
-	return { recipes: results, allTags, searchQuery, selectedTags: tagSlugs };
+	// ── Hydrate relations ─────────────────────────────────────────────────────
+	// The ranking above works on bare recipe rows. RecipeCard needs author and
+	// tags, so re-fetch the ranked ids with relations and restore the order —
+	// Postgres does not preserve inArray ordering.
+	const rankedIds = [...new Set(results.map((r) => r.id))];
+
+	let hydrated: Awaited<ReturnType<typeof db.query.recipes.findMany>> = [];
+	if (rankedIds.length > 0) {
+		const rows = await db.query.recipes.findMany({
+			where: inArray(recipes.id, rankedIds),
+			with: {
+				recipesToTags: { with: { tag: true } },
+				author: true
+			}
+		});
+		const byId = new Map(rows.map((r) => [r.id, r]));
+		hydrated = rankedIds.map((id) => byId.get(id)).filter((r) => r !== undefined);
+	}
+
+	return { recipes: hydrated, allTags, searchQuery, selectedTags: tagSlugs };
 };
