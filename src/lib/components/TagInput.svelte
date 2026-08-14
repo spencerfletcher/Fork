@@ -74,7 +74,7 @@
 					<button
 						type="button"
 						onclick={() => remove(tag)}
-						class="w-auto cursor-pointer border-none bg-transparent p-0 text-base leading-none text-inherit opacity-70 hover:opacity-100"
+						class="text-text-3 hover:text-text w-auto cursor-pointer border-none bg-transparent p-0 text-base leading-none transition-colors duration-150"
 						aria-label="Remove {tag}"
 					>
 						×

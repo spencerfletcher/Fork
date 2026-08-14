@@ -48,7 +48,7 @@
 			{#each visibleVersions as version (version.id)}
 				{@const isCurrent = version.versionNumber === currentVersion?.versionNumber}
 				<div
-					class="group border-border flex cursor-pointer items-start gap-3 border-b py-3 transition-opacity duration-150 hover:opacity-80 [&:last-child]:border-b-0 [&:last-child]:pb-0"
+					class="group border-border hover:bg-surface-2 flex cursor-pointer items-start gap-3 border-b py-3 transition-colors duration-150 [&:last-child]:border-b-0 [&:last-child]:pb-0"
 					role="link"
 					tabindex="0"
 					onclick={() => goto(`/recipes/${recipeSlug}?version=${version.versionNumber}`)}

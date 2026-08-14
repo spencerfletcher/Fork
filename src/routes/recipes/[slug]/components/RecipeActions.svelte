@@ -37,7 +37,7 @@
 			>
 				<button
 					type="submit"
-					class="rounded-pill border-accent text-accent flex w-full cursor-pointer items-center justify-center gap-2 border-[1.5px] bg-transparent px-4 py-3 text-center font-sans text-[0.9rem] font-semibold no-underline transition-opacity duration-150 hover:opacity-75"
+					class="rounded-pill border-accent text-accent hover:bg-accent-pale flex w-full cursor-pointer items-center justify-center gap-2 border-[1.5px] bg-transparent px-4 py-3 text-center font-sans text-[0.9rem] font-semibold no-underline transition-colors duration-150"
 					aria-label={isFavorited ? 'Unsave' : 'Save'}
 				>
 					<svg
@@ -110,7 +110,7 @@
 		{#if isOwner && !isViewingHistory}
 			<a
 				href="/recipes/{recipe.slug}/edit"
-				class="rounded-pill border-accent text-accent flex w-full cursor-pointer items-center justify-center gap-2 border-[1.5px] bg-transparent px-4 py-3 text-center font-sans text-[0.9rem] font-semibold no-underline transition-opacity duration-150 hover:opacity-75"
+				class="rounded-pill border-accent text-accent hover:bg-accent-pale flex w-full cursor-pointer items-center justify-center gap-2 border-[1.5px] bg-transparent px-4 py-3 text-center font-sans text-[0.9rem] font-semibold no-underline transition-colors duration-150"
 			>
 				Edit recipe
 			</a>

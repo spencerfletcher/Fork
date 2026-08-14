@@ -24,7 +24,7 @@
 		<div class="flex items-center gap-6">
 			<a
 				href="/"
-				class="text-text-cream hover:text-text-cream font-serif text-[1.65rem] font-bold tracking-[-0.01em] no-underline transition-opacity hover:opacity-90"
+				class="text-text-cream hover:text-text-cream font-serif text-[1.65rem] font-bold tracking-[-0.01em] no-underline"
 				onclick={closeMenu}
 			>
 				{m.app_title()}<span class="text-accent">.</span>
@@ -80,7 +80,7 @@
 				{/if}
 				<a
 					href="/recipes/new"
-					class="rounded-pill bg-accent text-hero-bg hover:text-hero-bg px-4 py-[7px] font-sans text-[0.85rem] font-semibold whitespace-nowrap no-underline transition-opacity hover:opacity-88"
+					class="rounded-pill bg-accent text-hero-bg hover:text-hero-bg hover:bg-accent-mid px-4 py-[7px] font-sans text-[0.85rem] font-semibold whitespace-nowrap no-underline transition-colors duration-150"
 					class:opacity-75={$page.url.pathname === '/recipes/new'}
 				>
 					+ {m.navbar_new()}
