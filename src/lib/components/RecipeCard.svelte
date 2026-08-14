@@ -6,6 +6,8 @@
 	interface CardRecipe extends Omit<Recipe, 'fts'> {
 		recipesToTags?: { tag: { id: number; name: string; slug: string } }[];
 		author?: { id: string; username: string } | null;
+		versionCount?: number;
+		forkCount?: number;
 	}
 
 	let { recipe }: { recipe: CardRecipe } = $props();
@@ -52,6 +54,16 @@
 						{:else if recipe.cookTimeMinutes}
 							{recipe.cookTimeMinutes} min cook
 						{/if}
+					</span>
+				{/if}
+				{#if recipe.versionCount}
+					<span class="text-text-3 font-mono text-[0.72rem]">·</span>
+					<span class="text-accent font-mono text-[0.72rem]">v{recipe.versionCount}</span>
+				{/if}
+				{#if recipe.forkCount}
+					<span class="text-text-3 font-mono text-[0.72rem]">
+						· {recipe.forkCount}
+						{recipe.forkCount === 1 ? 'fork' : 'forks'}
 					</span>
 				{/if}
 			</div>

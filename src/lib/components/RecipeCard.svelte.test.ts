@@ -124,4 +124,26 @@ describe('RecipeCard', () => {
 		render(RecipeCard, { props: { recipe: makeRecipe() } });
 		expect(screen.queryByText(/^@/)).not.toBeInTheDocument();
 	});
+
+	test('shows the latest version number', () => {
+		render(RecipeCard, { props: { recipe: makeRecipe({ versionCount: 3 }) } });
+		expect(screen.getByText(/^v3$/)).toBeInTheDocument();
+	});
+
+	test('shows the fork count when the recipe has forks', () => {
+		render(RecipeCard, { props: { recipe: makeRecipe({ versionCount: 1, forkCount: 2 }) } });
+		expect(screen.getByText(/2 forks/)).toBeInTheDocument();
+	});
+
+	test('omits the fork count when there are none', () => {
+		render(RecipeCard, { props: { recipe: makeRecipe({ versionCount: 1, forkCount: 0 }) } });
+		// Matches the "N fork(s)" text specifically — the unrelated "Forked" badge
+		// (hidden via CSS but still present in the DOM) also matches /fork/i.
+		expect(screen.queryByText(/\d+ forks?/i)).not.toBeInTheDocument();
+	});
+
+	test('uses the singular for one fork', () => {
+		render(RecipeCard, { props: { recipe: makeRecipe({ versionCount: 1, forkCount: 1 }) } });
+		expect(screen.getByText(/1 fork(?!s)/)).toBeInTheDocument();
+	});
 });
