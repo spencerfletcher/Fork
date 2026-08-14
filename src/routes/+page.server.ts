@@ -4,6 +4,13 @@ import { and, count, desc, eq, isNotNull } from 'drizzle-orm';
 import { diffIngredients, diffSteps } from '$lib/utils/diff';
 import type { PageServerLoad } from './$types';
 
+/**
+ * The landing page's sample diff is the site's shop window, so it is pinned to the
+ * owner's own recipes. Signup is open, and without this any visitor could publish a
+ * two-version recipe and take over the front page.
+ */
+const SHOWCASE_AUTHOR = 'spencerfletcher';
+
 export const load: PageServerLoad = async ({ locals: { user } }) => {
 	const displayedRecipes = await db.query.recipes.findMany({
 		where: eq(recipes.isPublic, true),
@@ -49,7 +56,12 @@ export const load: PageServerLoad = async ({ locals: { user } }) => {
 	if (!user) {
 		// Pick the newest version pair that actually differs — "most versions" is not
 		// the same as "has a visible change", and repeated no-op commits are common.
-		const candidates = withCounts.filter((r) => r.versionCount >= 2);
+		// Restricted to the showcase author: this is the site's shop window, and
+		// signup is open, so any other author's recipe qualifying here would be a
+		// takeover of the front page, not a fallback worth having.
+		const candidates = withCounts.filter(
+			(r) => r.versionCount >= 2 && r.author?.username === SHOWCASE_AUTHOR
+		);
 
 		for (const candidate of candidates) {
 			const versions = await db.query.recipeVersions.findMany({

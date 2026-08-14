@@ -133,9 +133,10 @@ describe('homepage load', () => {
 		// versions are a no-op commit (e.g. re-saved with no changes) — the
 		// landing page must not show "A real change, diffed" over an empty diff.
 		// C's latest two versions do differ, so C should be picked instead.
+		const showcaseAuthor = { id: 'user-1', username: 'spencerfletcher' };
 		findManyMock.mockResolvedValue([
-			{ id: 1, title: 'B', slug: 'b', recipesToTags: [], author: null },
-			{ id: 2, title: 'C', slug: 'c', recipesToTags: [], author: null }
+			{ id: 1, title: 'B', slug: 'b', recipesToTags: [], author: showcaseAuthor },
+			{ id: 2, title: 'C', slug: 'c', recipesToTags: [], author: showcaseAuthor }
 		]);
 		selectMock.mockReturnValueOnce(
 			chain([
@@ -170,5 +171,32 @@ describe('homepage load', () => {
 			result.sampleDiff?.ingredientDiff.some((r) => r.status !== 'unchanged') ||
 			result.sampleDiff?.stepDiff.some((r) => r.status !== 'unchanged');
 		expect(hasVisibleChange).toBe(true);
+	});
+
+	test('does not select a qualifying recipe from another author for the showcase diff', async () => {
+		// Signup is open, so any registered user's recipe would otherwise qualify.
+		// The showcase diff must stay pinned to the site owner's own recipes — a
+		// stranger's recipe with two differing versions must never be picked, even
+		// when it is the only qualifying candidate.
+		findManyMock.mockResolvedValue([
+			{
+				id: 1,
+				title: 'Stranger Danger',
+				slug: 'stranger-danger',
+				recipesToTags: [],
+				author: { id: 'user-2', username: 'not-spencer' }
+			}
+		]);
+		selectMock.mockReturnValueOnce(chain([{ recipeId: 1, count: 2 }]));
+		selectMock.mockReturnValueOnce(chain([]));
+
+		const result = await loadResult({
+			locals: { user: null }
+		} as unknown as Parameters<typeof load>[0]);
+
+		expect(result.sampleDiff).toBeNull();
+		// The candidate was excluded before the loop, so no per-recipe version
+		// query should ever have been issued for it.
+		expect(recipeVersionsFindManyMock).not.toHaveBeenCalled();
 	});
 });
