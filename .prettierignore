@@ -4,3 +4,6 @@ pnpm-lock.yaml
 yarn.lock
 bun.lock
 bun.lockb
+
+# Agent scratch workspace (git-ignored; Prettier does not read .gitignore)
+.superpowers/
