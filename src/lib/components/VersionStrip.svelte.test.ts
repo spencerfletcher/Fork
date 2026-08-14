@@ -27,8 +27,8 @@ describe('VersionStrip', () => {
 	});
 
 	test('marks the current version', () => {
-		render(VersionStrip, { props });
-		expect(screen.getByLabelText(/current version/i)).toHaveTextContent('v2');
+		const { container } = render(VersionStrip, { props });
+		expect(container.querySelector('[aria-current="true"]')).toHaveTextContent('v2');
 	});
 
 	test('offers a compare link for versions after the first', () => {

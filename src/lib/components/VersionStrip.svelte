@@ -22,11 +22,12 @@
 <nav class="version-strip" aria-label="Version history">
 	{#each versions as version (version.id)}
 		{@const isCurrent = version.versionNumber === currentVersionNumber}
-		<div class="version-entry" aria-label={isCurrent ? 'Current version' : undefined}>
+		<div class="version-entry">
 			<a
 				href="/recipes/{recipeSlug}?version={version.versionNumber}"
 				class="version-number"
 				class:is-current={isCurrent}
+				aria-current={isCurrent ? 'true' : undefined}
 			>
 				v{version.versionNumber}
 			</a>

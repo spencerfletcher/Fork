@@ -50,8 +50,12 @@ test.describe('Recipe detail page', () => {
 			.click();
 		await expect(page).toHaveURL(/\/recipes\//);
 		// Version history is the strip under the hero — all versions visible without expanding.
+		// Assert on rendered content, not just wrapper count: a div-count check passes even
+		// if the messages render empty.
 		const versionEntries = page.locator('.version-strip .version-entry');
 		await expect(versionEntries).toHaveCount(2);
+		await expect(page.getByRole('link', { name: /^v2$/ })).toBeVisible();
+		await expect(page.locator('.version-strip')).toContainText('Initial recipe');
 	});
 
 	test('"Brown Butter Chocolate Chip Cookies" shows fork attribution', async ({ page }) => {
