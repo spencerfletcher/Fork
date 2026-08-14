@@ -11,6 +11,15 @@ import { expect, test } from '@playwright/test';
 const hasAuth = !!(process.env.E2E_USER_EMAIL && process.env.E2E_USER_PASSWORD);
 test.skip(!hasAuth, 'Set E2E_USER_EMAIL and E2E_USER_PASSWORD in .env to run authenticated tests');
 
+// ─── Landing page (logged in) ──────────────────────────────────────────────────
+
+test.describe('Landing page when logged in', () => {
+	test('logged-in users get the feed, not the landing page', async ({ page }) => {
+		await page.goto('/');
+		await expect(page.getByRole('link', { name: /browse recipes/i })).not.toBeVisible();
+	});
+});
+
 // ─── Navbar (logged in) ───────────────────────────────────────────────────────
 
 test.describe('Navbar when logged in', () => {

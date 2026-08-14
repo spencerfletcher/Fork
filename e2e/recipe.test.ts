@@ -330,3 +330,24 @@ test.describe('Recipe detail page', () => {
 		await expect(badge).toBeVisible();
 	});
 });
+
+test.describe('Landing page (logged out)', () => {
+	test('logged-out visitors see the premise and a diff', async ({ page }) => {
+		await page.goto('/');
+		await expect(page.getByRole('link', { name: /browse recipes/i })).toBeVisible();
+		await expect(page.locator('.diff-content').first()).toBeVisible();
+	});
+
+	test('the landing page does not scroll sideways on mobile', async ({ page }) => {
+		await page.setViewportSize({ width: 390, height: 900 });
+		await page.goto('/');
+		await expect(page.getByRole('link', { name: /browse recipes/i })).toBeVisible();
+
+		const { scrollWidth, clientWidth } = await page.evaluate(() => ({
+			scrollWidth: document.documentElement.scrollWidth,
+			clientWidth: document.documentElement.clientWidth
+		}));
+
+		expect(scrollWidth).toBeLessThanOrEqual(clientWidth);
+	});
+});

@@ -2,13 +2,20 @@ import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { and, eq, isNotNull } from 'drizzle-orm';
 import { recipes } from '$lib/server/db/schema';
 
-const { findManyMock, selectMock } = vi.hoisted(() => ({
+const { findManyMock, selectMock, recipeVersionsFindManyMock } = vi.hoisted(() => ({
 	findManyMock: vi.fn(),
-	selectMock: vi.fn()
+	selectMock: vi.fn(),
+	recipeVersionsFindManyMock: vi.fn()
 }));
 
 vi.mock('$lib/server/db', () => ({
-	db: { query: { recipes: { findMany: findManyMock } }, select: selectMock }
+	db: {
+		query: {
+			recipes: { findMany: findManyMock },
+			recipeVersions: { findMany: recipeVersionsFindManyMock }
+		},
+		select: selectMock
+	}
 }));
 
 import { load } from './+page.server';
@@ -41,7 +48,13 @@ async function loadResult(event: Parameters<typeof load>[0]): Promise<PageData> 
 }
 
 describe('homepage load', () => {
-	beforeEach(() => vi.clearAllMocks());
+	beforeEach(() => {
+		vi.clearAllMocks();
+		// Default: no second version available, so sampleDiff stays null unless a
+		// test sets it up explicitly. Keeps pre-existing tests (which don't care
+		// about the diff) from needing to know about this call.
+		recipeVersionsFindManyMock.mockResolvedValue([]);
+	});
 
 	test('attaches version and fork counts without a query per card', async () => {
 		findManyMock.mockResolvedValue([
@@ -91,5 +104,27 @@ describe('homepage load', () => {
 		const whereMock = forkChain.where as ReturnType<typeof vi.fn>;
 		const whereArg = whereMock.mock.calls[0][0];
 		expect(whereArg).toEqual(and(isNotNull(recipes.parentId), eq(recipes.isPublic, true)));
+	});
+
+	test('returns feed mode for a logged-in user', async () => {
+		findManyMock.mockResolvedValue([]);
+		selectMock.mockReturnValue(chain([]));
+
+		const result = await loadResult({
+			locals: { user: { id: 'u1' } }
+		} as unknown as Parameters<typeof load>[0]);
+
+		expect(result.mode).toBe('feed');
+	});
+
+	test('returns landing mode for an anonymous visitor', async () => {
+		findManyMock.mockResolvedValue([]);
+		selectMock.mockReturnValue(chain([]));
+
+		const result = await loadResult({
+			locals: { user: null }
+		} as unknown as Parameters<typeof load>[0]);
+
+		expect(result.mode).toBe('landing');
 	});
 });

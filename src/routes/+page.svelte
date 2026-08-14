@@ -1,9 +1,24 @@
 <script lang="ts">
 	import RecipeCard from '$lib/components/RecipeCard.svelte';
+	import VersionDiff from '$lib/components/VersionDiff.svelte';
+	import LandingHero from './LandingHero.svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
 </script>
+
+{#if data.mode === 'landing'}
+	<LandingHero sampleSlug={data.sampleDiff?.recipeSlug} />
+	{#if data.sampleDiff}
+		<section class="mx-auto max-w-[900px] px-6 py-10">
+			<h2 class="eyebrow-label mb-3">A real change, diffed</h2>
+			<VersionDiff
+				ingredientDiff={data.sampleDiff.ingredientDiff}
+				stepDiff={data.sampleDiff.stepDiff}
+			/>
+		</section>
+	{/if}
+{/if}
 
 <div class="page">
 	<div class="page-inner">
