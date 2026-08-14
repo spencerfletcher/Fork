@@ -257,7 +257,10 @@ async function seed() {
 			{ name: 'American', slug: slugify('American') },
 			{ name: 'Dinner', slug: slugify('Dinner') },
 			{ name: 'Indian', slug: slugify('Indian') },
-			{ name: 'Spicy', slug: slugify('Spicy') }
+			{ name: 'Spicy', slug: slugify('Spicy') },
+			// Deliberately orphaned — attached to no recipe below. Exercises the
+			// search loader's innerJoin, which hides tags with zero recipes.
+			{ name: 'Unused', slug: slugify('Unused') }
 		])
 		.onConflictDoUpdate({ target: tags.name, set: { name: tags.name } })
 		.returning({ id: tags.id, name: tags.name });
