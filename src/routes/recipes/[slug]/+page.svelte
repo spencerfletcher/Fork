@@ -79,6 +79,14 @@
 		align-items: start;
 	}
 
+	.sidebar-sticky {
+		position: sticky;
+		top: 76px;
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-4);
+	}
+
 	@media (max-width: 860px) {
 		.content-layout {
 			grid-template-columns: 1fr;
@@ -97,13 +105,5 @@
 		.recipe-photo {
 			order: -1;
 		}
-	}
-
-	.sidebar-sticky {
-		position: sticky;
-		top: 76px;
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-4);
 	}
 </style>

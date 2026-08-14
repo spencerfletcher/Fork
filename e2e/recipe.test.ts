@@ -104,6 +104,23 @@ test.describe('Recipe detail page', () => {
 		expect(ingredientsBox!.y).toBeLessThan(detailsBox!.y);
 	});
 
+	test('on mobile, the photo leads above the recipe', async ({ page }) => {
+		await page.setViewportSize({ width: 390, height: 900 });
+		await page.goto('/recipes/classic-chocolate-chip-cookies-0bNW21');
+
+		const photo = page.locator('.recipe-photo img').first();
+		const ingredients = page.getByRole('heading', { name: /ingredients/i }).first();
+		await photo.waitFor();
+		await ingredients.waitFor();
+
+		const photoBox = await photo.boundingBox();
+		const ingredientsBox = await ingredients.boundingBox();
+
+		expect(photoBox).not.toBeNull();
+		expect(ingredientsBox).not.toBeNull();
+		expect(photoBox!.y).toBeLessThan(ingredientsBox!.y);
+	});
+
 	test('on desktop, the sidebar sits beside the recipe, not below it', async ({ page }) => {
 		await page.setViewportSize({ width: 1440, height: 1000 });
 		await page.goto('/recipes/classic-chocolate-chip-cookies-0bNW21');
