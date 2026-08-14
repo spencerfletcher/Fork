@@ -1,14 +1,15 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 
-const { selectMock, findManyMock } = vi.hoisted(() => ({
+const { selectMock, selectDistinctMock, findManyMock } = vi.hoisted(() => ({
 	selectMock: vi.fn(),
+	selectDistinctMock: vi.fn(),
 	findManyMock: vi.fn()
 }));
 
 vi.mock('$lib/server/db', () => ({
 	db: {
 		select: selectMock,
-		selectDistinct: selectMock,
+		selectDistinct: selectDistinctMock,
 		query: { recipes: { findMany: findManyMock } }
 	}
 }));
@@ -56,8 +57,8 @@ describe('search load', () => {
 	});
 
 	test('returns recipes carrying author and tag relations', async () => {
+		selectDistinctMock.mockReturnValue(chain([])); // tags for the filter UI
 		selectMock
-			.mockReturnValueOnce(chain([])) // tags for the filter UI
 			.mockReturnValueOnce(chain([{ id: 2 }, { id: 1 }])) // pass 1: ranked FTS hits
 			.mockReturnValueOnce(chain([])); // pass 2: no ingredient-only matches
 		findManyMock.mockResolvedValue([
@@ -76,8 +77,8 @@ describe('search load', () => {
 
 	test('preserves ranked order, not database order', async () => {
 		// Ranking puts 2 before 1; findMany returns them the other way round.
+		selectDistinctMock.mockReturnValue(chain([])); // tags for the filter UI
 		selectMock
-			.mockReturnValueOnce(chain([])) // tags for the filter UI
 			.mockReturnValueOnce(chain([{ id: 2 }, { id: 1 }])) // pass 1: ranked FTS hits
 			.mockReturnValueOnce(chain([])); // pass 2: no ingredient-only matches
 		findManyMock.mockResolvedValue([
@@ -91,8 +92,8 @@ describe('search load', () => {
 	});
 
 	test('hydrates with a single relational query', async () => {
+		selectDistinctMock.mockReturnValue(chain([])); // tags for the filter UI
 		selectMock
-			.mockReturnValueOnce(chain([])) // tags for the filter UI
 			.mockReturnValueOnce(chain([{ id: 1 }])) // pass 1: ranked FTS hits
 			.mockReturnValueOnce(chain([])); // pass 2: no ingredient-only matches
 		findManyMock.mockResolvedValue([{ id: 1, author: null, recipesToTags: [] }]);
@@ -103,16 +104,20 @@ describe('search load', () => {
 	});
 
 	test('offers only tags that have at least one recipe', async () => {
-		// The tag query is the first db.select call; it must join through
-		// recipes_to_tags rather than selecting the whole table.
-		selectMock.mockReturnValue(chain([{ id: 1, name: 'Dessert', slug: 'dessert' }]));
+		// The tag query must join through recipes_to_tags rather than
+		// selecting the whole table.
+		selectDistinctMock.mockReturnValue(chain([{ id: 1, name: 'Dessert', slug: 'dessert' }]));
+		selectMock.mockReturnValue(chain([]));
 		findManyMock.mockResolvedValue([]);
 
 		const result = await loadResult(makeEvent(''));
 
 		expect(result.allTags).toEqual([{ id: 1, name: 'Dessert', slug: 'dessert' }]);
-		// A bare select().from(tags) takes no join; the fixed query must.
-		const firstCall = selectMock.mock.results[0].value;
-		expect(firstCall.innerJoin).toHaveBeenCalled();
+
+		// The join is what scopes tags to ones that match a recipe...
+		const tagsChain = selectDistinctMock.mock.results[0].value;
+		expect(tagsChain.innerJoin).toHaveBeenCalled();
+		// ...and selectDistinct is what stops the join fanning out duplicate chips.
+		expect(selectDistinctMock).toHaveBeenCalledTimes(1);
 	});
 });
