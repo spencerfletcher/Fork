@@ -268,12 +268,31 @@ test.describe('Recipe detail page', () => {
 
 		const style = await badge.evaluate((el) => {
 			const cs = getComputedStyle(el);
-			return { bg: cs.backgroundColor, border: cs.borderStyle, width: cs.borderTopWidth };
+			// Walk up for the first non-transparent background — the badge's own is transparent.
+			let node: HTMLElement | null = el.parentElement;
+			let surface = 'rgba(0, 0, 0, 0)';
+			while (node && (surface === 'rgba(0, 0, 0, 0)' || surface === 'transparent')) {
+				surface = getComputedStyle(node).backgroundColor;
+				node = node.parentElement;
+			}
+			return {
+				bg: cs.backgroundColor,
+				border: cs.borderStyle,
+				width: cs.borderTopWidth,
+				color: cs.color,
+				opacity: cs.opacity,
+				surface
+			};
 		});
 
 		expect(['rgba(0, 0, 0, 0)', 'transparent']).toContain(style.bg);
 		expect(style.border).toBe('solid');
 		expect(parseFloat(style.width)).toBeGreaterThan(0);
+		// An outline badge whose text is transparent or matches its surface is invisible
+		// while still passing toBeVisible() — assert the text is actually painted.
+		expect(['rgba(0, 0, 0, 0)', 'transparent']).not.toContain(style.color);
+		expect(style.color).not.toBe(style.surface);
+		expect(parseFloat(style.opacity)).toBeGreaterThan(0);
 		await expect(badge).toBeVisible();
 	});
 });
