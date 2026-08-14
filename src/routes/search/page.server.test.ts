@@ -73,6 +73,15 @@ describe('search load', () => {
 			expect(r).toHaveProperty('author');
 			expect(r).toHaveProperty('recipesToTags');
 		}
+
+		// The fixture above returns author/recipesToTags regardless of what the
+		// loader asked for — assert the loader actually requests the relations,
+		// otherwise this test stays green even if `with:` is deleted.
+		expect(findManyMock).toHaveBeenCalledWith(
+			expect.objectContaining({
+				with: expect.objectContaining({ author: true, recipesToTags: expect.anything() })
+			})
+		);
 	});
 
 	test('preserves ranked order, not database order', async () => {
