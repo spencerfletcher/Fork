@@ -57,12 +57,17 @@
 					</span>
 				{/if}
 				{#if recipe.versionCount}
-					<span class="text-text-3 font-mono text-[0.72rem]">·</span>
+					{#if recipe.author || recipe.prepTimeMinutes || recipe.cookTimeMinutes}
+						<span class="text-text-3 font-mono text-[0.72rem]">·</span>
+					{/if}
 					<span class="text-accent font-mono text-[0.72rem]">v{recipe.versionCount}</span>
 				{/if}
 				{#if recipe.forkCount}
 					<span class="text-text-3 font-mono text-[0.72rem]">
-						· {recipe.forkCount}
+						{#if recipe.author || recipe.prepTimeMinutes || recipe.cookTimeMinutes || recipe.versionCount}
+							·
+						{/if}
+						{recipe.forkCount}
 						{recipe.forkCount === 1 ? 'fork' : 'forks'}
 					</span>
 				{/if}

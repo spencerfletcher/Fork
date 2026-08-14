@@ -146,4 +146,16 @@ describe('RecipeCard', () => {
 		render(RecipeCard, { props: { recipe: makeRecipe({ versionCount: 1, forkCount: 1 }) } });
 		expect(screen.getByText(/1 fork(?!s)/)).toBeInTheDocument();
 	});
+
+	test('does not render a leading separator when author and times are absent', () => {
+		// makeRecipe() has no author and null prep/cook times, so versionCount is
+		// the first thing in the meta row — its separator must not render.
+		// Inspects the whole row rather than a single span: matching just the
+		// version-number text would pass even with a leading "·" still rendered.
+		const { container } = render(RecipeCard, {
+			props: { recipe: makeRecipe({ versionCount: 3 }) }
+		});
+		const metaRow = container.querySelector('.flex.items-center.gap-2');
+		expect(metaRow?.textContent?.trim().startsWith('·')).toBe(false);
+	});
 });
