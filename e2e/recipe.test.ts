@@ -99,6 +99,100 @@ test.describe('Recipe detail page', () => {
 		await expect(page.locator('h1')).toContainText(/compare/i);
 	});
 
+	test('diff-added and diff-removed text clear 4.5:1 against the surface actually behind them', async ({
+		page
+	}) => {
+		await gotoClassicCookies(page);
+		await page.locator('a[href*="/diff?from="]').first().click();
+		await expect(page).toHaveURL(/\/diff/);
+
+		// Relative luminance/contrast per WCAG — same formula as the tag-contrast test above.
+		const contrast = (fg: string, bg: string) => {
+			const lum = (c: string) => {
+				const [r, g, b] = c
+					.match(/\d+(\.\d+)?/g)!
+					.slice(0, 3)
+					.map(Number);
+				const f = (v: number) => {
+					const s = v / 255;
+					return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+				};
+				return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+			};
+			const [a, b] = [lum(fg), lum(bg)].sort((x, y) => y - x);
+			return (a + 0.05) / (b + 0.05);
+		};
+
+		// ── Added: v1→v2 adds "espresso powder" as a whole new ingredient row.
+		// The row has no background override, so it sits directly on the page
+		// background — no opacity involved.
+		const addedRow = page.locator('div.diff-added').first();
+		await addedRow.waitFor();
+		const added = await addedRow.evaluate((el) => {
+			const cs = getComputedStyle(el);
+			let node: HTMLElement | null = el as HTMLElement;
+			let bg = 'rgba(0, 0, 0, 0)';
+			while (node && (bg === 'rgba(0, 0, 0, 0)' || bg === 'transparent')) {
+				bg = getComputedStyle(node).backgroundColor;
+				node = node.parentElement;
+			}
+			return { color: cs.color, bg };
+		});
+		expect(contrast(added.color, added.bg)).toBeGreaterThanOrEqual(4.5);
+
+		// ── Removed: reverse the compared range (v2 → v1) so "espresso powder" —
+		// present in v2, absent in v1 — renders as a genuinely removed whole row,
+		// which carries opacity-85 (VersionDiff.svelte) on top of bg-remove-bg and
+		// text-remove. No fixture recipe has a real cross-version deletion, so the
+		// reversed range is what produces one without hardcoding a slug or altering
+		// seed data.
+		const diffUrl = new URL(page.url());
+		diffUrl.searchParams.set('from', '2');
+		diffUrl.searchParams.set('to', '1');
+		await page.goto(diffUrl.toString());
+
+		const removedRow = page.locator('div.diff-removed.opacity-85').first();
+		await removedRow.waitFor();
+		const removed = await removedRow.evaluate((el) => {
+			const cs = getComputedStyle(el);
+			// Walk up from the *parent* — not the element itself — because the
+			// element's own background-color is --color-remove-bg, and that is
+			// exactly what opacity-85 fades toward the true surface behind it.
+			let node: HTMLElement | null = el.parentElement;
+			let trueBg = 'rgba(0, 0, 0, 0)';
+			while (node && (trueBg === 'rgba(0, 0, 0, 0)' || trueBg === 'transparent')) {
+				trueBg = getComputedStyle(node).backgroundColor;
+				node = node.parentElement;
+			}
+			return {
+				color: cs.color,
+				ownBg: cs.backgroundColor,
+				opacity: parseFloat(cs.opacity),
+				trueBg
+			};
+		});
+
+		// opacity on an element fades the whole rendered element (text and its own
+		// background alike) toward whatever surface sits behind it — reproduce
+		// that composite here rather than comparing the raw (pre-opacity) values.
+		const blend = (fg: string, trueBg: string, alpha: number) => {
+			const nums = (c: string) =>
+				c
+					.match(/\d+(\.\d+)?/g)!
+					.slice(0, 3)
+					.map(Number);
+			const [fr, fg2, fb] = nums(fg);
+			const [tr, tg, tb] = nums(trueBg);
+			const mix = (f: number, t: number) => alpha * f + (1 - alpha) * t;
+			return `rgb(${mix(fr, tr)}, ${mix(fg2, tg)}, ${mix(fb, tb)})`;
+		};
+
+		const effectiveText = blend(removed.color, removed.trueBg, removed.opacity);
+		const effectiveRowBg = blend(removed.ownBg, removed.trueBg, removed.opacity);
+
+		expect(contrast(effectiveText, effectiveRowBg)).toBeGreaterThanOrEqual(4.5);
+	});
+
 	test('on mobile, ingredients render above the details box', async ({ page }) => {
 		await page.setViewportSize({ width: 390, height: 900 });
 		await gotoClassicCookies(page);

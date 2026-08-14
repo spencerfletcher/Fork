@@ -128,11 +128,20 @@
 	/* aged gold — inactive version dots */
 
 	/* Semantic diff colors */
-	--color-add: #87ae73;
-	/* 258020;*/
-	--color-remove: #c45a38;
+	/* WCAG AA (4.5:1) against their actual backgrounds. --color-remove is darkened
+	   past its raw contrast against --color-remove-bg because removed diff rows
+	   also carry opacity-85 (VersionDiff.svelte), which blends the text toward
+	   --color-bg and lowers the effective ratio — see e2e/recipe.test.ts. */
+	--color-add: #4a7538;
+	--color-remove: #8a3020;
 	--color-add-bg: #fdfdfd00;
 	--color-remove-bg: #fae8e0;
+	/* [data-theme='dark'] does not currently override --color-add/--color-remove,
+	   so dark mode inherits these light-mode values. Verified data-theme is never
+	   set anywhere in the app (only referenced in this file's own override
+	   blocks), so this is unreachable today — but if dark mode is ever wired up,
+	   the dark block will need its own add/remove values checked against its own
+	   backgrounds. */
 
 	/* Elevation */
 	--shadow-card: 0 1px 3px rgba(26, 20, 8, 0.08), 0 1px 2px rgba(26, 20, 8, 0.05);
