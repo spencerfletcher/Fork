@@ -148,11 +148,11 @@
 		font-family: var(--font-mono);
 		font-size: 0.65rem;
 		font-weight: 600;
-		background: var(--color-accent-pale);
-		color: var(--color-accent);
-		border: 1px solid rgba(232, 168, 58, 0.35);
+		background: transparent;
+		color: var(--color-text-2);
+		border: 1px solid var(--color-tag-border);
 		border-radius: var(--radius-pill);
-		padding: 3px 8px;
+		padding: 2px 7px;
 		align-self: flex-start;
 	}
 

@@ -32,7 +32,8 @@
 
 	/* Tags */
 	--color-tag: var(--color-tag);
-	--color-tag-pale: var(--color-tag-pale);
+	--color-tag-border: var(--color-tag-border);
+	--color-tag-hover-bg: var(--color-tag-hover-bg);
 
 	/* Borders */
 	--color-border: var(--color-border);
@@ -111,11 +112,12 @@
 	--color-sienna: #a84a28;
 	/* burnt sienna — ingredient quantities */
 	--color-paprika: #c45a38;
-	/* paprika — time / heat tags */
+	/* paprika — warning annotations on recipe steps (RecipeMethod) */
 
-	/* Tag system (golden) */
-	--color-tag: #e8a83a;
-	--color-tag-pale: #fdf0d0;
+	/* Tag system — quiet by default. Amber is reserved for actions and versions. */
+	--color-tag: #6b5a3a;
+	--color-tag-border: #ddd0b4;
+	--color-tag-hover-bg: #f3ead6;
 
 	/* Borders / surfaces */
 	--color-border: #eee4d0;
@@ -179,8 +181,9 @@
 	--color-accent-pale: #3a2a08;
 	--color-sienna: #c45a38;
 	--color-paprika: #e06040;
-	--color-tag: #e8a83a;
-	--color-tag-pale: #3a2a08;
+	--color-tag: #b8a880;
+	--color-tag-border: #4a3a20;
+	--color-tag-hover-bg: #3a2a08;
 	--color-border: #38281a;
 	--color-border-2: #4a3820;
 	--color-dot-inactive: #6b5a3a;
@@ -384,16 +387,30 @@
 		font-size: 0.75rem;
 		font-weight: 500;
 		color: var(--color-tag);
-		background: var(--color-tag-pale);
+		background: transparent;
+		border: 1px solid var(--color-tag-border);
 		border-radius: var(--radius-pill);
-		padding: 3px 10px;
+		padding: 2px 9px; /* 1px less than before to absorb the new border */
 		display: inline-block;
-		transition: background 0.15s;
+		transition:
+			background 0.15s,
+			border-color 0.15s;
 	}
 
 	a.tag:hover {
-		background: var(--color-accent);
-		color: var(--color-hero-bg);
+		background: var(--color-tag-hover-bg);
+		border-color: var(--color-tag);
+	}
+
+	/* The recipe hero sits on --color-hero-bg; the light border disappears there. */
+	.tag--on-dark {
+		color: var(--color-text-tan);
+		border-color: rgb(255 255 255 / 0.22);
+	}
+
+	a.tag--on-dark:hover {
+		background: rgb(255 255 255 / 0.08);
+		border-color: rgb(255 255 255 / 0.4);
 	}
 
 	/* ── Back link ── */

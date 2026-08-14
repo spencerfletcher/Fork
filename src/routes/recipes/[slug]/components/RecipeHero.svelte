@@ -47,7 +47,7 @@
 				</a>
 				<span class="opacity-50">/</span>
 			{/if}
-			<span class="text-accent">{recipe.slug.split('-').slice(0, -1).join('-')}</span>
+			<span class="text-accent">{recipe.title}</span>
 		</nav>
 
 		<!-- Title + version -->
@@ -78,31 +78,15 @@
 		<!-- Badges row -->
 		<div class="flex flex-wrap items-center gap-2">
 			{#each tags as tag (tag.id)}
-				<a
-					href="/tags/{tag.slug}"
-					class="rounded-pill bg-accent text-hero-bg px-3 py-1 font-sans text-[0.78rem] font-semibold no-underline transition-opacity duration-150 hover:opacity-85"
-				>
+				<a href="/tags/{tag.slug}" class="tag tag--on-dark no-underline">
 					{tag.name}
 				</a>
 			{/each}
 			{#if totalMinutes > 0}
-				<span
-					class="rounded-pill bg-paprika text-text-cream px-3 py-1 font-sans text-[0.78rem] font-semibold"
-				>
-					{formatTime(totalMinutes)}
-				</span>
+				<span class="text-text-bronze font-mono text-[0.85rem]">{formatTime(totalMinutes)}</span>
 			{/if}
 			{#if recipe.servings}
 				<span class="text-text-bronze text-[0.9rem]">Serves {recipe.servings}</span>
-			{/if}
-			{#if recipe.author}
-				<span class="text-text-bronze opacity-40">·</span>
-				<a
-					href="/users/{recipe.author.username}"
-					class="text-text-bronze hover:text-accent font-mono text-[0.85rem] no-underline transition-colors duration-150"
-				>
-					@{recipe.author.username}
-				</a>
 			{/if}
 		</div>
 	</div>

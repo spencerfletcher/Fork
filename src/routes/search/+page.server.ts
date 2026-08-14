@@ -13,7 +13,14 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 		: eq(recipes.isPublic, true);
 
 	// ── Fetch tags up front — always needed for the filter UI ────────────────
-	const allTags = await db.select().from(tags);
+	// Only tags that actually match something; a filter chip that leads to an
+	// empty page is worse than no chip. Tags drop off this list on their own
+	// when their last recipe goes away.
+	const allTags = await db
+		.selectDistinct({ id: tags.id, name: tags.name, slug: tags.slug })
+		.from(tags)
+		.innerJoin(recipesToTags, eq(recipesToTags.tagId, tags.id))
+		.orderBy(tags.name);
 
 	// ── Tag filter: collect matching recipe IDs up front ─────────────────────
 	let tagFilteredIds: number[] | null = null;
@@ -108,5 +115,25 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 		});
 	}
 
-	return { recipes: results, allTags, searchQuery, selectedTags: tagSlugs };
+	// ── Hydrate relations ─────────────────────────────────────────────────────
+	// The ranking above works on bare recipe rows. RecipeCard needs author and
+	// tags, so re-fetch the ranked ids with relations and restore the order —
+	// Postgres does not preserve inArray ordering.
+	const rankedIds = results.map((r) => r.id);
+
+	const rows =
+		rankedIds.length > 0
+			? await db.query.recipes.findMany({
+					where: inArray(recipes.id, rankedIds),
+					with: {
+						recipesToTags: { with: { tag: true } },
+						author: true
+					}
+				})
+			: [];
+
+	const byId = new Map(rows.map((r) => [r.id, r]));
+	const hydrated = rankedIds.map((id) => byId.get(id)).filter((r) => r !== undefined);
+
+	return { recipes: hydrated, allTags, searchQuery, selectedTags: tagSlugs };
 };

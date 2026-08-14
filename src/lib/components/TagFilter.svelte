@@ -41,7 +41,7 @@
 					onclick={() => onTagToggle(tag.slug)}
 					class={isSelected
 						? 'rounded-pill bg-accent text-hero-bg hover:bg-accent-mid cursor-pointer border-none px-3 py-1 font-sans text-[0.75rem] font-medium transition-[background,color] duration-150'
-						: 'rounded-pill bg-tag-pale text-tag hover:bg-accent hover:text-hero-bg cursor-pointer border-none px-3 py-1 font-sans text-[0.75rem] font-medium transition-[background,color] duration-150'}
+						: 'tag hover:bg-tag-hover-bg cursor-pointer'}
 				>
 					{tag.name}
 				</button>

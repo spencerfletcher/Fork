@@ -39,11 +39,13 @@
 		<aside class="min-w-0">
 			<div class="sidebar-sticky">
 				{#if recipe.imageUrl}
-					<img
-						src={recipe.imageUrl}
-						alt={recipe.title}
-						class="border-border-2 [aspect-ratio:4/3] w-full rounded-lg border object-cover"
-					/>
+					<div class="recipe-photo">
+						<img
+							src={recipe.imageUrl}
+							alt={recipe.title}
+							class="border-border-2 [aspect-ratio:4/3] w-full rounded-lg border object-cover"
+						/>
+					</div>
 				{/if}
 				<Details {recipe} />
 				<RecipeActions
@@ -77,22 +79,45 @@
 		align-items: start;
 	}
 
-	@media (max-width: 860px) {
-		.content-layout {
-			grid-template-columns: 1fr;
-			padding: var(--space-5);
-		}
-
-		.content-layout aside {
-			order: -1;
-		}
-	}
-
+	/* Keep this above the max-width:860px block: that block overrides `display`
+	   at equal specificity, so it only wins by source order. */
 	.sidebar-sticky {
 		position: sticky;
 		top: 76px;
 		display: flex;
 		flex-direction: column;
 		gap: var(--space-4);
+	}
+
+	@media (max-width: 860px) {
+		.content-layout {
+			grid-template-columns: 1fr;
+			padding: var(--space-5);
+			/* .sidebar-sticky's own 16px gap stops applying once it becomes
+			   display: contents, so the grid supplies the rhythm instead. */
+			row-gap: var(--space-4);
+		}
+
+		/* Promote the sidebar's children to grid items so the photo can lead on its
+		   own. <aside> follows the main column in the DOM, so everything else falls
+		   into the right order without an explicit rule. Desktop is untouched:
+		   the aside stays a normal sticky block there. */
+		.content-layout > aside,
+		.sidebar-sticky {
+			display: contents;
+		}
+
+		/* <aside class="min-w-0"> supplied this before display:contents removed its
+		   box; without it, nowrap content in the sidebar blows out the grid column.
+		   :global() is required because Details/RecipeActions/VersionHistory are
+		   separate components — their root elements don't carry this file's
+		   scoped-CSS hash, so an un-globaled `*` would silently never match them. */
+		.sidebar-sticky > :global(*) {
+			min-width: 0;
+		}
+
+		.recipe-photo {
+			order: -1;
+		}
 	}
 </style>
