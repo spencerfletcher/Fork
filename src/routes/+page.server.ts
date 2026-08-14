@@ -59,9 +59,12 @@ export const load: PageServerLoad = async ({ locals: { user } }) => {
 		// Restricted to the showcase author: this is the site's shop window, and
 		// signup is open, so any other author's recipe qualifying here would be a
 		// takeover of the front page, not a fallback worth having.
-		const candidates = withCounts.filter(
-			(r) => r.versionCount >= 2 && r.author?.username === SHOWCASE_AUTHOR
-		);
+		// Belt-and-braces bound: the showcase-author filter above already keeps this
+		// pool small, but nothing stops a bulk edit from producing many same-author
+		// no-op second versions, each costing a sequential round trip below.
+		const candidates = withCounts
+			.filter((r) => r.versionCount >= 2 && r.author?.username === SHOWCASE_AUTHOR)
+			.slice(0, 5);
 
 		for (const candidate of candidates) {
 			const versions = await db.query.recipeVersions.findMany({
