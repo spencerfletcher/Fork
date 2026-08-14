@@ -112,7 +112,7 @@
 	--color-sienna: #a84a28;
 	/* burnt sienna — ingredient quantities */
 	--color-paprika: #c45a38;
-	/* paprika — time / heat tags */
+	/* paprika — warning annotations on recipe steps (RecipeMethod) */
 
 	/* Tag system — quiet by default. Amber is reserved for actions and versions. */
 	--color-tag: #6b5a3a;
