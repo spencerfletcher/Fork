@@ -143,9 +143,7 @@
 							class="border-border diff-modified text-text-2 flex items-baseline gap-3 border-b px-4 py-2 [&:last-child]:border-b-0"
 						>
 							<span class="text-text-3 w-[1ch] shrink-0 font-bold select-none">~</span>
-							<span
-								class="step-num bg-accent inline-flex size-[22px] shrink-0 items-center justify-center rounded-full font-sans text-[0.7rem] font-semibold text-[#fdfaf4]"
-							>
+							<span class="step-num text-sienna shrink-0 font-mono text-[0.8rem] font-semibold">
 								{row.stepNumber}
 							</span>
 							<span class="diff-content flex-1 leading-[1.5]">
@@ -181,9 +179,7 @@
 								{#if row.status === 'added'}+{:else if row.status === 'removed'}−{:else}&nbsp;{/if}
 							</span>
 							{#if row.status !== 'removed'}
-								<span
-									class="step-num bg-accent inline-flex size-[22px] shrink-0 items-center justify-center rounded-full font-sans text-[0.7rem] font-semibold text-[#fdfaf4]"
-								>
+								<span class="step-num text-sienna shrink-0 font-mono text-[0.8rem] font-semibold">
 									{row.step.step}
 								</span>
 							{/if}
