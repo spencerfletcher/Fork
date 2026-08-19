@@ -13,115 +13,79 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 	const searchQuery = url.searchParams.get('q') || '';
 	const tagSlugs = url.searchParams.get('tags')?.split(',').filter(Boolean) || [];
 
-	// Get base favorited recipe IDs
 	const favoriteMappings = await db
 		.select({ recipeId: favorites.recipeId })
 		.from(favorites)
 		.where(eq(favorites.userId, user.id));
 
-	let favoriteRecipeIds = favoriteMappings.map((f) => f.recipeId);
+	const favoriteIds = favoriteMappings
+		.map((f) => f.recipeId)
+		.filter((id): id is number => id !== null);
 
-	if (favoriteRecipeIds.length === 0) {
-		return {
-			favoriteRecipes: [],
-			allTags: [],
-			searchQuery,
-			selectedTags: tagSlugs
-		};
+	if (favoriteIds.length === 0) {
+		return { favoriteRecipes: [], allTags: [], searchQuery, selectedTags: tagSlugs };
 	}
 
-	// Tag filtering with OR logic and sorting by match count
-	if (tagSlugs.length > 0) {
-		const selectedTags = await db.select().from(tags).where(inArray(tags.slug, tagSlugs));
-		const tagIds = selectedTags.map((t) => t.id);
+	// Filter chips are scoped to tags that actually appear on this user's
+	// favourites — a chip leading to an empty page is worse than no chip. Derived
+	// from every favourite rather than the filtered subset, or narrowing by one
+	// tag would remove the chips needed to widen the filter again.
+	const allTags = await db
+		.selectDistinct({ id: tags.id, name: tags.name, slug: tags.slug })
+		.from(tags)
+		.innerJoin(recipesToTags, eq(recipesToTags.tagId, tags.id))
+		.where(inArray(recipesToTags.recipeId, favoriteIds))
+		.orderBy(tags.name);
 
-		if (tagIds.length > 0) {
-			// Get recipe IDs that have ANY of these tags (OR logic)
-			const taggedRecipes = await db
-				.select({ recipeId: recipesToTags.recipeId })
-				.from(recipesToTags)
-				.where(inArray(recipesToTags.tagId, tagIds));
+	// Tag filtering is OR logic: a recipe qualifies on any selected tag, and
+	// recipes matching more of them rank higher.
+	const selectedTagIds = allTags.filter((t) => tagSlugs.includes(t.slug)).map((t) => t.id);
+	const matchCounts = new Map<number, number>();
+	let candidateIds = favoriteIds;
 
-			const taggedRecipeIds = [...new Set(taggedRecipes.map((r) => r.recipeId))];
+	if (selectedTagIds.length > 0) {
+		const taggedRows = await db
+			.select({ recipeId: recipesToTags.recipeId })
+			.from(recipesToTags)
+			.where(
+				and(
+					inArray(recipesToTags.tagId, selectedTagIds),
+					inArray(recipesToTags.recipeId, favoriteIds)
+				)
+			);
 
-			// Intersect: recipes that are BOTH favorited AND have ANY of the tags
-			favoriteRecipeIds = favoriteRecipeIds.filter((id) => taggedRecipeIds.includes(id));
+		for (const row of taggedRows) {
+			if (row.recipeId === null) continue;
+			matchCounts.set(row.recipeId, (matchCounts.get(row.recipeId) ?? 0) + 1);
+		}
 
-			if (favoriteRecipeIds.length === 0) {
-				return {
-					favoriteRecipes: [],
-					allTags: [],
-					searchQuery,
-					selectedTags: tagSlugs
-				};
-			}
+		candidateIds = [...matchCounts.keys()];
 
-			// Build conditions for recipe fetch
-			const conditions = [inArray(recipes.id, favoriteRecipeIds)];
-
-			if (searchQuery) {
-				conditions.push(ilike(recipes.title, `%${searchQuery}%`));
-			}
-
-			// Fetch recipes with their tags
-			const filteredRecipes = await db.query.recipes.findMany({
-				where: and(...conditions),
-				with: {
-					recipesToTags: {
-						with: {
-							tag: true
-						}
-					}
-				}
-			});
-
-			// Count tag matches for each recipe
-			const recipesWithMatchCount = filteredRecipes.map((recipe) => {
-				const matchCount = taggedRecipes.filter((r) => r.recipeId === recipe.id).length;
-				return { ...recipe, matchCount };
-			});
-
-			// Sort by match count descending
-			recipesWithMatchCount.sort((a, b) => b.matchCount - a.matchCount);
-
-			const allTags = await db.select().from(tags);
-			const withCounts = await attachRecipeCounts(recipesWithMatchCount);
-
-			return {
-				favoriteRecipes: withCounts,
-				allTags,
-				searchQuery,
-				selectedTags: tagSlugs
-			};
+		if (candidateIds.length === 0) {
+			return { favoriteRecipes: [], allTags, searchQuery, selectedTags: tagSlugs };
 		}
 	}
 
-	// Build conditions for recipe fetch without tag filtering
-	const conditions = [inArray(recipes.id, favoriteRecipeIds)];
-
+	const conditions = [inArray(recipes.id, candidateIds)];
 	if (searchQuery) {
 		conditions.push(ilike(recipes.title, `%${searchQuery}%`));
 	}
 
-	// Fetch recipes with their tags
-	const filteredRecipes = await db.query.recipes.findMany({
+	const rows = await db.query.recipes.findMany({
 		where: and(...conditions),
 		with: {
-			recipesToTags: {
-				with: {
-					tag: true
-				}
-			}
+			recipesToTags: { with: { tag: true } },
+			author: true
 		}
 	});
 
-	const allTags = await db.select().from(tags);
-	const withCounts = await attachRecipeCounts(filteredRecipes);
+	// Counts come from the map built above, so ranking is O(n log n) rather than
+	// rescanning the tag rows inside every comparison.
+	if (matchCounts.size > 0) {
+		rows.sort((a, b) => (matchCounts.get(b.id) ?? 0) - (matchCounts.get(a.id) ?? 0));
+	}
 
-	return {
-		favoriteRecipes: withCounts,
-		allTags,
-		searchQuery,
-		selectedTags: tagSlugs
-	};
+	const withCounts = await attachRecipeCounts(rows);
+
+	return { favoriteRecipes: withCounts, allTags, searchQuery, selectedTags: tagSlugs };
 };
