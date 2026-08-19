@@ -38,7 +38,6 @@
 	/* Borders */
 	--color-border: var(--color-border);
 	--color-border-2: var(--color-border-2);
-	--color-dot-inactive: var(--color-dot-inactive);
 
 	/* Diff */
 	--color-add: var(--color-add);
@@ -124,8 +123,6 @@
 	/* pale linen — ingredient / step dividers */
 	--color-border-2: #e0d0b0;
 	/* warm sand — sidebar card borders */
-	--color-dot-inactive: #c8b890;
-	/* aged gold — inactive version dots */
 
 	/* Semantic diff colors */
 	/* WCAG AA (4.5:1) against their actual backgrounds. --color-remove is darkened
@@ -195,7 +192,6 @@
 	--color-tag-hover-bg: #3a2a08;
 	--color-border: #38281a;
 	--color-border-2: #4a3820;
-	--color-dot-inactive: #6b5a3a;
 	--color-add-bg: #2a2010;
 	--color-remove-bg: #2e1810;
 	--shadow-card: 0 1px 3px rgba(0, 0, 0, 0.4);
@@ -328,25 +324,6 @@
 	}
 
 	.btn-ghost:hover {
-		background: var(--color-accent-pale);
-	}
-
-	.btn-ghost-sm {
-		font-family: var(--font-sans);
-		font-weight: 500;
-		font-size: 0.8rem;
-		background: transparent;
-		color: var(--color-accent);
-		border: 1.5px solid var(--color-accent);
-		border-radius: var(--radius-md);
-		padding: 4px 10px;
-		cursor: pointer;
-		transition: background 0.15s ease;
-		display: inline-block;
-		text-align: center;
-	}
-
-	.btn-ghost-sm:hover {
 		background: var(--color-accent-pale);
 	}
 
