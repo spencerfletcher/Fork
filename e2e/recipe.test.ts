@@ -102,6 +102,31 @@ test.describe('Recipe detail page', () => {
 		await expect(page.locator('h1')).toContainText(/compare/i);
 	});
 
+	test('changing the version range navigates and re-renders the diff', async ({ page }) => {
+		await gotoClassicCookies(page);
+		await page.locator('a[href*="/diff?from="]').first().click();
+		await expect(page).toHaveURL(/\/diff/);
+
+		// Count modified rows rather than reading the first row's text: the first
+		// row is unchanged flour in every range, so comparing it proves nothing.
+		const modifiedRows = page.locator('.diff-row.diff-modified');
+		const before = await modifiedRows.count();
+		expect(before).toBeGreaterThan(0);
+
+		// The strip's first compare link already opens v2 -> v3, so widen the range
+		// back to v1 — selecting v2 here would be a no-op and prove nothing.
+		await page.locator('#from-select').selectOption('1');
+		await expect(page).toHaveURL(/from=1/);
+
+		// The selects must reflect the range actually being shown, not reset to a
+		// default — the page navigates rather than updating in place.
+		await expect(page.locator('#from-select')).toHaveValue('1');
+		await expect(page.locator('.commit-bar')).toContainText('v1');
+
+		// A wider range covers more edits, so the diff itself must have changed.
+		await expect(modifiedRows).not.toHaveCount(before);
+	});
+
 	test('diff-added and diff-removed text clear 4.5:1 against the surface actually behind them', async ({
 		page
 	}) => {

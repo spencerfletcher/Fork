@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import VersionDiff from '$lib/components/VersionDiff.svelte';
+	import VersionRangePicker from '$lib/components/VersionRangePicker.svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -26,36 +27,12 @@
 			<p class="text-text-2 m-0 text-base">{recipe.title}</p>
 		</div>
 
-		<!-- Version selectors -->
-		<div class="mb-6 flex items-end gap-4">
-			<div class="flex flex-1 flex-col gap-1">
-				<label
-					for="from-select"
-					class="text-text-3 text-[0.75rem] font-semibold tracking-[0.05em] uppercase"
-				>
-					From
-				</label>
-				<select id="from-select" bind:value={fromSelect} onchange={navigate}>
-					{#each allVersions as v (v.versionNumber)}
-						<option value={v.versionNumber}>v{v.versionNumber}: {v.commitMessage}</option>
-					{/each}
-				</select>
-			</div>
-			<span class="text-text-3 pb-2 text-[1.25rem]">→</span>
-			<div class="flex flex-1 flex-col gap-1">
-				<label
-					for="to-select"
-					class="text-text-3 text-[0.75rem] font-semibold tracking-[0.05em] uppercase"
-				>
-					To
-				</label>
-				<select id="to-select" bind:value={toSelect} onchange={navigate}>
-					{#each allVersions as v (v.versionNumber)}
-						<option value={v.versionNumber}>v{v.versionNumber}: {v.commitMessage}</option>
-					{/each}
-				</select>
-			</div>
-		</div>
+		<VersionRangePicker
+			versions={allVersions}
+			bind:from={fromSelect}
+			bind:to={toSelect}
+			onchange={navigate}
+		/>
 
 		<!-- Commit context: same .commit-bar the landing page uses for its sample
 		     diff, stacked because this view shows both endpoints of the range. -->
