@@ -14,6 +14,35 @@
 
 	const tags = recipe.recipesToTags?.map((r) => r.tag) ?? [];
 	const href = `/recipes/${recipe.slug}`;
+
+	/**
+	 * The meta line, as data rather than nested markup. Building it as a list is
+	 * what lets the separator be "not the first item" instead of a condition that
+	 * restates every preceding field — the old version had three of those, each
+	 * one term longer than the last.
+	 */
+	type MetaPart = { text: string; href?: string; accent?: boolean };
+
+	const metaParts: MetaPart[] = $derived.by(() => {
+		const parts: MetaPart[] = [];
+
+		if (recipe.author) {
+			parts.push({ text: `@${recipe.author.username}`, href: `/users/${recipe.author.username}` });
+		}
+
+		const { prepTimeMinutes: prep, cookTimeMinutes: cook } = recipe;
+		if (prep && cook) parts.push({ text: `${prep + cook} min` });
+		else if (prep) parts.push({ text: `${prep} min prep` });
+		else if (cook) parts.push({ text: `${cook} min cook` });
+
+		if (recipe.versionCount) parts.push({ text: `v${recipe.versionCount}`, accent: true });
+
+		if (recipe.forkCount) {
+			parts.push({ text: `${recipe.forkCount} ${recipe.forkCount === 1 ? 'fork' : 'forks'}` });
+		}
+
+		return parts;
+	});
 </script>
 
 <div class="recipe-card">
@@ -54,44 +83,15 @@
 			<p class="card-desc text-text-2 m-0 text-sm leading-[1.5]">{recipe.description}</p>
 		{/if}
 
-		<div class="flex flex-wrap items-center gap-2">
-			{#if recipe.author}
-				<a
-					href="/users/{recipe.author.username}"
-					class="text-text-3 hover:text-accent relative z-[2] font-mono text-[0.72rem] no-underline transition-colors duration-150"
-				>
-					@{recipe.author.username}
-				</a>
-			{/if}
-			{#if recipe.author && (recipe.prepTimeMinutes || recipe.cookTimeMinutes)}
-				<span class="text-text-3 font-mono text-[0.72rem]">·</span>
-			{/if}
-			{#if recipe.prepTimeMinutes || recipe.cookTimeMinutes}
-				<span class="text-text-3 font-mono text-[0.72rem]">
-					{#if recipe.prepTimeMinutes && recipe.cookTimeMinutes}
-						{recipe.prepTimeMinutes + recipe.cookTimeMinutes} min
-					{:else if recipe.prepTimeMinutes}
-						{recipe.prepTimeMinutes} min prep
-					{:else if recipe.cookTimeMinutes}
-						{recipe.cookTimeMinutes} min cook
-					{/if}
-				</span>
-			{/if}
-			{#if recipe.versionCount}
-				{#if recipe.author || recipe.prepTimeMinutes || recipe.cookTimeMinutes}
-					<span class="text-text-3 font-mono text-[0.72rem]">·</span>
+		<div class="meta-row">
+			{#each metaParts as part, i (part.text)}
+				{#if i > 0}<span class="meta-sep">·</span>{/if}
+				{#if part.href}
+					<a class="meta-item meta-link" href={part.href}>{part.text}</a>
+				{:else}
+					<span class="meta-item" class:meta-item--accent={part.accent}>{part.text}</span>
 				{/if}
-				<span class="text-accent font-mono text-[0.72rem]">v{recipe.versionCount}</span>
-			{/if}
-			{#if recipe.forkCount}
-				<span class="text-text-3 font-mono text-[0.72rem]">
-					{#if recipe.author || recipe.prepTimeMinutes || recipe.cookTimeMinutes || recipe.versionCount}
-						·
-					{/if}
-					{recipe.forkCount}
-					{recipe.forkCount === 1 ? 'fork' : 'forks'}
-				</span>
-			{/if}
+			{/each}
 		</div>
 
 		{#if tags.length > 0}
@@ -158,6 +158,36 @@
 	   carries author, time, version and fork count. The background is opaque,
 	   not translucent: recipe photos are arbitrary user-supplied images, and a
 	   scrim cannot guarantee contrast over all of them. */
+	.meta-row {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.meta-item,
+	.meta-sep {
+		font-family: var(--font-mono);
+		font-size: 0.72rem;
+		color: var(--color-text-3);
+	}
+
+	.meta-item--accent {
+		color: var(--color-accent);
+	}
+
+	.meta-link {
+		/* Above the card's stretched link, so the author stays clickable. */
+		position: relative;
+		z-index: 2;
+		text-decoration: none;
+		transition: color 0.15s ease;
+	}
+
+	.meta-link:hover {
+		color: var(--color-accent);
+	}
+
 	.forked-badge {
 		position: absolute;
 		top: 10px;

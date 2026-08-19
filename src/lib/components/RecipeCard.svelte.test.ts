@@ -158,7 +158,10 @@ describe('RecipeCard', () => {
 		const { container } = render(RecipeCard, {
 			props: { recipe: makeRecipe({ versionCount: 3 }) }
 		});
-		const metaRow = container.querySelector('.flex.items-center.gap-2');
+		const metaRow = container.querySelector('.meta-row');
 		expect(metaRow?.textContent?.trim().startsWith('·')).toBe(false);
+		// The separator is now "not the first part" rather than a condition
+		// restating every preceding field, so a lone item renders none at all.
+		expect(container.querySelectorAll('.meta-sep')).toHaveLength(0);
 	});
 });
