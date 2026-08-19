@@ -72,30 +72,6 @@
 					</span>
 				{/if}
 			</div>
-			<span
-				class="forked-badge"
-				class:forked-badge--hidden={!recipe.parentId}
-				aria-hidden={!recipe.parentId}
-			>
-				<svg
-					class="h-[10px] w-[9px] shrink-0"
-					viewBox="0 0 12 14"
-					fill="none"
-					xmlns="http://www.w3.org/2000/svg"
-					aria-hidden="true"
-				>
-					<circle cx="2" cy="2" r="1.5" stroke="currentColor" stroke-width="1" />
-					<circle cx="10" cy="2" r="1.5" stroke="currentColor" stroke-width="1" />
-					<circle cx="6" cy="12" r="1.5" stroke="currentColor" stroke-width="1" />
-					<path
-						d="M2 3.5V6C2 7.1 2.9 8 4 8H6M10 3.5V6C10 7.1 9.1 8 8 8H6M6 8V10.5"
-						stroke="currentColor"
-						stroke-width="1"
-						stroke-linecap="round"
-					/>
-				</svg>
-				Forked
-			</span>
 		</div>
 
 		{#if tags.length > 0}
@@ -105,6 +81,30 @@
 				{/each}
 			</div>
 		{/if}
+		<span
+			class="forked-badge"
+			class:forked-badge--hidden={!recipe.parentId}
+			aria-hidden={!recipe.parentId}
+		>
+			<svg
+				class="h-[10px] w-[9px] shrink-0"
+				viewBox="0 0 12 14"
+				fill="none"
+				xmlns="http://www.w3.org/2000/svg"
+				aria-hidden="true"
+			>
+				<circle cx="2" cy="2" r="1.5" stroke="currentColor" stroke-width="1" />
+				<circle cx="10" cy="2" r="1.5" stroke="currentColor" stroke-width="1" />
+				<circle cx="6" cy="12" r="1.5" stroke="currentColor" stroke-width="1" />
+				<path
+					d="M2 3.5V6C2 7.1 2.9 8 4 8H6M10 3.5V6C10 7.1 9.1 8 8 8H6M6 8V10.5"
+					stroke="currentColor"
+					stroke-width="1"
+					stroke-linecap="round"
+				/>
+			</svg>
+			Forked
+		</span>
 	</div>
 </div>
 
