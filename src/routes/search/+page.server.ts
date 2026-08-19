@@ -45,7 +45,7 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 		}
 	}
 
-	const baseConditions = [visibilityCondition!];
+	const baseConditions = [visibilityCondition];
 	if (tagFilteredIds !== null) {
 		baseConditions.push(inArray(recipes.id, tagFilteredIds));
 	}
