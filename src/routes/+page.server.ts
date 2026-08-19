@@ -13,7 +13,7 @@ import type { PageServerLoad } from './$types';
 const SHOWCASE_AUTHOR = 'spencerfletcher';
 
 export const load: PageServerLoad = async ({ locals: { user } }) => {
-	const displayedRecipes = await db.query.recipes.findMany({
+	const allRecipes = await db.query.recipes.findMany({
 		where: eq(recipes.isPublic, true),
 		with: {
 			recipesToTags: { with: { tag: true } },
@@ -22,7 +22,25 @@ export const load: PageServerLoad = async ({ locals: { user } }) => {
 		orderBy: (r, { desc }) => [desc(r.createdAt)]
 	});
 
-	const withCounts = await attachRecipeCounts(displayedRecipes);
+	// The landing page renders three cards; the feed renders everything. Counting
+	// is scoped to the rows one of those two actually needs, plus the showcase
+	// candidates below, so the aggregates do not grow with the size of the site
+	// on a page whose output is fixed.
+	const displayed = user ? allRecipes : allRecipes.slice(0, 3);
+	const showcasePool = user
+		? []
+		: allRecipes.filter((r) => r.author?.username === SHOWCASE_AUTHOR).slice(0, 5);
+
+	const needed = [...displayed];
+	for (const recipe of showcasePool) {
+		if (!needed.some((r) => r.id === recipe.id)) needed.push(recipe);
+	}
+
+	// attachRecipeCounts preserves input order, and `needed` starts with exactly
+	// the displayed rows, so the leading slice is the rendered set.
+	const counted = await attachRecipeCounts(needed);
+	const countedById = new Map(counted.map((r) => [r.id, r]));
+	const withCounts = counted.slice(0, displayed.length);
 
 	// A real diff from real rows. If no recipe has two versions the section is
 	// omitted rather than fabricated — the landing page must not claim more
@@ -42,12 +60,13 @@ export const load: PageServerLoad = async ({ locals: { user } }) => {
 		// Restricted to the showcase author: this is the site's shop window, and
 		// signup is open, so any other author's recipe qualifying here would be a
 		// takeover of the front page, not a fallback worth having.
-		// Belt-and-braces bound: the showcase-author filter above already keeps this
-		// pool small, but nothing stops a bulk edit from producing many same-author
-		// no-op second versions, each costing a sequential round trip below.
-		const candidates = withCounts
-			.filter((r) => r.versionCount >= 2 && r.author?.username === SHOWCASE_AUTHOR)
-			.slice(0, 5);
+		// showcasePool is already capped at five: nothing stops a bulk edit from
+		// producing many same-author no-op second versions, and each candidate
+		// costs a sequential round trip below.
+		const candidates = showcasePool
+			.map((r) => countedById.get(r.id))
+			.filter((r) => r !== undefined)
+			.filter((r) => r.versionCount >= 2);
 
 		for (const candidate of candidates) {
 			const versions = await db.query.recipeVersions.findMany({
@@ -87,7 +106,7 @@ export const load: PageServerLoad = async ({ locals: { user } }) => {
 
 	return {
 		mode: user ? ('feed' as const) : ('landing' as const),
-		recipes: user ? withCounts : withCounts.slice(0, 3),
+		recipes: withCounts,
 		sampleDiff
 	};
 };

@@ -1,6 +1,6 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { and, eq, inArray } from 'drizzle-orm';
-import { recipes } from '$lib/server/db/schema';
+import { recipes, recipeVersions } from '$lib/server/db/schema';
 
 const { findManyMock, selectMock, recipeVersionsFindManyMock } = vi.hoisted(() => ({
 	findManyMock: vi.fn(),
@@ -171,6 +171,64 @@ describe('homepage load', () => {
 			result.sampleDiff?.ingredientDiff.some((r) => r.status !== 'unchanged') ||
 			result.sampleDiff?.stepDiff.some((r) => r.status !== 'unchanged');
 		expect(hasVisibleChange).toBe(true);
+	});
+
+	test('counts only the recipes the landing page actually renders', async () => {
+		// The landing page shows three cards. Aggregating over every public recipe
+		// to display three is work that grows with the size of the site for a page
+		// whose output does not.
+		findManyMock.mockResolvedValue(
+			Array.from({ length: 20 }, (_, i) => ({
+				id: i + 1,
+				title: `R${i + 1}`,
+				slug: `r${i + 1}`,
+				recipesToTags: [],
+				author: null
+			}))
+		);
+		const versionChain = chain([]);
+		selectMock.mockReturnValueOnce(versionChain).mockReturnValueOnce(chain([]));
+
+		const result = await loadResult({
+			locals: { user: null }
+		} as unknown as Parameters<typeof load>[0]);
+
+		expect(result.recipes.length).toBe(3);
+		// Structural: compare the condition object against one built here, so the
+		// test fails if the loader widens the id set rather than merely if
+		// `.where` was called.
+		const whereArg = (versionChain.where as ReturnType<typeof vi.fn>).mock.calls[0][0];
+		expect(whereArg).toEqual(inArray(recipeVersions.recipeId, [1, 2, 3]));
+	});
+
+	test('still counts showcase candidates that fall outside the three rendered cards', async () => {
+		// The diff picker needs version counts for the owner's recipes to know
+		// which have history — scoping the aggregate must not starve it.
+		const showcaseAuthor = { id: 'user-1', username: 'spencerfletcher' };
+		findManyMock.mockResolvedValue([
+			...Array.from({ length: 3 }, (_, i) => ({
+				id: i + 1,
+				title: `R${i + 1}`,
+				slug: `r${i + 1}`,
+				recipesToTags: [],
+				author: null
+			})),
+			{ id: 9, title: 'Owned', slug: 'owned', recipesToTags: [], author: showcaseAuthor }
+		]);
+		const versionChain = chain([{ recipeId: 9, count: 2 }]);
+		selectMock.mockReturnValueOnce(versionChain).mockReturnValueOnce(chain([]));
+		recipeVersionsFindManyMock.mockResolvedValue([
+			{ ingredients: [{ amount: '2', unit: 'cup', name: 'flour' }], steps: [], versionNumber: 2 },
+			{ ingredients: [{ amount: '1', unit: 'cup', name: 'flour' }], steps: [], versionNumber: 1 }
+		]);
+
+		const result = await loadResult({
+			locals: { user: null }
+		} as unknown as Parameters<typeof load>[0]);
+
+		const whereArg = (versionChain.where as ReturnType<typeof vi.fn>).mock.calls[0][0];
+		expect(whereArg).toEqual(inArray(recipeVersions.recipeId, [1, 2, 3, 9]));
+		expect(result.sampleDiff?.recipeTitle).toBe('Owned');
 	});
 
 	test('does not select a qualifying recipe from another author for the showcase diff', async () => {
