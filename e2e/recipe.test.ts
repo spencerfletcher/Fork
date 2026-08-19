@@ -389,38 +389,52 @@ test.describe('Recipe detail page', () => {
 		expect(box!.width).toBeLessThanOrEqual(390);
 	});
 
-	test('the forked badge reads as an outline, not a fill', async ({ page }) => {
+	test('the forked badge stays readable over an arbitrary photo', async ({ page }) => {
 		await page.goto('/');
-		const badge = page.locator('.forked-badge:not(.forked-badge--hidden)').first();
+		const badge = page.locator('.forked-badge').first();
 		await badge.waitFor();
 
 		const style = await badge.evaluate((el) => {
 			const cs = getComputedStyle(el);
-			// Walk up for the first non-transparent background — the badge's own is transparent.
-			let node: HTMLElement | null = el.parentElement;
-			let surface = 'rgba(0, 0, 0, 0)';
-			while (node && (surface === 'rgba(0, 0, 0, 0)' || surface === 'transparent')) {
-				surface = getComputedStyle(node).backgroundColor;
-				node = node.parentElement;
-			}
 			return {
 				bg: cs.backgroundColor,
 				border: cs.borderStyle,
 				width: cs.borderTopWidth,
 				color: cs.color,
-				opacity: cs.opacity,
-				surface
+				opacity: cs.opacity
 			};
 		});
 
-		expect(['rgba(0, 0, 0, 0)', 'transparent']).toContain(style.bg);
+		const rgb = (c: string) => c.match(/[\d.]+/g)!.map(Number);
+
+		// The badge overlays a user-supplied photo, so it must paint its own
+		// background. A transparent or translucent chip is legible over some
+		// images and unreadable over others, and no scrim fixes that in general.
+		const [, , , bgAlpha = 1] = rgb(style.bg);
+		expect(bgAlpha).toBe(1);
+
+		// Amber is reserved for actions and version identity. The badge is neither,
+		// so it must not be filled with the accent.
+		expect(rgb(style.bg).slice(0, 3)).not.toEqual([232, 168, 58]);
+
 		expect(style.border).toBe('solid');
 		expect(parseFloat(style.width)).toBeGreaterThan(0);
-		// An outline badge whose text is transparent or matches its surface is invisible
-		// while still passing toBeVisible() — assert the text is actually painted.
-		expect(['rgba(0, 0, 0, 0)', 'transparent']).not.toContain(style.color);
-		expect(style.color).not.toBe(style.surface);
 		expect(parseFloat(style.opacity)).toBeGreaterThan(0);
+
+		// Text against the badge's own background, not an ancestor's — assert the
+		// label is actually painted rather than merely present in the DOM.
+		const luminance = (c: number[]) => {
+			const [r, g, b] = c.slice(0, 3).map((v) => {
+				const s = v / 255;
+				return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+			});
+			return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+		};
+		const l1 = luminance(rgb(style.color));
+		const l2 = luminance(rgb(style.bg));
+		const contrast = (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+		expect(contrast).toBeGreaterThanOrEqual(4.5);
+
 		await expect(badge).toBeVisible();
 	});
 });
