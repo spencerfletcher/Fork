@@ -54,7 +54,7 @@
 				{/each}
 			</div>
 		{:else}
-			<p class="text-text-3 py-8 text-center">
+			<p class="empty-state">
 				No recipes yet. <a href="/recipes/new">Create the first one →</a>
 			</p>
 		{/if}

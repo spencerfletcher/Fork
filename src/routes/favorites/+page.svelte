@@ -26,11 +26,9 @@
 				{/each}
 			</div>
 		{:else if data.searchQuery || data.selectedTags?.length > 0}
-			<p class="text-text-3 mt-5 py-8 text-center">
-				No favorites match your filters. Try adjusting your search.
-			</p>
+			<p class="empty-state mt-5">No favorites match your filters. Try adjusting your search.</p>
 		{:else}
-			<p class="text-text-3 mt-5 py-8 text-center">
+			<p class="empty-state mt-5">
 				No favorites yet. <a href="/">Explore recipes →</a>
 			</p>
 		{/if}

@@ -20,13 +20,11 @@
 		/>
 
 		{#if data.recipes.length === 0 && (data.searchQuery || data.selectedTags.length > 0)}
-			<p class="text-text-3 mt-5 py-8 text-center">
+			<p class="empty-state mt-5">
 				No recipes found. Try adjusting your search or clearing some filters.
 			</p>
 		{:else if data.recipes.length === 0}
-			<p class="text-text-3 mt-5 py-8 text-center">
-				Enter a recipe name or select tags to find recipes.
-			</p>
+			<p class="empty-state mt-5">Enter a recipe name or select tags to find recipes.</p>
 		{:else}
 			<div class="recipe-grid mt-5">
 				{#each data.recipes as recipe (recipe.id)}

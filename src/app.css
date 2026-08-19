@@ -606,6 +606,14 @@
 
 	/* ── Eyebrow label ── */
 
+	/* The "nothing here" paragraph shown when a list query returns no rows.
+	   Shared by the feed, search, favourites and tag pages. */
+	.empty-state {
+		padding: 2rem 0;
+		text-align: center;
+		color: var(--color-text-3);
+	}
+
 	/* Commit context: which two versions a diff spans and why the change was made.
 	   Used above the landing page's sample diff and on the compare page. */
 	.commit-bar {
