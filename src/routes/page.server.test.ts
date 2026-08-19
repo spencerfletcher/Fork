@@ -231,6 +231,63 @@ describe('homepage load', () => {
 		expect(result.sampleDiff?.recipeTitle).toBe('Owned');
 	});
 
+	test('prefers a diff that changes both panels over a larger one-sided diff', async () => {
+		// A sample diff whose ingredients panel is entirely unchanged is a poor
+		// advertisement even when it touches more rows: half the screen is grey.
+		const showcaseAuthor = { id: 'user-1', username: 'spencerfletcher' };
+		findManyMock.mockResolvedValue([
+			{ id: 1, title: 'StepsOnly', slug: 'steps-only', recipesToTags: [], author: showcaseAuthor },
+			{ id: 2, title: 'Balanced', slug: 'balanced', recipesToTags: [], author: showcaseAuthor }
+		]);
+		selectMock
+			.mockReturnValueOnce(
+				chain([
+					{ recipeId: 1, count: 2 },
+					{ recipeId: 2, count: 2 }
+				])
+			)
+			.mockReturnValueOnce(chain([]));
+
+		const ing = [{ amount: '1', unit: 'cup', name: 'flour' }];
+		recipeVersionsFindManyMock
+			// Newer, and changes MORE rows — but every one of them is a step.
+			.mockResolvedValueOnce([
+				{
+					versionNumber: 2,
+					ingredients: ing,
+					steps: [
+						{ step: 1, text: 'One changed.' },
+						{ step: 2, text: 'Two changed.' },
+						{ step: 3, text: 'Three changed.' }
+					]
+				},
+				{
+					versionNumber: 1,
+					ingredients: ing,
+					steps: [
+						{ step: 1, text: 'One.' },
+						{ step: 2, text: 'Two.' },
+						{ step: 3, text: 'Three.' }
+					]
+				}
+			])
+			// Older and smaller, but both panels move.
+			.mockResolvedValueOnce([
+				{
+					versionNumber: 2,
+					ingredients: [{ amount: '2', unit: 'cup', name: 'flour' }],
+					steps: [{ step: 1, text: 'One changed.' }]
+				},
+				{ versionNumber: 1, ingredients: ing, steps: [{ step: 1, text: 'One.' }] }
+			]);
+
+		const result = await loadResult({
+			locals: { user: null }
+		} as unknown as Parameters<typeof load>[0]);
+
+		expect(result.sampleDiff?.recipeTitle).toBe('Balanced');
+	});
+
 	test('carries the commit message of the version being shown', async () => {
 		// The landing diff is an argument for commit messages, so it has to show
 		// one. Without it a visitor sees what changed but never why.

@@ -75,7 +75,11 @@ export const load: PageServerLoad = async ({ locals: { user } }) => {
 		// rewrite on an older one, and the e2e suite writes exactly such a tweak
 		// on every run. Candidates are already capped at five, so this is at most
 		// five round trips.
-		let bestScore = 0;
+		// Ranked as [both panels changed, number of changed rows]. A diff whose
+		// ingredients panel is entirely unchanged leaves half the section grey, so
+		// it loses to a smaller diff that moves both — which is the difference
+		// between a showcase and a wall of context.
+		let bestRank = [0, 0];
 
 		for (const candidate of candidates) {
 			const versions = await db.query.recipeVersions.findMany({
@@ -95,14 +99,19 @@ export const load: PageServerLoad = async ({ locals: { user } }) => {
 				to.steps as Parameters<typeof diffSteps>[0]
 			);
 
-			const changedRows = [...ingredientDiff, ...stepDiff].filter(
-				(r) => r.status !== 'unchanged'
-			).length;
+			const changedIngredients = ingredientDiff.filter((r) => r.status !== 'unchanged').length;
+			const changedSteps = stepDiff.filter((r) => r.status !== 'unchanged').length;
+			const rank = [
+				changedIngredients > 0 && changedSteps > 0 ? 1 : 0,
+				changedIngredients + changedSteps
+			];
 
-			// Strictly greater, so an equal score leaves the newer candidate in
+			// Strictly greater, so an equal rank leaves the newer candidate in
 			// place — candidates arrive newest first.
-			if (changedRows > bestScore) {
-				bestScore = changedRows;
+			const beatsBest = rank[0] !== bestRank[0] ? rank[0] > bestRank[0] : rank[1] > bestRank[1];
+
+			if (rank[1] > 0 && beatsBest) {
+				bestRank = rank;
 				sampleDiff = {
 					recipeTitle: candidate.title,
 					recipeSlug: candidate.slug,
