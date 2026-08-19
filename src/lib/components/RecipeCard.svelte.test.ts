@@ -43,18 +43,21 @@ describe('RecipeCard', () => {
 	});
 
 	test('shows "Forked" badge when parentId is set', () => {
-		render(RecipeCard, { props: { recipe: makeRecipe({ parentId: 42 }) } });
-		const badge = screen.getByText('Forked').closest('.forked-badge');
-		expect(badge).not.toHaveClass('forked-badge--hidden');
-		expect(badge).not.toHaveAttribute('aria-hidden', 'true');
+		const { container } = render(RecipeCard, { props: { recipe: makeRecipe({ parentId: 42 }) } });
+		expect(screen.getByText('Forked').closest('.forked-badge')).toBeInTheDocument();
+		// The badge overlays the photo, so it must live inside the image container
+		// rather than the text block below it.
+		expect(container.querySelector('.card-img')?.parentElement).toContainElement(
+			container.querySelector('.forked-badge')
+		);
 	});
 
-	test('hides "Forked" badge when parentId is null', () => {
-		render(RecipeCard, { props: { recipe: makeRecipe({ parentId: null }) } });
-		// Badge stays in DOM (preserves layout) but is visually hidden and aria-hidden
-		const badge = screen.getByText('Forked').closest('.forked-badge');
-		expect(badge).toHaveClass('forked-badge--hidden');
-		expect(badge).toHaveAttribute('aria-hidden', 'true');
+	test('omits the "Forked" badge entirely when parentId is null', () => {
+		const { container } = render(RecipeCard, { props: { recipe: makeRecipe({ parentId: null }) } });
+		// Absolutely positioned, so it no longer needs to occupy layout space
+		// when hidden — it is simply not rendered.
+		expect(screen.queryByText('Forked')).not.toBeInTheDocument();
+		expect(container.querySelector('.forked-badge')).toBeNull();
 	});
 
 	test('shows combined total time when both prep and cook time are set', () => {

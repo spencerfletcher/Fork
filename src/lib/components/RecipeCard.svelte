@@ -19,8 +19,30 @@
 <div class="recipe-card">
 	<a {href} class="card-stretched-link" aria-label={recipe.title} tabindex="0"></a>
 
-	<div class="aspect-[16/9] overflow-hidden">
+	<div class="relative aspect-[16/9] overflow-hidden">
 		<img src={recipe.imageUrl ?? '/None.png'} alt={recipe.title} loading="lazy" class="card-img" />
+		{#if recipe.parentId}
+			<span class="forked-badge">
+				<svg
+					class="h-[10px] w-[9px] shrink-0"
+					viewBox="0 0 12 14"
+					fill="none"
+					xmlns="http://www.w3.org/2000/svg"
+					aria-hidden="true"
+				>
+					<circle cx="2" cy="2" r="1.5" stroke="currentColor" stroke-width="1" />
+					<circle cx="10" cy="2" r="1.5" stroke="currentColor" stroke-width="1" />
+					<circle cx="6" cy="12" r="1.5" stroke="currentColor" stroke-width="1" />
+					<path
+						d="M2 3.5V6C2 7.1 2.9 8 4 8H6M10 3.5V6C10 7.1 9.1 8 8 8H6M6 8V10.5"
+						stroke="currentColor"
+						stroke-width="1"
+						stroke-linecap="round"
+					/>
+				</svg>
+				Forked
+			</span>
+		{/if}
 	</div>
 
 	<div class="flex flex-col gap-2 p-5">
@@ -32,46 +54,44 @@
 			<p class="card-desc text-text-2 m-0 text-sm leading-[1.5]">{recipe.description}</p>
 		{/if}
 
-		<div class="flex items-center justify-between">
-			<div class="flex items-center gap-2">
-				{#if recipe.author}
-					<a
-						href="/users/{recipe.author.username}"
-						class="text-text-3 hover:text-accent relative z-[2] font-mono text-[0.72rem] no-underline transition-colors duration-150"
-					>
-						@{recipe.author.username}
-					</a>
-				{/if}
-				{#if recipe.author && (recipe.prepTimeMinutes || recipe.cookTimeMinutes)}
+		<div class="flex flex-wrap items-center gap-2">
+			{#if recipe.author}
+				<a
+					href="/users/{recipe.author.username}"
+					class="text-text-3 hover:text-accent relative z-[2] font-mono text-[0.72rem] no-underline transition-colors duration-150"
+				>
+					@{recipe.author.username}
+				</a>
+			{/if}
+			{#if recipe.author && (recipe.prepTimeMinutes || recipe.cookTimeMinutes)}
+				<span class="text-text-3 font-mono text-[0.72rem]">·</span>
+			{/if}
+			{#if recipe.prepTimeMinutes || recipe.cookTimeMinutes}
+				<span class="text-text-3 font-mono text-[0.72rem]">
+					{#if recipe.prepTimeMinutes && recipe.cookTimeMinutes}
+						{recipe.prepTimeMinutes + recipe.cookTimeMinutes} min
+					{:else if recipe.prepTimeMinutes}
+						{recipe.prepTimeMinutes} min prep
+					{:else if recipe.cookTimeMinutes}
+						{recipe.cookTimeMinutes} min cook
+					{/if}
+				</span>
+			{/if}
+			{#if recipe.versionCount}
+				{#if recipe.author || recipe.prepTimeMinutes || recipe.cookTimeMinutes}
 					<span class="text-text-3 font-mono text-[0.72rem]">·</span>
 				{/if}
-				{#if recipe.prepTimeMinutes || recipe.cookTimeMinutes}
-					<span class="text-text-3 font-mono text-[0.72rem]">
-						{#if recipe.prepTimeMinutes && recipe.cookTimeMinutes}
-							{recipe.prepTimeMinutes + recipe.cookTimeMinutes} min
-						{:else if recipe.prepTimeMinutes}
-							{recipe.prepTimeMinutes} min prep
-						{:else if recipe.cookTimeMinutes}
-							{recipe.cookTimeMinutes} min cook
-						{/if}
-					</span>
-				{/if}
-				{#if recipe.versionCount}
-					{#if recipe.author || recipe.prepTimeMinutes || recipe.cookTimeMinutes}
-						<span class="text-text-3 font-mono text-[0.72rem]">·</span>
+				<span class="text-accent font-mono text-[0.72rem]">v{recipe.versionCount}</span>
+			{/if}
+			{#if recipe.forkCount}
+				<span class="text-text-3 font-mono text-[0.72rem]">
+					{#if recipe.author || recipe.prepTimeMinutes || recipe.cookTimeMinutes || recipe.versionCount}
+						·
 					{/if}
-					<span class="text-accent font-mono text-[0.72rem]">v{recipe.versionCount}</span>
-				{/if}
-				{#if recipe.forkCount}
-					<span class="text-text-3 font-mono text-[0.72rem]">
-						{#if recipe.author || recipe.prepTimeMinutes || recipe.cookTimeMinutes || recipe.versionCount}
-							·
-						{/if}
-						{recipe.forkCount}
-						{recipe.forkCount === 1 ? 'fork' : 'forks'}
-					</span>
-				{/if}
-			</div>
+					{recipe.forkCount}
+					{recipe.forkCount === 1 ? 'fork' : 'forks'}
+				</span>
+			{/if}
 		</div>
 
 		{#if tags.length > 0}
@@ -81,30 +101,6 @@
 				{/each}
 			</div>
 		{/if}
-		<span
-			class="forked-badge"
-			class:forked-badge--hidden={!recipe.parentId}
-			aria-hidden={!recipe.parentId}
-		>
-			<svg
-				class="h-[10px] w-[9px] shrink-0"
-				viewBox="0 0 12 14"
-				fill="none"
-				xmlns="http://www.w3.org/2000/svg"
-				aria-hidden="true"
-			>
-				<circle cx="2" cy="2" r="1.5" stroke="currentColor" stroke-width="1" />
-				<circle cx="10" cy="2" r="1.5" stroke="currentColor" stroke-width="1" />
-				<circle cx="6" cy="12" r="1.5" stroke="currentColor" stroke-width="1" />
-				<path
-					d="M2 3.5V6C2 7.1 2.9 8 4 8H6M10 3.5V6C10 7.1 9.1 8 8 8H6M6 8V10.5"
-					stroke="currentColor"
-					stroke-width="1"
-					stroke-linecap="round"
-				/>
-			</svg>
-			Forked
-		</span>
 	</div>
 </div>
 
@@ -158,22 +154,25 @@
 		overflow: hidden;
 	}
 
+	/* Overlaid on the photo rather than placed in the meta line, which already
+	   carries author, time, version and fork count. The background is opaque,
+	   not translucent: recipe photos are arbitrary user-supplied images, and a
+	   scrim cannot guarantee contrast over all of them. */
 	.forked-badge {
+		position: absolute;
+		top: 10px;
+		left: 10px;
+		z-index: 2;
 		display: inline-flex;
 		align-items: center;
 		gap: 4px;
 		font-family: var(--font-mono);
 		font-size: 0.65rem;
 		font-weight: 600;
-		background: transparent;
+		background: var(--color-surface);
 		color: var(--color-text-2);
-		border: 1px solid var(--color-tag-border);
+		border: 1px solid var(--color-border);
 		border-radius: var(--radius-pill);
 		padding: 2px 7px;
-		align-self: flex-start;
-	}
-
-	.forked-badge--hidden {
-		visibility: hidden;
 	}
 </style>
