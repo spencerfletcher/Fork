@@ -129,15 +129,19 @@
 	   past its raw contrast against --color-remove-bg because removed diff rows
 	   also carry opacity-85 (VersionDiff.svelte), which blends the text toward
 	   --color-bg and lowers the effective ratio — see e2e/recipe.test.ts. */
-	--color-add: #4a7538;
+	--color-add: #205c22;
 	--color-remove: #8a3020;
-	--color-add-bg: #fdfdfd00;
+	--color-add-bg: #eaf4e2;
 	--color-remove-bg: #fae8e0;
-	/* [data-theme='dark'] does not currently override --color-add/--color-remove,
-	   so dark mode inherits these light-mode values. Verified data-theme is never
+	/* Additions and removals now carry matching weight: --color-add is 7.09:1 on
+	   --color-add-bg, --color-remove is 7.01:1 on --color-remove-bg. --color-add-bg
+	   was previously transparent, so only removals were tinted and additions read
+	   as the weaker half of the pair.
+
+	   The dark block below overrides all four. Verified data-theme is never
 	   set anywhere in the app (only referenced in this file's own override
-	   blocks), so this is unreachable today — but if dark mode is ever wired up,
-	   the dark block will need its own add/remove values checked against its own
+	   blocks), so dark mode is unreachable today — but if it is ever wired up,
+	   its add/remove values are already checked against its own
 	   backgrounds. */
 
 	/* Elevation */
@@ -192,7 +196,11 @@
 	--color-tag-hover-bg: #3a2a08;
 	--color-border: #38281a;
 	--color-border-2: #4a3820;
-	--color-add-bg: #2a2010;
+	/* Dark mode needs its own add/remove text, not just its own backgrounds:
+	   the light values land at 2.97:1 and 2.01:1 against these panels. */
+	--color-add: #86d187;
+	--color-remove: #f0a08e;
+	--color-add-bg: #1e2a14;
 	--color-remove-bg: #2e1810;
 	--shadow-card: 0 1px 3px rgba(0, 0, 0, 0.4);
 	--shadow-raised: 0 4px 16px rgba(0, 0, 0, 0.5);

@@ -39,7 +39,7 @@ test.describe('Recipe detail page', () => {
 		await expect(page.getByRole('heading', { name: /^method$/i })).toBeVisible();
 	});
 
-	test('"Classic Chocolate Chip Cookies" shows version history with 2 versions', async ({
+	test('"Classic Chocolate Chip Cookies" shows version history with 3 versions', async ({
 		page
 	}) => {
 		await page.goto('/');
@@ -53,9 +53,12 @@ test.describe('Recipe detail page', () => {
 		// Assert on rendered content, not just wrapper count: a div-count check passes even
 		// if the messages render empty.
 		const versionEntries = page.locator('.version-strip .version-entry');
-		await expect(versionEntries).toHaveCount(2);
-		await expect(page.getByRole('link', { name: /^v2$/ })).toBeVisible();
+		await expect(versionEntries).toHaveCount(3);
+		await expect(page.getByRole('link', { name: /^v3$/ })).toBeVisible();
 		await expect(page.locator('.version-strip')).toContainText('Initial recipe');
+		// v3 is the version the landing page showcases; the strip is where a
+		// visitor arriving from that diff lands.
+		await expect(page.locator('.version-strip')).toContainText('Chill the dough');
 	});
 
 	test('"Brown Butter Chocolate Chip Cookies" shows fork attribution', async ({ page }) => {

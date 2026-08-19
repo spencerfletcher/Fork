@@ -28,7 +28,9 @@
 							<span class="text-text-3 w-[1ch] shrink-0 font-bold select-none">~</span>
 							<span class="diff-content flex-1 leading-[1.5]">
 								{#each row.segments as seg, si (si)}
-									{#if seg.type === 'added'}<span class="diff-added text-add">{seg.text}</span>
+									{#if seg.type === 'added'}<span class="diff-added bg-add-bg text-add"
+											>{seg.text}</span
+										>
 									{:else if seg.type === 'removed'}
 										<span class="diff-removed bg-remove-bg text-remove line-through">
 											{seg.text}
@@ -44,6 +46,7 @@
 						<div
 							class="border-border flex items-baseline gap-3 border-b px-4 py-2 [&:last-child]:border-b-0"
 							class:diff-added={row.status === 'added'}
+							class:bg-add-bg={row.status === 'added'}
 							class:text-add={row.status === 'added'}
 							class:diff-removed={row.status === 'removed'}
 							class:bg-remove-bg={row.status === 'removed'}
@@ -86,7 +89,7 @@
 							<span class="diff-content flex-1 leading-[1.5]">
 								{#each row.segments as seg, si (si)}
 									{#if seg.type === 'added'}
-										<span class="diff-added text-add">
+										<span class="diff-added bg-add-bg text-add">
 											{seg.text}
 										</span>
 									{:else if seg.type === 'removed'}
@@ -103,6 +106,7 @@
 						<div
 							class="border-border flex items-baseline gap-3 border-b px-4 py-2 [&:last-child]:border-b-0"
 							class:diff-added={row.status === 'added'}
+							class:bg-add-bg={row.status === 'added'}
 							class:text-add={row.status === 'added'}
 							class:diff-removed={row.status === 'removed'}
 							class:bg-remove-bg={row.status === 'removed'}
