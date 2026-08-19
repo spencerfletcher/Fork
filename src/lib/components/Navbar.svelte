@@ -21,11 +21,7 @@
 	<div class="mx-auto flex h-[60px] max-w-[1200px] items-center justify-between">
 		<!-- Logo + nav links -->
 		<div class="flex items-center gap-6">
-			<a
-				href="/"
-				class="text-text-cream hover:text-text-cream font-serif text-[1.65rem] font-bold tracking-[-0.01em] no-underline"
-				onclick={closeMenu}
-			>
+			<a href="/" class="nav-brand" onclick={closeMenu}>
 				Fork<span class="text-accent">.</span>
 			</a>
 			<ul class="navbar-links m-0 hidden list-none gap-6 p-0 md:flex">
@@ -79,7 +75,7 @@
 				{/if}
 				<a
 					href="/recipes/new"
-					class="rounded-pill bg-accent text-hero-bg hover:text-hero-bg hover:bg-accent-mid px-4 py-[7px] font-sans text-[0.85rem] font-semibold whitespace-nowrap no-underline transition-colors duration-150"
+					class="nav-cta"
 					class:opacity-75={$page.url.pathname === '/recipes/new'}
 				>
 					+ New Recipe
@@ -89,7 +85,7 @@
 			<button
 				type="button"
 				onclick={toggleMenu}
-				class="text-text-tan hover:text-text-cream flex items-center justify-center rounded-sm border-none bg-transparent p-2 transition-colors md:hidden"
+				class="nav-menu-toggle"
 				aria-controls="mobile-menu"
 				aria-expanded={isMenuOpen}
 			>
@@ -170,6 +166,61 @@
 </nav>
 
 <style>
+	.nav-brand {
+		font-family: var(--font-serif);
+		font-size: 1.65rem;
+		font-weight: 700;
+		letter-spacing: -0.01em;
+		text-decoration: none;
+		color: var(--color-text-cream);
+	}
+
+	.nav-brand:hover {
+		color: var(--color-text-cream);
+	}
+
+	/* The one solid amber control on the page. Amber means action or version
+	   identity, so nothing else in the navbar may be filled with it. */
+	.nav-cta {
+		padding: 7px 16px;
+		border-radius: var(--radius-pill);
+		background: var(--color-accent);
+		color: var(--color-hero-bg);
+		font-family: var(--font-sans);
+		font-size: 0.85rem;
+		font-weight: 600;
+		white-space: nowrap;
+		text-decoration: none;
+		transition: background 0.15s ease;
+	}
+
+	.nav-cta:hover {
+		background: var(--color-accent-mid);
+		color: var(--color-hero-bg);
+	}
+
+	.nav-menu-toggle {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0.5rem;
+		border: none;
+		border-radius: var(--radius-sm);
+		background: transparent;
+		color: var(--color-text-tan);
+		transition: color 0.15s ease;
+	}
+
+	.nav-menu-toggle:hover {
+		color: var(--color-text-cream);
+	}
+
+	@media (min-width: 768px) {
+		.nav-menu-toggle {
+			display: none;
+		}
+	}
+
 	/* Shared link style used for both desktop nav links and logout button */
 	.navbar-link {
 		font-family: var(--font-sans);

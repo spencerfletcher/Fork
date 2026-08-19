@@ -74,7 +74,7 @@
 					<button
 						type="button"
 						onclick={() => remove(tag)}
-						class="text-text-3 hover:text-text w-auto cursor-pointer border-none bg-transparent p-0 text-base leading-none transition-colors duration-150"
+						class="tag-remove"
 						aria-label="Remove {tag}"
 					>
 						×
@@ -104,11 +104,7 @@
 		/>
 
 		{#if showDropdown}
-			<ul
-				class="border-border bg-surface shadow-raised absolute top-[calc(100%+4px)] right-0 left-0 z-50 m-0 max-h-[240px] list-none overflow-y-auto rounded-lg border p-0 py-1"
-				role="listbox"
-				id="tag-listbox"
-			>
+			<ul class="tag-menu" role="listbox" id="tag-listbox">
 				{#each suggestions as tag (tag.id)}
 					<li
 						class="border-border border-b [&:last-child]:border-b-0"
@@ -117,7 +113,7 @@
 					>
 						<button
 							type="button"
-							class="text-text hover:bg-surface-2 flex w-full cursor-pointer items-center gap-3 rounded-none border-none bg-transparent px-4 py-3 text-left text-[0.9rem]"
+							class="tag-option"
 							onmousedown={(e) => {
 								e.preventDefault();
 								pick(tag.name);
@@ -146,7 +142,7 @@
 					<li class="border-border border-t" role="option" aria-selected="false">
 						<button
 							type="button"
-							class="text-accent hover:bg-surface-2 flex w-full cursor-pointer items-center gap-3 rounded-none border-none bg-transparent px-4 py-3 text-left text-[0.9rem]"
+							class="tag-option tag-option--create"
 							onmousedown={(e) => {
 								e.preventDefault();
 								pick(query.trim());
@@ -173,3 +169,63 @@
 		{/if}
 	</div>
 </div>
+
+<style>
+	.tag-remove {
+		width: auto;
+		padding: 0;
+		border: none;
+		background: transparent;
+		font-size: 1rem;
+		line-height: 1;
+		cursor: pointer;
+		color: var(--color-text-3);
+		transition: color 0.15s ease;
+	}
+
+	.tag-remove:hover {
+		color: var(--color-text);
+	}
+
+	.tag-menu {
+		position: absolute;
+		top: calc(100% + 4px);
+		right: 0;
+		left: 0;
+		z-index: 50;
+		margin: 0;
+		padding: 0.25rem 0;
+		max-height: 240px;
+		overflow-y: auto;
+		list-style: none;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-lg);
+		background: var(--color-surface);
+		box-shadow: var(--shadow-raised);
+	}
+
+	.tag-option {
+		display: flex;
+		width: 100%;
+		align-items: center;
+		gap: 0.75rem;
+		padding: 0.75rem 1rem;
+		border: none;
+		border-radius: 0;
+		background: transparent;
+		font-size: 0.9rem;
+		text-align: left;
+		cursor: pointer;
+		color: var(--color-text);
+	}
+
+	.tag-option:hover {
+		background: var(--color-surface-2);
+	}
+
+	/* "Create <name>" — an action rather than an existing tag, so it takes the
+	   accent while the plain options stay quiet. */
+	.tag-option--create {
+		color: var(--color-accent);
+	}
+</style>

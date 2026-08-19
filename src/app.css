@@ -306,13 +306,15 @@
 		border-radius: var(--radius-pill);
 		padding: 10px 20px;
 		cursor: pointer;
-		transition: opacity 0.15s ease;
+		/* Darken on hover rather than fade. An opacity transition washes the button
+		   toward whatever is behind it, which reads as the control going inactive. */
+		transition: background 0.15s ease;
 		display: inline-block;
 		text-align: center;
 	}
 
 	.btn-primary:hover {
-		opacity: 0.88;
+		background: var(--color-accent-mid);
 		color: var(--color-hero-bg);
 	}
 
