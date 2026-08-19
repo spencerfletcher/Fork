@@ -57,25 +57,22 @@
 			</div>
 		</div>
 
-		<!-- Commit context -->
-		<div class="border-border bg-surface-2 mb-7 flex flex-col gap-2 rounded-md border p-4">
-			<div class="flex items-center gap-3 text-sm">
-				<span class="text-accent font-mono text-[0.8rem] font-semibold">
-					v{fromVersion.versionNumber}
-				</span>
+		<!-- Commit context: same .commit-bar the landing page uses for its sample
+		     diff, stacked because this view shows both endpoints of the range. -->
+		<div class="commit-bar commit-bar--stacked">
+			<div class="commit-bar__line">
+				<span class="commit-bar__versions">v{fromVersion.versionNumber}</span>
 				<span>{fromVersion.commitMessage}</span>
 				{#if fromVersion.creator}
-					<span class="text-text-3 text-[0.8rem]">by @{fromVersion.creator.username}</span>
+					<span class="commit-bar__author">by @{fromVersion.creator.username}</span>
 				{/if}
 			</div>
-			<div class="text-text-3 pl-3 text-sm">↓</div>
-			<div class="flex items-center gap-3 text-sm">
-				<span class="text-accent font-mono text-[0.8rem] font-semibold">
-					v{toVersion.versionNumber}
-				</span>
+			<div class="commit-bar__arrow">↓</div>
+			<div class="commit-bar__line">
+				<span class="commit-bar__versions">v{toVersion.versionNumber}</span>
 				<span>{toVersion.commitMessage}</span>
 				{#if toVersion.creator}
-					<span class="text-text-3 text-[0.8rem]">by @{toVersion.creator.username}</span>
+					<span class="commit-bar__author">by @{toVersion.creator.username}</span>
 				{/if}
 			</div>
 		</div>

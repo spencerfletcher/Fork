@@ -27,14 +27,8 @@
 	keep their own spacing. Without the flag, ingredients run together and steps
 	gain double spaces.
 -->
-{#snippet segments(list: InlineSegment[], spaced: boolean)}
-	{#each list as seg, i (i)}
-		{#if seg.type === 'added'}<span class="diff-added">{seg.text}</span>
-		{:else if seg.type === 'removed'}<span class="diff-removed">{seg.text}</span>
-		{:else}{seg.text}{/if}
-		{#if spaced}<span> </span>{/if}
-	{/each}
-{/snippet}
+<!-- prettier-ignore -->
+{#snippet segments(list: InlineSegment[], spaced: boolean)}{#each list as seg, i (i)}{#if seg.type === 'added'}<span class="diff-added">{seg.text}</span>{:else if seg.type === 'removed'}<span class="diff-removed">{seg.text}</span>{:else}{seg.text}{/if}{spaced ? ' ' : ''}{/each}{/snippet}
 
 {#snippet panel(title: string, isEmpty: boolean, rows: import('svelte').Snippet)}
 	<section class="diff-section">
