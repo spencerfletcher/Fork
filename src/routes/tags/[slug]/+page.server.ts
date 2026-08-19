@@ -3,6 +3,7 @@ import { db } from '$lib/server/db';
 import { eq, and, inArray } from 'drizzle-orm';
 import { tags, recipes, recipesToTags } from '$lib/server/db/schema';
 import { attachRecipeCounts } from '$lib/server/recipeCounts';
+import { clampDescription } from '$lib/seo';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params }) => {
@@ -22,8 +23,15 @@ export const load: PageServerLoad = async ({ params }) => {
 
 	const ids = recipeIdsResult.map((item) => item.id);
 
+	const tagMeta = (count: number) => ({
+		title: tag.name,
+		description: clampDescription(
+			`${count} ${tag.name} recipe${count === 1 ? '' : 's'} on Fork, each with its full version history.`
+		)
+	});
+
 	if (ids.length === 0) {
-		return { tag, recipes: [] };
+		return { tag, recipes: [], meta: tagMeta(0) };
 	}
 
 	const recipesData = await db.query.recipes.findMany({
@@ -36,5 +44,5 @@ export const load: PageServerLoad = async ({ params }) => {
 
 	const withCounts = await attachRecipeCounts(recipesData);
 
-	return { tag, recipes: withCounts };
+	return { tag, recipes: withCounts, meta: tagMeta(withCounts.length) };
 };

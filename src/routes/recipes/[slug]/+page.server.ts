@@ -4,6 +4,7 @@ import { recipes, recipeVersions, recipesToTags, profiles, favorites } from '$li
 import { eq, desc, and, count } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { slugify } from '$lib/helpers';
+import { absoluteImage, clampDescription } from '$lib/seo';
 import type { PageServerLoad, Actions } from './$types';
 
 export const load: PageServerLoad = async ({ params, url, locals: { user } }) => {
@@ -60,7 +61,16 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 		allVersions: recipe.versions,
 		isViewingHistory,
 		isFavorited,
-		forkCount
+		forkCount,
+		meta: {
+			title: recipe.title,
+			description: clampDescription(
+				recipe.description ??
+					`${recipe.title} on Fork — ${recipe.versions.length} version${recipe.versions.length === 1 ? '' : 's'}, with the full history of what changed and why.`
+			),
+			image: absoluteImage(recipe.imageUrl),
+			type: 'article' as const
+		}
 	};
 };
 

@@ -102,6 +102,46 @@ test.describe('Recipe detail page', () => {
 		await expect(page.locator('h1')).toContainText(/compare/i);
 	});
 
+	test('a recipe link previews as that recipe, with each tag emitted once', async ({ page }) => {
+		await gotoClassicCookies(page);
+
+		const content = (sel: string) => page.locator(sel).first().getAttribute('content');
+
+		expect(await content('meta[property="og:title"]')).toContain('Classic Chocolate Chip Cookies');
+		expect(await content('meta[property="og:type"]')).toBe('article');
+		expect(await page.title()).toContain('Classic Chocolate Chip Cookies');
+
+		// og:image must be absolute — a relative path resolves against the
+		// crawler's host and the preview silently loses its image.
+		expect(await content('meta[property="og:image"]')).toMatch(/^https?:\/\//);
+
+		const canonical = await page.locator('link[rel="canonical"]').first().getAttribute('href');
+		expect(canonical).toContain('/recipes/');
+
+		// The reason meta is rendered in the layout from page data rather than in a
+		// per-page <svelte:head>: Svelte does not deduplicate head tags, so two
+		// components emitting og:title would put two in the document.
+		for (const sel of [
+			'meta[property="og:title"]',
+			'meta[property="og:description"]',
+			'meta[property="og:image"]',
+			'meta[name="description"]',
+			'link[rel="canonical"]',
+			'title'
+		]) {
+			await expect(page.locator(sel)).toHaveCount(1);
+		}
+	});
+
+	test('a listing page keeps the site-level preview', async ({ page }) => {
+		await page.goto('/tags/dessert');
+		expect(await page.title()).toContain('Dessert');
+		expect(await page.locator('meta[property="og:type"]').first().getAttribute('content')).toBe(
+			'website'
+		);
+		await expect(page.locator('meta[property="og:title"]')).toHaveCount(1);
+	});
+
 	test('changing the version range navigates and re-renders the diff', async ({ page }) => {
 		await gotoClassicCookies(page);
 		await page.locator('a[href*="/diff?from="]').first().click();

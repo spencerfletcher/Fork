@@ -2,11 +2,21 @@ import { db } from '$lib/server/db';
 import { recipes, tags, recipesToTags, recipeVersions } from '$lib/server/db/schema';
 import { eq, and, or, inArray, desc, sql } from 'drizzle-orm';
 import { attachRecipeCounts } from '$lib/server/recipeCounts';
+import { clampDescription } from '$lib/seo';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 	const searchQuery = url.searchParams.get('q')?.trim() || '';
 	const tagSlugs = url.searchParams.get('tags')?.split(',').filter(Boolean) || [];
+
+	const searchMeta = (count: number) => ({
+		title: searchQuery ? `“${searchQuery}” — search` : 'Search',
+		description: clampDescription(
+			searchQuery
+				? `${count} recipe${count === 1 ? '' : 's'} matching “${searchQuery}” on Fork.`
+				: 'Search recipes by name, description or ingredient.'
+		)
+	});
 
 	// ── Visibility: public recipes, or the user's own ────────────────────────
 	const visibilityCondition = user
@@ -41,7 +51,7 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 
 		// Tags specified but nothing matched — short-circuit
 		if (!tagFilteredIds || tagFilteredIds.length === 0) {
-			return { recipes: [], allTags, searchQuery, selectedTags: tagSlugs };
+			return { recipes: [], allTags, searchQuery, selectedTags: tagSlugs, meta: searchMeta(0) };
 		}
 	}
 
@@ -138,5 +148,11 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 
 	const withCounts = await attachRecipeCounts(hydrated);
 
-	return { recipes: withCounts, allTags, searchQuery, selectedTags: tagSlugs };
+	return {
+		recipes: withCounts,
+		allTags,
+		searchQuery,
+		selectedTags: tagSlugs,
+		meta: searchMeta(withCounts.length)
+	};
 };
