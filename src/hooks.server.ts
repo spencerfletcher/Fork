@@ -1,16 +1,11 @@
 import type { Handle } from '@sveltejs/kit';
 import { createServerClient } from '@supabase/ssr';
-import { paraglideMiddleware } from '$lib/paraglide/server';
 import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
 
 export const handle: Handle = async ({ event, resolve }) => {
-	// --- 1. Supabase Auth Logic (runs first)
 	event.locals.supabase = createServerClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY, {
 		cookies: {
-			// This is the new, recommended way to handle cookies.
-			getAll: () => {
-				return event.cookies.getAll();
-			},
+			getAll: () => event.cookies.getAll(),
 			setAll: (cookiesToSet) => {
 				cookiesToSet.forEach(({ name, value, options }) => {
 					event.cookies.set(name, value, { ...options, path: '/' });
@@ -24,21 +19,12 @@ export const handle: Handle = async ({ event, resolve }) => {
 	} = await event.locals.supabase.auth.getUser();
 	event.locals.user = user ?? null;
 
-	// --- 2. Paraglide i18n Logic (runs second) ---
-	const response = await paraglideMiddleware(event.request, ({ request, locale }) => {
-		event.request = request;
-
-		// --- 3. Final Resolve ---
-		return resolve(event, {
-			transformPageChunk: ({ html }) => html.replace('%paraglide.lang%', locale),
-			// This part from the Supabase hook is important for security
-			filterSerializedResponseHeaders(name) {
-				return name === 'content-range';
-			}
-		});
+	const response = await resolve(event, {
+		// Supabase writes auth state into content-range; letting any other header
+		// through to the client serialization is unnecessary exposure.
+		filterSerializedResponseHeaders: (name) => name === 'content-range'
 	});
 
-	// --- 4. Security Headers ---
 	// Content-Security-Policy is NOT set here — it lives in svelte.config.js so
 	// SvelteKit can nonce its own inline bootstrap script.
 	response.headers.set('X-Content-Type-Options', 'nosniff');

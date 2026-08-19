@@ -1,11 +1,10 @@
-import { mdsvex } from 'mdsvex';
 // Pinned rather than adapter-auto, which resolves the host at build time and
 // installs the adapter mid-build — a network call inside the deploy.
 import adapter from '@sveltejs/adapter-netlify';
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
 const config = {
-	preprocess: [vitePreprocess(), mdsvex()],
+	preprocess: [vitePreprocess()],
 	kit: {
 		adapter: adapter(),
 		// CSP is configured here rather than as a raw header in hooks.server.ts,
@@ -33,8 +32,7 @@ const config = {
 				'form-action': ['self']
 			}
 		}
-	},
-	extensions: ['.svelte', '.svx']
+	}
 };
 
 export default config;

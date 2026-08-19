@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { page } from '$app/stores';
-	import * as m from '$lib/paraglide/messages.js';
 	import { enhance, applyAction } from '$app/forms';
 	import type { User } from '@supabase/supabase-js';
 	import type { Profile } from '$lib/server/db/schema';
@@ -27,7 +26,7 @@
 				class="text-text-cream hover:text-text-cream font-serif text-[1.65rem] font-bold tracking-[-0.01em] no-underline"
 				onclick={closeMenu}
 			>
-				{m.app_title()}<span class="text-accent">.</span>
+				Fork<span class="text-accent">.</span>
 			</a>
 			<ul class="navbar-links m-0 hidden list-none gap-6 p-0 md:flex">
 				<li>
@@ -42,7 +41,7 @@
 						class:active={$page.url.pathname.startsWith('/recipes') &&
 							$page.url.pathname !== '/recipes/new'}
 					>
-						{m.navbar_recipes()}
+						Recipes
 					</a>
 				</li>
 				{#if user}
@@ -83,7 +82,7 @@
 					class="rounded-pill bg-accent text-hero-bg hover:text-hero-bg hover:bg-accent-mid px-4 py-[7px] font-sans text-[0.85rem] font-semibold whitespace-nowrap no-underline transition-colors duration-150"
 					class:opacity-75={$page.url.pathname === '/recipes/new'}
 				>
-					+ {m.navbar_new()}
+					+ New Recipe
 				</a>
 			</div>
 
@@ -135,10 +134,10 @@
 			<ul class="m-0 list-none p-2">
 				<li><a href="/search" onclick={closeMenu} class="mobile-link">Search</a></li>
 				<li>
-					<a href="/recipes/new" onclick={closeMenu} class="mobile-link">{m.navbar_new()}</a>
+					<a href="/recipes/new" onclick={closeMenu} class="mobile-link">New Recipe</a>
 				</li>
 				<li>
-					<a href="/recipes" onclick={closeMenu} class="mobile-link">{m.navbar_recipes()}</a>
+					<a href="/recipes" onclick={closeMenu} class="mobile-link">Recipes</a>
 				</li>
 				{#if user}
 					<li><a href="/favorites" onclick={closeMenu} class="mobile-link">Favorites</a></li>
