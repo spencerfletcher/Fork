@@ -73,13 +73,18 @@
 					<a href="/login" class="navbar-link">Login</a>
 					<a href="/signup" class="navbar-link">Sign Up</a>
 				{/if}
-				<a
-					href="/recipes/new"
-					class="nav-cta"
-					class:opacity-75={$page.url.pathname === '/recipes/new'}
-				>
-					+ New Recipe
-				</a>
+				<!-- Signed-in only. /recipes/new redirects to /login, so showing the
+				     page's most prominent control to a logged-out visitor sends them
+				     into an auth wall rather than to the thing it names. -->
+				{#if user}
+					<a
+						href="/recipes/new"
+						class="nav-cta"
+						class:opacity-75={$page.url.pathname === '/recipes/new'}
+					>
+						+ New Recipe
+					</a>
+				{/if}
 			</div>
 
 			<button
@@ -129,9 +134,11 @@
 		>
 			<ul class="m-0 list-none p-2">
 				<li><a href="/search" onclick={closeMenu} class="mobile-link">Search</a></li>
-				<li>
-					<a href="/recipes/new" onclick={closeMenu} class="mobile-link">New Recipe</a>
-				</li>
+				{#if user}
+					<li>
+						<a href="/recipes/new" onclick={closeMenu} class="mobile-link">New Recipe</a>
+					</li>
+				{/if}
 				<li>
 					<a href="/recipes" onclick={closeMenu} class="mobile-link">Recipes</a>
 				</li>

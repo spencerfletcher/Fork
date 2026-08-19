@@ -62,10 +62,17 @@ describe('Navbar', () => {
 		expect(logo).toBeInTheDocument();
 	});
 
-	test('has a link to New Recipe', () => {
-		render(Navbar, { props: { user: null } });
+	test('shows New Recipe to a signed-in user', () => {
+		render(Navbar, { props: { user: { id: 'u1' } as never } });
 		// Multiple links with this name exist (desktop + mobile) — just check presence
 		expect(screen.getAllByRole('link', { name: /new recipe/i }).length).toBeGreaterThanOrEqual(1);
+	});
+
+	test('hides New Recipe from a logged-out visitor', () => {
+		// /recipes/new redirects to /login, so offering it to a visitor sends the
+		// most prominent control on the page into an auth wall.
+		render(Navbar, { props: { user: null } });
+		expect(screen.queryAllByRole('link', { name: /new recipe/i })).toHaveLength(0);
 	});
 
 	test('has a link to Recipes', () => {

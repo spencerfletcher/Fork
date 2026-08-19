@@ -41,18 +41,16 @@ alice/classic-ccc            v1  v2
                         accept ──> alice/classic-ccc v3   created_by = bob
 ```
 
-Estimated 14–18h total.
+Estimated 14–18h total, less Task 0, which is already done.
 
-## Task 0 — Extract the diff renderer (1–2h)
+## Task 0 — Extract the diff renderer — **done**
 
-Prerequisite refactor, no behaviour change. The diff markup currently lives inline in
-`src/routes/recipes/[slug]/diff/+page.svelte`. PR detail needs the identical rendering.
+Shipped ahead of M1, during the UI refresh. `src/lib/components/VersionDiff.svelte`
+takes `{ ingredientDiff: IngredientDiffRow[], stepDiff: StepDiffRow[] }`, the compare
+page is a thin wrapper around it, and the landing page renders the same component. It
+has its own tests in `VersionDiff.svelte.test.ts`.
 
-- Extract into `src/lib/components/VersionDiff.svelte` taking
-  `{ ingredientDiff: IngredientDiffRow[], stepDiff: StepDiffRow[] }`.
-- The compare page becomes a thin wrapper around it.
-- `src/routes/recipes/[slug]/diff/page.svelte.test.ts` (13 tests) must pass unchanged —
-  that is the safety net for this refactor.
+Subtract 1–2h from the estimate below.
 
 ## Task 1 — Schema and migration (1h)
 
