@@ -10,8 +10,8 @@
 		     below demonstrates it, and asserting what you are about to show reads as
 		     padding. -->
 		<p class="hero-lede">
-			Every edit is a version with a commit message. Fork any recipe and your changes keep their
-			attribution.
+			<span>Every edit is a version with a commit message.</span>
+			<span>Fork any recipe and your changes keep their attribution.</span>
 		</p>
 		<div class="hero-actions">
 			<a href="/search" class="hero-cta">Browse recipes</a>
@@ -72,8 +72,29 @@
 		font-size: 1.05rem;
 		line-height: 1.6;
 		color: var(--color-text-tan);
-		/* Keeps "attribution." from sitting alone on the last line at desktop. */
 		text-wrap: pretty;
+	}
+
+	/*
+		One line per sentence once there is room for it.
+
+		Left to wrap on its own the copy broke as "...your changes keep / their
+		attribution.", splitting a phrase across lines for no reason. text-wrap:
+		pretty does not help — it fixes orphans, and a two-word last line is not an
+		orphan, just a bad break.
+
+		Below 768px the sentences run together as ordinary prose, because neither
+		fits on one line at that width and forcing a block each would only add a
+		ragged line.
+	*/
+	.hero-lede span {
+		display: inline;
+	}
+
+	@media (min-width: 768px) {
+		.hero-lede span {
+			display: block;
+		}
 	}
 
 	.hero-actions {
