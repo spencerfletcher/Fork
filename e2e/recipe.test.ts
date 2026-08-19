@@ -505,6 +505,51 @@ test.describe('Landing page (logged out)', () => {
 		expect(contrast(style.color, style.bg)).toBeGreaterThanOrEqual(4.5);
 	});
 
+	test('the diff panels sit side by side on a wide screen and stack on a narrow one', async ({
+		page
+	}) => {
+		const panels = () =>
+			page
+				.locator('section')
+				.filter({ hasText: 'A real change, diffed' })
+				.first()
+				.locator('section');
+
+		await page.setViewportSize({ width: 1440, height: 1800 });
+		await page.goto('/');
+		await panels().first().waitFor();
+		const wide = [await panels().nth(0).boundingBox(), await panels().nth(1).boundingBox()];
+		// Same top edge, different left edge — two columns, measured rather than
+		// inferred from a class name.
+		expect(wide[0]!.y).toBeCloseTo(wide[1]!.y, 0);
+		expect(wide[1]!.x).toBeGreaterThan(wide[0]!.x + wide[0]!.width - 1);
+
+		await page.setViewportSize({ width: 390, height: 2400 });
+		await page.goto('/');
+		await panels().first().waitFor();
+		const narrow = [await panels().nth(0).boundingBox(), await panels().nth(1).boundingBox()];
+		expect(narrow[1]!.y).toBeGreaterThan(narrow[0]!.y + narrow[0]!.height - 40);
+
+		const doc = await page.evaluate(() => ({
+			scrollWidth: document.documentElement.scrollWidth,
+			clientWidth: document.documentElement.clientWidth
+		}));
+		expect(doc.scrollWidth).toBeLessThanOrEqual(doc.clientWidth);
+	});
+
+	test('the compare page keeps the diff in one column even on a wide screen', async ({ page }) => {
+		// The split is a container query, not a viewport one: the compare page
+		// constrains the diff to a reading column and must not split inside it.
+		await page.setViewportSize({ width: 1440, height: 1800 });
+		await gotoClassicCookies(page);
+		await page.goto(page.url().split('?')[0] + '/diff');
+
+		const panels = page.locator('section').filter({ has: page.locator('.eyebrow-label') });
+		const a = await panels.nth(0).boundingBox();
+		const b = await panels.nth(1).boundingBox();
+		expect(b!.y).toBeGreaterThan(a!.y + a!.height - 40);
+	});
+
 	test('the sample diff shows an actual change, not just unchanged rows', async ({ page }) => {
 		await page.goto('/');
 		const changedRow = page.locator('.diff-added, .diff-removed, .diff-modified').first();

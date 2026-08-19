@@ -70,6 +70,52 @@ const COOKIE_STEPS = [
 	}
 ];
 
+// Version 3 is the diff the landing page showcases, so it is shaped to the
+// strengths of the diff engine as well as to the story. Every ingredient change
+// has a step that acts on it — the sugar ratio shifts, and the chill and the
+// salt are what that ratio needs.
+//
+// It deliberately edits the two existing steps in place rather than inserting a
+// new one: diffSteps matches by step number, so inserting mid-list renumbers
+// everything after it and renders as a cascade of unrelated changes. It also
+// avoids renaming an ingredient, which diffIngredients reports as a removal plus
+// an addition rather than one modification. Both are documented limitations in
+// lib/utils/diff.ts.
+const COOKIE_INGREDIENTS_V3 = [
+	{ amount: '2¼', unit: 'cups', name: 'all-purpose flour' },
+	{ amount: '1', unit: 'tsp', name: 'baking soda' },
+	{ amount: '1', unit: 'tsp', name: 'salt' },
+	{ amount: '1', unit: 'cup', name: 'unsalted butter, softened' },
+	{ amount: '½', unit: 'cup', name: 'granulated sugar' },
+	{ amount: '1', unit: 'cup', name: 'packed brown sugar' },
+	{ amount: '2', unit: 'tsp', name: 'vanilla extract' },
+	{ amount: '2', unit: 'large', name: 'eggs' },
+	{ amount: '2', unit: 'cups', name: 'chocolate chips' },
+	{ amount: '¼', unit: 'tsp', name: 'espresso powder' },
+	{ amount: '1', unit: 'tsp', name: 'flaky sea salt, for topping' }
+];
+
+const COOKIE_STEPS_V3 = [
+	{ step: 1, text: 'Preheat oven to 375°F (190°C). Line two baking sheets with parchment paper.' },
+	{ step: 2, text: 'Whisk flour, baking soda, and salt in a medium bowl. Set aside.' },
+	{
+		step: 3,
+		text: 'Beat butter and both sugars with an electric mixer on medium speed until light and fluffy, about 3 minutes.'
+	},
+	{
+		step: 4,
+		text: 'Add eggs one at a time, beating well after each addition. Beat in vanilla extract.'
+	},
+	{
+		step: 5,
+		text: 'Gradually stir in the flour mixture until just combined. Fold in chocolate chips, reserving a handful to press into the tops. Cover and chill the dough at least 2 hours — cold dough spreads less, so the extra brown sugar reads as chew rather than sprawl.'
+	},
+	{
+		step: 6,
+		text: 'Drop rounded tablespoons of chilled dough onto prepared baking sheets, pressing the reserved chips into the tops. Bake 9–11 minutes until edges are golden. Sprinkle with flaky sea salt while still hot, then cool on baking sheet for 5 minutes before transferring.'
+	}
+];
+
 const BROWN_BUTTER_INGREDIENTS = [
 	{ amount: '2¼', unit: 'cups', name: 'all-purpose flour' },
 	{ amount: '1', unit: 'tsp', name: 'baking soda' },
@@ -165,10 +211,19 @@ const TIKKA_INGREDIENTS_V2 = [
 	{ amount: '1', unit: 'cup', name: 'heavy cream' }
 ];
 
+// v3 changes only what its commit message claims: the paprika added to the
+// ingredients in v2 finally reaches the marinade, and the sauce gains a butter
+// finish. An earlier draft also quietly dropped "in the fridge", "about 5
+// minutes" and "stirring occasionally" — detail a cook wants, deleted for no
+// stated reason, which is exactly what makes a diff read as churn.
+//
+// The butter finish is appended to step 5 rather than inserted as a new step 6,
+// because diffSteps matches by step number and a mid-list insert renumbers
+// everything after it into a cascade of false changes.
 const TIKKA_STEPS_V3 = [
 	{
 		step: 1,
-		text: 'Combine chicken with yogurt, lemon juice, garam masala, cumin, coriander, turmeric, and paprika. Marinate at least 1 hour or overnight.'
+		text: 'Combine chicken with yogurt, lemon juice, garam masala, cumin, coriander, turmeric, and smoked paprika. Marinate at least 1 hour or overnight in the fridge.'
 	},
 	{
 		step: 2,
@@ -176,21 +231,20 @@ const TIKKA_STEPS_V3 = [
 	},
 	{
 		step: 3,
-		text: 'Melt butter in a large skillet over medium heat. Sauté onion until softened. Add garlic and ginger, cook 1 minute more.'
+		text: 'Melt butter in a large skillet over medium heat. Sauté onion until softened, about 5 minutes. Add garlic and ginger, cook 1 minute more.'
 	},
 	{
 		step: 4,
-		text: 'Add crushed tomatoes and remaining spices. Simmer 15 minutes until sauce thickens.'
+		text: 'Add crushed tomatoes and remaining spices. Simmer 15 minutes, stirring occasionally, until sauce thickens.'
 	},
 	{
 		step: 5,
-		text: 'Add chicken to the sauce. Pour in cream and stir to combine. Simmer 10 minutes.'
+		text: 'Add chicken to the sauce. Pour in cream and stir to combine. Simmer 10 minutes, then stir in a final tablespoon of cold butter for richness and gloss.'
 	},
 	{
 		step: 6,
-		text: 'Stir in a final tablespoon of cold butter at the end for richness and gloss. Adjust seasoning.'
-	},
-	{ step: 7, text: 'Serve over basmati rice with warm naan. Garnish with fresh cilantro.' }
+		text: 'Serve over basmati rice with warm naan bread. Garnish with fresh cilantro.'
+	}
 ];
 
 // ─── Seed function ────────────────────────────────────────────────────────────
@@ -309,6 +363,16 @@ async function seed() {
 			steps: COOKIE_STEPS,
 			createdBy: userId,
 			createdAt: new Date('2026-02-28')
+		},
+		{
+			recipeId: recipe1.id,
+			versionNumber: 3,
+			commitMessage:
+				'Chill the dough and shift the sugar toward brown — thicker cookies, less cloying',
+			ingredients: COOKIE_INGREDIENTS_V3,
+			steps: COOKIE_STEPS_V3,
+			createdBy: userId,
+			createdAt: new Date('2026-07-19')
 		}
 	]);
 
@@ -394,7 +458,8 @@ async function seed() {
 		{
 			recipeId: recipe3.id,
 			versionNumber: 3,
-			commitMessage: 'Added cream at the end for richness, finish with cold butter for gloss',
+			commitMessage:
+				'Worked the smoked paprika into the marinade, finished the sauce with cold butter',
 			ingredients: TIKKA_INGREDIENTS_V2,
 			steps: TIKKA_STEPS_V3,
 			createdBy: userId,

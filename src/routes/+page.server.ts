@@ -68,6 +68,14 @@ export const load: PageServerLoad = async ({ locals: { user } }) => {
 			.filter((r) => r !== undefined)
 			.filter((r) => r.versionCount >= 2);
 
+		// Score every candidate and keep the strongest rather than breaking on the
+		// first that differs at all. The landing diff is the shop window: a
+		// one-line tweak on the newest recipe should not outrank a substantial
+		// rewrite on an older one, and the e2e suite writes exactly such a tweak
+		// on every run. Candidates are already capped at five, so this is at most
+		// five round trips.
+		let bestScore = 0;
+
 		for (const candidate of candidates) {
 			const versions = await db.query.recipeVersions.findMany({
 				where: eq(recipeVersions.recipeId, candidate.id),
@@ -86,11 +94,14 @@ export const load: PageServerLoad = async ({ locals: { user } }) => {
 				to.steps as Parameters<typeof diffSteps>[0]
 			);
 
-			const hasChange =
-				ingredientDiff.some((r) => r.status !== 'unchanged') ||
-				stepDiff.some((r) => r.status !== 'unchanged');
+			const changedRows = [...ingredientDiff, ...stepDiff].filter(
+				(r) => r.status !== 'unchanged'
+			).length;
 
-			if (hasChange) {
+			// Strictly greater, so an equal score leaves the newer candidate in
+			// place — candidates arrive newest first.
+			if (changedRows > bestScore) {
+				bestScore = changedRows;
 				sampleDiff = {
 					recipeTitle: candidate.title,
 					recipeSlug: candidate.slug,
@@ -99,7 +110,6 @@ export const load: PageServerLoad = async ({ locals: { user } }) => {
 					ingredientDiff,
 					stepDiff
 				};
-				break;
 			}
 		}
 	}

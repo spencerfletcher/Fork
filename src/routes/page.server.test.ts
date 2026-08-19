@@ -231,6 +231,99 @@ describe('homepage load', () => {
 		expect(result.sampleDiff?.recipeTitle).toBe('Owned');
 	});
 
+	test('picks the pair with the most changes, not merely the first that differs', async () => {
+		// The landing diff is the shop window. A one-line tweak on the newest
+		// recipe used to win it outright, including the version the e2e suite
+		// writes on every run.
+		const showcaseAuthor = { id: 'user-1', username: 'spencerfletcher' };
+		findManyMock.mockResolvedValue([
+			{ id: 1, title: 'Tweak', slug: 'tweak', recipesToTags: [], author: showcaseAuthor },
+			{
+				id: 2,
+				title: 'Substantial',
+				slug: 'substantial',
+				recipesToTags: [],
+				author: showcaseAuthor
+			}
+		]);
+		selectMock
+			.mockReturnValueOnce(
+				chain([
+					{ recipeId: 1, count: 2 },
+					{ recipeId: 2, count: 2 }
+				])
+			)
+			.mockReturnValueOnce(chain([]));
+
+		const steps = [{ step: 1, text: 'Mix.' }];
+		// Candidate 1 is newer and does differ — one ingredient amount.
+		recipeVersionsFindManyMock
+			.mockResolvedValueOnce([
+				{
+					versionNumber: 2,
+					ingredients: [{ amount: '2', unit: 'tsp', name: 'vanilla' }],
+					steps
+				},
+				{ versionNumber: 1, ingredients: [{ amount: '1', unit: 'tsp', name: 'vanilla' }], steps }
+			])
+			// Candidate 2 is older but rewrites three ingredients and a step.
+			.mockResolvedValueOnce([
+				{
+					versionNumber: 2,
+					ingredients: [
+						{ amount: '½', unit: 'cup', name: 'sugar' },
+						{ amount: '1', unit: 'cup', name: 'brown sugar' },
+						{ amount: '1', unit: 'tsp', name: 'flaky salt' }
+					],
+					steps: [{ step: 1, text: 'Chill the dough overnight.' }]
+				},
+				{
+					versionNumber: 1,
+					ingredients: [
+						{ amount: '¾', unit: 'cup', name: 'sugar' },
+						{ amount: '¾', unit: 'cup', name: 'brown sugar' }
+					],
+					steps
+				}
+			]);
+
+		const result = await loadResult({
+			locals: { user: null }
+		} as unknown as Parameters<typeof load>[0]);
+
+		expect(result.sampleDiff?.recipeTitle).toBe('Substantial');
+	});
+
+	test('keeps the newer recipe when two candidates change equally', async () => {
+		const showcaseAuthor = { id: 'user-1', username: 'spencerfletcher' };
+		findManyMock.mockResolvedValue([
+			{ id: 1, title: 'Newer', slug: 'newer', recipesToTags: [], author: showcaseAuthor },
+			{ id: 2, title: 'Older', slug: 'older', recipesToTags: [], author: showcaseAuthor }
+		]);
+		selectMock
+			.mockReturnValueOnce(
+				chain([
+					{ recipeId: 1, count: 2 },
+					{ recipeId: 2, count: 2 }
+				])
+			)
+			.mockReturnValueOnce(chain([]));
+
+		const pair = (name: string) => [
+			{ versionNumber: 2, ingredients: [{ amount: '2', unit: 'tsp', name }], steps: [] },
+			{ versionNumber: 1, ingredients: [{ amount: '1', unit: 'tsp', name }], steps: [] }
+		];
+		recipeVersionsFindManyMock
+			.mockResolvedValueOnce(pair('vanilla'))
+			.mockResolvedValueOnce(pair('almond'));
+
+		const result = await loadResult({
+			locals: { user: null }
+		} as unknown as Parameters<typeof load>[0]);
+
+		expect(result.sampleDiff?.recipeTitle).toBe('Newer');
+	});
+
 	test('does not select a qualifying recipe from another author for the showcase diff', async () => {
 		// Signup is open, so any registered user's recipe would otherwise qualify.
 		// The showcase diff must stay pinned to the site owner's own recipes — a

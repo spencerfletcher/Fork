@@ -14,7 +14,9 @@
 		toVersion={data.sampleDiff?.toVersion}
 	/>
 	{#if data.sampleDiff}
-		<section class="mx-auto max-w-[900px] px-6 py-10">
+		<!-- Wider than the site's reading column: the diff renders two panels side
+		     by side here, which needs the room. -->
+		<section class="mx-auto max-w-[1200px] px-6 py-10">
 			<h2 class="eyebrow-label mb-3">A real change, diffed</h2>
 			<VersionDiff
 				ingredientDiff={data.sampleDiff.ingredientDiff}
