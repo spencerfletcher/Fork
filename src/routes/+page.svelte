@@ -19,7 +19,6 @@
 		<section class="mx-auto max-w-[1200px] px-6 py-10">
 			<h2 class="eyebrow-label mb-3">A real change, diffed</h2>
 			<h3 class="eyebrow-label mb-3">Diff Message</h3>
-			asdsa
 			<VersionDiff
 				ingredientDiff={data.sampleDiff.ingredientDiff}
 				stepDiff={data.sampleDiff.stepDiff}
