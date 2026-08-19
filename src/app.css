@@ -608,6 +608,18 @@
 
 	/* ── Eyebrow label ── */
 
+	.diff-open-link {
+		display: inline-block;
+		font-family: var(--font-mono);
+		font-size: 0.8rem;
+		color: var(--color-accent);
+		text-decoration: none;
+	}
+
+	.diff-open-link:hover {
+		text-decoration: underline;
+	}
+
 	/* The "nothing here" paragraph shown when a list query returns no rows.
 	   Shared by the feed, search, favourites and tag pages. */
 	.empty-state {

@@ -8,11 +8,7 @@
 </script>
 
 {#if data.mode === 'landing'}
-	<LandingHero
-		sampleSlug={data.sampleDiff?.recipeSlug}
-		fromVersion={data.sampleDiff?.fromVersion}
-		toVersion={data.sampleDiff?.toVersion}
-	/>
+	<LandingHero isLoggedIn={!!data.user} />
 	{#if data.sampleDiff}
 		<!-- Wider than the site's reading column: the diff renders two panels side
 		     by side here, which needs the room. -->
@@ -32,6 +28,16 @@
 				ingredientDiff={data.sampleDiff.ingredientDiff}
 				stepDiff={data.sampleDiff.stepDiff}
 			/>
+			<!-- The hero's "See a diff" button pointed here and was redundant beside
+			     the diff itself. The route to the interactive compare view still needs
+			     a signpost, so it sits under the thing it opens. -->
+			<a
+				class="diff-open-link"
+				href="/recipes/{data.sampleDiff.recipeSlug}/diff?from={data.sampleDiff.fromVersion}&to={data
+					.sampleDiff.toVersion}"
+			>
+				Open the full comparison →
+			</a>
 		</section>
 	{/if}
 {/if}

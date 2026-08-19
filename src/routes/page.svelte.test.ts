@@ -31,10 +31,12 @@ describe('/+page.svelte', () => {
 		expect(screen.queryByText('Recipes, under version control.')).not.toBeInTheDocument();
 	});
 
-	test('"See a diff" points at the same version range as the diff rendered below it', () => {
-		// A recipe with 3+ versions exposes the bug this guards against: the hero
-		// used to link to v1→last regardless of which two versions the sample
-		// diff below it actually shows.
+	test('the compare link points at the same version range as the diff shown', () => {
+		// A recipe with 3+ versions exposes the bug this guards against: the link
+		// used to point at v1→last regardless of which two versions the sample
+		// diff beside it actually shows. It moved out of the hero — where it sat
+		// a few hundred pixels above the diff it opened — to under the diff itself,
+		// but it still has to open the exact pair being rendered.
 		const sampleDiff = {
 			recipeTitle: 'Chicken Tikka Masala',
 			recipeSlug: 'chicken-tikka-masala-xyz',
@@ -55,7 +57,7 @@ describe('/+page.svelte', () => {
 			}
 		});
 
-		const link = screen.getByRole('link', { name: /see a diff/i });
+		const link = screen.getByRole('link', { name: /open the full comparison/i });
 		expect(link).toHaveAttribute(
 			'href',
 			`/recipes/${sampleDiff.recipeSlug}/diff?from=${sampleDiff.fromVersion}&to=${sampleDiff.toVersion}`
