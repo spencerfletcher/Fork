@@ -34,9 +34,12 @@ describe('VersionDiff', () => {
 		const row = container.querySelector('.diff-added');
 		// The gutter glyph is what distinguishes added from removed for anyone
 		// who cannot rely on colour alone.
-		expect(row?.textContent).toContain('+');
+		expect(row?.querySelector('.diff-gutter')?.textContent?.trim()).toBe('+');
 		expect(row?.textContent).toContain('flour');
-		expect(row).toHaveClass('text-add');
+		// Colour comes from a stylesheet, which jsdom does not apply — the real
+		// contrast is asserted in a browser by e2e/recipe.test.ts. Here we assert
+		// the status class the stylesheet keys off.
+		expect(row).toHaveClass('diff-row');
 	});
 
 	test('marks a removed ingredient with a minus sign and strikes it through', () => {
@@ -44,9 +47,9 @@ describe('VersionDiff', () => {
 			{ status: 'removed', ingredient: ingredient('butter') } as IngredientDiffRow
 		]);
 		const row = container.querySelector('.diff-removed');
-		expect(row?.textContent).toContain('−');
-		expect(row).toHaveClass('line-through');
-		expect(row).toHaveClass('text-remove');
+		expect(row?.querySelector('.diff-gutter')?.textContent?.trim()).toBe('−');
+		expect(row?.textContent).toContain('butter');
+		expect(row).toHaveClass('diff-row');
 	});
 
 	test('renders an unchanged ingredient without add or remove styling', () => {

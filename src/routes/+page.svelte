@@ -18,7 +18,16 @@
 		     by side here, which needs the room. -->
 		<section class="mx-auto max-w-[1200px] px-6 py-10">
 			<h2 class="eyebrow-label mb-3">A real change, diffed</h2>
-			<h3 class="eyebrow-label mb-3">Diff Message</h3>
+			<!-- The premise is that every edit carries a reason, so the sample has to
+			     show the reason and not only the change. -->
+			<div class="commit-bar">
+				<span class="commit-bar__versions">
+					v{data.sampleDiff.fromVersion} → v{data.sampleDiff.toVersion}
+				</span>
+				{#if data.sampleDiff.commitMessage}
+					<span class="commit-bar__message">{data.sampleDiff.commitMessage}</span>
+				{/if}
+			</div>
 			<VersionDiff
 				ingredientDiff={data.sampleDiff.ingredientDiff}
 				stepDiff={data.sampleDiff.stepDiff}

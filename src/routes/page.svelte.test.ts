@@ -40,6 +40,7 @@ describe('/+page.svelte', () => {
 			recipeSlug: 'chicken-tikka-masala-xyz',
 			fromVersion: 2,
 			toVersion: 3,
+			commitMessage: 'Worked the smoked paprika into the marinade',
 			ingredientDiff: [],
 			stepDiff: [
 				{

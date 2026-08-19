@@ -127,8 +127,8 @@ test.describe('Recipe detail page', () => {
 		};
 
 		// ── Added: v1→v2 adds "espresso powder" as a whole new ingredient row.
-		// The row has no background override, so it sits directly on the page
-		// background — no opacity involved.
+		// Added rows carry --color-add-bg; the walk below therefore stops on the
+		// row itself. No opacity is involved.
 		const addedRow = page.locator('div.diff-added').first();
 		await addedRow.waitFor();
 		const added = await addedRow.evaluate((el) => {
@@ -145,8 +145,8 @@ test.describe('Recipe detail page', () => {
 
 		// ── Removed: reverse the compared range (v2 → v1) so "espresso powder" —
 		// present in v2, absent in v1 — renders as a genuinely removed whole row,
-		// which carries opacity-85 (VersionDiff.svelte) on top of bg-remove-bg and
-		// text-remove. No fixture recipe has a real cross-version deletion, so the
+		// which carries a reduced opacity (VersionDiff.svelte) on top of its
+		// --color-remove-bg background and --color-remove text. No fixture recipe has a real cross-version deletion, so the
 		// reversed range is what produces one without hardcoding a slug or altering
 		// seed data.
 		const diffUrl = new URL(page.url());
@@ -154,7 +154,10 @@ test.describe('Recipe detail page', () => {
 		diffUrl.searchParams.set('to', '1');
 		await page.goto(diffUrl.toString());
 
-		const removedRow = page.locator('div.diff-removed.opacity-85').first();
+		// Selected by status class alone: opacity is now a stylesheet property of
+		// .diff-row.diff-removed rather than an opacity-85 utility class, and it is
+		// asserted below as a computed value.
+		const removedRow = page.locator('div.diff-removed').first();
 		await removedRow.waitFor();
 		const removed = await removedRow.evaluate((el) => {
 			const cs = getComputedStyle(el);

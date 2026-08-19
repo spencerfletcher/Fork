@@ -50,6 +50,7 @@ export const load: PageServerLoad = async ({ locals: { user } }) => {
 		recipeSlug: string;
 		fromVersion: number;
 		toVersion: number;
+		commitMessage: string | null;
 		ingredientDiff: ReturnType<typeof diffIngredients>;
 		stepDiff: ReturnType<typeof diffSteps>;
 	} | null = null;
@@ -107,6 +108,7 @@ export const load: PageServerLoad = async ({ locals: { user } }) => {
 					recipeSlug: candidate.slug,
 					fromVersion: from.versionNumber,
 					toVersion: to.versionNumber,
+					commitMessage: to.commitMessage,
 					ingredientDiff,
 					stepDiff
 				};

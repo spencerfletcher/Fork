@@ -606,6 +606,33 @@
 
 	/* ── Eyebrow label ── */
 
+	/* Commit context: which two versions a diff spans and why the change was made.
+	   Used above the landing page's sample diff and on the compare page. */
+	.commit-bar {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: 0.75rem;
+		margin-bottom: 1.5rem;
+		padding: 0.75rem 1rem;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+		background: var(--color-surface-2);
+	}
+
+	.commit-bar__versions {
+		flex-shrink: 0;
+		font-family: var(--font-mono);
+		font-size: 0.8rem;
+		font-weight: 600;
+		color: var(--color-accent);
+	}
+
+	.commit-bar__message {
+		color: var(--color-text-2);
+		font-size: 0.95rem;
+	}
+
 	.eyebrow-label {
 		font-family: var(--font-sans);
 		font-size: 0.65rem;

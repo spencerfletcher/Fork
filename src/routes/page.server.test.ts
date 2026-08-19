@@ -231,6 +231,39 @@ describe('homepage load', () => {
 		expect(result.sampleDiff?.recipeTitle).toBe('Owned');
 	});
 
+	test('carries the commit message of the version being shown', async () => {
+		// The landing diff is an argument for commit messages, so it has to show
+		// one. Without it a visitor sees what changed but never why.
+		const showcaseAuthor = { id: 'user-1', username: 'spencerfletcher' };
+		findManyMock.mockResolvedValue([
+			{ id: 1, title: 'Cookies', slug: 'cookies', recipesToTags: [], author: showcaseAuthor }
+		]);
+		selectMock
+			.mockReturnValueOnce(chain([{ recipeId: 1, count: 2 }]))
+			.mockReturnValueOnce(chain([]));
+		recipeVersionsFindManyMock.mockResolvedValue([
+			{
+				versionNumber: 3,
+				commitMessage: 'Chill the dough',
+				ingredients: [{ amount: '½', unit: 'cup', name: 'sugar' }],
+				steps: []
+			},
+			{
+				versionNumber: 2,
+				commitMessage: 'Increased vanilla',
+				ingredients: [{ amount: '¾', unit: 'cup', name: 'sugar' }],
+				steps: []
+			}
+		]);
+
+		const result = await loadResult({
+			locals: { user: null }
+		} as unknown as Parameters<typeof load>[0]);
+
+		// The message of the version being moved TO, not the one being moved from.
+		expect(result.sampleDiff?.commitMessage).toBe('Chill the dough');
+	});
+
 	test('picks the pair with the most changes, not merely the first that differs', async () => {
 		// The landing diff is the shop window. A one-line tweak on the newest
 		// recipe used to win it outright, including the version the e2e suite
