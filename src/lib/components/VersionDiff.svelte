@@ -181,4 +181,12 @@
 		color: var(--color-remove);
 		text-decoration: line-through;
 	}
+
+	/* A replaced word renders as a removed run immediately followed by an added
+	   run. A thin gap keeps "Cool" + "Sprinkle" from reading as one word without
+	   adding characters to the copyable text. */
+	.diff-content .diff-removed + .diff-added,
+	.diff-content .diff-added + .diff-removed {
+		margin-left: 0.4em;
+	}
 </style>
