@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { enhance, applyAction } from '$app/forms';
 	import type { User } from '@supabase/supabase-js';
 	import type { Profile } from '#lib/server/db/schema.js';
@@ -26,7 +26,7 @@
 			</a>
 			<ul class="navbar-links m-0 hidden list-none gap-6 p-0 md:flex">
 				<li>
-					<a href="/search" class="navbar-link" class:active={$page.url.pathname === '/search'}>
+					<a href="/search" class="navbar-link" class:active={page.url.pathname === '/search'}>
 						Search
 					</a>
 				</li>
@@ -34,8 +34,8 @@
 					<a
 						href="/recipes"
 						class="navbar-link"
-						class:active={$page.url.pathname.startsWith('/recipes') &&
-							$page.url.pathname !== '/recipes/new'}
+						class:active={page.url.pathname.startsWith('/recipes') &&
+							page.url.pathname !== '/recipes/new'}
 					>
 						Recipes
 					</a>
@@ -45,7 +45,7 @@
 						<a
 							href="/favorites"
 							class="navbar-link"
-							class:active={$page.url.pathname === '/favorites'}
+							class:active={page.url.pathname === '/favorites'}
 						>
 							Favorites
 						</a>
@@ -80,7 +80,7 @@
 					<a
 						href="/recipes/new"
 						class="nav-cta"
-						class:opacity-75={$page.url.pathname === '/recipes/new'}
+						class:opacity-75={page.url.pathname === '/recipes/new'}
 					>
 						+ New Recipe
 					</a>
