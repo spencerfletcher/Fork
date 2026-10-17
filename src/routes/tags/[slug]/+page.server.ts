@@ -1,9 +1,9 @@
 import { error } from '@sveltejs/kit';
-import { db } from '$lib/server/db';
+import { db } from '#lib/server/db/index.js';
 import { eq, and, inArray } from 'drizzle-orm';
-import { tags, recipes, recipesToTags } from '$lib/server/db/schema';
-import { attachRecipeCounts } from '$lib/server/recipeCounts';
-import { clampDescription } from '$lib/seo';
+import { tags, recipes, recipesToTags } from '#lib/server/db/schema.js';
+import { attachRecipeCounts } from '#lib/server/recipeCounts.js';
+import { clampDescription } from '#lib/seo.js';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params }) => {

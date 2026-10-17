@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { RecipeVersion } from '$lib/server/db/schema';
+	import type { RecipeVersion } from '#lib/server/db/schema.js';
 
 	let { currentVersion }: { currentVersion: RecipeVersion } = $props();
 

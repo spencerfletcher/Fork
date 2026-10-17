@@ -1,7 +1,7 @@
-import { db } from '$lib/server/db';
-import { recipes } from '$lib/server/db/schema';
+import { db } from '#lib/server/db/index.js';
+import { recipes } from '#lib/server/db/schema.js';
 import { eq } from 'drizzle-orm';
-import { attachRecipeCounts } from '$lib/server/recipeCounts';
+import { attachRecipeCounts } from '#lib/server/recipeCounts.js';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals: { user } }) => {

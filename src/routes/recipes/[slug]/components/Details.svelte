@@ -1,6 +1,6 @@
 <script lang="ts">
-	import type { Recipe } from '$lib/server/db/schema';
-	import { formatTime } from '$lib/helpers';
+	import type { Recipe } from '#lib/server/db/schema.js';
+	import { formatTime } from '#lib/helpers.js';
 
 	let { recipe }: { recipe: Pick<Recipe, 'prepTimeMinutes' | 'cookTimeMinutes' | 'servings'> } =
 		$props();

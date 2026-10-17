@@ -6,7 +6,7 @@ const { selectMock, selectDistinctMock, findManyMock } = vi.hoisted(() => ({
 	findManyMock: vi.fn()
 }));
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.js', () => ({
 	db: {
 		select: selectMock,
 		selectDistinct: selectDistinctMock,

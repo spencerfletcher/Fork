@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Tag } from '$lib/server/db/schema';
+	import type { Tag } from '#lib/server/db/schema.js';
 
 	let {
 		availableTags,

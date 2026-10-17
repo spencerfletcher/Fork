@@ -2,7 +2,7 @@
 	import { goto } from '$app/navigation';
 	import SearchBar from './SearchBar.svelte';
 	import TagFilter from './TagFilter.svelte';
-	import type { Tag } from '$lib/server/db/schema';
+	import type { Tag } from '#lib/server/db/schema.js';
 
 	let {
 		initialQuery = '',

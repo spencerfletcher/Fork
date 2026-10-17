@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import type { PageData } from './$types';
-	import type { Ingredient, Step } from '$lib/server/db/schema';
-	import IngredientEditor from '$lib/components/IngredientEditor.svelte';
-	import StepEditor from '$lib/components/StepEditor.svelte';
+	import type { Ingredient, Step } from '#lib/server/db/schema.js';
+	import IngredientEditor from '#lib/components/IngredientEditor.svelte';
+	import StepEditor from '#lib/components/StepEditor.svelte';
 
 	let { data }: { data: PageData } = $props();
 

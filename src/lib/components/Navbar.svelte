@@ -2,7 +2,7 @@
 	import { page } from '$app/stores';
 	import { enhance, applyAction } from '$app/forms';
 	import type { User } from '@supabase/supabase-js';
-	import type { Profile } from '$lib/server/db/schema';
+	import type { Profile } from '#lib/server/db/schema.js';
 
 	let { user, profile = null }: { user: User | null; profile?: Profile | null } = $props();
 

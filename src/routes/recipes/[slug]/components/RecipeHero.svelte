@@ -1,6 +1,6 @@
 <script lang="ts">
-	import type { Recipe, RecipeVersion, Tag } from '$lib/server/db/schema';
-	import { formatTime } from '$lib/helpers';
+	import type { Recipe, RecipeVersion, Tag } from '#lib/server/db/schema.js';
+	import { formatTime } from '#lib/helpers.js';
 
 	interface RecipeWithRelations extends Recipe {
 		author?: { id: string; username: string } | null;

@@ -1,8 +1,8 @@
 import { error } from '@sveltejs/kit';
-import { db } from '$lib/server/db';
-import { recipes, recipeVersions } from '$lib/server/db/schema';
+import { db } from '#lib/server/db/index.js';
+import { recipes, recipeVersions } from '#lib/server/db/schema.js';
 import { eq, asc } from 'drizzle-orm';
-import { diffIngredients, diffSteps } from '$lib/utils/diff';
+import { diffIngredients, diffSteps } from '#lib/utils/diff.js';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params, url, locals }) => {

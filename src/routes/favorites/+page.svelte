@@ -1,6 +1,6 @@
 <script lang="ts">
-	import RecipeCard from '$lib/components/RecipeCard.svelte';
-	import SearchFilters from '$lib/components/SearchFilters.svelte';
+	import RecipeCard from '#lib/components/RecipeCard.svelte';
+	import SearchFilters from '#lib/components/SearchFilters.svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();

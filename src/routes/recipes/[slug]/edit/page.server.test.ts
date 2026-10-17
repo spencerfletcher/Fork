@@ -13,7 +13,7 @@ const { findRecipeMock, dbInsert, transactionMock } = vi.hoisted(() => ({
 	transactionMock: vi.fn()
 }));
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.js', () => ({
 	db: {
 		query: {
 			recipes: { findFirst: findRecipeMock },

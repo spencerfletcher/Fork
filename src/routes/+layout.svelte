@@ -3,9 +3,9 @@
 	import type { Snippet } from 'svelte';
 	import type { LayoutData } from './$types';
 	import '../app.css';
-	import Navbar from '$lib/components/Navbar.svelte';
+	import Navbar from '#lib/components/Navbar.svelte';
 	import { page } from '$app/stores';
-	import { DEFAULT_META, SITE_NAME, pageTitle, type PageMeta } from '$lib/seo';
+	import { DEFAULT_META, SITE_NAME, pageTitle, type PageMeta } from '#lib/seo.js';
 
 	// This is the key change:
 	// We destructure BOTH `data` and `children` from the top-level props.

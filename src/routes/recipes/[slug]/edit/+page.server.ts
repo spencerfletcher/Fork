@@ -1,8 +1,8 @@
 import { error, redirect } from '@sveltejs/kit';
-import { db } from '$lib/server/db';
-import { recipes, recipeVersions, recipesToTags, tags } from '$lib/server/db/schema';
+import { db } from '#lib/server/db/index.js';
+import { recipes, recipeVersions, recipesToTags, tags } from '#lib/server/db/schema.js';
 import { eq, desc, max, inArray } from 'drizzle-orm';
-import { slugify } from '$lib/helpers';
+import { slugify } from '#lib/helpers.js';
 import type { PageServerLoad, Actions } from './$types';
 
 export const load: PageServerLoad = async ({ params, locals: { user } }) => {

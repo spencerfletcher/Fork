@@ -65,5 +65,9 @@
 		"drizzle-orm": "^0.45.4",
 		"nanoid": "^6.0.2",
 		"postgres": "^3.4.9"
+	},
+	"imports": {
+		"#lib": "./src/lib/index.js",
+		"#lib/*": "./src/lib/*"
 	}
 }

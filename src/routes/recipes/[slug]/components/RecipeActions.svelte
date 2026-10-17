@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { Dialog } from 'bits-ui';
-	import type { Recipe } from '$lib/server/db/schema';
+	import type { Recipe } from '#lib/server/db/schema.js';
 
 	let {
 		recipe,

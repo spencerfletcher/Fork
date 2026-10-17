@@ -1,6 +1,6 @@
 import { json } from '@sveltejs/kit';
 import { SPOONACULAR_API_KEY } from '$app/env/private';
-import { lookupGrams } from '$lib/server/ingredientDensities';
+import { lookupGrams } from '#lib/server/ingredientDensities.js';
 import type { RequestHandler } from './$types';
 
 interface IngredientInput {
