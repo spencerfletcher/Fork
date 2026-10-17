@@ -34,6 +34,12 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 	if (!recipe) throw error(404, 'Recipe not found');
 	if (!recipe.isPublic && recipe.authorId !== user?.id) throw error(404, 'Recipe not found');
 
+	// A public fork can come from a private recipe. Readers who can't see that
+	// recipe get no parent data at all; parentId alone lets the page say so.
+	const parentVisible =
+		recipe.parent !== null && (recipe.parent.isPublic || recipe.parent.authorId === user?.id);
+	const visibleRecipe = { ...recipe, parent: parentVisible ? recipe.parent : null };
+
 	// Resolve which version's content to display
 	let currentVersion = recipe.versions[0] ?? null;
 	let isViewingHistory = false;
@@ -62,7 +68,7 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 	const forkCount = forkRow?.value ?? 0;
 
 	return {
-		recipe,
+		recipe: visibleRecipe,
 		currentVersion,
 		allVersions: recipe.versions,
 		isViewingHistory,

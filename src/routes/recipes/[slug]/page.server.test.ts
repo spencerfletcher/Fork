@@ -1,24 +1,30 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
-import { actions } from './+page.server';
+import { actions, load } from './+page.server';
 
 // ─── Hoisted mocks ────────────────────────────────────────────────────────────
 
-const { findRecipeMock, dbInsert, transactionMock } = vi.hoisted(() => ({
-	findRecipeMock: vi.fn(),
-	// db.insert is called at the top level (profile upsert) before the transaction
-	dbInsert: vi.fn().mockReturnValue({
-		values: vi.fn().mockReturnValue({
-			onConflictDoNothing: vi.fn().mockResolvedValue(undefined)
-		})
-	}),
-	transactionMock: vi.fn()
-}));
+const { findRecipeMock, findFavoriteMock, selectMock, dbInsert, transactionMock } = vi.hoisted(
+	() => ({
+		findRecipeMock: vi.fn(),
+		findFavoriteMock: vi.fn(),
+		selectMock: vi.fn(),
+		// db.insert is called at the top level (profile upsert) before the transaction
+		dbInsert: vi.fn().mockReturnValue({
+			values: vi.fn().mockReturnValue({
+				onConflictDoNothing: vi.fn().mockResolvedValue(undefined)
+			})
+		}),
+		transactionMock: vi.fn()
+	})
+);
 
 vi.mock('#lib/server/db/index.js', () => ({
 	db: {
 		query: {
-			recipes: { findFirst: findRecipeMock }
+			recipes: { findFirst: findRecipeMock },
+			favorites: { findFirst: findFavoriteMock }
 		},
+		select: selectMock,
 		insert: dbInsert,
 		transaction: transactionMock
 	}
@@ -232,5 +238,74 @@ describe('fork', () => {
 
 		const versionValues = tx.insertChain.values.mock.calls[2][0];
 		expect(versionValues.commitMessage).toBe('Forked recipe');
+	});
+});
+
+// ─── load: fork attribution ───────────────────────────────────────────────────
+
+/** A RequestEvent-like object for `load`, which reads params, url, and locals. */
+function makeLoadEvent(user: { id: string; email: string } | null = null) {
+	return {
+		params: { slug: 'the-fork' },
+		url: new URL('http://localhost/recipes/the-fork'),
+		locals: { user }
+	};
+}
+
+/** A public fork whose parent has the given visibility and owner. */
+function forkOf(parent: { isPublic: boolean; authorId: string }) {
+	return {
+		...SOURCE_RECIPE,
+		id: 99,
+		slug: 'the-fork',
+		authorId: 'fork-author',
+		parentId: 42,
+		parent: {
+			id: 42,
+			slug: 'secret-original',
+			title: 'Secret Original',
+			...parent,
+			author: { id: parent.authorId, username: 'original' }
+		}
+	};
+}
+
+async function loadData(user: { id: string; email: string } | null = null) {
+	return (await load(makeLoadEvent(user) as never)) as {
+		recipe: { parent: unknown; parentId: number | null };
+	};
+}
+
+describe('load: fork attribution', () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+		findFavoriteMock.mockResolvedValue(undefined);
+		selectMock.mockReturnValue(chain([{ value: 0 }]));
+	});
+
+	test('includes a public parent', async () => {
+		findRecipeMock.mockResolvedValue(forkOf({ isPublic: true, authorId: 'original-author' }));
+		const data = await loadData();
+		expect(data.recipe.parent).toMatchObject({ slug: 'secret-original' });
+	});
+
+	test('withholds a private parent from a viewer who does not own it', async () => {
+		findRecipeMock.mockResolvedValue(forkOf({ isPublic: false, authorId: 'original-author' }));
+		const data = await loadData(FORKER);
+		expect(data.recipe.parent).toBeNull();
+		// parentId stays so the page can say it was forked from a private recipe.
+		expect(data.recipe.parentId).toBe(42);
+	});
+
+	test('withholds a private parent from a logged-out viewer', async () => {
+		findRecipeMock.mockResolvedValue(forkOf({ isPublic: false, authorId: 'original-author' }));
+		const data = await loadData(null);
+		expect(data.recipe.parent).toBeNull();
+	});
+
+	test("includes a private parent for the parent's owner", async () => {
+		findRecipeMock.mockResolvedValue(forkOf({ isPublic: false, authorId: 'original-author' }));
+		const data = await loadData({ id: 'original-author', email: 'o@test.com' });
+		expect(data.recipe.parent).toMatchObject({ slug: 'secret-original' });
 	});
 });

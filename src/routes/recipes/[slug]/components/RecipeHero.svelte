@@ -73,6 +73,10 @@
 				<a href="/recipes/{recipe.parent.slug}" class="text-accent">{recipe.parent.title}</a>
 				{#if recipe.parent.author}by @{recipe.parent.author.username}{/if}
 			</p>
+		{:else if recipe.parentId}
+			<p class="text-text-bronze m-0 -mt-4 font-serif text-[0.9rem] italic">
+				Forked from a private recipe
+			</p>
 		{/if}
 
 		<!-- Badges row -->
