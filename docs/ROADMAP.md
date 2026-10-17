@@ -1,6 +1,16 @@
 # Fork — Roadmap
 
-Planning document. Nothing here is built; see the README for what actually exists.
+## Current direction — 2026-09-09
+
+The sequence below is preserved as historical planning and is superseded by [the repository reconciliation](PRODUCT-RECONCILIATION.md). The consolidated product note is `/Users/spfle/obsidian-vault/fork/ForkV2.md`.
+
+Prioritize reliable private writing, readable mobile recipes, and deliberate friend-to-friend sharing with independent adaptations. Pull requests, feeds, and graph work are deferred. Small shared collections can follow simple sharing; they do not require professional operations. Per-page metadata is already implemented in the layout and route loaders, so historical M2 is no longer pending.
+
+The original M1 design is not approval to implement it. Preserve existing history and diff functionality. The assessment distinguishes source-inspected behavior from unverified runtime behavior.
+
+## Historical roadmap
+
+The material below records the earlier direction; estimates are historical, not current commitments.
 
 ## Sequencing
 
