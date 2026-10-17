@@ -15,6 +15,7 @@ vi.mock('#lib/server/db/index.js', () => ({
 }));
 
 import { load } from './+page.server';
+import { recipes } from '#lib/server/db/schema.js';
 import type { PageData } from './$types';
 
 /** Drizzle-compatible chainable mock. */
@@ -134,5 +135,20 @@ describe('search load', () => {
 		expect(tagsChain.innerJoin).toHaveBeenCalled();
 		// ...and selectDistinct is what stops the join fanning out duplicate chips.
 		expect(selectDistinctMock).toHaveBeenCalledTimes(1);
+	});
+
+	test("offers only tags from recipes the viewer can see, not other users' private ones", async () => {
+		selectDistinctMock.mockReturnValue(chain([]));
+		selectMock.mockReturnValue(chain([]));
+		findManyMock.mockResolvedValue([]);
+
+		await loadResult(makeEvent(''));
+
+		// The tag query has to reach the recipes table to know each recipe's
+		// visibility, and filter on it.
+		const tagsChain = selectDistinctMock.mock.results[0].value;
+		const joinedTables = tagsChain.innerJoin.mock.calls.map((call: unknown[]) => call[0]);
+		expect(joinedTables).toContain(recipes);
+		expect(tagsChain.where).toHaveBeenCalledTimes(1);
 	});
 });

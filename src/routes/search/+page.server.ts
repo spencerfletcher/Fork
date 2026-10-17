@@ -24,13 +24,16 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 		: eq(recipes.isPublic, true);
 
 	// ── Fetch tags up front — always needed for the filter UI ────────────────
-	// Only tags that actually match something; a filter chip that leads to an
-	// empty page is worse than no chip. Tags drop off this list on their own
-	// when their last recipe goes away.
+	// Only tags on recipes this viewer can see; a filter chip that leads to an
+	// empty page is worse than no chip, and a tag used only on someone else's
+	// private recipe must not appear at all. Tags drop off this list on their
+	// own when their last visible recipe goes away.
 	const allTags = await db
 		.selectDistinct({ id: tags.id, name: tags.name, slug: tags.slug })
 		.from(tags)
 		.innerJoin(recipesToTags, eq(recipesToTags.tagId, tags.id))
+		.innerJoin(recipes, eq(recipes.id, recipesToTags.recipeId))
+		.where(visibilityCondition)
 		.orderBy(tags.name);
 
 	// ── Tag filter: collect matching recipe IDs up front ─────────────────────
