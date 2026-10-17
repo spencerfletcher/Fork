@@ -40,7 +40,6 @@ A deliberate split in the schema supports this: recipe _metadata_ (title, descri
 | Social     | Favorites, user profile pages with public recipes and a commit count                                     |
 | Auth       | Email/password via Supabase Auth, SSR session handling, auth-gated routes and actions                    |
 | Utility    | Ingredient-to-grams conversion from a local density table, with an optional Spoonacular fallback         |
-| i18n       | English and Spanish message catalogs via Paraglide                                                       |
 
 ## Not built
 
@@ -57,7 +56,6 @@ pull requests / recipe suggestions · merging · multi-hop lineage graphs · com
 | ORM            | Drizzle                                         |
 | Auth & Storage | Supabase Auth, Supabase Storage                 |
 | Styling        | Tailwind CSS v4, Bits UI primitives             |
-| i18n           | Paraglide (inlang)                              |
 | Testing        | Vitest + Testing Library, Playwright            |
 | Hosting        | Netlify                                         |
 

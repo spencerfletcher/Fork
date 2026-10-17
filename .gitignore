@@ -24,8 +24,6 @@ Thumbs.db
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
-# Paraglide
-
 *storybook.log
 storybook-static
 
