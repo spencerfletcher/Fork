@@ -1,3 +1,18 @@
 {
-	"css.customData": [".vscode/tailwind.json"]
+	"css.customData": [
+		".vscode/tailwind.json"
+	],
+	"sqltools.connections": [
+		{
+			"ssh": "Disabled",
+			"previewLimit": 50,
+			"server": "localhost",
+			"port": 54322,
+			"driver": "PostgreSQL",
+			"name": "Test Database",
+			"database": "postgres",
+			"username": "postgres",
+			"password": ""
+		}
+	]
 }
