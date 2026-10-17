@@ -124,13 +124,13 @@ Every schema change edits `schema.ts` and adds a migration in the same commit, s
 ## Testing
 
 ```bash
-pnpm test:unit run   # 110 unit + component tests (Vitest)
+pnpm test:unit run   # unit + component tests (Vitest)
 pnpm test:e2e        # Playwright; requires a seeded database
 pnpm check           # svelte-check
 pnpm lint            # eslint + prettier
 ```
 
-Unit tests live next to their source (`Foo.svelte` → `Foo.svelte.test.ts`). Server logic runs in a Node environment, component tests in jsdom; the split is configured in `vitest.workspace.ts`. CI runs type checking, linting, and the unit suite on every push. The Playwright suite needs a live seeded database and is currently run locally rather than in CI.
+Unit tests live next to their source (`Foo.svelte` → `Foo.svelte.test.ts`). Server logic runs in a Node environment, component tests in jsdom; the split is configured in `vite.config.ts`. CI runs type checking, linting, and the unit suite on every push. The Playwright job starts a local Supabase, which replays the migration chain from empty, seeds it, and runs the e2e suite against it.
 
 ## License
 
