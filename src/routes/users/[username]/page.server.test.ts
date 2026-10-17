@@ -1,5 +1,6 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { load } from './+page.server';
+import { recipes } from '#lib/server/db/schema.js';
 
 // ─── Hoisted mocks ────────────────────────────────────────────────────────────
 
@@ -43,7 +44,7 @@ function chain(resolved: unknown = []) {
 		catch: p.catch.bind(p),
 		finally: p.finally.bind(p)
 	};
-	for (const m of ['from', 'where', 'groupBy']) {
+	for (const m of ['from', 'where', 'groupBy', 'innerJoin']) {
 		c[m] = vi.fn().mockReturnValue(c);
 	}
 	return c;
@@ -88,13 +89,22 @@ describe('users/[username] load', () => {
 	test('returns commitCount from db', async () => {
 		findProfileMock.mockResolvedValue(makeProfile());
 		findRecipesMock.mockResolvedValue([]);
-		selectMock.mockReturnValue({
-			from: vi.fn().mockReturnValue({
-				where: vi.fn().mockResolvedValue([{ commitCount: 7 }])
-			})
-		});
+		selectMock.mockReturnValue(chain([{ commitCount: 7 }]));
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const result = (await load(makeLoadEvent('chefmaria'))) as any;
 		expect(result.commitCount).toBe(7);
+	});
+
+	test('counts only commits on public recipes, so private work stays hidden', async () => {
+		findProfileMock.mockResolvedValue(makeProfile());
+		findRecipesMock.mockResolvedValue([]);
+
+		await load(makeLoadEvent('chefmaria'));
+
+		// The first select is the commit count. It has to reach the recipes
+		// table to know each version's visibility.
+		const commitChain = selectMock.mock.results[0].value;
+		const joinedTables = commitChain.innerJoin.mock.calls.map((call: unknown[]) => call[0]);
+		expect(joinedTables).toContain(recipes);
 	});
 });

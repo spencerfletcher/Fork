@@ -21,10 +21,13 @@ export const load: PageServerLoad = async ({ params }) => {
 			},
 			orderBy: (r, { desc }) => [desc(r.createdAt)]
 		}),
+		// Commits on public recipes only: the count appears in link previews,
+		// and must not hint at private work.
 		db
 			.select({ commitCount: count() })
 			.from(recipeVersions)
-			.where(eq(recipeVersions.createdBy, profile.id))
+			.innerJoin(recipes, eq(recipes.id, recipeVersions.recipeId))
+			.where(and(eq(recipeVersions.createdBy, profile.id), eq(recipes.isPublic, true)))
 	]);
 
 	const withCounts = await attachRecipeCounts(publicRecipes);
