@@ -30,16 +30,16 @@ A deliberate split in the schema supports this: recipe _metadata_ (title, descri
 
 ## Built
 
-| Area       | What works                                                                                               |
-| ---------- | -------------------------------------------------------------------------------------------------------- |
+| Area | What works |
+| --- | --- |
 | Versioning | Version history per recipe, required commit messages, collapsible history UI, version-to-version compare |
-| Diffing    | Ingredient and step diffs with word-level inline highlighting                                            |
-| Forking    | Fork any public recipe, lineage via `parent_id`, fork counts, attribution on the recipe page             |
-| Recipes    | Create, edit, image upload to Supabase Storage, public/private visibility                                |
-| Discovery  | Postgres full-text search (`tsvector` + GIN) ranked with ingredient matching, tag pages, tag filtering   |
-| Social     | Favorites, user profile pages with public recipes and a commit count                                     |
-| Auth       | Email/password via Supabase Auth, SSR session handling, auth-gated routes and actions                    |
-| Utility    | Ingredient-to-grams conversion from a local density table, with an optional Spoonacular fallback         |
+| Diffing | Ingredient and step diffs with word-level inline highlighting |
+| Forking | Fork any public recipe, lineage via `parent_id`, fork counts, attribution on the recipe page |
+| Recipes | Create, edit, image upload to Supabase Storage, public/private visibility |
+| Discovery | Postgres full-text search (`tsvector` + GIN) ranked with ingredient matching, tag pages, tag filtering |
+| Social | Favorites, user profile pages with public recipes and a commit count |
+| Auth | Email/password via Supabase Auth, SSR session handling, auth-gated routes and actions |
+| Utility | Ingredient-to-grams conversion from a local density table, with an optional Spoonacular fallback |
 
 ## Not built
 

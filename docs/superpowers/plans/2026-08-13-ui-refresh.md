@@ -80,8 +80,7 @@ test('on mobile, ingredients come before the details box', async ({ page }) => {
 
 - [ ] **Step 2: Run the test and confirm it fails**
 
-Run: `pnpm exec playwright test --project=chromium -g "ingredients come before"`
-Expected: FAIL — `ingredients` index is greater than `details`.
+Run: `pnpm exec playwright test --project=chromium -g "ingredients come before"` Expected: FAIL — `ingredients` index is greater than `details`.
 
 Note: Playwright's `webServer` builds and serves automatically. If a preview server is already running on 4173 it is reused.
 
@@ -134,13 +133,11 @@ Replace the `@media (max-width: 860px)` block:
 
 - [ ] **Step 5: Run the test and confirm it passes**
 
-Run: `pnpm exec playwright test --project=chromium -g "ingredients come before"`
-Expected: PASS
+Run: `pnpm exec playwright test --project=chromium -g "ingredients come before"` Expected: PASS
 
 - [ ] **Step 6: Verify the desktop layout did not regress**
 
-Run: `pnpm exec playwright test --project=chromium e2e/recipe.test.ts`
-Expected: all pass. Then check visually at 1440px that the photo still sits top-right in the sidebar column, not full width.
+Run: `pnpm exec playwright test --project=chromium e2e/recipe.test.ts` Expected: all pass. Then check visually at 1440px that the photo still sits top-right in the sidebar column, not full width.
 
 - [ ] **Step 7: Commit**
 
@@ -259,8 +256,7 @@ describe('search load', () => {
 
 - [ ] **Step 2: Run the test and confirm it fails**
 
-Run: `pnpm exec vitest run src/routes/search/page.server.test.ts`
-Expected: FAIL — results have no `author` property, and `findMany` was never called.
+Run: `pnpm exec vitest run src/routes/search/page.server.test.ts` Expected: FAIL — results have no `author` property, and `findMany` was never called.
 
 - [ ] **Step 3: Add the hydration step**
 
@@ -293,8 +289,7 @@ Delete the old `return { recipes: results, ... }` line at the end of the functio
 
 - [ ] **Step 4: Run the test and confirm it passes**
 
-Run: `pnpm exec vitest run src/routes/search/page.server.test.ts`
-Expected: PASS (3 tests)
+Run: `pnpm exec vitest run src/routes/search/page.server.test.ts` Expected: PASS (3 tests)
 
 - [ ] **Step 5: Verify against real data**
 
@@ -354,8 +349,7 @@ test('offers only tags that have at least one recipe', async () => {
 
 - [ ] **Step 2: Run the test and confirm it fails**
 
-Run: `pnpm exec vitest run src/routes/search/page.server.test.ts -t "at least one recipe"`
-Expected: FAIL — `innerJoin` was never called.
+Run: `pnpm exec vitest run src/routes/search/page.server.test.ts -t "at least one recipe"` Expected: FAIL — `innerJoin` was never called.
 
 - [ ] **Step 3: Scope the tag query**
 
@@ -377,8 +371,7 @@ const allTags = await db
 
 - [ ] **Step 4: Run the test and confirm it passes**
 
-Run: `pnpm exec vitest run src/routes/search/page.server.test.ts`
-Expected: PASS (4 tests)
+Run: `pnpm exec vitest run src/routes/search/page.server.test.ts` Expected: PASS (4 tests)
 
 - [ ] **Step 5: Write the data migration**
 
@@ -473,8 +466,7 @@ Load a recipe at 1440px and at 390px. The breadcrumb reads `@spencerfletcher / C
 
 - [ ] **Step 4: Run the full suite**
 
-Run: `pnpm test:unit run && pnpm exec playwright test --project=chromium`
-Expected: all pass. If an e2e test asserted on the slug breadcrumb, update it deliberately in this commit.
+Run: `pnpm test:unit run && pnpm exec playwright test --project=chromium` Expected: all pass. If an e2e test asserted on the slug breadcrumb, update it deliberately in this commit.
 
 - [ ] **Step 5: Commit**
 
@@ -593,13 +585,11 @@ In `RecipeHero.svelte`, replace the tag anchor's class:
 
 - [ ] **Step 5: Run the component tests**
 
-Run: `pnpm exec vitest run src/lib/components/RecipeCard.svelte.test.ts`
-Expected: PASS unchanged — `RecipeCard` uses `class="tag"` and the class name has not moved.
+Run: `pnpm exec vitest run src/lib/components/RecipeCard.svelte.test.ts` Expected: PASS unchanged — `RecipeCard` uses `class="tag"` and the class name has not moved.
 
 - [ ] **Step 6: Confirm no token references survive**
 
-Run: `grep -rn "tag-pale" src/`
-Expected: no output. If anything matches, fix it before committing.
+Run: `grep -rn "tag-pale" src/` Expected: no output. If anything matches, fix it before committing.
 
 - [ ] **Step 6b: Prove the tags are actually readable on both surfaces**
 
@@ -708,8 +698,7 @@ The fork glyph `<svg>` stays as it is; `currentColor` picks up the new text colo
 
 - [ ] **Step 0b: Confirm the badge tests still pass**
 
-Run: `pnpm exec vitest run src/lib/components/RecipeCard.svelte.test.ts`
-Expected: PASS — the restyle changes only colour properties, not class names.
+Run: `pnpm exec vitest run src/lib/components/RecipeCard.svelte.test.ts` Expected: PASS — the restyle changes only colour properties, not class names.
 
 - [ ] **Step 1: Render the time as metadata**
 
@@ -727,17 +716,11 @@ It now sits alongside `Serves {recipe.servings}` in the same visual register rat
 
 Run: `grep -rn "paprika" src/`
 
-This step resolved during implementation: the token has a **second live consumer** —
-`RecipeMethod.svelte:20` maps `warning: 'text-paprika'` for step annotations. An earlier
-draft of this plan claimed the time pill was its only use and told the implementer to delete
-the token; that claim came from a grep that errored out and never searched `src/`. Deleting
-it would have rendered step warning annotations with an undefined colour.
+This step resolved during implementation: the token has a **second live consumer** — `RecipeMethod.svelte:20` maps `warning: 'text-paprika'` for step annotations. An earlier draft of this plan claimed the time pill was its only use and told the implementer to delete the token; that claim came from a grep that errored out and never searched `src/`. Deleting it would have rendered step warning annotations with an undefined colour.
 
 - [ ] **Step 3: Keep the token, fix its comment**
 
-`--color-paprika` stays. It is not the accent, so a semantic warning colour does not violate
-the hierarchy rule. Only its comment is stale — "time / heat tags" no longer describes
-anything, since cook time is no longer a pill and there are no heat tags:
+`--color-paprika` stays. It is not the accent, so a semantic warning colour does not violate the hierarchy rule. Only its comment is stale — "time / heat tags" no longer describes anything, since cook time is no longer a pill and there are no heat tags:
 
 ```css
 --color-paprika: #c45a38;
@@ -748,8 +731,7 @@ Leave the `@theme inline` registration and the `[data-theme='dark']` override un
 
 - [ ] **Step 4: Verify the build still resolves**
 
-Run: `pnpm exec vite build`
-Expected: success. Tailwind fails loudly on an unknown utility, so a surviving `bg-paprika` would break here.
+Run: `pnpm exec vite build` Expected: success. Tailwind fails loudly on an unknown utility, so a surviving `bg-paprika` would break here.
 
 - [ ] **Step 5: Assert the demotion, do not eyeball it**
 
@@ -834,8 +816,7 @@ The diff markup is inline in the compare page. The landing page needs the identi
 
 - [ ] **Step 1: Confirm the existing tests pass before touching anything**
 
-Run: `pnpm exec vitest run "src/routes/recipes/[slug]/diff/page.svelte.test.ts"`
-Expected: PASS (13 tests). This is the safety net; do not proceed if it is already red.
+Run: `pnpm exec vitest run "src/routes/recipes/[slug]/diff/page.svelte.test.ts"` Expected: PASS (13 tests). This is the safety net; do not proceed if it is already red.
 
 - [ ] **Step 2: Create the component**
 
@@ -869,8 +850,7 @@ Add the import: `import VersionDiff from '$lib/components/VersionDiff.svelte';`
 
 - [ ] **Step 4: Run the tests and confirm they still pass**
 
-Run: `pnpm exec vitest run "src/routes/recipes/[slug]/diff/page.svelte.test.ts"`
-Expected: PASS (13 tests), unchanged. Any failure means the move altered the rendering — fix the component, not the test.
+Run: `pnpm exec vitest run "src/routes/recipes/[slug]/diff/page.svelte.test.ts"` Expected: PASS (13 tests), unchanged. Any failure means the move altered the rendering — fix the component, not the test.
 
 - [ ] **Step 5: Verify the compare page in the browser**
 
@@ -937,8 +917,7 @@ Note: the "omits the fork count" test must not collide with the `Forked` badge, 
 
 - [ ] **Step 2: Run the tests and confirm they fail**
 
-Run: `pnpm exec vitest run src/lib/components/RecipeCard.svelte.test.ts`
-Expected: FAIL — four new tests cannot find the text.
+Run: `pnpm exec vitest run src/lib/components/RecipeCard.svelte.test.ts` Expected: FAIL — four new tests cannot find the text.
 
 - [ ] **Step 3: Extend the card's prop type**
 
@@ -974,8 +953,7 @@ The version number is amber deliberately — version identity is one of the two 
 
 - [ ] **Step 5: Run the tests and confirm they pass**
 
-Run: `pnpm exec vitest run src/lib/components/RecipeCard.svelte.test.ts`
-Expected: PASS (17 tests)
+Run: `pnpm exec vitest run src/lib/components/RecipeCard.svelte.test.ts` Expected: PASS (17 tests)
 
 - [ ] **Step 6: Write the failing loader test**
 
@@ -1039,8 +1017,7 @@ describe('homepage load', () => {
 
 - [ ] **Step 7: Run it and confirm it fails**
 
-Run: `pnpm exec vitest run src/routes/page.server.test.ts`
-Expected: FAIL — `versionCount` is undefined.
+Run: `pnpm exec vitest run src/routes/page.server.test.ts` Expected: FAIL — `versionCount` is undefined.
 
 - [ ] **Step 8: Add the aggregates to the loader**
 
@@ -1075,8 +1052,7 @@ Add `count`, `isNotNull` to the `drizzle-orm` import and `recipeVersions` to the
 
 - [ ] **Step 9: Run the tests and confirm they pass**
 
-Run: `pnpm exec vitest run src/routes/page.server.test.ts src/lib/components/RecipeCard.svelte.test.ts`
-Expected: PASS
+Run: `pnpm exec vitest run src/routes/page.server.test.ts src/lib/components/RecipeCard.svelte.test.ts` Expected: PASS
 
 - [ ] **Step 10: Commit**
 
@@ -1161,8 +1137,7 @@ describe('VersionStrip', () => {
 
 - [ ] **Step 2: Run it and confirm it fails**
 
-Run: `pnpm exec vitest run src/lib/components/VersionStrip.svelte.test.ts`
-Expected: FAIL — the component does not exist.
+Run: `pnpm exec vitest run src/lib/components/VersionStrip.svelte.test.ts` Expected: FAIL — the component does not exist.
 
 - [ ] **Step 3: Build the component**
 
@@ -1269,8 +1244,7 @@ Create `src/lib/components/VersionStrip.svelte`:
 
 - [ ] **Step 4: Run the tests and confirm they pass**
 
-Run: `pnpm exec vitest run src/lib/components/VersionStrip.svelte.test.ts`
-Expected: PASS (4 tests)
+Run: `pnpm exec vitest run src/lib/components/VersionStrip.svelte.test.ts` Expected: PASS (4 tests)
 
 - [ ] **Step 5: Place it on the recipe page**
 
@@ -1369,8 +1343,7 @@ test('returns landing mode for an anonymous visitor', async () => {
 
 - [ ] **Step 2: Run them and confirm they fail**
 
-Run: `pnpm exec vitest run src/routes/page.server.test.ts -t "mode"`
-Expected: FAIL — `mode` is undefined.
+Run: `pnpm exec vitest run src/routes/page.server.test.ts -t "mode"` Expected: FAIL — `mode` is undefined.
 
 - [ ] **Step 3: Branch the loader**
 
@@ -1427,8 +1400,7 @@ Add to the imports: `desc` from `drizzle-orm`, `recipeVersions` from the schema,
 
 - [ ] **Step 4: Run the tests and confirm they pass**
 
-Run: `pnpm exec vitest run src/routes/page.server.test.ts`
-Expected: PASS
+Run: `pnpm exec vitest run src/routes/page.server.test.ts` Expected: PASS
 
 - [ ] **Step 5: Build the hero**
 
@@ -1514,8 +1486,7 @@ test('logged-in users get the feed, not the landing page', async ({ page }) => {
 
 - [ ] **Step 8: Run everything**
 
-Run: `pnpm test:unit run && pnpm exec playwright test`
-Expected: all pass.
+Run: `pnpm test:unit run && pnpm exec playwright test` Expected: all pass.
 
 - [ ] **Step 9: Commit**
 
