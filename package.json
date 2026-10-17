@@ -15,6 +15,7 @@
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"format": "prettier --write .",
 		"lint": "prettier --check . && eslint .",
+		"verify": "pnpm check && pnpm lint && pnpm test:unit run && pnpm build",
 		"// ── Testing ─────────────────────────────────────────────────": "",
 		"test": "pnpm test:unit run && pnpm test:e2e",
 		"test:unit": "vitest",
