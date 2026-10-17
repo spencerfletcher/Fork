@@ -8,6 +8,11 @@ import { svelteTesting } from '@testing-library/svelte/vite';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vitest/config';
 
+// Netlify's deploy-preview toolbar embeds an iframe from app.netlify.com.
+// Allow it on preview builds only; production keeps the strict policy.
+const netlifyPreviewFrames =
+	process.env.CONTEXT === 'deploy-preview' ? (['https://app.netlify.com'] as const) : [];
+
 export default defineConfig({
 	build: {
 		rollupOptions: {
@@ -47,7 +52,8 @@ export default defineConfig({
 					'connect-src': ['self'],
 					'frame-ancestors': ['none'],
 					'base-uri': ['self'],
-					'form-action': ['self']
+					'form-action': ['self'],
+					'frame-src': ['self', ...netlifyPreviewFrames]
 				}
 			}
 		})
