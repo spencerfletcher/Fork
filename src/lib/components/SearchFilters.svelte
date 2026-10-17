@@ -25,6 +25,8 @@
 
 	// Update URL when Apply button is clicked
 	function applyFilters() {
+		// A throwaway local used only to build the URL string, so it never needs to be reactive.
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity
 		const params = new URLSearchParams();
 
 		if (searchQuery) {

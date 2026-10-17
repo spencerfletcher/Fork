@@ -510,17 +510,17 @@ PRIMARY KEY (user_id, recipe_id)
 
 ## 6. Page Structure / Routes
 
-| Route                            | Description                                                                        |
-| -------------------------------- | ---------------------------------------------------------------------------------- |
-| `/`                              | Public recipe feed — card grid, search bar, tag filter pills                       |
-| `/recipes/[id]`                  | Recipe detail — hero image, ingredients, steps, fork button, version history panel |
-| `/recipes/[id]/versions`         | Full version history for a recipe                                                  |
-| `/recipes/[id]/diff?from=1&to=3` | Diff view between two versions                                                     |
-| `/recipes/new`                   | Create new recipe (auth required)                                                  |
-| `/recipes/[id]/edit`             | Edit recipe, saves as new version (auth required, must be owner)                   |
-| `/profile/[username]`            | User's public recipe collection                                                    |
-| `/profile/me`                    | Authenticated user's own recipes + saved                                           |
-| `/login`                         | Auth page                                                                          |
+| Route | Description |
+| --- | --- |
+| `/` | Public recipe feed — card grid, search bar, tag filter pills |
+| `/recipes/[id]` | Recipe detail — hero image, ingredients, steps, fork button, version history panel |
+| `/recipes/[id]/versions` | Full version history for a recipe |
+| `/recipes/[id]/diff?from=1&to=3` | Diff view between two versions |
+| `/recipes/new` | Create new recipe (auth required) |
+| `/recipes/[id]/edit` | Edit recipe, saves as new version (auth required, must be owner) |
+| `/profile/[username]` | User's public recipe collection |
+| `/profile/me` | Authenticated user's own recipes + saved |
+| `/login` | Auth page |
 
 ---
 
@@ -799,19 +799,19 @@ Fold this into the AI recipe generator feature above. The UX is: user selects or
 **🔄 Should be updated — `v1`**  
 Your notes listed these fields for recipes. Here's the evaluation against the current schema:
 
-| Your field                            | Status                                            | Action                                                     |
-| ------------------------------------- | ------------------------------------------------- | ---------------------------------------------------------- |
-| Ingredients                           | ✅ In schema                                      | —                                                          |
-| Name/title                            | ✅ In schema                                      | —                                                          |
-| Tags/Categories (Diet, Cuisine, Meal) | ✅ In schema (`tags text[]`)                      | Upgrade to structured tag taxonomy (enum categories) in v1 |
-| Time to create                        | ✅ In schema (`prep_time_mins`, `cook_time_mins`) | —                                                          |
-| Ingredient sum overrides (Price)      | ❌ Dropped                                        | tied to grocery API                                        |
-| Ingredient sum overrides (Macros)     | ➕ Add                                            | v2, nullable jsonb                                         |
-| Rating — crowd sourced                | ➕ Add                                            | v2 (requires ratings table)                                |
-| Rating — personal                     | ➕ Add                                            | v2 (user's own private star rating)                        |
-| Short blurb / description             | ✅ In schema (`description`)                      | —                                                          |
-| Servings made                         | ✅ In schema (`servings`)                         | —                                                          |
-| Grams made                            | ❌ Not a good idea                                | Too niche, adds friction to recipe creation. Skip.         |
+| Your field | Status | Action |
+| --- | --- | --- |
+| Ingredients | ✅ In schema | — |
+| Name/title | ✅ In schema | — |
+| Tags/Categories (Diet, Cuisine, Meal) | ✅ In schema (`tags text[]`) | Upgrade to structured tag taxonomy (enum categories) in v1 |
+| Time to create | ✅ In schema (`prep_time_mins`, `cook_time_mins`) | — |
+| Ingredient sum overrides (Price) | ❌ Dropped | tied to grocery API |
+| Ingredient sum overrides (Macros) | ➕ Add | v2, nullable jsonb |
+| Rating — crowd sourced | ➕ Add | v2 (requires ratings table) |
+| Rating — personal | ➕ Add | v2 (user's own private star rating) |
+| Short blurb / description | ✅ In schema (`description`) | — |
+| Servings made | ✅ In schema (`servings`) | — |
+| Grams made | ❌ Not a good idea | Too niche, adds friction to recipe creation. Skip. |
 
 **Action for v1:** Upgrade `tags text[]` to a structured taxonomy with three tag categories: `diet[]`, `cuisine[]`, `meal_type[]`. This makes filtering more powerful and the UI cleaner (three separate filter rows).
 

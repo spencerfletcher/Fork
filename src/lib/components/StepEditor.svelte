@@ -62,8 +62,7 @@
 						placeholder="Describe this step..."
 						bind:value={step.text}
 						rows="2"
-						class="step-textarea"
-					></textarea>
+						class="step-textarea"></textarea>
 					{#if annotations}
 						{#if step.annotation}
 							<div class="bg-accent-pale flex flex-col gap-2 rounded-md p-3">
@@ -80,8 +79,7 @@
 									placeholder="Add a note for this step…"
 									bind:value={step.annotation.text}
 									rows="2"
-									class="step-textarea italic"
-								></textarea>
+									class="step-textarea italic"></textarea>
 								<button
 									type="button"
 									onclick={() => removeAnnotation(i)}

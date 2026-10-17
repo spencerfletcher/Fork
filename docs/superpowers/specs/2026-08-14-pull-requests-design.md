@@ -14,14 +14,14 @@ This is also the feature that would make a résumé claim about collaborative re
 
 Verified against the code, not assumed:
 
-| Piece             | Where                                                                         | Note                                                            |
-| ----------------- | ----------------------------------------------------------------------------- | --------------------------------------------------------------- |
-| Fork lineage      | `recipes.parentId`, `recipes.forkedAt`                                        | Set by the `fork` action                                        |
-| Versioned content | `recipe_versions` — `ingredients`/`steps` JSONB, `commitMessage`, `createdBy` | Append-only                                                     |
-| Version numbering | `edit/+page.server.ts` — `max(versionNumber) + 1` in a transaction            |                                                                 |
-| Diff engine       | `lib/utils/diff.ts` — `diffIngredients`, `diffSteps`                          | Takes raw arrays, so it already diffs **across** recipes        |
-| Diff rendering    | `lib/components/VersionDiff.svelte`                                           | Extracted in the UI refresh; self-contained, no page-scoped CSS |
-| Version strip     | `lib/components/VersionStrip.svelte`                                          | Sits under the hero — where PR affordances belong               |
+| Piece | Where | Note |
+| --- | --- | --- |
+| Fork lineage | `recipes.parentId`, `recipes.forkedAt` | Set by the `fork` action |
+| Versioned content | `recipe_versions` — `ingredients`/`steps` JSONB, `commitMessage`, `createdBy` | Append-only |
+| Version numbering | `edit/+page.server.ts` — `max(versionNumber) + 1` in a transaction |  |
+| Diff engine | `lib/utils/diff.ts` — `diffIngredients`, `diffSteps` | Takes raw arrays, so it already diffs **across** recipes |
+| Diff rendering | `lib/components/VersionDiff.svelte` | Extracted in the UI refresh; self-contained, no page-scoped CSS |
+| Version strip | `lib/components/VersionStrip.svelte` | Sits under the hero — where PR affordances belong |
 
 **The diff renderer and its extraction are already done.** The roadmap listed that as M1's Task 0; the UI refresh completed it, which removes 1–2 hours from this estimate.
 
@@ -100,12 +100,12 @@ The staleness check is the interesting part, and it is the roadmap's M9 (optimis
 
 ## Permissions
 
-| Action | Who                                                                                                         |
-| ------ | ----------------------------------------------------------------------------------------------------------- |
-| Open   | Owner of the source recipe, where `source.parentId === target.id` and the target is public or owned by them |
-| View   | Anyone who can view the target recipe                                                                       |
-| Accept | Owner of the target recipe only                                                                             |
-| Close  | Owner of the target recipe, or the PR author                                                                |
+| Action | Who |
+| --- | --- |
+| Open | Owner of the source recipe, where `source.parentId === target.id` and the target is public or owned by them |
+| View | Anyone who can view the target recipe |
+| Accept | Owner of the target recipe only |
+| Close | Owner of the target recipe, or the PR author |
 
 Rejections worth writing tests for: proposing against a recipe that is not your fork's parent; proposing a fork you do not own; a second open PR from the same source version; **proposing an unmodified fork** (empty diff — "nothing to propose").
 
@@ -161,12 +161,12 @@ Merging beyond "append the proposed version". Conflict resolution. Notifications
 
 ## Risks
 
-| Risk                                                     | Mitigation                                                                                                                                                         |
-| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `accept` corrupts history under concurrency              | Everything in one transaction; staleness guard; assert no-write on the failure path                                                                                |
-| Empty PRs from unmodified forks                          | Reject at open time with a clear message; test it                                                                                                                  |
-| PR list becomes an N+1                                   | One grouped aggregate for counts, the pattern already used for version/fork counts                                                                                 |
-| Private recipes leak through PR listings                 | Scope every query by visibility — the fork-count leak found during the UI refresh was exactly this class of bug                                                    |
+| Risk | Mitigation |
+| --- | --- |
+| `accept` corrupts history under concurrency | Everything in one transaction; staleness guard; assert no-write on the failure path |
+| Empty PRs from unmodified forks | Reject at open time with a clear message; test it |
+| PR list becomes an N+1 | One grouped aggregate for counts, the pattern already used for version/fork counts |
+| Private recipes leak through PR listings | Scope every query by visibility — the fork-count leak found during the UI refresh was exactly this class of bug |
 | Spec asserts things about the codebase that are not true | Paste grep output into the plan rather than conclusions drawn from it. Three defects in the last run traced to this, twice from misreading a grep that had errored |
 
 ## Recommendation

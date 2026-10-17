@@ -2,9 +2,7 @@
 
 ## Project Overview
 
-Full-stack recipe platform with git-style version control for recipes.
-Stack: SvelteKit + TypeScript frontend, PostgreSQL backend.
-Live at recipes.spencerfletcher.com.
+Full-stack recipe platform with git-style version control for recipes. Stack: SvelteKit + TypeScript frontend, PostgreSQL backend. Live at recipes.spencerfletcher.com.
 
 ## Architecture
 

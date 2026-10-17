@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 
-	let { form } = $props<{ form: { message?: string } | null }>();
+	let { form }: { form: { message?: string } | null } = $props();
 </script>
 
 <div class="auth-page">

@@ -30,17 +30,16 @@ A deliberate split in the schema supports this: recipe _metadata_ (title, descri
 
 ## Built
 
-| Area       | What works                                                                                               |
-| ---------- | -------------------------------------------------------------------------------------------------------- |
+| Area | What works |
+| --- | --- |
 | Versioning | Version history per recipe, required commit messages, collapsible history UI, version-to-version compare |
-| Diffing    | Ingredient and step diffs with word-level inline highlighting                                            |
-| Forking    | Fork any public recipe, lineage via `parent_id`, fork counts, attribution on the recipe page             |
-| Recipes    | Create, edit, image upload to Supabase Storage, public/private visibility                                |
-| Discovery  | Postgres full-text search (`tsvector` + GIN) ranked with ingredient matching, tag pages, tag filtering   |
-| Social     | Favorites, user profile pages with public recipes and a commit count                                     |
-| Auth       | Email/password via Supabase Auth, SSR session handling, auth-gated routes and actions                    |
-| Utility    | Ingredient-to-grams conversion from a local density table, with an optional Spoonacular fallback         |
-| i18n       | English and Spanish message catalogs via Paraglide                                                       |
+| Diffing | Ingredient and step diffs with word-level inline highlighting |
+| Forking | Fork any public recipe, lineage via `parent_id`, fork counts, attribution on the recipe page |
+| Recipes | Create, edit, image upload to Supabase Storage, public/private visibility |
+| Discovery | Postgres full-text search (`tsvector` + GIN) ranked with ingredient matching, tag pages, tag filtering |
+| Social | Favorites, user profile pages with public recipes and a commit count |
+| Auth | Email/password via Supabase Auth, SSR session handling, auth-gated routes and actions |
+| Utility | Ingredient-to-grams conversion from a local density table, with an optional Spoonacular fallback |
 
 ## Not built
 
@@ -57,7 +56,6 @@ pull requests / recipe suggestions · merging · multi-hop lineage graphs · com
 | ORM            | Drizzle                                         |
 | Auth & Storage | Supabase Auth, Supabase Storage                 |
 | Styling        | Tailwind CSS v4, Bits UI primitives             |
-| i18n           | Paraglide (inlang)                              |
 | Testing        | Vitest + Testing Library, Playwright            |
 | Hosting        | Netlify                                         |
 
@@ -98,12 +96,11 @@ pnpm install
 cp .env.example .env
 ```
 
-Start Supabase and apply the schema:
+Start Supabase, which also applies every migration in `supabase/migrations/`:
 
 ```bash
 supabase start                 # prints your local API URL, anon key, and service role key
 # paste those into .env, then:
-pnpm db:push                   # apply the Drizzle schema
 pnpm db:seed                   # demo user + three recipes, one a fork with two versions
 pnpm dev
 ```
@@ -112,16 +109,28 @@ The app runs at `http://localhost:5173`. The seeded account is `spencer@fork.dev
 
 To point at a hosted Supabase project instead, skip `supabase start` and fill `.env` from your project's dashboard — `DATABASE_URL` should be the **pooler** connection string (port 6543), not the direct one, since serverless functions exhaust direct connections.
 
+## Database changes
+
+The SQL files in `supabase/migrations/` are the only way schema changes reach a database. Drizzle is used for typed queries, Drizzle Studio (`pnpm db:studio`), and the schema in `src/lib/server/db/schema.ts`, but not for migrations.
+
+```bash
+supabase migration new <name>  # create an empty migration file, then write the SQL by hand
+supabase db reset              # rebuild the local database from the full migration chain
+supabase db push               # apply pending migration files to the linked hosted project
+```
+
+Every schema change edits `schema.ts` and adds a migration in the same commit, so the Drizzle types match the real database. Don't use `drizzle-kit push`: it changes a database without a migration file, and `drizzle.config.ts` loads `.env.local` with `override: true`, so it can target a different database than you expect.
+
 ## Testing
 
 ```bash
-pnpm test:unit run   # 110 unit + component tests (Vitest)
+pnpm test:unit run   # unit + component tests (Vitest)
 pnpm test:e2e        # Playwright; requires a seeded database
 pnpm check           # svelte-check
 pnpm lint            # eslint + prettier
 ```
 
-Unit tests live next to their source (`Foo.svelte` → `Foo.svelte.test.ts`). Server logic runs in a Node environment, component tests in jsdom; the split is configured in `vitest.workspace.ts`. CI runs type checking, linting, and the unit suite on every push. The Playwright suite needs a live seeded database and is currently run locally rather than in CI.
+Unit tests live next to their source (`Foo.svelte` → `Foo.svelte.test.ts`). Server logic runs in a Node environment, component tests in jsdom; the split is configured in `vite.config.ts`. CI runs type checking, linting, and the unit suite on every push. The Playwright job starts a local Supabase, which replays the migration chain from empty, seeds it, and runs the e2e suite against it.
 
 ## License
 
