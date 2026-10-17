@@ -41,9 +41,8 @@
 		const newURL = queryString ? `?${queryString}` : window.location.pathname;
 
 		goto(newURL, {
-			replaceState: false,
-			keepFocus: true,
-			noScroll: true
+			replace: false,
+			reset: false
 		});
 	}
 
