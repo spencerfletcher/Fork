@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { setContext } from 'svelte';
 	import type { Snippet } from 'svelte';
 	import type { LayoutData } from './$types';
 	import '../app.css';
@@ -10,9 +9,6 @@
 	// This is the key change:
 	// We destructure BOTH `data` and `children` from the top-level props.
 	let { data, children }: { data: LayoutData; children: Snippet } = $props();
-
-	// Make the user available to all child components through Svelte's context API.
-	setContext('user', data.user);
 
 	// The single source of head tags. Pages contribute by returning `meta` from
 	// their loader; anything they omit falls back to the site defaults.
