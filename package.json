@@ -34,7 +34,7 @@
 		"@tailwindcss/vite": "^4.3.3",
 		"@testing-library/jest-dom": "^7.0.1",
 		"@testing-library/svelte": "^5.4.2",
-		"@types/node": "^22.20.5",
+		"@types/node": "^24.19.2",
 		"@vitest/browser": "5.0.5",
 		"@vitest/coverage-v8": "5.0.5",
 		"dotenv": "^18.0.8",
@@ -61,7 +61,7 @@
 		"@supabase/supabase-js": "^2.118.0",
 		"bits-ui": "^2.19.5",
 		"diff": "^9.0.0",
-		"drizzle-orm": "^0.44.7",
+		"drizzle-orm": "^0.45.4",
 		"nanoid": "^6.0.2",
 		"postgres": "^3.4.9"
 	}
