@@ -340,4 +340,27 @@ describe('saveVersion', () => {
 		expect(inserted.steps[0].step).toBe(1);
 		expect(inserted.steps[1].step).toBe(2);
 	});
+
+	test('keeps step annotations in the saved version', async () => {
+		findRecipeMock.mockResolvedValue(RECIPE);
+		const tx = makeTx({ maxVer: 0 });
+		transactionMock.mockImplementationOnce(
+			async (cb: (tx: ReturnType<typeof makeTx>) => Promise<void>) => cb(tx)
+		);
+
+		const annotated = JSON.stringify([
+			{ step: 1, text: 'Bake.', annotation: { type: 'warning', text: 'Oven runs hot.' } }
+		]);
+
+		await invoke(
+			actions.saveVersion as never,
+			makeEvent({
+				user: OWNER,
+				fields: { commitMessage: 'add note', ingredients: VALID_INGREDIENTS, steps: annotated }
+			})
+		);
+
+		const inserted = tx.insertChain.values.mock.calls[0][0];
+		expect(inserted.steps[0].annotation).toEqual({ type: 'warning', text: 'Oven runs hot.' });
+	});
 });

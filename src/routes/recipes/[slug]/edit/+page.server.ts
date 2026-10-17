@@ -1,5 +1,6 @@
 import { error, redirect } from '@sveltejs/kit';
 import { db } from '#lib/server/db/index.js';
+import { normalizeSteps } from '#lib/server/steps.js';
 import { recipes, recipeVersions, recipesToTags, tags } from '#lib/server/db/schema.js';
 import { eq, desc, max, inArray } from 'drizzle-orm';
 import { slugify } from '#lib/helpers.js';
@@ -134,8 +135,8 @@ export const actions: Actions = {
 			throw error(400, 'At least one step is required');
 		}
 
-		// Normalize step numbers to be sequential
-		steps = steps.map((s: { text: string }, i: number) => ({ step: i + 1, text: s.text }));
+		// Renumber steps and keep only well-formed annotations
+		steps = normalizeSteps(steps);
 
 		await db.transaction(async (tx) => {
 			// Get current max version
