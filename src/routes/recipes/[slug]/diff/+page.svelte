@@ -8,8 +8,10 @@
 
 	const { recipe, ingredientDiff, stepDiff, allVersions } = $derived(data);
 
-	let fromSelect = $state(data.fromVersion.versionNumber);
-	let toSelect = $state(data.toVersion.versionNumber);
+	// Writable derived: the pickers can change them, and they reset to the loaded
+	// range whenever the page data changes, including on back/forward.
+	let fromSelect = $derived(data.fromVersion.versionNumber);
+	let toSelect = $derived(data.toVersion.versionNumber);
 
 	const fromVersion = $derived(data.fromVersion);
 	const toVersion = $derived(data.toVersion);

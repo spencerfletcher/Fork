@@ -34,13 +34,16 @@ function makeData(
 			ingredient: { amount: string; unit: string; name: string };
 		}[];
 		stepDiff?: { status: string; step: { step: number; text: string } }[];
+		fromVersion?: typeof V1;
+		toVersion?: typeof V1;
+		allVersions?: (typeof V1)[];
 	} = {}
 ) {
 	return {
 		recipe: RECIPE,
-		fromVersion: V1,
-		toVersion: V2,
-		allVersions: [V1, V2],
+		fromVersion: overrides.fromVersion ?? V1,
+		toVersion: overrides.toVersion ?? V2,
+		allVersions: overrides.allVersions ?? [V1, V2],
 		ingredientDiff: overrides.ingredientDiff ?? [],
 		stepDiff: overrides.stepDiff ?? [],
 		user: null
@@ -161,5 +164,20 @@ describe('Diff page', () => {
 		render(DiffPage, { props: { data: makeData() } });
 		const backLink = screen.getByRole('link', { name: /back to recipe/i });
 		expect(backLink).toHaveAttribute('href', '/recipes/classic-cookies');
+	});
+
+	test('version pickers follow the loaded range, e.g. after back/forward navigation', async () => {
+		const V3 = { ...V2, versionNumber: 3, commitMessage: 'Less sugar' };
+		const versions = [V1, V2, V3];
+		const { rerender } = render(DiffPage, {
+			props: { data: makeData({ allVersions: versions }) }
+		});
+
+		await rerender({
+			data: makeData({ allVersions: versions, fromVersion: V2, toVersion: V3 })
+		});
+
+		expect(screen.getByLabelText('From')).toHaveValue('2');
+		expect(screen.getByLabelText('To')).toHaveValue('3');
 	});
 });
