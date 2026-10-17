@@ -308,4 +308,11 @@ describe('load: fork attribution', () => {
 		const data = await loadData({ id: 'original-author', email: 'o@test.com' });
 		expect(data.recipe.parent).toMatchObject({ slug: 'secret-original' });
 	});
+
+	test("does not return a fork count, which would reveal other users' private forks", async () => {
+		findRecipeMock.mockResolvedValue(forkOf({ isPublic: true, authorId: 'original-author' }));
+		const data = await loadData();
+		expect(data).not.toHaveProperty('forkCount');
+		expect(selectMock).not.toHaveBeenCalled();
+	});
 });

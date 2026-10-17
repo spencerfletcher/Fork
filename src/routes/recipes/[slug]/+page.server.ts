@@ -7,7 +7,7 @@ import {
 	profiles,
 	favorites
 } from '#lib/server/db/schema.js';
-import { eq, desc, and, count } from 'drizzle-orm';
+import { eq, desc, and } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { slugify } from '#lib/helpers.js';
 import { absoluteImage, clampDescription } from '#lib/seo.js';
@@ -60,20 +60,12 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 		isFavorited = !!existing;
 	}
 
-	// Count how many times this recipe has been forked
-	const [forkRow] = await db
-		.select({ value: count() })
-		.from(recipes)
-		.where(eq(recipes.parentId, recipe.id));
-	const forkCount = forkRow?.value ?? 0;
-
 	return {
 		recipe: visibleRecipe,
 		currentVersion,
 		allVersions: recipe.versions,
 		isViewingHistory,
 		isFavorited,
-		forkCount,
 		meta: {
 			title: recipe.title,
 			description: clampDescription(
