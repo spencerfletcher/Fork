@@ -20,7 +20,13 @@ export default ts.config(
 		languageOptions: {
 			globals: { ...globals.browser, ...globals.node }
 		},
-		rules: { 'no-undef': 'off' }
+		rules: {
+			'no-undef': 'off',
+			// Turned on by eslint-plugin-svelte's recommended set in 3.x. The app has no
+			// base path, so wrapping every link in resolve() adds nothing yet.
+			// TODO: adopt resolve() for typed route checking, then remove this.
+			'svelte/no-navigation-without-resolve': 'off'
+		}
 	},
 	{
 		files: ['**/*.svelte', '**/*.svelte.ts', '**/*.svelte.js'],
