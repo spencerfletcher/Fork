@@ -19,7 +19,9 @@
 		initialFavorited: boolean;
 	} = $props();
 
-	let isFavorited = $state(initialFavorited);
+	// Writable derived: the click flips it optimistically, and it resets to the
+	// prop whenever the page loads another recipe or reloads this one.
+	let isFavorited = $derived(initialFavorited);
 	let forkDialogOpen = $state(false);
 	let forkCommitMessage = $state('');
 </script>
