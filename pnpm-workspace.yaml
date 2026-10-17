@@ -1,3 +1,9 @@
 onlyBuiltDependencies:
   - '@tailwindcss/oxide'
   - esbuild
+
+# drizzle-orm lists kysely as an optional peer, and pnpm auto-installed 0.27.6,
+# which has SQL injection advisories, even though nothing imports it. Requiring
+# a patched version also stops pnpm installing it at all.
+overrides:
+  kysely: '>=0.28.17'
