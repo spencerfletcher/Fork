@@ -51,7 +51,7 @@ pull requests / recipe suggestions · merging · multi-hop lineage graphs · com
 
 | Layer          | Choice                                          |
 | -------------- | ----------------------------------------------- |
-| Framework      | SvelteKit 2 (Svelte 5 runes), TypeScript strict |
+| Framework      | SvelteKit 3 (Svelte 5 runes), TypeScript strict |
 | Database       | PostgreSQL (Supabase)                           |
 | ORM            | Drizzle                                         |
 | Auth & Storage | Supabase Auth, Supabase Storage                 |
@@ -87,7 +87,7 @@ Tables: `profiles`, `recipes`, `recipe_versions`, `tags`, `recipes_to_tags`, `fa
 
 ## Running locally
 
-**Prerequisites:** Node 22, pnpm 10, Docker (for local Supabase).
+**Prerequisites:** Node 24 (the version in `.nvmrc`), pnpm 10, Docker (for local Supabase).
 
 ```bash
 git clone https://github.com/spencerfletcher/Fork.git
