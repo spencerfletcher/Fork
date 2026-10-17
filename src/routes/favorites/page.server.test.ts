@@ -44,11 +44,21 @@ async function loadResult(event: Parameters<typeof load>[0]): Promise<PageData> 
 	return result as PageData;
 }
 
-/** Wires the favourite-id lookup, then the two attachRecipeCounts aggregates. */
-function mockFavourites(ids: number[], ...afterFavourites: ReturnType<typeof chain>[]) {
-	selectMock.mockReturnValueOnce(chain(ids.map((id) => ({ recipeId: id }))));
+type FavouriteRow = { recipeId: number; isPublic: boolean; authorId: string };
+
+/** Wires the favourite lookup with explicit visibility, then the attachRecipeCounts aggregates. */
+function mockFavouriteRows(rows: FavouriteRow[], ...afterFavourites: ReturnType<typeof chain>[]) {
+	selectMock.mockReturnValueOnce(chain(rows));
 	for (const c of afterFavourites) selectMock.mockReturnValueOnce(c);
 	selectMock.mockReturnValue(chain([])); // attachRecipeCounts aggregates
+}
+
+/** Favourites of public recipes by another author — the common case. */
+function mockFavourites(ids: number[], ...afterFavourites: ReturnType<typeof chain>[]) {
+	mockFavouriteRows(
+		ids.map((id) => ({ recipeId: id, isPublic: true, authorId: 'someone-else' })),
+		...afterFavourites
+	);
 }
 
 describe('favorites load', () => {
@@ -151,5 +161,27 @@ describe('favorites load', () => {
 		expect(result.favoriteRecipes).toEqual([]);
 		expect(result.allTags).toEqual([]);
 		expect(findManyMock).not.toHaveBeenCalled();
+	});
+
+	test('hides a favourite whose recipe has since been made private by its owner', async () => {
+		mockFavouriteRows([{ recipeId: 1, isPublic: false, authorId: 'someone-else' }]);
+
+		const result = await loadResult(makeEvent());
+
+		expect(result.favoriteRecipes).toEqual([]);
+		// Its tags must not leak through the filter chips either.
+		expect(result.allTags).toEqual([]);
+		expect(selectDistinctMock).not.toHaveBeenCalled();
+		expect(findManyMock).not.toHaveBeenCalled();
+	});
+
+	test("keeps a favourite of the user's own private recipe", async () => {
+		mockFavouriteRows([{ recipeId: 1, isPublic: false, authorId: 'u1' }]);
+		findManyMock.mockResolvedValue([{ id: 1, author: null, recipesToTags: [] }]);
+
+		const result = await loadResult(makeEvent());
+
+		expect(findManyMock).toHaveBeenCalledTimes(1);
+		expect(result.favoriteRecipes).toHaveLength(1);
 	});
 });

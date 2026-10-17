@@ -14,11 +14,19 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 	const tagSlugs = url.searchParams.get('tags')?.split(',').filter(Boolean) || [];
 
 	const favoriteMappings = await db
-		.select({ recipeId: favorites.recipeId })
+		.select({
+			recipeId: favorites.recipeId,
+			isPublic: recipes.isPublic,
+			authorId: recipes.authorId
+		})
 		.from(favorites)
+		.innerJoin(recipes, eq(recipes.id, favorites.recipeId))
 		.where(eq(favorites.userId, user.id));
 
+	// A favourited recipe can be made private by its owner later. Drop it here,
+	// before the filter chips and the recipe query, so neither reveals it.
 	const favoriteIds = favoriteMappings
+		.filter((f) => f.isPublic || f.authorId === user.id)
 		.map((f) => f.recipeId)
 		.filter((id): id is number => id !== null);
 
