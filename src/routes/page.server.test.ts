@@ -1,6 +1,6 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { and, eq, inArray } from 'drizzle-orm';
-import { recipes, recipeVersions } from '$lib/server/db/schema';
+import { recipes, recipeVersions } from '#lib/server/db/schema.js';
 
 const { findManyMock, selectMock, recipeVersionsFindManyMock } = vi.hoisted(() => ({
 	findManyMock: vi.fn(),
@@ -8,7 +8,7 @@ const { findManyMock, selectMock, recipeVersionsFindManyMock } = vi.hoisted(() =
 	recipeVersionsFindManyMock: vi.fn()
 }));
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.js', () => ({
 	db: {
 		query: {
 			recipes: { findMany: findManyMock },

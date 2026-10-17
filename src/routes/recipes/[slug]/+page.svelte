@@ -5,7 +5,7 @@
 	import RecipeMethod from './components/RecipeMethod.svelte';
 	import RecipeActions from './components/RecipeActions.svelte';
 	import Details from './components/Details.svelte';
-	import VersionStrip from '$lib/components/VersionStrip.svelte';
+	import VersionStrip from '#lib/components/VersionStrip.svelte';
 
 	let { data }: { data: PageData } = $props();
 

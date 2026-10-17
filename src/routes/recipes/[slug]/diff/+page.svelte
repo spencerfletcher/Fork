@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import VersionDiff from '$lib/components/VersionDiff.svelte';
-	import VersionRangePicker from '$lib/components/VersionRangePicker.svelte';
+	import VersionDiff from '#lib/components/VersionDiff.svelte';
+	import VersionRangePicker from '#lib/components/VersionRangePicker.svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();

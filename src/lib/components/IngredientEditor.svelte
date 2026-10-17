@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Ingredient } from '$lib/server/db/schema';
+	import type { Ingredient } from '#lib/server/db/schema.js';
 
 	let { ingredients = $bindable() }: { ingredients: Ingredient[] } = $props();
 

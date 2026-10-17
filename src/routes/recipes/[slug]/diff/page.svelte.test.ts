@@ -1,14 +1,13 @@
 import { describe, test, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/svelte';
-import { readable } from 'svelte/store';
 import DiffPage from './+page.svelte';
 
 // ─── SvelteKit module mocks ───────────────────────────────────────────────────
 
 vi.mock('$app/navigation', () => ({ goto: vi.fn() }));
 
-vi.mock('$app/stores', () => ({
-	page: readable({ url: new URL('http://localhost/'), params: {}, route: { id: null } })
+vi.mock('$app/state', () => ({
+	page: { url: new URL('http://localhost/'), params: {}, route: { id: null } }
 }));
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

@@ -9,7 +9,7 @@ const { findProfileMock, findRecipesMock, selectMock } = vi.hoisted(() => ({
 	selectMock: vi.fn()
 }));
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.js', () => ({
 	db: {
 		query: {
 			profiles: { findFirst: findProfileMock },

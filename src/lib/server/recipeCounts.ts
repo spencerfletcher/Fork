@@ -1,5 +1,5 @@
-import { db } from '$lib/server/db';
-import { recipes, recipeVersions } from '$lib/server/db/schema';
+import { db } from '#lib/server/db/index.js';
+import { recipes, recipeVersions } from '#lib/server/db/schema.js';
 import { and, count, eq, inArray } from 'drizzle-orm';
 
 /**

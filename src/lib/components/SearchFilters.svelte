@@ -2,7 +2,7 @@
 	import { goto } from '$app/navigation';
 	import SearchBar from './SearchBar.svelte';
 	import TagFilter from './TagFilter.svelte';
-	import type { Tag } from '$lib/server/db/schema';
+	import type { Tag } from '#lib/server/db/schema.js';
 
 	let {
 		initialQuery = '',
@@ -41,9 +41,8 @@
 		const newURL = queryString ? `?${queryString}` : window.location.pathname;
 
 		goto(newURL, {
-			replaceState: false,
-			keepFocus: true,
-			noScroll: true
+			replace: false,
+			reset: false
 		});
 	}
 

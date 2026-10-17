@@ -1,9 +1,9 @@
-import { db } from '$lib/server/db';
-import { profiles, recipes, recipeVersions } from '$lib/server/db/schema';
+import { db } from '#lib/server/db/index.js';
+import { profiles, recipes, recipeVersions } from '#lib/server/db/schema.js';
 import { and, count, eq } from 'drizzle-orm';
 import { error } from '@sveltejs/kit';
-import { attachRecipeCounts } from '$lib/server/recipeCounts';
-import { clampDescription } from '$lib/seo';
+import { attachRecipeCounts } from '#lib/server/recipeCounts.js';
+import { clampDescription } from '#lib/seo.js';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params }) => {

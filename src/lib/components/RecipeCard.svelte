@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Recipe } from '$lib/server/db/schema';
+	import type { Recipe } from '#lib/server/db/schema.js';
 
 	// `fts` is a Postgres-generated search vector — never read by the card, and
 	// callers building fixtures shouldn't have to supply one.

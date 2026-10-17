@@ -1,5 +1,5 @@
-import { db } from '$lib/server/db';
-import { profiles } from '$lib/server/db/schema';
+import { db } from '#lib/server/db/index.js';
+import { profiles } from '#lib/server/db/schema.js';
 import { eq } from 'drizzle-orm';
 import type { LayoutServerLoad } from './$types';
 

@@ -1,6 +1,6 @@
 <script lang="ts">
-	import RecipeCard from '$lib/components/RecipeCard.svelte';
-	import VersionDiff from '$lib/components/VersionDiff.svelte';
+	import RecipeCard from '#lib/components/RecipeCard.svelte';
+	import VersionDiff from '#lib/components/VersionDiff.svelte';
 	import LandingHero from './LandingHero.svelte';
 	import type { PageData } from './$types';
 

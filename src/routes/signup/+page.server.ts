@@ -1,7 +1,7 @@
 import { error, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { db } from '$lib/server/db';
-import { profiles } from '$lib/server/db/schema';
+import { db } from '#lib/server/db/index.js';
+import { profiles } from '#lib/server/db/schema.js';
 
 // Redirect users who are already logged in away from the signup page.
 export const load: PageServerLoad = async ({ locals: { user } }) => {
@@ -17,14 +17,14 @@ export const actions: Actions = {
 		const password = formData.get('password') as string;
 
 		if (!email || !password) {
-			return error(400, { message: 'Email and password are required.' });
+			return error(400, 'Email and password are required.');
 		}
 
 		// Use the Supabase client to sign up a new user
 		const { data, error: err } = await supabase.auth.signUp({ email, password });
 
 		if (err) {
-			return error(err.status || 500, { message: err.message });
+			return error(err.status || 500, err.message);
 		}
 
 		// Create a profile row for the new user (best-effort; email may not be confirmed yet)

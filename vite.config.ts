@@ -1,7 +1,17 @@
+// Pinned rather than adapter-auto, which resolves the host at build time and
+// installs the adapter mid-build — a network call inside the deploy.
+import adapter from '@sveltejs/adapter-netlify';
+
+import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 import tailwindcss from '@tailwindcss/vite';
 import { svelteTesting } from '@testing-library/svelte/vite';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vitest/config';
+
+// Netlify's deploy-preview toolbar embeds an iframe from app.netlify.com.
+// Allow it on preview builds only; production keeps the strict policy.
+const netlifyPreviewFrames =
+	process.env.CONTEXT === 'deploy-preview' ? (['https://app.netlify.com'] as const) : [];
 
 export default defineConfig({
 	build: {
@@ -15,7 +25,39 @@ export default defineConfig({
 			}
 		}
 	},
-	plugins: [tailwindcss(), sveltekit()],
+	plugins: [
+		tailwindcss(),
+		sveltekit({
+			preprocess: [vitePreprocess()],
+			adapter: adapter(),
+			// CSP is configured here rather than as a raw header in hooks.server.ts,
+			// because SvelteKit emits an inline bootstrap <script> on every page and
+			// only it can add the matching nonce/hash.
+			csp: {
+				mode: 'auto',
+				directives: {
+					'default-src': ['self'],
+					'script-src': ['self'],
+					// 'unsafe-inline' is required for Svelte transitions, which build
+					// inline <style> elements at runtime.
+					'style-src': ['self', 'unsafe-inline', 'https://fonts.googleapis.com'],
+					// Governs style="" attributes, which a nonce on style-src would
+					// otherwise block — app.html wraps the app in one.
+					'style-src-attr': ['unsafe-inline'],
+					'font-src': ['self', 'https://fonts.gstatic.com', 'data:'],
+					// Recipe images are user-supplied URLs as well as Supabase Storage.
+					'img-src': ['self', 'data:', 'https:'],
+					// No browser-side Supabase client; the only client fetch is
+					// same-origin, to /api/convert-to-grams.
+					'connect-src': ['self'],
+					'frame-ancestors': ['none'],
+					'base-uri': ['self'],
+					'form-action': ['self'],
+					'frame-src': ['self', ...netlifyPreviewFrames]
+				}
+			}
+		})
+	],
 	test: {
 		projects: [
 			{

@@ -1,11 +1,10 @@
 import { describe, test, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/svelte';
-import { readable } from 'svelte/store';
 import Navbar from './Navbar.svelte';
 import type { User } from '@supabase/supabase-js';
 
-vi.mock('$app/stores', () => ({
-	page: readable({ url: new URL('http://localhost/'), params: {}, route: { id: null } })
+vi.mock('$app/state', () => ({
+	page: { url: new URL('http://localhost/'), params: {}, route: { id: null } }
 }));
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

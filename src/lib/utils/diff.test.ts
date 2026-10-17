@@ -1,6 +1,6 @@
 import { describe, test, expect } from 'vitest';
 import { diffIngredients, diffSteps, diffInline } from './diff';
-import type { Ingredient, Step } from '$lib/server/db/schema';
+import type { Ingredient, Step } from '#lib/server/db/schema.js';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 

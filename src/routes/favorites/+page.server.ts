@@ -1,8 +1,8 @@
 import { redirect } from '@sveltejs/kit';
-import { db } from '$lib/server/db';
-import { recipes, favorites, tags, recipesToTags } from '$lib/server/db/schema';
+import { db } from '#lib/server/db/index.js';
+import { recipes, favorites, tags, recipesToTags } from '#lib/server/db/schema.js';
 import { eq, and, ilike, inArray } from 'drizzle-orm';
-import { attachRecipeCounts } from '$lib/server/recipeCounts';
+import { attachRecipeCounts } from '#lib/server/recipeCounts.js';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ url, locals: { user } }) => {

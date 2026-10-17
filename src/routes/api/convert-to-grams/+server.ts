@@ -1,6 +1,5 @@
-import { json } from '@sveltejs/kit';
-import { env } from '$env/dynamic/private';
-import { lookupGrams } from '$lib/server/ingredientDensities';
+import { SPOONACULAR_API_KEY } from '$app/env/private';
+import { lookupGrams } from '#lib/server/ingredientDensities.js';
 import type { RequestHandler } from './$types';
 
 interface IngredientInput {
@@ -49,7 +48,7 @@ function isIngredientInput(value: unknown): value is IngredientInput {
 }
 
 function fail(code: string, message: string, status: number, headers?: Record<string, string>) {
-	return json({ error: message, code }, { status, headers });
+	return Response.json({ error: message, code }, { status, headers });
 }
 
 function parseAmount(amount: string): number {
@@ -78,14 +77,15 @@ async function convertViaSpoonacular(
 	unit: string,
 	name: string
 ): Promise<number | null> {
-	if (!env.SPOONACULAR_API_KEY) return null;
+	if (!SPOONACULAR_API_KEY) return null;
+
 	try {
 		const params = new URLSearchParams({
 			ingredientName: name,
 			sourceAmount: String(amount),
 			sourceUnit: unit,
 			targetUnit: 'grams',
-			apiKey: env.SPOONACULAR_API_KEY
+			apiKey: SPOONACULAR_API_KEY
 		});
 		const res = await fetch(`https://api.spoonacular.com/recipes/convert?${params}`);
 		if (!res.ok) return null;
@@ -147,5 +147,5 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		})
 	);
 
-	return json({ results });
+	return Response.json({ results });
 };

@@ -5,7 +5,7 @@ import { config } from 'dotenv';
 import { nanoid } from 'nanoid';
 
 import { recipes, tags, recipesToTags, recipeVersions, profiles } from './schema';
-import { slugify } from '$lib/helpers';
+import { slugify } from '#lib/helpers.js';
 
 // Load .env.local with override so it wins even over shell env vars,
 // then fill in any remaining vars from .env

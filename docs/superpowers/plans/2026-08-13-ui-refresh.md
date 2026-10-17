@@ -179,7 +179,7 @@ const { selectMock, findManyMock } = vi.hoisted(() => ({
 	findManyMock: vi.fn()
 }));
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.js', () => ({
 	db: {
 		select: selectMock,
 		query: { recipes: { findMany: findManyMock } }
@@ -811,7 +811,7 @@ The diff markup is inline in the compare page. The landing page needs the identi
 
 **Interfaces:**
 
-- Consumes: `IngredientDiffRow`, `StepDiffRow` from `$lib/utils/diff`
+- Consumes: `IngredientDiffRow`, `StepDiffRow` from `#lib/utils/diff.js`
 - Produces: `VersionDiff.svelte` with props `{ ingredientDiff: IngredientDiffRow[]; stepDiff: StepDiffRow[] }`. Task 10 imports it.
 
 - [ ] **Step 1: Confirm the existing tests pass before touching anything**
@@ -824,7 +824,7 @@ Create `src/lib/components/VersionDiff.svelte` containing the two `<section>` bl
 
 ```svelte
 <script lang="ts">
-	import type { IngredientDiffRow, StepDiffRow } from '$lib/utils/diff';
+	import type { IngredientDiffRow, StepDiffRow } from '../../../src/lib/utils/diff';
 
 	let {
 		ingredientDiff,
@@ -846,7 +846,7 @@ In `src/routes/recipes/[slug]/diff/+page.svelte`, delete the two sections and th
 <VersionDiff {ingredientDiff} {stepDiff} />
 ```
 
-Add the import: `import VersionDiff from '$lib/components/VersionDiff.svelte';`
+Add the import: `import VersionDiff from '../../../src/lib/components/VersionDiff.svelte';`
 
 - [ ] **Step 4: Run the tests and confirm they still pass**
 
@@ -967,7 +967,7 @@ const { findManyMock, selectMock } = vi.hoisted(() => ({
 	selectMock: vi.fn()
 }));
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('../../../src/lib/server/db', () => ({
 	db: { query: { recipes: { findMany: findManyMock } }, select: selectMock }
 }));
 
@@ -1396,7 +1396,7 @@ return {
 };
 ```
 
-Add to the imports: `desc` from `drizzle-orm`, `recipeVersions` from the schema, and `diffIngredients, diffSteps` from `$lib/utils/diff`.
+Add to the imports: `desc` from `drizzle-orm`, `recipeVersions` from the schema, and `diffIngredients, diffSteps` from `#lib/utils/diff.js`.
 
 - [ ] **Step 4: Run the tests and confirm they pass**
 

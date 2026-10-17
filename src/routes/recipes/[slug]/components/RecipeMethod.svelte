@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Step } from '$lib/server/db/schema';
+	import type { Step } from '#lib/server/db/schema.js';
 
 	let { steps }: { steps: Step[] } = $props();
 

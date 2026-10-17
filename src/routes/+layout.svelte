@@ -3,9 +3,9 @@
 	import type { Snippet } from 'svelte';
 	import type { LayoutData } from './$types';
 	import '../app.css';
-	import Navbar from '$lib/components/Navbar.svelte';
-	import { page } from '$app/stores';
-	import { DEFAULT_META, SITE_NAME, pageTitle, type PageMeta } from '$lib/seo';
+	import Navbar from '#lib/components/Navbar.svelte';
+	import { page } from '$app/state';
+	import { DEFAULT_META, SITE_NAME, pageTitle, type PageMeta } from '#lib/seo.js';
 
 	// This is the key change:
 	// We destructure BOTH `data` and `children` from the top-level props.
@@ -16,8 +16,8 @@
 
 	// The single source of head tags. Pages contribute by returning `meta` from
 	// their loader; anything they omit falls back to the site defaults.
-	const meta: PageMeta = $derived({ ...DEFAULT_META, ...($page.data.meta ?? {}) });
-	const canonical = $derived($page.url.origin + $page.url.pathname);
+	const meta: PageMeta = $derived({ ...DEFAULT_META, ...(page.data.meta ?? {}) });
+	const canonical = $derived(page.url.origin + page.url.pathname);
 </script>
 
 <svelte:head>

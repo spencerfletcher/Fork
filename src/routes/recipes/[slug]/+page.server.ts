@@ -1,10 +1,16 @@
 import { error, redirect } from '@sveltejs/kit';
-import { db } from '$lib/server/db';
-import { recipes, recipeVersions, recipesToTags, profiles, favorites } from '$lib/server/db/schema';
+import { db } from '#lib/server/db/index.js';
+import {
+	recipes,
+	recipeVersions,
+	recipesToTags,
+	profiles,
+	favorites
+} from '#lib/server/db/schema.js';
 import { eq, desc, and, count } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
-import { slugify } from '$lib/helpers';
-import { absoluteImage, clampDescription } from '$lib/seo';
+import { slugify } from '#lib/helpers.js';
+import { absoluteImage, clampDescription } from '#lib/seo.js';
 import type { PageServerLoad, Actions } from './$types';
 
 export const load: PageServerLoad = async ({ params, url, locals: { user } }) => {
