@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 
 // The endpoint reads SPOONACULAR_API_KEY at module scope; without a key it
 // skips the external fallback, which keeps these tests offline.
-vi.mock('$env/dynamic/private', () => ({ env: {} }));
+vi.mock('$app/env/private', () => ({ SPOONACULAR_API_KEY: '' }));
 
 const { POST } = await import('./+server');
 
