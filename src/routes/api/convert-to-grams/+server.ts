@@ -1,4 +1,3 @@
-import { json } from '@sveltejs/kit';
 import { SPOONACULAR_API_KEY } from '$app/env/private';
 import { lookupGrams } from '#lib/server/ingredientDensities.js';
 import type { RequestHandler } from './$types';
@@ -49,7 +48,7 @@ function isIngredientInput(value: unknown): value is IngredientInput {
 }
 
 function fail(code: string, message: string, status: number, headers?: Record<string, string>) {
-	return json({ error: message, code }, { status, headers });
+	return Response.json({ error: message, code }, { status, headers });
 }
 
 function parseAmount(amount: string): number {
@@ -148,5 +147,5 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		})
 	);
 
-	return json({ results });
+	return Response.json({ results });
 };
