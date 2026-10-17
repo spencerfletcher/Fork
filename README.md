@@ -96,12 +96,11 @@ pnpm install
 cp .env.example .env
 ```
 
-Start Supabase and apply the schema:
+Start Supabase, which also applies every migration in `supabase/migrations/`:
 
 ```bash
 supabase start                 # prints your local API URL, anon key, and service role key
 # paste those into .env, then:
-pnpm db:push                   # apply the Drizzle schema
 pnpm db:seed                   # demo user + three recipes, one a fork with two versions
 pnpm dev
 ```
@@ -109,6 +108,18 @@ pnpm dev
 The app runs at `http://localhost:5173`. The seeded account is `spencer@fork.dev` with the password from `SEED_USER_PASSWORD` (default `Fork-Demo-2025!`).
 
 To point at a hosted Supabase project instead, skip `supabase start` and fill `.env` from your project's dashboard — `DATABASE_URL` should be the **pooler** connection string (port 6543), not the direct one, since serverless functions exhaust direct connections.
+
+## Database changes
+
+The SQL files in `supabase/migrations/` are the only way schema changes reach a database. Drizzle is used for typed queries, Drizzle Studio (`pnpm db:studio`), and the schema in `src/lib/server/db/schema.ts`, but not for migrations.
+
+```bash
+supabase migration new <name>  # create an empty migration file, then write the SQL by hand
+supabase db reset              # rebuild the local database from the full migration chain
+supabase db push               # apply pending migration files to the linked hosted project
+```
+
+Every schema change edits `schema.ts` and adds a migration in the same commit, so the Drizzle types match the real database. Don't use `drizzle-kit push`: it changes a database without a migration file, and `drizzle.config.ts` loads `.env.local` with `override: true`, so it can target a different database than you expect.
 
 ## Testing
 

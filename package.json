@@ -20,8 +20,6 @@
 		"test:unit": "vitest",
 		"test:e2e": "playwright test",
 		"// ── Database ─────────────────────────────────────────────────": "",
-		"db:push": "drizzle-kit push",
-		"db:migrate": "drizzle-kit migrate",
 		"db:studio": "drizzle-kit studio",
 		"db:seed": "tsx src/lib/server/db/seed.ts"
 	},
