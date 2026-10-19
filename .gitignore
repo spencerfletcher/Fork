@@ -38,4 +38,4 @@ supabase/snippets/
 e2e/.auth/
 
 # Local docs
-todo/*
+docs/todo/*

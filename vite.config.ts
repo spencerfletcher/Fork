@@ -69,7 +69,7 @@ export default defineConfig({
 					clearMocks: true,
 					include: ['src/**/*.svelte.{test,spec}.{js,ts}'],
 					exclude: ['src/lib/server/**', 'e2e/**'],
-					setupFiles: ['./vitest-setup-client.ts']
+					setupFiles: ['./src/vitest-setup-client.ts']
 				}
 			},
 			{
