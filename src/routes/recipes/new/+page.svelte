@@ -2,9 +2,9 @@
 	import { enhance } from '$app/forms';
 	import type { PageData } from './$types';
 	import type { Ingredient, Step } from '#lib/recipes/types.js';
-	import TagInput from '#lib/components/TagInput.svelte';
-	import IngredientEditor from '#lib/components/IngredientEditor.svelte';
-	import StepEditor from '#lib/components/StepEditor.svelte';
+	import TagInput from '#lib/components/ui/TagInput.svelte';
+	import IngredientEditor from '#lib/components/recipes/IngredientEditor.svelte';
+	import StepEditor from '#lib/components/recipes/StepEditor.svelte';
 
 	let { data }: { data: PageData } = $props();
 

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import RecipeCard from '#lib/components/RecipeCard.svelte';
+	import RecipeCard from '#lib/components/recipes/RecipeCard.svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
