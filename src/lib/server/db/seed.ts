@@ -80,7 +80,7 @@ const COOKIE_STEPS = [
 // everything after it and renders as a cascade of unrelated changes. It also
 // avoids renaming an ingredient, which diffIngredients reports as a removal plus
 // an addition rather than one modification. Both are documented limitations in
-// lib/utils/diff.ts.
+// lib/recipes/diff.ts.
 const COOKIE_INGREDIENTS_V3 = [
 	{ amount: '2¼', unit: 'cups', name: 'all-purpose flour' },
 	{ amount: '1', unit: 'tsp', name: 'baking soda' },

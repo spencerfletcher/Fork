@@ -1,7 +1,7 @@
 import { describe, test, expect } from 'vitest';
 import { render, screen } from '@testing-library/svelte';
 import VersionDiff from './VersionDiff.svelte';
-import type { IngredientDiffRow, StepDiffRow } from '#lib/utils/diff.js';
+import type { IngredientDiffRow, StepDiffRow } from '#lib/recipes/diff.js';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 

@@ -1,7 +1,7 @@
 import { redirect, error } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { db } from '#lib/server/db/index.js';
-import { normalizeSteps } from '#lib/server/steps.js';
+import { normalizeSteps } from '#lib/recipes/steps.js';
 import { recipes, recipeVersions, tags, recipesToTags, profiles } from '#lib/server/db/schema.js';
 import { slugify } from '#lib/helpers.js';
 import { inArray } from 'drizzle-orm';

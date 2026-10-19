@@ -1,6 +1,6 @@
 import { error, redirect } from '@sveltejs/kit';
 import { db } from '#lib/server/db/index.js';
-import { normalizeSteps } from '#lib/server/steps.js';
+import { normalizeSteps } from '#lib/recipes/steps.js';
 import { recipes, recipeVersions, recipesToTags, tags } from '#lib/server/db/schema.js';
 import { eq, desc, max, inArray } from 'drizzle-orm';
 import { slugify } from '#lib/helpers.js';

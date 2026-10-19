@@ -1,7 +1,7 @@
 import { db } from '#lib/server/db/index.js';
 import { recipes, recipeVersions } from '#lib/server/db/schema.js';
 import { desc, eq } from 'drizzle-orm';
-import { diffIngredients, diffSteps } from '#lib/utils/diff.js';
+import { diffIngredients, diffSteps } from '#lib/recipes/diff.js';
 import { attachRecipeCounts } from '#lib/server/recipeCounts.js';
 import type { PageServerLoad } from './$types';
 

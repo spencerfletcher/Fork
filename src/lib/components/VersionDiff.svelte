@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { IngredientDiffRow, InlineSegment, StepDiffRow } from '#lib/utils/diff.js';
+	import type { IngredientDiffRow, InlineSegment, StepDiffRow } from '#lib/recipes/diff.js';
 
 	let {
 		ingredientDiff,
