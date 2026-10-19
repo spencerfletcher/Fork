@@ -1,3 +1,4 @@
+import type { Ingredient, Step } from '#lib/recipes/types.js';
 import {
 	pgTable,
 	serial,
@@ -172,25 +173,6 @@ export const recipeVersionsRelations = relations(recipeVersions, ({ one }) => ({
 }));
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-
-export type Ingredient = {
-	amount: string;
-	unit: string;
-	name: string;
-};
-
-export type StepAnnotationType = 'tip' | 'warning' | 'substitution';
-
-export type StepAnnotation = {
-	type: StepAnnotationType;
-	text: string;
-};
-
-export type Step = {
-	step: number;
-	text: string;
-	annotation?: StepAnnotation;
-};
 
 export type Profile = InferSelectModel<typeof profiles>;
 export type NewProfile = InferInsertModel<typeof profiles>;

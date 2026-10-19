@@ -1,4 +1,4 @@
-import type { Step, StepAnnotationType } from './db/schema.js';
+import type { Step, StepAnnotationType } from '#lib/recipes/types.js';
 
 const ANNOTATION_TYPES: readonly StepAnnotationType[] = ['tip', 'warning', 'substitution'];
 

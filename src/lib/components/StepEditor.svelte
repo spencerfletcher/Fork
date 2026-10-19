@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Step, StepAnnotationType } from '#lib/server/db/schema.js';
+	import type { Step, StepAnnotationType } from '#lib/recipes/types.js';
 
 	let { steps = $bindable(), annotations = false }: { steps: Step[]; annotations?: boolean } =
 		$props();

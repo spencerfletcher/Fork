@@ -1,5 +1,5 @@
 import { diffWords } from 'diff';
-import type { Ingredient, Step } from '#lib/server/db/schema.js';
+import type { Ingredient, Step } from '#lib/recipes/types.js';
 
 export type DiffStatus = 'added' | 'removed' | 'unchanged' | 'modified';
 
