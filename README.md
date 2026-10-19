@@ -75,13 +75,18 @@ src/
     users/[username]/          public profile
     api/convert-to-grams/      ingredient unit conversion
   lib/
+    recipes/                   pure recipe-domain logic, no framework or DB imports
+      types.ts                 Ingredient and Step shapes stored as JSONB
+      validation.ts            form parsing shared by the create and edit actions
+      diff.ts                  version comparison (unit tested in isolation)
+    components/
+      recipes/                 recipe, editor and version components
+      ui/                      app shell, search and tag input components
     server/db/schema.ts        Drizzle schema — single source of truth
     server/db/seed.ts          demo data
-    utils/diff.ts              pure diff logic (unit tested in isolation)
-    components/                shared components
 ```
 
-Load functions and form actions do the data work; `hooks.server.ts` attaches the Supabase client and the user to `event.locals` on every request. The diff engine in `lib/utils/diff.ts` is deliberately free of framework and database dependencies, which is why it's the most heavily tested file in the repo.
+Load functions and form actions do the data work; `hooks.server.ts` attaches the Supabase client and the user to `event.locals` on every request. The diff engine in `lib/recipes/diff.ts` is deliberately free of framework and database dependencies, which is why it's the most heavily tested file in the repo.
 
 Tables: `profiles`, `recipes`, `recipe_versions`, `tags`, `recipes_to_tags`, `favorites`.
 
