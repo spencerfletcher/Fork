@@ -1,7 +1,7 @@
 import { redirect, error } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { db } from '#lib/server/db/index.js';
-import { normalizeSteps } from '#lib/recipes/steps.js';
+import { parseRecipeMeta, parseRecipeContent } from '#lib/recipes/validation.js';
 import { recipes, recipeVersions, tags, recipesToTags, profiles } from '#lib/server/db/schema.js';
 import { slugify } from '#lib/helpers.js';
 import { inArray } from 'drizzle-orm';
@@ -22,17 +22,9 @@ export const actions: Actions = {
 		if (!user) throw error(401, 'Login required');
 
 		const formData = await request.formData();
-		const title = (formData.get('title') as string)?.trim();
-		const description = (formData.get('description') as string)?.trim() || null;
-		const servings = parseInt(formData.get('servings') as string) || null;
-		const prepTimeMinutes = parseInt(formData.get('prepTimeMinutes') as string) || null;
-		const cookTimeMinutes = parseInt(formData.get('cookTimeMinutes') as string) || null;
-		const isPublic = formData.get('isPublic') === 'on';
-		const selectedTagNames = formData.getAll('tags') as string[];
-		const ingredientsRaw = formData.get('ingredients') as string;
-		const stepsRaw = formData.get('steps') as string;
-
-		if (!title) throw error(400, 'Title is required');
+		const { title, description, servings, prepTimeMinutes, cookTimeMinutes, isPublic, tagNames } =
+			parseRecipeMeta(formData);
+		const { ingredients, steps } = parseRecipeContent(formData);
 
 		// Handle image upload to Supabase Storage
 		let imageUrl: string | null = null;
@@ -51,23 +43,6 @@ export const actions: Actions = {
 			}
 			// If upload fails, imageUrl stays null — recipe is created without an image
 		}
-
-		let ingredients, steps;
-		try {
-			ingredients = JSON.parse(ingredientsRaw);
-			steps = JSON.parse(stepsRaw);
-		} catch {
-			throw error(400, 'Invalid ingredient or step data');
-		}
-
-		if (!Array.isArray(ingredients) || ingredients.length === 0) {
-			throw error(400, 'At least one ingredient is required');
-		}
-		if (!Array.isArray(steps) || steps.length === 0) {
-			throw error(400, 'At least one step is required');
-		}
-
-		steps = normalizeSteps(steps);
 
 		// Upsert profile for creator
 		await db
@@ -94,13 +69,13 @@ export const actions: Actions = {
 				.returning({ id: recipes.id });
 
 			// Sync tags
-			if (selectedTagNames.length > 0) {
+			if (tagNames.length > 0) {
 				await tx
 					.insert(tags)
-					.values(selectedTagNames.map((name) => ({ name, slug: slugify(name) })))
+					.values(tagNames.map((name) => ({ name, slug: slugify(name) })))
 					.onConflictDoNothing();
 				const relevantTags = await tx.query.tags.findMany({
-					where: inArray(tags.name, selectedTagNames)
+					where: inArray(tags.name, tagNames)
 				});
 				if (relevantTags.length > 0) {
 					await tx

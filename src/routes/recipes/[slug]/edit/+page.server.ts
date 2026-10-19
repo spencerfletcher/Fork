@@ -1,6 +1,6 @@
 import { error, redirect } from '@sveltejs/kit';
 import { db } from '#lib/server/db/index.js';
-import { normalizeSteps } from '#lib/recipes/steps.js';
+import { parseRecipeMeta, parseRecipeContent } from '#lib/recipes/validation.js';
 import { recipes, recipeVersions, recipesToTags, tags } from '#lib/server/db/schema.js';
 import { eq, desc, max, inArray } from 'drizzle-orm';
 import { slugify } from '#lib/helpers.js';
@@ -43,8 +43,8 @@ export const actions: Actions = {
 		if (recipe.authorId !== user.id) throw error(403, 'Not authorized');
 
 		const formData = await request.formData();
-		const title = (formData.get('title') as string)?.trim();
-		const description = (formData.get('description') as string)?.trim() || null;
+		const { title, description, servings, prepTimeMinutes, cookTimeMinutes, isPublic, tagNames } =
+			parseRecipeMeta(formData);
 		const rawImageUrl = (formData.get('imageUrl') as string)?.trim() || null;
 		if (rawImageUrl) {
 			let parsedUrl: URL;
@@ -58,13 +58,6 @@ export const actions: Actions = {
 			}
 		}
 		const imageUrl = rawImageUrl;
-		const servings = parseInt(formData.get('servings') as string) || null;
-		const prepTimeMinutes = parseInt(formData.get('prepTimeMinutes') as string) || null;
-		const cookTimeMinutes = parseInt(formData.get('cookTimeMinutes') as string) || null;
-		const isPublic = formData.get('isPublic') === 'on';
-		const selectedTagNames = formData.getAll('tags') as string[];
-
-		if (!title) throw error(400, 'Title is required');
 
 		await db.transaction(async (tx) => {
 			await tx
@@ -83,14 +76,14 @@ export const actions: Actions = {
 
 			// Sync tags
 			await tx.delete(recipesToTags).where(eq(recipesToTags.recipeId, recipe.id));
-			if (selectedTagNames.length > 0) {
+			if (tagNames.length > 0) {
 				// Upsert any new tags
 				await tx
 					.insert(tags)
-					.values(selectedTagNames.map((name) => ({ name, slug: slugify(name) })))
+					.values(tagNames.map((name) => ({ name, slug: slugify(name) })))
 					.onConflictDoNothing();
 				const relevantTags = await tx.query.tags.findMany({
-					where: inArray(tags.name, selectedTagNames)
+					where: inArray(tags.name, tagNames)
 				});
 				if (relevantTags.length > 0) {
 					await tx
@@ -115,28 +108,8 @@ export const actions: Actions = {
 
 		const formData = await request.formData();
 		const commitMessage = (formData.get('commitMessage') as string)?.trim();
-		const ingredientsRaw = formData.get('ingredients') as string;
-		const stepsRaw = formData.get('steps') as string;
-
 		if (!commitMessage) throw error(400, 'Commit message is required');
-
-		let ingredients, steps;
-		try {
-			ingredients = JSON.parse(ingredientsRaw);
-			steps = JSON.parse(stepsRaw);
-		} catch {
-			throw error(400, 'Invalid ingredient or step data');
-		}
-
-		if (!Array.isArray(ingredients) || ingredients.length === 0) {
-			throw error(400, 'At least one ingredient is required');
-		}
-		if (!Array.isArray(steps) || steps.length === 0) {
-			throw error(400, 'At least one step is required');
-		}
-
-		// Renumber steps and keep only well-formed annotations
-		steps = normalizeSteps(steps);
+		const { ingredients, steps } = parseRecipeContent(formData);
 
 		await db.transaction(async (tx) => {
 			// Get current max version
