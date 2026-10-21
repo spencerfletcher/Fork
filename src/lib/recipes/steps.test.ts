@@ -45,4 +45,16 @@ describe('normalizeSteps', () => {
 		const result = normalizeSteps([{ step: 1, text: 'Bake.', injected: true }]);
 		expect(result[0]).toEqual({ step: 1, text: 'Bake.' });
 	});
+
+	test('throws 400 on a null step', () => {
+		expect(() => normalizeSteps([null])).toThrow(expect.objectContaining({ status: 400 }));
+	});
+	test('throws 400 on a step without string text', () => {
+		expect(() => normalizeSteps([{ text: 42 }])).toThrow(expect.objectContaining({ status: 400 }));
+	});
+	test('ignores an annotation that is not an object', () => {
+		expect(normalizeSteps([{ text: 'chop', annotation: 'tip' }])).toEqual([
+			{ step: 1, text: 'chop' }
+		]);
+	});
 });
