@@ -53,13 +53,16 @@ export function diffIngredients(from: Ingredient[], to: Ingredient[]): Ingredien
 			result.push({ status: 'added', ingredient });
 		} else {
 			const unchanged =
-				fromIngredient.amount === ingredient.amount && fromIngredient.unit === ingredient.unit;
+				fromIngredient.quantity === ingredient.quantity &&
+				fromIngredient.quantity2 === ingredient.quantity2 &&
+				fromIngredient.unit === ingredient.unit;
 			if (unchanged) {
 				result.push({ status: 'unchanged', ingredient });
 			} else {
-				const fromStr = `${fromIngredient.amount} ${fromIngredient.unit} ${fromIngredient.name}`;
-				const toStr = `${ingredient.amount} ${ingredient.unit} ${ingredient.name}`;
-				result.push({ status: 'modified', segments: diffInline(fromStr, toStr) });
+				result.push({
+					status: 'modified',
+					segments: diffInline(fromIngredient.text, ingredient.text)
+				});
 			}
 		}
 	}

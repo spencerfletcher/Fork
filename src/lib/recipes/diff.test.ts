@@ -1,11 +1,12 @@
 import { describe, test, expect } from 'vitest';
 import { diffIngredients, diffSteps, diffInline } from './diff';
+import { parseIngredientLine } from './ingredients';
 import type { Ingredient, Step } from '#lib/recipes/types.js';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function ing(name: string, amount = '1', unit = 'cup'): Ingredient {
-	return { name, amount, unit };
+	return parseIngredientLine(`${amount} ${unit} ${name}`);
 }
 
 function step(text: string): Step {
@@ -63,7 +64,7 @@ describe('diffIngredients', () => {
 		expect(result).toContainEqual({ status: 'removed', ingredient: ing('sugar') });
 	});
 
-	test('changed amount emits a single modified row with inline segments', () => {
+	test('changed quantity emits a single modified row with inline segments', () => {
 		const from = [ing('flour', '1', 'cup')];
 		const to = [ing('flour', '2', 'cup')];
 		const result = diffIngredients(from, to);
@@ -91,6 +92,26 @@ describe('diffIngredients', () => {
 				true
 			);
 		}
+	});
+
+	test('a changed range end is modified', () => {
+		const from = [parseIngredientLine('2-3 cloves garlic')];
+		const to = [parseIngredientLine('2-4 cloves garlic')];
+		expect(diffIngredients(from, to)[0].status).toBe('modified');
+	});
+
+	test('a modified row diffs the lines as typed', () => {
+		const from = [parseIngredientLine('1 cup flour')];
+		const to = [parseIngredientLine('2 cups flour')];
+		const [row] = diffIngredients(from, to);
+		if (row.status !== 'modified') throw new Error('expected modified');
+		const side = (skip: 'added' | 'removed') =>
+			row.segments
+				.filter((s) => s.type !== skip)
+				.map((s) => s.text)
+				.join('');
+		expect(side('added')).toBe('1 cup flour');
+		expect(side('removed')).toBe('2 cups flour');
 	});
 
 	test('name matching is case-insensitive', () => {

@@ -35,14 +35,8 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 	if (!fromVersion) throw error(400, `Version ${fromNum} not found`);
 	if (!toVersion) throw error(400, `Version ${toNum} not found`);
 
-	const ingredientDiff = diffIngredients(
-		fromVersion.ingredients as Parameters<typeof diffIngredients>[0],
-		toVersion.ingredients as Parameters<typeof diffIngredients>[0]
-	);
-	const stepDiff = diffSteps(
-		fromVersion.steps as Parameters<typeof diffSteps>[0],
-		toVersion.steps as Parameters<typeof diffSteps>[0]
-	);
+	const ingredientDiff = diffIngredients(fromVersion.ingredients, toVersion.ingredients);
+	const stepDiff = diffSteps(fromVersion.steps, toVersion.steps);
 
 	return {
 		recipe,
