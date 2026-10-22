@@ -34,7 +34,7 @@ describe('parseRecipeMeta', () => {
 	});
 
 	test('defaults optional fields to null, false and empty', () => {
-		const result = parseRecipeMeta(form({ title: 'Cookies', description: '  ', servings: 'x' }));
+		const result = parseRecipeMeta(form({ title: 'Cookies', description: '  ', servings: '' }));
 		expect(result).toEqual({
 			title: 'Cookies',
 			description: null,
@@ -51,6 +51,36 @@ describe('parseRecipeMeta', () => {
 			expect.objectContaining({ status: 400 })
 		);
 		expect(() => parseRecipeMeta(form({}))).toThrow(expect.objectContaining({ status: 400 }));
+	});
+
+	describe('integer fields', () => {
+		const bad = ['x', '2.5', '4people', '-3'];
+
+		test.each(bad)('throws 400 on servings %j', (value) => {
+			expect(() => parseRecipeMeta(form({ title: 'Cookies', servings: value }))).toThrow(
+				expect.objectContaining({ status: 400 })
+			);
+		});
+
+		test.each(bad)('throws 400 on prep time %j', (value) => {
+			expect(() => parseRecipeMeta(form({ title: 'Cookies', prepTimeMinutes: value }))).toThrow(
+				expect.objectContaining({ status: 400 })
+			);
+		});
+
+		test('throws 400 on zero servings', () => {
+			expect(() => parseRecipeMeta(form({ title: 'Cookies', servings: '0' }))).toThrow(
+				expect.objectContaining({ status: 400 })
+			);
+		});
+
+		test('keeps zero prep and cook time', () => {
+			const result = parseRecipeMeta(
+				form({ title: 'Cookies', prepTimeMinutes: '0', cookTimeMinutes: '0' })
+			);
+			expect(result.prepTimeMinutes).toBe(0);
+			expect(result.cookTimeMinutes).toBe(0);
+		});
 	});
 });
 

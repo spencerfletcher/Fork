@@ -23,8 +23,12 @@ function text(formData: FormData, key: string): string {
 	return typeof value === 'string' ? value.trim() : '';
 }
 
-function int(formData: FormData, key: string): number | null {
-	return parseInt(text(formData, key)) || null;
+function int(value: string, min: number, label: string): number | null {
+	if (!value) return null;
+	if (!/^\d+$/.test(value) || Number(value) < min) {
+		throw error(400, `${label} must be a whole number of at least ${min}`);
+	}
+	return Number(value);
 }
 
 /** Recipe metadata (the in-place-edited `recipes` row), from a submitted form. */
@@ -35,9 +39,9 @@ export function parseRecipeMeta(formData: FormData): RecipeMeta {
 	return {
 		title,
 		description: text(formData, 'description') || null,
-		servings: int(formData, 'servings'),
-		prepTimeMinutes: int(formData, 'prepTimeMinutes'),
-		cookTimeMinutes: int(formData, 'cookTimeMinutes'),
+		servings: int(text(formData, 'servings'), 1, 'Servings'),
+		prepTimeMinutes: int(text(formData, 'prepTimeMinutes'), 0, 'Prep time'),
+		cookTimeMinutes: int(text(formData, 'cookTimeMinutes'), 0, 'Cook time'),
 		isPublic: formData.get('isPublic') === 'on',
 		tagNames: formData.getAll('tags').filter((t): t is string => typeof t === 'string')
 	};
