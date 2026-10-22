@@ -28,7 +28,6 @@
 	// A success redirects away, so neither needs resetting here.
 	let submitting = $state<'meta' | 'content' | null>(null);
 	let metaDirty = $state(false);
-	// svelte-ignore state_referenced_locally -- the initial value is the point: it is the saved baseline
 	const savedContent = JSON.stringify({ ingredients, steps });
 	const contentDirty = $derived(JSON.stringify({ ingredients, steps }) !== savedContent);
 
