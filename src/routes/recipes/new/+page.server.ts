@@ -1,4 +1,4 @@
-import { redirect, error } from '@sveltejs/kit';
+import { redirect, error, fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { db } from '#lib/server/db/index.js';
 import { parseRecipeMeta, parseRecipeContent } from '#lib/recipes/validation.js';
@@ -22,9 +22,13 @@ export const actions: Actions = {
 		if (!user) throw error(401, 'Login required');
 
 		const formData = await request.formData();
+		const meta = parseRecipeMeta(formData);
+		if (!meta.ok) return fail(400, { error: meta.error });
+		const content = parseRecipeContent(formData);
+		if (!content.ok) return fail(400, { error: content.error });
 		const { title, description, servings, prepTimeMinutes, cookTimeMinutes, isPublic, tagNames } =
-			parseRecipeMeta(formData);
-		const { ingredients, steps } = parseRecipeContent(formData);
+			meta.value;
+		const { ingredients, steps } = content.value;
 
 		// Handle image upload to Supabase Storage
 		let imageUrl: string | null = null;

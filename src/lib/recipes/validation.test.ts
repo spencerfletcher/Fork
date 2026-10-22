@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import { parseRecipeMeta, parseRecipeContent } from './validation';
+import { parseRecipeMeta, parseRecipeContent, type Result } from './validation';
 
 function form(fields: Record<string, string | string[]>): FormData {
 	const fd = new FormData();
@@ -9,12 +9,25 @@ function form(fields: Record<string, string | string[]>): FormData {
 	return fd;
 }
 
-const rejects = expect.objectContaining({ status: 400 });
+const rejected = { ok: false, error: expect.any(String) };
+
+function unwrap<T>(result: Result<T>): T {
+	if (!result.ok) throw new Error(result.error);
+	return result.value;
+}
+
+function meta(fields: Record<string, string | string[]>) {
+	return parseRecipeMeta(form(fields));
+}
+
+function content(fields: Record<string, string | string[]>) {
+	return parseRecipeContent(form(fields));
+}
 
 describe('parseRecipeMeta', () => {
 	test('parses all metadata fields', () => {
-		const result = parseRecipeMeta(
-			form({
+		const result = unwrap(
+			meta({
 				title: '  Cookies ',
 				description: ' Chewy ',
 				servings: '12',
@@ -36,7 +49,7 @@ describe('parseRecipeMeta', () => {
 	});
 
 	test('treats missing optional fields as absent', () => {
-		expect(parseRecipeMeta(form({ title: 'Cookies' }))).toEqual({
+		expect(unwrap(meta({ title: 'Cookies' }))).toEqual({
 			title: 'Cookies',
 			description: null,
 			servings: null,
@@ -48,8 +61,8 @@ describe('parseRecipeMeta', () => {
 	});
 
 	test('treats blank optional fields as absent', () => {
-		const result = parseRecipeMeta(
-			form({
+		const result = unwrap(
+			meta({
 				title: 'Cookies',
 				description: '  ',
 				servings: '',
@@ -65,47 +78,39 @@ describe('parseRecipeMeta', () => {
 		});
 	});
 
-	test('throws 400 when title is missing or blank', () => {
-		expect(() => parseRecipeMeta(form({ title: '  ' }))).toThrow(rejects);
-		expect(() => parseRecipeMeta(form({}))).toThrow(rejects);
+	test('rejects when title is missing or blank', () => {
+		expect(meta({ title: '  ' })).toEqual(rejected);
+		expect(meta({})).toEqual(rejected);
 	});
 
 	describe('integer fields', () => {
 		const bad = ['x', '2.5', '2.0', '4people', '-3', '1e2', '0x10', '+4'];
 
-		test.each(bad)('throws 400 on servings %j', (value) => {
-			expect(() => parseRecipeMeta(form({ title: 'Cookies', servings: value }))).toThrow(rejects);
+		test.each(bad)('rejects servings %j', (value) => {
+			expect(meta({ title: 'Cookies', servings: value })).toEqual(rejected);
 		});
 
-		test.each(bad)('throws 400 on prep time %j', (value) => {
-			expect(() => parseRecipeMeta(form({ title: 'Cookies', prepTimeMinutes: value }))).toThrow(
-				rejects
-			);
+		test.each(bad)('rejects prep time %j', (value) => {
+			expect(meta({ title: 'Cookies', prepTimeMinutes: value })).toEqual(rejected);
 		});
 
-		test('throws 400 on zero servings', () => {
-			expect(() => parseRecipeMeta(form({ title: 'Cookies', servings: '0' }))).toThrow(rejects);
+		test('rejects zero servings', () => {
+			expect(meta({ title: 'Cookies', servings: '0' })).toEqual(rejected);
 		});
 
 		test('keeps zero prep and cook time', () => {
-			const result = parseRecipeMeta(
-				form({ title: 'Cookies', prepTimeMinutes: '0', cookTimeMinutes: '0' })
-			);
+			const result = unwrap(meta({ title: 'Cookies', prepTimeMinutes: '0', cookTimeMinutes: '0' }));
 			expect(result.prepTimeMinutes).toBe(0);
 			expect(result.cookTimeMinutes).toBe(0);
 		});
 
 		test('trims surrounding whitespace', () => {
-			expect(parseRecipeMeta(form({ title: 'Cookies', servings: ' 4 ' })).servings).toBe(4);
+			expect(unwrap(meta({ title: 'Cookies', servings: ' 4 ' })).servings).toBe(4);
 		});
 
-		test('throws 400 above the integer column limit', () => {
-			expect(parseRecipeMeta(form({ title: 'Cookies', servings: '2147483647' })).servings).toBe(
-				2147483647
-			);
-			expect(() => parseRecipeMeta(form({ title: 'Cookies', servings: '2147483648' }))).toThrow(
-				rejects
-			);
+		test('rejects above the integer column limit', () => {
+			expect(unwrap(meta({ title: 'Cookies', servings: '2147483647' })).servings).toBe(2147483647);
+			expect(meta({ title: 'Cookies', servings: '2147483648' })).toEqual(rejected);
 		});
 	});
 });
@@ -115,8 +120,8 @@ describe('parseRecipeContent', () => {
 	const steps = JSON.stringify([{ text: 'Mix.' }]);
 
 	test('parses ingredients and normalizes steps', () => {
-		const result = parseRecipeContent(
-			form({ ingredients, steps: JSON.stringify([{ step: 7, text: 'Mix.' }]) })
+		const result = unwrap(
+			content({ ingredients, steps: JSON.stringify([{ step: 7, text: 'Mix.' }]) })
 		);
 		expect(result).toEqual({
 			ingredients: [{ amount: '1', unit: 'cup', name: 'flour' }],
@@ -124,23 +129,23 @@ describe('parseRecipeContent', () => {
 		});
 	});
 
-	test('throws 400 on invalid JSON', () => {
-		expect(() => parseRecipeContent(form({ ingredients: '{bad', steps }))).toThrow(rejects);
-		expect(() => parseRecipeContent(form({ ingredients, steps: '{bad' }))).toThrow(rejects);
+	test('rejects invalid JSON', () => {
+		expect(content({ ingredients: '{bad', steps })).toEqual(rejected);
+		expect(content({ ingredients, steps: '{bad' })).toEqual(rejected);
 	});
 
-	test('throws 400 when a list is missing, not an array, or empty', () => {
-		expect(() => parseRecipeContent(form({ steps }))).toThrow(rejects);
-		expect(() => parseRecipeContent(form({ ingredients: '{}', steps }))).toThrow(rejects);
-		expect(() => parseRecipeContent(form({ ingredients: '[]', steps }))).toThrow(rejects);
-		expect(() => parseRecipeContent(form({ ingredients }))).toThrow(rejects);
-		expect(() => parseRecipeContent(form({ ingredients, steps: '"Mix."' }))).toThrow(rejects);
-		expect(() => parseRecipeContent(form({ ingredients, steps: '[]' }))).toThrow(rejects);
+	test('rejects when a list is missing, not an array, or empty', () => {
+		expect(content({ steps })).toEqual(rejected);
+		expect(content({ ingredients: '{}', steps })).toEqual(rejected);
+		expect(content({ ingredients: '[]', steps })).toEqual(rejected);
+		expect(content({ ingredients })).toEqual(rejected);
+		expect(content({ ingredients, steps: '"Mix."' })).toEqual(rejected);
+		expect(content({ ingredients, steps: '[]' })).toEqual(rejected);
 	});
 
 	describe('steps', () => {
 		function stepsOf(raw: unknown[]) {
-			return parseRecipeContent(form({ ingredients, steps: JSON.stringify(raw) })).steps;
+			return unwrap(content({ ingredients, steps: JSON.stringify(raw) })).steps;
 		}
 
 		test('renumbers steps sequentially from 1', () => {
@@ -194,14 +199,14 @@ describe('parseRecipeContent', () => {
 			['a step without text', {}],
 			['blank step text', { text: '   ' }],
 			['non-string step text', { text: 42 }]
-		])('throws 400 on %s', (_, step) => {
-			expect(() => stepsOf([step])).toThrow(rejects);
+		])('rejects %s', (_, step) => {
+			expect(content({ ingredients, steps: JSON.stringify([step]) })).toEqual(rejected);
 		});
 	});
 
 	describe('ingredients', () => {
 		function ingredientsOf(raw: unknown[]) {
-			return parseRecipeContent(form({ ingredients: JSON.stringify(raw), steps })).ingredients;
+			return unwrap(content({ ingredients: JSON.stringify(raw), steps })).ingredients;
 		}
 
 		test('passes a full ingredient through unchanged', () => {
@@ -234,8 +239,8 @@ describe('parseRecipeContent', () => {
 			['a non-string name', { name: 1 }],
 			['a non-string amount', { amount: 1, unit: 'cup', name: 'flour' }],
 			['a non-string unit', { amount: '1', unit: ['cup'], name: 'flour' }]
-		])('throws 400 on %s', (_, ingredient) => {
-			expect(() => ingredientsOf([ingredient])).toThrow(rejects);
+		])('rejects %s', (_, ingredient) => {
+			expect(content({ ingredients: JSON.stringify([ingredient]), steps })).toEqual(rejected);
 		});
 	});
 });

@@ -125,13 +125,14 @@ describe('saveMeta', () => {
 		expect(result.status).toBe(403);
 	});
 
-	test('throws 400 when title is missing', async () => {
+	test('fails with 400 when title is missing', async () => {
 		findRecipeMock.mockResolvedValue(RECIPE);
 		const result = await invoke(
 			actions.saveMeta as never,
 			makeEvent({ user: OWNER, fields: { title: '   ' } })
 		);
 		expect(result.status).toBe(400);
+		expect(result.data).toEqual({ error: expect.any(String) });
 	});
 
 	test('redirects to recipe page on success', async () => {
@@ -222,7 +223,7 @@ describe('saveVersion', () => {
 		expect(result.status).toBe(403);
 	});
 
-	test('throws 400 when commit message is empty', async () => {
+	test('fails with 400 when commit message is empty', async () => {
 		findRecipeMock.mockResolvedValue(RECIPE);
 		const result = await invoke(
 			actions.saveVersion as never,
@@ -232,9 +233,10 @@ describe('saveVersion', () => {
 			})
 		);
 		expect(result.status).toBe(400);
+		expect(result.data).toEqual({ error: expect.any(String) });
 	});
 
-	test('throws 400 when ingredients JSON is invalid', async () => {
+	test('fails with 400 when ingredients JSON is invalid', async () => {
 		findRecipeMock.mockResolvedValue(RECIPE);
 		const result = await invoke(
 			actions.saveVersion as never,
@@ -244,9 +246,10 @@ describe('saveVersion', () => {
 			})
 		);
 		expect(result.status).toBe(400);
+		expect(result.data).toEqual({ error: expect.any(String) });
 	});
 
-	test('throws 400 when ingredients array is empty', async () => {
+	test('fails with 400 when ingredients array is empty', async () => {
 		findRecipeMock.mockResolvedValue(RECIPE);
 		const result = await invoke(
 			actions.saveVersion as never,
@@ -256,9 +259,10 @@ describe('saveVersion', () => {
 			})
 		);
 		expect(result.status).toBe(400);
+		expect(result.data).toEqual({ error: expect.any(String) });
 	});
 
-	test('throws 400 when steps array is empty', async () => {
+	test('fails with 400 when steps array is empty', async () => {
 		findRecipeMock.mockResolvedValue(RECIPE);
 		const result = await invoke(
 			actions.saveVersion as never,
@@ -268,6 +272,7 @@ describe('saveVersion', () => {
 			})
 		);
 		expect(result.status).toBe(400);
+		expect(result.data).toEqual({ error: expect.any(String) });
 	});
 
 	test('redirects to recipe page on success', async () => {

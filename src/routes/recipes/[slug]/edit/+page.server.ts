@@ -1,4 +1,4 @@
-import { error, redirect } from '@sveltejs/kit';
+import { error, fail, redirect } from '@sveltejs/kit';
 import { db } from '#lib/server/db/index.js';
 import { parseRecipeMeta, parseRecipeContent } from '#lib/recipes/validation.js';
 import { recipes, recipeVersions, recipesToTags, tags } from '#lib/server/db/schema.js';
@@ -43,18 +43,20 @@ export const actions: Actions = {
 		if (recipe.authorId !== user.id) throw error(403, 'Not authorized');
 
 		const formData = await request.formData();
+		const meta = parseRecipeMeta(formData);
+		if (!meta.ok) return fail(400, { error: meta.error });
 		const { title, description, servings, prepTimeMinutes, cookTimeMinutes, isPublic, tagNames } =
-			parseRecipeMeta(formData);
+			meta.value;
 		const rawImageUrl = (formData.get('imageUrl') as string)?.trim() || null;
 		if (rawImageUrl) {
 			let parsedUrl: URL;
 			try {
 				parsedUrl = new URL(rawImageUrl);
 			} catch {
-				throw error(400, 'Invalid image URL');
+				return fail(400, { error: 'Invalid image URL' });
 			}
 			if (parsedUrl.protocol !== 'https:' && parsedUrl.protocol !== 'http:') {
-				throw error(400, 'Image URL must use http or https');
+				return fail(400, { error: 'Image URL must use http or https' });
 			}
 		}
 		const imageUrl = rawImageUrl;
@@ -108,8 +110,10 @@ export const actions: Actions = {
 
 		const formData = await request.formData();
 		const commitMessage = (formData.get('commitMessage') as string)?.trim();
-		if (!commitMessage) throw error(400, 'Commit message is required');
-		const { ingredients, steps } = parseRecipeContent(formData);
+		if (!commitMessage) return fail(400, { error: 'Commit message is required' });
+		const content = parseRecipeContent(formData);
+		if (!content.ok) return fail(400, { error: content.error });
+		const { ingredients, steps } = content.value;
 
 		await db.transaction(async (tx) => {
 			// Get current max version
