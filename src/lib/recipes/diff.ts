@@ -1,7 +1,5 @@
 import { diffWords } from 'diff';
-import type { Ingredient, Step } from '#lib/recipes/types.js';
-
-export type DiffStatus = 'added' | 'removed' | 'unchanged' | 'modified';
+import type { Ingredient, Step, StepAnnotation, StepAnnotationType } from '#lib/recipes/types.js';
 
 export interface InlineSegment {
 	type: 'added' | 'removed' | 'unchanged';
@@ -12,12 +10,23 @@ export type IngredientDiffRow =
 	| { status: 'added' | 'removed' | 'unchanged'; ingredient: Ingredient }
 	| { status: 'modified'; segments: InlineSegment[] };
 
+export type AnnotationDiff = {
+	status: 'added' | 'removed' | 'modified';
+	type: StepAnnotationType;
+	segments: InlineSegment[];
+};
+
 // Steps are numbered by position. A removed step has no position in the new
 // version, so it carries none.
 export type StepDiffRow =
 	| { status: 'added' | 'unchanged'; stepNumber: number; step: Step }
 	| { status: 'removed'; step: Step }
-	| { status: 'modified'; stepNumber: number; segments: InlineSegment[] };
+	| {
+			status: 'modified';
+			stepNumber: number;
+			segments: InlineSegment[];
+			annotation?: AnnotationDiff;
+	  };
 
 export function diffInline(a: string, b: string): InlineSegment[] {
 	return diffWords(a, b).map((part) => ({
@@ -29,6 +38,18 @@ export function diffInline(a: string, b: string): InlineSegment[] {
 // Ingredients are matched across versions by name, so "flour" in one version
 // pairs with "flour" in the other regardless of position or case.
 const nameKey = (i: Ingredient) => i.name.toLowerCase();
+
+function annotationDiff(
+	from: StepAnnotation | undefined,
+	to: StepAnnotation | undefined
+): AnnotationDiff | undefined {
+	if (!to) {
+		return from && { status: 'removed', type: from.type, segments: diffInline(from.text, '') };
+	}
+	if (!from) return { status: 'added', type: to.type, segments: diffInline('', to.text) };
+	if (from.type === to.type && from.text === to.text) return undefined;
+	return { status: 'modified', type: to.type, segments: diffInline(from.text, to.text) };
+}
 
 // Classifies one ingredient from the new version against its namesake in the
 // old version, if any. Removed rows are handled by the caller, since they have
@@ -75,12 +96,20 @@ export function diffSteps(from: Step[], to: Step[]): StepDiffRow[] {
 	// Every step in the new version has a row, paired with whatever sat at the
 	// same position in the old version. The explicit `: StepDiffRow` on the
 	// arrow keeps each literal's `status` as the union member, not plain string.
-	const rows = to.map((step, i): StepDiffRow => {
+	const rows = to.map((toStep, i): StepDiffRow => {
 		const stepNumber = i + 1;
 		const fromStep = from[i];
-		if (!fromStep) return { status: 'added', stepNumber, step };
-		if (fromStep.text === step.text) return { status: 'unchanged', stepNumber, step };
-		return { status: 'modified', stepNumber, segments: diffInline(fromStep.text, step.text) };
+		if (!fromStep) return { status: 'added', stepNumber, step: toStep };
+		const annotation = annotationDiff(fromStep.annotation, toStep.annotation);
+		if (fromStep.text === toStep.text && !annotation) {
+			return { status: 'unchanged', stepNumber, step: toStep };
+		}
+		return {
+			status: 'modified',
+			stepNumber,
+			segments: diffInline(fromStep.text, toStep.text),
+			...(annotation && { annotation })
+		};
 	});
 	// Positions the new version does not reach are the removed steps; they come
 	// last because they have no place among the numbered rows.

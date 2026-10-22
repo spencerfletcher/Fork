@@ -2,11 +2,12 @@ import { describe, test, expect } from 'vitest';
 import { render, screen } from '@testing-library/svelte';
 import VersionDiff from './VersionDiff.svelte';
 import type { IngredientDiffRow, StepDiffRow } from '#lib/recipes/diff.js';
+import { parseIngredientLine } from '#lib/recipes/ingredients.js';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function ingredient(name: string, amount = '1', unit = 'cup') {
-	return { amount, unit, name };
+	return parseIngredientLine(`${amount} ${unit} ${name}`);
 }
 
 function renderDiff(ingredientDiff: IngredientDiffRow[] = [], stepDiff: StepDiffRow[] = []) {
@@ -99,6 +100,36 @@ describe('VersionDiff', () => {
 		);
 		expect(container.querySelector('.step-num')).toBeNull();
 		expect(screen.getByText('Chill overnight.')).toBeInTheDocument();
+	});
+
+	test('renders an added annotation under a modified step', () => {
+		const { container } = renderDiff(
+			[],
+			[
+				{
+					status: 'modified',
+					stepNumber: 2,
+					segments: [{ type: 'unchanged', text: 'Bake.' }],
+					annotation: {
+						status: 'added',
+						type: 'tip',
+						segments: [{ type: 'added', text: 'watch it' }]
+					}
+				}
+			]
+		);
+		const note = container.querySelector('.diff-annotation');
+		expect(note).toHaveClass('diff-added');
+		expect(note?.textContent).toContain('tip');
+		expect(note?.textContent).toContain('watch it');
+	});
+
+	test('renders no annotation line on a modified step without one', () => {
+		const { container } = renderDiff(
+			[],
+			[{ status: 'modified', stepNumber: 1, segments: [{ type: 'added', text: 'New.' }] }]
+		);
+		expect(container.querySelector('.diff-annotation')).toBeNull();
 	});
 
 	test('renders ingredient and step rows independently', () => {

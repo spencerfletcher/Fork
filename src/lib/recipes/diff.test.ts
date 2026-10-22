@@ -212,4 +212,77 @@ describe('diffSteps', () => {
 		expect(result).toHaveLength(1);
 		expect(result[0].status).toBe('modified');
 	});
+
+	describe('annotations', () => {
+		const tip = (text: string) => ({ type: 'tip' as const, text });
+		const modified = (rows: ReturnType<typeof diffSteps>) => {
+			const [row] = rows;
+			if (row.status !== 'modified') throw new Error(`expected modified, got ${row.status}`);
+			return row;
+		};
+
+		test('adding an annotation marks the step modified with unchanged text segments', () => {
+			const row = modified(
+				diffSteps([step('Bake.')], [{ text: 'Bake.', annotation: tip('watch it') }])
+			);
+			expect(row.stepNumber).toBe(1);
+			expect(row.segments.every((s) => s.type === 'unchanged')).toBe(true);
+			expect(row.annotation).toEqual({
+				status: 'added',
+				type: 'tip',
+				segments: [{ type: 'added', text: 'watch it' }]
+			});
+		});
+
+		test('removing an annotation is modified with a removed annotation diff', () => {
+			const row = modified(
+				diffSteps([{ text: 'Bake.', annotation: tip('watch it') }], [step('Bake.')])
+			);
+			expect(row.annotation).toEqual({
+				status: 'removed',
+				type: 'tip',
+				segments: [{ type: 'removed', text: 'watch it' }]
+			});
+		});
+
+		test('editing annotation text inline-diffs the annotation only', () => {
+			const row = modified(
+				diffSteps(
+					[{ text: 'Bake.', annotation: tip('watch it') }],
+					[{ text: 'Bake.', annotation: tip('watch it closely') }]
+				)
+			);
+			expect(row.segments.every((s) => s.type === 'unchanged')).toBe(true);
+			expect(row.annotation?.status).toBe('modified');
+			expect(
+				row.annotation?.segments.some((s) => s.type === 'added' && s.text.includes('closely'))
+			).toBe(true);
+		});
+
+		test('changing only the annotation type is modified and reports the new type', () => {
+			const row = modified(
+				diffSteps(
+					[{ text: 'Bake.', annotation: tip('hot') }],
+					[{ text: 'Bake.', annotation: { type: 'warning', text: 'hot' } }]
+				)
+			);
+			expect(row.annotation).toMatchObject({ status: 'modified', type: 'warning' });
+		});
+
+		test('identical annotations stay unchanged', () => {
+			const list = [{ text: 'Bake.', annotation: tip('hot') }];
+			expect(diffSteps(list, list)[0].status).toBe('unchanged');
+		});
+
+		test('changed text and changed annotation both appear on one row', () => {
+			const row = modified(
+				diffSteps(
+					[{ text: 'Bake 10.', annotation: tip('a') }],
+					[{ text: 'Bake 12.', annotation: tip('b') }]
+				)
+			);
+			expect(row.segments.some((s) => s.type === 'added' && s.text.includes('12'))).toBe(true);
+			expect(row.annotation?.status).toBe('modified');
+		});
+	});
 });

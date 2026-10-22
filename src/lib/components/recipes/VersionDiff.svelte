@@ -78,6 +78,11 @@
 					<span class="diff-content">
 						{#if row.status === 'modified'}
 							{@render segments(row.segments, false)}
+							{#if row.annotation}
+								<span class="diff-annotation diff-{row.annotation.status}">
+									{row.annotation.type}: {@render segments(row.annotation.segments, false)}
+								</span>
+							{/if}
 						{:else}
 							{row.step.text}
 						{/if}
@@ -186,5 +191,11 @@
 	.diff-content .diff-removed + .diff-added,
 	.diff-content .diff-added + .diff-removed {
 		margin-left: 0.4em;
+	}
+
+	.diff-annotation {
+		display: block;
+		font-style: italic;
+		font-size: 0.9em;
 	}
 </style>

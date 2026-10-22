@@ -19,6 +19,7 @@ vi.mock('#lib/server/db/index.js', () => ({
 }));
 
 import { load } from './+page.server';
+import { parseIngredientLine as ing } from '#lib/recipes/ingredients.js';
 import type { PageData } from './$types';
 
 function chain(resolved: unknown = []) {
@@ -146,7 +147,7 @@ describe('homepage load', () => {
 		);
 		selectMock.mockReturnValueOnce(chain([]));
 
-		const sameIngredients = [{ amount: '1', unit: 'cup', name: 'flour' }];
+		const sameIngredients = [ing('1 cup flour')];
 		const sameSteps = [{ text: 'Mix.' }];
 
 		recipeVersionsFindManyMock
@@ -157,7 +158,7 @@ describe('homepage load', () => {
 			])
 			// Then for candidate C
 			.mockResolvedValueOnce([
-				{ ingredients: [{ amount: '2', unit: 'cup', name: 'flour' }], steps: sameSteps },
+				{ ingredients: [ing('2 cup flour')], steps: sameSteps },
 				{ ingredients: sameIngredients, steps: sameSteps }
 			]);
 
@@ -218,8 +219,8 @@ describe('homepage load', () => {
 		const versionChain = chain([{ recipeId: 9, count: 2 }]);
 		selectMock.mockReturnValueOnce(versionChain).mockReturnValueOnce(chain([]));
 		recipeVersionsFindManyMock.mockResolvedValue([
-			{ ingredients: [{ amount: '2', unit: 'cup', name: 'flour' }], steps: [], versionNumber: 2 },
-			{ ingredients: [{ amount: '1', unit: 'cup', name: 'flour' }], steps: [], versionNumber: 1 }
+			{ ingredients: [ing('2 cup flour')], steps: [], versionNumber: 2 },
+			{ ingredients: [ing('1 cup flour')], steps: [], versionNumber: 1 }
 		]);
 
 		const result = await loadResult({
@@ -248,18 +249,18 @@ describe('homepage load', () => {
 			)
 			.mockReturnValueOnce(chain([]));
 
-		const ing = [{ amount: '1', unit: 'cup', name: 'flour' }];
+		const flour = [ing('1 cup flour')];
 		recipeVersionsFindManyMock
 			// Newer, and changes MORE rows — but every one of them is a step.
 			.mockResolvedValueOnce([
 				{
 					versionNumber: 2,
-					ingredients: ing,
+					ingredients: flour,
 					steps: [{ text: 'One changed.' }, { text: 'Two changed.' }, { text: 'Three changed.' }]
 				},
 				{
 					versionNumber: 1,
-					ingredients: ing,
+					ingredients: flour,
 					steps: [{ text: 'One.' }, { text: 'Two.' }, { text: 'Three.' }]
 				}
 			])
@@ -267,10 +268,10 @@ describe('homepage load', () => {
 			.mockResolvedValueOnce([
 				{
 					versionNumber: 2,
-					ingredients: [{ amount: '2', unit: 'cup', name: 'flour' }],
+					ingredients: [ing('2 cup flour')],
 					steps: [{ text: 'One changed.' }]
 				},
-				{ versionNumber: 1, ingredients: ing, steps: [{ text: 'One.' }] }
+				{ versionNumber: 1, ingredients: flour, steps: [{ text: 'One.' }] }
 			]);
 
 		const result = await loadResult({
@@ -294,13 +295,13 @@ describe('homepage load', () => {
 			{
 				versionNumber: 3,
 				commitMessage: 'Chill the dough',
-				ingredients: [{ amount: '½', unit: 'cup', name: 'sugar' }],
+				ingredients: [ing('½ cup sugar')],
 				steps: []
 			},
 			{
 				versionNumber: 2,
 				commitMessage: 'Increased vanilla',
-				ingredients: [{ amount: '¾', unit: 'cup', name: 'sugar' }],
+				ingredients: [ing('¾ cup sugar')],
 				steps: []
 			}
 		]);
@@ -343,28 +344,21 @@ describe('homepage load', () => {
 			.mockResolvedValueOnce([
 				{
 					versionNumber: 2,
-					ingredients: [{ amount: '2', unit: 'tsp', name: 'vanilla' }],
+					ingredients: [ing('2 tsp vanilla')],
 					steps
 				},
-				{ versionNumber: 1, ingredients: [{ amount: '1', unit: 'tsp', name: 'vanilla' }], steps }
+				{ versionNumber: 1, ingredients: [ing('1 tsp vanilla')], steps }
 			])
 			// Candidate 2 is older but rewrites three ingredients and a step.
 			.mockResolvedValueOnce([
 				{
 					versionNumber: 2,
-					ingredients: [
-						{ amount: '½', unit: 'cup', name: 'sugar' },
-						{ amount: '1', unit: 'cup', name: 'brown sugar' },
-						{ amount: '1', unit: 'tsp', name: 'flaky salt' }
-					],
+					ingredients: [ing('½ cup sugar'), ing('1 cup brown sugar'), ing('1 tsp flaky salt')],
 					steps: [{ text: 'Chill the dough overnight.' }]
 				},
 				{
 					versionNumber: 1,
-					ingredients: [
-						{ amount: '¾', unit: 'cup', name: 'sugar' },
-						{ amount: '¾', unit: 'cup', name: 'brown sugar' }
-					],
+					ingredients: [ing('¾ cup sugar'), ing('¾ cup brown sugar')],
 					steps
 				}
 			]);
@@ -392,8 +386,8 @@ describe('homepage load', () => {
 			.mockReturnValueOnce(chain([]));
 
 		const pair = (name: string) => [
-			{ versionNumber: 2, ingredients: [{ amount: '2', unit: 'tsp', name }], steps: [] },
-			{ versionNumber: 1, ingredients: [{ amount: '1', unit: 'tsp', name }], steps: [] }
+			{ versionNumber: 2, ingredients: [ing(`2 tsp ${name}`)], steps: [] },
+			{ versionNumber: 1, ingredients: [ing(`1 tsp ${name}`)], steps: [] }
 		];
 		recipeVersionsFindManyMock
 			.mockResolvedValueOnce(pair('vanilla'))
