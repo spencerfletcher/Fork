@@ -1,113 +1,111 @@
 import { error } from '@sveltejs/kit';
-import type { Ingredient, Step, StepAnnotationType } from './types.js';
+import { z } from 'zod';
+import type { Ingredient, Step } from './types.js';
 
-const ANNOTATION_TYPES: readonly StepAnnotationType[] = ['tip', 'warning', 'substitution'];
+// Largest value a Postgres `integer` column holds.
+const INT4_MAX = 2_147_483_647;
 
-export type RecipeMeta = {
-	title: string;
-	description: string | null;
-	servings: number | null;
-	prepTimeMinutes: number | null;
-	cookTimeMinutes: number | null;
-	isPublic: boolean;
-	tagNames: string[];
-};
+/** A whole number from a text input: blank is absent, otherwise digits only within [min, INT4_MAX]. */
+const optionalInt = (min: number, label: string) =>
+	z
+		.string()
+		.trim()
+		.regex(/^\d*$/, `${label} must be a whole number`)
+		.transform((s) => (s === '' ? null : Number(s)))
+		.pipe(
+			z
+				.number()
+				.min(min, `${label} must be at least ${min}`)
+				.max(INT4_MAX, `${label} is too large`)
+				.nullable()
+		);
 
-export type RecipeContent = {
-	ingredients: Ingredient[];
-	steps: Step[];
-};
+const metaSchema = z.object({
+	title: z.string().trim().min(1, 'Title is required'),
+	description: z
+		.string()
+		.trim()
+		.transform((s) => s || null),
+	servings: optionalInt(1, 'Servings'),
+	prepTimeMinutes: optionalInt(0, 'Prep time'),
+	cookTimeMinutes: optionalInt(0, 'Cook time'),
+	isPublic: z.boolean(),
+	tagNames: z.array(z.string())
+});
+
+const ingredientSchema = z.object({
+	amount: z.string().trim().default(''),
+	unit: z.string().trim().default(''),
+	name: z.string().trim().min(1, 'Each ingredient needs a name')
+});
+
+const annotationSchema = z.object({
+	type: z.enum(['tip', 'warning', 'substitution'], 'Unknown annotation type'),
+	text: z.string().trim()
+});
+
+const stepSchema = z.object({
+	text: z.string().trim().min(1, 'Each step needs text'),
+	annotation: annotationSchema.optional()
+});
+
+// Steps are renumbered from 1 and keep only known fields. An annotation the
+// editor added but left blank is dropped rather than rejected.
+const stepsSchema = z
+	.array(stepSchema)
+	.min(1, 'At least one step is required')
+	.transform((steps) =>
+		steps.map(({ text, annotation }, i): Step => {
+			const step: Step = { step: i + 1, text };
+			if (annotation?.text) step.annotation = annotation;
+			return step;
+		})
+	);
+
+const contentSchema = z.object({
+	ingredients: z.array(ingredientSchema).min(1, 'At least one ingredient is required'),
+	steps: stepsSchema
+});
+
+export type RecipeMeta = z.output<typeof metaSchema>;
+export type RecipeContent = { ingredients: Ingredient[]; steps: Step[] };
 
 function text(formData: FormData, key: string): string {
 	const value = formData.get(key);
-	return typeof value === 'string' ? value.trim() : '';
+	return typeof value === 'string' ? value : '';
 }
 
-function int(value: string, min: number, label: string): number | null {
-	if (!value) return null;
-	if (!/^\d+$/.test(value) || Number(value) < min) {
-		throw error(400, `${label} must be a whole number of at least ${min}`);
+function json(formData: FormData, key: string): unknown {
+	try {
+		return JSON.parse(text(formData, key));
+	} catch {
+		throw error(400, 'Invalid ingredient or step data');
 	}
-	return Number(value);
+}
+
+function parse<T>(schema: z.ZodType<T>, input: unknown): T {
+	const result = schema.safeParse(input);
+	if (!result.success) throw error(400, result.error.issues[0].message);
+	return result.data;
 }
 
 /** Recipe metadata (the in-place-edited `recipes` row), from a submitted form. */
 export function parseRecipeMeta(formData: FormData): RecipeMeta {
-	const title = text(formData, 'title');
-	if (!title) throw error(400, 'Title is required');
-
-	return {
-		title,
-		description: text(formData, 'description') || null,
-		servings: int(text(formData, 'servings'), 1, 'Servings'),
-		prepTimeMinutes: int(text(formData, 'prepTimeMinutes'), 0, 'Prep time'),
-		cookTimeMinutes: int(text(formData, 'cookTimeMinutes'), 0, 'Cook time'),
+	return parse(metaSchema, {
+		title: text(formData, 'title'),
+		description: text(formData, 'description'),
+		servings: text(formData, 'servings'),
+		prepTimeMinutes: text(formData, 'prepTimeMinutes'),
+		cookTimeMinutes: text(formData, 'cookTimeMinutes'),
 		isPublic: formData.get('isPublic') === 'on',
 		tagNames: formData.getAll('tags').filter((t): t is string => typeof t === 'string')
-	};
-}
-
-function isObject(value: unknown): value is Record<string, unknown> {
-	return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
-function str(value: unknown): string {
-	return typeof value === 'string' ? value.trim() : '';
-}
-
-function isAnnotationType(value: unknown): value is StepAnnotationType {
-	return typeof value === 'string' && (ANNOTATION_TYPES as readonly string[]).includes(value);
-}
-
-/**
- * Rebuilds steps from client-submitted JSON: numbers them from 1 and keeps
- * only known fields. Throws 400 on a step that is not an object or has no
- * text. An annotation survives only with a known type and non-empty text,
- * since it comes from the client and is rendered to readers.
- */
-function normalizeSteps(raw: unknown[]): Step[] {
-	return raw.map((s, i) => {
-		if (!isObject(s)) throw error(400, `Step ${i + 1} is invalid`);
-		const text = str(s.text);
-		if (!text) throw error(400, `Step ${i + 1} needs text`);
-		const step: Step = { step: i + 1, text };
-		if (isObject(s.annotation)) {
-			const type = s.annotation.type;
-			const note = str(s.annotation.text);
-			if (isAnnotationType(type) && note) step.annotation = { type, text: note };
-		}
-		return step;
 	});
-}
-
-function parseIngredient(raw: unknown, i: number): Ingredient {
-	if (!isObject(raw)) throw error(400, `Ingredient ${i + 1} is invalid`);
-	const name = str(raw.name);
-	if (!name) throw error(400, `Ingredient ${i + 1} needs a name`);
-	return {
-		amount: str(raw.amount),
-		unit: str(raw.unit),
-		name
-	};
 }
 
 /** Versioned recipe content (ingredients and steps), from JSON fields in a submitted form. */
 export function parseRecipeContent(formData: FormData): RecipeContent {
-	let ingredients: unknown;
-	let steps: unknown;
-	try {
-		ingredients = JSON.parse(text(formData, 'ingredients'));
-		steps = JSON.parse(text(formData, 'steps'));
-	} catch {
-		throw error(400, 'Invalid ingredient or step data');
-	}
-
-	if (!Array.isArray(ingredients) || ingredients.length === 0) {
-		throw error(400, 'At least one ingredient is required');
-	}
-	if (!Array.isArray(steps) || steps.length === 0) {
-		throw error(400, 'At least one step is required');
-	}
-
-	return { ingredients: ingredients.map(parseIngredient), steps: normalizeSteps(steps) };
+	return parse(contentSchema, {
+		ingredients: json(formData, 'ingredients'),
+		steps: json(formData, 'steps')
+	});
 }

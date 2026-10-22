@@ -9,6 +9,8 @@ function form(fields: Record<string, string | string[]>): FormData {
 	return fd;
 }
 
+const rejects = expect.objectContaining({ status: 400 });
+
 describe('parseRecipeMeta', () => {
 	test('parses all metadata fields', () => {
 		const result = parseRecipeMeta(
@@ -33,9 +35,8 @@ describe('parseRecipeMeta', () => {
 		});
 	});
 
-	test('defaults optional fields to null, false and empty', () => {
-		const result = parseRecipeMeta(form({ title: 'Cookies', description: '  ', servings: '' }));
-		expect(result).toEqual({
+	test('treats missing optional fields as absent', () => {
+		expect(parseRecipeMeta(form({ title: 'Cookies' }))).toEqual({
 			title: 'Cookies',
 			description: null,
 			servings: null,
@@ -46,32 +47,44 @@ describe('parseRecipeMeta', () => {
 		});
 	});
 
-	test('throws 400 when title is missing', () => {
-		expect(() => parseRecipeMeta(form({ title: '  ' }))).toThrow(
-			expect.objectContaining({ status: 400 })
+	test('treats blank optional fields as absent', () => {
+		const result = parseRecipeMeta(
+			form({
+				title: 'Cookies',
+				description: '  ',
+				servings: '',
+				prepTimeMinutes: ' ',
+				cookTimeMinutes: ''
+			})
 		);
-		expect(() => parseRecipeMeta(form({}))).toThrow(expect.objectContaining({ status: 400 }));
+		expect(result).toMatchObject({
+			description: null,
+			servings: null,
+			prepTimeMinutes: null,
+			cookTimeMinutes: null
+		});
+	});
+
+	test('throws 400 when title is missing or blank', () => {
+		expect(() => parseRecipeMeta(form({ title: '  ' }))).toThrow(rejects);
+		expect(() => parseRecipeMeta(form({}))).toThrow(rejects);
 	});
 
 	describe('integer fields', () => {
-		const bad = ['x', '2.5', '4people', '-3'];
+		const bad = ['x', '2.5', '2.0', '4people', '-3', '1e2', '0x10', '+4'];
 
 		test.each(bad)('throws 400 on servings %j', (value) => {
-			expect(() => parseRecipeMeta(form({ title: 'Cookies', servings: value }))).toThrow(
-				expect.objectContaining({ status: 400 })
-			);
+			expect(() => parseRecipeMeta(form({ title: 'Cookies', servings: value }))).toThrow(rejects);
 		});
 
 		test.each(bad)('throws 400 on prep time %j', (value) => {
 			expect(() => parseRecipeMeta(form({ title: 'Cookies', prepTimeMinutes: value }))).toThrow(
-				expect.objectContaining({ status: 400 })
+				rejects
 			);
 		});
 
 		test('throws 400 on zero servings', () => {
-			expect(() => parseRecipeMeta(form({ title: 'Cookies', servings: '0' }))).toThrow(
-				expect.objectContaining({ status: 400 })
-			);
+			expect(() => parseRecipeMeta(form({ title: 'Cookies', servings: '0' }))).toThrow(rejects);
 		});
 
 		test('keeps zero prep and cook time', () => {
@@ -81,11 +94,25 @@ describe('parseRecipeMeta', () => {
 			expect(result.prepTimeMinutes).toBe(0);
 			expect(result.cookTimeMinutes).toBe(0);
 		});
+
+		test('trims surrounding whitespace', () => {
+			expect(parseRecipeMeta(form({ title: 'Cookies', servings: ' 4 ' })).servings).toBe(4);
+		});
+
+		test('throws 400 above the integer column limit', () => {
+			expect(parseRecipeMeta(form({ title: 'Cookies', servings: '2147483647' })).servings).toBe(
+				2147483647
+			);
+			expect(() => parseRecipeMeta(form({ title: 'Cookies', servings: '2147483648' }))).toThrow(
+				rejects
+			);
+		});
 	});
 });
 
 describe('parseRecipeContent', () => {
 	const ingredients = JSON.stringify([{ amount: '1', unit: 'cup', name: 'flour' }]);
+	const steps = JSON.stringify([{ text: 'Mix.' }]);
 
 	test('parses ingredients and normalizes steps', () => {
 		const result = parseRecipeContent(
@@ -98,31 +125,27 @@ describe('parseRecipeContent', () => {
 	});
 
 	test('throws 400 on invalid JSON', () => {
-		expect(() => parseRecipeContent(form({ ingredients: '{bad', steps: '[]' }))).toThrow(
-			expect.objectContaining({ status: 400 })
-		);
+		expect(() => parseRecipeContent(form({ ingredients: '{bad', steps }))).toThrow(rejects);
+		expect(() => parseRecipeContent(form({ ingredients, steps: '{bad' }))).toThrow(rejects);
 	});
 
-	test('throws 400 when ingredients are empty', () => {
-		expect(() =>
-			parseRecipeContent(form({ ingredients: '[]', steps: JSON.stringify([{ text: 'Mix.' }]) }))
-		).toThrow(expect.objectContaining({ status: 400 }));
-	});
-
-	test('throws 400 when steps are empty', () => {
-		expect(() => parseRecipeContent(form({ ingredients, steps: '[]' }))).toThrow(
-			expect.objectContaining({ status: 400 })
-		);
+	test('throws 400 when a list is missing, not an array, or empty', () => {
+		expect(() => parseRecipeContent(form({ steps }))).toThrow(rejects);
+		expect(() => parseRecipeContent(form({ ingredients: '{}', steps }))).toThrow(rejects);
+		expect(() => parseRecipeContent(form({ ingredients: '[]', steps }))).toThrow(rejects);
+		expect(() => parseRecipeContent(form({ ingredients }))).toThrow(rejects);
+		expect(() => parseRecipeContent(form({ ingredients, steps: '"Mix."' }))).toThrow(rejects);
+		expect(() => parseRecipeContent(form({ ingredients, steps: '[]' }))).toThrow(rejects);
 	});
 
 	describe('steps', () => {
-		function steps(raw: unknown[]) {
+		function stepsOf(raw: unknown[]) {
 			return parseRecipeContent(form({ ingredients, steps: JSON.stringify(raw) })).steps;
 		}
 
 		test('renumbers steps sequentially from 1', () => {
 			expect(
-				steps([
+				stepsOf([
 					{ step: 4, text: 'Mix.' },
 					{ step: 9, text: 'Bake.' }
 				])
@@ -132,53 +155,53 @@ describe('parseRecipeContent', () => {
 			]);
 		});
 
+		test('trims step text', () => {
+			expect(stepsOf([{ text: '  Mix.  ' }])).toEqual([{ step: 1, text: 'Mix.' }]);
+		});
+
 		test('keeps a valid annotation', () => {
-			const result = steps([
+			const result = stepsOf([
 				{ step: 1, text: 'Bake.', annotation: { type: 'warning', text: 'Oven runs hot.' } }
 			]);
 			expect(result[0].annotation).toEqual({ type: 'warning', text: 'Oven runs hot.' });
 		});
 
 		test('trims annotation text', () => {
-			const result = steps([
+			const result = stepsOf([
 				{ step: 1, text: 'Bake.', annotation: { type: 'tip', text: '  Use parchment.  ' } }
 			]);
 			expect(result[0].annotation).toEqual({ type: 'tip', text: 'Use parchment.' });
 		});
 
-		test('drops an annotation with empty text', () => {
-			const result = steps([{ step: 1, text: 'Bake.', annotation: { type: 'tip', text: '   ' } }]);
+		test('drops an annotation the editor added but left blank', () => {
+			const result = stepsOf([
+				{ step: 1, text: 'Bake.', annotation: { type: 'tip', text: '   ' } }
+			]);
 			expect(result[0]).toEqual({ step: 1, text: 'Bake.' });
-		});
-
-		test('drops an annotation with an unknown type', () => {
-			const result = steps([{ step: 1, text: 'Bake.', annotation: { type: 'script', text: 'x' } }]);
-			expect(result[0]).toEqual({ step: 1, text: 'Bake.' });
-		});
-
-		test('drops an annotation that is not an object', () => {
-			expect(steps([{ text: 'Bake.', annotation: 'tip' }])).toEqual([{ step: 1, text: 'Bake.' }]);
 		});
 
 		test('ignores fields other than step text and annotation', () => {
-			const result = steps([{ step: 1, text: 'Bake.', injected: true }]);
+			const result = stepsOf([{ step: 1, text: 'Bake.', injected: true }]);
 			expect(result[0]).toEqual({ step: 1, text: 'Bake.' });
 		});
 
-		test('throws 400 on a null step', () => {
-			expect(() => steps([null])).toThrow(expect.objectContaining({ status: 400 }));
-		});
-
-		test('throws 400 on a step without string text', () => {
-			expect(() => steps([{ text: 42 }])).toThrow(expect.objectContaining({ status: 400 }));
+		test.each([
+			['an unknown annotation type', { text: 'Bake.', annotation: { type: 'script', text: 'x' } }],
+			['a non-object annotation', { text: 'Bake.', annotation: 'tip' }],
+			['non-string annotation text', { text: 'Bake.', annotation: { type: 'tip', text: 1 } }],
+			['a null step', null],
+			['a string step', 'Bake.'],
+			['a step without text', {}],
+			['blank step text', { text: '   ' }],
+			['non-string step text', { text: 42 }]
+		])('throws 400 on %s', (_, step) => {
+			expect(() => stepsOf([step])).toThrow(rejects);
 		});
 	});
 
 	describe('ingredients', () => {
 		function ingredientsOf(raw: unknown[]) {
-			return parseRecipeContent(
-				form({ ingredients: JSON.stringify(raw), steps: JSON.stringify([{ text: 'Mix.' }]) })
-			).ingredients;
+			return parseRecipeContent(form({ ingredients: JSON.stringify(raw), steps })).ingredients;
 		}
 
 		test('passes a full ingredient through unchanged', () => {
@@ -197,30 +220,22 @@ describe('parseRecipeContent', () => {
 			]);
 		});
 
-		test('drops a non-string amount', () => {
-			expect(ingredientsOf([{ amount: 1, unit: 'cup', name: 'flour' }])).toEqual([
-				{ amount: '', unit: 'cup', name: 'flour' }
-			]);
-		});
-
 		test('ignores fields other than amount, unit and name', () => {
 			expect(ingredientsOf([{ name: 'flour', injected: true }])).toEqual([
 				{ amount: '', unit: '', name: 'flour' }
 			]);
 		});
 
-		test('throws 400 on a null ingredient', () => {
-			expect(() => ingredientsOf([null])).toThrow(expect.objectContaining({ status: 400 }));
-		});
-
-		test('throws 400 on an ingredient without a name', () => {
-			expect(() => ingredientsOf([{}])).toThrow(expect.objectContaining({ status: 400 }));
-		});
-
-		test('throws 400 on a blank name', () => {
-			expect(() => ingredientsOf([{ name: '  ' }])).toThrow(
-				expect.objectContaining({ status: 400 })
-			);
+		test.each([
+			['a null ingredient', null],
+			['a string ingredient', 'flour'],
+			['an ingredient without a name', {}],
+			['a blank name', { name: '  ' }],
+			['a non-string name', { name: 1 }],
+			['a non-string amount', { amount: 1, unit: 'cup', name: 'flour' }],
+			['a non-string unit', { amount: '1', unit: ['cup'], name: 'flour' }]
+		])('throws 400 on %s', (_, ingredient) => {
+			expect(() => ingredientsOf([ingredient])).toThrow(rejects);
 		});
 	});
 });
