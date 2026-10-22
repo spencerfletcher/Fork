@@ -109,8 +109,8 @@ Grammar:
 
 1. Normalise `\r\n` to `\n`, trim the whole text.
 2. Split into blocks on one or more blank lines (a line is blank if it is empty after trimming).
-3. Within a block, a line whose trimmed form starts with `tip:`, `warning:`, `substitution:` or `note:` (case-insensitive) is an annotation line. `note:` maps to type `tip`. The remaining text after the colon, trimmed, is the annotation text. Only the last annotation line in a block is kept; earlier ones are folded into the step text as written. Empty annotation text means no annotation.
-4. Every other line in the block, joined with `\n`, trimmed, is the step text. A block with no step text (annotation only) is dropped.
+3. Within a block, a line after the first whose trimmed form starts with `tip:`, `warning:`, `substitution:` or `note:` (case-insensitive) is an annotation line. The first line of a block is always step text, so a step that happens to begin with `tip:` is never swallowed. `note:` maps to type `tip`. The text after the colon, trimmed, is the annotation text. Only the last annotation line in a block is kept; earlier ones stay in the step text as written. Empty annotation text means no annotation.
+4. Every other line in the block, joined with `\n`, trimmed, is the step text.
 5. Steps are numbered from 1 in order.
 
 Example:
@@ -128,7 +128,7 @@ warning: Oven runs hot, check at 10.
 
 gives three steps; the first has a two-line text, the second a tip, the third a warning.
 
-Inverse, for loading into the editor: each step's text, then its annotation as `type: text` on its own line if present, blocks joined with a blank line. Builder exports it from the same module so the round trip has one test.
+Inverse, for loading into the editor: each step's text, then its annotation as `type: text` on its own line if present, blocks joined with a blank line. Old data can contain what the grammar cannot express, so the inverse sanitises: blank lines inside a step's text collapse to one newline, and newlines inside annotation text become spaces. Reopening an old recipe and saving unchanged must produce the same steps after that sanitisation, and the round-trip test asserts exactly that. Builder exports the inverse from the same module.
 
 ## Validation
 
@@ -163,12 +163,18 @@ Inverse, for loading into the editor: each step's text, then its annotation as `
 
 ## Readers of `Ingredient` and `Step`
 
-- `RecipeIngredients.svelte`: prints `text` only, one line per ingredient, replacing the amount-plus-unit span and name. Gram toggle: when grams are shown and the converter returned a value, print the gram value in place of the line's leading quantity is not required; print `Ng · text` or similar. Builder's call, keep it simple.
-- `api/convert-to-grams`: accepts the new shape, uses `quantity` directly and drops its own `parseAmount`. Returns `null` for ingredients with `quantity === null` or empty `unit`. Its request validation changes to match. Must still accept old-shape rows if the recipe page ever sends them; the backfill at load time makes that moot, so it may require the new shape.
+- `RecipeIngredients.svelte`: prints `text` only, one line per ingredient, replacing the amount-plus-unit span and name, and keys the `#each` on index rather than name. Gram toggle: when grams are shown and the converter returned a value, print it before the line, `120g · text` or similar; builder's call. An approximate value is prefixed `≈` with a `title` explaining it, and when any shown value is approximate a one-line note under the list says whole-item weights are estimates, not a source of truth.
+- `api/convert-to-grams`: accepts the new shape, uses `quantity` directly and drops its own `parseAmount`. Returns `null` only for `quantity === null`. Three layers, in order:
+  1. Volume units: the existing density table, then Spoonacular, as today.
+  2. Count lines (empty unit): a new per-item table in `src/lib/server/ingredientDensities.ts` or beside it, grams per whole item, matched on name the same way the density table matches, longest key wins. Seed it with egg 50, egg white 33, egg yolk 18, and a dozen common produce items; builder's list. Result is `quantity × grams`.
+  3. Count lines not in that table: Spoonacular with `sourceUnit: 'piece'`. One call per such line per page load, cached on the page as today. Each result carries whether it is an estimate: `{ grams, approximate }` or `null` per ingredient instead of a bare number. Layers 2 and 3 are approximate; layer 1 is not marked. Request validation changes to the new shape; the backfill at load time means old rows never reach it.
 - `diff.ts` `diffIngredients`: keys on `name`, compares `quantity`, `quantity2` and `unit` instead of `amount` and `unit`. The modified row's inline diff compares `text` strings. Unparsed lines have the whole line as name, so edits read as removed plus added. Accepted.
 - `VersionDiff.svelte`: prints `text` for ingredient rows.
 - `RecipeMethod.svelte`: renders multi-line step text with line breaks. Annotation rendering unchanged.
 - `diff.ts` `diffSteps`: unchanged; text with newlines diffs as text.
+- Fork action in `src/routes/recipes/[slug]/+page.server.ts` copies `latestVersion.ingredients` raw into the new recipe's first version. It must backfill first so forks of old recipes are written in the new shape.
+- Search's raw SQL reads `ing->>'name'`, which both shapes have. No change.
+- `VersionDiff.svelte` step rows get the same line-break rendering as `RecipeMethod`.
 - Seed script: writes the new ingredient shape. Builder may generate it by running the existing amount-unit-name triples through the backfill helper.
 
 ## Tests
@@ -176,10 +182,10 @@ Inverse, for loading into the editor: each step's text, then its annotation as `
 Order: server first, then components, then e2e.
 
 1. `ingredients.test.ts`: every row of the table; `\r\n`; blank and whitespace lines dropped; leading and trailing whitespace; the backfill helper on an old-shape row and on a new-shape row (no-op).
-2. `steps.test.ts`: the example above; `note:` maps to tip; case-insensitive keyword; annotation with empty text dropped; annotation-only block dropped; multiple blank lines between blocks; a step with internal newlines; round trip through the inverse function.
+2. `steps.test.ts`: the example above; `note:` maps to tip; case-insensitive keyword; annotation with empty text dropped; a block whose first line starts with `tip:` is step text; multiple blank lines between blocks; a step with internal newlines; round trip through the inverse, including an old step containing a blank line and an annotation containing a newline.
 3. `validation.test.ts`: text reaches each parser; empty or whitespace-only text fails with the existing messages; the old JSON-shape tests are removed.
 4. `diff.test.ts`: an old-shape list and its backfilled new-shape equivalent diff as unchanged; a quantity change shows as modified.
-5. `convert-to-grams` server test: unparsed ingredient yields `null`.
+5. `convert-to-grams` server test: unparsed ingredient yields `null`; a count line in the per-item table yields `quantity × grams` marked approximate; a count line not in the table calls Spoonacular with `piece`; a volume line is not marked approximate.
 6. `IngredientEditor.svelte.test.ts`: value renders; an unparsable line appears in the note; fixing it clears the note; binding updates.
 7. `StepEditor.svelte.test.ts`: value renders; hint present; binding updates.
 8. Page component tests: edit page initialises both textareas from a version, including an old-shape ingredient; existing error and state tests still pass with the new fields.
@@ -198,4 +204,5 @@ Order: server first, then components, then e2e.
 - Names now carry whatever follows the unit, including notes like `, for topping`. The ingredient diff keys on name, so a changed note reads as a replaced ingredient. Accepted.
 - Users who typed `large` as a size in a unit box before get `large` in the name after backfill, since backfill reparses the joined text. Correct per the strict decision.
 - parse-ingredient's unit list is the library's. If a future version changes it, backfilled old rows could reparse differently. Pin the exact version.
-- A step whose first line happens to start with `tip:` becomes an annotation-only block and is dropped. Documented in the hint; acceptable.
+- Per-item gram weights ignore size words: `2 large eggs` and `2 eggs` both use the `egg` entry unless the table also has `large egg`. Values are marked approximate in the UI for this reason.
+- Spoonacular `piece` conversions are a guess by a third party. Also marked approximate, and bounded by the existing rate limit and daily cap.
