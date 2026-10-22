@@ -11,9 +11,12 @@
 
 	const currentTagNames = $derived(recipe.recipesToTags?.map((r) => r.tag.name) ?? []);
 
+	// The editor works on a local copy of the loaded version, so only the initial value is wanted.
+	// svelte-ignore state_referenced_locally
 	let ingredients = $state<Ingredient[]>(
 		data.latestVersion?.ingredients ?? [{ amount: '', unit: '', name: '' }]
 	);
+	// svelte-ignore state_referenced_locally
 	let steps = $state<Step[]>(data.latestVersion?.steps ?? [{ step: 1, text: '' }]);
 
 	let ingredientsInput: HTMLInputElement;
@@ -28,6 +31,8 @@
 	// A success redirects away, so neither needs resetting here.
 	let submitting = $state<'meta' | 'content' | null>(null);
 	let metaDirty = $state(false);
+	// The initial value is the point: it is the saved baseline that dirty-checking compares against.
+	// svelte-ignore state_referenced_locally
 	const savedContent = JSON.stringify({ ingredients, steps });
 	const contentDirty = $derived(JSON.stringify({ ingredients, steps }) !== savedContent);
 
