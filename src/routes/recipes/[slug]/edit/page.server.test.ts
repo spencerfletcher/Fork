@@ -100,8 +100,8 @@ const OWNER = { id: 'owner-123', email: 'owner@test.com' };
 const OTHER = { id: 'other-456', email: 'other@test.com' };
 const RECIPE = { id: 1, authorId: 'owner-123', slug: 'test-slug' };
 
-const VALID_INGREDIENTS = JSON.stringify([{ amount: '2', unit: 'cups', name: 'flour' }]);
-const VALID_STEPS = JSON.stringify([{ step: 1, text: 'Mix everything.' }]);
+const VALID_INGREDIENTS = '2 cups flour';
+const VALID_STEPS = 'Mix everything.';
 
 // ─── saveMeta ─────────────────────────────────────────────────────────────────
 
@@ -236,39 +236,26 @@ describe('saveVersion', () => {
 		expect(result.data).toEqual({ error: expect.any(String), section: 'content' });
 	});
 
-	test('fails with 400 when ingredients JSON is invalid', async () => {
+	test('fails with 400 when ingredients text is empty', async () => {
 		findRecipeMock.mockResolvedValue(RECIPE);
 		const result = await invoke(
 			actions.saveVersion as never,
 			makeEvent({
 				user: OWNER,
-				fields: { commitMessage: 'fix', ingredients: 'not-json', steps: VALID_STEPS }
+				fields: { commitMessage: 'fix', ingredients: '', steps: VALID_STEPS }
 			})
 		);
 		expect(result.status).toBe(400);
 		expect(result.data).toEqual({ error: expect.any(String), section: 'content' });
 	});
 
-	test('fails with 400 when ingredients array is empty', async () => {
+	test('fails with 400 when steps text is empty', async () => {
 		findRecipeMock.mockResolvedValue(RECIPE);
 		const result = await invoke(
 			actions.saveVersion as never,
 			makeEvent({
 				user: OWNER,
-				fields: { commitMessage: 'fix', ingredients: '[]', steps: VALID_STEPS }
-			})
-		);
-		expect(result.status).toBe(400);
-		expect(result.data).toEqual({ error: expect.any(String), section: 'content' });
-	});
-
-	test('fails with 400 when steps array is empty', async () => {
-		findRecipeMock.mockResolvedValue(RECIPE);
-		const result = await invoke(
-			actions.saveVersion as never,
-			makeEvent({
-				user: OWNER,
-				fields: { commitMessage: 'fix', ingredients: VALID_INGREDIENTS, steps: '[]' }
+				fields: { commitMessage: 'fix', ingredients: VALID_INGREDIENTS, steps: '' }
 			})
 		);
 		expect(result.status).toBe(400);
@@ -321,29 +308,25 @@ describe('saveVersion', () => {
 		expect(inserted.createdBy).toBe(OWNER.id);
 	});
 
-	test('normalizes step numbers to be sequential', async () => {
+	test('splits step text into one step per block', async () => {
 		findRecipeMock.mockResolvedValue(RECIPE);
 		const tx = makeTx({ maxVer: 0 });
 		transactionMock.mockImplementationOnce(
 			async (cb: (tx: ReturnType<typeof makeTx>) => Promise<void>) => cb(tx)
 		);
 
-		const messedUpSteps = JSON.stringify([
-			{ step: 5, text: 'First' },
-			{ step: 10, text: 'Second' }
-		]);
+		const twoSteps = 'First\n\nSecond';
 
 		await invoke(
 			actions.saveVersion as never,
 			makeEvent({
 				user: OWNER,
-				fields: { commitMessage: 'fix steps', ingredients: VALID_INGREDIENTS, steps: messedUpSteps }
+				fields: { commitMessage: 'fix steps', ingredients: VALID_INGREDIENTS, steps: twoSteps }
 			})
 		);
 
 		const inserted = tx.insertChain.values.mock.calls[0][0];
-		expect(inserted.steps[0].step).toBe(1);
-		expect(inserted.steps[1].step).toBe(2);
+		expect(inserted.steps).toEqual([{ text: 'First' }, { text: 'Second' }]);
 	});
 
 	test('keeps step annotations in the saved version', async () => {
@@ -353,9 +336,7 @@ describe('saveVersion', () => {
 			async (cb: (tx: ReturnType<typeof makeTx>) => Promise<void>) => cb(tx)
 		);
 
-		const annotated = JSON.stringify([
-			{ step: 1, text: 'Bake.', annotation: { type: 'warning', text: 'Oven runs hot.' } }
-		]);
+		const annotated = 'Bake.\nwarning: Oven runs hot.';
 
 		await invoke(
 			actions.saveVersion as never,

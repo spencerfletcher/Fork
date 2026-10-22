@@ -1,5 +1,7 @@
 import { z } from 'zod';
 import type { Ingredient, Step } from './types.js';
+import { parseIngredientText } from './ingredients.js';
+import { parseStepText } from './steps.js';
 
 // Largest value a Postgres `integer` column holds.
 const INT4_MAX = 2_147_483_647;
@@ -32,40 +34,15 @@ const metaSchema = z.object({
 	tagNames: z.array(z.string())
 });
 
-const ingredientSchema = z.object({
-	amount: z.string().trim().default(''),
-	unit: z.string().trim().default(''),
-	name: z.string().trim().min(1, 'Each ingredient needs a name')
-});
-
-const annotationSchema = z.object({
-	type: z.enum(['tip', 'warning', 'substitution'], 'Unknown annotation type'),
-	text: z.string().trim()
-});
-
-const stepSchema = z.object({
-	text: z.string().trim().min(1, 'Each step needs text'),
-	annotation: annotationSchema.optional()
-});
-
-// Steps are renumbered from 1 and keep only known fields. An annotation the
-// editor added but left blank is dropped rather than rejected.
-const stepsSchema = z
-	.array(stepSchema, 'Invalid step data')
-	.min(1, 'At least one step is required')
-	.transform((steps) =>
-		steps.map(({ text, annotation }, i): Step => {
-			const step: Step = { step: i + 1, text };
-			if (annotation?.text) step.annotation = annotation;
-			return step;
-		})
-	);
-
 const contentSchema = z.object({
 	ingredients: z
-		.array(ingredientSchema, 'Invalid ingredient data')
-		.min(1, 'At least one ingredient is required'),
-	steps: stepsSchema
+		.string()
+		.transform(parseIngredientText)
+		.pipe(z.array(z.custom<Ingredient>()).min(1, 'At least one ingredient is required')),
+	steps: z
+		.string()
+		.transform(parseStepText)
+		.pipe(z.array(z.custom<Step>()).min(1, 'At least one step is required'))
 });
 
 export type RecipeMeta = z.output<typeof metaSchema>;
@@ -77,15 +54,6 @@ export type Result<T> = { ok: true; value: T } | { ok: false; error: string };
 function text(formData: FormData, key: string): string {
 	const value = formData.get(key);
 	return typeof value === 'string' ? value : '';
-}
-
-// Malformed JSON becomes undefined, which the schema rejects with its own message.
-function json(formData: FormData, key: string): unknown {
-	try {
-		return JSON.parse(text(formData, key));
-	} catch {
-		return undefined;
-	}
 }
 
 function parse<T>(schema: z.ZodType<T>, input: unknown): Result<T> {
@@ -108,10 +76,10 @@ export function parseRecipeMeta(formData: FormData): Result<RecipeMeta> {
 	});
 }
 
-/** Versioned recipe content (ingredients and steps), from JSON fields in a submitted form. */
+/** Versioned recipe content (ingredients and steps), from text fields in a submitted form. */
 export function parseRecipeContent(formData: FormData): Result<RecipeContent> {
 	return parse(contentSchema, {
-		ingredients: json(formData, 'ingredients'),
-		steps: json(formData, 'steps')
+		ingredients: text(formData, 'ingredients'),
+		steps: text(formData, 'steps')
 	});
 }

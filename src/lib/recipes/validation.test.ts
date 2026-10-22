@@ -116,131 +116,46 @@ describe('parseRecipeMeta', () => {
 });
 
 describe('parseRecipeContent', () => {
-	const ingredients = JSON.stringify([{ amount: '1', unit: 'cup', name: 'flour' }]);
-	const steps = JSON.stringify([{ text: 'Mix.' }]);
+	const ingredients = '2¼ cups all-purpose flour\n2 large eggs';
+	const steps = 'Mix.\n\nBake.\ntip: watch it';
 
-	test('parses ingredients and normalizes steps', () => {
-		const result = unwrap(
-			content({ ingredients, steps: JSON.stringify([{ step: 7, text: 'Mix.' }]) })
-		);
-		expect(result).toEqual({
-			ingredients: [{ amount: '1', unit: 'cup', name: 'flour' }],
-			steps: [{ step: 1, text: 'Mix.' }]
+	test('parses ingredient and step text', () => {
+		const value = unwrap(content({ ingredients, steps }));
+		expect(value.ingredients.map((i) => i.text)).toEqual([
+			'2¼ cups all-purpose flour',
+			'2 large eggs'
+		]);
+		expect(value.steps).toEqual([
+			{ text: 'Mix.' },
+			{ text: 'Bake.', annotation: { type: 'tip', text: 'watch it' } }
+		]);
+	});
+
+	test('an unparsable ingredient line is kept, not rejected', () => {
+		expect(unwrap(content({ ingredients: 'salt to taste', steps })).ingredients[0]).toMatchObject({
+			quantity: null,
+			name: 'salt to taste'
 		});
 	});
 
-	test('rejects invalid JSON', () => {
-		expect(content({ ingredients: '{bad', steps })).toEqual(rejected);
-		expect(content({ ingredients, steps: '{bad' })).toEqual(rejected);
-	});
-
-	test('rejects when a list is missing, not an array, or empty', () => {
-		expect(content({ steps })).toEqual(rejected);
-		expect(content({ ingredients: '{}', steps })).toEqual(rejected);
-		expect(content({ ingredients: '[]', steps })).toEqual(rejected);
-		expect(content({ ingredients })).toEqual(rejected);
-		expect(content({ ingredients, steps: '"Mix."' })).toEqual(rejected);
-		expect(content({ ingredients, steps: '[]' })).toEqual(rejected);
-	});
-
-	describe('steps', () => {
-		function stepsOf(raw: unknown[]) {
-			return unwrap(content({ ingredients, steps: JSON.stringify(raw) })).steps;
-		}
-
-		test('renumbers steps sequentially from 1', () => {
-			expect(
-				stepsOf([
-					{ step: 4, text: 'Mix.' },
-					{ step: 9, text: 'Bake.' }
-				])
-			).toEqual([
-				{ step: 1, text: 'Mix.' },
-				{ step: 2, text: 'Bake.' }
-			]);
-		});
-
-		test('trims step text', () => {
-			expect(stepsOf([{ text: '  Mix.  ' }])).toEqual([{ step: 1, text: 'Mix.' }]);
-		});
-
-		test('keeps a valid annotation', () => {
-			const result = stepsOf([
-				{ step: 1, text: 'Bake.', annotation: { type: 'warning', text: 'Oven runs hot.' } }
-			]);
-			expect(result[0].annotation).toEqual({ type: 'warning', text: 'Oven runs hot.' });
-		});
-
-		test('trims annotation text', () => {
-			const result = stepsOf([
-				{ step: 1, text: 'Bake.', annotation: { type: 'tip', text: '  Use parchment.  ' } }
-			]);
-			expect(result[0].annotation).toEqual({ type: 'tip', text: 'Use parchment.' });
-		});
-
-		test('drops an annotation the editor added but left blank', () => {
-			const result = stepsOf([
-				{ step: 1, text: 'Bake.', annotation: { type: 'tip', text: '   ' } }
-			]);
-			expect(result[0]).toEqual({ step: 1, text: 'Bake.' });
-		});
-
-		test('ignores fields other than step text and annotation', () => {
-			const result = stepsOf([{ step: 1, text: 'Bake.', injected: true }]);
-			expect(result[0]).toEqual({ step: 1, text: 'Bake.' });
-		});
-
-		test.each([
-			['an unknown annotation type', { text: 'Bake.', annotation: { type: 'script', text: 'x' } }],
-			['a non-object annotation', { text: 'Bake.', annotation: 'tip' }],
-			['non-string annotation text', { text: 'Bake.', annotation: { type: 'tip', text: 1 } }],
-			['a null step', null],
-			['a string step', 'Bake.'],
-			['a step without text', {}],
-			['blank step text', { text: '   ' }],
-			['non-string step text', { text: 42 }]
-		])('rejects %s', (_, step) => {
-			expect(content({ ingredients, steps: JSON.stringify([step]) })).toEqual(rejected);
+	test.each(['', '   \n\n'])('rejects ingredients %j with the existing message', (value) => {
+		expect(content({ ingredients: value, steps })).toEqual({
+			ok: false,
+			error: 'At least one ingredient is required'
 		});
 	});
 
-	describe('ingredients', () => {
-		function ingredientsOf(raw: unknown[]) {
-			return unwrap(content({ ingredients: JSON.stringify(raw), steps })).ingredients;
-		}
-
-		test('passes a full ingredient through unchanged', () => {
-			expect(ingredientsOf([{ amount: 'to taste', unit: '', name: 'salt' }])).toEqual([
-				{ amount: 'to taste', unit: '', name: 'salt' }
-			]);
+	test.each(['', '   \n\n'])('rejects steps %j with the existing message', (value) => {
+		expect(content({ ingredients, steps: value })).toEqual({
+			ok: false,
+			error: 'At least one step is required'
 		});
+	});
 
-		test('defaults missing amount and unit to empty strings', () => {
-			expect(ingredientsOf([{ name: 'salt' }])).toEqual([{ amount: '', unit: '', name: 'salt' }]);
-		});
-
-		test('trims string fields', () => {
-			expect(ingredientsOf([{ amount: ' 1 ', unit: ' cup ', name: ' flour ' }])).toEqual([
-				{ amount: '1', unit: 'cup', name: 'flour' }
-			]);
-		});
-
-		test('ignores fields other than amount, unit and name', () => {
-			expect(ingredientsOf([{ name: 'flour', injected: true }])).toEqual([
-				{ amount: '', unit: '', name: 'flour' }
-			]);
-		});
-
-		test.each([
-			['a null ingredient', null],
-			['a string ingredient', 'flour'],
-			['an ingredient without a name', {}],
-			['a blank name', { name: '  ' }],
-			['a non-string name', { name: 1 }],
-			['a non-string amount', { amount: 1, unit: 'cup', name: 'flour' }],
-			['a non-string unit', { amount: '1', unit: ['cup'], name: 'flour' }]
-		])('rejects %s', (_, ingredient) => {
-			expect(content({ ingredients: JSON.stringify([ingredient]), steps })).toEqual(rejected);
+	test('a missing field is treated as empty text', () => {
+		expect(content({ steps })).toEqual({
+			ok: false,
+			error: 'At least one ingredient is required'
 		});
 	});
 });
