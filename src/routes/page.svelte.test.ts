@@ -47,7 +47,8 @@ describe('/+page.svelte', () => {
 			stepDiff: [
 				{
 					status: 'added' as const,
-					step: { step: 7, text: 'Garnish with fresh cilantro.' }
+					stepNumber: 7,
+					step: { text: 'Garnish with fresh cilantro.' }
 				}
 			]
 		};

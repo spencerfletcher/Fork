@@ -25,19 +25,20 @@
 <section class="mb-3">
 	<h4 class="eyebrow-label border-text mb-1 border-t-2 pt-3">Method</h4>
 	<div class="m-0 flex flex-col p-0" role="list">
-		{#each steps as step (step.step)}
+		{#each steps as step, i (i)}
+			{@const n = i + 1}
 			<div
 				class="border-border grid cursor-pointer [grid-template-columns:48px_1fr] items-start gap-2 border-b py-4 select-none [&:last-child]:border-b-0"
-				class:opacity-40={crossedSteps.has(step.step)}
-				class:line-through={crossedSteps.has(step.step)}
-				onclick={() => toggleStep(step.step)}
+				class:opacity-40={crossedSteps.has(n)}
+				class:line-through={crossedSteps.has(n)}
+				onclick={() => toggleStep(n)}
 				role="checkbox"
-				aria-checked={crossedSteps.has(step.step)}
+				aria-checked={crossedSteps.has(n)}
 				tabindex="0"
-				onkeydown={(e) => e.key === ' ' && toggleStep(step.step)}
+				onkeydown={(e) => e.key === ' ' && toggleStep(n)}
 			>
 				<span class="text-sienna pt-[2px] font-mono text-[1.5rem] leading-[1.6] font-medium">
-					{zeroPad(step.step)}
+					{zeroPad(n)}
 				</span>
 				<div class="flex flex-col gap-3">
 					<p class="text-text m-0 font-sans text-base leading-[1.75]">{step.text}</p>

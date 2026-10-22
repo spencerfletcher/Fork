@@ -17,7 +17,7 @@
 		data.latestVersion?.ingredients ?? [{ amount: '', unit: '', name: '' }]
 	);
 	// svelte-ignore state_referenced_locally
-	let steps = $state<Step[]>(data.latestVersion?.steps ?? [{ step: 1, text: '' }]);
+	let steps = $state<Step[]>(data.latestVersion?.steps ?? [{ text: '' }]);
 
 	let ingredientsInput: HTMLInputElement;
 	let stepsInput: HTMLInputElement;

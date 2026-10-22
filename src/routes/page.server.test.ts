@@ -147,7 +147,7 @@ describe('homepage load', () => {
 		selectMock.mockReturnValueOnce(chain([]));
 
 		const sameIngredients = [{ amount: '1', unit: 'cup', name: 'flour' }];
-		const sameSteps = [{ step: 1, text: 'Mix.' }];
+		const sameSteps = [{ text: 'Mix.' }];
 
 		recipeVersionsFindManyMock
 			// Called for candidate B first (withCounts preserves findMany order)
@@ -255,20 +255,12 @@ describe('homepage load', () => {
 				{
 					versionNumber: 2,
 					ingredients: ing,
-					steps: [
-						{ step: 1, text: 'One changed.' },
-						{ step: 2, text: 'Two changed.' },
-						{ step: 3, text: 'Three changed.' }
-					]
+					steps: [{ text: 'One changed.' }, { text: 'Two changed.' }, { text: 'Three changed.' }]
 				},
 				{
 					versionNumber: 1,
 					ingredients: ing,
-					steps: [
-						{ step: 1, text: 'One.' },
-						{ step: 2, text: 'Two.' },
-						{ step: 3, text: 'Three.' }
-					]
+					steps: [{ text: 'One.' }, { text: 'Two.' }, { text: 'Three.' }]
 				}
 			])
 			// Older and smaller, but both panels move.
@@ -276,9 +268,9 @@ describe('homepage load', () => {
 				{
 					versionNumber: 2,
 					ingredients: [{ amount: '2', unit: 'cup', name: 'flour' }],
-					steps: [{ step: 1, text: 'One changed.' }]
+					steps: [{ text: 'One changed.' }]
 				},
-				{ versionNumber: 1, ingredients: ing, steps: [{ step: 1, text: 'One.' }] }
+				{ versionNumber: 1, ingredients: ing, steps: [{ text: 'One.' }] }
 			]);
 
 		const result = await loadResult({
@@ -345,7 +337,7 @@ describe('homepage load', () => {
 			)
 			.mockReturnValueOnce(chain([]));
 
-		const steps = [{ step: 1, text: 'Mix.' }];
+		const steps = [{ text: 'Mix.' }];
 		// Candidate 1 is newer and does differ — one ingredient amount.
 		recipeVersionsFindManyMock
 			.mockResolvedValueOnce([
@@ -365,7 +357,7 @@ describe('homepage load', () => {
 						{ amount: '1', unit: 'cup', name: 'brown sugar' },
 						{ amount: '1', unit: 'tsp', name: 'flaky salt' }
 					],
-					steps: [{ step: 1, text: 'Chill the dough overnight.' }]
+					steps: [{ text: 'Chill the dough overnight.' }]
 				},
 				{
 					versionNumber: 1,

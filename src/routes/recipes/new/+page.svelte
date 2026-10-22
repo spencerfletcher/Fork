@@ -12,7 +12,7 @@
 
 	let imagePreview = $state<string | null>(null);
 	let ingredients = $state<Ingredient[]>([{ amount: '', unit: '', name: '' }]);
-	let steps = $state<Step[]>([{ step: 1, text: '' }]);
+	let steps = $state<Step[]>([{ text: '' }]);
 
 	let ingredientsInput: HTMLInputElement;
 	let stepsInput: HTMLInputElement;

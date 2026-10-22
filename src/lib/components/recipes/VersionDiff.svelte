@@ -72,10 +72,8 @@
 					{@render gutter(row.status)}
 					<!-- A removed step has no position in the new version, so numbering it
 					     would imply the steps after it had shifted. -->
-					{#if row.status === 'modified'}
+					{#if row.status !== 'removed'}
 						<span class="step-num">{row.stepNumber}</span>
-					{:else if row.status !== 'removed'}
-						<span class="step-num">{row.step.step}</span>
 					{/if}
 					<span class="diff-content">
 						{#if row.status === 'modified'}

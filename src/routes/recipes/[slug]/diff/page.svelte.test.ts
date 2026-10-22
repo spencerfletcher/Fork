@@ -132,7 +132,7 @@ describe('Diff page', () => {
 
 	test('added step row shows the step number', () => {
 		const data = makeData({
-			stepDiff: [{ status: 'added', step: { step: 3, text: 'Stir in chips.' } }]
+			stepDiff: [{ status: 'added', stepNumber: 3, step: { text: 'Stir in chips.' } }]
 		});
 		const { container } = render(DiffPage, { props: { data } });
 		// Step number circle should render inside the diff row
@@ -143,7 +143,7 @@ describe('Diff page', () => {
 
 	test('removed step row does not show a step number circle', () => {
 		const data = makeData({
-			stepDiff: [{ status: 'removed', step: { step: 2, text: 'Old step.' } }]
+			stepDiff: [{ status: 'removed', step: { text: 'Old step.' } }]
 		});
 		const { container } = render(DiffPage, { props: { data } });
 		// Per the component: {#if row.status !== 'removed'}<span class="step-num">

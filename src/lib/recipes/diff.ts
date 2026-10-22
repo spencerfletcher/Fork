@@ -12,8 +12,11 @@ export type IngredientDiffRow =
 	| { status: 'added' | 'removed' | 'unchanged'; ingredient: Ingredient }
 	| { status: 'modified'; segments: InlineSegment[] };
 
+// Steps are numbered by position. A removed step has no position in the new
+// version, so it carries none.
 export type StepDiffRow =
-	| { status: 'added' | 'removed' | 'unchanged'; step: Step }
+	| { status: 'added' | 'unchanged'; stepNumber: number; step: Step }
+	| { status: 'removed'; step: Step }
 	| { status: 'modified'; stepNumber: number; segments: InlineSegment[] };
 
 export function diffInline(a: string, b: string): InlineSegment[] {
@@ -65,37 +68,32 @@ export function diffIngredients(from: Ingredient[], to: Ingredient[]): Ingredien
 }
 
 /**
- * Diff two step lists by step number.
+ * Diff two step lists by position.
  *
  * Known v1 limitations:
- * - Matching is by step number, not LCS on text.
+ * - Matching is by position, not LCS on text.
  * - Inserting a step in the middle causes cascade of apparent changes.
  * - LCS-based diffing deferred to v2.
  */
 export function diffSteps(from: Step[], to: Step[]): StepDiffRow[] {
 	const result: StepDiffRow[] = [];
 
-	const fromMap = new Map(from.map((s) => [s.step, s]));
-	const toMap = new Map(to.map((s) => [s.step, s]));
-
-	const allStepNumbers = new Set([...fromMap.keys(), ...toMap.keys()]);
-	const sorted = [...allStepNumbers].sort((a, b) => a - b);
-
-	for (const num of sorted) {
-		const fromStep = fromMap.get(num);
-		const toStep = toMap.get(num);
+	for (let i = 0; i < Math.max(from.length, to.length); i++) {
+		const fromStep = from[i];
+		const toStep = to[i];
+		const stepNumber = i + 1;
 
 		if (fromStep && !toStep) {
 			result.push({ status: 'removed', step: fromStep });
 		} else if (!fromStep && toStep) {
-			result.push({ status: 'added', step: toStep });
+			result.push({ status: 'added', stepNumber, step: toStep });
 		} else if (fromStep && toStep) {
 			if (fromStep.text === toStep.text) {
-				result.push({ status: 'unchanged', step: toStep });
+				result.push({ status: 'unchanged', stepNumber, step: toStep });
 			} else {
 				result.push({
 					status: 'modified',
-					stepNumber: toStep.step,
+					stepNumber,
 					segments: diffInline(fromStep.text, toStep.text)
 				});
 			}

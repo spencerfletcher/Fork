@@ -50,22 +50,18 @@ const COOKIE_INGREDIENTS_V2 = [
 ];
 
 const COOKIE_STEPS = [
-	{ step: 1, text: 'Preheat oven to 375°F (190°C). Line two baking sheets with parchment paper.' },
-	{ step: 2, text: 'Whisk flour, baking soda, and salt in a medium bowl. Set aside.' },
+	{ text: 'Preheat oven to 375°F (190°C). Line two baking sheets with parchment paper.' },
+	{ text: 'Whisk flour, baking soda, and salt in a medium bowl. Set aside.' },
 	{
-		step: 3,
 		text: 'Beat butter and both sugars with an electric mixer on medium speed until light and fluffy, about 3 minutes.'
 	},
 	{
-		step: 4,
 		text: 'Add eggs one at a time, beating well after each addition. Beat in vanilla extract.'
 	},
 	{
-		step: 5,
 		text: 'Gradually stir in the flour mixture until just combined. Fold in chocolate chips.'
 	},
 	{
-		step: 6,
 		text: 'Drop rounded tablespoons of dough onto prepared baking sheets. Bake 9–11 minutes until edges are golden. Cool on baking sheet for 5 minutes before transferring.'
 	}
 ];
@@ -96,22 +92,18 @@ const COOKIE_INGREDIENTS_V3 = [
 ];
 
 const COOKIE_STEPS_V3 = [
-	{ step: 1, text: 'Preheat oven to 375°F (190°C). Line two baking sheets with parchment paper.' },
-	{ step: 2, text: 'Whisk flour, baking soda, and salt in a medium bowl. Set aside.' },
+	{ text: 'Preheat oven to 375°F (190°C). Line two baking sheets with parchment paper.' },
+	{ text: 'Whisk flour, baking soda, and salt in a medium bowl. Set aside.' },
 	{
-		step: 3,
 		text: 'Beat butter and both sugars with an electric mixer on medium speed until light and fluffy, about 3 minutes.'
 	},
 	{
-		step: 4,
 		text: 'Add eggs one at a time, beating well after each addition. Beat in vanilla extract.'
 	},
 	{
-		step: 5,
 		text: 'Gradually stir in the flour mixture until just combined. Fold in chocolate chips, reserving a handful to press into the tops. Cover and chill the dough at least 2 hours — cold dough spreads less, so the extra brown sugar reads as chew rather than sprawl.'
 	},
 	{
-		step: 6,
 		text: 'Drop rounded tablespoons of chilled dough onto prepared baking sheets, pressing the reserved chips into the tops. Bake 9–11 minutes until edges are golden. Sprinkle with flaky sea salt while still hot, then cool on baking sheet for 5 minutes before transferring.'
 	}
 ];
@@ -132,24 +124,19 @@ const BROWN_BUTTER_INGREDIENTS = [
 
 const BROWN_BUTTER_STEPS = [
 	{
-		step: 1,
 		text: 'Melt butter in a light-colored saucepan over medium heat, stirring frequently. Cook until foam subsides and milk solids turn golden brown, about 5–7 minutes. It should smell nutty. Pour into a bowl and let cool 10 minutes.'
 	},
-	{ step: 2, text: 'Whisk flour, baking soda, and salt in a medium bowl. Set aside.' },
+	{ text: 'Whisk flour, baking soda, and salt in a medium bowl. Set aside.' },
 	{
-		step: 3,
 		text: 'Whisk brown butter, granulated sugar, and brown sugar together until combined. Add eggs one at a time, whisking well, then add vanilla and espresso powder.'
 	},
 	{
-		step: 4,
 		text: 'Fold in flour mixture until just combined, then fold in chocolate chips. Refrigerate dough for at least 30 minutes (or overnight for best results).'
 	},
 	{
-		step: 5,
 		text: 'Preheat oven to 375°F (190°C). Line baking sheets with parchment. Drop rounded tablespoons of dough 2 inches apart.'
 	},
 	{
-		step: 6,
 		text: 'Bake 9–11 minutes until edges are set. Immediately sprinkle with flaky sea salt. Cool on baking sheet 5 minutes before transferring.'
 	}
 ];
@@ -172,26 +159,21 @@ const TIKKA_INGREDIENTS_V1 = [
 
 const TIKKA_STEPS_V1 = [
 	{
-		step: 1,
 		text: 'Combine chicken with yogurt, lemon juice, garam masala, cumin, coriander, and turmeric. Marinate at least 1 hour or overnight in the fridge.'
 	},
 	{
-		step: 2,
 		text: 'Grill or broil marinated chicken until cooked through and lightly charred, about 8–10 minutes. Set aside.'
 	},
 	{
-		step: 3,
 		text: 'Melt butter in a large skillet over medium heat. Sauté onion until softened, about 5 minutes. Add garlic and ginger, cook 1 minute more.'
 	},
 	{
-		step: 4,
 		text: 'Add crushed tomatoes and remaining spices. Simmer 15 minutes, stirring occasionally, until sauce thickens.'
 	},
 	{
-		step: 5,
 		text: 'Add chicken to the sauce. Pour in cream and stir to combine. Simmer 10 minutes.'
 	},
-	{ step: 6, text: 'Serve over basmati rice with warm naan bread.' }
+	{ text: 'Serve over basmati rice with warm naan bread.' }
 ];
 
 const TIKKA_INGREDIENTS_V2 = [
@@ -222,27 +204,21 @@ const TIKKA_INGREDIENTS_V2 = [
 // everything after it into a cascade of false changes.
 const TIKKA_STEPS_V3 = [
 	{
-		step: 1,
 		text: 'Combine chicken with yogurt, lemon juice, garam masala, cumin, coriander, turmeric, and smoked paprika. Marinate at least 1 hour or overnight in the fridge.'
 	},
 	{
-		step: 2,
 		text: 'Grill or broil marinated chicken until cooked through and lightly charred, about 8–10 minutes. Set aside.'
 	},
 	{
-		step: 3,
 		text: 'Melt butter in a large skillet over medium heat. Sauté onion until softened, about 5 minutes. Add garlic and ginger, cook 1 minute more.'
 	},
 	{
-		step: 4,
 		text: 'Add crushed tomatoes and remaining spices. Simmer 15 minutes, stirring occasionally, until sauce thickens.'
 	},
 	{
-		step: 5,
 		text: 'Add chicken to the sauce. Pour in cream and stir to combine. Simmer 10 minutes, then stir in a final tablespoon of cold butter for richness and gloss.'
 	},
 	{
-		step: 6,
 		text: 'Serve over basmati rice with warm naan bread. Garnish with fresh cilantro.'
 	}
 ];

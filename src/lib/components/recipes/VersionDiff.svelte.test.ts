@@ -84,7 +84,7 @@ describe('VersionDiff', () => {
 	test('shows the step number on an added step', () => {
 		const { container } = renderDiff(
 			[],
-			[{ status: 'added', step: { step: 3, text: 'Fold gently.' } } as StepDiffRow]
+			[{ status: 'added', stepNumber: 3, step: { text: 'Fold gently.' } } as StepDiffRow]
 		);
 		expect(container.querySelector('.step-num')?.textContent?.trim()).toBe('3');
 		expect(screen.getByText('Fold gently.')).toBeInTheDocument();
@@ -95,7 +95,7 @@ describe('VersionDiff', () => {
 		// would imply the following steps had shifted.
 		const { container } = renderDiff(
 			[],
-			[{ status: 'removed', step: { step: 2, text: 'Chill overnight.' } } as StepDiffRow]
+			[{ status: 'removed', step: { text: 'Chill overnight.' } } as StepDiffRow]
 		);
 		expect(container.querySelector('.step-num')).toBeNull();
 		expect(screen.getByText('Chill overnight.')).toBeInTheDocument();
@@ -104,7 +104,7 @@ describe('VersionDiff', () => {
 	test('renders ingredient and step rows independently', () => {
 		const { container } = renderDiff(
 			[{ status: 'added', ingredient: ingredient('flour') } as IngredientDiffRow],
-			[{ status: 'removed', step: { step: 1, text: 'Preheat.' } } as StepDiffRow]
+			[{ status: 'removed', step: { text: 'Preheat.' } } as StepDiffRow]
 		);
 		// One section has content, so only one "No changes" placeholder remains.
 		expect(screen.queryAllByText('No changes')).toHaveLength(0);

@@ -117,7 +117,7 @@ const SOURCE_RECIPE = {
 			versionNumber: 1,
 			commitMessage: 'Initial recipe',
 			ingredients: [{ amount: '2', unit: 'cups', name: 'flour' }],
-			steps: [{ step: 1, text: 'Mix.' }]
+			steps: [{ text: 'Mix.' }]
 		}
 	],
 	recipesToTags: [{ tagId: 7 }]

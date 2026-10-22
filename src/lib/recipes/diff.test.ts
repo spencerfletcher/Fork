@@ -8,8 +8,8 @@ function ing(name: string, amount = '1', unit = 'cup'): Ingredient {
 	return { name, amount, unit };
 }
 
-function step(stepNum: number, text: string): Step {
-	return { step: stepNum, text };
+function step(text: string): Step {
+	return { text };
 }
 
 // ─── diffInline ───────────────────────────────────────────────────────────────
@@ -130,7 +130,7 @@ describe('diffIngredients', () => {
 
 describe('diffSteps', () => {
 	test('identical lists are all unchanged', () => {
-		const list = [step(1, 'Mix'), step(2, 'Bake'), step(3, 'Cool')];
+		const list = [step('Mix'), step('Bake'), step('Cool')];
 		const result = diffSteps(list, list);
 		expect(result).toHaveLength(3);
 		expect(result.every((r) => r.status === 'unchanged')).toBe(true);
@@ -141,22 +141,22 @@ describe('diffSteps', () => {
 	});
 
 	test('added step appears as added', () => {
-		const from = [step(1, 'Mix'), step(2, 'Bake')];
-		const to = [step(1, 'Mix'), step(2, 'Bake'), step(3, 'Cool')];
+		const from = [step('Mix'), step('Bake')];
+		const to = [step('Mix'), step('Bake'), step('Cool')];
 		const result = diffSteps(from, to);
-		expect(result).toContainEqual({ status: 'added', step: step(3, 'Cool') });
+		expect(result).toContainEqual({ status: 'added', stepNumber: 3, step: step('Cool') });
 	});
 
 	test('removed step appears as removed', () => {
-		const from = [step(1, 'Mix'), step(2, 'Bake'), step(3, 'Cool')];
-		const to = [step(1, 'Mix'), step(2, 'Bake')];
+		const from = [step('Mix'), step('Bake'), step('Cool')];
+		const to = [step('Mix'), step('Bake')];
 		const result = diffSteps(from, to);
-		expect(result).toContainEqual({ status: 'removed', step: step(3, 'Cool') });
+		expect(result).toContainEqual({ status: 'removed', step: step('Cool') });
 	});
 
-	test('changed text on same step number emits a single modified row', () => {
-		const from = [step(1, 'Bake at 350°F')];
-		const to = [step(1, 'Bake at 375°F')];
+	test('changed text at the same position emits a single modified row', () => {
+		const from = [step('Bake at 350°F')];
+		const to = [step('Bake at 375°F')];
 		const result = diffSteps(from, to);
 		expect(result).toHaveLength(1);
 		expect(result[0].status).toBe('modified');
@@ -171,17 +171,22 @@ describe('diffSteps', () => {
 		}
 	});
 
-	test('results are sorted by step number', () => {
-		const from = [step(1, 'A'), step(3, 'C')];
-		const to = [step(1, 'A'), step(2, 'B'), step(3, 'C')];
+	test('numbers rows by position, counting from 1', () => {
+		const from = [step('A'), step('B')];
+		const to = [step('A'), step('B'), step('C')];
 		const result = diffSteps(from, to);
-		const stepNums = result.map((r) => (r.status === 'modified' ? r.stepNumber : r.step.step));
+		const stepNums = result.map((r) => (r.status === 'removed' ? null : r.stepNumber));
 		expect(stepNums).toEqual([1, 2, 3]);
 	});
 
+	test('an unchanged step carries its position', () => {
+		const result = diffSteps([step('A')], [step('A')]);
+		expect(result).toEqual([{ status: 'unchanged', stepNumber: 1, step: step('A') }]);
+	});
+
 	test('single step list each side emits modified', () => {
-		const from = [step(1, 'old text')];
-		const to = [step(1, 'new text')];
+		const from = [step('old text')];
+		const to = [step('new text')];
 		const result = diffSteps(from, to);
 		expect(result).toHaveLength(1);
 		expect(result[0].status).toBe('modified');

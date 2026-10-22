@@ -7,11 +7,11 @@
 	let dragIndex = $state<number | null>(null);
 
 	function add() {
-		steps = [...steps, { step: steps.length + 1, text: '' }];
+		steps = [...steps, { text: '' }];
 	}
 
 	function remove(i: number) {
-		steps = steps.filter((_, idx) => idx !== i).map((s, idx) => ({ ...s, step: idx + 1 }));
+		steps = steps.filter((_, idx) => idx !== i);
 	}
 
 	function onDragStart(i: number) {
@@ -23,7 +23,7 @@
 		const updated = [...steps];
 		const [moved] = updated.splice(dragIndex, 1);
 		updated.splice(i, 0, moved);
-		steps = updated.map((s, idx) => ({ ...s, step: idx + 1 }));
+		steps = updated;
 		dragIndex = null;
 	}
 
