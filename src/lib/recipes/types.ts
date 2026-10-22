@@ -9,15 +9,16 @@ export type Ingredient = {
 	name: string;
 };
 
-export type StepAnnotationType = 'tip' | 'warning' | 'substitution';
+export const STEP_ANNOTATION_TYPES = ['tip', 'warning', 'substitution'] as const;
+export type StepAnnotationType = (typeof STEP_ANNOTATION_TYPES)[number];
 
 export type StepAnnotation = {
 	type: StepAnnotationType;
 	text: string;
 };
 
+// Steps are numbered by their position in the list.
 export type Step = {
-	step: number;
 	text: string;
 	annotation?: StepAnnotation;
 };

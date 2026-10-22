@@ -109,7 +109,7 @@ Grammar:
 
 1. Normalise `\r\n` to `\n`, trim the whole text.
 2. Split into blocks on one or more blank lines (a line is blank if it is empty after trimming).
-3. Within a block, a line after the first whose trimmed form starts with `tip:`, `warning:`, `substitution:` or `note:` (case-insensitive) is an annotation line. The first line of a block is always step text, so a step that happens to begin with `tip:` is never swallowed. `note:` maps to type `tip`. The text after the colon, trimmed, is the annotation text. Only the last annotation line in a block is kept; earlier ones stay in the step text as written. Empty annotation text means no annotation.
+3. Within a block, a line after the first whose trimmed form starts with `tip:`, `warning:` or `substitution:` (case-insensitive) is an annotation line. The first line of a block is always step text, so a step that happens to begin with `tip:` is never swallowed. The text after the colon, trimmed, is the annotation text. Only the last annotation line in a block is kept; earlier ones stay in the step text as written. Empty annotation text means no annotation.
 4. Every other line in the block, joined with `\n`, trimmed, is the step text.
 5. Steps are numbered from 1 in order.
 
