@@ -2,7 +2,9 @@
 // recipe_versions; these describe the shape of that JSON on both client and server.
 
 export type Ingredient = {
-	amount: string;
+	text: string;
+	quantity: number | null;
+	quantity2: number | null;
 	unit: string;
 	name: string;
 };

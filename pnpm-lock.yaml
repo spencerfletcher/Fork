@@ -29,6 +29,9 @@ importers:
       nanoid:
         specifier: ^6.0.2
         version: 6.0.2
+      parse-ingredient:
+        specifier: 3.0.0
+        version: 3.0.0
       postgres:
         specifier: ^3.4.9
         version: 3.4.9
@@ -1980,6 +1983,10 @@ packages:
   natural-compare@1.4.0:
     resolution: {integrity: sha512-OWND8ei3VtNC9h7V60qff3SVobHr996CTwgxubgyQYEpg290h9J0buyECNNJexkFm5sOajh5G116RYA1c8ZMSw==}
 
+  numeric-quantity@3.3.3:
+    resolution: {integrity: sha512-XICjnIs8Q8vUlOvVOFI8Xe3kte8fknfpzASHjwy4R2GtRm4Q5lI+d62JqFe54X4kqj/xdsucWxYe8G+OD9O8Uw==}
+    engines: {node: '>=16'}
+
   obug@2.2.1:
     resolution: {integrity: sha512-XrsrhT5sybtKI6wakr2SPOlGZWWYbUXZ7a0jT8/QOeAPau+1X/bSegNe5YR75oJmEZQbKningirmGOEJCIk61Q==}
     engines: {node: '>=12.20.0'}
@@ -1999,6 +2006,10 @@ packages:
   p-locate@5.0.0:
     resolution: {integrity: sha512-LaNjtRWUBY++zB5nE/NwcaoMylSPk+S+ZHNB1TzdbMJMny6dynpAGt7X/tl/QYq3TIeE6nxHppbo2LGymrG5Pw==}
     engines: {node: '>=10'}
+
+  parse-ingredient@3.0.0:
+    resolution: {integrity: sha512-1pmfoDfK2i/rE2jIBmGfcATDGEoCvYD98hClaMKzKsh11VNdgQzX44hs1YW1R7dgy0fO08VkNiK5+3isNlYbZA==}
+    engines: {node: '>=20'}
 
   parse5@8.0.1:
     resolution: {integrity: sha512-z1e/HMG90obSGeidlli3hj7cbocou0/wa5HacvI3ASx34PecNjNQeaHNo5WIZpWofN9kgkqV1q5YvXe3F0FoPw==}
@@ -4002,6 +4013,8 @@ snapshots:
 
   natural-compare@1.4.0: {}
 
+  numeric-quantity@3.3.3: {}
+
   obug@2.2.1: {}
 
   obug@3.0.0: {}
@@ -4022,6 +4035,10 @@ snapshots:
   p-locate@5.0.0:
     dependencies:
       p-limit: 3.1.0
+
+  parse-ingredient@3.0.0:
+    dependencies:
+      numeric-quantity: 3.3.3
 
   parse5@8.0.1:
     dependencies:
