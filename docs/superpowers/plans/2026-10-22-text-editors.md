@@ -385,6 +385,81 @@ git commit -m "Diff ingredients by quantity and text, normalizing old rows on lo
 
 ---
 
+### Task 4b: Step annotation diff
+
+**Files:**
+
+- Modify: `src/lib/recipes/diff.ts:15-17, 75-110`
+- Modify: `src/lib/recipes/diff.test.ts` (the `diffSteps` block)
+- Modify: `src/lib/components/recipes/VersionDiff.svelte:69-90`
+- Test: `src/lib/components/recipes/VersionDiff.svelte.test.ts`
+
+**Interfaces:**
+
+- Consumes: `Step`, `StepAnnotation`, `diffInline`.
+- Produces:
+
+  ```ts
+  export type AnnotationDiff = {
+  	status: 'added' | 'removed' | 'modified';
+  	type: StepAnnotationType; // the `to` type, or the `from` type when removed
+  	segments: InlineSegment[];
+  };
+  export type StepDiffRow =
+  	| { status: 'added' | 'removed' | 'unchanged'; step: Step }
+  	| {
+  			status: 'modified';
+  			stepNumber: number;
+  			segments: InlineSegment[];
+  			annotation?: AnnotationDiff;
+  	  };
+  ```
+
+  A step is `modified` when its text differs or its annotation differs (type or text, added or removed). When only the annotation changed, `segments` is `diffInline(text, text)` (all unchanged) and `annotation` is set. A changed annotation type with the same text is `modified` with all-unchanged segments and the new `type`.
+
+- [ ] **Step 1: Write the failing tests**
+
+```ts
+test('adding an annotation marks the step modified with unchanged text segments', () => {
+	const from = [step(1, 'Bake.')];
+	const to = [{ ...step(1, 'Bake.'), annotation: { type: 'tip' as const, text: 'watch it' } }];
+	const [row] = diffSteps(from, to);
+	expect(row).toMatchObject({ status: 'modified', stepNumber: 1, annotation: { status: 'added', type: 'tip' } });
+	if (row.status === 'modified') {
+		expect(row.segments.every((s) => s.type === 'unchanged')).toBe(true);
+		expect(row.annotation?.segments).toEqual([{ type: 'added', text: 'watch it' }]);
+	}
+});
+test('removing an annotation is modified with a removed annotation diff', ...); // annotation.status 'removed', segments [{ removed, 'watch it' }]
+test('editing annotation text inline-diffs the annotation only', ...);     // 'watch it' → 'watch it closely': annotation.status 'modified', a segment added 'closely'
+test('changing only the annotation type is modified', ...);                 // tip → warning, same text: annotation.status 'modified', type 'warning'
+test('identical annotations stay unchanged', ...);
+test('changed text and changed annotation both appear on one row', ...);
+```
+
+`VersionDiff.svelte.test.ts`: a modified row with `annotation: { status: 'added', type: 'tip', segments }` renders the annotation text under the step with the `diff-added` class on its wrapper; a row without `annotation` renders no annotation line.
+
+- [ ] **Step 2: Run to verify failure**
+
+Run: `pnpm test:unit --run src/lib/recipes/diff src/lib/components/recipes/VersionDiff`. Expected: FAIL, `annotation` undefined.
+
+- [ ] **Step 3: Implement**
+
+In `diffSteps`, replace the `fromStep.text === toStep.text` check with `textSame && annotationSame`, where `annotationSame` compares `type` and `text` of both annotations or both absent. Build `annotation` via a small `diffAnnotation(from?: StepAnnotation, to?: StepAnnotation): AnnotationDiff | undefined` in the same file: `added` with `diffInline('', to.text)`, `removed` with `diffInline(from.text, '')`, `modified` with `diffInline(from.text, to.text)`, `undefined` when equal. In `VersionDiff.svelte`, under a modified step's content, render `{#if row.annotation}<span class="diff-annotation diff-{row.annotation.status}">{row.annotation.type}: {@render segments(row.annotation.segments, false)}</span>{/if}`, styled like `RecipeMethod`'s annotation line (italic, smaller) with the existing `diff-*` colouring.
+
+- [ ] **Step 4: Run to verify pass**
+
+Run: same command. Expected: PASS.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add src/lib/recipes/diff.ts src/lib/recipes/diff.test.ts src/lib/components/recipes/VersionDiff.svelte src/lib/components/recipes/VersionDiff.svelte.test.ts
+git commit -m "Show step annotation changes in the version diff"
+```
+
+---
+
 ### Task 5: Gram converter with a per-item layer and approximate flag
 
 **Files:**
