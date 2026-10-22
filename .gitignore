@@ -39,3 +39,6 @@ e2e/.auth/
 
 # Local docs
 docs/todo/*
+
+# Plan execution scratch (ledgers, briefs)
+.superpowers/
