@@ -175,11 +175,25 @@ Two people editing one recipe is currently last-write-wins. Mostly delivered by 
 
 ---
 
+# M10 — Drizzle-generated migrations (half day)
+
+`schema.ts` is the source of truth for types, but migrations are still SQL written by hand in `supabase/migrations/`, so the two can drift. Move to `drizzle-kit generate` plus `drizzle-kit migrate`: the schema diff produces the SQL, which is reviewed and committed like any other change. `drizzle-kit push` stays banned; it applies changes with no file and no history.
+
+Steps, in order:
+
+1. Stop `drizzle.config.ts` loading `.env.local` with `override: true`, so `migrate` cannot silently target the wrong database.
+2. Generate a baseline migration from the current `schema.ts` and mark it applied on local and prod by hand, so `migrate` does not try to recreate tables.
+3. Decide whether the existing `supabase/migrations/` chain stays as history or is folded into `drizzle/`. Two live chains is not an option.
+4. Express RLS policies in `schema.ts` where Drizzle supports them; use `generate --custom` for one-off SQL such as data cleanups.
+5. CI: after `supabase start`, run `drizzle-kit migrate`, and keep the from-empty replay check.
+
+---
+
 ## Working agreements
 
 These are the ones this project has already been bitten by. They are enforced in CI now, so following them is cheaper than working around them.
 
 - Schema changes go through a migration file in `supabase/migrations/`. `supabase start` replays the chain from empty on every push, so a broken migration fails CI.
 - Tests before implementation: server logic, then component, then e2e.
-- Never `drizzle-kit push` at production. `drizzle.config.ts` loads `.env.local` with `override: true`, so it silently targets localhost.
+- Never `drizzle-kit push`, anywhere. It changes a database with no migration file, and `drizzle.config.ts` loads `.env.local` with `override: true`, so it can target a different database than you expect. M10 moves migrations to `drizzle-kit generate`.
 - Do not add a feature to the README until it exists. The README's "Not built" section is the honest record.

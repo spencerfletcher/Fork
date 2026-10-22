@@ -12,6 +12,9 @@ Full-stack recipe platform with git-style version control for recipes. Stack: Sv
 
 ## Database
 
+- Drizzle is the ORM: write queries with it, and keep `src/lib/server/db/schema.ts` as the typed source of truth for every table
+- Schema changes edit `schema.ts` and add a hand-written SQL migration in `supabase/migrations/` in the same commit (`supabase migration new <name>`)
+- Never use `drizzle-kit push`: it changes a database with no migration file, and `drizzle.config.ts` loads `.env.local` so it can hit the wrong database. `drizzle-kit generate` is unused until the migration chain moves to Drizzle (roadmap M10)
 - Never modify the schema without a migration file
 - Migrations are one-way — no rollback scripts means you need to get it right
 - Version history is append-only by design — don't add any logic that mutates past versions
