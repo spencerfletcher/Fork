@@ -47,6 +47,10 @@ function isObject(value: unknown): value is Record<string, unknown> {
 	return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+function str(value: unknown): string {
+	return typeof value === 'string' ? value.trim() : '';
+}
+
 function isAnnotationType(value: unknown): value is StepAnnotationType {
 	return typeof value === 'string' && (ANNOTATION_TYPES as readonly string[]).includes(value);
 }
@@ -72,6 +76,17 @@ function normalizeSteps(raw: unknown[]): Step[] {
 	});
 }
 
+function parseIngredient(raw: unknown, i: number): Ingredient {
+	if (!isObject(raw)) throw error(400, `Ingredient ${i + 1} is invalid`);
+	const name = str(raw.name);
+	if (!name) throw error(400, `Ingredient ${i + 1} needs a name`);
+	return {
+		amount: str(raw.amount),
+		unit: str(raw.unit),
+		name
+	};
+}
+
 /** Versioned recipe content (ingredients and steps), from JSON fields in a submitted form. */
 export function parseRecipeContent(formData: FormData): RecipeContent {
 	let ingredients: unknown;
@@ -90,5 +105,5 @@ export function parseRecipeContent(formData: FormData): RecipeContent {
 		throw error(400, 'At least one step is required');
 	}
 
-	return { ingredients, steps: normalizeSteps(steps) };
+	return { ingredients: ingredients.map(parseIngredient), steps: normalizeSteps(steps) };
 }

@@ -143,4 +143,54 @@ describe('parseRecipeContent', () => {
 			expect(() => steps([{ text: 42 }])).toThrow(expect.objectContaining({ status: 400 }));
 		});
 	});
+
+	describe('ingredients', () => {
+		function ingredientsOf(raw: unknown[]) {
+			return parseRecipeContent(
+				form({ ingredients: JSON.stringify(raw), steps: JSON.stringify([{ text: 'Mix.' }]) })
+			).ingredients;
+		}
+
+		test('passes a full ingredient through unchanged', () => {
+			expect(ingredientsOf([{ amount: 'to taste', unit: '', name: 'salt' }])).toEqual([
+				{ amount: 'to taste', unit: '', name: 'salt' }
+			]);
+		});
+
+		test('defaults missing amount and unit to empty strings', () => {
+			expect(ingredientsOf([{ name: 'salt' }])).toEqual([{ amount: '', unit: '', name: 'salt' }]);
+		});
+
+		test('trims string fields', () => {
+			expect(ingredientsOf([{ amount: ' 1 ', unit: ' cup ', name: ' flour ' }])).toEqual([
+				{ amount: '1', unit: 'cup', name: 'flour' }
+			]);
+		});
+
+		test('drops a non-string amount', () => {
+			expect(ingredientsOf([{ amount: 1, unit: 'cup', name: 'flour' }])).toEqual([
+				{ amount: '', unit: 'cup', name: 'flour' }
+			]);
+		});
+
+		test('ignores fields other than amount, unit and name', () => {
+			expect(ingredientsOf([{ name: 'flour', injected: true }])).toEqual([
+				{ amount: '', unit: '', name: 'flour' }
+			]);
+		});
+
+		test('throws 400 on a null ingredient', () => {
+			expect(() => ingredientsOf([null])).toThrow(expect.objectContaining({ status: 400 }));
+		});
+
+		test('throws 400 on an ingredient without a name', () => {
+			expect(() => ingredientsOf([{}])).toThrow(expect.objectContaining({ status: 400 }));
+		});
+
+		test('throws 400 on a blank name', () => {
+			expect(() => ingredientsOf([{ name: '  ' }])).toThrow(
+				expect.objectContaining({ status: 400 })
+			);
+		});
+	});
 });
