@@ -459,6 +459,17 @@
 		gap: var(--space-4);
 	}
 
+	.form-actions {
+		display: flex;
+		align-items: center;
+		gap: var(--space-4);
+	}
+
+	.form-hint {
+		font-size: 0.875rem;
+		color: var(--color-text-3);
+	}
+
 	.inline-checkbox {
 		display: flex;
 		align-items: center;

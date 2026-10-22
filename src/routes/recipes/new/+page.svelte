@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
+	import { enhance, type SubmitFunction } from '$app/forms';
 	import type { PageData, ActionData } from './$types';
 	import type { Ingredient, Step } from '#lib/recipes/types.js';
 	import TagInput from '#lib/components/ui/TagInput.svelte';
@@ -34,6 +34,18 @@
 		ingredientsInput.value = JSON.stringify(ingredients);
 		stepsInput.value = JSON.stringify(steps);
 	}
+
+	// A success redirects away, so neither flag needs resetting here.
+	let submitting = $state(false);
+	let dirty = $state(false);
+
+	const track: SubmitFunction = () => {
+		submitting = true;
+		return async ({ update }) => {
+			await update();
+			submitting = false;
+		};
+	};
 </script>
 
 <div class="page">
@@ -44,8 +56,9 @@
 
 		<form
 			method="POST"
-			use:enhance
+			use:enhance={track}
 			onsubmit={serializeContent}
+			oninput={() => (dirty = true)}
 			class="form"
 			enctype="multipart/form-data"
 		>
@@ -124,7 +137,14 @@
 				<p class="form-error" role="alert">{form.error}</p>
 			{/if}
 
-			<button type="submit" class="btn-primary">Create recipe</button>
+			<div class="form-actions">
+				<button type="submit" class="btn-primary" disabled={submitting}>
+					{submitting ? 'Saving…' : 'Create recipe'}
+				</button>
+				{#if dirty && !submitting}
+					<span class="form-hint">Unsaved changes</span>
+				{/if}
+			</div>
 		</form>
 	</div>
 </div>

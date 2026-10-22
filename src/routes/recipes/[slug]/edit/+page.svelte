@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
+	import { enhance, type SubmitFunction } from '$app/forms';
 	import type { PageData, ActionData } from './$types';
 	import type { Ingredient, Step } from '#lib/recipes/types.js';
 	import IngredientEditor from '#lib/components/recipes/IngredientEditor.svelte';
@@ -23,6 +23,24 @@
 		ingredientsInput.value = JSON.stringify(ingredients);
 		stepsInput.value = JSON.stringify(steps);
 	}
+
+	// Editor state: which form is mid-request, and which has unsaved edits.
+	// A success redirects away, so neither needs resetting here.
+	let submitting = $state<'meta' | 'content' | null>(null);
+	let metaDirty = $state(false);
+	// svelte-ignore state_referenced_locally -- the initial value is the point: it is the saved baseline
+	const savedContent = JSON.stringify({ ingredients, steps });
+	const contentDirty = $derived(JSON.stringify({ ingredients, steps }) !== savedContent);
+
+	const track = (section: 'meta' | 'content'): SubmitFunction => {
+		return () => {
+			submitting = section;
+			return async ({ update }) => {
+				await update();
+				submitting = null;
+			};
+		};
+	};
 </script>
 
 <div class="page">
@@ -39,7 +57,13 @@
 				Updates the recipe directly. No version snapshot created.
 			</p>
 
-			<form method="POST" action="?/saveMeta" use:enhance class="form">
+			<form
+				method="POST"
+				action="?/saveMeta"
+				use:enhance={track('meta')}
+				oninput={() => (metaDirty = true)}
+				class="form"
+			>
 				<div class="field">
 					<label for="title">Title</label>
 					<input id="title" name="title" type="text" value={recipe.title} required />
@@ -118,7 +142,14 @@
 					<p class="form-error" role="alert">{form.error}</p>
 				{/if}
 
-				<button type="submit" class="btn-primary">Save info</button>
+				<div class="form-actions">
+					<button type="submit" class="btn-primary" disabled={submitting === 'meta'}>
+						{submitting === 'meta' ? 'Saving…' : 'Save info'}
+					</button>
+					{#if metaDirty && submitting !== 'meta'}
+						<span class="form-hint">Unsaved changes</span>
+					{/if}
+				</div>
 			</form>
 		</section>
 
@@ -134,7 +165,7 @@
 			<form
 				method="POST"
 				action="?/saveVersion"
-				use:enhance
+				use:enhance={track('content')}
 				onsubmit={serializeContent}
 				class="form"
 			>
@@ -159,7 +190,14 @@
 					<p class="form-error" role="alert">{form.error}</p>
 				{/if}
 
-				<button type="submit" class="btn-primary">Save new version</button>
+				<div class="form-actions">
+					<button type="submit" class="btn-primary" disabled={submitting === 'content'}>
+						{submitting === 'content' ? 'Saving…' : 'Save new version'}
+					</button>
+					{#if contentDirty && submitting !== 'content'}
+						<span class="form-hint">Unsaved changes</span>
+					{/if}
+				</div>
 			</form>
 		</section>
 	</div>
