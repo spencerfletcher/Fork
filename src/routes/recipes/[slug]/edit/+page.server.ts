@@ -44,7 +44,7 @@ export const actions: Actions = {
 
 		const formData = await request.formData();
 		const meta = parseRecipeMeta(formData);
-		if (!meta.ok) return fail(400, { error: meta.error });
+		if (!meta.ok) return fail(400, { error: meta.error, section: 'meta' });
 		const { title, description, servings, prepTimeMinutes, cookTimeMinutes, isPublic, tagNames } =
 			meta.value;
 		const rawImageUrl = (formData.get('imageUrl') as string)?.trim() || null;
@@ -53,10 +53,10 @@ export const actions: Actions = {
 			try {
 				parsedUrl = new URL(rawImageUrl);
 			} catch {
-				return fail(400, { error: 'Invalid image URL' });
+				return fail(400, { error: 'Invalid image URL', section: 'meta' });
 			}
 			if (parsedUrl.protocol !== 'https:' && parsedUrl.protocol !== 'http:') {
-				return fail(400, { error: 'Image URL must use http or https' });
+				return fail(400, { error: 'Image URL must use http or https', section: 'meta' });
 			}
 		}
 		const imageUrl = rawImageUrl;
@@ -110,9 +110,10 @@ export const actions: Actions = {
 
 		const formData = await request.formData();
 		const commitMessage = (formData.get('commitMessage') as string)?.trim();
-		if (!commitMessage) return fail(400, { error: 'Commit message is required' });
+		if (!commitMessage)
+			return fail(400, { error: 'Commit message is required', section: 'content' });
 		const content = parseRecipeContent(formData);
-		if (!content.ok) return fail(400, { error: content.error });
+		if (!content.ok) return fail(400, { error: content.error, section: 'content' });
 		const { ingredients, steps } = content.value;
 
 		await db.transaction(async (tx) => {

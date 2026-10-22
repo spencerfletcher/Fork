@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import type { PageData } from './$types';
+	import type { PageData, ActionData } from './$types';
 	import type { Ingredient, Step } from '#lib/recipes/types.js';
 	import IngredientEditor from '#lib/components/recipes/IngredientEditor.svelte';
 	import StepEditor from '#lib/components/recipes/StepEditor.svelte';
 
-	let { data }: { data: PageData } = $props();
+	let { data, form }: { data: PageData; form: ActionData } = $props();
 
 	const { recipe, allTags } = $derived(data);
 
@@ -114,6 +114,10 @@
 					</label>
 				</div>
 
+				{#if form?.section === 'meta'}
+					<p class="form-error" role="alert">{form.error}</p>
+				{/if}
+
 				<button type="submit" class="btn-primary">Save info</button>
 			</form>
 		</section>
@@ -150,6 +154,10 @@
 						required
 					/>
 				</div>
+
+				{#if form?.section === 'content'}
+					<p class="form-error" role="alert">{form.error}</p>
+				{/if}
 
 				<button type="submit" class="btn-primary">Save new version</button>
 			</form>

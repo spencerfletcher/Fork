@@ -584,7 +584,8 @@
 		font-size: 0.95rem;
 	}
 
-	.auth-error {
+	.auth-error,
+	.form-error {
 		background: var(--color-remove-bg);
 		color: var(--color-remove);
 		border: 1px solid var(--color-remove);

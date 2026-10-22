@@ -132,7 +132,7 @@ describe('saveMeta', () => {
 			makeEvent({ user: OWNER, fields: { title: '   ' } })
 		);
 		expect(result.status).toBe(400);
-		expect(result.data).toEqual({ error: expect.any(String) });
+		expect(result.data).toEqual({ error: expect.any(String), section: 'meta' });
 	});
 
 	test('redirects to recipe page on success', async () => {
@@ -233,7 +233,7 @@ describe('saveVersion', () => {
 			})
 		);
 		expect(result.status).toBe(400);
-		expect(result.data).toEqual({ error: expect.any(String) });
+		expect(result.data).toEqual({ error: expect.any(String), section: 'content' });
 	});
 
 	test('fails with 400 when ingredients JSON is invalid', async () => {
@@ -246,7 +246,7 @@ describe('saveVersion', () => {
 			})
 		);
 		expect(result.status).toBe(400);
-		expect(result.data).toEqual({ error: expect.any(String) });
+		expect(result.data).toEqual({ error: expect.any(String), section: 'content' });
 	});
 
 	test('fails with 400 when ingredients array is empty', async () => {
@@ -259,7 +259,7 @@ describe('saveVersion', () => {
 			})
 		);
 		expect(result.status).toBe(400);
-		expect(result.data).toEqual({ error: expect.any(String) });
+		expect(result.data).toEqual({ error: expect.any(String), section: 'content' });
 	});
 
 	test('fails with 400 when steps array is empty', async () => {
@@ -272,7 +272,7 @@ describe('saveVersion', () => {
 			})
 		);
 		expect(result.status).toBe(400);
-		expect(result.data).toEqual({ error: expect.any(String) });
+		expect(result.data).toEqual({ error: expect.any(String), section: 'content' });
 	});
 
 	test('redirects to recipe page on success', async () => {
