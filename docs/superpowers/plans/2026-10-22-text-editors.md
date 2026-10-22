@@ -12,9 +12,9 @@
 
 ## Global Constraints
 
-- `parse-ingredient` pinned to exact `3.0.0` (no caret) because backfill reparses old rows.
+- `parse-ingredient` pinned to exact `3.0.0` (no caret) so an upgrade is deliberate.
 - Parser configuration lives in one object: `ignoreUOMs: ['large', 'medium', 'small']`, `normalizeUOM` off, leading `of` stripped (library default).
-- No schema migration. JSONB columns keep both shapes; readers normalize.
+- No schema migration and no backfill: JSONB columns hold only the new shape after a reseed. The site is pre-production.
 - Parsed fields are never edited by a human. Every save re-parses from text.
 - A line that does not parse is never a validation error.
 - Unit test files sit next to source; `vi.hoisted()` for any mock used in a `vi.mock()` factory; `pnpm test:unit` green before every commit.
@@ -26,12 +26,12 @@
 1. A pasted list with Windows line endings and trailing spaces must parse line by line, not as one line. Pinned in Task 1.
 2. An old step whose text contains a blank line must survive open-then-save unchanged except for the documented collapse. Pinned in Task 2.
 3. A textarea containing only whitespace must fail with the existing "at least one" message, not save an empty version. Pinned in Task 3.
-4. A fork of a recipe whose rows are old-shape must write new-shape rows. Pinned in Task 6.
+4. A fork copies the latest version's ingredients and steps unchanged. Pinned in Task 6.
 5. The gram toggle on a list mixing volume, count and unparsed lines must show numbers for the first two and the original text for the third, with `≈` only on count lines. Pinned in Tasks 5 and 6.
 
 ---
 
-### Task 1: Ingredient parser and backfill
+### Task 1: Ingredient parser
 
 **Files:**
 
@@ -342,7 +342,7 @@ git commit -m "Validate ingredients and steps from textarea text via the parsers
 
 **Interfaces:**
 
-- Consumes: `Ingredient`, `normalizeIngredients`.
+- Consumes: `Ingredient`, `parseIngredientLine`.
 - Produces: `diffIngredients(from: Ingredient[], to: Ingredient[]): IngredientDiffRow[]`, same row types.
 
 - [ ] **Step 1: Update the tests**
@@ -350,10 +350,8 @@ git commit -m "Validate ingredients and steps from textarea text via the parsers
 Replace the test fixtures' `{ amount, unit, name }` literals with `parseIngredientLine(...)` calls from Task 1. Change "changed amount" to assert that `quantity` 1 vs 2 on the same name yields one `modified` row whose segments, joined, read as the two `text` values. Add:
 
 ```ts
-test('an old-shape list and its normalized equivalent are all unchanged', () => {
-	const old = [{ amount: '1', unit: 'cup', name: 'flour' }];
-	const rows = diffIngredients(normalizeIngredients(old), [parseIngredientLine('1 cup flour')]);
-	expect(rows).toEqual([{ status: 'unchanged', ingredient: parseIngredientLine('1 cup flour') }]);
+test('a modified row diffs the lines as typed', () => {
+	// '1 cup flour' → '2 cups flour': segments minus added read as the from text, minus removed as the to text
 });
 test('a changed range end is modified', () => {
 	const rows = diffIngredients(
@@ -370,7 +368,7 @@ Run: `pnpm test:unit --run src/lib/recipes/diff`. Expected: FAIL, `amount` missi
 
 - [ ] **Step 3: Implement**
 
-`unchanged` compares `quantity`, `quantity2`, `unit`. Modified rows call `diffInline(fromIngredient.text, ingredient.text)`. In the two page loads, replace the `as Parameters<...>[0]` casts with `normalizeIngredients(version.ingredients)`.
+`unchanged` compares `quantity`, `quantity2`, `unit`. Modified rows call `diffInline(fromIngredient.text, ingredient.text)`. In the two page loads, delete the `as Parameters<...>[0]` casts; the schema type is already `Ingredient[]`.
 
 - [ ] **Step 4: Run to verify pass**
 
@@ -380,7 +378,7 @@ Run: `pnpm test:unit --run src/lib/recipes/diff`. Expected: PASS.
 
 ```bash
 git add src/lib/recipes/diff.ts src/lib/recipes/diff.test.ts "src/routes/recipes/[slug]/diff/+page.server.ts" src/routes/+page.server.ts
-git commit -m "Diff ingredients by quantity and text, normalizing old rows on load"
+git commit -m "Diff ingredients by quantity and text"
 ```
 
 ---
@@ -501,7 +499,7 @@ test('count line not in the table asks Spoonacular with piece', ...); // mock fe
 test('volume line is not approximate', ...);                 // '1 cup flour' → approximate: false
 ```
 
-In `input validation`: an old-shape body (`{ amount, unit, name }`) returns 400 `INVALID_INGREDIENTS`.
+In `input validation`: a body with string `amount` instead of numeric `quantity` returns 400 `INVALID_INGREDIENTS`.
 
 - [ ] **Step 2: Run to verify failure**
 
@@ -528,21 +526,18 @@ git commit -m "Convert count ingredients to grams via a per-item table and flag 
 
 **Files:**
 
-- Modify: `src/lib/server/db/schema.ts:110` (`$type<StoredIngredient[]>()`)
-- Modify: `src/routes/recipes/[slug]/+page.server.ts:44-66` (normalize every version's ingredients in the load) and `:172` (fork writes `normalizeIngredients(latestVersion.ingredients)`)
+- Modify: `src/routes/recipes/[slug]/+page.server.ts` only if the type check demands it; the fork action copies ingredients and steps as-is
 - Modify: `src/routes/recipes/[slug]/components/RecipeIngredients.svelte:8, 60-82`
 - Modify: `src/routes/recipes/[slug]/components/RecipeMethod.svelte:43`
 - Modify: `src/lib/components/recipes/VersionDiff.svelte:59-61, 84`
-- Test: `src/routes/recipes/[slug]/page.server.test.ts` (fork case; create if absent, matching the edit route test's mock pattern), `src/routes/recipes/[slug]/components/RecipeIngredients.svelte.test.ts` (create), `src/lib/components/recipes/VersionDiff.svelte.test.ts`
+- Test: `src/routes/recipes/[slug]/components/RecipeIngredients.svelte.test.ts` (create), `src/lib/components/recipes/VersionDiff.svelte.test.ts`
 
 **Interfaces:**
 
-- Consumes: `normalizeIngredients`, response shape from Task 5.
-- Produces: `RecipeIngredients` prop type becomes `Omit<RecipeVersion, 'ingredients'> & { ingredients: Ingredient[] }` (the schema type now says `StoredIngredient[]`, the load guarantees normalized); `gramCache` typed `({ grams: number; approximate: boolean } | null)[] | null`. The `[slug]/+page.svelte` parent passes the normalized `currentVersion` unchanged.
+- Consumes: response shape from Task 5.
+- Produces: `RecipeIngredients` prop stays `currentVersion: RecipeVersion`; `gramCache` typed `({ grams: number; approximate: boolean } | null)[] | null`.
 
 - [ ] **Step 1: Write the failing tests**
-
-Fork: with `findFirst` returning a version whose ingredients are old-shape, the inserted version's `ingredients` equals `normalizeIngredients(oldRows)`.
 
 `RecipeIngredients.svelte.test.ts` (mock `fetch` via `vi.stubGlobal`):
 
@@ -560,7 +555,7 @@ Run: `pnpm test:unit --run "src/routes/recipes/[slug]" src/lib/components/recipe
 
 - [ ] **Step 3: Implement**
 
-Load: `versions: recipe.versions.map((v) => ({ ...v, ingredients: normalizeIngredients(v.ingredients) }))` before deriving `currentVersion`. `RecipeIngredients`: key `#each` on `i`, print `{ingredient.text}`, prefix `≈` when `gramCache[i]?.approximate`, `title="Estimated weight for a whole item"`, and under the list `{#if showGrams && gramCache?.some((g) => g?.approximate)}<p class="form-hint">Whole-item weights are estimates, not exact.</p>{/if}`. `RecipeMethod` and `VersionDiff` step text: add `whitespace-pre-line`.
+`RecipeIngredients`: key `#each` on `i`, print `{ingredient.text}`, prefix `≈` when `gramCache[i]?.approximate`, `title="Estimated weight for a whole item"`, and under the list `{#if showGrams && gramCache?.some((g) => g?.approximate)}<p class="form-hint">Whole-item weights are estimates, not exact.</p>{/if}`. `RecipeMethod` and `VersionDiff` step text: add `whitespace-pre-line`.
 
 - [ ] **Step 4: Run to verify pass, then type check**
 
@@ -569,8 +564,8 @@ Run: `pnpm test:unit` and `pnpm exec svelte-check --threshold error`. Expected: 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/lib/server/db/schema.ts "src/routes/recipes/[slug]" src/lib/components/recipes/VersionDiff.svelte src/lib/components/recipes/VersionDiff.svelte.test.ts
-git commit -m "Read ingredients in the new shape everywhere, normalizing old rows on load"
+git add "src/routes/recipes/[slug]" src/lib/components/recipes/VersionDiff.svelte src/lib/components/recipes/VersionDiff.svelte.test.ts
+git commit -m "Read ingredients in the new shape everywhere"
 ```
 
 ---
@@ -658,11 +653,11 @@ git commit -m "Replace the step list editor with a textarea"
 
 **Interfaces:**
 
-- Consumes: `ingredientsToText`, `normalizeIngredients`, `stepsToText`, both editors' `value` prop.
+- Consumes: `ingredientsToText`, `stepsToText`, both editors' `value` prop.
 
 - [ ] **Step 1: Update and add page tests**
 
-Edit page `makeData()` gets a `latestVersion` with one old-shape ingredient and one step with a tip. Add:
+Edit page `makeData()` gets a `latestVersion` with one parsed ingredient and one step with a tip. Add:
 
 ```ts
 test('fills both textareas from the latest version', ...); // Ingredients textarea value '1 cup flour'; Steps textarea value 'Mix.\ntip: gently'
@@ -675,7 +670,7 @@ New page: the typing test now targets `getByLabelText('Ingredients')`.
 
 - [ ] **Step 3: Implement**
 
-Both pages: delete `ingredientsInput`, `stepsInput`, `serializeContent`, the two hidden inputs and the `onsubmit`. Replace the `$state` arrays with `let ingredientsText = $state(...)` and `let stepsText = $state(...)`; on edit initialised from `ingredientsToText(data.latestVersion?.ingredients ?? [])` (the load already normalized) and `stepsToText(data.latestVersion?.steps ?? [])`, on new from `''`. Editors: `<IngredientEditor bind:value={ingredientsText} />`, `<StepEditor bind:value={stepsText} />`. Edit page dirty: `contentDirty = $derived(ingredientsText !== savedIngredients || stepsText !== savedSteps)` with the two saved constants captured at init (keep the `svelte-ignore` comments).
+Both pages: delete `ingredientsInput`, `stepsInput`, `serializeContent`, the two hidden inputs and the `onsubmit`. Replace the `$state` arrays with `let ingredientsText = $state(...)` and `let stepsText = $state(...)`; on edit initialised from `ingredientsToText(data.latestVersion?.ingredients ?? [])` and `stepsToText(data.latestVersion?.steps ?? [])`, on new from `''`. Editors: `<IngredientEditor bind:value={ingredientsText} />`, `<StepEditor bind:value={stepsText} />`. Edit page dirty: `contentDirty = $derived(ingredientsText !== savedIngredients || stepsText !== savedSteps)` with the two saved constants captured at init (keep the `svelte-ignore` comments).
 
 - [ ] **Step 4: Run to verify pass, type check, lint**
 
@@ -700,7 +695,7 @@ git commit -m "Bind the new and edit pages to the text editors"
 
 - [ ] **Step 1: Seed**
 
-Wrap each `COOKIE_INGREDIENTS_*` and other arrays in `normalizeIngredients(...)` at the point of insert, so the literals stay readable and the DB gets the new shape. Run `pnpm db:seed` against local and open the cookie recipe to confirm `2 large eggs` renders and the gram toggle shows `≈100g`.
+Rewrite each `COOKIE_INGREDIENTS_*` and `*_STEPS` literal as a template string of lines, and call `parseIngredientText(...)` and `parseStepText(...)` at the point of insert, so the seed exercises the real parsers. Run `pnpm db:seed` against local and open the cookie recipe to confirm `2 large eggs` renders and the gram toggle shows `≈100g`.
 
 - [ ] **Step 2: e2e**
 

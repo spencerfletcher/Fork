@@ -81,11 +81,11 @@ Examples, with `ignoreUOMs` applied:
 
 The last row is what the library returns. Treat it as parsed; a name of `cup` is odd but harmless, and rejecting it would mean a second grammar.
 
-**Old rows** have `{ amount: string, unit, name }` and no `text` or `quantity`. A single backfill helper, called wherever versions are loaded, produces the new shape: `text` is `[amount, unit, name]` joined with single spaces with empties dropped, and `quantity`, `quantity2` come from running that text through the same parser. The builder chooses its location and name. New saves always write the new shape.
+**Existing rows** in the old `{ amount, unit, name }` shape are not supported. The site is pre-production; the seed is rewritten and the database reseeded. No backfill, no legacy type.
 
 ### Step
 
-`Step` is unchanged: `{ step: number; text: string; annotation?: { type; text } }`. Step text may now contain newlines; the recipe page must render them as line breaks (`white-space: pre-line` or equivalent). Old rows need no backfill.
+`Step` loses its stored number: `{ text: string; annotation?: { type; text } }`. Position in the list is the number. Step text may contain newlines; the recipe page renders them as line breaks (`white-space: pre-line` or equivalent).
 
 ## Parsers
 
@@ -97,7 +97,7 @@ Both live in `src/lib/recipes/`, pure, no server imports, importable from compon
 export function parseIngredientText(text: string): Ingredient[];
 ```
 
-Splits on newlines (handling `\r\n`), trims each line, drops blank lines, runs each through parse-ingredient with the configuration above, and maps the result to `Ingredient`. Never throws on content. Also exports the backfill helper for old rows, or that lives next to it; builder's call.
+Splits on newlines (handling `\r\n`), trims each line, drops blank lines, runs each through parse-ingredient with the configuration above, and maps the result to `Ingredient`. Never throws on content. Also exports `ingredientsToText(rows): string` for loading the editor.
 
 ### `steps.ts`
 
@@ -128,7 +128,7 @@ warning: Oven runs hot, check at 10.
 
 gives three steps; the first has a two-line text, the second a tip, the third a warning.
 
-Inverse, for loading into the editor: each step's text, then its annotation as `type: text` on its own line if present, blocks joined with a blank line. Old data can contain what the grammar cannot express, so the inverse sanitises: blank lines inside a step's text collapse to one newline, and newlines inside annotation text become spaces. Reopening an old recipe and saving unchanged must produce the same steps after that sanitisation, and the round-trip test asserts exactly that. Builder exports the inverse from the same module.
+Inverse, `stepsToText`, for loading into the editor: each step's text, then its annotation as `type: text` on its own line if present, blocks joined with a blank line. `parseStepText` is the only writer of steps, so the inverse does no sanitising; the round-trip test asserts `stepsToText(parseStepText(x)) === x` for the example.
 
 ## Validation
 
@@ -157,7 +157,7 @@ Inverse, for loading into the editor: each step's text, then its annotation as `
 ### Pages
 
 - `serializeContent` and the two hidden inputs are deleted on both pages.
-- Edit page initialises both strings from the loaded version: ingredients by joining backfilled `text` with newlines, steps via the inverse function.
+- Edit page initialises both strings from the loaded version via `ingredientsToText` and `stepsToText`.
 - Dirty tracking on the edit page compares each string to its initial value. The JSON compare goes away.
 - New page starts both strings empty.
 
@@ -167,33 +167,32 @@ Inverse, for loading into the editor: each step's text, then its annotation as `
 - `api/convert-to-grams`: accepts the new shape, uses `quantity` directly and drops its own `parseAmount`. Returns `null` only for `quantity === null`. Three layers, in order:
   1. Volume units: the existing density table, then Spoonacular, as today.
   2. Count lines (empty unit): a new per-item table in `src/lib/server/ingredientDensities.ts` or beside it, grams per whole item, matched on name the same way the density table matches, longest key wins. Seed it with egg 50, egg white 33, egg yolk 18, and a dozen common produce items; builder's list. Result is `quantity × grams`.
-  3. Count lines not in that table: Spoonacular with `sourceUnit: 'piece'`. One call per such line per page load, cached on the page as today. Each result carries whether it is an estimate: `{ grams, approximate }` or `null` per ingredient instead of a bare number. Layers 2 and 3 are approximate; layer 1 is not marked. Request validation changes to the new shape; the backfill at load time means old rows never reach it.
+  3. Count lines not in that table: Spoonacular with `sourceUnit: 'piece'`. One call per such line per page load, cached on the page as today. Each result carries whether it is an estimate: `{ grams, approximate }` or `null` per ingredient instead of a bare number. Layers 2 and 3 are approximate; layer 1 is not marked. Request validation changes to the new shape.
 - `diff.ts` `diffIngredients`: keys on `name`, compares `quantity`, `quantity2` and `unit` instead of `amount` and `unit`. The modified row's inline diff compares `text` strings. Unparsed lines have the whole line as name, so edits read as removed plus added. Accepted.
 - `VersionDiff.svelte`: prints `text` for ingredient rows.
 - `RecipeMethod.svelte`: renders multi-line step text with line breaks. Annotation rendering unchanged.
-- `diff.ts` `diffSteps`: unchanged; text with newlines diffs as text.
-- Fork action in `src/routes/recipes/[slug]/+page.server.ts` copies `latestVersion.ingredients` raw into the new recipe's first version. It must backfill first so forks of old recipes are written in the new shape.
-- Search's raw SQL reads `ing->>'name'`, which both shapes have. No change.
+- `diff.ts` `diffSteps`: keys by position and reports `stepNumber` on every non-removed row; text with newlines diffs as text.
+- Fork action copies `latestVersion.ingredients` and `steps` unchanged; both are already the new shape.
+- Search's raw SQL reads `ing->>'name'`, which the new shape has. No change.
 - `VersionDiff.svelte` step rows get the same line-break rendering as `RecipeMethod`.
-- Seed script: writes the new ingredient shape. Builder may generate it by running the existing amount-unit-name triples through the backfill helper.
+- Seed script: ingredient and step literals become text, parsed with `parseIngredientText` and `parseStepText` at insert time, so the seed exercises the real parsers.
 
 ## Tests
 
 Order: server first, then components, then e2e.
 
-1. `ingredients.test.ts`: every row of the table; `\r\n`; blank and whitespace lines dropped; leading and trailing whitespace; the backfill helper on an old-shape row and on a new-shape row (no-op).
-2. `steps.test.ts`: the example above; `note:` maps to tip; case-insensitive keyword; annotation with empty text dropped; a block whose first line starts with `tip:` is step text; multiple blank lines between blocks; a step with internal newlines; round trip through the inverse, including an old step containing a blank line and an annotation containing a newline.
+1. `ingredients.test.ts`: every row of the table; `\r\n`; blank and whitespace lines dropped; leading and trailing whitespace; `ingredientsToText` joins.
+2. `steps.test.ts`: the example above; case-insensitive keyword; annotation with empty text dropped; a block whose first line starts with `tip:` is step text; multiple blank lines between blocks; a step with internal newlines; round trip through the inverse.
 3. `validation.test.ts`: text reaches each parser; empty or whitespace-only text fails with the existing messages; the old JSON-shape tests are removed.
-4. `diff.test.ts`: an old-shape list and its backfilled new-shape equivalent diff as unchanged; a quantity change shows as modified.
+4. `diff.test.ts`: a quantity or range change shows as modified; modified rows diff the typed lines; steps number by position.
 5. `convert-to-grams` server test: unparsed ingredient yields `null`; a count line in the per-item table yields `quantity × grams` marked approximate; a count line not in the table calls Spoonacular with `piece`; a volume line is not marked approximate.
 6. `IngredientEditor.svelte.test.ts`: value renders; an unparsable line appears in the note; fixing it clears the note; binding updates.
 7. `StepEditor.svelte.test.ts`: value renders; hint present; binding updates.
-8. Page component tests: edit page initialises both textareas from a version, including an old-shape ingredient; existing error and state tests still pass with the new fields.
+8. Page component tests: edit page initialises both textareas from a version; existing error and state tests still pass with the new fields.
 9. e2e `authenticated.test.ts`: the three placeholder fills and the step textarea fill become one fill per textarea.
 
 ## Left to the builder
 
-- Backfill helper name and location.
 - Note and hint wording and styling within existing form styles.
 - Textarea sizing.
 - Gram display format on the recipe page.
@@ -202,7 +201,6 @@ Order: server first, then components, then e2e.
 ## Risks
 
 - Names now carry whatever follows the unit, including notes like `, for topping`. The ingredient diff keys on name, so a changed note reads as a replaced ingredient. Accepted.
-- Users who typed `large` as a size in a unit box before get `large` in the name after backfill, since backfill reparses the joined text. Correct per the strict decision.
-- parse-ingredient's unit list is the library's. If a future version changes it, backfilled old rows could reparse differently. Pin the exact version.
+- parse-ingredient's unit list is the library's. Pin the exact version so an upgrade is a deliberate reparse of the seed, not a surprise.
 - Per-item gram weights ignore size words: `2 large eggs` and `2 eggs` both use the `egg` entry unless the table also has `large egg`. Values are marked approximate in the UI for this reason.
 - Spoonacular `piece` conversions are a guess by a third party. Also marked approximate, and bounded by the existing rate limit and daily cap.
