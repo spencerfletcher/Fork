@@ -1,6 +1,12 @@
 import { describe, test, expect } from 'vitest';
-import { changedGroups, contentChanged, generatedCommitMessage } from './content';
+import {
+	changedGroups,
+	contentChanged,
+	generatedCommitMessage,
+	type ContentGroup
+} from './content';
 import { makeContent, makeIngredient, makeStep } from './fixtures';
+import type { RecipeContent } from './types';
 
 const base = makeContent();
 
@@ -10,7 +16,7 @@ describe('changedGroups', () => {
 		expect(contentChanged(base, makeContent())).toBe(false);
 	});
 
-	test.each([
+	test.each<[string, Partial<RecipeContent>, ContentGroup]>([
 		['title', { title: 'Biscuits' }, 'title'],
 		['description', { description: 'Crisp edges.' }, 'description'],
 		['servings', { servings: 8 }, 'servings'],
@@ -18,7 +24,7 @@ describe('changedGroups', () => {
 		['cookTimeMinutes', { cookTimeMinutes: 25 }, 'times'],
 		['ingredients', { ingredients: [makeIngredient('2 cups flour')] }, 'ingredients'],
 		['steps', { steps: [makeStep('Stir.')] }, 'steps']
-	] as const)('%s alone is a change in its group', (_, overrides, group) => {
+	])('%s alone is a change in its group', (_, overrides, group) => {
 		expect(changedGroups(base, makeContent(overrides))).toEqual([group]);
 	});
 
