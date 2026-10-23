@@ -49,6 +49,8 @@ Recipe-level, not versioned: slug, image URL, visibility, tags, author, fork lin
 
 `recipes` keeps `title`, `description`, `servings`, `prep_time_minutes` and `cook_time_minutes` as maintained copies, with the ownership comment. No column is dropped.
 
+`recipes` gains `edit_revision integer not null default 0`: a counter of state-changing saves, incremented once per committed save (version or settings-only), never by a no-op, a failed validation or a rejected stale save. It is the concurrency token; `updatedAt` stays a timestamp and plays no part in correctness.
+
 Add `UNIQUE (recipe_id, version_number)` on `recipe_versions` as the last line of defence against duplicate numbers. There is none today.
 
 One hand-written migration in `supabase/migrations/` (`supabase migration new one_save_versioned_formulation`), `schema.ts` edited in the same commit, seed updated, local and hosted reseeded. No backfill.
@@ -97,17 +99,19 @@ Generated commit message when the user leaves it blank and a version is written:
 
 ### Load
 
-Returns `recipe` (settings and ownership), `latestVersion` (the formulation), `allTags`, and `revision`: a string token identifying the recipe's state, `${latestVersion.id}:${recipe.updatedAt.getTime()}`. A settings-only save bumps `updatedAt`, a version save changes the id, so any committed change changes the token.
+Returns `recipe` (settings, ownership and `editRevision`), `latestVersion` (the formulation) and `allTags`. The page sends `editRevision` back as a hidden field.
 
 ### Form
 
-One `<form method="POST" action="?/save" enctype="multipart/form-data" use:enhance>`. Keep the two headings as visual grouping ("Recipe" for the formulation, "Settings" for photo, tags, visibility) with a single "Save changes" button at the bottom and the optional "What changed?" field next to it. Hidden input `revision`.
+One `<form method="POST" action="?/save" enctype="multipart/form-data" use:enhance>`. Keep the two headings as visual grouping ("Recipe" for the formulation, "Settings" for photo, tags, visibility) with a single "Save changes" button at the bottom and the optional "What changed?" field next to it. Hidden input `editRevision`.
 
 ### Photo
 
-The edit page gains the same photo upload as the new page: a file input with preview, replacing the image URL text box. The current photo shows as the preview when there is one, with a "Remove photo" control that sets a hidden `removeImage` flag. Upload goes to the `recipe-images` bucket exactly as in the new action; extract that upload into one shared server helper (`src/lib/server/images.ts`, say) used by both actions. A new file replaces the stored URL; `removeImage` clears it; neither means no change. An upload failure returns 400 with the draft and writes nothing.
+The edit page gains the same photo upload as the new page: a file input with preview, replacing the image URL text box. The current photo shows as the preview when there is one, with a "Remove photo" control that sets a hidden `removeImage` flag. Upload goes to the `recipe-images` bucket exactly as in the new action; extract that upload into one shared server helper (`src/lib/server/images.ts`, say) used by both actions. A new file replaces the stored URL; `removeImage` clears it; neither means no change.
 
-The whole form is wrapped in `<fieldset disabled={submitting}>` while a request is in flight, so nothing typed during the request can be lost by the redirect.
+Upload and database save are two operations and cannot be one transaction; Storage objects are removed only through the Storage API. Order: validate everything, upload to a new unique object path if a file was sent, then the short database transaction. Never hold the row lock while waiting on the upload. If the upload fails, return 400 with the draft and write nothing. If the upload succeeds and the save is then rejected (stale, validation inside the transaction) or rolled back, delete that newly uploaded object, best effort: a cleanup failure is logged, not surfaced, and never claimed as a rollback. The previous image is never deleted in this feature, since forks copy `imageUrl` and may still reference it. Guarantee: a failed save never partially changes recipe, version or tag rows; unused new uploads get best-effort cleanup.
+
+The whole form is wrapped in `<fieldset disabled={submitting}>` while a request is in flight, so nothing typed during the request can be lost by the redirect. Disabled controls are left out of `FormData`, so the enhance callback reads the submitted data before the flag is set (SvelteKit builds it before `use:enhance`'s submit function runs, which is where the flag is set). The fieldset is re-enabled on any failure.
 
 ### Dirty state
 
@@ -115,21 +119,22 @@ Derived, not set on first input. The page holds the editable draft as `$state` (
 
 ### Failure
 
-The action returns `fail(status, { error, draft })` where `draft` is every submitted text field as raw strings (title, description, servings, prepTimeMinutes, cookTimeMinutes, ingredients, steps, isPublic, tags, commitMessage, revision). A chosen file cannot be returned; after a failure the user picks it again, and the page says so next to the photo field when a file had been chosen. The page initialises its draft state from `form?.draft ?? baseline`, so an invalid value stays visible for correction. The baseline is untouched, so "Unsaved changes" still shows.
+The action returns `fail(status, { error, draft })` where `draft` is every submitted text field as raw strings (title, description, servings, prepTimeMinutes, cookTimeMinutes, ingredients, steps, isPublic, tags, commitMessage, revision). The `draft` also carries the `editRevision` the draft was loaded against, unchanged; a 409 never hands the old draft a fresh token, or the next click would overwrite the intervening edit. A chosen file is not returned by the server, but on the enhanced path the form stays mounted and the file input keeps its selection, so the file is still there; only after a full reload is it gone, and the page shows "Please choose the photo again" only when the input is actually empty and a file had been chosen. The page initialises its draft state from `form?.draft ?? baseline`, so an invalid value stays visible for correction. The baseline is untouched, so "Unsaved changes" still shows.
 
 Status 400 for validation, 409 for a stale revision with the message "This recipe was changed in another tab. Reload to see the latest version, then reapply your edits." Nothing is merged or overwritten on 409.
 
 ### Action, in order
 
 1. Auth and ownership as today.
-2. `parseFormulation`, `parseSettings`; on failure return 400 with the draft.
+2. `parseFormulation`, `parseSettings`; on failure return 400 with the draft. An early `editRevision` compare against the loaded recipe may short-circuit before uploading; the authoritative check is under the lock. 2b. Upload the photo if one was sent (see Photo).
 3. Transaction:
-   1. `SELECT … FROM recipes WHERE id = … FOR UPDATE` (Drizzle `.for('update')`), so concurrent saves on one recipe run one at a time.
-   2. Load the latest version inside the transaction. Compute the current revision token; if it differs from the submitted one, return 409 with the draft.
+   1. `SELECT … FROM recipes WHERE id = … FOR UPDATE` (Drizzle `.for('update')`), so concurrent saves on one recipe run one at a time. Nothing about the recipe is read before this lock is held.
+   2. Recheck ownership on the locked row. If its `editRevision` differs from the submitted one, return 409 with the draft (and clean up any new upload). Only then load the latest version.
    3. `changed = formulationChanged(latest, submitted)`; `settingsChanged` = a new file was uploaded, `removeImage` is set with a photo present, visibility differs, or the tag set differs.
    4. If neither: no writes, redirect.
-   5. If `settingsChanged`: update `recipes` image URL, visibility, `updatedAt`; replace tag rows (existing tag handling, including creating new tags). The file upload itself happens before the transaction, after validation, so a failed upload never leaves a half-written save; an orphaned file in the bucket is acceptable.
-   6. If `changed`: insert the version with `versionNumber = latest.versionNumber + 1`, the submitted formulation, the user's commit message or the generated one, `createdBy`; update the five copies on `recipes` and `updatedAt` from the same values.
+   5. If `settingsChanged`: update `recipes` image URL and visibility; replace tag rows (existing tag handling, including creating new tags, names deduplicated and trimmed before comparing and writing).
+   6. If `changed`: insert the version with `versionNumber = latest.versionNumber + 1`, the submitted formulation, the user's commit message or the generated one, `createdBy`; update the five copies on `recipes` from the same values.
+   7. If either changed: `editRevision = editRevision + 1` and `updatedAt = now()` on `recipes`, in the same statement as the last update.
 4. Redirect to the recipe page.
 
 A commit message with no formulation change is ignored, no version, no write.
@@ -146,7 +151,7 @@ The fork action copies the source's latest version as one snapshot: title, descr
 
 - Recipe page loader: `currentVersion` (requested or latest) supplies title, description, servings, times, ingredients, steps to the hero, details, SEO title and description, and the history banner. `recipe` supplies image, tags, author, visibility, fork lineage. The hero and details components take the version fields instead of recipe fields.
 - Cards, list pages and search keep reading the copies on `recipes`, including total time on cards. No list query changes.
-- Diff: `diff.ts` gains `diffMeta(from: Formulation, to: Formulation): MetaDiffRow[]` with `MetaDiffRow = { field: 'title' | 'description' | 'servings' | 'prepTimeMinutes' | 'cookTimeMinutes'; from: string | number | null; to: string | number | null }`, only changed fields. `VersionDiff.svelte` takes `metaDiff` as a required prop and renders the rows as a short list above the ingredient columns, with a label per field ("Title", "Description", "Servings", "Prep time", "Cook time"). The compare page and the landing page pass it.
+- Diff: `diff.ts` gains `diffMeta(from: Formulation, to: Formulation): MetaDiffRow[]` with `MetaDiffRow = { field: 'title' | 'description' | 'servings' | 'prepTimeMinutes' | 'cookTimeMinutes'; from: string | number | null; to: string | number | null }`, only changed fields. `VersionDiff.svelte` takes `metaDiff` as a required prop (`[]` when nothing changed) and renders the rows as a short list above the ingredient columns, printing `0` as a value and `—` for null, with a label per field ("Title", "Description", "Servings", "Prep time", "Cook time"). The compare page and the landing page pass it.
 - Seed: the cookie recipe's second version changes servings (24 to 36 cookies, say) and the title ("Classic" to "Thick and Chewy"), so the landing diff and the compare page show metadata rows out of the box. The landing page's "best diff" ranking counts meta rows as changes.
 - History list and any other reader of `recipe.servings` or `recipe.prepTimeMinutes` switch to the version. `svelte-check` is the net: the task is not done until it is green.
 
@@ -157,7 +162,7 @@ Order: server logic, then components, then e2e. Fixtures through `fixtures.ts`.
 1. `formulation.test.ts`: unchanged is not changed; each field alone is a change; ingredient wording change with identical parse is a change; step annotation change is a change; whitespace-only title and description differences are not; `changedGroups` order and the generated message.
 2. `validation.test.ts`: regrouped fields; draft strings round-trip.
 3. `diff.test.ts`: `diffMeta` returns only changed fields, null handling.
-4. `edit/page.server.test.ts`: the outcomes table below; ownership rule after each write (all five copies); stale revision returns 409 with the draft and writes nothing; a thrown error inside the transaction leaves no recipe, version or tag change; commit message without a formulation change writes nothing; a new photo or `removeImage` counts as a settings change; a failed upload returns 400 and writes nothing.
+4. `edit/page.server.test.ts`: the outcomes table below; ownership rule after each write (all five copies); stale `editRevision` returns 409 with the draft carrying its original revision and writes nothing; a settings-only save bumps `editRevision` so an older draft is stale even with a frozen clock; two submissions with the same revision give one success and one 409, never two versions; a thrown error inside the transaction leaves no recipe, version or tag change; commit message without a formulation change writes nothing; a new photo or `removeImage` counts as a settings change; a failed upload returns 400 and writes nothing; an upload that succeeds before a rejected save leaves the database unchanged, keeps the prior image, and deletes only the new object.
 5. `new/page.server.test.ts`, `[slug]/page.server.test.ts` (fork): copies land on both rows; fork is a complete snapshot; source untouched.
 6. Component tests: `VersionDiff` renders meta rows; hero and details read version fields; edit page shows the draft after a failed save, derives dirty from the draft and clears it when restored, disables the form while submitting.
 7. e2e in `authenticated.test.ts`: the acceptance scenarios.
@@ -168,7 +173,7 @@ Order: server logic, then components, then e2e. Fixtures through `fixtures.ts`.
 | Only image, visibility or tags | Settings updated; no version                          |
 | Nothing                        | No writes, not even `updatedAt`; redirect             |
 | Only commit message            | No writes                                             |
-| Stale revision                 | 409, draft returned, no writes                        |
+| Stale `editRevision`           | 409, draft returned with its old revision, no writes  |
 | Invalid field                  | 400, draft returned, no writes                        |
 
 ## Acceptance
@@ -178,7 +183,8 @@ Order: server logic, then components, then e2e. Fixtures through `fixtures.ts`.
 - Change content and visibility and tags together: everything saves, exactly one new version.
 - Settings-only and unchanged submissions: no version; the unchanged one performs no writes.
 - Invalid field: draft still in the form, nothing committed.
-- Two tabs on version 2: the second save gets 409 and keeps its draft; version numbers stay unique.
+- Two tabs on version 2: the second save gets 409 and keeps its draft; version numbers stay unique. A settings-only save in one tab also makes the other tab's draft stale.
+- Failed submission: text remains, the form is editable again, and the photo message appears only when the file input is actually empty.
 - Fork after changing servings and title: the fork's version 1 has the complete latest formulation; the source is untouched.
 
 ## Left to the builder
@@ -186,10 +192,12 @@ Order: server logic, then components, then e2e. Fixtures through `fixtures.ts`.
 - Exact layout of the single form and the placement of the "What changed?" field.
 - Wording of the generated commit message beyond the pattern given.
 - Shape of the `draft` object as long as it carries raw strings for every field.
-- Whether the stale check compares the token string or its two parts.
 - Name and location of the shared upload helper; preview markup on the edit page can copy the new page's.
 
 ## Decisions made in review
 
 - Card times: Spencer chose to keep times as maintained copies on `recipes` (option 3 of drop / join / copy), so cards and list queries are untouched.
 - Photos: Spencer chose upload on both pages; the edit page's image URL box goes away.
+- Concurrency token: a reviewer pointed out that a millisecond timestamp can collapse distinct Postgres microsecond timestamps and that settings-only saves leave the version id unchanged; replaced by the `editRevision` counter above.
+- Upload failure boundary made explicit as above, at the same reviewer's request.
+- Times on `recipes`: the reviewer would keep only title and description as copies. Spencer chose to copy servings and times too so cards keep showing total time without a join. The ownership rule and its test cover all five.
