@@ -205,6 +205,12 @@ A per-user `ingredient_weights` table (name, grams per ml or grams per item), co
 
 ---
 
+# M14 — iOS app (large, after the web product settles)
+
+A native or wrapped iOS client for cooking from a recipe: large type, screen stays awake, step timers (M11), serving scaling, offline access to saved recipes. Options, cheapest first: the SvelteKit site as a PWA with an install prompt and a service worker for offline; Capacitor wrapping the same site for an App Store listing; a Swift client against the existing endpoints. Decide after the save flow, scaling and the first AI adaptation exist, since the app would consume all three. Needs API auth that is not cookie-based for anything beyond the PWA.
+
+---
+
 ## Working agreements
 
 These are the ones this project has already been bitten by. They are enforced in CI now, so following them is cheaper than working around them.
