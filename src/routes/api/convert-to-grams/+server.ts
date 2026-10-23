@@ -1,12 +1,9 @@
 import { SPOONACULAR_API_KEY } from '$app/env/private';
-import { lookupGrams } from '#lib/server/ingredientDensities.js';
+import { lookupGrams, lookupPieceGrams } from '#lib/server/ingredientDensities.js';
 import type { RequestHandler } from './$types';
+import type { Ingredient } from '#lib/recipes/types.ts';
 
-interface IngredientInput {
-	amount: string;
-	unit: string;
-	name: string;
-}
+type GramResult = { grams: number; approximate: boolean };
 
 // No recipe needs more than this, and each entry can cost a Spoonacular call
 // against a 150/day quota.
@@ -39,41 +36,24 @@ function rateLimit(address: string, now: number): { ok: boolean; retryAfter: num
 	return { ok: true, retryAfter: 0 };
 }
 
-function isIngredientInput(value: unknown): value is IngredientInput {
+function isIngredient(value: unknown): value is Ingredient {
 	if (typeof value !== 'object' || value === null) return false;
-	const { amount, unit, name } = value as Record<string, unknown>;
-	return [amount, unit, name].every(
+	const { text, unit, name, quantity, quantity2 } = value as Record<string, unknown>;
+	const stringsOk = [text, unit, name].every(
 		(field) => typeof field === 'string' && field.length <= MAX_FIELD_LENGTH
 	);
+	const numbersOk = [quantity, quantity2].every(
+		(field) => field === null || typeof field === 'number'
+	);
+	return stringsOk && numbersOk;
 }
 
 function fail(code: string, message: string, status: number, headers?: Record<string, string>) {
 	return Response.json({ error: message, code }, { status, headers });
 }
 
-function parseAmount(amount: string): number {
-	const vulgar: Record<string, number> = {
-		'½': 0.5,
-		'¼': 0.25,
-		'¾': 0.75,
-		'⅓': 1 / 3,
-		'⅔': 2 / 3,
-		'⅛': 0.125,
-		'⅜': 0.375,
-		'⅝': 0.625,
-		'⅞': 0.875
-	};
-	const t = amount.trim();
-	if (vulgar[t] !== undefined) return vulgar[t];
-	const mixed = t.match(/^(\d+)\s+(\d+)\/(\d+)$/);
-	if (mixed) return parseInt(mixed[1]) + parseInt(mixed[2]) / parseInt(mixed[3]);
-	const frac = t.match(/^(\d+)\/(\d+)$/);
-	if (frac) return parseInt(frac[1]) / parseInt(frac[2]);
-	return parseFloat(t) || 0;
-}
-
 async function convertViaSpoonacular(
-	amount: number,
+	quantity: number,
 	unit: string,
 	name: string
 ): Promise<number | null> {
@@ -82,7 +62,7 @@ async function convertViaSpoonacular(
 	try {
 		const params = new URLSearchParams({
 			ingredientName: name,
-			sourceAmount: String(amount),
+			sourceAmount: String(quantity),
 			sourceUnit: unit,
 			targetUnit: 'grams',
 			apiKey: SPOONACULAR_API_KEY
@@ -121,29 +101,29 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	if (ingredients.length > MAX_INGREDIENTS) {
 		return fail('TOO_MANY_INGREDIENTS', `At most ${MAX_INGREDIENTS} ingredients per request.`, 400);
 	}
-	if (!ingredients.every(isIngredientInput)) {
+	if (!ingredients.every(isIngredient)) {
 		return fail(
 			'INVALID_INGREDIENTS',
-			'Each ingredient needs string amount, unit, and name fields.',
+			'Each ingredient needs text, unit and name strings, and a numeric or null quantity.',
 			400
 		);
 	}
 
 	const results = await Promise.all(
-		ingredients.map(async (ingredient) => {
-			const { amount: rawAmount, unit, name } = ingredient;
+		ingredients.map(async (ingredient): Promise<GramResult | null> => {
+			const { quantity, unit, name } = ingredient;
+			if (quantity === null) return null;
 
-			if (!unit) return null;
+			if (unit) {
+				const grams =
+					lookupGrams(quantity, unit, name) ?? (await convertViaSpoonacular(quantity, unit, name));
+				return grams === null ? null : { grams, approximate: false };
+			}
 
-			const amount = parseAmount(rawAmount);
-			if (amount === 0) return null;
-
-			// Table lookup first
-			const tableResult = lookupGrams(amount, unit, name);
-			if (tableResult !== null) return tableResult;
-
-			// Spoonacular fallback
-			return await convertViaSpoonacular(amount, unit, name);
+			// No unit means a count ("2 eggs"): whole-item weights are estimates.
+			const grams =
+				lookupPieceGrams(quantity, name) ?? (await convertViaSpoonacular(quantity, 'piece', name));
+			return grams === null ? null : { grams, approximate: true };
 		})
 	);
 
