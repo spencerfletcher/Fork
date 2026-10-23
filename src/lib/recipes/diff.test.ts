@@ -1,16 +1,12 @@
 import { describe, test, expect } from 'vitest';
 import { diffIngredients, diffSteps, diffInline } from './diff';
-import { parseIngredientLine } from './ingredients';
-import type { Ingredient, Step } from '#lib/recipes/types.js';
+import { makeIngredient, makeStep as step } from './fixtures';
+import type { Ingredient, StepAnnotation } from '#lib/recipes/types.js';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function ing(name: string, amount = '1', unit = 'cup'): Ingredient {
-	return parseIngredientLine(`${amount} ${unit} ${name}`);
-}
-
-function step(text: string): Step {
-	return { text };
+	return makeIngredient(`${amount} ${unit} ${name}`);
 }
 
 // ─── diffInline ───────────────────────────────────────────────────────────────
@@ -95,14 +91,14 @@ describe('diffIngredients', () => {
 	});
 
 	test('a changed range end is modified', () => {
-		const from = [parseIngredientLine('2-3 cloves garlic')];
-		const to = [parseIngredientLine('2-4 cloves garlic')];
+		const from = [makeIngredient('2-3 cloves garlic')];
+		const to = [makeIngredient('2-4 cloves garlic')];
 		expect(diffIngredients(from, to)[0].status).toBe('modified');
 	});
 
 	test('a modified row diffs the lines as typed', () => {
-		const from = [parseIngredientLine('1 cup flour')];
-		const to = [parseIngredientLine('2 cups flour')];
+		const from = [makeIngredient('1 cup flour')];
+		const to = [makeIngredient('2 cups flour')];
 		const [row] = diffIngredients(from, to);
 		if (row.status !== 'modified') throw new Error('expected modified');
 		const side = (skip: 'added' | 'removed') =>
@@ -214,7 +210,7 @@ describe('diffSteps', () => {
 	});
 
 	describe('annotations', () => {
-		const tip = (text: string) => ({ type: 'tip' as const, text });
+		const tip = (text: string): StepAnnotation => ({ type: 'tip', text });
 		const modified = (rows: ReturnType<typeof diffSteps>) => {
 			const [row] = rows;
 			if (row.status !== 'modified') throw new Error(`expected modified, got ${row.status}`);
@@ -222,9 +218,7 @@ describe('diffSteps', () => {
 		};
 
 		test('adding an annotation marks the step modified with unchanged text segments', () => {
-			const row = modified(
-				diffSteps([step('Bake.')], [{ text: 'Bake.', annotation: tip('watch it') }])
-			);
+			const row = modified(diffSteps([step('Bake.')], [step('Bake.', tip('watch it'))]));
 			expect(row.stepNumber).toBe(1);
 			expect(row.segments.every((s) => s.type === 'unchanged')).toBe(true);
 			expect(row.annotation).toEqual({
@@ -235,9 +229,7 @@ describe('diffSteps', () => {
 		});
 
 		test('removing an annotation is modified with a removed annotation diff', () => {
-			const row = modified(
-				diffSteps([{ text: 'Bake.', annotation: tip('watch it') }], [step('Bake.')])
-			);
+			const row = modified(diffSteps([step('Bake.', tip('watch it'))], [step('Bake.')]));
 			expect(row.annotation).toEqual({
 				status: 'removed',
 				type: 'tip',
@@ -247,10 +239,7 @@ describe('diffSteps', () => {
 
 		test('editing annotation text inline-diffs the annotation only', () => {
 			const row = modified(
-				diffSteps(
-					[{ text: 'Bake.', annotation: tip('watch it') }],
-					[{ text: 'Bake.', annotation: tip('watch it closely') }]
-				)
+				diffSteps([step('Bake.', tip('watch it'))], [step('Bake.', tip('watch it closely'))])
 			);
 			expect(row.segments.every((s) => s.type === 'unchanged')).toBe(true);
 			expect(row.annotation?.status).toBe('modified');
@@ -261,26 +250,18 @@ describe('diffSteps', () => {
 
 		test('changing only the annotation type is modified and reports the new type', () => {
 			const row = modified(
-				diffSteps(
-					[{ text: 'Bake.', annotation: tip('hot') }],
-					[{ text: 'Bake.', annotation: { type: 'warning', text: 'hot' } }]
-				)
+				diffSteps([step('Bake.', tip('hot'))], [step('Bake.', { type: 'warning', text: 'hot' })])
 			);
 			expect(row.annotation).toMatchObject({ status: 'modified', type: 'warning' });
 		});
 
 		test('identical annotations stay unchanged', () => {
-			const list = [{ text: 'Bake.', annotation: tip('hot') }];
+			const list = [step('Bake.', tip('hot'))];
 			expect(diffSteps(list, list)[0].status).toBe('unchanged');
 		});
 
 		test('changed text and changed annotation both appear on one row', () => {
-			const row = modified(
-				diffSteps(
-					[{ text: 'Bake 10.', annotation: tip('a') }],
-					[{ text: 'Bake 12.', annotation: tip('b') }]
-				)
-			);
+			const row = modified(diffSteps([step('Bake 10.', tip('a'))], [step('Bake 12.', tip('b'))]));
 			expect(row.segments.some((s) => s.type === 'added' && s.text.includes('12'))).toBe(true);
 			expect(row.annotation?.status).toBe('modified');
 		});

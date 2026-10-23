@@ -1,11 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { parseIngredientLine as ing } from '#lib/recipes/ingredients.js';
+import { makeIngredient as ing } from '#lib/recipes/fixtures.js';
 
 // A key is set so the Spoonacular fallback runs; fetch is stubbed so the tests
 // stay offline and can assert what the endpoint asked for.
 vi.mock('$app/env/private', () => ({ SPOONACULAR_API_KEY: 'test-key' }));
 
-const fetchMock = vi.fn(async (_url: string) => Response.json({ targetAmount: 42 }));
+const fetchMock = vi.fn<(url: string) => Promise<Response>>(async () =>
+	Response.json({ targetAmount: 42 })
+);
 vi.stubGlobal('fetch', fetchMock);
 
 const { POST } = await import('./+server');

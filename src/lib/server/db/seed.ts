@@ -6,6 +6,8 @@ import { nanoid } from 'nanoid';
 
 import { recipes, tags, recipesToTags, recipeVersions, profiles } from './schema';
 import { slugify } from '#lib/helpers.js';
+import { parseIngredientText } from '#lib/recipes/ingredients.js';
+import { parseStepText } from '#lib/recipes/steps.js';
 
 // Load .env.local with override so it wins even over shell env vars,
 // then fill in any remaining vars from .env
@@ -24,47 +26,44 @@ if (!SUPABASE_SECRET_KEY) throw new Error('SUPABASE_SECRET_KEY is not set');
 
 // ─── Seed data ────────────────────────────────────────────────────────────────
 
-const COOKIE_INGREDIENTS_V1 = [
-	{ amount: '2¼', unit: 'cups', name: 'all-purpose flour' },
-	{ amount: '1', unit: 'tsp', name: 'baking soda' },
-	{ amount: '1', unit: 'tsp', name: 'salt' },
-	{ amount: '1', unit: 'cup', name: 'unsalted butter, softened' },
-	{ amount: '¾', unit: 'cup', name: 'granulated sugar' },
-	{ amount: '¾', unit: 'cup', name: 'packed brown sugar' },
-	{ amount: '1', unit: 'tsp', name: 'vanilla extract' },
-	{ amount: '2', unit: 'large', name: 'eggs' },
-	{ amount: '2', unit: 'cups', name: 'chocolate chips' }
-];
+const COOKIE_INGREDIENTS_V1 = parseIngredientText(`
+2¼ cups all-purpose flour
+1 tsp baking soda
+1 tsp salt
+1 cup unsalted butter, softened
+¾ cup granulated sugar
+¾ cup packed brown sugar
+1 tsp vanilla extract
+2 large eggs
+2 cups chocolate chips
+`);
 
-const COOKIE_INGREDIENTS_V2 = [
-	{ amount: '2¼', unit: 'cups', name: 'all-purpose flour' },
-	{ amount: '1', unit: 'tsp', name: 'baking soda' },
-	{ amount: '1', unit: 'tsp', name: 'salt' },
-	{ amount: '1', unit: 'cup', name: 'unsalted butter, softened' },
-	{ amount: '¾', unit: 'cup', name: 'granulated sugar' },
-	{ amount: '¾', unit: 'cup', name: 'packed brown sugar' },
-	{ amount: '2', unit: 'tsp', name: 'vanilla extract' },
-	{ amount: '2', unit: 'large', name: 'eggs' },
-	{ amount: '2', unit: 'cups', name: 'chocolate chips' },
-	{ amount: '¼', unit: 'tsp', name: 'espresso powder' }
-];
+const COOKIE_INGREDIENTS_V2 = parseIngredientText(`
+2¼ cups all-purpose flour
+1 tsp baking soda
+1 tsp salt
+1 cup unsalted butter, softened
+¾ cup granulated sugar
+¾ cup packed brown sugar
+2 tsp vanilla extract
+2 large eggs
+2 cups chocolate chips
+¼ tsp espresso powder
+`);
 
-const COOKIE_STEPS = [
-	{ text: 'Preheat oven to 375°F (190°C). Line two baking sheets with parchment paper.' },
-	{ text: 'Whisk flour, baking soda, and salt in a medium bowl. Set aside.' },
-	{
-		text: 'Beat butter and both sugars with an electric mixer on medium speed until light and fluffy, about 3 minutes.'
-	},
-	{
-		text: 'Add eggs one at a time, beating well after each addition. Beat in vanilla extract.'
-	},
-	{
-		text: 'Gradually stir in the flour mixture until just combined. Fold in chocolate chips.'
-	},
-	{
-		text: 'Drop rounded tablespoons of dough onto prepared baking sheets. Bake 9–11 minutes until edges are golden. Cool on baking sheet for 5 minutes before transferring.'
-	}
-];
+const COOKIE_STEPS = parseStepText(`
+Preheat oven to 375°F (190°C). Line two baking sheets with parchment paper.
+
+Whisk flour, baking soda, and salt in a medium bowl. Set aside.
+
+Beat butter and both sugars with an electric mixer on medium speed until light and fluffy, about 3 minutes.
+
+Add eggs one at a time, beating well after each addition. Beat in vanilla extract.
+
+Gradually stir in the flour mixture until just combined. Fold in chocolate chips.
+
+Drop rounded tablespoons of dough onto prepared baking sheets. Bake 9–11 minutes until edges are golden. Cool on baking sheet for 5 minutes before transferring.
+`);
 
 // Version 3 is the diff the landing page showcases, so it is shaped to the
 // strengths of the diff engine as well as to the story. Every ingredient change
@@ -72,126 +71,113 @@ const COOKIE_STEPS = [
 // salt are what that ratio needs.
 //
 // It deliberately edits the two existing steps in place rather than inserting a
-// new one: diffSteps matches by step number, so inserting mid-list renumbers
+// new one: diffSteps matches by position, so inserting mid-list renumbers
 // everything after it and renders as a cascade of unrelated changes. It also
 // avoids renaming an ingredient, which diffIngredients reports as a removal plus
 // an addition rather than one modification. Both are documented limitations in
 // lib/recipes/diff.ts.
-const COOKIE_INGREDIENTS_V3 = [
-	{ amount: '2¼', unit: 'cups', name: 'all-purpose flour' },
-	{ amount: '1', unit: 'tsp', name: 'baking soda' },
-	{ amount: '1', unit: 'tsp', name: 'salt' },
-	{ amount: '1', unit: 'cup', name: 'unsalted butter, softened' },
-	{ amount: '½', unit: 'cup', name: 'granulated sugar' },
-	{ amount: '1', unit: 'cup', name: 'packed brown sugar' },
-	{ amount: '2', unit: 'tsp', name: 'vanilla extract' },
-	{ amount: '2', unit: 'large', name: 'eggs' },
-	{ amount: '2', unit: 'cups', name: 'chocolate chips' },
-	{ amount: '¼', unit: 'tsp', name: 'espresso powder' },
-	{ amount: '1', unit: 'tsp', name: 'flaky sea salt, for topping' }
-];
+const COOKIE_INGREDIENTS_V3 = parseIngredientText(`
+2¼ cups all-purpose flour
+1 tsp baking soda
+1 tsp salt
+1 cup unsalted butter, softened
+½ cup granulated sugar
+1 cup packed brown sugar
+2 tsp vanilla extract
+2 large eggs
+2 cups chocolate chips
+¼ tsp espresso powder
+1 tsp flaky sea salt, for topping
+`);
 
-const COOKIE_STEPS_V3 = [
-	{ text: 'Preheat oven to 375°F (190°C). Line two baking sheets with parchment paper.' },
-	{ text: 'Whisk flour, baking soda, and salt in a medium bowl. Set aside.' },
-	{
-		text: 'Beat butter and both sugars with an electric mixer on medium speed until light and fluffy, about 3 minutes.'
-	},
-	{
-		text: 'Add eggs one at a time, beating well after each addition. Beat in vanilla extract.'
-	},
-	{
-		text: 'Gradually stir in the flour mixture until just combined. Fold in chocolate chips, reserving a handful to press into the tops. Cover and chill the dough at least 2 hours — cold dough spreads less, so the extra brown sugar reads as chew rather than sprawl.'
-	},
-	{
-		text: 'Drop rounded tablespoons of chilled dough onto prepared baking sheets, pressing the reserved chips into the tops. Bake 9–11 minutes until edges are golden. Sprinkle with flaky sea salt while still hot, then cool on baking sheet for 5 minutes before transferring.'
-	}
-];
+const COOKIE_STEPS_V3 = parseStepText(`
+Preheat oven to 375°F (190°C). Line two baking sheets with parchment paper.
 
-const BROWN_BUTTER_INGREDIENTS = [
-	{ amount: '2¼', unit: 'cups', name: 'all-purpose flour' },
-	{ amount: '1', unit: 'tsp', name: 'baking soda' },
-	{ amount: '1', unit: 'tsp', name: 'salt' },
-	{ amount: '1', unit: 'cup', name: 'unsalted butter' },
-	{ amount: '¾', unit: 'cup', name: 'granulated sugar' },
-	{ amount: '¾', unit: 'cup', name: 'packed brown sugar' },
-	{ amount: '2', unit: 'tsp', name: 'vanilla extract' },
-	{ amount: '2', unit: 'large', name: 'eggs' },
-	{ amount: '2', unit: 'cups', name: 'chocolate chips' },
-	{ amount: '¼', unit: 'tsp', name: 'espresso powder' },
-	{ amount: '1', unit: 'tsp', name: 'flaky sea salt, for topping' }
-];
+Whisk flour, baking soda, and salt in a medium bowl. Set aside.
 
-const BROWN_BUTTER_STEPS = [
-	{
-		text: 'Melt butter in a light-colored saucepan over medium heat, stirring frequently. Cook until foam subsides and milk solids turn golden brown, about 5–7 minutes. It should smell nutty. Pour into a bowl and let cool 10 minutes.'
-	},
-	{ text: 'Whisk flour, baking soda, and salt in a medium bowl. Set aside.' },
-	{
-		text: 'Whisk brown butter, granulated sugar, and brown sugar together until combined. Add eggs one at a time, whisking well, then add vanilla and espresso powder.'
-	},
-	{
-		text: 'Fold in flour mixture until just combined, then fold in chocolate chips. Refrigerate dough for at least 30 minutes (or overnight for best results).'
-	},
-	{
-		text: 'Preheat oven to 375°F (190°C). Line baking sheets with parchment. Drop rounded tablespoons of dough 2 inches apart.'
-	},
-	{
-		text: 'Bake 9–11 minutes until edges are set. Immediately sprinkle with flaky sea salt. Cool on baking sheet 5 minutes before transferring.'
-	}
-];
+Beat butter and both sugars with an electric mixer on medium speed until light and fluffy, about 3 minutes.
 
-const TIKKA_INGREDIENTS_V1 = [
-	{ amount: '2', unit: 'lbs', name: 'boneless chicken thighs, cut into chunks' },
-	{ amount: '1', unit: 'cup', name: 'plain yogurt' },
-	{ amount: '2', unit: 'tbsp', name: 'lemon juice' },
-	{ amount: '2', unit: 'tsp', name: 'garam masala' },
-	{ amount: '1', unit: 'tsp', name: 'ground cumin' },
-	{ amount: '1', unit: 'tsp', name: 'ground coriander' },
-	{ amount: '1', unit: 'tsp', name: 'turmeric' },
-	{ amount: '3', unit: 'tbsp', name: 'butter' },
-	{ amount: '1', unit: 'large', name: 'onion, diced' },
-	{ amount: '4', unit: 'cloves', name: 'garlic, minced' },
-	{ amount: '1', unit: 'tbsp', name: 'fresh ginger, grated' },
-	{ amount: '1', unit: 'can (28 oz)', name: 'crushed tomatoes' },
-	{ amount: '1', unit: 'cup', name: 'heavy cream' }
-];
+Add eggs one at a time, beating well after each addition. Beat in vanilla extract.
 
-const TIKKA_STEPS_V1 = [
-	{
-		text: 'Combine chicken with yogurt, lemon juice, garam masala, cumin, coriander, and turmeric. Marinate at least 1 hour or overnight in the fridge.'
-	},
-	{
-		text: 'Grill or broil marinated chicken until cooked through and lightly charred, about 8–10 minutes. Set aside.'
-	},
-	{
-		text: 'Melt butter in a large skillet over medium heat. Sauté onion until softened, about 5 minutes. Add garlic and ginger, cook 1 minute more.'
-	},
-	{
-		text: 'Add crushed tomatoes and remaining spices. Simmer 15 minutes, stirring occasionally, until sauce thickens.'
-	},
-	{
-		text: 'Add chicken to the sauce. Pour in cream and stir to combine. Simmer 10 minutes.'
-	},
-	{ text: 'Serve over basmati rice with warm naan bread.' }
-];
+Gradually stir in the flour mixture until just combined. Fold in chocolate chips, reserving a handful to press into the tops. Cover and chill the dough at least 2 hours — cold dough spreads less, so the extra brown sugar reads as chew rather than sprawl.
 
-const TIKKA_INGREDIENTS_V2 = [
-	{ amount: '2', unit: 'lbs', name: 'boneless chicken thighs, cut into chunks' },
-	{ amount: '1', unit: 'cup', name: 'plain yogurt' },
-	{ amount: '2', unit: 'tbsp', name: 'lemon juice' },
-	{ amount: '3', unit: 'tsp', name: 'garam masala' },
-	{ amount: '½', unit: 'tsp', name: 'ground cumin' },
-	{ amount: '1', unit: 'tsp', name: 'ground coriander' },
-	{ amount: '1', unit: 'tsp', name: 'turmeric' },
-	{ amount: '1', unit: 'tsp', name: 'smoked paprika' },
-	{ amount: '3', unit: 'tbsp', name: 'butter' },
-	{ amount: '1', unit: 'large', name: 'onion, diced' },
-	{ amount: '4', unit: 'cloves', name: 'garlic, minced' },
-	{ amount: '1', unit: 'tbsp', name: 'fresh ginger, grated' },
-	{ amount: '1', unit: 'can (28 oz)', name: 'crushed tomatoes' },
-	{ amount: '1', unit: 'cup', name: 'heavy cream' }
-];
+Drop rounded tablespoons of chilled dough onto prepared baking sheets, pressing the reserved chips into the tops. Bake 9–11 minutes until edges are golden. Sprinkle with flaky sea salt while still hot, then cool on baking sheet for 5 minutes before transferring.
+`);
+
+const BROWN_BUTTER_INGREDIENTS = parseIngredientText(`
+2¼ cups all-purpose flour
+1 tsp baking soda
+1 tsp salt
+1 cup unsalted butter
+¾ cup granulated sugar
+¾ cup packed brown sugar
+2 tsp vanilla extract
+2 large eggs
+2 cups chocolate chips
+¼ tsp espresso powder
+1 tsp flaky sea salt, for topping
+`);
+
+const BROWN_BUTTER_STEPS = parseStepText(`
+Melt butter in a light-colored saucepan over medium heat, stirring frequently. Cook until foam subsides and milk solids turn golden brown, about 5–7 minutes. It should smell nutty. Pour into a bowl and let cool 10 minutes.
+
+Whisk flour, baking soda, and salt in a medium bowl. Set aside.
+
+Whisk brown butter, granulated sugar, and brown sugar together until combined. Add eggs one at a time, whisking well, then add vanilla and espresso powder.
+
+Fold in flour mixture until just combined, then fold in chocolate chips. Refrigerate dough for at least 30 minutes (or overnight for best results).
+
+Preheat oven to 375°F (190°C). Line baking sheets with parchment. Drop rounded tablespoons of dough 2 inches apart.
+
+Bake 9–11 minutes until edges are set. Immediately sprinkle with flaky sea salt. Cool on baking sheet 5 minutes before transferring.
+`);
+
+const TIKKA_INGREDIENTS_V1 = parseIngredientText(`
+2 lbs boneless chicken thighs, cut into chunks
+1 cup plain yogurt
+2 tbsp lemon juice
+2 tsp garam masala
+1 tsp ground cumin
+1 tsp ground coriander
+1 tsp turmeric
+3 tbsp butter
+1 large onion, diced
+4 cloves garlic, minced
+1 tbsp fresh ginger, grated
+28 oz canned crushed tomatoes
+1 cup heavy cream
+`);
+
+const TIKKA_STEPS_V1 = parseStepText(`
+Combine chicken with yogurt, lemon juice, garam masala, cumin, coriander, and turmeric. Marinate at least 1 hour or overnight in the fridge.
+
+Grill or broil marinated chicken until cooked through and lightly charred, about 8–10 minutes. Set aside.
+
+Melt butter in a large skillet over medium heat. Sauté onion until softened, about 5 minutes. Add garlic and ginger, cook 1 minute more.
+
+Add crushed tomatoes and remaining spices. Simmer 15 minutes, stirring occasionally, until sauce thickens.
+
+Add chicken to the sauce. Pour in cream and stir to combine. Simmer 10 minutes.
+
+Serve over basmati rice with warm naan bread.
+`);
+
+const TIKKA_INGREDIENTS_V2 = parseIngredientText(`
+2 lbs boneless chicken thighs, cut into chunks
+1 cup plain yogurt
+2 tbsp lemon juice
+3 tsp garam masala
+½ tsp ground cumin
+1 tsp ground coriander
+1 tsp turmeric
+1 tsp smoked paprika
+3 tbsp butter
+1 large onion, diced
+4 cloves garlic, minced
+1 tbsp fresh ginger, grated
+28 oz canned crushed tomatoes
+1 cup heavy cream
+`);
 
 // v3 changes only what its commit message claims: the paprika added to the
 // ingredients in v2 finally reaches the marinade, and the sauce gains a butter
@@ -200,28 +186,21 @@ const TIKKA_INGREDIENTS_V2 = [
 // stated reason, which is exactly what makes a diff read as churn.
 //
 // The butter finish is appended to step 5 rather than inserted as a new step 6,
-// because diffSteps matches by step number and a mid-list insert renumbers
+// because diffSteps matches by position and a mid-list insert renumbers
 // everything after it into a cascade of false changes.
-const TIKKA_STEPS_V3 = [
-	{
-		text: 'Combine chicken with yogurt, lemon juice, garam masala, cumin, coriander, turmeric, and smoked paprika. Marinate at least 1 hour or overnight in the fridge.'
-	},
-	{
-		text: 'Grill or broil marinated chicken until cooked through and lightly charred, about 8–10 minutes. Set aside.'
-	},
-	{
-		text: 'Melt butter in a large skillet over medium heat. Sauté onion until softened, about 5 minutes. Add garlic and ginger, cook 1 minute more.'
-	},
-	{
-		text: 'Add crushed tomatoes and remaining spices. Simmer 15 minutes, stirring occasionally, until sauce thickens.'
-	},
-	{
-		text: 'Add chicken to the sauce. Pour in cream and stir to combine. Simmer 10 minutes, then stir in a final tablespoon of cold butter for richness and gloss.'
-	},
-	{
-		text: 'Serve over basmati rice with warm naan bread. Garnish with fresh cilantro.'
-	}
-];
+const TIKKA_STEPS_V3 = parseStepText(`
+Combine chicken with yogurt, lemon juice, garam masala, cumin, coriander, turmeric, and smoked paprika. Marinate at least 1 hour or overnight in the fridge.
+
+Grill or broil marinated chicken until cooked through and lightly charred, about 8–10 minutes. Set aside.
+
+Melt butter in a large skillet over medium heat. Sauté onion until softened, about 5 minutes. Add garlic and ginger, cook 1 minute more.
+
+Add crushed tomatoes and remaining spices. Simmer 15 minutes, stirring occasionally, until sauce thickens.
+
+Add chicken to the sauce. Pour in cream and stir to combine. Simmer 10 minutes, then stir in a final tablespoon of cold butter for richness and gloss.
+
+Serve over basmati rice with warm naan bread. Garnish with fresh cilantro.
+`);
 
 // ─── Seed function ────────────────────────────────────────────────────────────
 

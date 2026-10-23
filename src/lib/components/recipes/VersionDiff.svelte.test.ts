@@ -2,12 +2,12 @@ import { describe, test, expect } from 'vitest';
 import { render, screen } from '@testing-library/svelte';
 import VersionDiff from './VersionDiff.svelte';
 import type { IngredientDiffRow, StepDiffRow } from '#lib/recipes/diff.js';
-import { parseIngredientLine } from '#lib/recipes/ingredients.js';
+import { makeIngredient } from '#lib/recipes/fixtures.js';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function ingredient(name: string, amount = '1', unit = 'cup') {
-	return parseIngredientLine(`${amount} ${unit} ${name}`);
+	return makeIngredient(`${amount} ${unit} ${name}`);
 }
 
 function renderDiff(ingredientDiff: IngredientDiffRow[] = [], stepDiff: StepDiffRow[] = []) {

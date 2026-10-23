@@ -2,7 +2,7 @@ import { describe, test, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/svelte';
 import DiffPage from './+page.svelte';
 import type { IngredientDiffRow, StepDiffRow } from '#lib/recipes/diff.js';
-import { parseIngredientLine as ing } from '#lib/recipes/ingredients.js';
+import { makeIngredient as ing } from '#lib/recipes/fixtures.js';
 
 // ─── SvelteKit module mocks ───────────────────────────────────────────────────
 

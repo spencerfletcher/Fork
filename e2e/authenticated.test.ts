@@ -75,8 +75,8 @@ test.describe('New recipe page', () => {
 
 	test('shows ingredient and step editors', async ({ page }) => {
 		await page.goto('/recipes/new');
-		await expect(page.getByText(/ingredients/i)).toBeVisible();
-		await expect(page.getByText(/steps/i)).toBeVisible();
+		await expect(page.getByLabel('Ingredients')).toBeVisible();
+		await expect(page.getByLabel('Steps')).toBeVisible();
 	});
 
 	test('creates a recipe and redirects to its detail page', async ({ page }) => {
@@ -87,13 +87,8 @@ test.describe('New recipe page', () => {
 
 			await page.locator('input[name="title"]').fill('E2E Test Recipe');
 
-			// Fill first ingredient row
-			await page.locator('input[placeholder="Amount"]').first().fill('2');
-			await page.locator('input[placeholder="Unit"]').first().fill('cups');
-			await page.locator('input[placeholder="Ingredient name"]').first().fill('flour');
-
-			// Fill first step
-			await page.locator('textarea[placeholder*="step"]').first().fill('Mix all ingredients.');
+			await page.getByLabel('Ingredients').fill('2 cups flour');
+			await page.getByLabel('Steps').fill('Mix all ingredients.');
 
 			await page.getByRole('button', { name: /create recipe/i }).click();
 

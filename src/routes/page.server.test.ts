@@ -19,7 +19,7 @@ vi.mock('#lib/server/db/index.js', () => ({
 }));
 
 import { load } from './+page.server';
-import { parseIngredientLine as ing } from '#lib/recipes/ingredients.js';
+import { makeIngredient as ing } from '#lib/recipes/fixtures.js';
 import type { PageData } from './$types';
 
 function chain(resolved: unknown = []) {

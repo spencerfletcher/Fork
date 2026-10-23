@@ -33,6 +33,7 @@ A deliberate split in the schema supports this: recipe _metadata_ (title, descri
 | Area | What works |
 | --- | --- |
 | Versioning | Version history per recipe, required commit messages, collapsible history UI, version-to-version compare |
+| Editing | Ingredients and steps are typed as plain text, one ingredient per line and one step per paragraph, and parsed into structure on save; lines that don't parse are kept as written |
 | Diffing | Ingredient and step diffs with word-level inline highlighting |
 | Forking | Fork any public recipe, lineage via `parent_id`, fork counts, attribution on the recipe page |
 | Recipes | Create, edit, image upload to Supabase Storage, public/private visibility |
