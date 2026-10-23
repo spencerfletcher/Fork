@@ -18,11 +18,15 @@ Full-stack recipe platform with git-style version control for recipes. Stack: Sv
 - Never modify the schema without a migration file
 - Migrations are one-way — no rollback scripts means you need to get it right
 - Version history is append-only by design — don't add any logic that mutates past versions
+- Pre-production: no backward compatibility with stored data. When a JSONB shape changes, change the type, update the seed, reseed. No legacy types, no backfill or normalize helpers, no sanitising for data nothing writes any more
+- Store only what cannot be derived. Position in a list is its number; do not add a stored index field
 - Test schema changes locally against a copy of prod data structure before shipping
 
 ## Frontend
 
 - TypeScript strict mode — no `any`
+- Naming: an ingredient's number is `quantity` (never `amount`, which is reserved for quoting external APIs such as Spoonacular's `sourceAmount`)
+- Status-like values are string literal unions, not enums. When a list must exist at runtime, declare it `as const` and derive the type from it
 - Svelte stores for shared state, props for component-local state
 - Keep components small and single-purpose
 - Accessibility matters: interactive elements need keyboard support and ARIA where appropriate
@@ -40,6 +44,8 @@ Full-stack recipe platform with git-style version control for recipes. Stack: Sv
 - Unit test files live next to the source file: `Foo.svelte` → `Foo.svelte.test.ts`, `page.server.ts` → `page.server.test.ts`
 - Use `@testing-library/svelte` for component tests; match existing `makeX()` helper patterns
 - Use `vi.hoisted()` for any mock function used inside `vi.mock()` factory
+- Build recipe content fixtures with the helpers in `src/lib/recipes/fixtures.ts`, never with hand-written object literals, so a shape change touches one file
+- When a stored type changes shape, do the type and every reader as one vertical slice so `svelte-check` is green at the end of the task; server-first ordering is for new features
 - Run `pnpm test:unit` before committing; don't commit with failing unit tests
 
 ## Deployment
