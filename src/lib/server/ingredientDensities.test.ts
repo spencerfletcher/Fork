@@ -20,6 +20,20 @@ describe('lookupPieceGrams', () => {
 		expect(lookupPieceGrams(1, 'unicorn')).toBeNull();
 	});
 
+	test('a compound name is its own item, not the short item inside it', () => {
+		expect(lookupPieceGrams(2, 'green onions')).toBe(30);
+		expect(lookupPieceGrams(2, 'sweet potatoes')).toBe(260);
+		expect(lookupPieceGrams(1, 'cherry tomatoes')).toBe(17);
+	});
+
+	test('a product made from an item is not the item', () => {
+		expect(lookupPieceGrams(1, 'lemon juice')).toBeNull();
+		expect(lookupPieceGrams(1, 'tomato paste')).toBeNull();
+		expect(lookupPieceGrams(1, 'egg noodles')).toBeNull();
+		expect(lookupPieceGrams(1, 'apple cider vinegar')).toBeNull();
+		expect(lookupPieceGrams(1, 'garlic powder')).toBeNull();
+	});
+
 	test('matches whole words only, so eggplant is not an egg', () => {
 		expect(lookupPieceGrams(2, 'eggplants')).toBeNull();
 		expect(lookupPieceGrams(2, 'eggs')).toBe(100);
@@ -33,11 +47,21 @@ describe('lookupGrams', () => {
 
 	test('prefers the most specific key when preparation text follows the name', () => {
 		const cup = ML_PER_UNIT.cup;
-		expect(lookupGrams(1, 'cup', 'almond flour, sifted')).toBe(cup * DENSITIES['almond flour']);
-		expect(lookupGrams(1, 'cup', 'powdered sugar, sifted')).toBe(cup * DENSITIES['powdered sugar']);
-		expect(lookupGrams(1, 'tsp', 'kosher salt, divided')).toBe(
-			ML_PER_UNIT.tsp * DENSITIES['kosher salt']
+		expect(lookupGrams(1, 'cup', 'almond flour, sifted')).toBe(cup * DENSITIES['almond flour']!);
+		expect(lookupGrams(1, 'cup', 'powdered sugar, sifted')).toBe(
+			cup * DENSITIES['powdered sugar']!
 		);
+		expect(lookupGrams(1, 'tsp', 'kosher salt, divided')).toBe(
+			ML_PER_UNIT.tsp * DENSITIES['kosher salt']!
+		);
+	});
+
+	test('a powder or juice uses its own density, not the fresh item it is named after', () => {
+		expect(lookupGrams(1, 'tsp', 'garlic powder')).toBe(
+			ML_PER_UNIT.tsp * DENSITIES['garlic powder']!
+		);
+		expect(lookupGrams(1, 'tsp', 'garlic powder')).not.toBe(ML_PER_UNIT.tsp * DENSITIES.garlic!);
+		expect(lookupGrams(1, 'cup', 'lemon juice')).toBe(ML_PER_UNIT.cup * DENSITIES['lemon juice']!);
 	});
 
 	test('matches whole words only and never guesses from a key that merely contains the name', () => {

@@ -6,7 +6,10 @@
  * Ingredient densities (grams per ml) for common ingredients.
  * Matching checks if the ingredient name contains the key (or vice-versa).
  */
-export const DENSITIES: Record<string, number> = {
+// A null value is a deliberate miss: the compound is a different thing from
+// the shorter key inside it, and nothing here knows its weight. Keys match
+// longest-first, so the compound wins over the short key.
+export const DENSITIES: Record<string, number | null> = {
 	// Flours
 	'all-purpose flour': 0.529,
 	flour: 0.529,
@@ -82,10 +85,12 @@ export const DENSITIES: Record<string, number> = {
 	'ginger, minced': 0.85,
 	'ground ginger': 0.56,
 	garlic: 0.64,
+	'garlic powder': 0.56,
 	'garlic, minced': 0.64,
 	'garlic, crushed': 0.64,
 	'minced garlic': 0.64,
 	onion: 0.72,
+	'onion powder': 0.56,
 	'onion, diced': 0.72,
 	'onion, chopped': 0.72,
 	'diced onion': 0.72,
@@ -95,6 +100,8 @@ export const DENSITIES: Record<string, number> = {
 	'green onion': 0.5,
 	chive: 0.5,
 	chives: 0.5,
+	'crushed tomatoes': 1.0,
+	'diced tomatoes': 1.0,
 	// Grains & starches
 	'rolled oats': 0.34,
 	oats: 0.34,
@@ -154,6 +161,8 @@ export const DENSITIES: Record<string, number> = {
 	'lemon juice': 1.006,
 	'lime juice': 1.006,
 	'orange juice': 1.045,
+	'apple juice': 1.045,
+	'apple cider': 1.0,
 	broth: 1.003,
 	'chicken broth': 1.003,
 	'beef broth': 1.003,
@@ -214,23 +223,46 @@ export const GRAMS_PER_WEIGHT_UNIT: Record<string, number> = {
  * These are typical weights and are shown to readers as estimates. Longer keys
  * win over shorter ones, so "egg white" is not read as "egg".
  */
-export const PIECE_GRAMS: Record<string, number> = {
+export const PIECE_GRAMS: Record<string, number | null> = {
 	egg: 50,
 	'egg white': 33,
 	'egg yolk': 18,
+	'egg noodle': null,
 	banana: 120,
 	apple: 180,
+	'apple cider': null,
+	'apple cider vinegar': null,
+	'apple juice': null,
+	'apple sauce': null,
+	applesauce: null,
 	lemon: 60,
+	'lemon juice': null,
+	'lemon zest': null,
 	lime: 45,
+	'lime juice': null,
+	'lime zest': null,
 	orange: 130,
+	'orange juice': null,
+	'orange zest': null,
 	onion: 150,
+	'green onion': 15,
+	'onion powder': null,
 	shallot: 30,
 	'garlic clove': 5,
 	'clove of garlic': 5,
 	'clove garlic': 5,
+	'garlic powder': null,
 	potato: 170,
+	'sweet potato': 130,
 	carrot: 60,
 	tomato: 120,
+	'cherry tomato': 17,
+	'grape tomato': 8,
+	'roma tomato': 60,
+	'tomato paste': null,
+	'tomato sauce': null,
+	'crushed tomato': null,
+	'diced tomato': null,
 	'bell pepper': 150,
 	avocado: 170
 };

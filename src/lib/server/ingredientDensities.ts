@@ -8,17 +8,18 @@ type Matcher = { key: string; pattern: RegExp };
 
 // Longest key first, so "almond flour, sifted" meets "almond flour" before
 // "flour". Keys match as whole words, so "eggplant" is not an egg and "oil"
-// alone is not "olive oil"; a trailing "s" is allowed for plurals.
-function matchers(table: Record<string, number>): Matcher[] {
+// alone is not "olive oil"; a trailing "s" or "es" is allowed for plurals.
+function matchers(table: Record<string, number | null>): Matcher[] {
 	return Object.keys(table)
 		.sort((a, b) => b.length - a.length)
 		.map((key) => ({
 			key,
-			pattern: new RegExp(`\\b${key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}s?\\b`)
+			pattern: new RegExp(`\\b${key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?:s|es)?\\b`)
 		}));
 }
 
-function lookup(table: Record<string, number>, table_matchers: Matcher[], name: string) {
+// A key with a null value is a deliberate miss, see gramTables.ts.
+function lookup(table: Record<string, number | null>, table_matchers: Matcher[], name: string) {
 	const nameLower = name.trim().toLowerCase();
 	const match = table_matchers.find(({ pattern }) => pattern.test(nameLower));
 	return match === undefined ? null : table[match.key];
