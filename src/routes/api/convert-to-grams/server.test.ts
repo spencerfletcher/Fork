@@ -5,7 +5,7 @@ import { parseIngredientLine as ing } from '#lib/recipes/ingredients.js';
 // stay offline and can assert what the endpoint asked for.
 vi.mock('$app/env/private', () => ({ SPOONACULAR_API_KEY: 'test-key' }));
 
-const fetchMock = vi.fn(async () => Response.json({ targetAmount: 42 }));
+const fetchMock = vi.fn(async (_url: string) => Response.json({ targetAmount: 42 }));
 vi.stubGlobal('fetch', fetchMock);
 
 const { POST } = await import('./+server');
