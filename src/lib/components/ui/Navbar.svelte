@@ -22,7 +22,8 @@
 		<!-- Logo + nav links -->
 		<div class="flex items-center gap-6">
 			<a href="/" class="nav-brand" onclick={closeMenu}>
-				Fork<span class="text-accent">.</span>
+				Fork
+				<span class="text-accent">.</span>
 			</a>
 			<ul class="navbar-links m-0 hidden list-none gap-6 p-0 md:flex">
 				<li>

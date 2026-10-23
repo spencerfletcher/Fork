@@ -18,8 +18,9 @@
 
 <div class="flex flex-col gap-3">
 	<div class="flex items-center justify-between">
-		<span class="text-text-3 text-[0.8rem] font-semibold tracking-[0.08em] uppercase"
-			>Filter by tag</span>
+		<span class="text-text-3 text-[0.8rem] font-semibold tracking-[0.08em] uppercase">
+			Filter by tag
+		</span>
 		{#if selectedTagSlugs.length > 0}
 			<button
 				type="button"

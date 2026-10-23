@@ -65,7 +65,9 @@
 			<input type="hidden" name="steps" bind:this={stepsInput} />
 
 			<div class="field">
-				<label for="title">Title <span class="required">*</span></label>
+				<label for="title">
+					Title <span class="required">*</span>
+				</label>
 				<input id="title" name="title" type="text" required />
 			</div>
 
@@ -86,7 +88,9 @@
 								imagePreview = null;
 								(document.getElementById('image') as HTMLInputElement).value = '';
 							}}
-							aria-label="Remove image">×</button>
+							aria-label="Remove image">
+							×
+						</button>
 					</div>
 				{/if}
 				<input

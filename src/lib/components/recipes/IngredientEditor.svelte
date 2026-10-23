@@ -46,7 +46,9 @@
 					type="button"
 					onclick={() => remove(i)}
 					class="remove-btn"
-					aria-label="Remove ingredient">×</button>
+					aria-label="Remove ingredient">
+					×
+				</button>
 			</div>
 		{/each}
 	</div>

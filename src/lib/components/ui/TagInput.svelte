@@ -152,7 +152,9 @@
 									stroke-width="1.5"
 									stroke-linecap="round" />
 							</svg>
-							Create "<strong>{query.trim()}</strong>"
+							Create "
+							<strong>{query.trim()}</strong>
+							"
 						</button>
 					</li>
 				{/if}

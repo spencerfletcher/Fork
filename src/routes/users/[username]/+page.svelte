@@ -29,14 +29,16 @@
 				<div class="mt-1 flex items-center gap-3">
 					<span class="flex items-baseline gap-[5px]">
 						<span class="text-accent font-mono text-base font-semibold">{recipes.length}</span>
-						<span class="text-text-tan text-[0.82rem]"
-							>{recipes.length === 1 ? 'recipe' : 'recipes'}</span>
+						<span class="text-text-tan text-[0.82rem]">
+							{recipes.length === 1 ? 'recipe' : 'recipes'}
+						</span>
 					</span>
 					<span class="text-text-bronze text-[0.85rem]">·</span>
 					<span class="flex items-baseline gap-[5px]">
 						<span class="text-accent font-mono text-base font-semibold">{commitCount}</span>
-						<span class="text-text-tan text-[0.82rem]"
-							>{commitCount === 1 ? 'commit' : 'commits'}</span>
+						<span class="text-text-tan text-[0.82rem]">
+							{commitCount === 1 ? 'commit' : 'commits'}
+						</span>
 					</span>
 				</div>
 			</div>

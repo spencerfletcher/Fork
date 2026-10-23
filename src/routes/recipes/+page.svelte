@@ -28,7 +28,10 @@
 		{:else}
 			<div class="page-header">
 				<h1>My Recipes</h1>
-				<p class="page-subtitle">Please <a href="/login">log in</a> to see your recipes.</p>
+				<p class="page-subtitle">
+					Please <a href="/login">log in</a>
+					 to see your recipes.
+				</p>
 			</div>
 		{/if}
 	</div>

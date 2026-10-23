@@ -74,8 +74,8 @@
 
 				<div class="field">
 					<label for="description">Description</label>
-					<textarea id="description" name="description" rows="3"
-						>{recipe.description ?? ''}</textarea>
+					<textarea id="description" name="description" rows="3">{recipe.description ??
+							''}</textarea>
 				</div>
 
 				<div class="field">
@@ -173,7 +173,9 @@
 				<StepEditor bind:steps annotations />
 
 				<div class="field">
-					<label for="commitMessage">What changed? <span class="required">*</span></label>
+					<label for="commitMessage">
+						What changed? <span class="required">*</span>
+					</label>
 					<input
 						id="commitMessage"
 						name="commitMessage"
