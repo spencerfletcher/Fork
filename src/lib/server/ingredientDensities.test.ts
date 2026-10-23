@@ -78,6 +78,20 @@ describe('lookupGrams', () => {
 		expect(lookupGrams(1, 'cup', 'flourish')).toBeNull();
 	});
 
+	test('an unrecognised qualifier never falls back to the generic ingredient', () => {
+		expect(lookupGrams(1, 'cup', 'flour (almond)')).toBeNull();
+		expect(lookupGrams(1, 'tsp', 'salt, kosher')).toBeNull();
+	});
+
+	test('a key that contains a preparation word is still reachable as typed', () => {
+		expect(lookupGrams(1, 'cup', 'crushed tomatoes')).toBe(
+			ML_PER_UNIT.cup * DENSITIES['crushed tomatoes']
+		);
+		expect(lookupGrams(1, 'cup', 'diced tomatoes')).toBe(
+			ML_PER_UNIT.cup * DENSITIES['diced tomatoes']
+		);
+	});
+
 	test('ignores preparation words that do not change density', () => {
 		expect(lookupGrams(1, 'cup', 'cold unsalted butter')).toBe(
 			ML_PER_UNIT.cup * DENSITIES['unsalted butter']

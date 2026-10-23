@@ -18,6 +18,8 @@ const PREP_WORDS = new Set([
 	'melted',
 	'warm',
 	'room-temperature',
+	'room',
+	'temperature',
 	'packed',
 	'sifted',
 	'divided',
@@ -29,27 +31,51 @@ const PREP_WORDS = new Set([
 	'sliced',
 	'peeled',
 	'beaten',
-	'optional'
+	'spooned',
+	'levelled',
+	'leveled',
+	'optional',
+	'and',
+	'at'
 ]);
 
-// "Large Eggs, beaten (room temp)" -> "eggs". Text after a comma or in
-// parentheses is preparation, never part of what the ingredient is.
-function normalise(name: string): string {
-	return name
-		.toLowerCase()
-		.replace(/\(.*?\)/g, '')
-		.split(',')[0]
-		.split(/\s+/)
-		.filter((word) => word && !PREP_WORDS.has(word))
-		.join(' ');
+const words = (text: string) => text.split(/\s+/).filter(Boolean);
+
+// A trailing clause ("…, softened", "… (spooned and levelled)", "…, for
+// topping") is dropped only when it is recognisably about handling. Anything
+// else may name the ingredient ("salt, kosher", "flour (almond)") and is kept.
+function isPrepClause(clause: string): boolean {
+	if (/^(for |to taste|cut into )/.test(clause)) return true;
+	return words(clause).every((word) => PREP_WORDS.has(word));
+}
+
+// Candidate keys for a name, most faithful first: the whole name as typed,
+// then with recognised preparation text removed. When a clause is not
+// recognised only the whole name is tried, so an unknown qualifier never
+// falls back to a generic match.
+function candidates(name: string): string[] {
+	const lower = name.trim().toLowerCase().replace(/\s+/g, ' ');
+	const clauses: string[] = [];
+	const withoutParens = lower.replace(/\(([^)]*)\)/g, (_, inner: string) => {
+		clauses.push(inner.trim());
+		return ' ';
+	});
+	const [main, ...afterCommas] = withoutParens.split(',').map((part) => part.trim());
+	clauses.push(...afterCommas);
+	if (!clauses.every(isPrepClause)) return [lower];
+	return [
+		lower,
+		words(main)
+			.filter((word) => !PREP_WORDS.has(word))
+			.join(' ')
+	];
 }
 
 // Whole-name match only, so "peanut butter" is not butter and "rice flour" is
 // not flour. A plural last word is tried in the singular: eggs, tomatoes, chives.
 function lookup(table: Record<string, number>, name: string): number | null {
-	const base = normalise(name);
-	const candidates = [base, base.replace(/es$/, ''), base.replace(/s$/, '')];
-	const key = candidates.find((candidate) => candidate in table);
+	const keys = candidates(name).flatMap((c) => [c, c.replace(/es$/, ''), c.replace(/s$/, '')]);
+	const key = keys.find((candidate) => candidate in table);
 	return key === undefined ? null : table[key];
 }
 
