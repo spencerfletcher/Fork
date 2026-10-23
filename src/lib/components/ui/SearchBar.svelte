@@ -59,8 +59,7 @@
 				stroke-width="2"
 				stroke-linecap="round"
 				stroke-linejoin="round"
-				class="text-muted-foreground h-4 w-4"
-			>
+				class="text-muted-foreground h-4 w-4">
 				<circle cx="11" cy="11" r="8" />
 				<path d="m21 21-4.35-4.35" />
 			</svg>
@@ -72,7 +71,6 @@
 			value={searchValue}
 			oninput={handleInput}
 			{placeholder}
-			class="border-border text-foreground placeholder-muted-foreground focus:border-primary focus:ring-primary/20 w-full rounded-md border bg-white py-2 pr-3 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none"
-		/>
+			class="border-border text-foreground placeholder-muted-foreground focus:border-primary focus:ring-primary/20 w-full rounded-md border bg-white py-2 pr-3 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none" />
 	</div>
 </form>

@@ -75,8 +75,7 @@
 						type="button"
 						onclick={() => remove(tag)}
 						class="tag-remove"
-						aria-label="Remove {tag}"
-					>
+						aria-label="Remove {tag}">
 						×
 					</button>
 				</span>
@@ -100,8 +99,7 @@
 			aria-expanded={showDropdown}
 			aria-haspopup="listbox"
 			aria-autocomplete="list"
-			aria-controls="tag-listbox"
-		/>
+			aria-controls="tag-listbox" />
 
 		{#if showDropdown}
 			<ul class="tag-menu" role="listbox" id="tag-listbox">
@@ -109,28 +107,24 @@
 					<li
 						class="border-border border-b [&:last-child]:border-b-0"
 						role="option"
-						aria-selected="false"
-					>
+						aria-selected="false">
 						<button
 							type="button"
 							class="tag-option"
 							onmousedown={(e) => {
 								e.preventDefault();
 								pick(tag.name);
-							}}
-						>
+							}}>
 							<svg
 								class="text-text-3 size-4 shrink-0"
 								viewBox="0 0 16 16"
 								fill="none"
-								aria-hidden="true"
-							>
+								aria-hidden="true">
 								<path
 									d="M2 2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 0 1.414l-4.586 4.586a1 1 0 0 1-1.414 0L2.293 8.293A1 1 0 0 1 2 7.586V2Z"
 									stroke="currentColor"
 									stroke-width="1.25"
-									stroke-linejoin="round"
-								/>
+									stroke-linejoin="round" />
 								<circle cx="5.5" cy="5.5" r="1" fill="currentColor" />
 							</svg>
 							{tag.name}
@@ -146,20 +140,17 @@
 							onmousedown={(e) => {
 								e.preventDefault();
 								pick(query.trim());
-							}}
-						>
+							}}>
 							<svg
 								class="text-accent size-4 shrink-0"
 								viewBox="0 0 16 16"
 								fill="none"
-								aria-hidden="true"
-							>
+								aria-hidden="true">
 								<path
 									d="M8 3v10M3 8h10"
 									stroke="currentColor"
 									stroke-width="1.5"
-									stroke-linecap="round"
-								/>
+									stroke-linecap="round" />
 							</svg>
 							Create "<strong>{query.trim()}</strong>"
 						</button>

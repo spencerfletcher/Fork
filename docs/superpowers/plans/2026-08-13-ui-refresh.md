@@ -94,8 +94,7 @@ In `src/routes/recipes/[slug]/+page.svelte`, the photo currently lives at the to
 		<img
 			src={recipe.imageUrl}
 			alt={recipe.title}
-			class="border-border-2 [aspect-ratio:4/3] w-full rounded-lg border object-cover"
-		/>
+			class="border-border-2 [aspect-ratio:4/3] w-full rounded-lg border object-cover" />
 	</div>
 {/if}
 ```
@@ -1172,8 +1171,7 @@ Create `src/lib/components/VersionStrip.svelte`:
 			<a
 				href="/recipes/{recipeSlug}?version={version.versionNumber}"
 				class="version-number"
-				class:is-current={isCurrent}
-			>
+				class:is-current={isCurrent}>
 				v{version.versionNumber}
 			</a>
 			<span class="version-message">{version.commitMessage}</span>
@@ -1181,8 +1179,7 @@ Create `src/lib/components/VersionStrip.svelte`:
 				<a
 					href="/recipes/{recipeSlug}/diff?from={version.versionNumber -
 						1}&to={version.versionNumber}"
-					class="version-compare"
-				>
+					class="version-compare">
 					Compare
 				</a>
 			{/if}
@@ -1423,15 +1420,13 @@ Create `src/routes/LandingHero.svelte`. The copy names only what exists — line
 		<div class="flex flex-wrap items-center gap-4">
 			<a
 				href="/recipes"
-				class="bg-accent text-hero-bg rounded-pill px-6 py-3 font-sans text-[0.95rem] font-semibold no-underline transition-opacity duration-150 hover:opacity-90"
-			>
+				class="bg-accent text-hero-bg rounded-pill px-6 py-3 font-sans text-[0.95rem] font-semibold no-underline transition-opacity duration-150 hover:opacity-90">
 				Browse recipes
 			</a>
 			{#if sampleSlug}
 				<a
 					href="/recipes/{sampleSlug}/diff"
-					class="text-text-cream rounded-pill border border-white/25 px-6 py-3 font-sans text-[0.95rem] no-underline transition-colors duration-150 hover:border-white/50"
-				>
+					class="text-text-cream rounded-pill border border-white/25 px-6 py-3 font-sans text-[0.95rem] no-underline transition-colors duration-150 hover:border-white/50">
 					See a diff →
 				</a>
 			{/if}
@@ -1454,8 +1449,7 @@ In `src/routes/+page.svelte`:
 			<h2 class="eyebrow-label mb-3">A real change, diffed</h2>
 			<VersionDiff
 				ingredientDiff={data.sampleDiff.ingredientDiff}
-				stepDiff={data.sampleDiff.stepDiff}
-			/>
+				stepDiff={data.sampleDiff.stepDiff} />
 		</section>
 	{/if}
 {/if}

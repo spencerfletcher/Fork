@@ -66,8 +66,7 @@
 		value={searchQuery}
 		placeholder="Search recipes by title..."
 		onSearch={handleSearch}
-		onSubmit={applyFilters}
-	/>
+		onSubmit={applyFilters} />
 
 	<TagFilter {availableTags} selectedTagSlugs={selectedTags} onTagToggle={handleTagToggle} />
 </div>

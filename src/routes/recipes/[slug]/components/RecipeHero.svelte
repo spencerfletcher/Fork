@@ -26,8 +26,7 @@
 	<div class="mx-auto flex max-w-[1200px] min-w-0 flex-col gap-4 px-5 py-6">
 		{#if isViewingHistory && currentVersion}
 			<div
-				class="text-text-tan flex flex-wrap items-center justify-between gap-3 rounded-md border border-white/[0.12] bg-white/[0.08] px-4 py-3 font-mono text-[0.8rem]"
-			>
+				class="text-text-tan flex flex-wrap items-center justify-between gap-3 rounded-md border border-white/[0.12] bg-white/[0.08] px-4 py-3 font-mono text-[0.8rem]">
 				Viewing v{currentVersion.versionNumber}: "{currentVersion.commitMessage}"
 				<a href="/recipes/{recipe.slug}" class="text-accent">Current version →</a>
 			</div>
@@ -36,13 +35,11 @@
 		<!-- Breadcrumb -->
 		<nav
 			class="text-text-bronze flex items-center gap-2 font-mono text-[0.78rem]"
-			aria-label="Recipe location"
-		>
+			aria-label="Recipe location">
 			{#if recipe.author}
 				<a
 					href="/users/{recipe.author.username}"
-					class="text-text-bronze hover:text-text-tan no-underline transition-colors duration-150"
-				>
+					class="text-text-bronze hover:text-text-tan no-underline transition-colors duration-150">
 					@{recipe.author.username}
 				</a>
 				<span class="opacity-50">/</span>
@@ -55,8 +52,7 @@
 			<!-- clamp() for fluid typography must stay inline -->
 			<h1
 				class="text-text-cream m-0 font-serif leading-[1.05] font-bold tracking-[-0.02em]"
-				style="font-size: clamp(1.9rem, 4vw, 3.2rem)"
-			>
+				style="font-size: clamp(1.9rem, 4vw, 3.2rem)">
 				{recipe.title}
 			</h1>
 			{#if currentVersion}

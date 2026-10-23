@@ -57,8 +57,7 @@
 					viewBox="0 0 12 14"
 					fill="none"
 					xmlns="http://www.w3.org/2000/svg"
-					aria-hidden="true"
-				>
+					aria-hidden="true">
 					<circle cx="2" cy="2" r="1.5" stroke="currentColor" stroke-width="1" />
 					<circle cx="10" cy="2" r="1.5" stroke="currentColor" stroke-width="1" />
 					<circle cx="6" cy="12" r="1.5" stroke="currentColor" stroke-width="1" />
@@ -66,8 +65,7 @@
 						d="M2 3.5V6C2 7.1 2.9 8 4 8H6M10 3.5V6C10 7.1 9.1 8 8 8H6M6 8V10.5"
 						stroke="currentColor"
 						stroke-width="1"
-						stroke-linecap="round"
-					/>
+						stroke-linecap="round" />
 				</svg>
 				Forked
 			</span>

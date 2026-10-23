@@ -35,8 +35,7 @@
 						href="/recipes"
 						class="navbar-link"
 						class:active={page.url.pathname.startsWith('/recipes') &&
-							page.url.pathname !== '/recipes/new'}
-					>
+							page.url.pathname !== '/recipes/new'}>
 						Recipes
 					</a>
 				</li>
@@ -45,8 +44,7 @@
 						<a
 							href="/favorites"
 							class="navbar-link"
-							class:active={page.url.pathname === '/favorites'}
-						>
+							class:active={page.url.pathname === '/favorites'}>
 							Favorites
 						</a>
 					</li>
@@ -61,8 +59,7 @@
 					{#if profile}
 						<a
 							href="/users/{profile.username}"
-							class="text-text-tan hover:text-accent font-mono text-[0.8rem] no-underline transition-colors"
-						>
+							class="text-text-tan hover:text-accent font-mono text-[0.8rem] no-underline transition-colors">
 							@{profile.username}
 						</a>
 					{/if}
@@ -80,8 +77,7 @@
 					<a
 						href="/recipes/new"
 						class="nav-cta"
-						class:opacity-75={page.url.pathname === '/recipes/new'}
-					>
+						class:opacity-75={page.url.pathname === '/recipes/new'}>
 						+ New Recipe
 					</a>
 				{/if}
@@ -92,8 +88,7 @@
 				onclick={toggleMenu}
 				class="nav-menu-toggle"
 				aria-controls="mobile-menu"
-				aria-expanded={isMenuOpen}
-			>
+				aria-expanded={isMenuOpen}>
 				<span class="sr-only">Open main menu</span>
 				{#if isMenuOpen}
 					<svg
@@ -102,8 +97,7 @@
 						fill="none"
 						viewBox="0 0 24 24"
 						stroke-width="1.5"
-						stroke="currentColor"
-					>
+						stroke="currentColor">
 						<path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
 					</svg>
 				{:else}
@@ -113,13 +107,11 @@
 						fill="none"
 						viewBox="0 0 24 24"
 						stroke-width="1.5"
-						stroke="currentColor"
-					>
+						stroke="currentColor">
 						<path
 							stroke-linecap="round"
 							stroke-linejoin="round"
-							d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
-						/>
+							d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
 					</svg>
 				{/if}
 			</button>
@@ -130,8 +122,7 @@
 		<div class="fixed inset-0 bg-black/50" onclick={closeMenu} aria-hidden="true"></div>
 		<div
 			class="bg-navbar-bg absolute top-full right-0 left-0 z-[100] border-b border-white/[0.08]"
-			id="mobile-menu"
-		>
+			id="mobile-menu">
 			<ul class="m-0 list-none p-2">
 				<li><a href="/search" onclick={closeMenu} class="mobile-link">Search</a></li>
 				{#if user}
@@ -157,8 +148,7 @@
 								await applyAction(result);
 								closeMenu();
 							};
-						}}
-					>
+						}}>
 						<button type="submit" class="mobile-link w-full border-none bg-transparent text-left">
 							Logout
 						</button>

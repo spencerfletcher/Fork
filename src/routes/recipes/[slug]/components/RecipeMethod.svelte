@@ -35,8 +35,7 @@
 				role="checkbox"
 				aria-checked={crossedSteps.has(n)}
 				tabindex="0"
-				onkeydown={(e) => e.key === ' ' && toggleStep(n)}
-			>
+				onkeydown={(e) => e.key === ' ' && toggleStep(n)}>
 				<span class="text-sienna pt-[2px] font-mono text-[1.5rem] leading-[1.6] font-medium">
 					{zeroPad(n)}
 				</span>
@@ -46,8 +45,7 @@
 						<p
 							class="m-0 font-sans text-[0.9rem] leading-[1.6] italic {annotationColor[
 								step.annotation.type
-							] ?? 'text-text-3'}"
-						>
+							] ?? 'text-text-3'}">
 							{step.annotation.text}
 						</p>
 					{/if}

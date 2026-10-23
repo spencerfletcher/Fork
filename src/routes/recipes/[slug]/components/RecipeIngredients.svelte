@@ -51,8 +51,7 @@
 		<button
 			class="rounded-pill border-border-2 text-text-3 hover:border-accent hover:text-accent border bg-transparent px-3 py-1 font-mono text-[0.8rem] font-semibold transition-[color,border-color] duration-150 disabled:opacity-50"
 			onclick={toggleGrams}
-			disabled={gramsLoading}
-		>
+			disabled={gramsLoading}>
 			{gramsLoading ? '…' : showGrams ? 'original' : 'g'}
 		</button>
 	</div>
@@ -66,8 +65,7 @@
 				role="checkbox"
 				aria-checked={crossedIngredients.has(ingredient.name)}
 				tabindex="0"
-				onkeydown={(e) => e.key === ' ' && toggleIngredient(ingredient.name)}
-			>
+				onkeydown={(e) => e.key === ' ' && toggleIngredient(ingredient.name)}>
 				<span class="text-sienna font-medium">
 					{#if showGrams && gramCache}
 						{gramCache[i] !== null

@@ -35,13 +35,11 @@
 				use:enhance={() => {
 					isFavorited = !isFavorited;
 					return async ({ update }) => update({ reset: false });
-				}}
-			>
+				}}>
 				<button
 					type="submit"
 					class="rounded-pill border-accent text-accent hover:bg-accent-pale flex w-full cursor-pointer items-center justify-center gap-2 border-[1.5px] bg-transparent px-4 py-3 text-center font-sans text-[0.9rem] font-semibold no-underline transition-colors duration-150"
-					aria-label={isFavorited ? 'Unsave' : 'Save'}
-				>
+					aria-label={isFavorited ? 'Unsave' : 'Save'}>
 					<svg
 						class="size-4 transition-[fill] duration-150"
 						class:fill-accent={isFavorited}
@@ -50,13 +48,11 @@
 						xmlns="http://www.w3.org/2000/svg"
 						viewBox="0 0 24 24"
 						stroke-width="1.8"
-						stroke="currentColor"
-					>
+						stroke="currentColor">
 						<path
 							stroke-linecap="round"
 							stroke-linejoin="round"
-							d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"
-						/>
+							d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
 					</svg>
 					{isFavorited ? 'Saved' : 'Save recipe'}
 				</button>
@@ -85,8 +81,7 @@
 									}
 									forkDialogOpen = false;
 								};
-							}}
-						>
+							}}>
 							<div class="mb-5">
 								<label for="fork-commit" class="text-text-2 mb-2 block text-[0.85rem] font-medium">
 									Initial commit message
@@ -96,8 +91,7 @@
 									name="commitMessage"
 									type="text"
 									placeholder="Forked from {recipe.title}"
-									bind:value={forkCommitMessage}
-								/>
+									bind:value={forkCommitMessage} />
 							</div>
 							<div class="dialog-actions">
 								<Dialog.Close class="btn-ghost">Cancel</Dialog.Close>
@@ -112,8 +106,7 @@
 		{#if isOwner && !isViewingHistory}
 			<a
 				href="/recipes/{recipe.slug}/edit"
-				class="rounded-pill border-accent text-accent hover:bg-accent-pale flex w-full cursor-pointer items-center justify-center gap-2 border-[1.5px] bg-transparent px-4 py-3 text-center font-sans text-[0.9rem] font-semibold no-underline transition-colors duration-150"
-			>
+				class="rounded-pill border-accent text-accent hover:bg-accent-pale flex w-full cursor-pointer items-center justify-center gap-2 border-[1.5px] bg-transparent px-4 py-3 text-center font-sans text-[0.9rem] font-semibold no-underline transition-colors duration-150">
 				Edit recipe
 			</a>
 		{/if}

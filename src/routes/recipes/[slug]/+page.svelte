@@ -27,8 +27,7 @@
 			versions={allVersions}
 			currentVersionNumber={currentVersion?.versionNumber ?? 0}
 			recipeSlug={recipe.slug}
-			{isViewingHistory}
-		/>
+			{isViewingHistory} />
 	{/if}
 
 	<!-- Two-column layout: kept in scoped CSS because of fixed 320px sidebar + responsive reorder -->
@@ -52,8 +51,7 @@
 						<img
 							src={recipe.imageUrl}
 							alt={recipe.title}
-							class="border-border-2 [aspect-ratio:4/3] w-full rounded-lg border object-cover"
-						/>
+							class="border-border-2 [aspect-ratio:4/3] w-full rounded-lg border object-cover" />
 					</div>
 				{/if}
 				<Details {recipe} />
@@ -63,8 +61,7 @@
 					{canFavorite}
 					{isOwner}
 					{isViewingHistory}
-					initialFavorited={data.isFavorited}
-				/>
+					initialFavorited={data.isFavorited} />
 			</div>
 		</aside>
 	</div>

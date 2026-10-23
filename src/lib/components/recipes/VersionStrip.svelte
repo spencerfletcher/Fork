@@ -27,8 +27,7 @@
 				href="/recipes/{recipeSlug}?version={version.versionNumber}"
 				class="version-number"
 				class:is-current={isCurrent}
-				aria-current={isCurrent ? 'true' : undefined}
-			>
+				aria-current={isCurrent ? 'true' : undefined}>
 				v{version.versionNumber}
 			</a>
 			<span class="version-message">{version.commitMessage}</span>
@@ -36,8 +35,7 @@
 				<a
 					href="/recipes/{recipeSlug}/diff?from={version.versionNumber -
 						1}&to={version.versionNumber}"
-					class="version-compare"
-				>
+					class="version-compare">
 					Compare
 				</a>
 			{/if}

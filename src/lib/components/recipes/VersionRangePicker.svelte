@@ -33,8 +33,7 @@
 			onchange={(e) => {
 				set(Number(e.currentTarget.value));
 				onchange();
-			}}
-		>
+			}}>
 			{#each versions as v (v.versionNumber)}
 				<option value={v.versionNumber}>v{v.versionNumber}: {v.commitMessage}</option>
 			{/each}

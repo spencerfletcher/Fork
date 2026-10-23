@@ -16,8 +16,7 @@
 		<SearchFilters
 			initialQuery={data.searchQuery}
 			initialTags={data.selectedTags}
-			availableTags={data.allTags}
-		/>
+			availableTags={data.allTags} />
 
 		{#if data.favoriteRecipes.length > 0}
 			<div class="recipe-grid mt-5">

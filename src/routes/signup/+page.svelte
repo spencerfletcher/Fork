@@ -29,8 +29,7 @@
 					type="password"
 					required
 					minlength="6"
-					placeholder="At least 6 characters"
-				/>
+					placeholder="At least 6 characters" />
 			</div>
 
 			<button type="submit" class="btn-primary auth-submit">Create account</button>

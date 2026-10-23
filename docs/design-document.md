@@ -110,8 +110,7 @@ Define these as CSS custom properties in `app.css` (or your global stylesheet). 
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link
 	href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;500;600&display=swap"
-	rel="stylesheet"
-/>
+	rel="stylesheet" />
 ```
 
 | Role          | Font        | Weight    | Usage                                 |

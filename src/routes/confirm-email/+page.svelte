@@ -12,8 +12,7 @@
 				stroke-width="2"
 				stroke-linecap="round"
 				stroke-linejoin="round"
-				class="text-primary h-6 w-6"
-			>
+				class="text-primary h-6 w-6">
 				<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"
 				></path>
 				<polyline points="22,6 12,13 2,6"></polyline>
@@ -34,8 +33,7 @@
 		<div class="mt-6">
 			<a
 				href="/login"
-				class="inline-block rounded-lg bg-amber-800 px-6 py-3 font-medium text-white transition-colors hover:bg-amber-900"
-			>
+				class="inline-block rounded-lg bg-amber-800 px-6 py-3 font-medium text-white transition-colors hover:bg-amber-900">
 				Back to Login
 			</a>
 		</div>

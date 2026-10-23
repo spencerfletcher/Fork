@@ -33,8 +33,7 @@
 			versions={allVersions}
 			bind:from={fromSelect}
 			bind:to={toSelect}
-			onchange={navigate}
-		/>
+			onchange={navigate} />
 
 		<!-- Commit context: same .commit-bar the landing page uses for its sample
 		     diff, stacked because this view shows both endpoints of the range. -->

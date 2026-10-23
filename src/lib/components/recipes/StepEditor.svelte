@@ -53,8 +53,7 @@
 				draggable="true"
 				ondragstart={() => onDragStart(i)}
 				ondragover={(e) => e.preventDefault()}
-				ondrop={() => onDrop(i)}
-			>
+				ondrop={() => onDrop(i)}>
 				<span class="step-num-badge">{i + 1}</span>
 				<span class="drag-handle" title="Drag to reorder">⠿</span>
 				<div class="flex min-w-0 flex-1 flex-col gap-2">
@@ -69,8 +68,7 @@
 								<select
 									bind:value={step.annotation.type}
 									class="w-auto text-[0.8rem]"
-									aria-label="Annotation type"
-								>
+									aria-label="Annotation type">
 									<option value="tip">💡 Tip</option>
 									<option value="warning">⚠️ Warning</option>
 									<option value="substitution">🔄 Substitution</option>
@@ -83,8 +81,7 @@
 								<button
 									type="button"
 									onclick={() => removeAnnotation(i)}
-									class="text-remove w-auto self-start border-none bg-transparent p-0 text-[0.75rem] underline"
-								>
+									class="text-remove w-auto self-start border-none bg-transparent p-0 text-[0.75rem] underline">
 									Remove note
 								</button>
 							</div>
@@ -92,16 +89,14 @@
 							<button
 								type="button"
 								onclick={() => addAnnotation(i)}
-								class="border-border-2 text-text-3 hover:border-accent hover:text-accent w-auto cursor-pointer self-start rounded-sm border border-dashed bg-transparent px-[10px] py-[3px] text-[0.8rem]"
-							>
+								class="border-border-2 text-text-3 hover:border-accent hover:text-accent w-auto cursor-pointer self-start rounded-sm border border-dashed bg-transparent px-[10px] py-[3px] text-[0.8rem]">
 								+ Add note
 							</button>
 						{/if}
 					{/if}
 				</div>
 				<button type="button" onclick={() => remove(i)} class="remove-btn" aria-label="Remove step"
-					>×</button
-				>
+					>×</button>
 			</div>
 		{/each}
 	</div>

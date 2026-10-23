@@ -66,8 +66,7 @@
 				action="?/saveMeta"
 				use:enhance={track('meta')}
 				oninput={() => (metaDirty = true)}
-				class="form"
-			>
+				class="form">
 				<div class="field">
 					<label for="title">Title</label>
 					<input id="title" name="title" type="text" value={recipe.title} required />
@@ -76,8 +75,7 @@
 				<div class="field">
 					<label for="description">Description</label>
 					<textarea id="description" name="description" rows="3"
-						>{recipe.description ?? ''}</textarea
-					>
+						>{recipe.description ?? ''}</textarea>
 				</div>
 
 				<div class="field">
@@ -93,8 +91,7 @@
 							name="servings"
 							type="number"
 							min="1"
-							value={recipe.servings ?? ''}
-						/>
+							value={recipe.servings ?? ''} />
 					</div>
 					<div class="field">
 						<label for="prepTimeMinutes">Prep time (min)</label>
@@ -103,8 +100,7 @@
 							name="prepTimeMinutes"
 							type="number"
 							min="0"
-							value={recipe.prepTimeMinutes ?? ''}
-						/>
+							value={recipe.prepTimeMinutes ?? ''} />
 					</div>
 					<div class="field">
 						<label for="cookTimeMinutes">Cook time (min)</label>
@@ -113,8 +109,7 @@
 							name="cookTimeMinutes"
 							type="number"
 							min="0"
-							value={recipe.cookTimeMinutes ?? ''}
-						/>
+							value={recipe.cookTimeMinutes ?? ''} />
 					</div>
 				</div>
 
@@ -127,8 +122,7 @@
 									type="checkbox"
 									name="tags"
 									value={tag.name}
-									checked={currentTagNames.includes(tag.name)}
-								/>
+									checked={currentTagNames.includes(tag.name)} />
 								{tag.name}
 							</label>
 						{/each}
@@ -171,8 +165,7 @@
 				action="?/saveVersion"
 				use:enhance={track('content')}
 				onsubmit={serializeContent}
-				class="form"
-			>
+				class="form">
 				<input type="hidden" name="ingredients" bind:this={ingredientsInput} />
 				<input type="hidden" name="steps" bind:this={stepsInput} />
 
@@ -186,8 +179,7 @@
 						name="commitMessage"
 						type="text"
 						placeholder="e.g. Reduced sugar by 20g, added vanilla"
-						required
-					/>
+						required />
 				</div>
 
 				{#if form?.section === 'content'}

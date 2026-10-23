@@ -16,8 +16,7 @@
 		<SearchFilters
 			initialQuery={data.searchQuery}
 			initialTags={data.selectedTags}
-			availableTags={data.allTags}
-		/>
+			availableTags={data.allTags} />
 
 		{#if data.recipes.length === 0 && (data.searchQuery || data.selectedTags.length > 0)}
 			<p class="empty-state mt-5">

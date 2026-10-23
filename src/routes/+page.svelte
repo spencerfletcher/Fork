@@ -26,16 +26,14 @@
 			</div>
 			<VersionDiff
 				ingredientDiff={data.sampleDiff.ingredientDiff}
-				stepDiff={data.sampleDiff.stepDiff}
-			/>
+				stepDiff={data.sampleDiff.stepDiff} />
 			<!-- The hero's "See a diff" button pointed here and was redundant beside
 			     the diff itself. The route to the interactive compare view still needs
 			     a signpost, so it sits under the thing it opens. -->
 			<a
 				class="diff-open-link"
 				href="/recipes/{data.sampleDiff.recipeSlug}/diff?from={data.sampleDiff.fromVersion}&to={data
-					.sampleDiff.toVersion}"
-			>
+					.sampleDiff.toVersion}">
 				Open the full comparison →
 			</a>
 		</section>

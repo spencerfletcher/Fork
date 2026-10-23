@@ -60,8 +60,7 @@
 			onsubmit={serializeContent}
 			oninput={() => (dirty = true)}
 			class="form"
-			enctype="multipart/form-data"
-		>
+			enctype="multipart/form-data">
 			<input type="hidden" name="ingredients" bind:this={ingredientsInput} />
 			<input type="hidden" name="steps" bind:this={stepsInput} />
 
@@ -87,8 +86,7 @@
 								imagePreview = null;
 								(document.getElementById('image') as HTMLInputElement).value = '';
 							}}
-							aria-label="Remove image">×</button
-						>
+							aria-label="Remove image">×</button>
 					</div>
 				{/if}
 				<input
@@ -97,8 +95,7 @@
 					type="file"
 					accept="image/jpeg,image/png,image/webp,image/gif"
 					class="border-border bg-surface-2 hover:border-accent cursor-pointer rounded-md border border-dashed p-2 text-sm"
-					onchange={onImageChange}
-				/>
+					onchange={onImageChange} />
 			</div>
 
 			<div class="field-row">

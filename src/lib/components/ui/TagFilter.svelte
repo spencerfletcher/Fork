@@ -19,14 +19,12 @@
 <div class="flex flex-col gap-3">
 	<div class="flex items-center justify-between">
 		<span class="text-text-3 text-[0.8rem] font-semibold tracking-[0.08em] uppercase"
-			>Filter by tag</span
-		>
+			>Filter by tag</span>
 		{#if selectedTagSlugs.length > 0}
 			<button
 				type="button"
 				onclick={clearAllTags}
-				class="text-text-3 hover:text-accent cursor-pointer border-none bg-transparent p-0 font-sans text-[0.8rem] transition-colors duration-150"
-			>
+				class="text-text-3 hover:text-accent cursor-pointer border-none bg-transparent p-0 font-sans text-[0.8rem] transition-colors duration-150">
 				Clear all
 			</button>
 		{/if}
@@ -41,8 +39,7 @@
 					onclick={() => onTagToggle(tag.slug)}
 					class={isSelected
 						? 'rounded-pill bg-accent text-hero-bg hover:bg-accent-mid cursor-pointer border-none px-3 py-1 font-sans text-[0.75rem] font-medium transition-[background,color] duration-150'
-						: 'tag hover:bg-tag-hover-bg cursor-pointer'}
-				>
+						: 'tag hover:bg-tag-hover-bg cursor-pointer'}>
 					{tag.name}
 				</button>
 			{/each}

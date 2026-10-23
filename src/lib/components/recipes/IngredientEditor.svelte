@@ -37,8 +37,7 @@
 				draggable="true"
 				ondragstart={() => onDragStart(i)}
 				ondragover={(e) => e.preventDefault()}
-				ondrop={() => onDrop(i)}
-			>
+				ondrop={() => onDrop(i)}>
 				<span class="drag-handle" title="Drag to reorder">⠿</span>
 				<input type="text" placeholder="Amount" bind:value={ingredient.amount} />
 				<input type="text" placeholder="Unit" bind:value={ingredient.unit} />
@@ -47,8 +46,7 @@
 					type="button"
 					onclick={() => remove(i)}
 					class="remove-btn"
-					aria-label="Remove ingredient">×</button
-				>
+					aria-label="Remove ingredient">×</button>
 			</div>
 		{/each}
 	</div>
