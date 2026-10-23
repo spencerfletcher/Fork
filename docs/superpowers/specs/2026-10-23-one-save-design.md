@@ -1,4 +1,4 @@
-# One save, versioned formulation — design
+# One save, versioned content — design
 
 Date: 2026-10-23. Status: approved by Spencer in conversation, pending plan.
 
@@ -11,7 +11,7 @@ Editing a recipe is one act. Today the edit page has two forms with two Save but
 ## Goals
 
 - One form, one "Save changes" button, one action, one transaction.
-- Each version carries its own complete formulation: title, description, servings, prep and cook minutes, ingredients, steps.
+- Each version carries its own complete content: title, description, servings, prep and cook minutes, ingredients, steps.
 - Unchanged or settings-only submissions do not create a version.
 - A failed save keeps what the user typed.
 - Two tabs cannot silently overwrite each other or produce duplicate version numbers.
@@ -31,9 +31,9 @@ Editing a recipe is one act. Today the edit page has two forms with two Save but
 
 ## Ownership rule
 
-**The latest version owns the current formulation.** `recipes.title`, `recipes.description`, `recipes.servings`, `recipes.prepTimeMinutes` and `recipes.cookTimeMinutes` are maintained copies of the latest version's values, kept only because the full-text search vector is a generated column on `recipes` and list pages and cards read `recipes` without a join. They are written in the same transaction as the version that defines them, on create, on save and on fork, and never edited on their own. A comment on the columns states this; server tests enforce it (after every write path, each copy equals the latest version's value).
+**The latest version owns the current content.** `recipes.title`, `recipes.description`, `recipes.servings`, `recipes.prepTimeMinutes` and `recipes.cookTimeMinutes` are maintained copies of the latest version's values, kept only because the full-text search vector is a generated column on `recipes` and list pages and cards read `recipes` without a join. They are written in the same transaction as the version that defines them, on create, on save and on fork, and never edited on their own. A comment on the columns states this; server tests enforce it (after every write path, each copy equals the latest version's value).
 
-Recipe-level, not versioned: slug, image URL, visibility, tags, author, fork lineage, timestamps. A historical version page therefore shows historical formulation with the current image, tags and access rules. That boundary is deliberate.
+Recipe-level, not versioned: slug, image URL, visibility, tags, author, fork lineage, timestamps. A historical version page therefore shows historical content with the current image, tags and access rules. That boundary is deliberate.
 
 ## Storage
 
@@ -53,14 +53,14 @@ Recipe-level, not versioned: slug, image URL, visibility, tags, author, fork lin
 
 Add `UNIQUE (recipe_id, version_number)` on `recipe_versions` as the last line of defence against duplicate numbers. There is none today.
 
-One hand-written migration in `supabase/migrations/` (`supabase migration new one_save_versioned_formulation`), `schema.ts` edited in the same commit, seed updated, local and hosted reseeded. No backfill.
+One hand-written migration in `supabase/migrations/` (`supabase migration new one_save_versioned_content`), `schema.ts` edited in the same commit, seed updated, local and hosted reseeded. No backfill.
 
 ## Types
 
 In `src/lib/recipes/types.ts`:
 
 ```ts
-export type Formulation = {
+export type RecipeContent = {
 	title: string;
 	description: string | null;
 	servings: number | null;
@@ -71,13 +71,13 @@ export type Formulation = {
 };
 ```
 
-A version row is a `Formulation` plus `id`, `recipeId`, `versionNumber`, `commitMessage`, `createdAt`, `createdBy`. Fixtures: `makeFormulation(overrides?)` in `fixtures.ts`, built from `makeIngredient` and `makeStep`.
+A version row is a `RecipeContent` plus `id`, `recipeId`, `versionNumber`, `commitMessage`, `createdAt`, `createdBy`. Fixtures: `makeContent(overrides?)` in `fixtures.ts`, built from `makeIngredient` and `makeStep`.
 
 ## "Differs" — one comparison
 
-New module `src/lib/recipes/formulation.ts`:
+New module `src/lib/recipes/content.ts`:
 
-- `formulationChanged(from: Formulation, to: Formulation): boolean`
+- `contentChanged(from: RecipeContent, to: RecipeContent): boolean`
 - `changedGroups(from, to): ('title' | 'description' | 'servings' | 'times' | 'ingredients' | 'steps')[]`
 
 Normalisation, applied to both sides: title trimmed; description trimmed, empty becomes null; numbers compared as values; ingredients compared by `text` in order; steps compared by `text` and annotation (`type` and `text`) in order. Parsed quantities, units and gram weights do not take part, so a wording change counts even when the parser reads the same quantity, and a parser or table change never creates a version by itself.
@@ -90,7 +90,7 @@ Generated commit message when the user leaves it blank and a version is written:
 
 `validation.ts` regroups the existing zod pieces:
 
-- `parseFormulation(formData): Result<Formulation>` — title (required), description, servings, prep and cook minutes (existing `optionalInt`), ingredients and steps text (existing content schema with its caps).
+- `parseContent(formData): Result<RecipeContent>` — title (required), description, servings, prep and cook minutes (existing `optionalInt`), ingredients and steps text (existing content schema with its caps).
 - `parseSettings(formData): Result<{ isPublic: boolean; tagNames: string[] }>`. The photo is a file, not a field: it is read from the multipart body in the action and uploaded as the new page does today.
 
 `parseRecipeMeta` and `parseRecipeContent` go away; their tests move with their fields.
@@ -99,11 +99,11 @@ Generated commit message when the user leaves it blank and a version is written:
 
 ### Load
 
-Returns `recipe` (settings, ownership and `editRevision`), `latestVersion` (the formulation) and `allTags`. The page sends `editRevision` back as a hidden field.
+Returns `recipe` (settings, ownership and `editRevision`), `latestVersion` (the content) and `allTags`. The page sends `editRevision` back as a hidden field.
 
 ### Form
 
-One `<form method="POST" action="?/save" enctype="multipart/form-data" use:enhance>`. Keep the two headings as visual grouping ("Recipe" for the formulation, "Settings" for photo, tags, visibility) with a single "Save changes" button at the bottom and the optional "What changed?" field next to it. Hidden input `editRevision`.
+One `<form method="POST" action="?/save" enctype="multipart/form-data" use:enhance>`. Keep the two headings as visual grouping ("Recipe" for the content, "Settings" for photo, tags, visibility) with a single "Save changes" button at the bottom and the optional "What changed?" field next to it. Hidden input `editRevision`.
 
 ### Photo
 
@@ -126,22 +126,22 @@ Status 400 for validation, 409 for a stale revision with the message "This recip
 ### Action, in order
 
 1. Auth and ownership as today.
-2. `parseFormulation`, `parseSettings`; on failure return 400 with the draft. An early `editRevision` compare against the loaded recipe may short-circuit before uploading; the authoritative check is under the lock. 2b. Upload the photo if one was sent (see Photo).
+2. `parseContent`, `parseSettings`; on failure return 400 with the draft. An early `editRevision` compare against the loaded recipe may short-circuit before uploading; the authoritative check is under the lock. 2b. Upload the photo if one was sent (see Photo).
 3. Transaction:
    1. `SELECT … FROM recipes WHERE id = … FOR UPDATE` (Drizzle `.for('update')`), so concurrent saves on one recipe run one at a time. Nothing about the recipe is read before this lock is held.
    2. Recheck ownership on the locked row. If its `editRevision` differs from the submitted one, return 409 with the draft (and clean up any new upload). Only then load the latest version.
-   3. `changed = formulationChanged(latest, submitted)`; `settingsChanged` = a new file was uploaded, `removeImage` is set with a photo present, visibility differs, or the tag set differs.
+   3. `changed = contentChanged(latest, submitted)`; `settingsChanged` = a new file was uploaded, `removeImage` is set with a photo present, visibility differs, or the tag set differs.
    4. If neither: no writes, redirect.
    5. If `settingsChanged`: update `recipes` image URL and visibility; replace tag rows (existing tag handling, including creating new tags, names deduplicated and trimmed before comparing and writing).
-   6. If `changed`: insert the version with `versionNumber = latest.versionNumber + 1`, the submitted formulation, the user's commit message or the generated one, `createdBy`; update the five copies on `recipes` from the same values.
+   6. If `changed`: insert the version with `versionNumber = latest.versionNumber + 1`, the submitted content, the user's commit message or the generated one, `createdBy`; update the five copies on `recipes` from the same values.
    7. If either changed: `editRevision = editRevision + 1` and `updatedAt = now()` on `recipes`, in the same statement as the last update.
 4. Redirect to the recipe page.
 
-A commit message with no formulation change is ignored, no version, no write.
+A commit message with no content change is ignored, no version, no write.
 
 ## New page
 
-Already one form and one action with photo upload. It inserts the recipe (settings and the five copies) and version 1 (the full formulation, commit message "Initial recipe") in one transaction. `parseFormulation` and `parseSettings` replace the current two parsers; the upload moves to the shared helper. Its page gets the same draft-preserving `fail` shape and derived dirty state.
+Already one form and one action with photo upload. It inserts the recipe (settings and the five copies) and version 1 (the full content, commit message "Initial recipe") in one transaction. `parseContent` and `parseSettings` replace the current two parsers; the upload moves to the shared helper. Its page gets the same draft-preserving `fail` shape and derived dirty state.
 
 ## Fork
 
@@ -151,7 +151,7 @@ The fork action copies the source's latest version as one snapshot: title, descr
 
 - Recipe page loader: `currentVersion` (requested or latest) supplies title, description, servings, times, ingredients, steps to the hero, details, SEO title and description, and the history banner. `recipe` supplies image, tags, author, visibility, fork lineage. The hero and details components take the version fields instead of recipe fields.
 - Cards, list pages and search keep reading the copies on `recipes`, including total time on cards. No list query changes.
-- Diff: `diff.ts` gains `diffMeta(from: Formulation, to: Formulation): MetaDiffRow[]` with `MetaDiffRow = { field: 'title' | 'description' | 'servings' | 'prepTimeMinutes' | 'cookTimeMinutes'; from: string | number | null; to: string | number | null }`, only changed fields. `VersionDiff.svelte` takes `metaDiff` as a required prop (`[]` when nothing changed) and renders the rows as a short list above the ingredient columns, printing `0` as a value and `—` for null, with a label per field ("Title", "Description", "Servings", "Prep time", "Cook time"). The compare page and the landing page pass it.
+- Diff: `diff.ts` gains `diffMeta(from: RecipeContent, to: RecipeContent): MetaDiffRow[]` with `MetaDiffRow = { field: 'title' | 'description' | 'servings' | 'prepTimeMinutes' | 'cookTimeMinutes'; from: string | number | null; to: string | number | null }`, only changed fields. `VersionDiff.svelte` takes `metaDiff` as a required prop (`[]` when nothing changed) and renders the rows as a short list above the ingredient columns, printing `0` as a value and `—` for null, with a label per field ("Title", "Description", "Servings", "Prep time", "Cook time"). The compare page and the landing page pass it.
 - Seed: the cookie recipe's second version changes servings (24 to 36 cookies, say) and the title ("Classic" to "Thick and Chewy"), so the landing diff and the compare page show metadata rows out of the box. The landing page's "best diff" ranking counts meta rows as changes.
 - History list and any other reader of `recipe.servings` or `recipe.prepTimeMinutes` switch to the version. `svelte-check` is the net: the task is not done until it is green.
 
@@ -159,17 +159,17 @@ The fork action copies the source's latest version as one snapshot: title, descr
 
 Order: server logic, then components, then e2e. Fixtures through `fixtures.ts`.
 
-1. `formulation.test.ts`: unchanged is not changed; each field alone is a change; ingredient wording change with identical parse is a change; step annotation change is a change; whitespace-only title and description differences are not; `changedGroups` order and the generated message.
+1. `content.test.ts`: unchanged is not changed; each field alone is a change; ingredient wording change with identical parse is a change; step annotation change is a change; whitespace-only title and description differences are not; `changedGroups` order and the generated message.
 2. `validation.test.ts`: regrouped fields; draft strings round-trip.
 3. `diff.test.ts`: `diffMeta` returns only changed fields, null handling.
-4. `edit/page.server.test.ts`: the outcomes table below; ownership rule after each write (all five copies); stale `editRevision` returns 409 with the draft carrying its original revision and writes nothing; a settings-only save bumps `editRevision` so an older draft is stale even with a frozen clock; two submissions with the same revision give one success and one 409, never two versions; a thrown error inside the transaction leaves no recipe, version or tag change; commit message without a formulation change writes nothing; a new photo or `removeImage` counts as a settings change; a failed upload returns 400 and writes nothing; an upload that succeeds before a rejected save leaves the database unchanged, keeps the prior image, and deletes only the new object.
+4. `edit/page.server.test.ts`: the outcomes table below; ownership rule after each write (all five copies); stale `editRevision` returns 409 with the draft carrying its original revision and writes nothing; a settings-only save bumps `editRevision` so an older draft is stale even with a frozen clock; two submissions with the same revision give one success and one 409, never two versions; a thrown error inside the transaction leaves no recipe, version or tag change; commit message without a content change writes nothing; a new photo or `removeImage` counts as a settings change; a failed upload returns 400 and writes nothing; an upload that succeeds before a rejected save leaves the database unchanged, keeps the prior image, and deletes only the new object.
 5. `new/page.server.test.ts`, `[slug]/page.server.test.ts` (fork): copies land on both rows; fork is a complete snapshot; source untouched.
 6. Component tests: `VersionDiff` renders meta rows; hero and details read version fields; edit page shows the draft after a failed save, derives dirty from the draft and clears it when restored, disables the form while submitting.
 7. e2e in `authenticated.test.ts`: the acceptance scenarios.
 
 | Submitted changes              | Result                                                |
 | ------------------------------ | ----------------------------------------------------- |
-| Formulation changed            | One new version; copies and settings updated together |
+| RecipeContent changed          | One new version; copies and settings updated together |
 | Only image, visibility or tags | Settings updated; no version                          |
 | Nothing                        | No writes, not even `updatedAt`; redirect             |
 | Only commit message            | No writes                                             |
@@ -185,7 +185,7 @@ Order: server logic, then components, then e2e. Fixtures through `fixtures.ts`.
 - Invalid field: draft still in the form, nothing committed.
 - Two tabs on version 2: the second save gets 409 and keeps its draft; version numbers stay unique. A settings-only save in one tab also makes the other tab's draft stale.
 - Failed submission: text remains, the form is editable again, and the photo message appears only when the file input is actually empty.
-- Fork after changing servings and title: the fork's version 1 has the complete latest formulation; the source is untouched.
+- Fork after changing servings and title: the fork's version 1 has the complete latest content; the source is untouched.
 
 ## Left to the builder
 
