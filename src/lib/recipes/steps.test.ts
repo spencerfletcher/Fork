@@ -41,8 +41,12 @@ describe('parseStepText', () => {
 		});
 	});
 
-	test('an annotation with empty text is dropped', () => {
-		expect(parseStepText('Mix.\ntip:   ')).toEqual([{ text: 'Mix.' }]);
+	test('an empty annotation line stays in the text, so a save does not change it', () => {
+		expect(parseStepText('Mix.\ntip:   ')).toEqual([{ text: 'Mix.\ntip:' }]);
+	});
+
+	test('a keyword line that is not last is step text, in place', () => {
+		expect(parseStepText('Mix.\ntip: a\nStir.')).toEqual([{ text: 'Mix.\ntip: a\nStir.' }]);
 	});
 
 	test('a keyword on the first line of a block is step text', () => {
@@ -71,5 +75,16 @@ describe('parseStepText', () => {
 describe('stepsToText', () => {
 	test('round-trips the spec example', () => {
 		expect(stepsToText(parseStepText(EXAMPLE))).toBe(EXAMPLE);
+	});
+
+	test.each([
+		['notes between instructions', 'Mix.\ntip: a\nStir.\ntip: b'],
+		['two annotation types', 'Mix.\nwarning: hot\nStir.\nsubstitution: oil'],
+		['an empty final annotation after a real one', 'Mix.\ntip: a\ntip:'],
+		['an ordinary multiline step', 'Mix.\nStir.\nRest.'],
+		['a first line that looks like a keyword', 'tip: this is a step\ntip: b']
+	])('a second save changes nothing: %s', (_, input) => {
+		const parsed = parseStepText(input);
+		expect(parseStepText(stepsToText(parsed))).toEqual(parsed);
 	});
 });
