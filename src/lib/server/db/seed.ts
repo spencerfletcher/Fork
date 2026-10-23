@@ -9,18 +9,26 @@ import { slugify } from '#lib/helpers.js';
 import { parseIngredientText } from '#lib/recipes/ingredients.js';
 import { parseStepText } from '#lib/recipes/steps.js';
 
-// Load .env.local with override so it wins even over shell env vars,
-// then fill in any remaining vars from .env
-config({ path: '.env.local', override: true });
+// `pnpm db:seed` targets the local stack in .env.local; `pnpm db:seed:prod`
+// skips that file so .env (hosted) wins. The guard below stops either script
+// from wiping the other database by accident.
+const prod = process.env.SEED_TARGET === 'prod';
+if (!prod) config({ path: '.env.local', override: true });
 config({ path: '.env', override: false });
 
 const DATABASE_URL = process.env.DATABASE_URL;
+if (!DATABASE_URL) throw new Error('DATABASE_URL is not set');
+const local = /127\.0\.0\.1|localhost/.test(DATABASE_URL);
+if (prod === local) {
+	throw new Error(
+		`SEED_TARGET=${prod ? 'prod' : 'local'} but DATABASE_URL points at a ${local ? 'local' : 'hosted'} database`
+	);
+}
 const SUPABASE_URL = process.env.PUBLIC_SUPABASE_URL;
 const SUPABASE_SECRET_KEY = process.env.SUPABASE_SECRET_KEY;
 const SEED_USER_PASSWORD = process.env.SEED_USER_PASSWORD ?? 'Fork-Demo-2025!';
 const SEED_USER_EMAIL = 'spencer@fork.dev';
 
-if (!DATABASE_URL) throw new Error('DATABASE_URL is not set');
 if (!SUPABASE_URL) throw new Error('PUBLIC_SUPABASE_URL is not set');
 if (!SUPABASE_SECRET_KEY) throw new Error('SUPABASE_SECRET_KEY is not set');
 

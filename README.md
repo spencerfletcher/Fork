@@ -107,6 +107,7 @@ Start Supabase, which also applies every migration in `supabase/migrations/`:
 supabase start                 # prints your local API URL, anon key, and service role key
 # paste those into .env, then:
 pnpm db:seed                   # demo user + three recipes, one a fork with two versions
+pnpm db:seed:prod              # same, against the hosted database in .env (wipes it first)
 pnpm dev
 ```
 
