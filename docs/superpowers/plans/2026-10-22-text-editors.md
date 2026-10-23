@@ -701,17 +701,21 @@ Rewrite each `COOKIE_INGREDIENTS_*` and `*_STEPS` literal as a template string o
 
 Replace lines 90-96 with `await page.getByLabel('Ingredients').fill('2 cups flour')` and `await page.getByLabel('Steps').fill('Mix all ingredients.')`. Run `pnpm test:e2e` (or the project's Playwright script) locally with Supabase up. Expected: PASS.
 
-- [ ] **Step 3: README**
+- [ ] **Step 3: Fixture helpers**
+
+Create `src/lib/recipes/fixtures.ts` exporting `makeIngredient(line: string): Ingredient` (wraps `parseIngredientLine`) and `makeStep(text: string, annotation?: StepAnnotation): Step`. Replace every test's local `ing()` / `ingredient()` / `step()` helper and `parseIngredientLine as ing` import with these. No behaviour change; the suite stays green.
+
+- [ ] **Step 4: README**
 
 Update any sentence describing per-row editors or the ingredient JSON shape to describe the textareas and the parsed shape. If none exists, skip.
 
-- [ ] **Step 4: Full verification**
+- [ ] **Step 5: Full verification**
 
 Run: `pnpm test:unit && pnpm exec svelte-check --threshold error && pnpm lint`. Then `pnpm dev`, open `/recipes/new`, paste the spec's twelve lines, confirm the note lists the three unparsable ones, save, confirm the recipe page prints every line as typed.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 6: Commit**
 
 ```bash
-git add src/lib/server/db/seed.ts e2e/authenticated.test.ts README.md
+git add src/lib/server/db/seed.ts e2e/authenticated.test.ts README.md src/lib/recipes/fixtures.ts
 git commit -m "Seed and test the text editors end to end"
 ```
