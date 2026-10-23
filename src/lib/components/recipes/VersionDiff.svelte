@@ -56,9 +56,7 @@
 						{#if row.status === 'modified'}
 							{@render segments(row.segments, true)}
 						{:else}
-							{row.ingredient.amount}
-							{row.ingredient.unit}
-							{row.ingredient.name}
+							{row.ingredient.text}
 						{/if}
 					</span>
 				</div>
@@ -75,7 +73,7 @@
 					{#if row.status !== 'removed'}
 						<span class="step-num">{row.stepNumber}</span>
 					{/if}
-					<span class="diff-content">
+					<span class="diff-content whitespace-pre-line">
 						{#if row.status === 'modified'}
 							{@render segments(row.segments, false)}
 							{#if row.annotation}

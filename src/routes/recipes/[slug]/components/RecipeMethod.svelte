@@ -40,7 +40,9 @@
 					{zeroPad(n)}
 				</span>
 				<div class="flex flex-col gap-3">
-					<p class="text-text m-0 font-sans text-base leading-[1.75]">{step.text}</p>
+					<p class="text-text m-0 font-sans text-base leading-[1.75] whitespace-pre-line">
+						{step.text}
+					</p>
 					{#if step.annotation}
 						<p
 							class="m-0 font-sans text-[0.9rem] leading-[1.6] italic {annotationColor[

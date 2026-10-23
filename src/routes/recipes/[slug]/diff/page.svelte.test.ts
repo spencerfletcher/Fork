@@ -1,6 +1,8 @@
 import { describe, test, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/svelte';
 import DiffPage from './+page.svelte';
+import type { IngredientDiffRow, StepDiffRow } from '#lib/recipes/diff.js';
+import { parseIngredientLine as ing } from '#lib/recipes/ingredients.js';
 
 // ─── SvelteKit module mocks ───────────────────────────────────────────────────
 
@@ -29,11 +31,8 @@ const V2 = {
 
 function makeData(
 	overrides: {
-		ingredientDiff?: {
-			status: string;
-			ingredient: { amount: string; unit: string; name: string };
-		}[];
-		stepDiff?: { status: string; step: { step: number; text: string } }[];
+		ingredientDiff?: IngredientDiffRow[];
+		stepDiff?: StepDiffRow[];
 		fromVersion?: typeof V1;
 		toVersion?: typeof V1;
 		allVersions?: (typeof V1)[];
@@ -71,9 +70,7 @@ describe('Diff page', () => {
 
 	test('renders "+" prefix for added ingredients', () => {
 		const data = makeData({
-			ingredientDiff: [
-				{ status: 'added', ingredient: { amount: '1', unit: 'tsp', name: 'espresso powder' } }
-			]
+			ingredientDiff: [{ status: 'added', ingredient: ing('1 tsp espresso powder') }]
 		});
 		const { container } = render(DiffPage, { props: { data } });
 		const content = container.querySelector('.diff-added .diff-content');
@@ -83,9 +80,7 @@ describe('Diff page', () => {
 
 	test('renders "−" prefix for removed ingredients', () => {
 		const data = makeData({
-			ingredientDiff: [
-				{ status: 'removed', ingredient: { amount: '2', unit: 'cups', name: 'butter' } }
-			]
+			ingredientDiff: [{ status: 'removed', ingredient: ing('2 cups butter') }]
 		});
 		const { container } = render(DiffPage, { props: { data } });
 		const content = container.querySelector('.diff-removed .diff-content');
@@ -95,9 +90,7 @@ describe('Diff page', () => {
 
 	test('added row has diff-added class', () => {
 		const data = makeData({
-			ingredientDiff: [
-				{ status: 'added', ingredient: { amount: '1', unit: 'tsp', name: 'vanilla' } }
-			]
+			ingredientDiff: [{ status: 'added', ingredient: ing('1 tsp vanilla') }]
 		});
 		const { container } = render(DiffPage, { props: { data } });
 		expect(container.querySelector('.diff-added')).not.toBeNull();
@@ -105,9 +98,7 @@ describe('Diff page', () => {
 
 	test('removed row has diff-removed class', () => {
 		const data = makeData({
-			ingredientDiff: [
-				{ status: 'removed', ingredient: { amount: '1', unit: 'tsp', name: 'vanilla' } }
-			]
+			ingredientDiff: [{ status: 'removed', ingredient: ing('1 tsp vanilla') }]
 		});
 		const { container } = render(DiffPage, { props: { data } });
 		expect(container.querySelector('.diff-removed')).not.toBeNull();
@@ -115,9 +106,7 @@ describe('Diff page', () => {
 
 	test('unchanged row has diff-unchanged class', () => {
 		const data = makeData({
-			ingredientDiff: [
-				{ status: 'unchanged', ingredient: { amount: '2', unit: 'cups', name: 'flour' } }
-			]
+			ingredientDiff: [{ status: 'unchanged', ingredient: ing('2 cups flour') }]
 		});
 		const { container } = render(DiffPage, { props: { data } });
 		expect(container.querySelector('.diff-unchanged')).not.toBeNull();

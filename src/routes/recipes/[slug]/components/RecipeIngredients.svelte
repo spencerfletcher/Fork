@@ -5,7 +5,8 @@
 
 	let crossedIngredients = $state(new Set<string>());
 	let showGrams = $state(false);
-	let gramCache = $state<(number | null)[] | null>(null);
+	type GramResult = { grams: number; approximate: boolean };
+	let gramCache = $state<(GramResult | null)[] | null>(null);
 	let gramsLoading = $state(false);
 
 	$effect(() => {
@@ -21,6 +22,11 @@
 				? [...crossedIngredients].filter((k) => k !== name)
 				: [...crossedIngredients, name]
 		);
+	}
+
+	// One string so the label is a single text node: "≈100g" or "125g".
+	function gramLabel(result: GramResult): string {
+		return `${result.approximate ? '≈' : ''}${Math.round(result.grams)}g`;
 	}
 
 	async function toggleGrams() {
@@ -56,7 +62,7 @@
 		</button>
 	</div>
 	<div class="m-0 p-0" role="list">
-		{#each currentVersion.ingredients as ingredient, i (ingredient.name)}
+		{#each currentVersion.ingredients as ingredient, i (i)}
 			<div
 				class="border-border text-text cursor-pointer border-b py-2 text-base select-none [&:last-child]:border-b-0"
 				class:opacity-40={crossedIngredients.has(ingredient.name)}
@@ -66,17 +72,18 @@
 				aria-checked={crossedIngredients.has(ingredient.name)}
 				tabindex="0"
 				onkeydown={(e) => e.key === ' ' && toggleIngredient(ingredient.name)}>
-				<span class="text-sienna font-medium">
-					{#if showGrams && gramCache}
-						{gramCache[i] !== null
-							? `${Math.round(gramCache[i]!)}g`
-							: `${ingredient.amount}${ingredient.unit ? ' ' + ingredient.unit : ''}`}
-					{:else}
-						{ingredient.amount}{ingredient.unit ? ' ' + ingredient.unit : ''}
-					{/if}
-				</span>
-				{ingredient.name}
+				{#if showGrams && gramCache?.[i]}
+					<span
+						class="text-sienna font-medium"
+						title={gramCache[i].approximate ? 'Estimated weight for a whole item' : undefined}>
+						{gramLabel(gramCache[i])}
+					</span>
+				{/if}
+				{ingredient.text}
 			</div>
 		{/each}
 	</div>
+	{#if showGrams && gramCache?.some((g) => g?.approximate)}
+		<p class="form-hint">Whole-item weights are estimates, not exact.</p>
+	{/if}
 </section>

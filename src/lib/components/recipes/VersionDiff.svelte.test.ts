@@ -62,6 +62,21 @@ describe('VersionDiff', () => {
 		expect(container.querySelector('.diff-removed')).toBeNull();
 	});
 
+	test('prints an ingredient row as the line was typed', () => {
+		renderDiff([{ status: 'unchanged', ingredient: ingredient('flour', '2', 'cups') }]);
+		expect(screen.getByText('2 cups flour')).toBeInTheDocument();
+	});
+
+	test('keeps line breaks inside a step row', () => {
+		const { container } = renderDiff(
+			[],
+			[{ status: 'added', stepNumber: 1, step: { text: 'Mix.\nRest.' } }]
+		);
+		const content = container.querySelector('.diff-content');
+		expect(content?.textContent?.trim()).toBe('Mix.\nRest.');
+		expect(content).toHaveClass('whitespace-pre-line');
+	});
+
 	test('renders word-level segments inside a modified ingredient', () => {
 		const { container } = renderDiff([
 			{
