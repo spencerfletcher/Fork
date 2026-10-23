@@ -75,17 +75,28 @@ export function lookupPieceGrams(quantity: number, name: string): number | null 
 	return grams === null ? null : quantity * grams;
 }
 
+/** A line with a unit converts by measure; otherwise, or when the "unit" is
+ * really a count word such as "cloves", it is looked up as whole items. */
+function convert(quantity: number, unit: string, name: string): GramResult | null {
+	if (unit) {
+		const grams = lookupGrams(quantity, unit, name);
+		if (grams !== null) return { grams, grams2: null, approximate: false };
+	}
+	const grams = lookupPieceGrams(quantity, unit ? `${unit} ${name}` : name);
+	return grams === null ? null : { grams, grams2: null, approximate: true };
+}
+
 /**
  * Weight for one parsed ingredient line from the local tables only, or null
  * when the line has no quantity or the tables do not know it. Measured lines
- * (with a unit) are conversions; counted lines are typical whole-item weights
- * and are flagged approximate.
+ * are conversions; counted lines are typical whole-item weights and are
+ * flagged approximate.
  */
 export function gramsFor(ingredient: Ingredient): GramResult | null {
 	const { quantity, quantity2, unit, name } = ingredient;
 	if (quantity === null) return null;
-	const convert = (q: number) => (unit ? lookupGrams(q, unit, name) : lookupPieceGrams(q, name));
-	const grams = convert(quantity);
-	if (grams === null) return null;
-	return { grams, grams2: quantity2 === null ? null : convert(quantity2), approximate: !unit };
+	const result = convert(quantity, unit, name);
+	if (result === null) return null;
+	const grams2 = quantity2 === null ? null : (convert(quantity2, unit, name)?.grams ?? null);
+	return { ...result, grams2 };
 }

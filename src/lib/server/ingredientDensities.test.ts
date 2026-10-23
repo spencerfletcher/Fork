@@ -123,6 +123,14 @@ describe('gramsFor', () => {
 		});
 	});
 
+	test('a count word parsed as a unit still finds the whole item', () => {
+		expect(gramsFor(makeIngredient('4 cloves garlic, minced'))).toEqual({
+			grams: 20,
+			grams2: null,
+			approximate: true
+		});
+	});
+
 	test('returns null for an unparsed line', () => {
 		expect(gramsFor(makeIngredient('salt to taste'))).toBeNull();
 	});
