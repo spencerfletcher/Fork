@@ -22,3 +22,13 @@ export type Step = {
 	text: string;
 	annotation?: StepAnnotation;
 };
+
+export type RecipeContent = {
+	title: string;
+	description: string | null;
+	servings: number | null;
+	prepTimeMinutes: number | null;
+	cookTimeMinutes: number | null;
+	ingredients: Ingredient[];
+	steps: Step[];
+};

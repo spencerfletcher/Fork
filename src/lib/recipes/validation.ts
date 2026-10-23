@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { Ingredient, Step } from './types.js';
+import type { Ingredient, Step, RecipeContent } from './types.js';
 import { parseIngredientText } from './ingredients.js';
 import { parseStepText } from './steps.js';
 import { MAX_FIELD, MAX_LINE, FIELD_TOO_LONG, LINE_TOO_LONG } from './limits.js';
@@ -50,7 +50,6 @@ const contentSchema = z.object({
 });
 
 export type RecipeMeta = z.output<typeof metaSchema>;
-export type RecipeContent = { ingredients: Ingredient[]; steps: Step[] };
 
 /** What a parser hands back: the typed value, or the first message to show the user. */
 export type Result<T> = { ok: true; value: T } | { ok: false; error: string };
@@ -81,7 +80,9 @@ export function parseRecipeMeta(formData: FormData): Result<RecipeMeta> {
 }
 
 /** Versioned recipe content (ingredients and steps), from text fields in a submitted form. */
-export function parseRecipeContent(formData: FormData): Result<RecipeContent> {
+export function parseRecipeContent(
+	formData: FormData
+): Result<Pick<RecipeContent, 'ingredients' | 'steps'>> {
 	return parse(contentSchema, {
 		ingredients: text(formData, 'ingredients'),
 		steps: text(formData, 'steps')
