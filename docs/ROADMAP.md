@@ -221,7 +221,19 @@ Entry points into the two text editors, cheapest first. Each stage lands in the 
 4. **Photo of a cookbook page or card.** Needs OCR or a vision model; slots after the first AI adaptation exists, reusing that plumbing.
 5. **iOS share sheet** (M14): the URL path from a different entry point.
 
+6. **Cooklang `.cook` files.** After the cooking loop works. Keep the original file, translate the supported subset (ingredients, steps, timers, metadata), say what was not represented. Evaluate existing TypeScript parsers and Cooklang's canonical parser tests first. See `research/2026-10-23-cooklang.md`.
+
 Not planned until asked for: Paprika, Mealie or Recipe Keeper export formats.
+
+---
+
+# M16 — Export (bounded, after M15 stage 3)
+
+Portability as a guarantee, not a sentence. A documented archive per user or per recipe: readable Markdown recipes, machine-readable version snapshots as JSON, source attribution and fork lineage, images, and attempt notes once M17 exists. Add `.cook` export of the supported subset alongside, without inventing ingredient-to-step links. See `research/2026-10-23-cooklang.md`.
+
+# M17 — Cooking attempts (the improvement loop)
+
+The strongest opportunity identified in the Cooklang research. An attempt records: which version, batch size or multiplier, deviations from the formulation, and the outcome, in a few taps. Distinct from the saved formulation and from a proposed revision. Feeds the AI adaptation ("version 3 at half size with oat milk was too thin") and answers "which version did I cook last time, and did it help?". Must be effortless or it is no advantage; start with one free-text note plus the version and multiplier, structure later.
 
 ---
 
