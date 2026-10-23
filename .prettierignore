@@ -7,3 +7,7 @@ bun.lockb
 
 # Agent scratch workspace (git-ignored; Prettier does not read .gitignore)
 .superpowers/
+
+# Installed agent skills, third-party markdown
+.agents/
+skills-lock.json
