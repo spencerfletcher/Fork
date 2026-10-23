@@ -211,6 +211,20 @@ A native or wrapped iOS client for cooking from a recipe: large type, screen sta
 
 ---
 
+# M15 — Importing recipes (in stages)
+
+Entry points into the two text editors, cheapest first. Each stage lands in the same `/recipes/new` form prefilled, so review and save are the existing flow.
+
+1. **Pasted text.** One box, paste a whole recipe; split it into title, ingredients and steps by headings and blank lines. Ingredients and steps already parse, so this is mostly finding the boundaries.
+2. **Text and Markdown files.** Same splitter behind a file picker.
+3. **URL.** Most recipe sites embed a schema.org `Recipe` as JSON-LD: name, `recipeIngredient` lines, `recipeInstructions`, `recipeYield`, prep and cook time. Fetch server-side, read the JSON-LD, prefill. No AI, covers most blogs; fall back to the pasted-text splitter on the page text when there is no JSON-LD.
+4. **Photo of a cookbook page or card.** Needs OCR or a vision model; slots after the first AI adaptation exists, reusing that plumbing.
+5. **iOS share sheet** (M14): the URL path from a different entry point.
+
+Not planned until asked for: Paprika, Mealie or Recipe Keeper export formats.
+
+---
+
 ## Working agreements
 
 These are the ones this project has already been bitten by. They are enforced in CI now, so following them is cheaper than working around them.
