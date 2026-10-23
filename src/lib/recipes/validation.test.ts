@@ -152,6 +152,21 @@ describe('parseRecipeContent', () => {
 		});
 	});
 
+	test('rejects an ingredient line longer than 300 characters before parsing it', () => {
+		const long = '1/2 '.repeat(100);
+		expect(content({ ingredients: `1 cup flour\n${long}`, steps })).toEqual({
+			ok: false,
+			error: 'An ingredient line is too long (300 characters max)'
+		});
+	});
+
+	test('rejects step text longer than 20,000 characters', () => {
+		expect(content({ ingredients, steps: 'x'.repeat(20_001) })).toEqual({
+			ok: false,
+			error: 'Steps are too long (20,000 characters max)'
+		});
+	});
+
 	test('a missing field is treated as empty text', () => {
 		expect(content({ steps })).toEqual({
 			ok: false,

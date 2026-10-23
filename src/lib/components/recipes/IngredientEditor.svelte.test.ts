@@ -17,9 +17,9 @@ describe('IngredientEditor', () => {
 		expect(box().name).toBe('ingredients');
 	});
 
-	test('shows no note when the box is empty', () => {
+	test('keeps an empty live region in the page when the box is empty, so later notes are announced', () => {
 		render(IngredientEditor, { props: { value: '' } });
-		expect(screen.queryByRole('status')).not.toBeInTheDocument();
+		expect(screen.getByRole('status')).toBeEmptyDOMElement();
 	});
 
 	test('lists only the lines that did not parse', async () => {
@@ -36,6 +36,6 @@ describe('IngredientEditor', () => {
 		render(IngredientEditor, { props: { value: 'salt to taste' } });
 		expect(screen.getByRole('status')).toBeInTheDocument();
 		await type('1 tsp salt');
-		expect(screen.queryByRole('status')).not.toBeInTheDocument();
+		expect(screen.getByRole('status')).toBeEmptyDOMElement();
 	});
 });

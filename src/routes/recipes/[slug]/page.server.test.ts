@@ -1,5 +1,6 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { actions, load } from './+page.server';
+import { makeIngredient } from '#lib/recipes/fixtures.js';
 
 // ─── Hoisted mocks ────────────────────────────────────────────────────────────
 
@@ -116,7 +117,7 @@ const SOURCE_RECIPE = {
 			id: 1,
 			versionNumber: 1,
 			commitMessage: 'Initial recipe',
-			ingredients: [{ amount: '2', unit: 'cups', name: 'flour' }],
+			ingredients: [makeIngredient('2 cups flour')],
 			steps: [{ text: 'Mix.' }]
 		}
 	],

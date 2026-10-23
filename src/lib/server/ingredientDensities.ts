@@ -41,13 +41,17 @@ export function lookupGrams(quantity: number, unit: string, name: string): numbe
 }
 
 // Longest key first, so a name containing "egg white" is matched before "egg".
-const PIECE_KEYS = Object.keys(PIECE_GRAMS).sort((a, b) => b.length - a.length);
+// Keys match as whole words, so "eggplant" is not an egg; a trailing "s" is
+// allowed for plurals.
+const PIECE_MATCHERS = Object.keys(PIECE_GRAMS)
+	.sort((a, b) => b.length - a.length)
+	.map((key) => ({ key, pattern: new RegExp(`\\b${key}s?\\b`) }));
 
 /** Grams for `quantity` whole items, or null when the name matches nothing in the table. */
 export function lookupPieceGrams(quantity: number, name: string): number | null {
 	const nameLower = name.trim().toLowerCase();
-	const key = PIECE_KEYS.find((k) => nameLower.includes(k));
-	return key === undefined ? null : quantity * PIECE_GRAMS[key];
+	const match = PIECE_MATCHERS.find(({ pattern }) => pattern.test(nameLower));
+	return match === undefined ? null : quantity * PIECE_GRAMS[match.key];
 }
 
 /**
@@ -57,11 +61,12 @@ export function lookupPieceGrams(quantity: number, name: string): number | null 
  * weights and are flagged approximate.
  */
 export function gramsFor(ingredient: Ingredient): GramResult | null {
-	const { quantity, unit, name } = ingredient;
+	const { quantity, quantity2, unit, name } = ingredient;
 	if (quantity === null) return null;
 	if (unit) {
 		const grams = lookupGrams(quantity, unit, name);
-		return grams === null ? null : { grams, approximate: false };
+		// A range ("1-2 cups") converts its lower bound, so it is only an estimate.
+		return grams === null ? null : { grams, approximate: quantity2 !== null };
 	}
 	const grams = lookupPieceGrams(quantity, name);
 	return grams === null ? null : { grams, approximate: true };

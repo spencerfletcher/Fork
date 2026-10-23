@@ -34,13 +34,25 @@ const metaSchema = z.object({
 	tagNames: z.array(z.string())
 });
 
+// parse-ingredient's run time grows with the square of a line's length, so a
+// line is capped before it reaches the parser; the whole fields are capped so a
+// save cannot carry an arbitrarily large body.
+const MAX_LINE = 300;
+const MAX_FIELD = 20_000;
+
 const contentSchema = z.object({
 	ingredients: z
 		.string()
+		.max(MAX_FIELD, 'Ingredients are too long (20,000 characters max)')
+		.refine(
+			(s) => s.split('\n').every((line) => line.length <= MAX_LINE),
+			'An ingredient line is too long (300 characters max)'
+		)
 		.transform(parseIngredientText)
 		.pipe(z.array(z.custom<Ingredient>()).min(1, 'At least one ingredient is required')),
 	steps: z
 		.string()
+		.max(MAX_FIELD, 'Steps are too long (20,000 characters max)')
 		.transform(parseStepText)
 		.pipe(z.array(z.custom<Step>()).min(1, 'At least one step is required'))
 });

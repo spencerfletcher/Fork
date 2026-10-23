@@ -18,6 +18,11 @@ describe('lookupPieceGrams', () => {
 	test('returns null for an unknown item', () => {
 		expect(lookupPieceGrams(1, 'unicorn')).toBeNull();
 	});
+
+	test('matches whole words only, so eggplant is not an egg', () => {
+		expect(lookupPieceGrams(2, 'eggplants')).toBeNull();
+		expect(lookupPieceGrams(2, 'eggs')).toBe(100);
+	});
 });
 
 describe('gramsFor', () => {
@@ -29,6 +34,12 @@ describe('gramsFor', () => {
 
 	test('converts a counted line from the per-item table, approximate', () => {
 		expect(gramsFor(makeIngredient('2 eggs'))).toEqual({ grams: 100, approximate: true });
+	});
+
+	test('marks a range as approximate and uses its lower bound', () => {
+		expect(gramsFor(makeIngredient('1-2 cups all-purpose flour'))).toMatchObject({
+			approximate: true
+		});
 	});
 
 	test('returns null for an unparsed line', () => {
