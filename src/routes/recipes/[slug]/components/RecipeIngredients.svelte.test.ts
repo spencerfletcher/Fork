@@ -11,12 +11,16 @@ function renderWith(text: string, grams: GramResult[]) {
 
 const LINES = '2¼ cups all-purpose flour\n2 large eggs\nsalt to taste';
 
+function rows() {
+	return screen.getAllByRole('checkbox');
+}
+
 describe('RecipeIngredients', () => {
 	test('prints each ingredient line as typed when no weight is known', () => {
 		renderWith(LINES, [null, null, null]);
-		expect(screen.getByText('2¼ cups all-purpose flour')).toBeInTheDocument();
-		expect(screen.getByText('2 large eggs')).toBeInTheDocument();
-		expect(screen.getByText('salt to taste')).toBeInTheDocument();
+		expect(rows()[0]).toHaveTextContent('2¼ cups all-purpose flour');
+		expect(rows()[1]).toHaveTextContent('2 large eggs');
+		expect(rows()[2]).toHaveTextContent('salt to taste');
 		expect(screen.queryByText(/estimates/i)).not.toBeInTheDocument();
 	});
 
@@ -26,15 +30,30 @@ describe('RecipeIngredients', () => {
 			{ grams: 100, approximate: true },
 			null
 		]);
-		expect(screen.getByText('2¼ cups (281g) all-purpose flour')).toBeInTheDocument();
-		expect(screen.getByText('2 large eggs (≈100g)')).toBeInTheDocument();
-		expect(screen.getByText('salt to taste')).toBeInTheDocument();
+		expect(rows()[0]).toHaveTextContent('2¼ cups (281g) all-purpose flour');
+		expect(rows()[1]).toHaveTextContent('2 large eggs (≈100g)');
+		expect(rows()[2]).toHaveTextContent('salt to taste');
 		expect(screen.getByText(/estimates/i)).toBeInTheDocument();
+	});
+
+	test('sets the weight apart as an accent', () => {
+		renderWith('1 cup flour', [{ grams: 125, approximate: false }]);
+		const accent = screen.getByText('(125g)');
+		expect(accent).toHaveClass('text-sienna');
+		expect(rows()[0]).toHaveTextContent('1 cup (125g) flour');
+	});
+
+	test('rounds to 0.1g below ten grams and to whole grams above', () => {
+		renderWith('1 tsp salt\n1 cup flour', [
+			{ grams: 5.6789, approximate: false },
+			{ grams: 125.4, approximate: false }
+		]);
+		expect(screen.getByText('(5.7g)')).toBeInTheDocument();
+		expect(screen.getByText('(125g)')).toBeInTheDocument();
 	});
 
 	test('shows no estimate note when nothing shown is approximate', () => {
 		renderWith('1 cup flour', [{ grams: 125, approximate: false }]);
-		expect(screen.getByText('1 cup (125g) flour')).toBeInTheDocument();
 		expect(screen.queryByText(/estimates/i)).not.toBeInTheDocument();
 	});
 });

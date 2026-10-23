@@ -11,14 +11,20 @@
 		crossed = new Set(crossed.has(i) ? [...crossed].filter((k) => k !== i) : [...crossed, i]);
 	}
 
-	// The line as typed with its weight worked in. A measured line gets the
-	// weight where the measure sits, before the name: "1 cup (125g) flour". A
-	// counted line has no measure, so the estimate trails: "2 eggs (≈100g)".
-	function withGrams(ingredient: Ingredient, result: GramResult): string {
-		const label = `(${result.approximate ? '≈' : ''}${Math.round(result.grams)}g)`;
+	// Whole grams, except below ten where a tenth matters: 5.7g, not 6g.
+	function formatGrams(result: GramResult): string {
+		const g = result.grams;
+		const rounded = g < 10 ? Math.round(g * 10) / 10 : Math.round(g);
+		return `(${result.approximate ? '≈' : ''}${rounded}g)`;
+	}
+
+	// The line as typed, split around where the weight goes. A measured line
+	// gets the weight where the measure sits, before the name: "1 cup (125g)
+	// flour". A counted line has no measure, so the estimate trails.
+	function parts(ingredient: Ingredient, result: GramResult): [string, string] {
 		const { text, name } = ingredient;
-		if (result.approximate || !text.endsWith(name)) return `${text} ${label}`;
-		return `${text.slice(0, text.length - name.length).trimEnd()} ${label} ${name}`;
+		if (result.approximate || !text.endsWith(name)) return [text, ''];
+		return [text.slice(0, text.length - name.length).trimEnd(), name];
 	}
 
 	const anyApproximate = $derived(grams.some((g) => g?.approximate));
@@ -41,9 +47,14 @@
 				tabindex="0"
 				onkeydown={(e) => e.key === ' ' && toggle(i)}>
 				{#if result}
-					<span title={result.approximate ? 'Estimated weight for a whole item' : undefined}>
-						{withGrams(ingredient, result)}
+					{@const [before, after] = parts(ingredient, result)}
+					{before}
+					<span
+						class="text-sienna font-medium"
+						title={result.approximate ? 'Estimated weight for a whole item' : undefined}>
+						{formatGrams(result)}
 					</span>
+					{after}
 				{:else}
 					{ingredient.text}
 				{/if}
