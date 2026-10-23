@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { enhance, type SubmitFunction } from '$app/forms';
 	import type { PageData, ActionData } from './$types';
-	import type { Ingredient, Step } from '#lib/recipes/types.js';
+	import { ingredientsToText } from '#lib/recipes/ingredients.js';
+	import { stepsToText } from '#lib/recipes/steps.js';
 	import IngredientEditor from '#lib/components/recipes/IngredientEditor.svelte';
 	import StepEditor from '#lib/components/recipes/StepEditor.svelte';
 
@@ -11,30 +12,20 @@
 
 	const currentTagNames = $derived(recipe.recipesToTags?.map((r) => r.tag.name) ?? []);
 
-	// The editor works on a local copy of the loaded version, so only the initial value is wanted.
+	// The editors work on text copies of the loaded version; only the initial
+	// value is wanted, and it doubles as the saved baseline for dirty-checking.
 	// svelte-ignore state_referenced_locally
-	let ingredients = $state<Ingredient[]>(
-		data.latestVersion?.ingredients ?? [{ amount: '', unit: '', name: '' }]
-	);
+	const savedIngredients = ingredientsToText(data.latestVersion?.ingredients ?? []);
 	// svelte-ignore state_referenced_locally
-	let steps = $state<Step[]>(data.latestVersion?.steps ?? [{ text: '' }]);
-
-	let ingredientsInput: HTMLInputElement;
-	let stepsInput: HTMLInputElement;
-
-	function serializeContent() {
-		ingredientsInput.value = JSON.stringify(ingredients);
-		stepsInput.value = JSON.stringify(steps);
-	}
+	const savedSteps = stepsToText(data.latestVersion?.steps ?? []);
+	let ingredientsText = $state(savedIngredients);
+	let stepsText = $state(savedSteps);
 
 	// Editor state: which form is mid-request, and which has unsaved edits.
 	// A success redirects away, so neither needs resetting here.
 	let submitting = $state<'meta' | 'content' | null>(null);
 	let metaDirty = $state(false);
-	// The initial value is the point: it is the saved baseline that dirty-checking compares against.
-	// svelte-ignore state_referenced_locally
-	const savedContent = JSON.stringify({ ingredients, steps });
-	const contentDirty = $derived(JSON.stringify({ ingredients, steps }) !== savedContent);
+	const contentDirty = $derived(ingredientsText !== savedIngredients || stepsText !== savedSteps);
 
 	const track = (section: 'meta' | 'content'): SubmitFunction => {
 		return () => {
@@ -160,17 +151,9 @@
 				Creates a new version snapshot. Describe what changed.
 			</p>
 
-			<form
-				method="POST"
-				action="?/saveVersion"
-				use:enhance={track('content')}
-				onsubmit={serializeContent}
-				class="form">
-				<input type="hidden" name="ingredients" bind:this={ingredientsInput} />
-				<input type="hidden" name="steps" bind:this={stepsInput} />
-
-				<IngredientEditor bind:ingredients />
-				<StepEditor bind:steps annotations />
+			<form method="POST" action="?/saveVersion" use:enhance={track('content')} class="form">
+				<IngredientEditor bind:value={ingredientsText} />
+				<StepEditor bind:value={stepsText} />
 
 				<div class="field">
 					<label for="commitMessage">

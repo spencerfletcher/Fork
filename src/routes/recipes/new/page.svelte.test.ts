@@ -47,4 +47,13 @@ describe('New recipe page editor state', () => {
 		await fireEvent.input(screen.getByLabelText(/title/i), { target: { value: 'Brownies' } });
 		expect(screen.getByText('Unsaved changes')).toBeInTheDocument();
 	});
+
+	test('starts with empty ingredient and step textareas in the form', () => {
+		render(NewPage, { props: { data, form: null } });
+		const ingredients = screen.getByLabelText('Ingredients');
+		expect(ingredients).toHaveValue('');
+		expect(ingredients).toHaveAttribute('name', 'ingredients');
+		expect(ingredients.closest('form')).not.toBeNull();
+		expect(screen.getByLabelText('Steps')).toHaveAttribute('name', 'steps');
+	});
 });

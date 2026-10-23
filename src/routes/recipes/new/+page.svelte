@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { enhance, type SubmitFunction } from '$app/forms';
 	import type { PageData, ActionData } from './$types';
-	import type { Ingredient, Step } from '#lib/recipes/types.js';
 	import TagInput from '#lib/components/ui/TagInput.svelte';
 	import IngredientEditor from '#lib/components/recipes/IngredientEditor.svelte';
 	import StepEditor from '#lib/components/recipes/StepEditor.svelte';
@@ -11,11 +10,8 @@
 	const { allTags } = $derived(data);
 
 	let imagePreview = $state<string | null>(null);
-	let ingredients = $state<Ingredient[]>([{ amount: '', unit: '', name: '' }]);
-	let steps = $state<Step[]>([{ text: '' }]);
-
-	let ingredientsInput: HTMLInputElement;
-	let stepsInput: HTMLInputElement;
+	let ingredientsText = $state('');
+	let stepsText = $state('');
 
 	function onImageChange(e: Event) {
 		const file = (e.target as HTMLInputElement).files?.[0];
@@ -28,11 +24,6 @@
 		} else {
 			imagePreview = null;
 		}
-	}
-
-	function serializeContent() {
-		ingredientsInput.value = JSON.stringify(ingredients);
-		stepsInput.value = JSON.stringify(steps);
 	}
 
 	// A success redirects away, so neither flag needs resetting here.
@@ -57,13 +48,9 @@
 		<form
 			method="POST"
 			use:enhance={track}
-			onsubmit={serializeContent}
 			oninput={() => (dirty = true)}
 			class="form"
 			enctype="multipart/form-data">
-			<input type="hidden" name="ingredients" bind:this={ingredientsInput} />
-			<input type="hidden" name="steps" bind:this={stepsInput} />
-
 			<div class="field">
 				<label for="title">
 					Title <span class="required">*</span>
@@ -131,8 +118,8 @@
 
 			<hr class="divider" />
 
-			<IngredientEditor bind:ingredients />
-			<StepEditor bind:steps />
+			<IngredientEditor bind:value={ingredientsText} />
+			<StepEditor bind:value={stepsText} />
 
 			{#if form?.error}
 				<p class="form-error" role="alert">{form.error}</p>

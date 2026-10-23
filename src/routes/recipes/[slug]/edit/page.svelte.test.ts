@@ -3,6 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import type { SubmitFunction } from '$app/forms';
 import EditPage from './+page.svelte';
+import { parseIngredientText } from '#lib/recipes/ingredients.js';
 
 // Capture each form's submit callback so a test can drive the pending state by hand.
 const captured = vi.hoisted(() => ({ submits: [] as SubmitFunction[] }));
@@ -33,7 +34,10 @@ function makeData() {
 			isPublic: false,
 			recipesToTags: []
 		},
-		latestVersion: null,
+		latestVersion: {
+			ingredients: parseIngredientText('1 cup flour\n2 eggs'),
+			steps: [{ text: 'Mix.' }, { text: 'Bake.', annotation: { type: 'tip', text: 'gently' } }]
+		},
 		allTags: []
 	} as never;
 }
@@ -88,12 +92,28 @@ describe('Edit page editor state', () => {
 		expect(hint.closest('form')).toHaveAttribute('action', '?/saveMeta');
 	});
 
-	test('shows unsaved changes for the content form after editing an ingredient', async () => {
+	test('fills both textareas from the latest version', () => {
 		render(EditPage, { props: { data: makeData(), form: null } });
-		await fireEvent.input(screen.getByPlaceholderText('Ingredient name'), {
-			target: { value: 'flour' }
+		expect(screen.getByLabelText('Ingredients')).toHaveValue('1 cup flour\n2 eggs');
+		expect(screen.getByLabelText('Steps')).toHaveValue('Mix.\n\nBake.\ntip: gently');
+	});
+
+	test('shows unsaved changes for the content form after editing the ingredients', async () => {
+		render(EditPage, { props: { data: makeData(), form: null } });
+		expect(screen.queryByText('Unsaved changes')).not.toBeInTheDocument();
+		await fireEvent.input(screen.getByLabelText('Ingredients'), {
+			target: { value: '1 cup flour\n3 eggs' }
 		});
 		const hint = screen.getByText('Unsaved changes');
 		expect(hint.closest('form')).toHaveAttribute('action', '?/saveVersion');
+	});
+
+	test('shows unsaved changes for the content form after editing the steps', async () => {
+		render(EditPage, { props: { data: makeData(), form: null } });
+		await fireEvent.input(screen.getByLabelText('Steps'), { target: { value: 'Mix well.' } });
+		expect(screen.getByText('Unsaved changes').closest('form')).toHaveAttribute(
+			'action',
+			'?/saveVersion'
+		);
 	});
 });
