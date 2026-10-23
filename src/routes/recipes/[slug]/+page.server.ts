@@ -11,6 +11,7 @@ import { eq, desc, and } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { slugify } from '#lib/helpers.js';
 import { absoluteImage, clampDescription } from '#lib/seo.js';
+import { gramsFor } from '#lib/server/ingredientDensities.js';
 import type { PageServerLoad, Actions } from './$types';
 
 export const load: PageServerLoad = async ({ params, url, locals: { user } }) => {
@@ -63,6 +64,9 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 	return {
 		recipe: visibleRecipe,
 		currentVersion,
+		// Weights come from local tables at load time, so the page never pays for
+		// an external lookup; lines the tables do not know get null.
+		grams: currentVersion?.ingredients.map(gramsFor) ?? [],
 		allVersions: recipe.versions,
 		isViewingHistory,
 		isFavorited,

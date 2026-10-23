@@ -1,5 +1,6 @@
 import { describe, test, expect } from 'vitest';
-import { lookupPieceGrams } from './ingredientDensities';
+import { gramsFor, lookupPieceGrams } from './ingredientDensities';
+import { makeIngredient } from '#lib/recipes/fixtures.js';
 
 describe('lookupPieceGrams', () => {
 	test('multiplies the quantity by the per-item weight', () => {
@@ -16,5 +17,26 @@ describe('lookupPieceGrams', () => {
 
 	test('returns null for an unknown item', () => {
 		expect(lookupPieceGrams(1, 'unicorn')).toBeNull();
+	});
+});
+
+describe('gramsFor', () => {
+	test('converts a measured line from the density table, not approximate', () => {
+		const result = gramsFor(makeIngredient('1 cup all-purpose flour'));
+		expect(result?.approximate).toBe(false);
+		expect(result?.grams).toBeGreaterThan(0);
+	});
+
+	test('converts a counted line from the per-item table, approximate', () => {
+		expect(gramsFor(makeIngredient('2 eggs'))).toEqual({ grams: 100, approximate: true });
+	});
+
+	test('returns null for an unparsed line', () => {
+		expect(gramsFor(makeIngredient('salt to taste'))).toBeNull();
+	});
+
+	test('returns null for a line the tables do not know', () => {
+		expect(gramsFor(makeIngredient('1 cup dragon fruit'))).toBeNull();
+		expect(gramsFor(makeIngredient('3 dragon fruit'))).toBeNull();
 	});
 });

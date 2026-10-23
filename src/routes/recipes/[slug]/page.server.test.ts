@@ -273,6 +273,8 @@ function forkOf(parent: { isPublic: boolean; authorId: string }) {
 async function loadData(user: { id: string; email: string } | null = null) {
 	return (await load(makeLoadEvent(user) as never)) as {
 		recipe: { parent: unknown; parentId: number | null };
+		currentVersion: { ingredients: unknown[] } | null;
+		grams: unknown[];
 	};
 }
 
@@ -307,6 +309,12 @@ describe('load: fork attribution', () => {
 		findRecipeMock.mockResolvedValue(forkOf({ isPublic: false, authorId: 'original-author' }));
 		const data = await loadData({ id: 'original-author', email: 'o@test.com' });
 		expect(data.recipe.parent).toMatchObject({ slug: 'secret-original' });
+	});
+
+	test('returns one gram result per ingredient of the shown version', async () => {
+		findRecipeMock.mockResolvedValue(forkOf({ isPublic: true, authorId: 'original-author' }));
+		const data = await loadData();
+		expect(data.grams).toHaveLength(data.currentVersion?.ingredients.length ?? -1);
 	});
 
 	test("does not return a fork count, which would reveal other users' private forks", async () => {

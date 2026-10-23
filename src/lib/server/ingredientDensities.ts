@@ -1,4 +1,7 @@
 import { DENSITIES, ML_PER_UNIT, GRAMS_PER_WEIGHT_UNIT, PIECE_GRAMS } from './gramTables.js';
+import type { Ingredient } from '#lib/recipes/types.js';
+
+export type GramResult = { grams: number; approximate: boolean };
 
 /**
  * Look up the gram equivalent of an ingredient from the local table.
@@ -14,7 +17,7 @@ export function lookupGrams(quantity: number, unit: string, name: string): numbe
 	}
 
 	const mlPerUnit = ML_PER_UNIT[unitLower];
-	if (!mlPerUnit) return null; // unknown unit (count, pinch, etc.) — fall through to Spoonacular
+	if (!mlPerUnit) return null; // unknown unit (count, pinch, etc.)
 
 	const nameLower = name.trim().toLowerCase();
 
@@ -45,4 +48,21 @@ export function lookupPieceGrams(quantity: number, name: string): number | null 
 	const nameLower = name.trim().toLowerCase();
 	const key = PIECE_KEYS.find((k) => nameLower.includes(k));
 	return key === undefined ? null : quantity * PIECE_GRAMS[key];
+}
+
+/**
+ * Weight for one parsed ingredient line from the local tables only, or null
+ * when the line has no quantity or the tables do not know it. Measured lines
+ * (with a unit) are exact conversions; counted lines are typical whole-item
+ * weights and are flagged approximate.
+ */
+export function gramsFor(ingredient: Ingredient): GramResult | null {
+	const { quantity, unit, name } = ingredient;
+	if (quantity === null) return null;
+	if (unit) {
+		const grams = lookupGrams(quantity, unit, name);
+		return grams === null ? null : { grams, approximate: false };
+	}
+	const grams = lookupPieceGrams(quantity, name);
+	return grams === null ? null : { grams, approximate: true };
 }

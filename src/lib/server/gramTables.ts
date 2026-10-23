@@ -4,7 +4,6 @@
 
 /**
  * Ingredient densities (grams per ml) for common ingredients.
- * Used as the first lookup layer before falling back to Spoonacular.
  * Matching checks if the ingredient name contains the key (or vice-versa).
  */
 export const DENSITIES: Record<string, number> = {

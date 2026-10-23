@@ -34,7 +34,7 @@
 	<div class="content-layout">
 		<div class="min-w-0">
 			{#if currentVersion}
-				<RecipeIngredients {currentVersion} />
+				<RecipeIngredients ingredients={currentVersion.ingredients} grams={data.grams} />
 				<RecipeMethod steps={currentVersion.steps} />
 			{:else}
 				<p class="text-text-3 py-7 text-base">

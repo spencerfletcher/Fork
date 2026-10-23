@@ -1,53 +1,40 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/svelte';
+import { describe, test, expect } from 'vitest';
+import { render, screen } from '@testing-library/svelte';
 import { parseIngredientText } from '#lib/recipes/ingredients.js';
 import RecipeIngredients from './RecipeIngredients.svelte';
 
-const fetchMock = vi.fn();
-vi.stubGlobal('fetch', fetchMock);
-
 type GramResult = { grams: number; approximate: boolean } | null;
 
-function renderWith(text: string, results?: GramResult[]) {
-	fetchMock.mockResolvedValue(Response.json({ results: results ?? [] }));
-	const currentVersion = { ingredients: parseIngredientText(text) } as never;
-	return render(RecipeIngredients, { props: { currentVersion } });
+function renderWith(text: string, grams: GramResult[]) {
+	return render(RecipeIngredients, { props: { ingredients: parseIngredientText(text), grams } });
 }
 
 const LINES = '2¼ cups all-purpose flour\n2 large eggs\nsalt to taste';
 
-beforeEach(() => fetchMock.mockReset());
-
 describe('RecipeIngredients', () => {
-	test('prints each ingredient line as typed', () => {
-		renderWith(LINES);
+	test('prints each ingredient line as typed when no weight is known', () => {
+		renderWith(LINES, [null, null, null]);
 		expect(screen.getByText('2¼ cups all-purpose flour')).toBeInTheDocument();
 		expect(screen.getByText('2 large eggs')).toBeInTheDocument();
 		expect(screen.getByText('salt to taste')).toBeInTheDocument();
+		expect(screen.queryByText(/estimates/i)).not.toBeInTheDocument();
 	});
 
-	test('shows grams, marks estimates with ≈, and explains the estimate', async () => {
+	test('works the weight into the line: after the measure, or trailing for a counted line', () => {
 		renderWith(LINES, [
 			{ grams: 281, approximate: false },
 			{ grams: 100, approximate: true },
 			null
 		]);
-		await fireEvent.click(screen.getByRole('button', { name: 'g' }));
-		// A measured line shows the weight where the measure was; a counted line
-		// has no measure, so the estimate goes at the end.
-		await waitFor(() =>
-			expect(screen.getByText('2¼ cups (281g) all-purpose flour')).toBeInTheDocument()
-		);
+		expect(screen.getByText('2¼ cups (281g) all-purpose flour')).toBeInTheDocument();
 		expect(screen.getByText('2 large eggs (≈100g)')).toBeInTheDocument();
-		// An unconverted line still shows as typed.
 		expect(screen.getByText('salt to taste')).toBeInTheDocument();
 		expect(screen.getByText(/estimates/i)).toBeInTheDocument();
 	});
 
-	test('shows no estimate note when nothing shown is approximate', async () => {
+	test('shows no estimate note when nothing shown is approximate', () => {
 		renderWith('1 cup flour', [{ grams: 125, approximate: false }]);
-		await fireEvent.click(screen.getByRole('button', { name: 'g' }));
-		await waitFor(() => expect(screen.getByText('1 cup (125g) flour')).toBeInTheDocument());
+		expect(screen.getByText('1 cup (125g) flour')).toBeInTheDocument();
 		expect(screen.queryByText(/estimates/i)).not.toBeInTheDocument();
 	});
 });

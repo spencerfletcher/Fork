@@ -40,7 +40,7 @@ A deliberate split in the schema supports this: recipe _metadata_ (title, descri
 | Discovery | Postgres full-text search (`tsvector` + GIN) ranked with ingredient matching, tag pages, tag filtering |
 | Social | Favorites, user profile pages with public recipes and a commit count |
 | Auth | Email/password via Supabase Auth, SSR session handling, auth-gated routes and actions |
-| Utility | Ingredient-to-grams conversion from a local density table, with an optional Spoonacular fallback |
+| Utility | Gram weights shown beside ingredients from a local density and per-item table; whole-item weights are marked as estimates |
 
 ## Not built
 
@@ -74,7 +74,6 @@ src/
     search/                    full-text search
     tags/[slug]/               recipes by tag
     users/[username]/          public profile
-    api/convert-to-grams/      ingredient unit conversion
   lib/
     recipes/                   pure recipe-domain logic, no framework or DB imports
       types.ts                 Ingredient and Step shapes stored as JSONB
