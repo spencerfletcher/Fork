@@ -1,56 +1,25 @@
 <script lang="ts">
-	import type { Ingredient } from '#lib/recipes/types.js';
+	import { parseIngredientText } from '#lib/recipes/ingredients.js';
 
-	let { ingredients = $bindable() }: { ingredients: Ingredient[] } = $props();
+	let { value = $bindable() }: { value: string } = $props();
 
-	let dragIndex = $state<number | null>(null);
+	// Reparsed on every keystroke; ingredient lists are short enough that this
+	// is cheaper than a debounce would be to read.
+	const unparsed = $derived(
+		parseIngredientText(value)
+			.filter((i) => i.quantity === null)
+			.map((i) => i.text)
+	);
 
-	function add() {
-		ingredients = [...ingredients, { amount: '', unit: '', name: '' }];
-	}
-
-	function remove(i: number) {
-		ingredients = ingredients.filter((_, idx) => idx !== i);
-	}
-
-	function onDragStart(i: number) {
-		dragIndex = i;
-	}
-
-	function onDrop(i: number) {
-		if (dragIndex === null || dragIndex === i) return;
-		const updated = [...ingredients];
-		const [moved] = updated.splice(dragIndex, 1);
-		updated.splice(i, 0, moved);
-		ingredients = updated;
-		dragIndex = null;
-	}
+	const placeholder = '2 1/4 cups all-purpose flour\n2 large eggs';
 </script>
 
 <div class="field">
-	<h4 class="m-0 mb-2">Ingredients</h4>
-	<div class="editor-list" role="list">
-		{#each ingredients as ingredient, i (i)}
-			<div
-				class="editor-row"
-				role="listitem"
-				draggable="true"
-				ondragstart={() => onDragStart(i)}
-				ondragover={(e) => e.preventDefault()}
-				ondrop={() => onDrop(i)}>
-				<span class="drag-handle" title="Drag to reorder">⠿</span>
-				<input type="text" placeholder="Amount" bind:value={ingredient.amount} />
-				<input type="text" placeholder="Unit" bind:value={ingredient.unit} />
-				<input type="text" placeholder="Ingredient name" bind:value={ingredient.name} />
-				<button
-					type="button"
-					onclick={() => remove(i)}
-					class="remove-btn"
-					aria-label="Remove ingredient">
-					×
-				</button>
-			</div>
-		{/each}
-	</div>
-	<button type="button" onclick={add} class="btn-ghost mt-1">+ Add ingredient</button>
+	<label for="ingredients">Ingredients</label>
+	<textarea id="ingredients" name="ingredients" rows="10" bind:value {placeholder}></textarea>
+	{#if unparsed.length > 0}
+		<p class="form-hint" role="status" aria-live="polite">
+			These lines will be saved as written but can't be scaled: {unparsed.join(', ')}
+		</p>
+	{/if}
 </div>
