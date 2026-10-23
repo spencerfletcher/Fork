@@ -195,6 +195,16 @@ Step text already carries durations ("marinate at least 1 hour", "bake 25 minute
 
 ---
 
+# M12 — Gram tables from USDA FoodData Central (half day)
+
+`gramTables.ts` is hand-typed and matched whole-name, so a name the table does not know shows no weight. USDA FoodData Central (public domain, SR Legacy and FNDDS) lists household measures per food: grams per cup, tablespoon and per item. A one-off script picks the most common few hundred foods, maps their formal names ("Wheat flour, white, all-purpose, enriched") to what people type, and emits the two tables. Review the generated keys by hand; the seed coverage test in `gramTables.test.ts` stays as the net. No runtime dependency on USDA.
+
+# M13 — User-defined ingredient weights (2–3h)
+
+A per-user `ingredient_weights` table (name, grams per ml or grams per item), consulted before the built-in tables with the same whole-name lookup. Lets a power user teach the app their flour or their eggs. A wrong number can then only come from the user's own entry. Edit UI is a small list on the profile page. Depends on M12 making the built-in table good enough that this is the exception, not the fix.
+
+---
+
 ## Working agreements
 
 These are the ones this project has already been bitten by. They are enforced in CI now, so following them is cheaper than working around them.
