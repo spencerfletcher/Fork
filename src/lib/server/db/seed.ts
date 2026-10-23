@@ -26,7 +26,12 @@ const SEED_USER_EMAIL = 'spencer@fork.dev';
 if (!DATABASE_URL) throw new Error('DATABASE_URL is not set');
 if (!SUPABASE_URL) throw new Error('PUBLIC_SUPABASE_URL is not set');
 if (!SUPABASE_SECRET_KEY) throw new Error('SUPABASE_SECRET_KEY is not set');
-const TARGET = describeSeedTarget(prod, DATABASE_URL, SUPABASE_URL);
+const TARGET = describeSeedTarget(
+	prod,
+	DATABASE_URL,
+	SUPABASE_URL,
+	process.env.SUPABASE_PROJECT_ID
+);
 
 // ─── Seed data ────────────────────────────────────────────────────────────────
 
