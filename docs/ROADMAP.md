@@ -1,5 +1,12 @@
 # Fork — Roadmap
 
+## Priority order — 2026-10-23
+
+1. One save, versioned formulation: `superpowers/specs/2026-10-23-one-save-design.md`, approved, plan not yet written.
+2. UI redesign.
+3. Serving scaling on the recipe page (temporary multiplier, no version written).
+4. Cooklang-derived items from `research/2026-10-23-cooklang.md`: cooking attempts (M17), export (M16), `.cook` import (M15 stage 6), ingredient use in steps.
+
 ## Current direction — 2026-09-09
 
 The sequence below is preserved as historical planning and is superseded by [the repository reconciliation](PRODUCT-RECONCILIATION.md). The consolidated product note is `/Users/spfle/obsidian-vault/fork/ForkV2.md`.
