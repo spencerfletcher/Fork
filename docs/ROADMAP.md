@@ -189,6 +189,12 @@ Steps, in order:
 
 ---
 
+# M11 — Step timers (2–3h)
+
+Step text already carries durations ("marinate at least 1 hour", "bake 25 minutes"). Match them at render time in `RecipeMethod.svelte` with one regex over `(\d+)\s*(seconds?|minutes?|mins?|hours?|hrs?)` and show a "Start 1h timer" inlay under that step. `setTimeout` plus the native `Notification` API, with permission requested on first click; fall back to an in-page banner when notifications are denied. Nothing stored: durations derive from the text, so no schema or seed change. One timer per step, running state is component-local.
+
+---
+
 ## Working agreements
 
 These are the ones this project has already been bitten by. They are enforced in CI now, so following them is cheaper than working around them.
