@@ -33,9 +33,12 @@ describe('RecipeIngredients', () => {
 			null
 		]);
 		await fireEvent.click(screen.getByRole('button', { name: 'g' }));
-		await waitFor(() => expect(screen.getByText(/281g/)).toBeInTheDocument());
-		expect(screen.getByText(/≈100g/)).toBeInTheDocument();
-		expect(screen.queryByText(/≈281g/)).not.toBeInTheDocument();
+		// A measured line shows the weight where the measure was; a counted line
+		// has no measure, so the estimate goes at the end.
+		await waitFor(() =>
+			expect(screen.getByText('2¼ cups (281g) all-purpose flour')).toBeInTheDocument()
+		);
+		expect(screen.getByText('2 large eggs (≈100g)')).toBeInTheDocument();
 		// An unconverted line still shows as typed.
 		expect(screen.getByText('salt to taste')).toBeInTheDocument();
 		expect(screen.getByText(/estimates/i)).toBeInTheDocument();
@@ -44,7 +47,7 @@ describe('RecipeIngredients', () => {
 	test('shows no estimate note when nothing shown is approximate', async () => {
 		renderWith('1 cup flour', [{ grams: 125, approximate: false }]);
 		await fireEvent.click(screen.getByRole('button', { name: 'g' }));
-		await waitFor(() => expect(screen.getByText(/125g/)).toBeInTheDocument());
+		await waitFor(() => expect(screen.getByText('1 cup (125g) flour')).toBeInTheDocument());
 		expect(screen.queryByText(/estimates/i)).not.toBeInTheDocument();
 	});
 });

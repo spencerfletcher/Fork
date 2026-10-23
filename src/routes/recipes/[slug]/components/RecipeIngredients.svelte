@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { RecipeVersion } from '#lib/server/db/schema.js';
+	import type { Ingredient } from '#lib/recipes/types.js';
 
 	let { currentVersion }: { currentVersion: RecipeVersion } = $props();
 
@@ -24,9 +25,14 @@
 		);
 	}
 
-	// One string so the label is a single text node: "≈100g" or "125g".
-	function gramLabel(result: GramResult): string {
-		return `${result.approximate ? '≈' : ''}${Math.round(result.grams)}g`;
+	// The line as typed with its weight worked in. A measured line gets the
+	// weight where the measure sits, before the name: "1 cup (125g) flour". A
+	// counted line has no measure, so the estimate trails: "2 eggs (≈100g)".
+	function withGrams(ingredient: Ingredient, result: GramResult): string {
+		const grams = `(${result.approximate ? '≈' : ''}${Math.round(result.grams)}g)`;
+		const { text, name } = ingredient;
+		if (result.approximate || !text.endsWith(name)) return `${text} ${grams}`;
+		return `${text.slice(0, text.length - name.length).trimEnd()} ${grams} ${name}`;
 	}
 
 	async function toggleGrams() {
@@ -73,13 +79,12 @@
 				tabindex="0"
 				onkeydown={(e) => e.key === ' ' && toggleIngredient(ingredient.name)}>
 				{#if showGrams && gramCache?.[i]}
-					<span
-						class="text-sienna font-medium"
-						title={gramCache[i].approximate ? 'Estimated weight for a whole item' : undefined}>
-						{gramLabel(gramCache[i])}
+					<span title={gramCache[i].approximate ? 'Estimated weight for a whole item' : undefined}>
+						{withGrams(ingredient, gramCache[i])}
 					</span>
+				{:else}
+					{ingredient.text}
 				{/if}
-				{ingredient.text}
 			</div>
 		{/each}
 	</div>
