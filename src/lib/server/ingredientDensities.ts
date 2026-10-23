@@ -4,29 +4,54 @@ import type { Ingredient } from '#lib/recipes/types.js';
 /** grams2 is the upper end when the line gave a range such as "1-2 cups". */
 export type GramResult = { grams: number; grams2: number | null; approximate: boolean };
 
-type Matcher = { key: string; pattern: RegExp };
+// Words that describe handling, not what the thing is. Size words survive
+// parsing because parse-ingredient is told they are not units.
+const PREP_WORDS = new Set([
+	'large',
+	'medium',
+	'small',
+	'extra-large',
+	'jumbo',
+	'cold',
+	'chilled',
+	'softened',
+	'melted',
+	'warm',
+	'room-temperature',
+	'packed',
+	'sifted',
+	'divided',
+	'chopped',
+	'diced',
+	'minced',
+	'grated',
+	'crushed',
+	'sliced',
+	'peeled',
+	'beaten',
+	'optional'
+]);
 
-// Longest key first, so "almond flour, sifted" meets "almond flour" before
-// "flour". Keys match as whole words, so "eggplant" is not an egg and "oil"
-// alone is not "olive oil"; a trailing "s" or "es" is allowed for plurals.
-function matchers(table: Record<string, number | null>): Matcher[] {
-	return Object.keys(table)
-		.sort((a, b) => b.length - a.length)
-		.map((key) => ({
-			key,
-			pattern: new RegExp(`\\b${key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?:s|es)?\\b`)
-		}));
+// "Large Eggs, beaten (room temp)" -> "eggs". Text after a comma or in
+// parentheses is preparation, never part of what the ingredient is.
+function normalise(name: string): string {
+	return name
+		.toLowerCase()
+		.replace(/\(.*?\)/g, '')
+		.split(',')[0]
+		.split(/\s+/)
+		.filter((word) => word && !PREP_WORDS.has(word))
+		.join(' ');
 }
 
-// A key with a null value is a deliberate miss, see gramTables.ts.
-function lookup(table: Record<string, number | null>, table_matchers: Matcher[], name: string) {
-	const nameLower = name.trim().toLowerCase();
-	const match = table_matchers.find(({ pattern }) => pattern.test(nameLower));
-	return match === undefined ? null : table[match.key];
+// Whole-name match only, so "peanut butter" is not butter and "rice flour" is
+// not flour. A plural last word is tried in the singular: eggs, tomatoes, chives.
+function lookup(table: Record<string, number>, name: string): number | null {
+	const base = normalise(name);
+	const candidates = [base, base.replace(/es$/, ''), base.replace(/s$/, '')];
+	const key = candidates.find((candidate) => candidate in table);
+	return key === undefined ? null : table[key];
 }
-
-const DENSITY_MATCHERS = matchers(DENSITIES);
-const PIECE_MATCHERS = matchers(PIECE_GRAMS);
 
 /**
  * Grams for a measured line. Weight units convert directly; volume units go
@@ -40,13 +65,13 @@ export function lookupGrams(quantity: number, unit: string, name: string): numbe
 	const mlPerUnit = ML_PER_UNIT[unitLower];
 	if (!mlPerUnit) return null; // unknown unit (pinch, etc.)
 
-	const density = lookup(DENSITIES, DENSITY_MATCHERS, name);
+	const density = lookup(DENSITIES, name);
 	return density === null ? null : quantity * mlPerUnit * density;
 }
 
 /** Grams for `quantity` whole items, or null when the name matches nothing in the table. */
 export function lookupPieceGrams(quantity: number, name: string): number | null {
-	const grams = lookup(PIECE_GRAMS, PIECE_MATCHERS, name);
+	const grams = lookup(PIECE_GRAMS, name);
 	return grams === null ? null : quantity * grams;
 }
 

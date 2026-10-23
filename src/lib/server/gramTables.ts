@@ -6,10 +6,9 @@
  * Ingredient densities (grams per ml) for common ingredients.
  * Matching checks if the ingredient name contains the key (or vice-versa).
  */
-// A null value is a deliberate miss: the compound is a different thing from
-// the shorter key inside it, and nothing here knows its weight. Keys match
-// longest-first, so the compound wins over the short key.
-export const DENSITIES: Record<string, number | null> = {
+// Names are matched whole after normalisation (see ingredientDensities.ts), so
+// "peanut butter" is not butter; add a key when a compound should convert.
+export const DENSITIES: Record<string, number> = {
 	// Flours
 	'all-purpose flour': 0.529,
 	flour: 0.529,
@@ -223,35 +222,22 @@ export const GRAMS_PER_WEIGHT_UNIT: Record<string, number> = {
  * These are typical weights and are shown to readers as estimates. Longer keys
  * win over shorter ones, so "egg white" is not read as "egg".
  */
-export const PIECE_GRAMS: Record<string, number | null> = {
+export const PIECE_GRAMS: Record<string, number> = {
 	egg: 50,
 	'egg white': 33,
 	'egg yolk': 18,
-	'egg noodle': null,
 	banana: 120,
 	apple: 180,
-	'apple cider': null,
-	'apple cider vinegar': null,
-	'apple juice': null,
-	'apple sauce': null,
-	applesauce: null,
 	lemon: 60,
-	'lemon juice': null,
-	'lemon zest': null,
 	lime: 45,
-	'lime juice': null,
-	'lime zest': null,
 	orange: 130,
-	'orange juice': null,
-	'orange zest': null,
 	onion: 150,
 	'green onion': 15,
-	'onion powder': null,
 	shallot: 30,
 	'garlic clove': 5,
 	'clove of garlic': 5,
+	'cloves of garlic': 5,
 	'clove garlic': 5,
-	'garlic powder': null,
 	potato: 170,
 	'sweet potato': 130,
 	carrot: 60,
@@ -259,10 +245,6 @@ export const PIECE_GRAMS: Record<string, number | null> = {
 	'cherry tomato': 17,
 	'grape tomato': 8,
 	'roma tomato': 60,
-	'tomato paste': null,
-	'tomato sauce': null,
-	'crushed tomato': null,
-	'diced tomato': null,
 	'bell pepper': 150,
 	avocado: 170
 };

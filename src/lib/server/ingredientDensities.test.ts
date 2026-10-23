@@ -26,12 +26,19 @@ describe('lookupPieceGrams', () => {
 		expect(lookupPieceGrams(1, 'cherry tomatoes')).toBe(17);
 	});
 
-	test('a product made from an item is not the item', () => {
+	test('an unknown compound is not the item inside it', () => {
 		expect(lookupPieceGrams(1, 'lemon juice')).toBeNull();
 		expect(lookupPieceGrams(1, 'tomato paste')).toBeNull();
 		expect(lookupPieceGrams(1, 'egg noodles')).toBeNull();
 		expect(lookupPieceGrams(1, 'apple cider vinegar')).toBeNull();
 		expect(lookupPieceGrams(1, 'garlic powder')).toBeNull();
+	});
+
+	test('ignores size words and preparation notes', () => {
+		expect(lookupPieceGrams(2, 'large eggs')).toBe(100);
+		expect(lookupPieceGrams(1, 'medium onion, diced')).toBe(150);
+		expect(lookupPieceGrams(3, 'garlic cloves, minced')).toBe(15);
+		expect(lookupPieceGrams(3, 'cloves of garlic')).toBe(15);
 	});
 
 	test('matches whole words only, so eggplant is not an egg', () => {
@@ -47,12 +54,12 @@ describe('lookupGrams', () => {
 
 	test('prefers the most specific key when preparation text follows the name', () => {
 		const cup = ML_PER_UNIT.cup;
-		expect(lookupGrams(1, 'cup', 'almond flour, sifted')).toBe(cup * DENSITIES['almond flour']!);
+		expect(lookupGrams(1, 'cup', 'almond flour, sifted')).toBe(cup * DENSITIES['almond flour']);
 		expect(lookupGrams(1, 'cup', 'powdered sugar, sifted')).toBe(
 			cup * DENSITIES['powdered sugar']!
 		);
 		expect(lookupGrams(1, 'tsp', 'kosher salt, divided')).toBe(
-			ML_PER_UNIT.tsp * DENSITIES['kosher salt']!
+			ML_PER_UNIT.tsp * DENSITIES['kosher salt']
 		);
 	});
 
@@ -60,13 +67,27 @@ describe('lookupGrams', () => {
 		expect(lookupGrams(1, 'tsp', 'garlic powder')).toBe(
 			ML_PER_UNIT.tsp * DENSITIES['garlic powder']!
 		);
-		expect(lookupGrams(1, 'tsp', 'garlic powder')).not.toBe(ML_PER_UNIT.tsp * DENSITIES.garlic!);
-		expect(lookupGrams(1, 'cup', 'lemon juice')).toBe(ML_PER_UNIT.cup * DENSITIES['lemon juice']!);
+		expect(lookupGrams(1, 'tsp', 'garlic powder')).not.toBe(ML_PER_UNIT.tsp * DENSITIES.garlic);
+		expect(lookupGrams(1, 'cup', 'lemon juice')).toBe(ML_PER_UNIT.cup * DENSITIES['lemon juice']);
 	});
 
-	test('matches whole words only and never guesses from a key that merely contains the name', () => {
+	test('an unknown compound is not the ingredient inside it', () => {
+		expect(lookupGrams(1, 'cup', 'peanut butter')).toBeNull();
+		expect(lookupGrams(1, 'cup', 'rice flour')).toBeNull();
 		expect(lookupGrams(1, 'cup', 'oil')).toBeNull();
 		expect(lookupGrams(1, 'cup', 'flourish')).toBeNull();
+	});
+
+	test('ignores preparation words that do not change density', () => {
+		expect(lookupGrams(1, 'cup', 'cold unsalted butter')).toBe(
+			ML_PER_UNIT.cup * DENSITIES['unsalted butter']
+		);
+		expect(lookupGrams(1, 'cup', 'packed brown sugar')).toBe(
+			ML_PER_UNIT.cup * DENSITIES['brown sugar']
+		);
+		expect(lookupGrams(1, 'cup', 'all-purpose flour (spooned and levelled)')).toBe(
+			ML_PER_UNIT.cup * DENSITIES['all-purpose flour']
+		);
 	});
 });
 
