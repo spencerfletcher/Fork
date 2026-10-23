@@ -12,18 +12,21 @@
 	}
 
 	// Whole grams, except below ten where a tenth matters: 5.7g, not 6g.
-	function formatGrams(result: GramResult): string {
-		const g = result.grams;
-		const rounded = g < 10 ? Math.round(g * 10) / 10 : Math.round(g);
-		return `(${result.approximate ? '≈' : ''}${rounded}g)`;
+	function round(g: number): number {
+		return g < 10 ? Math.round(g * 10) / 10 : Math.round(g);
+	}
+
+	function formatGrams({ grams, grams2, approximate }: GramResult): string {
+		const range = grams2 === null ? '' : `–${round(grams2)}`;
+		return `(${approximate ? '≈' : ''}${round(grams)}${range}g)`;
 	}
 
 	// The line as typed, split around where the weight goes. A measured line
 	// gets the weight where the measure sits, before the name: "1 cup (125g)
 	// flour". A counted line has no measure, so the estimate trails.
-	function parts(ingredient: Ingredient, result: GramResult): [string, string] {
-		const { text, name } = ingredient;
-		if (result.approximate || !text.endsWith(name)) return [text, ''];
+	function parts(ingredient: Ingredient): [string, string] {
+		const { text, name, unit } = ingredient;
+		if (!unit || !text.endsWith(name)) return [text, ''];
 		return [text.slice(0, text.length - name.length).trimEnd(), name];
 	}
 
@@ -47,11 +50,13 @@
 				tabindex="0"
 				onkeydown={(e) => e.key === ' ' && toggle(i)}>
 				{#if result}
-					{@const [before, after] = parts(ingredient, result)}
+					{@const [before, after] = parts(ingredient)}
 					{before}
 					<span
 						class="text-sienna font-medium"
-						title={result.approximate ? 'Estimated weight for a whole item' : undefined}>
+						title={result.approximate
+							? 'Typical weight for a whole item; actual items vary'
+							: undefined}>
 						{formatGrams(result)}
 					</span>
 					{after}
