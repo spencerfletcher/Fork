@@ -46,7 +46,7 @@ Steps need no library.
 
 ## Data model
 
-Both types live in `src/lib/recipes/types.ts`. Storage is the existing JSONB columns on `recipe_versions`; no migration. Versions are append-only, so old rows keep their old shape and readers backfill.
+Both types live in `src/lib/recipes/types.ts`. Storage is the existing JSONB columns on `recipe_versions`; no migration. Existing rows are not read in the old shape: the database is reseeded (see below).
 
 ### Ingredient
 
@@ -163,11 +163,10 @@ Inverse, `stepsToText`, for loading into the editor: each step's text, then its 
 
 ## Readers of `Ingredient` and `Step`
 
-- `RecipeIngredients.svelte`: prints `text` only, one line per ingredient, replacing the amount-plus-unit span and name, and keys the `#each` on index rather than name. Gram toggle: when grams are shown and the converter returned a value, print it before the line, `120g · text` or similar; builder's call. An approximate value is prefixed `≈` with a `title` explaining it, and when any shown value is approximate a one-line note under the list says whole-item weights are estimates, not a source of truth.
-- `api/convert-to-grams`: accepts the new shape, uses `quantity` directly and drops its own `parseAmount`. Returns `null` only for `quantity === null`. Three layers, in order:
-  1. Volume units: the existing density table, then Spoonacular, as today.
-  2. Count lines (empty unit): a new per-item table in `src/lib/server/ingredientDensities.ts` or beside it, grams per whole item, matched on name the same way the density table matches, longest key wins. Seed it with egg 50, egg white 33, egg yolk 18, and a dozen common produce items; builder's list. Result is `quantity × grams`.
-  3. Count lines not in that table: Spoonacular with `sourceUnit: 'piece'`. One call per such line per page load, cached on the page as today. Each result carries whether it is an estimate: `{ grams, approximate }` or `null` per ingredient instead of a bare number. Layers 2 and 3 are approximate; layer 1 is not marked. Request validation changes to the new shape.
+- `RecipeIngredients.svelte`: prints `text` only, one line per ingredient, replacing the amount-plus-unit span and name, and keys the `#each` on index rather than name. Gram weights are always shown when the local tables know the line, in `text-sienna`: after the measure for a measured line (`2¼ cups (281g) all-purpose flour`), trailing for a counted line (`2 large eggs (≈100g)`). A range shows both ends (`240–480g`). An approximate value is prefixed `≈` with a `title` explaining it, and when any shown value is approximate a one-line note under the list says whole-item weights are estimates, not a source of truth.
+- `gramsFor` in `src/lib/server/ingredientDensities.ts`, called from the recipe page load for every ingredient. No HTTP endpoint and no third-party conversion service. Returns `{ grams, grams2, approximate }` or `null` for `quantity === null` and for names the tables do not know. Two layers:
+  1. Measured lines: weight units convert directly; volume units go through the density table in `gramTables.ts`. Keys match longest-first as whole words, so `almond flour, sifted` meets `almond flour` before `flour`. Not marked approximate.
+  2. Counted lines (empty unit): the per-item table in `gramTables.ts`, grams per whole item (egg 50, egg white 33, egg yolk 18, common produce), matched the same way. Result is `quantity × grams`, marked approximate.
 - `diff.ts` `diffIngredients`: keys on `name`, compares `quantity`, `quantity2` and `unit` instead of `amount` and `unit`. The modified row's inline diff compares `text` strings. Unparsed lines have the whole line as name, so edits read as removed plus added. Accepted.
 - `VersionDiff.svelte`: prints `text` for ingredient rows.
 - `RecipeMethod.svelte`: renders multi-line step text with line breaks. Annotation rendering unchanged.
@@ -185,7 +184,7 @@ Order: server first, then components, then e2e.
 2. `steps.test.ts`: the example above; case-insensitive keyword; annotation with empty text dropped; a block whose first line starts with `tip:` is step text; multiple blank lines between blocks; a step with internal newlines; round trip through the inverse.
 3. `validation.test.ts`: text reaches each parser; empty or whitespace-only text fails with the existing messages; the old JSON-shape tests are removed.
 4. `diff.test.ts`: a quantity or range change shows as modified; modified rows diff the typed lines; steps number by position.
-5. `convert-to-grams` server test: unparsed ingredient yields `null`; a count line in the per-item table yields `quantity × grams` marked approximate; a count line not in the table calls Spoonacular with `piece`; a volume line is not marked approximate.
+5. `ingredientDensities.test.ts`: unparsed ingredient yields `null`; a count line in the per-item table yields `quantity × grams` marked approximate; a count line not in the table yields `null`; a volume line is not marked approximate; a range converts both ends.
 6. `IngredientEditor.svelte.test.ts`: value renders; an unparsable line appears in the note; fixing it clears the note; binding updates.
 7. `StepEditor.svelte.test.ts`: value renders; hint present; binding updates.
 8. Page component tests: edit page initialises both textareas from a version; existing error and state tests still pass with the new fields.
@@ -203,4 +202,3 @@ Order: server first, then components, then e2e.
 - Names now carry whatever follows the unit, including notes like `, for topping`. The ingredient diff keys on name, so a changed note reads as a replaced ingredient. Accepted.
 - parse-ingredient's unit list is the library's. Pin the exact version so an upgrade is a deliberate reparse of the seed, not a surprise.
 - Per-item gram weights ignore size words: `2 large eggs` and `2 eggs` both use the `egg` entry unless the table also has `large egg`. Values are marked approximate in the UI for this reason.
-- Spoonacular `piece` conversions are a guess by a third party. Also marked approximate, and bounded by the existing rate limit and daily cap.
