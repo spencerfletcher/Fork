@@ -1,6 +1,7 @@
 import { describe, test, expect } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/svelte';
 import IngredientEditor from './IngredientEditor.svelte';
+import { MAX_FIELD, MAX_LINE } from '#lib/recipes/limits.js';
 
 function box() {
 	return screen.getByLabelText('Ingredients') as HTMLTextAreaElement;
@@ -37,5 +38,25 @@ describe('IngredientEditor', () => {
 		expect(screen.getByRole('status')).toBeInTheDocument();
 		await type('1 tsp salt');
 		expect(screen.getByRole('status')).toBeEmptyDOMElement();
+	});
+
+	test('keeps an over-long line in the box and says so instead of parsing it', async () => {
+		render(IngredientEditor, { props: { value: '' } });
+		const line = '1 cup ' + 'x'.repeat(MAX_LINE);
+		await type(line);
+		expect(box().value).toBe(line);
+		expect(screen.getByRole('status')).toHaveTextContent(`${MAX_LINE} characters`);
+	});
+
+	test('keeps an over-long field in the box and says so instead of parsing it', async () => {
+		render(IngredientEditor, { props: { value: '' } });
+		const text = Array(Math.ceil(MAX_FIELD / 20) + 1)
+			.fill('1 cup flour xxxxxxxx')
+			.join('\n');
+		await type(text);
+		expect(box().value).toBe(text);
+		expect(screen.getByRole('status')).toHaveTextContent(
+			`${MAX_FIELD.toLocaleString()} characters`
+		);
 	});
 });
