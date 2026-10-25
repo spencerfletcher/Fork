@@ -26,9 +26,7 @@ export const actions: Actions = {
 		if (!meta.ok) return fail(400, { error: meta.error });
 		const content = parseRecipeContent(formData);
 		if (!content.ok) return fail(400, { error: content.error });
-		const { title, description, servings, prepTimeMinutes, cookTimeMinutes, isPublic, tagNames } =
-			meta.value;
-		const { ingredients, steps } = content.value;
+		const { isPublic, tagNames, ...contentMeta } = meta.value;
 
 		// Handle image upload to Supabase Storage
 		let imageUrl: string | null = null;
@@ -54,19 +52,15 @@ export const actions: Actions = {
 			.values({ id: user.id, username: user.email?.split('@')[0] ?? user.id })
 			.onConflictDoNothing();
 
-		const slug = `${slugify(title)}-${nanoid(6)}`;
+		const slug = `${slugify(contentMeta.title)}-${nanoid(6)}`;
 
 		await db.transaction(async (tx) => {
 			const [newRecipe] = await tx
 				.insert(recipes)
 				.values({
 					slug,
-					title,
-					description,
+					...contentMeta,
 					imageUrl,
-					servings,
-					prepTimeMinutes,
-					cookTimeMinutes,
 					isPublic,
 					authorId: user.id
 				})
@@ -92,8 +86,8 @@ export const actions: Actions = {
 				recipeId: newRecipe.id,
 				versionNumber: 1,
 				commitMessage: 'Initial recipe',
-				ingredients,
-				steps,
+				...contentMeta,
+				...content.value,
 				createdBy: user.id
 			});
 		});

@@ -8,6 +8,7 @@ import { recipes, tags, recipesToTags, recipeVersions, profiles } from './schema
 import { slugify } from '#lib/helpers.js';
 import { parseIngredientText } from '#lib/recipes/ingredients.js';
 import { parseStepText } from '#lib/recipes/steps.js';
+import type { RecipeContent } from '#lib/recipes/types.js';
 import { describeSeedTarget } from './seedTarget';
 
 // `pnpm db:seed` targets the local stack in .env.local; `pnpm db:seed:prod`
@@ -211,6 +212,130 @@ Add chicken to the sauce. Pour in cream and stir to combine. Simmer 10 minutes, 
 Serve over basmati rice with warm naan bread. Garnish with fresh cilantro.
 `);
 
+// ─── Recipes ──────────────────────────────────────────────────────────────────
+//
+// One object per recipe: the recipe-level settings and its versions, oldest
+// first. The recipes row copies title, description, servings and times from
+// the last version, so those are only written here once, on the version.
+
+type SeedVersion = RecipeContent & { commitMessage: string; createdAt: string };
+
+type SeedRecipe = {
+	slug: string; // prefix; a random suffix is added at insert
+	imageUrl: string;
+	tags: string[];
+	isPublic: boolean;
+	forkOf?: { slug: string; forkedAt: string }; // parent's slug prefix
+	versions: SeedVersion[];
+};
+
+const COOKIE_META = {
+	title: 'Classic Chocolate Chip Cookies',
+	description:
+		'The definitive chocolate chip cookie — crisp edges, chewy centers, and pockets of melted chocolate in every bite.',
+	servings: 48,
+	prepTimeMinutes: 15,
+	cookTimeMinutes: 11
+};
+
+const TIKKA_META = {
+	title: 'Chicken Tikka Masala',
+	description:
+		'Rich, aromatic, and deeply satisfying — a restaurant-quality tikka masala built from a yogurt-marinated chicken and a slow-simmered tomato cream sauce.',
+	servings: 4,
+	prepTimeMinutes: 20,
+	cookTimeMinutes: 40
+};
+
+const SEED: SeedRecipe[] = [
+	{
+		slug: 'classic-chocolate-chip-cookies',
+		imageUrl: 'https://images.unsplash.com/photo-1499636136210-6f4ee915583e?w=800&q=80',
+		tags: ['Dessert', 'Baking', 'American'],
+		isPublic: true,
+		versions: [
+			{
+				...COOKIE_META,
+				ingredients: COOKIE_INGREDIENTS_V1,
+				steps: COOKIE_STEPS,
+				commitMessage: 'Initial recipe',
+				createdAt: '2025-10-14'
+			},
+			{
+				...COOKIE_META,
+				ingredients: COOKIE_INGREDIENTS_V2,
+				steps: COOKIE_STEPS,
+				commitMessage: 'Increased vanilla to 2 tsp, added pinch of espresso powder',
+				createdAt: '2026-02-28'
+			},
+			// Renamed and a smaller, longer-baked batch, so the landing-page diff
+			// and the compare page have metadata changes to show.
+			{
+				...COOKIE_META,
+				title: 'Thick and Chewy Chocolate Chip Cookies',
+				servings: 36,
+				cookTimeMinutes: 13,
+				ingredients: COOKIE_INGREDIENTS_V3,
+				steps: COOKIE_STEPS_V3,
+				commitMessage:
+					'Chill the dough and shift the sugar toward brown — thicker cookies, less cloying, smaller batch',
+				createdAt: '2026-07-19'
+			}
+		]
+	},
+	{
+		slug: 'brown-butter-chocolate-chip-cookies',
+		imageUrl: 'https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=800&q=80',
+		tags: ['Dessert', 'Baking', 'American'],
+		isPublic: true,
+		forkOf: { slug: 'classic-chocolate-chip-cookies', forkedAt: '2026-03-01' },
+		versions: [
+			{
+				title: 'Brown Butter Chocolate Chip Cookies',
+				description:
+					'A fork of the classic — brown butter adds a deep, nutty complexity that takes these cookies to another level.',
+				servings: 36,
+				prepTimeMinutes: 20,
+				cookTimeMinutes: 11,
+				ingredients: BROWN_BUTTER_INGREDIENTS,
+				steps: BROWN_BUTTER_STEPS,
+				commitMessage: 'Swapped melted butter for brown butter, added flaky sea salt topping',
+				createdAt: '2026-03-01'
+			}
+		]
+	},
+	{
+		slug: 'chicken-tikka-masala',
+		imageUrl: 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=800&q=80',
+		tags: ['Dinner', 'Indian', 'Spicy'],
+		isPublic: true,
+		versions: [
+			{
+				...TIKKA_META,
+				ingredients: TIKKA_INGREDIENTS_V1,
+				steps: TIKKA_STEPS_V1,
+				commitMessage: 'Initial recipe',
+				createdAt: '2025-11-05'
+			},
+			{
+				...TIKKA_META,
+				ingredients: TIKKA_INGREDIENTS_V2,
+				steps: TIKKA_STEPS_V1,
+				commitMessage: 'Adjusted spice blend — more garam masala, less cumin, added smoked paprika',
+				createdAt: '2026-01-20'
+			},
+			{
+				...TIKKA_META,
+				ingredients: TIKKA_INGREDIENTS_V2,
+				steps: TIKKA_STEPS_V3,
+				commitMessage:
+					'Worked the smoked paprika into the marinade, finished the sauce with cold butter',
+				createdAt: '2026-03-10'
+			}
+		]
+	}
+];
+
 // ─── Seed function ────────────────────────────────────────────────────────────
 
 async function seed() {
@@ -285,151 +410,44 @@ async function seed() {
 
 	const tagId = (name: string) => tagRows.find((t) => t.name === name)!.id;
 
-	// ── Recipe 1: Classic Chocolate Chip Cookies ──────────────────────────────
-	console.log('Seeding Recipe 1: Classic Chocolate Chip Cookies...');
-	const [recipe1] = await db
-		.insert(recipes)
-		.values({
-			authorId: userId,
-			slug: `classic-chocolate-chip-cookies-${nanoid(6)}`,
-			title: 'Classic Chocolate Chip Cookies',
-			description:
-				'The definitive chocolate chip cookie — crisp edges, chewy centers, and pockets of melted chocolate in every bite.',
-			imageUrl: 'https://images.unsplash.com/photo-1499636136210-6f4ee915583e?w=800&q=80',
-			servings: 48,
-			prepTimeMinutes: 15,
-			cookTimeMinutes: 11,
-			isPublic: true
-		})
-		.returning();
+	// ── Recipes ──────────────────────────────────────────────────────────────
+	const idBySlug = new Map<string, number>();
+	for (const recipe of SEED) {
+		const latest = recipe.versions.at(-1)!;
+		console.log(`Seeding ${latest.title}...`);
+		const [row] = await db
+			.insert(recipes)
+			.values({
+				authorId: userId,
+				slug: `${recipe.slug}-${nanoid(6)}`,
+				// Copies of the latest version, per the ownership rule in schema.ts.
+				title: latest.title,
+				description: latest.description,
+				servings: latest.servings,
+				prepTimeMinutes: latest.prepTimeMinutes,
+				cookTimeMinutes: latest.cookTimeMinutes,
+				imageUrl: recipe.imageUrl,
+				isPublic: recipe.isPublic,
+				parentId: recipe.forkOf ? idBySlug.get(recipe.forkOf.slug) : null,
+				forkedAt: recipe.forkOf ? new Date(recipe.forkOf.forkedAt) : null
+			})
+			.returning({ id: recipes.id });
+		idBySlug.set(recipe.slug, row.id);
 
-	await db.insert(recipesToTags).values([
-		{ recipeId: recipe1.id, tagId: tagId('Dessert') },
-		{ recipeId: recipe1.id, tagId: tagId('Baking') },
-		{ recipeId: recipe1.id, tagId: tagId('American') }
-	]);
+		await db
+			.insert(recipesToTags)
+			.values(recipe.tags.map((name) => ({ recipeId: row.id, tagId: tagId(name) })));
 
-	await db.insert(recipeVersions).values([
-		{
-			recipeId: recipe1.id,
-			versionNumber: 1,
-			commitMessage: 'Initial recipe',
-			ingredients: COOKIE_INGREDIENTS_V1,
-			steps: COOKIE_STEPS,
-			createdBy: userId,
-			createdAt: new Date('2025-10-14')
-		},
-		{
-			recipeId: recipe1.id,
-			versionNumber: 2,
-			commitMessage: 'Increased vanilla to 2 tsp, added pinch of espresso powder',
-			ingredients: COOKIE_INGREDIENTS_V2,
-			steps: COOKIE_STEPS,
-			createdBy: userId,
-			createdAt: new Date('2026-02-28')
-		},
-		{
-			recipeId: recipe1.id,
-			versionNumber: 3,
-			commitMessage:
-				'Chill the dough and shift the sugar toward brown — thicker cookies, less cloying',
-			ingredients: COOKIE_INGREDIENTS_V3,
-			steps: COOKIE_STEPS_V3,
-			createdBy: userId,
-			createdAt: new Date('2026-07-19')
-		}
-	]);
-
-	// ── Recipe 2: Brown Butter Chocolate Chip Cookies (fork of Recipe 1) ──────
-	console.log('Seeding Recipe 2: Brown Butter fork...');
-	const [recipe2] = await db
-		.insert(recipes)
-		.values({
-			authorId: userId,
-			slug: `brown-butter-chocolate-chip-cookies-${nanoid(6)}`,
-			title: 'Brown Butter Chocolate Chip Cookies',
-			description:
-				'A fork of the classic — brown butter adds a deep, nutty complexity that takes these cookies to another level.',
-			imageUrl: 'https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=800&q=80',
-			servings: 36,
-			prepTimeMinutes: 20,
-			cookTimeMinutes: 11,
-			parentId: recipe1.id,
-			forkedAt: new Date('2026-03-01'),
-			isPublic: true
-		})
-		.returning();
-
-	await db.insert(recipesToTags).values([
-		{ recipeId: recipe2.id, tagId: tagId('Dessert') },
-		{ recipeId: recipe2.id, tagId: tagId('Baking') },
-		{ recipeId: recipe2.id, tagId: tagId('American') }
-	]);
-
-	await db.insert(recipeVersions).values({
-		recipeId: recipe2.id,
-		versionNumber: 1,
-		commitMessage: 'Swapped melted butter for brown butter, added flaky sea salt topping',
-		ingredients: BROWN_BUTTER_INGREDIENTS,
-		steps: BROWN_BUTTER_STEPS,
-		createdBy: userId,
-		createdAt: new Date('2026-03-01')
-	});
-
-	// ── Recipe 3: Chicken Tikka Masala ────────────────────────────────────────
-	console.log('Seeding Recipe 3: Chicken Tikka Masala...');
-	const [recipe3] = await db
-		.insert(recipes)
-		.values({
-			authorId: userId,
-			slug: `chicken-tikka-masala-${nanoid(6)}`,
-			title: 'Chicken Tikka Masala',
-			description:
-				'Rich, aromatic, and deeply satisfying — a restaurant-quality tikka masala built from a yogurt-marinated chicken and a slow-simmered tomato cream sauce.',
-			imageUrl: 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=800&q=80',
-			servings: 4,
-			prepTimeMinutes: 20,
-			cookTimeMinutes: 40,
-			isPublic: true
-		})
-		.returning();
-
-	await db.insert(recipesToTags).values([
-		{ recipeId: recipe3.id, tagId: tagId('Dinner') },
-		{ recipeId: recipe3.id, tagId: tagId('Indian') },
-		{ recipeId: recipe3.id, tagId: tagId('Spicy') }
-	]);
-
-	await db.insert(recipeVersions).values([
-		{
-			recipeId: recipe3.id,
-			versionNumber: 1,
-			commitMessage: 'Initial recipe',
-			ingredients: TIKKA_INGREDIENTS_V1,
-			steps: TIKKA_STEPS_V1,
-			createdBy: userId,
-			createdAt: new Date('2025-11-05')
-		},
-		{
-			recipeId: recipe3.id,
-			versionNumber: 2,
-			commitMessage: 'Adjusted spice blend — more garam masala, less cumin, added smoked paprika',
-			ingredients: TIKKA_INGREDIENTS_V2,
-			steps: TIKKA_STEPS_V1,
-			createdBy: userId,
-			createdAt: new Date('2026-01-20')
-		},
-		{
-			recipeId: recipe3.id,
-			versionNumber: 3,
-			commitMessage:
-				'Worked the smoked paprika into the marinade, finished the sauce with cold butter',
-			ingredients: TIKKA_INGREDIENTS_V2,
-			steps: TIKKA_STEPS_V3,
-			createdBy: userId,
-			createdAt: new Date('2026-03-10')
-		}
-	]);
+		await db.insert(recipeVersions).values(
+			recipe.versions.map(({ createdAt, ...version }, i) => ({
+				...version,
+				recipeId: row.id,
+				versionNumber: i + 1,
+				createdBy: userId,
+				createdAt: new Date(createdAt)
+			}))
+		);
+	}
 
 	console.log('✅ Seeding complete.');
 	console.log(

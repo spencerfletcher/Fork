@@ -23,6 +23,7 @@ function makeRecipe(overrides: Record<string, unknown> = {}) {
 		isPublic: true,
 		createdAt: new Date(),
 		updatedAt: new Date(),
+		editRevision: 0,
 		...overrides
 	};
 }

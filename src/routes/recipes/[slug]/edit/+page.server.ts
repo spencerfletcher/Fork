@@ -129,6 +129,11 @@ export const actions: Actions = {
 				recipeId: recipe.id,
 				versionNumber: nextVersion,
 				commitMessage,
+				title: recipe.title,
+				description: recipe.description,
+				servings: recipe.servings,
+				prepTimeMinutes: recipe.prepTimeMinutes,
+				cookTimeMinutes: recipe.cookTimeMinutes,
 				ingredients,
 				steps,
 				createdBy: user.id

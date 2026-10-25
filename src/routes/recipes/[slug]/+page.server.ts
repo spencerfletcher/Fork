@@ -173,6 +173,11 @@ export const actions: Actions = {
 				recipeId: newRecipe.id,
 				versionNumber: 1,
 				commitMessage,
+				title: source.title,
+				description: source.description,
+				servings: source.servings,
+				prepTimeMinutes: source.prepTimeMinutes,
+				cookTimeMinutes: source.cookTimeMinutes,
 				ingredients: latestVersion.ingredients,
 				steps: latestVersion.steps,
 				createdBy: user.id

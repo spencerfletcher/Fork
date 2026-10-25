@@ -9,7 +9,8 @@ import {
 	boolean,
 	jsonb,
 	customType,
-	index
+	index,
+	unique
 } from 'drizzle-orm/pg-core';
 import { relations, sql } from 'drizzle-orm';
 
@@ -38,7 +39,9 @@ export const recipes = pgTable(
 		id: serial().primaryKey(),
 		authorId: text('author_id').references(() => profiles.id, { onDelete: 'set null' }),
 		slug: text().notNull().unique(),
-		// Metadata (edited directly, not versioned)
+		// Copies of the latest version's content, kept so search (the generated fts
+		// column) and list cards can read recipes without a join. Written in the same
+		// transaction as the version that defines them; never edited on their own.
 		title: text().notNull(),
 		description: text(),
 		imageUrl: text('image_url'),
@@ -52,6 +55,9 @@ export const recipes = pgTable(
 		isPublic: boolean('is_public').notNull().default(true),
 		createdAt: timestamp('created_at').defaultNow(),
 		updatedAt: timestamp('updated_at').defaultNow(),
+		// Bumped once per committed save (version or settings-only). The edit form
+		// sends it back and a save with a stale value is refused.
+		editRevision: integer('edit_revision').notNull().default(0),
 		// Full-text search vector: title (weight A) + description (weight B)
 		// Generated automatically by Postgres — never set manually
 		fts: tsvector('fts').generatedAlwaysAs(
@@ -100,18 +106,27 @@ export const favorites = pgTable(
 
 // ─── Recipe Versions ──────────────────────────────────────────────────────────
 
-export const recipeVersions = pgTable('recipe_versions', {
-	id: serial().primaryKey(),
-	recipeId: integer('recipe_id')
-		.notNull()
-		.references(() => recipes.id, { onDelete: 'cascade' }),
-	versionNumber: integer('version_number').notNull(),
-	commitMessage: text('commit_message').notNull(),
-	ingredients: jsonb().notNull().$type<Ingredient[]>(),
-	steps: jsonb().notNull().$type<Step[]>(),
-	createdAt: timestamp('created_at').defaultNow(),
-	createdBy: text('created_by').references(() => profiles.id, { onDelete: 'set null' })
-});
+export const recipeVersions = pgTable(
+	'recipe_versions',
+	{
+		id: serial().primaryKey(),
+		recipeId: integer('recipe_id')
+			.notNull()
+			.references(() => recipes.id, { onDelete: 'cascade' }),
+		versionNumber: integer('version_number').notNull(),
+		commitMessage: text('commit_message').notNull(),
+		title: text().notNull(),
+		description: text(),
+		servings: integer(),
+		prepTimeMinutes: integer('prep_time_minutes'),
+		cookTimeMinutes: integer('cook_time_minutes'),
+		ingredients: jsonb().notNull().$type<Ingredient[]>(),
+		steps: jsonb().notNull().$type<Step[]>(),
+		createdAt: timestamp('created_at').defaultNow(),
+		createdBy: text('created_by').references(() => profiles.id, { onDelete: 'set null' })
+	},
+	(table) => [unique().on(table.recipeId, table.versionNumber)]
+);
 
 // ─── Relations ────────────────────────────────────────────────────────────────
 
