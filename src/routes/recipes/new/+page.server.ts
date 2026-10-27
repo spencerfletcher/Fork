@@ -33,6 +33,14 @@ export const actions: Actions = {
 		const settings = parseSettings(formData);
 		if (!settings.ok) return fail(400, { error: settings.error, draft });
 
+		// Before the upload, so a profile failure cannot orphan a stored file.
+		try {
+			await ensureProfile(user);
+		} catch (e) {
+			console.error('Could not ensure profile', e);
+			return fail(500, { error: 'Could not save the recipe. Please try again.', draft });
+		}
+
 		// Storage is outside the transaction: upload first, remove on a failed save.
 		let image: UploadedImage | null = null;
 		const file = imageFileFrom(formData);
@@ -43,8 +51,6 @@ export const actions: Actions = {
 				return fail(400, { error: 'Photo upload failed. Please try again.', draft });
 			}
 		}
-
-		await ensureProfile(user);
 
 		const { ingredients, steps, ...meta } = content.value;
 		const slug = `${slugify(meta.title)}-${randomSuffix()}`;

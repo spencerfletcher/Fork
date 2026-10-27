@@ -137,6 +137,16 @@ describe('new recipe action', () => {
 		expect(result.location).toBe(`/recipes/${recipe.slug}`);
 	});
 
+	test('a profile failure returns the draft before anything is uploaded', async () => {
+		ensureProfileMock.mockRejectedValueOnce(new Error('db down'));
+		const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+		const result = await invoke(makeEvent({ fields: FULL, file: new File(['x'], 'a.png') }));
+		expect(result.status).toBe(500);
+		expect(result.data).toMatchObject({ draft: { title: 'Soup' } });
+		expect(uploadMock).not.toHaveBeenCalled();
+		error.mockRestore();
+	});
+
 	test('uploads the photo before the transaction and stores its url', async () => {
 		const order: string[] = [];
 		uploadMock.mockImplementation(async () => {

@@ -20,9 +20,8 @@
 	} = $props();
 
 	// The viewed version owns the content; the recipe row only carries a copy of
-	// the latest, which is wrong for a historical version.
-	const title = $derived(currentVersion?.title ?? recipe.title);
-	const servings = $derived(currentVersion?.servings ?? recipe.servings);
+	// the latest, which is wrong for a historical version. Chosen once, so a
+	// field the old version left blank stays blank instead of falling through.
 	const content = $derived(currentVersion ?? recipe);
 	const totalMinutes = $derived((content.prepTimeMinutes ?? 0) + (content.cookTimeMinutes ?? 0));
 </script>
@@ -49,7 +48,7 @@
 				</a>
 				<span class="opacity-50">/</span>
 			{/if}
-			<span class="text-text-tan">{title}</span>
+			<span class="text-text-tan">{content.title}</span>
 		</nav>
 
 		<!-- Title + version -->
@@ -58,7 +57,7 @@
 			<h1
 				class="text-text-cream m-0 font-serif leading-[1.05] font-bold tracking-[-0.02em]"
 				style="font-size: clamp(1.9rem, 4vw, 3.2rem)">
-				{title}
+				{content.title}
 			</h1>
 			{#if currentVersion}
 				<span class="text-accent shrink-0 font-mono text-[1.8rem] font-medium">
@@ -90,8 +89,8 @@
 			{#if totalMinutes > 0}
 				<span class="text-text-bronze font-mono text-[0.85rem]">{formatTime(totalMinutes)}</span>
 			{/if}
-			{#if servings}
-				<span class="text-text-bronze text-[0.9rem]">Serves {servings}</span>
+			{#if content.servings}
+				<span class="text-text-bronze text-[0.9rem]">Serves {content.servings}</span>
 			{/if}
 		</div>
 	</div>

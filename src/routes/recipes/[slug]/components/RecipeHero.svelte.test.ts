@@ -87,6 +87,11 @@ describe('RecipeHero versioned content', () => {
 		expect(screen.getByText('Serves 4')).toBeInTheDocument();
 	});
 
+	test('a blank field on the viewed version stays blank, not filled from the recipe copy', () => {
+		renderHero(makeRecipe({ servings: 8 }), { ...VERSION, servings: null });
+		expect(screen.queryByText(/Serves/)).toBeNull();
+	});
+
 	test('falls back to the recipe copy when there is no version', () => {
 		renderHero(makeRecipe({ title: 'Only Copy' }), null);
 		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Only Copy');
