@@ -32,6 +32,19 @@ Durable guidance, not trend labels. Sources at the end.
 6. **Tokens in OKLCH.** Perceptual lightness makes hover states, tints and dark variants consistent across warm hues, where HSL lies badly (a yellow and a brown at the same HSL lightness look nothing alike). Browser support has been universal since 2023. WCAG 2.x ratios remain the compliance floor; APCA is a better readability predictor and worth checking in parallel.
 7. **Restraint as the method.** Linear's stated first principle is quality, with opinionated defaults and near-zero latency over surface polish. Mela draws praise for polish and criticism for hiding core actions behind minimalism. The lesson for Fork: the fork button, the version strip and the diff are the product, and they stay prominent whatever gets quieter around them.
 
+## Reference pass: food sites and cookbooks (2026-10-27)
+
+Most recipe sites refuse automated fetches (NYT Cooking, Bon Appétit, Serious Eats, Food52, Half Baked Harvest), so this is from secondary sources plus the one page that loaded.
+
+| Reference | What it does | Lesson for Fork |
+| --- | --- | --- |
+| NYT Cooking | Cheltenham headlines, Franklin for UI, Karnak slab for display; white page, one red accent; tap-to-cross ingredient checklist, steps highlight as you go, photo leads | Three type roles with one characterful display face; cross-off is a solved pattern we already have; the page is light, not a dark band |
+| Mob (Studio Nari, 2021) | Custom sans from Right Grotesk, colours named after flavours, loud and playful; recipe page is tabs (Ingredients, Method, Nutrition), numbered steps, a cook mode that keeps the screen awake | Palette can come from food itself; cook mode with wake lock is table stakes |
+| Bon Appétit | Aperitif, a custom condensed garamond-style display, photography first, print-led system | One distinctive display face carries the whole brand |
+| Award cookbooks 2024 (Plated, Enjoy, Butter Butter, Cazador) | A grotesk plus a text serif, earthy tones with one bold colour, generous white, per-recipe typographic play | Contemporary cookbook design is closest to direction C: restrained type pairing, one strong colour, paper-coloured ground |
+
+What this changes: every reference is a light page with the photo leading; none uses a dark hero band, so the espresso hero is the outlier and goes in B and C. The cookbook evidence raises C's standing on pedigree, but C's tomato accent sits one hue away from the diff's "removed" tint, which is a real conflict on a product whose centrepiece is a diff. B's green accent is the diff's "added" colour, so action and addition share one meaning.
+
 ## Principles for Fork
 
 These hold for every direction below and should move into `AGENTS.md` once a direction is chosen.
