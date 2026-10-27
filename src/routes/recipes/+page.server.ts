@@ -1,3 +1,4 @@
+import { redirect } from '@sveltejs/kit';
 import { db } from '#lib/server/db/index.js';
 import { recipes } from '#lib/server/db/schema.js';
 import { eq } from 'drizzle-orm';
@@ -5,9 +6,7 @@ import { attachRecipeCounts } from '#lib/server/recipeCounts.js';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals: { user } }) => {
-	if (!user) {
-		return { recipes: null };
-	}
+	if (!user) throw redirect(303, '/login');
 
 	const userRecipes = await db.query.recipes.findMany({
 		where: eq(recipes.authorId, user.id),
