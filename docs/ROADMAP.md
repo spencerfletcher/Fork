@@ -21,6 +21,9 @@ Ideas from the original MVP design that are not covered by a milestone. Kept as 
 
 - Temperature toggle (°C / °F) on steps: temperatures are free text, so a render-time regex like the M11 timer match, no schema.
 - Print stylesheet for the recipe page: `@media print`, no nav or sidebar. An afternoon.
+- Serving scaler on the recipe page: a stepper or ×½ / ×2 that re-renders parsed quantities in place; unparsed lines render as written with a mark. The parser already separates the two.
+- Restore or edit-from on the compare page: one secondary button in the "from" card that opens the editor seeded with that version's content.
+- Quantities inline in steps ("Whisk flour (280 g), baking soda (1 tsp)…") so cooking does not mean scrolling between the list and the method. Needs ingredient names matched to step text; after the redesign.
 - Nutrition (macros) per ingredient from USDA FoodData Central, after the M12 gram tables, since weights are the input.
 - Ratings: a private personal rating first, crowd-sourced later if the social loop exists.
 - AI recipe generation and adaptation from a prompt or chosen ingredients, reviewed in the form before saving; M14, M15 and M17 all mention consuming it.
