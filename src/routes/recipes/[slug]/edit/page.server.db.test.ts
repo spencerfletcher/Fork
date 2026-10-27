@@ -1,8 +1,11 @@
 import { describe, test, expect, beforeAll, afterAll } from 'vitest';
-import { config } from 'dotenv';
 import { eq } from 'drizzle-orm';
 
-config({ path: '.env.local', override: true, quiet: true });
+try {
+	process.loadEnvFile('.env.local');
+} catch {
+	// CI has no .env.local; it sets the variables itself.
+}
 const local = process.env.DATABASE_URL?.includes('127.0.0.1') ?? false;
 
 // Runs only against the local Supabase stack; the mock tests cover everything

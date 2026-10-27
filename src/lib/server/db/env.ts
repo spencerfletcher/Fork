@@ -1,7 +1,6 @@
 // Env loading for Node tooling (seed, migrations, Drizzle Studio, Playwright).
 // The app itself reads $env; this is for scripts that must choose a database
 // on purpose. Extensionless import so Playwright's loader can follow it.
-import { config } from 'dotenv';
 import { describeDbTarget } from './target';
 
 export type DbTarget = 'local' | 'prod';
@@ -13,12 +12,13 @@ export function targetFromEnv(): DbTarget {
 
 /**
  * Loads the env files for `target` and refuses a mix-up before returning.
- * Local: `.env.local` wins, even over shell variables, then `.env` fills gaps.
- * Prod: `.env.local` is skipped entirely, so `.env` (hosted) is the only source.
+ * Variables already in the environment win; then `.env.local` (local only),
+ * then `.env` fills whatever is still unset. Prod skips `.env.local` entirely,
+ * so `.env` (hosted) is the only file read.
  */
 export function loadEnv(target: DbTarget) {
-	if (target === 'local') config({ path: '.env.local', override: true, quiet: true });
-	config({ path: '.env', override: false, quiet: true });
+	if (target === 'local') loadFile('.env.local');
+	loadFile('.env');
 
 	const DATABASE_URL = required('DATABASE_URL');
 	const SUPABASE_URL = required('PUBLIC_SUPABASE_URL');
@@ -34,6 +34,15 @@ export function loadEnv(target: DbTarget) {
 		SUPABASE_URL,
 		SUPABASE_SECRET_KEY: required('SUPABASE_SECRET_KEY')
 	};
+}
+
+/** A missing file is fine: CI sets every variable in the environment and has none. */
+function loadFile(path: string) {
+	try {
+		process.loadEnvFile(path);
+	} catch {
+		// absent file
+	}
 }
 
 function required(name: string): string {
