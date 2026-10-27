@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
-	import RecipeHero from './components/RecipeHero.svelte';
+	import RecipeHeader from './components/RecipeHeader.svelte';
 	import RecipeIngredients from './components/RecipeIngredients.svelte';
 	import RecipeMethod from './components/RecipeMethod.svelte';
 	import RecipeActions from './components/RecipeActions.svelte';
@@ -19,7 +19,7 @@
 </script>
 
 <article class="min-h-screen">
-	<RecipeHero {recipe} {currentVersion} {isViewingHistory} {tags} />
+	<RecipeHeader {recipe} {currentVersion} {isViewingHistory} {tags} />
 
 	{#if allVersions.length > 0}
 		<VersionStrip
