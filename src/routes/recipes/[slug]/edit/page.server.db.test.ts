@@ -7,17 +7,23 @@ const local = process.env.DATABASE_URL?.includes('127.0.0.1') ?? false;
 
 // Runs only against the local Supabase stack; the mock tests cover everything
 // else. This one proves the row lock and revision check hold under a real race.
-describe.skipIf(!local)('save, against the real database', async () => {
-	const { db } = await import('#lib/server/db/index.js');
-	const { recipes, recipeVersions } = await import('#lib/server/db/schema.js');
-	const { actions } = await import('./+page.server');
-	const { makeContent } = await import('#lib/recipes/fixtures.js');
+describe.skipIf(!local)('save, against the real database', () => {
+	// Imported in beforeAll, not at collection time: a skipped suite still runs
+	// its describe body, and the db module throws without DATABASE_URL.
+	let db: typeof import('#lib/server/db/index.js').db;
+	let recipes: typeof import('#lib/server/db/schema.js').recipes;
+	let recipeVersions: typeof import('#lib/server/db/schema.js').recipeVersions;
+	let actions: typeof import('./+page.server').actions;
 
 	let recipeId: number;
 	let userId: string;
 	const slug = `race-test-${Date.now()}`;
 
 	beforeAll(async () => {
+		({ db } = await import('#lib/server/db/index.js'));
+		({ recipes, recipeVersions } = await import('#lib/server/db/schema.js'));
+		({ actions } = await import('./+page.server'));
+		const { makeContent } = await import('#lib/recipes/fixtures.js');
 		const profile = await db.query.profiles.findFirst();
 		if (!profile) throw new Error('Seed the local database first (pnpm db:seed)');
 		userId = profile.id;
