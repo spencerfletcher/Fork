@@ -16,15 +16,15 @@ Home cooks modify recipes constantly and have no structured way to record what c
 
 This is the core of the project, so it's worth being precise about what it does and doesn't do:
 
-- **Linear versioning.** Each recipe has an append-only list of versions numbered `1..n`. Saving an edit writes a new `recipe_versions` row with a required commit message. Past versions are never mutated.
+- **Linear versioning.** Each recipe has an append-only list of versions numbered `1..n`. Each version is a complete snapshot: title, description, servings, times, ingredients and steps. Saving an edit that changes any of those writes a new `recipe_versions` row, with a commit message or a generated one; saving without a change writes nothing. Past versions are never mutated.
 - **Forking.** Any public recipe can be forked into your own account. The fork records `parent_id` and `forked_at`, so attribution survives, and the recipe page shows a fork count and a link back to the source.
-- **Diffing.** Any two versions of a recipe can be compared side by side. Ingredients are matched by name; steps are matched by position. Changed lines get a word-level inline diff so you can see `¾ cup` become `½ cup` without re-reading the row.
+- **Diffing.** Any two versions of a recipe can be compared side by side. Title, description, servings and times show as a Details block; ingredients are matched by name; steps are matched by position. Changed lines get a word-level inline diff so you can see `¾ cup` become `½ cup` without re-reading the row.
 
 ![Comparing v1 and v2 of a recipe: a changed vanilla measurement shown as a word-level inline diff, and an added espresso powder row](docs/screenshots/diff.png)
 
 **There is no branching and no merging.** History is a straight line per recipe, and a fork is a copy with a pointer home — not a branch that can be merged back. Pull requests are on the roadmap below, not in the codebase.
 
-A deliberate split in the schema supports this: recipe _metadata_ (title, description, image, times, servings) lives on the `recipes` row and is edited in place, while the _content_ that people actually iterate on (ingredients and steps) is versioned as JSONB in `recipe_versions`. Renaming a typo in the title shouldn't create a new version; swapping butter for oil should.
+A deliberate split in the schema supports this: the recipe's _settings_ (photo, tags, visibility) live on the `recipes` row and are edited in place, while its _content_ (title, description, servings, times, ingredients and steps) is versioned in `recipe_versions`. The `recipes` row also keeps a copy of the latest version's title, description, servings and times so search and list pages can read them without a join; those copies are written in the same transaction as the version and never edited alone. One Save button handles both: settings-only changes update in place, content changes append a version, and a save from a stale tab is refused rather than silently overwriting.
 
 ![A recipe page showing the current version, its ingredients and method, and a version history sidebar](docs/screenshots/recipe.png)
 
@@ -32,7 +32,7 @@ A deliberate split in the schema supports this: recipe _metadata_ (title, descri
 
 | Area | What works |
 | --- | --- |
-| Versioning | Version history per recipe, required commit messages, collapsible history UI, version-to-version compare |
+| Versioning | Version history per recipe, optional commit messages (generated when blank), version-to-version compare including title, servings and times |
 | Editing | Ingredients and steps are typed as plain text, one ingredient per line and one step per paragraph, and parsed into structure on save; lines that don't parse are kept as written |
 | Diffing | Ingredient and step diffs with word-level inline highlighting |
 | Forking | Fork any public recipe, lineage via `parent_id`, fork counts, attribution on the recipe page |
@@ -68,7 +68,7 @@ src/
     +page.server.ts            public recipe feed
     recipes/
       [slug]/                  recipe detail, colocated presentational components
-      [slug]/edit/             edit form; writes a new version on save
+      [slug]/edit/             one-form editor; appends a version only when the content changed
       [slug]/diff/             version comparison
       new/                     create + image upload
     search/                    full-text search

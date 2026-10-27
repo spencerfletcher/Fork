@@ -5,7 +5,7 @@
  * They test the fork dialog, new recipe creation, and the edit flow.
  */
 
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import { SEED } from '../src/lib/server/db/seedData';
 
 const COOKIES_RE = new RegExp(SEED[0].versions.at(-1)!.title, 'i');
@@ -168,5 +168,134 @@ test.describe('Edit recipe page', () => {
 		await page.waitForURL(/\/recipes\/(?!.*\/edit)/);
 		// Version history is visible in the sidebar — verify our commit message appears
 		await expect(page.getByText('e2e test commit').first()).toBeVisible();
+	});
+});
+
+// ─── One save ─────────────────────────────────────────────────────────────────
+//
+// Each scenario creates its own recipe and deletes it in `finally`, so the
+// seed stays untouched and the tests can run in parallel.
+
+async function createRecipe(page: Page, title: string, servings: string) {
+	await page.goto('/recipes/new');
+	await page.locator('input[name="title"]').fill(title);
+	await page.locator('input[name="servings"]').fill(servings);
+	await page.locator('input[name="cookTimeMinutes"]').fill('20');
+	await page.getByLabel('Ingredients').fill('2 cups flour');
+	await page.getByLabel('Steps').fill('Mix all ingredients.');
+	await page.getByRole('button', { name: /create recipe/i }).click();
+	await page.waitForURL(/\/recipes\/(?!new)/);
+	return page.url().split('?')[0];
+}
+
+async function deleteRecipe(page: Page, url: string) {
+	await page.evaluate(async (u) => {
+		await fetch(`${u}/edit?/deleteRecipe`, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+			body: ''
+		});
+	}, url);
+}
+
+test.describe('One save', () => {
+	test('one save records servings, times and ingredients as a new version', async ({ page }) => {
+		const url = await createRecipe(page, 'E2E Four Servings', '4');
+		try {
+			await page.goto(`${url}/edit`);
+			await page.locator('input[name="servings"]').fill('8');
+			await page.locator('input[name="cookTimeMinutes"]').fill('30');
+			await page.getByLabel('Ingredients').fill('4 cups flour');
+			await page.getByRole('button', { name: /save changes/i }).click();
+			await page.waitForURL(url);
+
+			await expect(page.getByText('Serves 8').first()).toBeVisible();
+			await expect(page.locator('.version-strip .version-entry')).toHaveCount(2);
+
+			await page.goto(`${url}?version=1`);
+			await expect(page.getByText('Serves 4').first()).toBeVisible();
+			await expect(page.getByText(/2 cups/).first()).toBeVisible();
+
+			await page.goto(`${url}/diff?from=1&to=2`);
+			const details = page.locator('section').filter({ hasText: 'Details' }).first();
+			await expect(details).toContainText('Servings');
+			await expect(details).toContainText('4');
+			await expect(details).toContainText('8');
+			await expect(details).toContainText('Cook time');
+		} finally {
+			await deleteRecipe(page, url);
+		}
+	});
+
+	test('renaming keeps the slug and the old version keeps its title', async ({ page }) => {
+		const url = await createRecipe(page, 'E2E Before Rename', '4');
+		try {
+			await page.goto(`${url}/edit`);
+			await page.locator('input[name="title"]').fill('E2E After Rename');
+			await page.getByRole('button', { name: /save changes/i }).click();
+			await page.waitForURL(url);
+			await expect(page.locator('h1')).toContainText('E2E After Rename');
+
+			await page.goto(`${url}?version=1`);
+			await expect(page.locator('h1')).toContainText('E2E Before Rename');
+
+			await page.goto('/recipes');
+			await expect(page.getByText('E2E After Rename').first()).toBeVisible();
+		} finally {
+			await deleteRecipe(page, url);
+		}
+	});
+
+	test('a settings-only save creates no version', async ({ page }) => {
+		const url = await createRecipe(page, 'E2E Settings Only', '4');
+		try {
+			await page.goto(`${url}/edit`);
+			await page.getByLabel(/public/i).uncheck();
+			await page.getByRole('button', { name: /save changes/i }).click();
+			await page.waitForURL(url);
+			await expect(page.locator('.version-strip .version-entry')).toHaveCount(1);
+		} finally {
+			await deleteRecipe(page, url);
+		}
+	});
+
+	test('a stale tab gets a conflict and keeps its draft', async ({ page, context }) => {
+		const url = await createRecipe(page, 'E2E Stale', '4');
+		try {
+			const other = await context.newPage();
+			await other.goto(`${url}/edit`);
+			await page.goto(`${url}/edit`);
+
+			await page.locator('input[name="servings"]').fill('6');
+			await page.getByRole('button', { name: /save changes/i }).click();
+			await page.waitForURL(url);
+
+			await other.locator('input[name="title"]').fill('E2E Stale Edit');
+			await other.getByRole('button', { name: /save changes/i }).click();
+			await expect(other.getByRole('alert')).toContainText(/changed in another tab/i);
+			await expect(other.locator('input[name="title"]')).toHaveValue('E2E Stale Edit');
+			await expect(other.locator('input[name="title"]')).toBeEnabled();
+
+			await page.goto(url);
+			await expect(page.locator('.version-strip .version-entry')).toHaveCount(2);
+			await other.close();
+		} finally {
+			await deleteRecipe(page, url);
+		}
+	});
+
+	test('an invalid field keeps the draft and re-enables the form', async ({ page }) => {
+		const url = await createRecipe(page, 'E2E Invalid', '4');
+		try {
+			await page.goto(`${url}/edit`);
+			const long = '1 cup ' + 'x'.repeat(300);
+			await page.getByLabel('Ingredients').fill(long);
+			await page.getByRole('button', { name: /save changes/i }).click();
+			await expect(page.getByRole('alert')).toContainText('An ingredient line is too long');
+			await expect(page.getByLabel('Ingredients')).toHaveValue(long);
+			await expect(page.getByLabel('Ingredients')).toBeEnabled();
+		} finally {
+			await deleteRecipe(page, url);
+		}
 	});
 });
