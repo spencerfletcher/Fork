@@ -16,6 +16,8 @@
 	const isOwner = $derived(user?.id === recipe.authorId);
 	const canFork = $derived(!!user && !isOwner && !isViewingHistory);
 	const canFavorite = $derived(!!user && !isViewingHistory);
+
+	const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
 </script>
 
 <article class="min-h-screen">
@@ -29,23 +31,12 @@
 			{isViewingHistory} />
 	{/if}
 
-	<!-- Two-column layout: kept in scoped CSS because of fixed 320px sidebar + responsive reorder -->
+	<!-- The sidebar comes first in the DOM so the phone stack (actions, details,
+	     then the recipe) needs no reordering; the desktop grid places it in the
+	     right-hand column. -->
 	<div class="content-layout">
-		<div class="min-w-0">
-			<RecipeIngredients ingredients={currentVersion.ingredients} grams={data.grams} />
-			<RecipeMethod steps={currentVersion.steps} />
-		</div>
-
 		<aside class="min-w-0">
 			<div class="sidebar-sticky">
-				{#if currentVersion.imageUrl}
-					<div class="recipe-photo">
-						<img
-							src={currentVersion.imageUrl}
-							alt={currentVersion.title}
-							class="border-border-2 [aspect-ratio:4/3] w-full rounded-lg border object-cover" />
-					</div>
-				{/if}
 				<Details content={currentVersion} />
 				<RecipeActions
 					{recipe}
@@ -54,8 +45,17 @@
 					{isOwner}
 					{isViewingHistory}
 					initialFavorited={data.isFavorited} />
+				<p class="recipe-counts text-text-3 m-0 font-mono text-[0.75rem]">
+					{plural(allVersions.length, 'version')}{#if data.forkCount > 0}
+						· {plural(data.forkCount, 'fork')}{/if}
+				</p>
 			</div>
 		</aside>
+
+		<div class="main min-w-0">
+			<RecipeIngredients ingredients={currentVersion.ingredients} grams={data.grams} />
+			<RecipeMethod steps={currentVersion.steps} />
+		</div>
 	</div>
 </article>
 
@@ -64,52 +64,73 @@
 	.content-layout {
 		max-width: var(--max-width);
 		margin: 0 auto;
-		padding: var(--space-7) var(--space-5);
+		padding: 30px var(--space-5) 40px;
 		display: grid;
-		grid-template-columns: 1fr 320px;
-		gap: var(--space-8);
+		grid-template-columns: minmax(0, 1fr) 320px;
+		column-gap: 56px;
 		align-items: start;
 	}
 
-	/* Keep this above the max-width:860px block: that block overrides `display`
-	   at equal specificity, so it only wins by source order. */
+	.main {
+		grid-column: 1;
+		grid-row: 1;
+		display: flex;
+		flex-direction: column;
+		gap: 34px;
+	}
+
+	aside {
+		grid-column: 2;
+		grid-row: 1;
+	}
+
 	.sidebar-sticky {
 		position: sticky;
 		top: 76px;
 		display: flex;
 		flex-direction: column;
-		gap: var(--space-4);
+		gap: 22px;
 	}
 
 	@media (max-width: 860px) {
 		.content-layout {
-			grid-template-columns: 1fr;
-			padding: var(--space-5);
-			/* .sidebar-sticky's own 16px gap stops applying once it becomes
-			   display: contents, so the grid supplies the rhythm instead. */
-			row-gap: var(--space-4);
+			grid-template-columns: minmax(0, 1fr);
+			padding: 16px 18px 32px;
+			row-gap: 20px;
 		}
 
-		/* Promote the sidebar's children to grid items so the photo can lead on its
-		   own. <aside> follows the main column in the DOM, so everything else falls
-		   into the right order without an explicit rule. Desktop is untouched:
-		   the aside stays a normal sticky block there. */
-		.content-layout > aside,
+		.main,
+		aside {
+			grid-column: 1;
+			grid-row: auto;
+		}
+
 		.sidebar-sticky {
-			display: contents;
+			position: static;
+			gap: 12px;
 		}
 
-		/* <aside class="min-w-0"> supplied this before display:contents removed its
-		   box; without it, nowrap content in the sidebar blows out the grid column.
-		   :global() is required because Details/RecipeActions are separate
-		   components — their root elements don't carry this file's scoped-CSS
-		   hash, so an un-globaled `*` would silently never match them. */
-		.sidebar-sticky > :global(*) {
-			min-width: 0;
+		/* Fork and Favorite side by side, Fork taking the room. */
+		.sidebar-sticky > :global(.actions) {
+			flex-direction: row;
 		}
 
-		.recipe-photo {
-			order: -1;
+		.sidebar-sticky > :global(.actions > .btn-primary),
+		.sidebar-sticky > :global(.actions > a) {
+			flex: 1;
+		}
+
+		/* Prep, cook and serves as one row of three. */
+		.sidebar-sticky > :global(dl.details) {
+			flex-direction: row;
+		}
+
+		.sidebar-sticky > :global(dl.details > div) {
+			flex: 1;
+			flex-direction: column;
+			align-items: flex-start;
+			gap: 2px;
+			border-bottom: 1px solid var(--color-border);
 		}
 	}
 </style>

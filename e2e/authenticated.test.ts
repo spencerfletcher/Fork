@@ -128,7 +128,7 @@ test.describe('Edit recipe page', () => {
 			await page.getByRole('button', { name: /save changes/i }).click();
 			await page.waitForURL(url);
 			await expect(page.locator('h1')).toContainText('E2E Unchanged');
-			await expect(page.locator('.version-strip .version-entry')).toHaveCount(1);
+			await expectVersions(page, 1);
 		} finally {
 			await deleteRecipe(page, url);
 		}
@@ -144,7 +144,7 @@ test.describe('Edit recipe page', () => {
 			await page.locator('input[name="commitMessage"]').fill('e2e test commit');
 			await page.getByRole('button', { name: /save changes/i }).click();
 			await page.waitForURL(url);
-			await expect(page.locator('.version-strip .version-entry')).toHaveCount(2);
+			await expectVersions(page, 2);
 			await expect(page.locator('.version-strip')).toContainText('e2e test commit');
 		} finally {
 			await deleteRecipe(page, url);
@@ -162,6 +162,14 @@ test.describe('Edit recipe page', () => {
  * hydrated the page races the client re-render: the fill clears the input,
  * hydration restores the server value, the fill then appends ("48").
  */
+// The strip shows one line: the current version and a "N versions" count;
+// the rows only render once that count is clicked.
+async function expectVersions(page: Page, n: number) {
+	await expect(page.locator('.version-strip')).toContainText(
+		n === 1 ? '1 version' : `${n} versions`
+	);
+}
+
 async function gotoHydrated(page: Page, url: string) {
 	await page.goto(url);
 	await page.waitForLoadState('networkidle');
@@ -201,7 +209,7 @@ test.describe('One save', () => {
 			await page.waitForURL(url);
 
 			await expect(page.getByText('Serves 8').first()).toBeVisible();
-			await expect(page.locator('.version-strip .version-entry')).toHaveCount(2);
+			await expectVersions(page, 2);
 
 			await page.goto(`${url}?version=1`);
 			await expect(page.getByText('Serves 4').first()).toBeVisible();
@@ -244,7 +252,7 @@ test.describe('One save', () => {
 			await page.getByLabel(/public/i).uncheck();
 			await page.getByRole('button', { name: /save changes/i }).click();
 			await page.waitForURL(url);
-			await expect(page.locator('.version-strip .version-entry')).toHaveCount(1);
+			await expectVersions(page, 1);
 		} finally {
 			await deleteRecipe(page, url);
 		}
@@ -268,7 +276,7 @@ test.describe('One save', () => {
 			await expect(other.locator('input[name="title"]')).toBeEnabled();
 
 			await page.goto(url);
-			await expect(page.locator('.version-strip .version-entry')).toHaveCount(2);
+			await expectVersions(page, 2);
 			await other.close();
 		} finally {
 			await deleteRecipe(page, url);

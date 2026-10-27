@@ -251,22 +251,21 @@ test.describe('Recipe detail page', () => {
 		expect(contrast(effectiveText, effectiveRowBg)).toBeGreaterThanOrEqual(4.5);
 	});
 
-	test('on mobile, ingredients render above the details box', async ({ page }) => {
+	test('on mobile, the actions and details sit above the ingredients', async ({ page }) => {
 		await page.setViewportSize({ width: 390, height: 900 });
 		await gotoClassicCookies(page);
 
 		const ingredients = page.getByRole('heading', { name: /ingredients/i }).first();
-		const details = page.getByRole('heading', { name: /details/i }).first();
+		const details = page.locator('dl.details').first();
 		await ingredients.waitFor();
 		await details.waitFor();
 
 		const ingredientsBox = await ingredients.boundingBox();
 		const detailsBox = await details.boundingBox();
 
-		// CSS `order` changes visual position, not DOM position — assert geometry.
 		expect(ingredientsBox).not.toBeNull();
 		expect(detailsBox).not.toBeNull();
-		expect(ingredientsBox!.y).toBeLessThan(detailsBox!.y);
+		expect(detailsBox!.y).toBeLessThan(ingredientsBox!.y);
 	});
 
 	test('the recipe page does not scroll sideways on mobile', async ({ page }) => {
@@ -307,7 +306,7 @@ test.describe('Recipe detail page', () => {
 		await gotoClassicCookies(page);
 
 		const ingredients = page.getByRole('heading', { name: /ingredients/i }).first();
-		const details = page.getByRole('heading', { name: /details/i }).first();
+		const details = page.locator('dl.details').first();
 		await ingredients.waitFor();
 		await details.waitFor();
 
@@ -322,9 +321,9 @@ test.describe('Recipe detail page', () => {
 		expect(Math.abs(detailsBox!.y - ingredientsBox!.y)).toBeLessThan(300);
 	});
 
-	test('the hero names the recipe once and the author once', async ({ page }) => {
+	test('the header names the recipe once and the author once', async ({ page }) => {
 		await gotoClassicCookies(page);
-		const hero = page.locator('header').first();
+		const hero = page.locator('header.recipe-header');
 		await hero.waitFor();
 
 		// The breadcrumb shows the title, not the URL slug.
@@ -346,7 +345,7 @@ test.describe('Recipe detail page', () => {
 		// The {#if recipe.imageUrl} branch is equivalent to the node being absent.
 		await page.evaluate(() => document.querySelector('.recipe-photo')?.remove());
 
-		const details = page.getByRole('heading', { name: /details/i }).first();
+		const details = page.locator('dl.details').first();
 		const ingredientsBox = await ingredients.boundingBox();
 		const detailsBox = await details.boundingBox();
 
@@ -377,7 +376,7 @@ test.describe('Recipe detail page', () => {
 			return (a + 0.05) / (b + 0.05);
 		};
 
-		const heroTag = page.locator('header .tag').first();
+		const heroTag = page.locator('header.recipe-header a[href^="/tags/"]').first();
 		await heroTag.waitFor();
 		const hero = await heroTag.evaluate((el) => {
 			const cs = getComputedStyle(el);
@@ -394,39 +393,37 @@ test.describe('Recipe detail page', () => {
 		expect(contrast(hero.color, hero.bg)).toBeGreaterThanOrEqual(4.5);
 	});
 
-	test('the hero demotes metadata and keeps one accent element', async ({ page }) => {
+	test('the header has one marigold fill, the version chip, and no marigold text', async ({
+		page
+	}) => {
 		await gotoClassicCookies(page);
-		const hero = page.locator('header').first();
+		const hero = page.locator('header.recipe-header');
 		await hero.waitFor();
 
 		const accent = 'rgb(232, 168, 58)';
 
-		// Nothing in the hero may use the accent as a fill any more.
+		// Marigold is the only fill, and the version chip is the only thing filled.
 		const filled = await hero.evaluate(
 			(el, a) =>
 				[...el.querySelectorAll('*')].filter((n) => getComputedStyle(n).backgroundColor === a)
 					.length,
 			accent
 		);
-		expect(filled).toBe(0);
+		expect(filled).toBe(1);
 
 		// Cook time is metadata, not a pill: no background of its own.
 		const time = page.getByText(/^\d+\s*(min|h)/).first();
 		const timeBg = await time.evaluate((el) => getComputedStyle(el).backgroundColor);
 		expect(['rgba(0, 0, 0, 0)', 'transparent']).toContain(timeBg);
 
-		// Amber text is a fill too, just on glyphs instead of a background —
-		// the rule is "amber means action or version identity", so the same
-		// audit has to catch a color:accent breadcrumb as much as a bg:accent one.
-		// Measured directly on the classic (non-fork) recipe: only the "v2"
-		// version badge (span.text-accent, "v2") is amber text. The breadcrumb
-		// title used to also be text-accent and has been demoted to quiet text.
+		// Marigold never colours text: clay is the text accent, marigold a fill
+		// with ink on it.
 		const coloredText = await hero.evaluate(
 			(el, a) =>
 				[...el.querySelectorAll('*')].filter((n) => getComputedStyle(n).color === a).length,
 			accent
 		);
-		expect(coloredText).toBe(1);
+		expect(coloredText).toBe(0);
 	});
 
 	test('the version strip scrolls without widening the page', async ({ page }) => {
