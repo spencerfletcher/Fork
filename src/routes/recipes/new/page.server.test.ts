@@ -1,5 +1,8 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { actions } from './+page.server';
+import { invokeAction } from '#lib/testing/actions.js';
+
+const invoke = (event: unknown) => invokeAction(actions.default as never, event);
 
 const { transactionMock, uploadMock, removeMock, syncTagsMock, ensureProfileMock } = vi.hoisted(
 	() => ({
@@ -67,12 +70,6 @@ function makeEvent(opts: {
 		request: { formData: vi.fn().mockResolvedValue(fd) },
 		locals: { user: opts.user === undefined ? USER : opts.user, supabase: SUPABASE }
 	};
-}
-
-async function invoke(event: unknown): Promise<Record<string, unknown>> {
-	return (actions.default(event as never) as Promise<unknown>).catch((e: unknown) => e) as Promise<
-		Record<string, unknown>
-	>;
 }
 
 let tx: ReturnType<typeof makeTx>;

@@ -1,4 +1,5 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
+import { invokeAction as invoke } from '#lib/testing/actions.js';
 import { actions, load } from './+page.server';
 import { makeIngredient, makeStep, makeContent } from '#lib/recipes/fixtures.js';
 
@@ -71,15 +72,6 @@ function makeTx(opts: { newRecipeId?: number; newRecipeSlug?: string } = {}) {
 		insertChain,
 		updateChain
 	};
-}
-
-async function invoke(
-	action: (...args: unknown[]) => unknown,
-	event: unknown
-): Promise<Record<string, unknown>> {
-	return (action(event as never) as Promise<unknown>).catch((e: unknown) => e) as Promise<
-		Record<string, unknown>
-	>;
 }
 
 function makeEvent(opts: {

@@ -5,6 +5,7 @@ import { recipes, recipeVersions } from '#lib/server/db/schema.js';
 import { eq, desc, sql } from 'drizzle-orm';
 import type { PageServerLoad, Actions } from './$types';
 import { contentChanged, changedGroups, generatedCommitMessage } from '#lib/recipes/content.js';
+import { sameTags } from '#lib/recipes/tags.js';
 import {
 	imageFileFrom,
 	uploadRecipeImage,
@@ -97,11 +98,10 @@ export const actions: Actions = {
 
 				const changed = latest ? contentChanged(latest, content.value) : true;
 
-				const storedTags = new Set(recipe.recipesToTags.map((r) => r.tag.name.toLowerCase()));
-				const submittedTags = new Set(settings.value.tagNames.map((n) => n.toLowerCase()));
-				const tagsChanged =
-					storedTags.size !== submittedTags.size ||
-					[...submittedTags].some((n) => !storedTags.has(n));
+				const tagsChanged = !sameTags(
+					recipe.recipesToTags.map((r) => r.tag.name),
+					settings.value.tagNames
+				);
 				const imageChanged = image !== null || (draft.removeImage && locked.imageUrl !== null);
 				const visibilityChanged = locked.isPublic !== settings.value.isPublic;
 

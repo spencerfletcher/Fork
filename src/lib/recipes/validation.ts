@@ -3,6 +3,7 @@ import type { Ingredient, Step, RecipeContent } from './types.js';
 import { parseIngredientText } from './ingredients.js';
 import { parseStepText } from './steps.js';
 import { MAX_FIELD, MAX_LINE, FIELD_TOO_LONG, LINE_TOO_LONG } from './limits.js';
+import { normaliseTagNames } from './tags.js';
 
 // Largest value a Postgres `integer` column holds.
 const INT4_MAX = 2_147_483_647;
@@ -99,12 +100,7 @@ export function parseContent(formData: FormData): Result<RecipeContent> {
 
 const settingsSchema = z.object({
 	isPublic: z.boolean(),
-	tagNames: z.array(z.string()).transform((names) => {
-		const seen = new Set<string>();
-		return names
-			.map((n) => n.trim())
-			.filter((n) => n !== '' && !seen.has(n.toLowerCase()) && !!seen.add(n.toLowerCase()));
-	})
+	tagNames: z.array(z.string()).transform(normaliseTagNames)
 });
 
 export function parseSettings(formData: FormData): Result<Settings> {

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance, type SubmitFunction } from '$app/forms';
 	import type { RecipeDraft } from '#lib/recipes/validation.js';
+	import { normaliseTagNames, tagKey } from '#lib/recipes/tags.js';
 	import TagInput from '#lib/components/ui/TagInput.svelte';
 	import IngredientEditor from './IngredientEditor.svelte';
 	import StepEditor from './StepEditor.svelte';
@@ -48,7 +49,7 @@
 			hadPhoto: false,
 			title: d.title.trim(),
 			description: d.description.trim(),
-			tags: [...d.tags].sort()
+			tags: normaliseTagNames(d.tags).map(tagKey).sort()
 		});
 
 	// Photo: a newly chosen file previews from the browser; otherwise the

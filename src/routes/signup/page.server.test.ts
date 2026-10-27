@@ -1,5 +1,6 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { isActionFailure, isRedirect } from '@sveltejs/kit';
+import { invokeAction as invoke } from '#lib/testing/actions.js';
 import { actions } from './+page.server';
 
 // ─── Hoisted mocks (must be available inside vi.mock factory) ─────────────────
@@ -11,11 +12,6 @@ const { ensureProfile } = vi.hoisted(() => ({
 vi.mock('#lib/server/profiles.js', () => ({ ensureProfile }));
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-/** Calls a SvelteKit action and returns whatever it throws (or returns). */
-async function invoke(action: (...args: unknown[]) => unknown, event: unknown): Promise<unknown> {
-	return (action(event as never) as Promise<unknown>).catch((e: unknown) => e);
-}
 
 const signUp = vi.fn();
 

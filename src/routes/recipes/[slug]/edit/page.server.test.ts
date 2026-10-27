@@ -1,4 +1,5 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
+import { invokeAction as invoke } from '#lib/testing/actions.js';
 import { actions } from './+page.server';
 import { makeContent, makeIngredient, makeStep } from '#lib/recipes/fixtures.js';
 
@@ -89,16 +90,6 @@ function makeTx(opts: { locked?: unknown[]; latest?: unknown } = {}) {
 		lockFor,
 		findLatest
 	};
-}
-
-/** Calls a SvelteKit action and returns whatever it throws (or returns). */
-async function invoke(
-	action: (...args: unknown[]) => unknown,
-	event: unknown
-): Promise<Record<string, unknown>> {
-	return (action(event as never) as Promise<unknown>).catch((e: unknown) => e) as Promise<
-		Record<string, unknown>
-	>;
 }
 
 /** Builds a minimal SvelteKit RequestEvent-like object. */
