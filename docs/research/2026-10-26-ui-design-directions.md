@@ -218,6 +218,14 @@ Structural ideas worth carrying into the roadmap from the same pass: sticky ingr
 
 Reviewer's third pass: keep 1, 2 and 5; drop 4 and 7; 8 is a maybe pending a browse-grid comparison; 6 is a component to fold in. Global changes adopted (Spencer agreed on the two that reversed earlier calls): plain Bitter step numerals in the accent, the author line loses the slug, tags become comma-separated text in the meta line, grams stay roman, the small-cap label grammar lives in the sidebar only. The canvas at https://claude.ai/artifact/3j3Qv463HkeiZqjmwnxZJR has 1, 2 and 5 with those changes, the 5 hero at 390px with the one-third and fold lines marked, the 2-vs-8 browse grid (card titles in ink; the accent shows only on version numbers and the no-photo panel), and two new candidates on template 2's roles: verdigris `#0E6B66` (5.7) and bay leaf `#2F5D3A` (6.9) as the text accent with the marigold fill. Oxblood's remove tint is `#A8401A` (5.0), the reviewer's `#C24A1E` being 4.0.
 
+### Round 4: the locked system on real pages (2026-10-27)
+
+Two reviewers converged on template 2. Locked: paper `#F7F3EC`, ink `#1A1714`, clay `#A4512B` as the only text accent, marigold `#E8A83A` as the only fill with ink on it, Bitter 500 for titles and step numerals, Source Sans 3 for everything else, JetBrains Mono for the author line, version numbers, the version strip and the diff. Light header everywhere; espresso stays on the nav bar only. Retired: saffron, enamel, oxblood, verdigris, bay leaf, the espresso hero.
+
+Decisions this round: no-photo cards and pages show the title inside the clay-tinted panel in Bitter, nothing below (Spencer's call over Sol's); card meta is sans with only the version number in mono, so the forked card stops wrapping; method steps lose their rules and separate by numeral and space; the version strip collapses on mobile to the current version plus a "3 versions" link; on mobile the photo leads full width under the nav, then title, description, meta, strip, Fork/Save, prep/cook/serves, ingredients.
+
+The canvas at https://claude.ai/artifact/JeBnxQYqrQCbraFGrsUxwY has the recipe page in both layouts (sidebar photo, and a 16:9 photo at content width between the meta line and the strip) plus 390px, the browse grid with Recent and Most forked sections at 4 and 2 across, the compare page with two version cards above the diff, and the edit page with the live parse note and the marigold "Save as new version". Open question for the reviewers: sidebar photo or wide photo.
+
 ## Typography options, independent of palette
 
 | Pairing | Titles | UI and meta | Reading | Fit |
