@@ -238,7 +238,7 @@ New token, the focus ring: `:focus-visible` only, 2px solid clay `#A4512B` with 
 
 Also decided: dark mode deferred (the dark set above stays recorded, nothing is built); grid breakpoints 2 across under 700px, 3 to 1100px, 4 above; fonts self-hosted through fontsource; the redesign is one branch, built in reviewer two's order: tokens, nav and shell, recipe page, card and grid, compare, edit and new.
 
-The canvas at https://claude.ai/artifact/QFTDpwCLRwuknh754yNPzc has the revised recipe page at both widths, the focus ring board, the mobile compare and edit boards at the new sizes, and the grid, compare and desktop edit boards carried over.
+The canvas at https://claude.ai/artifact/QFTDpwCLRwuknh754yNPzc is the final set: recipe, browse, compare and edit at desktop and 390px, plus the focus ring board. Annotations and the comparison variants were stripped once decided, and its brief note restates the tokens, type, rules, layout and build order.
 
 Final corrections after the reviewers' last pass: the editor heading is "Editing v3" (the old "a change makes v4" contradicted the settings-only save); the focus note says the browser decides when `:focus-visible` shows, with no logic hiding it after a click, so text fields keep their ring; the edit form's label is "Serves" everywhere, matching the sidebar; the mobile compare title row wraps instead of truncating; mobile strip, tags and helper copy now use the same strings as desktop. Reviewer two asked a second time to cut the Details block on the grounds that metadata is not snapshotted; it is (`recipe_versions` carries title, servings, prep and cook minutes), so the block stays and nothing goes on the roadmap for it.
 
