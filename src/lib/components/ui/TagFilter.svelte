@@ -23,7 +23,7 @@
 			<button
 				type="button"
 				onclick={onClear}
-				class="text-text-3 hover:text-accent cursor-pointer border-none bg-transparent p-0 font-sans text-[0.8rem] transition-colors duration-150">
+				class="text-text-3 hover:text-text cursor-pointer border-none bg-transparent p-0 font-sans text-[0.8rem] transition-colors duration-150">
 				Clear all
 			</button>
 		{/if}
@@ -37,7 +37,7 @@
 					type="button"
 					onclick={() => onTagToggle(tag.slug)}
 					class={isSelected
-						? 'rounded-pill bg-accent text-hero-bg hover:bg-accent-mid cursor-pointer border-none px-3 py-1 font-sans text-[0.75rem] font-medium transition-[background,color] duration-150'
+						? 'rounded-pill bg-marigold text-text hover:bg-marigold-hover cursor-pointer border-none px-3 py-1 font-sans text-[0.75rem] font-medium transition-[background,color] duration-150'
 						: 'tag hover:bg-tag-hover-bg cursor-pointer'}>
 					{tag.name}
 				</button>

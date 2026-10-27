@@ -117,16 +117,16 @@
 	}
 
 	.hero-cta {
-		background: var(--color-accent);
-		color: var(--color-hero-bg);
+		background: var(--color-marigold);
+		color: var(--color-text);
 		font-weight: 600;
 	}
 
 	/* Darkens rather than fading — an opacity transition washes the button toward
 	   the background behind it, which reads as the control going inactive. */
 	.hero-cta:hover {
-		background: var(--color-accent-mid);
-		color: var(--color-hero-bg);
+		background: var(--color-marigold-hover);
+		color: var(--color-text);
 	}
 
 	.hero-cta-secondary {

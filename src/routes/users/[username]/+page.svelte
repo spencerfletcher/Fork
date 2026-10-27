@@ -28,14 +28,14 @@
 				<p class="text-text-bronze m-0 text-[0.85rem]">Member since {memberSince}</p>
 				<div class="mt-1 flex items-center gap-3">
 					<span class="flex items-baseline gap-[5px]">
-						<span class="text-accent font-mono text-base font-semibold">{recipes.length}</span>
+						<span class="text-marigold font-mono text-base font-semibold">{recipes.length}</span>
 						<span class="text-text-tan text-[0.82rem]">
 							{recipes.length === 1 ? 'recipe' : 'recipes'}
 						</span>
 					</span>
 					<span class="text-text-bronze text-[0.85rem]">·</span>
 					<span class="flex items-baseline gap-[5px]">
-						<span class="text-accent font-mono text-base font-semibold">{commitCount}</span>
+						<span class="text-marigold font-mono text-base font-semibold">{commitCount}</span>
 						<span class="text-text-tan text-[0.82rem]">
 							{commitCount === 1 ? 'commit' : 'commits'}
 						</span>
@@ -74,8 +74,8 @@
 		width: 72px;
 		height: 72px;
 		border-radius: 50%;
-		background: var(--color-accent);
-		color: var(--color-hero-bg);
+		background: var(--color-marigold);
+		color: var(--color-text);
 		font-family: var(--font-serif);
 		font-size: 2rem;
 		font-weight: 700;

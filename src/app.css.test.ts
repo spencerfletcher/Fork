@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 
 // The design system's tokens live in app.css as plain CSS variables. This
 // test pins the locked values and proves every text/background pair the app
@@ -63,5 +63,19 @@ describe('app.css tokens', () => {
 		expect(tokens['--font-serif']).toMatch(/^'bitter'/);
 		expect(tokens['--font-sans']).toMatch(/^'source sans 3'/);
 		expect(tokens['--font-mono']).toMatch(/^'jetbrains mono'/);
+	});
+
+	// Clay is a text accent for paper. On the espresso surface it is 3.3:1 as
+	// text and, with espresso text on it, 1:1 on hover. Components that paint
+	// the espresso surface must use marigold for anything accented.
+	test('no component draws the clay accent on the espresso surface', () => {
+		const offenders = readdirSync(new URL('.', import.meta.url), { recursive: true })
+			.map(String)
+			.filter((f) => f.endsWith('.svelte'))
+			.filter((f) => {
+				const src = readFileSync(new URL(f, import.meta.url), 'utf8');
+				return src.includes('hero-bg') && /\baccent\b|accent-mid|accent-pale/.test(src);
+			});
+		expect(offenders).toEqual([]);
 	});
 });
