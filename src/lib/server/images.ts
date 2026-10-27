@@ -1,5 +1,4 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { nanoid } from 'nanoid';
 
 const BUCKET = 'recipe-images';
 
@@ -16,7 +15,7 @@ export async function uploadRecipeImage(
 	file: File
 ): Promise<UploadedImage> {
 	const ext = file.name.split('.').pop()?.toLowerCase() ?? 'jpg';
-	const path = `${userId}/${nanoid()}.${ext}`;
+	const path = `${userId}/${crypto.randomUUID()}.${ext}`;
 	const { error } = await supabase.storage
 		.from(BUCKET)
 		.upload(path, file, { contentType: file.type, upsert: false });

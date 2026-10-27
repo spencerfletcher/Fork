@@ -18,3 +18,8 @@ export function formatTime(minutes: number): string {
 	const m = minutes % 60;
 	return m > 0 ? `${h}h ${m}m` : `${h}h`;
 }
+
+/** Eight URL-safe random characters, appended to slugs so titles need not be unique. */
+export function randomSuffix(): string {
+	return crypto.randomUUID().slice(0, 8);
+}

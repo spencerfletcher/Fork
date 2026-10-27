@@ -2,9 +2,9 @@ import { error, redirect } from '@sveltejs/kit';
 import { db } from '#lib/server/db/index.js';
 import { recipes, recipeVersions, recipesToTags, favorites } from '#lib/server/db/schema.js';
 import { eq, desc, and } from 'drizzle-orm';
-import { nanoid } from 'nanoid';
-import { slugify } from '#lib/helpers.js';
+import { slugify, randomSuffix } from '#lib/helpers.js';
 import { ensureProfile } from '#lib/server/profiles.js';
+import { text } from '#lib/recipes/validation.js';
 import type { RecipeContent } from '#lib/recipes/types.js';
 import { absoluteImage, clampDescription } from '#lib/seo.js';
 import { gramsFor } from '#lib/server/ingredientDensities.js';
@@ -108,7 +108,7 @@ export const actions: Actions = {
 		if (!user) throw error(401, 'Login required to fork a recipe');
 
 		const formData = await request.formData();
-		const commitMessage = (formData.get('commitMessage') as string)?.trim() || 'Forked recipe';
+		const commitMessage = text(formData, 'commitMessage').trim() || 'Forked recipe';
 
 		// Load source recipe + latest version
 		const source = await db.query.recipes.findFirst({
@@ -134,7 +134,7 @@ export const actions: Actions = {
 			latestVersion;
 		const meta = { title, description, servings, prepTimeMinutes, cookTimeMinutes };
 		const snapshot: RecipeContent = { ...meta, ingredients, steps };
-		const slug = `${slugify(snapshot.title)}-${nanoid(6)}`;
+		const slug = `${slugify(snapshot.title)}-${randomSuffix()}`;
 
 		let newSlug: string | null = null;
 

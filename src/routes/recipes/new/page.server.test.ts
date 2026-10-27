@@ -120,7 +120,7 @@ describe('new recipe action', () => {
 			authorId: 'user-1',
 			imageUrl: null
 		});
-		expect(recipe.slug).toMatch(/^soup-[A-Za-z0-9_-]{6}$/);
+		expect(recipe.slug).toMatch(/^soup-[a-f0-9]{8}$/);
 		expect(version).toMatchObject({
 			recipeId: 42,
 			versionNumber: 1,

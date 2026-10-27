@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { Dialog } from 'bits-ui';
 	import type { Recipe } from '#lib/server/db/schema.js';
 
 	let {
@@ -22,7 +21,7 @@
 	// Writable derived: the click flips it optimistically, and it resets to the
 	// prop whenever the page loads another recipe or reloads this one.
 	let isFavorited = $derived(initialFavorited);
-	let forkDialogOpen = $state(false);
+	let forkDialog: HTMLDialogElement | undefined = $state();
 	let forkCommitMessage = $state('');
 </script>
 
@@ -60,47 +59,46 @@
 		{/if}
 
 		{#if canFork}
-			<Dialog.Root bind:open={forkDialogOpen}>
-				<Dialog.Trigger class="btn-primary w-full py-3">Fork this recipe</Dialog.Trigger>
-				<Dialog.Portal>
-					<Dialog.Overlay class="dialog-overlay" />
-					<Dialog.Content class="dialog-content">
-						<Dialog.Title class="dialog-title">Fork this recipe?</Dialog.Title>
-						<Dialog.Description class="dialog-desc">
-							A copy will be added to your recipes. You can edit it independently.
-						</Dialog.Description>
-						<form
-							method="POST"
-							action="?/fork"
-							use:enhance={() => {
-								return async ({ result, update }) => {
-									if (result.type === 'redirect') {
-										window.location.href = result.location;
-									} else {
-										await update();
-									}
-									forkDialogOpen = false;
-								};
-							}}>
-							<div class="mb-5">
-								<label for="fork-commit" class="text-text-2 mb-2 block text-[0.85rem] font-medium">
-									Initial commit message
-								</label>
-								<input
-									id="fork-commit"
-									name="commitMessage"
-									type="text"
-									placeholder="Forked from {recipe.title}"
-									bind:value={forkCommitMessage} />
-							</div>
-							<div class="dialog-actions">
-								<Dialog.Close class="btn-ghost">Cancel</Dialog.Close>
-								<button type="submit" class="btn-primary">Fork</button>
-							</div>
-						</form>
-					</Dialog.Content>
-				</Dialog.Portal>
-			</Dialog.Root>
+			<button type="button" class="btn-primary w-full py-3" onclick={() => forkDialog?.showModal()}>
+				Fork this recipe
+			</button>
+			<dialog bind:this={forkDialog} class="dialog-content" aria-labelledby="fork-title">
+				<h2 id="fork-title" class="dialog-title">Fork this recipe?</h2>
+				<p class="dialog-desc">
+					A copy will be added to your recipes. You can edit it independently.
+				</p>
+				<form
+					method="POST"
+					action="?/fork"
+					use:enhance={() => {
+						return async ({ result, update }) => {
+							if (result.type === 'redirect') {
+								window.location.href = result.location;
+							} else {
+								await update();
+							}
+							forkDialog?.close();
+						};
+					}}>
+					<div class="mb-5">
+						<label for="fork-commit" class="text-text-2 mb-2 block text-[0.85rem] font-medium">
+							Initial commit message
+						</label>
+						<input
+							id="fork-commit"
+							name="commitMessage"
+							type="text"
+							placeholder="Forked from {recipe.title}"
+							bind:value={forkCommitMessage} />
+					</div>
+					<div class="dialog-actions">
+						<button type="button" class="btn-ghost" onclick={() => forkDialog?.close()}>
+							Cancel
+						</button>
+						<button type="submit" class="btn-primary">Fork</button>
+					</div>
+				</form>
+			</dialog>
 		{/if}
 
 		{#if isOwner && !isViewingHistory}

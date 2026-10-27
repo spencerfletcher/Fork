@@ -3,23 +3,20 @@ import type { Actions, PageServerLoad } from './$types';
 import { db } from '#lib/server/db/index.js';
 import { parseContent, parseSettings, draftOf } from '#lib/recipes/validation.js';
 import { recipes, recipeVersions } from '#lib/server/db/schema.js';
-import { slugify } from '#lib/helpers.js';
-import { nanoid } from 'nanoid';
+import { slugify, randomSuffix } from '#lib/helpers.js';
 import {
 	imageFileFrom,
 	uploadRecipeImage,
 	removeRecipeImage,
 	type UploadedImage
 } from '#lib/server/images.js';
-import { syncTags } from '#lib/server/tags.js';
+import { syncTags, listTags } from '#lib/server/tags.js';
 import { ensureProfile } from '#lib/server/profiles.js';
 
 export const load: PageServerLoad = async ({ locals: { user } }) => {
 	if (!user) throw redirect(303, '/login');
 
-	const allTags = await db.query.tags.findMany({
-		orderBy: (t, { asc }) => [asc(t.name)]
-	});
+	const allTags = await listTags();
 
 	return { allTags };
 };
@@ -50,7 +47,7 @@ export const actions: Actions = {
 		await ensureProfile(user);
 
 		const { ingredients, steps, ...meta } = content.value;
-		const slug = `${slugify(meta.title)}-${nanoid(6)}`;
+		const slug = `${slugify(meta.title)}-${randomSuffix()}`;
 
 		try {
 			await db.transaction(async (tx) => {

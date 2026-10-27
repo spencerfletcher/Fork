@@ -2,10 +2,9 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { createClient } from '@supabase/supabase-js';
 import { config } from 'dotenv';
-import { nanoid } from 'nanoid';
 
 import { recipes, tags, recipesToTags, recipeVersions, profiles } from './schema';
-import { slugify } from '#lib/helpers.js';
+import { slugify, randomSuffix } from '#lib/helpers.js';
 import { SEED } from './seedData';
 import { parseIngredientText } from '#lib/recipes/ingredients.js';
 import { parseStepText } from '#lib/recipes/steps.js';
@@ -117,7 +116,7 @@ async function seed() {
 			.insert(recipes)
 			.values({
 				authorId: userId,
-				slug: `${recipe.slug}-${nanoid(6)}`,
+				slug: `${recipe.slug}-${randomSuffix()}`,
 				// Copies of the latest version, per the ownership rule in schema.ts.
 				title: latest.title,
 				description: latest.description,

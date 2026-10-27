@@ -704,27 +704,19 @@
 		margin: 0;
 	}
 
-	/* ── Bits-ui Dialog (global overrides) ── */
-
-	.dialog-overlay {
-		position: fixed;
-		inset: 0;
-		background: rgba(26, 20, 8, 0.5);
-		z-index: 100;
-	}
+	/* ── Native <dialog>, opened with showModal() ── */
 
 	.dialog-content {
-		position: fixed;
-		top: 50%;
-		left: 50%;
-		transform: translate(-50%, -50%);
 		background: var(--color-surface);
 		border: 1px solid var(--color-border-2);
 		border-radius: var(--radius-lg);
 		box-shadow: var(--shadow-raised);
 		padding: var(--space-6);
 		width: min(480px, calc(100vw - 48px));
-		z-index: 101;
+	}
+
+	.dialog-content::backdrop {
+		background: rgba(26, 20, 8, 0.5);
 	}
 
 	.dialog-title {

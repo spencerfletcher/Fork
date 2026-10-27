@@ -34,8 +34,8 @@ vi.mock('#lib/server/db/index.js', () => ({
 
 vi.mock('#lib/server/profiles.js', () => ({ ensureProfile: ensureProfileMock }));
 
-// nanoid must be deterministic so we can predict slugs
-vi.mock('nanoid', () => ({ nanoid: vi.fn().mockReturnValue('abc123') }));
+// The slug suffix must be deterministic so we can predict slugs.
+vi.spyOn(crypto, 'randomUUID').mockReturnValue('abc12345-0000-4000-8000-000000000000');
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -58,7 +58,7 @@ function chain(resolved: unknown = undefined) {
 function makeTx(opts: { newRecipeId?: number; newRecipeSlug?: string } = {}) {
 	const newRecipe = {
 		id: opts.newRecipeId ?? 99,
-		slug: opts.newRecipeSlug ?? 'forked-slug-abc123'
+		slug: opts.newRecipeSlug ?? 'forked-slug-abc12345'
 	};
 	const insertChain = chain([newRecipe]);
 	const updateChain = chain();
@@ -68,7 +68,6 @@ function makeTx(opts: { newRecipeId?: number; newRecipeSlug?: string } = {}) {
 		insert: vi.fn().mockReturnValue(insertChain),
 		update: vi.fn().mockReturnValue(updateChain),
 		delete: vi.fn().mockReturnValue(deleteChain),
-		query: { tags: { findMany: vi.fn().mockResolvedValue([]) } },
 		insertChain,
 		updateChain
 	};
@@ -156,7 +155,7 @@ describe('fork', () => {
 
 	test('ensures a profile for the forking user before the transaction', async () => {
 		findRecipeMock.mockResolvedValue(SOURCE_RECIPE);
-		const tx = makeTx({ newRecipeSlug: 'classic-cookies-abc123' });
+		const tx = makeTx({ newRecipeSlug: 'classic-cookies-abc12345' });
 		transactionMock.mockImplementationOnce(
 			async (cb: (tx: ReturnType<typeof makeTx>) => Promise<void>) => cb(tx)
 		);
@@ -171,7 +170,7 @@ describe('fork', () => {
 
 	test('redirects to /edit of the new forked recipe on success', async () => {
 		findRecipeMock.mockResolvedValue(SOURCE_RECIPE);
-		const tx = makeTx({ newRecipeSlug: 'classic-cookies-abc123' });
+		const tx = makeTx({ newRecipeSlug: 'classic-cookies-abc12345' });
 		transactionMock.mockImplementationOnce(
 			async (cb: (tx: ReturnType<typeof makeTx>) => Promise<void>) => cb(tx)
 		);
@@ -182,12 +181,12 @@ describe('fork', () => {
 		);
 
 		expect(result.status).toBe(303);
-		expect(result.location).toBe('/recipes/classic-cookies-abc123/edit');
+		expect(result.location).toBe('/recipes/classic-cookies-abc12345/edit');
 	});
 
 	test('inserts new recipe row with parentId pointing at source', async () => {
 		findRecipeMock.mockResolvedValue(SOURCE_RECIPE);
-		const tx = makeTx({ newRecipeSlug: 'classic-cookies-abc123' });
+		const tx = makeTx({ newRecipeSlug: 'classic-cookies-abc12345' });
 		transactionMock.mockImplementationOnce(
 			async (cb: (tx: ReturnType<typeof makeTx>) => Promise<void>) => cb(tx)
 		);
@@ -202,7 +201,7 @@ describe('fork', () => {
 
 	test('writes the five copies on the new recipe from the latest version, not the source row', async () => {
 		findRecipeMock.mockResolvedValue(SOURCE_RECIPE);
-		const tx = makeTx({ newRecipeSlug: 'classic-cookies-abc123' });
+		const tx = makeTx({ newRecipeSlug: 'classic-cookies-abc12345' });
 		transactionMock.mockImplementationOnce(
 			async (cb: (tx: ReturnType<typeof makeTx>) => Promise<void>) => cb(tx)
 		);
@@ -216,13 +215,13 @@ describe('fork', () => {
 			servings: 24,
 			prepTimeMinutes: 20,
 			cookTimeMinutes: 12,
-			slug: 'classic-cookies-abc123'
+			slug: 'classic-cookies-abc12345'
 		});
 	});
 
 	test('takes image, visibility and tags from the source recipe, and nothing else from its row', async () => {
 		findRecipeMock.mockResolvedValue(SOURCE_RECIPE);
-		const tx = makeTx({ newRecipeId: 99, newRecipeSlug: 'classic-cookies-abc123' });
+		const tx = makeTx({ newRecipeId: 99, newRecipeSlug: 'classic-cookies-abc12345' });
 		transactionMock.mockImplementationOnce(
 			async (cb: (tx: ReturnType<typeof makeTx>) => Promise<void>) => cb(tx)
 		);
@@ -253,7 +252,7 @@ describe('fork', () => {
 
 	test('inserts version 1 as the complete latest content of the source', async () => {
 		findRecipeMock.mockResolvedValue(SOURCE_RECIPE);
-		const tx = makeTx({ newRecipeId: 99, newRecipeSlug: 'classic-cookies-abc123' });
+		const tx = makeTx({ newRecipeId: 99, newRecipeSlug: 'classic-cookies-abc12345' });
 		transactionMock.mockImplementationOnce(
 			async (cb: (tx: ReturnType<typeof makeTx>) => Promise<void>) => cb(tx)
 		);
@@ -278,7 +277,7 @@ describe('fork', () => {
 
 	test('copies tags from the source recipe', async () => {
 		findRecipeMock.mockResolvedValue(SOURCE_RECIPE);
-		const tx = makeTx({ newRecipeId: 99, newRecipeSlug: 'classic-cookies-abc123' });
+		const tx = makeTx({ newRecipeId: 99, newRecipeSlug: 'classic-cookies-abc12345' });
 		transactionMock.mockImplementationOnce(
 			async (cb: (tx: ReturnType<typeof makeTx>) => Promise<void>) => cb(tx)
 		);
@@ -292,7 +291,7 @@ describe('fork', () => {
 
 	test('uses a default commit message when none is provided', async () => {
 		findRecipeMock.mockResolvedValue(SOURCE_RECIPE);
-		const tx = makeTx({ newRecipeSlug: 'classic-cookies-abc123' });
+		const tx = makeTx({ newRecipeSlug: 'classic-cookies-abc12345' });
 		transactionMock.mockImplementationOnce(
 			async (cb: (tx: ReturnType<typeof makeTx>) => Promise<void>) => cb(tx)
 		);

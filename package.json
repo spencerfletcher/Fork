@@ -63,16 +63,13 @@
 	"dependencies": {
 		"@supabase/ssr": "^0.12.7",
 		"@supabase/supabase-js": "^2.118.0",
-		"bits-ui": "^2.19.5",
 		"diff": "^9.0.0",
 		"drizzle-orm": "^0.45.4",
-		"nanoid": "^6.0.2",
 		"parse-ingredient": "3.0.0",
 		"postgres": "^3.4.9",
 		"zod": "^4.6.7"
 	},
 	"imports": {
-		"#lib": "./src/lib/index.js",
 		"#lib/*": "./src/lib/*"
 	}
 }
