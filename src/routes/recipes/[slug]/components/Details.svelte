@@ -1,35 +1,37 @@
 <script lang="ts">
-	import type { Recipe } from '#lib/server/db/schema.js';
+	import type { RecipeContent } from '#lib/recipes/types.js';
 	import { formatTime } from '#lib/helpers.js';
 
-	let { recipe }: { recipe: Pick<Recipe, 'prepTimeMinutes' | 'cookTimeMinutes' | 'servings'> } =
+	let {
+		content
+	}: { content: Pick<RecipeContent, 'prepTimeMinutes' | 'cookTimeMinutes' | 'servings'> } =
 		$props();
 </script>
 
-{#if recipe.prepTimeMinutes || recipe.cookTimeMinutes || recipe.servings}
+{#if content.prepTimeMinutes || content.cookTimeMinutes || content.servings}
 	<div class="border-border-2 bg-surface rounded-lg border p-5">
 		<h4 class="eyebrow-label mb-4">Details</h4>
 		<dl class="m-0 flex flex-col gap-3 p-0">
-			{#if recipe.prepTimeMinutes}
+			{#if content.prepTimeMinutes}
 				<div class="flex items-baseline justify-between gap-3">
 					<dt class="text-text-3 font-sans text-[0.75rem] font-medium">Prep</dt>
 					<dd class="text-text m-0 font-mono text-[0.85rem] font-medium">
-						{formatTime(recipe.prepTimeMinutes)}
+						{formatTime(content.prepTimeMinutes)}
 					</dd>
 				</div>
 			{/if}
-			{#if recipe.cookTimeMinutes}
+			{#if content.cookTimeMinutes}
 				<div class="flex items-baseline justify-between gap-3">
 					<dt class="text-text-3 font-sans text-[0.75rem] font-medium">Cook</dt>
 					<dd class="text-text m-0 font-mono text-[0.85rem] font-medium">
-						{formatTime(recipe.cookTimeMinutes)}
+						{formatTime(content.cookTimeMinutes)}
 					</dd>
 				</div>
 			{/if}
-			{#if recipe.servings}
+			{#if content.servings}
 				<div class="flex items-baseline justify-between gap-3">
 					<dt class="text-text-3 font-sans text-[0.75rem] font-medium">Serves</dt>
-					<dd class="text-text m-0 font-mono text-[0.85rem] font-medium">{recipe.servings}</dd>
+					<dd class="text-text m-0 font-mono text-[0.85rem] font-medium">{content.servings}</dd>
 				</div>
 			{/if}
 		</dl>

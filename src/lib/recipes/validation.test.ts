@@ -72,7 +72,8 @@ describe('parseContent', () => {
 	});
 
 	test('rejects a missing title', () => {
-		const { title: _, ...rest } = FULL;
+		const rest: Record<string, string> = { ...FULL };
+		delete rest.title;
 		expect(parseContent(form(rest))).toEqual(rejected);
 	});
 

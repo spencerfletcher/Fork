@@ -16,7 +16,9 @@
 	const isOwner = $derived(user?.id === recipe.authorId);
 	const canFork = $derived(!!user && !isOwner && !isViewingHistory);
 	const canFavorite = $derived(!!user && !isViewingHistory);
-	const totalMinutes = $derived((recipe.prepTimeMinutes ?? 0) + (recipe.cookTimeMinutes ?? 0));
+	// The viewed version owns servings and times; the recipe row is only a copy of the latest.
+	const content = $derived(currentVersion ?? recipe);
+	const totalMinutes = $derived((content.prepTimeMinutes ?? 0) + (content.cookTimeMinutes ?? 0));
 </script>
 
 <article class="min-h-screen">
@@ -50,11 +52,11 @@
 					<div class="recipe-photo">
 						<img
 							src={recipe.imageUrl}
-							alt={recipe.title}
+							alt={content.title}
 							class="border-border-2 [aspect-ratio:4/3] w-full rounded-lg border object-cover" />
 					</div>
 				{/if}
-				<Details {recipe} />
+				<Details {content} />
 				<RecipeActions
 					{recipe}
 					{canFork}

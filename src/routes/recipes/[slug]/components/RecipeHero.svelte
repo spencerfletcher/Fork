@@ -20,6 +20,11 @@
 		tags: Tag[];
 		totalMinutes: number;
 	} = $props();
+
+	// The viewed version owns the content; the recipe row only carries a copy of
+	// the latest, which is wrong for a historical version.
+	const title = $derived(currentVersion?.title ?? recipe.title);
+	const servings = $derived(currentVersion?.servings ?? recipe.servings);
 </script>
 
 <header class="bg-hero-bg box-border w-full">
@@ -44,7 +49,7 @@
 				</a>
 				<span class="opacity-50">/</span>
 			{/if}
-			<span class="text-text-tan">{recipe.title}</span>
+			<span class="text-text-tan">{title}</span>
 		</nav>
 
 		<!-- Title + version -->
@@ -53,7 +58,7 @@
 			<h1
 				class="text-text-cream m-0 font-serif leading-[1.05] font-bold tracking-[-0.02em]"
 				style="font-size: clamp(1.9rem, 4vw, 3.2rem)">
-				{recipe.title}
+				{title}
 			</h1>
 			{#if currentVersion}
 				<span class="text-accent shrink-0 font-mono text-[1.8rem] font-medium">
@@ -85,8 +90,8 @@
 			{#if totalMinutes > 0}
 				<span class="text-text-bronze font-mono text-[0.85rem]">{formatTime(totalMinutes)}</span>
 			{/if}
-			{#if recipe.servings}
-				<span class="text-text-bronze text-[0.9rem]">Serves {recipe.servings}</span>
+			{#if servings}
+				<span class="text-text-bronze text-[0.9rem]">Serves {servings}</span>
 			{/if}
 		</div>
 	</div>

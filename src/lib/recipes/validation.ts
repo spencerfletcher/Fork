@@ -48,12 +48,6 @@ const recipeContentSchema = z.object({
 	...textSchema.shape
 });
 
-const metaSchema = recipeContentSchema
-	.omit({ ingredients: true, steps: true })
-	.extend({ isPublic: z.boolean(), tagNames: z.array(z.string()) });
-
-export type RecipeMeta = z.output<typeof metaSchema>;
-
 /** What a parser hands back: the typed value, or the first message to show the user. */
 export type Result<T> = { ok: true; value: T } | { ok: false; error: string };
 
@@ -88,29 +82,6 @@ function parse<T>(schema: z.ZodType<T>, input: unknown): Result<T> {
 	return result.success
 		? { ok: true, value: result.data }
 		: { ok: false, error: result.error.issues[0].message };
-}
-
-/** Recipe metadata (the in-place-edited `recipes` row), from a submitted form. */
-export function parseRecipeMeta(formData: FormData): Result<RecipeMeta> {
-	return parse(metaSchema, {
-		title: text(formData, 'title'),
-		description: text(formData, 'description'),
-		servings: text(formData, 'servings'),
-		prepTimeMinutes: text(formData, 'prepTimeMinutes'),
-		cookTimeMinutes: text(formData, 'cookTimeMinutes'),
-		isPublic: formData.get('isPublic') === 'on',
-		tagNames: tagsOf(formData)
-	});
-}
-
-/** Versioned recipe content (ingredients and steps), from text fields in a submitted form. */
-export function parseRecipeContent(
-	formData: FormData
-): Result<Pick<RecipeContent, 'ingredients' | 'steps'>> {
-	return parse(textSchema, {
-		ingredients: text(formData, 'ingredients'),
-		steps: text(formData, 'steps')
-	});
 }
 
 export function parseContent(formData: FormData): Result<RecipeContent> {
