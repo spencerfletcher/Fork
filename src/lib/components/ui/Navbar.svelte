@@ -15,6 +15,20 @@
 	function closeMenu() {
 		isMenuOpen = false;
 	}
+
+	// One list for both menus. Recipes is "active" anywhere under it except the
+	// new-recipe page, which has its own control.
+	const links = $derived([
+		{ href: '/search', label: 'Search', active: page.url.pathname === '/search' },
+		{
+			href: '/recipes',
+			label: 'Recipes',
+			active: page.url.pathname.startsWith('/recipes') && page.url.pathname !== '/recipes/new'
+		},
+		...(user
+			? [{ href: '/favorites', label: 'Favorites', active: page.url.pathname === '/favorites' }]
+			: [])
+	]);
 </script>
 
 <nav class="bg-navbar-bg relative z-50 px-5">
@@ -26,30 +40,11 @@
 				<span class="text-accent">.</span>
 			</a>
 			<ul class="navbar-links m-0 hidden list-none gap-6 p-0 md:flex">
-				<li>
-					<a href="/search" class="navbar-link" class:active={page.url.pathname === '/search'}>
-						Search
-					</a>
-				</li>
-				<li>
-					<a
-						href="/recipes"
-						class="navbar-link"
-						class:active={page.url.pathname.startsWith('/recipes') &&
-							page.url.pathname !== '/recipes/new'}>
-						Recipes
-					</a>
-				</li>
-				{#if user}
+				{#each links as link (link.href)}
 					<li>
-						<a
-							href="/favorites"
-							class="navbar-link"
-							class:active={page.url.pathname === '/favorites'}>
-							Favorites
-						</a>
+						<a href={link.href} class="navbar-link" class:active={link.active}>{link.label}</a>
 					</li>
-				{/if}
+				{/each}
 			</ul>
 		</div>
 
@@ -125,18 +120,14 @@
 			class="bg-navbar-bg absolute top-full right-0 left-0 z-[100] border-b border-white/[0.08]"
 			id="mobile-menu">
 			<ul class="m-0 list-none p-2">
-				<li><a href="/search" onclick={closeMenu} class="mobile-link">Search</a></li>
 				{#if user}
 					<li>
 						<a href="/recipes/new" onclick={closeMenu} class="mobile-link">New Recipe</a>
 					</li>
 				{/if}
-				<li>
-					<a href="/recipes" onclick={closeMenu} class="mobile-link">Recipes</a>
-				</li>
-				{#if user}
-					<li><a href="/favorites" onclick={closeMenu} class="mobile-link">Favorites</a></li>
-				{/if}
+				{#each links as link (link.href)}
+					<li><a href={link.href} onclick={closeMenu} class="mobile-link">{link.label}</a></li>
+				{/each}
 			</ul>
 			<div class="border-t border-white/[0.08] px-2 py-4">
 				{#if user}
