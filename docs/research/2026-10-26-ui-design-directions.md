@@ -145,6 +145,19 @@ Spencer picked C. Six accents on the same paper, ink, type and diff tints, light
 | 5 | Bay leaf | `#2f5d3a` (6.9) | `#86d187` (10.1) | Accent is the diff's "added" green; one colour fewer |
 | 6 | Squid ink | `#141210` | `#ece7de` | No accent: ink buttons, underlined links, the diff is the only colour |
 
+### Warm pops, after the cookbooks (2026-10-27)
+
+Spencer's shelf (The Food Lab, Salt Fat Acid Heat, Smuggler's Cove) agrees on one model: paper, black or brown-black text, and the title carrying the single warm colour. Four more boards on the same canvas follow that model; each borrows its display treatment from one book.
+
+| # | Name | Light | Dark | Display | After |
+| --- | --- | --- | --- | --- | --- |
+| 7 | Burnt orange | `#a84a0c` (5.2) | `#ff9a4d` (8.8) | Letterspaced serif caps, rust subtitle line | The Food Lab |
+| 8 | Terracotta | `#b2432c` (5.1) | `#ff8f73` (8.3) | Zilla Slab 600, dotted rule | Salt Fat Acid Heat |
+| 9 | Bronze | `#7a5a2a` (5.7) | `#d9b57a` (9.6) | Wide bold sans caps, small-cap labels with italic serif values, bold quantities | Smuggler's Cove |
+| 10 | Marigold highlighter | `#e8a83a` as fill only, ink text on it (9.0) | `#f0b650` (10.2) | Newsreader; the amber sits under the version number, on the fork button and as the link underline, never as text | Today's amber, kept honest |
+
+Terracotta is the one warm hue near the diff's "removed" tint; it works because the title is the only large terracotta element and the diff tints are pale. Burnt orange and bronze are clear of both diff colours.
+
 ## Typography options, independent of palette
 
 | Pairing | Titles | UI and meta | Reading | Fit |
