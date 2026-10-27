@@ -13,7 +13,7 @@ env:
   PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
   # The build imports the db module, which refuses to start without a URL; the
   # client connects lazily, so a placeholder is never dialled.
-  DATABASE_URL: postgresql://placeholder:placeholder@127.0.0.1:5432/placeholder
+  DATABASE_URL: postgresql://placeholder:placeholder@db.placeholder.invalid:5432/placeholder
 
 jobs:
   check:
