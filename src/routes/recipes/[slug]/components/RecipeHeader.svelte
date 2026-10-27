@@ -92,7 +92,7 @@
 			{#if totalMinutes > 0 || currentVersion.servings}<span class="text-text-3">·</span>{/if}
 			<span class="tags">
 				{#each tags as tag, i (tag.id)}
-					{#if i > 0}{', '}{/if}
+					{#if i > 0},&#32;{/if}
 					<a href="/tags/{tag.slug}" class="text-text-2 hover:text-text">{tag.name}</a>
 				{/each}
 			</span>

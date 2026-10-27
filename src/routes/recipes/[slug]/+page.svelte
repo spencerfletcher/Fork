@@ -18,6 +18,10 @@
 	const canFavorite = $derived(!!user && !isViewingHistory);
 
 	const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
+	const counts = $derived(
+		plural(allVersions.length, 'version') +
+			(data.forkCount > 0 ? ` · ${plural(data.forkCount, 'fork')}` : '')
+	);
 </script>
 
 <article class="min-h-screen">
@@ -45,10 +49,7 @@
 					{isOwner}
 					{isViewingHistory}
 					initialFavorited={data.isFavorited} />
-				<p class="recipe-counts text-text-3 m-0 font-mono text-[0.75rem]">
-					{plural(allVersions.length, 'version')}{#if data.forkCount > 0}
-						· {plural(data.forkCount, 'fork')}{/if}
-				</p>
+				<p class="recipe-counts text-text-3 m-0 font-mono text-[0.75rem]">{counts}</p>
 			</div>
 		</aside>
 

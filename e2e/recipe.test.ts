@@ -55,6 +55,8 @@ test.describe('Recipe detail page', () => {
 		const versionEntries = page.locator('.version-strip .version-entry');
 		await expect(versionEntries).toHaveCount(3);
 		await expect(page.locator('.version-strip')).toContainText('Initial recipe');
+		// The sidebar counts both, with a spaced separator.
+		await expect(page.locator('.recipe-counts')).toHaveText('3 versions · 1 fork');
 	});
 
 	test('"Brown Butter Chocolate Chip Cookies" shows fork attribution', async ({ page }) => {
