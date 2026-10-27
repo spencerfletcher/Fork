@@ -1,7 +1,7 @@
 import { error, redirect } from '@sveltejs/kit';
 import { db } from '#lib/server/db/index.js';
 import { recipes, recipeVersions, recipesToTags, favorites } from '#lib/server/db/schema.js';
-import { eq, desc, and } from 'drizzle-orm';
+import { eq, desc, and, count } from 'drizzle-orm';
 import { slugify, randomSuffix } from '#lib/helpers.js';
 import { ensureProfile } from '#lib/server/profiles.js';
 import { text } from '#lib/recipes/validation.js';
@@ -60,9 +60,18 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 		isFavorited = !!existing;
 	}
 
+	// Public forks only, the same rule attachRecipeCounts applies on the lists,
+	// so a private fork cannot inflate the count on a page anyone can read.
+	const forkRows = await db
+		.select({ count: count() })
+		.from(recipes)
+		.where(and(eq(recipes.parentId, recipe.id), eq(recipes.isPublic, true)));
+	const forkCount = Number(forkRows[0]?.count ?? 0);
+
 	return {
 		recipe: visibleRecipe,
 		currentVersion,
+		forkCount,
 		// Weights come from local tables at load time, so the page never pays for
 		// an external lookup; lines the tables do not know get null.
 		grams: currentVersion.ingredients.map(gramsFor),

@@ -307,9 +307,22 @@ function forkOf(parent: { isPublic: boolean; authorId: string }) {
 	};
 }
 
+// Column names referenced anywhere inside a Drizzle SQL fragment.
+function columnNames(node: unknown, out: string[] = []): string[] {
+	if (node && typeof node === 'object') {
+		if ('queryChunks' in node) {
+			for (const chunk of (node as { queryChunks: unknown[] }).queryChunks) columnNames(chunk, out);
+		} else if ('name' in node && 'table' in node) {
+			out.push((node as { name: string }).name);
+		}
+	}
+	return out;
+}
+
 async function loadData(user: { id: string; email: string } | null = null) {
 	return (await load(makeLoadEvent(user) as never)) as {
 		recipe: { parent: unknown; parentId: number | null };
+		forkCount: number;
 		currentVersion: { ingredients: unknown[] } | null;
 		grams: unknown[];
 		meta: { title: string; description: string; image: string };
@@ -321,6 +334,13 @@ describe('load: fork attribution', () => {
 		vi.clearAllMocks();
 		findFavoriteMock.mockResolvedValue(undefined);
 		selectMock.mockReturnValue(chain([{ value: 0 }]));
+	});
+
+	test('counts public forks of the recipe', async () => {
+		findRecipeMock.mockResolvedValue(forkOf({ isPublic: true, authorId: 'original-author' }));
+		selectMock.mockReturnValue(chain([{ count: 2 }]));
+		const data = await loadData();
+		expect(data.forkCount).toBe(2);
 	});
 
 	test('includes a public parent', async () => {
@@ -374,10 +394,13 @@ describe('load: fork attribution', () => {
 		expect(data.grams).toHaveLength(data.currentVersion?.ingredients.length ?? -1);
 	});
 
-	test("does not return a fork count, which would reveal other users' private forks", async () => {
+	test('counts only public forks, so private forks stay invisible', async () => {
 		findRecipeMock.mockResolvedValue(forkOf({ isPublic: true, authorId: 'original-author' }));
-		const data = await loadData();
-		expect(data).not.toHaveProperty('forkCount');
-		expect(selectMock).not.toHaveBeenCalled();
+		const countQuery = chain([{ count: 1 }]);
+		selectMock.mockReturnValue(countQuery);
+		await loadData();
+		// The where clause must name is_public: a count of every fork would reveal
+		// private forks by number.
+		expect(columnNames(countQuery.where.mock.calls[0][0])).toContain('is_public');
 	});
 });
