@@ -9,8 +9,8 @@
 
 /* ── Design token registration ────────────────────────────────────────────────
    @theme inline: generates Tailwind utilities (bg-accent, text-text-2, etc.)
-   that reference our CSS custom properties. Dark mode works automatically
-   because [data-theme='dark'] overrides the underlying CSS vars at runtime.
+   that reference our CSS custom properties. Dark mode is deferred; the dark
+   set is recorded in docs/research/2026-10-26-ui-design-directions.md.
 ────────────────────────────────────────────────────────────────────────────── */
 @theme inline {
 	/* Backgrounds */
@@ -32,6 +32,9 @@
 	--color-accent: var(--color-accent);
 	--color-accent-mid: var(--color-accent-mid);
 	--color-accent-pale: var(--color-accent-pale);
+	--color-marigold: var(--color-marigold);
+	--color-marigold-hover: var(--color-marigold-hover);
+	--color-tint: var(--color-tint);
 
 	/* Named accents */
 	--color-sienna: var(--color-sienna);
@@ -45,6 +48,7 @@
 	/* Borders */
 	--color-border: var(--color-border);
 	--color-border-2: var(--color-border-2);
+	--color-input-border: var(--color-input-border);
 
 	/* Diff */
 	--color-add: var(--color-add);
@@ -82,83 +86,74 @@
 
 :root {
 	/* Backgrounds */
-	--color-bg: #faf4e8;
-	/* warm cream — page background */
-	--color-surface: #ffffff;
-	/* white — sidebar cards, dialogs */
-	--color-surface-2: #faf4e8;
-	/* cream — stat tiles inside cards */
+	--color-bg: #f7f3ec;
+	/* paper — page background */
+	--color-surface: #fffdf9;
+	/* lifted paper — cards, inputs, dialogs */
+	--color-surface-2: #f7f3ec;
+	/* paper — stat tiles inside cards */
+	--color-navbar-bg: #1a1408;
+	/* espresso — the navbar, the one dark surface */
 	--color-hero-bg: #1a1408;
-	/* deep espresso — recipe hero */
-	--color-navbar-bg: #2e1f0f;
-	/* mid espresso — navbar (subtly lighter) */
+	/* alias of the navbar until the recipe hero is rebuilt on paper */
+	--color-tint: #f5e9e0;
+	/* clay tint — no-photo panels, hover fills */
 
 	/* Text on light backgrounds */
-	--color-text: #1a1408;
-	/* espresso body text */
-	--color-text-2: #6b5a3a;
-	/* dark bronze — secondary labels */
-	--color-text-3: #8b7355;
-	/* mid brown — muted labels, italic notes */
+	--color-text: #1a1714;
+	/* ink */
+	--color-text-2: #4a443e;
+	/* ink-2 — secondary copy */
+	--color-text-3: #6f6960;
+	/* ink-3 — muted labels, grams, timestamps (4.9:1 on paper) */
 
-	/* Text on dark backgrounds */
-	--color-text-cream: #faf4e8;
-	/* hero title, nav brand */
+	/* Text on the espresso navbar */
+	--color-text-cream: #f7f3ec;
 	--color-text-tan: #b8a880;
-	/* nav links */
-	--color-text-bronze: #8b7a5a;
-	/* breadcrumb user, meta */
+	--color-text-bronze: #b8a880;
 
-	/* Accent — saffron gold (interactive / structural) */
-	--color-accent: #e8a83a;
-	--color-accent-mid: #c8961e;
-	--color-accent-pale: #fdf0d0;
+	/* Accent — clay is the only text accent: links, titles, version numbers.
+	   Marigold is the only fill, always with ink on it. Nothing else is coloured. */
+	--color-accent: #a4512b;
+	--color-accent-mid: #1a1714;
+	/* clay's hover is ink */
+	--color-accent-pale: #f5e9e0;
+	/* alias of the tint */
+	--color-marigold: #e8a83a;
+	--color-marigold-hover: #d99a2c;
 
-	/* Named accents with distinct jobs */
-	--color-sienna: #a84a28;
-	/* burnt sienna — ingredient quantities */
-	--color-paprika: #c45a38;
-	/* paprika — warning annotations on recipe steps (RecipeMethod) */
+	/* Aliases kept so pages compile until their own redesign step */
+	--color-sienna: #1a1714;
+	--color-paprika: #922d23;
 
-	/* Tag system — quiet by default. Amber is reserved for actions and versions. */
-	--color-tag: #6b5a3a;
-	--color-tag-border: #ddd0b4;
-	--color-tag-hover-bg: #f3ead6;
+	/* Tags */
+	--color-tag: #4a443e;
+	--color-tag-border: #d9d3c8;
+	--color-tag-hover-bg: #f5e9e0;
 
-	/* Borders / surfaces */
-	--color-border: #eee4d0;
-	/* pale linen — ingredient / step dividers */
-	--color-border-2: #e0d0b0;
-	/* warm sand — sidebar card borders */
+	/* Borders */
+	--color-border: #e4ded4;
+	/* rule — ingredient and step dividers */
+	--color-border-2: #d9d3c8;
+	--color-input-border: #d9d3c8;
 
-	/* Semantic diff colors */
-	/* WCAG AA (4.5:1) against their actual backgrounds. --color-remove is darkened
-	   past its raw contrast against --color-remove-bg because removed diff rows
-	   also carry opacity-85 (VersionDiff.svelte), which blends the text toward
-	   --color-bg and lowers the effective ratio — see e2e/recipe.test.ts. */
-	--color-add: #205c22;
-	--color-remove: #8a3020;
-	--color-add-bg: #eaf4e2;
-	--color-remove-bg: #fae8e0;
-	/* Additions and removals now carry matching weight: --color-add is 7.09:1 on
-	   --color-add-bg, --color-remove is 7.01:1 on --color-remove-bg. --color-add-bg
-	   was previously transparent, so only removals were tinted and additions read
-	   as the weaker half of the pair.
-
-	   The dark block below overrides all four. Verified data-theme is never
-	   set anywhere in the app (only referenced in this file's own override
-	   blocks), so dark mode is unreachable today — but if it is ever wired up,
-	   its add/remove values are already checked against its own
-	   backgrounds. */
+	/* Semantic diff colors, AA against their own backgrounds. --color-remove is
+	   darker than the design's #a3362b because removed diff rows render at
+	   opacity 0.85 (VersionDiff.svelte), which blends the text toward --color-bg:
+	   #a3362b lands at 4.15:1 blended, #922d23 at 4.79:1 — see e2e/recipe.test.ts. */
+	--color-add: #2f6b37;
+	--color-remove: #922d23;
+	--color-add-bg: #e6f0e3;
+	--color-remove-bg: #f6e3e0;
 
 	/* Elevation */
-	--shadow-card: 0 1px 3px rgba(26, 20, 8, 0.08), 0 1px 2px rgba(26, 20, 8, 0.05);
-	--shadow-raised: 0 4px 16px rgba(26, 20, 8, 0.12);
+	--shadow-card: 0 1px 3px rgba(26, 23, 20, 0.08), 0 1px 2px rgba(26, 23, 20, 0.05);
+	--shadow-raised: 0 4px 16px rgba(26, 23, 20, 0.12);
 
 	/* Typography */
-	--font-serif: 'Lora', Georgia, serif;
-	--font-sans: 'Instrument Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-	--font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+	--font-serif: 'Bitter', Georgia, serif;
+	--font-sans: 'Source Sans 3', -apple-system, BlinkMacSystemFont, sans-serif;
+	--font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 
 	/* Spacing (8px base unit) */
 	--space-1: 4px;
@@ -172,44 +167,12 @@
 
 	/* Border radius */
 	--radius-sm: 4px;
-	--radius-md: 8px;
-	--radius-lg: 12px;
+	--radius-md: 6px;
+	--radius-lg: 8px;
 	--radius-pill: 100px;
 
 	/* Layout */
 	--max-width: 1200px;
-}
-
-[data-theme='dark'] {
-	--color-bg: #1a1408;
-	--color-surface: #2a1e10;
-	--color-surface-2: #221808;
-	--color-hero-bg: #0e0c06;
-	--color-navbar-bg: #1a1408;
-	--color-text: #faf4e8;
-	--color-text-2: #c8b890;
-	--color-text-3: #8b7a5a;
-	--color-text-cream: #faf4e8;
-	--color-text-tan: #b8a880;
-	--color-text-bronze: #8b7a5a;
-	--color-accent: #e8a83a;
-	--color-accent-mid: #c8961e;
-	--color-accent-pale: #3a2a08;
-	--color-sienna: #c45a38;
-	--color-paprika: #e06040;
-	--color-tag: #b8a880;
-	--color-tag-border: #4a3a20;
-	--color-tag-hover-bg: #3a2a08;
-	--color-border: #38281a;
-	--color-border-2: #4a3820;
-	/* Dark mode needs its own add/remove text, not just its own backgrounds:
-	   the light values land at 2.97:1 and 2.01:1 against these panels. */
-	--color-add: #86d187;
-	--color-remove: #f0a08e;
-	--color-add-bg: #1e2a14;
-	--color-remove-bg: #2e1810;
-	--shadow-card: 0 1px 3px rgba(0, 0, 0, 0.4);
-	--shadow-raised: 0 4px 16px rgba(0, 0, 0, 0.5);
 }
 
 @layer base {
@@ -225,13 +188,14 @@
 		font-family: var(--font-sans);
 		font-size: 16px;
 		line-height: 1.65;
+		font-variant-numeric: tabular-nums;
 		-webkit-font-smoothing: antialiased;
 	}
 
 	h1 {
 		font-family: var(--font-serif);
 		font-size: 2.5rem;
-		font-weight: 600;
+		font-weight: 500;
 		line-height: 1.15;
 		color: var(--color-text);
 	}
@@ -239,7 +203,7 @@
 	h2 {
 		font-family: var(--font-serif);
 		font-size: 1.75rem;
-		font-weight: 400;
+		font-weight: 500;
 		line-height: 1.25;
 		color: var(--color-text);
 	}
@@ -254,11 +218,11 @@
 
 	h4 {
 		font-family: var(--font-sans);
-		font-size: 0.875rem;
+		font-size: 0.6875rem;
 		font-weight: 600;
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
-		color: var(--color-text-2);
+		color: var(--color-text-3);
 	}
 
 	a {
@@ -267,7 +231,14 @@
 	}
 
 	a:hover {
-		color: var(--color-accent-mid);
+		color: var(--color-text);
+	}
+
+	/* One focus ring everywhere: the browser decides when :focus-visible
+	   applies, nothing hides it after a click. The navbar swaps the colour. */
+	:focus-visible {
+		outline: 2px solid var(--color-accent);
+		outline-offset: 2px;
 	}
 
 	button,
@@ -281,7 +252,7 @@
 	textarea,
 	select {
 		background: var(--color-surface);
-		border: 1.5px solid var(--color-border);
+		border: 1px solid var(--color-input-border);
 		border-radius: var(--radius-md);
 		color: var(--color-text);
 		font-family: var(--font-sans);
@@ -289,13 +260,6 @@
 		padding: 8px 12px;
 		width: 100%;
 		box-sizing: border-box;
-	}
-
-	input:focus,
-	textarea:focus,
-	select:focus {
-		outline: 2px solid var(--color-accent-pale);
-		border-color: var(--color-border-2);
 	}
 }
 
@@ -305,12 +269,12 @@
 	.btn-primary {
 		font-family: var(--font-sans);
 		font-weight: 600;
-		font-size: 0.9rem;
-		background: var(--color-accent);
-		color: var(--color-hero-bg);
+		font-size: 0.9375rem;
+		background: var(--color-marigold);
+		color: var(--color-text);
 		border: none;
-		border-radius: var(--radius-pill);
-		padding: 10px 20px;
+		border-radius: var(--radius-md);
+		padding: 12px 16px;
 		cursor: pointer;
 		/* Darken on hover rather than fade. An opacity transition washes the button
 		   toward whatever is behind it, which reads as the control going inactive. */
@@ -320,19 +284,19 @@
 	}
 
 	.btn-primary:hover {
-		background: var(--color-accent-mid);
-		color: var(--color-hero-bg);
+		background: var(--color-marigold-hover);
+		color: var(--color-text);
 	}
 
 	.btn-ghost {
 		font-family: var(--font-sans);
 		font-weight: 500;
-		font-size: 0.9rem;
+		font-size: 0.9375rem;
 		background: transparent;
-		color: var(--color-accent);
-		border: 1.5px solid var(--color-accent);
+		color: var(--color-text);
+		border: 1px solid var(--color-text);
 		border-radius: var(--radius-md);
-		padding: 9px 18px;
+		padding: 11px 16px;
 		cursor: pointer;
 		transition: background 0.15s ease;
 		display: inline-block;
@@ -340,7 +304,7 @@
 	}
 
 	.btn-ghost:hover {
-		background: var(--color-accent-pale);
+		background: var(--color-tint);
 	}
 
 	/* ── Page layout ── */
@@ -366,19 +330,19 @@
 
 	.recipe-grid {
 		display: grid;
-		grid-template-columns: 1fr;
-		gap: var(--space-6);
+		grid-template-columns: repeat(2, 1fr);
+		gap: var(--space-5);
 	}
 
-	@media (min-width: 640px) {
+	@media (min-width: 700px) {
 		.recipe-grid {
-			grid-template-columns: repeat(2, 1fr);
+			grid-template-columns: repeat(3, 1fr);
 		}
 	}
 
-	@media (min-width: 1024px) {
+	@media (min-width: 1100px) {
 		.recipe-grid {
-			grid-template-columns: repeat(3, 1fr);
+			grid-template-columns: repeat(4, 1fr);
 		}
 	}
 
@@ -425,7 +389,7 @@
 	}
 
 	.back-link:hover {
-		color: var(--color-accent);
+		color: var(--color-text);
 	}
 
 	/* ── Form / editor shared styles ── */
@@ -630,9 +594,9 @@
 
 	.eyebrow-label {
 		font-family: var(--font-sans);
-		font-size: 0.65rem;
-		font-weight: 700;
-		letter-spacing: 0.11em;
+		font-size: 0.6875rem;
+		font-weight: 600;
+		letter-spacing: 0.08em;
 		text-transform: uppercase;
 		color: var(--color-text-3);
 		margin: 0;
@@ -656,7 +620,7 @@
 	.dialog-title {
 		font-family: var(--font-serif);
 		font-size: 1.4rem;
-		font-weight: 600;
+		font-weight: 500;
 		color: var(--color-text);
 		margin: 0 0 var(--space-3);
 	}

@@ -38,7 +38,7 @@
 			<div
 				class="text-text-tan flex flex-wrap items-center justify-between gap-3 rounded-md border border-white/[0.12] bg-white/[0.08] px-4 py-3 font-mono text-[0.8rem]">
 				Viewing v{currentVersion.versionNumber}: "{currentVersion.commitMessage}"
-				<a href="/recipes/{recipe.slug}" class="text-accent">Current version →</a>
+				<a href="/recipes/{recipe.slug}" class="text-marigold">Current version →</a>
 			</div>
 		{/if}
 
@@ -65,7 +65,7 @@
 				style="font-size: clamp(1.9rem, 4vw, 3.2rem)">
 				{currentVersion.title}
 			</h1>
-			<span class="text-accent shrink-0 font-mono text-[1.8rem] font-medium">
+			<span class="text-marigold shrink-0 font-mono text-[1.8rem] font-medium">
 				v{currentVersion.versionNumber}
 			</span>
 		</div>
@@ -74,7 +74,7 @@
 		{#if recipe.parent}
 			<p class="text-text-bronze m-0 -mt-4 font-serif text-[0.9rem] italic">
 				Forked from
-				<a href="/recipes/{recipe.parent.slug}" class="text-accent">{recipe.parent.title}</a>
+				<a href="/recipes/{recipe.parent.slug}" class="text-marigold">{recipe.parent.title}</a>
 				{#if recipe.parent.author}by @{recipe.parent.author.username}{/if}
 			</p>
 		{:else if recipe.parentId}
