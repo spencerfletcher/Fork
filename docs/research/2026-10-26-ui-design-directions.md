@@ -195,6 +195,25 @@ The reviewer ranked fired clay first across every board, verdigris second, the o
 
 The one choice still open is the heading face: slab (sturdy, approachable) or Newsreader (lighter, editorial). Both are on a full recipe page with the seed photo and the same Source Sans 3 body at https://claude.ai/artifact/AEmVrLZ9AF5znQNEYZja5S. Spencer leans slab (Bitter 600); Newsreader stays in the running until the redesign spec, where the choice is made on the real pages.
 
+### Eight templates on one token table (2026-10-27)
+
+The reviewer's second pass proposed one table (paper `#F7F3EC`, ink `#1A1714`, clay `#A4512B` as the text accent, marigold `#E8A83A` as the only fill with ink on it, add `#2F6B37`/`#E6F0E3`, remove `#A3362B`/`#F6E3E0`, dark set as listed there) and eight templates on it. Two values failed AA and are corrected: ink-3 `#7A736B` (4.2) becomes `#6F6960` (4.9); Oxblood's red-orange remove `#C24A1E` (4.0) becomes `#A8401A` (5.0). All eight are mocked as compact recipe pages, light mode, same photo, at https://claude.ai/artifact/FyvrNogKSkXR5RK253pDyb.
+
+| # | Template | What changes |
+| --- | --- | --- |
+| 1 | Fired clay | Clay is the only accent, including the fork button |
+| 2 | Clay + marigold (reviewer's pick) | Clay for text you can act on; marigold fill on the fork button and the current-version chip |
+| 3 | Marigold highlighter | Ink everywhere; marigold only as a fill and a 3px link underline |
+| 4 | Saffron ink | Template 1 with `#8A6914` |
+| 5 | Warm kitchen, tuned | Template 2 plus the espresso hero: title in paper, version number in marigold |
+| 6 | Bronze label system | Template 2 plus Smuggler's Cove's label grammar: letterspaced small-cap labels, Bitter italic values, bold quantities. A component, not a palette |
+| 7 | Enamel | Chalk paper, charcoal ink, enamel blue `#2F4F8F` text accent, marigold fill |
+| 8 | Oxblood | Deep cherry `#7A2E3B` text accent, marigold fill, remove tint shifted to red-orange |
+
+Held against the reviewer's spec: the monospace rule is Spencer's (breadcrumb, version numbers, strip, step numbers, history counts stay mono; the reviewer had mono in the diff only), and the espresso nav bar is kept in every board as they specified but is the thing to test both ways, since every food reference is a light page.
+
+Structural ideas worth carrying into the roadmap from the same pass: sticky ingredient column (Mob), serving stepper that re-renders quantities in place (NYT), the latest commit message as the "why it works" slot above the recipe (Serious Eats), per-step ingredient highlighting in cook mode (Mela; nearly free from parsed `Ingredient.name`), a kitchen-mode type toggle (Readwise), and a fixed-aspect no-photo state (a clay-tinted panel with the title in the slab).
+
 ## Typography options, independent of palette
 
 | Pairing | Titles | UI and meta | Reading | Fit |
