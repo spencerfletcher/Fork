@@ -1,23 +1,24 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { actions, load } from './+page.server';
-import { makeIngredient } from '#lib/recipes/fixtures.js';
+import { makeIngredient, makeStep, makeContent } from '#lib/recipes/fixtures.js';
 
 // ─── Hoisted mocks ────────────────────────────────────────────────────────────
 
-const { findRecipeMock, findFavoriteMock, selectMock, dbInsert, transactionMock } = vi.hoisted(
-	() => ({
-		findRecipeMock: vi.fn(),
-		findFavoriteMock: vi.fn(),
-		selectMock: vi.fn(),
-		// db.insert is called at the top level (profile upsert) before the transaction
-		dbInsert: vi.fn().mockReturnValue({
-			values: vi.fn().mockReturnValue({
-				onConflictDoNothing: vi.fn().mockResolvedValue(undefined)
-			})
-		}),
-		transactionMock: vi.fn()
-	})
-);
+const {
+	findRecipeMock,
+	findFavoriteMock,
+	selectMock,
+	dbInsert,
+	transactionMock,
+	ensureProfileMock
+} = vi.hoisted(() => ({
+	findRecipeMock: vi.fn(),
+	findFavoriteMock: vi.fn(),
+	selectMock: vi.fn(),
+	dbInsert: vi.fn(),
+	transactionMock: vi.fn(),
+	ensureProfileMock: vi.fn().mockResolvedValue(undefined)
+}));
 
 vi.mock('#lib/server/db/index.js', () => ({
 	db: {
@@ -30,6 +31,8 @@ vi.mock('#lib/server/db/index.js', () => ({
 		transaction: transactionMock
 	}
 }));
+
+vi.mock('#lib/server/profiles.js', () => ({ ensureProfile: ensureProfileMock }));
 
 // nanoid must be deterministic so we can predict slugs
 vi.mock('nanoid', () => ({ nanoid: vi.fn().mockReturnValue('abc123') }));
@@ -97,30 +100,35 @@ function makeEvent(opts: {
 const FORKER = { id: 'forker-id', email: 'forker@test.com' };
 
 /** A complete source recipe with one version and one tag. */
+// The recipe row's copies deliberately disagree with the latest version, so a
+// test can tell which one the fork read from. The version is the truth.
+const LATEST = makeContent({
+	title: 'Classic Cookies',
+	description: 'Good cookies',
+	servings: 24,
+	prepTimeMinutes: 20,
+	cookTimeMinutes: 12,
+	ingredients: [makeIngredient('2 cups flour')],
+	steps: [makeStep('Mix.')]
+});
+
 const SOURCE_RECIPE = {
 	id: 42,
 	authorId: 'original-author',
 	slug: 'classic-cookies',
-	title: 'Classic Cookies',
-	description: 'Good cookies',
-	imageUrl: null,
-	servings: 24,
-	prepTimeMinutes: 20,
-	cookTimeMinutes: 12,
+	title: 'STALE COPY',
+	description: 'stale',
+	imageUrl: 'https://img/cookies.png',
+	servings: 1,
+	prepTimeMinutes: 1,
+	cookTimeMinutes: 1,
 	isPublic: true,
 	parentId: null,
 	forkedAt: null,
 	createdAt: new Date(),
 	updatedAt: new Date(),
-	versions: [
-		{
-			id: 1,
-			versionNumber: 1,
-			commitMessage: 'Initial recipe',
-			ingredients: [makeIngredient('2 cups flour')],
-			steps: [{ text: 'Mix.' }]
-		}
-	],
+	editRevision: 3,
+	versions: [{ id: 1, versionNumber: 1, commitMessage: 'Initial recipe', ...LATEST }],
 	recipesToTags: [{ tagId: 7 }]
 };
 
@@ -146,7 +154,7 @@ describe('fork', () => {
 		expect(result.status).toBe(400);
 	});
 
-	test('upserts a profile for the forking user before the transaction', async () => {
+	test('ensures a profile for the forking user before the transaction', async () => {
 		findRecipeMock.mockResolvedValue(SOURCE_RECIPE);
 		const tx = makeTx({ newRecipeSlug: 'classic-cookies-abc123' });
 		transactionMock.mockImplementationOnce(
@@ -155,10 +163,10 @@ describe('fork', () => {
 
 		await invoke(actions.fork as never, makeEvent({ user: FORKER }));
 
-		expect(dbInsert).toHaveBeenCalled();
-		const profileValues = (dbInsert.mock.results[0].value.values as ReturnType<typeof vi.fn>).mock
-			.calls[0][0];
-		expect(profileValues.id).toBe(FORKER.id);
+		expect(ensureProfileMock).toHaveBeenCalledWith(FORKER);
+		expect(ensureProfileMock.mock.invocationCallOrder[0]).toBeLessThan(
+			transactionMock.mock.invocationCallOrder[0]
+		);
 	});
 
 	test('redirects to /edit of the new forked recipe on success', async () => {
@@ -190,10 +198,60 @@ describe('fork', () => {
 		const recipeValues = tx.insertChain.values.mock.calls[0][0];
 		expect(recipeValues.parentId).toBe(SOURCE_RECIPE.id);
 		expect(recipeValues.authorId).toBe(FORKER.id);
-		expect(recipeValues.title).toBe(SOURCE_RECIPE.title);
 	});
 
-	test('inserts version 1 copying ingredients and steps from source', async () => {
+	test('writes the five copies on the new recipe from the latest version, not the source row', async () => {
+		findRecipeMock.mockResolvedValue(SOURCE_RECIPE);
+		const tx = makeTx({ newRecipeSlug: 'classic-cookies-abc123' });
+		transactionMock.mockImplementationOnce(
+			async (cb: (tx: ReturnType<typeof makeTx>) => Promise<void>) => cb(tx)
+		);
+
+		await invoke(actions.fork as never, makeEvent({ user: FORKER }));
+
+		const recipeValues = tx.insertChain.values.mock.calls[0][0];
+		expect(recipeValues).toMatchObject({
+			title: 'Classic Cookies',
+			description: 'Good cookies',
+			servings: 24,
+			prepTimeMinutes: 20,
+			cookTimeMinutes: 12,
+			slug: 'classic-cookies-abc123'
+		});
+	});
+
+	test('takes image, visibility and tags from the source recipe, and nothing else from its row', async () => {
+		findRecipeMock.mockResolvedValue(SOURCE_RECIPE);
+		const tx = makeTx({ newRecipeId: 99, newRecipeSlug: 'classic-cookies-abc123' });
+		transactionMock.mockImplementationOnce(
+			async (cb: (tx: ReturnType<typeof makeTx>) => Promise<void>) => cb(tx)
+		);
+
+		await invoke(actions.fork as never, makeEvent({ user: FORKER }));
+
+		const recipeValues = tx.insertChain.values.mock.calls[0][0];
+		expect(recipeValues.imageUrl).toBe('https://img/cookies.png');
+		expect(recipeValues.isPublic).toBe(true);
+		expect(recipeValues).not.toHaveProperty('id');
+		expect(recipeValues).not.toHaveProperty('editRevision');
+		expect(recipeValues).not.toHaveProperty('createdAt');
+		expect(tx.insertChain.values.mock.calls[1][0]).toEqual([{ recipeId: 99, tagId: 7 }]);
+	});
+
+	test('does not modify the source recipe', async () => {
+		findRecipeMock.mockResolvedValue(SOURCE_RECIPE);
+		const tx = makeTx();
+		transactionMock.mockImplementationOnce(
+			async (cb: (tx: ReturnType<typeof makeTx>) => Promise<void>) => cb(tx)
+		);
+
+		await invoke(actions.fork as never, makeEvent({ user: FORKER }));
+
+		expect(tx.update).not.toHaveBeenCalled();
+		expect(tx.delete).not.toHaveBeenCalled();
+	});
+
+	test('inserts version 1 as the complete latest content of the source', async () => {
 		findRecipeMock.mockResolvedValue(SOURCE_RECIPE);
 		const tx = makeTx({ newRecipeId: 99, newRecipeSlug: 'classic-cookies-abc123' });
 		transactionMock.mockImplementationOnce(
@@ -207,11 +265,15 @@ describe('fork', () => {
 
 		// Third tx.insert call is recipeVersions (after recipes + recipesToTags)
 		const versionValues = tx.insertChain.values.mock.calls[2][0];
-		expect(versionValues.versionNumber).toBe(1);
-		expect(versionValues.commitMessage).toBe('My fork');
-		expect(versionValues.ingredients).toEqual(SOURCE_RECIPE.versions[0].ingredients);
-		expect(versionValues.steps).toEqual(SOURCE_RECIPE.versions[0].steps);
-		expect(versionValues.createdBy).toBe(FORKER.id);
+		expect(versionValues).toMatchObject({
+			recipeId: 99,
+			versionNumber: 1,
+			commitMessage: 'My fork',
+			createdBy: FORKER.id,
+			...LATEST
+		});
+		expect(versionValues).not.toHaveProperty('id');
+		expect(versionValues).not.toHaveProperty('createdAt');
 	});
 
 	test('copies tags from the source recipe', async () => {
