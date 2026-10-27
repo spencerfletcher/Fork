@@ -11,6 +11,7 @@ describe('Details', () => {
 		expect(screen.getByText('6')).toBeInTheDocument();
 		expect(screen.getByText('15 min')).toBeInTheDocument();
 		expect(screen.getByText('45 min')).toBeInTheDocument();
+		expect(screen.queryByRole('heading')).toBeNull();
 	});
 
 	test('renders nothing when there is nothing to show', () => {

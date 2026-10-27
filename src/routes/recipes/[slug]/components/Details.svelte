@@ -18,15 +18,15 @@
 </script>
 
 {#if rows.length > 0}
-	<div class="border-border-2 bg-surface rounded-lg border p-5">
-		<h4 class="eyebrow-label mb-4">Details</h4>
-		<dl class="m-0 flex flex-col gap-3 p-0">
-			{#each rows as [label, value] (label)}
-				<div class="flex items-baseline justify-between gap-3">
-					<dt class="text-text-3 font-sans text-[0.75rem] font-medium">{label}</dt>
-					<dd class="text-text m-0 font-mono text-[0.85rem] font-medium">{value}</dd>
-				</div>
-			{/each}
-		</dl>
-	</div>
+	<dl class="details m-0 flex flex-col p-0">
+		{#each rows as [label, value] (label)}
+			<div
+				class="border-border flex items-baseline justify-between gap-3 border-t py-[7px] last:border-b">
+				<dt class="text-text-3 text-[0.625rem] font-semibold tracking-[0.08em] uppercase">
+					{label}
+				</dt>
+				<dd class="text-text m-0 font-sans text-base font-semibold">{value}</dd>
+			</div>
+		{/each}
+	</dl>
 {/if}

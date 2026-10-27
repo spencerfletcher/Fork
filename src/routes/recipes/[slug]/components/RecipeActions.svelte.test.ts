@@ -23,7 +23,7 @@ function makeProps(overrides: Record<string, unknown> = {}) {
 describe('RecipeActions save button', () => {
 	test('reflects the initial favourite state', () => {
 		render(RecipeActions, { props: makeProps({ initialFavorited: true }) });
-		expect(screen.getByRole('button', { name: 'Unsave' })).toHaveTextContent('Saved');
+		expect(screen.getByRole('button', { name: 'Unfavorite' })).toHaveTextContent('Favorited');
 	});
 
 	test('follows the prop when the page moves to a recipe with a different state', async () => {
@@ -35,6 +35,6 @@ describe('RecipeActions save button', () => {
 			makeProps({ recipe: { slug: 'original', title: 'Original' }, initialFavorited: false })
 		);
 
-		expect(screen.getByRole('button', { name: 'Save' })).toHaveTextContent('Save recipe');
+		expect(screen.getByRole('button', { name: 'Favorite' })).toHaveTextContent('Favorite');
 	});
 });

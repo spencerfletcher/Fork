@@ -26,7 +26,7 @@
 </script>
 
 {#if canFavorite || canFork || (isOwner && !isViewingHistory)}
-	<div class="flex flex-col gap-2">
+	<div class="actions flex flex-col gap-2">
 		{#if canFavorite}
 			<form
 				method="POST"
@@ -37,8 +37,8 @@
 				}}>
 				<button
 					type="submit"
-					class="rounded-pill border-accent text-accent hover:bg-accent-pale flex w-full cursor-pointer items-center justify-center gap-2 border-[1.5px] bg-transparent px-4 py-3 text-center font-sans text-[0.9rem] font-semibold no-underline transition-colors duration-150"
-					aria-label={isFavorited ? 'Unsave' : 'Save'}>
+					class="btn-ghost flex w-full items-center justify-center gap-2 no-underline"
+					aria-label={isFavorited ? 'Unfavorite' : 'Favorite'}>
 					<svg
 						class="size-4 transition-[fill] duration-150"
 						class:fill-accent={isFavorited}
@@ -53,7 +53,7 @@
 							stroke-linejoin="round"
 							d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
 					</svg>
-					{isFavorited ? 'Saved' : 'Save recipe'}
+					{isFavorited ? 'Favorited' : 'Favorite'}
 				</button>
 			</form>
 		{/if}
@@ -104,7 +104,7 @@
 		{#if isOwner && !isViewingHistory}
 			<a
 				href="/recipes/{recipe.slug}/edit"
-				class="rounded-pill border-accent text-accent hover:bg-accent-pale flex w-full cursor-pointer items-center justify-center gap-2 border-[1.5px] bg-transparent px-4 py-3 text-center font-sans text-[0.9rem] font-semibold no-underline transition-colors duration-150">
+				class="btn-ghost flex w-full items-center justify-center gap-2 no-underline">
 				Edit recipe
 			</a>
 		{/if}
