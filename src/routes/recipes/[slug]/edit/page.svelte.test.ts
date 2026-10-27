@@ -3,9 +3,10 @@ import { render, screen, fireEvent } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import type { SubmitFunction } from '$app/forms';
 import EditPage from './+page.svelte';
-import { parseIngredientText } from '#lib/recipes/ingredients.js';
+import { makeContent, makeIngredient, makeStep } from '#lib/recipes/fixtures.js';
+import type { RecipeDraft } from '#lib/recipes/validation.js';
 
-// Capture each form's submit callback so a test can drive the pending state by hand.
+// Capture the form's submit callback so a test can drive the pending state by hand.
 const captured = vi.hoisted(() => ({ submits: [] as SubmitFunction[] }));
 vi.mock('$app/forms', () => ({
 	enhance: (_node: HTMLFormElement, submit: SubmitFunction) => {
@@ -15,105 +16,179 @@ vi.mock('$app/forms', () => ({
 }));
 
 /** Runs the captured submit callback as SvelteKit would, returning the finish step. */
-async function startSubmit(index: number) {
-	const finish = (await captured.submits[index]({} as never)) as (input: unknown) => Promise<void>;
+async function startSubmit() {
+	const finish = (await captured.submits[0]({} as never)) as (input: unknown) => Promise<void>;
 	await tick();
 	return () => finish({ update: async () => {} }).then(tick);
 }
 
-function makeData() {
+const TAGS = [
+	{ id: 1, name: 'Dessert', slug: 'dessert' },
+	{ id: 2, name: 'Baking', slug: 'baking' },
+	{ id: 3, name: 'Spicy', slug: 'spicy' }
+];
+
+function makeData(overrides: { imageUrl?: string | null } = {}) {
 	return {
 		recipe: {
 			slug: 'cookies',
 			title: 'Cookies',
 			description: null,
-			imageUrl: null,
-			servings: null,
-			prepTimeMinutes: null,
-			cookTimeMinutes: null,
+			imageUrl: overrides.imageUrl ?? null,
 			isPublic: false,
-			recipesToTags: []
+			editRevision: 3,
+			recipesToTags: [{ tag: TAGS[0] }, { tag: TAGS[1] }]
 		},
 		latestVersion: {
-			ingredients: parseIngredientText('1 cup flour\n2 eggs'),
-			steps: [{ text: 'Mix.' }, { text: 'Bake.', annotation: { type: 'tip', text: 'gently' } }]
+			versionNumber: 2,
+			commitMessage: 'Tweak',
+			...makeContent({
+				title: 'Cookies',
+				servings: 4,
+				prepTimeMinutes: 10,
+				cookTimeMinutes: 20,
+				ingredients: [makeIngredient('1 cup flour'), makeIngredient('2 eggs')],
+				steps: [makeStep('Mix.'), makeStep('Bake.', { type: 'tip', text: 'gently' })]
+			})
 		},
-		allTags: []
+		allTags: TAGS
 	} as never;
 }
+
+/** The draft the server would echo back for makeData, with overrides. */
+function failed(draft: Partial<RecipeDraft>, error = 'Title is required') {
+	const base: RecipeDraft = {
+		title: 'Cookies',
+		description: '',
+		servings: '4',
+		prepTimeMinutes: '10',
+		cookTimeMinutes: '20',
+		ingredients: '1 cup flour\n2 eggs',
+		steps: 'Mix.\n\nBake.\ntip: gently',
+		commitMessage: '',
+		editRevision: '3',
+		isPublic: false,
+		tags: ['Dessert', 'Baking'],
+		hadPhoto: false,
+		removeImage: false
+	};
+	return { error, draft: { ...base, ...draft } };
+}
+
+const title = () => screen.getByLabelText(/^title/i) as HTMLInputElement;
+const hiddenRevision = () =>
+	document.querySelector('input[name="editRevision"]') as HTMLInputElement | null;
 
 beforeEach(() => {
 	captured.submits.length = 0;
 });
 
-describe('Edit page validation errors', () => {
-	test('shows no alert without a failed action', () => {
+describe('Edit page form', () => {
+	test('renders one form with one Save changes button', () => {
 		render(EditPage, { props: { data: makeData(), form: null } });
-		expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+		expect(document.querySelectorAll('form')).toHaveLength(1);
+		expect(document.querySelector('form')).toHaveAttribute('action', '?/save');
+		expect(screen.getByRole('button', { name: 'Save changes' })).toBeInTheDocument();
+		expect(screen.queryByRole('button', { name: /save info|save new version/i })).toBeNull();
 	});
 
-	test('shows a metadata error under the info form only', () => {
-		render(EditPage, {
-			props: { data: makeData(), form: { error: 'Title is required', section: 'meta' } }
-		});
-		const alerts = screen.getAllByRole('alert');
-		expect(alerts).toHaveLength(1);
-		expect(alerts[0]).toHaveTextContent('Title is required');
-		expect(alerts[0].closest('form')).toHaveAttribute('action', '?/saveMeta');
-	});
-
-	test('shows a content error under the version form only', () => {
-		render(EditPage, {
-			props: { data: makeData(), form: { error: 'Each step needs text', section: 'content' } }
-		});
-		const alerts = screen.getAllByRole('alert');
-		expect(alerts).toHaveLength(1);
-		expect(alerts[0]).toHaveTextContent('Each step needs text');
-		expect(alerts[0].closest('form')).toHaveAttribute('action', '?/saveVersion');
-	});
-});
-
-describe('Edit page editor state', () => {
-	test('disables the info button and relabels it while its save is pending', async () => {
+	test('fills title, servings and both textareas from the latest version', () => {
 		render(EditPage, { props: { data: makeData(), form: null } });
-		const finish = await startSubmit(0);
-		const button = screen.getByRole('button', { name: 'Saving…' });
-		expect(button).toBeDisabled();
-		expect(screen.getByRole('button', { name: 'Save new version' })).toBeEnabled();
-		await finish();
-		expect(screen.getByRole('button', { name: 'Save info' })).toBeEnabled();
-	});
-
-	test('shows unsaved changes for the info form after typing', async () => {
-		render(EditPage, { props: { data: makeData(), form: null } });
-		expect(screen.queryByText('Unsaved changes')).not.toBeInTheDocument();
-		await fireEvent.input(screen.getByLabelText('Title'), { target: { value: 'Brownies' } });
-		const hint = screen.getByText('Unsaved changes');
-		expect(hint.closest('form')).toHaveAttribute('action', '?/saveMeta');
-	});
-
-	test('fills both textareas from the latest version', () => {
-		render(EditPage, { props: { data: makeData(), form: null } });
+		expect(title()).toHaveValue('Cookies');
+		expect(screen.getByLabelText(/servings/i)).toHaveValue(4);
 		expect(screen.getByLabelText('Ingredients')).toHaveValue('1 cup flour\n2 eggs');
 		expect(screen.getByLabelText('Steps')).toHaveValue('Mix.\n\nBake.\ntip: gently');
 	});
 
-	test('shows unsaved changes for the content form after editing the ingredients', async () => {
+	test('sends the loaded editRevision as a hidden field', () => {
 		render(EditPage, { props: { data: makeData(), form: null } });
-		expect(screen.queryByText('Unsaved changes')).not.toBeInTheDocument();
-		await fireEvent.input(screen.getByLabelText('Ingredients'), {
-			target: { value: '1 cup flour\n3 eggs' }
-		});
-		const hint = screen.getByText('Unsaved changes');
-		expect(hint.closest('form')).toHaveAttribute('action', '?/saveVersion');
+		expect(hiddenRevision()).toHaveValue('3');
 	});
 
-	test('shows unsaved changes for the content form after editing the steps', async () => {
+	test('shows Unsaved changes after an edit and clears it when the value is restored', async () => {
 		render(EditPage, { props: { data: makeData(), form: null } });
-		await fireEvent.input(screen.getByLabelText('Steps'), { target: { value: 'Mix well.' } });
-		expect(screen.getByText('Unsaved changes').closest('form')).toHaveAttribute(
-			'action',
-			'?/saveVersion'
+		expect(screen.queryByText('Unsaved changes')).toBeNull();
+		await fireEvent.input(title(), { target: { value: 'Biscuits' } });
+		expect(screen.getByText('Unsaved changes')).toBeInTheDocument();
+		await fireEvent.input(title(), { target: { value: 'Cookies' } });
+		expect(screen.queryByText('Unsaved changes')).toBeNull();
+	});
+
+	test('treats a tag unticked and ticked again as clean', async () => {
+		render(EditPage, { props: { data: makeData(), form: null } });
+		const dessert = screen.getByLabelText('Dessert');
+		await fireEvent.click(dessert);
+		expect(screen.getByText('Unsaved changes')).toBeInTheDocument();
+		await fireEvent.click(dessert);
+		expect(screen.queryByText('Unsaved changes')).toBeNull();
+	});
+
+	test('typing only a commit message is not an unsaved change', async () => {
+		render(EditPage, { props: { data: makeData(), form: null } });
+		await fireEvent.input(screen.getByLabelText(/what changed/i), { target: { value: 'note' } });
+		expect(screen.queryByText('Unsaved changes')).toBeNull();
+	});
+
+	test('refills every field from form.draft after a failure and keeps Unsaved changes', async () => {
+		render(EditPage, {
+			props: {
+				data: makeData(),
+				form: failed({ title: 'Biscuits', prepTimeMinutes: '-5', tags: ['Spicy'], isPublic: true })
+			}
+		});
+		await tick();
+		expect(title()).toHaveValue('Biscuits');
+		expect(screen.getByLabelText(/prep time/i)).toHaveValue(-5);
+		expect(screen.getByLabelText('Spicy')).toBeChecked();
+		expect(screen.getByLabelText('Dessert')).not.toBeChecked();
+		expect(screen.getByLabelText(/public/i)).toBeChecked();
+		expect(screen.getByRole('alert')).toHaveTextContent('Title is required');
+		expect(screen.getByText('Unsaved changes')).toBeInTheDocument();
+		expect(hiddenRevision()).toHaveValue('3');
+	});
+
+	test('shows the conflict message as an alert', async () => {
+		render(EditPage, {
+			props: { data: makeData(), form: failed({}, 'This recipe was changed in another tab.') }
+		});
+		await tick();
+		expect(screen.getByRole('alert')).toHaveTextContent(/changed in another tab/);
+	});
+
+	test('disables every field while saving and re-enables them when it finishes', async () => {
+		render(EditPage, { props: { data: makeData(), form: null } });
+		const finish = await startSubmit();
+		expect(screen.getByRole('button', { name: 'Saving…' })).toBeDisabled();
+		expect(title()).toBeDisabled();
+		await finish();
+		expect(screen.getByRole('button', { name: 'Save changes' })).toBeEnabled();
+		expect(title()).toBeEnabled();
+	});
+
+	test('asks for the photo again only when one had been chosen and the input is now empty', async () => {
+		const { unmount } = render(EditPage, {
+			props: { data: makeData(), form: failed({ hadPhoto: true }) }
+		});
+		await tick();
+		expect(screen.getByText(/choose the photo again/i)).toBeInTheDocument();
+		unmount();
+		render(EditPage, { props: { data: makeData(), form: failed({ hadPhoto: false }) } });
+		await tick();
+		expect(screen.queryByText(/choose the photo again/i)).toBeNull();
+	});
+
+	test('shows the current photo and a Remove photo control that marks it for removal', async () => {
+		render(EditPage, {
+			props: { data: makeData({ imageUrl: 'https://cdn/cookies.png' }), form: null }
+		});
+		expect(screen.getByRole('img', { name: /preview/i })).toHaveAttribute(
+			'src',
+			'https://cdn/cookies.png'
 		);
+		expect(document.querySelector('input[name="removeImage"]')).toBeNull();
+		await fireEvent.click(screen.getByRole('button', { name: /remove photo/i }));
+		expect(screen.queryByRole('img', { name: /preview/i })).toBeNull();
+		expect(document.querySelector('input[name="removeImage"]')).toHaveValue('on');
+		expect(screen.getByText('Unsaved changes')).toBeInTheDocument();
 	});
 });
