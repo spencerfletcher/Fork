@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { tagKey } from '#lib/recipes/tags.js';
+
 	let {
 		allTags,
 		selected = $bindable([])
@@ -12,26 +14,26 @@
 	let inputEl: HTMLInputElement;
 	let rootEl: HTMLDivElement;
 
+	// Tag identity ignores case: "Vegan" and "vegan" are one tag here, as they
+	// are on the server.
+	const isSelected = (name: string) => selected.some((s) => tagKey(s) === tagKey(name));
+
 	const suggestions = $derived(
 		allTags.filter(
-			(t) =>
-				!selected.includes(t.name) &&
-				(query.trim() === '' || t.name.toLowerCase().includes(query.toLowerCase().trim()))
+			(t) => !isSelected(t.name) && (query.trim() === '' || tagKey(t.name).includes(tagKey(query)))
 		)
 	);
 
 	const canCreate = $derived(
 		query.trim().length > 0 &&
-			!allTags.some((t) => t.name.toLowerCase() === query.trim().toLowerCase()) &&
-			!selected.includes(query.trim())
+			!allTags.some((t) => tagKey(t.name) === tagKey(query)) &&
+			!isSelected(query)
 	);
 
 	const showDropdown = $derived(open && (suggestions.length > 0 || canCreate));
 
 	function pick(name: string) {
-		if (!selected.includes(name)) {
-			selected = [...selected, name];
-		}
+		if (!isSelected(name)) selected = [...selected, name];
 		query = '';
 	}
 

@@ -125,49 +125,34 @@ test.describe('Edit recipe page', () => {
 		await expect(page.locator('input[name="title"]')).toBeVisible();
 	});
 
-	test('can update the recipe title', async ({ page }) => {
-		await page.goto('/');
-		await page.getByRole('link', { name: COOKIES_RE }).first().click();
-		await page.waitForURL(/\/recipes\//);
-		const recipeUrl = page.url();
-
-		await page.getByRole('link', { name: /edit recipe/i }).click();
-		await page.waitForURL(/\/edit/);
-
-		// Re-saving the same title is a no-op: no version is written, the page
-		// just redirects back. The title must still be what the seed says.
-		const titleInput = page.locator('input[name="title"]');
-		const before = await titleInput.inputValue();
-		await titleInput.fill(before);
-
-		await page.getByRole('button', { name: /save changes/i }).click();
-
-		await page.waitForURL(recipeUrl);
-		await expect(page.locator('h1')).toContainText(before);
+	test('re-saving an unchanged recipe writes no version and returns to it', async ({ page }) => {
+		const url = await createRecipe(page, 'E2E Unchanged', '4');
+		try {
+			await gotoHydrated(page, `${url}/edit`);
+			await page.getByRole('button', { name: /save changes/i }).click();
+			await page.waitForURL(url);
+			await expect(page.locator('h1')).toContainText('E2E Unchanged');
+			await expect(page.locator('.version-strip .version-entry')).toHaveCount(1);
+		} finally {
+			await deleteRecipe(page, url);
+		}
 	});
 
-	test('can save a new version with a commit message', async ({ page }) => {
-		await page.goto('/');
-		await page
-			.getByRole('link', { name: /chicken tikka masala/i })
-			.first()
-			.click();
-		await page.waitForURL(/\/recipes\//);
-
-		await page.getByRole('link', { name: /edit recipe/i }).click();
-		await page.waitForURL(/\/edit/);
-
-		// Change the steps
-		const steps = page.getByLabel('Steps');
-		await steps.fill('Updated step text from e2e test.');
-
-		await page.locator('input[name="commitMessage"]').fill('e2e test commit');
-		await page.getByRole('button', { name: /save changes/i }).click();
-
-		// Should redirect back to the recipe page
-		await page.waitForURL(/\/recipes\/(?!.*\/edit)/);
-		// Version history is visible in the sidebar — verify our commit message appears
-		await expect(page.getByText('e2e test commit').first()).toBeVisible();
+	test('saving changed steps with a commit message adds a version carrying it', async ({
+		page
+	}) => {
+		const url = await createRecipe(page, 'E2E Commit Message', '4');
+		try {
+			await gotoHydrated(page, `${url}/edit`);
+			await page.getByLabel('Steps').fill('Updated step text from e2e test.');
+			await page.locator('input[name="commitMessage"]').fill('e2e test commit');
+			await page.getByRole('button', { name: /save changes/i }).click();
+			await page.waitForURL(url);
+			await expect(page.locator('.version-strip .version-entry')).toHaveCount(2);
+			await expect(page.locator('.version-strip')).toContainText('e2e test commit');
+		} finally {
+			await deleteRecipe(page, url);
+		}
 	});
 });
 

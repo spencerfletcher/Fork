@@ -137,4 +137,15 @@ describe('TagInput', () => {
 		await fireEvent.keyDown(getInput(), { key: 'Enter' });
 		expect(container.querySelector('input[type="hidden"][name="tags"]')).toHaveValue('Vegan');
 	});
+
+	test('a created tag cannot be added again in a different case', async () => {
+		const { container } = render(TagInput, { props: { allTags } });
+		await fireEvent.focus(getInput());
+		await fireEvent.input(getInput(), { target: { value: 'Vegan' } });
+		await fireEvent.keyDown(getInput(), { key: 'Enter' });
+		await fireEvent.input(getInput(), { target: { value: 'vegan' } });
+		expect(screen.queryByText(/Create/i)).not.toBeInTheDocument();
+		await fireEvent.keyDown(getInput(), { key: 'Enter' });
+		expect(container.querySelectorAll('input[type="hidden"][name="tags"]')).toHaveLength(1);
+	});
 });
