@@ -3,7 +3,7 @@
 ## Priority order — 2026-10-23
 
 1. ~~One save, versioned content~~ shipped 2026-10-27 (`superpowers/specs/2026-10-23-one-save-design.md`), together with M10 Drizzle migrations and the operational cleanup.
-2. UI redesign. Direction chosen 2026-10-27: paper and ink with a fired-clay accent, Zilla Slab and Geist; tokens and rules in `research/2026-10-26-ui-design-directions.md` under "Decision". Older inputs: `todo/DESIGN.md`, `todo/TODO_UI.md`.
+2. UI redesign. System approved 2026-10-27 after five review rounds: paper and ink, clay text accent, marigold fill, Bitter, Source Sans 3 and JetBrains Mono; tokens, rules and the build order in `research/2026-10-26-ui-design-directions.md` under "Round 4" and "Round 5". Built on one branch: tokens, nav and shell, recipe page, card and grid, compare, edit and new. Older inputs: `todo/DESIGN.md`, `todo/TODO_UI.md`.
 3. Serving scaling on the recipe page (temporary multiplier, no version written).
 4. Cooklang-derived items from `research/2026-10-23-cooklang.md`: cooking attempts (M17), export (M16), `.cook` import (M15 stage 6), ingredient use in steps.
 

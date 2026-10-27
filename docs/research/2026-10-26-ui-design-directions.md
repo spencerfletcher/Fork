@@ -226,6 +226,20 @@ Decisions this round: no-photo cards and pages show the title inside the clay-ti
 
 The canvas at https://claude.ai/artifact/JeBnxQYqrQCbraFGrsUxwY has the recipe page in both layouts (sidebar photo, and a 16:9 photo at content width between the meta line and the strip) plus 390px, the browse grid with Recent and Most forked sections at 4 and 2 across, the compare page with two version cards above the diff, and the edit page with the live parse note and the marigold "Save as new version". Open question for the reviewers: sidebar photo or wide photo.
 
+### Round 5: fixes, system approved (2026-10-27)
+
+Both reviewers approved the system; no more layout alternatives. The reviewers split on the recipe photo (one sidebar, one wide and capped); Spencer chose wide, capped at 420px with `object-fit: cover`, the sidebar sticky below it. On mobile the title comes before the photo, and the photo is 4:3, so the two stacks share one order and the Fork button lands in the first screen. The version strip is the collapsed form at every width: current version, its message, "Compare with v2", "3 versions". Nothing scrolls or clips.
+
+Fixes adopted from the reviewers: version commentary out of the description field (history explains the change); mobile diff at 14px and mobile form fields at 16px, which also stops iOS zooming on focus; the mobile edit form keeps description, photo, tags and visibility, and the labels keep "(min)"; the save button says "Save" and the helper line states the outcome ("Saves as v4 · ingredients and steps changed"), since a settings-only save writes no version; the commit message stays optional with the generated message ("Updated ingredients, steps", from `generatedCommitMessage`) as its placeholder.
+
+Two reviewer objections were checked against the repo and dropped: versions do snapshot title, servings and times, so the compare page's Details block stands; the commit message column is not null but the server generates one when blank, so "optional" is right.
+
+New token, the focus ring: `:focus-visible` only, 2px solid clay `#A4512B` with 2px offset on light surfaces, 2px solid marigold `#E8A83A` on the espresso nav, following the element's radius; inline links get 2px padding so the ring clears the text. Nothing else changes on focus.
+
+Also decided: dark mode deferred (the dark set above stays recorded, nothing is built); grid breakpoints 2 across under 700px, 3 to 1100px, 4 above; fonts self-hosted through fontsource; the redesign is one branch, built in reviewer two's order: tokens, nav and shell, recipe page, card and grid, compare, edit and new.
+
+The canvas at https://claude.ai/artifact/QFTDpwCLRwuknh754yNPzc has the revised recipe page at both widths, the focus ring board, the mobile compare and edit boards at the new sizes, and the grid, compare and desktop edit boards carried over.
+
 ## Typography options, independent of palette
 
 | Pairing | Titles | UI and meta | Reading | Fit |
