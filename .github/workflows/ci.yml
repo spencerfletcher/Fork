@@ -38,6 +38,9 @@ jobs:
       # ESLint + Prettier format check
       - run: pnpm lint
 
+      # A broken production build should fail here, not on Netlify.
+      - run: pnpm build
+
   unit:
     name: Unit & component tests
     runs-on: ubuntu-latest
@@ -100,6 +103,10 @@ jobs:
       - run: pnpm exec svelte-kit sync
 
       - run: pnpm db:seed
+
+      # The concurrent-save test needs a real Postgres; the unit job has none,
+      # so it runs here where the local stack is up.
+      - run: pnpm test:unit run src/routes/recipes/[slug]/edit/page.server.db
 
       - run: pnpm exec playwright install --with-deps chromium
 

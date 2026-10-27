@@ -113,7 +113,7 @@ pnpm dev
 
 The app runs at `http://localhost:5173`. The seeded account is `spencer@fork.dev` with the password from `SEED_USER_PASSWORD` (default `Fork-Demo-2025!`).
 
-To point at a hosted Supabase project instead, skip `supabase start` and fill `.env` from your project's dashboard — `DATABASE_URL` should be the **pooler** connection string (port 6543), not the direct one, since serverless functions exhaust direct connections.
+To point at a hosted Supabase project instead, skip `supabase start` and fill `.env` from your project's dashboard — `DATABASE_URL` should be the **session pooler** connection string (`aws-0-<region>.pooler.supabase.com:5432`, user `postgres.<ref>`): the direct `db.<ref>` host is IPv6-only and unreachable from most home networks and from serverless runtimes. Set `SUPABASE_PROJECT_ID` to the project ref; `pnpm db:seed:prod` refuses to run unless both URLs name it.
 
 ## Database changes
 
