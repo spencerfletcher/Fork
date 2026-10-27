@@ -2,7 +2,7 @@ import { z } from 'zod';
 import type { Ingredient, Step, RecipeContent } from './types.js';
 import { parseIngredientText } from './ingredients.js';
 import { parseStepText } from './steps.js';
-import { MAX_FIELD, MAX_LINE, FIELD_TOO_LONG, LINE_TOO_LONG } from './limits.js';
+import { limitError } from './limits.js';
 import { normaliseTagNames } from './tags.js';
 
 // Largest value a Postgres `integer` column holds.
@@ -23,19 +23,12 @@ const optionalInt = (min: number, label: string) =>
 				.nullable()
 		);
 
-const textSchema = z.object({
-	ingredients: z
-		.string()
-		.max(MAX_FIELD, FIELD_TOO_LONG('Ingredients'))
-		.refine((s) => s.split('\n').every((line) => line.length <= MAX_LINE), LINE_TOO_LONG)
-		.transform(parseIngredientText)
-		.pipe(z.array(z.custom<Ingredient>()).min(1, 'At least one ingredient is required')),
-	steps: z
-		.string()
-		.max(MAX_FIELD, FIELD_TOO_LONG('Steps'))
-		.transform(parseStepText)
-		.pipe(z.array(z.custom<Step>()).min(1, 'At least one step is required'))
-});
+/** Raw editor text, refused with the same message the editor shows live. */
+const bounded = (label: string, perLine: boolean) =>
+	z.string().superRefine((s, ctx) => {
+		const message = limitError(s, label, perLine);
+		if (message) ctx.addIssue({ code: 'custom', message });
+	});
 
 const recipeContentSchema = z.object({
 	title: z.string().trim().min(1, 'Title is required'),
@@ -46,7 +39,12 @@ const recipeContentSchema = z.object({
 	servings: optionalInt(1, 'Servings'),
 	prepTimeMinutes: optionalInt(0, 'Prep time'),
 	cookTimeMinutes: optionalInt(0, 'Cook time'),
-	...textSchema.shape
+	ingredients: bounded('Ingredients', true)
+		.transform(parseIngredientText)
+		.pipe(z.array(z.custom<Ingredient>()).min(1, 'At least one ingredient is required')),
+	steps: bounded('Steps', false)
+		.transform(parseStepText)
+		.pipe(z.array(z.custom<Step>()).min(1, 'At least one step is required'))
 });
 
 /** What a parser hands back: the typed value, or the first message to show the user. */
