@@ -96,7 +96,7 @@ describe('Navbar', () => {
 		expect(screen.queryByText(/@chefmaria/)).not.toBeInTheDocument();
 	});
 
-	test('mobile nav has a search icon link beside the menu toggle', () => {
+	test('has a search icon link for the phone nav', () => {
 		render(Navbar, { props: { user: null } });
 		const icon = screen
 			.getAllByRole('link', { name: 'Search' })

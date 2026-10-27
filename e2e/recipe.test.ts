@@ -342,9 +342,15 @@ test.describe('Recipe detail page', () => {
 		await gotoClassicCookies(page);
 		await page.getByRole('button', { name: '3 versions' }).click();
 		await page.locator('#version-history').waitFor();
+		// A URL inside a message must wrap inside the panel, not widen the page.
+		const wrap = await page
+			.locator('#version-history .version-message')
+			.first()
+			.evaluate((el) => getComputedStyle(el).overflowWrap);
+		expect(wrap).toBe('anywhere');
 		await page.locator('#version-history').getByRole('link', { name: 'v1' }).click();
 		await expect(page).toHaveURL(/version=1/);
-		await expect(page.locator('#version-history')).toHaveCount(0);
+		await expect(page.locator('#version-history')).toBeHidden();
 	});
 
 	test('the header names the recipe once and the author once', async ({ page }) => {
@@ -368,18 +374,15 @@ test.describe('Recipe detail page', () => {
 		const ingredients = page.getByRole('heading', { name: /ingredients/i }).first();
 		await ingredients.waitFor();
 
-		// The {#if recipe.imageUrl} branch is equivalent to the node being absent.
+		// The {#if imageUrl} branch is equivalent to the node being absent.
 		await page.evaluate(() => document.querySelector('.recipe-photo')?.remove());
 
-		const details = page.locator('dl.details').first();
-		const ingredientsBox = await ingredients.boundingBox();
-		const detailsBox = await details.boundingBox();
-
-		expect(ingredientsBox).not.toBeNull();
-		expect(detailsBox).not.toBeNull();
-		// Sidebar stays in the right-hand column, top-aligned — not pushed down the page.
-		expect(detailsBox!.x).toBeGreaterThan(ingredientsBox!.x + ingredientsBox!.width - 1);
-		expect(Math.abs(detailsBox!.y - ingredientsBox!.y)).toBeLessThan(300);
+		// Nothing reserves the photo's room: the strip follows the header directly.
+		const header = await page.locator('header.recipe-header').boundingBox();
+		const strip = await page.locator('.version-strip').boundingBox();
+		expect(header).not.toBeNull();
+		expect(strip).not.toBeNull();
+		expect(strip!.y - (header!.y + header!.height)).toBeLessThan(20);
 	});
 
 	test('tags stay readable on both the card and the hero surfaces', async ({ page }) => {

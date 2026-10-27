@@ -51,21 +51,21 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 		isViewingHistory = found.versionNumber !== latestVersion.versionNumber;
 	}
 
-	// Check if the current user has favorited this recipe
-	let isFavorited = false;
-	if (user) {
-		const existing = await db.query.favorites.findFirst({
-			where: and(eq(favorites.userId, user.id), eq(favorites.recipeId, recipe.id))
-		});
-		isFavorited = !!existing;
-	}
-
-	// Public forks only, the same rule attachRecipeCounts applies on the lists,
-	// so a private fork cannot inflate the count on a page anyone can read.
-	const forkRows = await db
-		.select({ count: count() })
-		.from(recipes)
-		.where(and(eq(recipes.parentId, recipe.id), eq(recipes.isPublic, true)));
+	// Two independent lookups, one round trip. The fork count is public forks
+	// only, the same rule attachRecipeCounts applies on the lists, so a private
+	// fork cannot inflate the count on a page anyone can read.
+	const [favorite, forkRows] = await Promise.all([
+		user
+			? db.query.favorites.findFirst({
+					where: and(eq(favorites.userId, user.id), eq(favorites.recipeId, recipe.id))
+				})
+			: Promise.resolve(undefined),
+		db
+			.select({ count: count() })
+			.from(recipes)
+			.where(and(eq(recipes.parentId, recipe.id), eq(recipes.isPublic, true)))
+	]);
+	const isFavorited = !!favorite;
 	const forkCount = Number(forkRows[0]?.count ?? 0);
 
 	return {

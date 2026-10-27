@@ -80,24 +80,26 @@
 		</p>
 	{/if}
 
-	<p class="meta text-text-2 m-0 flex flex-wrap items-center gap-2.5 text-[0.875rem]">
-		{#if totalMinutes > 0}
-			<span>{formatTime(totalMinutes)}</span>
-		{/if}
-		{#if currentVersion.servings}
-			{#if totalMinutes > 0}<span class="text-text-3">·</span>{/if}
-			<span>Serves {currentVersion.servings}</span>
-		{/if}
-		{#if tags.length > 0}
-			{#if totalMinutes > 0 || currentVersion.servings}<span class="text-text-3">·</span>{/if}
-			<span class="tags">
-				{#each tags as tag, i (tag.id)}
-					{#if i > 0},&#32;{/if}
-					<a href="/tags/{tag.slug}" class="text-text-2 hover:text-text">{tag.name}</a>
-				{/each}
-			</span>
-		{/if}
-	</p>
+	{#if totalMinutes > 0 || currentVersion.servings || tags.length > 0}
+		<p class="meta text-text-2 m-0 flex flex-wrap items-center gap-2.5 text-[0.875rem]">
+			{#if totalMinutes > 0}
+				<span>{formatTime(totalMinutes)}</span>
+			{/if}
+			{#if currentVersion.servings}
+				{#if totalMinutes > 0}<span class="text-text-3">·</span>{/if}
+				<span>Serves {currentVersion.servings}</span>
+			{/if}
+			{#if tags.length > 0}
+				{#if totalMinutes > 0 || currentVersion.servings}<span class="text-text-3">·</span>{/if}
+				<span class="tags">
+					{#each tags as tag, i (tag.id)}
+						{#if i > 0},&#32;{/if}
+						<a href="/tags/{tag.slug}" class="text-text-2 hover:text-text">{tag.name}</a>
+					{/each}
+				</span>
+			{/if}
+		</p>
+	{/if}
 
 	{#if currentVersion.imageUrl}
 		<figure class="recipe-photo m-0">

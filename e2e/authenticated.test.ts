@@ -165,7 +165,7 @@ test.describe('Edit recipe page', () => {
 // The strip shows one line: the current version and a "N versions" count;
 // the rows only render once that count is clicked.
 async function expectVersions(page: Page, n: number) {
-	await expect(page.locator('.version-strip')).toContainText(
+	await expect(page.locator('.version-toggle, .version-count')).toHaveText(
 		n === 1 ? '1 version' : `${n} versions`
 	);
 }

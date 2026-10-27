@@ -72,8 +72,8 @@
 		<span class="version-count">1 version</span>
 	{/if}
 
-	{#if open}
-		<div id="version-history" class="version-history">
+	{#if count > 1}
+		<div id="version-history" class="version-history" hidden={!open}>
 			{#each versions as version (version.id)}
 				{@const isCurrent = version.versionNumber === currentVersionNumber}
 				<div class="version-entry">
@@ -187,6 +187,7 @@
 		flex: 1;
 		overflow: visible;
 		white-space: normal;
+		overflow-wrap: anywhere;
 		color: var(--color-text-2);
 	}
 

@@ -115,6 +115,23 @@ describe('RecipeHeader content', () => {
 		expect(container.querySelector('.recipe-photo')).toBeNull();
 	});
 
+	test('renders no meta line when there is no time, servings or tags', () => {
+		const { container } = render(RecipeHeader, {
+			props: {
+				recipe: makeRecipe(),
+				currentVersion: {
+					...VERSION,
+					servings: null,
+					prepTimeMinutes: null,
+					cookTimeMinutes: null
+				},
+				isViewingHistory: false,
+				tags: []
+			}
+		});
+		expect(container.querySelector('.meta')).toBeNull();
+	});
+
 	test('links the author once in the author line', () => {
 		renderHeader(makeRecipe({ author: { id: 'u1', username: 'chef' } }), VERSION);
 		expect(screen.getAllByRole('link', { name: '@chef' })).toHaveLength(1);

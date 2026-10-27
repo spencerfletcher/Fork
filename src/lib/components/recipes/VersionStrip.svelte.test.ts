@@ -23,10 +23,14 @@ const props = {
 
 describe('VersionStrip', () => {
 	test('shows the current version and its message without expanding', () => {
-		render(VersionStrip, { props });
-		expect(screen.getByText('v2')).toHaveClass('version-current');
-		expect(screen.getByText('Added espresso powder')).toBeInTheDocument();
-		expect(screen.queryByText('Initial recipe')).toBeNull();
+		const { container } = render(VersionStrip, { props });
+		expect(container.querySelector('.version-current')).toHaveTextContent('v2');
+		expect(container.querySelector('.version-strip > .version-message')).toHaveTextContent(
+			'Added espresso powder'
+		);
+		expect(screen.getByText('Initial recipe')).not.toBeVisible();
+		// The toggle always controls a real element.
+		expect(document.getElementById('version-history')).not.toBeNull();
 	});
 
 	test('offers a compare with the previous version', () => {
@@ -44,7 +48,7 @@ describe('VersionStrip', () => {
 			'href',
 			'/recipes/classic-cookies-abc123?version=1'
 		);
-		expect(screen.getByText('Initial recipe')).toBeInTheDocument();
+		expect(screen.getByText('Initial recipe')).toBeVisible();
 		expect(screen.getByRole('link', { name: 'v2' })).toHaveAttribute('aria-current', 'true');
 	});
 
@@ -61,9 +65,9 @@ describe('VersionStrip', () => {
 		render(VersionStrip, { props });
 		const toggle = screen.getByRole('button', { name: '2 versions' });
 		await fireEvent.click(toggle);
-		expect(screen.getByText('Initial recipe')).toBeInTheDocument();
+		expect(screen.getByText('Initial recipe')).toBeVisible();
 		await fireEvent.keyDown(window, { key: 'Escape' });
-		expect(screen.queryByText('Initial recipe')).toBeNull();
+		expect(screen.getByText('Initial recipe')).not.toBeVisible();
 		expect(toggle).toHaveFocus();
 	});
 
@@ -71,12 +75,14 @@ describe('VersionStrip', () => {
 		render(VersionStrip, { props });
 		await fireEvent.click(screen.getByRole('button', { name: '2 versions' }));
 		await fireEvent.click(document.body);
-		expect(screen.queryByText('Initial recipe')).toBeNull();
+		expect(screen.getByText('Initial recipe')).not.toBeVisible();
 	});
 
 	test('hides compare links while viewing history', () => {
-		render(VersionStrip, { props: { ...props, isViewingHistory: true, currentVersionNumber: 1 } });
-		expect(screen.getByText('v1')).toHaveClass('version-current');
+		const { container } = render(VersionStrip, {
+			props: { ...props, isViewingHistory: true, currentVersionNumber: 1 }
+		});
+		expect(container.querySelector('.version-current')).toHaveTextContent('v1');
 		expect(screen.queryByRole('link', { name: /compare/i })).toBeNull();
 	});
 });
