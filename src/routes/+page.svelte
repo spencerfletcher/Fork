@@ -25,6 +25,7 @@
 				{/if}
 			</div>
 			<VersionDiff
+				metaDiff={data.sampleDiff.metaDiff}
 				ingredientDiff={data.sampleDiff.ingredientDiff}
 				stepDiff={data.sampleDiff.stepDiff} />
 			<!-- The hero's "See a diff" button pointed here and was redundant beside

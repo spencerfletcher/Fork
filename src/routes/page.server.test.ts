@@ -19,7 +19,7 @@ vi.mock('#lib/server/db/index.js', () => ({
 }));
 
 import { load } from './+page.server';
-import { makeIngredient as ing } from '#lib/recipes/fixtures.js';
+import { makeIngredient as ing, makeContent } from '#lib/recipes/fixtures.js';
 import type { PageData } from './$types';
 
 function chain(resolved: unknown = []) {
@@ -153,13 +153,13 @@ describe('homepage load', () => {
 		recipeVersionsFindManyMock
 			// Called for candidate B first (withCounts preserves findMany order)
 			.mockResolvedValueOnce([
-				{ ingredients: sameIngredients, steps: sameSteps },
-				{ ingredients: sameIngredients, steps: sameSteps }
+				{ ...makeContent(), ingredients: sameIngredients, steps: sameSteps },
+				{ ...makeContent(), ingredients: sameIngredients, steps: sameSteps }
 			])
 			// Then for candidate C
 			.mockResolvedValueOnce([
-				{ ingredients: [ing('2 cup flour')], steps: sameSteps },
-				{ ingredients: sameIngredients, steps: sameSteps }
+				{ ...makeContent(), ingredients: [ing('2 cup flour')], steps: sameSteps },
+				{ ...makeContent(), ingredients: sameIngredients, steps: sameSteps }
 			]);
 
 		const result = await loadResult({
@@ -219,8 +219,8 @@ describe('homepage load', () => {
 		const versionChain = chain([{ recipeId: 9, count: 2 }]);
 		selectMock.mockReturnValueOnce(versionChain).mockReturnValueOnce(chain([]));
 		recipeVersionsFindManyMock.mockResolvedValue([
-			{ ingredients: [ing('2 cup flour')], steps: [], versionNumber: 2 },
-			{ ingredients: [ing('1 cup flour')], steps: [], versionNumber: 1 }
+			{ ...makeContent(), ingredients: [ing('2 cup flour')], steps: [], versionNumber: 2 },
+			{ ...makeContent(), ingredients: [ing('1 cup flour')], steps: [], versionNumber: 1 }
 		]);
 
 		const result = await loadResult({
@@ -254,11 +254,13 @@ describe('homepage load', () => {
 			// Newer, and changes MORE rows — but every one of them is a step.
 			.mockResolvedValueOnce([
 				{
+					...makeContent(),
 					versionNumber: 2,
 					ingredients: flour,
 					steps: [{ text: 'One changed.' }, { text: 'Two changed.' }, { text: 'Three changed.' }]
 				},
 				{
+					...makeContent(),
 					versionNumber: 1,
 					ingredients: flour,
 					steps: [{ text: 'One.' }, { text: 'Two.' }, { text: 'Three.' }]
@@ -267,11 +269,12 @@ describe('homepage load', () => {
 			// Older and smaller, but both panels move.
 			.mockResolvedValueOnce([
 				{
+					...makeContent(),
 					versionNumber: 2,
 					ingredients: [ing('2 cup flour')],
 					steps: [{ text: 'One changed.' }]
 				},
-				{ versionNumber: 1, ingredients: flour, steps: [{ text: 'One.' }] }
+				{ ...makeContent(), versionNumber: 1, ingredients: flour, steps: [{ text: 'One.' }] }
 			]);
 
 		const result = await loadResult({
@@ -293,12 +296,14 @@ describe('homepage load', () => {
 			.mockReturnValueOnce(chain([]));
 		recipeVersionsFindManyMock.mockResolvedValue([
 			{
+				...makeContent(),
 				versionNumber: 3,
 				commitMessage: 'Chill the dough',
 				ingredients: [ing('½ cup sugar')],
 				steps: []
 			},
 			{
+				...makeContent(),
 				versionNumber: 2,
 				commitMessage: 'Increased vanilla',
 				ingredients: [ing('¾ cup sugar')],
@@ -343,20 +348,23 @@ describe('homepage load', () => {
 		recipeVersionsFindManyMock
 			.mockResolvedValueOnce([
 				{
+					...makeContent(),
 					versionNumber: 2,
 					ingredients: [ing('2 tsp vanilla')],
 					steps
 				},
-				{ versionNumber: 1, ingredients: [ing('1 tsp vanilla')], steps }
+				{ ...makeContent(), versionNumber: 1, ingredients: [ing('1 tsp vanilla')], steps }
 			])
 			// Candidate 2 is older but rewrites three ingredients and a step.
 			.mockResolvedValueOnce([
 				{
+					...makeContent(),
 					versionNumber: 2,
 					ingredients: [ing('½ cup sugar'), ing('1 cup brown sugar'), ing('1 tsp flaky salt')],
 					steps: [{ text: 'Chill the dough overnight.' }]
 				},
 				{
+					...makeContent(),
 					versionNumber: 1,
 					ingredients: [ing('¾ cup sugar'), ing('¾ cup brown sugar')],
 					steps
@@ -386,8 +394,8 @@ describe('homepage load', () => {
 			.mockReturnValueOnce(chain([]));
 
 		const pair = (name: string) => [
-			{ versionNumber: 2, ingredients: [ing(`2 tsp ${name}`)], steps: [] },
-			{ versionNumber: 1, ingredients: [ing(`1 tsp ${name}`)], steps: [] }
+			{ ...makeContent(), versionNumber: 2, ingredients: [ing(`2 tsp ${name}`)], steps: [] },
+			{ ...makeContent(), versionNumber: 1, ingredients: [ing(`1 tsp ${name}`)], steps: [] }
 		];
 		recipeVersionsFindManyMock
 			.mockResolvedValueOnce(pair('vanilla'))

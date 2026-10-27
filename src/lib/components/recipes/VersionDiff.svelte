@@ -1,13 +1,32 @@
 <script lang="ts">
-	import type { IngredientDiffRow, InlineSegment, StepDiffRow } from '#lib/recipes/diff.js';
+	import type {
+		IngredientDiffRow,
+		InlineSegment,
+		MetaDiffRow,
+		MetaField,
+		StepDiffRow
+	} from '#lib/recipes/diff.js';
 
 	let {
+		metaDiff,
 		ingredientDiff,
 		stepDiff
 	}: {
+		metaDiff: MetaDiffRow[];
 		ingredientDiff: IngredientDiffRow[];
 		stepDiff: StepDiffRow[];
 	} = $props();
+
+	const LABEL: Record<MetaField, string> = {
+		title: 'Title',
+		description: 'Description',
+		servings: 'Servings',
+		prepTimeMinutes: 'Prep time',
+		cookTimeMinutes: 'Cook time'
+	};
+
+	// Zero is a value; only null is "not set".
+	const show = (value: string | number | null) => (value === null ? '—' : String(value));
 
 	const GUTTER = { added: '+', removed: '−', modified: '~', unchanged: ' ' } as const;
 </script>
@@ -46,6 +65,24 @@
      viewport one: the compare page constrains the diff to a 720px reading column
      and must stay stacked even on a wide screen, while the landing page gives it
      the full width and should split. -->
+<!-- Title, description, servings and times. Only rendered when something
+     changed: an empty Details panel would be noise above every diff. -->
+{#if metaDiff.length > 0}
+	{#snippet metaRows()}
+		{#each metaDiff as row (row.field)}
+			<div class="diff-row diff-modified">
+				{@render gutter('modified')}
+				<span class="diff-content">
+					{LABEL[row.field]}:
+					<span class="diff-removed">{show(row.from)}</span>
+					<span class="diff-added">{show(row.to)}</span>
+				</span>
+			</div>
+		{/each}
+	{/snippet}
+	{@render panel('Details', false, metaRows)}
+{/if}
+
 <div class="@container">
 	<div class="grid gap-x-8 @3xl:grid-cols-2">
 		{#snippet ingredientRows()}

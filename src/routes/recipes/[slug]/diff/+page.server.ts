@@ -2,7 +2,7 @@ import { error } from '@sveltejs/kit';
 import { db } from '#lib/server/db/index.js';
 import { recipes, recipeVersions } from '#lib/server/db/schema.js';
 import { eq, asc } from 'drizzle-orm';
-import { diffIngredients, diffSteps } from '#lib/recipes/diff.js';
+import { diffIngredients, diffMeta, diffSteps } from '#lib/recipes/diff.js';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params, url, locals }) => {
@@ -37,11 +37,13 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 
 	const ingredientDiff = diffIngredients(fromVersion.ingredients, toVersion.ingredients);
 	const stepDiff = diffSteps(fromVersion.steps, toVersion.steps);
+	const metaDiff = diffMeta(fromVersion, toVersion);
 
 	return {
 		recipe,
 		fromVersion,
 		toVersion,
+		metaDiff,
 		ingredientDiff,
 		stepDiff,
 		allVersions

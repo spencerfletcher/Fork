@@ -10,9 +10,14 @@ export const CONTENT_GROUPS = [
 ] as const;
 export type ContentGroup = (typeof CONTENT_GROUPS)[number];
 
+// Shared with diffMeta, so the diff and the "did it change" decision agree.
+export const normaliseTitle = (title: string): string => title.trim();
+export const normaliseDescription = (description: string | null): string | null =>
+	description?.trim() || null;
+
 const VIEW: Record<ContentGroup, (c: RecipeContent) => unknown> = {
-	title: (c) => c.title.trim(),
-	description: (c) => c.description?.trim() || null,
+	title: (c) => normaliseTitle(c.title),
+	description: (c) => normaliseDescription(c.description),
 	servings: (c) => c.servings,
 	times: (c) => [c.prepTimeMinutes, c.cookTimeMinutes],
 	ingredients: (c) => c.ingredients.map((i) => i.text),

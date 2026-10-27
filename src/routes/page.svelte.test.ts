@@ -43,6 +43,7 @@ describe('/+page.svelte', () => {
 			fromVersion: 2,
 			toVersion: 3,
 			commitMessage: 'Worked the smoked paprika into the marinade',
+			metaDiff: [],
 			ingredientDiff: [],
 			stepDiff: [
 				{

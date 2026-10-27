@@ -1,5 +1,12 @@
 import { diffWords } from 'diff';
-import type { Ingredient, Step, StepAnnotation, StepAnnotationType } from '#lib/recipes/types.js';
+import { normaliseTitle, normaliseDescription } from './content.js';
+import type {
+	Ingredient,
+	Step,
+	StepAnnotation,
+	StepAnnotationType,
+	RecipeContent
+} from '#lib/recipes/types.js';
 
 export interface InlineSegment {
 	type: 'added' | 'removed' | 'unchanged';
@@ -27,6 +34,37 @@ export type StepDiffRow =
 			segments: InlineSegment[];
 			annotation?: AnnotationDiff;
 	  };
+
+export type MetaField =
+	'title' | 'description' | 'servings' | 'prepTimeMinutes' | 'cookTimeMinutes';
+export type MetaDiffRow = {
+	field: MetaField;
+	from: string | number | null;
+	to: string | number | null;
+};
+const META_FIELDS: MetaField[] = [
+	'title',
+	'description',
+	'servings',
+	'prepTimeMinutes',
+	'cookTimeMinutes'
+];
+
+// One field's comparable value, normalised the same way contentChanged does.
+function metaValue(content: RecipeContent, field: MetaField): string | number | null {
+	if (field === 'title') return normaliseTitle(content.title);
+	if (field === 'description') return normaliseDescription(content.description);
+	return content[field];
+}
+
+/** The metadata fields that differ between two versions, in display order. */
+export function diffMeta(from: RecipeContent, to: RecipeContent): MetaDiffRow[] {
+	return META_FIELDS.map((field) => ({
+		field,
+		from: metaValue(from, field),
+		to: metaValue(to, field)
+	})).filter((row) => row.from !== row.to);
+}
 
 export function diffInline(a: string, b: string): InlineSegment[] {
 	return diffWords(a, b).map((part) => ({

@@ -1,7 +1,7 @@
 import { db } from '#lib/server/db/index.js';
 import { recipes, recipeVersions } from '#lib/server/db/schema.js';
 import { desc, eq } from 'drizzle-orm';
-import { diffIngredients, diffSteps } from '#lib/recipes/diff.js';
+import { diffIngredients, diffMeta, diffSteps } from '#lib/recipes/diff.js';
 import { attachRecipeCounts } from '#lib/server/recipeCounts.js';
 import type { PageServerLoad } from './$types';
 
@@ -51,6 +51,7 @@ export const load: PageServerLoad = async ({ locals: { user } }) => {
 		fromVersion: number;
 		toVersion: number;
 		commitMessage: string | null;
+		metaDiff: ReturnType<typeof diffMeta>;
 		ingredientDiff: ReturnType<typeof diffIngredients>;
 		stepDiff: ReturnType<typeof diffSteps>;
 	} | null = null;
@@ -99,11 +100,12 @@ export const load: PageServerLoad = async ({ locals: { user } }) => {
 				to.steps as Parameters<typeof diffSteps>[0]
 			);
 
+			const metaDiff = diffMeta(from, to);
 			const changedIngredients = ingredientDiff.filter((r) => r.status !== 'unchanged').length;
 			const changedSteps = stepDiff.filter((r) => r.status !== 'unchanged').length;
 			const rank = [
 				changedIngredients > 0 && changedSteps > 0 ? 1 : 0,
-				changedIngredients + changedSteps
+				changedIngredients + changedSteps + metaDiff.length
 			];
 
 			// Strictly greater, so an equal rank leaves the newer candidate in
@@ -118,6 +120,7 @@ export const load: PageServerLoad = async ({ locals: { user } }) => {
 					fromVersion: from.versionNumber,
 					toVersion: to.versionNumber,
 					commitMessage: to.commitMessage,
+					metaDiff,
 					ingredientDiff,
 					stepDiff
 				};

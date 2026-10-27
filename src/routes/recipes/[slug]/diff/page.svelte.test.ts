@@ -43,6 +43,7 @@ function makeData(
 		fromVersion: overrides.fromVersion ?? V1,
 		toVersion: overrides.toVersion ?? V2,
 		allVersions: overrides.allVersions ?? [V1, V2],
+		metaDiff: [],
 		ingredientDiff: overrides.ingredientDiff ?? [],
 		stepDiff: overrides.stepDiff ?? [],
 		user: null

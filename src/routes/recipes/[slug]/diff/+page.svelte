@@ -6,7 +6,7 @@
 
 	let { data }: { data: PageData } = $props();
 
-	const { recipe, ingredientDiff, stepDiff, allVersions } = $derived(data);
+	const { recipe, metaDiff, ingredientDiff, stepDiff, allVersions } = $derived(data);
 
 	// Writable derived: the pickers can change them, and they reset to the loaded
 	// range whenever the page data changes, including on back/forward.
@@ -55,6 +55,6 @@
 			</div>
 		</div>
 
-		<VersionDiff {ingredientDiff} {stepDiff} />
+		<VersionDiff {metaDiff} {ingredientDiff} {stepDiff} />
 	</div>
 </div>
