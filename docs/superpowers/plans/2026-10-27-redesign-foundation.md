@@ -209,21 +209,16 @@ test('mobile nav has a search icon link beside the menu toggle', () => {
 		.find((l) => l.getAttribute('aria-label') === 'Search');
 	expect(icon).toHaveAttribute('href', '/search');
 });
-
-test('the new recipe control reads "+ New recipe"', () => {
-	render(Navbar, { props: { user: makeUser('chef@example.com') } });
-	expect(screen.getAllByRole('link', { name: '+ New recipe' }).length).toBeGreaterThanOrEqual(1);
-});
 ```
 
-- [ ] **Step 2: Run them to see them fail**
+- [ ] **Step 2: Run it to see it fail**
 
 Run: `pnpm vitest run src/lib/components/ui/Navbar.svelte.test.ts`
-Expected: FAIL, both: no link with `aria-label="Search"`; the control reads "+ New Recipe".
+Expected: FAIL: no link with `aria-label="Search"`.
 
 - [ ] **Step 3: Restyle the navbar**
 
-Markup changes: the bar is `h-14` on desktop, `h-[52px]` under `md`; next to the menu toggle, visible only under `md`, an `<a href="/search" aria-label="Search">` sized 44×44 with an inline stroke magnifier SVG (`aria-hidden="true"`), colour tan; CTA text "+ New recipe"; mobile menu list order unchanged.
+Markup changes: the bar is `h-14` on desktop, `h-[52px]` under `md`; next to the menu toggle, visible only under `md`, an `<a href="/search" aria-label="Search">` sized 44×44 with an inline stroke magnifier SVG (`aria-hidden="true"`), colour tan; CTA text stays "+ New Recipe" (Spencer's call over the mock's lowercase r); mobile menu list order unchanged.
 
 Style changes in the component's `<style>`: `.nav-brand` Bitter 600 at `1.375rem`, paper; the dot `text-marigold`; `.navbar-link` Source Sans 500 at `0.875rem`, tan, active and hover paper; `.nav-cta` marigold fill, ink text, `border-radius: var(--radius-md)`, padding `7px 14px`, weight 600, hover `--color-marigold-hover`; the `@username` link mono `0.75rem` tan; `.nav-menu-toggle` and the search link 44×44; add
 
@@ -236,7 +231,7 @@ nav :focus-visible {
 - [ ] **Step 4: Run the navbar tests**
 
 Run: `pnpm vitest run src/lib/components/ui/Navbar.svelte.test.ts`
-Expected: PASS, all tests including the two new ones.
+Expected: PASS, all tests including the new one.
 
 - [ ] **Step 5: Look at it**
 
