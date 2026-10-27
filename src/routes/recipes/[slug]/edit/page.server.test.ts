@@ -249,6 +249,22 @@ describe('save', () => {
 		noWrites();
 	});
 
+	test('a tab already stale on the loaded row is refused before it uploads anything', async () => {
+		findRecipeMock.mockResolvedValue({ ...RECIPE, editRevision: 2 });
+		const result = await save({ ...UNCHANGED, servings: '8' }, { file: new File(['x'], 'a.png') });
+		expect(result.status).toBe(409);
+		expect(uploadMock).not.toHaveBeenCalled();
+		expect(transactionMock).not.toHaveBeenCalled();
+	});
+
+	test('losing ownership between load and lock is a 403, and a new upload is removed', async () => {
+		tx = makeTx({ locked: [{ ...LOCKED, authorId: 'someone-else' }] });
+		const result = await save(UNCHANGED, { file: new File(['x'], 'a.png') });
+		expect(result.status).toBe(403);
+		expect(removeMock).toHaveBeenCalledWith(SUPABASE, 'owner-123/new.png');
+		expect(tx.insert).not.toHaveBeenCalled();
+	});
+
 	test('two submissions with the same revision give one success and one 409, never two versions', async () => {
 		tx = makeTx({ locked: [LOCKED, { ...LOCKED, editRevision: 1 }] });
 		const first = await save({ ...UNCHANGED, servings: '8' });

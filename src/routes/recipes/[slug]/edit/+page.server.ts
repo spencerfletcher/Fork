@@ -65,6 +65,9 @@ export const actions: Actions = {
 			return fail(400, { error: 'Invalid form state, reload the page', draft });
 		}
 		const editRevision = Number(draft.editRevision);
+		// A tab that is already stale need not upload its photo first; the check
+		// that counts is the one under the row lock below.
+		if (recipe.editRevision !== editRevision) return fail(409, { error: STALE_MESSAGE, draft });
 
 		// Storage is outside the transaction: upload first, remove on a failed save.
 		let image: UploadedImage | null = null;
@@ -77,16 +80,18 @@ export const actions: Actions = {
 			}
 		}
 
-		let outcome: 'stale' | 'saved' | 'unchanged';
+		let outcome: 'stale' | 'forbidden' | 'saved' | 'unchanged';
 		try {
 			outcome = await db.transaction(async (tx) => {
-				// Serialise saves on this recipe; nothing is read before the lock.
+				// Serialise saves on this recipe. The recipe row and its tags were read
+				// before this lock only for auth and the tag comparison; any concurrent
+				// change to either bumps editRevision, which is rechecked right here.
 				const [locked] = await tx
 					.select()
 					.from(recipes)
 					.where(eq(recipes.id, recipe.id))
 					.for('update');
-				if (!locked || locked.authorId !== user.id) throw error(403, 'Not authorized');
+				if (!locked || locked.authorId !== user.id) return 'forbidden';
 				if (locked.editRevision !== editRevision) return 'stale';
 
 				const latest = await tx.query.recipeVersions.findFirst({
@@ -99,9 +104,8 @@ export const actions: Actions = {
 				const imageUrl = image ? image.url : draft.removeImage ? null : (latest?.imageUrl ?? null);
 				const submitted: RecipeContent = { ...content.value, imageUrl };
 				const changed = latest ? contentChanged(latest, submitted) : true;
-				const { ingredients, steps, ...copies } = submitted;
-				void ingredients;
-				void steps;
+				const { title, description, servings, prepTimeMinutes, cookTimeMinutes } = submitted;
+				const copies = { title, description, servings, prepTimeMinutes, cookTimeMinutes, imageUrl };
 
 				const tagsChanged = !sameTags(
 					recipe.recipesToTags.map((r) => r.tag.name),
@@ -144,8 +148,9 @@ export const actions: Actions = {
 			return fail(500, { error: 'Could not save the recipe. Please try again.', draft });
 		}
 
-		if (outcome === 'stale') {
+		if (outcome === 'stale' || outcome === 'forbidden') {
 			if (image) await removeRecipeImage(supabase, image.path);
+			if (outcome === 'forbidden') throw error(403, 'Not authorized');
 			return fail(409, { error: STALE_MESSAGE, draft });
 		}
 		throw redirect(303, `/recipes/${params.slug}`);
