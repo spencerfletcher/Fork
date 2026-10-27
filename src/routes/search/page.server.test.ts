@@ -74,36 +74,30 @@ describe('search load', () => {
 		);
 	});
 
-	test('preserves ranked order, not database order', async () => {
-		// Ranking puts 2 before 1; findMany returns them the other way round.
+	test('a search is one relational query, ranked in the database', async () => {
 		selectDistinctMock.mockReturnValue(chain([])); // tags for the filter UI
-		selectMock
-			.mockReturnValueOnce(chain([{ id: 2 }, { id: 1 }])) // pass 1: ranked FTS hits
-			.mockReturnValueOnce(chain([])) // pass 2: no ingredient-only matches
-			.mockReturnValueOnce(chain([])) // attachRecipeCounts: version counts
-			.mockReturnValueOnce(chain([])); // attachRecipeCounts: fork counts
-		findManyMock.mockResolvedValue([
-			{ id: 1, title: 'One', author: null, recipesToTags: [] },
-			{ id: 2, title: 'Two', author: null, recipesToTags: [] }
-		]);
-
-		const result = await loadResult(makeEvent('cookie'));
-
-		expect(result.recipes.map((r) => r.id)).toEqual([2, 1]);
-	});
-
-	test('hydrates with a single relational query', async () => {
-		selectDistinctMock.mockReturnValue(chain([])); // tags for the filter UI
-		selectMock
-			.mockReturnValueOnce(chain([{ id: 1 }])) // pass 1: ranked FTS hits
-			.mockReturnValueOnce(chain([])) // pass 2: no ingredient-only matches
-			.mockReturnValueOnce(chain([])) // attachRecipeCounts: version counts
-			.mockReturnValueOnce(chain([])); // attachRecipeCounts: fork counts
+		selectMock.mockReturnValue(chain([])); // attachRecipeCounts aggregates
 		findManyMock.mockResolvedValue([{ id: 1, author: null, recipesToTags: [] }]);
 
 		await loadResult(makeEvent('cookie'));
 
 		expect(findManyMock).toHaveBeenCalledTimes(1);
+		// Relevance first, then recency; without a query only recency applies.
+		expect(findManyMock.mock.calls[0][0].orderBy).toHaveLength(2);
+	});
+
+	test('keeps database order when there is no query', async () => {
+		selectDistinctMock.mockReturnValue(chain([]));
+		selectMock.mockReturnValue(chain([]));
+		findManyMock.mockResolvedValue([
+			{ id: 2, title: 'Two', author: null, recipesToTags: [] },
+			{ id: 1, title: 'One', author: null, recipesToTags: [] }
+		]);
+
+		const result = await loadResult(makeEvent(''));
+
+		expect(result.recipes.map((r) => r.id)).toEqual([2, 1]);
+		expect(findManyMock.mock.calls[0][0].orderBy).toHaveLength(1);
 	});
 
 	test('offers only tags that have at least one recipe', async () => {

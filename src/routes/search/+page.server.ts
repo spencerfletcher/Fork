@@ -1,6 +1,6 @@
 import { db } from '#lib/server/db/index.js';
 import { recipes, recipeVersions } from '#lib/server/db/schema.js';
-import { eq, and, or, inArray, desc, sql } from 'drizzle-orm';
+import { eq, and, or, inArray, desc, exists, sql } from 'drizzle-orm';
 import { attachRecipeCounts } from '#lib/server/recipeCounts.js';
 import { byTagMatches, tagMatchCounts, visibleTags } from '#lib/server/tagFilter.js';
 import { clampDescription } from '#lib/seo.js';
@@ -19,107 +19,63 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 		)
 	});
 
-	// ── Visibility: public recipes, or the user's own ────────────────────────
+	// Public recipes, or the user's own.
 	const visibilityCondition = user
 		? or(eq(recipes.isPublic, true), eq(recipes.authorId, user.id))
 		: eq(recipes.isPublic, true);
 
 	const allTags = await visibleTags(visibilityCondition);
 
-	// ── Tag filter ───────────────────────────────────────────────────────────
+	// Tag filter: OR over the selected tags, ranked by how many matched below.
 	let matchCounts = new Map<number, number>();
 	if (tagSlugs.length > 0) {
 		const tagIds = allTags.filter((t) => tagSlugs.includes(t.slug)).map((t) => t.id);
 		if (tagIds.length > 0) matchCounts = await tagMatchCounts(tagIds);
-		// Tags specified but nothing matched — short-circuit
 		if (matchCounts.size === 0) {
 			return { recipes: [], allTags, searchQuery, selectedTags: tagSlugs, meta: searchMeta(0) };
 		}
 	}
 
-	const baseConditions = [visibilityCondition];
-	if (matchCounts.size > 0) baseConditions.push(inArray(recipes.id, [...matchCounts.keys()]));
-
-	// ── Search ───────────────────────────────────────────────────────────────
-	let results: (typeof recipes.$inferSelect)[];
-
-	if (searchQuery) {
-		const tsQuery = sql`websearch_to_tsquery('english', ${searchQuery})`;
-
-		// Pass 1: title + description FTS (ranked by ts_rank, highest first)
-		const titleDescMatches = await db
-			.select()
-			.from(recipes)
-			.where(and(...baseConditions, sql`${recipes.fts} @@ ${tsQuery}`))
-			.orderBy(sql`ts_rank(${recipes.fts}, ${tsQuery}) DESC`, desc(recipes.createdAt));
-
-		const titleDescIds = new Set(titleDescMatches.map((r) => r.id));
-
-		// Pass 2: ingredient name FTS against recipe_versions JSONB
-		// Extracts ingredient names from each version and searches them.
-		// Only surfaces recipes not already in pass 1.
-		const ingredientRows = await db
-			.select({ recipeId: recipeVersions.recipeId })
-			.from(recipeVersions)
-			.where(
-				sql`to_tsvector('english', (
-					SELECT coalesce(string_agg(ing->>'name', ' '), '')
-					FROM jsonb_array_elements(${recipeVersions.ingredients}) AS ing
-				)) @@ ${tsQuery}`
-			);
-
-		const ingredientOnlyIds = [
-			...new Set(
-				ingredientRows
-					.map((r) => r.recipeId)
-					.filter((id): id is number => id !== null && !titleDescIds.has(id))
+	// A recipe matches the query on its own text (the generated fts column) or on
+	// an ingredient name in any of its versions. Text hits rank by relevance;
+	// ingredient-only hits score zero there and follow, newest first.
+	const tsQuery = searchQuery ? sql`websearch_to_tsquery('english', ${searchQuery})` : null;
+	const textMatch = tsQuery
+		? or(
+				sql`${recipes.fts} @@ ${tsQuery}`,
+				exists(
+					db
+						.select({ one: sql`1` })
+						.from(recipeVersions)
+						.where(
+							and(
+								eq(recipeVersions.recipeId, recipes.id),
+								sql`to_tsvector('english', (
+									SELECT coalesce(string_agg(ing->>'name', ' '), '')
+									FROM jsonb_array_elements(${recipeVersions.ingredients}) AS ing
+								)) @@ ${tsQuery}`
+							)
+						)
+				)
 			)
-		];
+		: undefined;
 
-		let ingredientOnlyRecipes: (typeof recipes.$inferSelect)[] = [];
-		if (ingredientOnlyIds.length > 0) {
-			ingredientOnlyRecipes = await db
-				.select()
-				.from(recipes)
-				.where(and(...baseConditions, inArray(recipes.id, ingredientOnlyIds)))
-				.orderBy(desc(recipes.createdAt));
-		}
-
-		// Title/description hits first, ingredient-only hits appended after
-		results = [...titleDescMatches, ...ingredientOnlyRecipes];
-	} else {
-		// No search query — return all visible/tag-filtered recipes
-		results = await db
-			.select()
-			.from(recipes)
-			.where(and(...baseConditions))
-			.orderBy(desc(recipes.createdAt));
-	}
+	const rows = await db.query.recipes.findMany({
+		where: and(
+			visibilityCondition,
+			matchCounts.size > 0 ? inArray(recipes.id, [...matchCounts.keys()]) : undefined,
+			textMatch
+		),
+		with: { recipesToTags: { with: { tag: true } }, author: true },
+		orderBy: tsQuery
+			? [sql`ts_rank(${recipes.fts}, ${tsQuery}) DESC`, desc(recipes.createdAt)]
+			: [desc(recipes.createdAt)]
+	});
 
 	// Rank by how many selected tags matched, unless searching: FTS rank wins then.
-	if (!searchQuery && matchCounts.size > 0) results.sort(byTagMatches(matchCounts));
+	if (!searchQuery && matchCounts.size > 0) rows.sort(byTagMatches(matchCounts));
 
-	// ── Hydrate relations ─────────────────────────────────────────────────────
-	// The ranking above works on bare recipe rows. RecipeCard needs author and
-	// tags, so re-fetch the ranked ids with relations and restore the order —
-	// Postgres does not preserve inArray ordering.
-	const rankedIds = results.map((r) => r.id);
-
-	const rows =
-		rankedIds.length > 0
-			? await db.query.recipes.findMany({
-					where: inArray(recipes.id, rankedIds),
-					with: {
-						recipesToTags: { with: { tag: true } },
-						author: true
-					}
-				})
-			: [];
-
-	const byId = new Map(rows.map((r) => [r.id, r]));
-	const hydrated = rankedIds.map((id) => byId.get(id)).filter((r) => r !== undefined);
-
-	const withCounts = await attachRecipeCounts(hydrated);
+	const withCounts = await attachRecipeCounts(rows);
 
 	return {
 		recipes: withCounts,
