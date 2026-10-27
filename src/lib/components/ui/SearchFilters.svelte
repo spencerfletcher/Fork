@@ -11,7 +11,7 @@
 	}: {
 		initialQuery?: string;
 		initialTags?: string[];
-		availableTags: Tag[];
+		availableTags: Pick<Tag, 'id' | 'name' | 'slug'>[];
 	} = $props();
 
 	let searchQuery = $state(initialQuery);
@@ -46,27 +46,30 @@
 		});
 	}
 
-	function handleSearch(query: string) {
-		searchQuery = query;
+	// Tags apply on click; the search box applies on submit. Both read the
+	// current query, so a tag click right after typing carries the new text.
+	function handleTagToggle(tagSlug: string) {
+		selectedTags = selectedTags.includes(tagSlug)
+			? selectedTags.filter((slug) => slug !== tagSlug)
+			: [...selectedTags, tagSlug];
+		applyFilters();
 	}
 
-	function handleTagToggle(tagSlug: string) {
-		if (selectedTags.includes(tagSlug)) {
-			selectedTags = selectedTags.filter((slug) => slug !== tagSlug);
-		} else {
-			selectedTags = [...selectedTags, tagSlug];
-		}
-		// Apply filters immediately when a tag is toggled
+	function handleClear() {
+		selectedTags = [];
 		applyFilters();
 	}
 </script>
 
 <div class="border-border space-y-4 rounded-lg border bg-white p-4">
 	<SearchBar
-		value={searchQuery}
+		bind:value={searchQuery}
 		placeholder="Search recipes by title..."
-		onSearch={handleSearch}
 		onSubmit={applyFilters} />
 
-	<TagFilter {availableTags} selectedTagSlugs={selectedTags} onTagToggle={handleTagToggle} />
+	<TagFilter
+		{availableTags}
+		selectedTagSlugs={selectedTags}
+		onTagToggle={handleTagToggle}
+		onClear={handleClear} />
 </div>

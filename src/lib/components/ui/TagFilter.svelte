@@ -3,17 +3,15 @@
 
 	let {
 		availableTags,
-		selectedTagSlugs = $bindable([]),
-		onTagToggle
+		selectedTagSlugs = [],
+		onTagToggle,
+		onClear
 	}: {
-		availableTags: Tag[];
+		availableTags: Pick<Tag, 'id' | 'name' | 'slug'>[];
 		selectedTagSlugs?: string[];
 		onTagToggle: (tagSlug: string) => void;
+		onClear: () => void;
 	} = $props();
-
-	function clearAllTags() {
-		selectedTagSlugs.forEach((slug) => onTagToggle(slug));
-	}
 </script>
 
 <div class="flex flex-col gap-3">
@@ -24,7 +22,7 @@
 		{#if selectedTagSlugs.length > 0}
 			<button
 				type="button"
-				onclick={clearAllTags}
+				onclick={onClear}
 				class="text-text-3 hover:text-accent cursor-pointer border-none bg-transparent p-0 font-sans text-[0.8rem] transition-colors duration-150">
 				Clear all
 			</button>

@@ -2,52 +2,20 @@
 	let {
 		value = $bindable(''),
 		placeholder = 'Search...',
-		onSearch,
 		onSubmit
 	}: {
 		value?: string;
 		placeholder?: string;
-		onSearch: (query: string) => void;
-		onSubmit?: () => void;
+		onSubmit: () => void;
 	} = $props();
-
-	// eslint-disable-next-line svelte/prefer-writable-derived
-	let searchValue = $state(value);
-	let debounceTimer: ReturnType<typeof setTimeout> | null = null;
-
-	// Update local state when prop changes
-	$effect(() => {
-		searchValue = value;
-	});
-
-	function handleInput(e: Event) {
-		const target = e.target as HTMLInputElement;
-		searchValue = target.value;
-
-		// Clear existing timer
-		if (debounceTimer) {
-			clearTimeout(debounceTimer);
-		}
-
-		// Debounce for 300ms
-		debounceTimer = setTimeout(() => {
-			onSearch(searchValue);
-		}, 300);
-	}
-
-	function handleSubmit(e: Event) {
-		e.preventDefault();
-		if (debounceTimer) {
-			clearTimeout(debounceTimer);
-		}
-		onSearch(searchValue);
-		if (onSubmit) {
-			onSubmit();
-		}
-	}
 </script>
 
-<form onsubmit={handleSubmit} class="relative">
+<form
+	onsubmit={(e) => {
+		e.preventDefault();
+		onSubmit();
+	}}
+	class="relative">
 	<div class="relative">
 		<!-- Search Icon -->
 		<div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
@@ -65,11 +33,9 @@
 			</svg>
 		</div>
 
-		<!-- Input -->
 		<input
 			type="search"
-			value={searchValue}
-			oninput={handleInput}
+			bind:value
 			{placeholder}
 			class="border-border text-foreground placeholder-muted-foreground focus:border-primary focus:ring-primary/20 w-full rounded-md border bg-white py-2 pr-3 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none" />
 	</div>
