@@ -22,20 +22,7 @@ const optionalInt = (min: number, label: string) =>
 				.nullable()
 		);
 
-const metaSchema = z.object({
-	title: z.string().trim().min(1, 'Title is required'),
-	description: z
-		.string()
-		.trim()
-		.transform((s) => s || null),
-	servings: optionalInt(1, 'Servings'),
-	prepTimeMinutes: optionalInt(0, 'Prep time'),
-	cookTimeMinutes: optionalInt(0, 'Cook time'),
-	isPublic: z.boolean(),
-	tagNames: z.array(z.string())
-});
-
-const contentSchema = z.object({
+const textSchema = z.object({
 	ingredients: z
 		.string()
 		.max(MAX_FIELD, FIELD_TOO_LONG('Ingredients'))
@@ -49,10 +36,47 @@ const contentSchema = z.object({
 		.pipe(z.array(z.custom<Step>()).min(1, 'At least one step is required'))
 });
 
+const recipeContentSchema = z.object({
+	title: z.string().trim().min(1, 'Title is required'),
+	description: z
+		.string()
+		.trim()
+		.transform((s) => s || null),
+	servings: optionalInt(1, 'Servings'),
+	prepTimeMinutes: optionalInt(0, 'Prep time'),
+	cookTimeMinutes: optionalInt(0, 'Cook time'),
+	...textSchema.shape
+});
+
+const metaSchema = recipeContentSchema
+	.omit({ ingredients: true, steps: true })
+	.extend({ isPublic: z.boolean(), tagNames: z.array(z.string()) });
+
 export type RecipeMeta = z.output<typeof metaSchema>;
 
 /** What a parser hands back: the typed value, or the first message to show the user. */
 export type Result<T> = { ok: true; value: T } | { ok: false; error: string };
+
+export type Settings = {
+	isPublic: boolean;
+	tagNames: string[];
+};
+
+export type RecipeDraft = {
+	title: string;
+	description: string;
+	servings: string;
+	prepTimeMinutes: string;
+	cookTimeMinutes: string;
+	ingredients: string;
+	steps: string;
+	commitMessage: string;
+	editRevision: string;
+	isPublic: boolean;
+	tags: string[];
+	hadPhoto: boolean;
+	removeImage: boolean;
+};
 
 function text(formData: FormData, key: string): string {
 	const value = formData.get(key);
@@ -75,7 +99,7 @@ export function parseRecipeMeta(formData: FormData): Result<RecipeMeta> {
 		prepTimeMinutes: text(formData, 'prepTimeMinutes'),
 		cookTimeMinutes: text(formData, 'cookTimeMinutes'),
 		isPublic: formData.get('isPublic') === 'on',
-		tagNames: formData.getAll('tags').filter((t): t is string => typeof t === 'string')
+		tagNames: tagsOf(formData)
 	});
 }
 
@@ -83,8 +107,66 @@ export function parseRecipeMeta(formData: FormData): Result<RecipeMeta> {
 export function parseRecipeContent(
 	formData: FormData
 ): Result<Pick<RecipeContent, 'ingredients' | 'steps'>> {
-	return parse(contentSchema, {
+	return parse(textSchema, {
 		ingredients: text(formData, 'ingredients'),
 		steps: text(formData, 'steps')
 	});
+}
+
+export function parseContent(formData: FormData): Result<RecipeContent> {
+	return parse(recipeContentSchema, {
+		title: text(formData, 'title'),
+		description: text(formData, 'description'),
+		servings: text(formData, 'servings'),
+		prepTimeMinutes: text(formData, 'prepTimeMinutes'),
+		cookTimeMinutes: text(formData, 'cookTimeMinutes'),
+		ingredients: text(formData, 'ingredients'),
+		steps: text(formData, 'steps')
+	});
+}
+
+const settingsSchema = z.object({
+	isPublic: z.boolean(),
+	tagNames: z.array(z.string()).transform((names) => {
+		const seen = new Set<string>();
+		return names
+			.map((n) => n.trim())
+			.filter((n) => n !== '' && !seen.has(n.toLowerCase()) && !!seen.add(n.toLowerCase()));
+	})
+});
+
+export function parseSettings(formData: FormData): Result<Settings> {
+	return parse(settingsSchema, {
+		isPublic: formData.get('isPublic') === 'on',
+		tagNames: formData.getAll('tags').filter((t): t is string => typeof t === 'string')
+	});
+}
+/** Tag names as submitted, before any trimming or deduplication. */
+function tagsOf(formData: FormData): string[] {
+	return formData.getAll('tags').filter((t): t is string => typeof t === 'string');
+}
+
+/**
+ * Every submitted field exactly as typed, so a failed save can hand the form
+ * back what the user entered, invalid values included. Nothing here is
+ * validated or trimmed; that is the parsers' job.
+ */
+export function draftOf(formData: FormData): RecipeDraft {
+	const image = formData.get('image');
+	return {
+		title: text(formData, 'title'),
+		description: text(formData, 'description'),
+		servings: text(formData, 'servings'),
+		prepTimeMinutes: text(formData, 'prepTimeMinutes'),
+		cookTimeMinutes: text(formData, 'cookTimeMinutes'),
+		ingredients: text(formData, 'ingredients'),
+		steps: text(formData, 'steps'),
+		commitMessage: text(formData, 'commitMessage'),
+		editRevision: text(formData, 'editRevision'),
+		isPublic: formData.get('isPublic') === 'on',
+		tags: tagsOf(formData),
+		// The file itself cannot be echoed back; the page uses this to say so.
+		hadPhoto: image instanceof File && image.size > 0,
+		removeImage: formData.get('removeImage') === 'on'
+	};
 }
