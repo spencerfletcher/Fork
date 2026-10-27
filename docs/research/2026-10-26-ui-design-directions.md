@@ -132,6 +132,19 @@ Changes: no dark hero; the title sits on paper in a large serif, version number 
 
 Risk: it can read as austere. Tomato must be used sparingly (the fork button, version numbers, the current version in the strip) or it becomes a warning colour.
 
+## Six accents for C (2026-10-27)
+
+Spencer picked C. Six accents on the same paper, ink, type and diff tints, light and dark, on the canvas at https://claude.ai/artifact/NSeJa5Xb6Me8TtURKhGLWB. Every accent passes AA as text on its ground and as a filled button with paper (light) or ink (dark) text.
+
+| # | Name | Light | Dark | Note |
+| --- | --- | --- | --- | --- |
+| 1 | Verdigris | `#0e6b66` (5.7) | `#5fc9c0` (9.4) | Blue-green, between the diff's green and red |
+| 2 | Cobalt | `#2452a8` (6.7) | `#8ab4ff` (8.9) | The web's link colour; reads "tool" |
+| 3 | Saffron ink | `#8a5e0a` (5.2) | `#f0b650` (10.2) | Today's amber, darkened until it can be text |
+| 4 | Damson | `#6e2a60` (8.8) | `#e39ad3` (8.7) | Plum skin; most editorial; strongest contrast |
+| 5 | Bay leaf | `#2f5d3a` (6.9) | `#86d187` (10.1) | Accent is the diff's "added" green; one colour fewer |
+| 6 | Squid ink | `#141210` | `#ece7de` | No accent: ink buttons, underlined links, the diff is the only colour |
+
 ## Typography options, independent of palette
 
 | Pairing | Titles | UI and meta | Reading | Fit |
