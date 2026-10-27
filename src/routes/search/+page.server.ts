@@ -1,7 +1,8 @@
 import { db } from '#lib/server/db/index.js';
-import { recipes, tags, recipesToTags, recipeVersions } from '#lib/server/db/schema.js';
+import { recipes, recipeVersions } from '#lib/server/db/schema.js';
 import { eq, and, or, inArray, desc, sql } from 'drizzle-orm';
 import { attachRecipeCounts } from '#lib/server/recipeCounts.js';
+import { byTagMatches, tagMatchCounts, visibleTags } from '#lib/server/tagFilter.js';
 import { clampDescription } from '#lib/seo.js';
 import type { PageServerLoad } from './$types';
 
@@ -23,45 +24,21 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 		? or(eq(recipes.isPublic, true), eq(recipes.authorId, user.id))
 		: eq(recipes.isPublic, true);
 
-	// ── Fetch tags up front — always needed for the filter UI ────────────────
-	// Only tags on recipes this viewer can see; a filter chip that leads to an
-	// empty page is worse than no chip, and a tag used only on someone else's
-	// private recipe must not appear at all. Tags drop off this list on their
-	// own when their last visible recipe goes away.
-	const allTags = await db
-		.selectDistinct({ id: tags.id, name: tags.name, slug: tags.slug })
-		.from(tags)
-		.innerJoin(recipesToTags, eq(recipesToTags.tagId, tags.id))
-		.innerJoin(recipes, eq(recipes.id, recipesToTags.recipeId))
-		.where(visibilityCondition)
-		.orderBy(tags.name);
+	const allTags = await visibleTags(visibilityCondition);
 
-	// ── Tag filter: collect matching recipe IDs up front ─────────────────────
-	let tagFilteredIds: number[] | null = null;
-	let tagMappings: { recipeId: number }[] = [];
-
+	// ── Tag filter ───────────────────────────────────────────────────────────
+	let matchCounts = new Map<number, number>();
 	if (tagSlugs.length > 0) {
-		const selectedTags = allTags.filter((t) => tagSlugs.includes(t.slug));
-		const tagIds = selectedTags.map((t) => t.id);
-
-		if (tagIds.length > 0) {
-			tagMappings = await db
-				.select({ recipeId: recipesToTags.recipeId })
-				.from(recipesToTags)
-				.where(inArray(recipesToTags.tagId, tagIds));
-			tagFilteredIds = [...new Set(tagMappings.map((m) => m.recipeId))];
-		}
-
+		const tagIds = allTags.filter((t) => tagSlugs.includes(t.slug)).map((t) => t.id);
+		if (tagIds.length > 0) matchCounts = await tagMatchCounts(tagIds);
 		// Tags specified but nothing matched — short-circuit
-		if (!tagFilteredIds || tagFilteredIds.length === 0) {
+		if (matchCounts.size === 0) {
 			return { recipes: [], allTags, searchQuery, selectedTags: tagSlugs, meta: searchMeta(0) };
 		}
 	}
 
 	const baseConditions = [visibilityCondition];
-	if (tagFilteredIds !== null) {
-		baseConditions.push(inArray(recipes.id, tagFilteredIds));
-	}
+	if (matchCounts.size > 0) baseConditions.push(inArray(recipes.id, [...matchCounts.keys()]));
 
 	// ── Search ───────────────────────────────────────────────────────────────
 	let results: (typeof recipes.$inferSelect)[];
@@ -119,15 +96,8 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 			.orderBy(desc(recipes.createdAt));
 	}
 
-	// ── Tag match count: sort by how many selected tags match ─────────────────
-	// Only applied when not searching (FTS rank takes priority when searching)
-	if (!searchQuery && tagMappings.length > 0) {
-		results.sort((a, b) => {
-			const countA = tagMappings.filter((m) => m.recipeId === a.id).length;
-			const countB = tagMappings.filter((m) => m.recipeId === b.id).length;
-			return countB - countA;
-		});
-	}
+	// Rank by how many selected tags matched, unless searching: FTS rank wins then.
+	if (!searchQuery && matchCounts.size > 0) results.sort(byTagMatches(matchCounts));
 
 	// ── Hydrate relations ─────────────────────────────────────────────────────
 	// The ranking above works on bare recipe rows. RecipeCard needs author and

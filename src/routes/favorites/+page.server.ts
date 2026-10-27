@@ -1,8 +1,9 @@
 import { redirect } from '@sveltejs/kit';
 import { db } from '#lib/server/db/index.js';
-import { recipes, favorites, tags, recipesToTags } from '#lib/server/db/schema.js';
+import { recipes, favorites, recipesToTags } from '#lib/server/db/schema.js';
 import { eq, and, ilike, inArray } from 'drizzle-orm';
 import { attachRecipeCounts } from '#lib/server/recipeCounts.js';
+import { byTagMatches, tagMatchCounts, visibleTags } from '#lib/server/tagFilter.js';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ url, locals: { user } }) => {
@@ -34,41 +35,16 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 		return { favoriteRecipes: [], allTags: [], searchQuery, selectedTags: tagSlugs };
 	}
 
-	// Filter chips are scoped to tags that actually appear on this user's
-	// favourites — a chip leading to an empty page is worse than no chip. Derived
-	// from every favourite rather than the filtered subset, or narrowing by one
-	// tag would remove the chips needed to widen the filter again.
-	const allTags = await db
-		.selectDistinct({ id: tags.id, name: tags.name, slug: tags.slug })
-		.from(tags)
-		.innerJoin(recipesToTags, eq(recipesToTags.tagId, tags.id))
-		.where(inArray(recipesToTags.recipeId, favoriteIds))
-		.orderBy(tags.name);
+	// Chips come from every favourite, not the filtered subset, or narrowing by
+	// one tag would remove the chips needed to widen the filter again.
+	const allTags = await visibleTags(inArray(recipesToTags.recipeId, favoriteIds));
 
-	// Tag filtering is OR logic: a recipe qualifies on any selected tag, and
-	// recipes matching more of them rank higher.
 	const selectedTagIds = allTags.filter((t) => tagSlugs.includes(t.slug)).map((t) => t.id);
-	const matchCounts = new Map<number, number>();
+	let matchCounts = new Map<number, number>();
 	let candidateIds = favoriteIds;
-
 	if (selectedTagIds.length > 0) {
-		const taggedRows = await db
-			.select({ recipeId: recipesToTags.recipeId })
-			.from(recipesToTags)
-			.where(
-				and(
-					inArray(recipesToTags.tagId, selectedTagIds),
-					inArray(recipesToTags.recipeId, favoriteIds)
-				)
-			);
-
-		for (const row of taggedRows) {
-			if (row.recipeId === null) continue;
-			matchCounts.set(row.recipeId, (matchCounts.get(row.recipeId) ?? 0) + 1);
-		}
-
+		matchCounts = await tagMatchCounts(selectedTagIds, favoriteIds);
 		candidateIds = [...matchCounts.keys()];
-
 		if (candidateIds.length === 0) {
 			return { favoriteRecipes: [], allTags, searchQuery, selectedTags: tagSlugs };
 		}
@@ -87,11 +63,7 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 		}
 	});
 
-	// Counts come from the map built above, so ranking is O(n log n) rather than
-	// rescanning the tag rows inside every comparison.
-	if (matchCounts.size > 0) {
-		rows.sort((a, b) => (matchCounts.get(b.id) ?? 0) - (matchCounts.get(a.id) ?? 0));
-	}
+	if (matchCounts.size > 0) rows.sort(byTagMatches(matchCounts));
 
 	const withCounts = await attachRecipeCounts(rows);
 
