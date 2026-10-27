@@ -29,7 +29,6 @@ export function loadEnv(target: DbTarget) {
 		process.env.SUPABASE_PROJECT_ID
 	);
 	return {
-		target,
 		description,
 		DATABASE_URL,
 		SUPABASE_URL,

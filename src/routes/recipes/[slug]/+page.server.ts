@@ -60,9 +60,6 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 		isFavorited = !!existing;
 	}
 
-	// Title, description and photo belong to the version on screen, not the recipe's copy of the latest.
-	const shown = currentVersion;
-
 	return {
 		recipe: visibleRecipe,
 		currentVersion,
@@ -73,12 +70,12 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 		isViewingHistory,
 		isFavorited,
 		meta: {
-			title: shown.title,
+			title: currentVersion.title,
 			description: clampDescription(
-				shown.description ??
-					`${shown.title} on Fork — ${recipe.versions.length} version${recipe.versions.length === 1 ? '' : 's'}, with the full history of what changed and why.`
+				currentVersion.description ??
+					`${currentVersion.title} on Fork — ${recipe.versions.length} version${recipe.versions.length === 1 ? '' : 's'}, with the full history of what changed and why.`
 			),
-			image: absoluteImage(shown.imageUrl),
+			image: absoluteImage(currentVersion.imageUrl),
 			type: 'article' as const
 		}
 	};

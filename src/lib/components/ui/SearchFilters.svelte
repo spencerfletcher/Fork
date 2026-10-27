@@ -45,10 +45,7 @@
 		const queryString = params.toString();
 		const newURL = queryString ? `?${queryString}` : window.location.pathname;
 
-		goto(newURL, {
-			replace: false,
-			reset: false
-		});
+		goto(newURL);
 	}
 
 	// Tags apply on click; the search box applies on submit. Both read the

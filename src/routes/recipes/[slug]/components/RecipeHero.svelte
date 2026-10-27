@@ -27,8 +27,9 @@
 		tags: { id: number; name: string; slug: string }[];
 	} = $props();
 
-	const content = $derived(currentVersion);
-	const totalMinutes = $derived((content.prepTimeMinutes ?? 0) + (content.cookTimeMinutes ?? 0));
+	const totalMinutes = $derived(
+		(currentVersion.prepTimeMinutes ?? 0) + (currentVersion.cookTimeMinutes ?? 0)
+	);
 </script>
 
 <header class="bg-hero-bg box-border w-full">
@@ -53,7 +54,7 @@
 				</a>
 				<span class="opacity-50">/</span>
 			{/if}
-			<span class="text-text-tan">{content.title}</span>
+			<span class="text-text-tan">{currentVersion.title}</span>
 		</nav>
 
 		<!-- Title + version -->
@@ -62,7 +63,7 @@
 			<h1
 				class="text-text-cream m-0 font-serif leading-[1.05] font-bold tracking-[-0.02em]"
 				style="font-size: clamp(1.9rem, 4vw, 3.2rem)">
-				{content.title}
+				{currentVersion.title}
 			</h1>
 			<span class="text-accent shrink-0 font-mono text-[1.8rem] font-medium">
 				v{currentVersion.versionNumber}
@@ -92,8 +93,8 @@
 			{#if totalMinutes > 0}
 				<span class="text-text-bronze font-mono text-[0.85rem]">{formatTime(totalMinutes)}</span>
 			{/if}
-			{#if content.servings}
-				<span class="text-text-bronze text-[0.9rem]">Serves {content.servings}</span>
+			{#if currentVersion.servings}
+				<span class="text-text-bronze text-[0.9rem]">Serves {currentVersion.servings}</span>
 			{/if}
 		</div>
 	</div>

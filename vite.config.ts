@@ -47,8 +47,7 @@ export default defineConfig({
 					'font-src': ['self', 'https://fonts.gstatic.com', 'data:'],
 					// Recipe images are user-supplied URLs as well as Supabase Storage.
 					'img-src': ['self', 'data:', 'https:'],
-					// No browser-side Supabase client; the only client fetch is
-					// same-origin, to /api/convert-to-grams.
+					// No browser-side Supabase client; form posts are same-origin.
 					'connect-src': ['self'],
 					'frame-ancestors': ['none'],
 					'base-uri': ['self'],

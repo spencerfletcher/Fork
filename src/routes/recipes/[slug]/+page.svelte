@@ -16,8 +16,6 @@
 	const isOwner = $derived(user?.id === recipe.authorId);
 	const canFork = $derived(!!user && !isOwner && !isViewingHistory);
 	const canFavorite = $derived(!!user && !isViewingHistory);
-	// The viewed version is the content; the recipe row only carries settings and copies.
-	const content = $derived(currentVersion);
 </script>
 
 <article class="min-h-screen">
@@ -34,21 +32,21 @@
 	<!-- Two-column layout: kept in scoped CSS because of fixed 320px sidebar + responsive reorder -->
 	<div class="content-layout">
 		<div class="min-w-0">
-			<RecipeIngredients ingredients={content.ingredients} grams={data.grams} />
-			<RecipeMethod steps={content.steps} />
+			<RecipeIngredients ingredients={currentVersion.ingredients} grams={data.grams} />
+			<RecipeMethod steps={currentVersion.steps} />
 		</div>
 
 		<aside class="min-w-0">
 			<div class="sidebar-sticky">
-				{#if content.imageUrl}
+				{#if currentVersion.imageUrl}
 					<div class="recipe-photo">
 						<img
-							src={content.imageUrl}
-							alt={content.title}
+							src={currentVersion.imageUrl}
+							alt={currentVersion.title}
 							class="border-border-2 [aspect-ratio:4/3] w-full rounded-lg border object-cover" />
 					</div>
 				{/if}
-				<Details {content} />
+				<Details content={currentVersion} />
 				<RecipeActions
 					{recipe}
 					{canFork}

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Step } from '#lib/recipes/types.js';
+	import type { Step, StepAnnotationType } from '#lib/recipes/types.js';
 
 	let { steps }: { steps: Step[] } = $props();
 
@@ -7,7 +7,7 @@
 		return String(n).padStart(2, '0');
 	}
 
-	const annotationColor: Record<string, string> = {
+	const annotationColor: Record<StepAnnotationType, string> = {
 		tip: 'text-text-3',
 		warning: 'text-paprika',
 		substitution: 'text-accent-mid'
@@ -35,7 +35,7 @@
 						<p
 							class="m-0 font-sans text-[0.9rem] leading-[1.6] italic {annotationColor[
 								step.annotation.type
-							] ?? 'text-text-3'}">
+							]}">
 							{step.annotation.text}
 						</p>
 					{/if}

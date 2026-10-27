@@ -20,7 +20,7 @@ const tsvector = customType<{ data: string }>({
 		return 'tsvector';
 	}
 });
-import type { InferSelectModel, InferInsertModel } from 'drizzle-orm';
+import type { InferSelectModel } from 'drizzle-orm';
 
 // Every table enables row level security with no policies: the anon key ships
 // to the browser, the app reaches Postgres only through Drizzle as the
@@ -197,15 +197,6 @@ export const recipeVersionsRelations = relations(recipeVersions, ({ one }) => ({
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export type Profile = InferSelectModel<typeof profiles>;
-export type NewProfile = InferInsertModel<typeof profiles>;
-
 export type Recipe = InferSelectModel<typeof recipes>;
-export type NewRecipe = InferInsertModel<typeof recipes>;
-
 export type RecipeVersion = InferSelectModel<typeof recipeVersions>;
-export type NewRecipeVersion = InferInsertModel<typeof recipeVersions>;
-
 export type Tag = InferSelectModel<typeof tags>;
-
-export type Favorite = InferSelectModel<typeof favorites>;
-export type NewFavorite = InferInsertModel<typeof favorites>;

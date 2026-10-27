@@ -27,7 +27,7 @@ describe('SearchFilters', () => {
 		render(SearchFilters, { props: { availableTags } });
 		await fireEvent.input(input(), { target: { value: 'soup' } });
 		await fireEvent.submit(input().closest('form')!);
-		expect(gotoMock).toHaveBeenCalledWith('?q=soup', expect.anything());
+		expect(gotoMock).toHaveBeenCalledWith('?q=soup');
 	});
 
 	test('Clear all is one navigation with no tags', async () => {
