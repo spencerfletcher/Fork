@@ -1,47 +1,33 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { createClient } from '@supabase/supabase-js';
-import { config } from 'dotenv';
 
 import { recipes, tags, recipesToTags, recipeVersions, profiles } from './schema';
 import { slugify, randomSuffix } from '#lib/helpers.js';
 import { SEED } from './seedData';
 import { parseIngredientText } from '#lib/recipes/ingredients.js';
 import { parseStepText } from '#lib/recipes/steps.js';
-import { describeSeedTarget } from './seedTarget';
+import { loadEnv, targetFromEnv } from './env';
 
-// `pnpm db:seed` targets the local stack in .env.local; `pnpm db:seed:prod`
-// skips that file so .env (hosted) wins. describeSeedTarget refuses a mix of
-// the two before anything is deleted.
-const prod = process.env.SEED_TARGET === 'prod';
-if (!prod) config({ path: '.env.local', override: true });
-config({ path: '.env', override: false });
-
-const DATABASE_URL = process.env.DATABASE_URL;
-const SUPABASE_URL = process.env.PUBLIC_SUPABASE_URL;
-const SUPABASE_SECRET_KEY = process.env.SUPABASE_SECRET_KEY;
+// `pnpm db:seed` targets the local stack; `pnpm db:seed:prod` sets DB_TARGET=prod
+// and loadEnv refuses a mix of local and hosted before anything is deleted.
+const env = loadEnv(targetFromEnv());
+const DATABASE_URL = env.DATABASE_URL;
+const SUPABASE_URL = env.SUPABASE_URL;
+const SUPABASE_SECRET_KEY = env.SUPABASE_SECRET_KEY;
+const TARGET = env.description;
 const SEED_USER_PASSWORD = process.env.SEED_USER_PASSWORD ?? 'Fork-Demo-2025!';
 const SEED_USER_EMAIL = 'spencer@fork.dev';
-
-if (!DATABASE_URL) throw new Error('DATABASE_URL is not set');
-if (!SUPABASE_URL) throw new Error('PUBLIC_SUPABASE_URL is not set');
-if (!SUPABASE_SECRET_KEY) throw new Error('SUPABASE_SECRET_KEY is not set');
-const TARGET = describeSeedTarget(
-	prod,
-	DATABASE_URL,
-	SUPABASE_URL,
-	process.env.SUPABASE_PROJECT_ID
-);
 
 // ─── Seed function ────────────────────────────────────────────────────────────
 
 async function seed() {
 	console.log(`🌱 Seeding ${TARGET}...`);
 
-	const client = postgres(DATABASE_URL!, { max: 1 });
+	const client = postgres(DATABASE_URL, { max: 1 });
 	const db = drizzle(client);
 
-	const supabaseAdmin = createClient(SUPABASE_URL!, SUPABASE_SECRET_KEY!, {
+	const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SECRET_KEY, {
 		auth: { autoRefreshToken: false, persistSession: false }
 	});
 

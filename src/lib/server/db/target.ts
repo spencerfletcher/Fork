@@ -6,12 +6,13 @@ function projectRefOf(db: URL): string {
 }
 
 /**
- * Which database the seed is about to wipe, checked before any side effect.
- * Local: both the Postgres and the Supabase API hosts are local. Hosted: the
- * expected project ref (SUPABASE_PROJECT_ID) is set, and both the API URL and
- * the Postgres credentials name that same ref. Anything else throws.
+ * Which database a tool (seed, migrate, studio) is about to touch, checked
+ * before any side effect. Local: both the Postgres and the Supabase API hosts
+ * are local. Hosted: the expected project ref (SUPABASE_PROJECT_ID) is set,
+ * and both the API URL and the Postgres credentials name that same ref.
+ * Anything else throws.
  */
-export function describeSeedTarget(
+export function describeDbTarget(
 	prod: boolean,
 	databaseUrl: string,
 	supabaseUrl: string,
@@ -25,15 +26,15 @@ export function describeSeedTarget(
 	if (!prod) {
 		if (dbLocal && apiLocal) return 'local database';
 		throw new Error(
-			`db:seed targets the local stack but DATABASE_URL is ${db.hostname} and PUBLIC_SUPABASE_URL is ${apiHost}`
+			`DB_TARGET=local targets the local stack but DATABASE_URL is ${db.hostname} and PUBLIC_SUPABASE_URL is ${apiHost}`
 		);
 	}
 	if (!expectedRef) {
-		throw new Error('db:seed:prod needs SUPABASE_PROJECT_ID set to the project it may wipe');
+		throw new Error('DB_TARGET=prod needs SUPABASE_PROJECT_ID set to the project it may change');
 	}
 	if (dbLocal || apiLocal) {
 		throw new Error(
-			`db:seed:prod targets a hosted project but DATABASE_URL is ${db.hostname} and PUBLIC_SUPABASE_URL is ${apiHost}`
+			`DB_TARGET=prod targets a hosted project but DATABASE_URL is ${db.hostname} and PUBLIC_SUPABASE_URL is ${apiHost}`
 		);
 	}
 	const apiRef = apiHost.split('.')[0];
