@@ -17,7 +17,8 @@
 	let searchQuery = $state(initialQuery);
 	let selectedTags = $state<string[]>([...initialTags]);
 
-	// Sync search query and tags when URL parameters change
+	// The URL is the source of truth: a navigation (back button, a shared link)
+	// changes the props, and the fields follow rather than keeping stale input.
 	$effect(() => {
 		searchQuery = initialQuery;
 		selectedTags = [...initialTags];

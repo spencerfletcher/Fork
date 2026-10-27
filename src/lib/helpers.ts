@@ -12,6 +12,7 @@ export function slugify(text: string): string {
 		.replace(/^-+|-+$/g, ''); // trim leading/trailing hyphens
 }
 
+/** Minutes for display: "45 min", "1h", "1h 30m". */
 export function formatTime(minutes: number): string {
 	if (minutes < 60) return `${minutes} min`;
 	const h = Math.floor(minutes / 60);

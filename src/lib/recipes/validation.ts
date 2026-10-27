@@ -86,6 +86,7 @@ function parse<T>(schema: z.ZodType<T>, input: unknown): Result<T> {
 		: { ok: false, error: result.error.issues[0].message };
 }
 
+/** The versioned content from the recipe form: title, description, servings, times, ingredients, steps. */
 export function parseContent(formData: FormData): Result<RecipeContent> {
 	return parse(recipeContentSchema, {
 		title: text(formData, 'title'),
@@ -103,15 +104,17 @@ const settingsSchema = z.object({
 	tagNames: z.array(z.string()).transform(normaliseTagNames)
 });
 
-export function parseSettings(formData: FormData): Result<Settings> {
-	return parse(settingsSchema, {
-		isPublic: formData.get('isPublic') === 'on',
-		tagNames: formData.getAll('tags').filter((t): t is string => typeof t === 'string')
-	});
-}
 /** Tag names as submitted, before any trimming or deduplication. */
 function tagsOf(formData: FormData): string[] {
 	return formData.getAll('tags').filter((t): t is string => typeof t === 'string');
+}
+
+/** The recipe-level settings from the form: visibility and tags. The photo is a file, handled by the action. */
+export function parseSettings(formData: FormData): Result<Settings> {
+	return parse(settingsSchema, {
+		isPublic: formData.get('isPublic') === 'on',
+		tagNames: tagsOf(formData)
+	});
 }
 
 /**

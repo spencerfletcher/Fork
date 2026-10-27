@@ -1,5 +1,10 @@
+// Steps are typed as paragraphs separated by a blank line. A step may end with
+// one annotation line, "tip: …", "warning: …" or "substitution: …", which is
+// stored apart from the text so the page can style it. Parsing and printing
+// are exact inverses, so a save never rewrites what the user typed.
 import { STEP_ANNOTATION_TYPES, type Step, type StepAnnotationType } from './types.js';
 
+// Built from the type list so adding an annotation type is one edit in types.ts.
 const KEYWORD = new RegExp(`^(${STEP_ANNOTATION_TYPES.join('|')}):\\s*(.*)$`, 'i');
 
 function isAnnotationType(value: string): value is StepAnnotationType {
@@ -22,6 +27,7 @@ function parseBlock(block: string): Step {
 	return { text: lines.join('\n').trim() };
 }
 
+/** The textarea's contents to steps: blocks split on blank lines, each parsed by parseBlock. */
 export function parseStepText(text: string): Step[] {
 	return text
 		.replace(/\r\n/g, '\n')
@@ -31,6 +37,7 @@ export function parseStepText(text: string): Step[] {
 		.map(parseBlock);
 }
 
+/** The inverse of parseStepText, for refilling the editor from a saved version. */
 export function stepsToText(steps: Step[]): string {
 	return steps
 		.map((step) =>

@@ -66,6 +66,7 @@ export function diffMeta(from: RecipeContent, to: RecipeContent): MetaDiffRow[] 
 	})).filter((row) => row.from !== row.to);
 }
 
+/** Word-level segments between two strings, for highlighting inside a modified row. */
 export function diffInline(a: string, b: string): InlineSegment[] {
 	return diffWords(a, b).map((part) => ({
 		type: part.added ? 'added' : part.removed ? 'removed' : 'unchanged',
