@@ -323,6 +323,30 @@ test.describe('Recipe detail page', () => {
 		expect(Math.abs(detailsBox!.y - ingredientsBox!.y)).toBeLessThan(300);
 	});
 
+	test('on desktop, the sidebar stays in view while the method scrolls', async ({ page }) => {
+		await page.setViewportSize({ width: 1440, height: 800 });
+		await gotoClassicCookies(page);
+		const details = page.locator('dl.details').first();
+		await details.waitFor();
+
+		await page.mouse.wheel(0, 1000);
+		await page.waitForTimeout(200);
+		const box = await details.boundingBox();
+		expect(box).not.toBeNull();
+		// Sticky at 76px: still near the top after a long scroll, not scrolled away.
+		expect(box!.y).toBeGreaterThanOrEqual(0);
+		expect(box!.y).toBeLessThan(200);
+	});
+
+	test('the version panel closes when one of its links navigates', async ({ page }) => {
+		await gotoClassicCookies(page);
+		await page.getByRole('button', { name: '3 versions' }).click();
+		await page.locator('#version-history').waitFor();
+		await page.locator('#version-history').getByRole('link', { name: 'v1' }).click();
+		await expect(page).toHaveURL(/version=1/);
+		await expect(page.locator('#version-history')).toHaveCount(0);
+	});
+
 	test('the header names the recipe once and the author once', async ({ page }) => {
 		await gotoClassicCookies(page);
 		const hero = page.locator('header.recipe-header');

@@ -80,9 +80,12 @@
 		gap: 34px;
 	}
 
+	/* The aside must span the row's full height, or the sticky child has no
+	   room to move inside it and scrolls away with the page. */
 	aside {
 		grid-column: 2;
 		grid-row: 1;
+		align-self: stretch;
 	}
 
 	.sidebar-sticky {

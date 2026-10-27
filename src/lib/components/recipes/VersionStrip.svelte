@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { afterNavigate } from '$app/navigation';
+
 	type StripVersion = {
 		id: number;
 		versionNumber: number;
@@ -19,6 +21,23 @@
 	} = $props();
 
 	let open = $state(false);
+	let nav: HTMLElement | undefined = $state();
+	let toggle: HTMLButtonElement | undefined = $state();
+
+	// SvelteKit keeps this component mounted when only the query or slug
+	// changes, so the panel's own links would otherwise leave it open over the
+	// next page.
+	afterNavigate(() => (open = false));
+
+	function onWindowKeydown(event: KeyboardEvent) {
+		if (!open || event.key !== 'Escape') return;
+		open = false;
+		toggle?.focus();
+	}
+
+	function onWindowClick(event: MouseEvent) {
+		if (open && nav && !nav.contains(event.target as Node)) open = false;
+	}
 
 	const current = $derived(
 		versions.find((v) => v.versionNumber === currentVersionNumber) ?? versions[0]
@@ -27,7 +46,9 @@
 	const count = $derived(versions.length);
 </script>
 
-<nav class="version-strip" aria-label="Version history">
+<svelte:window onkeydown={onWindowKeydown} onclick={onWindowClick} />
+
+<nav class="version-strip" aria-label="Version history" bind:this={nav}>
 	<span class="version-current">v{current.versionNumber}</span>
 	<span class="version-message">{current.commitMessage}</span>
 	{#if canCompare}
@@ -41,6 +62,7 @@
 		<button
 			type="button"
 			class="version-toggle"
+			bind:this={toggle}
 			aria-expanded={open}
 			aria-controls="version-history"
 			onclick={() => (open = !open)}>

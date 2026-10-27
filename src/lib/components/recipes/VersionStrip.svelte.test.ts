@@ -1,6 +1,8 @@
 import { render, screen, fireEvent } from '@testing-library/svelte';
-import { describe, test, expect } from 'vitest';
+import { describe, test, expect, vi } from 'vitest';
 import VersionStrip from './VersionStrip.svelte';
+
+vi.mock('$app/navigation', () => ({ afterNavigate: () => {} }));
 
 function makeVersion(n: number, message: string) {
 	return {
@@ -53,6 +55,23 @@ describe('VersionStrip', () => {
 		expect(screen.getByText('1 version')).toBeInTheDocument();
 		expect(screen.queryByRole('button')).toBeNull();
 		expect(screen.queryByRole('link', { name: /compare/i })).toBeNull();
+	});
+
+	test('Escape closes the panel and returns focus to the toggle', async () => {
+		render(VersionStrip, { props });
+		const toggle = screen.getByRole('button', { name: '2 versions' });
+		await fireEvent.click(toggle);
+		expect(screen.getByText('Initial recipe')).toBeInTheDocument();
+		await fireEvent.keyDown(window, { key: 'Escape' });
+		expect(screen.queryByText('Initial recipe')).toBeNull();
+		expect(toggle).toHaveFocus();
+	});
+
+	test('a click outside the strip closes the panel', async () => {
+		render(VersionStrip, { props });
+		await fireEvent.click(screen.getByRole('button', { name: '2 versions' }));
+		await fireEvent.click(document.body);
+		expect(screen.queryByText('Initial recipe')).toBeNull();
 	});
 
 	test('hides compare links while viewing history', () => {
