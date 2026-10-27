@@ -158,6 +158,30 @@ Spencer's shelf (The Food Lab, Salt Fat Acid Heat, Smuggler's Cove) agrees on on
 
 Terracotta is the one warm hue near the diff's "removed" tint; it works because the title is the only large terracotta element and the diff tints are pale. Burnt orange and bronze are clear of both diff colours.
 
+## Decision (2026-10-27)
+
+**Direction C, paper and ink, with the "fired clay" accent: terracotta shifted toward burnt orange.** Spencer's pick, seconded by his reviewer. Board 8 on the palette canvas is the reference.
+
+| Token | Light | Ratio on ground | Dark | Ratio on ground |
+| --- | --- | --- | --- | --- |
+| paper | `#f6f3ee` |  | `#151311` |  |
+| surface | `#fcfbf8` |  | `#1d1a17` |  |
+| ink | `#141210` | 16.9 | `#ece7de` | 14.6 |
+| ink-2 | `#4f4a43` | 7.9 | `#b5aea4` | 8.4 |
+| ink-3 | `#6f6960` | 4.9 | `#8a837a` | 5.0 |
+| rule | `#d9d3c8` |  | `#2c2823` |  |
+| clay (titles, version numbers, links, fork button) | `#a04f28` | 5.2 | `#d79a73` | 7.7 |
+| add / add-bg | `#1f5f2a` / `#e6f1e3` | 6.6 | `#86d187` / `#1b2a1b` | 8.2 |
+| remove / remove-bg | `#9c2f1c` / `#f8e5df` | 6.1 | `#f0a08e` / `#2d1b16` | 7.9 |
+
+The reviewer proposed `#A8542B` light and `#D79A73` dark. The dark value is used as given. The light value passes at 4.8:1, which is a thin margin for 11px mono in the version strip, so the same hue a step darker, `#a04f28` at 5.2:1, is the token; the difference is not visible side by side. The dark accent is deliberately lighter and less saturated than a straight lift of the light one, so it reads without glowing.
+
+Type: Zilla Slab 600 for titles and version numbers, Geist for body and UI with tabular figures, Geist Mono in the diff only.
+
+Rules carried from the reviewer: clay appears on the title, the version number, the fork button and links, and nowhere else; the divider under the title is a 1px dotted hairline in the rule tone, not clay, so it does not compete with the four clay elements.
+
+Next: token hygiene on master (direction-neutral: `accent-ink`, darker muted tones, one dark surface, a contrast script), then the redesign branch per the sequence above.
+
 ## Typography options, independent of palette
 
 | Pairing | Titles | UI and meta | Reading | Fit |
