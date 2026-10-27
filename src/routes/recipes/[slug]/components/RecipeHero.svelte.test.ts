@@ -1,40 +1,31 @@
 import { describe, test, expect } from 'vitest';
 import { render, screen } from '@testing-library/svelte';
 import RecipeHero from './RecipeHero.svelte';
+import type { ComponentProps } from 'svelte';
 import { makeContent } from '#lib/recipes/fixtures.js';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function makeRecipe(overrides: Record<string, unknown> = {}) {
+type HeroProps = ComponentProps<typeof RecipeHero>;
+
+function makeRecipe(overrides: Partial<HeroProps['recipe']> = {}): HeroProps['recipe'] {
 	return {
-		id: 99,
-		authorId: 'user-1',
 		slug: 'my-fork',
 		title: 'My Fork',
-		description: null,
-		imageUrl: null,
 		servings: null,
 		prepTimeMinutes: null,
 		cookTimeMinutes: null,
 		parentId: null,
-		forkedAt: null,
-		isPublic: true,
-		createdAt: new Date(),
-		updatedAt: new Date(),
 		parent: null,
 		...overrides
 	};
 }
 
-function renderHero(recipe: ReturnType<typeof makeRecipe>, currentVersion: unknown = null) {
-	render(RecipeHero, {
-		props: {
-			recipe: recipe as never,
-			currentVersion: currentVersion as never,
-			isViewingHistory: false,
-			tags: []
-		}
-	});
+function renderHero(
+	recipe: HeroProps['recipe'],
+	currentVersion: HeroProps['currentVersion'] = null
+) {
+	render(RecipeHero, { props: { recipe, currentVersion, isViewingHistory: false, tags: [] } });
 }
 
 const VERSION = {

@@ -59,7 +59,7 @@ describe('TagInput', () => {
 		render(TagInput, { props: { allTags } });
 		await fireEvent.focus(getInput());
 		const dessertBtn = screen.getByRole('button', { name: /^Dessert$/i });
-		await fireEvent.mouseDown(dessertBtn);
+		await fireEvent.click(dessertBtn);
 		// Pill should appear
 		expect(screen.getAllByText('Dessert').length).toBeGreaterThanOrEqual(1);
 	});
@@ -68,7 +68,7 @@ describe('TagInput', () => {
 		render(TagInput, { props: { allTags } });
 		await fireEvent.focus(getInput());
 		const dessertBtn = screen.getByRole('button', { name: /^Dessert$/i });
-		await fireEvent.mouseDown(dessertBtn);
+		await fireEvent.click(dessertBtn);
 		// Re-focus to open dropdown
 		await fireEvent.focus(getInput());
 		// Dessert should no longer appear in the dropdown list options
@@ -81,7 +81,7 @@ describe('TagInput', () => {
 		render(TagInput, { props: { allTags } });
 		await fireEvent.focus(getInput());
 		const dessertBtn = screen.getByRole('button', { name: /^Dessert$/i });
-		await fireEvent.mouseDown(dessertBtn);
+		await fireEvent.click(dessertBtn);
 		// Click the × button on the pill
 		const removeBtn = screen.getByRole('button', { name: /remove dessert/i });
 		await fireEvent.click(removeBtn);
@@ -94,7 +94,7 @@ describe('TagInput', () => {
 		const { container } = render(TagInput, { props: { allTags } });
 		await fireEvent.focus(getInput());
 		const bakingBtn = screen.getByRole('button', { name: /^Baking$/i });
-		await fireEvent.mouseDown(bakingBtn);
+		await fireEvent.click(bakingBtn);
 		const hidden = container.querySelectorAll('input[type="hidden"][name="tags"]');
 		expect(hidden).toHaveLength(1);
 		expect(hidden[0]).toHaveValue('Baking');
@@ -104,10 +104,10 @@ describe('TagInput', () => {
 		const { container } = render(TagInput, { props: { allTags } });
 		// Select Dessert
 		await fireEvent.focus(getInput());
-		await fireEvent.mouseDown(screen.getByRole('button', { name: /^Dessert$/i }));
+		await fireEvent.click(screen.getByRole('button', { name: /^Dessert$/i }));
 		// Select Baking
 		await fireEvent.focus(getInput());
-		await fireEvent.mouseDown(screen.getByRole('button', { name: /^Baking$/i }));
+		await fireEvent.click(screen.getByRole('button', { name: /^Baking$/i }));
 		const hidden = container.querySelectorAll('input[type="hidden"][name="tags"]');
 		expect(hidden).toHaveLength(2);
 	});
@@ -118,5 +118,23 @@ describe('TagInput', () => {
 		await fireEvent.focus(input);
 		// No tags, empty query — nothing to show
 		expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+	});
+
+	test('Enter picks the first matching suggestion, keyboard only', async () => {
+		const { container } = render(TagInput, { props: { allTags } });
+		await fireEvent.focus(getInput());
+		await fireEvent.input(getInput(), { target: { value: 'des' } });
+		await fireEvent.keyDown(getInput(), { key: 'Enter' });
+		const hidden = container.querySelectorAll('input[type="hidden"][name="tags"]');
+		expect(hidden).toHaveLength(1);
+		expect(hidden[0]).toHaveValue('Dessert');
+	});
+
+	test('Enter creates the typed tag when nothing matches', async () => {
+		const { container } = render(TagInput, { props: { allTags } });
+		await fireEvent.focus(getInput());
+		await fireEvent.input(getInput(), { target: { value: 'Vegan' } });
+		await fireEvent.keyDown(getInput(), { key: 'Enter' });
+		expect(container.querySelector('input[type="hidden"][name="tags"]')).toHaveValue('Vegan');
 	});
 });

@@ -1,9 +1,18 @@
 <script lang="ts">
 	import type { Recipe } from '#lib/server/db/schema.js';
 
-	// `fts` is a Postgres-generated search vector — never read by the card, and
-	// callers building fixtures shouldn't have to supply one.
-	interface CardRecipe extends Omit<Recipe, 'fts'> {
+	// Only what the card renders, so a column added to the table does not ripple
+	// into every card fixture.
+	interface CardRecipe extends Pick<
+		Recipe,
+		| 'slug'
+		| 'title'
+		| 'description'
+		| 'imageUrl'
+		| 'parentId'
+		| 'prepTimeMinutes'
+		| 'cookTimeMinutes'
+	> {
 		recipesToTags?: { tag: { id: number; name: string; slug: string } }[];
 		author?: { id: string; username: string } | null;
 		versionCount?: number;

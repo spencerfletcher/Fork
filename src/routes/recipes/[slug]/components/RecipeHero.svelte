@@ -1,8 +1,16 @@
 <script lang="ts">
-	import type { Recipe, RecipeVersion, Tag } from '#lib/server/db/schema.js';
+	import type { Recipe, RecipeVersion } from '#lib/server/db/schema.js';
+	import type { RecipeContent } from '#lib/recipes/types.js';
 	import { formatTime } from '#lib/helpers.js';
 
-	interface RecipeWithRelations extends Recipe {
+	// Only what the hero renders. The content fields come from the viewed
+	// version, or from the recipe's copies when there is none.
+	type HeroContent = Pick<
+		RecipeContent,
+		'title' | 'servings' | 'prepTimeMinutes' | 'cookTimeMinutes'
+	>;
+
+	interface HeroRecipe extends Pick<Recipe, 'slug' | 'parentId'>, HeroContent {
 		author?: { id: string; username: string } | null;
 		parent?: { slug: string; title: string; author?: { username: string } | null } | null;
 	}
@@ -13,10 +21,10 @@
 		isViewingHistory,
 		tags
 	}: {
-		recipe: RecipeWithRelations;
-		currentVersion: RecipeVersion | null;
+		recipe: HeroRecipe;
+		currentVersion: (Pick<RecipeVersion, 'versionNumber' | 'commitMessage'> & HeroContent) | null;
 		isViewingHistory: boolean;
-		tags: Tag[];
+		tags: { id: number; name: string; slug: string }[];
 	} = $props();
 
 	// The viewed version owns the content; the recipe row only carries a copy of

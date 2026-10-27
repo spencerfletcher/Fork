@@ -39,10 +39,14 @@
 		selected = selected.filter((s) => s !== name);
 	}
 
+	// Enter takes the first suggestion, or creates the typed tag when nothing
+	// matches, so a tag can be added without leaving the keyboard. Arrowing
+	// down reaches the option buttons, which are plain buttons.
 	function handleKeydown(e: KeyboardEvent) {
-		if (e.key === 'Enter' && canCreate) {
+		if (e.key === 'Enter') {
 			e.preventDefault();
-			pick(query.trim());
+			if (suggestions.length > 0 && query.trim() !== '') pick(suggestions[0].name);
+			else if (canCreate) pick(query.trim());
 		}
 		if (e.key === 'Escape') {
 			open = false;
@@ -51,7 +55,7 @@
 	}
 
 	function handleBlur() {
-		// Delay so onmousedown on an option fires before we close
+		// Delay so a click on an option lands before the list closes
 		setTimeout(() => {
 			if (!rootEl.contains(document.activeElement)) {
 				open = false;
@@ -112,10 +116,8 @@
 						<button
 							type="button"
 							class="tag-option"
-							onmousedown={(e) => {
-								e.preventDefault();
-								pick(tag.name);
-							}}>
+							onmousedown={(e) => e.preventDefault()}
+							onclick={() => pick(tag.name)}>
 							<svg
 								class="text-text-3 size-4 shrink-0"
 								viewBox="0 0 16 16"
@@ -138,10 +140,8 @@
 						<button
 							type="button"
 							class="tag-option tag-option--create"
-							onmousedown={(e) => {
-								e.preventDefault();
-								pick(query.trim());
-							}}>
+							onmousedown={(e) => e.preventDefault()}
+							onclick={() => pick(query.trim())}>
 							<svg
 								class="text-accent size-4 shrink-0"
 								viewBox="0 0 16 16"

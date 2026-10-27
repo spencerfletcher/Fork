@@ -119,9 +119,7 @@ describe('Edit page form', () => {
 		await fireEvent.click(screen.getByRole('button', { name: 'Remove Dessert' }));
 		expect(screen.getByText('Unsaved changes')).toBeInTheDocument();
 		await fireEvent.focus(screen.getByRole('combobox'));
-		await fireEvent.mouseDown(
-			screen.getByRole('option', { name: /Dessert/ }).querySelector('button')!
-		);
+		await fireEvent.click(screen.getByRole('option', { name: /Dessert/ }).querySelector('button')!);
 		expect(screen.queryByText('Unsaved changes')).toBeNull();
 	});
 
