@@ -22,6 +22,11 @@ const tsvector = customType<{ data: string }>({
 });
 import type { InferSelectModel, InferInsertModel } from 'drizzle-orm';
 
+// Every table enables row level security with no policies: the anon key ships
+// to the browser, the app reaches Postgres only through Drizzle as the
+// `postgres` role (BYPASSRLS), so RLS-with-no-policies closes PostgREST to the
+// public while leaving the app untouched. A browser-side client would read
+// nothing until policies are added here, which is the intended failure mode.
 // ─── Profiles ────────────────────────────────────────────────────────────────
 
 export const profiles = pgTable('profiles', {
@@ -29,7 +34,7 @@ export const profiles = pgTable('profiles', {
 	username: text().notNull().unique(),
 	avatarUrl: text('avatar_url'),
 	createdAt: timestamp('created_at').defaultNow()
-});
+}).enableRLS();
 
 // ─── Recipes ─────────────────────────────────────────────────────────────────
 
@@ -65,7 +70,7 @@ export const recipes = pgTable(
 		)
 	},
 	(table) => [index('recipes_fts_idx').using('gin', table.fts)]
-);
+).enableRLS();
 
 // ─── Tags ─────────────────────────────────────────────────────────────────────
 
@@ -73,7 +78,7 @@ export const tags = pgTable('tags', {
 	id: serial().primaryKey(),
 	name: text().notNull().unique(),
 	slug: text().notNull().unique()
-});
+}).enableRLS();
 
 export const recipesToTags = pgTable(
 	'recipes_to_tags',
@@ -86,7 +91,7 @@ export const recipesToTags = pgTable(
 			.references(() => tags.id, { onDelete: 'cascade' })
 	},
 	(table) => [primaryKey({ columns: [table.recipeId, table.tagId] })]
-);
+).enableRLS();
 
 // ─── Favorites ────────────────────────────────────────────────────────────────
 
@@ -102,7 +107,7 @@ export const favorites = pgTable(
 		createdAt: timestamp('created_at').defaultNow()
 	},
 	(table) => [primaryKey({ columns: [table.userId, table.recipeId] })]
-);
+).enableRLS();
 
 // ─── Recipe Versions ──────────────────────────────────────────────────────────
 
@@ -126,7 +131,7 @@ export const recipeVersions = pgTable(
 		createdBy: text('created_by').references(() => profiles.id, { onDelete: 'set null' })
 	},
 	(table) => [unique().on(table.recipeId, table.versionNumber)]
-);
+).enableRLS();
 
 // ─── Relations ────────────────────────────────────────────────────────────────
 

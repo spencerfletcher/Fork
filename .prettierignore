@@ -11,3 +11,6 @@ bun.lockb
 # Installed agent skills, third-party markdown
 .agents/
 skills-lock.json
+
+# Drizzle migration metadata, machine-written
+drizzle/meta/
