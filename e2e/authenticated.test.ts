@@ -10,10 +10,6 @@ import { SEED } from '../src/lib/server/db/seedData';
 
 const COOKIES_RE = new RegExp(SEED[0].versions.at(-1)!.title, 'i');
 
-// Skip the entire suite when auth credentials aren't configured
-const hasAuth = !!(process.env.E2E_USER_EMAIL && process.env.E2E_USER_PASSWORD);
-test.skip(!hasAuth, 'Set E2E_USER_EMAIL and E2E_USER_PASSWORD in .env to run authenticated tests');
-
 // ─── Landing page (logged in) ──────────────────────────────────────────────────
 
 test.describe('Landing page when logged in', () => {

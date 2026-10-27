@@ -10,7 +10,7 @@ import { loadEnv } from './src/lib/server/db/env';
 // production by accident.
 loadEnv('local');
 
-const AUTH_FILE = path.join('e2e', '.auth', 'user.json');
+export const AUTH_FILE = path.join('e2e', '.auth', 'user.json');
 
 export default defineConfig({
 	webServer: {

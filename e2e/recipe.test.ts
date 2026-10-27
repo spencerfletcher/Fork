@@ -27,15 +27,13 @@ test.describe('Recipe detail page', () => {
 	});
 
 	test('recipe detail shows Ingredients section', async ({ page }) => {
-		await page.goto('/');
-		await page.locator('div.recipe-card').first().click();
+		await gotoClassicCookies(page);
 		// Use heading role to avoid matching ingredient names that contain "ingredients"
 		await expect(page.getByRole('heading', { name: /^ingredients$/i })).toBeVisible();
 	});
 
 	test('recipe detail shows Method section', async ({ page }) => {
-		await page.goto('/');
-		await page.locator('div.recipe-card').first().click();
+		await gotoClassicCookies(page);
 		await expect(page.getByRole('heading', { name: /^method$/i })).toBeVisible();
 	});
 
