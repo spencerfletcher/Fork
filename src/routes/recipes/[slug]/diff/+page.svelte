@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import VersionDiff from '#lib/components/recipes/VersionDiff.svelte';
-	import VersionRangePicker from '#lib/components/recipes/VersionRangePicker.svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -29,11 +28,27 @@
 			<p class="text-text-2 m-0 text-base">{recipe.title}</p>
 		</div>
 
-		<VersionRangePicker
-			versions={allVersions}
-			bind:from={fromSelect}
-			bind:to={toSelect}
-			onchange={navigate} />
+		<div class="version-picker">
+			{#snippet picker(id: string, label: string, value: number, set: (v: number) => void)}
+				<div class="version-picker__field">
+					<label class="version-picker__label" for={id}>{label}</label>
+					<select
+						{id}
+						{value}
+						onchange={(e) => {
+							set(Number(e.currentTarget.value));
+							navigate();
+						}}>
+						{#each allVersions as v (v.versionNumber)}
+							<option value={v.versionNumber}>v{v.versionNumber}: {v.commitMessage}</option>
+						{/each}
+					</select>
+				</div>
+			{/snippet}
+			{@render picker('from-select', 'From', fromSelect, (v) => (fromSelect = v))}
+			<span class="version-picker__arrow">→</span>
+			{@render picker('to-select', 'To', toSelect, (v) => (toSelect = v))}
+		</div>
 
 		<!-- Commit context: same .commit-bar the landing page uses for its sample
 		     diff, stacked because this view shows both endpoints of the range. -->
@@ -58,3 +73,36 @@
 		<VersionDiff {metaDiff} {ingredientDiff} {stepDiff} />
 	</div>
 </div>
+
+<style>
+	.version-picker {
+		display: flex;
+		align-items: flex-end;
+		gap: 1rem;
+		margin-bottom: 1.5rem;
+	}
+
+	.version-picker__field {
+		display: flex;
+		flex: 1;
+		flex-direction: column;
+		gap: 0.25rem;
+		/* Without this a long commit message in an <option> sets the select's
+		   intrinsic width and the two fields stop being equal. */
+		min-width: 0;
+	}
+
+	.version-picker__label {
+		font-size: 0.75rem;
+		font-weight: 600;
+		letter-spacing: 0.05em;
+		text-transform: uppercase;
+		color: var(--color-text-3);
+	}
+
+	.version-picker__arrow {
+		padding-bottom: 0.5rem;
+		font-size: 1.25rem;
+		color: var(--color-text-3);
+	}
+</style>

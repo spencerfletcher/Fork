@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import SearchBar from './SearchBar.svelte';
 	import TagFilter from './TagFilter.svelte';
 	import type { Tag } from '#lib/server/db/schema.js';
 
@@ -64,10 +63,31 @@
 </script>
 
 <div class="border-border space-y-4 rounded-lg border bg-white p-4">
-	<SearchBar
-		bind:value={searchQuery}
-		placeholder="Search recipes by title..."
-		onSubmit={applyFilters} />
+	<form
+		onsubmit={(e) => {
+			e.preventDefault();
+			applyFilters();
+		}}
+		class="relative">
+		<svg
+			class="text-text-3 pointer-events-none absolute inset-y-0 left-3 my-auto h-4 w-4"
+			xmlns="http://www.w3.org/2000/svg"
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			stroke-width="2"
+			stroke-linecap="round"
+			stroke-linejoin="round"
+			aria-hidden="true">
+			<circle cx="11" cy="11" r="8" />
+			<path d="m21 21-4.35-4.35" />
+		</svg>
+		<input
+			type="search"
+			bind:value={searchQuery}
+			placeholder="Search recipes by title..."
+			class="border-border text-text placeholder-text-3 focus:border-accent focus:ring-accent/20 w-full rounded-md border bg-white py-2 pr-3 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none" />
+	</form>
 
 	<TagFilter
 		{availableTags}
