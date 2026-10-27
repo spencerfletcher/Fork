@@ -135,7 +135,8 @@
 							name="servings"
 							type="number"
 							min="1"
-							bind:value={draft.servings} />
+							value={draft.servings}
+							oninput={(e) => (draft.servings = e.currentTarget.value)} />
 					</div>
 					<div class="field">
 						<label for="prepTimeMinutes">Prep time (min)</label>
@@ -144,7 +145,8 @@
 							name="prepTimeMinutes"
 							type="number"
 							min="0"
-							bind:value={draft.prepTimeMinutes} />
+							value={draft.prepTimeMinutes}
+							oninput={(e) => (draft.prepTimeMinutes = e.currentTarget.value)} />
 					</div>
 					<div class="field">
 						<label for="cookTimeMinutes">Cook time (min)</label>
@@ -153,7 +155,8 @@
 							name="cookTimeMinutes"
 							type="number"
 							min="0"
-							bind:value={draft.cookTimeMinutes} />
+							value={draft.cookTimeMinutes}
+							oninput={(e) => (draft.cookTimeMinutes = e.currentTarget.value)} />
 					</div>
 				</div>
 

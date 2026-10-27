@@ -6,6 +6,9 @@
  */
 
 import { expect, test } from '@playwright/test';
+import { SEED } from '../src/lib/server/db/seedData';
+
+const COOKIES_RE = new RegExp(SEED[0].versions.at(-1)!.title, 'i');
 
 // Skip the entire suite when auth credentials aren't configured
 const hasAuth = !!(process.env.E2E_USER_EMAIL && process.env.E2E_USER_PASSWORD);
@@ -46,10 +49,7 @@ test.describe('Fork dialog', () => {
 		// is hidden for owned recipes and visible for others.
 		// Since the seed user owns all seeded recipes, we verify the button is absent.
 		await page.goto('/');
-		await page
-			.getByRole('link', { name: /classic chocolate chip cookies/i })
-			.first()
-			.click();
+		await page.getByRole('link', { name: COOKIES_RE }).first().click();
 		await page.waitForURL(/\/recipes\//);
 		// Owner should see Edit, not Fork
 		await expect(page.getByRole('link', { name: /edit recipe/i })).toBeVisible();
@@ -118,10 +118,7 @@ test.describe('New recipe page', () => {
 test.describe('Edit recipe page', () => {
 	test('is accessible for a recipe the user owns', async ({ page }) => {
 		await page.goto('/');
-		await page
-			.getByRole('link', { name: /classic chocolate chip cookies/i })
-			.first()
-			.click();
+		await page.getByRole('link', { name: COOKIES_RE }).first().click();
 		await page.waitForURL(/\/recipes\//);
 		await page.getByRole('link', { name: /edit recipe/i }).click();
 		await page.waitForURL(/\/edit/);
@@ -130,26 +127,23 @@ test.describe('Edit recipe page', () => {
 
 	test('can update the recipe title', async ({ page }) => {
 		await page.goto('/');
-		await page
-			.getByRole('link', { name: /classic chocolate chip cookies/i })
-			.first()
-			.click();
+		await page.getByRole('link', { name: COOKIES_RE }).first().click();
 		await page.waitForURL(/\/recipes\//);
 		const recipeUrl = page.url();
 
 		await page.getByRole('link', { name: /edit recipe/i }).click();
 		await page.waitForURL(/\/edit/);
 
-		// Update the title
+		// Re-saving the same title is a no-op: no version is written, the page
+		// just redirects back. The title must still be what the seed says.
 		const titleInput = page.locator('input[name="title"]');
-		await titleInput.clear();
-		await titleInput.fill('Classic Chocolate Chip Cookies');
+		const before = await titleInput.inputValue();
+		await titleInput.fill(before);
 
-		await page.getByRole('button', { name: /save info/i }).click();
+		await page.getByRole('button', { name: /save changes/i }).click();
 
-		// Should redirect back to the recipe page
 		await page.waitForURL(recipeUrl);
-		await expect(page.locator('h1')).toContainText('Classic Chocolate Chip Cookies');
+		await expect(page.locator('h1')).toContainText(before);
 	});
 
 	test('can save a new version with a commit message', async ({ page }) => {
@@ -163,13 +157,12 @@ test.describe('Edit recipe page', () => {
 		await page.getByRole('link', { name: /edit recipe/i }).click();
 		await page.waitForURL(/\/edit/);
 
-		// Change a step text
-		const stepTextareas = page.locator('textarea');
-		await stepTextareas.first().clear();
-		await stepTextareas.first().fill('Updated step text from e2e test.');
+		// Change the steps
+		const steps = page.getByLabel('Steps');
+		await steps.fill('Updated step text from e2e test.');
 
 		await page.locator('input[name="commitMessage"]').fill('e2e test commit');
-		await page.getByRole('button', { name: /save new version/i }).click();
+		await page.getByRole('button', { name: /save changes/i }).click();
 
 		// Should redirect back to the recipe page
 		await page.waitForURL(/\/recipes\/(?!.*\/edit)/);
