@@ -12,6 +12,17 @@ import type { PageServerLoad } from './$types';
  */
 const SHOWCASE_AUTHOR = 'spencerfletcher';
 
+type SampleDiff = {
+	recipeTitle: string;
+	recipeSlug: string;
+	fromVersion: number;
+	toVersion: number;
+	commitMessage: string | null;
+	metaDiff: ReturnType<typeof diffMeta>;
+	ingredientDiff: ReturnType<typeof diffIngredients>;
+	stepDiff: ReturnType<typeof diffSteps>;
+};
+
 export const load: PageServerLoad = async ({ locals: { user } }) => {
 	const allRecipes = await db.query.recipes.findMany({
 		where: eq(recipes.isPublic, true),
@@ -42,95 +53,55 @@ export const load: PageServerLoad = async ({ locals: { user } }) => {
 	const countedById = new Map(counted.map((r) => [r.id, r]));
 	const withCounts = counted.slice(0, displayed.length);
 
-	// A real diff from real rows. If no recipe has two versions the section is
-	// omitted rather than fabricated — the landing page must not claim more
-	// than the data supports.
-	let sampleDiff: {
-		recipeTitle: string;
-		recipeSlug: string;
-		fromVersion: number;
-		toVersion: number;
-		commitMessage: string | null;
-		metaDiff: ReturnType<typeof diffMeta>;
-		ingredientDiff: ReturnType<typeof diffIngredients>;
-		stepDiff: ReturnType<typeof diffSteps>;
-	} | null = null;
+	// The showcase diff: the newest pair of versions that differs, from the
+	// showcase author's recipes only (signup is open, so anyone else qualifying
+	// here would be a takeover of the front page). Omitted when nothing differs
+	// rather than fabricated. Ranked as [both panels changed, changed rows], so
+	// a one-line tweak does not beat a real rewrite and a diff with one panel
+	// all grey loses to a smaller one that moves both; ties keep the newer
+	// recipe. showcasePool is capped at five, one round trip each.
+	let best: { rank: [number, number]; diff: SampleDiff } | null = null;
+	const candidates = showcasePool.flatMap((r) => {
+		const counted = countedById.get(r.id);
+		return counted && counted.versionCount >= 2 ? [counted] : [];
+	});
+	for (const candidate of candidates) {
+		const [to, from] = await db.query.recipeVersions.findMany({
+			where: eq(recipeVersions.recipeId, candidate.id),
+			orderBy: [desc(recipeVersions.versionNumber)],
+			limit: 2
+		});
+		if (!from || !to) continue;
 
-	if (!user) {
-		// Pick the newest version pair that actually differs — "most versions" is not
-		// the same as "has a visible change", and repeated no-op commits are common.
-		// Restricted to the showcase author: this is the site's shop window, and
-		// signup is open, so any other author's recipe qualifying here would be a
-		// takeover of the front page, not a fallback worth having.
-		// showcasePool is already capped at five: nothing stops a bulk edit from
-		// producing many same-author no-op second versions, and each candidate
-		// costs a sequential round trip below.
-		const candidates = showcasePool
-			.map((r) => countedById.get(r.id))
-			.filter((r) => r !== undefined)
-			.filter((r) => r.versionCount >= 2);
+		const metaDiff = diffMeta(from, to);
+		const ingredientDiff = diffIngredients(from.ingredients, to.ingredients);
+		const stepDiff = diffSteps(from.steps, to.steps);
+		const changed = (rows: { status: string }[]) =>
+			rows.filter((r) => r.status !== 'unchanged').length;
+		const [i, s] = [changed(ingredientDiff), changed(stepDiff)];
+		const rank: [number, number] = [i > 0 && s > 0 ? 1 : 0, i + s + metaDiff.length];
+		const beatsBest =
+			!best || (rank[0] === best.rank[0] ? rank[1] > best.rank[1] : rank[0] > best.rank[0]);
+		if (rank[1] === 0 || !beatsBest) continue;
 
-		// Score every candidate and keep the strongest rather than breaking on the
-		// first that differs at all. The landing diff is the shop window: a
-		// one-line tweak on the newest recipe should not outrank a substantial
-		// rewrite on an older one, and the e2e suite writes exactly such a tweak
-		// on every run. Candidates are already capped at five, so this is at most
-		// five round trips.
-		// Ranked as [both panels changed, number of changed rows]. A diff whose
-		// ingredients panel is entirely unchanged leaves half the section grey, so
-		// it loses to a smaller diff that moves both — which is the difference
-		// between a showcase and a wall of context.
-		let bestRank = [0, 0];
-
-		for (const candidate of candidates) {
-			const versions = await db.query.recipeVersions.findMany({
-				where: eq(recipeVersions.recipeId, candidate.id),
-				orderBy: [desc(recipeVersions.versionNumber)],
-				limit: 2
-			});
-			const [to, from] = versions;
-			if (!from || !to) continue;
-
-			const ingredientDiff = diffIngredients(
-				from.ingredients as Parameters<typeof diffIngredients>[0],
-				to.ingredients as Parameters<typeof diffIngredients>[0]
-			);
-			const stepDiff = diffSteps(
-				from.steps as Parameters<typeof diffSteps>[0],
-				to.steps as Parameters<typeof diffSteps>[0]
-			);
-
-			const metaDiff = diffMeta(from, to);
-			const changedIngredients = ingredientDiff.filter((r) => r.status !== 'unchanged').length;
-			const changedSteps = stepDiff.filter((r) => r.status !== 'unchanged').length;
-			const rank = [
-				changedIngredients > 0 && changedSteps > 0 ? 1 : 0,
-				changedIngredients + changedSteps + metaDiff.length
-			];
-
-			// Strictly greater, so an equal rank leaves the newer candidate in
-			// place — candidates arrive newest first.
-			const beatsBest = rank[0] !== bestRank[0] ? rank[0] > bestRank[0] : rank[1] > bestRank[1];
-
-			if (rank[1] > 0 && beatsBest) {
-				bestRank = rank;
-				sampleDiff = {
-					recipeTitle: candidate.title,
-					recipeSlug: candidate.slug,
-					fromVersion: from.versionNumber,
-					toVersion: to.versionNumber,
-					commitMessage: to.commitMessage,
-					metaDiff,
-					ingredientDiff,
-					stepDiff
-				};
+		best = {
+			rank,
+			diff: {
+				recipeTitle: candidate.title,
+				recipeSlug: candidate.slug,
+				fromVersion: from.versionNumber,
+				toVersion: to.versionNumber,
+				commitMessage: to.commitMessage,
+				metaDiff,
+				ingredientDiff,
+				stepDiff
 			}
-		}
+		};
 	}
 
 	return {
 		mode: user ? ('feed' as const) : ('landing' as const),
 		recipes: withCounts,
-		sampleDiff
+		sampleDiff: best?.diff ?? null
 	};
 };
