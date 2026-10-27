@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import { render, screen } from '@testing-library/svelte';
+import { render, screen, fireEvent } from '@testing-library/svelte';
 import { parseIngredientText } from '#lib/recipes/ingredients.js';
 import RecipeIngredients from './RecipeIngredients.svelte';
 
@@ -11,8 +11,9 @@ function renderWith(text: string, grams: GramResult[]) {
 
 const LINES = '2¼ cups all-purpose flour\n2 large eggs\nsalt to taste';
 
+/** The visible rows: each is the label wrapping a native checkbox. */
 function rows() {
-	return screen.getAllByRole('checkbox');
+	return screen.getAllByRole('checkbox').map((box) => box.closest('label')!);
 }
 
 describe('RecipeIngredients', () => {
@@ -69,5 +70,15 @@ describe('RecipeIngredients', () => {
 	test('shows no estimate note when nothing shown is approximate', () => {
 		renderWith('1 cup flour', [{ grams: 125, grams2: null, approximate: false }]);
 		expect(screen.queryByText(/estimates/i)).not.toBeInTheDocument();
+	});
+
+	test('each line is a native checkbox named by its text', async () => {
+		renderWith('1 cup flour\n2 eggs', [null, null]);
+		const flour = screen.getByRole('checkbox', { name: /1 cup flour/ });
+		expect(flour).not.toBeChecked();
+		await fireEvent.click(rows()[0]);
+		expect(flour).toBeChecked();
+		await fireEvent.click(rows()[0]);
+		expect(flour).not.toBeChecked();
 	});
 });

@@ -5,12 +5,6 @@
 	let { ingredients, grams }: { ingredients: Ingredient[]; grams: (GramResult | null)[] } =
 		$props();
 
-	let crossed = $state(new Set<number>());
-
-	function toggle(i: number) {
-		crossed = new Set(crossed.has(i) ? [...crossed].filter((k) => k !== i) : [...crossed, i]);
-	}
-
 	// Whole grams, except below ten where a tenth matters: 5.7g, not 6g.
 	function round(g: number): number {
 		return g < 10 ? Math.round(g * 10) / 10 : Math.round(g);
@@ -40,15 +34,11 @@
 	<div class="m-0 p-0" role="list">
 		{#each ingredients as ingredient, i (i)}
 			{@const result = grams[i]}
-			<div
-				class="border-border text-text cursor-pointer border-b py-2 text-base select-none [&:last-child]:border-b-0"
-				class:opacity-40={crossed.has(i)}
-				class:line-through={crossed.has(i)}
-				onclick={() => toggle(i)}
-				role="checkbox"
-				aria-checked={crossed.has(i)}
-				tabindex="0"
-				onkeydown={(e) => e.key === ' ' && toggle(i)}>
+			<!-- A native checkbox, visually hidden, carries the state and the keyboard
+			     behaviour; the label is the row and takes the struck-through look. -->
+			<label
+				class="border-border text-text block cursor-pointer border-b py-2 text-base select-none has-[:checked]:line-through has-[:checked]:opacity-40 [&:last-child]:border-b-0">
+				<input type="checkbox" class="sr-only" />
 				{#if result}
 					{@const [before, after] = parts(ingredient)}
 					{before}
@@ -63,7 +53,7 @@
 				{:else}
 					{ingredient.text}
 				{/if}
-			</div>
+			</label>
 		{/each}
 	</div>
 	{#if anyApproximate}

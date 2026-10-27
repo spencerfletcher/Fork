@@ -3,14 +3,6 @@
 
 	let { steps }: { steps: Step[] } = $props();
 
-	let crossedSteps = $state(new Set<number>());
-
-	function toggleStep(step: number) {
-		crossedSteps = new Set(
-			crossedSteps.has(step) ? [...crossedSteps].filter((k) => k !== step) : [...crossedSteps, step]
-		);
-	}
-
 	function zeroPad(n: number): string {
 		return String(n).padStart(2, '0');
 	}
@@ -27,15 +19,11 @@
 	<div class="m-0 flex flex-col p-0" role="list">
 		{#each steps as step, i (i)}
 			{@const n = i + 1}
-			<div
-				class="border-border grid cursor-pointer [grid-template-columns:48px_1fr] items-start gap-2 border-b py-4 select-none [&:last-child]:border-b-0"
-				class:opacity-40={crossedSteps.has(n)}
-				class:line-through={crossedSteps.has(n)}
-				onclick={() => toggleStep(n)}
-				role="checkbox"
-				aria-checked={crossedSteps.has(n)}
-				tabindex="0"
-				onkeydown={(e) => e.key === ' ' && toggleStep(n)}>
+			<!-- A native checkbox, visually hidden, carries the state and the keyboard
+			     behaviour; the label is the row and takes the struck-through look. -->
+			<label
+				class="border-border grid cursor-pointer [grid-template-columns:48px_1fr] items-start gap-2 border-b py-4 select-none has-[:checked]:line-through has-[:checked]:opacity-40 [&:last-child]:border-b-0">
+				<input type="checkbox" class="sr-only" />
 				<span class="text-sienna pt-[2px] font-mono text-[1.5rem] leading-[1.6] font-medium">
 					{zeroPad(n)}
 				</span>
@@ -52,7 +40,7 @@
 						</p>
 					{/if}
 				</div>
-			</div>
+			</label>
 		{/each}
 	</div>
 </section>

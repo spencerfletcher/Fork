@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import { render, screen } from '@testing-library/svelte';
+import { render, screen, fireEvent } from '@testing-library/svelte';
 import RecipeMethod from './RecipeMethod.svelte';
 
 describe('RecipeMethod', () => {
@@ -14,5 +14,13 @@ describe('RecipeMethod', () => {
 		const p = screen.getByText(/Rest 10 minutes/);
 		expect(p.textContent).toBe('Mix.\nRest 10 minutes.');
 		expect(p).toHaveClass('whitespace-pre-line');
+	});
+
+	test('each step is a native checkbox named by its text, toggled by clicking the row', async () => {
+		render(RecipeMethod, { props: { steps: [{ text: 'Mix.' }, { text: 'Bake.' }] } });
+		const bake = screen.getByRole('checkbox', { name: /Bake\./ });
+		expect(bake).not.toBeChecked();
+		await fireEvent.click(bake.closest('label')!);
+		expect(bake).toBeChecked();
 	});
 });
