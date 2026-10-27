@@ -36,7 +36,7 @@ export type StepDiffRow =
 	  };
 
 export type MetaField =
-	'title' | 'description' | 'servings' | 'prepTimeMinutes' | 'cookTimeMinutes';
+	'title' | 'description' | 'imageUrl' | 'servings' | 'prepTimeMinutes' | 'cookTimeMinutes';
 export type MetaDiffRow = {
 	field: MetaField;
 	from: string | number | null;
@@ -45,6 +45,7 @@ export type MetaDiffRow = {
 const META_FIELDS: MetaField[] = [
 	'title',
 	'description',
+	'imageUrl',
 	'servings',
 	'prepTimeMinutes',
 	'cookTimeMinutes'

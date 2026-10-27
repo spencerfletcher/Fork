@@ -9,21 +9,12 @@ import { makeContent } from '#lib/recipes/fixtures.js';
 type HeroProps = ComponentProps<typeof RecipeHero>;
 
 function makeRecipe(overrides: Partial<HeroProps['recipe']> = {}): HeroProps['recipe'] {
-	return {
-		slug: 'my-fork',
-		title: 'My Fork',
-		servings: null,
-		prepTimeMinutes: null,
-		cookTimeMinutes: null,
-		parentId: null,
-		parent: null,
-		...overrides
-	};
+	return { slug: 'my-fork', parentId: null, parent: null, ...overrides };
 }
 
 function renderHero(
 	recipe: HeroProps['recipe'],
-	currentVersion: HeroProps['currentVersion'] = null
+	currentVersion: HeroProps['currentVersion'] = VERSION
 ) {
 	render(RecipeHero, { props: { recipe, currentVersion, isViewingHistory: false, tags: [] } });
 }
@@ -67,24 +58,18 @@ describe('RecipeHero fork attribution', () => {
 // ─── Versioned content ────────────────────────────────────────────────────────
 
 describe('RecipeHero versioned content', () => {
-	test("shows the viewed version's title, not the recipe's current copy", () => {
-		renderHero(makeRecipe({ title: 'New Title' }), VERSION);
+	test("shows the viewed version's title", () => {
+		renderHero(makeRecipe(), VERSION);
 		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Old Title');
-		expect(screen.queryByText('New Title')).toBeNull();
 	});
 
 	test('shows Serves from the viewed version', () => {
-		renderHero(makeRecipe({ servings: 8 }), VERSION);
+		renderHero(makeRecipe(), VERSION);
 		expect(screen.getByText('Serves 4')).toBeInTheDocument();
 	});
 
-	test('a blank field on the viewed version stays blank, not filled from the recipe copy', () => {
-		renderHero(makeRecipe({ servings: 8 }), { ...VERSION, servings: null });
+	test('a blank servings on the viewed version shows no Serves', () => {
+		renderHero(makeRecipe(), { ...VERSION, servings: null });
 		expect(screen.queryByText(/Serves/)).toBeNull();
-	});
-
-	test('falls back to the recipe copy when there is no version', () => {
-		renderHero(makeRecipe({ title: 'Only Copy' }), null);
-		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Only Copy');
 	});
 });

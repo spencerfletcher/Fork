@@ -52,6 +52,9 @@ const recipeContentSchema = z.object({
 /** What a parser hands back: the typed value, or the first message to show the user. */
 export type Result<T> = { ok: true; value: T } | { ok: false; error: string };
 
+/** The content fields a form carries as text. The photo is a file and is resolved by the action. */
+export type ContentFields = Omit<RecipeContent, 'imageUrl'>;
+
 export type Settings = {
 	isPublic: boolean;
 	tagNames: string[];
@@ -87,7 +90,7 @@ function parse<T>(schema: z.ZodType<T>, input: unknown): Result<T> {
 }
 
 /** The versioned content from the recipe form: title, description, servings, times, ingredients, steps. */
-export function parseContent(formData: FormData): Result<RecipeContent> {
+export function parseContent(formData: FormData): Result<ContentFields> {
 	return parse(recipeContentSchema, {
 		title: text(formData, 'title'),
 		description: text(formData, 'description'),

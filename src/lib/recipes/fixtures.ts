@@ -18,6 +18,7 @@ export function makeContent(overrides: Partial<RecipeContent> = {}): RecipeConte
 		servings: 4,
 		prepTimeMinutes: 10,
 		cookTimeMinutes: 20,
+		imageUrl: null,
 		ingredients: [makeIngredient('1 cup flour')],
 		steps: [makeStep('Mix.')],
 		...overrides

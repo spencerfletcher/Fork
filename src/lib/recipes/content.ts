@@ -9,6 +9,7 @@ import type { RecipeContent } from './types.js';
 export const CONTENT_GROUPS = [
 	'title',
 	'description',
+	'photo',
 	'servings',
 	'times',
 	'ingredients',
@@ -26,6 +27,7 @@ export const normaliseDescription = (description: string | null): string | null 
 const VIEW: Record<ContentGroup, (c: RecipeContent) => unknown> = {
 	title: (c) => normaliseTitle(c.title),
 	description: (c) => normaliseDescription(c.description),
+	photo: (c) => c.imageUrl,
 	servings: (c) => c.servings,
 	times: (c) => [c.prepTimeMinutes, c.cookTimeMinutes],
 	ingredients: (c) => c.ingredients.map((i) => i.text),

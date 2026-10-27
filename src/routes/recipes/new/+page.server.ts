@@ -11,6 +11,7 @@ import {
 	type UploadedImage
 } from '#lib/server/images.js';
 import { syncTags, listTags } from '#lib/server/tags.js';
+import type { RecipeContent } from '#lib/recipes/types.js';
 import { ensureProfile } from '#lib/server/profiles.js';
 
 export const load: PageServerLoad = async ({ locals: { user } }) => {
@@ -52,7 +53,8 @@ export const actions: Actions = {
 			}
 		}
 
-		const { ingredients, steps, ...meta } = content.value;
+		const submitted: RecipeContent = { ...content.value, imageUrl: image?.url ?? null };
+		const { ingredients, steps, ...meta } = submitted;
 		const slug = `${slugify(meta.title)}-${randomSuffix()}`;
 
 		try {
@@ -63,7 +65,6 @@ export const actions: Actions = {
 						slug,
 						// Copies of version 1, per the ownership rule in schema.ts.
 						...meta,
-						imageUrl: image?.url ?? null,
 						isPublic: settings.value.isPublic,
 						authorId: user.id
 					})

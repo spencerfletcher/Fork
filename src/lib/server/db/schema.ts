@@ -44,9 +44,10 @@ export const recipes = pgTable(
 		id: serial().primaryKey(),
 		authorId: text('author_id').references(() => profiles.id, { onDelete: 'set null' }),
 		slug: text().notNull().unique(),
-		// Copies of the latest version's content, kept so search (the generated fts
-		// column) and list cards can read recipes without a join. Written in the same
-		// transaction as the version that defines them; never edited on their own.
+		// Copies of the latest version's content (title, description, photo,
+		// servings, times), kept so search (the generated fts column) and list
+		// cards can read recipes without a join. Written in the same transaction
+		// as the version that defines them; never edited on their own.
 		title: text().notNull(),
 		description: text(),
 		imageUrl: text('image_url'),
@@ -125,6 +126,7 @@ export const recipeVersions = pgTable(
 		servings: integer(),
 		prepTimeMinutes: integer('prep_time_minutes'),
 		cookTimeMinutes: integer('cook_time_minutes'),
+		imageUrl: text('image_url'),
 		ingredients: jsonb().notNull().$type<Ingredient[]>(),
 		steps: jsonb().notNull().$type<Step[]>(),
 		createdAt: timestamp('created_at').defaultNow(),

@@ -3,14 +3,14 @@
 	import type { RecipeContent } from '#lib/recipes/types.js';
 	import { formatTime } from '#lib/helpers.js';
 
-	// Only what the hero renders. The content fields come from the viewed
-	// version, or from the recipe's copies when there is none.
+	// Only what the hero renders: the viewed version for the dish, the recipe
+	// row for where it lives.
 	type HeroContent = Pick<
 		RecipeContent,
 		'title' | 'servings' | 'prepTimeMinutes' | 'cookTimeMinutes'
 	>;
 
-	interface HeroRecipe extends Pick<Recipe, 'slug' | 'parentId'>, HeroContent {
+	interface HeroRecipe extends Pick<Recipe, 'slug' | 'parentId'> {
 		author?: { id: string; username: string } | null;
 		parent?: { slug: string; title: string; author?: { username: string } | null } | null;
 	}
@@ -22,21 +22,18 @@
 		tags
 	}: {
 		recipe: HeroRecipe;
-		currentVersion: (Pick<RecipeVersion, 'versionNumber' | 'commitMessage'> & HeroContent) | null;
+		currentVersion: Pick<RecipeVersion, 'versionNumber' | 'commitMessage'> & HeroContent;
 		isViewingHistory: boolean;
 		tags: { id: number; name: string; slug: string }[];
 	} = $props();
 
-	// The viewed version owns the content; the recipe row only carries a copy of
-	// the latest, which is wrong for a historical version. Chosen once, so a
-	// field the old version left blank stays blank instead of falling through.
-	const content = $derived(currentVersion ?? recipe);
+	const content = $derived(currentVersion);
 	const totalMinutes = $derived((content.prepTimeMinutes ?? 0) + (content.cookTimeMinutes ?? 0));
 </script>
 
 <header class="bg-hero-bg box-border w-full">
 	<div class="mx-auto flex max-w-[1200px] min-w-0 flex-col gap-4 px-5 py-6">
-		{#if isViewingHistory && currentVersion}
+		{#if isViewingHistory}
 			<div
 				class="text-text-tan flex flex-wrap items-center justify-between gap-3 rounded-md border border-white/[0.12] bg-white/[0.08] px-4 py-3 font-mono text-[0.8rem]">
 				Viewing v{currentVersion.versionNumber}: "{currentVersion.commitMessage}"
@@ -67,11 +64,9 @@
 				style="font-size: clamp(1.9rem, 4vw, 3.2rem)">
 				{content.title}
 			</h1>
-			{#if currentVersion}
-				<span class="text-accent shrink-0 font-mono text-[1.8rem] font-medium">
-					v{currentVersion.versionNumber}
-				</span>
-			{/if}
+			<span class="text-accent shrink-0 font-mono text-[1.8rem] font-medium">
+				v{currentVersion.versionNumber}
+			</span>
 		</div>
 
 		<!-- Fork attribution -->

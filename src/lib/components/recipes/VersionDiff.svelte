@@ -20,6 +20,7 @@
 	const LABEL: Record<MetaField, string> = {
 		title: 'Title',
 		description: 'Description',
+		imageUrl: 'Photo',
 		servings: 'Servings',
 		prepTimeMinutes: 'Prep time',
 		cookTimeMinutes: 'Cook time'
@@ -70,8 +71,19 @@
 				{@render gutter('modified')}
 				<span class="diff-content">
 					{LABEL[row.field]}:
-					<span class="diff-removed">{show(row.from)}</span>
-					<span class="diff-added">{show(row.to)}</span>
+					{#if row.field === 'imageUrl'}
+						{#if row.from}<img
+								class="diff-thumb diff-removed"
+								src={String(row.from)}
+								alt="Before" />{:else}<span class="diff-removed">—</span>{/if}
+						{#if row.to}<img
+								class="diff-thumb diff-added"
+								src={String(row.to)}
+								alt="After" />{:else}<span class="diff-added">—</span>{/if}
+					{:else}
+						<span class="diff-removed">{show(row.from)}</span>
+						<span class="diff-added">{show(row.to)}</span>
+					{/if}
 				</span>
 			</div>
 		{/each}
@@ -222,6 +234,16 @@
 	.diff-content .diff-removed + .diff-added,
 	.diff-content .diff-added + .diff-removed {
 		margin-left: 0.4em;
+	}
+
+	.diff-thumb {
+		display: inline-block;
+		height: 2.5rem;
+		width: 2.5rem;
+		object-fit: cover;
+		border-radius: 4px;
+		vertical-align: middle;
+		margin-right: 0.4em;
 	}
 
 	.diff-annotation {

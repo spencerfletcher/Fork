@@ -109,7 +109,7 @@ async function seed() {
 				servings: latest.servings,
 				prepTimeMinutes: latest.prepTimeMinutes,
 				cookTimeMinutes: latest.cookTimeMinutes,
-				imageUrl: recipe.imageUrl,
+				imageUrl: latest.imageUrl,
 				isPublic: recipe.isPublic,
 				parentId: recipe.forkOf ? idBySlug.get(recipe.forkOf.slug) : null,
 				forkedAt: recipe.forkOf ? new Date(recipe.forkOf.forkedAt) : null

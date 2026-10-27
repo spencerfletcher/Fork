@@ -64,6 +64,16 @@ describe('VersionDiff', () => {
 		expect(row.querySelector('.diff-added')).toHaveTextContent('0');
 	});
 
+	test('renders a photo change as two thumbnails, or a dash where there was none', () => {
+		renderDiff([], [], [{ field: 'imageUrl', from: null, to: 'https://cdn/new.png' }]);
+		const row = screen.getByText(/^Photo/).closest('.diff-row')!;
+		expect(row.querySelector('.diff-removed')).toHaveTextContent('—');
+		expect(screen.getByRole('img', { name: 'After' })).toHaveAttribute(
+			'src',
+			'https://cdn/new.png'
+		);
+	});
+
 	test('places the Details section before the Ingredients section', () => {
 		renderDiff([], [], [{ field: 'title', from: 'A', to: 'B' }]);
 		const headings = screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent);

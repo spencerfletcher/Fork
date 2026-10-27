@@ -34,7 +34,7 @@ function makeData(overrides: { imageUrl?: string | null } = {}) {
 			slug: 'cookies',
 			title: 'Cookies',
 			description: null,
-			imageUrl: overrides.imageUrl ?? null,
+			imageUrl: null,
 			isPublic: false,
 			editRevision: 3,
 			recipesToTags: [{ tag: TAGS[0] }, { tag: TAGS[1] }]
@@ -47,6 +47,7 @@ function makeData(overrides: { imageUrl?: string | null } = {}) {
 				servings: 4,
 				prepTimeMinutes: 10,
 				cookTimeMinutes: 20,
+				imageUrl: overrides.imageUrl ?? null,
 				ingredients: [makeIngredient('1 cup flour'), makeIngredient('2 eggs')],
 				steps: [makeStep('Mix.'), makeStep('Bake.', { type: 'tip', text: 'gently' })]
 			})

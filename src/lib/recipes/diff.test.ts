@@ -296,6 +296,13 @@ describe('diffMeta', () => {
 		expect(diffMeta(base, to)).toEqual([]);
 	});
 
+	test('reports a changed photo by its urls', () => {
+		const to = makeContent({ imageUrl: 'https://cdn/new.png' });
+		expect(diffMeta(base, to)).toEqual([
+			{ field: 'imageUrl', from: null, to: 'https://cdn/new.png' }
+		]);
+	});
+
 	test('reports the normalised values, not the raw ones', () => {
 		const to = makeContent({ title: ' Biscuits ' });
 		expect(diffMeta(base, to)).toEqual([{ field: 'title', from: 'Cookies', to: 'Biscuits' }]);

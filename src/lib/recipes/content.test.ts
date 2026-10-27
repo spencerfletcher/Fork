@@ -19,6 +19,7 @@ describe('changedGroups', () => {
 	test.each<[string, Partial<RecipeContent>, ContentGroup]>([
 		['title', { title: 'Biscuits' }, 'title'],
 		['description', { description: 'Crisp edges.' }, 'description'],
+		['imageUrl', { imageUrl: 'https://cdn/new.png' }, 'photo'],
 		['servings', { servings: 8 }, 'servings'],
 		['prepTimeMinutes', { prepTimeMinutes: 15 }, 'times'],
 		['cookTimeMinutes', { cookTimeMinutes: 25 }, 'times'],

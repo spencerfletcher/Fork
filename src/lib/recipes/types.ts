@@ -29,6 +29,7 @@ export type RecipeContent = {
 	servings: number | null;
 	prepTimeMinutes: number | null;
 	cookTimeMinutes: number | null;
+	imageUrl: string | null;
 	ingredients: Ingredient[];
 	steps: Step[];
 };

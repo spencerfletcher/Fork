@@ -141,6 +141,7 @@ const LATEST = {
 		servings: 4,
 		prepTimeMinutes: 10,
 		cookTimeMinutes: 20,
+		imageUrl: 'https://cdn/old.png',
 		ingredients: [makeIngredient('2 cups flour')],
 		steps: [makeStep('Mix everything.')]
 	})
@@ -275,7 +276,7 @@ describe('save', () => {
 	});
 
 	test('removeImage with no stored image is not a change', async () => {
-		tx = makeTx({ locked: [{ ...LOCKED, imageUrl: null }] });
+		tx = makeTx({ latest: { ...LATEST, imageUrl: null } });
 		await save({ ...UNCHANGED, removeImage: 'on' });
 		noWrites();
 	});
@@ -294,13 +295,15 @@ describe('save', () => {
 		expect(set).not.toHaveProperty('title');
 	});
 
-	test('removeImage clears the stored image', async () => {
+	test('removeImage is a content change: a version without the photo, and the copy cleared', async () => {
 		await save({ ...UNCHANGED, removeImage: 'on' });
+		expect(versionInserts()[0]).toMatchObject({ imageUrl: null, versionNumber: 3 });
+		expect(versionInserts()[0].commitMessage).toBe('Updated photo');
 		expect(tx.updateChain.set.mock.calls[0][0]).toMatchObject({ imageUrl: null });
 		expect(removeMock).not.toHaveBeenCalled();
 	});
 
-	test('content changed: inserts the next version with the submitted content and message, and updates all five copies and editRevision in one update', async () => {
+	test('content changed: inserts the next version with the submitted content and message, and updates all six copies and editRevision in one update', async () => {
 		const result = await save({
 			...UNCHANGED,
 			servings: '8',
@@ -325,6 +328,7 @@ describe('save', () => {
 			servings: 8,
 			prepTimeMinutes: 10,
 			cookTimeMinutes: 20,
+			imageUrl: 'https://cdn/old.png',
 			editRevision: expect.anything(),
 			updatedAt: expect.any(Date)
 		});
@@ -346,7 +350,7 @@ describe('save', () => {
 		});
 	});
 
-	test('a new photo counts as a settings change and is uploaded before the transaction', async () => {
+	test('a new photo is a content change, uploaded before the transaction', async () => {
 		const order: string[] = [];
 		uploadMock.mockImplementation(async () => {
 			order.push('upload');
@@ -360,7 +364,10 @@ describe('save', () => {
 		expect(order).toEqual(['upload', 'transaction']);
 		expect(uploadMock).toHaveBeenCalledWith(SUPABASE, 'owner-123', expect.any(File));
 		expect(tx.updateChain.set.mock.calls[0][0]).toMatchObject({ imageUrl: 'https://cdn/new.png' });
-		expect(tx.insert).not.toHaveBeenCalled();
+		expect(versionInserts()[0]).toMatchObject({
+			imageUrl: 'https://cdn/new.png',
+			title: 'Cookies'
+		});
 	});
 
 	test('a failed upload returns 400 with the draft and writes nothing', async () => {

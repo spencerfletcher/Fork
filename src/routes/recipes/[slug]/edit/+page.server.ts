@@ -6,6 +6,7 @@ import { eq, desc, sql } from 'drizzle-orm';
 import type { PageServerLoad, Actions } from './$types';
 import { contentChanged, changedGroups, generatedCommitMessage } from '#lib/recipes/content.js';
 import { sameTags } from '#lib/recipes/tags.js';
+import type { RecipeContent } from '#lib/recipes/types.js';
 import {
 	imageFileFrom,
 	uploadRecipeImage,
@@ -76,9 +77,6 @@ export const actions: Actions = {
 			}
 		}
 
-		const { title, description, servings, prepTimeMinutes, cookTimeMinutes } = content.value;
-		const copies = { title, description, servings, prepTimeMinutes, cookTimeMinutes };
-
 		let outcome: 'stale' | 'saved' | 'unchanged';
 		try {
 			outcome = await db.transaction(async (tx) => {
@@ -96,16 +94,22 @@ export const actions: Actions = {
 					orderBy: [desc(recipeVersions.versionNumber)]
 				});
 
-				const changed = latest ? contentChanged(latest, content.value) : true;
+				// The photo is content: a new upload or a removal changes the version.
+				// Otherwise the latest version's photo carries forward unchanged.
+				const imageUrl = image ? image.url : draft.removeImage ? null : (latest?.imageUrl ?? null);
+				const submitted: RecipeContent = { ...content.value, imageUrl };
+				const changed = latest ? contentChanged(latest, submitted) : true;
+				const { ingredients, steps, ...copies } = submitted;
+				void ingredients;
+				void steps;
 
 				const tagsChanged = !sameTags(
 					recipe.recipesToTags.map((r) => r.tag.name),
 					settings.value.tagNames
 				);
-				const imageChanged = image !== null || (draft.removeImage && locked.imageUrl !== null);
 				const visibilityChanged = locked.isPublic !== settings.value.isPublic;
 
-				if (!changed && !imageChanged && !visibilityChanged && !tagsChanged) return 'unchanged';
+				if (!changed && !visibilityChanged && !tagsChanged) return 'unchanged';
 
 				if (tagsChanged) await syncTags(tx, recipe.id, settings.value.tagNames);
 
@@ -115,8 +119,8 @@ export const actions: Actions = {
 						versionNumber: (latest?.versionNumber ?? 0) + 1,
 						commitMessage:
 							draft.commitMessage.trim() ||
-							generatedCommitMessage(latest ? changedGroups(latest, content.value) : ['title']),
-						...content.value,
+							generatedCommitMessage(latest ? changedGroups(latest, submitted) : ['title']),
+						...submitted,
 						createdBy: user.id
 					});
 				}
@@ -127,8 +131,6 @@ export const actions: Actions = {
 					.update(recipes)
 					.set({
 						...(changed ? copies : {}),
-						...(image ? { imageUrl: image.url } : {}),
-						...(draft.removeImage && !image ? { imageUrl: null } : {}),
 						...(visibilityChanged ? { isPublic: settings.value.isPublic } : {}),
 						editRevision: sql`${recipes.editRevision} + 1`,
 						updatedAt: new Date()

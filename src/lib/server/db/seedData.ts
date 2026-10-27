@@ -185,8 +185,8 @@ Serve over basmati rice with warm naan bread. Garnish with fresh cilantro.
 // ─── Recipes ──────────────────────────────────────────────────────────────────
 //
 // One object per recipe: the recipe-level settings and its versions, oldest
-// first. The recipes row copies title, description, servings and times from
-// the last version, so those are only written here once, on the version.
+// first. The recipes row copies title, description, photo, servings and times
+// from the last version, so those are only written here once, on the version.
 
 export type SeedVersion = Omit<RecipeContent, 'ingredients' | 'steps'> & {
 	ingredientsText: string;
@@ -197,7 +197,6 @@ export type SeedVersion = Omit<RecipeContent, 'ingredients' | 'steps'> & {
 
 export type SeedRecipe = {
 	slug: string; // prefix; a random suffix is added at insert
-	imageUrl: string;
 	tags: string[];
 	isPublic: boolean;
 	forkOf?: { slug: string; forkedAt: string }; // parent's slug prefix
@@ -225,7 +224,6 @@ const TIKKA_META = {
 export const SEED: SeedRecipe[] = [
 	{
 		slug: 'classic-chocolate-chip-cookies',
-		imageUrl: 'https://images.unsplash.com/photo-1499636136210-6f4ee915583e?w=800&q=80',
 		tags: ['Dessert', 'Baking', 'American'],
 		isPublic: true,
 		versions: [
@@ -233,6 +231,7 @@ export const SEED: SeedRecipe[] = [
 				...COOKIE_META,
 				ingredientsText: COOKIE_INGREDIENTS_V1,
 				stepsText: COOKIE_STEPS,
+				imageUrl: 'https://images.unsplash.com/photo-1499636136210-6f4ee915583e?w=800&q=80',
 				commitMessage: 'Initial recipe',
 				createdAt: '2025-10-14'
 			},
@@ -240,6 +239,7 @@ export const SEED: SeedRecipe[] = [
 				...COOKIE_META,
 				ingredientsText: COOKIE_INGREDIENTS_V2,
 				stepsText: COOKIE_STEPS,
+				imageUrl: 'https://images.unsplash.com/photo-1499636136210-6f4ee915583e?w=800&q=80',
 				commitMessage: 'Increased vanilla to 2 tsp, added pinch of espresso powder',
 				createdAt: '2026-02-28'
 			},
@@ -252,6 +252,7 @@ export const SEED: SeedRecipe[] = [
 				cookTimeMinutes: 13,
 				ingredientsText: COOKIE_INGREDIENTS_V3,
 				stepsText: COOKIE_STEPS_V3,
+				imageUrl: 'https://images.unsplash.com/photo-1499636136210-6f4ee915583e?w=800&q=80',
 				commitMessage:
 					'Chill the dough and shift the sugar toward brown — thicker cookies, less cloying, smaller batch',
 				createdAt: '2026-07-19'
@@ -260,7 +261,6 @@ export const SEED: SeedRecipe[] = [
 	},
 	{
 		slug: 'brown-butter-chocolate-chip-cookies',
-		imageUrl: 'https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=800&q=80',
 		tags: ['Dessert', 'Baking', 'American'],
 		isPublic: true,
 		forkOf: { slug: 'classic-chocolate-chip-cookies', forkedAt: '2026-03-01' },
@@ -274,6 +274,7 @@ export const SEED: SeedRecipe[] = [
 				cookTimeMinutes: 11,
 				ingredientsText: BROWN_BUTTER_INGREDIENTS,
 				stepsText: BROWN_BUTTER_STEPS,
+				imageUrl: 'https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=800&q=80',
 				commitMessage: 'Swapped melted butter for brown butter, added flaky sea salt topping',
 				createdAt: '2026-03-01'
 			}
@@ -281,7 +282,6 @@ export const SEED: SeedRecipe[] = [
 	},
 	{
 		slug: 'chicken-tikka-masala',
-		imageUrl: 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=800&q=80',
 		tags: ['Dinner', 'Indian', 'Spicy'],
 		isPublic: true,
 		versions: [
@@ -289,6 +289,7 @@ export const SEED: SeedRecipe[] = [
 				...TIKKA_META,
 				ingredientsText: TIKKA_INGREDIENTS_V1,
 				stepsText: TIKKA_STEPS_V1,
+				imageUrl: 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=800&q=80',
 				commitMessage: 'Initial recipe',
 				createdAt: '2025-11-05'
 			},
@@ -296,6 +297,7 @@ export const SEED: SeedRecipe[] = [
 				...TIKKA_META,
 				ingredientsText: TIKKA_INGREDIENTS_V2,
 				stepsText: TIKKA_STEPS_V1,
+				imageUrl: 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=800&q=80',
 				commitMessage: 'Adjusted spice blend — more garam masala, less cumin, added smoked paprika',
 				createdAt: '2026-01-20'
 			},
@@ -303,6 +305,7 @@ export const SEED: SeedRecipe[] = [
 				...TIKKA_META,
 				ingredientsText: TIKKA_INGREDIENTS_V2,
 				stepsText: TIKKA_STEPS_V3,
+				imageUrl: 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=800&q=80',
 				commitMessage:
 					'Worked the smoked paprika into the marinade, finished the sauce with cold butter',
 				createdAt: '2026-03-10'

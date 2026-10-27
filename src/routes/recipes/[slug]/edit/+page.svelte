@@ -42,7 +42,7 @@
 			allTags={data.allTags}
 			action="?/save"
 			submitLabel="Save changes"
-			imageUrl={recipe.imageUrl}
+			imageUrl={latestVersion?.imageUrl ?? null}
 			withCommitMessage />
 	</div>
 </div>

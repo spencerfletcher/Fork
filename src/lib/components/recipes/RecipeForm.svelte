@@ -23,7 +23,7 @@
 		/** Named action, e.g. `?/save`; omit for the route's default action. */
 		action?: string;
 		submitLabel: string;
-		/** The stored photo, shown until replaced or removed. */
+		/** The latest version's photo, shown until replaced or removed. */
 		imageUrl?: string | null;
 		/** Edits carry an optional "what changed" message; creation does not. */
 		withCommitMessage?: boolean;
@@ -113,13 +113,6 @@
 		{/if}
 
 		<section class="mb-6">
-			<h3>Recipe</h3>
-			<p class="text-text-3 mt-1 mb-5 text-sm">
-				{withCommitMessage
-					? 'Changes here are saved as a new version. The previous version stays in the history.'
-					: 'This becomes version 1. Later edits are saved as new versions.'}
-			</p>
-
 			<div class="field">
 				<label for="title">
 					Title <span class="required">*</span>
@@ -173,11 +166,6 @@
 		<hr class="divider my-7" />
 
 		<section class="mb-6">
-			<h3>Settings</h3>
-			<p class="text-text-3 mt-1 mb-5 text-sm">
-				Photo, tags and visibility apply to the recipe as a whole, not to a version.
-			</p>
-
 			<div class="field">
 				<label for="image">Photo</label>
 				{#if preview}
@@ -218,6 +206,7 @@
 					<input type="checkbox" name="isPublic" bind:checked={draft.isPublic} />
 					Make this recipe public
 				</label>
+				<p class="form-hint">Applies to every version, not just this save.</p>
 			</div>
 		</section>
 

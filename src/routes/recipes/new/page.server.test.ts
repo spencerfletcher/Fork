@@ -103,11 +103,18 @@ describe('new recipe action', () => {
 		expect(transactionMock).not.toHaveBeenCalled();
 	});
 
-	test('inserts the recipe with the five copies equal to version 1, then redirects', async () => {
+	test('inserts the recipe with the six copies equal to version 1, then redirects', async () => {
 		const result = await invoke(makeEvent({ fields: FULL }));
 		const recipe = tx.recipeInsert.values.mock.calls[0][0];
 		const version = tx.versionInsert.values.mock.calls[0][0];
-		for (const key of ['title', 'description', 'servings', 'prepTimeMinutes', 'cookTimeMinutes']) {
+		for (const key of [
+			'title',
+			'description',
+			'servings',
+			'prepTimeMinutes',
+			'cookTimeMinutes',
+			'imageUrl'
+		]) {
 			expect(recipe[key]).toEqual(version[key]);
 		}
 		expect(recipe).toMatchObject({
@@ -160,6 +167,7 @@ describe('new recipe action', () => {
 		expect(order).toEqual(['upload', 'transaction']);
 		expect(uploadMock).toHaveBeenCalledWith(SUPABASE, 'user-1', expect.any(File));
 		expect(tx.recipeInsert.values.mock.calls[0][0].imageUrl).toBe('https://cdn/img.png');
+		expect(tx.versionInsert.values.mock.calls[0][0].imageUrl).toBe('https://cdn/img.png');
 	});
 
 	test('a failed upload returns 400 with the draft and writes nothing', async () => {

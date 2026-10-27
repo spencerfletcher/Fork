@@ -16,8 +16,8 @@
 	const isOwner = $derived(user?.id === recipe.authorId);
 	const canFork = $derived(!!user && !isOwner && !isViewingHistory);
 	const canFavorite = $derived(!!user && !isViewingHistory);
-	// The viewed version owns servings and times; the recipe row is only a copy of the latest.
-	const content = $derived(currentVersion ?? recipe);
+	// The viewed version is the content; the recipe row only carries settings and copies.
+	const content = $derived(currentVersion);
 </script>
 
 <article class="min-h-screen">
@@ -26,7 +26,7 @@
 	{#if allVersions.length > 0}
 		<VersionStrip
 			versions={allVersions}
-			currentVersionNumber={currentVersion?.versionNumber ?? 0}
+			currentVersionNumber={currentVersion.versionNumber}
 			recipeSlug={recipe.slug}
 			{isViewingHistory} />
 	{/if}
@@ -34,23 +34,16 @@
 	<!-- Two-column layout: kept in scoped CSS because of fixed 320px sidebar + responsive reorder -->
 	<div class="content-layout">
 		<div class="min-w-0">
-			{#if currentVersion}
-				<RecipeIngredients ingredients={currentVersion.ingredients} grams={data.grams} />
-				<RecipeMethod steps={currentVersion.steps} />
-			{:else}
-				<p class="text-text-3 py-7 text-base">
-					No recipe content yet.
-					{#if isOwner}<a href="/recipes/{recipe.slug}/edit">Add content →</a>{/if}
-				</p>
-			{/if}
+			<RecipeIngredients ingredients={content.ingredients} grams={data.grams} />
+			<RecipeMethod steps={content.steps} />
 		</div>
 
 		<aside class="min-w-0">
 			<div class="sidebar-sticky">
-				{#if recipe.imageUrl}
+				{#if content.imageUrl}
 					<div class="recipe-photo">
 						<img
-							src={recipe.imageUrl}
+							src={content.imageUrl}
 							alt={content.title}
 							class="border-border-2 [aspect-ratio:4/3] w-full rounded-lg border object-cover" />
 					</div>

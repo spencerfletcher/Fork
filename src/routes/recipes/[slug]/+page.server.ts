@@ -37,15 +37,18 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 		recipe.parent !== null && (recipe.parent.isPublic || recipe.parent.authorId === user?.id);
 	const visibleRecipe = { ...recipe, parent: parentVisible ? recipe.parent : null };
 
-	// Resolve which version's content to display
-	let currentVersion = recipe.versions[0] ?? null;
+	// Resolve which version's content to display. Creation and forking write a
+	// version in the same transaction as the recipe, so none is a broken row.
+	const latestVersion = recipe.versions[0];
+	if (!latestVersion) throw error(404, 'Recipe not found');
+	let currentVersion = latestVersion;
 	let isViewingHistory = false;
 
 	if (requestedVersion !== null) {
 		const found = recipe.versions.find((v) => v.versionNumber === requestedVersion);
 		if (!found) throw error(404, 'Version not found');
 		currentVersion = found;
-		isViewingHistory = found.versionNumber !== recipe.versions[0]?.versionNumber;
+		isViewingHistory = found.versionNumber !== latestVersion.versionNumber;
 	}
 
 	// Check if the current user has favorited this recipe
@@ -57,15 +60,15 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 		isFavorited = !!existing;
 	}
 
-	// Title and description belong to the version on screen, not the recipe's copy of the latest.
-	const shown = currentVersion ?? recipe;
+	// Title, description and photo belong to the version on screen, not the recipe's copy of the latest.
+	const shown = currentVersion;
 
 	return {
 		recipe: visibleRecipe,
 		currentVersion,
 		// Weights come from local tables at load time, so the page never pays for
 		// an external lookup; lines the tables do not know get null.
-		grams: currentVersion?.ingredients.map(gramsFor) ?? [],
+		grams: currentVersion.ingredients.map(gramsFor),
 		allVersions: recipe.versions,
 		isViewingHistory,
 		isFavorited,
@@ -75,7 +78,7 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 				shown.description ??
 					`${shown.title} on Fork — ${recipe.versions.length} version${recipe.versions.length === 1 ? '' : 's'}, with the full history of what changed and why.`
 			),
-			image: absoluteImage(recipe.imageUrl),
+			image: absoluteImage(shown.imageUrl),
 			type: 'article' as const
 		}
 	};
@@ -130,9 +133,17 @@ export const actions: Actions = {
 
 		// One snapshot of the latest version is the whole content of the fork;
 		// the source row contributes only its settings and lineage.
-		const { title, description, servings, prepTimeMinutes, cookTimeMinutes, ingredients, steps } =
-			latestVersion;
-		const meta = { title, description, servings, prepTimeMinutes, cookTimeMinutes };
+		const {
+			title,
+			description,
+			servings,
+			prepTimeMinutes,
+			cookTimeMinutes,
+			imageUrl,
+			ingredients,
+			steps
+		} = latestVersion;
+		const meta = { title, description, servings, prepTimeMinutes, cookTimeMinutes, imageUrl };
 		const snapshot: RecipeContent = { ...meta, ingredients, steps };
 		const slug = `${slugify(snapshot.title)}-${randomSuffix()}`;
 
@@ -146,7 +157,6 @@ export const actions: Actions = {
 					slug,
 					// Copies of version 1, per the ownership rule in schema.ts.
 					...meta,
-					imageUrl: source.imageUrl,
 					isPublic: source.isPublic,
 					parentId: source.id,
 					forkedAt: new Date()

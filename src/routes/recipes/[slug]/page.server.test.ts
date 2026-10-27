@@ -99,6 +99,7 @@ const LATEST = makeContent({
 	servings: 24,
 	prepTimeMinutes: 20,
 	cookTimeMinutes: 12,
+	imageUrl: 'https://img/version.png',
 	ingredients: [makeIngredient('2 cups flour')],
 	steps: [makeStep('Mix.')]
 });
@@ -211,7 +212,7 @@ describe('fork', () => {
 		});
 	});
 
-	test('takes image, visibility and tags from the source recipe, and nothing else from its row', async () => {
+	test('takes visibility and tags from the source recipe, the photo from its latest version, and nothing else from the row', async () => {
 		findRecipeMock.mockResolvedValue(SOURCE_RECIPE);
 		const tx = makeTx({ newRecipeId: 99, newRecipeSlug: 'classic-cookies-abc12345' });
 		transactionMock.mockImplementationOnce(
@@ -221,7 +222,7 @@ describe('fork', () => {
 		await invoke(actions.fork as never, makeEvent({ user: FORKER }));
 
 		const recipeValues = tx.insertChain.values.mock.calls[0][0];
-		expect(recipeValues.imageUrl).toBe('https://img/cookies.png');
+		expect(recipeValues.imageUrl).toBe('https://img/version.png');
 		expect(recipeValues.isPublic).toBe(true);
 		expect(recipeValues).not.toHaveProperty('id');
 		expect(recipeValues).not.toHaveProperty('editRevision');
@@ -329,7 +330,7 @@ async function loadData(user: { id: string; email: string } | null = null) {
 		recipe: { parent: unknown; parentId: number | null };
 		currentVersion: { ingredients: unknown[] } | null;
 		grams: unknown[];
-		meta: { title: string; description: string };
+		meta: { title: string; description: string; image: string };
 	};
 }
 
@@ -371,6 +372,18 @@ describe('load: fork attribution', () => {
 		const data = await loadData();
 		expect(data.meta.title).toBe('Classic Cookies');
 		expect(data.meta.description).toBe('Good cookies');
+		expect(data.meta.image).toBe('https://img/version.png');
+	});
+
+	test('404s a recipe with no version rather than rendering a broken page', async () => {
+		findRecipeMock.mockResolvedValue({
+			...forkOf({ isPublic: true, authorId: 'o' }),
+			versions: []
+		});
+		const result = await Promise.resolve()
+			.then(() => load(makeLoadEvent() as never))
+			.catch((e: unknown) => e);
+		expect(result).toMatchObject({ status: 404 });
 	});
 
 	test('returns one gram result per ingredient of the shown version', async () => {
