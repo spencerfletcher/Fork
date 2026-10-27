@@ -28,31 +28,31 @@
 </script>
 
 <section class="mb-3">
-	<div class="border-text mb-1 border-t-2 pt-3">
-		<h4 class="eyebrow-label">Ingredients</h4>
-	</div>
+	<h4 class="eyebrow-label mb-1">Ingredients</h4>
 	<div class="m-0 p-0" role="list">
 		{#each ingredients as ingredient, i (i)}
 			{@const result = grams[i]}
+			{@const [before, after] = parts(ingredient)}
 			<!-- A native checkbox, visually hidden, carries the state and the keyboard
 			     behaviour; the label is the row and takes the struck-through look. -->
 			<label
-				class="border-border text-text block cursor-pointer border-b py-2 text-base select-none has-[:checked]:line-through has-[:checked]:opacity-40 [&:last-child]:border-b-0">
+				class="border-border text-text has-[:focus-visible]:outline-accent block cursor-pointer border-b py-2 text-base select-none has-[:checked]:line-through has-[:checked]:opacity-40 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2">
 				<input type="checkbox" class="sr-only" />
-				{#if result}
-					{@const [before, after] = parts(ingredient)}
+				{#if after}
+					<span class="font-semibold">{before}</span>
+				{:else}
 					{before}
+				{/if}
+				{#if result}
 					<span
-						class="text-sienna font-medium"
+						class="text-text-3 text-sm"
 						title={result.approximate
 							? 'Typical weight for a whole item; actual items vary'
 							: undefined}>
 						{formatGrams(result)}
 					</span>
-					{after}
-				{:else}
-					{ingredient.text}
 				{/if}
+				{after}
 			</label>
 		{/each}
 	</div>

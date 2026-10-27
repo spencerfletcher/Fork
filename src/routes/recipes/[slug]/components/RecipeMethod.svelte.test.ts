@@ -5,8 +5,15 @@ import RecipeMethod from './RecipeMethod.svelte';
 describe('RecipeMethod', () => {
 	test('numbers steps by position', () => {
 		render(RecipeMethod, { props: { steps: [{ text: 'Mix.' }, { text: 'Bake.' }] } });
-		expect(screen.getByText('01')).toBeInTheDocument();
-		expect(screen.getByText('02')).toBeInTheDocument();
+		expect(screen.getByText('1')).toBeInTheDocument();
+		expect(screen.getByText('2')).toBeInTheDocument();
+	});
+
+	test('annotations keep their own tone', () => {
+		render(RecipeMethod, {
+			props: { steps: [{ text: 'Bake.', annotation: { type: 'warning', text: 'Hot.' } }] }
+		});
+		expect(screen.getByText('Hot.')).toHaveClass('text-remove');
 	});
 
 	test('keeps line breaks inside a step', () => {

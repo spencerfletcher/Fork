@@ -37,10 +37,10 @@ describe('RecipeIngredients', () => {
 		expect(screen.getByText(/estimates/i)).toBeInTheDocument();
 	});
 
-	test('sets the weight apart as an accent', () => {
+	test('sets the weight apart in the muted tone', () => {
 		renderWith('1 cup flour', [{ grams: 125, grams2: null, approximate: false }]);
 		const accent = screen.getByText('(125g)');
-		expect(accent).toHaveClass('text-sienna');
+		expect(accent).toHaveClass('text-text-3');
 		expect(rows()[0]).toHaveTextContent('1 cup (125g) flour');
 	});
 
@@ -70,6 +70,16 @@ describe('RecipeIngredients', () => {
 	test('shows no estimate note when nothing shown is approximate', () => {
 		renderWith('1 cup flour', [{ grams: 125, grams2: null, approximate: false }]);
 		expect(screen.queryByText(/estimates/i)).not.toBeInTheDocument();
+	});
+
+	test('the measure is bold even when no weight is known', () => {
+		renderWith('1 cup flour', [null]);
+		expect(screen.getByText('1 cup')).toHaveClass('font-semibold');
+	});
+
+	test('a check-off row shows the focus ring on the row, not the hidden box', () => {
+		renderWith('1 cup flour', [null]);
+		expect(rows()[0]).toHaveClass('has-[:focus-visible]:outline-2');
 	});
 
 	test('each line is a native checkbox named by its text', async () => {
