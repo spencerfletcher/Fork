@@ -1,11 +1,12 @@
 <script lang="ts">
 	let {
-		allTags
+		allTags,
+		selected = $bindable([])
 	}: {
 		allTags: Array<{ id: number; name: string; slug: string }>;
+		selected?: string[];
 	} = $props();
 
-	let selected = $state<string[]>([]);
 	let query = $state('');
 	let open = $state(false);
 	let inputEl: HTMLInputElement;

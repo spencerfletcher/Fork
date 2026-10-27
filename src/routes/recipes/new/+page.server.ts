@@ -1,11 +1,18 @@
 import { redirect, error, fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { db } from '#lib/server/db/index.js';
-import { parseRecipeMeta, parseRecipeContent } from '#lib/recipes/validation.js';
-import { recipes, recipeVersions, tags, recipesToTags, profiles } from '#lib/server/db/schema.js';
+import { parseContent, parseSettings, draftOf } from '#lib/recipes/validation.js';
+import { recipes, recipeVersions } from '#lib/server/db/schema.js';
 import { slugify } from '#lib/helpers.js';
-import { inArray } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
+import {
+	imageFileFrom,
+	uploadRecipeImage,
+	removeRecipeImage,
+	type UploadedImage
+} from '#lib/server/images.js';
+import { syncTags } from '#lib/server/tags.js';
+import { ensureProfile } from '#lib/server/profiles.js';
 
 export const load: PageServerLoad = async ({ locals: { user } }) => {
 	if (!user) throw redirect(303, '/login');
@@ -22,75 +29,60 @@ export const actions: Actions = {
 		if (!user) throw error(401, 'Login required');
 
 		const formData = await request.formData();
-		const meta = parseRecipeMeta(formData);
-		if (!meta.ok) return fail(400, { error: meta.error });
-		const content = parseRecipeContent(formData);
-		if (!content.ok) return fail(400, { error: content.error });
-		const { isPublic, tagNames, ...contentMeta } = meta.value;
+		// Everything as typed, handed back on any failure so nothing is lost.
+		const draft = draftOf(formData);
+		const content = parseContent(formData);
+		if (!content.ok) return fail(400, { error: content.error, draft });
+		const settings = parseSettings(formData);
+		if (!settings.ok) return fail(400, { error: settings.error, draft });
 
-		// Handle image upload to Supabase Storage
-		let imageUrl: string | null = null;
-		const imageFile = formData.get('image') as File | null;
-		if (imageFile && imageFile.size > 0) {
-			const ext = imageFile.name.split('.').pop()?.toLowerCase() ?? 'jpg';
-			const filename = `${user.id}/${nanoid()}.${ext}`;
-			const { error: uploadError } = await supabase.storage
-				.from('recipe-images')
-				.upload(filename, imageFile, { contentType: imageFile.type, upsert: false });
-			if (!uploadError) {
-				const {
-					data: { publicUrl }
-				} = supabase.storage.from('recipe-images').getPublicUrl(filename);
-				imageUrl = publicUrl;
+		// Storage is outside the transaction: upload first, remove on a failed save.
+		let image: UploadedImage | null = null;
+		const file = imageFileFrom(formData);
+		if (file) {
+			try {
+				image = await uploadRecipeImage(supabase, user.id, file);
+			} catch {
+				return fail(400, { error: 'Photo upload failed. Please try again.', draft });
 			}
-			// If upload fails, imageUrl stays null — recipe is created without an image
 		}
 
-		// Upsert profile for creator
-		await db
-			.insert(profiles)
-			.values({ id: user.id, username: user.email?.split('@')[0] ?? user.id })
-			.onConflictDoNothing();
+		await ensureProfile(user);
 
-		const slug = `${slugify(contentMeta.title)}-${nanoid(6)}`;
+		const { ingredients, steps, ...meta } = content.value;
+		const slug = `${slugify(meta.title)}-${nanoid(6)}`;
 
-		await db.transaction(async (tx) => {
-			const [newRecipe] = await tx
-				.insert(recipes)
-				.values({
-					slug,
-					...contentMeta,
-					imageUrl,
-					isPublic,
-					authorId: user.id
-				})
-				.returning({ id: recipes.id });
+		try {
+			await db.transaction(async (tx) => {
+				const [recipe] = await tx
+					.insert(recipes)
+					.values({
+						slug,
+						// Copies of version 1, per the ownership rule in schema.ts.
+						...meta,
+						imageUrl: image?.url ?? null,
+						isPublic: settings.value.isPublic,
+						authorId: user.id
+					})
+					.returning({ id: recipes.id });
 
-			// Sync tags
-			if (tagNames.length > 0) {
-				await tx
-					.insert(tags)
-					.values(tagNames.map((name) => ({ name, slug: slugify(name) })))
-					.onConflictDoNothing();
-				const relevantTags = await tx.query.tags.findMany({
-					where: inArray(tags.name, tagNames)
+				await syncTags(tx, recipe.id, settings.value.tagNames);
+
+				await tx.insert(recipeVersions).values({
+					recipeId: recipe.id,
+					versionNumber: 1,
+					commitMessage: 'Initial recipe',
+					...meta,
+					ingredients,
+					steps,
+					createdBy: user.id
 				});
-				if (relevantTags.length > 0) {
-					await tx
-						.insert(recipesToTags)
-						.values(relevantTags.map((t) => ({ recipeId: newRecipe.id, tagId: t.id })));
-				}
-			}
-
-			await tx.insert(recipeVersions).values({
-				recipeId: newRecipe.id,
-				versionNumber: 1,
-				commitMessage: 'Initial recipe',
-				...contentMeta,
-				...content.value,
-				createdBy: user.id
 			});
-		});
+		} catch (e) {
+			console.error('Could not create recipe', e);
+			if (image) await removeRecipeImage(supabase, image.path);
+			return fail(500, { error: 'Could not save the recipe. Please try again.', draft });
+		}
 
 		throw redirect(303, `/recipes/${slug}`);
 	}
