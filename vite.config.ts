@@ -40,11 +40,11 @@ export default defineConfig({
 					'script-src': ['self'],
 					// 'unsafe-inline' is required for Svelte transitions, which build
 					// inline <style> elements at runtime.
-					'style-src': ['self', 'unsafe-inline', 'https://fonts.googleapis.com'],
+					'style-src': ['self', 'unsafe-inline'],
 					// Governs style="" attributes, which a nonce on style-src would
 					// otherwise block — app.html wraps the app in one.
 					'style-src-attr': ['unsafe-inline'],
-					'font-src': ['self', 'https://fonts.gstatic.com', 'data:'],
+					'font-src': ['self', 'data:'],
 					// Recipe images are user-supplied URLs as well as Supabase Storage.
 					'img-src': ['self', 'data:', 'https:'],
 					// No browser-side Supabase client; form posts are same-origin.
