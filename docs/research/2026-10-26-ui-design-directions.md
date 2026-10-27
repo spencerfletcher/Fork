@@ -240,6 +240,8 @@ Also decided: dark mode deferred (the dark set above stays recorded, nothing is 
 
 The canvas at https://claude.ai/artifact/QFTDpwCLRwuknh754yNPzc has the revised recipe page at both widths, the focus ring board, the mobile compare and edit boards at the new sizes, and the grid, compare and desktop edit boards carried over.
 
+Final corrections after the reviewers' last pass: the editor heading is "Editing v3" (the old "a change makes v4" contradicted the settings-only save); the focus note says the browser decides when `:focus-visible` shows, with no logic hiding it after a click, so text fields keep their ring; the edit form's label is "Serves" everywhere, matching the sidebar; the mobile compare title row wraps instead of truncating; mobile strip, tags and helper copy now use the same strings as desktop. Reviewer two asked a second time to cut the Details block on the grounds that metadata is not snapshotted; it is (`recipe_versions` carries title, servings, prep and cook minutes), so the block stays and nothing goes on the roadmap for it. Mocks are closed.
+
 ## Typography options, independent of palette
 
 | Pairing | Titles | UI and meta | Reading | Fit |
