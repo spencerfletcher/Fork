@@ -120,14 +120,14 @@
 			class="bg-navbar-bg absolute top-full right-0 left-0 z-[100] border-b border-white/[0.08]"
 			id="mobile-menu">
 			<ul class="m-0 list-none p-2">
+				{#each links as link (link.href)}
+					<li><a href={link.href} onclick={closeMenu} class="mobile-link">{link.label}</a></li>
+				{/each}
 				{#if user}
 					<li>
 						<a href="/recipes/new" onclick={closeMenu} class="mobile-link">New Recipe</a>
 					</li>
 				{/if}
-				{#each links as link (link.href)}
-					<li><a href={link.href} onclick={closeMenu} class="mobile-link">{link.label}</a></li>
-				{/each}
 			</ul>
 			<div class="border-t border-white/[0.08] px-2 py-4">
 				{#if user}
