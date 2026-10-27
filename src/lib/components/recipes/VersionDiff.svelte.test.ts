@@ -1,7 +1,7 @@
 import { describe, test, expect } from 'vitest';
 import { render, screen } from '@testing-library/svelte';
 import VersionDiff from './VersionDiff.svelte';
-import type { IngredientDiffRow, StepDiffRow } from '#lib/recipes/diff.js';
+import type { IngredientDiffRow, MetaDiffRow, StepDiffRow } from '#lib/recipes/diff.js';
 import { makeIngredient } from '#lib/recipes/fixtures.js';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -10,8 +10,12 @@ function ingredient(name: string, amount = '1', unit = 'cup') {
 	return makeIngredient(`${amount} ${unit} ${name}`);
 }
 
-function renderDiff(ingredientDiff: IngredientDiffRow[] = [], stepDiff: StepDiffRow[] = []) {
-	return render(VersionDiff, { props: { ingredientDiff, stepDiff } });
+function renderDiff(
+	ingredientDiff: IngredientDiffRow[] = [],
+	stepDiff: StepDiffRow[] = [],
+	metaDiff: MetaDiffRow[] = []
+) {
+	return render(VersionDiff, { props: { metaDiff, ingredientDiff, stepDiff } });
 }
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
@@ -26,6 +30,44 @@ describe('VersionDiff', () => {
 	test('says "No changes" in each empty section', () => {
 		renderDiff();
 		expect(screen.getAllByText('No changes')).toHaveLength(2);
+	});
+
+	test('renders no Details section when metaDiff is empty', () => {
+		renderDiff();
+		expect(screen.queryByText('Details')).not.toBeInTheDocument();
+	});
+
+	test('renders a Details section listing each changed field with its label', () => {
+		renderDiff(
+			[],
+			[],
+			[
+				{ field: 'title', from: 'Cookies', to: 'Biscuits' },
+				{ field: 'servings', from: 4, to: 8 },
+				{ field: 'cookTimeMinutes', from: 11, to: 13 }
+			]
+		);
+		expect(screen.getByText('Details')).toBeInTheDocument();
+		const title = screen.getByText(/^Title/).closest('.diff-row')!;
+		expect(title).toHaveTextContent('Cookies');
+		expect(title).toHaveTextContent('Biscuits');
+		expect(title.querySelector('.diff-removed')).toHaveTextContent('Cookies');
+		expect(title.querySelector('.diff-added')).toHaveTextContent('Biscuits');
+		expect(screen.getByText(/^Servings/).closest('.diff-row')).toHaveTextContent('4');
+		expect(screen.getByText(/^Cook time/).closest('.diff-row')).toHaveTextContent('13');
+	});
+
+	test('prints 0 as a value and — for null', () => {
+		renderDiff([], [], [{ field: 'prepTimeMinutes', from: null, to: 0 }]);
+		const row = screen.getByText(/^Prep time/).closest('.diff-row')!;
+		expect(row.querySelector('.diff-removed')).toHaveTextContent('—');
+		expect(row.querySelector('.diff-added')).toHaveTextContent('0');
+	});
+
+	test('places the Details section before the Ingredients section', () => {
+		renderDiff([], [], [{ field: 'title', from: 'A', to: 'B' }]);
+		const headings = screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent);
+		expect(headings).toEqual(['Details', 'Ingredients', 'Steps']);
 	});
 
 	test('marks an added ingredient with + and the add colour', () => {

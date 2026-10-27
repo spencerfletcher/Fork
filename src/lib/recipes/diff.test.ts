@@ -1,6 +1,6 @@
 import { describe, test, expect } from 'vitest';
-import { diffIngredients, diffSteps, diffInline } from './diff';
-import { makeIngredient, makeStep as step } from './fixtures';
+import { diffIngredients, diffSteps, diffInline, diffMeta } from './diff';
+import { makeIngredient, makeStep as step, makeContent } from './fixtures';
 import type { Ingredient, StepAnnotation } from '#lib/recipes/types.js';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -265,5 +265,39 @@ describe('diffSteps', () => {
 			expect(row.segments.some((s) => s.type === 'added' && s.text.includes('12'))).toBe(true);
 			expect(row.annotation?.status).toBe('modified');
 		});
+	});
+});
+
+// ─── diffMeta ─────────────────────────────────────────────────────────────────
+
+describe('diffMeta', () => {
+	const base = makeContent();
+
+	test('returns nothing for identical content', () => {
+		expect(diffMeta(base, makeContent())).toEqual([]);
+	});
+
+	test('returns only the changed fields, in field order', () => {
+		const to = makeContent({ servings: 8, title: 'Biscuits' });
+		expect(diffMeta(base, to)).toEqual([
+			{ field: 'title', from: 'Cookies', to: 'Biscuits' },
+			{ field: 'servings', from: 4, to: 8 }
+		]);
+	});
+
+	test('treats null and a value as a change, including zero', () => {
+		const from = makeContent({ prepTimeMinutes: null });
+		const to = makeContent({ prepTimeMinutes: 0 });
+		expect(diffMeta(from, to)).toEqual([{ field: 'prepTimeMinutes', from: null, to: 0 }]);
+	});
+
+	test('ignores whitespace-only title and blank-vs-null description differences', () => {
+		const to = makeContent({ title: ' Cookies ', description: '' });
+		expect(diffMeta(base, to)).toEqual([]);
+	});
+
+	test('reports the normalised values, not the raw ones', () => {
+		const to = makeContent({ title: ' Biscuits ' });
+		expect(diffMeta(base, to)).toEqual([{ field: 'title', from: 'Cookies', to: 'Biscuits' }]);
 	});
 });
