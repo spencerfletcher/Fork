@@ -201,3 +201,16 @@ Order: server logic, then components, then e2e. Fixtures through `fixtures.ts`.
 - Concurrency token: a reviewer pointed out that a millisecond timestamp can collapse distinct Postgres microsecond timestamps and that settings-only saves leave the version id unchanged; replaced by the `editRevision` counter above.
 - Upload failure boundary made explicit as above, at the same reviewer's request.
 - Times on `recipes`: the reviewer would keep only title and description as copies. Spencer chose to copy servings and times too so cards keep showing total time without a join. The ownership rule and its test cover all five.
+
+## Addendum 2026-10-27: the photo is content
+
+Decided with Spencer after shipping. A dish photo is evidence of what a version produced, so it moves onto the version like title and servings; GitHub's analogue is an image committed in the tree, not the repo's social preview.
+
+- `recipe_versions.image_url` (text, null). `recipes.image_url` stays as a maintained copy of the latest version's, under the same ownership rule, so cards need no join.
+- `RecipeContent` gains `imageUrl: string | null`; `CONTENT_GROUPS` gains `photo`; `diffMeta` reports an `imageUrl` row and `VersionDiff` renders it as two thumbnails.
+- In the save action a new upload or `removeImage` is a content change, not a settings change: the resolved `imageUrl` (new upload, null on removal, otherwise the latest version's) joins the parsed content before `contentChanged` runs. Settings are now visibility and tags only.
+- Creation writes version 1 with the uploaded photo; the fork copies the snapshot's photo, not the source row's.
+- A recipe always has at least one version (creation and forking write both rows in one transaction), so the recipe page loader returns a non-null `currentVersion` and 404s otherwise; readers no longer fall back to the recipe row.
+- Tags stay recipe-level, like GitHub topics: they place the recipe for discovery and every list query joins on them.
+- The form loses its "Recipe" and "Settings" headings. Visibility keeps one hint: "Applies to every version, not just this save." Forking a single historical version stays a non-goal, so no hint points at it.
+- Hosted: `pnpm db:migrate:prod` then `pnpm db:seed:prod`, since existing versions would otherwise carry no photo.
