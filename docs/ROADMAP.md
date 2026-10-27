@@ -3,7 +3,7 @@
 ## Priority order — 2026-10-23
 
 1. One save, versioned formulation: `superpowers/specs/2026-10-23-one-save-design.md`, approved, plan not yet written.
-2. UI redesign.
+2. UI redesign. Inputs: `todo/DESIGN.md` (palette and observations) and `todo/TODO_UI.md` (reference sites).
 3. Serving scaling on the recipe page (temporary multiplier, no version written).
 4. Cooklang-derived items from `research/2026-10-23-cooklang.md`: cooking attempts (M17), export (M16), `.cook` import (M15 stage 6), ingredient use in steps.
 

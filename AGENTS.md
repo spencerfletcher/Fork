@@ -52,3 +52,7 @@ Full-stack recipe platform with git-style version control for recipes. Stack: Sv
 
 - This is a live site — flag anything that would cause downtime or data loss
 - Test SSR behavior locally before pushing — hydration bugs are hard to catch after deploy
+
+## Working with agents
+
+Two-way doors swing freely: walk through them and show the result after. Stop at one-way doors. If the answer would be a rubber stamp, don't ask; if running something could answer the question, run it. Save questions for taste and product calls only Spencer can make, one at a time, with a recommendation, using the harness's question tool. "No" is an acceptable answer. Once a one-way door is opened it stays open for that piece of work, including for any subagent handed it (quote the decision). Come back only if the door turns out to be different from the one opened: more at stake than stated, a check failing, something unknown at the time.
