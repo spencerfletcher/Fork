@@ -21,7 +21,7 @@ const hash = createHash('sha256')
 	.update(readFileSync(`drizzle/${baseline.tag}.sql`, 'utf8'))
 	.digest('hex');
 
-const sql = postgres(DATABASE_URL, { max: 1 });
+const sql = postgres(DATABASE_URL, { max: 1, onnotice: () => {} });
 await sql`CREATE SCHEMA IF NOT EXISTS drizzle`;
 await sql`CREATE TABLE IF NOT EXISTS drizzle.__drizzle_migrations (
 	id serial PRIMARY KEY,

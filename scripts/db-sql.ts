@@ -17,7 +17,7 @@ console.log(`Running ${file} against ${description}...`);
 
 // No parameters, so postgres.js uses the simple query protocol, which accepts
 // a file with many statements.
-const sql = postgres(DATABASE_URL, { max: 1 });
+const sql = postgres(DATABASE_URL, { max: 1, onnotice: () => {} });
 await sql.file(file);
 await sql.end();
 console.log('✅ Done.');
