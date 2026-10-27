@@ -44,16 +44,17 @@ test.describe('Recipe detail page', () => {
 		// Click the stretched link (aria-label) rather than the h3 text node
 		await page.getByRole('link', { name: COOKIES_RE }).first().click();
 		await expect(page).toHaveURL(/\/recipes\//);
-		// Version history is the strip under the hero — all versions visible without expanding.
-		// Assert on rendered content, not just wrapper count: a div-count check passes even
-		// if the messages render empty.
-		const versionEntries = page.locator('.version-strip .version-entry');
-		await expect(versionEntries).toHaveCount(3);
-		await expect(page.getByRole('link', { name: /^v3$/ })).toBeVisible();
-		await expect(page.locator('.version-strip')).toContainText('Initial recipe');
+		// The strip shows the current version; the full history opens from the
+		// "3 versions" toggle. Assert on rendered content, not just wrapper count:
+		// a div-count check passes even if the messages render empty.
+		await expect(page.locator('.version-current')).toHaveText('v3');
 		// v3 is the version the landing page showcases; the strip is where a
 		// visitor arriving from that diff lands.
 		await expect(page.locator('.version-strip')).toContainText('Chill the dough');
+		await page.getByRole('button', { name: '3 versions' }).click();
+		const versionEntries = page.locator('.version-strip .version-entry');
+		await expect(versionEntries).toHaveCount(3);
+		await expect(page.locator('.version-strip')).toContainText('Initial recipe');
 	});
 
 	test('"Brown Butter Chocolate Chip Cookies" shows fork attribution', async ({ page }) => {
