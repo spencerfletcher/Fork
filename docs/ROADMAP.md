@@ -7,6 +7,27 @@
 3. Serving scaling on the recipe page (temporary multiplier, no version written).
 4. Cooklang-derived items from `research/2026-10-23-cooklang.md`: cooking attempts (M17), export (M16), `.cook` import (M15 stage 6), ingredient use in steps.
 
+## Sharing defaults — from the 2026-09 reconciliation
+
+Open product calls carried over from the repository reconciliation (the rest of that note has since shipped or lives in the milestones below):
+
+- **Start private, publish deliberately.** New recipes and forks default to public. Default to private with an explicit "make public" step that says what it exposes, and stop a fork inheriting the source's visibility.
+- **Pin the source version on a fork.** `parentId` records the parent but not which version was copied, so "forked from v3" is lost once the parent moves on. One `parentVersionNumber` column written at fork time.
+- **Variation versus bookmark.** Fork and favorite both read as "save". The copy should say which one makes an editable copy.
+
+## Backlog — from the 2025 design document
+
+Ideas from the original MVP design that are not covered by a milestone. Kept as one line each; the document's palette, layout sketches and Bits UI plan are superseded (see `todo/DESIGN.md`).
+
+- Temperature toggle (°C / °F) on steps: temperatures are free text, so a render-time regex like the M11 timer match, no schema.
+- Print stylesheet for the recipe page: `@media print`, no nav or sidebar. An afternoon.
+- Nutrition (macros) per ingredient from USDA FoodData Central, after the M12 gram tables, since weights are the input.
+- Ratings: a private personal rating first, crowd-sourced later if the social loop exists.
+- AI recipe generation and adaptation from a prompt or chosen ingredients, reviewed in the form before saving; M14, M15 and M17 all mention consuming it.
+- Structured tag taxonomy (diet, cuisine, meal type) instead of one flat list, when the tag count makes one filter row unwieldy.
+- Pantry, meal log and grocery pricing (v3 in the old plan): a separate product. Not before everything above.
+- Rejected then and still: ads, automatic prep-time estimates, "grams made" as a recipe field.
+
 ## Current direction — 2026-09-09
 
 The sequence below is preserved as historical planning. The consolidated product note is `/Users/spfle/obsidian-vault/fork/ForkV2.md`.
