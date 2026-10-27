@@ -32,12 +32,12 @@
 </script>
 
 <nav class="bg-navbar-bg relative z-50 px-5">
-	<div class="mx-auto flex h-[60px] max-w-[1200px] items-center justify-between">
+	<div class="mx-auto flex h-[52px] max-w-[1200px] items-center justify-between md:h-14">
 		<!-- Logo + nav links -->
 		<div class="flex items-center gap-6">
 			<a href="/" class="nav-brand" onclick={closeMenu}>
 				Fork
-				<span class="text-accent">.</span>
+				<span class="text-marigold">.</span>
 			</a>
 			<ul class="navbar-links m-0 hidden list-none gap-6 p-0 md:flex">
 				{#each links as link (link.href)}
@@ -55,7 +55,7 @@
 					{#if profile}
 						<a
 							href="/users/{profile.username}"
-							class="text-text-tan hover:text-accent font-mono text-[0.8rem] no-underline transition-colors">
+							class="text-text-tan hover:text-text-cream font-mono text-[0.75rem] no-underline transition-colors">
 							@{profile.username}
 						</a>
 					{/if}
@@ -79,6 +79,21 @@
 				{/if}
 			</div>
 
+			<!-- Search is a top-level link on desktop; on a phone it lives here, beside
+			     the menu, so it is one tap rather than two. -->
+			<a href="/search" aria-label="Search" class="nav-icon" onclick={closeMenu}>
+				<svg
+					class="size-5"
+					xmlns="http://www.w3.org/2000/svg"
+					fill="none"
+					viewBox="0 0 24 24"
+					stroke-width="1.8"
+					stroke="currentColor"
+					aria-hidden="true">
+					<circle cx="11" cy="11" r="7" />
+					<path stroke-linecap="round" d="M20 20l-3.5-3.5" />
+				</svg>
+			</a>
 			<button
 				type="button"
 				onclick={toggleMenu}
@@ -157,8 +172,8 @@
 <style>
 	.nav-brand {
 		font-family: var(--font-serif);
-		font-size: 1.65rem;
-		font-weight: 700;
+		font-size: 1.375rem;
+		font-weight: 600;
 		letter-spacing: -0.01em;
 		text-decoration: none;
 		color: var(--color-text-cream);
@@ -168,15 +183,15 @@
 		color: var(--color-text-cream);
 	}
 
-	/* The one solid amber control on the page. Amber means action or version
-	   identity, so nothing else in the navbar may be filled with it. */
+	/* The one marigold fill in the navbar. Marigold means a primary action or
+	   the current version, so nothing else here may be filled with it. */
 	.nav-cta {
-		padding: 7px 16px;
-		border-radius: var(--radius-pill);
-		background: var(--color-accent);
-		color: var(--color-hero-bg);
+		padding: 7px 14px;
+		border-radius: var(--radius-md);
+		background: var(--color-marigold);
+		color: var(--color-text);
 		font-family: var(--font-sans);
-		font-size: 0.85rem;
+		font-size: 0.875rem;
 		font-weight: 600;
 		white-space: nowrap;
 		text-decoration: none;
@@ -184,15 +199,23 @@
 	}
 
 	.nav-cta:hover {
-		background: var(--color-accent-mid);
-		color: var(--color-hero-bg);
+		background: var(--color-marigold-hover);
+		color: var(--color-text);
 	}
 
+	/* Clay vanishes on espresso, so the ring inside the bar is marigold. */
+	nav :focus-visible {
+		outline-color: var(--color-marigold);
+	}
+
+	.nav-icon,
 	.nav-menu-toggle {
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		padding: 0.5rem;
+		width: 44px;
+		height: 44px;
+		padding: 0;
 		border: none;
 		border-radius: var(--radius-sm);
 		background: transparent;
@@ -200,11 +223,13 @@
 		transition: color 0.15s ease;
 	}
 
+	.nav-icon:hover,
 	.nav-menu-toggle:hover {
 		color: var(--color-text-cream);
 	}
 
 	@media (min-width: 768px) {
+		.nav-icon,
 		.nav-menu-toggle {
 			display: none;
 		}
@@ -213,8 +238,8 @@
 	/* Shared link style used for both desktop nav links and logout button */
 	.navbar-link {
 		font-family: var(--font-sans);
-		font-size: 0.9rem;
-		font-weight: 400;
+		font-size: 0.875rem;
+		font-weight: 500;
 		color: var(--color-text-tan);
 		text-decoration: none;
 		background: none;
@@ -230,7 +255,7 @@
 	}
 
 	.logout-btn {
-		font-size: 0.9rem;
+		font-size: 0.875rem;
 	}
 
 	/* Mobile link style */
@@ -239,7 +264,7 @@
 		padding: var(--space-3) var(--space-4);
 		font-family: var(--font-sans);
 		font-size: 0.95rem;
-		font-weight: 400;
+		font-weight: 500;
 		color: var(--color-text-tan);
 		text-decoration: none;
 		border-radius: var(--radius-sm);

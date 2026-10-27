@@ -95,4 +95,12 @@ describe('Navbar', () => {
 		render(Navbar, { props: { user: makeUser('chef@example.com'), profile: null } });
 		expect(screen.queryByText(/@chefmaria/)).not.toBeInTheDocument();
 	});
+
+	test('mobile nav has a search icon link beside the menu toggle', () => {
+		render(Navbar, { props: { user: null } });
+		const icon = screen
+			.getAllByRole('link', { name: 'Search' })
+			.find((l) => l.getAttribute('aria-label') === 'Search');
+		expect(icon).toHaveAttribute('href', '/search');
+	});
 });
