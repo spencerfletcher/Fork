@@ -176,7 +176,7 @@ Terracotta is the one warm hue near the diff's "removed" tint; it works because 
 
 The reviewer proposed `#A8542B` light and `#D79A73` dark. The dark value is used as given. The light value passes at 4.8:1, which is a thin margin for 11px mono in the version strip, so the same hue a step darker, `#a04f28` at 5.2:1, is the token; the difference is not visible side by side. The dark accent is deliberately lighter and less saturated than a straight lift of the light one, so it reads without glowing.
 
-Type: Zilla Slab 600 for titles and version numbers, Geist for body and UI with tabular figures, Geist Mono in the diff only.
+Type: a slab for titles, version numbers and method numbers (Bitter 600 leading; Newsreader 500 still in the running), Source Sans 3 for body and UI with tabular figures, Source Code Pro for the version strip and the diff.
 
 Rules carried from the reviewer: clay appears on the title, the version number, the fork button and links, and nowhere else; the divider under the title is a 1px dotted hairline in the rule tone, not clay, so it does not compete with the four clay elements.
 
@@ -190,9 +190,9 @@ The reviewer ranked fired clay first across every board, verdigris second, the o
 - Slab heading over a humanist sans. Test pairing: **Bitter 600 + Source Sans 3** (their suggestion) against Zilla Slab + Geist. Bitter is the more bookish slab; Source Sans 3 is warmer than Geist and closer to the cookbook references.
 - The Food Lab's hierarchy: compact ingredients, clear method numbers in the display face, restrained eyebrow labels.
 - Space through margins and type; fine rules sparingly.
-- Version messages in the body sans, not mono. Mono stays in the diff only, where the gutter glyphs need it.
+- Version messages stay monospace (Spencer's call, against the reviewer): the strip is the git metaphor made visible. Source Code Pro, the sibling of Source Sans 3. Mono also stays in the diff.
 
-The one choice still open is the heading face: slab (sturdy, approachable) or Newsreader (lighter, editorial). Both are on a full recipe page with the seed photo and the same Source Sans 3 body at https://claude.ai/artifact/AEmVrLZ9AF5znQNEYZja5S.
+The one choice still open is the heading face: slab (sturdy, approachable) or Newsreader (lighter, editorial). Both are on a full recipe page with the seed photo and the same Source Sans 3 body at https://claude.ai/artifact/AEmVrLZ9AF5znQNEYZja5S. Spencer leans slab (Bitter 600); Newsreader stays in the running until the redesign spec, where the choice is made on the real pages.
 
 ## Typography options, independent of palette
 
