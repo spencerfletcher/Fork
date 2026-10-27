@@ -182,6 +182,18 @@ Rules carried from the reviewer: clay appears on the title, the version number, 
 
 Next: token hygiene on master (direction-neutral: `accent-ink`, darker muted tones, one dark surface, a contrast script), then the redesign branch per the sequence above.
 
+### Reviewer's build list and the open question (2026-10-27)
+
+The reviewer ranked fired clay first across every board, verdigris second, the original tomato C third. Their build list, adopted:
+
+- Fired clay on C's paper and ink; no second brand colour. Clay, ink tones and the two diff tints are the whole range.
+- Slab heading over a humanist sans. Test pairing: **Bitter 600 + Source Sans 3** (their suggestion) against Zilla Slab + Geist. Bitter is the more bookish slab; Source Sans 3 is warmer than Geist and closer to the cookbook references.
+- The Food Lab's hierarchy: compact ingredients, clear method numbers in the display face, restrained eyebrow labels.
+- Space through margins and type; fine rules sparingly.
+- Version messages in the body sans, not mono. Mono stays in the diff only, where the gutter glyphs need it.
+
+The one choice still open is the heading face: slab (sturdy, approachable) or Newsreader (lighter, editorial). Both are on a full recipe page with the seed photo and the same Source Sans 3 body at https://claude.ai/artifact/AEmVrLZ9AF5znQNEYZja5S.
+
 ## Typography options, independent of palette
 
 | Pairing | Titles | UI and meta | Reading | Fit |
