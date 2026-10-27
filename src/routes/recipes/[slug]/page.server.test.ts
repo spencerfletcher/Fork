@@ -338,6 +338,7 @@ async function loadData(user: { id: string; email: string } | null = null) {
 		recipe: { parent: unknown; parentId: number | null };
 		currentVersion: { ingredients: unknown[] } | null;
 		grams: unknown[];
+		meta: { title: string; description: string };
 	};
 }
 
@@ -372,6 +373,13 @@ describe('load: fork attribution', () => {
 		findRecipeMock.mockResolvedValue(forkOf({ isPublic: false, authorId: 'original-author' }));
 		const data = await loadData({ id: 'original-author', email: 'o@test.com' });
 		expect(data.recipe.parent).toMatchObject({ slug: 'secret-original' });
+	});
+
+	test('builds the page metadata from the shown version, not the recipe copy', async () => {
+		findRecipeMock.mockResolvedValue(forkOf({ isPublic: true, authorId: 'original-author' }));
+		const data = await loadData();
+		expect(data.meta.title).toBe('Classic Cookies');
+		expect(data.meta.description).toBe('Good cookies');
 	});
 
 	test('returns one gram result per ingredient of the shown version', async () => {
