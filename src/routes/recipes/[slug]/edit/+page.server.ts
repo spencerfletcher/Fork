@@ -1,10 +1,20 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import { db } from '#lib/server/db/index.js';
-import { parseRecipeMeta, parseRecipeContent } from '#lib/recipes/validation.js';
-import { recipes, recipeVersions, recipesToTags, tags } from '#lib/server/db/schema.js';
-import { eq, desc, max, inArray } from 'drizzle-orm';
-import { slugify } from '#lib/helpers.js';
+import { parseContent, parseSettings, draftOf } from '#lib/recipes/validation.js';
+import { recipes, recipeVersions } from '#lib/server/db/schema.js';
+import { eq, desc, sql } from 'drizzle-orm';
 import type { PageServerLoad, Actions } from './$types';
+import { contentChanged, changedGroups, generatedCommitMessage } from '#lib/recipes/content.js';
+import {
+	imageFileFrom,
+	uploadRecipeImage,
+	removeRecipeImage,
+	type UploadedImage
+} from '#lib/server/images.js';
+import { syncTags } from '#lib/server/tags.js';
+
+const STALE_MESSAGE =
+	'This recipe was changed in another tab. Reload to see the latest version, then reapply your edits.';
 
 export const load: PageServerLoad = async ({ params, locals: { user } }) => {
 	if (!user) throw redirect(303, '/login');
@@ -32,116 +42,112 @@ export const load: PageServerLoad = async ({ params, locals: { user } }) => {
 };
 
 export const actions: Actions = {
-	// Update recipe metadata (no version bump)
-	saveMeta: async ({ params, request, locals: { user } }) => {
+	// One save for the whole edit form: settings are updated in place, and a
+	// new version is appended only when the content actually changed.
+	save: async ({ params, request, locals: { user, supabase } }) => {
 		if (!user) throw error(401, 'Login required');
-
 		const recipe = await db.query.recipes.findFirst({
-			where: eq(recipes.slug, params.slug)
+			where: eq(recipes.slug, params.slug),
+			with: { recipesToTags: { with: { tag: true } } }
 		});
 		if (!recipe) throw error(404, 'Recipe not found');
 		if (recipe.authorId !== user.id) throw error(403, 'Not authorized');
 
 		const formData = await request.formData();
-		const meta = parseRecipeMeta(formData);
-		if (!meta.ok) return fail(400, { error: meta.error, section: 'meta' });
-		const { title, description, servings, prepTimeMinutes, cookTimeMinutes, isPublic, tagNames } =
-			meta.value;
-		const rawImageUrl = (formData.get('imageUrl') as string)?.trim() || null;
-		if (rawImageUrl) {
-			let parsedUrl: URL;
+		// Everything as typed, handed back on any failure so nothing is lost.
+		const draft = draftOf(formData);
+		const content = parseContent(formData);
+		if (!content.ok) return fail(400, { error: content.error, draft });
+		const settings = parseSettings(formData);
+		if (!settings.ok) return fail(400, { error: settings.error, draft });
+
+		if (!/^\d+$/.test(draft.editRevision)) {
+			return fail(400, { error: 'Invalid form state, reload the page', draft });
+		}
+		const editRevision = Number(draft.editRevision);
+
+		// Storage is outside the transaction: upload first, remove on a failed save.
+		let image: UploadedImage | null = null;
+		const file = imageFileFrom(formData);
+		if (file) {
 			try {
-				parsedUrl = new URL(rawImageUrl);
+				image = await uploadRecipeImage(supabase, user.id, file);
 			} catch {
-				return fail(400, { error: 'Invalid image URL', section: 'meta' });
-			}
-			if (parsedUrl.protocol !== 'https:' && parsedUrl.protocol !== 'http:') {
-				return fail(400, { error: 'Image URL must use http or https', section: 'meta' });
+				return fail(400, { error: 'Photo upload failed. Please try again.', draft });
 			}
 		}
-		const imageUrl = rawImageUrl;
 
-		await db.transaction(async (tx) => {
-			await tx
-				.update(recipes)
-				.set({
-					title,
-					description,
-					imageUrl,
-					servings,
-					prepTimeMinutes,
-					cookTimeMinutes,
-					isPublic,
-					updatedAt: new Date()
-				})
-				.where(eq(recipes.id, recipe.id));
+		const { title, description, servings, prepTimeMinutes, cookTimeMinutes } = content.value;
+		const copies = { title, description, servings, prepTimeMinutes, cookTimeMinutes };
 
-			// Sync tags
-			await tx.delete(recipesToTags).where(eq(recipesToTags.recipeId, recipe.id));
-			if (tagNames.length > 0) {
-				// Upsert any new tags
-				await tx
-					.insert(tags)
-					.values(tagNames.map((name) => ({ name, slug: slugify(name) })))
-					.onConflictDoNothing();
-				const relevantTags = await tx.query.tags.findMany({
-					where: inArray(tags.name, tagNames)
+		let outcome: 'stale' | 'saved' | 'unchanged';
+		try {
+			outcome = await db.transaction(async (tx) => {
+				// Serialise saves on this recipe; nothing is read before the lock.
+				const [locked] = await tx
+					.select()
+					.from(recipes)
+					.where(eq(recipes.id, recipe.id))
+					.for('update');
+				if (!locked || locked.authorId !== user.id) throw error(403, 'Not authorized');
+				if (locked.editRevision !== editRevision) return 'stale';
+
+				const latest = await tx.query.recipeVersions.findFirst({
+					where: eq(recipeVersions.recipeId, recipe.id),
+					orderBy: [desc(recipeVersions.versionNumber)]
 				});
-				if (relevantTags.length > 0) {
-					await tx
-						.insert(recipesToTags)
-						.values(relevantTags.map((t) => ({ recipeId: recipe.id, tagId: t.id })));
+
+				const changed = latest ? contentChanged(latest, content.value) : true;
+
+				const storedTags = new Set(recipe.recipesToTags.map((r) => r.tag.name.toLowerCase()));
+				const submittedTags = new Set(settings.value.tagNames.map((n) => n.toLowerCase()));
+				const tagsChanged =
+					storedTags.size !== submittedTags.size ||
+					[...submittedTags].some((n) => !storedTags.has(n));
+				const imageChanged = image !== null || (draft.removeImage && locked.imageUrl !== null);
+				const visibilityChanged = locked.isPublic !== settings.value.isPublic;
+
+				if (!changed && !imageChanged && !visibilityChanged && !tagsChanged) return 'unchanged';
+
+				if (tagsChanged) await syncTags(tx, recipe.id, settings.value.tagNames);
+
+				if (changed) {
+					await tx.insert(recipeVersions).values({
+						recipeId: recipe.id,
+						versionNumber: (latest?.versionNumber ?? 0) + 1,
+						commitMessage:
+							draft.commitMessage.trim() ||
+							generatedCommitMessage(latest ? changedGroups(latest, content.value) : ['title']),
+						...content.value,
+						createdBy: user.id
+					});
 				}
-			}
-		});
 
-		throw redirect(303, `/recipes/${params.slug}`);
-	},
-
-	// Save new version (ingredients + steps)
-	saveVersion: async ({ params, request, locals: { user } }) => {
-		if (!user) throw error(401, 'Login required');
-
-		const recipe = await db.query.recipes.findFirst({
-			where: eq(recipes.slug, params.slug)
-		});
-		if (!recipe) throw error(404, 'Recipe not found');
-		if (recipe.authorId !== user.id) throw error(403, 'Not authorized');
-
-		const formData = await request.formData();
-		const commitMessage = (formData.get('commitMessage') as string)?.trim();
-		if (!commitMessage)
-			return fail(400, { error: 'Commit message is required', section: 'content' });
-		const content = parseRecipeContent(formData);
-		if (!content.ok) return fail(400, { error: content.error, section: 'content' });
-		const { ingredients, steps } = content.value;
-
-		await db.transaction(async (tx) => {
-			// Get current max version
-			const [{ maxVer }] = await tx
-				.select({ maxVer: max(recipeVersions.versionNumber) })
-				.from(recipeVersions)
-				.where(eq(recipeVersions.recipeId, recipe.id));
-
-			const nextVersion = (maxVer ?? 0) + 1;
-
-			await tx.insert(recipeVersions).values({
-				recipeId: recipe.id,
-				versionNumber: nextVersion,
-				commitMessage,
-				title: recipe.title,
-				description: recipe.description,
-				servings: recipe.servings,
-				prepTimeMinutes: recipe.prepTimeMinutes,
-				cookTimeMinutes: recipe.cookTimeMinutes,
-				ingredients,
-				steps,
-				createdBy: user.id
+				// One update: the copies when the content changed, the settings that
+				// moved, and always the revision bump.
+				await tx
+					.update(recipes)
+					.set({
+						...(changed ? copies : {}),
+						...(image ? { imageUrl: image.url } : {}),
+						...(draft.removeImage && !image ? { imageUrl: null } : {}),
+						...(visibilityChanged ? { isPublic: settings.value.isPublic } : {}),
+						editRevision: sql`${recipes.editRevision} + 1`,
+						updatedAt: new Date()
+					})
+					.where(eq(recipes.id, recipe.id));
+				return 'saved';
 			});
+		} catch (e) {
+			console.error('Could not save recipe', e);
+			if (image) await removeRecipeImage(supabase, image.path);
+			return fail(500, { error: 'Could not save the recipe. Please try again.', draft });
+		}
 
-			await tx.update(recipes).set({ updatedAt: new Date() }).where(eq(recipes.id, recipe.id));
-		});
-
+		if (outcome === 'stale') {
+			if (image) await removeRecipeImage(supabase, image.path);
+			return fail(409, { error: STALE_MESSAGE, draft });
+		}
 		throw redirect(303, `/recipes/${params.slug}`);
 	},
 
