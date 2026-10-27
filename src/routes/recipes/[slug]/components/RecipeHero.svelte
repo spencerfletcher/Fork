@@ -11,20 +11,20 @@
 		recipe,
 		currentVersion,
 		isViewingHistory,
-		tags,
-		totalMinutes
+		tags
 	}: {
 		recipe: RecipeWithRelations;
 		currentVersion: RecipeVersion | null;
 		isViewingHistory: boolean;
 		tags: Tag[];
-		totalMinutes: number;
 	} = $props();
 
 	// The viewed version owns the content; the recipe row only carries a copy of
 	// the latest, which is wrong for a historical version.
 	const title = $derived(currentVersion?.title ?? recipe.title);
 	const servings = $derived(currentVersion?.servings ?? recipe.servings);
+	const content = $derived(currentVersion ?? recipe);
+	const totalMinutes = $derived((content.prepTimeMinutes ?? 0) + (content.cookTimeMinutes ?? 0));
 </script>
 
 <header class="bg-hero-bg box-border w-full">

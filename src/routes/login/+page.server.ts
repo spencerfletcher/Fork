@@ -1,5 +1,6 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
+import { text } from '#lib/recipes/validation.js';
 
 // Add a load function to redirect logged-in users away from the login page.
 // If a user with an active session tries to visit /login, they'll be
@@ -13,8 +14,8 @@ export const load: PageServerLoad = async ({ locals: { user } }) => {
 export const actions: Actions = {
 	default: async ({ request, locals: { supabase } }) => {
 		const formData = await request.formData();
-		const email = formData.get('email') as string;
-		const password = formData.get('password') as string;
+		const email = text(formData, 'email');
+		const password = text(formData, 'password');
 
 		// Basic validation
 		if (!email || !password) {

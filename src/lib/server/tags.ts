@@ -3,6 +3,11 @@ import { db } from './db/index.js';
 import { recipesToTags, tags } from './db/schema.js';
 import { slugify } from '#lib/helpers.js';
 
+/** Every tag, alphabetical, for the recipe form's suggestions. */
+export function listTags() {
+	return db.query.tags.findMany({ orderBy: (t, { asc }) => [asc(t.name)] });
+}
+
 export type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
 /**

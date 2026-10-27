@@ -72,7 +72,8 @@ export type RecipeDraft = {
 	removeImage: boolean;
 };
 
-function text(formData: FormData, key: string): string {
+/** A form field as a string: missing or non-string (a File) reads as empty. */
+export function text(formData: FormData, key: string): string {
 	const value = formData.get(key);
 	return typeof value === 'string' ? value : '';
 }

@@ -37,17 +37,13 @@
 	<span class="diff-gutter">{GUTTER[status]}</span>
 {/snippet}
 
-<!--
-	Word-level segments inside a modified row.
-
-	`spaced` exists because the two callers tokenise differently. Ingredient rows
-	are diffed as "amount unit name", where the segment boundaries fall on the
-	spaces and the joining whitespace is lost; step rows are diffed as prose and
-	keep their own spacing. Without the flag, ingredients run together and steps
-	gain double spaces.
--->
-<!-- prettier-ignore -->
-{#snippet segments(list: InlineSegment[], spaced: boolean)}{#each list as seg, i (i)}{#if seg.type === 'added'}<span class="diff-added">{seg.text}</span>{:else if seg.type === 'removed'}<span class="diff-removed">{seg.text}</span>{:else}{seg.text}{/if}{spaced ? ' ' : ''}{/each}{/snippet}
+<!-- Word-level segments inside a modified row; diffWords keeps the spacing. -->
+{#snippet segments(list: InlineSegment[])}{#each list as seg, i (i)}{#if seg.type === 'added'}<span
+				class="diff-added">
+				{seg.text}
+			</span>{:else if seg.type === 'removed'}<span class="diff-removed">
+				{seg.text}
+			</span>{:else}{seg.text}{/if}{/each}{/snippet}
 
 {#snippet panel(title: string, isEmpty: boolean, rows: import('svelte').Snippet)}
 	<section class="diff-section">
@@ -91,7 +87,7 @@
 					{@render gutter(row.status)}
 					<span class="diff-content">
 						{#if row.status === 'modified'}
-							{@render segments(row.segments, true)}
+							{@render segments(row.segments)}
 						{:else}
 							{row.ingredient.text}
 						{/if}
@@ -112,10 +108,10 @@
 					{/if}
 					<span class="diff-content whitespace-pre-line">
 						{#if row.status === 'modified'}
-							{@render segments(row.segments, false)}
+							{@render segments(row.segments)}
 							{#if row.annotation}
 								<span class="diff-annotation diff-{row.annotation.status}">
-									{row.annotation.type}: {@render segments(row.annotation.segments, false)}
+									{row.annotation.type}: {@render segments(row.annotation.segments)}
 								</span>
 							{/if}
 						{:else}

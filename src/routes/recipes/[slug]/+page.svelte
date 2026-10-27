@@ -18,11 +18,10 @@
 	const canFavorite = $derived(!!user && !isViewingHistory);
 	// The viewed version owns servings and times; the recipe row is only a copy of the latest.
 	const content = $derived(currentVersion ?? recipe);
-	const totalMinutes = $derived((content.prepTimeMinutes ?? 0) + (content.cookTimeMinutes ?? 0));
 </script>
 
 <article class="min-h-screen">
-	<RecipeHero {recipe} {currentVersion} {isViewingHistory} {tags} {totalMinutes} />
+	<RecipeHero {recipe} {currentVersion} {isViewingHistory} {tags} />
 
 	{#if allVersions.length > 0}
 		<VersionStrip

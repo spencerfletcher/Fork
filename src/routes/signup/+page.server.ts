@@ -1,7 +1,7 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { db } from '#lib/server/db/index.js';
-import { profiles } from '#lib/server/db/schema.js';
+import { text } from '#lib/recipes/validation.js';
+import { ensureProfile } from '#lib/server/profiles.js';
 
 // Redirect users who are already logged in away from the signup page.
 export const load: PageServerLoad = async ({ locals: { user } }) => {
@@ -13,30 +13,21 @@ export const load: PageServerLoad = async ({ locals: { user } }) => {
 export const actions: Actions = {
 	default: async ({ request, locals: { supabase } }) => {
 		const formData = await request.formData();
-		const email = formData.get('email') as string;
-		const password = formData.get('password') as string;
+		const email = text(formData, 'email');
+		const password = text(formData, 'password');
 
 		if (!email || !password) {
 			return fail(400, { message: 'Email and password are required.' });
 		}
 
-		// Use the Supabase client to sign up a new user
 		const { data, error: err } = await supabase.auth.signUp({ email, password });
 
 		if (err) {
 			return fail(err.status || 500, { message: err.message });
 		}
 
-		// Create a profile row for the new user (best-effort; email may not be confirmed yet)
-		if (data.user) {
-			await db
-				.insert(profiles)
-				.values({
-					id: data.user.id,
-					username: email.split('@')[0]
-				})
-				.onConflictDoNothing();
-		}
+		// Best effort: the email may not be confirmed yet, but the profile row can exist.
+		if (data.user) await ensureProfile(data.user);
 
 		// By default, Supabase sends a confirmation email.
 		throw redirect(303, '/confirm-email');

@@ -4,15 +4,11 @@ import { actions } from './+page.server';
 
 // ─── Hoisted mocks (must be available inside vi.mock factory) ─────────────────
 
-const { onConflictDoNothing } = vi.hoisted(() => ({
-	onConflictDoNothing: vi.fn().mockResolvedValue(undefined)
+const { ensureProfile } = vi.hoisted(() => ({
+	ensureProfile: vi.fn().mockResolvedValue(undefined)
 }));
 
-vi.mock('#lib/server/db/index.js', () => ({
-	db: {
-		insert: vi.fn().mockReturnValue({ values: vi.fn().mockReturnValue({ onConflictDoNothing }) })
-	}
-}));
+vi.mock('#lib/server/profiles.js', () => ({ ensureProfile }));
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -83,7 +79,7 @@ describe('signup action', () => {
 			makeEvent({ email: 'cook@b.com', password: 'pw' })
 		);
 
-		expect(onConflictDoNothing).toHaveBeenCalled();
+		expect(ensureProfile).toHaveBeenCalledWith({ id: 'user-1' });
 		expect(isRedirect(result)).toBe(true);
 		expect(result).toMatchObject({ status: 303, location: '/confirm-email' });
 	});

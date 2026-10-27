@@ -11,7 +11,7 @@ import {
 	removeRecipeImage,
 	type UploadedImage
 } from '#lib/server/images.js';
-import { syncTags } from '#lib/server/tags.js';
+import { syncTags, listTags } from '#lib/server/tags.js';
 
 const STALE_MESSAGE =
 	'This recipe was changed in another tab. Reload to see the latest version, then reapply your edits.';
@@ -30,9 +30,7 @@ export const load: PageServerLoad = async ({ params, locals: { user } }) => {
 	if (!recipe) throw error(404, 'Recipe not found');
 	if (recipe.authorId !== user.id) throw error(403, 'You do not own this recipe');
 
-	const allTags = await db.query.tags.findMany({
-		orderBy: (t, { asc }) => [asc(t.name)]
-	});
+	const allTags = await listTags();
 
 	return {
 		recipe,

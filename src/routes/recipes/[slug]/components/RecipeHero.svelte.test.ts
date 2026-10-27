@@ -32,8 +32,7 @@ function renderHero(recipe: ReturnType<typeof makeRecipe>, currentVersion: unkno
 			recipe: recipe as never,
 			currentVersion: currentVersion as never,
 			isViewingHistory: false,
-			tags: [],
-			totalMinutes: 0
+			tags: []
 		}
 	});
 }

@@ -80,10 +80,7 @@ function makeTx(opts: { locked?: unknown[]; latest?: unknown } = {}) {
 		update: vi.fn().mockReturnValue(updateChain),
 		delete: vi.fn().mockReturnValue(deleteChain),
 		select: vi.fn().mockReturnValue(selectChain),
-		query: {
-			tags: { findMany: vi.fn().mockResolvedValue([]) },
-			recipeVersions: { findFirst: findLatest }
-		},
+		query: { recipeVersions: { findFirst: findLatest } },
 		// Exposed for assertions
 		insertChain,
 		updateChain,
