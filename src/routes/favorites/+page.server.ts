@@ -28,8 +28,7 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 	// before the filter chips and the recipe query, so neither reveals it.
 	const favoriteIds = favoriteMappings
 		.filter((f) => f.isPublic || f.authorId === user.id)
-		.map((f) => f.recipeId)
-		.filter((id): id is number => id !== null);
+		.map((f) => f.recipeId);
 
 	if (favoriteIds.length === 0) {
 		return { favoriteRecipes: [], allTags: [], searchQuery, selectedTags: tagSlugs };

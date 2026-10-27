@@ -42,10 +42,12 @@ export function absoluteImage(url: string | null | undefined): string {
 	return url && /^https?:\/\//.test(url) ? url : DEFAULT_IMAGE;
 }
 
+const DESCRIPTION_MAX = 160;
+
 /** Trims a description to a length link previews will not cut mid-word. */
-export function clampDescription(text: string, max = 160): string {
+export function clampDescription(text: string): string {
 	const clean = text.replace(/\s+/g, ' ').trim();
-	if (clean.length <= max) return clean;
-	const cut = clean.slice(0, max);
+	if (clean.length <= DESCRIPTION_MAX) return clean;
+	const cut = clean.slice(0, DESCRIPTION_MAX);
 	return `${cut.slice(0, cut.lastIndexOf(' '))}…`;
 }

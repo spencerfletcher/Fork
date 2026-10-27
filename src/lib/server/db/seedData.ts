@@ -209,7 +209,8 @@ const COOKIE_META = {
 		'The definitive chocolate chip cookie — crisp edges, chewy centers, and pockets of melted chocolate in every bite.',
 	servings: 48,
 	prepTimeMinutes: 15,
-	cookTimeMinutes: 11
+	cookTimeMinutes: 11,
+	imageUrl: 'https://images.unsplash.com/photo-1499636136210-6f4ee915583e?w=800&q=80'
 };
 
 const TIKKA_META = {
@@ -218,7 +219,8 @@ const TIKKA_META = {
 		'Rich, aromatic, and deeply satisfying — a restaurant-quality tikka masala built from a yogurt-marinated chicken and a slow-simmered tomato cream sauce.',
 	servings: 4,
 	prepTimeMinutes: 20,
-	cookTimeMinutes: 40
+	cookTimeMinutes: 40,
+	imageUrl: 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=800&q=80'
 };
 
 export const SEED: SeedRecipe[] = [
@@ -231,7 +233,6 @@ export const SEED: SeedRecipe[] = [
 				...COOKIE_META,
 				ingredientsText: COOKIE_INGREDIENTS_V1,
 				stepsText: COOKIE_STEPS,
-				imageUrl: 'https://images.unsplash.com/photo-1499636136210-6f4ee915583e?w=800&q=80',
 				commitMessage: 'Initial recipe',
 				createdAt: '2025-10-14'
 			},
@@ -239,7 +240,6 @@ export const SEED: SeedRecipe[] = [
 				...COOKIE_META,
 				ingredientsText: COOKIE_INGREDIENTS_V2,
 				stepsText: COOKIE_STEPS,
-				imageUrl: 'https://images.unsplash.com/photo-1499636136210-6f4ee915583e?w=800&q=80',
 				commitMessage: 'Increased vanilla to 2 tsp, added pinch of espresso powder',
 				createdAt: '2026-02-28'
 			},
@@ -252,7 +252,6 @@ export const SEED: SeedRecipe[] = [
 				cookTimeMinutes: 13,
 				ingredientsText: COOKIE_INGREDIENTS_V3,
 				stepsText: COOKIE_STEPS_V3,
-				imageUrl: 'https://images.unsplash.com/photo-1499636136210-6f4ee915583e?w=800&q=80',
 				commitMessage:
 					'Chill the dough and shift the sugar toward brown — thicker cookies, less cloying, smaller batch',
 				createdAt: '2026-07-19'
@@ -289,7 +288,6 @@ export const SEED: SeedRecipe[] = [
 				...TIKKA_META,
 				ingredientsText: TIKKA_INGREDIENTS_V1,
 				stepsText: TIKKA_STEPS_V1,
-				imageUrl: 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=800&q=80',
 				commitMessage: 'Initial recipe',
 				createdAt: '2025-11-05'
 			},
@@ -297,7 +295,6 @@ export const SEED: SeedRecipe[] = [
 				...TIKKA_META,
 				ingredientsText: TIKKA_INGREDIENTS_V2,
 				stepsText: TIKKA_STEPS_V1,
-				imageUrl: 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=800&q=80',
 				commitMessage: 'Adjusted spice blend — more garam masala, less cumin, added smoked paprika',
 				createdAt: '2026-01-20'
 			},
@@ -305,7 +302,6 @@ export const SEED: SeedRecipe[] = [
 				...TIKKA_META,
 				ingredientsText: TIKKA_INGREDIENTS_V2,
 				stepsText: TIKKA_STEPS_V3,
-				imageUrl: 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=800&q=80',
 				commitMessage:
 					'Worked the smoked paprika into the marinade, finished the sauce with cold butter',
 				createdAt: '2026-03-10'

@@ -31,8 +31,8 @@ describe('clampDescription', () => {
 
 	test('cuts at a word boundary, not mid-word', () => {
 		const long = 'word '.repeat(60).trim();
-		const out = clampDescription(long, 40);
-		expect(out.length).toBeLessThanOrEqual(41);
+		const out = clampDescription(long);
+		expect(out.length).toBeLessThanOrEqual(161);
 		expect(out.endsWith('…')).toBe(true);
 		expect(out).not.toMatch(/wo…$/);
 	});

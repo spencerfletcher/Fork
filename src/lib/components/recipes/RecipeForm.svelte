@@ -98,12 +98,6 @@
 			submitting = false;
 		};
 	};
-
-	const numberField = (key: 'servings' | 'prepTimeMinutes' | 'cookTimeMinutes') => (e: Event) => {
-		// Kept as strings so the dirty check compares like with like; bind:value
-		// on a number input would hand back numbers and null.
-		draft[key] = (e.currentTarget as HTMLInputElement).value;
-	};
 </script>
 
 <form method="POST" {action} enctype="multipart/form-data" use:enhance={track} class="form">
@@ -155,6 +149,8 @@
 			{/if}
 		</div>
 
+		<!-- Number fields stay strings so the dirty check compares like with like;
+		     bind:value on a number input would hand back numbers and null. -->
 		<div class="field-row">
 			<div class="field">
 				<label for="servings">Servings</label>
@@ -164,7 +160,7 @@
 					type="number"
 					min="1"
 					value={draft.servings}
-					oninput={numberField('servings')} />
+					oninput={(e) => (draft.servings = e.currentTarget.value)} />
 			</div>
 			<div class="field">
 				<label for="prepTimeMinutes">Prep time (min)</label>
@@ -174,7 +170,7 @@
 					type="number"
 					min="0"
 					value={draft.prepTimeMinutes}
-					oninput={numberField('prepTimeMinutes')} />
+					oninput={(e) => (draft.prepTimeMinutes = e.currentTarget.value)} />
 			</div>
 			<div class="field">
 				<label for="cookTimeMinutes">Cook time (min)</label>
@@ -184,7 +180,7 @@
 					type="number"
 					min="0"
 					value={draft.cookTimeMinutes}
-					oninput={numberField('cookTimeMinutes')} />
+					oninput={(e) => (draft.cookTimeMinutes = e.currentTarget.value)} />
 			</div>
 		</div>
 
