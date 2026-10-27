@@ -112,103 +112,97 @@
 			<input type="hidden" name="editRevision" value={draft.editRevision} />
 		{/if}
 
-		<section class="mb-6">
-			<div class="field">
-				<label for="title">
-					Title <span class="required">*</span>
-				</label>
-				<input id="title" name="title" type="text" required bind:value={draft.title} />
-			</div>
+		<div class="field">
+			<label for="title">
+				Title <span class="required">*</span>
+			</label>
+			<input id="title" name="title" type="text" required bind:value={draft.title} />
+		</div>
 
-			<div class="field">
-				<label for="description">Description</label>
-				<textarea id="description" name="description" rows="3" bind:value={draft.description}>
-				</textarea>
-			</div>
+		<div class="field">
+			<label for="description">Description</label>
+			<textarea id="description" name="description" rows="3" bind:value={draft.description}>
+			</textarea>
+		</div>
 
-			<div class="field-row">
-				<div class="field">
-					<label for="servings">Servings</label>
-					<input
-						id="servings"
-						name="servings"
-						type="number"
-						min="1"
-						value={draft.servings}
-						oninput={numberField('servings')} />
+		<div class="field">
+			<label for="image">Photo</label>
+			{#if preview}
+				<div class="border-border relative w-full overflow-hidden rounded-md border">
+					<img src={preview} alt="Preview" class="block h-[220px] w-full object-cover" />
+					<button
+						type="button"
+						class="absolute top-2 right-2 flex size-7 items-center justify-center rounded-full border-none bg-black/55 text-[1.1rem] leading-none text-white"
+						onclick={removePhoto}
+						aria-label="Remove photo">
+						×
+					</button>
 				</div>
-				<div class="field">
-					<label for="prepTimeMinutes">Prep time (min)</label>
-					<input
-						id="prepTimeMinutes"
-						name="prepTimeMinutes"
-						type="number"
-						min="0"
-						value={draft.prepTimeMinutes}
-						oninput={numberField('prepTimeMinutes')} />
-				</div>
-				<div class="field">
-					<label for="cookTimeMinutes">Cook time (min)</label>
-					<input
-						id="cookTimeMinutes"
-						name="cookTimeMinutes"
-						type="number"
-						min="0"
-						value={draft.cookTimeMinutes}
-						oninput={numberField('cookTimeMinutes')} />
-				</div>
-			</div>
+			{/if}
+			<input
+				id="image"
+				name="image"
+				type="file"
+				accept="image/jpeg,image/png,image/webp,image/gif"
+				class="border-border bg-surface-2 hover:border-accent cursor-pointer rounded-md border border-dashed p-2 text-sm"
+				bind:this={imageInput}
+				onchange={onImageChange} />
+			{#if draft.removeImage}
+				<input type="hidden" name="removeImage" value="on" />
+			{/if}
+			{#if photoLost}
+				<p class="form-hint">Please choose the photo again.</p>
+			{/if}
+		</div>
 
-			<IngredientEditor bind:value={draft.ingredients} />
-			<StepEditor bind:value={draft.steps} />
-		</section>
-
-		<hr class="divider my-7" />
-
-		<section class="mb-6">
+		<div class="field-row">
 			<div class="field">
-				<label for="image">Photo</label>
-				{#if preview}
-					<div class="border-border relative w-full overflow-hidden rounded-md border">
-						<img src={preview} alt="Preview" class="block h-[220px] w-full object-cover" />
-						<button
-							type="button"
-							class="absolute top-2 right-2 flex size-7 items-center justify-center rounded-full border-none bg-black/55 text-[1.1rem] leading-none text-white"
-							onclick={removePhoto}
-							aria-label="Remove photo">
-							×
-						</button>
-					</div>
-				{/if}
+				<label for="servings">Servings</label>
 				<input
-					id="image"
-					name="image"
-					type="file"
-					accept="image/jpeg,image/png,image/webp,image/gif"
-					class="border-border bg-surface-2 hover:border-accent cursor-pointer rounded-md border border-dashed p-2 text-sm"
-					bind:this={imageInput}
-					onchange={onImageChange} />
-				{#if draft.removeImage}
-					<input type="hidden" name="removeImage" value="on" />
-				{/if}
-				{#if photoLost}
-					<p class="form-hint">Please choose the photo again.</p>
-				{/if}
+					id="servings"
+					name="servings"
+					type="number"
+					min="1"
+					value={draft.servings}
+					oninput={numberField('servings')} />
 			</div>
-
-			<fieldset class="field field-tags">
-				<legend class="field-legend">Tags</legend>
-				<TagInput {allTags} bind:selected={draft.tags} />
-			</fieldset>
-
 			<div class="field">
-				<label class="inline-checkbox">
-					<input type="checkbox" name="isPublic" bind:checked={draft.isPublic} />
-					Make this recipe public
-				</label>
-				<p class="form-hint">Applies to every version, not just this save.</p>
+				<label for="prepTimeMinutes">Prep time (min)</label>
+				<input
+					id="prepTimeMinutes"
+					name="prepTimeMinutes"
+					type="number"
+					min="0"
+					value={draft.prepTimeMinutes}
+					oninput={numberField('prepTimeMinutes')} />
 			</div>
-		</section>
+			<div class="field">
+				<label for="cookTimeMinutes">Cook time (min)</label>
+				<input
+					id="cookTimeMinutes"
+					name="cookTimeMinutes"
+					type="number"
+					min="0"
+					value={draft.cookTimeMinutes}
+					oninput={numberField('cookTimeMinutes')} />
+			</div>
+		</div>
+
+		<IngredientEditor bind:value={draft.ingredients} />
+		<StepEditor bind:value={draft.steps} />
+
+		<fieldset class="field field-tags">
+			<legend class="field-legend">Tags</legend>
+			<TagInput {allTags} bind:selected={draft.tags} />
+		</fieldset>
+
+		<div class="field">
+			<label class="inline-checkbox">
+				<input type="checkbox" name="isPublic" bind:checked={draft.isPublic} />
+				Make this recipe public
+			</label>
+			<p class="form-hint">Applies to every version, not just this save.</p>
+		</div>
 
 		{#if withCommitMessage}
 			<div class="field">
