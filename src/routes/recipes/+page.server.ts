@@ -1,15 +1,14 @@
-import { redirect } from '@sveltejs/kit';
 import { db } from '#lib/server/db/index.js';
 import { recipes } from '#lib/server/db/schema.js';
 import { eq } from 'drizzle-orm';
 import { attachRecipeCounts } from '#lib/server/recipeCounts.js';
 import type { PageServerLoad } from './$types';
 
+// Signed in: your own recipes, private ones included. Signed out: every public
+// recipe, so the page is browsable without an account.
 export const load: PageServerLoad = async ({ locals: { user } }) => {
-	if (!user) throw redirect(303, '/login');
-
-	const userRecipes = await db.query.recipes.findMany({
-		where: eq(recipes.authorId, user.id),
+	const rows = await db.query.recipes.findMany({
+		where: user ? eq(recipes.authorId, user.id) : eq(recipes.isPublic, true),
 		with: {
 			recipesToTags: { with: { tag: true } },
 			author: true
@@ -17,7 +16,5 @@ export const load: PageServerLoad = async ({ locals: { user } }) => {
 		orderBy: (r, { desc }) => [desc(r.updatedAt)]
 	});
 
-	const withCounts = await attachRecipeCounts(userRecipes);
-
-	return { recipes: withCounts };
+	return { recipes: await attachRecipeCounts(rows), mine: !!user };
 };
