@@ -1,12 +1,10 @@
 import { describe, test, expect } from 'vitest';
-import { readFileSync } from 'node:fs';
 import { parseIngredientText } from '#lib/recipes/ingredients.js';
 import { gramsFor } from './ingredientDensities';
+import { SEED } from './db/seedData';
 
-// seed.ts runs on import, so its ingredient literals are read as text.
-const seed = readFileSync(new URL('./db/seed.ts', import.meta.url), 'utf8');
-const seedIngredients = [...seed.matchAll(/parseIngredientText\(`([\s\S]*?)`\)/g)]
-	.flatMap((m) => parseIngredientText(m[1]))
+const seedIngredients = SEED.flatMap((recipe) => recipe.versions)
+	.flatMap((version) => parseIngredientText(version.ingredientsText))
 	.filter((ingredient) => ingredient.quantity !== null);
 
 describe('gram tables', () => {

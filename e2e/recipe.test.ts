@@ -1,17 +1,17 @@
 import { expect, test, type Page } from '@playwright/test';
+import { SEED } from '../src/lib/server/db/seedData';
 
-// These tests assume the DB has been seeded with the demo data:
-// - "Classic Chocolate Chip Cookies" (2 versions)
-// - "Brown Butter Chocolate Chip Cookies" (forked, 1 version)
-// - "Chicken Tikka Masala" (3 versions)
+// These tests assume the DB has been seeded with the demo data in seedData.ts:
+// cookies (3 versions, renamed in v3), a brown-butter fork of it, and a tikka
+// masala. Titles are read from the seed so a rename cannot strand a test.
+const COOKIES = SEED[0].versions.at(-1)!.title;
+const COOKIES_RE = new RegExp(COOKIES, 'i');
+const FORK_RE = new RegExp(SEED[1].versions.at(-1)!.title, 'i');
 
 /** Slugs carry a random nanoid suffix, so reach the recipe by name, not URL. */
 async function gotoClassicCookies(page: Page) {
 	await page.goto('/');
-	await page
-		.getByRole('link', { name: /classic chocolate chip cookies/i })
-		.first()
-		.click();
+	await page.getByRole('link', { name: COOKIES_RE }).first().click();
 	await page.waitForURL(/\/recipes\//);
 }
 
@@ -39,15 +39,12 @@ test.describe('Recipe detail page', () => {
 		await expect(page.getByRole('heading', { name: /^method$/i })).toBeVisible();
 	});
 
-	test('"Classic Chocolate Chip Cookies" shows version history with 3 versions', async ({
+	test('"Thick and Chewy Chocolate Chip Cookies" shows version history with 3 versions', async ({
 		page
 	}) => {
 		await page.goto('/');
 		// Click the stretched link (aria-label) rather than the h3 text node
-		await page
-			.getByRole('link', { name: /classic chocolate chip cookies/i })
-			.first()
-			.click();
+		await page.getByRole('link', { name: COOKIES_RE }).first().click();
 		await expect(page).toHaveURL(/\/recipes\//);
 		// Version history is the strip under the hero — all versions visible without expanding.
 		// Assert on rendered content, not just wrapper count: a div-count check passes even
@@ -63,21 +60,15 @@ test.describe('Recipe detail page', () => {
 
 	test('"Brown Butter Chocolate Chip Cookies" shows fork attribution', async ({ page }) => {
 		await page.goto('/');
-		await page
-			.getByRole('link', { name: /brown butter chocolate chip cookies/i })
-			.first()
-			.click();
+		await page.getByRole('link', { name: FORK_RE }).first().click();
 		await expect(page).toHaveURL(/\/recipes\//);
 		await expect(page.getByText(/forked from/i)).toBeVisible();
-		await expect(page.getByText(/Classic Chocolate Chip Cookies/i)).toBeVisible();
+		await expect(page.getByText(COOKIES_RE)).toBeVisible();
 	});
 
 	test('viewing a specific version shows the history banner', async ({ page }) => {
 		await page.goto('/');
-		await page
-			.getByRole('link', { name: /classic chocolate chip cookies/i })
-			.first()
-			.click();
+		await page.getByRole('link', { name: COOKIES_RE }).first().click();
 		await page.waitForURL(/\/recipes\//);
 		// Append ?version=1 to the current recipe URL
 		const recipeUrl = page.url().split('?')[0];
@@ -90,10 +81,7 @@ test.describe('Recipe detail page', () => {
 
 	test('Compare link on v2 navigates to diff page', async ({ page }) => {
 		await page.goto('/');
-		await page
-			.getByRole('link', { name: /classic chocolate chip cookies/i })
-			.first()
-			.click();
+		await page.getByRole('link', { name: COOKIES_RE }).first().click();
 		await expect(page).toHaveURL(/\/recipes\//);
 		// Target the Compare anchor by href. Matching on the accessible name would
 		// also match the version row it sits inside, which navigates elsewhere.
@@ -107,9 +95,9 @@ test.describe('Recipe detail page', () => {
 
 		const content = (sel: string) => page.locator(sel).first().getAttribute('content');
 
-		expect(await content('meta[property="og:title"]')).toContain('Classic Chocolate Chip Cookies');
+		expect(await content('meta[property="og:title"]')).toContain(COOKIES);
 		expect(await content('meta[property="og:type"]')).toBe('article');
-		expect(await page.title()).toContain('Classic Chocolate Chip Cookies');
+		expect(await page.title()).toContain(COOKIES);
 
 		// og:image must be absolute — a relative path resolves against the
 		// crawler's host and the preview silently loses its image.
@@ -341,7 +329,7 @@ test.describe('Recipe detail page', () => {
 		await hero.waitFor();
 
 		// The breadcrumb shows the title, not the URL slug.
-		await expect(hero).toContainText('Classic Chocolate Chip Cookies');
+		await expect(hero).toContainText(COOKIES);
 		await expect(hero).not.toContainText('classic-chocolate-chip-cookies');
 
 		// The author is named exactly once in the hero.
@@ -579,12 +567,14 @@ test.describe('Landing page (logged out)', () => {
 	test('the diff panels sit side by side on a wide screen and stack on a narrow one', async ({
 		page
 	}) => {
+		// The Ingredients and Steps panels; a Details panel may precede them.
 		const panels = () =>
 			page
 				.locator('section')
 				.filter({ hasText: 'A real change, diffed' })
 				.first()
-				.locator('section');
+				.locator('section')
+				.filter({ has: page.getByRole('heading', { name: /^(Ingredients|Steps)$/ }) });
 
 		await page.setViewportSize({ width: 1440, height: 1800 });
 		await page.goto('/');

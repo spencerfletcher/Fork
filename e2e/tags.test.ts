@@ -2,11 +2,12 @@
  * Tag page e2e tests.
  *
  * These run unauthenticated and rely on the seeded data:
- * - "Classic Chocolate Chip Cookies" tagged: Dessert, Baking, American
+ * - "Thick and Chewy Chocolate Chip Cookies" tagged: Dessert, Baking, American
  * - "Chicken Tikka Masala" tagged: Dinner, Indian, Spicy
  */
 
 import { test, expect } from '@playwright/test';
+import { SEED } from '../src/lib/server/db/seedData';
 
 test.describe('Tag pages', () => {
 	test('recipe cards link to tag pages', async ({ page }) => {
@@ -26,7 +27,7 @@ test.describe('Tag pages', () => {
 	test('tag page shows recipes with that tag', async ({ page }) => {
 		await page.goto('/tags/dessert');
 		// Both cookie recipes are tagged Dessert
-		await expect(page.getByText('Classic Chocolate Chip Cookies')).toBeVisible();
+		await expect(page.getByText(SEED[0].versions.at(-1)!.title)).toBeVisible();
 	});
 
 	test('clicking a recipe card on a tag page navigates to the recipe', async ({ page }) => {
