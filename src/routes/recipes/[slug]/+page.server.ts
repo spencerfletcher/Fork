@@ -1,15 +1,11 @@
 import { error, redirect } from '@sveltejs/kit';
 import { db } from '#lib/server/db/index.js';
-import {
-	recipes,
-	recipeVersions,
-	recipesToTags,
-	profiles,
-	favorites
-} from '#lib/server/db/schema.js';
+import { recipes, recipeVersions, recipesToTags, favorites } from '#lib/server/db/schema.js';
 import { eq, desc, and } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { slugify } from '#lib/helpers.js';
+import { ensureProfile } from '#lib/server/profiles.js';
+import type { RecipeContent } from '#lib/recipes/types.js';
 import { absoluteImage, clampDescription } from '#lib/seo.js';
 import { gramsFor } from '#lib/server/ingredientDensities.js';
 import type { PageServerLoad, Actions } from './$types';
@@ -127,38 +123,33 @@ export const actions: Actions = {
 		const latestVersion = source.versions[0];
 		if (!latestVersion) throw error(400, 'Source recipe has no versions');
 
-		// Upsert profile for the forking user (guard against missing profile)
-		await db
-			.insert(profiles)
-			.values({
-				id: user.id,
-				username: user.email?.split('@')[0] ?? user.id.slice(0, 8)
-			})
-			.onConflictDoNothing();
+		await ensureProfile(user);
+
+		// One snapshot of the latest version is the whole content of the fork;
+		// the source row contributes only its settings and lineage.
+		const { title, description, servings, prepTimeMinutes, cookTimeMinutes, ingredients, steps } =
+			latestVersion;
+		const meta = { title, description, servings, prepTimeMinutes, cookTimeMinutes };
+		const snapshot: RecipeContent = { ...meta, ingredients, steps };
+		const slug = `${slugify(snapshot.title)}-${nanoid(6)}`;
 
 		let newSlug: string | null = null;
 
 		await db.transaction(async (tx) => {
-			const slug = `${slugify(source.title)}-${nanoid(6)}`;
-
 			const [newRecipe] = await tx
 				.insert(recipes)
 				.values({
 					authorId: user.id,
 					slug,
-					title: source.title,
-					description: source.description,
+					// Copies of version 1, per the ownership rule in schema.ts.
+					...meta,
 					imageUrl: source.imageUrl,
-					servings: source.servings,
-					prepTimeMinutes: source.prepTimeMinutes,
-					cookTimeMinutes: source.cookTimeMinutes,
 					isPublic: source.isPublic,
 					parentId: source.id,
 					forkedAt: new Date()
 				})
 				.returning();
 
-			// Copy tags
 			if (source.recipesToTags.length > 0) {
 				await tx.insert(recipesToTags).values(
 					source.recipesToTags.map((rt) => ({
@@ -168,18 +159,11 @@ export const actions: Actions = {
 				);
 			}
 
-			// Create version 1 as a copy of the source's latest version
 			await tx.insert(recipeVersions).values({
 				recipeId: newRecipe.id,
 				versionNumber: 1,
 				commitMessage,
-				title: source.title,
-				description: source.description,
-				servings: source.servings,
-				prepTimeMinutes: source.prepTimeMinutes,
-				cookTimeMinutes: source.cookTimeMinutes,
-				ingredients: latestVersion.ingredients,
-				steps: latestVersion.steps,
+				...snapshot,
 				createdBy: user.id
 			});
 
