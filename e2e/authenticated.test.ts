@@ -176,8 +176,18 @@ test.describe('Edit recipe page', () => {
 // Each scenario creates its own recipe and deletes it in `finally`, so the
 // seed stays untouched and the tests can run in parallel.
 
+/**
+ * Navigate and wait for hydration. Filling a field before SvelteKit has
+ * hydrated the page races the client re-render: the fill clears the input,
+ * hydration restores the server value, the fill then appends ("48").
+ */
+async function gotoHydrated(page: Page, url: string) {
+	await page.goto(url);
+	await page.waitForLoadState('networkidle');
+}
+
 async function createRecipe(page: Page, title: string, servings: string) {
-	await page.goto('/recipes/new');
+	await gotoHydrated(page, '/recipes/new');
 	await page.locator('input[name="title"]').fill(title);
 	await page.locator('input[name="servings"]').fill(servings);
 	await page.locator('input[name="cookTimeMinutes"]').fill('20');
@@ -202,7 +212,7 @@ test.describe('One save', () => {
 	test('one save records servings, times and ingredients as a new version', async ({ page }) => {
 		const url = await createRecipe(page, 'E2E Four Servings', '4');
 		try {
-			await page.goto(`${url}/edit`);
+			await gotoHydrated(page, `${url}/edit`);
 			await page.locator('input[name="servings"]').fill('8');
 			await page.locator('input[name="cookTimeMinutes"]').fill('30');
 			await page.getByLabel('Ingredients').fill('4 cups flour');
@@ -230,7 +240,7 @@ test.describe('One save', () => {
 	test('renaming keeps the slug and the old version keeps its title', async ({ page }) => {
 		const url = await createRecipe(page, 'E2E Before Rename', '4');
 		try {
-			await page.goto(`${url}/edit`);
+			await gotoHydrated(page, `${url}/edit`);
 			await page.locator('input[name="title"]').fill('E2E After Rename');
 			await page.getByRole('button', { name: /save changes/i }).click();
 			await page.waitForURL(url);
@@ -249,7 +259,7 @@ test.describe('One save', () => {
 	test('a settings-only save creates no version', async ({ page }) => {
 		const url = await createRecipe(page, 'E2E Settings Only', '4');
 		try {
-			await page.goto(`${url}/edit`);
+			await gotoHydrated(page, `${url}/edit`);
 			await page.getByLabel(/public/i).uncheck();
 			await page.getByRole('button', { name: /save changes/i }).click();
 			await page.waitForURL(url);
@@ -263,8 +273,8 @@ test.describe('One save', () => {
 		const url = await createRecipe(page, 'E2E Stale', '4');
 		try {
 			const other = await context.newPage();
-			await other.goto(`${url}/edit`);
-			await page.goto(`${url}/edit`);
+			await gotoHydrated(other, `${url}/edit`);
+			await gotoHydrated(page, `${url}/edit`);
 
 			await page.locator('input[name="servings"]').fill('6');
 			await page.getByRole('button', { name: /save changes/i }).click();
@@ -287,7 +297,7 @@ test.describe('One save', () => {
 	test('an invalid field keeps the draft and re-enables the form', async ({ page }) => {
 		const url = await createRecipe(page, 'E2E Invalid', '4');
 		try {
-			await page.goto(`${url}/edit`);
+			await gotoHydrated(page, `${url}/edit`);
 			const long = '1 cup ' + 'x'.repeat(300);
 			await page.getByLabel('Ingredients').fill(long);
 			await page.getByRole('button', { name: /save changes/i }).click();
