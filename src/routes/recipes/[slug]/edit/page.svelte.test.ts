@@ -114,12 +114,14 @@ describe('Edit page form', () => {
 		expect(screen.queryByText('Unsaved changes')).toBeNull();
 	});
 
-	test('treats a tag unticked and ticked again as clean', async () => {
+	test('treats a tag removed and added back as clean', async () => {
 		render(EditPage, { props: { data: makeData(), form: null } });
-		const dessert = screen.getByLabelText('Dessert');
-		await fireEvent.click(dessert);
+		await fireEvent.click(screen.getByRole('button', { name: 'Remove Dessert' }));
 		expect(screen.getByText('Unsaved changes')).toBeInTheDocument();
-		await fireEvent.click(dessert);
+		await fireEvent.focus(screen.getByRole('combobox'));
+		await fireEvent.mouseDown(
+			screen.getByRole('option', { name: /Dessert/ }).querySelector('button')!
+		);
 		expect(screen.queryByText('Unsaved changes')).toBeNull();
 	});
 
@@ -139,8 +141,10 @@ describe('Edit page form', () => {
 		await tick();
 		expect(title()).toHaveValue('Biscuits');
 		expect(screen.getByLabelText(/prep time/i)).toHaveValue(-5);
-		expect(screen.getByLabelText('Spicy')).toBeChecked();
-		expect(screen.getByLabelText('Dessert')).not.toBeChecked();
+		const tags = [...document.querySelectorAll('input[name="tags"]')].map(
+			(i) => (i as HTMLInputElement).value
+		);
+		expect(tags).toEqual(['Spicy']);
 		expect(screen.getByLabelText(/public/i)).toBeChecked();
 		expect(screen.getByRole('alert')).toHaveTextContent('Title is required');
 		expect(screen.getByText('Unsaved changes')).toBeInTheDocument();
