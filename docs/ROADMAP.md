@@ -9,7 +9,7 @@
 
 ## Current direction — 2026-09-09
 
-The sequence below is preserved as historical planning and is superseded by [the repository reconciliation](PRODUCT-RECONCILIATION.md). The consolidated product note is `/Users/spfle/obsidian-vault/fork/ForkV2.md`.
+The sequence below is preserved as historical planning. The consolidated product note is `/Users/spfle/obsidian-vault/fork/ForkV2.md`.
 
 Prioritize reliable private writing, readable mobile recipes, and deliberate friend-to-friend sharing with independent adaptations. Pull requests, feeds, and graph work are deferred. Small shared collections can follow simple sharing; they do not require professional operations. Per-page metadata is already implemented in the layout and route loaders, so historical M2 is no longer pending.
 
