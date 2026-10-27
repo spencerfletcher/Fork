@@ -35,18 +35,19 @@
 ### Task 1: Self-hosted fonts
 
 **Files:**
+
 - Modify: `package.json` (dependencies)
 - Modify: `src/app.html:11-17` (remove preconnect and stylesheet links)
 - Modify: `src/app.css:1` (font imports after the Tailwind import)
 - Modify: `vite.config.ts:38-42` (`style-src`, `font-src`)
 
 **Interfaces:**
+
 - Produces: the font families `'Bitter'`, `'Source Sans 3'`, `'JetBrains Mono'` available to any stylesheet by name. Task 2 points the `--font-*` tokens at them.
 
 - [ ] **Step 1: Install the three packages**
 
-Run: `pnpm add @fontsource/bitter @fontsource/source-sans-3 @fontsource/jetbrains-mono`
-Expected: three new entries under `dependencies`, lockfile updated.
+Run: `pnpm add @fontsource/bitter @fontsource/source-sans-3 @fontsource/jetbrains-mono` Expected: three new entries under `dependencies`, lockfile updated.
 
 - [ ] **Step 2: Import the weights the system uses**
 
@@ -68,11 +69,9 @@ Delete the two `<link rel="preconnect">` lines and the `<link href="https://font
 
 - [ ] **Step 4: Verify no external font request survives**
 
-Run: `grep -rn "fonts.g" src vite.config.ts`
-Expected: no output.
+Run: `grep -rn "fonts.g" src vite.config.ts` Expected: no output.
 
-Run: `pnpm build 2>&1 | tail -3`
-Expected: build completes; the `.svelte-kit/output/client/_app/immutable/assets/` folder contains `.woff2` files for Bitter, Source Sans 3 and JetBrains Mono.
+Run: `pnpm build 2>&1 | tail -3` Expected: build completes; the `.svelte-kit/output/client/_app/immutable/assets/` folder contains `.woff2` files for Bitter, Source Sans 3 and JetBrains Mono.
 
 - [ ] **Step 5: Commit**
 
@@ -86,11 +85,13 @@ git commit -m "Self-host Bitter, Source Sans 3 and JetBrains Mono"
 ### Task 2: Tokens, base styles and shared classes
 
 **Files:**
+
 - Create: `src/app.css.test.ts`
 - Modify: `src/app.css` (the `:root` block, the `[data-theme='dark']` block, `@layer base`, `@layer components`)
 - Modify: `src/routes/recipes/[slug]/components/RecipeHero.svelte` (only the classes named in Step 7)
 
 **Interfaces:**
+
 - Consumes: the font families from Task 1.
 - Produces: token names, all registered in `@theme inline` so the matching Tailwind utilities exist:
   - kept, revalued: `--color-bg`, `--color-surface`, `--color-surface-2`, `--color-navbar-bg`, `--color-hero-bg`, `--color-text`, `--color-text-2`, `--color-text-3`, `--color-text-cream`, `--color-text-tan`, `--color-text-bronze`, `--color-accent` (now clay), `--color-accent-mid` (now ink, the clay hover), `--color-accent-pale` (now the tint), `--color-sienna` (now ink), `--color-paprika` (now remove), `--color-tag`, `--color-tag-border`, `--color-tag-hover-bg`, `--color-border`, `--color-border-2`, `--color-add`, `--color-add-bg`, `--color-remove`, `--color-remove-bg`, `--font-serif`, `--font-sans`, `--font-mono`, `--radius-sm`, `--radius-md`, `--radius-lg`, `--radius-pill`.
@@ -139,8 +140,7 @@ Lower-case the hex values when parsing. Font tokens are parsed from the same blo
 
 - [ ] **Step 2: Run it to see it fail**
 
-Run: `pnpm vitest run src/app.css.test.ts`
-Expected: FAIL on the exact-value test (`--color-bg` is `#faf4e8`) and the dark theme test.
+Run: `pnpm vitest run src/app.css.test.ts` Expected: FAIL on the exact-value test (`--color-bg` is `#faf4e8`) and the dark theme test.
 
 - [ ] **Step 3: Rewrite the `:root` block**
 
@@ -163,20 +163,17 @@ Values from Global Constraints. Aliases: `--color-surface-2` = paper, `--color-h
 
 - [ ] **Step 6: Run the token test**
 
-Run: `pnpm vitest run src/app.css.test.ts`
-Expected: PASS, every pair.
+Run: `pnpm vitest run src/app.css.test.ts` Expected: PASS, every pair.
 
 - [ ] **Step 7: Keep the dark hero readable until its step**
 
 In `RecipeHero.svelte`, change every `text-accent` to `text-marigold` (version number, any link on the espresso surface). Leave `.tag--on-dark` as is: its border is a white alpha, unaffected by tokens.
 
-Run: `grep -n "text-accent" "src/routes/recipes/[slug]/components/RecipeHero.svelte"`
-Expected: no output.
+Run: `grep -n "text-accent" "src/routes/recipes/[slug]/components/RecipeHero.svelte"` Expected: no output.
 
 - [ ] **Step 8: Whole suite and type check**
 
-Run: `pnpm check && pnpm test:unit run`
-Expected: `svelte-check found 0 errors`; every unit test passes (no test asserts on a colour value).
+Run: `pnpm check && pnpm test:unit run` Expected: `svelte-check found 0 errors`; every unit test passes (no test asserts on a colour value).
 
 - [ ] **Step 9: Commit**
 
@@ -190,10 +187,12 @@ git commit -m "Tokens: locked palette, Bitter and Source Sans 3, focus ring, no 
 ### Task 3: Navbar
 
 **Files:**
+
 - Modify: `src/lib/components/ui/Navbar.svelte`
 - Test: `src/lib/components/ui/Navbar.svelte.test.ts`
 
 **Interfaces:**
+
 - Consumes: `--color-marigold`, `--color-marigold-hover`, `--color-text-tan`, `--color-text-cream`, `--color-navbar-bg`, `--font-serif`, `--radius-md` from Task 2.
 - Produces: the navbar markup every later page sits under. No new exports.
 
@@ -213,8 +212,7 @@ test('mobile nav has a search icon link beside the menu toggle', () => {
 
 - [ ] **Step 2: Run it to see it fail**
 
-Run: `pnpm vitest run src/lib/components/ui/Navbar.svelte.test.ts`
-Expected: FAIL: no link with `aria-label="Search"`.
+Run: `pnpm vitest run src/lib/components/ui/Navbar.svelte.test.ts` Expected: FAIL: no link with `aria-label="Search"`.
 
 - [ ] **Step 3: Restyle the navbar**
 
@@ -230,13 +228,11 @@ nav :focus-visible {
 
 - [ ] **Step 4: Run the navbar tests**
 
-Run: `pnpm vitest run src/lib/components/ui/Navbar.svelte.test.ts`
-Expected: PASS, all tests including the new one.
+Run: `pnpm vitest run src/lib/components/ui/Navbar.svelte.test.ts` Expected: PASS, all tests including the new one.
 
 - [ ] **Step 5: Look at it**
 
-Run: `pnpm dev` and open `/`, `/recipes` and one recipe at 1200px and 390px.
-Expected: espresso bar, paper brand with marigold dot, tan links, marigold "+ New recipe" with ink text; at 390px the search icon sits left of the menu toggle; Tab shows a marigold ring in the bar and a clay ring on the page.
+Run: `pnpm dev` and open `/`, `/recipes` and one recipe at 1200px and 390px. Expected: espresso bar, paper brand with marigold dot, tan links, marigold "+ New recipe" with ink text; at 390px the search icon sits left of the menu toggle; Tab shows a marigold ring in the bar and a clay ring on the page.
 
 - [ ] **Step 6: Commit**
 
@@ -253,13 +249,11 @@ git commit -m "Navbar: locked palette, Bitter brand, mobile search icon, marigol
 
 - [ ] **Step 1: Run the e2e suite against a local database**
 
-Run: `pnpm test:e2e`
-Expected: PASS. The two contrast tests in `e2e/recipe.test.ts` (diff rows at 4.5:1 with the row opacity, tags on card and hero) are the ones this step can break; both clear with the values in Global Constraints.
+Run: `pnpm test:e2e` Expected: PASS. The two contrast tests in `e2e/recipe.test.ts` (diff rows at 4.5:1 with the row opacity, tags on card and hero) are the ones this step can break; both clear with the values in Global Constraints.
 
 - [ ] **Step 2: Lint**
 
-Run: `pnpm lint`
-Expected: no errors.
+Run: `pnpm lint` Expected: no errors.
 
 - [ ] **Step 3: Record the shipped remove value**
 
