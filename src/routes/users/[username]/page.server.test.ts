@@ -1,4 +1,5 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
+import { chain } from '#lib/testing/drizzle.js';
 import { load } from './+page.server';
 import { recipes } from '#lib/server/db/schema.js';
 
@@ -34,20 +35,6 @@ function makeProfile(overrides = {}) {
 
 function makeLoadEvent(username: string) {
 	return { params: { username } } as Parameters<typeof load>[0];
-}
-
-/** Drizzle-compatible chainable mock — thenable, and every chain method returns itself. */
-function chain(resolved: unknown = []) {
-	const p = Promise.resolve(resolved);
-	const c: Record<string, unknown> = {
-		then: p.then.bind(p),
-		catch: p.catch.bind(p),
-		finally: p.finally.bind(p)
-	};
-	for (const m of ['from', 'where', 'groupBy', 'innerJoin']) {
-		c[m] = vi.fn().mockReturnValue(c);
-	}
-	return c;
 }
 
 // ─── Tests ────────────────────────────────────────────────────────────────────

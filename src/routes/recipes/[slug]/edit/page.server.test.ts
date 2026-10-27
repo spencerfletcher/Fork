@@ -1,4 +1,5 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
+import { chain } from '#lib/testing/drizzle.js';
 import { invokeAction as invoke } from '#lib/testing/actions.js';
 import { actions } from './+page.server';
 import { makeContent, makeIngredient, makeStep } from '#lib/recipes/fixtures.js';
@@ -38,27 +39,6 @@ vi.mock('#lib/server/db/index.js', () => ({
 }));
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-/**
- * Makes a Drizzle-compatible chainable mock.
- * Awaiting the object resolves to `resolved`.
- * Calling .returning() also resolves to `resolved`.
- * Calling .values()/.set()/.from()/.where() returns the same object (chainable).
- */
-function chain(resolved: unknown = undefined) {
-	const p = Promise.resolve(resolved);
-	const c: Record<string, unknown> = {
-		then: p.then.bind(p),
-		catch: p.catch.bind(p),
-		finally: p.finally.bind(p),
-		onConflictDoNothing: vi.fn().mockReturnValue(Promise.resolve()),
-		returning: vi.fn().mockReturnValue(p)
-	};
-	for (const m of ['values', 'set', 'from', 'where']) {
-		c[m] = vi.fn().mockReturnValue(c);
-	}
-	return c as Record<string, ReturnType<typeof vi.fn>>;
-}
 
 /**
  * A fresh drizzle-compatible tx mock. `select().from().where().for('update')`

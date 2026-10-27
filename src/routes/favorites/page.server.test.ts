@@ -1,4 +1,5 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
+import { chain } from '#lib/testing/drizzle.js';
 
 const { selectMock, selectDistinctMock, findManyMock } = vi.hoisted(() => ({
 	selectMock: vi.fn(),
@@ -16,20 +17,6 @@ vi.mock('#lib/server/db/index.js', () => ({
 
 import { load } from './+page.server';
 import type { PageData } from './$types';
-
-/** Drizzle-compatible chainable mock. */
-function chain(resolved: unknown = []) {
-	const p = Promise.resolve(resolved);
-	const c: Record<string, unknown> = {
-		then: p.then.bind(p),
-		catch: p.catch.bind(p),
-		finally: p.finally.bind(p)
-	};
-	for (const m of ['from', 'where', 'orderBy', 'innerJoin', 'leftJoin', 'groupBy', 'limit']) {
-		c[m] = vi.fn().mockReturnValue(c);
-	}
-	return c;
-}
 
 function makeEvent(search = '', user: { id: string } | null = { id: 'u1' }) {
 	return {

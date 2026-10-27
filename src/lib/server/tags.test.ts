@@ -1,19 +1,9 @@
 import { describe, test, expect, vi } from 'vitest';
+import { chain } from '#lib/testing/drizzle.js';
 import { syncTags, type Tx } from './tags';
 
 // tags.ts imports the live db for listTags; the tests here only ever pass a tx in.
 vi.mock('./db/index.js', () => ({ db: {} }));
-
-/** Awaitable Drizzle-like chain: every builder method returns the chain, awaiting resolves `rows`. */
-function chain(rows: unknown = undefined) {
-	const p = Promise.resolve(rows);
-	const c: Record<string, unknown> = {
-		then: p.then.bind(p),
-		returning: vi.fn().mockReturnValue(p)
-	};
-	for (const m of ['values', 'from', 'where']) c[m] = vi.fn().mockReturnValue(c);
-	return c as Record<string, ReturnType<typeof vi.fn>> & PromiseLike<unknown>;
-}
 
 function makeTx(
 	existing: { id: number; name: string }[],

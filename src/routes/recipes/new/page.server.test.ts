@@ -1,4 +1,5 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
+import { chain } from '#lib/testing/drizzle.js';
 import { actions } from './+page.server';
 import { invokeAction } from '#lib/testing/actions.js';
 
@@ -22,16 +23,6 @@ vi.mock('#lib/server/images.js', async (importOriginal) => ({
 }));
 vi.mock('#lib/server/tags.js', () => ({ syncTags: syncTagsMock }));
 vi.mock('#lib/server/profiles.js', () => ({ ensureProfile: ensureProfileMock }));
-
-function chain(resolved: unknown = undefined) {
-	const p = Promise.resolve(resolved);
-	const c: Record<string, unknown> = {
-		then: p.then.bind(p),
-		returning: vi.fn().mockReturnValue(p)
-	};
-	for (const m of ['values', 'set', 'from', 'where']) c[m] = vi.fn().mockReturnValue(c);
-	return c as Record<string, ReturnType<typeof vi.fn>>;
-}
 
 /** A tx whose first insert is the recipe (returns id 42) and second is the version. */
 function makeTx() {

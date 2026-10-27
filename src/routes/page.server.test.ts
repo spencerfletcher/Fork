@@ -1,4 +1,5 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
+import { chain } from '#lib/testing/drizzle.js';
 import { and, eq, inArray } from 'drizzle-orm';
 import { recipes, recipeVersions } from '#lib/server/db/schema.js';
 
@@ -21,19 +22,6 @@ vi.mock('#lib/server/db/index.js', () => ({
 import { load } from './+page.server';
 import { makeIngredient as ing, makeContent } from '#lib/recipes/fixtures.js';
 import type { PageData } from './$types';
-
-function chain(resolved: unknown = []) {
-	const p = Promise.resolve(resolved);
-	const c: Record<string, unknown> = {
-		then: p.then.bind(p),
-		catch: p.catch.bind(p),
-		finally: p.finally.bind(p)
-	};
-	for (const m of ['from', 'where', 'groupBy', 'innerJoin', 'leftJoin', 'orderBy']) {
-		c[m] = vi.fn().mockReturnValue(c);
-	}
-	return c;
-}
 
 /**
  * `load` is annotated with the generic `PageServerLoad` interface, whose

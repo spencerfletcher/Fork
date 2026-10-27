@@ -1,4 +1,5 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
+import { chain } from '#lib/testing/drizzle.js';
 import { and, eq, inArray } from 'drizzle-orm';
 import { recipes, recipeVersions } from '#lib/server/db/schema.js';
 
@@ -11,20 +12,6 @@ vi.mock('#lib/server/db/index.js', () => ({
 }));
 
 import { attachRecipeCounts } from './recipeCounts';
-
-/** Drizzle-compatible chainable mock. */
-function chain(resolved: unknown = []) {
-	const p = Promise.resolve(resolved);
-	const c: Record<string, unknown> = {
-		then: p.then.bind(p),
-		catch: p.catch.bind(p),
-		finally: p.finally.bind(p)
-	};
-	for (const m of ['from', 'where', 'groupBy']) {
-		c[m] = vi.fn().mockReturnValue(c);
-	}
-	return c;
-}
 
 describe('attachRecipeCounts', () => {
 	beforeEach(() => {

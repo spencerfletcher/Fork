@@ -1,4 +1,5 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
+import { chain } from '#lib/testing/drizzle.js';
 import { invokeAction as invoke } from '#lib/testing/actions.js';
 import { actions, load } from './+page.server';
 import { makeIngredient, makeStep, makeContent } from '#lib/recipes/fixtures.js';
@@ -39,22 +40,6 @@ vi.mock('#lib/server/profiles.js', () => ({ ensureProfile: ensureProfileMock }))
 vi.spyOn(crypto, 'randomUUID').mockReturnValue('abc12345-0000-4000-8000-000000000000');
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-/** Drizzle-compatible chainable mock — see edit/page.server.test.ts for rationale. */
-function chain(resolved: unknown = undefined) {
-	const p = Promise.resolve(resolved);
-	const c: Record<string, unknown> = {
-		then: p.then.bind(p),
-		catch: p.catch.bind(p),
-		finally: p.finally.bind(p),
-		onConflictDoNothing: vi.fn().mockReturnValue(Promise.resolve()),
-		returning: vi.fn().mockReturnValue(p)
-	};
-	for (const m of ['values', 'set', 'from', 'where']) {
-		c[m] = vi.fn().mockReturnValue(c);
-	}
-	return c as Record<string, ReturnType<typeof vi.fn>>;
-}
 
 function makeTx(opts: { newRecipeId?: number; newRecipeSlug?: string } = {}) {
 	const newRecipe = {

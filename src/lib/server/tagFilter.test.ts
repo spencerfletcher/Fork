@@ -1,4 +1,5 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest';
+import { chain } from '#lib/testing/drizzle.js';
 import { eq } from 'drizzle-orm';
 import { recipes } from './db/schema';
 import { byTagMatches, tagMatchCounts, visibleTags } from './tagFilter';
@@ -10,13 +11,6 @@ const { selectMock, selectDistinctMock } = vi.hoisted(() => ({
 vi.mock('./db/index.js', () => ({
 	db: { select: selectMock, selectDistinct: selectDistinctMock }
 }));
-
-function chain(rows: unknown) {
-	const p = Promise.resolve(rows);
-	const c: Record<string, unknown> = { then: p.then.bind(p) };
-	for (const m of ['from', 'innerJoin', 'where', 'orderBy']) c[m] = vi.fn().mockReturnValue(c);
-	return c as Record<string, ReturnType<typeof vi.fn>>;
-}
 
 beforeEach(() => vi.clearAllMocks());
 
