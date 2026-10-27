@@ -21,8 +21,8 @@
 
 	let { recipe }: { recipe: CardRecipe } = $props();
 
-	const tags = recipe.recipesToTags?.map((r) => r.tag) ?? [];
-	const href = `/recipes/${recipe.slug}`;
+	const tags = $derived(recipe.recipesToTags?.map((r) => r.tag) ?? []);
+	const href = $derived(`/recipes/${recipe.slug}`);
 
 	/**
 	 * The meta line, as data rather than nested markup. Building it as a list is

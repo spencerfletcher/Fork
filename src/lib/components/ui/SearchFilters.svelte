@@ -14,7 +14,11 @@
 		availableTags: Pick<Tag, 'id' | 'name' | 'slug'>[];
 	} = $props();
 
+	// Seeded from the props once so the server render is filled in; the effect
+	// below follows later prop changes.
+	// svelte-ignore state_referenced_locally
 	let searchQuery = $state(initialQuery);
+	// svelte-ignore state_referenced_locally
 	let selectedTags = $state<string[]>([...initialTags]);
 
 	// The URL is the source of truth: a navigation (back button, a shared link)
