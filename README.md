@@ -101,15 +101,17 @@ pnpm install
 cp .env.example .env
 ```
 
-Start Supabase, which also applies every migration in `supabase/migrations/`:
+Start Supabase for Auth, Storage and an empty Postgres, then build the schema and seed it:
 
 ```bash
 supabase start                 # prints your local API URL, anon key, and service role key
-# paste those into .env, then:
+# paste those into .env.local, then:
+pnpm db:migrate                # apply the Drizzle migrations in drizzle/
 pnpm db:seed                   # demo user + three recipes, one a fork with two versions
-pnpm db:seed:prod              # same, against the hosted database in .env (wipes it first)
 pnpm dev
 ```
+
+`.env.local` is the local stack and `.env` the hosted project. Every database script takes the local one unless it ends in `:prod`, and the `:prod` scripts refuse to run unless `SUPABASE_PROJECT_ID` names the project both URLs point at.
 
 The app runs at `http://localhost:5173`. The seeded account is `spencer@fork.dev` with the password from `SEED_USER_PASSWORD` (default `Fork-Demo-2025!`).
 
@@ -117,15 +119,18 @@ To point at a hosted Supabase project instead, skip `supabase start` and fill `.
 
 ## Database changes
 
-The SQL files in `supabase/migrations/` are the only way schema changes reach a database. Drizzle is used for typed queries, Drizzle Studio (`pnpm db:studio`), and the schema in `src/lib/server/db/schema.ts`, but not for migrations.
+`src/lib/server/db/schema.ts` is the source of truth. A schema change is: edit `schema.ts`, generate the migration, review the SQL, commit both.
 
 ```bash
-supabase migration new <name>  # create an empty migration file, then write the SQL by hand
-supabase db reset              # rebuild the local database from the full migration chain
-supabase db push               # apply pending migration files to the linked hosted project
+pnpm db:generate --name <what-changed>   # diff schema.ts against drizzle/ and write the SQL
+pnpm db:migrate                          # apply pending migrations to the local stack
+pnpm db:migrate:prod                     # same, against the hosted project in .env
+supabase db reset && pnpm db:migrate     # rebuild the local database from scratch
 ```
 
-Every schema change edits `schema.ts` and adds a migration in the same commit, so the Drizzle types match the real database. Don't use `drizzle-kit push`: it changes a database without a migration file, and `drizzle.config.ts` loads `.env.local` with `override: true`, so it can target a different database than you expect.
+Data fixes that no schema change expresses go in a custom migration: `pnpm db:generate --custom --name <name>` writes an empty file to fill in. Never use `drizzle-kit push`: it changes a database with no migration file. The pre-Drizzle SQL chain is kept under `docs/history/supabase-migrations/`.
+
+Deploying a schema change to the live site is three steps close together: `pnpm db:migrate:prod`, `pnpm db:seed:prod` if the change needs a reseed, then publish on Netlify.
 
 ## Testing
 

@@ -82,8 +82,7 @@ jobs:
         with:
           version: 2.121.0
 
-      # Applies supabase/migrations in order against an empty database, so this
-      # job also proves the migration chain still builds the schema from scratch.
+      # Auth, Storage and an empty Postgres; the schema comes from db:migrate below.
       - run: supabase start
 
       # Publish the generated local keys and database URL to later steps.
@@ -101,6 +100,10 @@ jobs:
           } >> "$GITHUB_ENV"
 
       - run: pnpm exec svelte-kit sync
+
+      # Replays the Drizzle chain from empty, so this job also proves the
+      # migrations still build the schema from scratch.
+      - run: pnpm db:migrate
 
       - run: pnpm db:seed
 

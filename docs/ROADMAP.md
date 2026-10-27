@@ -182,7 +182,11 @@ Two people editing one recipe is currently last-write-wins. Mostly delivered by 
 
 ---
 
-# M10 — Drizzle-generated migrations (half day)
+# M10 — Drizzle-generated migrations — **done 2026-10-27**
+
+Shipped: `drizzle/` is the only migration chain, `pnpm db:generate` / `db:migrate` / `db:migrate:prod`, one env loader with a hosted guard, RLS declared in `schema.ts`, CI replays the chain from empty. The Supabase chain lives in `docs/history/supabase-migrations/`. Original plan below.
+
+## M10 as planned (half day)
 
 `schema.ts` is the source of truth for types, but migrations are still SQL written by hand in `supabase/migrations/`, so the two can drift. Move to `drizzle-kit generate` plus `drizzle-kit migrate`: the schema diff produces the SQL, which is reviewed and committed like any other change. `drizzle-kit push` stays banned; it applies changes with no file and no history.
 
