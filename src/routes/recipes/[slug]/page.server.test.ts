@@ -1,6 +1,6 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { chain } from '#lib/testing/drizzle.js';
-import { invokeAction as invoke } from '#lib/testing/actions.js';
+import { invokeAction as invoke, formEvent } from '#lib/testing/actions.js';
 import { actions, load } from './+page.server';
 import { makeIngredient, makeStep, makeContent } from '#lib/recipes/fixtures.js';
 
@@ -59,19 +59,16 @@ function makeTx(opts: { newRecipeId?: number; newRecipeSlug?: string } = {}) {
 	};
 }
 
-function makeEvent(opts: {
+const makeEvent = (opts: {
 	params?: Record<string, string>;
 	fields?: Record<string, string>;
 	user?: { id: string; email: string } | null;
-}) {
-	const fd = new FormData();
-	for (const [k, v] of Object.entries(opts.fields ?? {})) fd.append(k, v);
-	return {
+}) =>
+	formEvent({
+		fields: opts.fields,
 		params: opts.params ?? { slug: 'source-recipe' },
-		request: { formData: vi.fn().mockResolvedValue(fd) },
 		locals: { user: opts.user ?? null }
-	};
-}
+	});
 
 const FORKER = { id: 'forker-id', email: 'forker@test.com' };
 

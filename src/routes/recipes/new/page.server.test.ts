@@ -1,7 +1,7 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { chain } from '#lib/testing/drizzle.js';
 import { actions } from './+page.server';
-import { invokeAction } from '#lib/testing/actions.js';
+import { invokeAction, formEvent } from '#lib/testing/actions.js';
 
 const invoke = (event: unknown) => invokeAction(actions.default as never, event);
 
@@ -47,21 +47,15 @@ const FULL = {
 	tags: ['Dessert', 'Baking']
 };
 
-function makeEvent(opts: {
+const makeEvent = (opts: {
 	fields?: Record<string, string | string[]>;
 	file?: File;
 	user?: typeof USER | null;
-}) {
-	const fd = new FormData();
-	for (const [k, v] of Object.entries(opts.fields ?? {})) {
-		for (const val of Array.isArray(v) ? v : [v]) fd.append(k, val);
-	}
-	if (opts.file) fd.append('image', opts.file);
-	return {
-		request: { formData: vi.fn().mockResolvedValue(fd) },
+}) =>
+	formEvent({
+		...opts,
 		locals: { user: opts.user === undefined ? USER : opts.user, supabase: SUPABASE }
-	};
-}
+	});
 
 let tx: ReturnType<typeof makeTx>;
 

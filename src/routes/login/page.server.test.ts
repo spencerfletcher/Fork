@@ -1,6 +1,6 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { isActionFailure, isRedirect } from '@sveltejs/kit';
-import { invokeAction as invoke } from '#lib/testing/actions.js';
+import { invokeAction as invoke, formEvent } from '#lib/testing/actions.js';
 import { actions } from './+page.server';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -8,14 +8,8 @@ import { actions } from './+page.server';
 const signInWithPassword = vi.fn();
 
 /** Builds a minimal RequestEvent-like object for the login action. */
-function makeEvent(fields: Record<string, string>) {
-	const fd = new FormData();
-	for (const [k, v] of Object.entries(fields)) fd.append(k, v);
-	return {
-		request: { formData: vi.fn().mockResolvedValue(fd) },
-		locals: { supabase: { auth: { signInWithPassword } } }
-	};
-}
+const makeEvent = (fields: Record<string, string>) =>
+	formEvent({ fields, locals: { supabase: { auth: { signInWithPassword } } } });
 
 // ─── default action ───────────────────────────────────────────────────────────
 

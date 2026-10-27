@@ -1,5 +1,6 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { chain } from '#lib/testing/drizzle.js';
+import { loadPage } from '#lib/testing/actions.js';
 
 const { selectMock, selectDistinctMock, findManyMock } = vi.hoisted(() => ({
 	selectMock: vi.fn(),
@@ -25,11 +26,7 @@ function makeEvent(search = '', user: { id: string } | null = { id: 'u1' }) {
 	} as unknown as Parameters<typeof load>[0];
 }
 
-async function loadResult(event: Parameters<typeof load>[0]): Promise<PageData> {
-	const result = await load(event);
-	if (!result) throw new Error('load returned no data');
-	return result as PageData;
-}
+const loadResult = (event: Parameters<typeof load>[0]) => loadPage<PageData>(load, event);
 
 type FavouriteRow = { recipeId: number; isPublic: boolean; authorId: string };
 

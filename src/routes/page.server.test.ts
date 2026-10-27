@@ -1,5 +1,6 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { chain } from '#lib/testing/drizzle.js';
+import { loadPage } from '#lib/testing/actions.js';
 import { and, eq, inArray } from 'drizzle-orm';
 import { recipes, recipeVersions } from '#lib/server/db/schema.js';
 
@@ -23,18 +24,7 @@ import { load } from './+page.server';
 import { makeIngredient as ing, makeContent } from '#lib/recipes/fixtures.js';
 import type { PageData } from './$types';
 
-/**
- * `load` is annotated with the generic `PageServerLoad` interface, whose
- * default `OutputData` includes `Record<string, any>` — so `ReturnType<typeof load>`
- * types every property as `any`, and may also be `void`. The framework's own
- * `PageData` (derived from the real implementation via SvelteKit's generated
- * proxy module) is the precise type; narrow to it once here.
- */
-async function loadResult(event: Parameters<typeof load>[0]): Promise<PageData> {
-	const result = await load(event);
-	if (!result) throw new Error('load returned no data');
-	return result as PageData;
-}
+const loadResult = (event: Parameters<typeof load>[0]) => loadPage<PageData>(load, event);
 
 describe('homepage load', () => {
 	beforeEach(() => {

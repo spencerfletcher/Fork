@@ -1,6 +1,6 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { chain } from '#lib/testing/drizzle.js';
-import { invokeAction as invoke } from '#lib/testing/actions.js';
+import { invokeAction as invoke, formEvent } from '#lib/testing/actions.js';
 import { actions } from './+page.server';
 import { makeContent, makeIngredient, makeStep } from '#lib/recipes/fixtures.js';
 
@@ -73,24 +73,17 @@ function makeTx(opts: { locked?: unknown[]; latest?: unknown } = {}) {
 }
 
 /** Builds a minimal SvelteKit RequestEvent-like object. */
-function makeEvent(opts: {
+const makeEvent = (opts: {
 	params?: Record<string, string>;
 	fields?: Record<string, string | string[]>;
 	file?: File;
 	user?: { id: string; email: string } | null;
-}) {
-	const fd = new FormData();
-	for (const [k, v] of Object.entries(opts.fields ?? {})) {
-		if (Array.isArray(v)) v.forEach((val) => fd.append(k, val));
-		else fd.append(k, v);
-	}
-	if (opts.file) fd.append('image', opts.file);
-	return {
+}) =>
+	formEvent({
+		...opts,
 		params: opts.params ?? { slug: 'test-slug' },
-		request: { formData: vi.fn().mockResolvedValue(fd) },
 		locals: { user: opts.user ?? null, supabase: SUPABASE }
-	};
-}
+	});
 
 const OWNER = { id: 'owner-123', email: 'owner@test.com' };
 const OTHER = { id: 'other-456', email: 'other@test.com' };
