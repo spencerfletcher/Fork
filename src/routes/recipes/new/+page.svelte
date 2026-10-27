@@ -27,8 +27,12 @@
 	};
 
 	// The whole form as one object. A failed save hands back what was
-	// submitted, invalid values included, and the fields refill from it.
-	let draft = $state<RecipeDraft>({ ...EMPTY });
+	// submitted, invalid values included, and the fields refill from it. It is
+	// the initial state, not an effect, so a server-rendered reply (a submit
+	// before hydration, or without JavaScript) already shows it; the effect
+	// covers later failures while the page stays mounted.
+	// svelte-ignore state_referenced_locally
+	let draft = $state<RecipeDraft>({ ...(form?.draft ?? EMPTY) });
 	$effect(() => {
 		if (form?.draft) draft = { ...form.draft };
 	});
