@@ -214,8 +214,8 @@ test.describe('Recipe detail page', () => {
 		const removed = await removedRow.evaluate((el) => {
 			const cs = getComputedStyle(el);
 			// Walk up from the *parent* — not the element itself — because the
-			// element's own background-color is --color-remove-bg, and that is
-			// exactly what opacity-85 fades toward the true surface behind it.
+			// element's own background-color is --color-remove-bg, and the true
+			// surface behind it is what any row opacity would blend toward.
 			let node: HTMLElement | null = el.parentElement;
 			let trueBg = 'rgba(0, 0, 0, 0)';
 			while (node && (trueBg === 'rgba(0, 0, 0, 0)' || trueBg === 'transparent')) {
@@ -579,8 +579,10 @@ test.describe('Landing page (logged out)', () => {
 		await gotoClassicCookies(page);
 		await page.goto(page.url().split('?')[0] + '/diff');
 		const panels = page.locator('section').filter({ has: page.locator('.eyebrow-label') });
-		const ingredients = panels.filter({ hasText: 'Ingredients' }).first();
-		const steps = panels.filter({ hasText: 'Steps' }).first();
+		const ingredients = panels.filter({
+			has: page.getByRole('heading', { name: 'Ingredients', exact: true })
+		});
+		const steps = panels.filter({ has: page.getByRole('heading', { name: 'Steps', exact: true }) });
 		const a = await ingredients.boundingBox();
 		const b = await steps.boundingBox();
 		expect(Math.abs(a!.y - b!.y)).toBeLessThan(2);

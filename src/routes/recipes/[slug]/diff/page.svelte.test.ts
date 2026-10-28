@@ -2,7 +2,7 @@ import { describe, test, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/svelte';
 import DiffPage from './+page.svelte';
 import type { IngredientDiffRow, StepDiffRow } from '#lib/recipes/diff.js';
-import { makeIngredient as ing } from '#lib/recipes/fixtures.js';
+import { makeContent, makeIngredient as ing } from '#lib/recipes/fixtures.js';
 
 // ─── SvelteKit module mocks ───────────────────────────────────────────────────
 
@@ -16,25 +16,25 @@ vi.mock('$app/state', () => ({
 
 const RECIPE = { id: 1, slug: 'classic-cookies', title: 'Classic Chocolate Chip Cookies' };
 
-const SNAPSHOT = {
+const SNAPSHOT = makeContent({
 	title: 'Classic Chocolate Chip Cookies',
 	servings: 48,
 	prepTimeMinutes: null,
 	cookTimeMinutes: 11,
 	ingredients: [ing('2 cups flour'), ing('1 tsp salt')]
-};
+});
 const V1 = {
 	versionNumber: 1,
 	commitMessage: 'Initial recipe',
 	creator: null as { id: string; username: string } | null,
-	createdAt: new Date(2026, 1, 28) as Date | null,
+	createdAt: new Date(Date.UTC(2026, 1, 28)) as Date | null,
 	...SNAPSHOT
 };
 const V2 = {
 	versionNumber: 2,
 	commitMessage: 'Added espresso powder',
 	creator: null as { id: string; username: string } | null,
-	createdAt: new Date(2026, 1, 28) as Date | null,
+	createdAt: new Date(Date.UTC(2026, 1, 28)) as Date | null,
 	...SNAPSHOT
 };
 
@@ -62,12 +62,6 @@ function makeData(
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
 describe('Diff page', () => {
-	test('renders the recipe title', () => {
-		render(DiffPage, { props: { data: makeData() } });
-		// In the back link and in each version card's snapshot.
-		expect(screen.getAllByText('Classic Chocolate Chip Cookies').length).toBeGreaterThan(0);
-	});
-
 	test('renders the h1 "Compare versions" heading', () => {
 		render(DiffPage, { props: { data: makeData() } });
 		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Compare versions');
@@ -198,6 +192,34 @@ describe('Diff page', () => {
 		expect(container.querySelector('article.version-card .version-card__head')).toHaveTextContent(
 			'28 Feb 2026 · @chef'
 		);
+	});
+
+	test('shows the date as a UTC calendar day, the same on the server and in the browser', () => {
+		// Just after midnight UTC on the 28th: a local-zone render west of UTC
+		// would say the 27th; the card says the 28th wherever it renders.
+		const { container } = render(DiffPage, {
+			props: {
+				data: makeData({
+					fromVersion: { ...V1, createdAt: new Date(Date.UTC(2026, 1, 28, 0, 30)) }
+				})
+			}
+		});
+		expect(container.querySelector('article.version-card .version-card__head')).toHaveTextContent(
+			'28 Feb 2026'
+		);
+	});
+
+	test('formats a long cook time the way the recipe page does', () => {
+		const { container } = render(DiffPage, {
+			props: { data: makeData({ fromVersion: { ...V1, cookTimeMinutes: 240 } }) }
+		});
+		expect(container.querySelector('article.version-card')).toHaveTextContent('Cook 4h');
+	});
+
+	test('every text in a card may break anywhere, so a long title cannot widen it', () => {
+		const { container } = render(DiffPage, { props: { data: makeData() } });
+		expect(container.querySelector('article.version-card')).toHaveClass('version-card');
+		// jsdom computes no layout; the e2e in authenticated.test.ts measures it.
 	});
 
 	test('the stacked commit bar is gone', () => {

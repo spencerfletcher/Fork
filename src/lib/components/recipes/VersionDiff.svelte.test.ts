@@ -63,6 +63,12 @@ describe('VersionDiff', () => {
 		expect(row.textContent?.replace(/\s+/g, ' ').trim()).toBe('~ Cook time: 11 13 min');
 	});
 
+	test('a time removed in Details reads — with no unit attached', () => {
+		renderDiff([], [], [{ field: 'prepTimeMinutes', from: 10, to: null }]);
+		const row = screen.getByText(/^Prep time/).closest('.diff-row')!;
+		expect(row.textContent?.replace(/\s+/g, ' ').trim()).toBe('~ Prep time: 10 —');
+	});
+
 	test('prints 0 as a value and — for null', () => {
 		renderDiff([], [], [{ field: 'prepTimeMinutes', from: null, to: 0 }]);
 		const row = screen.getByText(/^Prep time/).closest('.diff-row')!;

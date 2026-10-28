@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import VersionDiff from '#lib/components/recipes/VersionDiff.svelte';
+	import { formatTime } from '#lib/helpers.js';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -21,8 +22,15 @@
 		goto(`?from=${fromSelect}&to=${toSelect}`);
 	}
 
+	// UTC on purpose: the server and the browser then print the same day, so
+	// hydration never rewrites the text.
 	const when = (d: Date | null) =>
-		d?.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+		d?.toLocaleDateString('en-GB', {
+			day: 'numeric',
+			month: 'short',
+			year: 'numeric',
+			timeZone: 'UTC'
+		});
 
 	// One string, so a missing date or creator leaves no orphaned separator.
 	const headLine = (v: CardVersion) =>
@@ -30,7 +38,7 @@
 </script>
 
 {#snippet picker(id: string, label: string, value: number, set: (v: number) => void)}
-	<label class="eyebrow-label" for={id}>{label}</label>
+	<label class="eyebrow-label max-[699px]:sr-only" for={id}>{label}</label>
 	<select
 		{id}
 		{value}
@@ -45,10 +53,11 @@
 {/snippet}
 
 {#snippet card(v: CardVersion, isTo: boolean)}
+	{@const head = headLine(v)}
 	<article class="version-card" class:version-card--to={isTo}>
 		<div class="version-card__head">
 			<span class="version-card__number">v{v.versionNumber}</span>
-			{#if headLine(v)}<span>{headLine(v)}</span>{/if}
+			{#if head}<span>{head}</span>{/if}
 		</div>
 		<p class="version-card__message">{v.commitMessage}</p>
 		<dl>
@@ -67,12 +76,12 @@
 			{#if v.prepTimeMinutes}<div>
 					<dt>Prep</dt>
 					&#32;
-					<dd>{v.prepTimeMinutes} min</dd>
+					<dd>{formatTime(v.prepTimeMinutes)}</dd>
 				</div>{/if}
 			{#if v.cookTimeMinutes}<div>
 					<dt>Cook</dt>
 					&#32;
-					<dd>{v.cookTimeMinutes} min</dd>
+					<dd>{formatTime(v.cookTimeMinutes)}</dd>
 				</div>{/if}
 			<div>
 				<dt>Ingredients</dt>
@@ -153,6 +162,9 @@
 		background: var(--color-surface);
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-lg);
+		/* A long unbroken title, name or message breaks rather than widening
+		   the card; inherited by every text inside. */
+		overflow-wrap: anywhere;
 	}
 
 	.version-card__head {
@@ -182,7 +194,6 @@
 		font-size: 0.75rem;
 		line-height: 1.5;
 		color: var(--color-text);
-		overflow-wrap: anywhere;
 	}
 
 	dl {
@@ -212,15 +223,6 @@
 			font-size: 1.625rem;
 		}
 
-		/* The labels stay for assistive tech; the selects share the row. */
-		.version-picker label {
-			position: absolute;
-			width: 1px;
-			height: 1px;
-			overflow: hidden;
-			clip: rect(0 0 0 0);
-		}
-
 		.version-picker {
 			gap: 8px;
 		}
@@ -232,7 +234,7 @@
 		}
 
 		.version-cards {
-			grid-template-columns: 1fr;
+			grid-template-columns: minmax(0, 1fr);
 			gap: 8px;
 		}
 

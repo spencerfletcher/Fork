@@ -59,9 +59,8 @@
 {/snippet}
 
 <!-- Two columns where there is room for them. This is a container query, not a
-     viewport one: the compare page constrains the diff to a 720px reading column
-     and must stay stacked even on a wide screen, while the landing page gives it
-     the full width and should split. -->
+     viewport one: the landing page and the compare page both give the diff a
+     column wide enough to split at 48rem, and it stacks on its own below that. -->
 <!-- Title, description, servings and times. Only rendered when something
      changed: an empty Details panel would be noise above every diff. -->
 {#if metaDiff.length > 0}
@@ -83,7 +82,7 @@
 					{:else}
 						<span class="diff-removed">{show(row.from)}</span>
 						<span class="diff-added">{show(row.to)}</span>
-						{#if row.field === 'prepTimeMinutes' || row.field === 'cookTimeMinutes'}min{/if}
+						{#if (row.field === 'prepTimeMinutes' || row.field === 'cookTimeMinutes') && row.to !== null}min{/if}
 					{/if}
 				</span>
 			</div>
