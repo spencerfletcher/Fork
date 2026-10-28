@@ -738,7 +738,7 @@
 	.diff-open-link {
 		display: inline-block;
 		font-family: var(--font-mono);
-		font-size: 0.8rem;
+		font-size: 0.875rem;
 		color: var(--color-accent);
 		text-decoration: none;
 	}
@@ -772,19 +772,19 @@
 	.commit-bar__versions {
 		flex-shrink: 0;
 		font-family: var(--font-mono);
-		font-size: 0.8rem;
+		font-size: 0.875rem;
 		font-weight: 600;
 		color: var(--color-accent);
 	}
 
 	.commit-bar__message {
 		color: var(--color-text-2);
-		font-size: 0.95rem;
+		font-size: 0.9375rem;
 	}
 
 	.commit-bar__author {
 		color: var(--color-text-3);
-		font-size: 0.8rem;
+		font-size: 0.875rem;
 	}
 
 	.eyebrow-label {

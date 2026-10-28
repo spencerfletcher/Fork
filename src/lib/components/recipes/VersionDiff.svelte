@@ -150,14 +150,7 @@
 		border-radius: var(--radius-md);
 		overflow: hidden;
 		font-family: var(--font-mono);
-		font-size: 0.75rem;
-	}
-
-	/* Larger on a phone, where the rows are read at arm's length. */
-	@media (max-width: 699px) {
-		.diff-panel {
-			font-size: 0.875rem;
-		}
+		font-size: 0.875rem;
 	}
 
 	.diff-empty {
@@ -188,12 +181,12 @@
 
 	.diff-content {
 		flex: 1;
+		max-width: 72ch;
 		line-height: 1.5;
 	}
 
 	.step-num {
 		flex-shrink: 0;
-		font-size: 0.8rem;
 		font-weight: 600;
 		color: var(--color-accent);
 	}

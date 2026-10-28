@@ -136,7 +136,7 @@
 		width: auto;
 		min-width: 0;
 		font-family: var(--font-mono);
-		font-size: 0.75rem;
+		font-size: 0.875rem;
 		padding: 6px 10px;
 	}
 
@@ -169,7 +169,7 @@
 		align-items: baseline;
 		gap: 10px;
 		font-family: var(--font-mono);
-		font-size: 0.75rem;
+		font-size: 0.875rem;
 		color: var(--color-text-3);
 	}
 
@@ -188,7 +188,7 @@
 	.version-card__message {
 		margin: 0;
 		font-family: var(--font-mono);
-		font-size: 0.75rem;
+		font-size: 0.875rem;
 		line-height: 1.5;
 		color: var(--color-text);
 	}
@@ -198,7 +198,7 @@
 		flex-wrap: wrap;
 		gap: 4px 18px;
 		margin: 0;
-		font-size: 0.8125rem;
+		font-size: 0.875rem;
 	}
 
 	dl:first-of-type {
