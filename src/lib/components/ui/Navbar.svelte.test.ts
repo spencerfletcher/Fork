@@ -2,6 +2,7 @@ import { describe, test, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/svelte';
 import Navbar from './Navbar.svelte';
 import type { User } from '@supabase/supabase-js';
+import { page } from '$app/state';
 
 vi.mock('$app/state', () => ({
 	page: { url: new URL('http://localhost/'), params: {}, route: { id: null } }
@@ -102,5 +103,16 @@ describe('Navbar', () => {
 			.getAllByRole('link', { name: 'Search' })
 			.find((l) => l.getAttribute('aria-label') === 'Search');
 		expect(icon).toHaveAttribute('href', '/search');
+	});
+
+	test('keeps Recipes highlighted on a tag page, which is a filtered Recipes view', () => {
+		page.url = new URL('http://localhost/tags/dessert');
+		try {
+			render(Navbar, { props: { user: null } });
+			const recipes = screen.getAllByRole('link', { name: /^recipes$/i })[0];
+			expect(recipes).toHaveClass('active');
+		} finally {
+			page.url = new URL('http://localhost/');
+		}
 	});
 });

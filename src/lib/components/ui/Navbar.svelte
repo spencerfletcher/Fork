@@ -17,13 +17,16 @@
 	}
 
 	// One list for both menus. Recipes is "active" anywhere under it except the
-	// new-recipe page, which has its own control.
+	// new-recipe page, which has its own control, and on tag pages, which are
+	// Recipes filtered by one tag.
 	const links = $derived([
 		{ href: '/search', label: 'Search', active: page.url.pathname === '/search' },
 		{
 			href: '/recipes',
 			label: 'Recipes',
-			active: page.url.pathname.startsWith('/recipes') && page.url.pathname !== '/recipes/new'
+			active:
+				(page.url.pathname.startsWith('/recipes') && page.url.pathname !== '/recipes/new') ||
+				page.url.pathname.startsWith('/tags/')
 		},
 		...(user
 			? [{ href: '/favorites', label: 'Favorites', active: page.url.pathname === '/favorites' }]
