@@ -94,7 +94,7 @@
 				<span class="tags">
 					{#each tags as tag, i (tag.id)}
 						{#if i > 0},&#32;{/if}
-						<a href="/tags/{tag.slug}" class="text-text-2 hover:text-text">{tag.name}</a>
+						<a href="/tags/{tag.slug}">{tag.name}</a>
 					{/each}
 				</span>
 			{/if}

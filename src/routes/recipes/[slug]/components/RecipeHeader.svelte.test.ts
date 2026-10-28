@@ -96,6 +96,8 @@ describe('RecipeHeader content', () => {
 		const dessert = screen.getByRole('link', { name: 'Dessert' });
 		expect(dessert).toHaveAttribute('href', '/tags/dessert');
 		expect(dessert).not.toHaveClass('tag');
+		// No colour override: links are clay by default, and these should read as links.
+		expect(dessert.className).not.toMatch(/text-text/);
 		expect(dessert.parentElement).toHaveTextContent('Dessert, Baking');
 	});
 

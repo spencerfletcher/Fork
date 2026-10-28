@@ -525,6 +525,21 @@ test.describe('Landing page (logged out)', () => {
 		expect(sizes[1]).toBe(sizes[0]);
 	});
 
+	test('the landing hero sits on the page paper, with only the bar in espresso', async ({
+		page
+	}) => {
+		await page.goto('/');
+		const hero = page.locator('section.hero');
+		await hero.waitFor();
+		const [heroBg, pageBg, navBg] = await page.evaluate(() => [
+			getComputedStyle(document.querySelector('section.hero')!).backgroundColor,
+			getComputedStyle(document.body).backgroundColor,
+			getComputedStyle(document.querySelector('nav')!).backgroundColor
+		]);
+		expect([pageBg, 'rgba(0, 0, 0, 0)']).toContain(heroBg);
+		expect(navBg).not.toBe(pageBg);
+	});
+
 	test('the landing page does not scroll sideways on mobile', async ({ page }) => {
 		await page.setViewportSize({ width: 390, height: 900 });
 		await page.goto('/');

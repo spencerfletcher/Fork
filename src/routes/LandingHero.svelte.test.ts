@@ -30,4 +30,11 @@ describe('LandingHero', () => {
 		render(LandingHero, { props: {} });
 		expect(screen.queryByRole('link', { name: /see a diff/i })).not.toBeInTheDocument();
 	});
+
+	test('sits on paper with the system buttons, not on an espresso block', () => {
+		const { container } = render(LandingHero, { props: { isLoggedIn: false } });
+		expect(container.querySelector('.hero-bg, .hero[style]')).toBeNull();
+		expect(screen.getByRole('link', { name: 'Browse recipes' })).toHaveClass('btn-primary');
+		expect(screen.getByRole('link', { name: 'Sign up' })).toHaveClass('btn-ghost');
+	});
 });
