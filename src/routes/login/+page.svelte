@@ -1,7 +1,11 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { page } from '$app/state';
 
 	let { form }: { form: { message?: string } | null } = $props();
+
+	// Where to go after signing in, set by the page that sent the visitor here.
+	const redirectTo = $derived(page.url.searchParams.get('redirect') ?? '');
 </script>
 
 <div class="auth-page">
@@ -16,6 +20,7 @@
 		{/if}
 
 		<form method="POST" use:enhance class="form">
+			<input type="hidden" name="redirect" value={redirectTo} />
 			<div class="field">
 				<label for="email">Email</label>
 				<input id="email" name="email" type="email" required placeholder="you@example.com" />
