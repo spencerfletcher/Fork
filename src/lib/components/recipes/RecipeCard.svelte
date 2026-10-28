@@ -190,12 +190,13 @@
 		z-index: 2;
 		font-family: var(--font-mono);
 		font-size: 0.75rem;
+		color: var(--color-accent);
 		text-decoration: none;
 		transition: color 0.15s ease;
 	}
 
 	a.meta-author:hover {
-		color: var(--color-accent);
+		color: var(--color-text);
 	}
 
 	/* Phone: two columns leave no room for the author; the recipe page has it. */

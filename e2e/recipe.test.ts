@@ -318,8 +318,10 @@ test.describe('Recipe detail page', () => {
 		expect(detailsBox).not.toBeNull();
 		// Two columns: the sidebar starts to the right of the main column.
 		expect(detailsBox!.x).toBeGreaterThan(ingredientsBox!.x + ingredientsBox!.width - 1);
-		// x alone passed while the sidebar sat 667px too low — assert top alignment too.
-		expect(Math.abs(detailsBox!.y - ingredientsBox!.y)).toBeLessThan(300);
+		// x alone passed while the sidebar sat 667px too low — assert top alignment too,
+		// on the sidebar itself: the photo sits above the details inside it.
+		const sidebar = await page.locator('.sidebar-sticky').boundingBox();
+		expect(Math.abs(sidebar!.y - ingredientsBox!.y)).toBeLessThan(60);
 	});
 
 	test('on desktop, the sidebar stays in view while the method scrolls', async ({ page }) => {
@@ -452,7 +454,7 @@ test.describe('Recipe detail page', () => {
 		expect(coloredText).toBe(0);
 	});
 
-	test('the version bar spans the content width under the header; the photo sits in the sidebar above the details; the recipe reads at 720px', async ({
+	test('the version bar spans the content width under the header; the photo sits in the sidebar above the details; the recipe reads beside it', async ({
 		page
 	}) => {
 		await page.setViewportSize({ width: 1200, height: 900 });
@@ -470,11 +472,12 @@ test.describe('Recipe detail page', () => {
 		expect(Math.abs(bar!.width - (header!.width - 48))).toBeLessThan(2);
 		expect(bar!.y).toBeGreaterThan(header!.y + header!.height - 1);
 		expect(ingredients!.y).toBeGreaterThan(bar!.y + bar!.height);
-		// Photo: in the right column, above the details, 320 wide.
+		// Photo: in the right column, above the details, the column's 380 wide.
 		expect(photo!.x).toBeGreaterThan(ingredients!.x + ingredients!.width);
-		expect(Math.abs(photo!.width - 320)).toBeLessThan(2);
+		expect(Math.abs(photo!.width - 380)).toBeLessThan(2);
 		expect(details!.y).toBeGreaterThan(photo!.y + photo!.height - 1);
-		expect(ingredients!.width).toBeLessThanOrEqual(720);
+		// The reading column fills what the sidebar and the 48px gap leave: 724 at 1200.
+		expect(ingredients!.width).toBeLessThanOrEqual(800);
 		expect(description!.width).toBeGreaterThan(900);
 		const color = await page
 			.locator('.version-compare')
@@ -713,5 +716,16 @@ test.describe('Landing page (logged out)', () => {
 		await page.goto('/');
 		const changedRow = page.locator('.diff-added, .diff-removed, .diff-modified').first();
 		await expect(changedRow).toBeVisible();
+	});
+});
+
+test.describe('Usernames', () => {
+	test('read as links: clay on paper, on the recipe page and the card', async ({ page }) => {
+		await page.goto('/recipes');
+		const card = page.locator('.recipe-card a.meta-author').first();
+		expect(await card.evaluate((el) => getComputedStyle(el).color)).toBe('rgb(164, 81, 43)');
+		await gotoClassicCookies(page);
+		const author = page.locator('.recipe-header a.username').first();
+		expect(await author.evaluate((el) => getComputedStyle(el).color)).toBe('rgb(164, 81, 43)');
 	});
 });

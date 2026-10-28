@@ -12,10 +12,11 @@
 </a>
 
 <style>
+	/* Clay like every other link in running text; ink on hover. */
 	.username {
 		font-family: var(--font-mono);
 		font-size: 0.75rem;
-		color: var(--color-text-3);
+		color: var(--color-accent);
 		text-decoration: none;
 		transition: color 0.15s ease;
 	}
