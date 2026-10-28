@@ -540,6 +540,17 @@ test.describe('Landing page (logged out)', () => {
 		expect(navBg).not.toBe(pageBg);
 	});
 
+	test('the landing page shares its left edge with browse', async ({ page }) => {
+		await page.setViewportSize({ width: 1200, height: 900 });
+		await page.goto('/recipes');
+		const browse = await page.getByRole('heading', { level: 1 }).boundingBox();
+		await page.goto('/');
+		const hero = await page.getByRole('heading', { level: 1 }).boundingBox();
+		const diff = await page.getByRole('heading', { name: 'A real change, diffed' }).boundingBox();
+		expect(Math.abs(hero!.x - browse!.x)).toBeLessThan(1);
+		expect(Math.abs(diff!.x - browse!.x)).toBeLessThan(1);
+	});
+
 	test('the landing page does not scroll sideways on mobile', async ({ page }) => {
 		await page.setViewportSize({ width: 390, height: 900 });
 		await page.goto('/');

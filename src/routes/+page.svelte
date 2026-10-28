@@ -12,7 +12,7 @@
 	{#if data.sampleDiff}
 		<!-- Wider than the site's reading column: the diff renders two panels side
 		     by side here, which needs the room. -->
-		<section class="mx-auto max-w-[1200px] px-6 py-10">
+		<section class="mx-auto max-w-[1200px] px-5 py-10">
 			<h2 class="eyebrow-label mb-3">A real change, diffed</h2>
 			<!-- The premise is that every edit carries a reason, so the sample has to
 			     show the reason and not only the change. -->

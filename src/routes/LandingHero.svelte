@@ -25,15 +25,17 @@
 <style>
 	/* On the page's paper, like every other page: only the bar is espresso.
 	   The headline takes the clay the other page titles use. */
+	/* The page gutter every list page uses, so the headline and the browse
+	   title share one left edge. */
 	.hero-inner {
-		max-width: 1200px;
+		max-width: var(--max-width);
 		margin: 0 auto;
-		padding: 3rem 2rem 2.5rem;
+		padding: 3rem var(--space-5) 2.5rem;
 	}
 
 	@media (min-width: 640px) {
 		.hero-inner {
-			padding: 4rem 2rem 3rem;
+			padding: 4rem var(--space-5) 3rem;
 		}
 	}
 
