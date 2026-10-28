@@ -44,7 +44,7 @@
 	<div class="title-row flex flex-wrap items-center gap-4">
 		<!-- clamp() for fluid typography must stay inline -->
 		<h1
-			class="text-accent m-0 font-serif leading-[1.1] font-medium"
+			class="m-0 font-serif leading-[1.1] font-medium"
 			style="font-size: clamp(1.75rem, 4vw, 2.75rem)">
 			{currentVersion.title}
 		</h1>
@@ -81,7 +81,7 @@
 	{/if}
 
 	{#if totalMinutes > 0 || currentVersion.servings || tags.length > 0}
-		<p class="meta text-text-2 m-0 flex flex-wrap items-center gap-2.5 text-[0.875rem]">
+		<p class="meta text-text-2 m-0 flex flex-wrap items-center gap-[7px] text-[0.875rem]">
 			{#if totalMinutes > 0}
 				<span>{formatTime(totalMinutes)}</span>
 			{/if}

@@ -41,9 +41,7 @@
 		margin: 0;
 		font-family: var(--font-serif);
 		font-size: 2.75rem;
-		font-weight: 500;
 		line-height: 1.1;
-		color: var(--color-accent);
 		/* Without this the headline breaks as "Recipes, under / version /
 		   control." at phone widths, stranding a word per line. */
 		text-wrap: balance;

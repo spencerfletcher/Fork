@@ -119,9 +119,7 @@
 	h1 {
 		margin: 0 0 12px;
 		font-size: 2.125rem;
-		font-weight: 500;
 		line-height: 1.1;
-		color: var(--color-accent);
 	}
 
 	.version-picker {

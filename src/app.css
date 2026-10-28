@@ -205,12 +205,13 @@
 		pointer-events: none;
 	}
 
+	/* Page titles take the clay accent, the one place running text carries it. */
 	h1 {
 		font-family: var(--font-serif);
 		font-size: 2.5rem;
 		font-weight: 500;
 		line-height: 1.15;
-		color: var(--color-text);
+		color: var(--color-accent);
 	}
 
 	h2 {
@@ -513,9 +514,7 @@
 	.editor-title h1 {
 		margin: 0;
 		font-size: 2.125rem;
-		font-weight: 500;
 		line-height: 1.1;
-		color: var(--color-accent);
 	}
 
 	.editing {

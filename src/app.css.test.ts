@@ -78,4 +78,9 @@ describe('app.css tokens', () => {
 			});
 		expect(offenders).toEqual([]);
 	});
+
+	test('page titles take the clay accent everywhere', () => {
+		const h1 = css.match(/\n\th1 \{([^}]*)\}/)?.[1] ?? '';
+		expect(h1).toContain('color: var(--color-accent)');
+	});
 });
