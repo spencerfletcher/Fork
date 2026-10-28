@@ -178,12 +178,14 @@ Clay and marigold were raised in chroma from #a4512b and #e8a83a: same hues, sam
 
 ### Hierarchy
 
-- **Display** (500, 2.5rem, 1.15, clay): page h1. Recipe titles, "Recipes", "Search", the profile handle. Phones drop to about 1.75rem.
+- **Display** (500, 2.5rem, 1.15, clay): page h1. "Recipes", "Search", the profile handle. Phones drop to about 1.75rem. A recipe's title runs larger, 2.25rem on a phone up to 3.25rem on a desktop, balanced.
+- **Deck** (500, 1.25rem, 1.4, Ink 2, Bitter): the current version's commit message under a recipe title, full measure, never truncated. On version 1 the description stands in. 1.125rem on a phone.
 - **Headline** (500, 1.75rem, 1.25, ink): h2 on pages that need a second serif level ("Recipes worth forking").
 - **Title** (500, 1.0625rem, 1.25): recipe card names in Bitter. Clay on a no-photo panel, ink on a photo card.
 - **Body** (400, 1rem, 1.65, ink): running text, ingredients, steps. Descriptions at 1.0625rem in Ink 2. Measure stays under about 72 characters.
 - **Sans label** (600, 0.6875rem, 0.08em, uppercase, Ink 3): section eyebrows ("Ingredients", "Method", "Recent"), form legends, stat labels (Prep, Cook, Serves). Also h4.
-- **Mono** (400, 0.75rem, 1.5): bylines, dates, version counts, gram weights, the version strip, diff rows and commit messages. Diff and compare surfaces use 0.875rem. Version chips and card version marks use 600 at 0.6875rem.
+- **Mono** (400, 0.75rem, 1.5): bylines, dates, version counts, gram weights, diff rows and commit messages in history. The recipe page's byline, meta line (Prep, Cook, Serves), section tabs and step numerals use 0.8125rem, the numerals and tabs at 600. Diff and compare surfaces use 0.875rem. Card version marks use 600 at 0.6875rem.
+- **Also in use** and on the ramp: 0.8125rem (card meta, byline, numerals), 0.875rem (navbar links, diff), 0.9375rem (buttons, card body), 1.375rem (the wordmark).
 
 ### Named Rules
 
@@ -251,9 +253,9 @@ Small, consistent corners: 4px on chips and icon buttons, 6px on buttons, inputs
 
 - Espresso bar, 56px, 1200px inner column. Bitter wordmark "Fork." in cream with a marigold full stop. Links in tan, 0.875rem 500, cream on hover or when active. One marigold action. Below 768px the links collapse behind 44px icon buttons.
 
-### Version Strip (signature)
+### Version byline (signature)
 
-The commit line for the version being read: marigold chip, the commit message in sans 0.875rem ink, then byline, date, version and fork counts and a compare link in mono Ink 3, all on one baseline. The history and fork icons sit in the text line at 14px. It is the mark that makes a Fork recipe page a Fork page.
+The commit message is the deck under the recipe's title, in Bitter at full measure, and the history is one mono line beneath it: `@author · v3 · 3 versions · 1 fork · Compare with v2`, Ink 3 with clay links, the version number in ink at 600. "3 versions" opens the list of every version, one link per version, under the byline. Viewing an older version the line reads `v2 of 3 · Viewing history · Back to v3` and the deck is that version's message. There is no version chip and no bar: the sentence is the mark that makes a Fork recipe page a Fork page.
 
 ### Diff rows (signature)
 

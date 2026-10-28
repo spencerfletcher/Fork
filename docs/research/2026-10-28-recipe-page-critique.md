@@ -177,3 +177,7 @@ Each remaining question with a recommendation. "No" is a fine answer to any of t
 2. `/impeccable shape` the recipe page with the composition in section 4 as the brief, producing one board at 1280, 768 and 390, with both visitor and owner states and the no-photo variant.
 3. Build it, then `/impeccable adapt` for the phone and iPad findings and `/impeccable polish` before shipping.
 4. Re-run `/impeccable critique` on the page; the target is 26/32 or better, which the header change plus the phone reading-start fix should reach.
+
+## 11. Built, 28 October 2026
+
+The composition in section 4 shipped on master the same day, in nine commits from the fork server change to the page layout. Measured on the build at 1280: Ingredients at 575px with a photo and 499px without; on a phone, 817px with the tab bar at 749px. The whole e2e suite (82 tests) and unit suite (522) pass. Not done: a forks page for the "1 fork" count to link to, so the count is text; struck rows still reset on reload. `VersionStrip.svelte` and its test are no longer used by any page and are left for Spencer to delete.
