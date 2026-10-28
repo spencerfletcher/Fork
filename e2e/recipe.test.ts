@@ -525,6 +525,8 @@ test.describe('Recipe detail page', () => {
 			})
 		);
 		for (const bottom of bottoms) expect(Math.abs(bottom - bottoms[0])).toBeLessThan(1);
+		// The icon sits in the line, not above it.
+		expect((await page.locator('.version-toggle').boundingBox())!.height).toBeLessThan(20);
 	});
 });
 

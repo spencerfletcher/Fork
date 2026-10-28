@@ -228,7 +228,9 @@
 		margin: 0 -4px 0 -8px;
 	}
 
+	/* Preflight makes svg block-level; these sit in the text line. */
 	.version-foot svg {
+		display: inline-block;
 		width: 14px;
 		height: 14px;
 		margin-right: 4px;
