@@ -105,6 +105,19 @@ const settingsSchema = z.object({
 	tagNames: z.array(z.string()).transform(normaliseTagNames)
 });
 
+/** The same content parse, fed from the form's own draft strings instead of FormData. */
+export function parseDraftContent(draft: RecipeDraft): Result<ContentFields> {
+	return parse(recipeContentSchema, {
+		title: draft.title,
+		description: draft.description,
+		servings: draft.servings,
+		prepTimeMinutes: draft.prepTimeMinutes,
+		cookTimeMinutes: draft.cookTimeMinutes,
+		ingredients: draft.ingredients,
+		steps: draft.steps
+	});
+}
+
 /** Tag names as submitted, before any trimming or deduplication. */
 function tagsOf(formData: FormData): string[] {
 	return formData.getAll('tags').filter((t): t is string => typeof t === 'string');
