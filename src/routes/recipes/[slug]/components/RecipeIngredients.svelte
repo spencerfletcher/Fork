@@ -44,8 +44,10 @@
 					{before}
 				{/if}
 				{#if result}
+					<!-- Same size as the line: WebKit strikes each inline box at its own
+					     font metrics, so a smaller span would get a lower, separate line. -->
 					<span
-						class="text-text-3 text-sm"
+						class="text-text-3"
 						title={result.approximate
 							? 'Typical weight for a whole item; actual items vary'
 							: undefined}>
