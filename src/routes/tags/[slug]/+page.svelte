@@ -14,11 +14,19 @@
 		</div>
 
 		{#if data.recipes.length > 0}
-			<div class="recipe-grid">
-				{#each data.recipes as recipe (recipe.id)}
-					<RecipeCard {recipe} />
-				{/each}
-			</div>
+			<!-- The same eyebrow-and-rule as a browse section, so the grid sits at
+			     the same height whichever tab is active. -->
+			<section>
+				<h2 class="eyebrow-label section-heading">
+					{data.recipes.length}
+					{data.recipes.length === 1 ? 'recipe' : 'recipes'}
+				</h2>
+				<div class="recipe-grid">
+					{#each data.recipes as recipe (recipe.id)}
+						<RecipeCard {recipe} />
+					{/each}
+				</div>
+			</section>
 		{:else}
 			<p class="empty-state">
 				No recipes with this tag yet. <a href="/">Explore all →</a>

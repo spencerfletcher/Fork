@@ -96,4 +96,17 @@ test.describe('Tag tabs', () => {
 		expect(n!.y + n!.height - (a!.y + a!.height)).toBeGreaterThanOrEqual(4);
 		expect(a!.x - n!.x).toBeGreaterThanOrEqual(4);
 	});
+
+	test('a tag page keeps the same section heading and spacing as browse', async ({ page }) => {
+		const gap = async (path: string) => {
+			await page.goto(path);
+			const tabs = await page.getByRole('navigation', { name: 'Browse by tag' }).boundingBox();
+			const grid = await page.locator('.recipe-grid').first().boundingBox();
+			return grid!.y - (tabs!.y + tabs!.height);
+		};
+		const browse = await gap('/recipes');
+		const tag = await gap('/tags/dessert');
+		await expect(page.locator('h2.section-heading')).toHaveText('2 recipes');
+		expect(Math.abs(browse - tag)).toBeLessThan(2);
+	});
 });
