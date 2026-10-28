@@ -125,7 +125,7 @@ test.describe('Edit recipe page', () => {
 		const url = await createRecipe(page, 'E2E Unchanged', '4');
 		try {
 			await gotoHydrated(page, `${url}/edit`);
-			await page.getByRole('button', { name: /save changes/i }).click();
+			await page.getByRole('button', { name: 'Save', exact: true }).click();
 			await page.waitForURL(url);
 			await expect(page.locator('h1')).toContainText('E2E Unchanged');
 			await expectVersions(page, 1);
@@ -142,7 +142,7 @@ test.describe('Edit recipe page', () => {
 		try {
 			await gotoHydrated(page, `${url}/edit`);
 			await page.getByLabel('Steps').fill('Mix, then bake.');
-			await page.getByRole('button', { name: /save changes/i }).click();
+			await page.getByRole('button', { name: 'Save', exact: true }).click();
 			await page.waitForURL(url);
 			await page.goto(`${url}/diff?from=1&to=2`);
 			await page.locator('article.version-card').first().waitFor();
@@ -156,6 +156,53 @@ test.describe('Edit recipe page', () => {
 		}
 	});
 
+	test('leaving a dirty editor asks first, and staying keeps the draft', async ({ page }) => {
+		const url = await createRecipe(page, 'E2E Guard', '4');
+		try {
+			await gotoHydrated(page, `${url}/edit`);
+			await page.locator('input[name="title"]').fill('E2E Guard Edited');
+			page.once('dialog', (d) => d.dismiss());
+			await page.getByRole('link', { name: 'Cancel' }).click();
+			await expect(page).toHaveURL(/\/edit$/);
+			await expect(page.locator('input[name="title"]')).toHaveValue('E2E Guard Edited');
+		} finally {
+			await deleteRecipe(page, url);
+		}
+	});
+
+	test('the helper line states the version a save will write', async ({ page }) => {
+		const url = await createRecipe(page, 'E2E Helper', '4');
+		try {
+			await gotoHydrated(page, `${url}/edit`);
+			await page.getByLabel('Steps').fill('Mix, then bake.');
+			await expect(page.getByText('Saves as v2 · steps changed')).toBeVisible();
+			await expect(page.locator('input[name="commitMessage"]')).toHaveAttribute(
+				'placeholder',
+				'Updated steps'
+			);
+		} finally {
+			await deleteRecipe(page, url);
+		}
+	});
+
+	test('a long ingredient list grows the editor on a phone and Save stays below it', async ({
+		page
+	}) => {
+		await page.setViewportSize({ width: 390, height: 900 });
+		const url = await createRecipe(page, 'E2E Grow', '4');
+		try {
+			await gotoHydrated(page, `${url}/edit`);
+			const box = page.getByLabel('Ingredients');
+			await box.fill(Array.from({ length: 40 }, (_, i) => `${i + 1} cup item ${i + 1}`).join('\n'));
+			const textarea = await box.boundingBox();
+			const save = await page.getByRole('button', { name: 'Save', exact: true }).boundingBox();
+			expect(textarea!.height).toBeGreaterThan(600);
+			expect(save!.y).toBeGreaterThan(textarea!.y + textarea!.height);
+		} finally {
+			await deleteRecipe(page, url);
+		}
+	});
+
 	test('saving changed steps with a commit message adds a version carrying it', async ({
 		page
 	}) => {
@@ -164,7 +211,7 @@ test.describe('Edit recipe page', () => {
 			await gotoHydrated(page, `${url}/edit`);
 			await page.getByLabel('Steps').fill('Updated step text from e2e test.');
 			await page.locator('input[name="commitMessage"]').fill('e2e test commit');
-			await page.getByRole('button', { name: /save changes/i }).click();
+			await page.getByRole('button', { name: 'Save', exact: true }).click();
 			await page.waitForURL(url);
 			await expectVersions(page, 2);
 			await expect(page.locator('.version-strip')).toContainText('e2e test commit');
@@ -227,7 +274,7 @@ test.describe('One save', () => {
 			await page.locator('input[name="servings"]').fill('8');
 			await page.locator('input[name="cookTimeMinutes"]').fill('30');
 			await page.getByLabel('Ingredients').fill('4 cups flour');
-			await page.getByRole('button', { name: /save changes/i }).click();
+			await page.getByRole('button', { name: 'Save', exact: true }).click();
 			await page.waitForURL(url);
 
 			await expect(page.getByText('Serves 8').first()).toBeVisible();
@@ -253,7 +300,7 @@ test.describe('One save', () => {
 		try {
 			await gotoHydrated(page, `${url}/edit`);
 			await page.locator('input[name="title"]').fill('E2E After Rename');
-			await page.getByRole('button', { name: /save changes/i }).click();
+			await page.getByRole('button', { name: 'Save', exact: true }).click();
 			await page.waitForURL(url);
 			await expect(page.locator('h1')).toContainText('E2E After Rename');
 
@@ -272,7 +319,7 @@ test.describe('One save', () => {
 		try {
 			await gotoHydrated(page, `${url}/edit`);
 			await page.getByLabel(/public/i).uncheck();
-			await page.getByRole('button', { name: /save changes/i }).click();
+			await page.getByRole('button', { name: 'Save', exact: true }).click();
 			await page.waitForURL(url);
 			await expectVersions(page, 1);
 		} finally {
@@ -288,11 +335,11 @@ test.describe('One save', () => {
 			await gotoHydrated(page, `${url}/edit`);
 
 			await page.locator('input[name="servings"]').fill('6');
-			await page.getByRole('button', { name: /save changes/i }).click();
+			await page.getByRole('button', { name: 'Save', exact: true }).click();
 			await page.waitForURL(url);
 
 			await other.locator('input[name="title"]').fill('E2E Stale Edit');
-			await other.getByRole('button', { name: /save changes/i }).click();
+			await other.getByRole('button', { name: 'Save', exact: true }).click();
 			await expect(other.getByRole('alert')).toContainText(/changed in another tab/i);
 			await expect(other.locator('input[name="title"]')).toHaveValue('E2E Stale Edit');
 			await expect(other.locator('input[name="title"]')).toBeEnabled();
@@ -311,7 +358,7 @@ test.describe('One save', () => {
 			await gotoHydrated(page, `${url}/edit`);
 			const long = '1 cup ' + 'x'.repeat(300);
 			await page.getByLabel('Ingredients').fill(long);
-			await page.getByRole('button', { name: /save changes/i }).click();
+			await page.getByRole('button', { name: 'Save', exact: true }).click();
 			await expect(page.getByRole('alert')).toContainText('An ingredient line is too long');
 			await expect(page.getByLabel('Ingredients')).toHaveValue(long);
 			await expect(page.getByLabel('Ingredients')).toBeEnabled();
