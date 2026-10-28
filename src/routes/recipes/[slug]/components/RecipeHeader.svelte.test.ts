@@ -41,7 +41,8 @@ describe('RecipeHeader fork attribution', () => {
 			'href',
 			'/recipes/original'
 		);
-		expect(screen.getByText(/by @chef/)).toBeInTheDocument();
+		// Usernames are mono everywhere, this line included.
+		expect(screen.getByText('@chef')).toHaveClass('font-mono');
 	});
 
 	test('says the parent is private when the server withheld it', () => {
@@ -101,20 +102,9 @@ describe('RecipeHeader content', () => {
 		expect(dessert.parentElement).toHaveTextContent('Dessert, Baking');
 	});
 
-	test('shows the photo when the version has one', () => {
+	test('carries no photo: that lives in the sidebar now', () => {
 		renderHeader(makeRecipe(), { ...VERSION, imageUrl: 'https://img/cookies.jpg' });
-		expect(screen.getByRole('img', { name: 'Old Title' })).toHaveAttribute(
-			'src',
-			'https://img/cookies.jpg'
-		);
-	});
-
-	test('renders no image and no placeholder without a photo', () => {
-		const { container } = render(RecipeHeader, {
-			props: { recipe: makeRecipe(), currentVersion: VERSION, isViewingHistory: false, tags: [] }
-		});
 		expect(screen.queryByRole('img')).toBeNull();
-		expect(container.querySelector('.recipe-photo')).toBeNull();
 	});
 
 	test('renders no meta line when there is no time, servings or tags', () => {

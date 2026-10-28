@@ -86,7 +86,7 @@ describe('VersionStrip', () => {
 		expect(screen.queryByRole('link', { name: /compare/i })).toBeNull();
 	});
 
-	test('is a card: chip and message, a byline, then history, forks and compare in a footer', () => {
+	test('is one card row: chip and message, a byline, then history, forks and compare', () => {
 		const { container } = render(VersionStrip, { props: { ...props, forkCount: 1 } });
 		const card = container.querySelector('.version-card')!;
 		expect(card.querySelector('.version-head .version-current')).toHaveTextContent('v2');

@@ -21,19 +21,25 @@
 <article class="min-h-screen">
 	<RecipeHeader {recipe} {currentVersion} {isViewingHistory} {tags} />
 
-	<!-- Everything about the recipe (versions, details, actions) sits in the
-	     right column; the recipe itself reads in a 720px column. The sidebar
-	     comes first in the DOM so the phone stack needs no reordering. -->
+	{#if allVersions.length > 0}
+		<VersionStrip
+			versions={allVersions}
+			currentVersionNumber={currentVersion.versionNumber}
+			recipeSlug={recipe.slug}
+			{isViewingHistory}
+			forkCount={data.forkCount} />
+	{/if}
+
+	<!-- Details and actions sit in the right column; the recipe itself reads
+	     in a 720px column. The sidebar comes first in the DOM so the phone
+	     stack needs no reordering. -->
 	<div class="content-layout">
 		<aside class="min-w-0">
 			<div class="sidebar-sticky">
-				{#if allVersions.length > 0}
-					<VersionStrip
-						versions={allVersions}
-						currentVersionNumber={currentVersion.versionNumber}
-						recipeSlug={recipe.slug}
-						{isViewingHistory}
-						forkCount={data.forkCount} />
+				{#if currentVersion.imageUrl}
+					<figure class="recipe-photo m-0">
+						<img src={currentVersion.imageUrl} alt={currentVersion.title} />
+					</figure>
 				{/if}
 				<Details content={currentVersion} />
 				<RecipeActions
@@ -90,6 +96,15 @@
 		gap: 22px;
 	}
 
+	/* Sidebar width, 4:3, so a photo's pixels are not stretched across the page. */
+	.recipe-photo img {
+		display: block;
+		width: 100%;
+		aspect-ratio: 4 / 3;
+		object-fit: cover;
+		border-radius: var(--radius-md);
+	}
+
 	@media (max-width: 860px) {
 		.content-layout {
 			grid-template-columns: minmax(0, 1fr);
@@ -106,6 +121,16 @@
 		.sidebar-sticky {
 			position: static;
 			gap: 14px;
+		}
+
+		/* Full width on a phone, as a 2:1 banner. */
+		.recipe-photo {
+			margin: 0 -18px;
+		}
+
+		.recipe-photo img {
+			aspect-ratio: 2 / 1;
+			border-radius: 0;
 		}
 
 		/* Fork and Favorite side by side, Fork taking the room. */

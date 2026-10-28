@@ -62,8 +62,8 @@
 <svelte:window onkeydown={onWindowKeydown} onclick={onWindowClick} />
 
 <nav class="version-strip" aria-label="Version history" bind:this={nav}>
-	<!-- Shaped like a repository's latest-commit bar: what the current version
-	     is, who made it and when, then the ways into the history. -->
+	<!-- Shaped like a repository's latest-commit bar, one row at content width:
+	     what the current version is, who made it and when, then the ways in. -->
 	<div class="version-card">
 		<p class="version-head">
 			<span class="version-current">v{current.versionNumber}</span>
@@ -151,24 +151,32 @@
 </nav>
 
 <style>
+	/* The bar sits between the photo and the body at the content width; the
+	   full history opens over the body rather than pushing it down. */
 	.version-strip {
-		display: flex;
-		flex-direction: column;
-		gap: 8px;
+		position: relative;
+		max-width: calc(var(--max-width) - 2 * var(--space-5));
+		margin: 14px auto 0;
 	}
 
 	.version-card {
 		display: flex;
-		flex-direction: column;
-		gap: 6px;
-		padding: 12px 14px;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: 6px 18px;
+		padding: 9px 14px;
 		background: var(--color-surface);
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-md);
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+		color: var(--color-text-3);
 	}
 
 	.version-head {
 		display: flex;
+		flex: 1 1 320px;
+		min-width: 0;
 		align-items: baseline;
 		gap: 10px;
 		margin: 0;
@@ -180,37 +188,30 @@
 		border-radius: 3px;
 		background: var(--color-marigold);
 		color: var(--color-text);
-		font-family: var(--font-mono);
-		font-size: 0.75rem;
 		font-weight: 600;
 	}
 
 	.version-head .version-message {
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 		font-family: var(--font-sans);
 		font-size: 0.875rem;
-		line-height: 1.4;
 		color: var(--color-text);
-		overflow-wrap: anywhere;
 	}
 
 	.version-by {
+		flex-shrink: 0;
 		margin: 0;
-		font-family: var(--font-mono);
-		font-size: 0.75rem;
-		color: var(--color-text-3);
 	}
 
 	.version-foot {
 		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		gap: 6px 14px;
-		margin: 2px 0 0;
-		padding-top: 8px;
-		border-top: 1px solid var(--color-border);
-		font-family: var(--font-mono);
-		font-size: 0.75rem;
-		color: var(--color-text-3);
+		flex-shrink: 0;
+		align-items: baseline;
+		gap: 14px;
+		margin: 0;
 	}
 
 	.version-foot svg {
@@ -241,7 +242,6 @@
 	}
 
 	.version-compare {
-		margin-left: auto;
 		color: var(--color-accent);
 		text-decoration: none;
 	}
@@ -251,6 +251,11 @@
 	}
 
 	.version-history {
+		position: absolute;
+		top: calc(100% + 6px);
+		left: 0;
+		right: 0;
+		z-index: 10;
 		display: flex;
 		flex-direction: column;
 		gap: var(--space-2);
@@ -258,6 +263,7 @@
 		background: var(--color-surface);
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-md);
+		box-shadow: var(--shadow-card);
 		font-family: var(--font-mono);
 		font-size: 0.75rem;
 	}
@@ -274,10 +280,6 @@
 		color: var(--color-text-2);
 	}
 
-	.version-entry .version-compare {
-		margin-left: 0;
-	}
-
 	.version-number {
 		flex-shrink: 0;
 		font-weight: 600;
@@ -290,5 +292,18 @@
 		background: var(--color-marigold);
 		padding: 0 5px;
 		border-radius: 3px;
+	}
+
+	@media (max-width: 860px) {
+		.version-strip {
+			max-width: calc(100% - 36px);
+			margin-top: 10px;
+		}
+
+		/* Two lines on a phone: the message wraps, the links go underneath. */
+		.version-head .version-message {
+			white-space: normal;
+			overflow: visible;
+		}
 	}
 </style>

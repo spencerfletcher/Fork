@@ -66,7 +66,8 @@
 		<p class="attribution text-text-3 m-0 font-sans text-[0.875rem]">
 			Forked from
 			<a href="/recipes/{recipe.parent.slug}" class="text-accent">{recipe.parent.title}</a>
-			{#if recipe.parent.author}by @{recipe.parent.author.username}{/if}
+			{#if recipe.parent.author}by
+				<span class="font-mono text-[0.75rem]">@{recipe.parent.author.username}</span>{/if}
 		</p>
 	{:else if recipe.parentId}
 		<p class="attribution text-text-3 m-0 font-sans text-[0.875rem]">
@@ -100,15 +101,6 @@
 			{/if}
 		</p>
 	{/if}
-
-	{#if currentVersion.imageUrl}
-		<figure class="recipe-photo m-0">
-			<img
-				src={currentVersion.imageUrl}
-				alt={currentVersion.title}
-				class="h-[420px] w-full rounded-lg object-cover" />
-		</figure>
-	{/if}
 </header>
 
 <style>
@@ -138,26 +130,11 @@
 	.meta {
 		order: 6;
 	}
-	.recipe-photo {
-		order: 7;
-	}
 
 	@media (max-width: 860px) {
 		.recipe-header {
 			padding: 16px 18px 0;
 			gap: 8px;
-		}
-
-		.recipe-photo {
-			order: 3;
-			margin: 4px -18px 4px;
-			width: calc(100% + 36px);
-		}
-
-		.recipe-photo img {
-			height: auto;
-			aspect-ratio: 2 / 1;
-			border-radius: 0;
 		}
 	}
 </style>

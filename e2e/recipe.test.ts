@@ -325,16 +325,16 @@ test.describe('Recipe detail page', () => {
 	test('on desktop, the sidebar stays in view while the method scrolls', async ({ page }) => {
 		await page.setViewportSize({ width: 1440, height: 800 });
 		await gotoClassicCookies(page);
-		const details = page.locator('dl.details').first();
-		await details.waitFor();
+		const sidebar = page.locator('.sidebar-sticky');
+		await sidebar.waitFor();
 
 		await page.mouse.wheel(0, 1000);
 		await page.waitForTimeout(200);
-		const box = await details.boundingBox();
+		const box = await sidebar.boundingBox();
 		expect(box).not.toBeNull();
-		// Sticky at 76px: still near the top after a long scroll, not scrolled away.
+		// Sticky at 24px: still at the top after a long scroll, not scrolled away.
 		expect(box!.y).toBeGreaterThanOrEqual(0);
-		expect(box!.y).toBeLessThan(200);
+		expect(box!.y).toBeLessThan(60);
 	});
 
 	test('the version panel closes when one of its links navigates', async ({ page }) => {
@@ -376,12 +376,10 @@ test.describe('Recipe detail page', () => {
 		// The {#if imageUrl} branch is equivalent to the node being absent.
 		await page.evaluate(() => document.querySelector('.recipe-photo')?.remove());
 
-		// Nothing reserves the photo's room: the body follows the header directly.
-		const header = await page.locator('header.recipe-header').boundingBox();
-		const body = await page.locator('.content-layout').boundingBox();
-		expect(header).not.toBeNull();
-		expect(body).not.toBeNull();
-		expect(body!.y - (header!.y + header!.height)).toBeLessThan(40);
+		// Nothing reserves the photo's room: the details start at the top of the sidebar.
+		const ingredientsBox = await ingredients.boundingBox();
+		const details = await page.locator('dl.details').first().boundingBox();
+		expect(Math.abs(details!.y - ingredientsBox!.y)).toBeLessThan(40);
 	});
 
 	test('tags stay readable on both the card and the hero surfaces', async ({ page }) => {
@@ -454,22 +452,30 @@ test.describe('Recipe detail page', () => {
 		expect(coloredText).toBe(0);
 	});
 
-	test('the reading column stops at 720px and the version block sits in the right column', async ({
+	test('the version bar spans the content width under the header; the photo sits in the sidebar above the details; the recipe reads at 720px', async ({
 		page
 	}) => {
 		await page.setViewportSize({ width: 1200, height: 900 });
 		await gotoClassicCookies(page);
+		const header = await page.locator('header.recipe-header').boundingBox();
+		const bar = await page.locator('.version-strip').boundingBox();
+		const photo = await page.locator('.recipe-photo').boundingBox();
+		const details = await page.locator('dl.details').first().boundingBox();
 		const ingredients = await page
 			.getByRole('heading', { name: /ingredients/i })
 			.first()
 			.boundingBox();
-		const strip = await page.locator('.version-strip').boundingBox();
 		const description = await page.locator('.recipe-header .description').boundingBox();
+		// Bar: full content width, right under the header, above the body.
+		expect(Math.abs(bar!.width - (header!.width - 48))).toBeLessThan(2);
+		expect(bar!.y).toBeGreaterThan(header!.y + header!.height - 1);
+		expect(ingredients!.y).toBeGreaterThan(bar!.y + bar!.height);
+		// Photo: in the right column, above the details, 320 wide.
+		expect(photo!.x).toBeGreaterThan(ingredients!.x + ingredients!.width);
+		expect(Math.abs(photo!.width - 320)).toBeLessThan(2);
+		expect(details!.y).toBeGreaterThan(photo!.y + photo!.height - 1);
 		expect(ingredients!.width).toBeLessThanOrEqual(720);
-		expect(strip!.x).toBeGreaterThan(ingredients!.x + ingredients!.width);
-		// The description spans the header, not the old 720px cap.
 		expect(description!.width).toBeGreaterThan(900);
-		// Compare and versions links are clay.
 		const color = await page
 			.locator('.version-compare')
 			.first()
