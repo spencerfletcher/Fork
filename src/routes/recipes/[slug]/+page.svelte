@@ -17,10 +17,9 @@
 	const canFork = $derived(!!user && !isOwner && !isViewingHistory);
 	const canFavorite = $derived(!!user && !isViewingHistory);
 
-	const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
+	// The strip already counts the versions; the sidebar adds only the forks.
 	const counts = $derived(
-		plural(allVersions.length, 'version') +
-			(data.forkCount > 0 ? ` · ${plural(data.forkCount, 'fork')}` : '')
+		data.forkCount > 0 ? `${data.forkCount} fork${data.forkCount === 1 ? '' : 's'}` : ''
 	);
 </script>
 
@@ -49,7 +48,9 @@
 					{isOwner}
 					{isViewingHistory}
 					initialFavorited={data.isFavorited} />
-				<p class="recipe-counts text-text-3 m-0 font-mono text-[0.75rem]">{counts}</p>
+				{#if counts}
+					<p class="recipe-counts text-text-3 m-0 font-mono text-[0.75rem]">{counts}</p>
+				{/if}
 			</div>
 		</aside>
 
@@ -90,7 +91,7 @@
 
 	.sidebar-sticky {
 		position: sticky;
-		top: 76px;
+		top: 24px;
 		display: flex;
 		flex-direction: column;
 		gap: 22px;

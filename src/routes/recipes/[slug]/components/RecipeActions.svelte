@@ -101,9 +101,10 @@
 			</form>
 		{/if}
 		{#if isOwner && !isViewingHistory}
+			<!-- The owner is not offered Fork, so Edit is their primary action. -->
 			<a
 				href="/recipes/{recipe.slug}/edit"
-				class="btn-ghost flex w-full items-center justify-center gap-2 no-underline">
+				class="btn-primary flex w-full items-center justify-center gap-2 no-underline">
 				Edit recipe
 			</a>
 		{/if}

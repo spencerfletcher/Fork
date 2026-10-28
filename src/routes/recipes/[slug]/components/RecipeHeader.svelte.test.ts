@@ -132,8 +132,11 @@ describe('RecipeHeader content', () => {
 		expect(container.querySelector('.meta')).toBeNull();
 	});
 
-	test('links the author once in the author line', () => {
+	test('links the author once, in a line under the title', () => {
 		renderHeader(makeRecipe({ author: { id: 'u1', username: 'chef' } }), VERSION);
+		const [link] = screen.getAllByRole('link', { name: '@chef' });
 		expect(screen.getAllByRole('link', { name: '@chef' })).toHaveLength(1);
+		const heading = screen.getByRole('heading', { level: 1 });
+		expect(heading.compareDocumentPosition(link) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 	});
 });

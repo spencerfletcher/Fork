@@ -108,9 +108,10 @@
 		display: flex;
 		align-items: center;
 		gap: 14px;
-		max-width: var(--max-width);
-		margin: 0 auto;
-		padding: 10px var(--space-5);
+		/* The rules span the content column exactly, as the photo above does. */
+		max-width: calc(var(--max-width) - 2 * var(--space-5));
+		margin: 14px auto 0;
+		padding: 10px 0;
 		border-top: 1px dotted var(--color-input-border);
 		border-bottom: 1px dotted var(--color-input-border);
 		font-family: var(--font-mono);
@@ -163,8 +164,8 @@
 	.version-history {
 		position: absolute;
 		top: 100%;
-		left: var(--space-5);
-		right: var(--space-5);
+		left: 0;
+		right: 0;
 		z-index: 10;
 		display: flex;
 		flex-direction: column;
@@ -207,13 +208,10 @@
 
 	@media (max-width: 860px) {
 		.version-strip {
-			padding: 9px 18px;
+			max-width: calc(100% - 36px);
+			margin-top: 10px;
+			padding: 9px 0;
 			gap: 8px;
-		}
-
-		.version-history {
-			left: 18px;
-			right: 18px;
 		}
 	}
 </style>

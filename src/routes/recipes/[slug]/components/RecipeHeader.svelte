@@ -41,15 +41,7 @@
 		</div>
 	{/if}
 
-	{#if recipe.author}
-		<p class="author-line text-text-3 m-0 font-mono text-[0.75rem]">
-			<a href="/users/{recipe.author.username}" class="text-text-3 hover:text-text no-underline">
-				@{recipe.author.username}
-			</a>
-		</p>
-	{/if}
-
-	<div class="title-row flex flex-wrap items-baseline gap-4">
+	<div class="title-row flex flex-wrap items-center gap-4">
 		<!-- clamp() for fluid typography must stay inline -->
 		<h1
 			class="text-accent m-0 font-serif leading-[1.1] font-medium"
@@ -61,6 +53,14 @@
 			v{currentVersion.versionNumber}
 		</span>
 	</div>
+
+	{#if recipe.author}
+		<p class="author-line text-text-3 m-0 font-mono text-[0.75rem]">
+			<a href="/users/{recipe.author.username}" class="text-text-3 hover:text-text no-underline">
+				@{recipe.author.username}
+			</a>
+		</p>
+	{/if}
 
 	{#if recipe.parent}
 		<p class="attribution text-text-3 m-0 font-sans text-[0.875rem]">
@@ -123,10 +123,10 @@
 
 	/* Explicit order so the photo can move between the title and the
 	   description on a phone without touching the DOM. */
-	.author-line {
+	.title-row {
 		order: 1;
 	}
-	.title-row {
+	.author-line {
 		order: 2;
 	}
 	.attribution {

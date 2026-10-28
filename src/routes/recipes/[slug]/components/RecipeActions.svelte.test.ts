@@ -38,3 +38,18 @@ describe('RecipeActions save button', () => {
 		expect(screen.getByRole('button', { name: 'Favorite' })).toHaveTextContent('Favorite');
 	});
 });
+
+// ─── Primary action ───────────────────────────────────────────────────────────
+
+describe('RecipeActions primary action', () => {
+	test('a visitor who can fork gets Fork in marigold and Favorite outlined', () => {
+		render(RecipeActions, { props: makeProps({ canFork: true }) });
+		expect(screen.getByRole('button', { name: 'Fork this recipe' })).toHaveClass('btn-primary');
+		expect(screen.getByRole('button', { name: /favorite/i })).toHaveClass('btn-ghost');
+	});
+
+	test('the owner gets Edit in marigold, since Fork is not offered', () => {
+		render(RecipeActions, { props: makeProps({ isOwner: true }) });
+		expect(screen.getByRole('link', { name: /edit recipe/i })).toHaveClass('btn-primary');
+	});
+});
