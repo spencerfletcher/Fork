@@ -1,0 +1,466 @@
+{
+	"schemaVersion": 2,
+	"generatedAt": "2026-10-28T08:43:24+00:00",
+	"title": "Design System: Fork",
+	"extensions": {
+		"colorMeta": {
+			"paper": {
+				"role": "neutral",
+				"displayName": "Paper",
+				"canonical": "#f7f3ec",
+				"tonalRamp": [
+					"#272625",
+					"#41403e",
+					"#5b5957",
+					"#74736f",
+					"#8e8c88",
+					"#a8a5a1",
+					"#cfccc6",
+					"#f6f2eb"
+				]
+			},
+			"lifted-paper": {
+				"role": "neutral",
+				"displayName": "Lifted Paper",
+				"canonical": "#fffdf9",
+				"tonalRamp": [
+					"#272626",
+					"#40403f",
+					"#5a5958",
+					"#747371",
+					"#8d8c8a",
+					"#a7a6a3",
+					"#cdccc9",
+					"#f4f2ee"
+				]
+			},
+			"clay-tint": {
+				"role": "neutral",
+				"displayName": "Clay Tint",
+				"canonical": "#f5e9e0",
+				"tonalRamp": [
+					"#282624",
+					"#423f3d",
+					"#5d5855",
+					"#77726d",
+					"#928b85",
+					"#aca49e",
+					"#d4cac2",
+					"#f8f1eb"
+				]
+			},
+			"espresso": {
+				"role": "neutral",
+				"displayName": "Espresso",
+				"canonical": "#1a1408",
+				"tonalRamp": [
+					"#2b261b",
+					"#443f36",
+					"#5d5950",
+					"#76726b",
+					"#8f8c86",
+					"#a8a6a1",
+					"#cdccc9",
+					"#f3f2f2"
+				]
+			},
+			"ink": {
+				"role": "neutral",
+				"displayName": "Ink",
+				"canonical": "#1a1714",
+				"tonalRamp": [
+					"#292623",
+					"#423f3d",
+					"#5b5957",
+					"#747271",
+					"#8d8c8a",
+					"#a7a6a4",
+					"#cdcccb",
+					"#f2f2f2"
+				]
+			},
+			"ink-2": {
+				"role": "neutral",
+				"displayName": "Ink 2",
+				"canonical": "#4a443e",
+				"tonalRamp": [
+					"#292622",
+					"#443f39",
+					"#5e5853",
+					"#76726d",
+					"#8f8c88",
+					"#a8a5a2",
+					"#cdccca",
+					"#f3f2f2"
+				]
+			},
+			"ink-3": {
+				"role": "neutral",
+				"displayName": "Ink 3",
+				"canonical": "#6f6960",
+				"tonalRamp": [
+					"#282623",
+					"#433f3a",
+					"#5e5951",
+					"#78726a",
+					"#908c85",
+					"#a9a5a0",
+					"#ceccc9",
+					"#f3f2f1"
+				]
+			},
+			"cream": {
+				"role": "neutral",
+				"displayName": "Cream",
+				"canonical": "#f7f3ec",
+				"tonalRamp": [
+					"#272625",
+					"#41403e",
+					"#5b5957",
+					"#74736f",
+					"#8e8c88",
+					"#a8a5a1",
+					"#cfccc6",
+					"#f6f2eb"
+				]
+			},
+			"tan": {
+				"role": "neutral",
+				"displayName": "Tan",
+				"canonical": "#b8a880",
+				"tonalRamp": [
+					"#2a261d",
+					"#464031",
+					"#625944",
+					"#7e7357",
+					"#998c6b",
+					"#b5a67e",
+					"#d5ccb4",
+					"#f5f2ec"
+				]
+			},
+			"clay": {
+				"role": "primary",
+				"displayName": "Clay",
+				"canonical": "#a4512b",
+				"tonalRamp": [
+					"#3e1f10",
+					"#67331b",
+					"#904726",
+					"#ac603d",
+					"#bb7d61",
+					"#ca9a84",
+					"#e1c5b9",
+					"#f7f1ed"
+				]
+			},
+			"marigold": {
+				"role": "primary",
+				"displayName": "Marigold",
+				"canonical": "#e8a83a",
+				"tonalRamp": [
+					"#33250d",
+					"#553d15",
+					"#77561e",
+					"#986e26",
+					"#ba872f",
+					"#dc9f37",
+					"#f0c882",
+					"#fbf1e0"
+				]
+			},
+			"marigold-deep": {
+				"role": "primary",
+				"displayName": "Marigold Deep",
+				"canonical": "#d99a2c",
+				"tonalRamp": [
+					"#34250a",
+					"#563d11",
+					"#795618",
+					"#9b6e1f",
+					"#be8726",
+					"#dba038",
+					"#ebc98d",
+					"#faf1e3"
+				]
+			},
+			"rule": {
+				"role": "neutral",
+				"displayName": "Rule",
+				"canonical": "#e4ded4",
+				"tonalRamp": [
+					"#272624",
+					"#41403d",
+					"#5b5955",
+					"#76726d",
+					"#908c86",
+					"#aaa59e",
+					"#d1cbc2",
+					"#f4f2ee"
+				]
+			},
+			"rule-2": {
+				"role": "neutral",
+				"displayName": "Rule 2",
+				"canonical": "#d9d3c8",
+				"tonalRamp": [
+					"#272624",
+					"#41403c",
+					"#5c5954",
+					"#76726c",
+					"#908c85",
+					"#aaa59d",
+					"#d1cbc1",
+					"#f4f2ef"
+				]
+			},
+			"diff-add": {
+				"role": "semantic",
+				"displayName": "Diff Add",
+				"canonical": "#2f6b37",
+				"tonalRamp": [
+					"#163119",
+					"#24522a",
+					"#36703e",
+					"#55865c",
+					"#749c79",
+					"#93b297",
+					"#c1d3c4",
+					"#f0f4f0"
+				]
+			},
+			"diff-add-bg": {
+				"role": "semantic",
+				"displayName": "Diff Add Background",
+				"canonical": "#e6f0e3",
+				"tonalRamp": [
+					"#252725",
+					"#3e413d",
+					"#575b56",
+					"#70756f",
+					"#898f87",
+					"#a2a9a0",
+					"#c7d0c5",
+					"#eff5ed"
+				]
+			},
+			"diff-remove": {
+				"role": "semantic",
+				"displayName": "Diff Remove",
+				"canonical": "#a3362b",
+				"tonalRamp": [
+					"#491813",
+					"#7a2820",
+					"#a53b30",
+					"#b35950",
+					"#c17770",
+					"#cf958f",
+					"#e3c3bf",
+					"#f8f0ef"
+				]
+			},
+			"diff-remove-bg": {
+				"role": "semantic",
+				"displayName": "Diff Remove Background",
+				"canonical": "#f6e3e0",
+				"tonalRamp": [
+					"#282525",
+					"#433e3d",
+					"#5e5756",
+					"#79706f",
+					"#948987",
+					"#afa2a0",
+					"#d8c7c5",
+					"#faefee"
+				]
+			}
+		},
+		"typographyMeta": {
+			"display": {
+				"displayName": "Display",
+				"purpose": "Page h1, in clay."
+			},
+			"headline": {
+				"displayName": "Headline",
+				"purpose": "Serif h2."
+			},
+			"title": {
+				"displayName": "Title",
+				"purpose": "Recipe card names."
+			},
+			"body": {
+				"displayName": "Body",
+				"purpose": "Running text, ingredients, steps."
+			},
+			"label": {
+				"displayName": "Sans label",
+				"purpose": "Section eyebrows, legends, stat labels."
+			},
+			"mono": {
+				"displayName": "Mono",
+				"purpose": "Every mark that is history or measurement."
+			}
+		},
+		"shadows": [
+			{
+				"name": "raised",
+				"value": "0 4px 16px rgba(26, 23, 20, 0.12)",
+				"purpose": "Native dialog, the one true overlay."
+			},
+			{
+				"name": "card",
+				"value": "0 1px 3px rgba(26, 23, 20, 0.08), 0 1px 2px rgba(26, 23, 20, 0.05)",
+				"purpose": "Legacy; to be removed under the flat rule."
+			}
+		],
+		"motion": [
+			{
+				"name": "ease-state",
+				"value": "0.15s ease",
+				"purpose": "Background and colour changes on hover."
+			},
+			{
+				"name": "ease-photo",
+				"value": "0.3s ease",
+				"purpose": "Card photo and panel title scale on hover."
+			}
+		],
+		"breakpoints": [
+			{
+				"name": "phone",
+				"value": "699px"
+			},
+			{
+				"name": "nav",
+				"value": "768px"
+			},
+			{
+				"name": "lg",
+				"value": "1024px"
+			},
+			{
+				"name": "grid-4",
+				"value": "1100px"
+			}
+		]
+	},
+	"components": [
+		{
+			"name": "Primary Button",
+			"kind": "button",
+			"refersTo": "button-primary",
+			"description": "The one marigold action on a view.",
+			"html": "<button class=\"ds-btn-primary\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\"><path d=\"M4 3.5v2a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-2M8 7.5v5\"/><circle cx=\"4\" cy=\"2.5\" r=\"1.3\" fill=\"currentColor\"/><circle cx=\"12\" cy=\"2.5\" r=\"1.3\" fill=\"currentColor\"/><circle cx=\"8\" cy=\"13.5\" r=\"1.3\" fill=\"currentColor\"/></svg> Fork this recipe</button>",
+			"css": ".ds-btn-primary{display:inline-flex;align-items:center;gap:8px;background:var(--color-marigold,#e8a83a);color:var(--color-text,#1a1714);font-family:'Source Sans 3',sans-serif;font-size:15px;font-weight:600;padding:12px 16px;border:0;border-radius:6px;cursor:pointer;transition:background .15s ease}.ds-btn-primary:hover{background:var(--color-marigold-hover,#d99a2c)}.ds-btn-primary:focus-visible{outline:2px solid var(--color-accent,#a4512b);outline-offset:2px}"
+		},
+		{
+			"name": "Ghost Button",
+			"kind": "button",
+			"refersTo": "button-ghost",
+			"description": "Secondary action: ink outline, clay-tint hover.",
+			"html": "<button class=\"ds-btn-ghost\">Favorite</button>",
+			"css": ".ds-btn-ghost{background:transparent;color:var(--color-text,#1a1714);font-family:'Source Sans 3',sans-serif;font-size:15px;font-weight:500;padding:11px 16px;border:1px solid var(--color-text,#1a1714);border-radius:6px;cursor:pointer;transition:background .15s ease}.ds-btn-ghost:hover{background:var(--color-tint,#f5e9e0)}.ds-btn-ghost:focus-visible{outline:2px solid var(--color-accent,#a4512b);outline-offset:2px}"
+		},
+		{
+			"name": "Text Input",
+			"kind": "input",
+			"refersTo": "input",
+			"description": "Lifted paper field with a Rule 2 border and the global clay ring.",
+			"html": "<input class=\"ds-input\" placeholder=\"you@example.com\">",
+			"css": ".ds-input{background:var(--color-surface,#fffdf9);border:1px solid var(--color-input-border,#d9d3c8);border-radius:6px;color:var(--color-text,#1a1714);font-family:'Source Sans 3',sans-serif;font-size:15px;padding:9px 12px;width:280px;box-sizing:border-box}.ds-input::placeholder{color:var(--color-text-3,#6f6960)}.ds-input:focus-visible{outline:2px solid var(--color-accent,#a4512b);outline-offset:2px}"
+		},
+		{
+			"name": "Tag",
+			"kind": "chip",
+			"refersTo": "tag",
+			"description": "Transparent pill; hover fills clay tint.",
+			"html": "<a class=\"ds-tag\" href=\"#\">dessert</a>",
+			"css": ".ds-tag{display:inline-block;font-family:'Source Sans 3',sans-serif;font-size:12px;font-weight:500;color:var(--color-tag,#4a443e);background:transparent;border:1px solid var(--color-tag-border,#d9d3c8);border-radius:100px;padding:2px 9px;text-decoration:none;transition:background .15s,border-color .15s}.ds-tag:hover{background:var(--color-tag-hover-bg,#f5e9e0);border-color:var(--color-tag,#4a443e)}"
+		},
+		{
+			"name": "Version Chip",
+			"kind": "chip",
+			"refersTo": "version-chip",
+			"description": "Marigold mark for the current version.",
+			"html": "<span class=\"ds-version\">v3</span>",
+			"css": ".ds-version{display:inline-block;background:var(--color-marigold,#e8a83a);color:var(--color-text,#1a1714);font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;padding:0 5px;border-radius:3px}"
+		},
+		{
+			"name": "Navbar",
+			"kind": "nav",
+			"refersTo": "navbar",
+			"description": "The one espresso surface: cream wordmark, tan links, one marigold action.",
+			"html": "<nav class=\"ds-nav\"><a class=\"ds-nav-brand\" href=\"#\">Fork<span>.</span></a><a class=\"ds-nav-link ds-active\" href=\"#\">Recipes</a><a class=\"ds-nav-link\" href=\"#\">Favorites</a><span class=\"ds-nav-spacer\"></span><a class=\"ds-nav-cta\" href=\"#\">+ New Recipe</a></nav>",
+			"css": ".ds-nav{display:flex;align-items:center;gap:24px;height:56px;padding:0 20px;background:var(--color-navbar-bg,#1a1408)}.ds-nav-brand{font-family:Bitter,serif;font-size:22px;font-weight:600;letter-spacing:-.01em;color:#f7f3ec;text-decoration:none}.ds-nav-brand span{color:#e8a83a}.ds-nav-link{font-family:'Source Sans 3',sans-serif;font-size:14px;font-weight:500;color:#b8a880;text-decoration:none;transition:color .15s ease}.ds-nav-link:hover,.ds-nav-link.ds-active{color:#f7f3ec}.ds-nav-spacer{flex:1}.ds-nav-cta{background:#e8a83a;color:#1a1714;font-family:'Source Sans 3',sans-serif;font-size:14px;font-weight:600;padding:7px 14px;border-radius:6px;text-decoration:none}.ds-nav-cta:hover{background:#d99a2c}.ds-nav :focus-visible{outline:2px solid #e8a83a;outline-offset:2px}"
+		},
+		{
+			"name": "Recipe Card",
+			"kind": "card",
+			"refersTo": "card",
+			"description": "Content on the paper, no box: a 4:3 photo or clay-tint panel, a Bitter title, mono meta.",
+			"html": "<article class=\"ds-card\"><div class=\"ds-card-panel\"><h3 class=\"ds-card-panel-title\">Weeknight Red Lentil Dal</h3></div><p class=\"ds-card-meta\"><span class=\"ds-card-author\">@maya</span><span>\u00b7</span><span>35 min</span><span>\u00b7</span><span class=\"ds-card-version\">v1</span></p></article>",
+			"css": ".ds-card{width:260px;display:flex;flex-direction:column;gap:10px}.ds-card-panel{aspect-ratio:4/3;border-radius:6px;background:var(--color-tint,#f5e9e0);display:flex;align-items:flex-end;padding:16px;box-sizing:border-box}.ds-card-panel-title{margin:0;font-family:Bitter,serif;font-weight:500;font-size:17px;line-height:1.25;color:var(--color-accent,#a4512b);transform-origin:left bottom;transition:transform .3s ease}.ds-card:hover .ds-card-panel-title{transform:scale(1.03)}.ds-card-meta{margin:0;display:flex;gap:5px;font-family:'Source Sans 3',sans-serif;font-size:13px;color:var(--color-text-3,#6f6960)}.ds-card-author{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--color-accent,#a4512b)}.ds-card-version{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;color:var(--color-accent,#a4512b)}"
+		},
+		{
+			"name": "Version Strip",
+			"kind": "custom",
+			"refersTo": "card",
+			"description": "The commit line for the version being read, on one baseline.",
+			"html": "<div class=\"ds-strip\"><p class=\"ds-strip-main\"><span class=\"ds-version\">v3</span><span class=\"ds-strip-msg\">Chill the dough and shift the sugar toward brown</span></p><p class=\"ds-strip-meta\"><a href=\"#\">@spencerfletcher</a> \u00b7 18 Jul 2026 \u00b7 3 versions \u00b7 1 fork \u00b7 <a href=\"#\">Compare with v2</a></p></div>",
+			"css": ".ds-strip{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 18px;padding:9px 14px;background:var(--color-surface,#fffdf9);border:1px solid var(--color-border,#e4ded4);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--color-text-3,#6f6960)}.ds-strip p{margin:0}.ds-strip-main{display:flex;align-items:baseline;gap:10px}.ds-strip-msg{font-family:'Source Sans 3',sans-serif;font-size:14px;color:var(--color-text,#1a1714)}.ds-strip a{color:var(--color-accent,#a4512b);text-decoration:none}.ds-strip a:hover{color:var(--color-text,#1a1714)}.ds-version{display:inline-block;background:var(--color-marigold,#e8a83a);color:var(--color-text,#1a1714);font-weight:600;padding:0 5px;border-radius:3px}"
+		}
+	],
+	"narrative": {
+		"northStar": "The Annotated Cookbook",
+		"overview": "Fork looks like a cookbook that has been cooked from: cream paper, a serif for the recipe names, and a cook's notes in the margin. The notes are the product. Version numbers, bylines, dates and gram weights are set in a monospace face, the way a pencil annotation differs from the printed page, so a reader always knows which marks are the recipe and which are its history. Everything else recedes: one dark surface (the espresso navbar), one text accent (clay), one fill (marigold, only ever on the single action or the current version).\n\nDensity is editorial rather than app-like. Body text sits at 16px with generous leading, the page has one 1200px column with 24px gutters (18px on a phone), and recipe cards are content on the paper, not tiles. Surfaces separate by a step in tone, never by shadow. The system is warm (paper, clay, marigold), exact (tabular figures, one focus ring, 8px rhythm) and simple (three faces doing three jobs, two button styles, one chip). Its colour should be decently vibrant: the owner finds the current clay and marigold a little dull and wants more life in them, short of anything neon.\n\nConfirmed rejections: no gradients, no glass, no shadows on resting elements, no colour other than clay and marigold outside the diff.",
+		"keyCharacteristics": [
+			"Cream paper ground with one espresso bar; nothing else is dark.",
+			"Bitter for names and titles, Source Sans 3 for everything read, JetBrains Mono for every mark that is history or measurement.",
+			"Clay is the only coloured text; marigold is the only fill.",
+			"Depth is tonal: paper, lifted paper, clay tint, espresso.",
+			"Version chips, bylines and diffs are first-class marks, set in mono."
+		],
+		"rules": [
+			{
+				"name": "The One Fill Rule",
+				"body": "Marigold means \"the action\" or \"the current version\". One marigold fill per view, two only when a primary button and a version chip share a screen. Nothing else is filled with colour.",
+				"section": "colors"
+			},
+			{
+				"name": "The Clay Is Text Rule",
+				"body": "Clay never fills a shape. It colours titles, links and version marks. Its hover is ink.",
+				"section": "colors"
+			},
+			{
+				"name": "The Pencil Rule",
+				"body": "Anything that is history or measurement (version number, byline, date, fork count, grams, diff text) is set in JetBrains Mono. Anything that is the recipe (title, description, ingredients, steps) is not. The reader tells the two apart by face alone.",
+				"section": "typography"
+			},
+			{
+				"name": "The One Clay Line Rule",
+				"body": "Clay running text is the h1 and links. Headings below h1 are ink.",
+				"section": "typography"
+			},
+			{
+				"name": "The Flat-At-Rest Rule",
+				"body": "Surfaces are flat. A shadow appears only on something that truly floats above the page: a dialog, a menu.",
+				"section": "elevation"
+			}
+		],
+		"dos": [
+			"set every version number, byline, date, count and gram weight in JetBrains Mono.",
+			"keep clay for titles, links and version marks, and marigold for the one action.",
+			"separate surfaces with a tone step or a 1px rule; reserve shadows for dialogs.",
+			"keep body text at 16px, ink, with a measure under about 72 characters.",
+			"compose desktop and iPad first; give the phone its own crop and order without reshaping the desktop.",
+			"hold the layout when a recipe has no photo; the clay-tint panel is the fallback."
+		],
+		"donts": [
+			"add a second dark surface, a gradient, a blur or a glow.",
+			"fill anything with clay, or colour text marigold.",
+			"put a shadow on a card, strip or button at rest.",
+			"invent proof: no ratings, counts, testimonials or press.",
+			"let the version UI crowd the recipe; where it harms reading, reduce it on that surface rather than the whole system."
+		]
+	}
+}
