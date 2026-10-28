@@ -14,36 +14,18 @@
 	} = $props();
 </script>
 
-<div class="flex flex-col gap-3">
-	<div class="flex items-center justify-between">
-		<span class="text-text-3 text-[0.8rem] font-semibold tracking-[0.08em] uppercase">
-			Filter by tag
-		</span>
-		{#if selectedTagSlugs.length > 0}
+{#if availableTags.length > 0}
+	<nav class="tag-tabs" aria-label="Filter by tag">
+		{#each availableTags as tag (tag.slug)}
 			<button
 				type="button"
-				onclick={onClear}
-				class="text-text-3 hover:text-text cursor-pointer border-none bg-transparent p-0 font-sans text-[0.8rem] transition-colors duration-150">
-				Clear all
+				aria-pressed={selectedTagSlugs.includes(tag.slug)}
+				onclick={() => onTagToggle(tag.slug)}>
+				{tag.name}
 			</button>
+		{/each}
+		{#if selectedTagSlugs.length > 0}
+			<button type="button" class="tag-tabs__clear" onclick={onClear}>Clear all</button>
 		{/if}
-	</div>
-
-	{#if availableTags.length > 0}
-		<div class="flex flex-wrap gap-1">
-			{#each availableTags as tag (tag.slug)}
-				{@const isSelected = selectedTagSlugs.includes(tag.slug)}
-				<button
-					type="button"
-					onclick={() => onTagToggle(tag.slug)}
-					class={isSelected
-						? 'rounded-pill bg-marigold text-text hover:bg-marigold-hover cursor-pointer border-none px-3 py-1 font-sans text-[0.75rem] font-medium transition-[background,color] duration-150'
-						: 'tag hover:bg-tag-hover-bg cursor-pointer'}>
-					{tag.name}
-				</button>
-			{/each}
-		</div>
-	{:else}
-		<p class="text-text-3 m-0 text-sm">No tags available</p>
-	{/if}
-</div>
+	</nav>
+{/if}

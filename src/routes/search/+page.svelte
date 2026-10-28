@@ -4,13 +4,15 @@
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
+
+	const recipes = $derived(data.recipes);
+	const filtered = $derived(!!data.searchQuery || data.selectedTags.length > 0);
 </script>
 
 <div class="page">
 	<div class="page-inner">
-		<div class="page-header">
+		<div class="browse-header">
 			<h1>Search</h1>
-			<p class="page-subtitle">Find recipes by name or tag.</p>
 		</div>
 
 		<SearchFilters
@@ -18,18 +20,32 @@
 			initialTags={data.selectedTags}
 			availableTags={data.allTags} />
 
-		{#if data.recipes.length === 0 && (data.searchQuery || data.selectedTags.length > 0)}
-			<p class="empty-state mt-5">
-				No recipes found. Try adjusting your search or clearing some filters.
-			</p>
-		{:else if data.recipes.length === 0}
-			<p class="empty-state mt-5">Enter a recipe name or select tags to find recipes.</p>
+		{#if recipes.length > 0}
+			<section class="results">
+				<h2 class="eyebrow-label section-heading">
+					{recipes.length}
+					{recipes.length === 1 ? 'recipe' : 'recipes'}
+				</h2>
+				<div class="recipe-grid">
+					{#each recipes as recipe (recipe.id)}
+						<RecipeCard {recipe} />
+					{/each}
+				</div>
+			</section>
 		{:else}
-			<div class="recipe-grid mt-5">
-				{#each data.recipes as recipe (recipe.id)}
-					<RecipeCard {recipe} />
-				{/each}
-			</div>
+			<p class="empty-state mt-6">
+				{#if filtered}
+					No recipes found. Try adjusting your search or clearing some filters.
+				{:else}
+					Enter a recipe name or select tags to find recipes.
+				{/if}
+			</p>
 		{/if}
 	</div>
 </div>
+
+<style>
+	.results {
+		margin-top: 26px;
+	}
+</style>

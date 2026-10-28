@@ -375,6 +375,53 @@
 
 	/* Both classes: .eyebrow-label is declared later in this layer and would
 	   otherwise reset the margin. */
+	/* Tag tabs: browse and tag pages link through them; search and favorites
+	   toggle them. One look for both. The row scrolls on a phone; the page
+	   never does. The padding/margin pair leaves room for the focus ring. */
+	.tag-tabs {
+		display: flex;
+		gap: 16px;
+		padding: 4px;
+		margin: -4px;
+		overflow-x: auto;
+		white-space: nowrap;
+		scrollbar-width: none;
+	}
+
+	.tag-tabs::-webkit-scrollbar {
+		display: none;
+	}
+
+	.tag-tabs a,
+	.tag-tabs button {
+		flex-shrink: 0;
+		padding: 0 0 4px;
+		border: 0;
+		border-bottom: 2px solid transparent;
+		background: none;
+		font-family: var(--font-sans);
+		font-size: 0.875rem;
+		color: var(--color-text-2);
+		text-decoration: none;
+		cursor: pointer;
+	}
+
+	.tag-tabs a:hover,
+	.tag-tabs button:hover {
+		color: var(--color-text);
+	}
+
+	.tag-tabs a[aria-current='page'],
+	.tag-tabs button[aria-pressed='true'] {
+		color: var(--color-text);
+		font-weight: 600;
+		border-bottom-color: var(--color-accent);
+	}
+
+	.tag-tabs .tag-tabs__clear {
+		color: var(--color-text-3);
+	}
+
 	.eyebrow-label.section-heading {
 		padding-bottom: 8px;
 		margin-bottom: 14px;

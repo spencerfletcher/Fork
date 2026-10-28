@@ -62,7 +62,7 @@
 	}
 </script>
 
-<div class="border-border space-y-4 rounded-lg border bg-white p-4">
+<div class="search-filters">
 	<form
 		onsubmit={(e) => {
 			e.preventDefault();
@@ -86,7 +86,7 @@
 			type="search"
 			bind:value={searchQuery}
 			placeholder="Search recipes by title..."
-			class="border-border text-text placeholder-text-3 focus:border-accent focus:ring-accent/20 w-full rounded-md border bg-white py-2 pr-3 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none max-[699px]:text-base" />
+			class="pl-10" />
 	</form>
 
 	<TagFilter
@@ -95,3 +95,15 @@
 		onTagToggle={handleTagToggle}
 		onClear={handleClear} />
 </div>
+
+<style>
+	.search-filters {
+		display: flex;
+		flex-direction: column;
+		gap: 14px;
+	}
+
+	.search-filters form {
+		max-width: 560px;
+	}
+</style>

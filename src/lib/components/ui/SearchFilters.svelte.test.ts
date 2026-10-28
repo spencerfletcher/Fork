@@ -44,4 +44,21 @@ describe('SearchFilters', () => {
 		await fireEvent.click(screen.getByRole('button', { name: 'Dessert' }));
 		expect(gotoMock.mock.calls[0][0]).toBe(window.location.pathname);
 	});
+
+	test('the tag filters are a tab row with pressed state, not pills in a card', () => {
+		const { container } = render(SearchFilters, {
+			props: { initialTags: ['dessert'], availableTags }
+		});
+		const row = screen.getByRole('navigation', { name: 'Filter by tag' });
+		expect(row).toHaveClass('tag-tabs');
+		expect(screen.getByRole('button', { name: 'Dessert' })).toHaveAttribute('aria-pressed', 'true');
+		expect(screen.getByRole('button', { name: 'Baking' })).toHaveAttribute('aria-pressed', 'false');
+		expect(container.querySelector('.bg-white')).toBeNull();
+	});
+
+	test('no tag row at all when there is nothing to filter by', () => {
+		render(SearchFilters, { props: { availableTags: [] } });
+		expect(screen.queryByRole('navigation', { name: 'Filter by tag' })).toBeNull();
+		expect(screen.queryByText(/no tags available/i)).toBeNull();
+	});
 });

@@ -30,9 +30,7 @@ test.describe('Search results', () => {
 
 	test('tags that match no recipe are not offered as filters', async ({ page }) => {
 		await page.goto('/search');
-		// "Filter by tag" sits in its own row; the tag buttons are a sibling row
-		// one level up (see TagFilter.svelte) — walk up two levels to scope both.
-		const filters = page.getByText('Filter by tag', { exact: false }).locator('../..');
+		const filters = page.getByRole('navigation', { name: 'Filter by tag' });
 		await filters.waitFor();
 
 		// 'Unused' is seeded deliberately with no recipes attached.
