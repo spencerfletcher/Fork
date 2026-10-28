@@ -67,9 +67,11 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 			textMatch
 		),
 		with: { recipesToTags: { with: { tag: true } }, author: true },
+		// Newest change first, the order browse uses; a ranked search keeps its
+		// text rank and uses it as the tiebreak.
 		orderBy: tsQuery
-			? [sql`ts_rank(${recipes.fts}, ${tsQuery}) DESC`, desc(recipes.createdAt)]
-			: [desc(recipes.createdAt)]
+			? [sql`ts_rank(${recipes.fts}, ${tsQuery}) DESC`, desc(recipes.updatedAt)]
+			: [desc(recipes.updatedAt)]
 	});
 
 	// Rank by how many selected tags matched, unless searching: FTS rank wins then.

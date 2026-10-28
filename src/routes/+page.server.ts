@@ -30,7 +30,7 @@ export const load: PageServerLoad = async ({ locals: { user } }) => {
 			recipesToTags: { with: { tag: true } },
 			author: true
 		},
-		orderBy: (r, { desc }) => [desc(r.createdAt)]
+		orderBy: (r, { desc }) => [desc(r.updatedAt)]
 	});
 
 	// The landing page renders three cards; the feed renders everything. Counting

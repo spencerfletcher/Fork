@@ -17,6 +17,7 @@ vi.mock('#lib/server/db/index.js', () => ({
 }));
 
 import { load } from './+page.server';
+import { desc } from 'drizzle-orm';
 import { recipes } from '#lib/server/db/schema.js';
 import type { PageData } from './$types';
 
@@ -87,7 +88,16 @@ describe('search load', () => {
 		const result = await loadResult(makeEvent(''));
 
 		expect(result.recipes.map((r) => r.id)).toEqual([2, 1]);
-		expect(findManyMock.mock.calls[0][0].orderBy).toHaveLength(1);
+		// Newest change first, the same order as browse.
+		expect(findManyMock.mock.calls[0][0].orderBy).toEqual([desc(recipes.updatedAt)]);
+	});
+
+	test('a ranked search breaks ties by the newest change', async () => {
+		selectDistinctMock.mockReturnValue(chain([]));
+		selectMock.mockReturnValue(chain([]));
+		findManyMock.mockResolvedValue([]);
+		await loadResult(makeEvent('cookies'));
+		expect(findManyMock.mock.calls[0][0].orderBy[1]).toEqual(desc(recipes.updatedAt));
 	});
 
 	test('offers only tags that have at least one recipe', async () => {

@@ -1,7 +1,7 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { chain } from '#lib/testing/drizzle.js';
 import { loadPage } from '#lib/testing/actions.js';
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, desc, eq, inArray } from 'drizzle-orm';
 import { recipes, recipeVersions } from '#lib/server/db/schema.js';
 
 const { findManyMock, selectMock, recipeVersionsFindManyMock } = vi.hoisted(() => ({
@@ -83,6 +83,15 @@ describe('homepage load', () => {
 		const whereMock = forkChain.where as ReturnType<typeof vi.fn>;
 		const whereArg = whereMock.mock.calls[0][0];
 		expect(whereArg).toEqual(and(inArray(recipes.parentId, [1]), eq(recipes.isPublic, true)));
+	});
+
+	test('lists the newest change first, like browse', async () => {
+		findManyMock.mockResolvedValue([]);
+		selectMock.mockReturnValue(chain([]));
+		await loadResult({ locals: { user: null } } as never);
+		// The loader uses the callback form, so call it the way Drizzle would.
+		const orderBy = findManyMock.mock.calls[0][0].orderBy;
+		expect(orderBy(recipes, { desc })).toEqual([desc(recipes.updatedAt)]);
 	});
 
 	test('returns feed mode for a logged-in user', async () => {
