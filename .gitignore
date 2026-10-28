@@ -46,3 +46,6 @@ docs/todo/*
 # Claude Code local permissions (contains machine-specific allow rules)
 .claude/settings.local.json
 .DS_Store
+
+# tasteskill inspector output, regenerable
+.taste-skill/
