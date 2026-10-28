@@ -69,6 +69,11 @@ describe('VersionDiff', () => {
 		expect(row.textContent?.replace(/\s+/g, ' ').trim()).toBe('~ Prep time: 10 —');
 	});
 
+	test('panel headings default to h3 and take the level a page gives them', () => {
+		renderDiff();
+		expect(screen.getByRole('heading', { level: 3, name: 'Ingredients' })).toBeInTheDocument();
+	});
+
 	test('prints 0 as a value and — for null', () => {
 		renderDiff([], [], [{ field: 'prepTimeMinutes', from: null, to: 0 }]);
 		const row = screen.getByText(/^Prep time/).closest('.diff-row')!;

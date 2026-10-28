@@ -222,6 +222,12 @@ describe('Diff page', () => {
 		// jsdom computes no layout; the e2e in authenticated.test.ts measures it.
 	});
 
+	test('the diff panels are h2, directly under the page h1', () => {
+		render(DiffPage, { props: { data: makeData() } });
+		expect(screen.getByRole('heading', { level: 2, name: 'Ingredients' })).toBeInTheDocument();
+		expect(screen.queryByRole('heading', { level: 3 })).toBeNull();
+	});
+
 	test('the stacked commit bar is gone', () => {
 		const { container } = render(DiffPage, { props: { data: makeData() } });
 		expect(container.querySelector('.commit-bar')).toBeNull();

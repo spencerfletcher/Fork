@@ -10,11 +10,14 @@
 	let {
 		metaDiff,
 		ingredientDiff,
-		stepDiff
+		stepDiff,
+		headingLevel = 3
 	}: {
 		metaDiff: MetaDiffRow[];
 		ingredientDiff: IngredientDiffRow[];
 		stepDiff: StepDiffRow[];
+		/** The panel headings' level, so the page's outline has no gap. */
+		headingLevel?: 2 | 3;
 	} = $props();
 
 	const LABEL: Record<MetaField, string> = {
@@ -48,7 +51,7 @@
 
 {#snippet panel(title: string, isEmpty: boolean, rows: import('svelte').Snippet)}
 	<section class="diff-section">
-		<h3 class="eyebrow-label mb-3">{title}</h3>
+		<svelte:element this={`h${headingLevel}`} class="eyebrow-label mb-3">{title}</svelte:element>
 		<div class="diff-panel">
 			{@render rows()}
 			{#if isEmpty}

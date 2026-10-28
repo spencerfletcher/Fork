@@ -108,7 +108,7 @@
 			{@render card(toVersion, true)}
 		</div>
 
-		<VersionDiff {metaDiff} {ingredientDiff} {stepDiff} />
+		<VersionDiff {metaDiff} {ingredientDiff} {stepDiff} headingLevel={2} />
 	</div>
 </div>
 
@@ -229,7 +229,8 @@
 
 		.version-picker select {
 			flex: 1;
-			font-size: 0.875rem;
+			/* 16px, or iOS zooms the picker on focus. */
+			font-size: 1rem;
 			padding: 10px;
 		}
 
