@@ -3,7 +3,7 @@
 ## Priority order — 2026-10-23
 
 1. ~~One save, versioned content~~ shipped 2026-10-27 (`superpowers/specs/2026-10-23-one-save-design.md`), together with M10 Drizzle migrations and the operational cleanup.
-2. ~~UI redesign~~ built 2026-10-27 on the `redesign` branch (tokens, nav and shell, recipe page, card and grid, compare, edit and new), each step reviewed; the "as built" paragraphs in `research/2026-10-26-ui-design-directions.md` record what differs from the boards. Moved to the backlog during the build: in-place tag filtering, browse sections past their caps, `static/None.png` removal, the navbar highlight on tag pages, dark mode. Older inputs: `todo/DESIGN.md`, `todo/TODO_UI.md`.
+2. ~~UI redesign~~ built 2026-10-27 on the `redesign` branch (tokens, nav and shell, recipe page, card and grid, compare, edit and new), each step reviewed; the "as built" paragraphs in `research/2026-10-26-ui-design-directions.md` record what differs from the boards. Moved to the backlog during the build: in-place tag filtering, browse sections past their caps, dark mode. Older inputs: `todo/DESIGN.md`, `todo/TODO_UI.md`.
 3. Serving scaling on the recipe page (temporary multiplier, no version written).
 4. Cooklang-derived items from `research/2026-10-23-cooklang.md`: cooking attempts (M17), export (M16), `.cook` import (M15 stage 6), ingredient use in steps.
 
@@ -21,7 +21,7 @@ Ideas from the original MVP design that are not covered by a milestone. Kept as 
 
 - In-place tag filtering on the browse page: today the tabs link to `/tags/{slug}`; filtering the sectioned page without a navigation needs the browse loader to take a tag and the sections to recompute.
 - Browse sections past their caps: a side-scrolling row or a "see more" link per section (Recent 8, Most forked 4) once the collection outgrows them.
-- `static/None.png` is unused since the card redesign; delete it. Navbar "Recipes" could stay highlighted on `/tags/*`, which now presents as a filtered Recipes view. Dark mode: the dark token set is recorded in the design directions, nothing is built.
+- Dark mode: the dark token set is recorded in the design directions, nothing is built.
 - Temperature toggle (°C / °F) on steps: temperatures are free text, so a render-time regex like the M11 timer match, no schema.
 - Print stylesheet for the recipe page: `@media print`, no nav or sidebar. An afternoon.
 - Serving scaler on the recipe page: a stepper or ×½ / ×2 that re-renders parsed quantities in place; unparsed lines render as written with a mark. The parser already separates the two.
