@@ -329,6 +329,33 @@
 		margin: var(--space-2) 0 0;
 	}
 
+	/* Browse and tag pages: the title and the tag tabs share one baseline. The
+	   tabs wrap under the title when the row runs out of room. */
+	.browse-header {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 20px;
+		margin-bottom: var(--space-5);
+		min-width: 0;
+	}
+
+	.browse-header h1 {
+		margin: 0;
+	}
+
+	.browse-header > :global(.tag-tabs) {
+		min-width: 0;
+		max-width: 100%;
+	}
+
+	.section-heading {
+		padding-bottom: 8px;
+		margin-bottom: 14px;
+		border-bottom: 1px solid var(--color-border);
+	}
+
 	.recipe-grid {
 		display: grid;
 		grid-template-columns: repeat(2, 1fr);

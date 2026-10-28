@@ -1,5 +1,6 @@
 <script lang="ts">
 	import RecipeCard from '#lib/components/recipes/RecipeCard.svelte';
+	import TagTabs from '#lib/components/ui/TagTabs.svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -7,9 +8,9 @@
 
 <div class="page">
 	<div class="page-inner">
-		<div class="page-header">
+		<div class="browse-header">
 			<h1>{data.tag.name}</h1>
-			<p class="page-subtitle">Recipes tagged with {data.tag.name}.</p>
+			<TagTabs tags={data.tags} active={data.tag.slug} />
 		</div>
 
 		{#if data.recipes.length > 0}

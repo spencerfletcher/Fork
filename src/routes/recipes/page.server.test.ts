@@ -3,13 +3,15 @@ import { chain } from '#lib/testing/drizzle.js';
 import { eq } from 'drizzle-orm';
 import { recipes } from '#lib/server/db/schema.js';
 
-const { findManyMock, selectMock } = vi.hoisted(() => ({
+const { findManyMock, selectMock, visibleTagsMock } = vi.hoisted(() => ({
 	findManyMock: vi.fn(),
-	selectMock: vi.fn()
+	selectMock: vi.fn(),
+	visibleTagsMock: vi.fn()
 }));
 vi.mock('#lib/server/db/index.js', () => ({
 	db: { query: { recipes: { findMany: findManyMock } }, select: selectMock }
 }));
+vi.mock('#lib/server/tagFilter.js', () => ({ visibleTags: visibleTagsMock }));
 
 import { load } from './+page.server';
 
@@ -20,6 +22,7 @@ beforeEach(() => {
 	vi.clearAllMocks();
 	findManyMock.mockResolvedValue([{ id: 1, recipesToTags: [], author: null }]);
 	selectMock.mockReturnValue(chain([]));
+	visibleTagsMock.mockResolvedValue([{ id: 1, name: 'Dessert', slug: 'dessert' }]);
 });
 
 describe('/recipes load', () => {
@@ -33,5 +36,17 @@ describe('/recipes load', () => {
 		const result = await load(event({ id: 'u1' }));
 		expect(findManyMock.mock.calls[0][0].where).toEqual(eq(recipes.authorId, 'u1'));
 		expect(result).toMatchObject({ mine: true });
+	});
+
+	test('a guest gets the tags with public recipes, for the tabs', async () => {
+		const result = await load(event(null));
+		expect(visibleTagsMock.mock.calls[0][0]).toEqual(eq(recipes.isPublic, true));
+		expect(result).toMatchObject({ tags: [{ id: 1, name: 'Dessert', slug: 'dessert' }] });
+	});
+
+	test('a signed-in user browsing their own recipes gets no tabs', async () => {
+		const result = await load(event({ id: 'u1' }));
+		expect(visibleTagsMock).not.toHaveBeenCalled();
+		expect(result).toMatchObject({ tags: [] });
 	});
 });
