@@ -150,7 +150,7 @@ test.describe('Recipe detail page', () => {
 		// The selects must reflect the range actually being shown, not reset to a
 		// default — the page navigates rather than updating in place.
 		await expect(page.locator('#from-select')).toHaveValue('1');
-		await expect(page.locator('.commit-bar')).toContainText('v1');
+		await expect(page.locator('article.version-card').first()).toContainText('v1');
 
 		// A wider range covers more edits, so the diff itself must have changed.
 		await expect(modifiedRows).not.toHaveCount(before);
@@ -198,9 +198,8 @@ test.describe('Recipe detail page', () => {
 		expect(contrast(added.color, added.bg)).toBeGreaterThanOrEqual(4.5);
 
 		// ── Removed: reverse the compared range (v2 → v1) so "espresso powder" —
-		// present in v2, absent in v1 — renders as a genuinely removed whole row,
-		// which carries a reduced opacity (VersionDiff.svelte) on top of its
-		// --color-remove-bg background and --color-remove text. No fixture recipe has a real cross-version deletion, so the
+		// present in v2, absent in v1 — renders as a genuinely removed whole row
+		// on its --color-remove-bg background. No fixture recipe has a real cross-version deletion, so the
 		// reversed range is what produces one without hardcoding a slug or altering
 		// seed data.
 		const diffUrl = new URL(page.url());
@@ -208,9 +207,8 @@ test.describe('Recipe detail page', () => {
 		diffUrl.searchParams.set('to', '1');
 		await page.goto(diffUrl.toString());
 
-		// Selected by status class alone: opacity is now a stylesheet property of
-		// .diff-row.diff-removed rather than an opacity-85 utility class, and it is
-		// asserted below as a computed value.
+		// The row's computed opacity (1 since the redesign) still enters the blend,
+		// so a future fade would be measured rather than assumed away.
 		const removedRow = page.locator('div.diff-removed').first();
 		await removedRow.waitFor();
 		const removed = await removedRow.evaluate((el) => {
@@ -574,17 +572,36 @@ test.describe('Landing page (logged out)', () => {
 		expect(doc.scrollWidth).toBeLessThanOrEqual(doc.clientWidth);
 	});
 
-	test('the compare page keeps the diff in one column even on a wide screen', async ({ page }) => {
-		// The split is a container query, not a viewport one: the compare page
-		// constrains the diff to a reading column and must not split inside it.
+	test('the compare page splits the diff on a wide screen and stacks it on a phone', async ({
+		page
+	}) => {
 		await page.setViewportSize({ width: 1440, height: 1800 });
 		await gotoClassicCookies(page);
 		await page.goto(page.url().split('?')[0] + '/diff');
-
 		const panels = page.locator('section').filter({ has: page.locator('.eyebrow-label') });
-		const a = await panels.nth(0).boundingBox();
-		const b = await panels.nth(1).boundingBox();
-		expect(b!.y).toBeGreaterThan(a!.y + a!.height - 40);
+		const ingredients = panels.filter({ hasText: 'Ingredients' }).first();
+		const steps = panels.filter({ hasText: 'Steps' }).first();
+		const a = await ingredients.boundingBox();
+		const b = await steps.boundingBox();
+		expect(Math.abs(a!.y - b!.y)).toBeLessThan(2);
+		expect(b!.x).toBeGreaterThan(a!.x + a!.width - 1);
+
+		await page.setViewportSize({ width: 390, height: 1800 });
+		const a2 = await ingredients.boundingBox();
+		const b2 = await steps.boundingBox();
+		expect(b2!.y).toBeGreaterThan(a2!.y + a2!.height - 40);
+	});
+
+	test('the compare page does not scroll sideways on a phone', async ({ page }) => {
+		await page.setViewportSize({ width: 390, height: 1200 });
+		await gotoClassicCookies(page);
+		await page.goto(page.url().split('?')[0] + '/diff');
+		await page.locator('article.version-card').first().waitFor();
+		const doc = await page.evaluate(() => ({
+			scrollWidth: document.documentElement.scrollWidth,
+			clientWidth: document.documentElement.clientWidth
+		}));
+		expect(doc.scrollWidth).toBeLessThanOrEqual(doc.clientWidth);
 	});
 
 	test('the sample diff shows an actual change, not just unchanged rows', async ({ page }) => {
