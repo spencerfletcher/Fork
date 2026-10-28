@@ -40,3 +40,10 @@
 		{/if}
 	</p>
 </div>
+
+<style>
+	/* field-sizing: content ignores rows; this keeps an empty box typeable. */
+	textarea {
+		min-height: calc(11lh + 20px);
+	}
+</style>

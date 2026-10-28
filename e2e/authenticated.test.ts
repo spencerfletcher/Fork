@@ -75,6 +75,18 @@ test.describe('New recipe page', () => {
 		await expect(page.getByLabel('Steps')).toBeVisible();
 	});
 
+	test('empty editors keep room to type into, instead of collapsing to one line', async ({
+		page
+	}) => {
+		await page.goto('/recipes/new');
+		const description = await page.getByLabel('Description').boundingBox();
+		const ingredients = await page.getByLabel('Ingredients').boundingBox();
+		const steps = await page.getByLabel('Steps').boundingBox();
+		expect(description!.height).toBeGreaterThan(60);
+		expect(ingredients!.height).toBeGreaterThan(200);
+		expect(steps!.height).toBeGreaterThan(ingredients!.height);
+	});
+
 	test('creates a recipe and redirects to its detail page', async ({ page }) => {
 		let createdRecipeUrl: string | null = null;
 
@@ -134,37 +146,26 @@ test.describe('Edit recipe page', () => {
 		}
 	});
 
-	test('a long unbroken title does not scroll the compare page sideways on a phone', async ({
-		page
-	}) => {
-		await page.setViewportSize({ width: 390, height: 1200 });
-		const url = await createRecipe(page, 'E2E' + 'x'.repeat(57), '4');
-		try {
-			await gotoHydrated(page, `${url}/edit`);
-			await page.getByLabel('Steps').fill('Mix, then bake.');
-			await page.getByRole('button', { name: 'Save', exact: true }).click();
-			await page.waitForURL(url);
-			await page.goto(`${url}/diff?from=1&to=2`);
-			await page.locator('article.version-card').first().waitFor();
-			const doc = await page.evaluate(() => ({
-				scrollWidth: document.documentElement.scrollWidth,
-				clientWidth: document.documentElement.clientWidth
-			}));
-			expect(doc.scrollWidth).toBeLessThanOrEqual(doc.clientWidth);
-		} finally {
-			await deleteRecipe(page, url);
-		}
-	});
-
 	test('leaving a dirty editor asks first, and staying keeps the draft', async ({ page }) => {
 		const url = await createRecipe(page, 'E2E Guard', '4');
 		try {
 			await gotoHydrated(page, `${url}/edit`);
 			await page.locator('input[name="title"]').fill('E2E Guard Edited');
-			page.once('dialog', (d) => d.dismiss());
+			// Playwright dismisses dialogs on its own, so wait for the event itself:
+			// without the guard there is no dialog and the wait times out.
+			let dialog = page.waitForEvent('dialog');
 			await page.getByRole('link', { name: 'Cancel' }).click();
+			let d = await dialog;
+			expect(d.message()).toBe('Leave without saving? Your changes will be lost.');
+			await d.dismiss();
 			await expect(page).toHaveURL(/\/edit$/);
 			await expect(page.locator('input[name="title"]')).toHaveValue('E2E Guard Edited');
+
+			dialog = page.waitForEvent('dialog');
+			await page.getByRole('link', { name: 'Cancel' }).click();
+			d = await dialog;
+			await d.accept();
+			await page.waitForURL(url);
 		} finally {
 			await deleteRecipe(page, url);
 		}
@@ -195,9 +196,14 @@ test.describe('Edit recipe page', () => {
 			const box = page.getByLabel('Ingredients');
 			await box.fill(Array.from({ length: 40 }, (_, i) => `${i + 1} cup item ${i + 1}`).join('\n'));
 			const textarea = await box.boundingBox();
-			const save = await page.getByRole('button', { name: 'Save', exact: true }).boundingBox();
+			const saveButton = page.getByRole('button', { name: 'Save', exact: true });
+			const save = await saveButton.boundingBox();
 			expect(textarea!.height).toBeGreaterThan(600);
 			expect(save!.y).toBeGreaterThan(textarea!.y + textarea!.height);
+			// 16px on a phone, or iOS zooms the field on focus.
+			expect(await box.evaluate((el) => getComputedStyle(el).fontSize)).toBe('16px');
+			await saveButton.scrollIntoViewIfNeeded();
+			await expect(saveButton).toBeInViewport();
 		} finally {
 			await deleteRecipe(page, url);
 		}
@@ -362,6 +368,32 @@ test.describe('One save', () => {
 			await expect(page.getByRole('alert')).toContainText('An ingredient line is too long');
 			await expect(page.getByLabel('Ingredients')).toHaveValue(long);
 			await expect(page.getByLabel('Ingredients')).toBeEnabled();
+		} finally {
+			await deleteRecipe(page, url);
+		}
+	});
+});
+
+// ─── Compare page ─────────────────────────────────────────────────────────────
+
+test.describe('Compare page', () => {
+	test('a long unbroken title does not scroll the compare page sideways on a phone', async ({
+		page
+	}) => {
+		await page.setViewportSize({ width: 390, height: 1200 });
+		const url = await createRecipe(page, 'E2E' + 'x'.repeat(57), '4');
+		try {
+			await gotoHydrated(page, `${url}/edit`);
+			await page.getByLabel('Steps').fill('Mix, then bake.');
+			await page.getByRole('button', { name: 'Save', exact: true }).click();
+			await page.waitForURL(url);
+			await page.goto(`${url}/diff?from=1&to=2`);
+			await page.locator('article.version-card').first().waitFor();
+			const doc = await page.evaluate(() => ({
+				scrollWidth: document.documentElement.scrollWidth,
+				clientWidth: document.documentElement.clientWidth
+			}));
+			expect(doc.scrollWidth).toBeLessThanOrEqual(doc.clientWidth);
 		} finally {
 			await deleteRecipe(page, url);
 		}

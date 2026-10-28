@@ -170,6 +170,34 @@ describe('Edit page form', () => {
 		await fireEvent.input(title(), { target: { value: 'Biscuits' } });
 		const cancel = vi.fn();
 		nav.guards[0]({ cancel, type: 'link' });
+		expect(window.confirm).toHaveBeenCalled();
+		expect(cancel).toHaveBeenCalled();
+	});
+
+	test('an invalid draft with a settings change promises nothing', async () => {
+		render(EditPage, { props: { data: makeData(), form: null } });
+		await fireEvent.input(title(), { target: { value: '' } });
+		await fireEvent.click(screen.getByLabelText(/public/i));
+		expect(screen.queryByText(/^Saves/)).toBeNull();
+	});
+
+	test('a dirty form navigates away when the question is accepted', async () => {
+		const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true);
+		render(EditPage, { props: { data: makeData(), form: null } });
+		await fireEvent.input(title(), { target: { value: 'Biscuits' } });
+		const cancel = vi.fn();
+		nav.guards[0]({ cancel, type: 'link' });
+		expect(confirm).toHaveBeenCalledWith('Leave without saving? Your changes will be lost.');
+		expect(cancel).not.toHaveBeenCalled();
+	});
+
+	test('a tab close on a dirty form is cancelled without our question, so the browser asks', async () => {
+		const confirm = vi.spyOn(window, 'confirm');
+		render(EditPage, { props: { data: makeData(), form: null } });
+		await fireEvent.input(title(), { target: { value: 'Biscuits' } });
+		const cancel = vi.fn();
+		nav.guards[0]({ cancel, type: 'leave' });
+		expect(confirm).not.toHaveBeenCalled();
 		expect(cancel).toHaveBeenCalled();
 	});
 
@@ -219,8 +247,8 @@ describe('Edit page form', () => {
 		expect(tags).toEqual(['Spicy']);
 		expect(screen.getByLabelText(/public/i)).toBeChecked();
 		expect(screen.getByRole('alert')).toHaveTextContent('Title is required');
-		// The draft is invalid, so there is no version to promise.
-		expect(screen.queryByText(/Saves as/)).toBeNull();
+		// The draft is invalid, so there is nothing to promise, settings included.
+		expect(screen.queryByText(/^Saves/)).toBeNull();
 		expect(hiddenRevision()).toHaveValue('3');
 	});
 

@@ -4,16 +4,19 @@
 import { CONTENT_GROUPS, changedGroups, type ContentGroup } from './content.js';
 import { parseDraftContent, type RecipeDraft } from './validation.js';
 
-/** Content groups that differ between the loaded draft and the edited one. */
+/**
+ * Content groups that differ between the loaded draft and the edited one, or
+ * null when the draft would not pass validation: then there is no outcome to
+ * describe, and the server's error says why.
+ */
 export function draftChangedGroups(
 	baseline: RecipeDraft,
 	draft: RecipeDraft,
 	photoChanged: boolean
-): ContentGroup[] {
+): ContentGroup[] | null {
 	const from = parseDraftContent(baseline);
 	const to = parseDraftContent(draft);
-	// An invalid draft has no outcome to describe; the server's error says why.
-	if (!from.ok || !to.ok) return [];
+	if (!from.ok || !to.ok) return null;
 	const changed = changedGroups({ ...from.value, imageUrl: null }, { ...to.value, imageUrl: null });
 	return CONTENT_GROUPS.filter((g) => (g === 'photo' ? photoChanged : changed.includes(g)));
 }

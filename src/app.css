@@ -468,6 +468,13 @@
 		line-height: 1.6;
 	}
 
+	/* This layer beats the base layer's phone rule, so repeat it here. */
+	@media (max-width: 699px) {
+		.field-mono {
+			font-size: 1rem;
+		}
+	}
+
 	/* Editor layout: settings on the left, the long text on the right, one
 	   column when there is no room for two. */
 	.editor {

@@ -49,10 +49,10 @@ describe('draftChangedGroups', () => {
 		expect(draftChangedGroups(base, { ...base, isPublic: false, tags: [] }, false)).toEqual([]);
 	});
 
-	test('an invalid draft reports no groups rather than throwing', () => {
-		expect(draftChangedGroups(base, { ...base, title: '', prepTimeMinutes: '-5' }, false)).toEqual(
-			[]
-		);
+	test('an invalid draft is told apart from an unchanged one', () => {
+		expect(
+			draftChangedGroups(base, { ...base, title: '', prepTimeMinutes: '-5' }, false)
+		).toBeNull();
 	});
 });
 

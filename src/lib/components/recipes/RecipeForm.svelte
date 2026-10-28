@@ -70,6 +70,7 @@
 	// What the save will write, in the server's own groups, so the helper and
 	// the placeholder agree with the message it would generate.
 	const photoChanged = $derived(chosenPreview !== null || draft.removeImage);
+	// null: the draft is invalid, and nothing can be promised about the save.
 	const groups = $derived(nextVersion ? draftChangedGroups(baseline, draft, photoChanged) : []);
 	const settings = (d: RecipeDraft) =>
 		JSON.stringify([d.isPublic, normaliseTagNames(d.tags).map(tagKey).sort()]);
@@ -78,13 +79,14 @@
 	const helper = $derived.by(() => {
 		if (!dirty || submitting) return '';
 		if (!nextVersion) return 'Unsaved changes';
+		if (groups === null) return '';
 		if (groups.length > 0) return `Saves as v${nextVersion} · ${describeGroups(groups)} changed`;
 		if (settingsChanged) return 'Saves settings · no new version';
 		return '';
 	});
 
 	const placeholder = $derived(
-		groups.length > 0 ? generatedCommitMessage(groups) : 'What changed in this version?'
+		groups && groups.length > 0 ? generatedCommitMessage(groups) : 'What changed in this version?'
 	);
 
 	function onImageChange(e: Event) {
@@ -268,9 +270,8 @@
 				{submitting ? 'Saving…' : submitLabel}
 			</button>
 			<a href={cancelHref} class="btn-ghost">Cancel</a>
-			{#if helper}
-				<span class="form-hint">{helper}</span>
-			{/if}
+			<!-- Always in the DOM, so the outcome is announced when it changes. -->
+			<span class="form-hint" role="status" aria-live="polite">{helper}</span>
 		</div>
 	</fieldset>
 </form>
@@ -312,6 +313,11 @@
 	.file-input {
 		border-style: dashed;
 		cursor: pointer;
+	}
+
+	/* field-sizing: content ignores rows; this keeps an empty box typeable. */
+	textarea[name='description'] {
+		min-height: calc(3lh + 18px);
 	}
 
 	.file-input:hover {
