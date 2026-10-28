@@ -134,7 +134,8 @@ export const actions: Actions = {
 
 		// Forking is one click. The first version says where the copy came from;
 		// the forker writes a message of their own when they change something.
-		const commitMessage = `Forked from @${source.author.username}, v${latestVersion.versionNumber}`;
+		const from = source.author ? `@${source.author.username}, ` : '';
+		const commitMessage = `Forked from ${from}v${latestVersion.versionNumber}`;
 
 		await ensureProfile(user);
 
