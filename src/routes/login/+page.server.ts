@@ -34,9 +34,7 @@ export const actions: Actions = {
 			return fail(401, { message: err.message });
 		}
 
-		// Back to the page that asked for the login, when it is one of ours: a
-		// single leading slash is a local path, two would be another host.
-		const back = text(formData, 'redirect');
-		throw redirect(303, /^\/(?!\/)/.test(back) ? back : '/');
+		// If login is successful, redirect the user to the homepage or their dashboard
+		throw redirect(303, '/');
 	}
 };

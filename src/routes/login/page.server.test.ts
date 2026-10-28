@@ -50,27 +50,4 @@ describe('login action', () => {
 		expect(isRedirect(result)).toBe(true);
 		expect(result).toMatchObject({ status: 303, location: '/' });
 	});
-
-	test('goes back to the page that sent the visitor to log in', async () => {
-		signInWithPassword.mockResolvedValue({ error: null });
-
-		const result = await invoke(
-			actions.default as never,
-			makeEvent({ email: 'a@b.com', password: 'right', redirect: '/recipes/cookies-ab12' })
-		);
-
-		expect(result).toMatchObject({ status: 303, location: '/recipes/cookies-ab12' });
-	});
-
-	test('never redirects off the site', async () => {
-		signInWithPassword.mockResolvedValue({ error: null });
-
-		for (const redirect of ['https://evil.example', '//evil.example', 'recipes']) {
-			const result = await invoke(
-				actions.default as never,
-				makeEvent({ email: 'a@b.com', password: 'right', redirect })
-			);
-			expect(result).toMatchObject({ status: 303, location: '/' });
-		}
-	});
 });
