@@ -4,7 +4,6 @@ import { recipes, recipeVersions, recipesToTags, favorites } from '#lib/server/d
 import { eq, desc, and, count } from 'drizzle-orm';
 import { slugify, randomSuffix } from '#lib/helpers.js';
 import { ensureProfile } from '#lib/server/profiles.js';
-import { text } from '#lib/recipes/validation.js';
 import type { RecipeContent } from '#lib/recipes/types.js';
 import { absoluteImage, clampDescription } from '#lib/seo.js';
 import { gramsFor } from '#lib/server/ingredientDensities.js';
@@ -113,18 +112,16 @@ export const actions: Actions = {
 		}
 	},
 
-	fork: async ({ params, locals: { user }, request }) => {
+	fork: async ({ params, locals: { user } }) => {
 		if (!user) throw error(401, 'Login required to fork a recipe');
-
-		const formData = await request.formData();
-		const commitMessage = text(formData, 'commitMessage').trim() || 'Forked recipe';
 
 		// Load source recipe + latest version
 		const source = await db.query.recipes.findFirst({
 			where: eq(recipes.slug, params.slug),
 			with: {
 				versions: { orderBy: [desc(recipeVersions.versionNumber)], limit: 1 },
-				recipesToTags: true
+				recipesToTags: true,
+				author: true
 			}
 		});
 
@@ -134,6 +131,10 @@ export const actions: Actions = {
 
 		const latestVersion = source.versions[0];
 		if (!latestVersion) throw error(400, 'Source recipe has no versions');
+
+		// Forking is one click. The first version says where the copy came from;
+		// the forker writes a message of their own when they change something.
+		const commitMessage = `Forked from @${source.author.username}, v${latestVersion.versionNumber}`;
 
 		await ensureProfile(user);
 

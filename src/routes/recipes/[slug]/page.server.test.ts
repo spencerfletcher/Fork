@@ -103,7 +103,8 @@ const SOURCE_RECIPE = {
 	updatedAt: new Date(),
 	editRevision: 3,
 	versions: [{ id: 1, versionNumber: 1, commitMessage: 'Initial recipe', ...LATEST }],
-	recipesToTags: [{ tagId: 7 }]
+	recipesToTags: [{ tagId: 7 }],
+	author: { username: 'chef' }
 };
 
 // ─── fork action ──────────────────────────────────────────────────────────────
@@ -225,24 +226,25 @@ describe('fork', () => {
 		expect(tx.delete).not.toHaveBeenCalled();
 	});
 
-	test('inserts version 1 as the complete latest content of the source', async () => {
-		findRecipeMock.mockResolvedValue(SOURCE_RECIPE);
+	test('inserts version 1 as the complete latest content of the source, with a message naming where it came from', async () => {
+		findRecipeMock.mockResolvedValue({
+			...SOURCE_RECIPE,
+			versions: [{ id: 3, versionNumber: 3, commitMessage: 'Chill the dough', ...LATEST }]
+		});
 		const tx = makeTx({ newRecipeId: 99, newRecipeSlug: 'classic-cookies-abc12345' });
 		transactionMock.mockImplementationOnce(
 			async (cb: (tx: ReturnType<typeof makeTx>) => Promise<void>) => cb(tx)
 		);
 
-		await invoke(
-			actions.fork as never,
-			makeEvent({ user: FORKER, fields: { commitMessage: 'My fork' } })
-		);
+		// Forking is one click: no message is asked for, so none is read.
+		await invoke(actions.fork as never, makeEvent({ user: FORKER }));
 
 		// Third tx.insert call is recipeVersions (after recipes + recipesToTags)
 		const versionValues = tx.insertChain.values.mock.calls[2][0];
 		expect(versionValues).toMatchObject({
 			recipeId: 99,
 			versionNumber: 1,
-			commitMessage: 'My fork',
+			commitMessage: 'Forked from @chef, v3',
 			createdBy: FORKER.id,
 			...LATEST
 		});
@@ -264,17 +266,20 @@ describe('fork', () => {
 		expect(tagValues).toEqual([{ recipeId: 99, tagId: 7 }]);
 	});
 
-	test('uses a default commit message when none is provided', async () => {
+	test('ignores a commit message sent with the form', async () => {
 		findRecipeMock.mockResolvedValue(SOURCE_RECIPE);
 		const tx = makeTx({ newRecipeSlug: 'classic-cookies-abc12345' });
 		transactionMock.mockImplementationOnce(
 			async (cb: (tx: ReturnType<typeof makeTx>) => Promise<void>) => cb(tx)
 		);
 
-		await invoke(actions.fork as never, makeEvent({ user: FORKER, fields: { commitMessage: '' } }));
+		await invoke(
+			actions.fork as never,
+			makeEvent({ user: FORKER, fields: { commitMessage: 'My fork' } })
+		);
 
 		const versionValues = tx.insertChain.values.mock.calls[2][0];
-		expect(versionValues.commitMessage).toBe('Forked recipe');
+		expect(versionValues.commitMessage).toBe('Forked from @chef, v1');
 	});
 });
 
