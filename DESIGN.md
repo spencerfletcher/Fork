@@ -178,7 +178,7 @@ Clay and marigold were raised in chroma from #a4512b and #e8a83a: same hues, sam
 
 ### Hierarchy
 
-- **Display** (500, 2.5rem, 1.15, clay): page h1. Recipe titles (balanced), "Recipes", "Search", the profile handle. Phones drop to about 1.75rem.
+- **Display** (500, 2.5rem, 1.15, clay): page h1. Recipe titles, "Recipes", "Search", the profile handle. Phones drop to about 1.75rem.
 - **Deck** (500, 1.25rem, 1.4, Ink 2, Bitter): the current version's commit message under a recipe title, full measure, never truncated. On version 1 the description stands in. 1.125rem on a phone.
 - **Headline** (500, 1.75rem, 1.25, ink): h2 on pages that need a second serif level ("Recipes worth forking").
 - **Title** (500, 1.0625rem, 1.25): recipe card names in Bitter. Clay on a no-photo panel, ink on a photo card.

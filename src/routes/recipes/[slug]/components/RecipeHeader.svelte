@@ -175,7 +175,6 @@
 		font-size: clamp(1.75rem, 1.2rem + 1.8vw, 2.5rem);
 		line-height: 1.15;
 		color: var(--color-accent);
-		text-wrap: balance;
 	}
 
 	.deck {
