@@ -62,7 +62,7 @@
 <style>
 	/* Fixed sidebar width + responsive column flip can't be expressed as Tailwind utilities */
 	.content-layout {
-		max-width: var(--max-width);
+		max-width: calc(var(--max-width) + 2 * var(--space-5));
 		margin: 0 auto;
 		padding: 26px var(--space-5) 40px;
 		display: grid;
@@ -105,10 +105,15 @@
 		border-radius: var(--radius-md);
 	}
 
+	@media (max-width: 699px) {
+		.content-layout {
+			padding: 16px 18px 32px;
+		}
+	}
+
 	@media (max-width: 860px) {
 		.content-layout {
 			grid-template-columns: minmax(0, 1fr);
-			padding: 16px 18px 32px;
 			row-gap: 20px;
 		}
 

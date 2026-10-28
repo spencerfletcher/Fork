@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { afterNavigate } from '$app/navigation';
+	import Username from '#lib/components/ui/Username.svelte';
 
 	type StripVersion = {
 		id: number;
@@ -51,12 +52,7 @@
 
 	const when = (d: Date | null | undefined) =>
 		d?.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-	// One string, so a missing creator or date leaves no orphaned separator.
-	const byline = $derived(
-		[current.creator && `@${current.creator.username}`, when(current.createdAt)]
-			.filter(Boolean)
-			.join(' · ')
-	);
+	const date = $derived(when(current.createdAt));
 </script>
 
 <svelte:window onkeydown={onWindowKeydown} onclick={onWindowClick} />
@@ -69,8 +65,12 @@
 			<span class="version-current">v{current.versionNumber}</span>
 			<span class="version-message">{current.commitMessage}</span>
 		</p>
-		{#if byline}
-			<p class="version-by">{byline}</p>
+		{#if current.creator || date}
+			<p class="version-by">
+				{#if current.creator}<Username username={current.creator.username} />{/if}
+				{#if current.creator && date}·{/if}
+				{date ?? ''}
+			</p>
 		{/if}
 		<p class="version-foot">
 			{#if count > 1}
@@ -153,10 +153,18 @@
 <style>
 	/* The bar sits between the photo and the body at the content width; the
 	   full history opens over the body rather than pushing it down. */
+	/* The list pages' content box: 1200px wide inside the page gutters. */
 	.version-strip {
 		position: relative;
-		max-width: calc(var(--max-width) - 2 * var(--space-5));
-		margin: 14px auto 0;
+		max-width: var(--max-width);
+		margin: 18px var(--space-5) 0;
+	}
+
+	@media (min-width: 1248px) {
+		.version-strip {
+			margin-left: auto;
+			margin-right: auto;
+		}
 	}
 
 	.version-card {
@@ -212,6 +220,12 @@
 		align-items: baseline;
 		gap: 14px;
 		margin: 0;
+	}
+
+	/* A dot between the byline and the counts when they share a line. */
+	.version-by + .version-foot::before {
+		content: '·';
+		margin-right: -4px;
 	}
 
 	.version-foot svg {
@@ -294,16 +308,21 @@
 		border-radius: 3px;
 	}
 
-	@media (max-width: 860px) {
+	@media (max-width: 699px) {
 		.version-strip {
-			max-width: calc(100% - 36px);
-			margin-top: 10px;
+			margin: 12px 18px 0;
 		}
+	}
 
+	@media (max-width: 860px) {
 		/* Two lines on a phone: the message wraps, the links go underneath. */
 		.version-head .version-message {
 			white-space: normal;
 			overflow: visible;
+		}
+
+		.version-by + .version-foot::before {
+			content: none;
 		}
 	}
 </style>

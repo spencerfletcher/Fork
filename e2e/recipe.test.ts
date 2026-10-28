@@ -559,6 +559,23 @@ test.describe('Landing page (logged out)', () => {
 		expect(navBg).not.toBe(pageBg);
 	});
 
+	test('the recipe page shares its gutters and width with browse at every size', async ({
+		page
+	}) => {
+		for (const width of [1440, 390]) {
+			await page.setViewportSize({ width, height: 900 });
+			await page.goto('/recipes');
+			const browse = await page.getByRole('heading', { level: 1 }).boundingBox();
+			const grid = await page.locator('.recipe-grid').first().boundingBox();
+			await gotoClassicCookies(page);
+			const title = await page.getByRole('heading', { level: 1 }).boundingBox();
+			const bar = await page.locator('.version-strip').boundingBox();
+			expect(Math.abs(title!.x - browse!.x)).toBeLessThan(1);
+			expect(Math.abs(bar!.x - grid!.x)).toBeLessThan(1);
+			expect(Math.abs(bar!.width - grid!.width)).toBeLessThan(1);
+		}
+	});
+
 	test('the landing page shares its left edge with browse', async ({ page }) => {
 		await page.setViewportSize({ width: 1200, height: 900 });
 		await page.goto('/recipes');

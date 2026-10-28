@@ -342,6 +342,13 @@
 		padding: var(--space-5) var(--space-5) var(--space-7);
 	}
 
+	/* Phone gutters are 18px on every page, as the boards have them. */
+	@media (max-width: 699px) {
+		.page {
+			padding: 16px 18px var(--space-7);
+		}
+	}
+
 	.page-inner {
 		max-width: var(--max-width);
 		margin: 0 auto;
