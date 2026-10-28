@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { enhance, type SubmitFunction } from '$app/forms';
 	import { beforeNavigate } from '$app/navigation';
-	import type { RecipeDraft } from '#lib/recipes/validation.js';
+	import { parseDraftContent, type RecipeDraft } from '#lib/recipes/validation.js';
 	import { normaliseTagNames, tagKey } from '#lib/recipes/tags.js';
 	import { generatedCommitMessage } from '#lib/recipes/content.js';
 	import { draftChangedGroups, describeGroups } from '#lib/recipes/draftChanges.js';
@@ -47,6 +47,9 @@
 		if (form?.draft) draft = { ...form.draft };
 	});
 
+	// Tag identity ignores case and order, as it does on the server.
+	const tagKeys = (tags: string[]) => normaliseTagNames(tags).map(tagKey).sort();
+
 	// Trimmed strings and sorted tags, so retyping the original reads as clean.
 	// The commit message describes a save; typing one is not itself a change.
 	const serialise = (d: RecipeDraft) =>
@@ -56,24 +59,28 @@
 			hadPhoto: false,
 			title: d.title.trim(),
 			description: d.description.trim(),
-			tags: normaliseTagNames(d.tags).map(tagKey).sort()
+			tags: tagKeys(d.tags)
 		});
 
-	// Photo: a newly chosen file previews from the browser; otherwise the
-	// stored photo shows until it is marked for removal.
+	// Photo: `chosen` flips the moment a file is picked, since the server will
+	// write it whether or not the preview loads; the preview follows when the
+	// reader finishes. Otherwise the stored photo shows until marked for removal.
+	let chosen = $state(false);
 	let chosenPreview = $state<string | null>(null);
 	let imageInput: HTMLInputElement | undefined = $state();
 	const preview = $derived(chosenPreview ?? (draft.removeImage ? null : imageUrl));
 
-	const dirty = $derived(chosenPreview !== null || serialise(draft) !== serialise(baseline));
+	const dirty = $derived(chosen || serialise(draft) !== serialise(baseline));
 
 	// What the save will write, in the server's own groups, so the helper and
 	// the placeholder agree with the message it would generate.
-	const photoChanged = $derived(chosenPreview !== null || draft.removeImage);
+	const photoChanged = $derived(chosen || draft.removeImage);
+	const baselineContent = $derived(parseDraftContent(baseline));
 	// null: the draft is invalid, and nothing can be promised about the save.
-	const groups = $derived(nextVersion ? draftChangedGroups(baseline, draft, photoChanged) : []);
-	const settings = (d: RecipeDraft) =>
-		JSON.stringify([d.isPublic, normaliseTagNames(d.tags).map(tagKey).sort()]);
+	const groups = $derived(
+		nextVersion ? draftChangedGroups(baselineContent, draft, photoChanged) : []
+	);
+	const settings = (d: RecipeDraft) => JSON.stringify([d.isPublic, tagKeys(d.tags)]);
 	const settingsChanged = $derived(settings(draft) !== settings(baseline));
 
 	const helper = $derived.by(() => {
@@ -91,6 +98,7 @@
 
 	function onImageChange(e: Event) {
 		const file = (e.target as HTMLInputElement).files?.[0];
+		chosen = !!file;
 		if (!file) {
 			chosenPreview = null;
 			return;
@@ -104,6 +112,7 @@
 	}
 
 	function removePhoto() {
+		chosen = false;
 		chosenPreview = null;
 		if (imageInput) imageInput.value = '';
 		if (imageUrl) draft.removeImage = true;
@@ -113,7 +122,7 @@
 	// still mounted and usually keeps the selection; only ask when it is gone,
 	// and stop asking once a file is chosen again.
 	const photoLost = $derived(
-		form?.draft?.hadPhoto === true && chosenPreview === null && !imageInput?.files?.length
+		form?.draft?.hadPhoto === true && !chosen && !imageInput?.files?.length
 	);
 
 	// Fields are disabled while saving, so nothing typed mid-request is lost by

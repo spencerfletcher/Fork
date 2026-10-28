@@ -146,6 +146,51 @@ test.describe('Edit recipe page', () => {
 		}
 	});
 
+	test('Tab walks the editor top to bottom at every width, because the grid reorders nothing', async ({
+		page
+	}) => {
+		const url = await createRecipe(page, 'E2E Tab Order', '4');
+		const expected = [
+			'title',
+			'description',
+			'image',
+			'servings',
+			'prepTimeMinutes',
+			'cookTimeMinutes',
+			'tag-combobox',
+			'isPublic',
+			'ingredients',
+			'steps',
+			'commitMessage',
+			'Save',
+			'Cancel'
+		];
+		const walk = async () => {
+			await page.locator('input[name="title"]').focus();
+			const seen: string[] = [];
+			for (let i = 0; i < expected.length; i++) {
+				const name = await page.evaluate(() => {
+					const el = document.activeElement as HTMLElement;
+					return el.getAttribute('name') || el.id || el.textContent?.trim() || '';
+				});
+				seen.push(name);
+				// The tag combobox opens its suggestion list on focus and Tab would
+				// walk the options; Escape closes it, as a keyboard user would.
+				if (name === 'tag-combobox') await page.keyboard.press('Escape');
+				await page.keyboard.press('Tab');
+			}
+			return seen;
+		};
+		try {
+			await gotoHydrated(page, `${url}/edit`);
+			expect(await walk()).toEqual(expected);
+			await page.setViewportSize({ width: 390, height: 900 });
+			expect(await walk()).toEqual(expected);
+		} finally {
+			await deleteRecipe(page, url);
+		}
+	});
+
 	test('leaving a dirty editor asks first, and staying keeps the draft', async ({ page }) => {
 		const url = await createRecipe(page, 'E2E Guard', '4');
 		try {
@@ -394,6 +439,10 @@ test.describe('Compare page', () => {
 				clientWidth: document.documentElement.clientWidth
 			}));
 			expect(doc.scrollWidth).toBeLessThanOrEqual(doc.clientWidth);
+			// 16px on a phone, or iOS zooms the picker on focus.
+			expect(
+				await page.locator('#from-select').evaluate((el) => getComputedStyle(el).fontSize)
+			).toBe('16px');
 		} finally {
 			await deleteRecipe(page, url);
 		}

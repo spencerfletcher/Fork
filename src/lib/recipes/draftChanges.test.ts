@@ -1,6 +1,6 @@
 import { describe, test, expect } from 'vitest';
 import { draftChangedGroups, describeGroups } from './draftChanges.js';
-import type { RecipeDraft } from './validation.js';
+import { parseDraftContent, type RecipeDraft } from './validation.js';
 
 const base: RecipeDraft = {
 	title: 'Cookies',
@@ -19,8 +19,9 @@ const base: RecipeDraft = {
 };
 
 describe('draftChangedGroups', () => {
+	const from = parseDraftContent(base);
 	test('an untouched draft changes nothing', () => {
-		expect(draftChangedGroups(base, { ...base }, false)).toEqual([]);
+		expect(draftChangedGroups(from, { ...base }, false)).toEqual([]);
 	});
 
 	test('whitespace and a commit message are not changes', () => {
@@ -30,28 +31,28 @@ describe('draftChangedGroups', () => {
 			ingredients: '1 cup flour\n\n2 eggs \n',
 			commitMessage: 'x'
 		};
-		expect(draftChangedGroups(base, draft, false)).toEqual([]);
+		expect(draftChangedGroups(from, draft, false)).toEqual([]);
 	});
 
 	test('lists changed groups in the server order', () => {
 		const draft = { ...base, steps: 'Mix well.\n\nBake.', servings: '8' };
-		expect(draftChangedGroups(base, draft, false)).toEqual(['servings', 'steps']);
+		expect(draftChangedGroups(from, draft, false)).toEqual(['servings', 'steps']);
 	});
 
 	test('a photo change is a group of its own, in order', () => {
-		expect(draftChangedGroups(base, { ...base, title: 'Biscuits' }, true)).toEqual([
+		expect(draftChangedGroups(from, { ...base, title: 'Biscuits' }, true)).toEqual([
 			'title',
 			'photo'
 		]);
 	});
 
 	test('tags and visibility are settings, not content', () => {
-		expect(draftChangedGroups(base, { ...base, isPublic: false, tags: [] }, false)).toEqual([]);
+		expect(draftChangedGroups(from, { ...base, isPublic: false, tags: [] }, false)).toEqual([]);
 	});
 
 	test('an invalid draft is told apart from an unchanged one', () => {
 		expect(
-			draftChangedGroups(base, { ...base, title: '', prepTimeMinutes: '-5' }, false)
+			draftChangedGroups(from, { ...base, title: '', prepTimeMinutes: '-5' }, false)
 		).toBeNull();
 	});
 });

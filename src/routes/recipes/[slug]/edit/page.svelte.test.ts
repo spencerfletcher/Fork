@@ -156,6 +156,15 @@ describe('Edit page form', () => {
 		expect(screen.getByText('Saves settings · no new version')).toBeInTheDocument();
 	});
 
+	test('choosing a photo file counts as a content change at once, before the preview loads', async () => {
+		render(EditPage, { props: { data: makeData(), form: null } });
+		const file = new File(['x'], 'c.png', { type: 'image/png' });
+		const input = screen.getByLabelText('Photo') as HTMLInputElement;
+		Object.defineProperty(input, 'files', { value: [file] });
+		await fireEvent.change(input);
+		expect(screen.getByText('Saves as v3 · photo changed')).toBeInTheDocument();
+	});
+
 	test('the placeholder falls back when nothing has changed', () => {
 		render(EditPage, { props: { data: makeData(), form: null } });
 		expect(screen.getByLabelText(/what changed/i)).toHaveAttribute(

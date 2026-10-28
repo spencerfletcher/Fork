@@ -2,19 +2,24 @@
 // server reports, so the helper line and the placeholder agree with the commit
 // message the server generates.
 import { CONTENT_GROUPS, changedGroups, type ContentGroup } from './content.js';
-import { parseDraftContent, type RecipeDraft } from './validation.js';
+import {
+	parseDraftContent,
+	type ContentFields,
+	type RecipeDraft,
+	type Result
+} from './validation.js';
 
 /**
  * Content groups that differ between the loaded draft and the edited one, or
  * null when the draft would not pass validation: then there is no outcome to
- * describe, and the server's error says why.
+ * describe, and the server's error says why. The baseline is parsed once by
+ * the caller (`parseDraftContent`); the draft is parsed here on each call.
  */
 export function draftChangedGroups(
-	baseline: RecipeDraft,
+	from: Result<ContentFields>,
 	draft: RecipeDraft,
 	photoChanged: boolean
 ): ContentGroup[] | null {
-	const from = parseDraftContent(baseline);
 	const to = parseDraftContent(draft);
 	if (!from.ok || !to.ok) return null;
 	const changed = changedGroups({ ...from.value, imageUrl: null }, { ...to.value, imageUrl: null });

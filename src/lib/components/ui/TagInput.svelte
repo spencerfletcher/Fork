@@ -93,6 +93,7 @@
 	<!-- Combobox input -->
 	<div class="relative">
 		<input
+			id="tag-combobox"
 			bind:this={inputEl}
 			type="text"
 			placeholder="Search or create a tag…"
