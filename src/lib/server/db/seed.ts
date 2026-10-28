@@ -112,7 +112,11 @@ async function seed() {
 				imageUrl: latest.imageUrl,
 				isPublic: recipe.isPublic,
 				parentId: recipe.forkOf ? idBySlug.get(recipe.forkOf.slug) : null,
-				forkedAt: recipe.forkOf ? new Date(recipe.forkOf.forkedAt) : null
+				forkedAt: recipe.forkOf ? new Date(recipe.forkOf.forkedAt) : null,
+				// Dated like its versions, so Recent and the feed order the seed the
+				// way real data would, not by insert order.
+				createdAt: new Date(recipe.versions[0].createdAt),
+				updatedAt: new Date(latest.createdAt)
 			})
 			.returning({ id: recipes.id });
 		idBySlug.set(recipe.slug, row.id);

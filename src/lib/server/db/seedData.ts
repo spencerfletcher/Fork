@@ -182,6 +182,27 @@ Add chicken to the sauce. Pour in cream and stir to combine. Simmer 10 minutes, 
 Serve over basmati rice with warm naan bread. Garnish with fresh cilantro.
 `;
 
+const DAL_INGREDIENTS = `1 cup red lentils
+3 cups water
+1 tsp ground turmeric
+1 tsp salt
+2 tbsp butter
+1 tsp cumin seeds
+3 cloves garlic
+1 green chilli
+1 tomato
+1/2 lemon
+a handful of coriander leaves, to finish`;
+
+const DAL_STEPS = `Rinse the lentils, then put them in a pot with the water, turmeric and salt. Bring to a boil, then simmer uncovered for 20 minutes, skimming any foam, until the lentils collapse. Whisk to smooth it out.
+
+Melt the butter in a small pan over medium heat. Add the cumin seeds and let them crackle, then the garlic and chilli, both thinly sliced. Cook until the garlic turns golden, about a minute.
+tip: Pull the pan the moment the garlic colours; it keeps cooking in the butter.
+
+Dice the tomato, add it to the pan and cook for two minutes until it softens.
+
+Pour the sizzling butter over the dal and stir it through. Squeeze in the lemon juice, taste for salt, and finish with the coriander.`;
+
 // ─── Recipes ──────────────────────────────────────────────────────────────────
 //
 // One object per recipe: the recipe-level settings and its versions, oldest
@@ -305,6 +326,28 @@ export const SEED: SeedRecipe[] = [
 				commitMessage:
 					'Worked the smoked paprika into the marinade, finished the sauce with cold butter',
 				createdAt: '2026-03-10'
+			}
+		]
+	},
+	// No photo on purpose: the card and the recipe page have a no-photo state,
+	// and nothing else in the seed exercises it.
+	{
+		slug: 'red-lentil-dal',
+		tags: ['Dinner', 'Indian'],
+		isPublic: true,
+		versions: [
+			{
+				title: 'Weeknight Red Lentil Dal',
+				description:
+					'Soft, spoonable dal in half an hour, finished with a sizzle of cumin, garlic and chilli in butter.',
+				servings: 4,
+				prepTimeMinutes: 10,
+				cookTimeMinutes: 25,
+				imageUrl: null,
+				ingredientsText: DAL_INGREDIENTS,
+				stepsText: DAL_STEPS,
+				commitMessage: 'Initial recipe',
+				createdAt: '2026-02-14'
 			}
 		]
 	}

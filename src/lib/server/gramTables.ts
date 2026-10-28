@@ -10,6 +10,7 @@
 // "peanut butter" is not butter; add a key when a compound should convert.
 export const DENSITIES: Record<string, number> = {
 	// Flours
+	'red lentils': 0.8,
 	'all-purpose flour': 0.529,
 	flour: 0.529,
 	'bread flour': 0.529,
@@ -131,6 +132,7 @@ export const DENSITIES: Record<string, number> = {
 	'ground turmeric': 0.56,
 	cumin: 0.56,
 	'ground cumin': 0.56,
+	'cumin seeds': 0.43,
 	coriander: 0.56,
 	'ground coriander': 0.56,
 	'garam masala': 0.56,
@@ -251,5 +253,7 @@ export const PIECE_GRAMS: Record<string, number> = {
 	'grape tomato': 8,
 	'roma tomato': 60,
 	'bell pepper': 150,
+	'green chilli': 15,
+	'green chili': 15,
 	avocado: 170
 };
