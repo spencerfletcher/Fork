@@ -45,6 +45,9 @@ describe('TagInput', () => {
 		await fireEvent.focus(input);
 		await fireEvent.input(input, { target: { value: 'Vegan' } });
 		expect(screen.getByText(/Create/i)).toBeInTheDocument();
+		expect(screen.getByRole('option').textContent?.replace(/\s+/g, ' ').trim()).toBe(
+			'Create “Vegan”'
+		);
 	});
 
 	test('does not show "Create" option when query exactly matches an existing tag', async () => {
