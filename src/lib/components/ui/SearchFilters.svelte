@@ -103,7 +103,9 @@
 		gap: 14px;
 	}
 
-	.search-filters form {
-		max-width: 560px;
+	@media (min-width: 1024px) {
+		.search-filters form {
+			max-width: 560px;
+		}
 	}
 </style>
