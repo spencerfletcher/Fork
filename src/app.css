@@ -399,6 +399,15 @@
 		display: none;
 	}
 
+	/* On a phone the row runs to the screen edge, so a tab is cut by the
+	   screen, not by the gutter. */
+	@media (max-width: 699px) {
+		.tag-tabs {
+			margin: -4px -18px;
+			padding: 4px 18px;
+		}
+	}
+
 	.tag-tabs a,
 	.tag-tabs button {
 		flex-shrink: 0;
