@@ -16,17 +16,26 @@ vi.mock('$app/state', () => ({
 
 const RECIPE = { id: 1, slug: 'classic-cookies', title: 'Classic Chocolate Chip Cookies' };
 
+const SNAPSHOT = {
+	title: 'Classic Chocolate Chip Cookies',
+	servings: 48,
+	prepTimeMinutes: null,
+	cookTimeMinutes: 11,
+	ingredients: [ing('2 cups flour'), ing('1 tsp salt')]
+};
 const V1 = {
 	versionNumber: 1,
 	commitMessage: 'Initial recipe',
-	creator: null,
-	createdAt: new Date()
+	creator: null as { id: string; username: string } | null,
+	createdAt: new Date(2026, 1, 28) as Date | null,
+	...SNAPSHOT
 };
 const V2 = {
 	versionNumber: 2,
 	commitMessage: 'Added espresso powder',
-	creator: null,
-	createdAt: new Date()
+	creator: null as { id: string; username: string } | null,
+	createdAt: new Date(2026, 1, 28) as Date | null,
+	...SNAPSHOT
 };
 
 function makeData(
@@ -55,7 +64,8 @@ function makeData(
 describe('Diff page', () => {
 	test('renders the recipe title', () => {
 		render(DiffPage, { props: { data: makeData() } });
-		expect(screen.getByText('Classic Chocolate Chip Cookies')).toBeInTheDocument();
+		// In the back link and in each version card's snapshot.
+		expect(screen.getAllByText('Classic Chocolate Chip Cookies').length).toBeGreaterThan(0);
 	});
 
 	test('renders the h1 "Compare versions" heading', () => {
@@ -150,10 +160,49 @@ describe('Diff page', () => {
 		expect(selects[1].querySelectorAll('option')).toHaveLength(2);
 	});
 
-	test('renders the back link to the recipe page', () => {
+	test('the back link is the recipe title and leads to the recipe', () => {
 		render(DiffPage, { props: { data: makeData() } });
-		const backLink = screen.getByRole('link', { name: /back to recipe/i });
+		const backLink = screen.getByRole('link', { name: /Classic Chocolate Chip Cookies/ });
 		expect(backLink).toHaveAttribute('href', '/recipes/classic-cookies');
+	});
+
+	test('each version card shows its number, date, message and snapshot', () => {
+		const { container } = render(DiffPage, { props: { data: makeData() } });
+		const cards = container.querySelectorAll('article.version-card');
+		expect(cards).toHaveLength(2);
+		expect(cards[0]).toHaveTextContent('v1');
+		expect(cards[0]).toHaveTextContent('28 Feb 2026');
+		expect(cards[0]).toHaveTextContent('Initial recipe');
+		expect(cards[0]).toHaveTextContent('Serves 48');
+		expect(cards[0]).toHaveTextContent('Cook 11 min');
+		expect(cards[0]).toHaveTextContent('Ingredients 2');
+		expect(cards[0]).not.toHaveTextContent('Prep');
+		expect(cards[1]).toHaveClass('version-card--to');
+		expect(cards[1].querySelector('.version-card__message')).toBeInTheDocument();
+	});
+
+	test('a card without a creator or a date shows neither, with no stray separator', () => {
+		const { container } = render(DiffPage, {
+			props: { data: makeData({ fromVersion: { ...V1, createdAt: null, creator: null } }) }
+		});
+		const header = container.querySelector('article.version-card .version-card__head');
+		expect(header?.textContent?.replace(/\s+/g, ' ').trim()).toBe('v1');
+	});
+
+	test('a card names its creator after the date', () => {
+		const { container } = render(DiffPage, {
+			props: {
+				data: makeData({ fromVersion: { ...V1, creator: { id: 'u1', username: 'chef' } } })
+			}
+		});
+		expect(container.querySelector('article.version-card .version-card__head')).toHaveTextContent(
+			'28 Feb 2026 · @chef'
+		);
+	});
+
+	test('the stacked commit bar is gone', () => {
+		const { container } = render(DiffPage, { props: { data: makeData() } });
+		expect(container.querySelector('.commit-bar')).toBeNull();
 	});
 
 	test('version pickers follow the loaded range, e.g. after back/forward navigation', async () => {

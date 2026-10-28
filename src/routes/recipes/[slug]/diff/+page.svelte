@@ -15,59 +15,88 @@
 	const fromVersion = $derived(data.fromVersion);
 	const toVersion = $derived(data.toVersion);
 
+	type CardVersion = typeof data.fromVersion;
+
 	function navigate() {
 		goto(`?from=${fromSelect}&to=${toSelect}`);
 	}
+
+	const when = (d: Date | null) =>
+		d?.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+
+	// One string, so a missing date or creator leaves no orphaned separator.
+	const headLine = (v: CardVersion) =>
+		[when(v.createdAt), v.creator && `@${v.creator.username}`].filter(Boolean).join(' · ');
 </script>
 
-<div class="page">
-	<div class="mx-auto max-w-[720px]">
-		<div class="page-header">
-			<a href="/recipes/{recipe.slug}" class="back-link">← Back to recipe</a>
-			<h1 class="m-0 mb-1">Compare versions</h1>
-			<p class="text-text-2 m-0 text-base">{recipe.title}</p>
+{#snippet picker(id: string, label: string, value: number, set: (v: number) => void)}
+	<label class="eyebrow-label" for={id}>{label}</label>
+	<select
+		{id}
+		{value}
+		onchange={(e) => {
+			set(Number(e.currentTarget.value));
+			navigate();
+		}}>
+		{#each allVersions as v (v.versionNumber)}
+			<option value={v.versionNumber}>v{v.versionNumber}: {v.commitMessage}</option>
+		{/each}
+	</select>
+{/snippet}
+
+{#snippet card(v: CardVersion, isTo: boolean)}
+	<article class="version-card" class:version-card--to={isTo}>
+		<div class="version-card__head">
+			<span class="version-card__number">v{v.versionNumber}</span>
+			{#if headLine(v)}<span>{headLine(v)}</span>{/if}
 		</div>
+		<p class="version-card__message">{v.commitMessage}</p>
+		<dl>
+			<div>
+				<dt>Title</dt>
+				&#32;
+				<dd>{v.title}</dd>
+			</div>
+		</dl>
+		<dl>
+			{#if v.servings}<div>
+					<dt>Serves</dt>
+					&#32;
+					<dd>{v.servings}</dd>
+				</div>{/if}
+			{#if v.prepTimeMinutes}<div>
+					<dt>Prep</dt>
+					&#32;
+					<dd>{v.prepTimeMinutes} min</dd>
+				</div>{/if}
+			{#if v.cookTimeMinutes}<div>
+					<dt>Cook</dt>
+					&#32;
+					<dd>{v.cookTimeMinutes} min</dd>
+				</div>{/if}
+			<div>
+				<dt>Ingredients</dt>
+				&#32;
+				<dd>{v.ingredients.length}</dd>
+			</div>
+		</dl>
+	</article>
+{/snippet}
+
+<div class="page">
+	<div class="compare">
+		<a href="/recipes/{recipe.slug}" class="back-link">← {recipe.title}</a>
+		<h1>Compare versions</h1>
 
 		<div class="version-picker">
-			{#snippet picker(id: string, label: string, value: number, set: (v: number) => void)}
-				<div class="version-picker__field">
-					<label class="version-picker__label" for={id}>{label}</label>
-					<select
-						{id}
-						{value}
-						onchange={(e) => {
-							set(Number(e.currentTarget.value));
-							navigate();
-						}}>
-						{#each allVersions as v (v.versionNumber)}
-							<option value={v.versionNumber}>v{v.versionNumber}: {v.commitMessage}</option>
-						{/each}
-					</select>
-				</div>
-			{/snippet}
 			{@render picker('from-select', 'From', fromSelect, (v) => (fromSelect = v))}
 			<span class="version-picker__arrow">→</span>
 			{@render picker('to-select', 'To', toSelect, (v) => (toSelect = v))}
 		</div>
 
-		<!-- Commit context: same .commit-bar the landing page uses for its sample
-		     diff, stacked because this view shows both endpoints of the range. -->
-		<div class="commit-bar commit-bar--stacked">
-			<div class="commit-bar__line">
-				<span class="commit-bar__versions">v{fromVersion.versionNumber}</span>
-				<span>{fromVersion.commitMessage}</span>
-				{#if fromVersion.creator}
-					<span class="commit-bar__author">by @{fromVersion.creator.username}</span>
-				{/if}
-			</div>
-			<div class="commit-bar__arrow">↓</div>
-			<div class="commit-bar__line">
-				<span class="commit-bar__versions">v{toVersion.versionNumber}</span>
-				<span>{toVersion.commitMessage}</span>
-				{#if toVersion.creator}
-					<span class="commit-bar__author">by @{toVersion.creator.username}</span>
-				{/if}
-			</div>
+		<div class="version-cards">
+			{@render card(fromVersion, false)}
+			{@render card(toVersion, true)}
 		</div>
 
 		<VersionDiff {metaDiff} {ingredientDiff} {stepDiff} />
@@ -75,34 +104,140 @@
 </div>
 
 <style>
+	/* Wide enough for the diff's container query to put ingredients beside
+	   steps, which is how the board shows it. */
+	.compare {
+		max-width: 784px;
+		margin: 0 auto;
+	}
+
+	h1 {
+		margin: 0 0 12px;
+		font-size: 2.125rem;
+		font-weight: 500;
+		line-height: 1.1;
+		color: var(--color-accent);
+	}
+
 	.version-picker {
 		display: flex;
-		align-items: flex-end;
-		gap: 1rem;
-		margin-bottom: 1.5rem;
+		align-items: center;
+		gap: 12px;
+		margin-bottom: 22px;
 	}
 
-	.version-picker__field {
-		display: flex;
-		flex: 1;
-		flex-direction: column;
-		gap: 0.25rem;
-		/* Without this a long commit message in an <option> sets the select's
-		   intrinsic width and the two fields stop being equal. */
+	.version-picker select {
+		width: auto;
 		min-width: 0;
-	}
-
-	.version-picker__label {
+		font-family: var(--font-mono);
 		font-size: 0.75rem;
-		font-weight: 600;
-		letter-spacing: 0.05em;
-		text-transform: uppercase;
-		color: var(--color-text-3);
+		padding: 6px 10px;
 	}
 
 	.version-picker__arrow {
-		padding-bottom: 0.5rem;
-		font-size: 1.25rem;
 		color: var(--color-text-3);
+	}
+
+	.version-cards {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 24px;
+		margin-bottom: 26px;
+	}
+
+	.version-card {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+		padding: 16px;
+		background: var(--color-surface);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-lg);
+	}
+
+	.version-card__head {
+		display: flex;
+		align-items: baseline;
+		gap: 10px;
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+		color: var(--color-text-3);
+	}
+
+	.version-card__number {
+		font-size: 1.125rem;
+		font-weight: 600;
+	}
+
+	.version-card--to .version-card__number {
+		padding: 0 6px;
+		border-radius: 3px;
+		background: var(--color-marigold);
+		color: var(--color-text);
+	}
+
+	.version-card__message {
+		margin: 0;
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+		line-height: 1.5;
+		color: var(--color-text);
+		overflow-wrap: anywhere;
+	}
+
+	dl {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 4px 18px;
+		margin: 0;
+		font-size: 0.8125rem;
+	}
+
+	dl:first-of-type {
+		margin-top: 4px;
+	}
+
+	dt,
+	dd {
+		display: inline;
+		margin: 0;
+	}
+
+	dt {
+		color: var(--color-text-3);
+	}
+
+	@media (max-width: 699px) {
+		h1 {
+			font-size: 1.625rem;
+		}
+
+		/* The labels stay for assistive tech; the selects share the row. */
+		.version-picker label {
+			position: absolute;
+			width: 1px;
+			height: 1px;
+			overflow: hidden;
+			clip: rect(0 0 0 0);
+		}
+
+		.version-picker {
+			gap: 8px;
+		}
+
+		.version-picker select {
+			flex: 1;
+			font-size: 0.875rem;
+			padding: 10px;
+		}
+
+		.version-cards {
+			grid-template-columns: 1fr;
+			gap: 8px;
+		}
+
+		.version-card {
+			padding: 12px;
+		}
 	}
 </style>
