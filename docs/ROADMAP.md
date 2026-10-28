@@ -19,6 +19,8 @@ Open product calls carried over from the repository reconciliation (the rest of 
 
 Ideas from the original MVP design that are not covered by a milestone. Kept as one line each; the document's palette, layout sketches and Bits UI plan are superseded (see `todo/DESIGN.md`).
 
+- In-place tag filtering on the browse page: today the tabs link to `/tags/{slug}`; filtering the sectioned page without a navigation needs the browse loader to take a tag and the sections to recompute.
+- Browse sections past their caps: a side-scrolling row or a "see more" link per section (Recent 8, Most forked 4) once the collection outgrows them.
 - Temperature toggle (°C / °F) on steps: temperatures are free text, so a render-time regex like the M11 timer match, no schema.
 - Print stylesheet for the recipe page: `@media print`, no nav or sidebar. An afternoon.
 - Serving scaler on the recipe page: a stepper or ×½ / ×2 that re-renders parsed quantities in place; unparsed lines render as written with a mark. The parser already separates the two.
