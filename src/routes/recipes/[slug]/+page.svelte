@@ -66,9 +66,8 @@
 		margin: 0 auto;
 		padding: 26px var(--space-5) 40px;
 		display: grid;
-		grid-template-columns: minmax(0, 720px) 320px;
-		justify-content: space-between;
-		column-gap: 56px;
+		grid-template-columns: minmax(0, 1fr) 380px;
+		column-gap: 48px;
 		align-items: start;
 	}
 
