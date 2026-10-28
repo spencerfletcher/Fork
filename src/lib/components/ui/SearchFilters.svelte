@@ -86,7 +86,7 @@
 			type="search"
 			bind:value={searchQuery}
 			placeholder="Search recipes by title..."
-			class="border-border text-text placeholder-text-3 focus:border-accent focus:ring-accent/20 w-full rounded-md border bg-white py-2 pr-3 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none" />
+			class="border-border text-text placeholder-text-3 focus:border-accent focus:ring-accent/20 w-full rounded-md border bg-white py-2 pr-3 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none max-[699px]:text-base" />
 	</form>
 
 	<TagFilter

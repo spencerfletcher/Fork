@@ -10,6 +10,14 @@ test.describe('Search results', () => {
 		await expect(card.locator('a[href^="/users/"]')).toHaveCount(1);
 	});
 
+	test('the search box is 16px on a phone, so iOS does not zoom it', async ({ page }) => {
+		await page.setViewportSize({ width: 390, height: 900 });
+		await page.goto('/search');
+		const box = page.getByRole('searchbox');
+		await box.waitFor();
+		expect(await box.evaluate((el) => getComputedStyle(el).fontSize)).toBe('16px');
+	});
+
 	test('cards carry a version badge, like the feed', async ({ page }) => {
 		await page.goto('/search?q=cookies');
 		const card = page.locator('div.recipe-card').first();
