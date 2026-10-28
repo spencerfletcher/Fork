@@ -1,12 +1,14 @@
 import { describe, test, expect } from 'vitest';
 import '@testing-library/jest-dom/vitest';
-import { render, screen } from '@testing-library/svelte';
+import { render, screen, within } from '@testing-library/svelte';
 import Page from './+page.svelte';
 
 describe('/+page.svelte', () => {
 	test('renders the site heading', () => {
 		render(Page, {
-			props: { data: { recipes: [], user: null, profile: null, mode: 'feed', sampleDiff: null } }
+			props: {
+				data: { recipes: [], user: null, profile: null, mode: 'feed', tags: [], sampleDiff: null }
+			}
 		});
 		expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
 	});
@@ -16,7 +18,14 @@ describe('/+page.svelte', () => {
 		// exactly one h1 — the hero's. That fix had no test at any level.
 		render(Page, {
 			props: {
-				data: { recipes: [], user: null, profile: null, mode: 'landing', sampleDiff: null }
+				data: {
+					recipes: [],
+					user: null,
+					profile: null,
+					mode: 'landing',
+					tags: [],
+					sampleDiff: null
+				}
 			}
 		});
 		const headings = screen.getAllByRole('heading', { level: 1 });
@@ -24,9 +33,33 @@ describe('/+page.svelte', () => {
 		expect(headings[0]).toHaveTextContent('Recipes, under version control.');
 	});
 
+	test('feed mode is browse: the tag tabs and a Recent section', () => {
+		render(Page, {
+			props: {
+				data: {
+					recipes: [{ id: 1, slug: 'a', title: 'A', updatedAt: new Date(), forkCount: 0 }],
+					user: null,
+					profile: null,
+					mode: 'feed',
+					tags: [{ id: 1, name: 'Dessert', slug: 'dessert' }],
+					sampleDiff: null
+				} as never
+			}
+		});
+		const tabs = screen.getByRole('navigation', { name: 'Browse by tag' });
+		expect(within(tabs).getByRole('link', { name: 'All' })).toHaveAttribute('href', '/');
+		expect(within(tabs).getByRole('link', { name: 'Dessert' })).toHaveAttribute(
+			'href',
+			'/tags/dessert'
+		);
+		expect(screen.getByRole('heading', { level: 2, name: 'Recent' })).toBeInTheDocument();
+	});
+
 	test('feed mode renders no LandingHero', () => {
 		render(Page, {
-			props: { data: { recipes: [], user: null, profile: null, mode: 'feed', sampleDiff: null } }
+			props: {
+				data: { recipes: [], user: null, profile: null, mode: 'feed', tags: [], sampleDiff: null }
+			}
 		});
 		expect(screen.queryByText('Recipes, under version control.')).not.toBeInTheDocument();
 	});
@@ -55,7 +88,7 @@ describe('/+page.svelte', () => {
 		};
 		render(Page, {
 			props: {
-				data: { recipes: [], user: null, profile: null, mode: 'landing', sampleDiff }
+				data: { recipes: [], user: null, profile: null, mode: 'landing', tags: [], sampleDiff }
 			}
 		});
 

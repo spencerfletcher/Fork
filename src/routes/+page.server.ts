@@ -3,6 +3,7 @@ import { recipes, recipeVersions } from '#lib/server/db/schema.js';
 import { desc, eq } from 'drizzle-orm';
 import { diffIngredients, diffMeta, diffSteps } from '#lib/recipes/diff.js';
 import { attachRecipeCounts } from '#lib/server/recipeCounts.js';
+import { visibleTags } from '#lib/server/tagFilter.js';
 import type { PageServerLoad } from './$types';
 
 /**
@@ -102,6 +103,8 @@ export const load: PageServerLoad = async ({ locals: { user } }) => {
 	return {
 		mode: user ? ('feed' as const) : ('landing' as const),
 		recipes: withCounts,
+		// The feed is browse for a signed-in user, tabs included.
+		tags: user ? await visibleTags(eq(recipes.isPublic, true)) : [],
 		sampleDiff: best?.diff ?? null
 	};
 };

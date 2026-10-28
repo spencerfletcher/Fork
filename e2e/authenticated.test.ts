@@ -17,6 +17,15 @@ test.describe('Landing page when logged in', () => {
 		await page.goto('/');
 		await expect(page.getByRole('link', { name: /browse recipes/i })).not.toBeVisible();
 	});
+
+	test('the feed is browse: tag tabs with All pointing home, and a Recent section', async ({
+		page
+	}) => {
+		await page.goto('/');
+		const tabs = page.getByRole('navigation', { name: 'Browse by tag' });
+		await expect(tabs.getByRole('link', { name: 'All' })).toHaveAttribute('href', '/');
+		await expect(page.getByRole('heading', { name: 'Recent' })).toBeVisible();
+	});
 });
 
 // ─── Navbar (logged in) ───────────────────────────────────────────────────────

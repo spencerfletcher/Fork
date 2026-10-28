@@ -10,6 +10,8 @@ const { findManyMock, selectMock, recipeVersionsFindManyMock } = vi.hoisted(() =
 	recipeVersionsFindManyMock: vi.fn()
 }));
 
+const visibleTagsMock = vi.hoisted(() => vi.fn());
+vi.mock('#lib/server/tagFilter.js', () => ({ visibleTags: visibleTagsMock }));
 vi.mock('#lib/server/db/index.js', () => ({
 	db: {
 		query: {
@@ -92,6 +94,19 @@ describe('homepage load', () => {
 		// The loader uses the callback form, so call it the way Drizzle would.
 		const orderBy = findManyMock.mock.calls[0][0].orderBy;
 		expect(orderBy(recipes, { desc })).toEqual([desc(recipes.updatedAt)]);
+	});
+
+	test('a signed-in feed carries the public tags for its tabs; the landing page none', async () => {
+		findManyMock.mockResolvedValue([]);
+		selectMock.mockReturnValue(chain([]));
+		visibleTagsMock.mockResolvedValue([{ id: 1, name: 'Dessert', slug: 'dessert' }]);
+		const feed = await loadResult({ locals: { user: { id: 'u1' } } } as never);
+		expect(visibleTagsMock.mock.calls[0][0]).toEqual(eq(recipes.isPublic, true));
+		expect(feed.tags).toEqual([{ id: 1, name: 'Dessert', slug: 'dessert' }]);
+		visibleTagsMock.mockClear();
+		const landing = await loadResult({ locals: { user: null } } as never);
+		expect(visibleTagsMock).not.toHaveBeenCalled();
+		expect(landing.tags).toEqual([]);
 	});
 
 	test('returns feed mode for a logged-in user', async () => {
