@@ -408,6 +408,8 @@
 		color: var(--color-text-3);
 		display: block;
 		margin-bottom: var(--space-3);
+		/* It carries the recipe title, which may be one long word. */
+		overflow-wrap: anywhere;
 	}
 
 	.back-link:hover {

@@ -134,6 +134,28 @@ test.describe('Edit recipe page', () => {
 		}
 	});
 
+	test('a long unbroken title does not scroll the compare page sideways on a phone', async ({
+		page
+	}) => {
+		await page.setViewportSize({ width: 390, height: 1200 });
+		const url = await createRecipe(page, 'E2E' + 'x'.repeat(57), '4');
+		try {
+			await gotoHydrated(page, `${url}/edit`);
+			await page.getByLabel('Steps').fill('Mix, then bake.');
+			await page.getByRole('button', { name: /save changes/i }).click();
+			await page.waitForURL(url);
+			await page.goto(`${url}/diff?from=1&to=2`);
+			await page.locator('article.version-card').first().waitFor();
+			const doc = await page.evaluate(() => ({
+				scrollWidth: document.documentElement.scrollWidth,
+				clientWidth: document.documentElement.clientWidth
+			}));
+			expect(doc.scrollWidth).toBeLessThanOrEqual(doc.clientWidth);
+		} finally {
+			await deleteRecipe(page, url);
+		}
+	});
+
 	test('saving changed steps with a commit message adds a version carrying it', async ({
 		page
 	}) => {
