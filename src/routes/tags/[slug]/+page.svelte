@@ -10,7 +10,7 @@
 	<div class="page-inner">
 		<div class="browse-header">
 			<h1>{data.tag.name}</h1>
-			<TagTabs tags={data.tags} active={data.tag.slug} />
+			<TagTabs tags={data.tags} active={data.tag.slug} allHref={data.user ? '/' : '/recipes'} />
 		</div>
 
 		{#if data.recipes.length > 0}

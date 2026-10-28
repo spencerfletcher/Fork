@@ -69,4 +69,26 @@ test.describe('Tag tabs', () => {
 		}));
 		expect(doc.scrollWidth).toBeLessThanOrEqual(doc.clientWidth);
 	});
+
+	test('the section rule sits clear of the grid below it', async ({ page }) => {
+		await page.goto('/recipes');
+		const heading = page.getByRole('heading', { name: 'Recent' });
+		const h = await heading.boundingBox();
+		const g = await heading.locator('xpath=following-sibling::*[1]').boundingBox();
+		expect(g!.y - (h!.y + h!.height)).toBeGreaterThanOrEqual(14);
+	});
+
+	test('a focused tab keeps its whole focus ring inside the row', async ({ page }) => {
+		await page.goto('/recipes');
+		const nav = page.getByRole('navigation', { name: 'Browse by tag' });
+		const all = nav.getByRole('link', { name: 'All' });
+		await all.focus();
+		const n = await nav.boundingBox();
+		const a = await all.boundingBox();
+		// The ring is 2px wide at a 2px offset, so 4px outside the link box on
+		// every side; the scroll container clips anything past its own edges.
+		expect(a!.y - n!.y).toBeGreaterThanOrEqual(4);
+		expect(n!.y + n!.height - (a!.y + a!.height)).toBeGreaterThanOrEqual(4);
+		expect(a!.x - n!.x).toBeGreaterThanOrEqual(4);
+	});
 });

@@ -1,12 +1,17 @@
 <script lang="ts">
 	import type { TagChip } from '#lib/server/tagFilter.js';
 
-	// `active` is the current tag's slug; null means "All".
-	let { tags, active }: { tags: TagChip[]; active: string | null } = $props();
+	// `active` is the current tag's slug; null means "All". `allHref` moves the
+	// All tab for a signed-in user, whose /recipes is their own list.
+	let {
+		tags,
+		active,
+		allHref = '/recipes'
+	}: { tags: TagChip[]; active: string | null; allHref?: string } = $props();
 </script>
 
 <nav class="tag-tabs" aria-label="Browse by tag">
-	<a href="/recipes" aria-current={active === null ? 'page' : undefined}>All</a>
+	<a href={allHref} aria-current={active === null ? 'page' : undefined}>All</a>
 	{#each tags as tag (tag.id)}
 		<a href="/tags/{tag.slug}" aria-current={active === tag.slug ? 'page' : undefined}>
 			{tag.name}
@@ -19,6 +24,10 @@
 	.tag-tabs {
 		display: flex;
 		gap: 16px;
+		/* A scroll container clips at its edges; this leaves room for the 2px
+		   ring at its 2px offset without moving the layout. */
+		padding: 4px;
+		margin: -4px;
 		overflow-x: auto;
 		white-space: nowrap;
 		scrollbar-width: none;
