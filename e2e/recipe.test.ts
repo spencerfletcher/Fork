@@ -472,55 +472,6 @@ test.describe('Recipe detail page', () => {
 		const box = await strip.boundingBox();
 		expect(box!.width).toBeLessThanOrEqual(390);
 	});
-
-	test('the forked badge stays readable over an arbitrary photo', async ({ page }) => {
-		await page.goto('/');
-		const badge = page.locator('.forked-badge').first();
-		await badge.waitFor();
-
-		const style = await badge.evaluate((el) => {
-			const cs = getComputedStyle(el);
-			return {
-				bg: cs.backgroundColor,
-				border: cs.borderStyle,
-				width: cs.borderTopWidth,
-				color: cs.color,
-				opacity: cs.opacity
-			};
-		});
-
-		const rgb = (c: string) => c.match(/[\d.]+/g)!.map(Number);
-
-		// The badge overlays a user-supplied photo, so it must paint its own
-		// background. A transparent or translucent chip is legible over some
-		// images and unreadable over others, and no scrim fixes that in general.
-		const [, , , bgAlpha = 1] = rgb(style.bg);
-		expect(bgAlpha).toBe(1);
-
-		// Amber is reserved for actions and version identity. The badge is neither,
-		// so it must not be filled with the accent.
-		expect(rgb(style.bg).slice(0, 3)).not.toEqual([232, 168, 58]);
-
-		expect(style.border).toBe('solid');
-		expect(parseFloat(style.width)).toBeGreaterThan(0);
-		expect(parseFloat(style.opacity)).toBeGreaterThan(0);
-
-		// Text against the badge's own background, not an ancestor's — assert the
-		// label is actually painted rather than merely present in the DOM.
-		const luminance = (c: number[]) => {
-			const [r, g, b] = c.slice(0, 3).map((v) => {
-				const s = v / 255;
-				return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
-			});
-			return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-		};
-		const l1 = luminance(rgb(style.color));
-		const l2 = luminance(rgb(style.bg));
-		const contrast = (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
-		expect(contrast).toBeGreaterThanOrEqual(4.5);
-
-		await expect(badge).toBeVisible();
-	});
 });
 
 test.describe('Landing page (logged out)', () => {

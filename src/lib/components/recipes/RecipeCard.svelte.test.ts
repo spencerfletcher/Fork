@@ -43,24 +43,6 @@ describe('RecipeCard', () => {
 		expect(link).toHaveAttribute('href', '/recipes/banana-bread-xyz');
 	});
 
-	test('shows "Forked" badge when parentId is set', () => {
-		const { container } = render(RecipeCard, { props: { recipe: makeRecipe({ parentId: 42 }) } });
-		expect(screen.getByText('Forked').closest('.forked-badge')).toBeInTheDocument();
-		// The badge overlays the photo, so it must live inside the image container
-		// rather than the text block below it.
-		expect(container.querySelector('.card-img')?.parentElement).toContainElement(
-			container.querySelector('.forked-badge')
-		);
-	});
-
-	test('omits the "Forked" badge entirely when parentId is null', () => {
-		const { container } = render(RecipeCard, { props: { recipe: makeRecipe({ parentId: null }) } });
-		// Absolutely positioned, so it no longer needs to occupy layout space
-		// when hidden — it is simply not rendered.
-		expect(screen.queryByText('Forked')).not.toBeInTheDocument();
-		expect(container.querySelector('.forked-badge')).toBeNull();
-	});
-
 	test('shows combined total time when both prep and cook time are set', () => {
 		render(RecipeCard, {
 			props: { recipe: makeRecipe({ prepTimeMinutes: 20, cookTimeMinutes: 30 }) }
@@ -78,40 +60,44 @@ describe('RecipeCard', () => {
 		expect(screen.getByText('45 min cook')).toBeInTheDocument();
 	});
 
-	test('shows description when present', () => {
-		render(RecipeCard, {
-			props: { recipe: makeRecipe({ description: 'A rich and moist cake.' }) }
-		});
-		expect(screen.getByText('A rich and moist cake.')).toBeInTheDocument();
-	});
-
-	test('does not show description when absent', () => {
-		render(RecipeCard, { props: { recipe: makeRecipe({ description: null }) } });
-		// No description paragraph — just verify title is there and nothing throws
-		expect(screen.getByText('Chocolate Cake')).toBeInTheDocument();
-	});
-
-	test('renders up to 3 tags', () => {
+	test('never shows a description, tags or a forked badge', () => {
 		const recipe = {
-			...makeRecipe(),
-			recipesToTags: [
-				{ tag: { id: 1, name: 'Dessert', slug: 'dessert' } },
-				{ tag: { id: 2, name: 'Baking', slug: 'baking' } },
-				{ tag: { id: 3, name: 'American', slug: 'american' } },
-				{ tag: { id: 4, name: 'Snack', slug: 'snack' } } // 4th should be hidden
-			]
+			...makeRecipe({ description: 'A rich and moist cake.', parentId: 42 }),
+			recipesToTags: [{ tag: { id: 1, name: 'Dessert', slug: 'dessert' } }]
 		};
-		render(RecipeCard, { props: { recipe } });
-		expect(screen.getByText('Dessert')).toBeInTheDocument();
-		expect(screen.getByText('Baking')).toBeInTheDocument();
-		expect(screen.getByText('American')).toBeInTheDocument();
-		expect(screen.queryByText('Snack')).not.toBeInTheDocument();
+		const { container } = render(RecipeCard, { props: { recipe } });
+		expect(screen.queryByText('A rich and moist cake.')).toBeNull();
+		expect(screen.queryByRole('link', { name: 'Dessert' })).toBeNull();
+		expect(container.querySelector('.forked-badge')).toBeNull();
 	});
 
-	test('renders no tags when recipesToTags is absent', () => {
-		render(RecipeCard, { props: { recipe: makeRecipe() } });
-		// Should render without throwing; title is visible
-		expect(screen.getByText('Chocolate Cake')).toBeInTheDocument();
+	test('a recipe with a photo shows it with the title below', () => {
+		const { container } = render(RecipeCard, {
+			props: { recipe: makeRecipe({ imageUrl: 'https://img/cake.jpg' }) }
+		});
+		expect(screen.getByRole('img', { name: 'Chocolate Cake' })).toHaveAttribute(
+			'src',
+			'https://img/cake.jpg'
+		);
+		expect(container.querySelector('h3.card-title')).toHaveTextContent('Chocolate Cake');
+		expect(container.querySelector('.card-panel')).toBeNull();
+	});
+
+	test('a recipe without a photo shows its title inside the panel and nowhere else', () => {
+		const { container } = render(RecipeCard, { props: { recipe: makeRecipe() } });
+		expect(screen.queryByRole('img')).toBeNull();
+		expect(container.querySelector('.card-panel .card-panel-title')).toHaveTextContent(
+			'Chocolate Cake'
+		);
+		expect(container.querySelector('h3.card-title')).toBeNull();
+		expect(screen.getAllByText('Chocolate Cake')).toHaveLength(1);
+	});
+
+	test('the author link is marked so the phone layout can hide it', () => {
+		render(RecipeCard, {
+			props: { recipe: { ...makeRecipe(), author: { id: 'u1', username: 'chefmaria' } } }
+		});
+		expect(screen.getByRole('link', { name: '@chefmaria' })).toHaveClass('meta-author');
 	});
 
 	test('shows @username link when author is present', () => {
