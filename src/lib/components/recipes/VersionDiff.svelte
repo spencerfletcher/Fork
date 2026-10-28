@@ -83,6 +83,7 @@
 					{:else}
 						<span class="diff-removed">{show(row.from)}</span>
 						<span class="diff-added">{show(row.to)}</span>
+						{#if row.field === 'prepTimeMinutes' || row.field === 'cookTimeMinutes'}min{/if}
 					{/if}
 				</span>
 			</div>
@@ -147,7 +148,14 @@
 		border-radius: var(--radius-md);
 		overflow: hidden;
 		font-family: var(--font-mono);
-		font-size: 0.875rem;
+		font-size: 0.75rem;
+	}
+
+	/* Larger on a phone, where the rows are read at arm's length. */
+	@media (max-width: 699px) {
+		.diff-panel {
+			font-size: 0.875rem;
+		}
 	}
 
 	.diff-empty {
@@ -185,7 +193,11 @@
 		flex-shrink: 0;
 		font-size: 0.8rem;
 		font-weight: 600;
-		color: var(--color-sienna);
+		color: var(--color-accent);
+	}
+
+	.diff-row.diff-added .step-num {
+		color: inherit;
 	}
 
 	/* ── Row status ─────────────────────────────────────────────────────────── */
@@ -204,22 +216,19 @@
 		color: var(--color-add);
 	}
 
-	/* opacity-85 was a utility class an e2e test asserted on directly. It is a
-	   visual property, so it lives here now and the test measures the computed
-	   value instead. --color-remove is already darkened to stay AA once this
-	   blend is applied — see the note in app.css. */
 	.diff-row.diff-removed {
 		background: var(--color-remove-bg);
 		color: var(--color-remove);
 		text-decoration: line-through;
-		opacity: 0.85;
 	}
 
 	/* ── Inline segments within a modified row ──────────────────────────────── */
 
+	/* Underlined as well as coloured, so a replaced word reads without colour. */
 	.diff-content .diff-added {
 		background: var(--color-add-bg);
 		color: var(--color-add);
+		text-decoration: underline;
 	}
 
 	.diff-content .diff-removed {

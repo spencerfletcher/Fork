@@ -138,12 +138,9 @@
 	--color-border-2: #d9d3c8;
 	--color-input-border: #d9d3c8;
 
-	/* Semantic diff colors, AA against their own backgrounds. --color-remove is
-	   darker than the design's #a3362b because removed diff rows render at
-	   opacity 0.85 (VersionDiff.svelte), which blends the text toward --color-bg:
-	   #a3362b lands at 4.15:1 blended, #922d23 at 4.79:1 — see e2e/recipe.test.ts. */
+	/* Semantic diff colors, AA against their own backgrounds (remove 5.44:1, add 5.47:1). */
 	--color-add: #2f6b37;
-	--color-remove: #922d23;
+	--color-remove: #a3362b;
 	--color-add-bg: #e6f0e3;
 	--color-remove-bg: #f6e3e0;
 

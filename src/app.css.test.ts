@@ -52,7 +52,7 @@ describe('app.css tokens', () => {
 		expect(tokens['--color-bg']).toBe('#f7f3ec');
 		expect(tokens['--color-accent']).toBe('#a4512b');
 		expect(tokens['--color-marigold']).toBe('#e8a83a');
-		expect(tokens['--color-remove']).toBe('#922d23');
+		expect(tokens['--color-remove']).toBe('#a3362b');
 	});
 
 	test('no dark theme block', () => {

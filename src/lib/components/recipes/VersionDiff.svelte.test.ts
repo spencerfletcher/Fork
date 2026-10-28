@@ -57,6 +57,12 @@ describe('VersionDiff', () => {
 		expect(screen.getByText(/^Cook time/).closest('.diff-row')).toHaveTextContent('13');
 	});
 
+	test('a time change in Details carries its unit', () => {
+		renderDiff([], [], [{ field: 'cookTimeMinutes', from: 11, to: 13 }]);
+		const row = screen.getByText(/^Cook time/).closest('.diff-row')!;
+		expect(row.textContent?.replace(/\s+/g, ' ').trim()).toBe('~ Cook time: 11 13 min');
+	});
+
 	test('prints 0 as a value and — for null', () => {
 		renderDiff([], [], [{ field: 'prepTimeMinutes', from: null, to: 0 }]);
 		const row = screen.getByText(/^Prep time/).closest('.diff-row')!;
