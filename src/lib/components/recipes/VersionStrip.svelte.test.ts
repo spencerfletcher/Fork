@@ -9,7 +9,7 @@ function makeVersion(n: number, message: string) {
 		id: n,
 		versionNumber: n,
 		commitMessage: message,
-		createdAt: new Date('2026-01-01'),
+		createdAt: new Date(2026, 0, 1),
 		creator: { id: 'u1', username: 'spencerfletcher' }
 	};
 }
@@ -25,7 +25,7 @@ describe('VersionStrip', () => {
 	test('shows the current version and its message without expanding', () => {
 		const { container } = render(VersionStrip, { props });
 		expect(container.querySelector('.version-current')).toHaveTextContent('v2');
-		expect(container.querySelector('.version-strip > .version-message')).toHaveTextContent(
+		expect(container.querySelector('.version-head > .version-message')).toHaveTextContent(
 			'Added espresso powder'
 		);
 		expect(screen.getByText('Initial recipe')).not.toBeVisible();
@@ -86,13 +86,20 @@ describe('VersionStrip', () => {
 		expect(screen.queryByRole('link', { name: /compare/i })).toBeNull();
 	});
 
-	test('the version row with its links comes first, the message underneath', () => {
-		const { container } = render(VersionStrip, { props });
-		const row = container.querySelector('.version-row')!;
-		const message = container.querySelector('.version-message')!;
-		expect(row.querySelector('.version-current')).not.toBeNull();
-		expect(row.querySelector('.version-toggle')).not.toBeNull();
-		expect(row.compareDocumentPosition(message) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+	test('is a card: chip and message, a byline, then history, forks and compare in a footer', () => {
+		const { container } = render(VersionStrip, { props: { ...props, forkCount: 1 } });
+		const card = container.querySelector('.version-card')!;
+		expect(card.querySelector('.version-head .version-current')).toHaveTextContent('v2');
+		expect(card.querySelector('.version-head .version-message')).toHaveTextContent(
+			'Added espresso powder'
+		);
+		expect(card.querySelector('.version-by')?.textContent?.replace(/\s+/g, ' ').trim()).toBe(
+			'@spencerfletcher · 1 Jan 2026'
+		);
+		const foot = card.querySelector('.version-foot')!;
+		expect(foot.querySelector('.version-toggle')).toHaveTextContent('2 versions');
+		expect(foot.querySelector('.version-forks')).toHaveTextContent('1 fork');
+		expect(foot.querySelector('.version-compare')).toHaveTextContent('Compare with v1');
 	});
 
 	test('counts the forks beside the versions, and not when there are none', () => {

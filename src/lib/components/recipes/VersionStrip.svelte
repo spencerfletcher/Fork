@@ -5,6 +5,7 @@
 		id: number;
 		versionNumber: number;
 		commitMessage: string;
+		createdAt?: Date | null;
 		creator?: { id: string; username: string } | null;
 	};
 
@@ -47,39 +48,80 @@
 	);
 	const canCompare = $derived(!isViewingHistory && current.versionNumber > 1);
 	const count = $derived(versions.length);
+
+	const when = (d: Date | null | undefined) =>
+		d?.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+	// One string, so a missing creator or date leaves no orphaned separator.
+	const byline = $derived(
+		[current.creator && `@${current.creator.username}`, when(current.createdAt)]
+			.filter(Boolean)
+			.join(' · ')
+	);
 </script>
 
 <svelte:window onkeydown={onWindowKeydown} onclick={onWindowClick} />
 
 <nav class="version-strip" aria-label="Version history" bind:this={nav}>
-	<p class="version-row">
-		<span class="version-current">v{current.versionNumber}</span>
-		{#if canCompare}
-			<a
-				href="/recipes/{recipeSlug}/diff?from={current.versionNumber -
-					1}&to={current.versionNumber}"
-				class="version-compare">
-				Compare with v{current.versionNumber - 1}
-			</a>
+	<!-- Shaped like a repository's latest-commit bar: what the current version
+	     is, who made it and when, then the ways into the history. -->
+	<div class="version-card">
+		<p class="version-head">
+			<span class="version-current">v{current.versionNumber}</span>
+			<span class="version-message">{current.commitMessage}</span>
+		</p>
+		{#if byline}
+			<p class="version-by">{byline}</p>
 		{/if}
-		{#if count > 1}
-			<button
-				type="button"
-				class="version-toggle"
-				bind:this={toggle}
-				aria-expanded={open}
-				aria-controls="version-history"
-				onclick={() => (open = !open)}>
-				{count} versions
-			</button>
-		{:else}
-			<span class="version-count">1 version</span>
-		{/if}
-		{#if forkCount > 0}
-			<span class="version-forks">{forkCount} {forkCount === 1 ? 'fork' : 'forks'}</span>
-		{/if}
-	</p>
-	<p class="version-message">{current.commitMessage}</p>
+		<p class="version-foot">
+			{#if count > 1}
+				<button
+					type="button"
+					class="version-toggle"
+					bind:this={toggle}
+					aria-expanded={open}
+					aria-controls="version-history"
+					onclick={() => (open = !open)}>
+					<svg viewBox="0 0 16 16" aria-hidden="true">
+						<path
+							d="M8 2.5a5.5 5.5 0 1 0 5.5 5.5M8 5v3l2 1.5M2.5 3v3h3"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="1.3"
+							stroke-linecap="round"
+							stroke-linejoin="round" />
+					</svg>
+					{count} versions
+				</button>
+			{:else}
+				<span class="version-count">1 version</span>
+			{/if}
+			{#if forkCount > 0}
+				<span class="version-forks">
+					<svg viewBox="0 0 16 16" aria-hidden="true">
+						<path
+							d="M4 3.5v2a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-2M8 7.5v5"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="1.3"
+							stroke-linecap="round" />
+						<circle cx="4" cy="2.5" r="1.3" fill="currentColor" />
+						<circle cx="12" cy="2.5" r="1.3" fill="currentColor" />
+						<circle cx="8" cy="13.5" r="1.3" fill="currentColor" />
+					</svg>
+					{forkCount}
+					{forkCount === 1 ? 'fork' : 'forks'}
+				</span>
+			{/if}
+			{#if canCompare}
+				<a
+					href="/recipes/{recipeSlug}/diff?from={current.versionNumber -
+						1}&to={current.versionNumber}"
+					class="version-compare">
+					Compare with v{current.versionNumber - 1}
+				</a>
+			{/if}
+		</p>
+	</div>
 
 	{#if count > 1}
 		<div id="version-history" class="version-history" hidden={!open}>
@@ -109,41 +151,27 @@
 </nav>
 
 <style>
-	/* A block in the right column: the current version and its message, then
-	   the links. The full history opens in place beneath them. */
 	.version-strip {
 		display: flex;
 		flex-direction: column;
-		gap: 6px;
-		padding: 10px 0;
-		border-top: 1px dotted var(--color-input-border);
-		border-bottom: 1px dotted var(--color-input-border);
-		font-family: var(--font-mono);
-		font-size: 0.75rem;
+		gap: 8px;
 	}
 
-	/* Chip and links on one mono line; the "·" separators come from CSS so
-	   the links stay plain text for assistive tech. */
-	.version-row {
+	.version-card {
 		display: flex;
-		flex-wrap: wrap;
+		flex-direction: column;
+		gap: 6px;
+		padding: 12px 14px;
+		background: var(--color-surface);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+	}
+
+	.version-head {
+		display: flex;
 		align-items: baseline;
-		gap: 4px 0;
+		gap: 10px;
 		margin: 0;
-	}
-
-	.version-row > * + * {
-		margin-left: 8px;
-	}
-
-	.version-row > .version-current + * {
-		margin-left: 10px;
-	}
-
-	.version-row > :not(.version-current) + ::before {
-		content: '·';
-		margin-right: 8px;
-		color: var(--color-text-3);
 	}
 
 	.version-current {
@@ -152,24 +180,50 @@
 		border-radius: 3px;
 		background: var(--color-marigold);
 		color: var(--color-text);
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
 		font-weight: 600;
 	}
 
-	/* What changed, in the sans the rest of the page reads in. */
-	.version-strip > .version-message {
-		margin: 0;
+	.version-head .version-message {
 		font-family: var(--font-sans);
 		font-size: 0.875rem;
-		line-height: 1.45;
-		color: var(--color-text-2);
+		line-height: 1.4;
+		color: var(--color-text);
 		overflow-wrap: anywhere;
 	}
 
-	.version-compare,
-	.version-toggle {
-		color: var(--color-accent);
-		text-decoration: none;
-		cursor: pointer;
+	.version-by {
+		margin: 0;
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+		color: var(--color-text-3);
+	}
+
+	.version-foot {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 6px 14px;
+		margin: 2px 0 0;
+		padding-top: 8px;
+		border-top: 1px solid var(--color-border);
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+		color: var(--color-text-3);
+	}
+
+	.version-foot svg {
+		width: 14px;
+		height: 14px;
+		margin-right: 4px;
+		vertical-align: -2px;
+	}
+
+	.version-toggle,
+	.version-forks {
+		display: inline-flex;
+		align-items: center;
 	}
 
 	.version-toggle {
@@ -177,27 +231,35 @@
 		border: none;
 		background: none;
 		font: inherit;
+		color: var(--color-text-2);
+		cursor: pointer;
 	}
 
-	.version-compare:hover,
-	.version-toggle:hover {
+	.version-toggle:hover,
+	.version-toggle[aria-expanded='true'] {
 		color: var(--color-text);
 	}
 
-	.version-count,
-	.version-forks {
-		color: var(--color-text-3);
+	.version-compare {
+		margin-left: auto;
+		color: var(--color-accent);
+		text-decoration: none;
+	}
+
+	.version-compare:hover {
+		color: var(--color-text);
 	}
 
 	.version-history {
 		display: flex;
 		flex-direction: column;
 		gap: var(--space-2);
-		margin-top: 4px;
 		padding: var(--space-3) var(--space-4);
 		background: var(--color-surface);
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-md);
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
 	}
 
 	.version-entry {
@@ -210,6 +272,10 @@
 		flex: 1;
 		overflow-wrap: anywhere;
 		color: var(--color-text-2);
+	}
+
+	.version-entry .version-compare {
+		margin-left: 0;
 	}
 
 	.version-number {
