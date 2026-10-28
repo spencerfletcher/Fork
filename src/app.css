@@ -345,12 +345,9 @@
 		margin: 0;
 	}
 
-	.browse-header > :global(.tag-tabs) {
-		min-width: 0;
-		max-width: 100%;
-	}
-
-	.section-heading {
+	/* Both classes: .eyebrow-label is declared later in this layer and would
+	   otherwise reset the margin. */
+	.eyebrow-label.section-heading {
 		padding-bottom: 8px;
 		margin-bottom: 14px;
 		border-bottom: 1px solid var(--color-border);
