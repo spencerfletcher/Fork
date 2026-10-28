@@ -34,7 +34,7 @@
 	<meta name="twitter:image" content={meta.image} />
 </svelte:head>
 
-<div class="flex min-h-screen flex-col">
+<div class="flex min-h-dvh flex-col">
 	<Navbar user={data.user} profile={data.profile} />
 
 	<main class="flex-grow">

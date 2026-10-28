@@ -18,7 +18,7 @@
 	const canFavorite = $derived(!!user && !isViewingHistory);
 </script>
 
-<article class="min-h-screen">
+<article class="min-h-dvh">
 	<RecipeHeader {recipe} {currentVersion} {isViewingHistory} {tags} />
 
 	{#if allVersions.length > 0}
