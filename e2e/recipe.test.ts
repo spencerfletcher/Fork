@@ -503,6 +503,29 @@ test.describe('Recipe detail page', () => {
 		const box = await strip.boundingBox();
 		expect(box!.width).toBeLessThanOrEqual(390);
 	});
+
+	test('the version bar’s byline, counts and compare link share one text baseline', async ({
+		page
+	}) => {
+		await page.setViewportSize({ width: 1440, height: 900 });
+		await gotoClassicCookies(page);
+		await page.locator('.version-strip .version-forks').waitFor();
+
+		// Each item's first text node, measured as a range so the icons and
+		// button boxes do not count.
+		const bottoms = await page.evaluate(() =>
+			['.version-by a', '.version-toggle', '.version-forks', '.version-compare'].map((sel) => {
+				const el = document.querySelector(sel)!;
+				const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+				let node = walker.nextNode();
+				while (node && !node.textContent?.trim()) node = walker.nextNode();
+				const range = document.createRange();
+				range.selectNodeContents(node!);
+				return range.getBoundingClientRect().bottom;
+			})
+		);
+		for (const bottom of bottoms) expect(Math.abs(bottom - bottoms[0])).toBeLessThan(1);
+	});
 });
 
 test.describe('Landing page (logged out)', () => {

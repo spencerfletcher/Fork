@@ -235,12 +235,6 @@
 		vertical-align: -2px;
 	}
 
-	.version-toggle,
-	.version-forks {
-		display: inline-flex;
-		align-items: center;
-	}
-
 	.version-toggle {
 		padding: 0;
 		border: none;
