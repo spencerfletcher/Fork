@@ -62,12 +62,17 @@ test.describe('Tag tabs', () => {
 	test('the tab row scrolls on a phone without widening the page', async ({ page }) => {
 		await page.setViewportSize({ width: 390, height: 900 });
 		await page.goto('/recipes');
-		await page.getByRole('navigation', { name: 'Browse by tag' }).waitFor();
+		const nav = page.getByRole('navigation', { name: 'Browse by tag' });
+		await nav.waitFor();
 		const doc = await page.evaluate(() => ({
 			scrollWidth: document.documentElement.scrollWidth,
 			clientWidth: document.documentElement.clientWidth
 		}));
 		expect(doc.scrollWidth).toBeLessThanOrEqual(doc.clientWidth);
+		// The row itself is the thing that scrolls: it must actually overflow
+		// with the seed's tags, or this test proves nothing about scrolling.
+		const row = await nav.evaluate((el) => ({ scroll: el.scrollWidth, client: el.clientWidth }));
+		expect(row.scroll).toBeGreaterThan(row.client);
 	});
 
 	test('the section rule sits clear of the grid below it', async ({ page }) => {

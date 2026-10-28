@@ -66,6 +66,9 @@ export default defineConfig({
 					name: 'client',
 					environment: 'jsdom',
 					clearMocks: true,
+					// West of UTC, so a date printed in local time differs from its UTC
+					// day and the compare page's UTC-date test means the same everywhere.
+					env: { TZ: 'America/Los_Angeles' },
 					include: ['src/**/*.svelte.{test,spec}.{js,ts}'],
 					exclude: ['src/lib/server/**', 'e2e/**'],
 					setupFiles: ['./src/vitest-setup-client.ts']
