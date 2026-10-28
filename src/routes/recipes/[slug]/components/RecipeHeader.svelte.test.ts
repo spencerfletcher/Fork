@@ -1,8 +1,10 @@
-import { describe, test, expect } from 'vitest';
-import { render, screen } from '@testing-library/svelte';
+import { describe, test, expect, vi } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/svelte';
 import RecipeHeader from './RecipeHeader.svelte';
 import type { ComponentProps } from 'svelte';
 import { makeContent } from '#lib/recipes/fixtures.js';
+
+vi.mock('$app/navigation', () => ({ afterNavigate: () => {} }));
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -12,31 +14,54 @@ function makeRecipe(overrides: Partial<HeaderProps['recipe']> = {}): HeaderProps
 	return { slug: 'my-fork', parentId: null, parent: null, ...overrides };
 }
 
-function renderHeader(
-	recipe: HeaderProps['recipe'],
-	currentVersion: HeaderProps['currentVersion'] = VERSION,
-	tags: HeaderProps['tags'] = []
-) {
-	render(RecipeHeader, { props: { recipe, currentVersion, isViewingHistory: false, tags } });
+function makeVersion(versionNumber: number, commitMessage: string) {
+	return { id: versionNumber, versionNumber, commitMessage };
 }
 
-const VERSION = {
-	id: 1,
-	versionNumber: 1,
-	commitMessage: 'Initial recipe',
-	...makeContent({ title: 'Old Title', servings: 4, description: 'Crisp edges.', imageUrl: null })
-};
+const CONTENT = makeContent({
+	title: 'Old Title',
+	servings: 4,
+	description: 'Crisp edges.',
+	imageUrl: null
+});
+
+const V1 = { ...makeVersion(1, 'Initial recipe'), ...CONTENT };
+const V3 = { ...makeVersion(3, 'Chill the dough'), ...CONTENT };
+const THREE = [
+	makeVersion(3, 'Chill the dough'),
+	makeVersion(2, 'Add espresso powder'),
+	makeVersion(1, 'Initial recipe')
+];
+
+function renderHeader(overrides: Partial<HeaderProps> = {}) {
+	return render(RecipeHeader, {
+		props: {
+			recipe: makeRecipe(),
+			currentVersion: V1,
+			versions: [makeVersion(1, 'Initial recipe')],
+			forkCount: 0,
+			isViewingHistory: false,
+			tags: [],
+			...overrides
+		}
+	});
+}
+
+/** The byline's text with the whitespace collapsed, as a reader sees it. */
+function byline(container: HTMLElement) {
+	return container.querySelector('.byline')!.textContent!.replace(/\s+/g, ' ').trim();
+}
 
 // ─── Fork attribution ─────────────────────────────────────────────────────────
 
 describe('RecipeHeader fork attribution', () => {
 	test('links to a visible parent with its author', () => {
-		renderHeader(
-			makeRecipe({
+		renderHeader({
+			recipe: makeRecipe({
 				parentId: 42,
 				parent: { slug: 'original', title: 'The Original', author: { username: 'chef' } }
 			})
-		);
+		});
 		expect(screen.getByRole('link', { name: 'The Original' })).toHaveAttribute(
 			'href',
 			'/recipes/original'
@@ -46,54 +71,142 @@ describe('RecipeHeader fork attribution', () => {
 	});
 
 	test('says the parent is private when the server withheld it', () => {
-		renderHeader(makeRecipe({ parentId: 42, parent: null }));
+		renderHeader({ recipe: makeRecipe({ parentId: 42, parent: null }) });
 		expect(screen.getByText('Forked from a private recipe')).toBeInTheDocument();
 		expect(screen.queryByRole('link')).not.toBeInTheDocument();
 	});
 
 	test('shows no attribution for a recipe that is not a fork', () => {
-		renderHeader(makeRecipe());
+		renderHeader();
 		expect(screen.queryByText(/Forked from/)).not.toBeInTheDocument();
 	});
 });
 
-// ─── Versioned content ────────────────────────────────────────────────────────
+// ─── The deck ─────────────────────────────────────────────────────────────────
 
-describe('RecipeHeader versioned content', () => {
+describe('RecipeHeader deck', () => {
 	test("shows the viewed version's title", () => {
-		renderHeader(makeRecipe(), VERSION);
+		renderHeader();
 		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Old Title');
 	});
 
-	test('shows Serves from the viewed version', () => {
-		renderHeader(makeRecipe(), VERSION);
-		expect(screen.getByText('Serves 4')).toBeInTheDocument();
+	test('the deck is the current commit message, then the description', () => {
+		const { container } = renderHeader({ currentVersion: V3, versions: THREE });
+		const deck = container.querySelector('.deck')!;
+		expect(deck).toHaveTextContent('Chill the dough');
+		const description = container.querySelector('.description')!;
+		expect(description).toHaveTextContent('Crisp edges.');
+		expect(
+			deck.compareDocumentPosition(description) & Node.DOCUMENT_POSITION_FOLLOWING
+		).toBeTruthy();
 	});
 
-	test('a blank servings on the viewed version shows no Serves', () => {
-		renderHeader(makeRecipe(), { ...VERSION, servings: null });
-		expect(screen.queryByText(/Serves/)).toBeNull();
+	test('on version 1 the deck is the description, shown once', () => {
+		const { container } = renderHeader();
+		expect(container.querySelector('.deck')).toHaveTextContent('Crisp edges.');
+		expect(container.querySelector('.description')).toBeNull();
+		expect(screen.queryByText('Initial recipe')).toBeNull();
+	});
+
+	test('version 1 without a description has no deck', () => {
+		const { container } = renderHeader({ currentVersion: { ...V1, description: null } });
+		expect(container.querySelector('.deck')).toBeNull();
+	});
+
+	test('no version chip: the version number appears once, in the byline', () => {
+		const { container } = renderHeader({ currentVersion: V3, versions: THREE });
+		// The hidden history list holds a second "v3"; the reader sees one.
+		const visible = screen.getAllByText('v3').filter((el) => !el.closest('[hidden]'));
+		expect(visible).toHaveLength(1);
+		expect(container.querySelector('.bg-marigold')).toBeNull();
+	});
+});
+
+// ─── The byline ───────────────────────────────────────────────────────────────
+
+describe('RecipeHeader byline', () => {
+	test('author, version, counts and compare in one mono line', () => {
+		const { container } = renderHeader({
+			recipe: makeRecipe({ author: { id: 'u1', username: 'chef' } }),
+			currentVersion: V3,
+			versions: THREE,
+			forkCount: 1
+		});
+		expect(byline(container)).toBe('@chef · v3 · 3 versions · 1 fork · Compare with v2');
+		expect(screen.getByRole('link', { name: 'Compare with v2' })).toHaveAttribute(
+			'href',
+			'/recipes/my-fork/diff?from=2&to=3'
+		);
+		expect(screen.getAllByRole('link', { name: '@chef' })).toHaveLength(1);
+	});
+
+	test('a single version reads as just the version, no count, no compare', () => {
+		const { container } = renderHeader({
+			recipe: makeRecipe({ author: { id: 'u1', username: 'chef' } })
+		});
+		expect(byline(container)).toBe('@chef · v1');
+		expect(screen.queryByRole('button')).toBeNull();
+		expect(screen.queryByRole('link', { name: /compare/i })).toBeNull();
+	});
+
+	test('forks are plural and absent when there are none', () => {
+		const { container, unmount } = renderHeader({ forkCount: 2 });
+		expect(byline(container)).toContain('2 forks');
+		unmount();
+		const second = renderHeader({ forkCount: 0 });
+		expect(byline(second.container)).not.toMatch(/fork/);
+	});
+
+	test('viewing an older version says so and offers the way back', () => {
+		const { container } = renderHeader({
+			currentVersion: { ...V1, ...makeVersion(2, 'Add espresso powder') },
+			versions: THREE,
+			isViewingHistory: true
+		});
+		expect(container.querySelector('.deck')).toHaveTextContent('Add espresso powder');
+		expect(byline(container)).toBe('v2 of 3 · Viewing history · Back to v3');
+		expect(screen.getByRole('link', { name: 'Back to v3' })).toHaveAttribute(
+			'href',
+			'/recipes/my-fork'
+		);
+		expect(screen.queryByRole('link', { name: /compare/i })).toBeNull();
+	});
+
+	test('the version count opens the history, one link per version, the viewed one marked', async () => {
+		renderHeader({ currentVersion: V3, versions: THREE });
+		expect(screen.getByText('Add espresso powder')).not.toBeVisible();
+		await fireEvent.click(screen.getByRole('button', { name: '3 versions' }));
+		expect(screen.getByText('Add espresso powder')).toBeVisible();
+		expect(screen.getByRole('link', { name: 'v2' })).toHaveAttribute(
+			'href',
+			'/recipes/my-fork?version=2'
+		);
+		expect(screen.getByRole('link', { name: 'v3' })).toHaveAttribute('aria-current', 'true');
 	});
 });
 
 // ─── Header content ───────────────────────────────────────────────────────────
 
 describe('RecipeHeader content', () => {
-	test('shows the version as a chip beside the title', () => {
-		renderHeader(makeRecipe(), { ...VERSION, versionNumber: 3 });
-		expect(screen.getByText('v3')).toHaveClass('bg-marigold');
+	test('shows Serves from the viewed version in the meta line', () => {
+		const { container } = renderHeader();
+		expect(container.querySelector('dl.details')!.textContent!.replace(/\s+/g, ' ')).toContain(
+			'Serves 4'
+		);
 	});
 
-	test('shows the description under the title', () => {
-		renderHeader(makeRecipe(), VERSION);
-		expect(screen.getByText('Crisp edges.')).toBeInTheDocument();
+	test('a blank servings on the viewed version shows no Serves', () => {
+		renderHeader({ currentVersion: { ...V1, servings: null } });
+		expect(screen.queryByText(/Serves/)).toBeNull();
 	});
 
 	test('lists tags as comma-separated links, not pills', () => {
-		renderHeader(makeRecipe(), VERSION, [
-			{ id: 1, name: 'Dessert', slug: 'dessert' },
-			{ id: 2, name: 'Baking', slug: 'baking' }
-		]);
+		renderHeader({
+			tags: [
+				{ id: 1, name: 'Dessert', slug: 'dessert' },
+				{ id: 2, name: 'Baking', slug: 'baking' }
+			]
+		});
 		const dessert = screen.getByRole('link', { name: 'Dessert' });
 		expect(dessert).toHaveAttribute('href', '/tags/dessert');
 		expect(dessert).not.toHaveClass('tag');
@@ -102,33 +215,16 @@ describe('RecipeHeader content', () => {
 		expect(dessert.parentElement).toHaveTextContent('Dessert, Baking');
 	});
 
-	test('carries no photo: that lives in the sidebar now', () => {
-		renderHeader(makeRecipe(), { ...VERSION, imageUrl: 'https://img/cookies.jpg' });
+	test('carries no photo: that is the page’s to place', () => {
+		renderHeader({ currentVersion: { ...V1, imageUrl: 'https://img/cookies.jpg' } });
 		expect(screen.queryByRole('img')).toBeNull();
 	});
 
-	test('renders no meta line when there is no time, servings or tags', () => {
-		const { container } = render(RecipeHeader, {
-			props: {
-				recipe: makeRecipe(),
-				currentVersion: {
-					...VERSION,
-					servings: null,
-					prepTimeMinutes: null,
-					cookTimeMinutes: null
-				},
-				isViewingHistory: false,
-				tags: []
-			}
+	test('renders no meta line and no tags when there is nothing to show', () => {
+		const { container } = renderHeader({
+			currentVersion: { ...V1, servings: null, prepTimeMinutes: null, cookTimeMinutes: null }
 		});
-		expect(container.querySelector('.meta')).toBeNull();
-	});
-
-	test('links the author once, in a line under the title', () => {
-		renderHeader(makeRecipe({ author: { id: 'u1', username: 'chef' } }), VERSION);
-		const [link] = screen.getAllByRole('link', { name: '@chef' });
-		expect(screen.getAllByRole('link', { name: '@chef' })).toHaveLength(1);
-		const heading = screen.getByRole('heading', { level: 1 });
-		expect(heading.compareDocumentPosition(link) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+		expect(container.querySelector('dl.details')).toBeNull();
+		expect(container.querySelector('.tags')).toBeNull();
 	});
 });

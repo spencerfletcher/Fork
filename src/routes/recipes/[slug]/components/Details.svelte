@@ -17,15 +17,14 @@
 	});
 </script>
 
+<!-- One line of measurement under the recipe's text, set in mono like the
+     byline: a label and its value, a dot between pairs. -->
 {#if rows.length > 0}
-	<dl class="details m-0 flex flex-col p-0">
+	<dl class="details m-0 flex flex-wrap items-baseline gap-x-5 gap-y-1 p-0">
 		{#each rows as [label, value] (label)}
-			<div
-				class="border-border flex items-baseline justify-between gap-3 border-t py-[7px] last:border-b">
-				<dt class="text-text-3 text-[0.625rem] font-semibold tracking-[0.08em] uppercase">
-					{label}
-				</dt>
-				<dd class="text-text m-0 font-sans text-base font-semibold">{value}</dd>
+			<div class="flex items-baseline gap-2">
+				<dt class="text-text-3 font-mono text-[0.8125rem] uppercase">{label}</dt>
+				<dd class="text-text m-0 font-sans text-[0.9375rem] font-semibold">{value}</dd>
 			</div>
 		{/each}
 	</dl>
