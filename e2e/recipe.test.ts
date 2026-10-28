@@ -56,8 +56,8 @@ test.describe('Recipe detail page', () => {
 		const versionEntries = page.locator('.version-strip .version-entry');
 		await expect(versionEntries).toHaveCount(3);
 		await expect(page.locator('.version-strip')).toContainText('Initial recipe');
-		// The strip already says how many versions; the sidebar adds only forks.
-		await expect(page.locator('.recipe-counts')).toHaveText('1 fork');
+		// The forks sit on the strip's links line, beside the versions.
+		await expect(page.locator('.version-strip .version-forks')).toHaveText('1 fork');
 	});
 
 	test('"Brown Butter Chocolate Chip Cookies" shows fork attribution', async ({ page }) => {
@@ -376,12 +376,12 @@ test.describe('Recipe detail page', () => {
 		// The {#if imageUrl} branch is equivalent to the node being absent.
 		await page.evaluate(() => document.querySelector('.recipe-photo')?.remove());
 
-		// Nothing reserves the photo's room: the strip follows the header directly.
+		// Nothing reserves the photo's room: the body follows the header directly.
 		const header = await page.locator('header.recipe-header').boundingBox();
-		const strip = await page.locator('.version-strip').boundingBox();
+		const body = await page.locator('.content-layout').boundingBox();
 		expect(header).not.toBeNull();
-		expect(strip).not.toBeNull();
-		expect(strip!.y - (header!.y + header!.height)).toBeLessThan(20);
+		expect(body).not.toBeNull();
+		expect(body!.y - (header!.y + header!.height)).toBeLessThan(40);
 	});
 
 	test('tags stay readable on both the card and the hero surfaces', async ({ page }) => {
@@ -454,14 +454,27 @@ test.describe('Recipe detail page', () => {
 		expect(coloredText).toBe(0);
 	});
 
-	test('the version strip lines up with the photo, with room between them', async ({ page }) => {
+	test('the reading column stops at 720px and the version block sits in the right column', async ({
+		page
+	}) => {
 		await page.setViewportSize({ width: 1200, height: 900 });
 		await gotoClassicCookies(page);
-		const photo = await page.locator('.recipe-photo').boundingBox();
+		const ingredients = await page
+			.getByRole('heading', { name: /ingredients/i })
+			.first()
+			.boundingBox();
 		const strip = await page.locator('.version-strip').boundingBox();
-		expect(Math.abs(strip!.x - photo!.x)).toBeLessThan(1);
-		expect(Math.abs(strip!.width - photo!.width)).toBeLessThan(1);
-		expect(strip!.y - (photo!.y + photo!.height)).toBeGreaterThanOrEqual(12);
+		const description = await page.locator('.recipe-header .description').boundingBox();
+		expect(ingredients!.width).toBeLessThanOrEqual(720);
+		expect(strip!.x).toBeGreaterThan(ingredients!.x + ingredients!.width);
+		// The description spans the header, not the old 720px cap.
+		expect(description!.width).toBeGreaterThan(900);
+		// Compare and versions links are clay.
+		const color = await page
+			.locator('.version-compare')
+			.first()
+			.evaluate((el) => getComputedStyle(el).color);
+		expect(color).toBe('rgb(164, 81, 43)');
 	});
 
 	test('the version strip scrolls without widening the page', async ({ page }) => {

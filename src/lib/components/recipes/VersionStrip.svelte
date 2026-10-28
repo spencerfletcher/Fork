@@ -12,12 +12,15 @@
 		versions,
 		currentVersionNumber,
 		recipeSlug,
-		isViewingHistory = false
+		isViewingHistory = false,
+		forkCount = 0
 	}: {
 		versions: StripVersion[];
 		currentVersionNumber: number;
 		recipeSlug: string;
 		isViewingHistory?: boolean;
+		/** Public forks, shown beside the version count. */
+		forkCount?: number;
 	} = $props();
 
 	let open = $state(false);
@@ -49,28 +52,36 @@
 <svelte:window onkeydown={onWindowKeydown} onclick={onWindowClick} />
 
 <nav class="version-strip" aria-label="Version history" bind:this={nav}>
-	<span class="version-current">v{current.versionNumber}</span>
-	<span class="version-message">{current.commitMessage}</span>
-	{#if canCompare}
-		<a
-			href="/recipes/{recipeSlug}/diff?from={current.versionNumber - 1}&to={current.versionNumber}"
-			class="version-compare">
-			Compare with v{current.versionNumber - 1}
-		</a>
-	{/if}
-	{#if count > 1}
-		<button
-			type="button"
-			class="version-toggle"
-			bind:this={toggle}
-			aria-expanded={open}
-			aria-controls="version-history"
-			onclick={() => (open = !open)}>
-			{count} versions
-		</button>
-	{:else}
-		<span class="version-count">1 version</span>
-	{/if}
+	<p class="version-line">
+		<span class="version-current">v{current.versionNumber}</span>
+		<span class="version-message">{current.commitMessage}</span>
+	</p>
+	<p class="version-links">
+		{#if canCompare}
+			<a
+				href="/recipes/{recipeSlug}/diff?from={current.versionNumber -
+					1}&to={current.versionNumber}"
+				class="version-compare">
+				Compare with v{current.versionNumber - 1}
+			</a>
+		{/if}
+		{#if count > 1}
+			<button
+				type="button"
+				class="version-toggle"
+				bind:this={toggle}
+				aria-expanded={open}
+				aria-controls="version-history"
+				onclick={() => (open = !open)}>
+				{count} versions
+			</button>
+		{:else}
+			<span class="version-count">1 version</span>
+		{/if}
+		{#if forkCount > 0}
+			<span class="version-forks">{forkCount} {forkCount === 1 ? 'fork' : 'forks'}</span>
+		{/if}
+	</p>
 
 	{#if count > 1}
 		<div id="version-history" class="version-history" hidden={!open}>
@@ -100,23 +111,26 @@
 </nav>
 
 <style>
-	/* One line at every width: the current version, its message, and two
-	   links. The full history opens underneath instead of pushing the recipe
-	   down, which is the problem the old scrolling strip existed to solve. */
+	/* A block in the right column: the current version and its message, then
+	   the links. The full history opens in place beneath them. */
 	.version-strip {
-		position: relative;
 		display: flex;
-		align-items: center;
-		gap: 14px;
-		/* The rules span the content column exactly, as the photo above does. */
-		max-width: calc(var(--max-width) - 2 * var(--space-5));
-		margin: 14px auto 0;
+		flex-direction: column;
+		gap: 6px;
 		padding: 10px 0;
 		border-top: 1px dotted var(--color-input-border);
 		border-bottom: 1px dotted var(--color-input-border);
 		font-family: var(--font-mono);
 		font-size: 0.75rem;
-		white-space: nowrap;
+	}
+
+	.version-line,
+	.version-links {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: 6px 12px;
+		margin: 0;
 	}
 
 	.version-current {
@@ -131,21 +145,15 @@
 	.version-message {
 		flex: 1;
 		min-width: 0;
-		overflow: hidden;
-		text-overflow: ellipsis;
+		overflow-wrap: anywhere;
 		color: var(--color-text);
 	}
 
 	.version-compare,
-	.version-toggle,
-	.version-count {
-		flex-shrink: 0;
-		color: var(--color-text-3);
-	}
-
-	.version-compare,
 	.version-toggle {
+		color: var(--color-accent);
 		text-decoration: underline;
+		text-underline-offset: 2px;
 		cursor: pointer;
 	}
 
@@ -161,21 +169,20 @@
 		color: var(--color-text);
 	}
 
+	.version-count,
+	.version-forks {
+		color: var(--color-text-3);
+	}
+
 	.version-history {
-		position: absolute;
-		top: 100%;
-		left: 0;
-		right: 0;
-		z-index: 10;
 		display: flex;
 		flex-direction: column;
 		gap: var(--space-2);
+		margin-top: 4px;
 		padding: var(--space-3) var(--space-4);
 		background: var(--color-surface);
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-md);
-		box-shadow: var(--shadow-card);
-		white-space: normal;
 	}
 
 	.version-entry {
@@ -186,9 +193,6 @@
 
 	.version-entry .version-message {
 		flex: 1;
-		overflow: visible;
-		white-space: normal;
-		overflow-wrap: anywhere;
 		color: var(--color-text-2);
 	}
 
@@ -204,14 +208,5 @@
 		background: var(--color-marigold);
 		padding: 0 5px;
 		border-radius: 3px;
-	}
-
-	@media (max-width: 860px) {
-		.version-strip {
-			max-width: calc(100% - 36px);
-			margin-top: 10px;
-			padding: 9px 0;
-			gap: 8px;
-		}
 	}
 </style>

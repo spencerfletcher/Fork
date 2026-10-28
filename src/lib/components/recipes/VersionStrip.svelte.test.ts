@@ -25,7 +25,7 @@ describe('VersionStrip', () => {
 	test('shows the current version and its message without expanding', () => {
 		const { container } = render(VersionStrip, { props });
 		expect(container.querySelector('.version-current')).toHaveTextContent('v2');
-		expect(container.querySelector('.version-strip > .version-message')).toHaveTextContent(
+		expect(container.querySelector('.version-line > .version-message')).toHaveTextContent(
 			'Added espresso powder'
 		);
 		expect(screen.getByText('Initial recipe')).not.toBeVisible();
@@ -84,5 +84,13 @@ describe('VersionStrip', () => {
 		});
 		expect(container.querySelector('.version-current')).toHaveTextContent('v1');
 		expect(screen.queryByRole('link', { name: /compare/i })).toBeNull();
+	});
+
+	test('counts the forks beside the versions, and not when there are none', () => {
+		const { container, unmount } = render(VersionStrip, { props: { ...props, forkCount: 1 } });
+		expect(container.querySelector('.version-forks')).toHaveTextContent('1 fork');
+		unmount();
+		const second = render(VersionStrip, { props: { ...props, forkCount: 0 } });
+		expect(second.container.querySelector('.version-forks')).toBeNull();
 	});
 });

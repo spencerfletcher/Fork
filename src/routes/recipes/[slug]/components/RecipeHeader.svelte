@@ -75,7 +75,7 @@
 	{/if}
 
 	{#if currentVersion.description}
-		<p class="description text-text-2 m-0 max-w-[720px] text-[1.0625rem] leading-[1.5]">
+		<p class="description text-text-2 m-0 text-[1.0625rem] leading-[1.5]">
 			{currentVersion.description}
 		</p>
 	{/if}

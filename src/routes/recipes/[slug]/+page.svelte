@@ -16,30 +16,25 @@
 	const isOwner = $derived(user?.id === recipe.authorId);
 	const canFork = $derived(!!user && !isOwner && !isViewingHistory);
 	const canFavorite = $derived(!!user && !isViewingHistory);
-
-	// The strip already counts the versions; the sidebar adds only the forks.
-	const counts = $derived(
-		data.forkCount > 0 ? `${data.forkCount} fork${data.forkCount === 1 ? '' : 's'}` : ''
-	);
 </script>
 
 <article class="min-h-screen">
 	<RecipeHeader {recipe} {currentVersion} {isViewingHistory} {tags} />
 
-	{#if allVersions.length > 0}
-		<VersionStrip
-			versions={allVersions}
-			currentVersionNumber={currentVersion.versionNumber}
-			recipeSlug={recipe.slug}
-			{isViewingHistory} />
-	{/if}
-
-	<!-- The sidebar comes first in the DOM so the phone stack (actions, details,
-	     then the recipe) needs no reordering; the desktop grid places it in the
-	     right-hand column. -->
+	<!-- Everything about the recipe (versions, details, actions) sits in the
+	     right column; the recipe itself reads in a 720px column. The sidebar
+	     comes first in the DOM so the phone stack needs no reordering. -->
 	<div class="content-layout">
 		<aside class="min-w-0">
 			<div class="sidebar-sticky">
+				{#if allVersions.length > 0}
+					<VersionStrip
+						versions={allVersions}
+						currentVersionNumber={currentVersion.versionNumber}
+						recipeSlug={recipe.slug}
+						{isViewingHistory}
+						forkCount={data.forkCount} />
+				{/if}
 				<Details content={currentVersion} />
 				<RecipeActions
 					{recipe}
@@ -48,9 +43,6 @@
 					{isOwner}
 					{isViewingHistory}
 					initialFavorited={data.isFavorited} />
-				{#if counts}
-					<p class="recipe-counts text-text-3 m-0 font-mono text-[0.75rem]">{counts}</p>
-				{/if}
 			</div>
 		</aside>
 
@@ -66,9 +58,10 @@
 	.content-layout {
 		max-width: var(--max-width);
 		margin: 0 auto;
-		padding: 30px var(--space-5) 40px;
+		padding: 26px var(--space-5) 40px;
 		display: grid;
-		grid-template-columns: minmax(0, 1fr) 320px;
+		grid-template-columns: minmax(0, 720px) 320px;
+		justify-content: space-between;
 		column-gap: 56px;
 		align-items: start;
 	}
@@ -112,7 +105,7 @@
 
 		.sidebar-sticky {
 			position: static;
-			gap: 12px;
+			gap: 14px;
 		}
 
 		/* Fork and Favorite side by side, Fork taking the room. */
