@@ -163,7 +163,6 @@
 	.main {
 		grid-column: 2;
 		grid-row: 1;
-		max-width: 720px;
 	}
 
 	/* iPad and phone: one column, the photo as a band, the tab bar pinned. */

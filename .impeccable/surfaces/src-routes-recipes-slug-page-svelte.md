@@ -39,14 +39,14 @@ Production-ready page, all three compositions, both roles, with and without phot
 - Viewing an older version: deck shows that version's message; byline reads `v2 of 3 · Viewing history · Back to v3`; actions hidden; no banner.
 - Prep · Cook · Serves in one mono line, each time shown once, 13px minimum; any missing value is omitted, not shown blank.
 - Ingredients: 1 to about 30 rows, quantity bold, grams inline in parentheses, estimated grams marked as today; rows strike on tap with a 44px hit area.
-- Method: 1 to about 20 steps, clay JetBrains Mono numerals, 72ch cap.
+- Method: 1 to about 20 steps, clay JetBrains Mono numerals, running to the content's right edge (Spencer, 28 October: no 72ch cap).
 - Photo: present or absent. Absent collapses the hero to a single left-aligned 760px column; nothing fills the space.
 - Roles: logged out (Fork rendered, links to login with redirect back), visitor (Fork primary, Favorite ghost), owner (Edit primary, Favorite ghost, no Fork).
 - Fork: one click; the copy opens with a default first commit message naming the source author and version.
 
 ## Interaction and layout
 
-Desktop, 1024 and up: hero 6/6, title block left (tags, title, deck, byline, description, meta line, actions), photo right at 4:3 capped around 440px. Below a 1px rule: the existing 380px aside, sticky, holding Ingredients; reading column holds Method at 72ch. Board: Q1 Sentence on the design canvas.
+Desktop, 1024 and up: hero 6/6, title block left (tags, title, deck, byline, description, meta line, actions), photo right at 4:3 capped around 440px. Below a 1px rule: the existing 380px aside, sticky, holding Ingredients; reading column holds Method, full remaining width. Board: Q1 Sentence on the design canvas.
 
 iPad, 700 to 1023: single column. Title block, photo as a 16:9 band capped around 300px, then the sticky Ingredients | Method tab bar, then Ingredients, then Method.
 

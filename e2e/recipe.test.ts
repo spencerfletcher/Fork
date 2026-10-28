@@ -483,9 +483,9 @@ test.describe('Recipe detail page', () => {
 		// The deck comes before the byline, which comes before the body.
 		expect(deck!.y).toBeLessThan(byline!.y);
 		expect(ingredients!.y).toBeGreaterThan(byline!.y + byline!.height);
-		// Ingredients start by about 600px, beside a method column no wider than 720.
+		// Ingredients start by about 600px, beside a method column that runs to the photo's right edge.
 		expect(ingredients!.y).toBeLessThan(620);
-		expect(method!.width).toBeLessThanOrEqual(720);
+		expect(Math.abs(method!.x + method!.width - (photo!.x + photo!.width))).toBeLessThan(2);
 		const color = await page
 			.locator('.byline a[href*="/diff?from="]')
 			.evaluate((el) => getComputedStyle(el).color);
