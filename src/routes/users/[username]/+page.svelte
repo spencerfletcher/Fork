@@ -14,58 +14,58 @@
 	);
 </script>
 
-<article class="min-h-screen">
-	<!-- Hero -->
-	<div class="bg-hero-bg px-5 py-8">
-		<div class="mx-auto flex max-w-[1200px] items-center gap-6">
-			<div class="profile-avatar">
-				{profile.username[0].toUpperCase()}
+<div class="page">
+	<div class="page-inner">
+		<header class="profile-header">
+			<div class="profile-avatar" aria-hidden="true">{profile.username[0].toUpperCase()}</div>
+			<div class="profile-text">
+				<h1>@{profile.username}</h1>
+				<p class="profile-since">Member since {memberSince}</p>
+				<p class="profile-stats">
+					{recipes.length}
+					{recipes.length === 1 ? 'recipe' : 'recipes'} · {commitCount}
+					{commitCount === 1 ? 'commit' : 'commits'}
+				</p>
 			</div>
-			<div class="flex flex-col gap-2">
-				<h1 class="profile-name">
-					@{profile.username}
-				</h1>
-				<p class="text-text-bronze m-0 text-[0.85rem]">Member since {memberSince}</p>
-				<div class="mt-1 flex items-center gap-3">
-					<span class="flex items-baseline gap-[5px]">
-						<span class="text-marigold font-mono text-base font-semibold">{recipes.length}</span>
-						<span class="text-text-tan text-[0.82rem]">
-							{recipes.length === 1 ? 'recipe' : 'recipes'}
-						</span>
-					</span>
-					<span class="text-text-bronze text-[0.85rem]">·</span>
-					<span class="flex items-baseline gap-[5px]">
-						<span class="text-marigold font-mono text-base font-semibold">{commitCount}</span>
-						<span class="text-text-tan text-[0.82rem]">
-							{commitCount === 1 ? 'commit' : 'commits'}
-						</span>
-					</span>
-				</div>
-			</div>
-		</div>
-	</div>
+		</header>
 
-	<!-- Recipe grid -->
-	<div class="px-5 py-7">
-		<div class="mx-auto max-w-[1200px]">
-			{#if recipes.length > 0}
-				<h2
-					class="text-text-3 m-0 mb-5 font-sans text-[0.72rem] font-semibold tracking-[0.1em] uppercase">
-					Recipes
+		{#if recipes.length > 0}
+			<section>
+				<h2 class="eyebrow-label section-heading">
+					{recipes.length}
+					{recipes.length === 1 ? 'recipe' : 'recipes'}
 				</h2>
-				<div class="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-5">
+				<div class="recipe-grid">
 					{#each recipes as recipe (recipe.id)}
 						<RecipeCard {recipe} />
 					{/each}
 				</div>
-			{:else}
-				<p class="text-text-3 py-8 text-[0.95rem]">No public recipes yet.</p>
-			{/if}
-		</div>
+			</section>
+		{:else}
+			<p class="empty-state">No public recipes yet.</p>
+		{/if}
 	</div>
-</article>
+</div>
 
 <style>
+	.profile-header {
+		display: flex;
+		align-items: center;
+		gap: 20px;
+		margin-bottom: var(--space-5);
+	}
+
+	.profile-text {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+	}
+
+	.profile-text h1 {
+		margin: 0;
+	}
+
+	/* The no-photo panel's treatment: tint behind a clay initial. */
 	.profile-avatar {
 		display: flex;
 		flex-shrink: 0;
@@ -74,20 +74,31 @@
 		width: 72px;
 		height: 72px;
 		border-radius: 50%;
-		background: var(--color-marigold);
-		color: var(--color-text);
+		background: var(--color-tint);
+		color: var(--color-accent);
 		font-family: var(--font-serif);
 		font-size: 2rem;
-		font-weight: 700;
+		font-weight: 500;
 	}
 
-	.profile-name {
+	.profile-since {
 		margin: 0;
-		font-family: var(--font-serif);
-		font-size: clamp(1.6rem, 3vw, 2.4rem);
-		font-weight: 700;
-		line-height: 1.1;
-		letter-spacing: -0.02em;
-		color: var(--color-text-cream);
+		font-size: 0.875rem;
+		color: var(--color-text-3);
+	}
+
+	.profile-stats {
+		margin: 0;
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+		color: var(--color-text-3);
+	}
+
+	@media (max-width: 699px) {
+		.profile-avatar {
+			width: 56px;
+			height: 56px;
+			font-size: 1.5rem;
+		}
 	}
 </style>
