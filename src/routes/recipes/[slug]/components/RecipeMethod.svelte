@@ -10,8 +10,8 @@
 	};
 </script>
 
-<section class="mb-3">
-	<h4 class="eyebrow-label border-border mb-3.5 border-b pb-2">Method</h4>
+<section id="method" class="mb-3 scroll-mt-14">
+	<h2 class="eyebrow-label border-border mb-3.5 border-b pb-2">Method</h2>
 	<div class="m-0 flex flex-col gap-[18px] p-0" role="list">
 		{#each steps as step, i (i)}
 			{@const n = i + 1}
@@ -20,7 +20,9 @@
 			<label
 				class="has-[:focus-visible]:outline-accent grid cursor-pointer [grid-template-columns:30px_1fr] items-start gap-[18px] select-none has-[:checked]:line-through has-[:checked]:opacity-40 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2">
 				<input type="checkbox" class="sr-only" />
-				<span class="text-accent font-serif text-[1.375rem] leading-[1.15] font-medium">
+				<!-- A step number is a mark of measure, so it is set like the grams
+				     and the byline: mono, clay. -->
+				<span class="text-accent pt-[5px] font-mono text-[0.8125rem] font-semibold">
 					{n}
 				</span>
 				<div class="flex flex-col gap-1.5">

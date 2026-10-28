@@ -17,6 +17,12 @@ function rows() {
 }
 
 describe('RecipeIngredients', () => {
+	test('is a section the tab bar can jump to, headed by an h2', () => {
+		const { container } = renderWith('1 cup flour', [null]);
+		expect(container.querySelector('section#ingredients')).not.toBeNull();
+		expect(screen.getByRole('heading', { level: 2, name: 'Ingredients' })).toBeInTheDocument();
+	});
+
 	test('prints each ingredient line as typed when no weight is known', () => {
 		renderWith(LINES, [null, null, null]);
 		expect(rows()[0]).toHaveTextContent('2¼ cups all-purpose flour');

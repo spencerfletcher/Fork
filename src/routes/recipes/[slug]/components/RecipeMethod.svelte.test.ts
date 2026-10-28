@@ -3,10 +3,16 @@ import { render, screen, fireEvent } from '@testing-library/svelte';
 import RecipeMethod from './RecipeMethod.svelte';
 
 describe('RecipeMethod', () => {
-	test('numbers steps by position', () => {
+	test('numbers steps by position, in clay mono like every other mark of measure', () => {
 		render(RecipeMethod, { props: { steps: [{ text: 'Mix.' }, { text: 'Bake.' }] } });
-		expect(screen.getByText('1')).toBeInTheDocument();
+		expect(screen.getByText('1')).toHaveClass('font-mono', 'text-accent');
 		expect(screen.getByText('2')).toBeInTheDocument();
+	});
+
+	test('is a section the tab bar can jump to, headed by an h2', () => {
+		const { container } = render(RecipeMethod, { props: { steps: [{ text: 'Mix.' }] } });
+		expect(container.querySelector('section#method')).not.toBeNull();
+		expect(screen.getByRole('heading', { level: 2, name: 'Method' })).toBeInTheDocument();
 	});
 
 	test('annotations keep their own tone', () => {
