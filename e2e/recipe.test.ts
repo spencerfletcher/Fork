@@ -10,7 +10,8 @@ const FORK_RE = new RegExp(SEED[1].versions.at(-1)!.title, 'i');
 
 /** Slugs carry a random nanoid suffix, so reach the recipe by name, not URL. */
 async function gotoClassicCookies(page: Page) {
-	await page.goto('/');
+	// The landing page shows the three newest; browse shows everything.
+	await page.goto('/recipes');
 	await page.getByRole('link', { name: COOKIES_RE }).first().click();
 	await page.waitForURL(/\/recipes\//);
 }
@@ -40,7 +41,7 @@ test.describe('Recipe detail page', () => {
 	test('"Thick and Chewy Chocolate Chip Cookies" shows version history with 3 versions', async ({
 		page
 	}) => {
-		await page.goto('/');
+		await page.goto('/recipes');
 		// Click the stretched link (aria-label) rather than the h3 text node
 		await page.getByRole('link', { name: COOKIES_RE }).first().click();
 		await expect(page).toHaveURL(/\/recipes\//);
@@ -55,8 +56,8 @@ test.describe('Recipe detail page', () => {
 		const versionEntries = page.locator('.version-strip .version-entry');
 		await expect(versionEntries).toHaveCount(3);
 		await expect(page.locator('.version-strip')).toContainText('Initial recipe');
-		// The sidebar counts both, with a spaced separator.
-		await expect(page.locator('.recipe-counts')).toHaveText('3 versions · 1 fork');
+		// The strip already says how many versions; the sidebar adds only forks.
+		await expect(page.locator('.recipe-counts')).toHaveText('1 fork');
 	});
 
 	test('"Brown Butter Chocolate Chip Cookies" shows fork attribution', async ({ page }) => {
@@ -68,7 +69,7 @@ test.describe('Recipe detail page', () => {
 	});
 
 	test('viewing a specific version shows the history banner', async ({ page }) => {
-		await page.goto('/');
+		await page.goto('/recipes');
 		await page.getByRole('link', { name: COOKIES_RE }).first().click();
 		await page.waitForURL(/\/recipes\//);
 		// Append ?version=1 to the current recipe URL
@@ -81,7 +82,7 @@ test.describe('Recipe detail page', () => {
 	});
 
 	test('Compare link on v2 navigates to diff page', async ({ page }) => {
-		await page.goto('/');
+		await page.goto('/recipes');
 		await page.getByRole('link', { name: COOKIES_RE }).first().click();
 		await expect(page).toHaveURL(/\/recipes\//);
 		// Target the Compare anchor by href. Matching on the accessible name would
@@ -453,6 +454,16 @@ test.describe('Recipe detail page', () => {
 		expect(coloredText).toBe(0);
 	});
 
+	test('the version strip lines up with the photo, with room between them', async ({ page }) => {
+		await page.setViewportSize({ width: 1200, height: 900 });
+		await gotoClassicCookies(page);
+		const photo = await page.locator('.recipe-photo').boundingBox();
+		const strip = await page.locator('.version-strip').boundingBox();
+		expect(Math.abs(strip!.x - photo!.x)).toBeLessThan(1);
+		expect(Math.abs(strip!.width - photo!.width)).toBeLessThan(1);
+		expect(strip!.y - (photo!.y + photo!.height)).toBeGreaterThanOrEqual(12);
+	});
+
 	test('the version strip scrolls without widening the page', async ({ page }) => {
 		await page.setViewportSize({ width: 390, height: 900 });
 		await gotoClassicCookies(page);
@@ -482,6 +493,36 @@ test.describe('Landing page (logged out)', () => {
 		// visible recipe for a guest.
 		await expect(browseLink).toHaveAttribute('href', '/search');
 		await expect(page.locator('.diff-content').first()).toBeVisible();
+	});
+
+	test('the open phone menu dims the page but not the bar above it', async ({ page }) => {
+		await page.setViewportSize({ width: 390, height: 844 });
+		await page.goto('/');
+		await page.getByRole('button', { name: /open main menu/i }).click();
+		await page.locator('#mobile-menu').waitFor();
+		const brand = await page.getByRole('link', { name: /^fork/i }).first().boundingBox();
+		const hit = await page.evaluate(
+			([x, y]) => document.elementFromPoint(x, y)?.closest('a')?.getAttribute('href') ?? null,
+			[brand!.x + brand!.width / 2, brand!.y + brand!.height / 2]
+		);
+		expect(hit).toBe('/');
+	});
+
+	test('a checked-off ingredient strikes through at one height, grams included', async ({
+		page
+	}) => {
+		await page.setViewportSize({ width: 390, height: 844 });
+		await gotoClassicCookies(page);
+		const row = page.locator('label:has(input[type="checkbox"])').first();
+		const grams = row.locator('span').last();
+		await grams.waitFor();
+		const sizes = await page.evaluate(
+			([r, g]) => [getComputedStyle(r!).fontSize, getComputedStyle(g!).fontSize],
+			[await row.elementHandle(), await grams.elementHandle()]
+		);
+		// A line-through is drawn at each inline box's own font metrics in WebKit,
+		// so a smaller grams span would get its own, lower strike.
+		expect(sizes[1]).toBe(sizes[0]);
 	});
 
 	test('the landing page does not scroll sideways on mobile', async ({ page }) => {
