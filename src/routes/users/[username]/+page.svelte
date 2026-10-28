@@ -59,10 +59,13 @@
 		display: flex;
 		flex-direction: column;
 		gap: 4px;
+		/* A long username must wrap inside the row, not widen the page. */
+		min-width: 0;
 	}
 
 	.profile-text h1 {
 		margin: 0;
+		overflow-wrap: anywhere;
 	}
 
 	/* The no-photo panel's treatment: tint behind a clay initial. */
@@ -95,6 +98,14 @@
 	}
 
 	@media (max-width: 699px) {
+		.profile-header {
+			gap: 14px;
+		}
+
+		.profile-text h1 {
+			font-size: 1.625rem;
+		}
+
 		.profile-avatar {
 			width: 56px;
 			height: 56px;

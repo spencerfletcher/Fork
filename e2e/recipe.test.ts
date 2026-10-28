@@ -729,3 +729,16 @@ test.describe('Usernames', () => {
 		expect(await author.evaluate((el) => getComputedStyle(el).color)).toBe('rgb(164, 81, 43)');
 	});
 });
+
+test.describe('Profile page', () => {
+	test('does not scroll sideways on a phone, even with a long username', async ({ page }) => {
+		await page.setViewportSize({ width: 390, height: 844 });
+		await page.goto('/users/spencerfletcher');
+		await page.getByRole('heading', { level: 1 }).waitFor();
+		const doc = await page.evaluate(() => ({
+			scrollWidth: document.documentElement.scrollWidth,
+			clientWidth: document.documentElement.clientWidth
+		}));
+		expect(doc.scrollWidth).toBeLessThanOrEqual(doc.clientWidth);
+	});
+});
