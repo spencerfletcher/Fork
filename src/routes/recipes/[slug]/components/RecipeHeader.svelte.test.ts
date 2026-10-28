@@ -221,19 +221,16 @@ describe('RecipeHeader content', () => {
 		expect(screen.queryByRole('img')).toBeNull();
 	});
 
-	test('the action row sits under the byline, before the description', () => {
+	test('the action row is the last line of the header, after the meta', () => {
 		const { container } = renderHeader({
 			currentVersion: V3,
 			versions: THREE,
 			actions: createRawSnippet(() => ({ render: () => '<button>Fork this recipe</button>' }))
 		});
 		const button = screen.getByRole('button', { name: 'Fork this recipe' });
-		const byline = container.querySelector('.byline')!;
-		const description = container.querySelector('.description')!;
-		expect(byline.compareDocumentPosition(button) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-		expect(
-			button.compareDocumentPosition(description) & Node.DOCUMENT_POSITION_FOLLOWING
-		).toBeTruthy();
+		const meta = container.querySelector('dl.details')!;
+		expect(meta.compareDocumentPosition(button) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+		expect(container.querySelector('header')!.lastElementChild).toContainElement(button);
 	});
 
 	test('renders no meta line and no tags when there is nothing to show', () => {

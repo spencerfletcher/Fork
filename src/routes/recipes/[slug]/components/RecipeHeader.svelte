@@ -36,7 +36,7 @@
 		forkCount: number;
 		isViewingHistory: boolean;
 		tags: { id: number; name: string; slug: string }[];
-		/** The action row (Fork or Edit, Favorite), set right under the byline. */
+		/** The action row (Fork or Edit, Favorite), the last line of the header. */
 		actions?: Snippet;
 	} = $props();
 
@@ -129,10 +129,6 @@
 		</ul>
 	{/if}
 
-	{#if actions}
-		<div class="actions-row">{@render actions()}</div>
-	{/if}
-
 	{#if recipe.parent}
 		<p class="attribution text-text-3 m-0 font-sans text-[0.875rem]">
 			Forked from
@@ -161,6 +157,10 @@
 	{/if}
 
 	<Details content={currentVersion} />
+
+	{#if actions}
+		<div class="actions-row">{@render actions()}</div>
+	{/if}
 </header>
 
 <style>
@@ -258,7 +258,7 @@
 	}
 
 	.actions-row {
-		margin: 2px 0 6px;
+		margin-top: 8px;
 	}
 
 	@media (max-width: 699px) {

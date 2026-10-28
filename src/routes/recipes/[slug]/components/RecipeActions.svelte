@@ -36,13 +36,41 @@
 						else await update();
 					};
 				}}>
-				<button type="submit" class="btn-primary">Fork this recipe</button>
+				<button type="submit" class="btn-primary">
+					<svg
+						class="size-4"
+						viewBox="0 0 16 16"
+						aria-hidden="true"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="1.5"
+						stroke-linecap="round">
+						<path d="M4 3.5v2a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-2M8 7.5v5" />
+						<circle cx="4" cy="2.5" r="1.3" fill="currentColor" />
+						<circle cx="12" cy="2.5" r="1.3" fill="currentColor" />
+						<circle cx="8" cy="13.5" r="1.3" fill="currentColor" />
+					</svg>
+					 Fork this recipe
+				</button>
 			</form>
 		{/if}
 
 		{#if isOwner && !isViewingHistory}
 			<!-- The owner is not offered Fork, so Edit is their primary action. -->
-			<a href="/recipes/{recipe.slug}/edit" class="btn-primary no-underline">Edit recipe</a>
+			<a href="/recipes/{recipe.slug}/edit" class="btn-primary no-underline">
+				<svg
+					class="size-4"
+					viewBox="0 0 16 16"
+					aria-hidden="true"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="1.5"
+					stroke-linecap="round"
+					stroke-linejoin="round">
+					<path d="M11.5 2.5l2 2L5 13H3v-2z" />
+				</svg>
+				 Edit recipe
+			</a>
 		{/if}
 		{#if canFavorite}
 			<form
@@ -78,8 +106,8 @@
 {/if}
 
 <style>
-	/* A row of buttons under the recipe's text; on a phone, two equal columns
-	   tall enough for a thumb. */
+	/* A row of pills as the last line of the recipe's text; on a phone, two
+	   equal columns tall enough for a thumb. */
 	.actions {
 		display: flex;
 		flex-wrap: wrap;
@@ -93,8 +121,8 @@
 		justify-content: center;
 		gap: 8px;
 		min-height: 40px;
-		padding-top: 8px;
-		padding-bottom: 8px;
+		padding: 8px 18px 8px 16px;
+		border-radius: 999px;
 	}
 
 	@media (max-width: 699px) {
