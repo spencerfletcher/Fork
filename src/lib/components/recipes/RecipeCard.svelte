@@ -117,6 +117,17 @@
 		transform: scale(1.03);
 	}
 
+	/* The panel title grows the way a photo does, from its own corner so
+	   nothing reflows. */
+	.card-panel-title {
+		transform-origin: left bottom;
+		transition: transform 0.3s ease;
+	}
+
+	.recipe-card:has(.card-stretched-link:hover) .card-panel-title {
+		transform: scale(1.03);
+	}
+
 	.card-title,
 	.card-panel-title {
 		margin: 0;

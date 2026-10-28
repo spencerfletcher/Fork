@@ -52,11 +52,8 @@
 <svelte:window onkeydown={onWindowKeydown} onclick={onWindowClick} />
 
 <nav class="version-strip" aria-label="Version history" bind:this={nav}>
-	<p class="version-line">
+	<p class="version-row">
 		<span class="version-current">v{current.versionNumber}</span>
-		<span class="version-message">{current.commitMessage}</span>
-	</p>
-	<p class="version-links">
 		{#if canCompare}
 			<a
 				href="/recipes/{recipeSlug}/diff?from={current.versionNumber -
@@ -82,6 +79,7 @@
 			<span class="version-forks">{forkCount} {forkCount === 1 ? 'fork' : 'forks'}</span>
 		{/if}
 	</p>
+	<p class="version-message">{current.commitMessage}</p>
 
 	{#if count > 1}
 		<div id="version-history" class="version-history" hidden={!open}>
@@ -124,13 +122,28 @@
 		font-size: 0.75rem;
 	}
 
-	.version-line,
-	.version-links {
+	/* Chip and links on one mono line; the "·" separators come from CSS so
+	   the links stay plain text for assistive tech. */
+	.version-row {
 		display: flex;
 		flex-wrap: wrap;
 		align-items: baseline;
-		gap: 6px 12px;
+		gap: 4px 0;
 		margin: 0;
+	}
+
+	.version-row > * + * {
+		margin-left: 8px;
+	}
+
+	.version-row > .version-current + * {
+		margin-left: 10px;
+	}
+
+	.version-row > :not(.version-current) + ::before {
+		content: '·';
+		margin-right: 8px;
+		color: var(--color-text-3);
 	}
 
 	.version-current {
@@ -142,18 +155,20 @@
 		font-weight: 600;
 	}
 
-	.version-message {
-		flex: 1;
-		min-width: 0;
+	/* What changed, in the sans the rest of the page reads in. */
+	.version-strip > .version-message {
+		margin: 0;
+		font-family: var(--font-sans);
+		font-size: 0.875rem;
+		line-height: 1.45;
+		color: var(--color-text-2);
 		overflow-wrap: anywhere;
-		color: var(--color-text);
 	}
 
 	.version-compare,
 	.version-toggle {
 		color: var(--color-accent);
-		text-decoration: underline;
-		text-underline-offset: 2px;
+		text-decoration: none;
 		cursor: pointer;
 	}
 
@@ -193,6 +208,7 @@
 
 	.version-entry .version-message {
 		flex: 1;
+		overflow-wrap: anywhere;
 		color: var(--color-text-2);
 	}
 
