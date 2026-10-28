@@ -64,7 +64,7 @@
 		<!-- No photo: the title stands in for it, inside the same 4:3 block, so a
 		     mixed grid keeps its rhythm and the title is not printed twice. -->
 		<div class="card-panel">
-			<span class="card-panel-title">{recipe.title}</span>
+			<h3 class="card-panel-title">{recipe.title}</h3>
 		</div>
 	{/if}
 
@@ -187,6 +187,11 @@
 
 	/* Phone: two columns leave no room for the author; the recipe page has it. */
 	@media (max-width: 699px) {
+		.card-title,
+		.card-panel-title {
+			font-size: 0.9375rem;
+		}
+
 		.meta-author {
 			display: none;
 		}

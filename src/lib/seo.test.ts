@@ -8,9 +8,9 @@ describe('absoluteImage', () => {
 		);
 	});
 
-	test('falls back for the relative placeholder a recipe without a photo uses', () => {
-		// '/None.png' is what RecipeCard renders; as an og:image it resolves
-		// against the crawler's host, not ours, so it must not be emitted.
+	test('falls back for a relative image path', () => {
+		// As an og:image a relative path resolves against the crawler's host,
+		// not ours, so it must not be emitted.
 		expect(absoluteImage('/None.png')).toBe(DEFAULT_IMAGE);
 	});
 

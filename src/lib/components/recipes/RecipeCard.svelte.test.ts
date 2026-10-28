@@ -86,7 +86,9 @@ describe('RecipeCard', () => {
 	test('a recipe without a photo shows its title inside the panel and nowhere else', () => {
 		const { container } = render(RecipeCard, { props: { recipe: makeRecipe() } });
 		expect(screen.queryByRole('img')).toBeNull();
-		expect(container.querySelector('.card-panel .card-panel-title')).toHaveTextContent(
+		// A heading either way, so screen-reader heading navigation does not
+		// depend on whether a photo was uploaded.
+		expect(container.querySelector('.card-panel h3.card-panel-title')).toHaveTextContent(
 			'Chocolate Cake'
 		);
 		expect(container.querySelector('h3.card-title')).toBeNull();
@@ -98,6 +100,23 @@ describe('RecipeCard', () => {
 			props: { recipe: { ...makeRecipe(), author: { id: 'u1', username: 'chefmaria' } } }
 		});
 		expect(screen.getByRole('link', { name: '@chefmaria' })).toHaveClass('meta-author');
+	});
+
+	test('the separator after the author hides with it on phones', () => {
+		const { container } = render(RecipeCard, {
+			props: {
+				recipe: { ...makeRecipe({ versionCount: 2 }), author: { id: 'u1', username: 'chefmaria' } }
+			}
+		});
+		expect(container.querySelector('.meta-sep.meta-author')).not.toBeNull();
+	});
+
+	test('no separator is marked when there is no author', () => {
+		const { container } = render(RecipeCard, {
+			props: { recipe: makeRecipe({ versionCount: 2, cookTimeMinutes: 10 }) }
+		});
+		expect(container.querySelector('.meta-sep')).not.toBeNull();
+		expect(container.querySelector('.meta-sep.meta-author')).toBeNull();
 	});
 
 	test('shows @username link when author is present', () => {

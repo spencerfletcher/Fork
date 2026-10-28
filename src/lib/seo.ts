@@ -34,8 +34,8 @@ export function pageTitle(title: string): string {
 }
 
 /**
- * Recipe images are user-supplied and may be a relative placeholder such as
- * `/None.png`, which is useless in a link preview. Fall back to the site card
+ * Recipe images are user-supplied and may be a relative path, which resolves
+ * against the crawler's host in a link preview. Fall back to the site card
  * unless the URL is absolute.
  */
 export function absoluteImage(url: string | null | undefined): string {
