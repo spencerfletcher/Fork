@@ -22,15 +22,11 @@
 		goto(`?from=${fromSelect}&to=${toSelect}`);
 	}
 
-	// UTC on purpose: the server and the browser then print the same day, so
-	// hydration never rewrites the text.
+	// The viewer's own day. The server renders in its zone and the browser may
+	// correct the text on hydration; a day that matches the reader's calendar
+	// is worth that.
 	const when = (d: Date | null) =>
-		d?.toLocaleDateString('en-GB', {
-			day: 'numeric',
-			month: 'short',
-			year: 'numeric',
-			timeZone: 'UTC'
-		});
+		d?.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 
 	// One string, so a missing date or creator leaves no orphaned separator.
 	const headLine = (v: CardVersion) =>

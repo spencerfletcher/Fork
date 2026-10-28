@@ -27,14 +27,14 @@ const V1 = {
 	versionNumber: 1,
 	commitMessage: 'Initial recipe',
 	creator: null as { id: string; username: string } | null,
-	createdAt: new Date(Date.UTC(2026, 1, 28)) as Date | null,
+	createdAt: new Date(2026, 1, 28) as Date | null,
 	...SNAPSHOT
 };
 const V2 = {
 	versionNumber: 2,
 	commitMessage: 'Added espresso powder',
 	creator: null as { id: string; username: string } | null,
-	createdAt: new Date(Date.UTC(2026, 1, 28)) as Date | null,
+	createdAt: new Date(2026, 1, 28) as Date | null,
 	...SNAPSHOT
 };
 
@@ -194,9 +194,9 @@ describe('Diff page', () => {
 		);
 	});
 
-	test('shows the date as a UTC calendar day, the same on the server and in the browser', () => {
-		// Just after midnight UTC on the 28th: a local-zone render west of UTC
-		// would say the 27th; the card says the 28th wherever it renders.
+	test("shows the date in the viewer's own day", () => {
+		// Just after midnight UTC on the 28th is still the 27th in the test zone
+		// (America/Los_Angeles, pinned in vite.config.ts).
 		const { container } = render(DiffPage, {
 			props: {
 				data: makeData({
@@ -205,7 +205,7 @@ describe('Diff page', () => {
 			}
 		});
 		expect(container.querySelector('article.version-card .version-card__head')).toHaveTextContent(
-			'28 Feb 2026'
+			'27 Feb 2026'
 		);
 	});
 
