@@ -8,6 +8,9 @@ import type { RecipeDraft } from '#lib/recipes/validation.js';
 
 // Capture the form's submit callback so a test can drive the pending state by hand.
 const captured = vi.hoisted(() => ({ submits: [] as SubmitFunction[] }));
+type Guard = (n: { cancel: () => void; type: string }) => void;
+const nav = vi.hoisted(() => ({ guards: [] as Guard[] }));
+vi.mock('$app/navigation', () => ({ beforeNavigate: (fn: Guard) => nav.guards.push(fn) }));
 vi.mock('$app/forms', () => ({
 	enhance: (_node: HTMLFormElement, submit: SubmitFunction) => {
 		captured.submits.push(submit);
@@ -82,21 +85,23 @@ const hiddenRevision = () =>
 
 beforeEach(() => {
 	captured.submits.length = 0;
+	nav.guards.length = 0;
+	vi.restoreAllMocks();
 });
 
 describe('Edit page form', () => {
-	test('renders one form with one Save changes button', () => {
+	test('renders one form with one Save button', () => {
 		render(EditPage, { props: { data: makeData(), form: null } });
 		expect(document.querySelectorAll('form')).toHaveLength(1);
 		expect(document.querySelector('form')).toHaveAttribute('action', '?/save');
-		expect(screen.getByRole('button', { name: 'Save changes' })).toBeInTheDocument();
+		expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument();
 		expect(screen.queryByRole('button', { name: /save info|save new version/i })).toBeNull();
 	});
 
 	test('fills title, servings and both textareas from the latest version', () => {
 		render(EditPage, { props: { data: makeData(), form: null } });
 		expect(title()).toHaveValue('Cookies');
-		expect(screen.getByLabelText(/servings/i)).toHaveValue(4);
+		expect(screen.getByLabelText(/serves/i)).toHaveValue(4);
 		expect(screen.getByLabelText('Ingredients')).toHaveValue('1 cup flour\n2 eggs');
 		expect(screen.getByLabelText('Steps')).toHaveValue('Mix.\n\nBake.\ntip: gently');
 	});
@@ -106,31 +111,99 @@ describe('Edit page form', () => {
 		expect(hiddenRevision()).toHaveValue('3');
 	});
 
-	test('shows Unsaved changes after an edit and clears it when the value is restored', async () => {
+	test('says what the save will write after an edit and clears it when the value is restored', async () => {
 		render(EditPage, { props: { data: makeData(), form: null } });
-		expect(screen.queryByText('Unsaved changes')).toBeNull();
+		expect(screen.queryByText(/Saves/)).toBeNull();
 		await fireEvent.input(title(), { target: { value: 'Biscuits' } });
-		expect(screen.getByText('Unsaved changes')).toBeInTheDocument();
+		expect(screen.getByText('Saves as v3 · title changed')).toBeInTheDocument();
 		await fireEvent.input(title(), { target: { value: 'Cookies' } });
-		expect(screen.queryByText('Unsaved changes')).toBeNull();
+		expect(screen.queryByText(/Saves/)).toBeNull();
 	});
 
 	test('treats a tag removed and added back as clean', async () => {
 		render(EditPage, { props: { data: makeData(), form: null } });
 		await fireEvent.click(screen.getByRole('button', { name: 'Remove Dessert' }));
-		expect(screen.getByText('Unsaved changes')).toBeInTheDocument();
+		expect(screen.getByText('Saves settings · no new version')).toBeInTheDocument();
 		await fireEvent.focus(screen.getByRole('combobox'));
 		await fireEvent.click(screen.getByRole('option', { name: /Dessert/ }).querySelector('button')!);
-		expect(screen.queryByText('Unsaved changes')).toBeNull();
+		expect(screen.queryByText(/Saves/)).toBeNull();
 	});
 
 	test('typing only a commit message is not an unsaved change', async () => {
 		render(EditPage, { props: { data: makeData(), form: null } });
 		await fireEvent.input(screen.getByLabelText(/what changed/i), { target: { value: 'note' } });
-		expect(screen.queryByText('Unsaved changes')).toBeNull();
+		expect(screen.queryByText(/Saves/)).toBeNull();
 	});
 
-	test('refills every field from form.draft after a failure and keeps Unsaved changes', async () => {
+	test('shows the version the save will write and what changed', async () => {
+		render(EditPage, { props: { data: makeData(), form: null } });
+		await fireEvent.input(screen.getByLabelText('Ingredients'), {
+			target: { value: '1 cup flour\n3 eggs' }
+		});
+		await fireEvent.input(screen.getByLabelText('Steps'), {
+			target: { value: 'Mix.\n\nBake longer.' }
+		});
+		expect(screen.getByText('Saves as v3 · ingredients and steps changed')).toBeInTheDocument();
+		expect(screen.getByLabelText(/what changed/i)).toHaveAttribute(
+			'placeholder',
+			'Updated ingredients, steps'
+		);
+	});
+
+	test('a settings-only change says no version will be written', async () => {
+		render(EditPage, { props: { data: makeData(), form: null } });
+		await fireEvent.click(screen.getByLabelText(/public/i));
+		expect(screen.getByText('Saves settings · no new version')).toBeInTheDocument();
+	});
+
+	test('the placeholder falls back when nothing has changed', () => {
+		render(EditPage, { props: { data: makeData(), form: null } });
+		expect(screen.getByLabelText(/what changed/i)).toHaveAttribute(
+			'placeholder',
+			'What changed in this version?'
+		);
+	});
+
+	test('a dirty form asks before navigating away and cancels on no', async () => {
+		vi.spyOn(window, 'confirm').mockReturnValue(false);
+		render(EditPage, { props: { data: makeData(), form: null } });
+		await fireEvent.input(title(), { target: { value: 'Biscuits' } });
+		const cancel = vi.fn();
+		nav.guards[0]({ cancel, type: 'link' });
+		expect(cancel).toHaveBeenCalled();
+	});
+
+	test('a clean form navigates away without asking', () => {
+		const confirm = vi.spyOn(window, 'confirm');
+		render(EditPage, { props: { data: makeData(), form: null } });
+		const cancel = vi.fn();
+		nav.guards[0]({ cancel, type: 'link' });
+		expect(confirm).not.toHaveBeenCalled();
+		expect(cancel).not.toHaveBeenCalled();
+	});
+
+	test('the guard stays quiet while the form is submitting', async () => {
+		const confirm = vi.spyOn(window, 'confirm');
+		render(EditPage, { props: { data: makeData(), form: null } });
+		await fireEvent.input(title(), { target: { value: 'Biscuits' } });
+		await startSubmit();
+		const cancel = vi.fn();
+		nav.guards[0]({ cancel, type: 'goto' });
+		expect(confirm).not.toHaveBeenCalled();
+		expect(cancel).not.toHaveBeenCalled();
+	});
+
+	test('has Cancel back to the recipe beside Save, and the header names the version', () => {
+		render(EditPage, { props: { data: makeData(), form: null } });
+		expect(screen.getByRole('link', { name: 'Cancel' })).toHaveAttribute(
+			'href',
+			'/recipes/cookies'
+		);
+		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Edit recipe');
+		expect(screen.getByText('Editing v2')).toBeInTheDocument();
+	});
+
+	test('refills every field from form.draft after a failure and shows the error, not an outcome', async () => {
 		render(EditPage, {
 			props: {
 				data: makeData(),
@@ -139,14 +212,15 @@ describe('Edit page form', () => {
 		});
 		await tick();
 		expect(title()).toHaveValue('Biscuits');
-		expect(screen.getByLabelText(/prep time/i)).toHaveValue(-5);
+		expect(screen.getByLabelText(/^prep/i)).toHaveValue(-5);
 		const tags = [...document.querySelectorAll('input[name="tags"]')].map(
 			(i) => (i as HTMLInputElement).value
 		);
 		expect(tags).toEqual(['Spicy']);
 		expect(screen.getByLabelText(/public/i)).toBeChecked();
 		expect(screen.getByRole('alert')).toHaveTextContent('Title is required');
-		expect(screen.getByText('Unsaved changes')).toBeInTheDocument();
+		// The draft is invalid, so there is no version to promise.
+		expect(screen.queryByText(/Saves as/)).toBeNull();
 		expect(hiddenRevision()).toHaveValue('3');
 	});
 
@@ -164,7 +238,7 @@ describe('Edit page form', () => {
 		expect(screen.getByRole('button', { name: 'Saving…' })).toBeDisabled();
 		expect(title()).toBeDisabled();
 		await finish();
-		expect(screen.getByRole('button', { name: 'Save changes' })).toBeEnabled();
+		expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled();
 		expect(title()).toBeEnabled();
 	});
 
@@ -192,6 +266,6 @@ describe('Edit page form', () => {
 		await fireEvent.click(screen.getByRole('button', { name: /remove photo/i }));
 		expect(screen.queryByRole('img', { name: /preview/i })).toBeNull();
 		expect(document.querySelector('input[name="removeImage"]')).toHaveValue('on');
-		expect(screen.getByText('Unsaved changes')).toBeInTheDocument();
+		expect(screen.getByText('Saves as v3 · photo changed')).toBeInTheDocument();
 	});
 });

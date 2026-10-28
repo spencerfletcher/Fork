@@ -23,11 +23,18 @@
 </script>
 
 <div class="page">
-	<div class="mx-auto max-w-[720px]">
-		<div class="page-header">
-			<h1>New Recipe</h1>
+	<div class="editor">
+		<div class="editor-header">
+			<div class="editor-title">
+				<h1>New recipe</h1>
+			</div>
 		</div>
 
-		<RecipeForm baseline={EMPTY} {form} allTags={data.allTags} submitLabel="Create recipe" />
+		<RecipeForm
+			baseline={EMPTY}
+			{form}
+			allTags={data.allTags}
+			submitLabel="Create recipe"
+			cancelHref="/recipes" />
 	</div>
 </div>

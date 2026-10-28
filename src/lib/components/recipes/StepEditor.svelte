@@ -7,7 +7,8 @@
 
 <div class="field">
 	<label for="steps">Steps</label>
-	<textarea id="steps" name="steps" rows="12" bind:value {placeholder}></textarea>
+	<textarea id="steps" name="steps" rows="14" class="field-mono" bind:value {placeholder}>
+	</textarea>
 	<p class="form-hint">
 		Separate steps with a blank line. Add a note under a step with tip:, warning: or substitution:
 		on its own line.

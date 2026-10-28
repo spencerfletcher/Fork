@@ -1,7 +1,10 @@
 <script lang="ts">
 	import { enhance, type SubmitFunction } from '$app/forms';
+	import { beforeNavigate } from '$app/navigation';
 	import type { RecipeDraft } from '#lib/recipes/validation.js';
 	import { normaliseTagNames, tagKey } from '#lib/recipes/tags.js';
+	import { generatedCommitMessage } from '#lib/recipes/content.js';
+	import { draftChangedGroups, describeGroups } from '#lib/recipes/draftChanges.js';
 	import TagInput from '#lib/components/ui/TagInput.svelte';
 	import IngredientEditor from './IngredientEditor.svelte';
 	import StepEditor from './StepEditor.svelte';
@@ -12,8 +15,9 @@
 		allTags,
 		action,
 		submitLabel,
+		cancelHref,
 		imageUrl = null,
-		withCommitMessage = false
+		nextVersion
 	}: {
 		/** What was loaded, as the form's strings. Dirty-checking compares against it. */
 		baseline: RecipeDraft;
@@ -23,10 +27,13 @@
 		/** Named action, e.g. `?/save`; omit for the route's default action. */
 		action?: string;
 		submitLabel: string;
+		/** Where Cancel goes: the recipe when editing, the list when creating. */
+		cancelHref: string;
 		/** The latest version's photo, shown until replaced or removed. */
 		imageUrl?: string | null;
-		/** Edits carry an optional "what changed" message; creation does not. */
-		withCommitMessage?: boolean;
+		/** Editing: the number the next version would get. Enables the commit
+		 *  message field and the helper that states what a save will write. */
+		nextVersion?: number;
 	} = $props();
 
 	// The whole form as one object. A failed save hands back what was
@@ -59,6 +66,26 @@
 	const preview = $derived(chosenPreview ?? (draft.removeImage ? null : imageUrl));
 
 	const dirty = $derived(chosenPreview !== null || serialise(draft) !== serialise(baseline));
+
+	// What the save will write, in the server's own groups, so the helper and
+	// the placeholder agree with the message it would generate.
+	const photoChanged = $derived(chosenPreview !== null || draft.removeImage);
+	const groups = $derived(nextVersion ? draftChangedGroups(baseline, draft, photoChanged) : []);
+	const settings = (d: RecipeDraft) =>
+		JSON.stringify([d.isPublic, normaliseTagNames(d.tags).map(tagKey).sort()]);
+	const settingsChanged = $derived(settings(draft) !== settings(baseline));
+
+	const helper = $derived.by(() => {
+		if (!dirty || submitting) return '';
+		if (!nextVersion) return 'Unsaved changes';
+		if (groups.length > 0) return `Saves as v${nextVersion} · ${describeGroups(groups)} changed`;
+		if (settingsChanged) return 'Saves settings · no new version';
+		return '';
+	});
+
+	const placeholder = $derived(
+		groups.length > 0 ? generatedCommitMessage(groups) : 'What changed in this version?'
+	);
 
 	function onImageChange(e: Event) {
 		const file = (e.target as HTMLInputElement).files?.[0];
@@ -98,6 +125,19 @@
 			submitting = false;
 		};
 	};
+
+	// Leaving a dirty form asks first. A tab close or hard reload cannot show
+	// our wording, so cancelling there hands the question to the browser. The
+	// save's own redirect happens while submitting, which never asks.
+	beforeNavigate((navigation) => {
+		if (!dirty || submitting) return;
+		if (
+			navigation.type === 'leave' ||
+			!confirm('Leave without saving? Your changes will be lost.')
+		) {
+			navigation.cancel();
+		}
+	});
 </script>
 
 <form method="POST" {action} enctype="multipart/form-data" use:enhance={track} class="form">
@@ -106,110 +146,115 @@
 			<input type="hidden" name="editRevision" value={draft.editRevision} />
 		{/if}
 
-		<div class="field">
-			<label for="title">
-				Title <span class="required">*</span>
-			</label>
-			<input id="title" name="title" type="text" required bind:value={draft.title} />
-		</div>
-
-		<div class="field">
-			<label for="description">Description</label>
-			<textarea id="description" name="description" rows="3" bind:value={draft.description}>
-			</textarea>
-		</div>
-
-		<div class="field">
-			<label for="image">Photo</label>
-			{#if preview}
-				<div class="border-border relative w-full overflow-hidden rounded-md border">
-					<img src={preview} alt="Preview" class="block h-[220px] w-full object-cover" />
-					<button
-						type="button"
-						class="absolute top-2 right-2 flex size-7 items-center justify-center rounded-full border-none bg-black/55 text-[1.1rem] leading-none text-white"
-						onclick={removePhoto}
-						aria-label="Remove photo">
-						×
-					</button>
+		<div class="form-grid">
+			<div class="form-col">
+				<div class="field">
+					<label for="title">
+						Title <span class="required">*</span>
+					</label>
+					<input id="title" name="title" type="text" required bind:value={draft.title} />
 				</div>
-			{/if}
-			<input
-				id="image"
-				name="image"
-				type="file"
-				accept="image/jpeg,image/png,image/webp,image/gif"
-				class="border-border bg-surface-2 hover:border-accent cursor-pointer rounded-md border border-dashed p-2 text-sm"
-				bind:this={imageInput}
-				onchange={onImageChange} />
-			{#if draft.removeImage}
-				<input type="hidden" name="removeImage" value="on" />
-			{/if}
-			{#if photoLost}
-				<p class="form-hint">Please choose the photo again.</p>
-			{/if}
+
+				<div class="field">
+					<label for="description">Description</label>
+					<textarea id="description" name="description" rows="3" bind:value={draft.description}>
+					</textarea>
+				</div>
+
+				<div class="field">
+					<label for="image">Photo</label>
+					{#if preview}
+						<div class="photo-preview">
+							<img src={preview} alt="Preview" />
+							<button
+								type="button"
+								class="photo-remove"
+								onclick={removePhoto}
+								aria-label="Remove photo">
+								×
+							</button>
+						</div>
+					{/if}
+					<input
+						id="image"
+						name="image"
+						type="file"
+						accept="image/jpeg,image/png,image/webp,image/gif"
+						class="file-input"
+						bind:this={imageInput}
+						onchange={onImageChange} />
+					{#if draft.removeImage}
+						<input type="hidden" name="removeImage" value="on" />
+					{/if}
+					{#if photoLost}
+						<p class="form-hint">Please choose the photo again.</p>
+					{/if}
+				</div>
+
+				<!-- Number fields stay strings so the dirty check compares like with like;
+				     bind:value on a number input would hand back numbers and null. -->
+				<div class="field-row">
+					<div class="field">
+						<label for="servings">Serves</label>
+						<input
+							id="servings"
+							name="servings"
+							type="number"
+							min="1"
+							value={draft.servings}
+							oninput={(e) => (draft.servings = e.currentTarget.value)} />
+					</div>
+					<div class="field">
+						<label for="prepTimeMinutes">Prep (min)</label>
+						<input
+							id="prepTimeMinutes"
+							name="prepTimeMinutes"
+							type="number"
+							min="0"
+							value={draft.prepTimeMinutes}
+							oninput={(e) => (draft.prepTimeMinutes = e.currentTarget.value)} />
+					</div>
+					<div class="field">
+						<label for="cookTimeMinutes">Cook (min)</label>
+						<input
+							id="cookTimeMinutes"
+							name="cookTimeMinutes"
+							type="number"
+							min="0"
+							value={draft.cookTimeMinutes}
+							oninput={(e) => (draft.cookTimeMinutes = e.currentTarget.value)} />
+					</div>
+				</div>
+
+				<fieldset class="field field-tags">
+					<legend class="field-legend">Tags</legend>
+					<TagInput {allTags} bind:selected={draft.tags} />
+				</fieldset>
+
+				<label class="inline-checkbox">
+					<input type="checkbox" name="isPublic" bind:checked={draft.isPublic} />
+					Make this recipe public
+					<span class="inline-checkbox__note">· applies to every version</span>
+				</label>
+			</div>
+
+			<div class="form-col">
+				<IngredientEditor bind:value={draft.ingredients} />
+				<StepEditor bind:value={draft.steps} />
+			</div>
 		</div>
 
-		<!-- Number fields stay strings so the dirty check compares like with like;
-		     bind:value on a number input would hand back numbers and null. -->
-		<div class="field-row">
-			<div class="field">
-				<label for="servings">Servings</label>
-				<input
-					id="servings"
-					name="servings"
-					type="number"
-					min="1"
-					value={draft.servings}
-					oninput={(e) => (draft.servings = e.currentTarget.value)} />
-			</div>
-			<div class="field">
-				<label for="prepTimeMinutes">Prep time (min)</label>
-				<input
-					id="prepTimeMinutes"
-					name="prepTimeMinutes"
-					type="number"
-					min="0"
-					value={draft.prepTimeMinutes}
-					oninput={(e) => (draft.prepTimeMinutes = e.currentTarget.value)} />
-			</div>
-			<div class="field">
-				<label for="cookTimeMinutes">Cook time (min)</label>
-				<input
-					id="cookTimeMinutes"
-					name="cookTimeMinutes"
-					type="number"
-					min="0"
-					value={draft.cookTimeMinutes}
-					oninput={(e) => (draft.cookTimeMinutes = e.currentTarget.value)} />
-			</div>
-		</div>
-
-		<IngredientEditor bind:value={draft.ingredients} />
-		<StepEditor bind:value={draft.steps} />
-
-		<fieldset class="field field-tags">
-			<legend class="field-legend">Tags</legend>
-			<TagInput {allTags} bind:selected={draft.tags} />
-		</fieldset>
-
-		<div class="field">
-			<label class="inline-checkbox">
-				<input type="checkbox" name="isPublic" bind:checked={draft.isPublic} />
-				Make this recipe public
-			</label>
-			<p class="form-hint">Applies to every version, not just this save.</p>
-		</div>
-
-		{#if withCommitMessage}
-			<div class="field">
+		{#if nextVersion}
+			<div class="field field-message">
 				<label for="commitMessage">
-					What changed? <span class="text-text-3">(optional)</span>
+					What changed? <span class="optional">optional</span>
 				</label>
 				<input
 					id="commitMessage"
 					name="commitMessage"
 					type="text"
-					placeholder="e.g. Reduced sugar by 20g, added vanilla"
+					class="field-mono"
+					{placeholder}
 					bind:value={draft.commitMessage} />
 			</div>
 		{/if}
@@ -222,9 +267,65 @@
 			<button type="submit" class="btn-primary" disabled={submitting}>
 				{submitting ? 'Saving…' : submitLabel}
 			</button>
-			{#if dirty && !submitting}
-				<span class="form-hint">Unsaved changes</span>
+			<a href={cancelHref} class="btn-ghost">Cancel</a>
+			{#if helper}
+				<span class="form-hint">{helper}</span>
 			{/if}
 		</div>
 	</fieldset>
 </form>
+
+<style>
+	.photo-preview {
+		position: relative;
+		width: 100%;
+		height: 150px;
+		border-radius: var(--radius-md);
+		overflow: hidden;
+	}
+
+	.photo-preview img {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+
+	.photo-remove {
+		position: absolute;
+		top: 8px;
+		right: 8px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 28px;
+		height: 28px;
+		border: 0;
+		border-radius: 50%;
+		background: rgb(26 23 20 / 0.7);
+		color: var(--color-text-cream);
+		font-size: 1rem;
+		line-height: 1;
+		cursor: pointer;
+	}
+
+	.file-input {
+		border-style: dashed;
+		cursor: pointer;
+	}
+
+	.file-input:hover {
+		border-color: var(--color-accent);
+	}
+
+	@media (max-width: 699px) {
+		.photo-preview {
+			height: 160px;
+		}
+
+		.photo-remove {
+			width: 32px;
+			height: 32px;
+		}
+	}
+</style>

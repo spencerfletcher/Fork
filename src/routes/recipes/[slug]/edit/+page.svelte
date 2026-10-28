@@ -27,13 +27,18 @@
 		hadPhoto: false,
 		removeImage: false
 	};
+
+	const current = $derived(latestVersion?.versionNumber ?? 0);
 </script>
 
 <div class="page">
-	<div class="mx-auto max-w-[720px]">
-		<div class="page-header">
-			<a href="/recipes/{recipe.slug}" class="back-link">← Back to recipe</a>
-			<h1>Edit Recipe</h1>
+	<div class="editor">
+		<div class="editor-header">
+			<a href="/recipes/{recipe.slug}" class="back-link">← {recipe.title}</a>
+			<div class="editor-title">
+				<h1>Edit recipe</h1>
+				<span class="editing">Editing v{current}</span>
+			</div>
 		</div>
 
 		<RecipeForm
@@ -41,8 +46,9 @@
 			{form}
 			allTags={data.allTags}
 			action="?/save"
-			submitLabel="Save changes"
+			submitLabel="Save"
+			cancelHref="/recipes/{recipe.slug}"
 			imageUrl={latestVersion?.imageUrl ?? null}
-			withCommitMessage />
+			nextVersion={current + 1} />
 	</div>
 </div>

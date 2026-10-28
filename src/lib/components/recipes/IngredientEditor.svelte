@@ -23,7 +23,14 @@
 
 <div class="field">
 	<label for="ingredients">Ingredients</label>
-	<textarea id="ingredients" name="ingredients" rows="10" bind:value {placeholder}></textarea>
+	<textarea
+		id="ingredients"
+		name="ingredients"
+		rows="11"
+		class="field-mono"
+		bind:value
+		{placeholder}>
+	</textarea>
 	<!-- Always in the DOM so screen readers announce the text when it appears. -->
 	<p class="form-hint" role="status" aria-live="polite">
 		{#if tooLong}

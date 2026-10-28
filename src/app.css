@@ -254,10 +254,25 @@
 		border-radius: var(--radius-md);
 		color: var(--color-text);
 		font-family: var(--font-sans);
-		font-size: 0.9rem;
-		padding: 8px 12px;
+		font-size: 0.9375rem;
+		padding: 9px 12px;
 		width: 100%;
 		box-sizing: border-box;
+	}
+
+	/* Grows with its content; `rows` is the floor where field-sizing is unsupported. */
+	textarea {
+		field-sizing: content;
+		resize: vertical;
+	}
+
+	/* 16px on a phone, so iOS does not zoom a focused field. */
+	@media (max-width: 699px) {
+		input:not([type='checkbox']),
+		textarea,
+		select {
+			font-size: 1rem;
+		}
 	}
 }
 
@@ -430,11 +445,83 @@
 		gap: var(--space-2);
 	}
 
+	/* Labels are eyebrows, the same voice as section headings. */
 	.field label,
 	.field-legend {
-		font-size: 0.875rem;
+		font-family: var(--font-sans);
+		font-size: 0.6875rem;
+		font-weight: 600;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--color-text-3);
+	}
+
+	.field label .optional {
+		font-weight: 400;
+		letter-spacing: 0;
+		text-transform: none;
+	}
+
+	.field-mono {
+		font-family: var(--font-mono);
+		font-size: 0.8125rem;
+		line-height: 1.6;
+	}
+
+	/* Editor layout: settings on the left, the long text on the right, one
+	   column when there is no room for two. */
+	.editor {
+		max-width: 864px;
+		margin: 0 auto;
+	}
+
+	.editor-header {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+		margin-bottom: 18px;
+	}
+
+	.editor-title {
+		display: flex;
+		align-items: baseline;
+		gap: 12px;
+	}
+
+	.editor-title h1 {
+		margin: 0;
+		font-size: 2.125rem;
 		font-weight: 500;
-		color: var(--color-text-2);
+		line-height: 1.1;
+		color: var(--color-accent);
+	}
+
+	.editing {
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+		color: var(--color-text-3);
+	}
+
+	.form-grid {
+		display: grid;
+		grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+		gap: 28px;
+	}
+
+	.form-col {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-4);
+	}
+
+	.field-message {
+		padding-top: 18px;
+		border-top: 1px dotted var(--color-input-border);
+	}
+
+	.inline-checkbox__note {
+		font-size: 0.75rem;
+		color: var(--color-text-3);
 	}
 
 	.field-tags {
@@ -456,7 +543,38 @@
 	.form-actions {
 		display: flex;
 		align-items: center;
-		gap: var(--space-4);
+		gap: 14px;
+	}
+
+	@media (max-width: 859px) {
+		.form-grid {
+			grid-template-columns: minmax(0, 1fr);
+		}
+	}
+
+	@media (max-width: 699px) {
+		.editor-title {
+			flex-direction: column;
+			gap: 4px;
+		}
+
+		.editor-title h1 {
+			font-size: 1.625rem;
+		}
+
+		.form-actions {
+			flex-wrap: wrap;
+			gap: 8px;
+		}
+
+		.form-actions .btn-primary {
+			flex: 1;
+		}
+
+		.form-actions .form-hint {
+			width: 100%;
+			text-align: center;
+		}
 	}
 
 	.form-hint {

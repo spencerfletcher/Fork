@@ -5,6 +5,7 @@ import type { SubmitFunction } from '$app/forms';
 import NewPage from './+page.svelte';
 
 const captured = vi.hoisted(() => ({ submits: [] as SubmitFunction[] }));
+vi.mock('$app/navigation', () => ({ beforeNavigate: () => {} }));
 vi.mock('$app/forms', () => ({
 	enhance: (_node: HTMLFormElement, submit: SubmitFunction) => {
 		captured.submits.push(submit);
@@ -58,7 +59,7 @@ describe('New recipe page validation errors', () => {
 		});
 		await tick();
 		expect(screen.getByLabelText(/title/i)).toHaveValue('Soup');
-		expect(screen.getByLabelText(/prep time/i)).toHaveValue(-5);
+		expect(screen.getByLabelText(/^prep/i)).toHaveValue(-5);
 		expect(screen.getByLabelText(/public/i)).not.toBeChecked();
 		expect(document.querySelector('input[name="tags"]')).toHaveValue('Dessert');
 	});
@@ -94,6 +95,13 @@ describe('New recipe page editor state', () => {
 		expect(screen.getByText('Unsaved changes')).toBeInTheDocument();
 		await fireEvent.input(screen.getByLabelText(/title/i), { target: { value: '' } });
 		expect(screen.queryByText('Unsaved changes')).not.toBeInTheDocument();
+	});
+
+	test('has Cancel to the recipe list and no commit message field', () => {
+		render(NewPage, { props: { data, form: null } });
+		expect(screen.getByRole('link', { name: 'Cancel' })).toHaveAttribute('href', '/recipes');
+		expect(screen.queryByLabelText(/what changed/i)).toBeNull();
+		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('New recipe');
 	});
 
 	test('starts with empty ingredient and step textareas in the form', () => {
