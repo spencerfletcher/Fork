@@ -48,9 +48,9 @@ test.describe('Recipe detail page', () => {
 		// The byline names the current version; the full history opens from the
 		// "3 versions" toggle. Assert on rendered content, not just wrapper count:
 		// a li-count check passes even if the messages render empty.
-		await expect(page.locator('.byline .version')).toHaveText('v3');
-		// v3's commit message is the deck: the sentence the landing page showcases.
-		await expect(page.locator('.deck')).toContainText('Chill the dough');
+		await expect(page.locator('.version-bar .version')).toHaveText('v3');
+		// v3's commit message leads the bar: the sentence the landing page showcases.
+		await expect(page.locator('.version-bar .commit')).toContainText('Chill the dough');
 		await page.getByRole('button', { name: '3 versions' }).click();
 		await expect(page.locator('#version-history li')).toHaveCount(3);
 		await expect(page.locator('#version-history')).toContainText('Initial recipe');
@@ -74,8 +74,10 @@ test.describe('Recipe detail page', () => {
 		const recipeUrl = page.url().split('?')[0];
 		await page.goto(`${recipeUrl}?version=2`);
 		await page.waitForLoadState('networkidle');
-		// The deck is v2's message now, and the byline reads "v2 of 3 · Viewing history · Back to v3".
-		await expect(page.locator('.deck')).toContainText(SEED[0].versions[1].commitMessage);
+		// The bar shows v2's message now, and the byline reads "v2 of 3 · Viewing history · Back to v3".
+		await expect(page.locator('.version-bar .commit')).toContainText(
+			SEED[0].versions[1].commitMessage
+		);
 		await expect(page.locator('.byline')).toContainText('v2 of 3');
 		await expect(page.getByRole('link', { name: 'Back to v3' })).toBeVisible();
 	});
@@ -426,7 +428,7 @@ test.describe('Recipe detail page', () => {
 		expect(contrast(hero.color, hero.bg)).toBeGreaterThanOrEqual(4.5);
 	});
 
-	test('logged out, the hero has no marigold fill, no Fork, and no marigold text', async ({
+	test('logged out, the hero has one marigold fill, the version chip, and no marigold text', async ({
 		page
 	}) => {
 		await gotoClassicCookies(page);
@@ -435,13 +437,15 @@ test.describe('Recipe detail page', () => {
 
 		const accent = 'rgb(236, 166, 32)';
 
-		// Nothing to act on without an account, so nothing is filled.
+		// Nothing to act on without an account, so the chip is the only fill.
 		const filled = await hero.evaluate(
 			(el, a) =>
-				[...el.querySelectorAll('*')].filter((n) => getComputedStyle(n).backgroundColor === a),
+				[...el.querySelectorAll('*')]
+					.filter((n) => getComputedStyle(n).backgroundColor === a)
+					.map((n) => n.className),
 			accent
 		);
-		expect(filled).toHaveLength(0);
+		expect(filled).toEqual([expect.stringContaining('version')]);
 		await expect(hero.getByText('Fork this recipe')).toHaveCount(0);
 
 		// Cook time is metadata, not a pill: no background of its own.
@@ -466,7 +470,7 @@ test.describe('Recipe detail page', () => {
 		await gotoClassicCookies(page);
 		const header = await page.locator('header.recipe-header').boundingBox();
 		const photo = await page.locator('.recipe-photo img').boundingBox();
-		const deck = await page.locator('.deck').boundingBox();
+		const deck = await page.locator('.description').boundingBox();
 		const byline = await page.locator('.byline').boundingBox();
 		const ingredients = await page
 			.getByRole('heading', { name: /ingredients/i })
@@ -480,7 +484,7 @@ test.describe('Recipe detail page', () => {
 		expect(photo!.x).toBeGreaterThan(header!.x + header!.width - 1);
 		expect(Math.abs(photo!.y - header!.y)).toBeLessThan(12);
 		expect(photo!.height).toBeLessThanOrEqual(440);
-		// The deck comes before the byline, which comes before the body.
+		// The description comes before the byline, which comes before the body.
 		expect(deck!.y).toBeLessThan(byline!.y);
 		expect(ingredients!.y).toBeGreaterThan(byline!.y + byline!.height);
 		// Ingredients start by about 600px, beside a method column that runs to the photo's right edge.
@@ -547,17 +551,15 @@ test.describe('Recipe detail page', () => {
 		// Each item's first text node, measured as a range so the button box
 		// does not count.
 		const bottoms = await page.evaluate(() =>
-			['.byline .username', '.byline .version', '.versions-toggle', '.byline a[href*="/diff"]'].map(
-				(sel) => {
-					const el = document.querySelector(sel)!;
-					const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
-					let node = walker.nextNode();
-					while (node && !node.textContent?.trim()) node = walker.nextNode();
-					const range = document.createRange();
-					range.selectNodeContents(node!);
-					return range.getBoundingClientRect().bottom;
-				}
-			)
+			['.byline .username', '.versions-toggle', '.byline a[href*="/diff"]'].map((sel) => {
+				const el = document.querySelector(sel)!;
+				const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+				let node = walker.nextNode();
+				while (node && !node.textContent?.trim()) node = walker.nextNode();
+				const range = document.createRange();
+				range.selectNodeContents(node!);
+				return range.getBoundingClientRect().bottom;
+			})
 		);
 		for (const bottom of bottoms) expect(Math.abs(bottom - bottoms[0])).toBeLessThan(1);
 	});

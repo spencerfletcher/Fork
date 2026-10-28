@@ -179,7 +179,7 @@ Clay and marigold were raised in chroma from #a4512b and #e8a83a: same hues, sam
 ### Hierarchy
 
 - **Display** (500, 2.5rem, 1.15, clay): page h1. Recipe titles, "Recipes", "Search", the profile handle. Phones drop to about 1.75rem.
-- **Deck** (500, 1.25rem, 1.4, Ink 2, Bitter): the current version's commit message under a recipe title, full measure, never truncated. On version 1 the description stands in. 1.125rem on a phone.
+- **Description** (400, 1.25rem, 1.45, Ink 2, Source Sans): a recipe's description under its title. 1.125rem on a phone.
 - **Headline** (500, 1.75rem, 1.25, ink): h2 on pages that need a second serif level ("Recipes worth forking").
 - **Title** (500, 1.0625rem, 1.25): recipe card names in Bitter. Clay on a no-photo panel, ink on a photo card.
 - **Body** (400, 1rem, 1.65, ink): running text, ingredients, steps. Descriptions at 1.0625rem in Ink 2. Measure stays under about 72 characters.
@@ -253,9 +253,9 @@ Small, consistent corners: 4px on chips and icon buttons, 6px on buttons, inputs
 
 - Espresso bar, 56px, 1200px inner column. Bitter wordmark "Fork." in cream with a marigold full stop. Links in tan, 0.875rem 500, cream on hover or when active. One marigold action. Below 768px the links collapse behind 44px icon buttons.
 
-### Version byline (signature)
+### Version bar (signature)
 
-The commit message is the deck under the recipe's title, in Bitter at full measure, and the history is one mono line beneath it: `@author · v3 · 3 versions · 1 fork · Compare with v2`, Ink 3 with clay links, the version number in ink at 600. "3 versions" opens the list of every version, one link per version, under the byline. Viewing an older version the line reads `v2 of 3 · Viewing history · Back to v3` and the deck is that version's message. There is no version chip and no bar: the sentence is the mark that makes a Fork recipe page a Fork page.
+A lifted-paper card under the description: a marigold `v3` chip in mono, the commit message in sans 1.0625rem ink clamped to two lines (a tap opens the rest), then one mono line of history: `@author · 3 versions · 1 fork · Compare with v2`, Ink 3 with clay links. "3 versions" opens the list of every version, one link per version, under the bar. Viewing an older version the chip and message are that version's and the line reads `v2 of 3 · Viewing history · Back to v3`. The chip is the only marigold fill above the buttons, and the version number appears nowhere else. The bar is the mark that makes a Fork recipe page a Fork page.
 
 ### Diff rows (signature)
 

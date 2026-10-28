@@ -146,7 +146,7 @@ Not yet decided: whether to track `.impeccable/critique/`, `.codex/hooks.json`, 
 
 Decided 28 October 2026, after path boards on the design canvas (rows Q1 to Q3):
 
-- Q1: the signature is a sentence. The commit message is the deck; the version bar is deleted; one mono byline carries the version, counts and Compare link.
+- Q1: the signature is a sentence. The commit message is the deck; the version bar is deleted; one mono byline carries the version, counts and Compare link. Revised the same evening after seeing it built: the description is the deck (sans, 20px) and the commit message returns to a version bar under it, with the marigold chip, clamped to two lines. The title chip stays gone.
 - Q2: the owner's primary action is Edit, with no Fork, as master already does. Fork is primary for every other signed-in reader. Revised after the build the same day: logged out, no action row at all; a lone Fork button read as odd and the login round trip was not worth it.
 - Q3: the photo is the right half of a 6/6 hero, 4:3, capped at 440px. Ingredients start by about 600px at 1280.
 - Q4: step numerals are clay JetBrains Mono everywhere; the live page changes from Bitter to match.

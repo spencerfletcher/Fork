@@ -83,57 +83,56 @@ describe('RecipeHeader fork attribution', () => {
 	});
 });
 
-// ─── The deck ─────────────────────────────────────────────────────────────────
+// ─── The version bar ──────────────────────────────────────────────────────────
 
-describe('RecipeHeader deck', () => {
+describe('RecipeHeader version bar', () => {
 	test("shows the viewed version's title", () => {
 		renderHeader();
 		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Old Title');
 	});
 
-	test('the deck is the current commit message, then the description', () => {
+	test('the description sits under the title, before the bar', () => {
 		const { container } = renderHeader({ currentVersion: V3, versions: THREE });
-		const deck = container.querySelector('.deck')!;
-		expect(deck).toHaveTextContent('Chill the dough');
 		const description = container.querySelector('.description')!;
+		const bar = container.querySelector('.version-bar')!;
 		expect(description).toHaveTextContent('Crisp edges.');
 		expect(
-			deck.compareDocumentPosition(description) & Node.DOCUMENT_POSITION_FOLLOWING
+			description.compareDocumentPosition(bar) & Node.DOCUMENT_POSITION_FOLLOWING
 		).toBeTruthy();
 	});
 
-	test('on version 1 the deck is the description, shown once', () => {
-		const { container } = renderHeader();
-		expect(container.querySelector('.deck')).toHaveTextContent('Crisp edges.');
-		expect(container.querySelector('.description')).toBeNull();
-		expect(screen.queryByText('Initial recipe')).toBeNull();
-	});
-
-	test('version 1 without a description has no deck', () => {
-		const { container } = renderHeader({ currentVersion: { ...V1, description: null } });
-		expect(container.querySelector('.deck')).toBeNull();
-	});
-
-	test('no version chip: the version number appears once, in the byline', () => {
+	test('the bar leads with a marigold version chip and the commit message', () => {
 		const { container } = renderHeader({ currentVersion: V3, versions: THREE });
+		const chip = container.querySelector('.version-bar .version')!;
+		expect(chip).toHaveTextContent('v3');
+		expect(screen.getByRole('button', { name: 'Chill the dough' })).toBeInTheDocument();
 		// The hidden history list holds a second "v3"; the reader sees one.
 		const visible = screen.getAllByText('v3').filter((el) => !el.closest('[hidden]'));
 		expect(visible).toHaveLength(1);
-		expect(container.querySelector('.bg-marigold')).toBeNull();
+	});
+
+	test('a long message is clamped until tapped', async () => {
+		renderHeader({ currentVersion: V3, versions: THREE });
+		const message = screen.getByRole('button', { name: 'Chill the dough' });
+		expect(message).toHaveClass('clamped');
+		expect(message).toHaveAttribute('aria-expanded', 'false');
+		await fireEvent.click(message);
+		expect(message).not.toHaveClass('clamped');
+		expect(message).toHaveAttribute('aria-expanded', 'true');
 	});
 });
 
 // ─── The byline ───────────────────────────────────────────────────────────────
 
 describe('RecipeHeader byline', () => {
-	test('author, version, counts and compare in one mono line', () => {
+	test('author, versions, forks and compare in one mono line', () => {
 		const { container } = renderHeader({
 			recipe: makeRecipe({ author: { id: 'u1', username: 'chef' } }),
 			currentVersion: V3,
 			versions: THREE,
 			forkCount: 1
 		});
-		expect(byline(container)).toBe('@chef · v3 · 3 versions · 1 fork · Compare with v2');
+		expect(byline(container)).toBe('@chef · 3 versions · 1 fork · Compare with v2');
 		expect(screen.getByRole('link', { name: 'Compare with v2' })).toHaveAttribute(
 			'href',
 			'/recipes/my-fork/diff?from=2&to=3'
@@ -141,12 +140,12 @@ describe('RecipeHeader byline', () => {
 		expect(screen.getAllByRole('link', { name: '@chef' })).toHaveLength(1);
 	});
 
-	test('a single version reads as just the version, no count, no compare', () => {
+	test('a single version reads as just the author, no count, no compare', () => {
 		const { container } = renderHeader({
 			recipe: makeRecipe({ author: { id: 'u1', username: 'chef' } })
 		});
-		expect(byline(container)).toBe('@chef · v1');
-		expect(screen.queryByRole('button')).toBeNull();
+		expect(byline(container)).toBe('@chef');
+		expect(screen.queryByRole('button', { name: /versions/ })).toBeNull();
 		expect(screen.queryByRole('link', { name: /compare/i })).toBeNull();
 	});
 
@@ -164,7 +163,8 @@ describe('RecipeHeader byline', () => {
 			versions: THREE,
 			isViewingHistory: true
 		});
-		expect(container.querySelector('.deck')).toHaveTextContent('Add espresso powder');
+		expect(container.querySelector('.version-bar .version')).toHaveTextContent('v2');
+		expect(screen.getByRole('button', { name: 'Add espresso powder' })).toBeInTheDocument();
 		expect(byline(container)).toBe('v2 of 3 · Viewing history · Back to v3');
 		expect(screen.getByRole('link', { name: 'Back to v3' })).toHaveAttribute(
 			'href',

@@ -7,7 +7,7 @@
 	import type { RecipeContent } from '#lib/recipes/types.js';
 
 	// Only what the header renders: the viewed version for the dish, the recipe
-	// row for where it lives, the version list for the byline and its history.
+	// row for where it lives, the version list for the bar and its history.
 	type HeaderContent = Pick<
 		RecipeContent,
 		'title' | 'description' | 'servings' | 'prepTimeMinutes' | 'cookTimeMinutes' | 'imageUrl'
@@ -44,17 +44,17 @@
 	const latest = $derived(Math.max(...versions.map((v) => v.versionNumber)));
 	const n = $derived(currentVersion.versionNumber);
 
-	// The commit message is the deck: the one sentence that says what this
-	// version is. Version 1 has nothing to say yet, so the description stands in.
-	const deck = $derived(n > 1 ? currentVersion.commitMessage : currentVersion.description);
-	const showDescription = $derived(n > 1 && !!currentVersion.description);
-
 	let open = $state(false);
 	let toggle: HTMLButtonElement | undefined = $state();
+	// The commit message shows two lines; a tap shows the rest.
+	let expanded = $state(false);
 
 	// SvelteKit keeps this component mounted when only the query changes, so
 	// the history's own links would otherwise leave it open over the next view.
-	afterNavigate(() => (open = false));
+	afterNavigate(() => {
+		open = false;
+		expanded = false;
+	});
 
 	function onWindowKeydown(event: KeyboardEvent) {
 		if (!open || event.key !== 'Escape') return;
@@ -66,50 +66,75 @@
 <svelte:window onkeydown={onWindowKeydown} />
 
 <header class="recipe-header">
-	<h1 class="title m-0 font-serif leading-[1.05] font-medium">{currentVersion.title}</h1>
+	<h1 class="title m-0 font-serif leading-[1.15] font-medium">{currentVersion.title}</h1>
 
-	{#if deck}
-		<p class="deck m-0 font-serif font-medium">{deck}</p>
+	{#if currentVersion.description}
+		<p class="description text-text-2 m-0">{currentVersion.description}</p>
 	{/if}
 
-	<!-- One mono line of history: who, which version, how many, the way in. -->
-	<p class="byline m-0 font-mono">
-		{#if isViewingHistory}
-			<span>v{n} of {count}</span>
-			<span class="dot">·</span>
-			<span>Viewing history</span>
-			<span class="dot">·</span>
-			<a href="/recipes/{recipe.slug}">Back to v{latest}</a>
-		{:else}
-			{#if recipe.author}
-				<Username username={recipe.author.username} />
-				<span class="dot">·</span>
-			{/if}
+	{#if recipe.parent}
+		<p class="attribution text-text-3 m-0 font-sans text-[0.875rem]">
+			Forked from
+			<a href="/recipes/{recipe.parent.slug}" class="text-accent">{recipe.parent.title}</a>
+			{#if recipe.parent.author}by <Username username={recipe.parent.author.username} />{/if}
+		</p>
+	{:else if recipe.parentId}
+		<p class="attribution text-text-3 m-0 font-sans text-[0.875rem]">
+			Forked from a private recipe
+		</p>
+	{/if}
+
+	<!-- The version bar: the version being read and what it changed, then one
+	     mono line of history: who, how many, the way in. -->
+	<div class="version-bar">
+		<p class="commit-line m-0">
 			<span class="version">v{n}</span>
-			{#if count > 1}
+			<button
+				type="button"
+				class="commit"
+				class:clamped={!expanded}
+				aria-expanded={expanded}
+				title={currentVersion.commitMessage}
+				onclick={() => (expanded = !expanded)}>
+				{currentVersion.commitMessage}
+			</button>
+		</p>
+		<p class="byline m-0 font-mono">
+			{#if isViewingHistory}
+				<span>v{n} of {count}</span>
 				<span class="dot">·</span>
-				<button
-					type="button"
-					class="versions-toggle"
-					bind:this={toggle}
-					aria-expanded={open}
-					aria-controls="version-history"
-					onclick={() => (open = !open)}>
-					{count} versions
-				</button>
-			{/if}
-			{#if forkCount > 0}
+				<span>Viewing history</span>
 				<span class="dot">·</span>
-				<span>{forkCount} {forkCount === 1 ? 'fork' : 'forks'}</span>
+				<a href="/recipes/{recipe.slug}">Back to v{latest}</a>
+			{:else}
+				{#if recipe.author}
+					<Username username={recipe.author.username} />
+				{/if}
+				{#if count > 1}
+					{#if recipe.author}<span class="dot">·</span>{/if}
+					<button
+						type="button"
+						class="versions-toggle"
+						bind:this={toggle}
+						aria-expanded={open}
+						aria-controls="version-history"
+						onclick={() => (open = !open)}>
+						{count} versions
+					</button>
+				{/if}
+				{#if forkCount > 0}
+					<span class="dot">·</span>
+					<span>{forkCount} {forkCount === 1 ? 'fork' : 'forks'}</span>
+				{/if}
+				{#if n > 1}
+					<span class="dot">·</span>
+					<a href="/recipes/{recipe.slug}/diff?from={n - 1}&to={n}" class="whitespace-nowrap">
+						Compare with v{n - 1}
+					</a>
+				{/if}
 			{/if}
-			{#if n > 1}
-				<span class="dot">·</span>
-				<a href="/recipes/{recipe.slug}/diff?from={n - 1}&to={n}" class="whitespace-nowrap">
-					Compare with v{n - 1}
-				</a>
-			{/if}
-		{/if}
-	</p>
+		</p>
+	</div>
 
 	{#if count > 1 && !isViewingHistory}
 		<ul id="version-history" class="history m-0 list-none p-0 font-mono" hidden={!open}>
@@ -127,24 +152,6 @@
 				</li>
 			{/each}
 		</ul>
-	{/if}
-
-	{#if recipe.parent}
-		<p class="attribution text-text-3 m-0 font-sans text-[0.875rem]">
-			Forked from
-			<a href="/recipes/{recipe.parent.slug}" class="text-accent">{recipe.parent.title}</a>
-			{#if recipe.parent.author}by <Username username={recipe.parent.author.username} />{/if}
-		</p>
-	{:else if recipe.parentId}
-		<p class="attribution text-text-3 m-0 font-sans text-[0.875rem]">
-			Forked from a private recipe
-		</p>
-	{/if}
-
-	{#if showDescription}
-		<p class="description text-text-2 m-0 text-[1.0625rem] leading-[1.5]">
-			{currentVersion.description}
-		</p>
 	{/if}
 
 	{#if tags.length > 0}
@@ -173,14 +180,61 @@
 	/* clamp() for fluid typography: 28px on a phone, 40px on a desktop. */
 	.title {
 		font-size: clamp(1.75rem, 1.2rem + 1.8vw, 2.5rem);
-		line-height: 1.15;
 		color: var(--color-accent);
 	}
 
-	.deck {
+	.description {
 		font-size: 1.25rem;
-		line-height: 1.4;
-		color: var(--color-text-2);
+		line-height: 1.45;
+	}
+
+	.version-bar {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+		padding: 10px 14px;
+		background: var(--color-surface);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+	}
+
+	.commit-line {
+		display: flex;
+		align-items: baseline;
+		gap: 10px;
+	}
+
+	.version {
+		flex-shrink: 0;
+		padding: 0 6px;
+		border-radius: var(--radius-sm);
+		background: var(--color-marigold);
+		color: var(--color-text);
+		font-family: var(--font-mono);
+		font-size: 0.8125rem;
+		font-weight: 600;
+	}
+
+	/* The message is a button only so a long one can be opened; it looks like text. */
+	.commit {
+		min-width: 0;
+		padding: 0;
+		border: none;
+		background: none;
+		font: inherit;
+		font-size: 1.0625rem;
+		line-height: 1.45;
+		text-align: left;
+		color: var(--color-text);
+		cursor: pointer;
+	}
+
+	.commit.clamped {
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		line-clamp: 2;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
 	}
 
 	.byline {
@@ -191,11 +245,6 @@
 		font-size: 0.875rem;
 		line-height: 1.7;
 		color: var(--color-text-3);
-	}
-
-	.byline .version {
-		font-weight: 600;
-		color: var(--color-text);
 	}
 
 	.byline a,
@@ -265,7 +314,7 @@
 			gap: 10px;
 		}
 
-		.deck {
+		.description {
 			font-size: 1.125rem;
 		}
 	}

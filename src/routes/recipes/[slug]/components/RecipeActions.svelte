@@ -50,7 +50,7 @@
 						<circle cx="12" cy="2.5" r="1.3" fill="currentColor" />
 						<circle cx="8" cy="13.5" r="1.3" fill="currentColor" />
 					</svg>
-					 Fork this recipe
+					Fork this recipe
 				</button>
 			</form>
 		{/if}
@@ -69,7 +69,7 @@
 					stroke-linejoin="round">
 					<path d="M11.5 2.5l2 2L5 13H3v-2z" />
 				</svg>
-				 Edit recipe
+				Edit recipe
 			</a>
 		{/if}
 		{#if canFavorite}

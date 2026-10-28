@@ -21,7 +21,7 @@ Primary task: read and cook. Secondary: fork (visitor), edit (owner), favorite, 
 
 Visual authority: DESIGN.md as it stands (cream paper, clay text accent, marigold action, Bitter, Source Sans 3, JetBrains Mono for history and measurement). Refinement inside the incumbent world, not a redesign.
 
-Thesis: the signature is a sentence, not a bar. The current version's commit message is the deck under the title, in Bitter, full measure, never truncated. One mono byline carries author, version, counts and Compare. The version bar, the title chip and every other place the version number appeared are deleted.
+Thesis (revised 28 October, evening): the description is the deck in sans; the commit message lives in a version bar under it with the marigold chip, clamped to two lines and opened on tap. One mono byline inside the bar carries author, counts and Compare. The title chip and every other place the version number appeared are deleted.
 
 Focal moment: title, deck and byline together, with the photo beside them.
 
