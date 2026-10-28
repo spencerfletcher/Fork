@@ -48,8 +48,11 @@ describe('RecipeActions primary action', () => {
 		expect(screen.getByRole('button', { name: /favorite/i })).toHaveClass('btn-ghost');
 	});
 
-	test('the owner gets Edit in marigold, since Fork is not offered', () => {
+	test('the owner gets Edit in marigold, first, since Fork is not offered', () => {
 		render(RecipeActions, { props: makeProps({ isOwner: true }) });
-		expect(screen.getByRole('link', { name: /edit recipe/i })).toHaveClass('btn-primary');
+		const edit = screen.getByRole('link', { name: /edit recipe/i });
+		expect(edit).toHaveClass('btn-primary');
+		const favorite = screen.getByRole('button', { name: /favorite/i });
+		expect(edit.compareDocumentPosition(favorite) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 	});
 });
