@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { afterNavigate } from '$app/navigation';
+	import type { Snippet } from 'svelte';
 	import Username from '#lib/components/ui/Username.svelte';
 	import Details from './Details.svelte';
 	import type { Recipe, RecipeVersion } from '#lib/server/db/schema.js';
@@ -24,7 +25,8 @@
 		versions,
 		forkCount,
 		isViewingHistory,
-		tags
+		tags,
+		actions
 	}: {
 		recipe: HeaderRecipe;
 		currentVersion: HeaderVersion & HeaderContent;
@@ -34,6 +36,8 @@
 		forkCount: number;
 		isViewingHistory: boolean;
 		tags: { id: number; name: string; slug: string }[];
+		/** The action row (Fork or Edit, Favorite), set right under the byline. */
+		actions?: Snippet;
 	} = $props();
 
 	const count = $derived(versions.length);
@@ -125,6 +129,10 @@
 		</ul>
 	{/if}
 
+	{#if actions}
+		<div class="actions-row">{@render actions()}</div>
+	{/if}
+
 	{#if recipe.parent}
 		<p class="attribution text-text-3 m-0 font-sans text-[0.875rem]">
 			Forked from
@@ -144,7 +152,7 @@
 	{/if}
 
 	{#if tags.length > 0}
-		<p class="tags text-text-2 m-0 text-[0.875rem]">
+		<p class="tags text-text-2 m-0 text-[1.0625rem] leading-[1.5]">
 			{#each tags as tag, i (tag.id)}
 				{#if i > 0},&#32;{/if}
 				<a href="/tags/{tag.slug}">{tag.name}</a>
@@ -162,9 +170,10 @@
 		gap: 12px;
 	}
 
-	/* clamp() for fluid typography: 36px on a phone, 52px on a desktop. */
+	/* clamp() for fluid typography: 28px on a phone, 40px on a desktop. */
 	.title {
-		font-size: clamp(2.25rem, 1.5rem + 2.2vw, 3.25rem);
+		font-size: clamp(1.75rem, 1.2rem + 1.8vw, 2.5rem);
+		line-height: 1.15;
 		color: var(--color-accent);
 		text-wrap: balance;
 	}
@@ -180,7 +189,7 @@
 		flex-wrap: wrap;
 		align-items: baseline;
 		gap: 4px 8px;
-		font-size: 0.8125rem;
+		font-size: 0.875rem;
 		line-height: 1.7;
 		color: var(--color-text-3);
 	}
@@ -224,7 +233,7 @@
 		background: var(--color-surface);
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-md);
-		font-size: 0.8125rem;
+		font-size: 0.875rem;
 	}
 
 	.history li {
@@ -248,8 +257,8 @@
 		color: var(--color-text);
 	}
 
-	.description {
-		margin-top: 4px;
+	.actions-row {
+		margin: 2px 0 6px;
 	}
 
 	@media (max-width: 699px) {

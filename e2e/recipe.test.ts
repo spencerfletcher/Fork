@@ -426,7 +426,7 @@ test.describe('Recipe detail page', () => {
 		expect(contrast(hero.color, hero.bg)).toBeGreaterThanOrEqual(4.5);
 	});
 
-	test('the hero has one marigold fill, the Fork button, and no marigold text', async ({
+	test('logged out, the hero has no marigold fill, no Fork, and no marigold text', async ({
 		page
 	}) => {
 		await gotoClassicCookies(page);
@@ -435,16 +435,14 @@ test.describe('Recipe detail page', () => {
 
 		const accent = 'rgb(236, 166, 32)';
 
-		// Marigold is the only fill, and the primary action is the only thing filled.
+		// Nothing to act on without an account, so nothing is filled.
 		const filled = await hero.evaluate(
 			(el, a) =>
 				[...el.querySelectorAll('*')].filter((n) => getComputedStyle(n).backgroundColor === a),
 			accent
 		);
-		expect(filled).toHaveLength(1);
-		// Logged out, Fork is still offered and leads to login with the way back.
-		const fork = page.locator('.hero').getByRole('link', { name: 'Fork this recipe' });
-		await expect(fork).toHaveAttribute('href', /^\/login\?redirect=%2Frecipes%2F/);
+		expect(filled).toHaveLength(0);
+		await expect(hero.getByText('Fork this recipe')).toHaveCount(0);
 
 		// Cook time is metadata, not a pill: no background of its own.
 		const time = page.getByText(/^\d+\s*(min|h)/).first();

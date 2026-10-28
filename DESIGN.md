@@ -178,13 +178,13 @@ Clay and marigold were raised in chroma from #a4512b and #e8a83a: same hues, sam
 
 ### Hierarchy
 
-- **Display** (500, 2.5rem, 1.15, clay): page h1. "Recipes", "Search", the profile handle. Phones drop to about 1.75rem. A recipe's title runs larger, 2.25rem on a phone up to 3.25rem on a desktop, balanced.
+- **Display** (500, 2.5rem, 1.15, clay): page h1. Recipe titles (balanced), "Recipes", "Search", the profile handle. Phones drop to about 1.75rem.
 - **Deck** (500, 1.25rem, 1.4, Ink 2, Bitter): the current version's commit message under a recipe title, full measure, never truncated. On version 1 the description stands in. 1.125rem on a phone.
 - **Headline** (500, 1.75rem, 1.25, ink): h2 on pages that need a second serif level ("Recipes worth forking").
 - **Title** (500, 1.0625rem, 1.25): recipe card names in Bitter. Clay on a no-photo panel, ink on a photo card.
 - **Body** (400, 1rem, 1.65, ink): running text, ingredients, steps. Descriptions at 1.0625rem in Ink 2. Measure stays under about 72 characters.
 - **Sans label** (600, 0.6875rem, 0.08em, uppercase, Ink 3): section eyebrows ("Ingredients", "Method", "Recent"), form legends, stat labels (Prep, Cook, Serves). Also h4.
-- **Mono** (400, 0.75rem, 1.5): bylines, dates, version counts, gram weights, diff rows and commit messages in history. The recipe page's byline, meta line (Prep, Cook, Serves), section tabs and step numerals use 0.8125rem, the numerals and tabs at 600. Diff and compare surfaces use 0.875rem. Card version marks use 600 at 0.6875rem.
+- **Mono** (400, 0.75rem, 1.5): bylines, dates, version counts, gram weights, diff rows and commit messages in history. The recipe page's byline and meta line (Prep, Cook, Serves) use 0.875rem; the section tabs 0.8125rem at 600; step numerals 1rem at 600. Diff and compare surfaces use 0.875rem. Card version marks use 600 at 0.6875rem.
 - **Also in use** and on the ramp: 0.8125rem (card meta, byline, numerals), 0.875rem (navbar links, diff), 0.9375rem (buttons, card body), 1.375rem (the wordmark).
 
 ### Named Rules

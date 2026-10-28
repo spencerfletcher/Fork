@@ -1,5 +1,6 @@
 import { describe, test, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/svelte';
+import { createRawSnippet } from 'svelte';
 import RecipeHeader from './RecipeHeader.svelte';
 import type { ComponentProps } from 'svelte';
 import { makeContent } from '#lib/recipes/fixtures.js';
@@ -218,6 +219,21 @@ describe('RecipeHeader content', () => {
 	test('carries no photo: that is the page’s to place', () => {
 		renderHeader({ currentVersion: { ...V1, imageUrl: 'https://img/cookies.jpg' } });
 		expect(screen.queryByRole('img')).toBeNull();
+	});
+
+	test('the action row sits under the byline, before the description', () => {
+		const { container } = renderHeader({
+			currentVersion: V3,
+			versions: THREE,
+			actions: createRawSnippet(() => ({ render: () => '<button>Fork this recipe</button>' }))
+		});
+		const button = screen.getByRole('button', { name: 'Fork this recipe' });
+		const byline = container.querySelector('.byline')!;
+		const description = container.querySelector('.description')!;
+		expect(byline.compareDocumentPosition(button) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+		expect(
+			button.compareDocumentPosition(description) & Node.DOCUMENT_POSITION_FOLLOWING
+		).toBeTruthy();
 	});
 
 	test('renders no meta line and no tags when there is nothing to show', () => {

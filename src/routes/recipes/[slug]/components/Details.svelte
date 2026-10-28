@@ -23,7 +23,7 @@
 	<dl class="details m-0 flex flex-wrap items-baseline gap-x-5 gap-y-1 p-0">
 		{#each rows as [label, value] (label)}
 			<div class="flex items-baseline gap-2">
-				<dt class="text-text-3 font-mono text-[0.8125rem] uppercase">{label}</dt>
+				<dt class="text-text-3 font-mono text-[0.875rem] uppercase">{label}</dt>
 				<dd class="text-text m-0 font-sans text-[0.9375rem] font-semibold">{value}</dd>
 			</div>
 		{/each}

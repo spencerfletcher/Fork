@@ -10,7 +10,6 @@ function makeProps(overrides: Record<string, unknown> = {}) {
 	return {
 		recipe: { slug: 'cookies', title: 'Cookies' },
 		canFork: false,
-		loginHref: null,
 		canFavorite: true,
 		isOwner: false,
 		isViewingHistory: false,
@@ -57,14 +56,9 @@ describe('RecipeActions primary action', () => {
 		expect(document.querySelector('dialog')).toBeNull();
 	});
 
-	test('logged out, Fork is still there and leads to login with the way back', () => {
-		render(RecipeActions, {
-			props: makeProps({ canFavorite: false, loginHref: '/login?redirect=%2Frecipes%2Fcookies' })
-		});
-		const fork = screen.getByRole('link', { name: 'Fork this recipe' });
-		expect(fork).toHaveClass('btn-primary');
-		expect(fork).toHaveAttribute('href', '/login?redirect=%2Frecipes%2Fcookies');
-		expect(screen.queryByRole('button', { name: /favorite/i })).toBeNull();
+	test('logged out, there is nothing to do and nothing is rendered', () => {
+		const { container } = render(RecipeActions, { props: makeProps({ canFavorite: false }) });
+		expect(container.querySelector('.actions')).toBeNull();
 	});
 
 	test('the owner gets Edit in marigold, first, since Fork is not offered', () => {

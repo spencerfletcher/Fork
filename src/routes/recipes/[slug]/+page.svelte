@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { page } from '$app/state';
 	import type { PageData } from './$types';
 	import RecipeHeader from './components/RecipeHeader.svelte';
 	import RecipeIngredients from './components/RecipeIngredients.svelte';
@@ -14,10 +13,6 @@
 	const user = $derived(data.user);
 	const isOwner = $derived(user?.id === recipe.authorId);
 	const canFork = $derived(!!user && !isOwner && !isViewingHistory);
-	// A visitor who is not logged in still sees Fork; it brings them back here.
-	const loginHref = $derived(
-		!user && !isViewingHistory ? `/login?redirect=${encodeURIComponent(page.url.pathname)}` : null
-	);
 	const canFavorite = $derived(!!user && !isViewingHistory);
 
 	// On a phone the Ingredients | Method tabs mark which section is under the
@@ -45,15 +40,17 @@
 				versions={allVersions}
 				forkCount={data.forkCount}
 				{isViewingHistory}
-				{tags} />
-			<RecipeActions
-				{recipe}
-				{canFork}
-				{loginHref}
-				{canFavorite}
-				{isOwner}
-				{isViewingHistory}
-				initialFavorited={data.isFavorited} />
+				{tags}>
+				{#snippet actions()}
+					<RecipeActions
+						{recipe}
+						{canFork}
+						{canFavorite}
+						{isOwner}
+						{isViewingHistory}
+						initialFavorited={data.isFavorited} />
+				{/snippet}
+			</RecipeHeader>
 		</div>
 		{#if currentVersion.imageUrl}
 			<figure class="recipe-photo m-0">

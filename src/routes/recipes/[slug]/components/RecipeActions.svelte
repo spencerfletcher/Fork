@@ -5,7 +5,6 @@
 	let {
 		recipe,
 		canFork,
-		loginHref,
 		canFavorite,
 		isOwner,
 		isViewingHistory,
@@ -13,8 +12,6 @@
 	}: {
 		recipe: Pick<Recipe, 'slug' | 'title'>;
 		canFork: boolean;
-		/** Where Fork sends a logged-out visitor; null when Fork is not offered. */
-		loginHref: string | null;
 		canFavorite: boolean;
 		isOwner: boolean;
 		isViewingHistory: boolean;
@@ -26,7 +23,7 @@
 	let isFavorited = $derived(initialFavorited);
 </script>
 
-{#if canFavorite || canFork || loginHref || (isOwner && !isViewingHistory)}
+{#if canFavorite || canFork || (isOwner && !isViewingHistory)}
 	<div class="actions">
 		{#if canFork}
 			<!-- One click. The server writes the first commit message itself. -->
@@ -41,8 +38,6 @@
 				}}>
 				<button type="submit" class="btn-primary">Fork this recipe</button>
 			</form>
-		{:else if loginHref}
-			<a href={loginHref} class="btn-primary no-underline">Fork this recipe</a>
 		{/if}
 
 		{#if isOwner && !isViewingHistory}
@@ -97,7 +92,9 @@
 		align-items: center;
 		justify-content: center;
 		gap: 8px;
-		min-height: 44px;
+		min-height: 40px;
+		padding-top: 8px;
+		padding-bottom: 8px;
 	}
 
 	@media (max-width: 699px) {

@@ -18,13 +18,11 @@
 			<!-- A native checkbox, visually hidden, carries the state and the keyboard
 			     behaviour; the label is the row and takes the struck-through look. -->
 			<label
-				class="has-[:focus-visible]:outline-accent grid cursor-pointer [grid-template-columns:30px_1fr] items-start gap-[18px] select-none has-[:checked]:line-through has-[:checked]:opacity-40 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2">
+				class="has-[:focus-visible]:outline-accent grid cursor-pointer [grid-template-columns:30px_1fr] items-baseline gap-[18px] select-none has-[:checked]:line-through has-[:checked]:opacity-40 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2">
 				<input type="checkbox" class="sr-only" />
 				<!-- A step number is a mark of measure, so it is set like the grams
 				     and the byline: mono, clay. -->
-				<span class="text-accent pt-[5px] font-mono text-[0.8125rem] font-semibold">
-					{n}
-				</span>
+				<span class="text-accent font-mono text-[1rem] font-semibold">{n}</span>
 				<div class="flex flex-col gap-1.5">
 					<p class="text-text m-0 font-sans text-[1.0625rem] leading-[1.6] whitespace-pre-line">
 						{step.text}
