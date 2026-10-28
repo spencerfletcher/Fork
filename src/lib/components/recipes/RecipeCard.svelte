@@ -188,6 +188,8 @@
 		/* Above the card's stretched link, so the author stays clickable. */
 		position: relative;
 		z-index: 2;
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
 		text-decoration: none;
 		transition: color 0.15s ease;
 	}

@@ -3,6 +3,7 @@
 	import { enhance, applyAction } from '$app/forms';
 	import type { User } from '@supabase/supabase-js';
 	import type { Profile } from '#lib/server/db/schema.js';
+	import Username from './Username.svelte';
 
 	let { user, profile = null }: { user: User | null; profile?: Profile | null } = $props();
 
@@ -58,11 +59,7 @@
 			<div class="hidden items-center gap-4 md:flex">
 				{#if user}
 					{#if profile}
-						<a
-							href="/users/{profile.username}"
-							class="text-text-tan hover:text-text-cream font-mono text-[0.75rem] no-underline transition-colors">
-							@{profile.username}
-						</a>
+						<Username username={profile.username} tone="dark" />
 					{/if}
 					<form action="/logout" method="POST" use:enhance>
 						<button type="submit" class="navbar-link logout-btn">Logout</button>
@@ -155,12 +152,9 @@
 				{#if user}
 					<!-- The same name and type as the desktop bar. -->
 					{#if profile}
-						<a
-							href="/users/{profile.username}"
-							onclick={closeMenu}
-							class="text-text-tan hover:text-text-cream block px-4 py-3 font-mono text-[0.75rem] no-underline transition-colors">
-							@{profile.username}
-						</a>
+						<div class="px-4 py-3">
+							<Username username={profile.username} tone="dark" onclick={closeMenu} />
+						</div>
 					{:else}
 						<p class="text-text-tan m-0 px-4 py-3 font-mono text-[0.75rem]">{user.email}</p>
 					{/if}

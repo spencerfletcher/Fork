@@ -41,8 +41,8 @@ describe('RecipeHeader fork attribution', () => {
 			'href',
 			'/recipes/original'
 		);
-		// Usernames are mono everywhere, this line included.
-		expect(screen.getByText('@chef')).toHaveClass('font-mono');
+		// Usernames are the same linked mono everywhere, this line included.
+		expect(screen.getByRole('link', { name: '@chef' })).toHaveAttribute('href', '/users/chef');
 	});
 
 	test('says the parent is private when the server withheld it', () => {

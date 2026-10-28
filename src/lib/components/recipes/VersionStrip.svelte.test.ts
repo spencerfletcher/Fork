@@ -96,6 +96,7 @@ describe('VersionStrip', () => {
 		expect(card.querySelector('.version-by')?.textContent?.replace(/\s+/g, ' ').trim()).toBe(
 			'@spencerfletcher · 1 Jan 2026'
 		);
+		expect(card.querySelector('.version-by a')).toHaveAttribute('href', '/users/spencerfletcher');
 		const foot = card.querySelector('.version-foot')!;
 		expect(foot.querySelector('.version-toggle')).toHaveTextContent('2 versions');
 		expect(foot.querySelector('.version-forks')).toHaveTextContent('1 fork');

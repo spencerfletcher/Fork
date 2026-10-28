@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation';
 	import VersionDiff from '#lib/components/recipes/VersionDiff.svelte';
 	import { formatTime } from '#lib/helpers.js';
+	import Username from '#lib/components/ui/Username.svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -27,10 +28,6 @@
 	// is worth that.
 	const when = (d: Date | null) =>
 		d?.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-
-	// One string, so a missing date or creator leaves no orphaned separator.
-	const headLine = (v: CardVersion) =>
-		[when(v.createdAt), v.creator && `@${v.creator.username}`].filter(Boolean).join(' · ');
 </script>
 
 {#snippet picker(id: string, label: string, value: number, set: (v: number) => void)}
@@ -49,11 +46,17 @@
 {/snippet}
 
 {#snippet card(v: CardVersion, isTo: boolean)}
-	{@const head = headLine(v)}
+	{@const date = when(v.createdAt)}
 	<article class="version-card" class:version-card--to={isTo}>
 		<div class="version-card__head">
 			<span class="version-card__number">v{v.versionNumber}</span>
-			{#if head}<span>{head}</span>{/if}
+			{#if v.creator || date}
+				<span>
+					{#if v.creator}<Username username={v.creator.username} />{/if}
+					{#if v.creator && date}·{/if}
+					{date ?? ''}
+				</span>
+			{/if}
 		</div>
 		<p class="version-card__message">{v.commitMessage}</p>
 		<dl>

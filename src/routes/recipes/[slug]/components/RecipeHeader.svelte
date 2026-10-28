@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Username from '#lib/components/ui/Username.svelte';
 	import type { Recipe, RecipeVersion } from '#lib/server/db/schema.js';
 	import type { RecipeContent } from '#lib/recipes/types.js';
 	import { formatTime } from '#lib/helpers.js';
@@ -55,10 +56,8 @@
 	</div>
 
 	{#if recipe.author}
-		<p class="author-line text-text-3 m-0 font-mono text-[0.75rem]">
-			<a href="/users/{recipe.author.username}" class="text-text-3 hover:text-text no-underline">
-				@{recipe.author.username}
-			</a>
+		<p class="author-line m-0">
+			<Username username={recipe.author.username} />
 		</p>
 	{/if}
 
@@ -66,8 +65,7 @@
 		<p class="attribution text-text-3 m-0 font-sans text-[0.875rem]">
 			Forked from
 			<a href="/recipes/{recipe.parent.slug}" class="text-accent">{recipe.parent.title}</a>
-			{#if recipe.parent.author}by
-				<span class="font-mono text-[0.75rem]">@{recipe.parent.author.username}</span>{/if}
+			{#if recipe.parent.author}by <Username username={recipe.parent.author.username} />{/if}
 		</p>
 	{:else if recipe.parentId}
 		<p class="attribution text-text-3 m-0 font-sans text-[0.875rem]">
@@ -104,8 +102,9 @@
 </header>
 
 <style>
+	/* The list pages' box: gutters outside a 1200px content width. */
 	.recipe-header {
-		max-width: var(--max-width);
+		max-width: calc(var(--max-width) + 2 * var(--space-5));
 		margin: 0 auto;
 		padding: 34px var(--space-5) 0;
 		display: flex;
@@ -131,7 +130,7 @@
 		order: 6;
 	}
 
-	@media (max-width: 860px) {
+	@media (max-width: 699px) {
 		.recipe-header {
 			padding: 16px 18px 0;
 			gap: 8px;

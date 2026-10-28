@@ -183,15 +183,15 @@ describe('Diff page', () => {
 		expect(header?.textContent?.replace(/\s+/g, ' ').trim()).toBe('v1');
 	});
 
-	test('a card names its creator after the date', () => {
+	test('a card links its creator, then the date', () => {
 		const { container } = render(DiffPage, {
 			props: {
 				data: makeData({ fromVersion: { ...V1, creator: { id: 'u1', username: 'chef' } } })
 			}
 		});
-		expect(container.querySelector('article.version-card .version-card__head')).toHaveTextContent(
-			'28 Feb 2026 · @chef'
-		);
+		const head = container.querySelector('article.version-card .version-card__head')!;
+		expect(head.textContent?.replace(/\s+/g, ' ').trim()).toBe('v1 @chef · 28 Feb 2026');
+		expect(head.querySelector('a')).toHaveAttribute('href', '/users/chef');
 	});
 
 	test("shows the date in the viewer's own day", () => {
