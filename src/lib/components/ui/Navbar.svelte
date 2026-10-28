@@ -35,7 +35,9 @@
 </script>
 
 <nav class="bg-navbar-bg relative z-50 px-5">
-	<div class="mx-auto flex h-[52px] max-w-[1200px] items-center justify-between md:h-14">
+	<!-- Above the overlay, so the bar stays bright and tappable while the menu is open. -->
+	<div
+		class="relative z-[100] mx-auto flex h-[52px] max-w-[1200px] items-center justify-between md:h-14">
 		<!-- Logo + nav links -->
 		<div class="flex items-center gap-6">
 			<a href="/" class="nav-brand" onclick={closeMenu}>
@@ -138,7 +140,9 @@
 			class="bg-navbar-bg absolute top-full right-0 left-0 z-[100] border-b border-white/[0.08]"
 			id="mobile-menu">
 			<ul class="m-0 list-none p-2">
-				{#each links as link (link.href)}
+				<!-- Search is the icon beside the menu button; listing it here too
+				     would be the same destination twice. -->
+				{#each links.filter((l) => l.href !== '/search') as link (link.href)}
 					<li><a href={link.href} onclick={closeMenu} class="mobile-link">{link.label}</a></li>
 				{/each}
 				{#if user}
@@ -149,7 +153,17 @@
 			</ul>
 			<div class="border-t border-white/[0.08] px-2 py-4">
 				{#if user}
-					<p class="text-text-bronze m-0 px-4 py-3 text-[0.8rem]">{user.email}</p>
+					<!-- The same name and type as the desktop bar. -->
+					{#if profile}
+						<a
+							href="/users/{profile.username}"
+							onclick={closeMenu}
+							class="text-text-tan hover:text-text-cream block px-4 py-3 font-mono text-[0.75rem] no-underline transition-colors">
+							@{profile.username}
+						</a>
+					{:else}
+						<p class="text-text-tan m-0 px-4 py-3 font-mono text-[0.75rem]">{user.email}</p>
+					{/if}
 					<form
 						action="/logout"
 						method="POST"

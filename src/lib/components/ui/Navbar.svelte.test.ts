@@ -1,5 +1,5 @@
 import { describe, test, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/svelte';
+import { render, screen, fireEvent, within } from '@testing-library/svelte';
 import Navbar from './Navbar.svelte';
 import type { User } from '@supabase/supabase-js';
 import { page } from '$app/state';
@@ -114,5 +114,31 @@ describe('Navbar', () => {
 		} finally {
 			page.url = new URL('http://localhost/');
 		}
+	});
+
+	test('the phone menu does not repeat Search, which sits beside it as an icon', async () => {
+		render(Navbar, { props: { user: null } });
+		await fireEvent.click(screen.getByRole('button', { name: /open main menu/i }));
+		const menu = within(document.getElementById('mobile-menu')!);
+		expect(menu.queryByRole('link', { name: 'Search' })).toBeNull();
+		expect(menu.getByRole('link', { name: 'Recipes' })).toBeInTheDocument();
+		expect(document.querySelector('a.nav-icon')).toHaveAttribute('href', '/search');
+	});
+
+	test('the phone menu names the user the way the desktop bar does', async () => {
+		const profile = {
+			id: 'user-abc',
+			username: 'chefmaria',
+			avatarUrl: null,
+			createdAt: new Date()
+		};
+		render(Navbar, { props: { user: makeUser('chef@example.com'), profile } });
+		await fireEvent.click(screen.getByRole('button', { name: /open main menu/i }));
+		const menu = within(document.getElementById('mobile-menu')!);
+		expect(menu.getByRole('link', { name: '@chefmaria' })).toHaveAttribute(
+			'href',
+			'/users/chefmaria'
+		);
+		expect(menu.queryByText('chef@example.com')).toBeNull();
 	});
 });
