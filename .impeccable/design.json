@@ -142,7 +142,7 @@
 			"clay": {
 				"role": "primary",
 				"displayName": "Clay",
-				"canonical": "#a4512b",
+				"canonical": "#b23c00",
 				"tonalRamp": [
 					"#3e1f10",
 					"#67331b",
@@ -157,7 +157,7 @@
 			"marigold": {
 				"role": "primary",
 				"displayName": "Marigold",
-				"canonical": "#e8a83a",
+				"canonical": "#eca620",
 				"tonalRamp": [
 					"#33250d",
 					"#553d15",
@@ -172,7 +172,7 @@
 			"marigold-deep": {
 				"role": "primary",
 				"displayName": "Marigold Deep",
-				"canonical": "#d99a2c",
+				"canonical": "#dc980a",
 				"tonalRamp": [
 					"#34250a",
 					"#563d11",
@@ -351,7 +351,7 @@
 			"refersTo": "button-primary",
 			"description": "The one marigold action on a view.",
 			"html": "<button class=\"ds-btn-primary\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\"><path d=\"M4 3.5v2a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-2M8 7.5v5\"/><circle cx=\"4\" cy=\"2.5\" r=\"1.3\" fill=\"currentColor\"/><circle cx=\"12\" cy=\"2.5\" r=\"1.3\" fill=\"currentColor\"/><circle cx=\"8\" cy=\"13.5\" r=\"1.3\" fill=\"currentColor\"/></svg> Fork this recipe</button>",
-			"css": ".ds-btn-primary{display:inline-flex;align-items:center;gap:8px;background:var(--color-marigold,#e8a83a);color:var(--color-text,#1a1714);font-family:'Source Sans 3',sans-serif;font-size:15px;font-weight:600;padding:12px 16px;border:0;border-radius:6px;cursor:pointer;transition:background .15s ease}.ds-btn-primary:hover{background:var(--color-marigold-hover,#d99a2c)}.ds-btn-primary:focus-visible{outline:2px solid var(--color-accent,#a4512b);outline-offset:2px}"
+			"css": ".ds-btn-primary{display:inline-flex;align-items:center;gap:8px;background:var(--color-marigold,#eca620);color:var(--color-text,#1a1714);font-family:'Source Sans 3',sans-serif;font-size:15px;font-weight:600;padding:12px 16px;border:0;border-radius:6px;cursor:pointer;transition:background .15s ease}.ds-btn-primary:hover{background:var(--color-marigold-hover,#dc980a)}.ds-btn-primary:focus-visible{outline:2px solid var(--color-accent,#b23c00);outline-offset:2px}"
 		},
 		{
 			"name": "Ghost Button",
@@ -359,7 +359,7 @@
 			"refersTo": "button-ghost",
 			"description": "Secondary action: ink outline, clay-tint hover.",
 			"html": "<button class=\"ds-btn-ghost\">Favorite</button>",
-			"css": ".ds-btn-ghost{background:transparent;color:var(--color-text,#1a1714);font-family:'Source Sans 3',sans-serif;font-size:15px;font-weight:500;padding:11px 16px;border:1px solid var(--color-text,#1a1714);border-radius:6px;cursor:pointer;transition:background .15s ease}.ds-btn-ghost:hover{background:var(--color-tint,#f5e9e0)}.ds-btn-ghost:focus-visible{outline:2px solid var(--color-accent,#a4512b);outline-offset:2px}"
+			"css": ".ds-btn-ghost{background:transparent;color:var(--color-text,#1a1714);font-family:'Source Sans 3',sans-serif;font-size:15px;font-weight:500;padding:11px 16px;border:1px solid var(--color-text,#1a1714);border-radius:6px;cursor:pointer;transition:background .15s ease}.ds-btn-ghost:hover{background:var(--color-tint,#f5e9e0)}.ds-btn-ghost:focus-visible{outline:2px solid var(--color-accent,#b23c00);outline-offset:2px}"
 		},
 		{
 			"name": "Text Input",
@@ -367,7 +367,7 @@
 			"refersTo": "input",
 			"description": "Lifted paper field with a Rule 2 border and the global clay ring.",
 			"html": "<input class=\"ds-input\" placeholder=\"you@example.com\">",
-			"css": ".ds-input{background:var(--color-surface,#fffdf9);border:1px solid var(--color-input-border,#d9d3c8);border-radius:6px;color:var(--color-text,#1a1714);font-family:'Source Sans 3',sans-serif;font-size:15px;padding:9px 12px;width:280px;box-sizing:border-box}.ds-input::placeholder{color:var(--color-text-3,#6f6960)}.ds-input:focus-visible{outline:2px solid var(--color-accent,#a4512b);outline-offset:2px}"
+			"css": ".ds-input{background:var(--color-surface,#fffdf9);border:1px solid var(--color-input-border,#d9d3c8);border-radius:6px;color:var(--color-text,#1a1714);font-family:'Source Sans 3',sans-serif;font-size:15px;padding:9px 12px;width:280px;box-sizing:border-box}.ds-input::placeholder{color:var(--color-text-3,#6f6960)}.ds-input:focus-visible{outline:2px solid var(--color-accent,#b23c00);outline-offset:2px}"
 		},
 		{
 			"name": "Tag",
@@ -383,7 +383,7 @@
 			"refersTo": "version-chip",
 			"description": "Marigold mark for the current version.",
 			"html": "<span class=\"ds-version\">v3</span>",
-			"css": ".ds-version{display:inline-block;background:var(--color-marigold,#e8a83a);color:var(--color-text,#1a1714);font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;padding:0 5px;border-radius:3px}"
+			"css": ".ds-version{display:inline-block;background:var(--color-marigold,#eca620);color:var(--color-text,#1a1714);font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;padding:0 5px;border-radius:3px}"
 		},
 		{
 			"name": "Navbar",
@@ -391,7 +391,7 @@
 			"refersTo": "navbar",
 			"description": "The one espresso surface: cream wordmark, tan links, one marigold action.",
 			"html": "<nav class=\"ds-nav\"><a class=\"ds-nav-brand\" href=\"#\">Fork<span>.</span></a><a class=\"ds-nav-link ds-active\" href=\"#\">Recipes</a><a class=\"ds-nav-link\" href=\"#\">Favorites</a><span class=\"ds-nav-spacer\"></span><a class=\"ds-nav-cta\" href=\"#\">+ New Recipe</a></nav>",
-			"css": ".ds-nav{display:flex;align-items:center;gap:24px;height:56px;padding:0 20px;background:var(--color-navbar-bg,#1a1408)}.ds-nav-brand{font-family:Bitter,serif;font-size:22px;font-weight:600;letter-spacing:-.01em;color:#f7f3ec;text-decoration:none}.ds-nav-brand span{color:#e8a83a}.ds-nav-link{font-family:'Source Sans 3',sans-serif;font-size:14px;font-weight:500;color:#b8a880;text-decoration:none;transition:color .15s ease}.ds-nav-link:hover,.ds-nav-link.ds-active{color:#f7f3ec}.ds-nav-spacer{flex:1}.ds-nav-cta{background:#e8a83a;color:#1a1714;font-family:'Source Sans 3',sans-serif;font-size:14px;font-weight:600;padding:7px 14px;border-radius:6px;text-decoration:none}.ds-nav-cta:hover{background:#d99a2c}.ds-nav :focus-visible{outline:2px solid #e8a83a;outline-offset:2px}"
+			"css": ".ds-nav{display:flex;align-items:center;gap:24px;height:56px;padding:0 20px;background:var(--color-navbar-bg,#1a1408)}.ds-nav-brand{font-family:Bitter,serif;font-size:22px;font-weight:600;letter-spacing:-.01em;color:#f7f3ec;text-decoration:none}.ds-nav-brand span{color:#eca620}.ds-nav-link{font-family:'Source Sans 3',sans-serif;font-size:14px;font-weight:500;color:#b8a880;text-decoration:none;transition:color .15s ease}.ds-nav-link:hover,.ds-nav-link.ds-active{color:#f7f3ec}.ds-nav-spacer{flex:1}.ds-nav-cta{background:#eca620;color:#1a1714;font-family:'Source Sans 3',sans-serif;font-size:14px;font-weight:600;padding:7px 14px;border-radius:6px;text-decoration:none}.ds-nav-cta:hover{background:#dc980a}.ds-nav :focus-visible{outline:2px solid #eca620;outline-offset:2px}"
 		},
 		{
 			"name": "Recipe Card",
@@ -399,7 +399,7 @@
 			"refersTo": "card",
 			"description": "Content on the paper, no box: a 4:3 photo or clay-tint panel, a Bitter title, mono meta.",
 			"html": "<article class=\"ds-card\"><div class=\"ds-card-panel\"><h3 class=\"ds-card-panel-title\">Weeknight Red Lentil Dal</h3></div><p class=\"ds-card-meta\"><span class=\"ds-card-author\">@maya</span><span>\u00b7</span><span>35 min</span><span>\u00b7</span><span class=\"ds-card-version\">v1</span></p></article>",
-			"css": ".ds-card{width:260px;display:flex;flex-direction:column;gap:10px}.ds-card-panel{aspect-ratio:4/3;border-radius:6px;background:var(--color-tint,#f5e9e0);display:flex;align-items:flex-end;padding:16px;box-sizing:border-box}.ds-card-panel-title{margin:0;font-family:Bitter,serif;font-weight:500;font-size:17px;line-height:1.25;color:var(--color-accent,#a4512b);transform-origin:left bottom;transition:transform .3s ease}.ds-card:hover .ds-card-panel-title{transform:scale(1.03)}.ds-card-meta{margin:0;display:flex;gap:5px;font-family:'Source Sans 3',sans-serif;font-size:13px;color:var(--color-text-3,#6f6960)}.ds-card-author{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--color-accent,#a4512b)}.ds-card-version{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;color:var(--color-accent,#a4512b)}"
+			"css": ".ds-card{width:260px;display:flex;flex-direction:column;gap:10px}.ds-card-panel{aspect-ratio:4/3;border-radius:6px;background:var(--color-tint,#f5e9e0);display:flex;align-items:flex-end;padding:16px;box-sizing:border-box}.ds-card-panel-title{margin:0;font-family:Bitter,serif;font-weight:500;font-size:17px;line-height:1.25;color:var(--color-accent,#b23c00);transform-origin:left bottom;transition:transform .3s ease}.ds-card:hover .ds-card-panel-title{transform:scale(1.03)}.ds-card-meta{margin:0;display:flex;gap:5px;font-family:'Source Sans 3',sans-serif;font-size:13px;color:var(--color-text-3,#6f6960)}.ds-card-author{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--color-accent,#b23c00)}.ds-card-version{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;color:var(--color-accent,#b23c00)}"
 		},
 		{
 			"name": "Version Strip",
@@ -407,7 +407,7 @@
 			"refersTo": "card",
 			"description": "The commit line for the version being read, on one baseline.",
 			"html": "<div class=\"ds-strip\"><p class=\"ds-strip-main\"><span class=\"ds-version\">v3</span><span class=\"ds-strip-msg\">Chill the dough and shift the sugar toward brown</span></p><p class=\"ds-strip-meta\"><a href=\"#\">@spencerfletcher</a> \u00b7 18 Jul 2026 \u00b7 3 versions \u00b7 1 fork \u00b7 <a href=\"#\">Compare with v2</a></p></div>",
-			"css": ".ds-strip{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 18px;padding:9px 14px;background:var(--color-surface,#fffdf9);border:1px solid var(--color-border,#e4ded4);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--color-text-3,#6f6960)}.ds-strip p{margin:0}.ds-strip-main{display:flex;align-items:baseline;gap:10px}.ds-strip-msg{font-family:'Source Sans 3',sans-serif;font-size:14px;color:var(--color-text,#1a1714)}.ds-strip a{color:var(--color-accent,#a4512b);text-decoration:none}.ds-strip a:hover{color:var(--color-text,#1a1714)}.ds-version{display:inline-block;background:var(--color-marigold,#e8a83a);color:var(--color-text,#1a1714);font-weight:600;padding:0 5px;border-radius:3px}"
+			"css": ".ds-strip{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 18px;padding:9px 14px;background:var(--color-surface,#fffdf9);border:1px solid var(--color-border,#e4ded4);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--color-text-3,#6f6960)}.ds-strip p{margin:0}.ds-strip-main{display:flex;align-items:baseline;gap:10px}.ds-strip-msg{font-family:'Source Sans 3',sans-serif;font-size:14px;color:var(--color-text,#1a1714)}.ds-strip a{color:var(--color-accent,#b23c00);text-decoration:none}.ds-strip a:hover{color:var(--color-text,#1a1714)}.ds-version{display:inline-block;background:var(--color-marigold,#eca620);color:var(--color-text,#1a1714);font-weight:600;padding:0 5px;border-radius:3px}"
 		}
 	],
 	"narrative": {

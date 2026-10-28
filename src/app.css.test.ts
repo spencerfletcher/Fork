@@ -50,8 +50,8 @@ describe('app.css tokens', () => {
 
 	test('exact values the design locked', () => {
 		expect(tokens['--color-bg']).toBe('#f7f3ec');
-		expect(tokens['--color-accent']).toBe('#a4512b');
-		expect(tokens['--color-marigold']).toBe('#e8a83a');
+		expect(tokens['--color-accent']).toBe('#b23c00');
+		expect(tokens['--color-marigold']).toBe('#eca620');
 		expect(tokens['--color-remove']).toBe('#a3362b');
 	});
 

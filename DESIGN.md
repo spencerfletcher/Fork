@@ -11,9 +11,9 @@ colors:
   ink-3: '#6f6960'
   cream: '#f7f3ec'
   tan: '#b8a880'
-  clay: '#a4512b'
-  marigold: '#e8a83a'
-  marigold-deep: '#d99a2c'
+  clay: '#b23c00'
+  marigold: '#eca620'
+  marigold-deep: '#dc980a'
   rule: '#e4ded4'
   rule-2: '#d9d3c8'
   diff-add: '#2f6b37'
@@ -142,8 +142,8 @@ A paper-and-ink palette with two warm accents and a semantic pair for diffs.
 
 ### Primary
 
-- **Clay** (#a4512b): the only text accent. Page titles (h1), links, recipe names on hover, version numbers in card meta, step numbers. Hover state for a clay link is ink, not a lighter clay.
-- **Marigold** (#e8a83a): the only fill. Primary buttons, the "+ New Recipe" navbar action, and the current-version chip. Always carries ink text. Hover darkens to **Marigold Deep** (#d99a2c); nothing fades.
+- **Clay** (#b23c00): the only text accent. Page titles (h1), links, recipe names on hover, version numbers in card meta, step numbers. Hover state for a clay link is ink, not a lighter clay.
+- **Marigold** (#eca620): the only fill. Primary buttons, the "+ New Recipe" navbar action, and the current-version chip. Always carries ink text. Hover darkens to **Marigold Deep** (#dc980a); nothing fades.
 
 ### Neutral
 
@@ -162,9 +162,9 @@ A paper-and-ink palette with two warm accents and a semantic pair for diffs.
 - **Diff Add** (#2f6b37) on **Diff Add Background** (#e6f0e3), 5.47:1.
 - **Diff Remove** (#a3362b) on **Diff Remove Background** (#f6e3e0), 5.44:1. Also the error style for forms.
 
-### Open decision
+### Colour pass, 28 October 2026
 
-The owner reads the current clay (#a4512b) and marigold (#e8a83a) as a bit dull. The next colour pass raises their chroma while keeping the hues, the paper ground and the AA contrast of ink on marigold and clay on paper. Neon, saturated red or pure yellow are out. Until that pass lands, the values above are the incumbent.
+Clay and marigold were raised in chroma from #a4512b and #e8a83a: same hues, same lightness, same paper. Clay now sits at the sRGB chroma limit for its lightness. If it reads loud on link-heavy pages, step it back to #af470b and leave the marigold.
 
 ### Named Rules
 

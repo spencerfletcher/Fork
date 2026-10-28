@@ -428,7 +428,7 @@ test.describe('Recipe detail page', () => {
 		const hero = page.locator('header.recipe-header');
 		await hero.waitFor();
 
-		const accent = 'rgb(232, 168, 58)';
+		const accent = 'rgb(236, 166, 32)';
 
 		// Marigold is the only fill, and the version chip is the only thing filled.
 		const filled = await hero.evaluate(
@@ -483,7 +483,7 @@ test.describe('Recipe detail page', () => {
 			.locator('.version-compare')
 			.first()
 			.evaluate((el) => getComputedStyle(el).color);
-		expect(color).toBe('rgb(164, 81, 43)');
+		expect(color).toBe('rgb(178, 60, 0)');
 	});
 
 	test('the version strip scrolls without widening the page', async ({ page }) => {
@@ -748,10 +748,10 @@ test.describe('Usernames', () => {
 	test('read as links: clay on paper, on the recipe page and the card', async ({ page }) => {
 		await page.goto('/recipes');
 		const card = page.locator('.recipe-card a.meta-author').first();
-		expect(await card.evaluate((el) => getComputedStyle(el).color)).toBe('rgb(164, 81, 43)');
+		expect(await card.evaluate((el) => getComputedStyle(el).color)).toBe('rgb(178, 60, 0)');
 		await gotoClassicCookies(page);
 		const author = page.locator('.recipe-header a.username').first();
-		expect(await author.evaluate((el) => getComputedStyle(el).color)).toBe('rgb(164, 81, 43)');
+		expect(await author.evaluate((el) => getComputedStyle(el).color)).toBe('rgb(178, 60, 0)');
 	});
 });
 
