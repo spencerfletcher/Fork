@@ -225,7 +225,7 @@
 	/* A dot between the byline and the counts when they share a line. */
 	.version-by + .version-foot::before {
 		content: '·';
-		margin-right: -4px;
+		margin: 0 -4px 0 -8px;
 	}
 
 	.version-foot svg {
