@@ -5,6 +5,7 @@
 	let {
 		recipe,
 		canFork,
+		loginHref,
 		canFavorite,
 		isOwner,
 		isViewingHistory,
@@ -12,6 +13,8 @@
 	}: {
 		recipe: Pick<Recipe, 'slug' | 'title'>;
 		canFork: boolean;
+		/** Where Fork sends a logged-out visitor; null when Fork is not offered. */
+		loginHref: string | null;
 		canFavorite: boolean;
 		isOwner: boolean;
 		isViewingHistory: boolean;
@@ -21,62 +24,30 @@
 	// Writable derived: the click flips it optimistically, and it resets to the
 	// prop whenever the page loads another recipe or reloads this one.
 	let isFavorited = $derived(initialFavorited);
-	let forkDialog: HTMLDialogElement | undefined = $state();
-	let forkCommitMessage = $state('');
 </script>
 
-{#if canFavorite || canFork || (isOwner && !isViewingHistory)}
-	<div class="actions flex flex-col gap-2">
+{#if canFavorite || canFork || loginHref || (isOwner && !isViewingHistory)}
+	<div class="actions">
 		{#if canFork}
-			<button type="button" class="btn-primary w-full py-3" onclick={() => forkDialog?.showModal()}>
-				Fork this recipe
-			</button>
-			<dialog bind:this={forkDialog} class="dialog-content" aria-labelledby="fork-title">
-				<h2 id="fork-title" class="dialog-title">Fork this recipe?</h2>
-				<p class="dialog-desc">
-					A copy will be added to your recipes. You can edit it independently.
-				</p>
-				<form
-					method="POST"
-					action="?/fork"
-					use:enhance={() => {
-						return async ({ result, update }) => {
-							if (result.type === 'redirect') {
-								window.location.href = result.location;
-							} else {
-								await update();
-							}
-							forkDialog?.close();
-						};
-					}}>
-					<div class="mb-5">
-						<label for="fork-commit" class="text-text-2 mb-2 block text-[0.85rem] font-medium">
-							Initial commit message
-						</label>
-						<input
-							id="fork-commit"
-							name="commitMessage"
-							type="text"
-							placeholder="Forked from {recipe.title}"
-							bind:value={forkCommitMessage} />
-					</div>
-					<div class="dialog-actions">
-						<button type="button" class="btn-ghost" onclick={() => forkDialog?.close()}>
-							Cancel
-						</button>
-						<button type="submit" class="btn-primary">Fork</button>
-					</div>
-				</form>
-			</dialog>
+			<!-- One click. The server writes the first commit message itself. -->
+			<form
+				method="POST"
+				action="?/fork"
+				use:enhance={() => {
+					return async ({ result, update }) => {
+						if (result.type === 'redirect') window.location.href = result.location;
+						else await update();
+					};
+				}}>
+				<button type="submit" class="btn-primary">Fork this recipe</button>
+			</form>
+		{:else if loginHref}
+			<a href={loginHref} class="btn-primary no-underline">Fork this recipe</a>
 		{/if}
 
 		{#if isOwner && !isViewingHistory}
 			<!-- The owner is not offered Fork, so Edit is their primary action. -->
-			<a
-				href="/recipes/{recipe.slug}/edit"
-				class="btn-primary flex w-full items-center justify-center gap-2 no-underline">
-				Edit recipe
-			</a>
+			<a href="/recipes/{recipe.slug}/edit" class="btn-primary no-underline">Edit recipe</a>
 		{/if}
 		{#if canFavorite}
 			<form
@@ -88,7 +59,7 @@
 				}}>
 				<button
 					type="submit"
-					class="btn-ghost flex w-full items-center justify-center gap-2 no-underline"
+					class="btn-ghost flex items-center justify-center gap-2 no-underline"
 					aria-label={isFavorited ? 'Unfavorite' : 'Favorite'}>
 					<svg
 						class="size-4 transition-[fill] duration-150"
@@ -110,3 +81,34 @@
 		{/if}
 	</div>
 {/if}
+
+<style>
+	/* A row of buttons under the recipe's text; on a phone, two equal columns
+	   tall enough for a thumb. */
+	.actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 10px;
+	}
+
+	.actions :global(.btn-primary),
+	.actions :global(.btn-ghost) {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 8px;
+		min-height: 44px;
+	}
+
+	@media (max-width: 699px) {
+		.actions {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+		}
+
+		.actions :global(.btn-primary),
+		.actions :global(.btn-ghost) {
+			width: 100%;
+		}
+	}
+</style>

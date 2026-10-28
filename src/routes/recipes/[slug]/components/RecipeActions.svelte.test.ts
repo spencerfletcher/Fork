@@ -10,6 +10,7 @@ function makeProps(overrides: Record<string, unknown> = {}) {
 	return {
 		recipe: { slug: 'cookies', title: 'Cookies' },
 		canFork: false,
+		loginHref: null,
 		canFavorite: true,
 		isOwner: false,
 		isViewingHistory: false,
@@ -46,6 +47,24 @@ describe('RecipeActions primary action', () => {
 		render(RecipeActions, { props: makeProps({ canFork: true }) });
 		expect(screen.getByRole('button', { name: 'Fork this recipe' })).toHaveClass('btn-primary');
 		expect(screen.getByRole('button', { name: /favorite/i })).toHaveClass('btn-ghost');
+	});
+
+	test('forking is one click: the button submits the fork, there is no dialog', () => {
+		render(RecipeActions, { props: makeProps({ canFork: true }) });
+		const fork = screen.getByRole('button', { name: 'Fork this recipe' });
+		expect(fork).toHaveAttribute('type', 'submit');
+		expect(fork.closest('form')).toHaveAttribute('action', '?/fork');
+		expect(document.querySelector('dialog')).toBeNull();
+	});
+
+	test('logged out, Fork is still there and leads to login with the way back', () => {
+		render(RecipeActions, {
+			props: makeProps({ canFavorite: false, loginHref: '/login?redirect=%2Frecipes%2Fcookies' })
+		});
+		const fork = screen.getByRole('link', { name: 'Fork this recipe' });
+		expect(fork).toHaveClass('btn-primary');
+		expect(fork).toHaveAttribute('href', '/login?redirect=%2Frecipes%2Fcookies');
+		expect(screen.queryByRole('button', { name: /favorite/i })).toBeNull();
 	});
 
 	test('the owner gets Edit in marigold, first, since Fork is not offered', () => {
