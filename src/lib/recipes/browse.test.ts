@@ -14,10 +14,18 @@ describe('browseSections', () => {
 		expect(sections[0].recipes.map((x) => x.id)).toEqual([2, 3, 1]);
 	});
 
-	test('forked recipes get their own section, most forks first', () => {
-		const sections = browseSections([r(1, 0, 1), r(2, 1, 4), r(3, 2)]);
+	test('forked recipes outside Recent get their own section, most forks first', () => {
+		const many = Array.from({ length: 10 }, (_, i) => r(i + 1, i, i === 8 ? 1 : i === 9 ? 4 : 0));
+		const sections = browseSections(many);
 		expect(sections[1].title).toBe('Most forked');
-		expect(sections[1].recipes.map((x) => x.id)).toEqual([2, 1]);
+		expect(sections[1].recipes.map((x) => x.id)).toEqual([10, 9]);
+	});
+
+	test('a recipe never appears in two sections', () => {
+		// Three recipes, one forked: all three are Recent, so Most forked is empty
+		// rather than repeating the forked card.
+		const sections = browseSections([r(1, 0, 1), r(2, 1, 4), r(3, 2)]);
+		expect(sections.map((s) => s.title)).toEqual(['Recent']);
 	});
 
 	test('Recent is capped at eight and the rest land in All recipes', () => {
@@ -29,7 +37,7 @@ describe('browseSections', () => {
 	});
 
 	test('Most forked is capped at four', () => {
-		const forked = Array.from({ length: 5 }, (_, i) => r(i + 1, i, 5 - i));
+		const forked = Array.from({ length: 13 }, (_, i) => r(i + 1, i, i >= 8 ? 13 - i : 0));
 		expect(browseSections(forked)[1].recipes).toHaveLength(4);
 	});
 
