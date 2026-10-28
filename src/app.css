@@ -190,6 +190,21 @@
 		-webkit-font-smoothing: antialiased;
 	}
 
+	/* A phone pulled past the top shows the canvas above the page. Fixed boxes
+	   ride along with that rubber band, so this strip, parked one screen above
+	   the viewport, slides in and the bar reads as continuing upward. */
+	body::before {
+		content: '';
+		position: fixed;
+		top: -100vh;
+		left: 0;
+		right: 0;
+		height: 100vh;
+		background: var(--color-navbar-bg);
+		z-index: -1;
+		pointer-events: none;
+	}
+
 	h1 {
 		font-family: var(--font-serif);
 		font-size: 2.5rem;
