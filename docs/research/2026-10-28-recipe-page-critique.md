@@ -153,6 +153,13 @@ Decided 28 October 2026, after path boards on the design canvas (rows Q1 to Q3):
 - Q5: grams stay inline in parentheses as the live page does; the boards' right column is dropped.
 - Q6: the phone gets a sticky two-tab bar (Ingredients | Method) drawn at 390 before the build decides.
 - Q7: `.impeccable/critique/` snapshots are tracked in git.
+- Q8: Impeccable hooks, the design-taste-frontend skill and today's report are committed; `.taste-skill/` is ignored.
+- Q9: the One Fill Rule is deleted from DESIGN.md. Marigold is the action colour; where it appears is judged page by page.
+- Q10: the phone fold is accepted at about 835px; the sticky tab bar, inside the first screen, is the remedy.
+- Q11: viewing an older version swaps the deck to that version's commit message and the byline reads "v2 of 3 · Viewing history · Back to v3". No banner.
+- Q12: forking is one click. The copy's first version carries a default message naming the source and version; the dialog goes.
+
+Defaults taken without a question, each reversible: the byline drops the date (history has it); tags stay after the description; Favorite stays for the owner; serving scaling is not in this round; the four font sizes the code uses are added to the DESIGN.md ramp rather than retuned; the h1 to h4 heading skip is fixed in the build; struck ingredient rows persisting across a reload is a later optimisation.
 
 Each remaining question with a recommendation. "No" is a fine answer to any of them.
 

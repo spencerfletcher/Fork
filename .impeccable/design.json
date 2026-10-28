@@ -398,7 +398,7 @@
 			"kind": "card",
 			"refersTo": "card",
 			"description": "Content on the paper, no box: a 4:3 photo or clay-tint panel, a Bitter title, mono meta.",
-			"html": "<article class=\"ds-card\"><div class=\"ds-card-panel\"><h3 class=\"ds-card-panel-title\">Weeknight Red Lentil Dal</h3></div><p class=\"ds-card-meta\"><span class=\"ds-card-author\">@maya</span><span>\u00b7</span><span>35 min</span><span>\u00b7</span><span class=\"ds-card-version\">v1</span></p></article>",
+			"html": "<article class=\"ds-card\"><div class=\"ds-card-panel\"><h3 class=\"ds-card-panel-title\">Weeknight Red Lentil Dal</h3></div><p class=\"ds-card-meta\"><span class=\"ds-card-author\">@maya</span><span>·</span><span>35 min</span><span>·</span><span class=\"ds-card-version\">v1</span></p></article>",
 			"css": ".ds-card{width:260px;display:flex;flex-direction:column;gap:10px}.ds-card-panel{aspect-ratio:4/3;border-radius:6px;background:var(--color-tint,#f5e9e0);display:flex;align-items:flex-end;padding:16px;box-sizing:border-box}.ds-card-panel-title{margin:0;font-family:Bitter,serif;font-weight:500;font-size:17px;line-height:1.25;color:var(--color-accent,#b23c00);transform-origin:left bottom;transition:transform .3s ease}.ds-card:hover .ds-card-panel-title{transform:scale(1.03)}.ds-card-meta{margin:0;display:flex;gap:5px;font-family:'Source Sans 3',sans-serif;font-size:13px;color:var(--color-text-3,#6f6960)}.ds-card-author{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--color-accent,#b23c00)}.ds-card-version{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;color:var(--color-accent,#b23c00)}"
 		},
 		{
@@ -406,13 +406,13 @@
 			"kind": "custom",
 			"refersTo": "card",
 			"description": "The commit line for the version being read, on one baseline.",
-			"html": "<div class=\"ds-strip\"><p class=\"ds-strip-main\"><span class=\"ds-version\">v3</span><span class=\"ds-strip-msg\">Chill the dough and shift the sugar toward brown</span></p><p class=\"ds-strip-meta\"><a href=\"#\">@spencerfletcher</a> \u00b7 18 Jul 2026 \u00b7 3 versions \u00b7 1 fork \u00b7 <a href=\"#\">Compare with v2</a></p></div>",
+			"html": "<div class=\"ds-strip\"><p class=\"ds-strip-main\"><span class=\"ds-version\">v3</span><span class=\"ds-strip-msg\">Chill the dough and shift the sugar toward brown</span></p><p class=\"ds-strip-meta\"><a href=\"#\">@spencerfletcher</a> · 18 Jul 2026 · 3 versions · 1 fork · <a href=\"#\">Compare with v2</a></p></div>",
 			"css": ".ds-strip{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 18px;padding:9px 14px;background:var(--color-surface,#fffdf9);border:1px solid var(--color-border,#e4ded4);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--color-text-3,#6f6960)}.ds-strip p{margin:0}.ds-strip-main{display:flex;align-items:baseline;gap:10px}.ds-strip-msg{font-family:'Source Sans 3',sans-serif;font-size:14px;color:var(--color-text,#1a1714)}.ds-strip a{color:var(--color-accent,#b23c00);text-decoration:none}.ds-strip a:hover{color:var(--color-text,#1a1714)}.ds-version{display:inline-block;background:var(--color-marigold,#eca620);color:var(--color-text,#1a1714);font-weight:600;padding:0 5px;border-radius:3px}"
 		}
 	],
 	"narrative": {
 		"northStar": "The Annotated Cookbook",
-		"overview": "Fork looks like a cookbook that has been cooked from: cream paper, a serif for the recipe names, and a cook's notes in the margin. The notes are the product. Version numbers, bylines, dates and gram weights are set in a monospace face, the way a pencil annotation differs from the printed page, so a reader always knows which marks are the recipe and which are its history. Everything else recedes: one dark surface (the espresso navbar), one text accent (clay), one fill (marigold, only ever on the single action or the current version).\n\nDensity is editorial rather than app-like. Body text sits at 16px with generous leading, the page has one 1200px column with 24px gutters (18px on a phone), and recipe cards are content on the paper, not tiles. Surfaces separate by a step in tone, never by shadow. The system is warm (paper, clay, marigold), exact (tabular figures, one focus ring, 8px rhythm) and simple (three faces doing three jobs, two button styles, one chip). Its colour should be decently vibrant: the owner finds the current clay and marigold a little dull and wants more life in them, short of anything neon.\n\nConfirmed rejections: no gradients, no glass, no shadows on resting elements, no colour other than clay and marigold outside the diff.",
+		"overview": "Fork looks like a cookbook that has been cooked from: cream paper, a serif for the recipe names, and a cook's notes in the margin. The notes are the product. Version numbers, bylines, dates and gram weights are set in a monospace face, the way a pencil annotation differs from the printed page, so a reader always knows which marks are the recipe and which are its history. Everything else recedes: one dark surface (the espresso navbar), one text accent (clay), one action colour (marigold).\n\nDensity is editorial rather than app-like. Body text sits at 16px with generous leading, the page has one 1200px column with 24px gutters (18px on a phone), and recipe cards are content on the paper, not tiles. Surfaces separate by a step in tone, never by shadow. The system is warm (paper, clay, marigold), exact (tabular figures, one focus ring, 8px rhythm) and simple (three faces doing three jobs, two button styles, one chip). Its colour should be decently vibrant: the owner finds the current clay and marigold a little dull and wants more life in them, short of anything neon.\n\nConfirmed rejections: no gradients, no glass, no shadows on resting elements, no colour other than clay and marigold outside the diff.",
 		"keyCharacteristics": [
 			"Cream paper ground with one espresso bar; nothing else is dark.",
 			"Bitter for names and titles, Source Sans 3 for everything read, JetBrains Mono for every mark that is history or measurement.",
@@ -421,11 +421,6 @@
 			"Version chips, bylines and diffs are first-class marks, set in mono."
 		],
 		"rules": [
-			{
-				"name": "The One Fill Rule",
-				"body": "Marigold means \"the action\" or \"the current version\". One marigold fill per view, two only when a primary button and a version chip share a screen. Nothing else is filled with colour.",
-				"section": "colors"
-			},
 			{
 				"name": "The Clay Is Text Rule",
 				"body": "Clay never fills a shape. It colours titles, links and version marks. Its hover is ink.",

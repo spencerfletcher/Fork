@@ -122,7 +122,7 @@ components:
 
 **Creative North Star: "The Annotated Cookbook"**
 
-Fork looks like a cookbook that has been cooked from: cream paper, a serif for the recipe names, and a cook's notes in the margin. The notes are the product. Version numbers, bylines, dates and gram weights are set in a monospace face, the way a pencil annotation differs from the printed page, so a reader always knows which marks are the recipe and which are its history. Everything else recedes: one dark surface (the espresso navbar), one text accent (clay), one fill (marigold, only ever on the single action or the current version).
+Fork looks like a cookbook that has been cooked from: cream paper, a serif for the recipe names, and a cook's notes in the margin. The notes are the product. Version numbers, bylines, dates and gram weights are set in a monospace face, the way a pencil annotation differs from the printed page, so a reader always knows which marks are the recipe and which are its history. Everything else recedes: one dark surface (the espresso navbar), one text accent (clay), one action colour (marigold).
 
 Density is editorial rather than app-like. Body text sits at 16px with generous leading, the page has one 1200px column with 24px gutters (18px on a phone), and recipe cards are content on the paper, not tiles. Surfaces separate by a step in tone, never by shadow. The system is warm (paper, clay, marigold), exact (tabular figures, one focus ring, 8px rhythm) and simple (three faces doing three jobs, two button styles, one chip). Its colour should be decently vibrant: the owner finds the current clay and marigold a little dull and wants more life in them, short of anything neon.
 
@@ -167,8 +167,6 @@ A paper-and-ink palette with two warm accents and a semantic pair for diffs.
 Clay and marigold were raised in chroma from #a4512b and #e8a83a: same hues, same lightness, same paper. Clay now sits at the sRGB chroma limit for its lightness. If it reads loud on link-heavy pages, step it back to #af470b and leave the marigold.
 
 ### Named Rules
-
-**The One Fill Rule.** Marigold means "the action" or "the current version". One marigold fill per view, two only when a primary button and a version chip share a screen. Nothing else is filled with colour.
 
 **The Clay Is Text Rule.** Clay never fills a shape. It colours titles, links and version marks. Its hover is ink.
 
