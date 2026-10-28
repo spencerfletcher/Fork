@@ -1,11 +1,10 @@
 <script lang="ts">
+	import { page } from '$app/state';
 	import type { PageData } from './$types';
 	import RecipeHeader from './components/RecipeHeader.svelte';
 	import RecipeIngredients from './components/RecipeIngredients.svelte';
 	import RecipeMethod from './components/RecipeMethod.svelte';
 	import RecipeActions from './components/RecipeActions.svelte';
-	import Details from './components/Details.svelte';
-	import VersionStrip from '#lib/components/recipes/VersionStrip.svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -15,74 +14,146 @@
 	const user = $derived(data.user);
 	const isOwner = $derived(user?.id === recipe.authorId);
 	const canFork = $derived(!!user && !isOwner && !isViewingHistory);
+	// A visitor who is not logged in still sees Fork; it brings them back here.
+	const loginHref = $derived(
+		!user && !isViewingHistory ? `/login?redirect=${encodeURIComponent(page.url.pathname)}` : null
+	);
 	const canFavorite = $derived(!!user && !isViewingHistory);
+
+	// On a phone the Ingredients | Method tabs mark which section is under the
+	// reader: Method once its heading is in the top third, or once the page is
+	// scrolled to the end, since a short method never reaches the top.
+	let methodSection: HTMLElement | undefined = $state();
+	let onMethod = $state(false);
+	function onScroll() {
+		if (!methodSection) return;
+		const atEnd = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 1;
+		onMethod = atEnd || methodSection.getBoundingClientRect().top <= window.innerHeight / 3;
+	}
 </script>
 
+<svelte:window onscroll={onScroll} />
+
 <article class="min-h-dvh">
-	<RecipeHeader {recipe} {currentVersion} {isViewingHistory} {tags} />
+	<!-- The hero: the recipe's text beside its photo. Title, deck and byline
+	     first, so a stranger reads what this version is before anything else. -->
+	<div class="hero">
+		<div class="hero-text">
+			<RecipeHeader
+				{recipe}
+				{currentVersion}
+				versions={allVersions}
+				forkCount={data.forkCount}
+				{isViewingHistory}
+				{tags} />
+			<RecipeActions
+				{recipe}
+				{canFork}
+				{loginHref}
+				{canFavorite}
+				{isOwner}
+				{isViewingHistory}
+				initialFavorited={data.isFavorited} />
+		</div>
+		{#if currentVersion.imageUrl}
+			<figure class="recipe-photo m-0">
+				<img src={currentVersion.imageUrl} alt={currentVersion.title} />
+			</figure>
+		{/if}
+	</div>
 
-	{#if allVersions.length > 0}
-		<VersionStrip
-			versions={allVersions}
-			currentVersionNumber={currentVersion.versionNumber}
-			recipeSlug={recipe.slug}
-			{isViewingHistory}
-			forkCount={data.forkCount} />
-	{/if}
+	<hr class="rule" />
 
-	<!-- Details and actions sit in the right column; the recipe itself reads
-	     in a 720px column. The sidebar comes first in the DOM so the phone
-	     stack needs no reordering. -->
+	<nav class="section-tabs" aria-label="Recipe sections">
+		<a href="#ingredients" aria-current={onMethod ? undefined : 'true'}>Ingredients</a>
+		<a href="#method" aria-current={onMethod ? 'true' : undefined}>Method</a>
+	</nav>
+
+	<!-- Ingredients stay in view beside the method on a desktop; the sidebar
+	     comes first in the DOM so the phone stack needs no reordering. -->
 	<div class="content-layout">
 		<aside class="min-w-0">
 			<div class="sidebar-sticky">
-				{#if currentVersion.imageUrl}
-					<figure class="recipe-photo m-0">
-						<img src={currentVersion.imageUrl} alt={currentVersion.title} />
-					</figure>
-				{/if}
-				<Details content={currentVersion} />
-				<RecipeActions
-					{recipe}
-					{canFork}
-					{canFavorite}
-					{isOwner}
-					{isViewingHistory}
-					initialFavorited={data.isFavorited} />
+				<RecipeIngredients ingredients={currentVersion.ingredients} grams={data.grams} />
 			</div>
 		</aside>
 
-		<div class="main min-w-0">
-			<RecipeIngredients ingredients={currentVersion.ingredients} grams={data.grams} />
+		<div class="main min-w-0" bind:this={methodSection}>
 			<RecipeMethod steps={currentVersion.steps} />
 		</div>
 	</div>
 </article>
 
 <style>
-	/* Fixed sidebar width + responsive column flip can't be expressed as Tailwind utilities */
+	/* The list pages' box: gutters outside a 1200px content width. */
+	.hero,
 	.content-layout {
 		max-width: calc(var(--max-width) + 2 * var(--space-5));
 		margin: 0 auto;
-		padding: 26px var(--space-5) 40px;
+		padding: 0 var(--space-5);
+	}
+
+	.hero {
+		padding-top: 34px;
 		display: grid;
-		grid-template-columns: minmax(0, 1fr) 380px;
+		grid-template-columns: 1fr 1fr;
 		column-gap: 48px;
 		align-items: start;
 	}
 
-	.main {
-		grid-column: 1;
-		grid-row: 1;
+	/* No photo: one left-aligned reading column; nothing fills the other half. */
+	.hero:not(:has(.recipe-photo)) {
+		grid-template-columns: minmax(0, 760px);
+	}
+
+	.hero-text {
 		display: flex;
 		flex-direction: column;
-		gap: 34px;
+		gap: 18px;
+		padding-top: 6px;
+	}
+
+	/* 4:3, capped so Ingredients start by about 600px on a desktop. */
+	.recipe-photo img {
+		display: block;
+		width: 100%;
+		aspect-ratio: 4 / 3;
+		max-height: 440px;
+		object-fit: cover;
+		border-radius: var(--radius-md);
+	}
+
+	.rule {
+		max-width: var(--max-width);
+		margin: 26px var(--space-5) 0;
+		border: 0;
+		border-top: 1px solid var(--color-border);
+	}
+
+	@media (min-width: 1248px) {
+		.rule {
+			margin-left: auto;
+			margin-right: auto;
+		}
+	}
+
+	.section-tabs {
+		display: none;
+	}
+
+	.content-layout {
+		padding-top: 26px;
+		padding-bottom: 40px;
+		display: grid;
+		grid-template-columns: 380px minmax(0, 1fr);
+		column-gap: 48px;
+		align-items: start;
 	}
 
 	/* The aside must span the row's full height, or the sticky child has no
 	   room to move inside it and scrolls away with the page. */
 	aside {
-		grid-column: 2;
+		grid-column: 1;
 		grid-row: 1;
 		align-self: stretch;
 	}
@@ -90,30 +161,73 @@
 	.sidebar-sticky {
 		position: sticky;
 		top: 24px;
-		display: flex;
-		flex-direction: column;
-		gap: 22px;
 	}
 
-	/* Sidebar width, 4:3, so a photo's pixels are not stretched across the page. */
-	.recipe-photo img {
-		display: block;
-		width: 100%;
-		aspect-ratio: 4 / 3;
-		object-fit: cover;
-		border-radius: var(--radius-md);
+	.main {
+		grid-column: 2;
+		grid-row: 1;
+		max-width: 720px;
 	}
 
-	@media (max-width: 699px) {
-		.content-layout {
-			padding: 16px 18px 32px;
+	/* iPad and phone: one column, the photo as a band, the tab bar pinned. */
+	@media (max-width: 1023px) {
+		.hero {
+			grid-template-columns: minmax(0, 1fr);
+			row-gap: 22px;
 		}
-	}
 
-	@media (max-width: 860px) {
+		.recipe-photo img {
+			aspect-ratio: 16 / 9;
+			max-height: 300px;
+		}
+
+		.section-tabs {
+			position: sticky;
+			top: 0;
+			z-index: 2;
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			max-width: var(--max-width);
+			margin: 0 var(--space-5);
+			background: var(--color-bg);
+			border-bottom: 1px solid var(--color-border-2);
+		}
+
+		.section-tabs a {
+			display: block;
+			min-height: 44px;
+			padding: 14px 0 12px;
+			margin-bottom: -1px;
+			border-bottom: 2px solid transparent;
+			font-family: var(--font-mono);
+			font-size: 0.8125rem;
+			font-weight: 600;
+			letter-spacing: 0.08em;
+			text-transform: uppercase;
+			text-align: center;
+			color: var(--color-text-3);
+			text-decoration: none;
+		}
+
+		.section-tabs a[aria-current='true'] {
+			color: var(--color-text);
+			border-bottom-color: var(--color-accent);
+		}
+
 		.content-layout {
 			grid-template-columns: minmax(0, 1fr);
-			row-gap: 20px;
+			row-gap: 26px;
+		}
+
+		/* The tabs are the section headings here; the h2s stay for readers of
+		   the outline, out of sight. */
+		.content-layout :global(h2) {
+			position: absolute;
+			width: 1px;
+			height: 1px;
+			overflow: hidden;
+			clip-path: inset(50%);
+			white-space: nowrap;
 		}
 
 		.main,
@@ -124,40 +238,47 @@
 
 		.sidebar-sticky {
 			position: static;
-			gap: 14px;
+		}
+	}
+
+	@media (max-width: 699px) {
+		.hero,
+		.content-layout {
+			padding-left: 18px;
+			padding-right: 18px;
 		}
 
-		/* Full width on a phone, as a 2:1 banner. */
+		.hero {
+			padding-top: 20px;
+			row-gap: 16px;
+		}
+
+		.hero-text {
+			gap: 14px;
+			padding-top: 0;
+		}
+
+		/* Edge to edge, a short crop: the recipe is what the screen is for. */
 		.recipe-photo {
 			margin: 0 -18px;
 		}
 
 		.recipe-photo img {
-			aspect-ratio: 2 / 1;
+			aspect-ratio: 21 / 9;
 			border-radius: 0;
 		}
 
-		/* Fork and Favorite side by side, Fork taking the room. */
-		.sidebar-sticky > :global(.actions) {
-			flex-direction: row;
+		.rule {
+			display: none;
 		}
 
-		.sidebar-sticky > :global(.actions > .btn-primary),
-		.sidebar-sticky > :global(.actions > a) {
-			flex: 1;
+		.section-tabs {
+			margin: 16px 0 0;
 		}
 
-		/* Prep, cook and serves as one row of three. */
-		.sidebar-sticky > :global(dl.details) {
-			flex-direction: row;
-		}
-
-		.sidebar-sticky > :global(dl.details > div) {
-			flex: 1;
-			flex-direction: column;
-			align-items: flex-start;
-			gap: 2px;
-			border-bottom: 1px solid var(--color-border);
+		.content-layout {
+			padding-top: 18px;
+			padding-bottom: 32px;
 		}
 	}
 </style>

@@ -2,7 +2,7 @@
  * Authenticated e2e tests.
  *
  * These run with the seed user's session pre-loaded (see auth.setup.ts).
- * They test the fork dialog, new recipe creation, and the edit flow.
+ * They test the fork button, new recipe creation, and the edit flow.
  */
 
 import { expect, test, type Page } from '@playwright/test';
@@ -46,9 +46,9 @@ test.describe('Navbar when logged in', () => {
 	});
 });
 
-// ─── Fork dialog ──────────────────────────────────────────────────────────────
+// ─── Fork ─────────────────────────────────────────────────────────────────────
 
-test.describe('Fork dialog', () => {
+test.describe('Fork', () => {
 	test('Fork button is visible on a recipe the user does not own', async ({ page }) => {
 		// The seed user owns all recipes — but we can navigate and verify the button
 		// is hidden for owned recipes and visible for others.
@@ -274,7 +274,7 @@ test.describe('Edit recipe page', () => {
 			await page.getByRole('button', { name: 'Save', exact: true }).click();
 			await page.waitForURL(url);
 			await expectVersions(page, 2);
-			await expect(page.locator('.version-strip')).toContainText('e2e test commit');
+			await expect(page.locator('.deck')).toContainText('e2e test commit');
 		} finally {
 			await deleteRecipe(page, url);
 		}
@@ -291,12 +291,11 @@ test.describe('Edit recipe page', () => {
  * hydrated the page races the client re-render: the fill clears the input,
  * hydration restores the server value, the fill then appends ("48").
  */
-// The strip shows one line: the current version and a "N versions" count;
-// the rows only render once that count is clicked.
+// The byline names the current version and, past the first, a "N versions"
+// count; the rows only render once that count is clicked.
 async function expectVersions(page: Page, n: number) {
-	await expect(page.locator('.version-toggle, .version-count')).toHaveText(
-		n === 1 ? '1 version' : `${n} versions`
-	);
+	await expect(page.locator('.byline .version')).toHaveText(`v${n}`);
+	if (n > 1) await expect(page.locator('.byline .versions-toggle')).toHaveText(`${n} versions`);
 }
 
 async function gotoHydrated(page: Page, url: string) {

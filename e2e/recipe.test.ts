@@ -45,19 +45,17 @@ test.describe('Recipe detail page', () => {
 		// Click the stretched link (aria-label) rather than the h3 text node
 		await page.getByRole('link', { name: COOKIES_RE }).first().click();
 		await expect(page).toHaveURL(/\/recipes\//);
-		// The strip shows the current version; the full history opens from the
+		// The byline names the current version; the full history opens from the
 		// "3 versions" toggle. Assert on rendered content, not just wrapper count:
-		// a div-count check passes even if the messages render empty.
-		await expect(page.locator('.version-current')).toHaveText('v3');
-		// v3 is the version the landing page showcases; the strip is where a
-		// visitor arriving from that diff lands.
-		await expect(page.locator('.version-strip')).toContainText('Chill the dough');
+		// a li-count check passes even if the messages render empty.
+		await expect(page.locator('.byline .version')).toHaveText('v3');
+		// v3's commit message is the deck: the sentence the landing page showcases.
+		await expect(page.locator('.deck')).toContainText('Chill the dough');
 		await page.getByRole('button', { name: '3 versions' }).click();
-		const versionEntries = page.locator('.version-strip .version-entry');
-		await expect(versionEntries).toHaveCount(3);
-		await expect(page.locator('.version-strip')).toContainText('Initial recipe');
-		// The forks sit on the strip's links line, beside the versions.
-		await expect(page.locator('.version-strip .version-forks')).toHaveText('1 fork');
+		await expect(page.locator('#version-history li')).toHaveCount(3);
+		await expect(page.locator('#version-history')).toContainText('Initial recipe');
+		// The forks sit in the byline, beside the versions.
+		await expect(page.locator('.byline')).toContainText('1 fork');
 	});
 
 	test('"Brown Butter Chocolate Chip Cookies" shows fork attribution', async ({ page }) => {
@@ -68,17 +66,18 @@ test.describe('Recipe detail page', () => {
 		await expect(page.getByText(COOKIES_RE)).toBeVisible();
 	});
 
-	test('viewing a specific version shows the history banner', async ({ page }) => {
+	test('viewing a specific version says so in the byline, with the way back', async ({ page }) => {
 		await page.goto('/recipes');
 		await page.getByRole('link', { name: COOKIES_RE }).first().click();
 		await page.waitForURL(/\/recipes\//);
-		// Append ?version=1 to the current recipe URL
+		// Append ?version=2 to the current recipe URL
 		const recipeUrl = page.url().split('?')[0];
-		await page.goto(`${recipeUrl}?version=1`);
+		await page.goto(`${recipeUrl}?version=2`);
 		await page.waitForLoadState('networkidle');
-		// Banner: "Viewing v1: "..." — Current version →"
-		await expect(page.getByText(/viewing v\d+:/i)).toBeVisible();
-		await expect(page.getByRole('link', { name: /current version/i })).toBeVisible();
+		// The deck is v2's message now, and the byline reads "v2 of 3 · Viewing history · Back to v3".
+		await expect(page.locator('.deck')).toContainText(SEED[0].versions[1].commitMessage);
+		await expect(page.locator('.byline')).toContainText('v2 of 3');
+		await expect(page.getByRole('link', { name: 'Back to v3' })).toBeVisible();
 	});
 
 	test('Compare link on v2 navigates to diff page', async ({ page }) => {
@@ -302,26 +301,23 @@ test.describe('Recipe detail page', () => {
 		expect(photoBox!.y).toBeLessThan(ingredientsBox!.y);
 	});
 
-	test('on desktop, the sidebar sits beside the recipe, not below it', async ({ page }) => {
+	test('on desktop, the ingredients sit beside the method, not below it', async ({ page }) => {
 		await page.setViewportSize({ width: 1440, height: 1000 });
 		await gotoClassicCookies(page);
 
 		const ingredients = page.getByRole('heading', { name: /ingredients/i }).first();
-		const details = page.locator('dl.details').first();
+		const method = page.getByRole('heading', { name: /method/i }).first();
 		await ingredients.waitFor();
-		await details.waitFor();
+		await method.waitFor();
 
 		const ingredientsBox = await ingredients.boundingBox();
-		const detailsBox = await details.boundingBox();
+		const methodBox = await method.boundingBox();
 
-		expect(ingredientsBox).not.toBeNull();
-		expect(detailsBox).not.toBeNull();
-		// Two columns: the sidebar starts to the right of the main column.
-		expect(detailsBox!.x).toBeGreaterThan(ingredientsBox!.x + ingredientsBox!.width - 1);
-		// x alone passed while the sidebar sat 667px too low — assert top alignment too,
-		// on the sidebar itself: the photo sits above the details inside it.
-		const sidebar = await page.locator('.sidebar-sticky').boundingBox();
-		expect(Math.abs(sidebar!.y - ingredientsBox!.y)).toBeLessThan(60);
+		// Two columns: the method starts to the right of the 380px ingredients column.
+		expect(Math.abs(ingredientsBox!.width - 380)).toBeLessThan(2);
+		expect(methodBox!.x).toBeGreaterThan(ingredientsBox!.x + ingredientsBox!.width - 1);
+		// x alone passed while the sidebar sat 667px too low: assert top alignment too.
+		expect(Math.abs(methodBox!.y - ingredientsBox!.y)).toBeLessThan(2);
 	});
 
 	test('on desktop, the sidebar stays in view while the method scrolls', async ({ page }) => {
@@ -330,6 +326,12 @@ test.describe('Recipe detail page', () => {
 		const sidebar = page.locator('.sidebar-sticky');
 		await sidebar.waitFor();
 
+		// A long method: the seed's six steps are shorter than the ingredients,
+		// which leaves the sticky column nothing to do.
+		await page.evaluate(() => {
+			const list = document.querySelector('#method [role="list"]')!;
+			for (let i = 0; i < 4; i++) list.append(...[...list.children].map((c) => c.cloneNode(true)));
+		});
 		await page.mouse.wheel(0, 1000);
 		await page.waitForTimeout(200);
 		const box = await sidebar.boundingBox();
@@ -345,7 +347,7 @@ test.describe('Recipe detail page', () => {
 		await page.locator('#version-history').waitFor();
 		// A URL inside a message must wrap inside the panel, not widen the page.
 		const wrap = await page
-			.locator('#version-history .version-message')
+			.locator('#version-history li span')
 			.first()
 			.evaluate((el) => getComputedStyle(el).overflowWrap);
 		expect(wrap).toBe('anywhere');
@@ -378,10 +380,13 @@ test.describe('Recipe detail page', () => {
 		// The {#if imageUrl} branch is equivalent to the node being absent.
 		await page.evaluate(() => document.querySelector('.recipe-photo')?.remove());
 
-		// Nothing reserves the photo's room: the details start at the top of the sidebar.
+		// Nothing reserves the photo's room: the text takes one 760px column and
+		// the recipe starts sooner.
+		const text = await page.locator('.hero-text').boundingBox();
+		expect(text!.width).toBeGreaterThan(700);
+		expect(text!.width).toBeLessThanOrEqual(760);
 		const ingredientsBox = await ingredients.boundingBox();
-		const details = await page.locator('dl.details').first().boundingBox();
-		expect(Math.abs(details!.y - ingredientsBox!.y)).toBeLessThan(40);
+		expect(ingredientsBox!.y).toBeLessThan(600);
 	});
 
 	test('tags stay readable on both the card and the hero surfaces', async ({ page }) => {
@@ -421,23 +426,25 @@ test.describe('Recipe detail page', () => {
 		expect(contrast(hero.color, hero.bg)).toBeGreaterThanOrEqual(4.5);
 	});
 
-	test('the header has one marigold fill, the version chip, and no marigold text', async ({
+	test('the hero has one marigold fill, the Fork button, and no marigold text', async ({
 		page
 	}) => {
 		await gotoClassicCookies(page);
-		const hero = page.locator('header.recipe-header');
+		const hero = page.locator('.hero');
 		await hero.waitFor();
 
 		const accent = 'rgb(236, 166, 32)';
 
-		// Marigold is the only fill, and the version chip is the only thing filled.
+		// Marigold is the only fill, and the primary action is the only thing filled.
 		const filled = await hero.evaluate(
 			(el, a) =>
-				[...el.querySelectorAll('*')].filter((n) => getComputedStyle(n).backgroundColor === a)
-					.length,
+				[...el.querySelectorAll('*')].filter((n) => getComputedStyle(n).backgroundColor === a),
 			accent
 		);
-		expect(filled).toBe(1);
+		expect(filled).toHaveLength(1);
+		// Logged out, Fork is still offered and leads to login with the way back.
+		const fork = page.locator('.hero').getByRole('link', { name: 'Fork this recipe' });
+		await expect(fork).toHaveAttribute('href', /^\/login\?redirect=%2Frecipes%2F/);
 
 		// Cook time is metadata, not a pill: no background of its own.
 		const time = page.getByText(/^\d+\s*(min|h)/).first();
@@ -454,43 +461,71 @@ test.describe('Recipe detail page', () => {
 		expect(coloredText).toBe(0);
 	});
 
-	test('the version bar spans the content width under the header; the photo sits in the sidebar above the details; the recipe reads beside it', async ({
+	test('the hero is the text beside the photo; below a rule, ingredients beside the method', async ({
 		page
 	}) => {
-		await page.setViewportSize({ width: 1200, height: 900 });
+		await page.setViewportSize({ width: 1280, height: 900 });
 		await gotoClassicCookies(page);
 		const header = await page.locator('header.recipe-header').boundingBox();
-		const bar = await page.locator('.version-strip').boundingBox();
-		const photo = await page.locator('.recipe-photo').boundingBox();
-		const details = await page.locator('dl.details').first().boundingBox();
+		const photo = await page.locator('.recipe-photo img').boundingBox();
+		const deck = await page.locator('.deck').boundingBox();
+		const byline = await page.locator('.byline').boundingBox();
 		const ingredients = await page
 			.getByRole('heading', { name: /ingredients/i })
 			.first()
 			.boundingBox();
-		const description = await page.locator('.recipe-header .description').boundingBox();
-		// Bar: full content width, right under the header, above the body.
-		expect(Math.abs(bar!.width - (header!.width - 48))).toBeLessThan(2);
-		expect(bar!.y).toBeGreaterThan(header!.y + header!.height - 1);
-		expect(ingredients!.y).toBeGreaterThan(bar!.y + bar!.height);
-		// Photo: in the right column, above the details, the column's 380 wide.
-		expect(photo!.x).toBeGreaterThan(ingredients!.x + ingredients!.width);
-		expect(Math.abs(photo!.width - 380)).toBeLessThan(2);
-		expect(details!.y).toBeGreaterThan(photo!.y + photo!.height - 1);
-		// The reading column fills what the sidebar and the 48px gap leave: 724 at 1200.
-		expect(ingredients!.width).toBeLessThanOrEqual(800);
-		expect(description!.width).toBeGreaterThan(900);
-		const color = await page
-			.locator('.version-compare')
+		const method = await page
+			.getByRole('heading', { name: /method/i })
 			.first()
+			.boundingBox();
+		// Hero: the photo takes the right half, top aligned with the text, 4:3 under 440px tall.
+		expect(photo!.x).toBeGreaterThan(header!.x + header!.width - 1);
+		expect(Math.abs(photo!.y - header!.y)).toBeLessThan(12);
+		expect(photo!.height).toBeLessThanOrEqual(440);
+		// The deck comes before the byline, which comes before the body.
+		expect(deck!.y).toBeLessThan(byline!.y);
+		expect(ingredients!.y).toBeGreaterThan(byline!.y + byline!.height);
+		// Ingredients start by about 600px, beside a method column no wider than 720.
+		expect(ingredients!.y).toBeLessThan(620);
+		expect(method!.width).toBeLessThanOrEqual(720);
+		const color = await page
+			.locator('.byline a[href*="/diff?from="]')
 			.evaluate((el) => getComputedStyle(el).color);
 		expect(color).toBe('rgb(178, 60, 0)');
 	});
 
-	test('the version strip scrolls without widening the page', async ({ page }) => {
+	test('on a phone and an iPad, a sticky tab bar reaches either section in one tap', async ({
+		page
+	}) => {
+		for (const width of [390, 768]) {
+			await page.setViewportSize({ width, height: 844 });
+			await gotoClassicCookies(page);
+			const tabs = page.locator('.section-tabs');
+			await expect(tabs).toBeVisible();
+			// The bar sits inside the first screen, so neither section is a scroll away.
+			expect((await tabs.boundingBox())!.y).toBeLessThan(844);
+			await expect(tabs.getByRole('link', { name: 'Ingredients' })).toHaveAttribute(
+				'aria-current',
+				'true'
+			);
+			await tabs.getByRole('link', { name: 'Method' }).click();
+			await page.waitForTimeout(200);
+			// Pinned at the top while the method is read, and marking it.
+			expect((await tabs.boundingBox())!.y).toBeLessThan(1);
+			await expect(tabs.getByRole('link', { name: 'Method' })).toHaveAttribute(
+				'aria-current',
+				'true'
+			);
+		}
+		await page.setViewportSize({ width: 1280, height: 900 });
+		await expect(page.locator('.section-tabs')).toBeHidden();
+	});
+
+	test('the byline wraps without widening the page', async ({ page }) => {
 		await page.setViewportSize({ width: 390, height: 900 });
 		await gotoClassicCookies(page);
 
-		const strip = page.locator('.version-strip');
+		const strip = page.locator('.byline');
 		await strip.waitFor();
 
 		const doc = await page.evaluate(() => ({
@@ -504,29 +539,29 @@ test.describe('Recipe detail page', () => {
 		expect(box!.width).toBeLessThanOrEqual(390);
 	});
 
-	test('the version bar’s byline, counts and compare link share one text baseline', async ({
+	test('the byline’s author, version, counts and compare link share one text baseline', async ({
 		page
 	}) => {
 		await page.setViewportSize({ width: 1440, height: 900 });
 		await gotoClassicCookies(page);
-		await page.locator('.version-strip .version-forks').waitFor();
+		await page.locator('.byline .versions-toggle').waitFor();
 
-		// Each item's first text node, measured as a range so the icons and
-		// button boxes do not count.
+		// Each item's first text node, measured as a range so the button box
+		// does not count.
 		const bottoms = await page.evaluate(() =>
-			['.version-by a', '.version-toggle', '.version-forks', '.version-compare'].map((sel) => {
-				const el = document.querySelector(sel)!;
-				const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
-				let node = walker.nextNode();
-				while (node && !node.textContent?.trim()) node = walker.nextNode();
-				const range = document.createRange();
-				range.selectNodeContents(node!);
-				return range.getBoundingClientRect().bottom;
-			})
+			['.byline .username', '.byline .version', '.versions-toggle', '.byline a[href*="/diff"]'].map(
+				(sel) => {
+					const el = document.querySelector(sel)!;
+					const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+					let node = walker.nextNode();
+					while (node && !node.textContent?.trim()) node = walker.nextNode();
+					const range = document.createRange();
+					range.selectNodeContents(node!);
+					return range.getBoundingClientRect().bottom;
+				}
+			)
 		);
 		for (const bottom of bottoms) expect(Math.abs(bottom - bottoms[0])).toBeLessThan(1);
-		// The icon sits in the line, not above it.
-		expect((await page.locator('.version-toggle').boundingBox())!.height).toBeLessThan(20);
 	});
 });
 
@@ -597,10 +632,18 @@ test.describe('Landing page (logged out)', () => {
 			const grid = await page.locator('.recipe-grid').first().boundingBox();
 			await gotoClassicCookies(page);
 			const title = await page.getByRole('heading', { level: 1 }).boundingBox();
-			const bar = await page.locator('.version-strip').boundingBox();
+			// The hero's content box, inside its gutters.
+			const hero = await page.locator('.hero').evaluate((el) => {
+				const { paddingLeft, paddingRight } = getComputedStyle(el);
+				const { x, width } = el.getBoundingClientRect();
+				return {
+					x: x + parseFloat(paddingLeft),
+					width: width - parseFloat(paddingLeft) - parseFloat(paddingRight)
+				};
+			});
 			expect(Math.abs(title!.x - browse!.x)).toBeLessThan(1);
-			expect(Math.abs(bar!.x - grid!.x)).toBeLessThan(1);
-			expect(Math.abs(bar!.width - grid!.width)).toBeLessThan(1);
+			expect(Math.abs(hero.x - grid!.x)).toBeLessThan(1);
+			expect(Math.abs(hero.width - grid!.width)).toBeLessThan(1);
 		}
 	});
 
