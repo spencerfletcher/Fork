@@ -257,6 +257,8 @@
 		/* The same links reach a thumb's 44px, as the recipe page's do. */
 		.version-card__head :global(.username) {
 			display: inline-block;
+			/* The padding alone falls short at Username's smaller size. */
+			min-height: 44px;
 			padding: 11px 0;
 			margin-block: -11px;
 		}
