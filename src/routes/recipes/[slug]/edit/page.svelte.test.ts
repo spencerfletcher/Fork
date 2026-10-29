@@ -244,7 +244,7 @@ describe('Edit page form', () => {
 			'href',
 			'/recipes/cookies'
 		);
-		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Edit recipe');
+		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Edit Recipe');
 		expect(screen.getByText('Editing v2')).toBeInTheDocument();
 	});
 

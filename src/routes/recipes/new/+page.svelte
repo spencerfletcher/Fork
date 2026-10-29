@@ -26,7 +26,7 @@
 	<div class="editor">
 		<div class="editor-header">
 			<div class="editor-title">
-				<h1>New recipe</h1>
+				<h1>New Recipe</h1>
 			</div>
 		</div>
 

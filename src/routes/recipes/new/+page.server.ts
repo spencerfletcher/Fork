@@ -19,7 +19,7 @@ export const load: PageServerLoad = async ({ locals: { user } }) => {
 
 	const allTags = await listTags();
 
-	return { allTags, meta: { title: 'New recipe' } };
+	return { allTags, meta: { title: 'New Recipe' } };
 };
 
 export const actions: Actions = {

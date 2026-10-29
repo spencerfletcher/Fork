@@ -46,7 +46,7 @@
 				<div class="editor-header">
 					<a href="/recipes/{recipe.slug}" class="back-link">← {recipe.title}</a>
 					<div class="editor-title">
-						<h1>Edit recipe</h1>
+						<h1>Edit Recipe</h1>
 						<!-- Always in the DOM, so the outcome is announced when it changes. -->
 						<span class="editing" aria-live="polite">
 							Editing v{current}{outcome ? ` · ${outcome}` : ''}

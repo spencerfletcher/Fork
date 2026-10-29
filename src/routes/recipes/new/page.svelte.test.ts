@@ -140,7 +140,7 @@ describe('New recipe page editor state', () => {
 		render(NewPage, { props: { data, form: null } });
 		expect(screen.getByRole('link', { name: 'Cancel' })).toHaveAttribute('href', '/recipes');
 		expect(screen.queryByLabelText(/what changed/i)).toBeNull();
-		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('New recipe');
+		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('New Recipe');
 	});
 
 	test('starts with empty ingredient and step textareas in the form', () => {
