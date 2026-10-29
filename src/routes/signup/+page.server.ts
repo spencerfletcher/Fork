@@ -2,13 +2,18 @@ import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { text } from '#lib/recipes/validation.js';
 import { ensureProfile, usernameTaken } from '#lib/server/profiles.js';
+import { localPath } from '#lib/server/localPath.js';
 
-// Redirect users who are already logged in away from the signup page.
-export const load: PageServerLoad = async ({ locals: { user } }) => {
+// Redirect users who are already logged in away from the signup page. A
+// redirectTo from the login page is kept so "Log in" can hand it back.
+export const load: PageServerLoad = async ({ locals: { user }, url }) => {
 	if (user) {
 		throw redirect(303, '/');
 	}
-	return { meta: { title: 'Create an account' } };
+	return {
+		redirectTo: localPath(url.searchParams.get('redirectTo')),
+		meta: { title: 'Create an Account' }
+	};
 };
 
 // The handle is a URL segment and a byline: lowercase, URL-safe, bounded.

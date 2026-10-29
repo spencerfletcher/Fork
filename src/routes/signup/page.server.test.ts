@@ -1,7 +1,7 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { isActionFailure, isRedirect } from '@sveltejs/kit';
 import { invokeAction as invoke, formEvent } from '#lib/testing/actions.js';
-import { actions } from './+page.server';
+import { actions, load } from './+page.server';
 
 // ─── Hoisted mocks (must be available inside vi.mock factory) ─────────────────
 
@@ -99,7 +99,7 @@ describe('signup action', () => {
 		expect(result).toMatchObject({ status: 500 });
 	});
 
-	test('an already registered email is flagged so the page can offer Sign in', async () => {
+	test('an already registered email is flagged so the page can offer Log in', async () => {
 		signUp.mockResolvedValue({
 			data: { user: null },
 			error: { status: 422, message: 'User already registered' }
@@ -120,5 +120,19 @@ describe('signup action', () => {
 		expect(ensureProfile).toHaveBeenCalledWith({ id: 'user-1' }, 'cook');
 		expect(isRedirect(result)).toBe(true);
 		expect(result).toMatchObject({ status: 303, location: '/confirm-email' });
+	});
+});
+
+describe('signup load', () => {
+	const run = (query = '') =>
+		load({ locals: { user: null }, url: new URL(`http://x/signup${query}`) } as never);
+
+	test('the tab title matches the h1', async () => {
+		expect(await run()).toMatchObject({ meta: { title: 'Create an Account' } });
+	});
+
+	test('carries a local redirectTo from the login page, so Log in can hand it back', async () => {
+		expect(await run('?redirectTo=%2Ffavorites')).toMatchObject({ redirectTo: '/favorites' });
+		expect(await run('?redirectTo=%2F%2Fevil.example')).toMatchObject({ redirectTo: null });
 	});
 });

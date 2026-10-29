@@ -912,6 +912,14 @@
 		font-size: 0.875rem;
 	}
 
+	/* A link inside the alert ("Log in") is underlined, since clay is too close
+	   to the alert's red to tell apart, and kept on one line (decided 29
+	   October 2026). */
+	.auth-error a {
+		text-decoration: underline;
+		white-space: nowrap;
+	}
+
 	.auth-submit {
 		width: 100%;
 		padding: 12px;

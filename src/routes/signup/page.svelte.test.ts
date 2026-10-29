@@ -1,13 +1,22 @@
 import { describe, test, expect, vi } from 'vitest';
 import { render, screen, fireEvent, within } from '@testing-library/svelte';
+import { tick } from 'svelte';
 import SignupPage from './+page.svelte';
 
-vi.mock('$app/forms', () => ({ enhance: () => ({ destroy: () => {} }) }));
+// The enhance mock keeps the page's submit callback so a test can start a
+// submission without a server.
+const { submits } = vi.hoisted(() => ({ submits: [] as Array<() => unknown> }));
+vi.mock('$app/forms', () => ({
+	enhance: (_form: HTMLFormElement, submit: () => unknown) => {
+		submits.push(submit);
+		return { destroy: () => {} };
+	}
+}));
 
 type Form = { message?: string; registered?: boolean; errors?: { username?: string } } | null;
 
-function renderSignup(form: Form = null) {
-	return render(SignupPage, { props: { form } as never });
+function renderSignup(form: Form = null, redirectTo: string | null = null) {
+	return render(SignupPage, { props: { form, data: { redirectTo } } as never });
 }
 
 const username = () => screen.getByLabelText('Username') as HTMLInputElement;
@@ -23,7 +32,10 @@ describe('Sign-up page', () => {
 		expect(username().compareDocumentPosition(screen.getByLabelText('Password'))).toBe(
 			Node.DOCUMENT_POSITION_FOLLOWING
 		);
-		expect(username()).toHaveAccessibleDescription('Your public handle, shown on every recipe.');
+		// The rules up front, on one line (decided 29 October 2026).
+		expect(username()).toHaveAccessibleDescription(
+			'3 to 30 letters, digits, - or _. Your public handle, shown on every recipe.'
+		);
 	});
 
 	test('the username prefills from the email prefix, sanitised to the rules', async () => {
@@ -63,10 +75,35 @@ describe('Sign-up page', () => {
 		expect(screen.getByRole('alert')).toHaveTextContent('Could not create the account. Try again.');
 	});
 
-	test('an already registered email offers Sign in inline', () => {
+	test('an already registered email offers Log in inline', () => {
 		renderSignup({ message: 'That email already has an account.', registered: true });
 		const alert = screen.getByRole('alert');
 		expect(alert).toHaveTextContent('That email already has an account.');
-		expect(within(alert).getByRole('link', { name: 'Sign in' })).toHaveAttribute('href', '/login');
+		expect(within(alert).getByRole('link', { name: 'Log in' })).toHaveAttribute('href', '/login');
+	});
+
+	test('"Create an Account", and "Log in" as the switch, handing back a redirectTo', () => {
+		renderSignup({ message: 'That email already has an account.', registered: true }, '/favorites');
+		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Create an Account');
+		for (const link of screen.getAllByRole('link', { name: 'Log in' })) {
+			expect(link).toHaveAttribute('href', '/login?redirectTo=%2Ffavorites');
+		}
+		expect(screen.queryByText(/sign in/i)).toBeNull();
+	});
+
+	test('the username states its rules as a pattern, and every field has its autocomplete token', () => {
+		renderSignup();
+		expect(username()).toHaveAttribute('pattern', '[A-Za-z0-9_-]{3,30}');
+		expect(username()).toHaveAttribute('autocomplete', 'username');
+		expect(email()).toHaveAttribute('autocomplete', 'email');
+		expect(screen.getByLabelText('Password')).toHaveAttribute('autocomplete', 'new-password');
+	});
+
+	test('while the form is submitting the button is disabled and says so', async () => {
+		submits.length = 0;
+		renderSignup();
+		submits.at(-1)!();
+		await tick();
+		expect(screen.getByRole('button', { name: 'Creating account…' })).toBeDisabled();
 	});
 });

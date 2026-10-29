@@ -52,7 +52,7 @@ describe('login action', () => {
 
 		expect(result).toMatchObject({
 			status: 401,
-			data: { message: 'Could not sign in. Try again.' }
+			data: { message: 'Could not log in. Try again.' }
 		});
 	});
 
@@ -92,5 +92,10 @@ describe('login load', () => {
 			} as never);
 		expect(await run('/recipes/cookies')).toMatchObject({ redirectTo: '/recipes/cookies' });
 		expect(await run('https://evil.example')).toMatchObject({ redirectTo: null });
+	});
+
+	test('the tab says "Log in", the verb the navbar and the button use', async () => {
+		const result = await load({ locals: { user: null }, url: new URL('http://x/login') } as never);
+		expect(result).toMatchObject({ meta: { title: 'Log in' } });
 	});
 });

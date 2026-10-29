@@ -25,6 +25,47 @@ test.describe('Auth pages', () => {
 		).toBeVisible();
 	});
 
+	// Neither form is ever submitted here.
+	test('"Log in" is the verb on the login page: tab, button and the navbar agree', async ({
+		page
+	}) => {
+		await page.goto('/login');
+		await expect(page).toHaveTitle('Log in — Fork');
+		await expect(page.getByRole('button', { name: 'Log in' })).toBeVisible();
+		await expect(page.getByText(/sign in/i)).toHaveCount(0);
+	});
+
+	test('sign-up states the username rules and says so in the field once the user leaves it', async ({
+		page
+	}) => {
+		await page.setViewportSize({ width: 390, height: 844 });
+		await page.goto('/signup');
+		await expect(page.getByRole('heading', { level: 1 })).toHaveText('Create an Account');
+		const rule = page.getByText('Usernames are 3 to 30 characters: letters, digits, - or _');
+		await expect(rule).toBeHidden();
+		await page.getByLabel('Username').fill('jo');
+		await page.getByLabel('Username').blur();
+		await expect(rule).toBeVisible();
+		await page.getByLabel('Username').fill('jo_cooks');
+		await page.getByLabel('Username').blur();
+		await expect(rule).toBeHidden();
+	});
+
+	test('a link inside the auth alert is underlined and stays on one line', async ({ page }) => {
+		// The alert only renders after a submission; build one with the page's
+		// own classes rather than submit the form.
+		await page.goto('/signup');
+		const style = await page.evaluate(() => {
+			const alert = document.createElement('div');
+			alert.className = 'auth-error';
+			alert.innerHTML = 'That email already has an account. <a href="/login">Log in</a>';
+			document.querySelector('.auth-card')!.prepend(alert);
+			const s = getComputedStyle(alert.querySelector('a')!);
+			return { line: s.textDecorationLine, wrap: s.whiteSpace };
+		});
+		expect(style).toEqual({ line: 'underline', wrap: 'nowrap' });
+	});
+
 	test('new recipe page redirects unauthenticated users to login', async ({ page }) => {
 		await page.goto('/recipes/new');
 		// Should either redirect to /login or show an error — not the new recipe form

@@ -1,21 +1,15 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { text } from '#lib/recipes/validation.js';
+import { localPath } from '#lib/server/localPath.js';
 
-// Add a load function to redirect logged-in users away from the login page.
-// If a user with an active session tries to visit /login, they'll be
-// sent to their profile page instead.
+// A signed-in visitor has nothing to do here and goes home.
 export const load: PageServerLoad = async ({ locals: { user }, url }) => {
 	if (user) {
-		throw redirect(303, '/'); // Or wherever you want logged-in users to go
+		throw redirect(303, '/');
 	}
-	return { redirectTo: localPath(url.searchParams.get('redirectTo')), meta: { title: 'Sign in' } };
+	return { redirectTo: localPath(url.searchParams.get('redirectTo')), meta: { title: 'Log in' } };
 };
-
-// Only a path on this site: no scheme, no host, no protocol-relative "//".
-function localPath(value: string | null): string | null {
-	return value && value.startsWith('/') && !value.startsWith('//') ? value : null;
-}
 
 export const actions: Actions = {
 	default: async ({ request, locals: { supabase } }) => {
@@ -40,7 +34,7 @@ export const actions: Actions = {
 			const message =
 				err.code === 'invalid_credentials' || err.message === 'Invalid login credentials'
 					? "That email and password don't match."
-					: 'Could not sign in. Try again.';
+					: 'Could not log in. Try again.';
 			return fail(401, { message });
 		}
 
