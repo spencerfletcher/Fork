@@ -84,7 +84,7 @@
 </header>
 
 <style>
-	/* 8, 8, 8, 2, 16 down the column: each line sets its own gap above. */
+	/* 8, 8, 8, 8, 16 down the column: each line sets its own gap above. */
 	.recipe-header {
 		display: flex;
 		flex-direction: column;
@@ -139,7 +139,7 @@
 	}
 
 	.tags {
-		margin-top: 2px;
+		margin-top: 8px;
 		font-size: 1rem;
 		line-height: 1.5;
 	}
