@@ -6,16 +6,17 @@ import { randomSuffix } from '#lib/helpers.js';
 
 /**
  * Guarantees a profile row for an authenticated user before they write
- * anything. The username defaults to the email's local part; when another
- * account already took it, a short random suffix is added rather than
- * silently leaving the user without a profile (which would fail every later
- * recipe insert on its foreign key).
+ * anything. Sign-up passes the username the user chose; a user from before
+ * that field gets the email's local part. When another account already took
+ * it, a short random suffix is added rather than silently leaving the user
+ * without a profile (which would fail every later recipe insert on its
+ * foreign key).
  *
  * Safe to call twice at once: a conflict on the id means the other call won,
  * which is success; only a conflict on the username earns a retry.
  */
-export async function ensureProfile(user: User): Promise<void> {
-	const base = user.email?.split('@')[0] ?? user.id.slice(0, 8);
+export async function ensureProfile(user: User, username?: string): Promise<void> {
+	const base = username ?? user.email?.split('@')[0] ?? user.id.slice(0, 8);
 	if (await tryInsert(user.id, base)) return;
 	if (await hasProfile(user.id)) return;
 	if (await tryInsert(user.id, `${base}-${randomSuffix().slice(0, 4)}`)) return;
@@ -31,6 +32,14 @@ async function tryInsert(id: string, username: string): Promise<boolean> {
 		.onConflictDoNothing()
 		.returning({ id: profiles.id });
 	return inserted.length > 0;
+}
+
+export async function usernameTaken(username: string): Promise<boolean> {
+	const row = await db.query.profiles.findFirst({
+		where: eq(profiles.username, username),
+		columns: { id: true }
+	});
+	return row !== undefined;
 }
 
 async function hasProfile(id: string): Promise<boolean> {

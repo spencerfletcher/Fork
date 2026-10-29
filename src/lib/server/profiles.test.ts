@@ -1,6 +1,6 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest';
 import type { User } from '@supabase/supabase-js';
-import { ensureProfile } from './profiles';
+import { ensureProfile, usernameTaken } from './profiles';
 
 const { findFirstMock, insertMock } = vi.hoisted(() => ({
 	findFirstMock: vi.fn(),
@@ -64,9 +64,38 @@ describe('ensureProfile', () => {
 		expect(insertMock).toHaveBeenCalledTimes(2);
 	});
 
+	test('inserts the username the sign-up form chose instead of the email prefix', async () => {
+		const chain = insertChain([{ id: 'user-2' }]);
+		insertMock.mockReturnValue(chain);
+		await ensureProfile(alex, 'alex_cooks');
+		expect(chain.values).toHaveBeenCalledWith({ id: 'user-2', username: 'alex_cooks' });
+	});
+
+	test('the chosen username gets the same suffix fallback when it is taken meanwhile', async () => {
+		const first = insertChain([]);
+		const second = insertChain([{ id: 'user-2' }]);
+		insertMock.mockReturnValueOnce(first).mockReturnValueOnce(second);
+		findFirstMock.mockResolvedValue(undefined);
+		await ensureProfile(alex, 'alex_cooks');
+		const retry = second.values.mock.calls[0][0] as { username: string };
+		expect(retry.username).toMatch(/^alex_cooks-[a-f0-9]{4}$/);
+	});
+
 	test('throws when neither username can be taken and no profile appears', async () => {
 		insertMock.mockReturnValue(insertChain([]));
 		findFirstMock.mockResolvedValue(undefined);
 		await expect(ensureProfile(alex)).rejects.toThrow('Could not create a profile');
+	});
+});
+
+describe('usernameTaken', () => {
+	test('is true when a profile already has the username', async () => {
+		findFirstMock.mockResolvedValue({ id: 'user-9' });
+		expect(await usernameTaken('alex')).toBe(true);
+	});
+
+	test('is false when no profile has it', async () => {
+		findFirstMock.mockResolvedValue(undefined);
+		expect(await usernameTaken('alex')).toBe(false);
 	});
 });
