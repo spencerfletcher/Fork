@@ -179,12 +179,13 @@ Clay and marigold were raised in chroma from #a4512b and #e8a83a: same hues, sam
 ### Hierarchy
 
 - **Display** (500, 2.5rem, 1.15, clay): page h1. Recipe titles, "Recipes", "Search", the profile handle. Phones drop to about 1.75rem.
-- **Description** (400, 1.125rem, 1.5, ink, Source Sans): a recipe's description under its title, in the printed voice. 1.0625rem on a phone.
+- **Byline** (600, 1rem, 1.5, ink, Source Sans): "By @author · 3 versions · 1 fork" under a recipe's title; the links clay.
+- **Description** (400, 1.0625rem, 1.5, ink, Source Sans): a recipe's description under its byline, plain body text.
 - **Headline** (500, 1.75rem, 1.25, ink): h2 on pages that need a second serif level ("Recipes worth forking").
 - **Title** (500, 1.0625rem, 1.25): recipe card names in Bitter. Clay on a no-photo panel, ink on a photo card.
 - **Body** (400, 1rem, 1.65, ink): running text, ingredients, steps. Descriptions at 1.0625rem in Ink 2. Measure stays under about 72 characters.
 - **Sans label** (600, 0.6875rem, 0.08em, uppercase, Ink 3): the page's one uppercase label: section eyebrows ("Ingredients", "Method", "Recent"), form legends, the recipe page's Prep, Cook and Serves, and its phone section tabs at 0.75rem.
-- **Mono** (400, 0.75rem, 1.5): bylines, dates, version counts, diff rows and commit messages in history. Gram weights are not mono: they sit inside a sans ingredient line at the line's own size, in Ink 3, so the strike runs through them as one line (decided 29 October 2026). The recipe page's byline uses 0.875rem; step numerals 1rem at 600. Diff and compare surfaces use 0.875rem. Card version marks use 600 at 0.6875rem.
+- **Mono** (400, 0.75rem, 1.5): dates, diff rows and commit messages in history. On the recipe page mono is spent on one line only, the version's note (0.875rem, Ink 2, with the chip); the byline and the measure are sans. Gram weights are not mono: they sit inside a sans ingredient line at the line's own size, in Ink 3, so the strike runs through them as one line (decided 29 October 2026). The recipe page's tag line uses 0.875rem; step numerals are Bitter 1.125rem in clay. Diff and compare surfaces use 0.875rem. Card version marks use 600 at 0.6875rem.
 - **Also in use** and on the ramp: 0.8125rem (card meta, byline, numerals), 0.875rem (navbar links, diff), 0.9375rem (buttons, card body), 1.375rem (the wordmark).
 
 ### Named Rules
@@ -257,9 +258,9 @@ A "Skip to content" link is the first tab stop on every page, hidden until focus
 
 - Espresso bar, 56px, 1200px inner column. Bitter wordmark "Fork." in cream with a marigold full stop. Links in tan, 0.875rem 500, cream on hover or when active. One marigold action. Below 768px the links collapse behind 44px icon buttons.
 
-### Version bar (signature)
+### Version note (signature)
 
-Unboxed, under the description: a marigold `v3` chip in mono, the commit message in the note voice (Source Sans italic 1.0625rem, Ink 2, the style the Method uses for a tip) at full length, then one mono line of history: `@author · 3 versions · 1 fork`, Ink 3 with clay links. No background, no border: the chip and the mono face are the mark, as the Pencil Rule says. "3 versions" opens the list of the other versions under the bar, each with "Compare with vN" against the one being read, older to newer; the version being read is not repeated. While viewing an older version the same list opens from "v2 of 3". A single version has no change to tell, so the chip joins the byline: `v1 · @author`. Viewing an older version the chip and message are that version's and the line reads `v2 of 3 · Viewing history · Back to v3`. Tags are not history: they sit in the body face on their own line under Prep, Cook and Serves, Ink 2 with clay on hover. The chip is the only marigold fill above the buttons, and the version number appears nowhere else.
+Decided 29 October 2026, after measuring eight reference headers (GitHub, GitLab, Hugging Face, npm, Serious Eats, Bon Appétit, King Arthur, NYT Cooking): one face below the title, all metadata at one size and one colour with weight as the only emphasis, the description as plain body text, colour spent once. The recipe header is title (Bitter, clay), byline (sans 1rem 600: "By @author · 3 versions · 1 fork", links clay), description (sans 1.0625rem ink), then the version's note: a marigold `v3` chip and the commit message in mono 0.875rem Ink 2 with a 2px Rule 2 edge in the margin, the only mono on the page. A 1px rule, then Prep · Cook · Serves as bold label and plain value at 1rem on one row (wrapping on a phone), the tags in Ink 2 with clay on hover, and the action pills. "3 versions" opens the list of the other versions under the note, each with "Compare with vN"; while viewing an older version the byline reads "v2 of 3 · Viewing history · Back to v3". No italic, no uppercase above the rule, no chip in the title.
 
 ### Diff rows (signature)
 

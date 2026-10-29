@@ -48,11 +48,9 @@ function renderHeader(overrides: Partial<HeaderProps> = {}) {
 	});
 }
 
-/** The byline as a reader sees it: its items, dotted (the dots are CSS). */
+/** The byline as a reader sees it, whitespace collapsed. */
 function byline(container: HTMLElement) {
-	return [...container.querySelector('.byline')!.children]
-		.map((el) => el.textContent!.replace(/\s+/g, ' ').trim())
-		.join(' · ');
+	return container.querySelector('.byline')!.textContent!.replace(/\s+/g, ' ').trim();
 }
 
 // ─── Fork attribution ─────────────────────────────────────────────────────────
@@ -108,7 +106,11 @@ describe('RecipeHeader version bar', () => {
 		const chip = container.querySelector('.version-bar .version')!;
 		expect(chip).toHaveTextContent('v3');
 		expect(container.querySelector('.version-bar .commit')).toHaveTextContent('Chill the dough');
-		expect(screen.getAllByText('v3')).toHaveLength(1);
+		expect(container.querySelectorAll('.version')).toHaveLength(1);
+		// Screen readers hear what the chip means.
+		expect(container.querySelector('.commit-line .sr-only')).toHaveTextContent(
+			'Version 3, latest:'
+		);
 	});
 
 	test('the message runs in full: plain text, no clamp, no button', () => {
@@ -130,7 +132,7 @@ describe('RecipeHeader byline', () => {
 			versions: THREE,
 			forkCount: 1
 		});
-		expect(byline(container)).toBe('@chef · 3 versions · 1 fork');
+		expect(byline(container)).toBe('By @chef · 3 versions · 1 fork');
 		expect(container.querySelector('.byline a[href*="/diff"]')).toBeNull();
 		expect(screen.getAllByRole('link', { name: '@chef' })).toHaveLength(1);
 	});
@@ -141,12 +143,12 @@ describe('RecipeHeader byline', () => {
 		expect(container.querySelector('.version-bar .commit')).not.toBeNull();
 	});
 
-	test('a single version has no change to tell: the chip joins the byline', () => {
+	test('a single version: the byline is just the author; no count, no compare', () => {
 		const { container } = renderHeader({
 			recipe: makeRecipe({ author: { id: 'u1', username: 'chef' } })
 		});
-		expect(byline(container)).toBe('v1 · @chef');
-		expect(container.querySelector('.commit')).toBeNull();
+		expect(byline(container)).toBe('By @chef');
+		expect(container.querySelector('.version')).toHaveTextContent('v1');
 		expect(screen.queryByRole('button', { name: /versions/ })).toBeNull();
 		expect(screen.queryByRole('link', { name: /compare/i })).toBeNull();
 	});
@@ -232,8 +234,8 @@ describe('RecipeHeader content', () => {
 		expect(dessert).toHaveAttribute('href', '/tags/dessert');
 		expect(dessert).not.toHaveClass('tag');
 		expect(dessert.parentElement).toHaveTextContent('Dessert, Baking');
-		// Taxonomy, not history: the body face, quiet, on the meta line with the measure.
-		expect(dessert.parentElement).toHaveClass('font-sans');
+		// Taxonomy, not history: the body face, quiet, under the measure.
+		expect(dessert.parentElement).toHaveClass('font-sans', 'text-text-2');
 		expect(dessert.closest('.meta')!.querySelector('dl.details')).not.toBeNull();
 	});
 

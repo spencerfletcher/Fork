@@ -20,9 +20,7 @@
 			<label
 				class="has-[:focus-visible]:outline-accent grid cursor-pointer [grid-template-columns:30px_1fr] items-baseline gap-[18px] select-none has-[:checked]:line-through has-[:checked]:opacity-60 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2">
 				<input type="checkbox" class="sr-only" />
-				<!-- A step number is a mark of measure, so it is set like the grams
-				     and the byline: mono, clay. -->
-				<span class="text-accent font-mono text-[1rem] font-semibold">{n}</span>
+				<span class="text-accent font-serif text-[1.125rem] font-medium">{n}</span>
 				<div class="flex flex-col gap-1.5">
 					<p class="text-text m-0 font-sans text-[1.0625rem] leading-[1.6] whitespace-pre-line">
 						{step.text}

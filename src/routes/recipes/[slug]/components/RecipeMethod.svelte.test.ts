@@ -3,9 +3,9 @@ import { render, screen, fireEvent } from '@testing-library/svelte';
 import RecipeMethod from './RecipeMethod.svelte';
 
 describe('RecipeMethod', () => {
-	test('numbers steps by position, in clay mono like every other mark of measure', () => {
+	test('numbers steps by position, in the display face and clay', () => {
 		render(RecipeMethod, { props: { steps: [{ text: 'Mix.' }, { text: 'Bake.' }] } });
-		expect(screen.getByText('1')).toHaveClass('font-mono', 'text-accent');
+		expect(screen.getByText('1')).toHaveClass('font-serif', 'text-accent');
 		expect(screen.getByText('2')).toBeInTheDocument();
 	});
 

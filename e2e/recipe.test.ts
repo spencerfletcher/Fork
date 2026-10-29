@@ -487,9 +487,9 @@ test.describe('Recipe detail page', () => {
 		expect(photo!.x).toBeGreaterThan(header!.x + header!.width - 1);
 		expect(Math.abs(photo!.y - header!.y)).toBeLessThan(12);
 		expect(photo!.height).toBeLessThanOrEqual(440);
-		// The description comes before the byline, which comes before the body.
-		expect(deck!.y).toBeLessThan(byline!.y);
-		expect(ingredients!.y).toBeGreaterThan(byline!.y + byline!.height);
+		// The byline comes before the description, which comes before the body.
+		expect(byline!.y).toBeLessThan(deck!.y);
+		expect(ingredients!.y).toBeGreaterThan(deck!.y + deck!.height);
 		// Ingredients start by about 600px, beside a method column that runs to the photo's right edge.
 		expect(ingredients!.y).toBeLessThan(620);
 		expect(Math.abs(method!.x + method!.width - (photo!.x + photo!.width))).toBeLessThan(2);

@@ -7,7 +7,7 @@
 	import type { RecipeContent } from '#lib/recipes/types.js';
 
 	// Only what the header renders: the viewed version for the dish, the recipe
-	// row for where it lives, the version list for the bar and its history.
+	// row for where it lives, the version list for the byline and its history.
 	type HeaderContent = Pick<
 		RecipeContent,
 		'title' | 'description' | 'servings' | 'prepTimeMinutes' | 'cookTimeMinutes' | 'imageUrl'
@@ -60,45 +60,32 @@
 
 <svelte:window onkeydown={onWindowKeydown} />
 
+<!-- One face below the title. The byline carries who and how many; the
+     description is plain body text; the only mono line is the version's
+     note, marked by its chip and a rule in the margin; then a rule, the
+     measure, the tags, the actions. -->
 <header class="recipe-header">
-	<!-- Three blocks: the recipe's own words, then the version's note and its
-	     history, then one quiet line of measure and tags. -->
-	<div class="lede">
-		<h1 class="title m-0 font-serif leading-[1.15] font-medium">{currentVersion.title}</h1>
+	<h1 class="title m-0 font-serif font-medium">{currentVersion.title}</h1>
 
-		{#if currentVersion.description}
-			<p class="description m-0">{currentVersion.description}</p>
-		{/if}
-
-		{#if recipe.parent}
-			<p class="attribution text-text-3 m-0 font-sans text-[0.875rem]">
-				Forked from
-				<a href="/recipes/{recipe.parent.slug}" class="text-accent">{recipe.parent.title}</a>
-				{#if recipe.parent.author}by <Username username={recipe.parent.author.username} />{/if}
-			</p>
-		{:else if recipe.parentId}
-			<p class="attribution text-text-3 m-0 font-sans text-[0.875rem]">
-				Forked from a private recipe
-			</p>
-		{/if}
-	</div>
-
-	<!-- The version bar, unboxed: the version being read and what it changed,
-	     then one mono line of history. The chip and the mono face are the
-	     mark; a single version has no change to tell, so the chip joins the
-	     byline. -->
-	<div class="version-bar">
-		{#if count > 1}
-			<p class="commit-line m-0">
-				<span class="version">v{n}</span>
-				<span class="commit">{currentVersion.commitMessage}</span>
-			</p>
-		{/if}
-		<p class="byline m-0 font-mono">
-			{#if count === 1}
-				<span class="version">v{n}</span>
+	<p class="byline m-0 font-sans">
+		{#if isViewingHistory}
+			{#if recipe.author}By <Username username={recipe.author.username} /> ·
 			{/if}
-			{#if isViewingHistory}
+			<button
+				type="button"
+				class="versions-toggle"
+				bind:this={toggle}
+				aria-expanded={open}
+				aria-controls="version-history"
+				onclick={() => (open = !open)}>
+				v{n} of {count}
+			</button>
+			· Viewing history ·
+			<a href="/recipes/{recipe.slug}">Back to v{latest}</a>
+		{:else}
+			{#if recipe.author}By <Username username={recipe.author.username} />{/if}
+			{#if count > 1}
+				{#if recipe.author}·{/if}
 				<button
 					type="button"
 					class="versions-toggle"
@@ -106,29 +93,39 @@
 					aria-expanded={open}
 					aria-controls="version-history"
 					onclick={() => (open = !open)}>
-					v{n} of {count}
+					{count} versions
 				</button>
-				<span>Viewing history</span>
-				<a href="/recipes/{recipe.slug}">Back to v{latest}</a>
-			{:else}
-				{#if recipe.author}
-					<Username username={recipe.author.username} />
-				{/if}
-				{#if count > 1}
-					<button
-						type="button"
-						class="versions-toggle"
-						bind:this={toggle}
-						aria-expanded={open}
-						aria-controls="version-history"
-						onclick={() => (open = !open)}>
-						{count} versions
-					</button>
-				{/if}
-				{#if forkCount > 0}
-					<span>{forkCount} {forkCount === 1 ? 'fork' : 'forks'}</span>
-				{/if}
 			{/if}
+			{#if forkCount > 0}
+				· {forkCount} {forkCount === 1 ? 'fork' : 'forks'}
+			{/if}
+		{/if}
+	</p>
+
+	{#if recipe.parent}
+		<p class="attribution text-text-3 m-0 font-sans text-[0.875rem]">
+			Forked from
+			<a href="/recipes/{recipe.parent.slug}" class="text-accent">{recipe.parent.title}</a>
+			{#if recipe.parent.author}by <Username username={recipe.parent.author.username} />{/if}
+		</p>
+	{:else if recipe.parentId}
+		<p class="attribution text-text-3 m-0 font-sans text-[0.875rem]">
+			Forked from a private recipe
+		</p>
+	{/if}
+
+	{#if currentVersion.description}
+		<p class="description m-0">{currentVersion.description}</p>
+	{/if}
+
+	<!-- The version's note, in the margin: a chip and the message in mono. -->
+	<div class="version-bar">
+		<p class="commit-line m-0 font-mono">
+			<span class="sr-only">
+				{isViewingHistory ? `Version ${n} of ${count}:` : `Version ${n}, latest:`}
+			</span>
+			<span class="version" aria-hidden="true">v{n}</span>
+			<span class="commit">{currentVersion.commitMessage}</span>
 		</p>
 	</div>
 
@@ -152,6 +149,8 @@
 		</ul>
 	{/if}
 
+	<hr class="rule" />
+
 	<div class="meta">
 		<Details content={currentVersion} />
 		{#if tags.length > 0}
@@ -173,85 +172,28 @@
 	.recipe-header {
 		display: flex;
 		flex-direction: column;
-		gap: 24px;
-	}
-
-	.lede {
-		display: flex;
-		flex-direction: column;
-		gap: 8px;
+		gap: 16px;
 	}
 
 	/* clamp() for fluid typography: 28px on a phone, 40px on a desktop. */
 	.title {
 		font-size: clamp(1.75rem, 1.2rem + 1.8vw, 2.5rem);
+		line-height: 1.15;
 		color: var(--color-accent);
 	}
 
-	/* The recipe's own words, in the printed voice: ink, a step above body. */
-	.description {
-		font-size: 1.125rem;
-		line-height: 1.5;
-		color: var(--color-text);
-	}
-
-	.version-bar {
-		display: flex;
-		flex-direction: column;
-		gap: 6px;
-	}
-
-	.commit-line {
-		display: flex;
-		align-items: baseline;
-		gap: 10px;
-	}
-
-	.version {
-		flex-shrink: 0;
-		padding: 0 6px;
-		border-radius: var(--radius-sm);
-		background: var(--color-marigold);
-		color: var(--color-text);
-		font-family: var(--font-mono);
-		font-size: 0.75rem;
-		font-weight: 600;
-	}
-
-	.commit {
-		min-width: 0;
-		font-size: 1.0625rem;
-		font-style: italic;
-		line-height: 1.45;
-		color: var(--color-text-2);
-	}
-
+	/* Who and how many, bold, right under the title. Links are clay like the
+	   rest of the site; the username keeps the byline's own face and size. */
 	.byline {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: baseline;
-		gap: 4px 8px;
-		font-size: 0.875rem;
-		line-height: 1.7;
-		color: var(--color-text-3);
+		margin-top: -8px;
+		font-size: 1rem;
+		font-weight: 600;
+		line-height: 1.5;
 	}
 
-	/* The dot ends the item before it, so a wrapped line never starts with one.
-	   :global so the Username component's own element takes it too. */
-	.byline > :global(:not(:last-child))::after {
-		content: '·';
-		margin-left: 8px;
-		color: var(--color-text-3);
-	}
-
-	/* The chip is a box, so its dot would paint inside the marigold; it keeps
-	   a gap instead. */
-	.byline > .version::after {
-		content: none;
-	}
-
-	.byline > .version {
-		margin-right: 4px;
+	.byline :global(.username) {
+		font-family: inherit;
+		font-size: inherit;
 	}
 
 	.byline a,
@@ -266,29 +208,6 @@
 		color: var(--color-text);
 	}
 
-	/* The measure, then the tags on their own line beneath, both in the body face. */
-	.meta {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: baseline;
-		gap: 4px 20px;
-	}
-
-	.tags {
-		flex-basis: 100%;
-		font-size: 0.875rem;
-		line-height: 1.7;
-	}
-
-	.tags a {
-		color: inherit;
-		text-decoration: none;
-	}
-
-	.tags a:hover {
-		color: var(--color-accent);
-	}
-
 	/* The toggle is a word in the sentence, not a button. */
 	.versions-toggle {
 		padding: 0;
@@ -298,9 +217,34 @@
 		cursor: pointer;
 	}
 
-	/* The username is the byline's own size, not the mono default. */
-	.byline :global(.username) {
-		font-size: inherit;
+	.description {
+		font-size: 1.0625rem;
+		line-height: 1.5;
+	}
+
+	.commit-line {
+		display: flex;
+		align-items: baseline;
+		gap: 10px;
+		padding-left: 12px;
+		border-left: 2px solid var(--color-border-2);
+		font-size: 0.875rem;
+		line-height: 1.6;
+		color: var(--color-text-2);
+	}
+
+	.version {
+		flex-shrink: 0;
+		padding: 0 6px;
+		border-radius: var(--radius-sm);
+		background: var(--color-marigold);
+		color: var(--color-text);
+		font-size: 0.75rem;
+		font-weight: 600;
+	}
+
+	.commit {
+		min-width: 0;
 	}
 
 	.history {
@@ -341,6 +285,41 @@
 		color: var(--color-text);
 	}
 
+	.rule {
+		margin: 8px 0 0;
+		border: 0;
+		border-top: 1px solid var(--color-border-2);
+	}
+
+	.meta {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+	}
+
+	.tags {
+		font-size: 0.875rem;
+		line-height: 1.5;
+	}
+
+	.tags a {
+		color: inherit;
+		text-decoration: none;
+	}
+
+	.tags a:hover {
+		color: var(--color-accent);
+	}
+
+	/* Logged out the snippet renders nothing; an empty row must not take a gap. */
+	.actions-row {
+		margin-top: 8px;
+	}
+
+	.actions-row:empty {
+		display: none;
+	}
+
 	/* Inline links reach a 24px hit without moving the text. Last, so nothing
 	   above resets it, and :global so the Username component's element takes it. */
 	.byline :global(a),
@@ -351,18 +330,14 @@
 		margin: -4px 0;
 	}
 
-	/* Logged out the snippet renders nothing; an empty row must not take a gap. */
-	.actions-row:empty {
-		display: none;
-	}
-
 	@media (max-width: 699px) {
-		.recipe-header {
-			gap: 20px;
+		.history li {
+			flex-wrap: wrap;
 		}
 
-		.description {
-			font-size: 1.0625rem;
+		.history .compare {
+			flex-basis: 100%;
+			margin-left: 27px;
 		}
 	}
 </style>

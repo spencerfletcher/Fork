@@ -17,14 +17,14 @@
 	});
 </script>
 
-<!-- One line of measurement under the recipe's text: the page's section
-     label style, then the value. -->
+<!-- The measure, one row where it fits and wrapping where it does not: a bold
+     label and a plain value, both the body face at the body size. -->
 {#if rows.length > 0}
-	<dl class="details m-0 flex flex-wrap items-baseline gap-x-5 gap-y-1 p-0">
+	<dl class="details m-0 flex flex-wrap gap-x-7 gap-y-1 p-0 font-sans text-base leading-[1.5]">
 		{#each rows as [label, value] (label)}
-			<div class="flex items-baseline gap-2">
-				<dt class="eyebrow-label">{label}</dt>
-				<dd class="text-text m-0 font-sans text-base font-semibold">{value}</dd>
+			<div class="flex gap-2">
+				<dt class="text-text font-semibold">{label}</dt>
+				<dd class="text-text m-0">{value}</dd>
 			</div>
 		{/each}
 	</dl>

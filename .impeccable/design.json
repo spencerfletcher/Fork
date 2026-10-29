@@ -402,12 +402,12 @@
 			"css": ".ds-card{width:260px;display:flex;flex-direction:column;gap:10px}.ds-card-panel{aspect-ratio:4/3;border-radius:6px;background:var(--color-tint,#f5e9e0);display:flex;align-items:flex-end;padding:16px;box-sizing:border-box}.ds-card-panel-title{margin:0;font-family:Bitter,serif;font-weight:500;font-size:17px;line-height:1.25;color:var(--color-accent,#b23c00);transform-origin:left bottom;transition:transform .3s ease}.ds-card:hover .ds-card-panel-title{transform:scale(1.03)}.ds-card-meta{margin:0;display:flex;gap:5px;font-family:'Source Sans 3',sans-serif;font-size:13px;color:var(--color-text-3,#6f6960)}.ds-card-author{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--color-accent,#b23c00)}.ds-card-version{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;color:var(--color-accent,#b23c00)}"
 		},
 		{
-			"name": "Version bar",
+			"name": "Version note",
 			"kind": "custom",
 			"refersTo": "card",
-			"description": "The version being read and what it changed, then one mono line of history; unboxed, full length.",
-			"html": "<div class=\"ds-bar\"><p class=\"ds-bar-line\"><span class=\"ds-version\">v3</span><span class=\"ds-bar-msg\">Chill the dough and shift the sugar toward brown — thicker cookies, less cloying, smaller batch</span></p><p class=\"ds-byline\"><a href=\"#\">@spencerfletcher</a> · <a href=\"#\">3 versions</a> · 1 fork · <a href=\"#\">Compare with v2</a></p></div>",
-			"css": ".ds-bar{display:flex;flex-direction:column;gap:6px;max-width:560px;}.ds-bar p{margin:0}.ds-bar-line{display:flex;gap:10px;align-items:baseline;font-family:'Source Sans 3',sans-serif;font-size:17px;line-height:1.45;color:var(--color-text,#1a1714)}.ds-version{flex-shrink:0;display:inline-block;background:var(--color-marigold,#eca620);color:var(--color-text,#1a1714);font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;padding:0 6px;border-radius:4px}.ds-byline{font-family:'JetBrains Mono',monospace;font-size:14px;line-height:1.7;color:var(--color-text-3,#6f6960)}.ds-byline a{color:var(--color-accent,#b23c00);text-decoration:none}"
+			"description": "The version chip and the commit message in mono, in the margin; the only mono line on the recipe page.",
+			"html": "<div class=\"ds-note-block\"><p class=\"ds-byline\">By <a href=\"#\">@spencerfletcher</a> · <a href=\"#\">3 versions</a> · 1 fork</p><p class=\"ds-note\"><span class=\"ds-version\">v3</span><span>Chill the dough and shift the sugar toward brown — thicker cookies, less cloying, smaller batch</span></p></div>",
+			"css": ".ds-note-block{display:flex;flex-direction:column;gap:16px;max-width:560px}.ds-note-block p{margin:0}.ds-byline{font-family:'Source Sans 3',sans-serif;font-size:16px;font-weight:600;line-height:1.5;color:var(--color-text,#1a1714)}.ds-byline a{color:var(--color-accent,#b23c00);text-decoration:none}.ds-note{display:flex;gap:10px;align-items:baseline;padding-left:12px;border-left:2px solid var(--color-border-2,#d9d3c8);font-family:'JetBrains Mono',monospace;font-size:14px;line-height:1.6;color:var(--color-text-2,#4a443e)}.ds-version{flex-shrink:0;background:var(--color-marigold,#eca620);color:var(--color-text,#1a1714);font-size:12px;font-weight:600;padding:0 6px;border-radius:4px}"
 		}
 	],
 	"narrative": {
