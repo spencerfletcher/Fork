@@ -204,6 +204,19 @@
 		color: var(--color-text-3);
 	}
 
+	/* Below 1024 the row wraps more often, so the dots go and the items sit
+	   10px apart instead; no wrapped line ever starts with a dot (the version
+	   bar does the same on a phone). */
+	@media (max-width: 1023px) {
+		.meta-row {
+			column-gap: 10px;
+		}
+
+		.meta-item + .meta-item::before {
+			display: none;
+		}
+	}
+
 	.meta-item--accent {
 		font-family: var(--font-mono);
 		font-size: 0.6875rem;
@@ -234,10 +247,6 @@
 		}
 
 		.meta-author {
-			display: none;
-		}
-
-		.meta-author + .meta-item::before {
 			display: none;
 		}
 	}

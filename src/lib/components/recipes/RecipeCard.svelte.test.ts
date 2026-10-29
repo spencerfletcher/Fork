@@ -149,10 +149,11 @@ describe('RecipeCard', () => {
 		expect(style).toMatch(/\.meta-item \+ \.meta-item::before\s*{[^}]*content:\s*'·'/);
 	});
 
-	test('on a phone the dot after the hidden author hides with it', () => {
-		// jsdom applies no component CSS, so the phone rule is read from the source.
-		const phone = source.slice(source.indexOf('@media (max-width: 699px)'));
-		expect(phone).toMatch(/\.meta-author \+ \.meta-item::before\s*{[^}]*display:\s*none/);
+	test('below 1024 the dots go and the items sit 10px apart', () => {
+		// jsdom applies no component CSS, so the rule is read from the source.
+		const narrow = source.slice(source.indexOf('@media (max-width: 1023px)'));
+		expect(narrow).toMatch(/\.meta-row\s*{[^}]*column-gap:\s*10px/);
+		expect(narrow).toMatch(/\.meta-item \+ \.meta-item::before\s*{[^}]*display:\s*none/);
 	});
 
 	test('shows @username link when author is present', () => {
