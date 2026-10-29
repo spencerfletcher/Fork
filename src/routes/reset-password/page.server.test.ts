@@ -1,7 +1,7 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { isActionFailure, isRedirect } from '@sveltejs/kit';
 import { invokeAction as invoke, formEvent } from '#lib/testing/actions.js';
-import { actions, load, RECOVERY_COOKIE } from './+page.server';
+import { actions, load, _RECOVERY_COOKIE } from './+page.server';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -39,7 +39,7 @@ const runLoad = (query: string, user: unknown = null, cookies = cookieJar()) =>
 
 const recovered = () => {
 	const c = cookieJar();
-	c.set(RECOVERY_COOKIE, '1');
+	c.set(_RECOVERY_COOKIE, '1');
 	return c;
 };
 
@@ -78,7 +78,7 @@ describe('reset-password load', () => {
 		const cookies = cookieJar();
 		await runLoad('?code=abc', null, cookies);
 		expect(cookies.set).toHaveBeenCalledWith(
-			RECOVERY_COOKIE,
+			_RECOVERY_COOKIE,
 			'1',
 			expect.objectContaining({ path: '/reset-password', httpOnly: true, maxAge: 15 * 60 })
 		);
@@ -144,7 +144,7 @@ describe('reset-password action', () => {
 		);
 
 		expect(updateUser).toHaveBeenCalledWith({ password: 'new-secret' });
-		expect(cookies.delete).toHaveBeenCalledWith(RECOVERY_COOKIE, { path: '/reset-password' });
+		expect(cookies.delete).toHaveBeenCalledWith(_RECOVERY_COOKIE, { path: '/reset-password' });
 		expect(isRedirect(result)).toBe(true);
 		expect(result).toMatchObject({ status: 303, location: '/' });
 	});

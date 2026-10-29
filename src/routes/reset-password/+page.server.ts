@@ -9,8 +9,8 @@ const meta = { title: 'Reset password' };
  * offered only to someone who came through the link, not to whoever is signed
  * in on a shared device. Fifteen minutes is the link's own order of life.
  */
-export const RECOVERY_COOKIE = 'pw-reset';
-const RECOVERY_COOKIE_OPTIONS = {
+export const _RECOVERY_COOKIE = 'pw-reset';
+const _RECOVERY_COOKIE_OPTIONS = {
 	path: '/reset-password',
 	httpOnly: true,
 	sameSite: 'lax',
@@ -29,13 +29,13 @@ export const load: PageServerLoad = async ({ url, cookies, locals: { supabase, u
 			? await supabase.auth.exchangeCodeForSession(code)
 			: await supabase.auth.verifyOtp({ type: 'recovery', token_hash: tokenHash! });
 		if (!error) {
-			cookies.set(RECOVERY_COOKIE, '1', RECOVERY_COOKIE_OPTIONS);
+			cookies.set(_RECOVERY_COOKIE, '1', _RECOVERY_COOKIE_OPTIONS);
 			throw redirect(303, '/reset-password');
 		}
 		return { linkValid: false, meta };
 	}
 
-	return { linkValid: user !== null && cookies.get(RECOVERY_COOKIE) === '1', meta };
+	return { linkValid: user !== null && cookies.get(_RECOVERY_COOKIE) === '1', meta };
 };
 
 export const actions: Actions = {
@@ -47,7 +47,7 @@ export const actions: Actions = {
 		if (password.length < 6) {
 			return fail(400, { message: 'Use at least 6 characters.' });
 		}
-		if (!user || cookies.get(RECOVERY_COOKIE) !== '1') {
+		if (!user || cookies.get(_RECOVERY_COOKIE) !== '1') {
 			return fail(401, { message: 'This link has expired. Ask for a new one.' });
 		}
 
@@ -64,7 +64,7 @@ export const actions: Actions = {
 
 		// The link is spent; the recovery session is a full session, so the cook
 		// is signed in.
-		cookies.delete(RECOVERY_COOKIE, { path: RECOVERY_COOKIE_OPTIONS.path });
+		cookies.delete(_RECOVERY_COOKIE, { path: _RECOVERY_COOKIE_OPTIONS.path });
 		throw redirect(303, '/');
 	}
 };
