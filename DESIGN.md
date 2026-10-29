@@ -198,6 +198,8 @@ Clay and marigold were raised in chroma from #a4512b and #e8a83a: same hues, sam
 
 One centred column, `max-width: 1200px`, with 24px side gutters on desktop and 18px on phones (`.page`, `.page-inner`). Spacing follows an 8px scale (4, 8, 12, 16, 24, 32, 48, 64); Tailwind `p-5` to `p-8` are mapped onto the 24, 32, 48 and 64 steps.
 
+Landing page, 29 October 2026: the logged-out home is that same column. The hero, the sample diff and the recipe grid all sit inside one `.page-inner`, on the one left edge every list page has (the hero and the diff used to carry their own 1200px column with the gutter inside it, which put them 24px further in at 1280). Under the diff the newest recipes sit under the browse page's "Recent" eyebrow with its rule, and the page closes on an "All recipes" link to `/recipes`, where the hero's "Browse recipes" also goes.
+
 Recipe grids are 2 columns on a phone, 3 from 700px, 4 from 1100px, with 24px gaps. The recipe page body is a 380px aside beside a reading column with a 48px gap; the aside is sticky at 24px and, when the list is taller than the screen, scrolls inside itself (`max-height: calc(100dvh - 48px)`, thin Rule 2 scrollbar; decided 29 October 2026). Below 1024px it is static and uncapped. Tag tabs are a single scrolling row that bleeds to the screen edge on phones.
 
 Breakpoints: 699px (phone), 768px (navbar collapses below it), 1024px, 1100px.
@@ -244,7 +246,7 @@ Fork is one click, decided 29 October 2026: the pill submits, the server makes t
 
 ### Cards / Containers
 
-- **Recipe card:** no surface, border or shadow. 4:3 photo or clay-tint panel with 6px corners, Bitter title at 1.0625rem, mono meta row in Ink 3 with the version mark in clay. Hover scales the photo 1.03 and turns the title clay.
+- **Recipe card:** no surface, border or shadow. 4:3 photo or clay-tint panel with 6px corners, Bitter title at 1.0625rem, a sans 0.8125rem meta row in Ink 3 whose author is a mono clay link (it must read as clickable) and whose version mark is mono 600 clay at 0.6875rem; the dots between the items are drawn by CSS, never typed, so a wrapped row never ends with one (29 October 2026). The photo's alt is empty, since the heading and the stretched link already name the recipe; the first row's photos load eagerly and the very first carries `fetchpriority="high"`, the rest lazily. Hover scales the photo 1.03 and turns the title clay.
 - **Panels (compare cards, commit bar):** lifted paper, 1px Rule border, 8px corners, 16px padding. The recipe page's version bar is the same paper at 6px corners and 12px 16px padding (see Version note).
 - **Stat tiles:** paper on lifted paper, sans label over a 600 value.
 
