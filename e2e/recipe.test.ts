@@ -8,6 +8,13 @@ const COOKIES = SEED[0].versions.at(-1)!.title;
 const COOKIES_RE = new RegExp(COOKIES, 'i');
 const FORK_RE = new RegExp(SEED[1].versions.at(-1)!.title, 'i');
 
+/** Compare sits beside each earlier version in the history list: open it, then compare v2 to v3. */
+async function openCompare(page: Page) {
+	await page.getByRole('button', { name: '3 versions' }).click();
+	await page.locator('#version-history a[href*="/diff?from=2&to=3"]').click();
+	await expect(page).toHaveURL(/\/diff/);
+}
+
 /** Slugs carry a random nanoid suffix, so reach the recipe by name, not URL. */
 async function gotoClassicCookies(page: Page) {
 	// The landing page shows the three newest; browse shows everything.
@@ -52,7 +59,8 @@ test.describe('Recipe detail page', () => {
 		// v3's commit message leads the bar: the sentence the landing page showcases.
 		await expect(page.locator('.version-bar .commit')).toContainText('Chill the dough');
 		await page.getByRole('button', { name: '3 versions' }).click();
-		await expect(page.locator('#version-history li')).toHaveCount(3);
+		// The version being read is already on the page: the list holds the other two.
+		await expect(page.locator('#version-history li')).toHaveCount(2);
 		await expect(page.locator('#version-history')).toContainText('Initial recipe');
 		// The forks sit in the byline, beside the versions.
 		await expect(page.locator('.byline')).toContainText('1 fork');
@@ -86,10 +94,7 @@ test.describe('Recipe detail page', () => {
 		await page.goto('/recipes');
 		await page.getByRole('link', { name: COOKIES_RE }).first().click();
 		await expect(page).toHaveURL(/\/recipes\//);
-		// Target the Compare anchor by href. Matching on the accessible name would
-		// also match the version row it sits inside, which navigates elsewhere.
-		await page.locator('a[href*="/diff?from="]').first().click();
-		await expect(page).toHaveURL(/\/diff/);
+		await openCompare(page);
 		await expect(page.locator('h1')).toContainText(/compare/i);
 	});
 
@@ -135,8 +140,7 @@ test.describe('Recipe detail page', () => {
 
 	test('changing the version range navigates and re-renders the diff', async ({ page }) => {
 		await gotoClassicCookies(page);
-		await page.locator('a[href*="/diff?from="]').first().click();
-		await expect(page).toHaveURL(/\/diff/);
+		await openCompare(page);
 
 		// Count modified rows rather than reading the first row's text: the first
 		// row is unchanged flour in every range, so comparing it proves nothing.
@@ -162,8 +166,7 @@ test.describe('Recipe detail page', () => {
 		page
 	}) => {
 		await gotoClassicCookies(page);
-		await page.locator('a[href*="/diff?from="]').first().click();
-		await expect(page).toHaveURL(/\/diff/);
+		await openCompare(page);
 
 		// Relative luminance/contrast per WCAG — same formula as the tag-contrast test above.
 		const contrast = (fg: string, bg: string) => {
@@ -491,7 +494,7 @@ test.describe('Recipe detail page', () => {
 		expect(ingredients!.y).toBeLessThan(620);
 		expect(Math.abs(method!.x + method!.width - (photo!.x + photo!.width))).toBeLessThan(2);
 		const color = await page
-			.locator('.byline a[href*="/diff?from="]')
+			.locator('.byline .versions-toggle')
 			.evaluate((el) => getComputedStyle(el).color);
 		expect(color).toBe('rgb(178, 60, 0)');
 	});
@@ -536,6 +539,42 @@ test.describe('Recipe detail page', () => {
 		expect(scrollHeight).toBeLessThanOrEqual(clientHeight + 1);
 	});
 
+	test('a keyboard cook can skip from the navbar to the ingredients', async ({ page }) => {
+		await page.setViewportSize({ width: 1280, height: 900 });
+		await gotoClassicCookies(page);
+		// The navbar's stops come first; the skip link is the page's own first stop,
+		// before the header's eight.
+		const skip = page.getByRole('link', { name: 'Skip to ingredients' });
+		for (let i = 0; i < 12 && !(await skip.evaluate((el) => el === document.activeElement)); i++) {
+			await page.keyboard.press('Tab');
+		}
+		await expect(skip).toBeFocused();
+		await expect(skip).toBeInViewport();
+		const headerFocusedBefore = await page.evaluate(
+			() => !!document.querySelector('header.recipe-header :focus')
+		);
+		expect(headerFocusedBefore).toBe(false);
+		await page.keyboard.press('Enter');
+		await expect(page).toHaveURL(/#ingredients$/);
+		// The next Tab lands on the first ingredient, not back in the header.
+		await page.keyboard.press('Tab');
+		await expect(page.locator('#ingredients input[type="checkbox"]').first()).toBeFocused();
+	});
+
+	test('every inline link in the header has a 24px hit box', async ({ page }) => {
+		await page.setViewportSize({ width: 1280, height: 900 });
+		await gotoClassicCookies(page);
+		const short = await page
+			.locator('header.recipe-header a, header.recipe-header button')
+			.evaluateAll((els) =>
+				els
+					.filter((el) => el.getClientRects().length > 0)
+					.map((el) => ({ text: el.textContent!.trim(), h: el.getBoundingClientRect().height }))
+					.filter((r) => r.h < 24)
+			);
+		expect(short).toEqual([]);
+	});
+
 	test('the byline wraps without widening the page', async ({ page }) => {
 		await page.setViewportSize({ width: 390, height: 900 });
 		await gotoClassicCookies(page);
@@ -564,7 +603,7 @@ test.describe('Recipe detail page', () => {
 		// Each item's first text node, measured as a range so the button box
 		// does not count.
 		const bottoms = await page.evaluate(() =>
-			['.byline .username', '.versions-toggle', '.byline a[href*="/diff"]'].map((sel) => {
+			['.byline .username', '.versions-toggle'].map((sel) => {
 				const el = document.querySelector(sel)!;
 				const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
 				let node = walker.nextNode();

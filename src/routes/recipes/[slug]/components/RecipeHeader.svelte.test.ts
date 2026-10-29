@@ -108,9 +108,7 @@ describe('RecipeHeader version bar', () => {
 		const chip = container.querySelector('.version-bar .version')!;
 		expect(chip).toHaveTextContent('v3');
 		expect(container.querySelector('.version-bar .commit')).toHaveTextContent('Chill the dough');
-		// The hidden history list holds a second "v3"; the reader sees one.
-		const visible = screen.getAllByText('v3').filter((el) => !el.closest('[hidden]'));
-		expect(visible).toHaveLength(1);
+		expect(screen.getAllByText('v3')).toHaveLength(1);
 	});
 
 	test('the message runs in full: plain text, no clamp, no button', () => {
@@ -125,19 +123,22 @@ describe('RecipeHeader version bar', () => {
 // ─── The byline ───────────────────────────────────────────────────────────────
 
 describe('RecipeHeader byline', () => {
-	test('author, versions, forks and compare in one mono line', () => {
+	test('author, versions and forks in one mono line; compare lives in the history', () => {
 		const { container } = renderHeader({
 			recipe: makeRecipe({ author: { id: 'u1', username: 'chef' } }),
 			currentVersion: V3,
 			versions: THREE,
 			forkCount: 1
 		});
-		expect(byline(container)).toBe('@chef · 3 versions · 1 fork · Compare with v2');
-		expect(screen.getByRole('link', { name: 'Compare with v2' })).toHaveAttribute(
-			'href',
-			'/recipes/my-fork/diff?from=2&to=3'
-		);
+		expect(byline(container)).toBe('@chef · 3 versions · 1 fork');
+		expect(container.querySelector('.byline a[href*="/diff"]')).toBeNull();
 		expect(screen.getAllByRole('link', { name: '@chef' })).toHaveLength(1);
+	});
+
+	test('the note is set in the note voice: italic, quieter than the description', () => {
+		const { container } = renderHeader({ currentVersion: V3, versions: THREE });
+		// The style itself is CSS; the hook the e2e suite measures is the class.
+		expect(container.querySelector('.version-bar .commit')).not.toBeNull();
 	});
 
 	test('a single version has no change to tell: the chip joins the byline', () => {
@@ -176,7 +177,7 @@ describe('RecipeHeader byline', () => {
 		expect(screen.queryByRole('link', { name: /compare/i })).toBeNull();
 	});
 
-	test('the version count opens the history, one link per version, the viewed one marked', async () => {
+	test('the version count opens the other versions, each with a compare against this one', async () => {
 		renderHeader({ currentVersion: V3, versions: THREE });
 		expect(screen.getByText('Add espresso powder')).not.toBeVisible();
 		await fireEvent.click(screen.getByRole('button', { name: '3 versions' }));
@@ -185,7 +186,13 @@ describe('RecipeHeader byline', () => {
 			'href',
 			'/recipes/my-fork?version=2'
 		);
-		expect(screen.getByRole('link', { name: 'v3' })).toHaveAttribute('aria-current', 'true');
+		// The version being read is already on the page, so it is not listed again.
+		expect(screen.queryByRole('link', { name: 'v3' })).toBeNull();
+		const compares = screen.getAllByRole('link', { name: 'Compare' });
+		expect(compares.map((a) => a.getAttribute('href'))).toEqual([
+			'/recipes/my-fork/diff?from=2&to=3',
+			'/recipes/my-fork/diff?from=1&to=3'
+		]);
 	});
 });
 

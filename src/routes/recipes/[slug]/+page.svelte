@@ -30,6 +30,9 @@
 <svelte:window onscroll={onScroll} />
 
 <article class="min-h-dvh">
+	<!-- A keyboard cook skips the header's eight stops. -->
+	<a href="#ingredients" class="skip-link">Skip to ingredients</a>
+
 	<!-- The hero: the recipe's text beside its photo. Title, deck and byline
 	     first, so a stranger reads what this version is before anything else. -->
 	<div class="hero">
@@ -88,6 +91,27 @@
 		max-width: calc(var(--max-width) + 2 * var(--space-5));
 		margin: 0 auto;
 		padding: 0 var(--space-5);
+	}
+
+	/* Out of the way until it has focus, then a pill at the top left. */
+	.skip-link {
+		position: absolute;
+		left: var(--space-5);
+		top: 8px;
+		padding: 8px 16px;
+		border-radius: 999px;
+		background: var(--color-marigold);
+		color: var(--color-text);
+		font-family: var(--font-sans);
+		font-size: 0.9375rem;
+		font-weight: 600;
+		text-decoration: none;
+		transform: translateY(-200%);
+	}
+
+	.skip-link:focus-visible {
+		transform: none;
+		z-index: 3;
 	}
 
 	.hero {

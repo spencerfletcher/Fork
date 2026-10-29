@@ -18,7 +18,7 @@
 			<!-- A native checkbox, visually hidden, carries the state and the keyboard
 			     behaviour; the label is the row and takes the struck-through look. -->
 			<label
-				class="has-[:focus-visible]:outline-accent grid cursor-pointer [grid-template-columns:30px_1fr] items-baseline gap-[18px] select-none has-[:checked]:line-through has-[:checked]:opacity-40 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2">
+				class="has-[:focus-visible]:outline-accent grid cursor-pointer [grid-template-columns:30px_1fr] items-baseline gap-[18px] select-none has-[:checked]:line-through has-[:checked]:opacity-60 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2">
 				<input type="checkbox" class="sr-only" />
 				<!-- A step number is a mark of measure, so it is set like the grams
 				     and the byline: mono, clay. -->

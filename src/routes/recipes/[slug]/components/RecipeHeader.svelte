@@ -120,26 +120,25 @@
 				{#if forkCount > 0}
 					<span>{forkCount} {forkCount === 1 ? 'fork' : 'forks'}</span>
 				{/if}
-				{#if n > 1}
-					<a href="/recipes/{recipe.slug}/diff?from={n - 1}&to={n}">Compare with v{n - 1}</a>
-				{/if}
 			{/if}
 		</p>
 	</div>
 
+	<!-- The other versions, newest first: the one being read is already on the
+	     page, so it is not repeated. Compare sits beside the version it compares. -->
 	{#if count > 1 && !isViewingHistory}
 		<ul id="version-history" class="history m-0 list-none p-0 font-mono" hidden={!open}>
-			{#each versions as version (version.id)}
-				{@const isCurrent = version.versionNumber === n}
+			{#each versions.filter((v) => v.versionNumber !== n) as version (version.id)}
 				<li>
-					<a
-						href="/recipes/{recipe.slug}?version={version.versionNumber}"
-						class="version-number"
-						class:is-current={isCurrent}
-						aria-current={isCurrent ? 'true' : undefined}>
+					<a href="/recipes/{recipe.slug}?version={version.versionNumber}" class="version-number">
 						v{version.versionNumber}
 					</a>
 					<span class="text-text-2">{version.commitMessage}</span>
+					<a
+						href="/recipes/{recipe.slug}/diff?from={version.versionNumber}&to={n}"
+						class="compare whitespace-nowrap">
+						Compare
+					</a>
 				</li>
 			{/each}
 		</ul>
@@ -189,7 +188,7 @@
 	.version-bar {
 		display: flex;
 		flex-direction: column;
-		gap: 4px;
+		gap: 2px;
 	}
 
 	.commit-line {
@@ -212,8 +211,9 @@
 	.commit {
 		min-width: 0;
 		font-size: 1.0625rem;
+		font-style: italic;
 		line-height: 1.45;
-		color: var(--color-text);
+		color: var(--color-text-2);
 	}
 
 	.byline {
@@ -256,15 +256,7 @@
 		color: var(--color-text);
 	}
 
-	/* Inline links reach a 24px hit without moving the text. */
-	.byline a,
-	.versions-toggle,
-	.tags a {
-		padding: 4px 0;
-		margin: -4px 0;
-	}
-
-	/* One quiet line: the measure, then the tags, both in the body face. */
+	/* The measure, then the tags on their own line beneath, both in the body face. */
 	.meta {
 		display: flex;
 		flex-wrap: wrap;
@@ -273,6 +265,7 @@
 	}
 
 	.tags {
+		flex-basis: 100%;
 		font-size: 0.875rem;
 		line-height: 1.7;
 	}
@@ -328,8 +321,24 @@
 		text-decoration: none;
 	}
 
-	.version-number.is-current {
+	.history .compare {
+		margin-left: auto;
+		color: var(--color-accent);
+		text-decoration: none;
+	}
+
+	.history .compare:hover {
 		color: var(--color-text);
+	}
+
+	/* Inline links reach a 24px hit without moving the text. Last, so nothing
+	   above resets it, and :global so the Username component's element takes it. */
+	.byline :global(a),
+	.byline .versions-toggle,
+	.tags a,
+	.history a {
+		padding: 4px 0;
+		margin: -4px 0;
 	}
 
 	@media (max-width: 699px) {

@@ -80,10 +80,7 @@
 					isFavorited = !isFavorited;
 					return async ({ update }) => update({ reset: false });
 				}}>
-				<button
-					type="submit"
-					class="btn-ghost flex items-center justify-center gap-2 no-underline"
-					aria-label={isFavorited ? 'Unfavorite' : 'Favorite'}>
+				<button type="submit" class="btn-ghost flex items-center justify-center gap-2 no-underline">
 					<svg
 						class="size-4 transition-[fill] duration-150"
 						class:fill-accent={isFavorited}
@@ -120,7 +117,7 @@
 		align-items: center;
 		justify-content: center;
 		gap: 8px;
-		min-height: 40px;
+		min-height: 44px;
 		padding: 8px 18px 8px 16px;
 		border-radius: 999px;
 	}

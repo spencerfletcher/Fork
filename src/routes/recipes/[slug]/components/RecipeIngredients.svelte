@@ -54,7 +54,7 @@
 			<!-- A native checkbox, visually hidden, carries the state and the keyboard
 			     behaviour; the label is the row and takes the struck-through look. -->
 			<label
-				class="border-border text-text has-[:focus-visible]:outline-accent block cursor-pointer border-b py-2.5 text-base leading-[1.5] select-none has-[:checked]:line-through has-[:checked]:opacity-40 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2">
+				class="border-border text-text has-[:focus-visible]:outline-accent block cursor-pointer border-b py-2.5 text-base leading-[1.5] select-none has-[:checked]:line-through has-[:checked]:opacity-60 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2">
 				<input type="checkbox" class="sr-only" />
 				{#if bold}<span class="font-semibold">{bold}</span>{/if}{rest}
 				{#if result}
