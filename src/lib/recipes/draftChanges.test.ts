@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import { draftChangedGroups, describeGroups } from './draftChanges.js';
+import { draftChangedGroups } from './draftChanges.js';
 import { parseDraftContent, type RecipeDraft } from './validation.js';
 
 const base: RecipeDraft = {
@@ -54,15 +54,5 @@ describe('draftChangedGroups', () => {
 		expect(
 			draftChangedGroups(from, { ...base, title: '', prepTimeMinutes: '-5' }, false)
 		).toBeNull();
-	});
-});
-
-describe('describeGroups', () => {
-	test('joins with commas and a final and', () => {
-		expect(describeGroups(['ingredients'])).toBe('ingredients');
-		expect(describeGroups(['ingredients', 'steps'])).toBe('ingredients and steps');
-		expect(describeGroups(['servings', 'ingredients', 'steps'])).toBe(
-			'servings, ingredients and steps'
-		);
 	});
 });

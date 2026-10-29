@@ -33,14 +33,6 @@
 
 <div class="page">
 	<div class="editor">
-		<div class="editor-header">
-			<a href="/recipes/{recipe.slug}" class="back-link">← {recipe.title}</a>
-			<div class="editor-title">
-				<h1>Edit recipe</h1>
-				<span class="editing">Editing v{current}</span>
-			</div>
-		</div>
-
 		<RecipeForm
 			{baseline}
 			{form}
@@ -49,6 +41,19 @@
 			submitLabel="Save"
 			cancelHref="/recipes/{recipe.slug}"
 			imageUrl={latestVersion?.imageUrl ?? null}
-			nextVersion={current + 1} />
+			nextVersion={current + 1}>
+			{#snippet header(outcome)}
+				<div class="editor-header">
+					<a href="/recipes/{recipe.slug}" class="back-link">← {recipe.title}</a>
+					<div class="editor-title">
+						<h1>Edit recipe</h1>
+						<!-- Always in the DOM, so the outcome is announced when it changes. -->
+						<span class="editing" aria-live="polite">
+							Editing v{current}{outcome ? ` · ${outcome}` : ''}
+						</span>
+					</div>
+				</div>
+			{/snippet}
+		</RecipeForm>
 	</div>
 </div>

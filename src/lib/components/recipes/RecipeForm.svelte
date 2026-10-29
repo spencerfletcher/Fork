@@ -1,10 +1,11 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte';
 	import { enhance, type SubmitFunction } from '$app/forms';
 	import { beforeNavigate } from '$app/navigation';
 	import { parseDraftContent, type RecipeDraft } from '#lib/recipes/validation.js';
 	import { normaliseTagNames, tagKey } from '#lib/recipes/tags.js';
 	import { generatedCommitMessage } from '#lib/recipes/content.js';
-	import { draftChangedGroups, describeGroups } from '#lib/recipes/draftChanges.js';
+	import { draftChangedGroups } from '#lib/recipes/draftChanges.js';
 	import TagInput from '#lib/components/ui/TagInput.svelte';
 	import IngredientEditor from './IngredientEditor.svelte';
 	import StepEditor from './StepEditor.svelte';
@@ -17,7 +18,8 @@
 		submitLabel,
 		cancelHref,
 		imageUrl = null,
-		nextVersion
+		nextVersion,
+		header
 	}: {
 		/** What was loaded, as the form's strings. Dirty-checking compares against it. */
 		baseline: RecipeDraft;
@@ -32,8 +34,11 @@
 		/** The latest version's photo, shown until replaced or removed. */
 		imageUrl?: string | null;
 		/** Editing: the number the next version would get. Enables the commit
-		 *  message field and the helper that states what a save will write. */
+		 *  message field and the outcome the header line states. */
 		nextVersion?: number;
+		/** The page's header, handed the outcome of a save ("saves as v4",
+		 *  "saves settings only", or '' while the form is clean or invalid). */
+		header?: Snippet<[outcome: string]>;
 	} = $props();
 
 	// The whole form as one object. A failed save hands back what was
@@ -72,7 +77,7 @@
 
 	const dirty = $derived(chosen || serialise(draft) !== serialise(baseline));
 
-	// What the save will write, in the server's own groups, so the helper and
+	// What the save will write, in the server's own groups, so the outcome and
 	// the placeholder agree with the message it would generate.
 	const photoChanged = $derived(chosen || draft.removeImage);
 	const baselineContent = $derived(parseDraftContent(baseline));
@@ -83,12 +88,10 @@
 	const settings = (d: RecipeDraft) => JSON.stringify([d.isPublic, tagKeys(d.tags)]);
 	const settingsChanged = $derived(settings(draft) !== settings(baseline));
 
-	const helper = $derived.by(() => {
-		if (!dirty || submitting) return '';
-		if (!nextVersion) return 'Unsaved changes';
-		if (groups === null) return '';
-		if (groups.length > 0) return `Saves as v${nextVersion} · ${describeGroups(groups)} changed`;
-		if (settingsChanged) return 'Saves settings · no new version';
+	const outcome = $derived.by(() => {
+		if (!dirty || submitting || !nextVersion || groups === null) return '';
+		if (groups.length > 0) return `saves as v${nextVersion}`;
+		if (settingsChanged) return 'saves settings only';
 		return '';
 	});
 
@@ -150,6 +153,8 @@
 		}
 	});
 </script>
+
+{@render header?.(outcome)}
 
 <form method="POST" {action} enctype="multipart/form-data" use:enhance={track} class="form">
 	<fieldset disabled={submitting} class="contents">
@@ -279,8 +284,6 @@
 				{submitting ? 'Saving…' : submitLabel}
 			</button>
 			<a href={cancelHref} class="btn-ghost">Cancel</a>
-			<!-- Always in the DOM, so the outcome is announced when it changes. -->
-			<span class="form-hint" role="status" aria-live="polite">{helper}</span>
 		</div>
 	</fieldset>
 </form>

@@ -111,28 +111,36 @@ describe('Edit page form', () => {
 		expect(hiddenRevision()).toHaveValue('3');
 	});
 
-	test('says what the save will write after an edit and clears it when the value is restored', async () => {
+	test('the header line says what the save will write after an edit and drops it when the value is restored', async () => {
 		render(EditPage, { props: { data: makeData(), form: null } });
-		expect(screen.queryByText(/Saves/)).toBeNull();
+		expect(screen.getByText('Editing v2')).toBeInTheDocument();
 		await fireEvent.input(title(), { target: { value: 'Biscuits' } });
-		expect(screen.getByText('Saves as v3 · title changed')).toBeInTheDocument();
+		expect(screen.getByText('Editing v2 · saves as v3')).toBeInTheDocument();
 		await fireEvent.input(title(), { target: { value: 'Cookies' } });
-		expect(screen.queryByText(/Saves/)).toBeNull();
+		expect(screen.getByText('Editing v2')).toBeInTheDocument();
+		expect(screen.queryByText(/saves/i)).toBeNull();
+	});
+
+	test('nothing about the outcome sits beside Save', async () => {
+		render(EditPage, { props: { data: makeData(), form: null } });
+		await fireEvent.input(title(), { target: { value: 'Biscuits' } });
+		expect(document.querySelector('.form-actions .form-hint')).toBeNull();
+		expect(screen.getByText(/saves as v3/).closest('.editor-header')).not.toBeNull();
 	});
 
 	test('treats a tag removed and added back as clean', async () => {
 		render(EditPage, { props: { data: makeData(), form: null } });
 		await fireEvent.click(screen.getByRole('button', { name: 'Remove Dessert' }));
-		expect(screen.getByText('Saves settings · no new version')).toBeInTheDocument();
+		expect(screen.getByText('Editing v2 · saves settings only')).toBeInTheDocument();
 		await fireEvent.focus(screen.getByRole('combobox'));
 		await fireEvent.click(screen.getByRole('option', { name: /Dessert/ }).querySelector('button')!);
-		expect(screen.queryByText(/Saves/)).toBeNull();
+		expect(screen.getByText('Editing v2')).toBeInTheDocument();
 	});
 
 	test('typing only a commit message is not an unsaved change', async () => {
 		render(EditPage, { props: { data: makeData(), form: null } });
 		await fireEvent.input(screen.getByLabelText(/what changed/i), { target: { value: 'note' } });
-		expect(screen.queryByText(/Saves/)).toBeNull();
+		expect(screen.getByText('Editing v2')).toBeInTheDocument();
 	});
 
 	test('shows the version the save will write and what changed', async () => {
@@ -143,7 +151,7 @@ describe('Edit page form', () => {
 		await fireEvent.input(screen.getByLabelText('Steps'), {
 			target: { value: 'Mix.\n\nBake longer.' }
 		});
-		expect(screen.getByText('Saves as v3 · ingredients and steps changed')).toBeInTheDocument();
+		expect(screen.getByText('Editing v2 · saves as v3')).toBeInTheDocument();
 		expect(screen.getByLabelText(/what changed/i)).toHaveAttribute(
 			'placeholder',
 			'Updated ingredients, steps'
@@ -153,7 +161,7 @@ describe('Edit page form', () => {
 	test('a settings-only change says no version will be written', async () => {
 		render(EditPage, { props: { data: makeData(), form: null } });
 		await fireEvent.click(screen.getByLabelText(/public/i));
-		expect(screen.getByText('Saves settings · no new version')).toBeInTheDocument();
+		expect(screen.getByText('Editing v2 · saves settings only')).toBeInTheDocument();
 	});
 
 	test('choosing a photo file counts as a content change at once, before the preview loads', async () => {
@@ -162,7 +170,7 @@ describe('Edit page form', () => {
 		const input = screen.getByLabelText('Photo') as HTMLInputElement;
 		Object.defineProperty(input, 'files', { value: [file] });
 		await fireEvent.change(input);
-		expect(screen.getByText('Saves as v3 · photo changed')).toBeInTheDocument();
+		expect(screen.getByText('Editing v2 · saves as v3')).toBeInTheDocument();
 	});
 
 	test('the placeholder falls back when nothing has changed', () => {
@@ -187,7 +195,7 @@ describe('Edit page form', () => {
 		render(EditPage, { props: { data: makeData(), form: null } });
 		await fireEvent.input(title(), { target: { value: '' } });
 		await fireEvent.click(screen.getByLabelText(/public/i));
-		expect(screen.queryByText(/^Saves/)).toBeNull();
+		expect(screen.getByText('Editing v2')).toBeInTheDocument();
 	});
 
 	test('a dirty form navigates away when the question is accepted', async () => {
@@ -257,7 +265,7 @@ describe('Edit page form', () => {
 		expect(screen.getByLabelText(/public/i)).toBeChecked();
 		expect(screen.getByRole('alert')).toHaveTextContent('Title is required');
 		// The draft is invalid, so there is nothing to promise, settings included.
-		expect(screen.queryByText(/^Saves/)).toBeNull();
+		expect(screen.getByText('Editing v2')).toBeInTheDocument();
 		expect(hiddenRevision()).toHaveValue('3');
 	});
 
@@ -303,6 +311,6 @@ describe('Edit page form', () => {
 		await fireEvent.click(screen.getByRole('button', { name: /remove photo/i }));
 		expect(screen.queryByRole('img', { name: /preview/i })).toBeNull();
 		expect(document.querySelector('input[name="removeImage"]')).toHaveValue('on');
-		expect(screen.getByText('Saves as v3 · photo changed')).toBeInTheDocument();
+		expect(screen.getByText('Editing v2 · saves as v3')).toBeInTheDocument();
 	});
 });

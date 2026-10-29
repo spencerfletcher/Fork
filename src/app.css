@@ -666,11 +666,6 @@
 		.form-actions .btn-primary {
 			flex: 1;
 		}
-
-		.form-actions .form-hint {
-			width: 100%;
-			text-align: center;
-		}
 	}
 
 	.form-hint {

@@ -225,12 +225,13 @@ test.describe('Edit recipe page', () => {
 		}
 	});
 
-	test('the helper line states the version a save will write', async ({ page }) => {
+	test('the header line states the version a save will write', async ({ page }) => {
 		const url = await createRecipe(page, 'E2E Helper', '4');
 		try {
 			await gotoHydrated(page, `${url}/edit`);
+			await expect(page.locator('.editing')).toHaveText('Editing v1');
 			await page.getByLabel('Steps').fill('Mix, then bake.');
-			await expect(page.getByText('Saves as v2 · steps changed')).toBeVisible();
+			await expect(page.locator('.editing')).toHaveText('Editing v1 · saves as v2');
 			await expect(page.locator('input[name="commitMessage"]')).toHaveAttribute(
 				'placeholder',
 				'Updated steps'

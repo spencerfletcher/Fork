@@ -88,13 +88,11 @@ describe('New recipe page editor state', () => {
 		expect(screen.getByLabelText(/title/i)).toBeEnabled();
 	});
 
-	test('shows unsaved changes only while the draft differs from the empty form', async () => {
+	test('says nothing about the outcome while typing; the leave guard carries the unsaved state', async () => {
 		render(NewPage, { props: { data, form: null } });
-		expect(screen.queryByText('Unsaved changes')).not.toBeInTheDocument();
 		await fireEvent.input(screen.getByLabelText(/title/i), { target: { value: 'Brownies' } });
-		expect(screen.getByText('Unsaved changes')).toBeInTheDocument();
-		await fireEvent.input(screen.getByLabelText(/title/i), { target: { value: '' } });
-		expect(screen.queryByText('Unsaved changes')).not.toBeInTheDocument();
+		expect(screen.queryByText(/unsaved|saves/i)).not.toBeInTheDocument();
+		expect(document.querySelector('.form-actions .form-hint')).toBeNull();
 	});
 
 	test('has Cancel to the recipe list and no commit message field', () => {
