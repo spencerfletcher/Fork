@@ -20,8 +20,9 @@
 		stepDiff: StepDiffRow[];
 		/** The panel headings' level, so the page's outline has no gap. */
 		headingLevel?: 2 | 3;
-		/** Below 700px, show each run of unchanged rows as one "N unchanged" row
-		 *  (the landing page). The compare page keeps every row. */
+		/** Below 1024px, where the panels stack, show each run of unchanged rows
+		 *  as one "N unchanged" row (the landing page). The compare page keeps
+		 *  every row. */
 		fold?: boolean;
 	} = $props();
 
@@ -96,7 +97,7 @@
 <!-- The unseen stop keeps a screen reader from running the number into the
      text: "5. Gradually stir", not "5 Gradually stir". Kept on one line: a
      break before the stop would put a space in front of it. -->
-<!-- After a run of unchanged rows: shown in its place below 700px. -->
+<!-- After a run of unchanged rows: shown in its place below 1024px. -->
 {#snippet foldRow(count: number | undefined)}
 	{#if count}
 		<div class="diff-row diff-fold" role="listitem">
@@ -308,14 +309,15 @@
 		color: var(--color-text-3);
 	}
 
-	/* A folded run's stand-in: Ink 3 like the rows it replaces, and only on a
-	   phone, where the run itself hides. */
+	/* A folded run's stand-in: Ink 3 like the rows it replaces, and only where
+	   the panels stack (below the 61rem container at a 1024 viewport), where
+	   the run itself hides. */
 	.diff-fold {
 		display: none;
 		color: var(--color-text-3);
 	}
 
-	@media (max-width: 699px) {
+	@media (max-width: 1023px) {
 		.diff-fold {
 			display: flex;
 		}

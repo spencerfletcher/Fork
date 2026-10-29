@@ -413,11 +413,11 @@ describe('VersionDiff fold', () => {
 		expect(method.filter((r) => r.classList.contains('diff-folded'))).toHaveLength(2);
 	});
 
-	test('the fold shows only below 700px; wider, every row shows', () => {
+	test('the fold shows only below 1024px, where the panels stack; wider, every row shows', () => {
 		// jsdom applies no component CSS, so the rules are read from the source.
 		const style = source.slice(source.indexOf('<style>'));
 		expect(style).toMatch(/\.diff-fold\s*{[^}]*display:\s*none/);
-		const phone = style.slice(style.indexOf('@media (max-width: 699px)'));
+		const phone = style.slice(style.indexOf('@media (max-width: 1023px)'));
 		expect(phone).toMatch(/\.diff-folded\s*{[^}]*display:\s*none/);
 		expect(phone).toMatch(/\.diff-fold\s*{[^}]*display:\s*flex/);
 	});

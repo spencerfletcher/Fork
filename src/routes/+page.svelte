@@ -29,7 +29,7 @@
 							<span class="commit-bar__message">{data.sampleDiff.commitMessage}</span>
 						{/if}
 					</div>
-					<!-- Folded on a phone, so the food comes up within a screen of it. -->
+					<!-- Folded wherever the panels stack, so the food comes up sooner. -->
 					<VersionDiff
 						fold
 						metaDiff={data.sampleDiff.metaDiff}
