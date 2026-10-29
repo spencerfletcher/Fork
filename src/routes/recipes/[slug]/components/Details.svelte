@@ -27,6 +27,7 @@
 {#if pairs.length > 0}
 	<p class="details text-text-2 m-0 font-sans text-base leading-[1.5]">
 		{#each pairs as [label, value], i (label)}
+			<!-- eslint-disable-next-line svelte/no-useless-mustaches -- a bare space between blocks is dropped -->
 			{#if i > 0}{' '}{/if}
 			<span class="pair whitespace-nowrap">
 				<span class="text-text font-semibold">{value}</span>

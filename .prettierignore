@@ -14,3 +14,11 @@ skills-lock.json
 
 # Drizzle migration metadata, machine-written
 drizzle/meta/
+
+# Impeccable critique snapshots, config and cache, machine-written
+.impeccable/
+
+# Hook and agent definitions written by their tools
+.codex/hooks.json
+.github/hooks/
+.claude/agents/

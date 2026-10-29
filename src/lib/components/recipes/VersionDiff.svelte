@@ -86,7 +86,9 @@
 {/snippet}
 
 <!-- A real space and an unseen "to" between the sides, so "¾½ cup" reads and
-     copies as "¾ to ½ cup". -->
+     copies as "¾ to ½ cup". The {' '} mustaches below are the spaces: Svelte
+     would drop a bare space at a snippet's edge, so the lint rule is off here. -->
+<!-- eslint-disable svelte/no-useless-mustaches -->
 {#snippet toWord()}{' '}
 	<span class="sr-only">to</span>
 	{' '}{/snippet}
