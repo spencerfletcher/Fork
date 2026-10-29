@@ -1,6 +1,7 @@
 import { describe, test, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/svelte';
 import VersionBar from './VersionBar.svelte';
+import source from './VersionBar.svelte?raw';
 import type { ComponentProps } from 'svelte';
 
 vi.mock('$app/navigation', () => ({ afterNavigate: () => {} }));
@@ -135,6 +136,10 @@ describe('VersionBar', () => {
 		expect(current.querySelectorAll('.controls .item')).toHaveLength(2);
 		expect(current.querySelector('.controls')).not.toHaveTextContent('Older version');
 		expect(current.querySelector('.controls')!.textContent).not.toContain('·');
+		// A phone keeps the dot too, or "Back to v3" and "3 versions" read as one
+		// phrase. jsdom applies no component CSS, so the rule is read from the source.
+		expect(source).toMatch(/\.item \+ \.item::before \{\s*content: '· ';/);
+		expect(source).not.toMatch(/\.item \+ \.item::before \{\s*content: none;/);
 
 		expect(screen.queryByRole('link', { name: /compare/i })).toBeNull();
 		await fireEvent.click(screen.getByRole('button', { name: '3 versions' }));

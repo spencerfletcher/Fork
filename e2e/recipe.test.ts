@@ -1031,7 +1031,7 @@ test.describe('Recipe detail page', () => {
 		expect(short).toEqual([]);
 	});
 
-	test('the bar’s separators are drawn, not typed, and a phone line never starts or ends with one', async ({
+	test('the bar’s separators are drawn, not typed, and no line starts or ends with one', async ({
 		page
 	}) => {
 		await gotoClassicCookies(page);
@@ -1046,17 +1046,22 @@ test.describe('Recipe detail page', () => {
 		await page.goto(`${recipeUrl}?version=2`);
 		expect(await dots()).toEqual(['none', '"· "']);
 		expect(await controls.textContent()).not.toContain('·');
-		// Phone: the items wrap with a 10px gap and no dots, so no line can
-		// begin or end with one.
+		// Phone: the dot stays, or "Back to v3" and "3 versions" read as one phrase.
 		await page.setViewportSize({ width: 390, height: 900 });
 		await page.goto(`${recipeUrl}?version=2`);
-		expect(await dots()).toEqual(['none', 'none']);
-		expect(await controls.evaluate((el) => getComputedStyle(el).columnGap)).toBe('10px');
+		expect(await dots()).toEqual(['none', '"· "']);
 		// At every width an item with a dot shares its line with the item before
 		// it, so no line starts with one; the dot is the item's ::before, so none
-		// can end a line either.
+		// can end a line either. Below 700 the note still has a row of its own.
+		const state = page.locator('.version-bar .current .state');
+		const note = page.locator('.version-bar .current .message');
 		for (const width of [1280, 1024, 768, 390, 320]) {
 			await page.setViewportSize({ width, height: 900 });
+			if (width < 700) {
+				const s = (await state.boundingBox())!;
+				const m = (await note.boundingBox())!;
+				expect(m.y, `${width}: note under the state`).toBeGreaterThanOrEqual(s.y + s.height - 1);
+			}
 			const stranded = await controls
 				.locator('.item')
 				.evaluateAll((els) =>

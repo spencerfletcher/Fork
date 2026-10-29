@@ -283,17 +283,14 @@
 			row-gap: 4px;
 		}
 
-		/* The controls wrap as items 10px apart with no dots at all, so a line
-		   that starts on "3 versions" does not start on a separator. */
-
+		/* The controls are items 10px apart, the gap standing in for the space,
+		   and keep their dot, or "Back to v3" and "3 versions" read as one phrase.
+		   The two fit one row even at 320 (about 194 of 214px), so the dot never
+		   starts a line. */
 		.controls {
 			display: flex;
 			flex-wrap: wrap;
 			column-gap: 10px;
-		}
-
-		.item + .item::before {
-			content: none;
 		}
 
 		/* An older version's note takes a row of its own under the state, rather
