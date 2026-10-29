@@ -54,7 +54,11 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 		stepDiff,
 		allVersions,
 		meta: {
-			title: `v${fromNum} → v${toNum} · ${recipe.title}`,
+			// One version on both sides is named once, not "v2 → v2".
+			title:
+				fromNum === toNum
+					? `v${toNum} · same version · ${recipe.title}`
+					: `v${fromNum} → v${toNum} · ${recipe.title}`,
 			description: `What changed between v${fromNum} and v${toNum} of ${recipe.title} on Fork.`
 		}
 	};

@@ -658,13 +658,25 @@
 
 	/* ── Back link ── */
 
+	/* As wide as its text, not the column, with a 24px hit at desktop and 44px
+	   on a phone that does not move it: the bottom margin less the padding now
+	   inside it (decided 29 October 2026). */
 	.back-link {
 		font-size: 0.875rem;
 		color: var(--color-text-3);
 		display: block;
-		margin-bottom: var(--space-3);
+		width: fit-content;
+		padding: 4px 0;
+		margin: -4px 0 calc(var(--space-3) - 4px);
 		/* It carries the recipe title, which may be one long word. */
 		overflow-wrap: anywhere;
+	}
+
+	@media (max-width: 699px) {
+		.back-link {
+			padding: 11px 0;
+			margin: -11px 0 calc(var(--space-3) - 11px);
+		}
 	}
 
 	.back-link:hover {

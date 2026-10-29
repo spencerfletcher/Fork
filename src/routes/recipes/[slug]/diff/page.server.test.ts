@@ -53,6 +53,11 @@ describe('compare page load', () => {
 		expect(data.meta.title).toBe('v2 → v3 · Classic Cookies');
 	});
 
+	test('the same version on both sides is named once in the tab title, not "v2 → v2"', async () => {
+		const data = (await loadWith('?from=2&to=2')) as { meta: { title: string } };
+		expect(data.meta.title).toBe('v2 · same version · Classic Cookies');
+	});
+
 	test('a reversed pair redirects to the same pair read older to newer', async () => {
 		const result = await loadWith('?from=3&to=1').catch((e: unknown) => e);
 		expect(isRedirect(result)).toBe(true);

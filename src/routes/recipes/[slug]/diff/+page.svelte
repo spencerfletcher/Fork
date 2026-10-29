@@ -39,19 +39,27 @@
 		d?.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 </script>
 
+<!-- Closed, a picker shows the version alone; open, each option carries its
+     message (decided 29 October 2026). The native select still does the work:
+     its own text is transparent under a face drawn in flow, which also gives
+     the picker its natural width. The face is aria-hidden, since the select's
+     value already names the version and its message. -->
 {#snippet picker(id: string, label: string, value: number, set: (v: number) => void)}
-	<label class="eyebrow-label max-[699px]:sr-only" for={id}>{label}</label>
-	<select
-		{id}
-		{value}
-		onchange={(e) => {
-			set(Number(e.currentTarget.value));
-			navigate(id);
-		}}>
-		{#each allVersions as v (v.versionNumber)}
-			<option value={v.versionNumber}>v{v.versionNumber}: {v.commitMessage}</option>
-		{/each}
-	</select>
+	<span class="picker">
+		<span class="picker__face" aria-hidden="true">v{value} ▾</span>
+		<select
+			{id}
+			{value}
+			aria-label={label}
+			onchange={(e) => {
+				set(Number(e.currentTarget.value));
+				navigate(id);
+			}}>
+			{#each allVersions as v (v.versionNumber)}
+				<option value={v.versionNumber}>v{v.versionNumber} · {v.commitMessage}</option>
+			{/each}
+		</select>
+	</span>
 {/snippet}
 
 <!-- Number, author, date and message. The title, servings and times are in
@@ -84,9 +92,9 @@
 		{/if}
 
 		<div class="version-picker">
-			{@render picker('from-select', 'From', fromSelect, (v) => (fromSelect = v))}
-			<span class="version-picker__arrow">→</span>
-			{@render picker('to-select', 'To', toSelect, (v) => (toSelect = v))}
+			{@render picker('from-select', 'From version', fromSelect, (v) => (fromSelect = v))}
+			<span class="version-picker__arrow" aria-hidden="true">→</span>
+			{@render picker('to-select', 'To version', toSelect, (v) => (toSelect = v))}
 		</div>
 
 		<div class="version-cards">
@@ -113,13 +121,6 @@
 		color: var(--color-text-2);
 	}
 
-	/* The back link's 24px hit, without moving the text: its global bottom
-	   margin less the padding that now sits inside it. */
-	.back-link {
-		padding: 4px 0;
-		margin: -4px 0 calc(var(--space-3) - 4px);
-	}
-
 	.read-link {
 		display: inline-block;
 		font-weight: 600;
@@ -132,15 +133,55 @@
 		margin-bottom: 22px;
 	}
 
-	.version-picker select {
-		width: auto;
+	.picker {
+		position: relative;
+		display: inline-flex;
 		min-width: 0;
+	}
+
+	/* The face and the select share one box: the face in flow sizes it, the
+	   select fills it, transparent text, and takes every click and key. */
+	.picker__face,
+	.version-picker select {
 		font-family: var(--font-mono);
 		font-size: 0.875rem;
+		line-height: 1.5;
 		padding: 6px 10px;
 	}
 
+	.picker__face {
+		position: relative;
+		z-index: 1;
+		border: 1px solid transparent;
+		color: var(--color-text);
+		white-space: nowrap;
+		pointer-events: none;
+	}
+
+	.version-picker select {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		min-width: 0;
+		appearance: none;
+		color: transparent;
+	}
+
+	.version-picker option {
+		color: var(--color-text);
+	}
+
+	/* Forced colours paint the select's text back in; the face steps aside. */
+	@media (forced-colors: active) {
+		.picker__face {
+			visibility: hidden;
+		}
+	}
+
+	/* Mono at the select's size, so it reads as part of the range. */
 	.version-picker__arrow {
+		font-family: var(--font-mono);
+		font-size: 0.875rem;
 		color: var(--color-text-3);
 	}
 
@@ -174,6 +215,7 @@
 	}
 
 	.version-card__number {
+		position: relative;
 		font-size: 1.125rem;
 		font-weight: 600;
 	}
@@ -204,15 +246,18 @@
 
 	@media (max-width: 699px) {
 		/* The same links reach a thumb's 44px, as the recipe page's do. */
-		.back-link {
-			padding: 11px 0;
-			margin: -11px 0 calc(var(--space-3) - 11px);
-		}
-
 		.version-card__head :global(.username) {
 			display: inline-block;
 			padding: 11px 0;
 			margin-block: -11px;
+		}
+
+		/* The card numbers too, by a box above and below rather than padding,
+		   so the To chip keeps its shape. */
+		.version-card__number::before {
+			content: '';
+			position: absolute;
+			inset: -11px 0;
 		}
 
 		.read-link {
@@ -225,10 +270,23 @@
 			gap: 8px;
 		}
 
-		.version-picker select {
+		.picker {
 			flex: 1;
+		}
+
+		.picker__face {
+			flex: 1;
+		}
+
+		.picker__face,
+		.version-picker select,
+		.version-picker__arrow {
 			/* 16px, or iOS zooms the picker on focus. */
 			font-size: 1rem;
+		}
+
+		.picker__face,
+		.version-picker select {
 			padding: 10px;
 		}
 

@@ -301,7 +301,32 @@ describe('Diff page', () => {
 			data: makeData({ allVersions: versions, fromVersion: V2, toVersion: V3 })
 		});
 
-		expect(screen.getByLabelText('From')).toHaveValue('2');
-		expect(screen.getByLabelText('To')).toHaveValue('3');
+		expect(screen.getByLabelText('From version')).toHaveValue('2');
+		expect(screen.getByLabelText('To version')).toHaveValue('3');
+	});
+
+	test('a closed picker shows only the version; the list shows the version and its message', () => {
+		const { container } = render(DiffPage, { props: { data: makeData() } });
+		const from = screen.getByRole('combobox', { name: 'From version' });
+		expect([...from.querySelectorAll('option')].map((o) => o.textContent)).toEqual([
+			'v1 · Initial recipe',
+			'v2 · Added espresso powder'
+		]);
+		// The closed face is drawn over the select, out of the accessibility tree:
+		// the select's own value already names the version and its message.
+		const faces = [...container.querySelectorAll('.picker__face')];
+		expect(faces.map((f) => f.textContent?.replace(/\s+/g, ' ').trim())).toEqual(['v1 ▾', 'v2 ▾']);
+		for (const face of faces) expect(face).toHaveAttribute('aria-hidden', 'true');
+	});
+
+	test('no From and To eyebrows: the selects are named, and the arrow between them is unseen', () => {
+		const { container } = render(DiffPage, { props: { data: makeData() } });
+		expect(container.querySelector('label')).toBeNull();
+		expect(screen.queryByText('From', { exact: true })).toBeNull();
+		expect(screen.getByRole('combobox', { name: 'To version' })).toBeInTheDocument();
+		expect(container.querySelector('.version-picker__arrow')).toHaveAttribute(
+			'aria-hidden',
+			'true'
+		);
 	});
 });

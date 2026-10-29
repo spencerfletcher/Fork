@@ -202,7 +202,53 @@ describe('VersionDiff', () => {
 		expect(text(rowWith(container, 'flour'))).toBe('Added: + 1 cup flour');
 		expect(text(rowWith(container, 'butter'))).toBe('Removed: − 1 cup butter');
 		expect(text(rowWith(container, 'salt'))).toBe('1 cup salt');
-		expect(text(rowWith(container, 'sugar'))).toBe('Changed: ~ 2 cups sugar');
+		expect(text(rowWith(container, 'sugar'))).toBe('Changed: ~ added: 2 cups sugar');
+	});
+
+	test('a lone insertion or deletion inside a changed row is named for a screen reader, as a replacement gets "to"', () => {
+		const { container } = renderDiff([
+			{
+				status: 'modified',
+				segments: [
+					{ type: 'unchanged', text: '1 cup ' },
+					{ type: 'added', text: 'brown ' },
+					{ type: 'unchanged', text: 'sugar' }
+				]
+			},
+			{
+				status: 'modified',
+				segments: [
+					{ type: 'unchanged', text: '2 tsp vanilla' },
+					{ type: 'removed', text: ', divided' }
+				]
+			},
+			{
+				status: 'modified',
+				segments: [
+					{ type: 'removed', text: '¾' },
+					{ type: 'added', text: '½' },
+					{ type: 'unchanged', text: ' cup flour' }
+				]
+			}
+		]);
+		expect(text(rowWith(container, 'brown'))).toBe('Changed: ~ 1 cup added: brown sugar');
+		expect(text(rowWith(container, 'vanilla'))).toBe('Changed: ~ 2 tsp vanilla removed: , divided');
+		// A replacement keeps its one "to" and gets neither word.
+		expect(text(rowWith(container, 'flour'))).toBe('Changed: ~ ¾ to ½ cup flour');
+	});
+
+	test('the Details rows run the column, without the 72ch cap the list rows keep', () => {
+		const { container } = renderDiff([], [], [{ field: 'title', from: 'A', to: 'B' }]);
+		expect(rowWith(container, 'Title').querySelector('.diff-content')).toHaveClass(
+			'diff-content--meta'
+		);
+	});
+
+	test('Ingredients and Method share the version cards’ grid: two equal columns, 24px apart', () => {
+		const { container } = renderDiff();
+		const grid = container.querySelector('.diff-columns')!;
+		expect(grid).toBeInTheDocument();
+		expect(grid).toHaveClass('gap-x-5'); // --spacing-5 is 24px, the cards' gap
 	});
 
 	test('shows the step number on an added step', () => {
@@ -226,7 +272,7 @@ describe('VersionDiff', () => {
 				}
 			]
 		);
-		expect(text(rowWith(container, 'Gradually'))).toBe('Changed: ~ 5. Gradually stir.');
+		expect(text(rowWith(container, 'Gradually'))).toBe('Changed: ~ 5. added: Gradually stir.');
 		const stop = container.querySelector('.step-num .sr-only');
 		expect(stop).toHaveTextContent('.');
 	});

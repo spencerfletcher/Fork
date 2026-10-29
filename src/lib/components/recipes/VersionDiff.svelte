@@ -71,12 +71,12 @@
 	{@render toWord()}
 	<ins class="diff-added">{to}</ins>{/snippet}
 
-<!-- Word-level segments inside a modified row; diffWords keeps the spacing. -->
-{#snippet segments(list: InlineSegment[])}{#each list as seg, i (i)}{#if seg.type === 'added'}<ins
-				class="diff-added">
-				{seg.text}
-			</ins>{:else if seg.type === 'removed'}<del class="diff-removed">{seg.text}</del>
-			{#if list[i + 1]?.type === 'added'}{@render toWord()}{/if}{:else}{seg.text}{/if}{/each}{/snippet}
+<!-- Word-level segments inside a modified row; diffWords keeps the spacing. A
+     replacement reads "old to new"; a lone insertion or deletion opens with an
+     unseen "added:" or "removed:", so it is not silent (decided 29 October
+     2026). The spaces sit inside the unseen words, so nothing visible moves. -->
+<!-- prettier-ignore -->
+{#snippet segments(list: InlineSegment[])}{#each list as seg, i (i)}{#if seg.type === 'added'}{#if list[i - 1]?.type !== 'removed'}<span class="sr-only">{' added: '}</span>{/if}<ins class="diff-added">{seg.text}</ins>{:else if seg.type === 'removed'}{#if list[i + 1]?.type !== 'added'}<span class="sr-only">{' removed: '}</span>{/if}<del class="diff-removed">{seg.text}</del>{#if list[i + 1]?.type === 'added'}{@render toWord()}{/if}{:else}{seg.text}{/if}{/each}{/snippet}
 
 {#snippet panel(title: string, isEmpty: boolean, rows: import('svelte').Snippet)}
 	<section class="diff-section">
@@ -101,7 +101,7 @@
 		{#each metaDiff as row (row.field)}
 			<div class="diff-row diff-modified">
 				{@render gutter('modified')}
-				<span class="diff-content">
+				<span class="diff-content diff-content--meta">
 					{#if row.field === 'imageUrl'}
 						{LABEL[row.field]}:
 						{#if row.from}<img
@@ -127,7 +127,9 @@
 {/if}
 
 <div class="@container">
-	<div class="grid gap-x-8 @min-[61rem]:grid-cols-2">
+	<!-- The compare page's version cards' grid: two equal columns 24px apart, so
+	     Method starts on the To card's edge (decided 29 October 2026). -->
+	<div class="diff-columns grid gap-x-5 @min-[61rem]:grid-cols-2">
 		{#snippet ingredientRows()}
 			{#each ingredientDiff as row, i (i)}
 				<div class="diff-row diff-{row.status}">
@@ -215,6 +217,11 @@
 		flex: 1;
 		max-width: 72ch;
 		line-height: 1.5;
+	}
+
+	/* Details runs the column, so a renamed title stays on one line. */
+	.diff-content--meta {
+		max-width: none;
 	}
 
 	.step-num {
