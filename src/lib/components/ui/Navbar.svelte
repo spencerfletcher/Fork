@@ -56,7 +56,7 @@
 
 		<!-- Auth + CTA + hamburger -->
 		<div class="flex items-center gap-4">
-			<div class="hidden items-center gap-4 md:flex">
+			<div class="hidden items-center gap-4 text-[0.875rem] md:flex">
 				{#if user}
 					{#if profile}
 						<Username username={profile.username} tone="dark" />
