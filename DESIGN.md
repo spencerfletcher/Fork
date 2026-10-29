@@ -104,7 +104,7 @@ components:
     textColor: '{colors.ink}'
     typography: '{typography.mono}'
     rounded: '{rounded.sm}'
-    padding: '0 5px'
+    padding: '0 6px'
   card:
     backgroundColor: '{colors.lifted-paper}'
     textColor: '{colors.ink}'
@@ -122,7 +122,7 @@ components:
 
 **Creative North Star: "The Annotated Cookbook"**
 
-Fork looks like a cookbook that has been cooked from: cream paper, a serif for the recipe names, and a cook's notes in the margin. The notes are the product. Version numbers, bylines, dates and gram weights are set in a monospace face, the way a pencil annotation differs from the printed page, so a reader always knows which marks are the recipe and which are its history. Everything else recedes: one dark surface (the espresso navbar), one text accent (clay), one action colour (marigold).
+Fork looks like a cookbook that has been cooked from: cream paper, a serif for the recipe names, and a cook's notes in the margin. The notes are the product. Version numbers, handles, dates and diffs are set in a monospace face, the way a pencil annotation differs from the printed page, so a reader always knows which marks are the recipe and which are its history. Everything else recedes: one dark surface (the espresso navbar), one text accent (clay), one action colour (marigold).
 
 Density is editorial rather than app-like. Body text sits at 16px with generous leading, the page has one 1200px column with 24px gutters (18px on a phone), and recipe cards are content on the paper, not tiles. Surfaces separate by a step in tone, never by shadow. The system is warm (paper, clay, marigold), exact (tabular figures, one focus ring, 8px rhythm) and simple (three faces doing three jobs, two button styles, one chip). Its colour should be decently vibrant: the owner finds the current clay and marigold a little dull and wants more life in them, short of anything neon.
 
@@ -178,7 +178,7 @@ Clay and marigold were raised in chroma from #a4512b and #e8a83a: same hues, sam
 
 ### Hierarchy
 
-- **Display** (500, 2.5rem, 1.15, clay): page h1. Recipe titles, "Recipes", "Search", the profile handle. One clamp on every page, `clamp(1.75rem, 1.2rem + 1.8vw, 2.5rem)`, so phones get about 1.75rem (29 October 2026; no page sets its own h1 size).
+- **Display** (500, 2.5rem, 1.15, clay): page h1. Recipe titles, "Recipes", "Search", the profile handle. One clamp on every page, `clamp(1.75rem, 1.2rem + 1.8vw, 2.5rem)`, so phones get about 1.75rem (29 October 2026; no page sets its own h1 size, the landing hero included: its 56px and 44px went at the end of that day, and its lede sits on the ramp at 1.0625rem).
 - **Byline** (600, 1rem, 1.5, ink, Source Sans): "By @author · 1 fork" under a recipe's title; the handle mono and clay at the line's size.
 - **Description** (400, 1.0625rem, 1.5, ink, Source Sans): a recipe's description under its byline, plain body text.
 - **Headline** (500, 1.75rem, 1.25, ink): h2 on pages that need a second serif level ("Recipes worth forking").
@@ -192,7 +192,7 @@ Clay and marigold were raised in chroma from #a4512b and #e8a83a: same hues, sam
 
 ### Named Rules
 
-**The Pencil Rule.** Anything that is history or measurement (version number, date, grams, diff text) is set in JetBrains Mono. Anything that is the recipe (title, description, ingredients, steps) is not. The reader tells the two apart by face alone. Usernames are identifiers and are set in mono like version numbers and dates: clay, at the size of the line they sit in, so the byline reads "By" sans, "@author" mono, "· 1 fork" sans. The byline's sans exception, decided earlier on 29 October 2026, was withdrawn the same day; the version and its history stay mono in the bar under the hero.
+**The Pencil Rule.** Anything that is history or measurement (version number, date, grams, diff text) is set in JetBrains Mono. Anything that is the recipe (title, description, ingredients, steps) is not. The reader tells the two apart by face alone. Usernames are identifiers and are set in mono like version numbers and dates: clay, at the size of the line they sit in, so the byline reads "By" sans, "@author" mono, "· 1 fork" sans. The byline's sans exception, decided earlier on 29 October 2026, was withdrawn the same day; the version and its history stay mono in the bar under the hero. One place a handle is not mono: the profile page's h1, which is a page title and takes the Display face, Bitter in clay, like every other h1 (decided 29 October 2026).
 
 **The One Clay Line Rule.** Clay running text is the h1 and links. Headings below h1 are ink.
 
@@ -200,7 +200,9 @@ Clay and marigold were raised in chroma from #a4512b and #e8a83a: same hues, sam
 
 One centred column, `max-width: 1200px`, with 24px side gutters on desktop and 18px on phones (`.page`, `.page-inner`). Spacing follows an 8px scale (4, 8, 12, 16, 24, 32, 48, 64); Tailwind `p-5` to `p-8` are mapped onto the 24, 32, 48 and 64 steps.
 
-Landing page, 29 October 2026: the logged-out home is that same column. The hero, the sample diff and the recipe grid all sit inside one `.page-inner`, on the one left edge every list page has (the hero and the diff used to carry their own 1200px column with the gutter inside it, which put them 24px further in at 1280). Under the diff the newest recipes sit under the browse page's "Recent" eyebrow with its rule, and the page closes on an "All recipes" link to `/recipes`, where the hero's "Browse recipes" also goes.
+Landing page, 29 October 2026: the logged-out home is that same column. The hero, the sample diff and the recipe grid all sit inside one `.page-inner`, on the one left edge every list page has (the hero and the diff used to carry their own 1200px column with the gutter inside it, which put them 24px further in at 1280). Under the diff the four newest recipes (one row at 1280, two by two on a phone) sit under the browse page's "Recent" eyebrow with its rule, and the page closes on an "All recipes →" link to `/recipes`, where the hero's "Browse recipes" also goes.
+
+Closing links, 29 October 2026: a link that ends a page or an empty state takes the arrow form ("All recipes →", "Explore recipes →") and the shared `.arrow-link`, 24px tall at desktop from its own line and 44px on a phone by padding pulled back by margin. The back link above a page title (`.back-link`) is as wide as its text, not the column, with the same 24px and 44px hits.
 
 Page width, 29 October 2026: every page is the 1200px column with the site gutters (`.page-inner`); the auth card is a card, not a page width. The compare page gave up its own 784px measure for it, and the diff's Ingredients and Method panels fill the column side by side from a 1024 viewport (the column is 61rem there, which is the container query's threshold) and stack below.
 
@@ -246,11 +248,11 @@ Fork is one click, decided 29 October 2026: the pill submits, the server makes t
 - **Version chip:** marigold fill, ink mono 600 text, 0 6px padding, 4px corners. Marigold carries no fixed meaning: it is the vibrant accent, spent sparingly on bold things (the primary button, the chip). On the recipe page the chip marks the version being read, so it stays marigold on an older version too; on the compare page it marks the "To" side; the recipe card's version mark is clay text (decided 29 October 2026, Spencer: "marigold only as the version being read is not inherently true, it's just a vibrant accent colour we should use sparingly").
 
 - **Tags:** transparent pill, 1px Rule 2 border, Ink 2 text at 0.75rem 500. Hover fills clay tint and darkens the border. On espresso: tan text with a 22% white border.
-- **Tag tabs:** plain text at 0.875rem, Ink 2, 2px transparent underline; the current tab is ink, 600, with a clay underline. A pressed filter (search, favorites) is a tag pill instead, a state rather than a place: a 1px Ink 2 border around the text band, Ink 2 text, no underline (29 October 2026). On a phone every tab reaches 44px by padding above the text, pulled back by the row's margin.
+- **Tag tabs:** plain text at 0.875rem, Ink 2, 2px transparent underline; the current tab is ink, 600, with a clay underline. A pressed filter (search, favorites) is a tag pill instead, a state rather than a place: a 1px Ink 2 border around the text band, 6px outside the button each side so two pressed neighbours keep a gap, Ink 2 text, no underline (29 October 2026). The filter row is a group of toggle buttons, not a nav; "Clear all" leads it, so a phone reaches it without scrolling, and a press keeps keyboard focus. On a phone every tab reaches 44px by padding above the text, pulled back by the row's margin.
 
 ### Cards / Containers
 
-- **Recipe card:** no surface, border or shadow. 4:3 photo or clay-tint panel with 6px corners, Bitter title at 1.0625rem (clamped to three lines on a photo, four on the panel; the stretched link carries the whole title), a sans 0.8125rem meta row in Ink 3 whose author is a mono clay link (it must read as clickable) and whose version mark is mono 600 clay at 0.6875rem; the dots between the items are drawn by CSS, never typed, so a wrapped row never ends with one; below 1024 there are no dots and the items sit 10px apart, so no wrapped line starts with one either (29 October 2026). The photo's alt is empty, since the heading and the stretched link already name the recipe; the first row's photos load eagerly and the very first carries `fetchpriority="high"`, the rest lazily. Hover scales the photo 1.03 and turns the title clay.
+- **Recipe card:** no surface, border or shadow. 4:3 photo or clay-tint panel with 6px corners, Bitter title at 1.0625rem (clamped to three lines on a photo, four on the panel; the stretched link carries the whole title), a sans 0.8125rem meta row in Ink 3 whose author is a mono clay link (it must read as clickable) and whose version mark is mono 600 clay at 0.6875rem; the dots between the items are drawn by CSS, never typed, so a wrapped row never ends with one; below 1024 there are no dots and the items sit 10px apart, so no wrapped line starts with one either (29 October 2026). The photo's alt is empty, since the heading and the stretched link already name the recipe; the first row's photos load eagerly and the very first carries `fetchpriority="high"`, the rest lazily; every grid passes the card its index, the tag and search pages included. Both the photo title and the panel title balance their lines. The author link reaches 24px at desktop without moving. Hover scales the photo 1.03 and turns the title clay.
 - **Panels (compare cards, commit bar):** lifted paper, 1px Rule border, 8px corners, 16px padding. The recipe page's version bar is the same paper at 6px corners and 12px 16px padding (see Version note).
 - **Stat tiles:** paper on lifted paper, sans label over a 600 value.
 
@@ -296,17 +298,20 @@ No italic, no uppercase in the header, no chip in the header, no note in the hea
 
 ### Diff rows (signature)
 
-Mono at 0.875rem, one row per ingredient or step, a 1ch gutter for `+`, `−` or `~`, added and removed words on their semantic backgrounds. Rows are capped at 72 characters.
+Mono at 0.875rem, one row per ingredient or step, a 1ch gutter for `+`, `−` or `~`, added and removed words on their semantic backgrounds. Ingredient and step rows are capped at 72 characters; the Details rows run the column, so a renamed title stays on one line.
 
 29 October 2026, after the compare page critique (Spencer's decisions): unchanged rows are Ink 3 so the changed rows carry the page; added and removed keep their colours. The two sides of a change are `<del>` and `<ins>` with a real space and an unseen "to" between them, so "¾½ cup" reads and copies as "¾ to ½ cup"; the gutter glyph is aria-hidden and each changed row opens with an unseen "Changed:", "Added:" or "Removed:". The third panel is "Method", and the Details panel speaks the recipe page's measure, value then label: "4 to 8 servings", "11 min to 13 min cook". A removed ingredient keeps its old place in the list. After the last row one link reads the To version. The compare page's "To" chip is the version chip (marigold, 0 6px, 4px corners) at the card number's 18px rather than the bar's 12px: deliberate, it is the card's number, not a mark in a line.
 
 Second sweep, 29 October 2026 (Spencer's decisions): a modified row is ink, its `~` included, so it stands apart from the Ink 3 rows around it; not clay, which would read too close to the removal red. Modified step numbers stay clay, unchanged ones Ink 3. A step number ends in an unseen stop so a screen reader says "5. Gradually stir", not "5 Gradually stir". The summary line that counted the change is gone: the Details panel is the summary. The version cards carry number, author, date and message only; the title, servings and times live in Details with their del/ins. Each card's number links to its version (the latest to the plain recipe URL), so the older version is reachable; the To number keeps the chip look. Card usernames and the back link reach 24px at desktop and 44px on a phone by padding and negative margin, as the recipe page's links do.
 
+End of day, 29 October 2026 (Spencer's decisions): a closed picker shows only its version, "v2 ▾"; the open list carries each message, "v2 · Increased vanilla to 2 tsp". The native select does the work, its own text transparent under a face drawn in flow that also sets its natural width. The From and To eyebrows are gone; the selects are named "From version" and "To version", and the arrow between them is mono at their size and hidden from screen readers. Ingredients and Method share the version cards' grid, two equal columns 24px apart, so Method starts on the To card's edge. A lone insertion or deletion inside a changed row opens with an unseen "added:" or "removed:", as a replacement carries its "to". On a phone each card number reaches 44px by a box above and below it, so the To chip keeps its shape. The same version on both sides titles the tab "v2 · same version · Recipe".
+
 ## Do's and Don'ts
 
 ### Do:
 
-- **Do** set every version number, byline, date, count and gram weight in JetBrains Mono.
+- **Do** set version numbers, dates, handles, the version bar and diff text in JetBrains Mono. Gram weights stay sans inside their ingredient line; the card's time and fork count are sans.
+- **Do** say "Log in" for signing in, everywhere: the navbar, the login page's tab, subtitle and button, and every link to it. "Sign up" is the other verb, and "Sign in" beside it differs by two letters.
 - **Do** keep clay for titles, links and version marks, and marigold for the one action.
 - **Do** separate surfaces with a tone step or a 1px rule; reserve shadows for dialogs.
 - **Do** keep body text at 16px, ink, with a measure under about 72 characters.
