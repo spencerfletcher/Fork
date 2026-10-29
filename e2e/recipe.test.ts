@@ -590,16 +590,25 @@ test.describe('Recipe detail page', () => {
 			await expect(tabs).toBeVisible();
 			// The bar sits inside the first screen, so neither section is a scroll away.
 			expect((await tabs.boundingBox())!.y).toBeLessThan(844);
+			// The tabs are toggle buttons: pressed marks the chosen section.
 			await expect(tabs.getByRole('button', { name: 'Ingredients' })).toHaveAttribute(
-				'aria-current',
+				'aria-pressed',
 				'true'
+			);
+			await expect(tabs.getByRole('button', { name: 'Method' })).toHaveAttribute(
+				'aria-pressed',
+				'false'
 			);
 			await expect(page.locator('#ingredients')).toBeVisible();
 			await expect(page.locator('#method')).toBeHidden();
 			await tabs.getByRole('button', { name: 'Method' }).click();
 			await expect(tabs.getByRole('button', { name: 'Method' })).toHaveAttribute(
-				'aria-current',
+				'aria-pressed',
 				'true'
+			);
+			await expect(tabs.getByRole('button', { name: 'Ingredients' })).toHaveAttribute(
+				'aria-pressed',
+				'false'
 			);
 			await expect(page.locator('#method')).toBeVisible();
 			await expect(page.locator('#ingredients')).toBeHidden();
@@ -849,10 +858,24 @@ test.describe('Recipe detail page', () => {
 		await gotoClassicCookies(page);
 		expect((await measure()).lines).toBe(1);
 	});
+
+	test('the hero photo is fetched first and decoded off the main thread', async ({ page }) => {
+		await gotoClassicCookies(page);
+		const img = page.locator('.recipe-photo img');
+		await expect(img).toHaveAttribute('fetchpriority', 'high');
+		await expect(img).toHaveAttribute('decoding', 'async');
+	});
+
+	test('selected text sits on marigold in ink', async ({ page }) => {
+		await gotoClassicCookies(page);
+		const selection = await page
+			.locator('.description')
+			.evaluate((el) => getComputedStyle(el, '::selection').backgroundColor);
+		expect(selection).toBe('rgb(236, 166, 32)');
+	});
 });
 
 test.describe('Landing page (logged out)', () => {
-
 	test('logged-out visitors see the premise and a diff', async ({ page }) => {
 		await page.goto('/');
 		const browseLink = page.getByRole('link', { name: /browse recipes/i });

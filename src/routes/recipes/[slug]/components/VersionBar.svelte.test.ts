@@ -46,8 +46,9 @@ describe('VersionBar', () => {
 		);
 		const current = container.querySelector('.version-bar .current')!;
 		expect(current.querySelector('.version-number')).toHaveTextContent('v3');
+		// A full stop, so a screen reader pauses before the note.
 		expect(current.querySelector('.version-number .sr-only')).toHaveTextContent(
-			'Version 3, the latest'
+			/^Version 3, the latest\.$/
 		);
 
 		expect(current.querySelector('.message')).toHaveTextContent('Chill the dough');
@@ -110,7 +111,7 @@ describe('VersionBar', () => {
 		const current = container.querySelector('.version-bar .current')!;
 		expect(current.querySelector('.version-number')).toHaveTextContent('v2');
 		expect(current.querySelector('.version-number .sr-only')).toHaveTextContent(
-			'Version 2 of 3, an older version'
+			/^Version 2 of 3, an older version\.$/
 		);
 
 		expect(current).toHaveTextContent('Older version');

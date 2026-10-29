@@ -255,6 +255,12 @@
 		outline-offset: 2px;
 	}
 
+	/* Selected text sits on marigold in ink, the one fill, everywhere. */
+	::selection {
+		background: var(--color-marigold);
+		color: var(--color-text);
+	}
+
 	button,
 	[role='link'],
 	[role='button'],

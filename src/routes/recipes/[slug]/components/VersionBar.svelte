@@ -55,8 +55,8 @@
 			<span class="version-number">
 				<span class="sr-only">
 					{isViewingHistory
-						? `Version ${n} of ${count}, an older version`
-						: `Version ${n}, the latest`}
+						? `Version ${n} of ${count}, an older version.`
+						: `Version ${n}, the latest.`}
 				</span>
 				<span aria-hidden="true">v{n}</span>
 			</span>

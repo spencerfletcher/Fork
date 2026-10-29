@@ -262,6 +262,10 @@ A "Skip to content" link is the first tab stop on every page, hidden until focus
 
 - Espresso bar, 56px, 1200px inner column. Bitter wordmark "Fork." in cream with a marigold full stop. Links in tan, 0.875rem 500, cream on hover or when active. One marigold action. Below 768px the links collapse behind 44px icon buttons.
 
+### Browser surfaces
+
+The marks the browser draws are the system's own. Focus: one 2px clay ring with 2px offset on `:focus-visible`, marigold inside the navbar. Selection: `::selection` is marigold behind ink text, site-wide, the one fill (decided 29 October 2026). Overscroll: the strip above the page is espresso. The recipe page's phone section tabs are toggle buttons carrying `aria-pressed`; its hero photo is the one image above the fold and carries `fetchpriority="high"` and `decoding="async"`; the bar's screen-reader version line ends in a full stop so the note does not run into it.
+
 ### Version note (signature)
 
 Decided 29 October 2026, revised twice the same day: first the commit message left the closed header for the version list; then, after a side-by-side of the byline version, a bar above the hero and a bar below it (boards "Bar A, D, E"), the version moved out of the header altogether into a bar under the hero, the hinge between the dish and the recipe. The header reads title, byline, description, measure, tags, actions, with nothing boxed and nothing pinned.

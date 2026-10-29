@@ -46,6 +46,12 @@ describe('RecipeActions save button', () => {
 		expect(screen.getByRole('button', { name: 'Favorited' })).not.toHaveAttribute('aria-label');
 	});
 
+	test('the star is decoration: the word is the name', () => {
+		render(RecipeActions, { props: makeProps() });
+		const star = screen.getByRole('button', { name: 'Favorite' }).querySelector('svg')!;
+		expect(star).toHaveAttribute('aria-hidden', 'true');
+	});
+
 	test('follows the prop when the page moves to a recipe with a different state', async () => {
 		// Navigating from one recipe to another (e.g. a fork's "Forked from" link)
 		// reuses this component, so only the prop changes.

@@ -55,7 +55,12 @@
 		</div>
 		{#if currentVersion.imageUrl}
 			<figure class="recipe-photo m-0">
-				<img src={currentVersion.imageUrl} alt={currentVersion.title} />
+				<!-- The one image above the fold: fetched first, decoded off the main thread. -->
+				<img
+					src={currentVersion.imageUrl}
+					alt={currentVersion.title}
+					fetchpriority="high"
+					decoding="async" />
 			</figure>
 		{/if}
 	</div>
@@ -66,17 +71,12 @@
 		<VersionBar {recipe} {currentVersion} versions={allVersions} {isViewingHistory} />
 	</div>
 
+	<!-- Toggle buttons, not links: pressed marks the section showing. -->
 	<nav class="section-tabs" aria-label="Recipe sections" data-pinned>
-		<button
-			type="button"
-			aria-current={tab === 'ingredients' ? 'true' : undefined}
-			onclick={() => show('ingredients')}>
+		<button type="button" aria-pressed={tab === 'ingredients'} onclick={() => show('ingredients')}>
 			Ingredients
 		</button>
-		<button
-			type="button"
-			aria-current={tab === 'method' ? 'true' : undefined}
-			onclick={() => show('method')}>
+		<button type="button" aria-pressed={tab === 'method'} onclick={() => show('method')}>
 			Method
 		</button>
 	</nav>
@@ -250,7 +250,7 @@
 			text-decoration: none;
 		}
 
-		.section-tabs button[aria-current='true'] {
+		.section-tabs button[aria-pressed='true'] {
 			color: var(--color-text);
 			border-bottom-color: var(--color-accent);
 		}
