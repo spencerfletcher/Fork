@@ -130,6 +130,8 @@ describe('/+page.svelte', () => {
 		});
 
 		const link = screen.getByRole('link', { name: /open the full comparison/i });
+		// The shared closing-link form, like "All recipes →": sans, 24/44px hits.
+		expect(link).toHaveClass('arrow-link');
 		expect(link).toHaveAttribute(
 			'href',
 			`/recipes/${sampleDiff.recipeSlug}/diff?from=${sampleDiff.fromVersion}&to=${sampleDiff.toVersion}`
@@ -137,5 +139,27 @@ describe('/+page.svelte', () => {
 		// The diff actually on the page came from the same fromVersion/toVersion
 		// pair the link points at — same object, not two independently-guessed values.
 		expect(screen.getByText('Garnish with fresh cilantro.')).toBeInTheDocument();
+	});
+
+	test('the landing grid sits below the fold, so its photos all load lazily', () => {
+		// Passing index made three below-fold photos eager and the first
+		// fetchpriority=high at 1359px of a 2212px phone page.
+		const recipes = [1, 2, 3, 4].map((id) => ({
+			id,
+			slug: `r${id}`,
+			title: `R${id}`,
+			imageUrl: `https://img/${id}.jpg`,
+			updatedAt: new Date(),
+			forkCount: 0
+		}));
+		const { container } = render(Page, {
+			props: {
+				data: { recipes, user: null, profile: null, mode: 'landing', tags: [], sampleDiff: null }
+			} as never
+		});
+		const imgs = [...container.querySelectorAll('img.card-img')];
+		expect(imgs).toHaveLength(4);
+		expect(imgs.every((img) => img.getAttribute('loading') === 'lazy')).toBe(true);
+		expect(imgs.some((img) => img.hasAttribute('fetchpriority'))).toBe(false);
 	});
 });

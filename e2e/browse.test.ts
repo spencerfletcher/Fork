@@ -43,6 +43,32 @@ test.describe('Landing page', () => {
 		await page.setViewportSize({ width: 390, height: 900 });
 		expect((await all.boundingBox())!.height).toBeGreaterThanOrEqual(44);
 	});
+
+	test('"Open the full comparison →" is the arrow link: sans, 24px at desktop, 44px on a phone', async ({
+		page
+	}) => {
+		await page.setViewportSize({ width: 1280, height: 900 });
+		await page.goto('/');
+		const open = page.getByRole('link', { name: 'Open the full comparison →' });
+		const all = page.getByRole('link', { name: 'All recipes →' });
+		const face = (el: Element) => getComputedStyle(el).fontFamily;
+		expect(await open.evaluate(face)).toBe(await all.evaluate(face));
+		expect((await open.boundingBox())!.height).toBeGreaterThanOrEqual(24);
+		await page.setViewportSize({ width: 390, height: 900 });
+		expect((await open.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+	});
+
+	test('the landing grid is below the fold, so no card photo loads eagerly', async ({ page }) => {
+		await page.goto('/');
+		const imgs = page.locator('.recipe-grid img');
+		expect(await imgs.count()).toBeGreaterThan(0);
+		const attrs = await imgs.evaluateAll((els) =>
+			els.map((el) => [el.getAttribute('loading'), el.getAttribute('fetchpriority')])
+		);
+		expect(attrs.every(([loading, priority]) => loading === 'lazy' && priority === null)).toBe(
+			true
+		);
+	});
 });
 
 test.describe('Search filters', () => {

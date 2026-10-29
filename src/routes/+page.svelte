@@ -37,7 +37,7 @@
 					     the diff itself. The route to the interactive compare view still needs
 					     a signpost, so it sits under the thing it opens. -->
 					<a
-						class="diff-open-link"
+						class="arrow-link"
 						href="/recipes/{data.sampleDiff.recipeSlug}/diff?from={data.sampleDiff
 							.fromVersion}&to={data.sampleDiff.toVersion}">
 						Open the full comparison →
@@ -49,8 +49,10 @@
 				<h2 class="eyebrow-label section-heading">Recent</h2>
 				{#if data.recipes.length > 0}
 					<div class="recipe-grid">
-						{#each data.recipes as recipe, i (recipe.id)}
-							<RecipeCard {recipe} index={i} />
+						<!-- No index: the grid sits below the fold at every width, so no
+						     photo here is worth fetching eagerly. -->
+						{#each data.recipes as recipe (recipe.id)}
+							<RecipeCard {recipe} />
 						{/each}
 					</div>
 					<p class="all-recipes"><a href="/recipes" class="arrow-link">All recipes →</a></p>

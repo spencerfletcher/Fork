@@ -936,18 +936,6 @@
 
 	/* ── Eyebrow label ── */
 
-	.diff-open-link {
-		display: inline-block;
-		font-family: var(--font-mono);
-		font-size: 0.875rem;
-		color: var(--color-accent);
-		text-decoration: none;
-	}
-
-	.diff-open-link:hover {
-		text-decoration: underline;
-	}
-
 	/* A closing link in the arrow form ("All recipes →"): 24px tall at desktop
 	   from its own line, 44px on a phone by padding pulled back by margin, so
 	   the text does not move (decided 29 October 2026). An empty state's
