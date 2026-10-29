@@ -60,3 +60,22 @@ Done 29 October 2026 after Spencer's rulings, as one batch beside the compare an
 ## Parked and todo (see `2026-10-28-recipe-page-critique.md` section 14)
 
 Forks page; Fork and version-level Favorite from older versions; struck rows persisting across reload; delete `VersionStrip.svelte`; outlined Fork and Star controls; compare-hover highlight.
+
+## End-of-day scores (third wave, 29 October 2026, Opus agents)
+
+Run after every round above landed. Overlay skipped this wave (ten agents sharing one server); detector and polish walks ran. Snapshots dated `2026-10-29T21-08` in `.impeccable/critique/`.
+
+| Surface | Morning | Now | Still open (biggest first) |
+| --- | --- | --- | --- |
+| Recipe page | 29 | 30/40 | Method squares never filled (fixed, d182186); ingredient focus ring clipped by the aside; tick border 1.35:1 and the dimmed fill; aside hides its last row with no cue; "Older version" trails the line; `local('Menlo')` fallback never loads |
+| Editor | 24 | 30/40 | Settings-only save drops a typed commit message; outcome not at the Save button; the photo input is the one sans box; native bubble doubles the inline error; errors not announced on blur |
+| Browse and landing | 27 | 30/40 | Three cards in a four-column landing row; search filter press drops focus; tag and search grids still lazy; "All recipes" ending too quiet; pressed pills touch; hero h1 off the clamp (decision) |
+| Compare | 23 | 30/40 | Lone insertions silent to screen readers; back link is a 1200px-wide target; pickers repeat the cards and clip; Details title wraps beside empty panel |
+| Favorites | 26 | 29/40 | False "no favorites match" with zero favorites |
+| Sign-up | 22 | 28/40 | Username rules only on the server (add pattern, state them in the hint); alert's Sign in link invisible against the alert |
+| Login | 23 | 25/40 | No pending state; no autocomplete tokens; "Log in" vs "Sign in" |
+| Profile | 20/32 | 22/32 | Owner view a dead end; h1 handle in Bitter against the Pencil Rule (record the exception) |
+
+Cross-cutting, still open: navbar username 23px at desktop; the 600 font weights not preloaded (CLS 0.0001, cosmetic); card author link 20px; "Open the full comparison" 23px; DESIGN.md Do's still say counts and grams in mono; the version-chip frontmatter says 0 5px while the prose and code say 0 6px.
+
+Decisions these need from Spencer: Save button stating the outcome ("Save as v4"); the commit field stepping aside on a settings-only save; tick border Ink 3 versus the Rule 2 ruling; landing hero as a documented display exception or on the clamp; "Log in" everywhere; profile h1 face; picker option text shortened.
