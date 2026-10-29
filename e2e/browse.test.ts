@@ -116,6 +116,45 @@ test.describe('Search filters', () => {
 		expect(box.x).toBeGreaterThanOrEqual(0);
 		expect(box.x + box.width).toBeLessThanOrEqual(390);
 	});
+
+	test('a pressed filter with focus wears the ring on its pill, inside the row', async ({
+		page
+	}) => {
+		for (const width of [1280, 390]) {
+			await page.setViewportSize({ width, height: 900 });
+			await page.goto('/search?tags=dessert');
+			const row = page.getByRole('group', { name: 'Filter by tag' });
+			const dessert = row.getByRole('button', { name: 'Dessert' });
+			await expect(dessert).toHaveAttribute('aria-pressed', 'true');
+			await dessert.focus();
+			const ring = await dessert.evaluate((el) => {
+				const own = getComputedStyle(el);
+				const pill = getComputedStyle(el, '::before');
+				return {
+					button: own.outlineStyle,
+					pill: pill.outlineStyle,
+					width: pill.outlineWidth,
+					offset: pill.outlineOffset,
+					focused: el.matches(':focus-visible')
+				};
+			});
+			expect(ring).toEqual({
+				button: 'none',
+				pill: 'solid',
+				width: '2px',
+				offset: '2px',
+				focused: true
+			});
+			// The ring's top edge (pill top minus offset and width) is not clipped
+			// by the scrolling row.
+			const clipped = await dessert.evaluate((el) => {
+				const r = el.getBoundingClientRect();
+				const top = r.top + parseFloat(getComputedStyle(el, '::before').top) - 4;
+				return top < el.parentElement!.getBoundingClientRect().top;
+			});
+			expect(clipped).toBe(false);
+		}
+	});
 });
 
 test.describe('Spacing', () => {
