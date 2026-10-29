@@ -30,11 +30,13 @@
 						{/if}
 					</div>
 					<!-- Folded wherever the panels stack, so the food comes up sooner. -->
-					<VersionDiff
-						fold
-						metaDiff={data.sampleDiff.metaDiff}
-						ingredientDiff={data.sampleDiff.ingredientDiff}
-						stepDiff={data.sampleDiff.stepDiff} />
+					<div class="sample-diff">
+						<VersionDiff
+							fold
+							metaDiff={data.sampleDiff.metaDiff}
+							ingredientDiff={data.sampleDiff.ingredientDiff}
+							stepDiff={data.sampleDiff.stepDiff} />
+					</div>
 					<!-- The hero's "See a diff" button pointed here and was redundant beside
 					     the diff itself. The route to the interactive compare view still needs
 					     a signpost, so it sits under the thing it opens. -->
@@ -97,6 +99,15 @@
 <style>
 	.browse-section + .browse-section {
 		margin-top: 34px;
+	}
+
+	/* A phone drops the sample's Details panel, the only section at the diff's
+	   top level (Ingredients and Method sit inside its columns), so the first
+	   photo comes up a screen sooner; the compare page keeps it. */
+	@media (max-width: 699px) {
+		.sample-diff > :global(.diff-section) {
+			display: none;
+		}
 	}
 
 	.all-recipes {

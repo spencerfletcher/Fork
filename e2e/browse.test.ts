@@ -140,6 +140,23 @@ test.describe('Landing page', () => {
 	});
 });
 
+test.describe('Landing sample on a phone', () => {
+	test('below 700px the sample drops its Details panel, so the food comes sooner', async ({
+		page
+	}) => {
+		await page.setViewportSize({ width: 390, height: 844 });
+		await page.goto('/');
+		const details = page.getByRole('heading', { name: 'Details' });
+		await expect(details).toBeHidden();
+		await expect(page.getByRole('heading', { name: 'Method' })).toBeVisible();
+		// 1698 with Details shown (wave 3 sweep, 29 October 2026).
+		const card = (await page.locator('.recent-strip .recipe-card').first().boundingBox())!;
+		expect(card.y).toBeLessThan(1698);
+		await page.setViewportSize({ width: 768, height: 1024 });
+		await expect(details).toBeVisible();
+	});
+});
+
 test.describe('Search filters', () => {
 	test('a filter pressed from the keyboard keeps focus after the page navigates', async ({
 		page
