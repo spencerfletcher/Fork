@@ -233,6 +233,8 @@
 	.tag-combo--open input {
 		border-bottom-right-radius: 0;
 		border-bottom-left-radius: 0;
+		/* Its ring stops at the join, where the list's takes over. */
+		clip-path: inset(-100vmax -100vmax 0);
 	}
 
 	.tag-menu {
@@ -256,8 +258,8 @@
 		clip-path: inset(0 -100vmax -100vmax);
 	}
 
-	/* The box's ring carries on around the list; the box's own bottom segment
-	   is under the list and the list's top one is clipped, so it encloses both. */
+	/* The box's ring carries on around the list; each is clipped at the join,
+	   so one ring encloses both. */
 	.tag-combo:has(input:focus-visible) .tag-menu {
 		outline: 2px solid var(--color-accent);
 		outline-offset: 2px;

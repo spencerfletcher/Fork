@@ -239,7 +239,8 @@ test.describe('New recipe page', () => {
 					s.borderBottomRightRadius,
 					s.borderBottomLeftRadius
 				],
-				outline: `${s.outlineStyle} ${s.outlineColor} ${s.outlineOffset}`
+				outline: `${s.outlineStyle} ${s.outlineColor} ${s.outlineOffset}`,
+				clip: s.clipPath
 			};
 		};
 		const closed = await input.evaluate(look);
@@ -259,6 +260,9 @@ test.describe('New recipe page', () => {
 			// The box's ring carries on around the list instead of crossing it.
 			expect(box.outline).toMatch(/^solid /);
 			expect(list.outline).toBe(box.outline);
+			// Each is clipped at the join: nothing of the box below it, nothing of the list above.
+			expect(box.clip).toMatch(/^inset\(-\S+ -\S+ 0px\)$/);
+			expect(list.clip).toMatch(/^inset\(0px -\S+ -\S+\)$/);
 			await page.keyboard.press('Escape');
 			await expect(menu).toBeHidden();
 			expect((await input.evaluate(look)).radii).toEqual(closed.radii);
