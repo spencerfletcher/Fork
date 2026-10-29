@@ -35,6 +35,30 @@ test.describe('Auth pages', () => {
 		await expect(page.getByText(/sign in/i)).toHaveCount(0);
 	});
 
+	test('sent from favorites, the login subtitle says why', async ({ page }) => {
+		await page.goto('/favorites');
+		await expect(page).toHaveURL(/\/login\?redirectTo=/);
+		await expect(page.locator('.auth-subtitle')).toHaveText('Log in to see your favorites');
+	});
+
+	for (const [path, name] of [['/login', 'Create one']] as const) {
+		test(`on ${path} the "${name}" switch link is a 44px target on a phone, 24px at desktop, without moving`, async ({
+			page
+		}) => {
+			await page.setViewportSize({ width: 1280, height: 900 });
+			await page.goto(path);
+			const link = page.locator('.auth-switch').getByRole('link', { name });
+			const line = page.locator('.auth-switch');
+			expect((await link.boundingBox())!.height).toBeGreaterThanOrEqual(24);
+			await page.setViewportSize({ width: 390, height: 844 });
+			const before = (await line.boundingBox())!;
+			expect((await link.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+			// The padding is pulled back by margin: the sentence keeps its line box.
+			const lineHeight = await line.evaluate((el) => parseFloat(getComputedStyle(el).lineHeight));
+			expect(before.height).toBeLessThan(lineHeight * 1.5);
+		});
+	}
+
 	test('sign-up states the username rules and says so in the field once the user leaves it', async ({
 		page
 	}) => {

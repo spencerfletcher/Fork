@@ -26,6 +26,16 @@ describe('Login page', () => {
 		expect(screen.queryByText(/sign in/i)).toBeNull();
 	});
 
+	test.each([
+		['/favorites', 'Log in to see your favorites'],
+		['/recipes/new', 'Log in to continue'],
+		['/recipes/classic-cookies?version=2', 'Log in to continue']
+	])('sent from %s, the subtitle names the reason: "%s"', (redirectTo, subtitle) => {
+		renderLogin(redirectTo);
+		expect(screen.getByText(subtitle)).toHaveClass('auth-subtitle');
+		expect(screen.queryByText('Log in to your cookbook')).toBeNull();
+	});
+
 	test('the fields carry autocomplete tokens, and the password no placeholder', () => {
 		renderLogin();
 		expect(screen.getByLabelText('Email')).toHaveAttribute('autocomplete', 'email');

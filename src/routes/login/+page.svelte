@@ -6,13 +6,22 @@
 
 	// Disabled while the request is out, so a second press cannot send it twice.
 	let pending = $state(false);
+
+	// Sent here from a page that needs an account, the subtitle says why.
+	const subtitle = $derived(
+		!data.redirectTo
+			? 'Log in to your cookbook'
+			: data.redirectTo.split('?')[0] === '/favorites'
+				? 'Log in to see your favorites'
+				: 'Log in to continue'
+	);
 </script>
 
 <div class="auth-page">
 	<div class="auth-card">
 		<div class="auth-header">
 			<h1>Welcome Back</h1>
-			<p class="auth-subtitle">Log in to your cookbook</p>
+			<p class="auth-subtitle">{subtitle}</p>
 		</div>
 
 		{#if form?.message}
@@ -68,3 +77,20 @@
 		</p>
 	</div>
 </div>
+
+<style>
+	/* The switch link reaches 24px at desktop and 44px on a phone by padding
+	   pulled back by margin, so the sentence does not move. */
+	.auth-switch a {
+		display: inline-block;
+		padding-block: 2px;
+		margin-block: -2px;
+	}
+
+	@media (max-width: 699px) {
+		.auth-switch a {
+			padding-block: 12px;
+			margin-block: -12px;
+		}
+	}
+</style>
