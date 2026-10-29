@@ -11,7 +11,6 @@
 		id="steps"
 		name="steps"
 		rows="14"
-		class="field-mono"
 		required
 		bind:value
 		{placeholder}

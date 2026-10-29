@@ -281,6 +281,42 @@ test.describe('Edit recipe page', () => {
 		}
 	});
 
+	test('every text box is mono at one size, the commit message as tall as its siblings, Save at least 112px wide', async ({
+		page
+	}) => {
+		const url = await createRecipe(page, 'E2E Mono', '4');
+		try {
+			await gotoHydrated(page, `${url}/edit`);
+			const boxes = page.locator('.form :is(input[type="text"], input[type="number"], textarea)');
+			expect(await boxes.count()).toBe(9);
+			for (const box of await boxes.all()) {
+				const style = await box.evaluate((el) => {
+					const s = getComputedStyle(el);
+					return { family: s.fontFamily, size: s.fontSize };
+				});
+				expect(style.family).toContain('JetBrains Mono');
+				expect(style.size).toBe('13px');
+			}
+			const title = await page.locator('input[name="title"]').boundingBox();
+			const message = await page.locator('input[name="commitMessage"]').boundingBox();
+			expect(message!.height).toBe(title!.height);
+			const save = await page.getByRole('button', { name: 'Save', exact: true }).boundingBox();
+			const cancel = await page.getByRole('link', { name: 'Cancel' }).boundingBox();
+			expect(save!.width).toBeGreaterThanOrEqual(112);
+			expect(save!.width).toBeGreaterThan(cancel!.width);
+
+			await page.setViewportSize({ width: 390, height: 900 });
+			for (const name of ['title', 'commitMessage']) {
+				const size = await page
+					.locator(`input[name="${name}"]`)
+					.evaluate((el) => getComputedStyle(el).fontSize);
+				expect(size).toBe('16px');
+			}
+		} finally {
+			await deleteRecipe(page, url);
+		}
+	});
+
 	test('a long ingredient list grows the editor on a phone and Save stays below it', async ({
 		page
 	}) => {

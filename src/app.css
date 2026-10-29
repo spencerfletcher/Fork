@@ -553,7 +553,10 @@
 		text-transform: none;
 	}
 
-	.field-mono {
+	/* In the editor every text box is mono (Spencer, 29 October 2026): what is
+	   typed is raw text under edit, not yet the recipe. One rule, so every
+	   single-line box is one height. */
+	.form :is(input[type='text'], input[type='number'], textarea) {
 		font-family: var(--font-mono);
 		font-size: 0.8125rem;
 		line-height: 1.6;
@@ -561,7 +564,7 @@
 
 	/* This layer beats the base layer's phone rule, so repeat it here. */
 	@media (max-width: 699px) {
-		.field-mono {
+		.form :is(input[type='text'], input[type='number'], textarea) {
 			font-size: 1rem;
 		}
 	}
@@ -640,6 +643,11 @@
 		display: flex;
 		align-items: center;
 		gap: 14px;
+	}
+
+	/* The primary outweighs Cancel; on a phone it fills the row instead. */
+	.form-actions .btn-primary {
+		min-width: 112px;
 	}
 
 	@media (max-width: 859px) {

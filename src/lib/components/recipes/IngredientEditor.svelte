@@ -18,7 +18,8 @@
 					.map((i) => i.text)
 	);
 
-	const placeholder = '2 1/4 cups all-purpose flour\n2 large eggs';
+	// What is typed is what comes back: the fraction as the recipe stores it.
+	const placeholder = '2¼ cups all-purpose flour\n2 large eggs';
 </script>
 
 <div class="field">
@@ -27,7 +28,6 @@
 		id="ingredients"
 		name="ingredients"
 		rows="11"
-		class="field-mono"
 		required
 		bind:value
 		{placeholder}

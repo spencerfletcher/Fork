@@ -18,6 +18,11 @@ describe('IngredientEditor', () => {
 		expect(box().name).toBe('ingredients');
 	});
 
+	test('the placeholder shows what comes back: the fraction as it is stored, not "2 1/4"', () => {
+		render(IngredientEditor, { props: { value: '' } });
+		expect(box().placeholder).toBe('2¼ cups all-purpose flour\n2 large eggs');
+	});
+
 	test('keeps an empty live region in the page when the box is empty, so later notes are announced', () => {
 		render(IngredientEditor, { props: { value: '' } });
 		expect(screen.getByRole('status')).toBeEmptyDOMElement();
