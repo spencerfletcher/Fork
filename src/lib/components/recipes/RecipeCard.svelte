@@ -24,9 +24,8 @@
 	const href = $derived(`/recipes/${recipe.slug}`);
 
 	/**
-	 * The meta line, as data rather than nested markup. Building it as a list is
-	 * what lets the separator be "not the first item" instead of a condition that
-	 * restates every preceding field.
+	 * The meta line, as data rather than nested markup. The dots between items
+	 * are drawn by CSS, so the list carries only the items.
 	 */
 	type MetaPart = { text: string; href?: string; accent?: boolean };
 
@@ -69,13 +68,10 @@
 	{/if}
 
 	<div class="meta-row">
-		{#each metaParts as part, i (part.text)}
+		{#each metaParts as part (part.text)}
 			{#if part.href}
 				<a class="meta-item meta-author" href={part.href}>{part.text}</a>
 			{:else}
-				{#if i > 0}<span class="meta-sep" class:meta-author={i === 1 && !!metaParts[0].href}>
-						·
-					</span>{/if}
 				<span class="meta-item" class:meta-item--accent={part.accent}>{part.text}</span>
 			{/if}
 		{/each}
@@ -172,10 +168,21 @@
 		gap: 5px;
 	}
 
-	.meta-item,
-	.meta-sep {
+	.meta-item {
 		font-family: var(--font-sans);
 		font-size: 0.8125rem;
+		color: var(--color-text-3);
+	}
+
+	/* The dot is drawn as part of the item it precedes, never typed, so a
+	   wrapped row never ends with one (decided 29 October 2026). It keeps the
+	   row's face whatever the item's own. */
+	.meta-item + .meta-item::before {
+		content: '·';
+		margin-right: 5px;
+		font-family: var(--font-sans);
+		font-size: 0.8125rem;
+		font-weight: 400;
 		color: var(--color-text-3);
 	}
 
@@ -209,6 +216,10 @@
 		}
 
 		.meta-author {
+			display: none;
+		}
+
+		.meta-author + .meta-item::before {
 			display: none;
 		}
 	}

@@ -1,6 +1,7 @@
 import { describe, test, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/svelte';
 import RecipeCard from './RecipeCard.svelte';
+import source from './RecipeCard.svelte?raw';
 
 const { mockGoto } = vi.hoisted(() => ({ mockGoto: vi.fn() }));
 vi.mock('$app/navigation', () => ({ goto: mockGoto }));
@@ -102,21 +103,30 @@ describe('RecipeCard', () => {
 		expect(screen.getByRole('link', { name: '@chefmaria' })).toHaveClass('meta-author');
 	});
 
-	test('the separator after the author hides with it on phones', () => {
+	test('the separators are drawn by CSS between items, never typed, so none can strand at a line end', () => {
+		// At 768 the row wrapped as "… · v3 ·" then "1 fork". A dot drawn by
+		// `.meta-item + .meta-item::before` is part of the item it precedes and
+		// wraps with it (decided 29 October 2026).
 		const { container } = render(RecipeCard, {
 			props: {
-				recipe: { ...makeRecipe({ versionCount: 2 }), author: { id: 'u1', username: 'chefmaria' } }
+				recipe: {
+					...makeRecipe({ versionCount: 3, cookTimeMinutes: 28, forkCount: 1 }),
+					author: { id: 'u1', username: 'chefmaria' }
+				}
 			}
 		});
-		expect(container.querySelector('.meta-sep.meta-author')).not.toBeNull();
+		const row = container.querySelector('.meta-row')!;
+		expect(row.textContent).not.toContain('·');
+		expect(container.querySelector('.meta-sep')).toBeNull();
+		expect([...row.children].every((el) => el.classList.contains('meta-item'))).toBe(true);
+		const style = source.slice(source.indexOf('<style>'));
+		expect(style).toMatch(/\.meta-item \+ \.meta-item::before\s*{[^}]*content:\s*'·'/);
 	});
 
-	test('no separator is marked when there is no author', () => {
-		const { container } = render(RecipeCard, {
-			props: { recipe: makeRecipe({ versionCount: 2, cookTimeMinutes: 10 }) }
-		});
-		expect(container.querySelector('.meta-sep')).not.toBeNull();
-		expect(container.querySelector('.meta-sep.meta-author')).toBeNull();
+	test('on a phone the dot after the hidden author hides with it', () => {
+		// jsdom applies no component CSS, so the phone rule is read from the source.
+		const phone = source.slice(source.indexOf('@media (max-width: 699px)'));
+		expect(phone).toMatch(/\.meta-author \+ \.meta-item::before\s*{[^}]*display:\s*none/);
 	});
 
 	test('shows @username link when author is present', () => {
@@ -166,8 +176,7 @@ describe('RecipeCard', () => {
 		});
 		const metaRow = container.querySelector('.meta-row');
 		expect(metaRow?.textContent?.trim().startsWith('·')).toBe(false);
-		// The separator is now "not the first part" rather than a condition
-		// restating every preceding field, so a lone item renders none at all.
-		expect(container.querySelectorAll('.meta-sep')).toHaveLength(0);
+		// The dot is drawn only between two items, so a lone item has none.
+		expect(metaRow?.children).toHaveLength(1);
 	});
 });
