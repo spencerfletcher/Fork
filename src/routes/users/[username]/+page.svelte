@@ -4,7 +4,7 @@
 
 	let { data }: { data: PageData } = $props();
 
-	const { profile, recipes, commitCount } = $derived(data);
+	const { profile, recipes, commitCount, privateCount } = $derived(data);
 
 	const memberSince = $derived(
 		new Date(profile.createdAt ?? Date.now()).toLocaleDateString('en-US', {
@@ -20,12 +20,18 @@
 			<div class="profile-avatar" aria-hidden="true">{profile.username[0].toUpperCase()}</div>
 			<div class="profile-text">
 				<h1>@{profile.username}</h1>
-				<p class="profile-since">Member since {memberSince}</p>
+				<!-- History and dates in mono: the commits and the member date share
+				     one line; the recipe count is the section eyebrow's. The dot
+				     between the items is drawn by CSS, never typed. -->
 				<p class="profile-stats">
-					{recipes.length}
-					{recipes.length === 1 ? 'recipe' : 'recipes'} · {commitCount}
-					{commitCount === 1 ? 'commit' : 'commits'}
+					<span class="stat">{commitCount} {commitCount === 1 ? 'commit' : 'commits'}</span>
+					<span class="stat profile-since">Member since {memberSince}</span>
 				</p>
+				{#if privateCount > 0}
+					<p class="profile-private">
+						You also have {privateCount} private {privateCount === 1 ? 'recipe' : 'recipes'}
+					</p>
+				{/if}
 			</div>
 		</header>
 
@@ -84,16 +90,24 @@
 		font-weight: 500;
 	}
 
-	.profile-since {
-		margin: 0;
-		font-size: 0.875rem;
-		color: var(--color-text-3);
-	}
-
 	.profile-stats {
+		display: flex;
+		flex-wrap: wrap;
 		margin: 0;
 		font-family: var(--font-mono);
 		font-size: 0.75rem;
+		color: var(--color-text-3);
+	}
+
+	.stat + .stat::before {
+		content: '·';
+		margin: 0 6px;
+	}
+
+	/* The owner's one line: sans, like the body, under the mono stats. */
+	.profile-private {
+		margin: 0;
+		font-size: 0.875rem;
 		color: var(--color-text-3);
 	}
 

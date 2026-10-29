@@ -5,10 +5,11 @@ import { recipes } from '#lib/server/db/schema.js';
 
 // ─── Hoisted mocks ────────────────────────────────────────────────────────────
 
-const { findProfileMock, findRecipesMock, selectMock } = vi.hoisted(() => ({
+const { findProfileMock, findRecipesMock, selectMock, countMock } = vi.hoisted(() => ({
 	findProfileMock: vi.fn(),
 	findRecipesMock: vi.fn(),
-	selectMock: vi.fn()
+	selectMock: vi.fn(),
+	countMock: vi.fn()
 }));
 
 vi.mock('#lib/server/db/index.js', () => ({
@@ -17,7 +18,8 @@ vi.mock('#lib/server/db/index.js', () => ({
 			profiles: { findFirst: findProfileMock },
 			recipes: { findMany: findRecipesMock }
 		},
-		select: selectMock
+		select: selectMock,
+		$count: countMock
 	}
 }));
 
@@ -33,8 +35,11 @@ function makeProfile(overrides = {}) {
 	};
 }
 
-function makeLoadEvent(username: string) {
-	return { params: { username } } as Parameters<typeof load>[0];
+function makeLoadEvent(username: string, viewerId: string | null = null) {
+	return {
+		params: { username },
+		locals: { user: viewerId ? { id: viewerId } : null }
+	} as Parameters<typeof load>[0];
 }
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
@@ -80,6 +85,27 @@ describe('users/[username] load', () => {
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const result = (await load(makeLoadEvent('chefmaria'))) as any;
 		expect(result.commitCount).toBe(7);
+	});
+
+	test('tells the owner how many private recipes they have', async () => {
+		findProfileMock.mockResolvedValue(makeProfile());
+		findRecipesMock.mockResolvedValue([]);
+		countMock.mockResolvedValue(2);
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const result = (await load(makeLoadEvent('chefmaria', 'user-1'))) as any;
+		expect(result.privateCount).toBe(2);
+	});
+
+	test('never counts private recipes for anyone but the owner', async () => {
+		findProfileMock.mockResolvedValue(makeProfile());
+		findRecipesMock.mockResolvedValue([]);
+		countMock.mockResolvedValue(2);
+		for (const viewer of [null, 'someone-else']) {
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			const result = (await load(makeLoadEvent('chefmaria', viewer))) as any;
+			expect(result.privateCount).toBe(0);
+		}
+		expect(countMock).not.toHaveBeenCalled();
 	});
 
 	test('counts only commits on public recipes, so private work stays hidden', async () => {

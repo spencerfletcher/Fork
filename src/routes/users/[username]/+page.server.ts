@@ -6,7 +6,7 @@ import { attachRecipeCounts } from '#lib/server/recipeCounts.js';
 import { clampDescription } from '#lib/seo.js';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ params }) => {
+export const load: PageServerLoad = async ({ params, locals: { user } }) => {
 	const profile = await db.query.profiles.findFirst({
 		where: eq(profiles.username, params.username)
 	});
@@ -34,10 +34,18 @@ export const load: PageServerLoad = async ({ params }) => {
 
 	const commitCount = commitResult[0]?.commitCount ?? 0;
 
+	// Only the owner learns how much private work sits behind the page; for
+	// anyone else the number is not even computed.
+	const privateCount =
+		user?.id === profile.id
+			? await db.$count(recipes, and(eq(recipes.authorId, profile.id), eq(recipes.isPublic, false)))
+			: 0;
+
 	return {
 		profile,
 		recipes: withCounts,
 		commitCount,
+		privateCount,
 		meta: {
 			title: `@${profile.username}`,
 			description: clampDescription(
