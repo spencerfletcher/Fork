@@ -286,7 +286,8 @@
 						</div>
 					{/if}
 					<!-- The native input, visually hidden, keeps the keyboard and the file
-					     dialog; the ghost button is its label and its picture. -->
+					     dialog; the ghost button is its label and its picture. Its words
+					     alone name the input, which both labels would otherwise name twice. -->
 					<label class="btn-ghost photo-choose">
 						<input
 							id="image"
@@ -294,9 +295,10 @@
 							type="file"
 							accept="image/jpeg,image/png,image/webp,image/gif"
 							class="sr-only"
+							aria-labelledby="image-action"
 							bind:this={imageInput}
 							onchange={onImageChange} />
-						{preview || chosen ? 'Replace photo' : 'Choose photo'}
+						<span id="image-action">{preview || chosen ? 'Replace photo' : 'Choose photo'}</span>
 					</label>
 					{#if draft.removeImage}
 						<input type="hidden" name="removeImage" value="on" />

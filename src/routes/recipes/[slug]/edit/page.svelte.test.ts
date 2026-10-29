@@ -190,7 +190,7 @@ describe('Edit page form', () => {
 	test('choosing a photo file counts as a content change at once, before the preview loads', async () => {
 		render(EditPage, { props: { data: makeData(), form: null } });
 		const file = new File(['x'], 'c.png', { type: 'image/png' });
-		const input = screen.getByLabelText('Photo') as HTMLInputElement;
+		const input = screen.getByLabelText('Choose photo') as HTMLInputElement;
 		Object.defineProperty(input, 'files', { value: [file] });
 		await fireEvent.change(input);
 		expect(screen.getByText('Editing v2 · saves as v3')).toBeInTheDocument();
@@ -372,13 +372,15 @@ describe('Edit page form', () => {
 		const button = photoInput().closest('label')!;
 		expect(button).toHaveClass('btn-ghost');
 		expect(button).toHaveTextContent(/^\s*Choose photo\s*$/);
-		expect(photoInput()).toHaveAccessibleName(/Choose photo/);
+		// One name, the button's, not the field label's "Photo" before it.
+		expect(photoInput()).toHaveAccessibleName('Choose photo');
 		unmount();
 
 		render(EditPage, {
 			props: { data: makeData({ imageUrl: 'https://cdn/cookies.png' }), form: null }
 		});
 		expect(photoInput().closest('label')).toHaveTextContent('Replace photo');
+		expect(photoInput()).toHaveAccessibleName('Replace photo');
 		await fireEvent.click(screen.getByRole('button', { name: /remove photo/i }));
 		expect(photoInput().closest('label')).toHaveTextContent('Choose photo');
 	});
