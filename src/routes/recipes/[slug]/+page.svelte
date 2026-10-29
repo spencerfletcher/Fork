@@ -55,12 +55,9 @@
 		</div>
 		{#if currentVersion.imageUrl}
 			<figure class="recipe-photo m-0">
-				<!-- The one image above the fold: fetched first, decoded off the main thread. -->
-				<img
-					src={currentVersion.imageUrl}
-					alt={currentVersion.title}
-					fetchpriority="high"
-					decoding="async" />
+				<!-- The one image above the fold: fetched first, decoded off the main
+				     thread. Decorative: the h1 beside it already names the recipe. -->
+				<img src={currentVersion.imageUrl} alt="" fetchpriority="high" decoding="async" />
 			</figure>
 		{/if}
 	</div>

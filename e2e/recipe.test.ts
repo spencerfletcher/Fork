@@ -1003,11 +1003,15 @@ test.describe('Recipe detail page', () => {
 		expect((await measure()).lines).toBe(1);
 	});
 
-	test('the hero photo is fetched first and decoded off the main thread', async ({ page }) => {
+	test('the hero photo is fetched first, decoded off the main thread, and silent to a screen reader', async ({
+		page
+	}) => {
 		await gotoClassicCookies(page);
 		const img = page.locator('.recipe-photo img');
 		await expect(img).toHaveAttribute('fetchpriority', 'high');
 		await expect(img).toHaveAttribute('decoding', 'async');
+		// The h1 names the recipe; an alt with the title read it twice.
+		await expect(img).toHaveAttribute('alt', '');
 	});
 
 	test('selected text sits on marigold in ink', async ({ page }) => {
