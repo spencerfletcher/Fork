@@ -300,8 +300,14 @@
 	/* Shared link style used for both desktop nav links and logout button */
 	.navbar-link {
 		font-family: var(--font-sans);
-		font-size: 0.875rem;
-		font-weight: 500;
+		/* Small caps at 600 with tracking (Spencer, 29 October 2026). The shipped
+		   Source Sans subset has no small-cap glyphs, so the browser synthesises
+		   them from the capitals; the weight and tracking keep them from going
+		   faint on espresso. */
+		font-variant-caps: all-small-caps;
+		font-size: 0.9375rem;
+		font-weight: 600;
+		letter-spacing: 0.08em;
 		color: var(--color-text-tan);
 		text-decoration: none;
 		background: none;
@@ -342,8 +348,10 @@
 		display: block;
 		padding: var(--space-3) var(--space-4);
 		font-family: var(--font-sans);
-		font-size: 0.9375rem;
-		font-weight: 500;
+		font-variant-caps: all-small-caps;
+		font-size: 1rem;
+		font-weight: 600;
+		letter-spacing: 0.08em;
 		color: var(--color-text-tan);
 		text-decoration: none;
 		border-radius: var(--radius-sm);

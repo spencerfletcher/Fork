@@ -307,3 +307,22 @@ describe('Navbar current page', () => {
 		);
 	});
 });
+
+// ─── Link face ────────────────────────────────────────────────────────────────
+
+describe('Navbar link face', () => {
+	// jsdom applies no component CSS, so the rules are read from the source.
+	const style = source.slice(source.indexOf('<style>'));
+	const rule = (selector: string) => {
+		const start = style.indexOf(`${selector} {`);
+		return style.slice(start, style.indexOf('}', start));
+	};
+
+	test('desktop links and the phone menu links are small caps at 600 with tracking (Spencer, 29 October 2026)', () => {
+		for (const selector of ['.navbar-link', '.mobile-link']) {
+			expect(rule(selector)).toMatch(/font-variant-caps:\s*all-small-caps/);
+			expect(rule(selector)).toMatch(/font-weight:\s*600/);
+			expect(rule(selector)).toMatch(/letter-spacing:\s*0\.08em/);
+		}
+	});
+});
