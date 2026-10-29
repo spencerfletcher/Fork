@@ -427,4 +427,30 @@ describe('Edit page form', () => {
 		expect(document.querySelector('input[name="removeImage"]')).toHaveValue('on');
 		expect(screen.getByText('Editing v2 · saves as v3')).toBeInTheDocument();
 	});
+
+	test('Keep photo, offered once the photo is marked for removal, brings it back and unmarks it', async () => {
+		render(EditPage, {
+			props: { data: makeData({ imageUrl: 'https://cdn/cookies.png' }), form: null }
+		});
+		expect(screen.queryByRole('button', { name: 'Keep photo' })).toBeNull();
+		await fireEvent.click(screen.getByRole('button', { name: /remove photo/i }));
+		await tick();
+		const keep = screen.getByRole('button', { name: 'Keep photo' });
+		expect(keep).toHaveClass('btn-ghost');
+		expect(keep).toHaveAttribute('type', 'button');
+		// The control pressed has gone; focus lands on the way back, not the page.
+		expect(keep).toHaveFocus();
+		await fireEvent.click(keep);
+		await tick();
+		expect(screen.getByRole('img', { name: /preview/i })).toHaveAttribute(
+			'src',
+			'https://cdn/cookies.png'
+		);
+		expect(document.querySelector('input[name="removeImage"]')).toBeNull();
+		expect(screen.queryByRole('button', { name: 'Keep photo' })).toBeNull();
+		expect(screen.getByRole('button', { name: /remove photo/i })).toHaveFocus();
+		expect(document.querySelector('input[name="image"]')).toHaveAccessibleName('Replace photo');
+		// Nothing left to save: the form is clean again.
+		expect(screen.getByText('Editing v2')).toBeInTheDocument();
+	});
 });

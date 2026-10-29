@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Snippet } from 'svelte';
+	import { tick, type Snippet } from 'svelte';
 	import { enhance, type SubmitFunction } from '$app/forms';
 	import { beforeNavigate } from '$app/navigation';
 	import {
@@ -121,11 +121,24 @@
 		draft.removeImage = false;
 	}
 
-	function removePhoto() {
+	// Each button takes the other's place, so focus follows to it.
+	let keepButton: HTMLButtonElement | undefined = $state();
+	let removeButton: HTMLButtonElement | undefined = $state();
+
+	async function removePhoto() {
 		chosen = false;
 		chosenPreview = null;
 		if (imageInput) imageInput.value = '';
 		if (imageUrl) draft.removeImage = true;
+		await tick();
+		keepButton?.focus();
+	}
+
+	// Undoes the removal alone; Cancel still discards every edit.
+	async function keepPhoto() {
+		draft.removeImage = false;
+		await tick();
+		removeButton?.focus();
 	}
 
 	// The server cannot echo a file back. After a failure the enhanced form is
@@ -279,6 +292,7 @@
 							<button
 								type="button"
 								class="photo-remove"
+								bind:this={removeButton}
 								onclick={removePhoto}
 								aria-label="Remove photo">
 								×
@@ -288,18 +302,29 @@
 					<!-- The native input, visually hidden, keeps the keyboard and the file
 					     dialog; the ghost button is its label and its picture. Its words
 					     alone name the input, which both labels would otherwise name twice. -->
-					<label class="btn-ghost photo-choose">
-						<input
-							id="image"
-							name="image"
-							type="file"
-							accept="image/jpeg,image/png,image/webp,image/gif"
-							class="sr-only"
-							aria-labelledby="image-action"
-							bind:this={imageInput}
-							onchange={onImageChange} />
-						<span id="image-action">{preview || chosen ? 'Replace photo' : 'Choose photo'}</span>
-					</label>
+					<div class="photo-actions">
+						<label class="btn-ghost photo-choose">
+							<input
+								id="image"
+								name="image"
+								type="file"
+								accept="image/jpeg,image/png,image/webp,image/gif"
+								class="sr-only"
+								aria-labelledby="image-action"
+								bind:this={imageInput}
+								onchange={onImageChange} />
+							<span id="image-action">{preview || chosen ? 'Replace photo' : 'Choose photo'}</span>
+						</label>
+						{#if draft.removeImage}
+							<button
+								type="button"
+								class="btn-ghost photo-keep"
+								bind:this={keepButton}
+								onclick={keepPhoto}>
+								Keep photo
+							</button>
+						{/if}
+					</div>
 					{#if draft.removeImage}
 						<input type="hidden" name="removeImage" value="on" />
 					{/if}
@@ -447,6 +472,12 @@
 		min-height: calc(3lh + 18px);
 	}
 
+	.photo-actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-2);
+	}
+
 	/* One height with the single-line boxes beside it. It is a label, so it
 	   takes back the button's voice from the field labels' eyebrow. */
 	.photo-choose {
@@ -460,6 +491,11 @@
 		letter-spacing: normal;
 		text-transform: none;
 		color: var(--color-text);
+	}
+
+	.photo-keep {
+		min-height: 41px;
+		padding-block: 0;
 	}
 
 	.photo-choose:has(:focus-visible) {
