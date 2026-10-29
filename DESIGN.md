@@ -219,7 +219,7 @@ Flat, by tonal step. Paper, lifted paper, clay tint and espresso are the four su
 
 ## Shapes
 
-Small, consistent corners: 4px on chips and icon buttons, 6px on buttons, inputs and card photos, 8px on cards, dialogs and the version strip, pills only on tags. Borders are 1px in Rule or Rule 2. Recipe cards have no box at all; the photo or the clay-tint panel (4:3) is the only shape. Photos are cropped, never letterboxed.
+Small, consistent corners: 4px on chips and icon buttons, 6px on buttons, inputs and card photos, 8px on cards and dialogs, 6px on the version bar, pills only on tags. Borders are 1px in Rule or Rule 2. Recipe cards have no box at all; the photo or the clay-tint panel (4:3) is the only shape. Photos are cropped, never letterboxed.
 
 ## Components
 
@@ -242,7 +242,7 @@ One exception, decided 28 October 2026: the recipe page's action row (Fork or Ed
 ### Cards / Containers
 
 - **Recipe card:** no surface, border or shadow. 4:3 photo or clay-tint panel with 6px corners, Bitter title at 1.0625rem, mono meta row in Ink 3 with the version mark in clay. Hover scales the photo 1.03 and turns the title clay.
-- **Panels (version strip, compare cards, commit bar):** lifted paper, 1px Rule border, 8px corners, 16px padding (9px 14px on the strip).
+- **Panels (compare cards, commit bar):** lifted paper, 1px Rule border, 8px corners, 16px padding. The recipe page's version bar is the same paper at 6px corners and 12px 16px padding (see Version note).
 - **Stat tiles:** paper on lifted paper, sans label over a 600 value.
 
 ### Inputs / Fields
@@ -272,7 +272,7 @@ Decided 29 October 2026, revised twice the same day: first the commit message le
 - **Photo:** 3:2 beside the header, capped at 340px tall, 6px corners. Stacked below 1024px it sits directly under the title, before the byline.
 - **Ingredients:** a measured line bolds its measure ("**2¼ cups** (281g) all-purpose flour"); a counted line is all measure, so it is bold whole ("**2 large eggs** (≈100g)"); a line with no number is plain. On every width.
 - **Sections below 1024px:** the Ingredients | Method bar is a switch, not a jump: one section shows, the other is hidden, and switching puts the section's top under the bar. Decided 29 October 2026 because scrolling past one section to reach the other felt bad.
-- **Version bar** (under the hero; its bottom edge is the divider, there is no page rule; absent on a one-version recipe): lifted paper, 1px Rule, 6px corners, 12px 16px padding, no shadow, the page's gutters. One mono 0.875rem line: the version number as the marigold chip (0.75rem 600, ink on marigold; the other rows' numbers are clay), the note in ink clamped to one line while closed, then at the right "3 versions ▾" (the one toggle, 12px chevron that flips) and "Compare with v2" (the latest against the one before; an older version against the latest). Viewing an older version the line reads "v2 · note · Older version · Back to v3 · 3 versions ▾ · Compare with v3". Open: the note runs in full and the other versions list under a rule, each row (number and message) a link to that version, in Ink 2 darkening on hover, with "Compare with vN" at the right. On a phone the controls drop under the note, each row is 44px tall and its compare link sits under it.
+- **Version bar** (under the hero; its bottom edge is the divider, there is no page rule; absent on a one-version recipe): lifted paper, 1px Rule, 6px corners, 12px 16px padding, no shadow, the page's gutters. One mono 0.875rem line: the version number as the marigold chip (0.75rem 600, ink on marigold; the other rows' numbers are clay), the note in ink clamped to one line while closed, then at the right "3 versions ▾" (the one toggle, 12px chevron that flips). "Compare with v2" (the latest against the one before; an older version against the latest) appears beside it only when open, once the version it names is a row below (decided 29 October 2026 after the second critique: closed, the bar offers one control). Viewing an older version the line reads "v2 · note · Older version · Back to v3 · 3 versions ▾ · Compare with v3". Open: the note runs in full and the other versions list under a rule, each row (number and message) a link to that version, in Ink 2 darkening on hover, with "Compare with vN" at the right. Below 1024 the controls drop under the note rather than crush it; on a phone each link and the toggle are 44px tall and each row's compare sits under it. Escape closes the list only while focus is inside the bar.
 
 No italic, no uppercase in the header, no chip in the header, no note in the header.
 

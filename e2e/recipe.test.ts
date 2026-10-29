@@ -332,6 +332,39 @@ test.describe('Recipe detail page', () => {
 		expect(new Set(messages).size).toBe(1);
 	});
 
+	test('on an iPad the older-version controls drop under the note and the tabs keep their gap', async ({
+		page
+	}) => {
+		await page.setViewportSize({ width: 768, height: 1024 });
+		await gotoClassicCookies(page);
+		await page.goto(`${page.url().split('?')[0]}?version=2`);
+		const note = await page.locator('.version-bar .current .message').boundingBox();
+		const controls = await page.locator('.version-bar .current .controls').boundingBox();
+		expect(note!.width).toBeGreaterThan(400);
+		expect(controls!.y).toBeGreaterThanOrEqual(note!.y + note!.height - 1);
+		const bar = await page.locator('.version-bar').boundingBox();
+		const tabs = await page.locator('.section-tabs').boundingBox();
+		expect(tabs!.y - (bar!.y + bar!.height)).toBeGreaterThanOrEqual(16);
+	});
+
+	test('on a phone every link and button in the bar is 44px tall', async ({ page }) => {
+		await page.setViewportSize({ width: 390, height: 900 });
+		await gotoClassicCookies(page);
+		await page.getByRole('button', { name: '3 versions' }).click();
+		const short = await page
+			.locator('.version-bar a, .version-bar button')
+			.evaluateAll((els) =>
+				els
+					.map((el) => ({ text: el.textContent!.trim(), h: el.getBoundingClientRect().height }))
+					.filter((r) => r.h < 44)
+			);
+		expect(short).toEqual([]);
+		// The compare under each row still indents to the message.
+		const message = await page.locator('#version-history .message').first().boundingBox();
+		const compare = await page.locator('#version-history .compare').first().boundingBox();
+		expect(Math.abs(compare!.x - message!.x)).toBeLessThan(1);
+	});
+
 	test('on a phone each history row is a 44px link to its version, beside its compare link', async ({
 		page
 	}) => {
@@ -705,7 +738,7 @@ test.describe('Recipe detail page', () => {
 	}) => {
 		await page.setViewportSize({ width: 1440, height: 900 });
 		await gotoClassicCookies(page);
-		await page.locator('.version-bar .versions-toggle').waitFor();
+		await page.getByRole('button', { name: '3 versions' }).click();
 
 		// Each item's first text node, measured as a range so the button box
 		// does not count.

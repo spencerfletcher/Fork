@@ -26,13 +26,17 @@
 
 	let open = $state(false);
 	let toggle: HTMLButtonElement | undefined = $state();
+	let bar: HTMLElement | undefined = $state();
 
 	// SvelteKit keeps this component mounted when only the query changes, so
 	// the list's own links would otherwise leave it open over the next view.
 	afterNavigate(() => (open = false));
 
+	// Escape closes the list only while focus is inside the bar; from the
+	// method below it is not the bar's to take, and taking it would scroll
+	// the page back up to the toggle.
 	function onWindowKeydown(event: KeyboardEvent) {
-		if (!open || event.key !== 'Escape') return;
+		if (!open || event.key !== 'Escape' || !bar?.contains(document.activeElement)) return;
 		open = false;
 		toggle?.focus();
 	}
@@ -49,43 +53,55 @@
      compare beside it. A recipe with one version has no bar. Decided 29
      October 2026 (board "Bar E"). -->
 {#if count > 1}
-	<section class="version-bar font-mono" aria-label="Version">
+	<section class="version-bar font-mono" aria-label="Version history" bind:this={bar}>
 		<div class="current">
 			<span class="version-number">
 				<span class="sr-only">
-					{isViewingHistory ? `Version ${n} of ${count}, replaced` : `Version ${n}, the latest`}
+					{isViewingHistory
+						? `Version ${n} of ${count}, an older version`
+						: `Version ${n}, the latest`}
 				</span>
 				<span aria-hidden="true">v{n}</span>
 			</span>
 			<span class="message text-text" class:clamped={!open}>{currentVersion.commitMessage}</span>
+			<!-- Each item carries its own separator, so a wrapped line never ends in one. -->
 			<span class="controls text-text-2">
 				{#if isViewingHistory}
-					Older version · <a href="/recipes/{recipe.slug}">Back to v{latest}</a>
-					·
+					<span class="item">Older version</span>
+					<span class="item">
+						· <a href="/recipes/{recipe.slug}">Back to v{latest}</a>
+					</span>
 				{/if}
-				<button
-					type="button"
-					class="versions-toggle"
-					bind:this={toggle}
-					aria-expanded={open}
-					aria-controls="version-history"
-					onclick={() => (open = !open)}>
-					{count} versions
-					<svg
-						class="chevron"
-						class:up={open}
-						viewBox="0 0 12 12"
-						aria-hidden="true"
-						fill="none"
-						stroke="currentColor"
-						stroke-width="1.6"
-						stroke-linecap="round"
-						stroke-linejoin="round">
-						<path d="M2.5 4.5 6 8l3.5-3.5" />
-					</svg>
-				</button>
-				·
-				<a href={diff(n, compareWith)} class="compare">Compare with v{compareWith}</a>
+				<span class="item">
+					{#if isViewingHistory}·{/if}
+					<button
+						type="button"
+						class="versions-toggle"
+						bind:this={toggle}
+						aria-expanded={open}
+						aria-controls="version-history"
+						onclick={() => (open = !open)}>
+						{count} versions
+						<svg
+							class="chevron"
+							class:up={open}
+							viewBox="0 0 12 12"
+							aria-hidden="true"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="1.6"
+							stroke-linecap="round"
+							stroke-linejoin="round">
+							<path d="M2.5 4.5 6 8l3.5-3.5" />
+						</svg>
+					</button>
+				</span>
+				<!-- The compare waits for open, when the version it names is one row below. -->
+				{#if open}
+					<span class="item">
+						· <a href={diff(n, compareWith)} class="compare">Compare with v{compareWith}</a>
+					</span>
+				{/if}
 			</span>
 		</div>
 
@@ -171,6 +187,9 @@
 
 	.controls {
 		flex-shrink: 0;
+	}
+
+	.item {
 		white-space: nowrap;
 	}
 
@@ -230,20 +249,41 @@
 		margin: -4px 0;
 	}
 
-	/* On a phone the controls drop under the note, the compare under each
-	   row, and each row is a thumb's height. */
+	/* Stacked widths: the controls drop under the note rather than crush it.
+	   flex-shrink back on, or the basis plus the indent overflows the page. */
+	@media (max-width: 1023px) {
+		.current {
+			flex-wrap: wrap;
+			row-gap: 4px;
+		}
+
+		.controls {
+			flex: 1 1 100%;
+			margin-left: 36px;
+		}
+	}
+
+	/* On a phone the compare drops under each row, and every link and the
+	   toggle reach a thumb's height. */
 	@media (max-width: 699px) {
-		.current,
 		.history li {
 			flex-wrap: wrap;
 			row-gap: 4px;
 		}
 
-		/* flex-shrink back on, or the basis plus the indent overflows the page. */
-		.controls {
-			flex: 1 1 100%;
-			margin-left: 36px;
-			white-space: normal;
+		/* Outranks the 4px hit rule above; inline-block so the padding counts. */
+		.version-bar .controls a,
+		.version-bar .versions-toggle,
+		.version-bar .history .compare,
+		.version-bar .version-link {
+			display: inline-block;
+			padding: 11px 0;
+			margin-block: -11px;
+		}
+
+		.version-bar .versions-toggle,
+		.version-bar .version-link {
+			display: inline-flex;
 		}
 
 		.history {
@@ -252,11 +292,6 @@
 
 		.history li {
 			padding: 11px 0;
-		}
-
-		.version-link {
-			padding: 11px 0;
-			margin: -11px 0;
 		}
 
 		.history .compare {

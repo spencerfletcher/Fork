@@ -38,8 +38,12 @@ describe('VersionBar', () => {
 		expect(container.querySelector('.version-bar')).toBeNull();
 	});
 
-	test('the latest version: number, message, the toggle, and a compare with the one before', () => {
+	test('the latest version, closed: number, message and the toggle; the compare waits for open', () => {
 		const { container } = renderBar();
+		expect(container.querySelector('.version-bar')).toHaveAttribute(
+			'aria-label',
+			'Version history'
+		);
 		const current = container.querySelector('.version-bar .current')!;
 		expect(current.querySelector('.version-number')).toHaveTextContent('v3');
 		expect(current.querySelector('.version-number .sr-only')).toHaveTextContent(
@@ -50,10 +54,7 @@ describe('VersionBar', () => {
 		const toggle = screen.getByRole('button', { name: '3 versions' });
 		expect(toggle).toHaveAttribute('aria-expanded', 'false');
 		expect(toggle).toHaveAttribute('aria-controls', 'version-history');
-		expect(screen.getByRole('link', { name: 'Compare with v2' })).toHaveAttribute(
-			'href',
-			'/recipes/my-fork/diff?from=2&to=3'
-		);
+		expect(screen.queryByRole('link', { name: 'Compare with v2' })).toBeNull();
 		expect(screen.getByText('Add espresso powder')).not.toBeVisible();
 		expect(screen.queryByText(/older version/i)).toBeNull();
 	});
@@ -66,6 +67,11 @@ describe('VersionBar', () => {
 			'true'
 		);
 		expect(container.querySelector('.version-bar .current .message')).not.toHaveClass('clamped');
+		// Open, the current line compares with the one before, now one row below.
+		expect(screen.getByRole('link', { name: 'Compare with v2' })).toHaveAttribute(
+			'href',
+			'/recipes/my-fork/diff?from=2&to=3'
+		);
 		expect(container.querySelectorAll('#version-history li')).toHaveLength(2);
 		expect(screen.getByRole('link', { name: 'v2 Add espresso powder' })).toHaveAttribute(
 			'href',
@@ -82,11 +88,20 @@ describe('VersionBar', () => {
 		]);
 	});
 
-	test('Escape closes the list and puts focus back on the toggle', async () => {
+	test('Escape closes the list and puts focus back on the toggle, but only from inside the bar', async () => {
 		renderBar();
 		const toggle = screen.getByRole('button', { name: '3 versions' });
 		await fireEvent.click(toggle);
 		expect(screen.getByText('Initial recipe')).toBeVisible();
+		// Focus elsewhere on the page: Escape is not the bar's to take.
+		const outside = document.createElement('button');
+		document.body.append(outside);
+		outside.focus();
+		await fireEvent.keyDown(window, { key: 'Escape' });
+		expect(screen.getByText('Initial recipe')).toBeVisible();
+		expect(outside).toHaveFocus();
+		outside.remove();
+		toggle.focus();
 		await fireEvent.keyDown(window, { key: 'Escape' });
 		expect(screen.getByText('Initial recipe')).not.toBeVisible();
 		expect(toggle).toHaveFocus();
@@ -97,18 +112,23 @@ describe('VersionBar', () => {
 		const current = container.querySelector('.version-bar .current')!;
 		expect(current.querySelector('.version-number')).toHaveTextContent('v2');
 		expect(current.querySelector('.version-number .sr-only')).toHaveTextContent(
-			'Version 2 of 3, replaced'
+			'Version 2 of 3, an older version'
 		);
 		expect(current).toHaveTextContent('Older version');
 		expect(screen.getByRole('link', { name: 'Back to v3' })).toHaveAttribute(
 			'href',
 			'/recipes/my-fork'
 		);
-		expect(screen.getByRole('link', { name: 'Compare with v3' })).toHaveAttribute(
+		// Each control carries its own separator, so a wrapped line never ends in one.
+		for (const item of current.querySelectorAll('.controls .item')) {
+			expect(item.textContent!.trim()).not.toMatch(/·$/);
+		}
+		expect(screen.queryByRole('link', { name: 'Compare with v3' })).toBeNull();
+		await fireEvent.click(screen.getByRole('button', { name: '3 versions' }));
+		expect(screen.getAllByRole('link', { name: 'Compare with v3' })[0]).toHaveAttribute(
 			'href',
 			'/recipes/my-fork/diff?from=2&to=3'
 		);
-		await fireEvent.click(screen.getByRole('button', { name: '3 versions' }));
 		expect(container.querySelectorAll('#version-history li')).toHaveLength(2);
 		const compares = screen.getAllByRole('link', { name: 'Compare with v2' });
 		expect(compares.map((a) => a.getAttribute('href'))).toEqual([

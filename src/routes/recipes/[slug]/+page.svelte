@@ -220,7 +220,7 @@
 			display: grid;
 			grid-template-columns: 1fr 1fr;
 			max-width: var(--max-width);
-			margin: 0 var(--space-5);
+			margin: 16px var(--space-5) 0;
 			background: var(--color-bg);
 			border-bottom: 1px solid var(--color-border-2);
 		}
