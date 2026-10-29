@@ -288,6 +288,30 @@ test.describe('Recipe cards', () => {
 	});
 });
 
+test.describe('Buttons', () => {
+	test('under forced colours the primary button keeps its box, the ghost beside it unmoved', async ({
+		page
+	}) => {
+		await page.goto('/');
+		const compare = await page
+			.getByRole('link', { name: 'Open the full comparison →' })
+			.getAttribute('href');
+		// A version that does not exist: the compare page's 400, with both buttons.
+		await page.emulateMedia({ forcedColors: 'active' });
+		await page.goto(compare!.replace(/to=\d+/, 'to=999'));
+		const primary = page.getByRole('link', { name: 'Compare first and latest' });
+		const ghost = page.getByRole('link', { name: 'Back to the recipe' });
+		const box = (el: Element) => {
+			const s = getComputedStyle(el);
+			return { width: s.borderTopWidth, style: s.borderTopStyle };
+		};
+		const p = await primary.evaluate(box);
+		expect(p.width).toBe('1px');
+		expect(p.style).toBe('solid');
+		expect((await primary.boundingBox())!.height).toBe((await ghost.boundingBox())!.height);
+	});
+});
+
 test.describe('Fonts', () => {
 	test('the mono fallback face resolves to a local Menlo', async ({ page }) => {
 		// Chromium matches local() by full or PostScript name: "Menlo Regular", not "Menlo".
