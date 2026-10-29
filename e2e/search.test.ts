@@ -18,14 +18,18 @@ test.describe('Search results', () => {
 		expect(await box.evaluate((el) => getComputedStyle(el).fontSize)).toBe('16px');
 	});
 
-	test('cards carry a version badge, like the feed', async ({ page }) => {
+	test('cards carry a version mark from v2, like the feed; a v1 card has none', async ({
+		page
+	}) => {
 		await page.goto('/search?q=cookies');
-		const card = page.locator('div.recipe-card').first();
-		await card.waitFor();
-
-		// versionCount/forkCount used to be attached only on "/" — search cards
-		// rendered without the "v{n}" badge even though every recipe has a version.
-		await expect(card.getByText(/^v\d+$/)).toBeVisible();
+		// versionCount/forkCount used to be attached only on "/". The seed's
+		// Thick and Chewy has three versions, Brown Butter one.
+		const cards = page.locator('div.recipe-card');
+		const edited = cards.filter({ hasText: 'Thick and Chewy' });
+		await expect(edited.getByText(/^v3$/)).toBeVisible();
+		const unedited = cards.filter({ hasText: 'Brown Butter' });
+		await unedited.waitFor();
+		await expect(unedited.getByText(/^v\d+$/)).toHaveCount(0);
 	});
 
 	test('tags that match no recipe are not offered as filters', async ({ page }) => {

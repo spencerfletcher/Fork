@@ -46,7 +46,10 @@
 		else if (prep) parts.push({ text: `${prep} min prep` });
 		else if (cook) parts.push({ text: `${cook} min cook` });
 
-		if (recipe.versionCount) parts.push({ text: `v${recipe.versionCount}`, accent: true });
+		// From v2 only: v1 is every unedited recipe and says nothing.
+		if ((recipe.versionCount ?? 0) > 1) {
+			parts.push({ text: `v${recipe.versionCount}`, accent: true });
+		}
 
 		if (recipe.forkCount) {
 			parts.push({ text: `${recipe.forkCount} ${recipe.forkCount === 1 ? 'fork' : 'forks'}` });

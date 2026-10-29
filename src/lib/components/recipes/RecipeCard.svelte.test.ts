@@ -186,6 +186,23 @@ describe('RecipeCard', () => {
 		expect(screen.getByText(/^v3$/)).toBeInTheDocument();
 	});
 
+	test('a one-version recipe shows no version mark, and its row keeps only its items', () => {
+		// v1 on every unedited card was noise (Spencer: "sure only show mark
+		// from v2"). The dots are CSS between items, so dropping one strands none.
+		const { container } = render(RecipeCard, {
+			props: { recipe: makeRecipe({ versionCount: 1, cookTimeMinutes: 28, forkCount: 1 }) }
+		});
+		expect(screen.queryByText(/^v\d+$/)).toBeNull();
+		expect(container.querySelector('.meta-item--accent')).toBeNull();
+		const row = container.querySelector('.meta-row')!;
+		expect([...row.children].map((el) => el.textContent)).toEqual(['28 min cook', '1 fork']);
+	});
+
+	test('the mark starts at v2', () => {
+		render(RecipeCard, { props: { recipe: makeRecipe({ versionCount: 2 }) } });
+		expect(screen.getByText(/^v2$/)).toHaveClass('meta-item--accent');
+	});
+
 	test('shows the fork count when the recipe has forks', () => {
 		render(RecipeCard, { props: { recipe: makeRecipe({ versionCount: 1, forkCount: 2 }) } });
 		expect(screen.getByText(/2 forks/)).toBeInTheDocument();
