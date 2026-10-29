@@ -6,6 +6,7 @@
 		MetaField,
 		StepDiffRow
 	} from '#lib/recipes/diff.js';
+	import { formatTime } from '#lib/helpers.js';
 
 	let {
 		metaDiff,
@@ -20,34 +21,54 @@
 		headingLevel?: 2 | 3;
 	} = $props();
 
-	const LABEL: Record<MetaField, string> = {
-		title: 'Title',
-		description: 'Description',
-		imageUrl: 'Photo',
-		servings: 'Servings',
-		prepTimeMinutes: 'Prep time',
-		cookTimeMinutes: 'Cook time'
-	};
+	const LABEL = { title: 'Title', description: 'Description', imageUrl: 'Photo' } as const;
 
 	// Zero is a value; only null is "not set".
 	const show = (value: string | number | null) => (value === null ? '—' : String(value));
 
-	const GUTTER = { added: '+', removed: '−', modified: '~', unchanged: ' ' } as const;
+	// The measure fields read as the recipe page's measure does: value then
+	// label, "4 to 8 servings", "11 min to 13 min cook".
+	type MeasureField = 'servings' | 'prepTimeMinutes' | 'cookTimeMinutes';
+	const isMeasure = (field: MetaField): field is MeasureField =>
+		field === 'servings' || field === 'prepTimeMinutes' || field === 'cookTimeMinutes';
+	const measure = (field: MeasureField, value: string | number | null) =>
+		value === null || field === 'servings' ? show(value) : formatTime(Number(value));
+	const measureLabel = (field: MeasureField, to: string | number | null) =>
+		field === 'prepTimeMinutes'
+			? 'prep'
+			: field === 'cookTimeMinutes'
+				? 'cook'
+				: to === 1
+					? 'serving'
+					: 'servings';
+
+	const GUTTER = { added: '+', removed: '−', modified: '~', unchanged: ' ' } as const;
+	const PREFIX = { added: 'Added:', removed: 'Removed:', modified: 'Changed:' } as const;
 </script>
 
 <!-- The gutter glyph carries the same information as the row colour, for anyone
-     who cannot rely on colour alone. -->
+     who cannot rely on colour alone; a screen reader gets the prefix instead. -->
 {#snippet gutter(status: keyof typeof GUTTER)}
-	<span class="diff-gutter">{GUTTER[status]}</span>
+	{#if status !== 'unchanged'}<span class="sr-only select-none">{PREFIX[status]}</span>{/if}
+	<span class="diff-gutter" aria-hidden="true">{GUTTER[status]}</span>
 {/snippet}
 
+<!-- A real space and an unseen "to" between the sides, so "¾½ cup" reads and
+     copies as "¾ to ½ cup". -->
+{#snippet toWord()}{' '}
+	<span class="sr-only">to</span>
+	{' '}{/snippet}
+
+{#snippet change(from: string, to: string)}<del class="diff-removed">{from}</del>
+	{@render toWord()}
+	<ins class="diff-added">{to}</ins>{/snippet}
+
 <!-- Word-level segments inside a modified row; diffWords keeps the spacing. -->
-{#snippet segments(list: InlineSegment[])}{#each list as seg, i (i)}{#if seg.type === 'added'}<span
+{#snippet segments(list: InlineSegment[])}{#each list as seg, i (i)}{#if seg.type === 'added'}<ins
 				class="diff-added">
 				{seg.text}
-			</span>{:else if seg.type === 'removed'}<span class="diff-removed">
-				{seg.text}
-			</span>{:else}{seg.text}{/if}{/each}{/snippet}
+			</ins>{:else if seg.type === 'removed'}<del class="diff-removed">{seg.text}</del>
+			{#if list[i + 1]?.type === 'added'}{@render toWord()}{/if}{:else}{seg.text}{/if}{/each}{/snippet}
 
 {#snippet panel(title: string, isEmpty: boolean, rows: import('svelte').Snippet)}
 	<section class="diff-section">
@@ -72,8 +93,8 @@
 			<div class="diff-row diff-modified">
 				{@render gutter('modified')}
 				<span class="diff-content">
-					{LABEL[row.field]}:
 					{#if row.field === 'imageUrl'}
+						{LABEL[row.field]}:
 						{#if row.from}<img
 								class="diff-thumb diff-removed"
 								src={String(row.from)}
@@ -82,10 +103,12 @@
 								class="diff-thumb diff-added"
 								src={String(row.to)}
 								alt="After" />{:else}<span class="diff-added">—</span>{/if}
+					{:else if isMeasure(row.field)}
+						{@render change(measure(row.field, row.from), measure(row.field, row.to))}
+						{measureLabel(row.field, row.to)}
 					{:else}
-						<span class="diff-removed">{show(row.from)}</span>
-						<span class="diff-added">{show(row.to)}</span>
-						{#if (row.field === 'prepTimeMinutes' || row.field === 'cookTimeMinutes') && row.to !== null}min{/if}
+						{LABEL[row.field]}:
+						{@render change(show(row.from), show(row.to))}
 					{/if}
 				</span>
 			</div>
@@ -136,7 +159,7 @@
 				</div>
 			{/each}
 		{/snippet}
-		{@render panel('Steps', stepDiff.length === 0, stepRows)}
+		{@render panel('Method', stepDiff.length === 0, stepRows)}
 	</div>
 </div>
 
@@ -197,9 +220,14 @@
 
 	/* ── Row status ─────────────────────────────────────────────────────────── */
 
-	.diff-unchanged,
 	.diff-modified {
 		color: var(--color-text-2);
+	}
+
+	/* Unchanged rows recede so the changed ones stand out. */
+	.diff-unchanged,
+	.diff-unchanged .step-num {
+		color: var(--color-text-3);
 	}
 
 	.diff-modified .diff-gutter {
@@ -230,14 +258,6 @@
 		background: var(--color-remove-bg);
 		color: var(--color-remove);
 		text-decoration: line-through;
-	}
-
-	/* A replaced word renders as a removed run immediately followed by an added
-	   run. A thin gap keeps "Cool" + "Sprinkle" from reading as one word without
-	   adding characters to the copyable text. */
-	.diff-content .diff-removed + .diff-added,
-	.diff-content .diff-added + .diff-removed {
-		margin-left: 0.4em;
 	}
 
 	.diff-thumb {

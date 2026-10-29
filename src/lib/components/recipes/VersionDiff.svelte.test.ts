@@ -10,6 +10,15 @@ function ingredient(name: string, amount = '1', unit = 'cup') {
 	return makeIngredient(`${amount} ${unit} ${name}`);
 }
 
+const text = (el: Element | null | undefined) => el?.textContent?.replace(/\s+/g, ' ').trim();
+
+/** The diff row whose text contains `needle`. */
+function rowWith(container: HTMLElement, needle: string) {
+	const row = [...container.querySelectorAll('.diff-row')].find((r) => text(r)?.includes(needle));
+	if (!row) throw new Error(`no row with "${needle}"`);
+	return row;
+}
+
 function renderDiff(
 	ingredientDiff: IngredientDiffRow[] = [],
 	stepDiff: StepDiffRow[] = [],
@@ -21,10 +30,11 @@ function renderDiff(
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
 describe('VersionDiff', () => {
-	test('renders an Ingredients and a Steps section', () => {
+	test('renders an Ingredients and a Method section, in the recipe page\'s words', () => {
 		renderDiff();
 		expect(screen.getByText('Ingredients')).toBeInTheDocument();
-		expect(screen.getByText('Steps')).toBeInTheDocument();
+		expect(screen.getByText('Method')).toBeInTheDocument();
+		expect(screen.queryByText('Steps')).toBeNull();
 	});
 
 	test('says "No changes" in each empty section', () => {
@@ -37,8 +47,8 @@ describe('VersionDiff', () => {
 		expect(screen.queryByText('Details')).not.toBeInTheDocument();
 	});
 
-	test('renders a Details section listing each changed field with its label', () => {
-		renderDiff(
+	test('renders a Details section listing each changed field, old value then new', () => {
+		const { container } = renderDiff(
 			[],
 			[],
 			[
@@ -48,25 +58,18 @@ describe('VersionDiff', () => {
 			]
 		);
 		expect(screen.getByText('Details')).toBeInTheDocument();
-		const title = screen.getByText(/^Title/).closest('.diff-row')!;
-		expect(title).toHaveTextContent('Cookies');
-		expect(title).toHaveTextContent('Biscuits');
-		expect(title.querySelector('.diff-removed')).toHaveTextContent('Cookies');
-		expect(title.querySelector('.diff-added')).toHaveTextContent('Biscuits');
-		expect(screen.getByText(/^Servings/).closest('.diff-row')).toHaveTextContent('4');
-		expect(screen.getByText(/^Cook time/).closest('.diff-row')).toHaveTextContent('13');
-	});
-
-	test('a time change in Details carries its unit', () => {
-		renderDiff([], [], [{ field: 'cookTimeMinutes', from: 11, to: 13 }]);
-		const row = screen.getByText(/^Cook time/).closest('.diff-row')!;
-		expect(row.textContent?.replace(/\s+/g, ' ').trim()).toBe('~ Cook time: 11 13 min');
+		const title = rowWith(container, 'Title');
+		expect(title.querySelector('del')).toHaveTextContent('Cookies');
+		expect(title.querySelector('ins')).toHaveTextContent('Biscuits');
+		expect(text(title)).toBe('Changed: ~ Title: Cookies to Biscuits');
+		// The measure in the recipe page's words: value then label.
+		expect(text(rowWith(container, 'servings'))).toBe('Changed: ~ 4 to 8 servings');
+		expect(text(rowWith(container, 'cook'))).toBe('Changed: ~ 11 min to 13 min cook');
 	});
 
 	test('a time removed in Details reads — with no unit attached', () => {
-		renderDiff([], [], [{ field: 'prepTimeMinutes', from: 10, to: null }]);
-		const row = screen.getByText(/^Prep time/).closest('.diff-row')!;
-		expect(row.textContent?.replace(/\s+/g, ' ').trim()).toBe('~ Prep time: 10 —');
+		const { container } = renderDiff([], [], [{ field: 'prepTimeMinutes', from: 10, to: null }]);
+		expect(text(rowWith(container, 'prep'))).toBe('Changed: ~ 10 min to — prep');
 	});
 
 	test('panel headings default to h3 and take the level a page gives them', () => {
@@ -75,10 +78,10 @@ describe('VersionDiff', () => {
 	});
 
 	test('prints 0 as a value and — for null', () => {
-		renderDiff([], [], [{ field: 'prepTimeMinutes', from: null, to: 0 }]);
-		const row = screen.getByText(/^Prep time/).closest('.diff-row')!;
+		const { container } = renderDiff([], [], [{ field: 'prepTimeMinutes', from: null, to: 0 }]);
+		const row = rowWith(container, 'prep');
 		expect(row.querySelector('.diff-removed')).toHaveTextContent('—');
-		expect(row.querySelector('.diff-added')).toHaveTextContent('0');
+		expect(row.querySelector('.diff-added')).toHaveTextContent('0 min');
 	});
 
 	test('renders a photo change as two thumbnails, or a dash where there was none', () => {
@@ -94,7 +97,7 @@ describe('VersionDiff', () => {
 	test('places the Details section before the Ingredients section', () => {
 		renderDiff([], [], [{ field: 'title', from: 'A', to: 'B' }]);
 		const headings = screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent);
-		expect(headings).toEqual(['Details', 'Ingredients', 'Steps']);
+		expect(headings).toEqual(['Details', 'Ingredients', 'Method']);
 	});
 
 	test('marks an added ingredient with + and the add colour', () => {
@@ -164,6 +167,42 @@ describe('VersionDiff', () => {
 		// Both sides of the change are shown, not just the new value.
 		expect(row?.querySelector('.diff-added')?.textContent?.trim()).toBe('brown');
 		expect(row?.querySelector('.diff-removed')?.textContent?.trim()).toBe('white');
+	});
+
+	test('a replaced word reads and copies as "old to new", with real elements for each side', () => {
+		const { container } = renderDiff([
+			{
+				status: 'modified',
+				segments: [
+					{ type: 'removed', text: '¾' },
+					{ type: 'added', text: '½' },
+					{ type: 'unchanged', text: ' cup flour' }
+				]
+			}
+		]);
+		const content = container.querySelector('.diff-content')!;
+		expect(text(content)).toBe('¾ to ½ cup flour');
+		expect(content.querySelector('del.diff-removed')).toHaveTextContent('¾');
+		expect(content.querySelector('ins.diff-added')).toHaveTextContent('½');
+	});
+
+	test('hides the gutter glyph from screen readers and prefixes each changed row for them', () => {
+		const { container } = renderDiff(
+			[
+				{ status: 'added', ingredient: ingredient('flour') },
+				{ status: 'removed', ingredient: ingredient('butter') },
+				{ status: 'unchanged', ingredient: ingredient('salt') },
+				{ status: 'modified', segments: [{ type: 'added', text: '2 cups sugar' }] }
+			],
+			[]
+		);
+		for (const gutter of container.querySelectorAll('.diff-gutter')) {
+			expect(gutter).toHaveAttribute('aria-hidden', 'true');
+		}
+		expect(text(rowWith(container, 'flour'))).toBe('Added: + 1 cup flour');
+		expect(text(rowWith(container, 'butter'))).toBe('Removed: − 1 cup butter');
+		expect(text(rowWith(container, 'salt'))).toBe('1 cup salt');
+		expect(text(rowWith(container, 'sugar'))).toBe('Changed: ~ 2 cups sugar');
 	});
 
 	test('shows the step number on an added step', () => {
