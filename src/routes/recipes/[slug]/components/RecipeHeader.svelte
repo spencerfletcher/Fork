@@ -46,8 +46,21 @@
 
 	let open = $state(false);
 	let toggle: HTMLButtonElement | undefined = $state();
-	// The commit message shows two lines; a tap shows the rest.
+
+	// The commit message shows two lines. Only when more is hidden does a
+	// "more" appear; the paragraph is never a button on its own.
+	let commit: HTMLElement | undefined = $state();
+	let clipped = $state(false);
 	let expanded = $state(false);
+	$effect(() => {
+		if (!commit) return;
+		const check = () => (clipped = commit!.scrollHeight > commit!.clientHeight + 1);
+		check();
+		if (typeof ResizeObserver === 'undefined') return;
+		const observer = new ResizeObserver(check);
+		observer.observe(commit);
+		return () => observer.disconnect();
+	});
 
 	// SvelteKit keeps this component mounted when only the query changes, so
 	// the history's own links would otherwise leave it open over the next view.
@@ -84,34 +97,39 @@
 		</p>
 	{/if}
 
-	<!-- The version bar: the version being read and what it changed, then one
-	     mono line of history: who, how many, the way in. -->
+	<!-- The version bar, unboxed: the version being read and what it changed,
+	     then one mono line of history. The chip and the mono face are the
+	     mark; a single version has no change to tell, so the chip joins the
+	     byline. -->
 	<div class="version-bar">
-		<p class="commit-line m-0">
-			<span class="version">v{n}</span>
-			<button
-				type="button"
-				class="commit"
-				class:clamped={!expanded}
-				aria-expanded={expanded}
-				title={currentVersion.commitMessage}
-				onclick={() => (expanded = !expanded)}>
-				{currentVersion.commitMessage}
-			</button>
-		</p>
+		{#if count > 1}
+			<p class="commit-line m-0">
+				<span class="version">v{n}</span>
+				<span class="commit-text">
+					<span class="commit" class:clamped={!expanded} bind:this={commit}>
+						{currentVersion.commitMessage}
+					</span>
+					{#if clipped && !expanded}
+						<button type="button" class="more font-mono" onclick={() => (expanded = true)}>
+							more
+						</button>
+					{/if}
+				</span>
+			</p>
+		{/if}
 		<p class="byline m-0 font-mono">
+			{#if count === 1}
+				<span class="version">v{n}</span>
+			{/if}
 			{#if isViewingHistory}
 				<span>v{n} of {count}</span>
-				<span class="dot">·</span>
 				<span>Viewing history</span>
-				<span class="dot">·</span>
 				<a href="/recipes/{recipe.slug}">Back to v{latest}</a>
 			{:else}
 				{#if recipe.author}
 					<Username username={recipe.author.username} />
 				{/if}
 				{#if count > 1}
-					{#if recipe.author}<span class="dot">·</span>{/if}
 					<button
 						type="button"
 						class="versions-toggle"
@@ -123,14 +141,10 @@
 					</button>
 				{/if}
 				{#if forkCount > 0}
-					<span class="dot">·</span>
 					<span>{forkCount} {forkCount === 1 ? 'fork' : 'forks'}</span>
 				{/if}
 				{#if n > 1}
-					<span class="dot">·</span>
-					<a href="/recipes/{recipe.slug}/diff?from={n - 1}&to={n}" class="whitespace-nowrap">
-						Compare with v{n - 1}
-					</a>
+					<a href="/recipes/{recipe.slug}/diff?from={n - 1}&to={n}">Compare with v{n - 1}</a>
 				{/if}
 			{/if}
 		</p>
@@ -155,7 +169,7 @@
 	{/if}
 
 	{#if tags.length > 0}
-		<p class="tags text-text-2 m-0 text-[1.0625rem] leading-[1.5]">
+		<p class="tags text-text-3 m-0 font-mono">
 			{#each tags as tag, i (tag.id)}
 				{#if i > 0},&#32;{/if}
 				<a href="/tags/{tag.slug}">{tag.name}</a>
@@ -191,11 +205,7 @@
 	.version-bar {
 		display: flex;
 		flex-direction: column;
-		gap: 6px;
-		padding: 10px 14px;
-		background: var(--color-surface);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-md);
+		gap: 4px;
 	}
 
 	.commit-line {
@@ -215,18 +225,11 @@
 		font-weight: 600;
 	}
 
-	/* The message is a button only so a long one can be opened; it looks like text. */
-	.commit {
+	.commit-text {
 		min-width: 0;
-		padding: 0;
-		border: none;
-		background: none;
-		font: inherit;
 		font-size: 1.0625rem;
 		line-height: 1.45;
-		text-align: left;
 		color: var(--color-text);
-		cursor: pointer;
 	}
 
 	.commit.clamped {
@@ -237,23 +240,50 @@
 		overflow: hidden;
 	}
 
-	.byline {
+	/* "more" reads as a word in the margin, in the history's own face. */
+	.more {
+		padding: 0;
+		border: none;
+		background: none;
+		font-size: 0.875rem;
+		color: var(--color-accent);
+		cursor: pointer;
+	}
+
+	.more:hover {
+		color: var(--color-text);
+	}
+
+	.byline,
+	.tags {
 		display: flex;
 		flex-wrap: wrap;
 		align-items: baseline;
 		gap: 4px 8px;
 		font-size: 0.875rem;
 		line-height: 1.7;
+	}
+
+	.byline {
+		color: var(--color-text-3);
+	}
+
+	/* The dot belongs to the item after it, so a wrap never starts with one. */
+	.byline > :not(:first-child)::before {
+		content: '·';
+		margin-right: 8px;
 		color: var(--color-text-3);
 	}
 
 	.byline a,
+	.tags a,
 	.versions-toggle {
 		color: var(--color-accent);
 		text-decoration: none;
 	}
 
 	.byline a:hover,
+	.tags a:hover,
 	.versions-toggle:hover,
 	.versions-toggle[aria-expanded='true'] {
 		color: var(--color-text);
@@ -306,7 +336,7 @@
 	}
 
 	.actions-row {
-		margin-top: 8px;
+		margin-top: 4px;
 	}
 
 	@media (max-width: 699px) {

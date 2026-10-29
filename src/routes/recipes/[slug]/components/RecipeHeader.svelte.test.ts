@@ -48,9 +48,11 @@ function renderHeader(overrides: Partial<HeaderProps> = {}) {
 	});
 }
 
-/** The byline's text with the whitespace collapsed, as a reader sees it. */
+/** The byline as a reader sees it: its items, dotted (the dots are CSS). */
 function byline(container: HTMLElement) {
-	return container.querySelector('.byline')!.textContent!.replace(/\s+/g, ' ').trim();
+	return [...container.querySelector('.byline')!.children]
+		.map((el) => el.textContent!.replace(/\s+/g, ' ').trim())
+		.join(' · ');
 }
 
 // ─── Fork attribution ─────────────────────────────────────────────────────────
@@ -105,20 +107,20 @@ describe('RecipeHeader version bar', () => {
 		const { container } = renderHeader({ currentVersion: V3, versions: THREE });
 		const chip = container.querySelector('.version-bar .version')!;
 		expect(chip).toHaveTextContent('v3');
-		expect(screen.getByRole('button', { name: 'Chill the dough' })).toBeInTheDocument();
+		expect(container.querySelector('.version-bar .commit')).toHaveTextContent('Chill the dough');
 		// The hidden history list holds a second "v3"; the reader sees one.
 		const visible = screen.getAllByText('v3').filter((el) => !el.closest('[hidden]'));
 		expect(visible).toHaveLength(1);
 	});
 
-	test('a long message is clamped until tapped', async () => {
-		renderHeader({ currentVersion: V3, versions: THREE });
-		const message = screen.getByRole('button', { name: 'Chill the dough' });
+	test('the message is clamped to two lines and is not a button', () => {
+		const { container } = renderHeader({ currentVersion: V3, versions: THREE });
+		const message = container.querySelector('.version-bar .commit')!;
 		expect(message).toHaveClass('clamped');
-		expect(message).toHaveAttribute('aria-expanded', 'false');
-		await fireEvent.click(message);
-		expect(message).not.toHaveClass('clamped');
-		expect(message).toHaveAttribute('aria-expanded', 'true');
+		expect(message.tagName).not.toBe('BUTTON');
+		// jsdom lays nothing out, so nothing is clipped and no "more" appears;
+		// the e2e suite covers the phone, where it does.
+		expect(screen.queryByRole('button', { name: 'more' })).toBeNull();
 	});
 });
 
@@ -140,11 +142,12 @@ describe('RecipeHeader byline', () => {
 		expect(screen.getAllByRole('link', { name: '@chef' })).toHaveLength(1);
 	});
 
-	test('a single version reads as just the author, no count, no compare', () => {
+	test('a single version has no change to tell: the chip joins the byline', () => {
 		const { container } = renderHeader({
 			recipe: makeRecipe({ author: { id: 'u1', username: 'chef' } })
 		});
-		expect(byline(container)).toBe('@chef');
+		expect(byline(container)).toBe('v1 · @chef');
+		expect(container.querySelector('.commit')).toBeNull();
 		expect(screen.queryByRole('button', { name: /versions/ })).toBeNull();
 		expect(screen.queryByRole('link', { name: /compare/i })).toBeNull();
 	});
@@ -164,7 +167,9 @@ describe('RecipeHeader byline', () => {
 			isViewingHistory: true
 		});
 		expect(container.querySelector('.version-bar .version')).toHaveTextContent('v2');
-		expect(screen.getByRole('button', { name: 'Add espresso powder' })).toBeInTheDocument();
+		expect(container.querySelector('.version-bar .commit')).toHaveTextContent(
+			'Add espresso powder'
+		);
 		expect(byline(container)).toBe('v2 of 3 · Viewing history · Back to v3');
 		expect(screen.getByRole('link', { name: 'Back to v3' })).toHaveAttribute(
 			'href',
@@ -214,6 +219,8 @@ describe('RecipeHeader content', () => {
 		// No colour override: links are clay by default, and these should read as links.
 		expect(dessert.className).not.toMatch(/text-text/);
 		expect(dessert.parentElement).toHaveTextContent('Dessert, Baking');
+		// Set like the byline, a line of history, not a second byline in clay at body size.
+		expect(dessert.parentElement).toHaveClass('font-mono');
 	});
 
 	test('carries no photo: that is the page’s to place', () => {

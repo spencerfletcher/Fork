@@ -17,14 +17,14 @@
 	});
 </script>
 
-<!-- One line of measurement under the recipe's text, set in mono like the
-     byline: a label and its value, a dot between pairs. -->
+<!-- One line of measurement under the recipe's text: the page's section
+     label style, then the value. -->
 {#if rows.length > 0}
 	<dl class="details m-0 flex flex-wrap items-baseline gap-x-5 gap-y-1 p-0">
 		{#each rows as [label, value] (label)}
 			<div class="flex items-baseline gap-2">
-				<dt class="text-text-3 font-mono text-[0.875rem] uppercase">{label}</dt>
-				<dd class="text-text m-0 font-sans text-[0.9375rem] font-semibold">{value}</dd>
+				<dt class="eyebrow-label">{label}</dt>
+				<dd class="text-text m-0 font-sans text-base font-semibold">{value}</dd>
 			</div>
 		{/each}
 	</dl>

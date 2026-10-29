@@ -183,8 +183,8 @@ Clay and marigold were raised in chroma from #a4512b and #e8a83a: same hues, sam
 - **Headline** (500, 1.75rem, 1.25, ink): h2 on pages that need a second serif level ("Recipes worth forking").
 - **Title** (500, 1.0625rem, 1.25): recipe card names in Bitter. Clay on a no-photo panel, ink on a photo card.
 - **Body** (400, 1rem, 1.65, ink): running text, ingredients, steps. Descriptions at 1.0625rem in Ink 2. Measure stays under about 72 characters.
-- **Sans label** (600, 0.6875rem, 0.08em, uppercase, Ink 3): section eyebrows ("Ingredients", "Method", "Recent"), form legends, stat labels (Prep, Cook, Serves). Also h4.
-- **Mono** (400, 0.75rem, 1.5): bylines, dates, version counts, gram weights, diff rows and commit messages in history. The recipe page's byline and meta line (Prep, Cook, Serves) use 0.875rem; the section tabs 0.8125rem at 600; step numerals 1rem at 600. Diff and compare surfaces use 0.875rem. Card version marks use 600 at 0.6875rem.
+- **Sans label** (600, 0.6875rem, 0.08em, uppercase, Ink 3): the page's one uppercase label: section eyebrows ("Ingredients", "Method", "Recent"), form legends, the recipe page's Prep, Cook and Serves, and its phone section tabs at 0.75rem.
+- **Mono** (400, 0.75rem, 1.5): bylines, dates, version counts, gram weights, diff rows and commit messages in history. The recipe page's byline and tag line use 0.875rem; step numerals 1rem at 600. Diff and compare surfaces use 0.875rem. Card version marks use 600 at 0.6875rem.
 - **Also in use** and on the ramp: 0.8125rem (card meta, byline, numerals), 0.875rem (navbar links, diff), 0.9375rem (buttons, card body), 1.375rem (the wordmark).
 
 ### Named Rules
@@ -255,7 +255,7 @@ Small, consistent corners: 4px on chips and icon buttons, 6px on buttons, inputs
 
 ### Version bar (signature)
 
-A lifted-paper card under the description: a marigold `v3` chip in mono, the commit message in sans 1.0625rem ink clamped to two lines (a tap opens the rest), then one mono line of history: `@author · 3 versions · 1 fork · Compare with v2`, Ink 3 with clay links. "3 versions" opens the list of every version, one link per version, under the bar. Viewing an older version the chip and message are that version's and the line reads `v2 of 3 · Viewing history · Back to v3`. The chip is the only marigold fill above the buttons, and the version number appears nowhere else. The bar is the mark that makes a Fork recipe page a Fork page.
+Unboxed, under the description: a marigold `v3` chip in mono, the commit message in sans 1.0625rem ink clamped to two lines with a clay mono "more" only when something is clipped, then one mono line of history: `@author · 3 versions · 1 fork · Compare with v2`, Ink 3 with clay links. No background, no border: the chip and the mono face are the mark, as the Pencil Rule says. "3 versions" opens the list of every version, one link per version, under the bar. A single version has no change to tell, so the chip joins the byline: `v1 · @author`. Viewing an older version the chip and message are that version's and the line reads `v2 of 3 · Viewing history · Back to v3`. Tags follow as a second mono line. The chip is the only marigold fill above the buttons, and the version number appears nowhere else.
 
 ### Diff rows (signature)
 

@@ -21,7 +21,7 @@ Primary task: read and cook. Secondary: fork (visitor), edit (owner), favorite, 
 
 Visual authority: DESIGN.md as it stands (cream paper, clay text accent, marigold action, Bitter, Source Sans 3, JetBrains Mono for history and measurement). Refinement inside the incumbent world, not a redesign.
 
-Thesis (revised 28 October, evening): the description is the deck in sans; the commit message lives in a version bar under it with the marigold chip, clamped to two lines and opened on tap. One mono byline inside the bar carries author, counts and Compare. The title chip and every other place the version number appeared are deleted.
+Thesis (revised 28 October, evening, after the second critique): the description is the deck in sans; under it the version bar, unboxed: the marigold chip and the commit message clamped to two lines with a mono "more" when clipped, then one mono byline with author, counts and Compare. Tags are a mono line after it; Prep/Cook/Serves use the page's eyebrow label. The title chip and every other place the version number appeared are deleted.
 
 Focal moment: title, deck and byline together, with the photo beside them.
 
@@ -41,7 +41,7 @@ Production-ready page, all three compositions, both roles, with and without phot
 - Ingredients: 1 to about 30 rows, quantity bold, grams inline in parentheses, estimated grams marked as today; rows strike on tap with a 44px hit area.
 - Method: 1 to about 20 steps, clay JetBrains Mono numerals, running to the content's right edge (Spencer, 28 October: no 72ch cap).
 - Photo: present or absent. Absent collapses the hero to a single left-aligned 760px column; nothing fills the space.
-- Roles: logged out (Fork rendered, links to login with redirect back), visitor (Fork primary, Favorite ghost), owner (Edit primary, Favorite ghost, no Fork).
+- Roles: logged out (no action row at all; decided 28 October afternoon, a lone Fork read as odd and the login round trip was not worth it), visitor (Fork primary, Favorite ghost), owner (Edit primary, Favorite ghost, no Fork).
 - Fork: one click; the copy opens with a default first commit message naming the source author and version.
 
 ## Interaction and layout

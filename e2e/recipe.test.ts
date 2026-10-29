@@ -523,6 +523,21 @@ test.describe('Recipe detail page', () => {
 		await expect(page.locator('.section-tabs')).toBeHidden();
 	});
 
+	test('on a phone the clamped commit offers "more", and opens on tap', async ({ page }) => {
+		await page.setViewportSize({ width: 390, height: 900 });
+		await gotoClassicCookies(page);
+		const message = page.locator('.version-bar .commit');
+		const more = page.getByRole('button', { name: 'more' });
+		await expect(more).toBeVisible();
+		const before = (await message.boundingBox())!.height;
+		await more.click();
+		await expect(more).toBeHidden();
+		expect((await message.boundingBox())!.height).toBeGreaterThan(before);
+		// On a desktop nothing is clipped, so nothing is offered.
+		await page.setViewportSize({ width: 1280, height: 900 });
+		await expect(more).toHaveCount(0);
+	});
+
 	test('the byline wraps without widening the page', async ({ page }) => {
 		await page.setViewportSize({ width: 390, height: 900 });
 		await gotoClassicCookies(page);

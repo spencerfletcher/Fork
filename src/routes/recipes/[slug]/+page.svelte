@@ -195,8 +195,8 @@
 			padding: 14px 0 12px;
 			margin-bottom: -1px;
 			border-bottom: 2px solid transparent;
-			font-family: var(--font-mono);
-			font-size: 0.8125rem;
+			font-family: var(--font-sans);
+			font-size: 0.75rem;
 			font-weight: 600;
 			letter-spacing: 0.08em;
 			text-transform: uppercase;
