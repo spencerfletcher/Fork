@@ -1,6 +1,8 @@
-import { describe, test, expect, vi } from 'vitest';
+import { describe, test, expect, vi, afterEach } from 'vitest';
 import { render, screen, fireEvent, within } from '@testing-library/svelte';
 import Navbar from './Navbar.svelte';
+import source from './Navbar.svelte?raw';
+import usernameSource from './Username.svelte?raw';
 import type { User } from '@supabase/supabase-js';
 import { page } from '$app/state';
 
@@ -142,12 +144,12 @@ describe('Navbar', () => {
 		expect(icon).toHaveAttribute('href', '/search');
 	});
 
-	test('keeps Recipes highlighted on a tag page, which is a filtered Recipes view', () => {
+	test('keeps Recipes current on a tag page, which is a filtered Recipes view', () => {
 		page.url = new URL('http://localhost/tags/dessert');
 		try {
 			render(Navbar, { props: { user: null } });
 			const recipes = screen.getAllByRole('link', { name: /^recipes$/i })[0];
-			expect(recipes).toHaveClass('active');
+			expect(recipes).toHaveAttribute('aria-current', 'page');
 		} finally {
 			page.url = new URL('http://localhost/');
 		}
@@ -177,5 +179,96 @@ describe('Navbar', () => {
 			'/users/chefmaria'
 		);
 		expect(menu.queryByText('chef@example.com')).toBeNull();
+	});
+});
+
+// ─── Current page ─────────────────────────────────────────────────────────────
+
+// Signed in, browse with tabs is the home page, so the nav's Recipes goes
+// there and My Recipes gets its own entry (Spencer: "fine nav recipes sounds
+// good"). The current link carries aria-current in the bar and the phone menu.
+describe('Navbar current page', () => {
+	afterEach(() => {
+		page.url = new URL('http://localhost/');
+	});
+
+	async function renderAt(path: string, user: User | null) {
+		page.url = new URL(`http://localhost${path}`);
+		render(Navbar, { props: { user } });
+		await fireEvent.click(screen.getByRole('button', { name: /open main menu/i }));
+		const menu = document.getElementById('mobile-menu')!;
+		// Desktop bar links are everything outside the phone menu.
+		const bar = (name: string) =>
+			screen.getAllByRole('link', { name }).filter((l) => !menu.contains(l));
+		return { bar, menu: within(menu) };
+	}
+
+	const signedIn = () => makeUser('chef@example.com');
+
+	test('signed in, Recipes is browse at / and My Recipes is /recipes', async () => {
+		const { bar, menu } = await renderAt('/search', signedIn());
+		expect(bar('Recipes')).toHaveLength(1);
+		expect(bar('Recipes')[0]).toHaveAttribute('href', '/');
+		expect(bar('My Recipes')[0]).toHaveAttribute('href', '/recipes');
+		expect(menu.getByRole('link', { name: 'Recipes' })).toHaveAttribute('href', '/');
+		expect(menu.getByRole('link', { name: 'My Recipes' })).toHaveAttribute('href', '/recipes');
+	});
+
+	test.each(['/', '/tags/dessert'])(
+		'signed in on %s, Recipes is current in both lists',
+		async (path) => {
+			const { bar, menu } = await renderAt(path, signedIn());
+			expect(bar('Recipes')[0]).toHaveAttribute('aria-current', 'page');
+			expect(menu.getByRole('link', { name: 'Recipes' })).toHaveAttribute('aria-current', 'page');
+			expect(bar('My Recipes')[0]).not.toHaveAttribute('aria-current');
+			expect(menu.getByRole('link', { name: 'My Recipes' })).not.toHaveAttribute('aria-current');
+		}
+	);
+
+	test('signed in on /recipes, My Recipes is current and Recipes is not', async () => {
+		const { bar, menu } = await renderAt('/recipes', signedIn());
+		expect(bar('My Recipes')[0]).toHaveAttribute('aria-current', 'page');
+		expect(menu.getByRole('link', { name: 'My Recipes' })).toHaveAttribute('aria-current', 'page');
+		expect(bar('Recipes')[0]).not.toHaveAttribute('aria-current');
+		expect(menu.getByRole('link', { name: 'Recipes' })).not.toHaveAttribute('aria-current');
+	});
+
+	test('signed out, Recipes stays /recipes, current there, with no My Recipes', async () => {
+		const { bar, menu } = await renderAt('/recipes', null);
+		expect(bar('Recipes')[0]).toHaveAttribute('href', '/recipes');
+		expect(bar('Recipes')[0]).toHaveAttribute('aria-current', 'page');
+		expect(menu.getByRole('link', { name: 'Recipes' })).toHaveAttribute('aria-current', 'page');
+		expect(screen.queryByRole('link', { name: 'My Recipes' })).toBeNull();
+	});
+
+	test('the search link is current on /search', async () => {
+		const { bar } = await renderAt('/search', null);
+		expect(bar('Search').every((l) => l.getAttribute('aria-current') === 'page')).toBe(true);
+	});
+
+	test.each([
+		['/login', 'Log in', 'Sign up'],
+		['/signup', 'Sign up', 'Log in']
+	])('on %s, %s is current and %s is not', async (path, current, other) => {
+		const { bar, menu } = await renderAt(path, null);
+		expect(bar(current)[0]).toHaveAttribute('aria-current', 'page');
+		expect(menu.getByRole('link', { name: current })).toHaveAttribute('aria-current', 'page');
+		expect(bar(other)[0]).not.toHaveAttribute('aria-current');
+		expect(menu.getByRole('link', { name: other })).not.toHaveAttribute('aria-current');
+	});
+
+	test('a current link turns cream: the style reads aria-current, not a class', () => {
+		// jsdom applies no component CSS, so the rules are read from the source.
+		const style = source.slice(source.indexOf('<style>'));
+		expect(style).toMatch(/\.navbar-link\[aria-current='page'\][^{]*{[^}]*--color-text-cream/);
+		expect(style).toMatch(/\.mobile-link\[aria-current='page'\][^{]*{[^}]*--color-text-cream/);
+		expect(source).not.toMatch(/class:active/);
+	});
+
+	test("the owner's handle on their own profile turns cream too", () => {
+		const style = usernameSource.slice(usernameSource.indexOf('<style>'));
+		expect(style).toMatch(
+			/\.username\.on-dark\[aria-current='page'\][^{]*{[^}]*--color-text-cream/
+		);
 	});
 });

@@ -42,7 +42,8 @@
 		color: var(--color-text-tan);
 	}
 
-	.username.on-dark:hover {
+	.username.on-dark:hover,
+	.username.on-dark[aria-current='page'] {
 		color: var(--color-text-cream);
 	}
 </style>

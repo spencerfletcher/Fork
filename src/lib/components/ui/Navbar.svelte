@@ -17,24 +17,37 @@
 		isMenuOpen = false;
 	}
 
-	// One list for both menus. Recipes is "active" anywhere under it except the
-	// new-recipe page, which has its own control, and on tag pages, which are
-	// Recipes filtered by one tag.
+	// One list for both menus. Signed in, browse with tabs is the home page, so
+	// Recipes goes there and is current on it and on tag pages (Recipes
+	// filtered by one tag); My Recipes is /recipes. Signed out, /recipes is
+	// browse, current anywhere under it but the new-recipe page.
 	const onOwnProfile = $derived(!!profile && page.url.pathname === `/users/${profile.username}`);
 
+	const path = $derived(page.url.pathname);
+
 	const links = $derived([
-		{ href: '/search', label: 'Search', active: page.url.pathname === '/search' },
-		{
-			href: '/recipes',
-			label: 'Recipes',
-			active:
-				(page.url.pathname.startsWith('/recipes') && page.url.pathname !== '/recipes/new') ||
-				page.url.pathname.startsWith('/tags/')
-		},
+		{ href: '/search', label: 'Search', active: path === '/search' },
 		...(user
-			? [{ href: '/favorites', label: 'Favorites', active: page.url.pathname === '/favorites' }]
-			: [])
+			? [
+					{
+						href: '/',
+						label: 'Recipes',
+						active: path === '/' || path.startsWith('/tags/')
+					},
+					{ href: '/recipes', label: 'My Recipes', active: path === '/recipes' },
+					{ href: '/favorites', label: 'Favorites', active: path === '/favorites' }
+				]
+			: [
+					{
+						href: '/recipes',
+						label: 'Recipes',
+						active:
+							(path.startsWith('/recipes') && path !== '/recipes/new') || path.startsWith('/tags/')
+					}
+				])
 	]);
+
+	const current = (active: boolean) => (active ? ('page' as const) : undefined);
 </script>
 
 <nav class="bg-navbar-bg relative z-50 px-5">
@@ -49,7 +62,9 @@
 			<ul class="navbar-links m-0 hidden list-none gap-6 p-0 md:flex">
 				{#each links as link (link.href)}
 					<li>
-						<a href={link.href} class="navbar-link" class:active={link.active}>{link.label}</a>
+						<a href={link.href} class="navbar-link" aria-current={current(link.active)}>
+							{link.label}
+						</a>
 					</li>
 				{/each}
 			</ul>
@@ -66,8 +81,10 @@
 						<button type="submit" class="navbar-link logout-btn">Logout</button>
 					</form>
 				{:else}
-					<a href="/login" class="navbar-link">Log in</a>
-					<a href="/signup" class="navbar-link">Sign up</a>
+					<a href="/login" class="navbar-link" aria-current={current(path === '/login')}>Log in</a>
+					<a href="/signup" class="navbar-link" aria-current={current(path === '/signup')}>
+						Sign up
+					</a>
 				{/if}
 				<!-- Signed-in only. /recipes/new redirects to /login, so showing the
 				     page's most prominent control to a logged-out visitor sends them
@@ -84,7 +101,12 @@
 
 			<!-- Search is a top-level link on desktop; on a phone it lives here, beside
 			     the menu, so it is one tap rather than two. -->
-			<a href="/search" aria-label="Search" class="nav-icon" onclick={closeMenu}>
+			<a
+				href="/search"
+				aria-label="Search"
+				class="nav-icon"
+				aria-current={current(path === '/search')}
+				onclick={closeMenu}>
 				<svg
 					class="size-5"
 					xmlns="http://www.w3.org/2000/svg"
@@ -141,7 +163,15 @@
 				<!-- Search is the icon beside the menu button; listing it here too
 				     would be the same destination twice. -->
 				{#each links.filter((l) => l.href !== '/search') as link (link.href)}
-					<li><a href={link.href} onclick={closeMenu} class="mobile-link">{link.label}</a></li>
+					<li>
+						<a
+							href={link.href}
+							onclick={closeMenu}
+							class="mobile-link"
+							aria-current={current(link.active)}>
+							{link.label}
+						</a>
+					</li>
 				{/each}
 				{#if user}
 					<li>
@@ -177,8 +207,20 @@
 						</button>
 					</form>
 				{:else}
-					<a href="/login" onclick={closeMenu} class="mobile-link">Log in</a>
-					<a href="/signup" onclick={closeMenu} class="mobile-link">Sign up</a>
+					<a
+						href="/login"
+						onclick={closeMenu}
+						class="mobile-link"
+						aria-current={current(path === '/login')}>
+						Log in
+					</a>
+					<a
+						href="/signup"
+						onclick={closeMenu}
+						class="mobile-link"
+						aria-current={current(path === '/signup')}>
+						Sign up
+					</a>
 				{/if}
 			</div>
 		</div>
@@ -244,6 +286,7 @@
 	}
 
 	.nav-icon:hover,
+	.nav-icon[aria-current='page'],
 	.nav-menu-toggle:hover {
 		color: var(--color-text-cream);
 	}
@@ -272,7 +315,7 @@
 	}
 
 	.navbar-link:hover,
-	.navbar-link.active {
+	.navbar-link[aria-current='page'] {
 		color: var(--color-text-cream);
 	}
 
@@ -301,6 +344,10 @@
 
 	.mobile-link:hover {
 		background: rgba(255, 255, 255, 0.06);
+		color: var(--color-text-cream);
+	}
+
+	.mobile-link[aria-current='page'] {
 		color: var(--color-text-cream);
 	}
 </style>
