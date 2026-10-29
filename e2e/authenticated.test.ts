@@ -498,6 +498,25 @@ test.describe('Edit recipe page', () => {
 			await deleteRecipe(page, url);
 		}
 	});
+
+	test('a message typed with nothing else changed saves a version carrying it', async ({
+		page
+	}) => {
+		const url = await createRecipe(page, 'E2E Message Alone', '4');
+		try {
+			await gotoHydrated(page, `${url}/edit`);
+			await page.locator('input[name="commitMessage"]').fill('a note on its own');
+			await expect(page.locator('.editor-header')).toContainText('saves as v2');
+			await page.getByRole('button', { name: 'Save', exact: true }).click();
+			await page.waitForURL(url);
+			await expectVersions(page, 2);
+			await expect(page.locator('.version-bar .current .message')).toContainText(
+				'a note on its own'
+			);
+		} finally {
+			await deleteRecipe(page, url);
+		}
+	});
 });
 
 // ─── One save ─────────────────────────────────────────────────────────────────
