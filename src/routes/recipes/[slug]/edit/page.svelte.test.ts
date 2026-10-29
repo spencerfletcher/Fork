@@ -320,6 +320,34 @@ describe('Edit page form', () => {
 		expect(field).toHaveAccessibleDescription(numberMessages(name)[kind]);
 	});
 
+	test('number errors sit under the whole row, in field order, each still describing its own box', async () => {
+		render(EditPage, { props: { data: makeData(), form: null } });
+		for (const [name, value] of [
+			['cookTimeMinutes', '1.5'],
+			['servings', '0']
+		]) {
+			const field = document.getElementById(name) as HTMLInputElement;
+			await fireEvent.input(field, { target: { value } });
+			await fireEvent.focusOut(field);
+		}
+		const row = document.getElementById('servings')!.closest('.field-row')!;
+		const errors = [...row.children].filter((el) => el.matches('.field-error'));
+		expect(errors.map((el) => el.id)).toEqual(['servings-error', 'cookTimeMinutes-error']);
+		// After all three boxes, not inside a column.
+		const lastField = row.querySelector('#cookTimeMinutes')!.closest('.field')!;
+		expect(
+			lastField.compareDocumentPosition(errors[0]) & Node.DOCUMENT_POSITION_FOLLOWING
+		).toBeTruthy();
+		expect(document.getElementById('servings')).toHaveAccessibleDescription(
+			numberMessages('servings').belowMin
+		);
+		expect(document.getElementById('cookTimeMinutes')).toHaveAttribute('aria-invalid', 'true');
+		expect(document.getElementById('cookTimeMinutes')).toHaveAccessibleDescription(
+			numberMessages('cookTimeMinutes').whole
+		);
+		expect(document.getElementById('prepTimeMinutes')).not.toHaveAttribute('aria-invalid');
+	});
+
 	test('a server error for the ingredients lands under the ingredients box and focuses it', async () => {
 		render(EditPage, {
 			props: {

@@ -103,6 +103,37 @@ test.describe('New recipe page', () => {
 		await expect(title).not.toHaveAttribute('aria-invalid', 'true');
 	});
 
+	test('number errors run the width of their row on one line each, in field order, under the boxes', async ({
+		page
+	}) => {
+		await gotoHydrated(page, '/recipes/new');
+		for (const [name, value] of [
+			['servings', '0'],
+			['prepTimeMinutes', '-5'],
+			['cookTimeMinutes', '1.5']
+		]) {
+			await page.locator(`input[name="${name}"]`).fill(value);
+			await page.locator(`input[name="${name}"]`).blur();
+		}
+		for (const width of [1280, 390]) {
+			await page.setViewportSize({ width, height: 900 });
+			const row = (await page.locator('.field-row').boundingBox())!;
+			const boxes = (await page.locator('input[name="cookTimeMinutes"]').boundingBox())!;
+			let above = boxes.y + boxes.height;
+			for (const name of ['servings', 'prepTimeMinutes', 'cookTimeMinutes']) {
+				const error = page.locator(`#${name}-error`);
+				await expect(page.locator(`input[name="${name}"]`)).toHaveAttribute('aria-invalid', 'true');
+				const box = (await error.boundingBox())!;
+				const line = parseFloat(await error.evaluate((el) => getComputedStyle(el).lineHeight));
+				expect(box.x).toBeCloseTo(row.x, 0);
+				expect(box.width).toBeCloseTo(row.width, 0);
+				expect(box.height).toBeLessThan(line * 1.5);
+				expect(box.y).toBeGreaterThanOrEqual(above);
+				above = box.y + box.height;
+			}
+		}
+	});
+
 	test('the required asterisk is Ink 3 at rest, not the error red', async ({ page }) => {
 		await gotoHydrated(page, '/recipes/new');
 		const star = page.locator('label[for="title"] .required');

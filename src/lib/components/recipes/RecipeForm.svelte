@@ -321,7 +321,6 @@
 							value={draft.servings}
 							oninput={(e) => (draft.servings = e.currentTarget.value)}
 							{...aria('servings')} />
-						{@render fieldError('servings')}
 					</div>
 					<div class="field">
 						<label for="prepTimeMinutes">Prep (min)</label>
@@ -333,7 +332,6 @@
 							value={draft.prepTimeMinutes}
 							oninput={(e) => (draft.prepTimeMinutes = e.currentTarget.value)}
 							{...aria('prepTimeMinutes')} />
-						{@render fieldError('prepTimeMinutes')}
 					</div>
 					<div class="field">
 						<label for="cookTimeMinutes">Cook (min)</label>
@@ -345,8 +343,11 @@
 							value={draft.cookTimeMinutes}
 							oninput={(e) => (draft.cookTimeMinutes = e.currentTarget.value)}
 							{...aria('cookTimeMinutes')} />
-						{@render fieldError('cookTimeMinutes')}
 					</div>
+					<!-- Under the whole row, in field order: a 150px column would wrap them. -->
+					{@render fieldError('servings')}
+					{@render fieldError('prepTimeMinutes')}
+					{@render fieldError('cookTimeMinutes')}
 				</div>
 
 				<fieldset class="field field-tags">
@@ -430,6 +431,15 @@
 		font-size: 1rem;
 		line-height: 1;
 		cursor: pointer;
+	}
+
+	/* The row's errors run its full width, a field's 8px under the boxes. */
+	.field-row {
+		row-gap: var(--space-2);
+	}
+
+	.field-row > .field-error {
+		grid-column: 1 / -1;
 	}
 
 	/* field-sizing: content ignores rows; this keeps an empty box typeable. */
