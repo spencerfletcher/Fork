@@ -20,7 +20,7 @@ Open product calls carried over from the repository reconciliation (the rest of 
 
 Ideas from the original MVP design that are not covered by a milestone. Kept as one line each; the document's palette, layout sketches and Bits UI plan are superseded (see `todo/DESIGN.md`).
 
-- Change your username and a forgot-password flow: both need a settings page and the Supabase reset email (Spencer, 29 October 2026).
+- Change your username: needs a settings page (Spencer, 29 October 2026). The forgot-password flow shipped on Supabase's reset email the same day (8bfd42b); the hosted project still needs its redirect URL allow-listed, the recovery template pointed at `/reset-password?token_hash=…&type=recovery`, and custom SMTP before real users get the mail.
 - Tag suggestions ranked by the recipe itself (Spencer, 29 October 2026): the editor's Tags box already lists tags before you type; it should order them by fit, so a recipe titled "cookies" offers Dessert and American first. Needs a small scorer over title, description and ingredients against tag names, no new data.
 - In-place tag filtering on the browse page: today the tabs link to `/tags/{slug}`; filtering the sectioned page without a navigation needs the browse loader to take a tag and the sections to recompute.
 - Browse sections past their caps: a side-scrolling row or a "see more" link per section (Recent 8, Most forked 4) once the collection outgrows them.
