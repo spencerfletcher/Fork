@@ -825,6 +825,30 @@ test.describe('Recipe detail page', () => {
 		const dot = page.locator('.details .dot').first();
 		expect(await dot.evaluate((el) => getComputedStyle(el).color)).toBe('rgb(111, 105, 96)');
 	});
+
+	test('on a phone the closed note shows two lines; on a desktop one', async ({ page }) => {
+		await page.setViewportSize({ width: 390, height: 900 });
+		await gotoClassicCookies(page);
+		const message = page.locator('.version-bar .current .message');
+		const measure = () =>
+			message.evaluate((el) => {
+				const s = getComputedStyle(el);
+				return {
+					lines: Math.round(el.getBoundingClientRect().height / parseFloat(s.lineHeight)),
+					clamp: s.webkitLineClamp,
+					clipped: el.scrollHeight > el.clientHeight + 1
+				};
+			});
+		// The seed's 95-character note needs three lines here, so two shows and the
+		// third is clipped.
+		expect(await measure()).toEqual({ lines: 2, clamp: '2', clipped: true });
+		// Open, it runs in full.
+		await page.getByRole('button', { name: '3 versions' }).click();
+		expect((await measure()).clipped).toBe(false);
+		await page.setViewportSize({ width: 1280, height: 900 });
+		await gotoClassicCookies(page);
+		expect((await measure()).lines).toBe(1);
+	});
 });
 
 test.describe('Landing page (logged out)', () => {

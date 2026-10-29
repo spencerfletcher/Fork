@@ -264,8 +264,20 @@
 			row-gap: 4px;
 		}
 
+		/* A phone line is short, so the closed note gets two of them instead of
+		   one. Open, it still runs in full. */
+		.message.clamped {
+			display: -webkit-box;
+			-webkit-line-clamp: 2;
+			line-clamp: 2;
+			-webkit-box-orient: vertical;
+
+			white-space: normal;
+		}
+
 		/* The controls wrap as items 10px apart with no dots at all, so a line
 		   that starts on "3 versions" does not start on a separator. */
+
 		.controls {
 			display: flex;
 			flex-wrap: wrap;
