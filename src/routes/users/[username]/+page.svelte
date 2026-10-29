@@ -116,10 +116,6 @@
 			gap: 14px;
 		}
 
-		.profile-text h1 {
-			font-size: 1.625rem;
-		}
-
 		.profile-avatar {
 			width: 56px;
 			height: 56px;

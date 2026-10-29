@@ -40,7 +40,7 @@
      the measure on one line, the tags, the actions. Nothing is boxed and
      nothing is pinned: the column ends where it ends. Decided 29 October 2026. -->
 <header class="recipe-header">
-	<h1 class="title m-0 font-serif font-medium">{currentVersion.title}</h1>
+	<h1 class="m-0 font-serif font-medium">{currentVersion.title}</h1>
 
 	<p class="byline m-0 font-sans">
 		{#if recipe.author}By <Username username={recipe.author.username} />{/if}
@@ -89,13 +89,6 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0;
-	}
-
-	/* clamp() for fluid typography: 28px on a phone, 40px on a desktop. */
-	.title {
-		font-size: clamp(1.75rem, 1.2rem + 1.8vw, 2.5rem);
-		line-height: 1.15;
-		color: var(--color-accent);
 	}
 
 	/* Who and the forks: one line, 600, links clay. "By" and the forks are
