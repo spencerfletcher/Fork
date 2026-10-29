@@ -227,7 +227,7 @@ test.describe('Recipe detail page', () => {
 		const recipePath = new URL(page.url()).pathname;
 		const response = await page.goto(recipePath + '/diff?from=abc&to=3');
 		expect(response?.status()).toBe(400);
-		await expect(page.locator('h1')).toHaveText(`Version not found in ${COOKIES}`);
+		await expect(page.locator('h1')).toHaveText(`Error 400 – Version not found in ${COOKIES}`);
 		await expect(page).toHaveTitle(`Version not found in ${COOKIES} — Fork`);
 		await expect(page.getByRole('link', { name: 'Back to the recipe' })).toHaveAttribute(
 			'href',
