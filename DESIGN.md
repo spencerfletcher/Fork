@@ -233,9 +233,13 @@ Small, consistent corners: 4px on chips and icon buttons, 6px on buttons, inputs
 
 One exception, decided 28 October 2026: the recipe page's action row (Fork or Edit, Favorite) is set as 44px pills with a leading icon, the header's last line. Everywhere else a button keeps the 6px corner.
 
+Fork is one click, decided 29 October 2026: the pill submits, the server makes the copy and redirects to it. No two-step confirm, no dialog. Logged out, the same pill leads to login and back to this page.
+
+
 ### Chips
 
-- **Version chip:** marigold fill, ink mono 600 text, 0 5px padding, 3px to 4px corners. Marks the current version on the recipe page, the version strip and the compare page.
+- **Version chip:** marigold fill, ink mono 600 text, 0 5px padding, 3px to 4px corners. On the recipe page it marks the version being read, not the latest: on an older version the chip stays marigold too (decided 29 October 2026; the critique's "older version wears the latest's mark" is closed by this ruling). The compare page's "To" chip and the recipe card's clay text mark do not yet follow this reading and are for their own rounds.
+
 - **Tags:** transparent pill, 1px Rule 2 border, Ink 2 text at 0.75rem 500. Hover fills clay tint and darkens the border. On espresso: tan text with a 22% white border.
 - **Tag tabs:** plain text at 0.875rem, Ink 2, 2px transparent underline; the current tab is ink, 600, with a clay underline.
 
