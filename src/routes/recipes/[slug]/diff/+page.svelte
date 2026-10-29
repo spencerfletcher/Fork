@@ -292,9 +292,14 @@
 			font-size: 1rem;
 		}
 
+		/* Full width, so the whole box opens the list, but the text area is the
+		   short label's ch, as at 1280: an open list's long labels clip to "v2"
+		   rather than cut mid-word against the caret. The percentage is the
+		   picker's width, which the select fills; 12px is its left padding and
+		   border. */
 		.version-picker select {
 			width: 100%;
-			padding: 10px calc(10px + 2ch) 10px 10px;
+			padding: 10px calc(100% - 12px - var(--label-chars) * 1ch) 10px 10px;
 		}
 
 		.version-cards {

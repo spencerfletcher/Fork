@@ -76,6 +76,38 @@ test.describe('Compare page', () => {
 		for (const n of [0, 1]) expect(await caretGap(n)).toBeLessThanOrEqual(12);
 	});
 
+	test('on a phone the open face clips to the version as at 1280, while the whole box stays the tap target', async ({
+		page
+	}) => {
+		// The select's text area is its longest short label in ch, so the long
+		// labels of an open list cannot show "v2 · Increase" cut mid-word.
+		await page.setViewportSize({ width: 390, height: 900 });
+		await openCookiesCompare(page);
+		const from = page.getByRole('combobox', { name: 'From version' });
+		await from.dispatchEvent('pointerdown');
+		await expect(from.locator('option').nth(1)).toHaveText(/^v2 · \S/);
+		const [textWidth, chars, ch] = await from.evaluate((el) => {
+			const s = getComputedStyle(el);
+			const probe = document.createElement('span');
+			Object.assign(probe.style, {
+				display: 'inline-block',
+				width: '1ch',
+				fontFamily: s.fontFamily,
+				fontSize: s.fontSize
+			});
+			document.body.append(probe);
+			const oneCh = probe.getBoundingClientRect().width;
+			probe.remove();
+			return [
+				el.clientWidth - parseFloat(s.paddingLeft) - parseFloat(s.paddingRight),
+				Number(getComputedStyle(el.parentElement!).getPropertyValue('--label-chars')),
+				oneCh
+			];
+		});
+		expect(textWidth).toBeCloseTo(chars * ch, 0);
+		expect((await from.boundingBox())!.width).toBeGreaterThan(120);
+	});
+
 	test('in forced colours the picker keeps its version and its caret, unclipped', async ({
 		page
 	}) => {
