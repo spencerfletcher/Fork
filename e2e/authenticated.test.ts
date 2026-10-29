@@ -529,7 +529,7 @@ test.describe('Compare page', () => {
 			).toBeVisible();
 			await expect(page.getByRole('link', { name: 'Back to the recipe' })).toHaveAttribute(
 				'href',
-				url
+				new URL(url).pathname
 			);
 		} finally {
 			await deleteRecipe(page, url);
