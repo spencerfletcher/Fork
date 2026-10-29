@@ -22,7 +22,9 @@
 				<input type="checkbox" class="sr-only" />
 				<span class="text-accent font-serif text-[1.125rem] font-medium">{n}</span>
 				<div class="flex flex-col gap-1.5">
-					<p class="text-text m-0 font-sans text-[1.0625rem] leading-[1.6] whitespace-pre-line">
+					<!-- A reading measure for the text; the rule and the numbers span the column. -->
+					<p
+						class="text-text m-0 max-w-[68ch] font-sans text-[1.0625rem] leading-[1.6] whitespace-pre-line">
 						{step.text}
 					</p>
 					{#if step.annotation}
