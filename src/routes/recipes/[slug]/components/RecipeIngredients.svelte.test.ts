@@ -117,6 +117,20 @@ describe('RecipeIngredients', () => {
 		).toBeTruthy();
 	});
 
+	test('the square is drawn in Ink 3, and a ticked row dims its text, not the square', () => {
+		renderWith('1 cup flour', [{ grams: 125, grams2: null, approximate: false }]);
+		const row = rows()[0];
+		const tick = row.querySelector('.tick')!;
+		// Rule 2 was 1.35:1 on the paper; a control's edge needs 3:1.
+		expect(tick).toHaveClass('border-text-3');
+		expect(tick).not.toHaveClass('border-border-2');
+		// The dim on the row would turn the clay fill salmon: it sits on the text,
+		// grams included, so the checked square stays full clay.
+		expect(row.className).not.toContain('opacity-60');
+		expect(tick.nextElementSibling).toHaveClass('group-has-[:checked]:opacity-60');
+		expect(tick.nextElementSibling).toHaveTextContent('1 cup (125g) flour');
+	});
+
 	test('each line is a native checkbox named by its text', async () => {
 		renderWith('1 cup flour\n2 eggs', [null, null]);
 		const flour = screen.getByRole('checkbox', { name: /1 cup flour/ });

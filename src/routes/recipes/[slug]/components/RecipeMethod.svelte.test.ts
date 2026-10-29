@@ -31,10 +31,22 @@ describe('RecipeMethod', () => {
 
 	test('the square that pictures the checkbox sits in the number column, before the numeral', () => {
 		render(RecipeMethod, { props: { steps: [{ text: 'Mix.' }] } });
-		const tick = screen.getByText('1').querySelector('.tick')!;
+		const tick = screen.getByRole('checkbox').closest('label')!.querySelector('.tick')!;
 		expect(tick).toHaveAttribute('aria-hidden', 'true');
 		expect(tick).toHaveClass('group-has-[:checked]:bg-accent');
 		expect(screen.getByRole('checkbox')).toHaveClass('sr-only');
+	});
+
+	test('the square is drawn in Ink 3, and a ticked step dims its numeral and text, not the square', () => {
+		render(RecipeMethod, { props: { steps: [{ text: 'Mix.' }] } });
+		const row = screen.getByRole('checkbox').closest('label')!;
+		const tick = row.querySelector('.tick')!;
+		expect(tick).toHaveClass('border-text-3');
+		expect(tick).not.toHaveClass('border-border-2');
+		expect(row.className).not.toContain('opacity-60');
+		expect(tick.closest('.group-has-\\[\\:checked\\]\\:opacity-60')).toBeNull();
+		expect(screen.getByText('1')).toHaveClass('group-has-[:checked]:opacity-60');
+		expect(screen.getByText('Mix.').parentElement).toHaveClass('group-has-[:checked]:opacity-60');
 	});
 
 	test('each step is a native checkbox named by its text, toggled by clicking the row', async () => {

@@ -17,21 +17,24 @@
 			{@const n = i + 1}
 			<!-- A native checkbox, visually hidden, carries the state and the keyboard
 			     behaviour; the label is the row and takes the struck-through look. The
-			     square before the numeral is the checkbox's picture: empty, then clay
-			     when checked (decided 29 October 2026). -->
+			     square before the numeral is the checkbox's picture: an Ink 3 edge, then
+			     full clay when checked (decided 29 October 2026). The dim is on the
+			     numeral and the text, so it never turns the clay salmon. -->
 			<label
-				class="group has-[:focus-visible]:outline-accent grid cursor-pointer [grid-template-columns:44px_1fr] items-baseline gap-[18px] select-none has-[:checked]:line-through has-[:checked]:opacity-60 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2">
+				class="group has-[:focus-visible]:outline-accent grid cursor-pointer [grid-template-columns:44px_1fr] items-baseline gap-[18px] select-none has-[:checked]:line-through has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2">
 				<input type="checkbox" class="sr-only" />
-				<span
-					class="text-accent inline-flex items-baseline gap-2.5 font-serif text-[1.125rem] font-medium">
+				<span class="inline-flex items-baseline gap-2.5">
 					<span
-						class="tick border-border-2 group-has-[:checked]:bg-accent group-has-[:checked]:border-accent size-3.5 shrink-0 rounded-[3px] border"
+						class="tick border-text-3 group-has-[:checked]:bg-accent group-has-[:checked]:border-accent size-3.5 shrink-0 rounded-[3px] border"
 						aria-hidden="true">
 					</span>
-					{n}
+					<span
+						class="text-accent font-serif text-[1.125rem] font-medium group-has-[:checked]:opacity-60">
+						{n}
+					</span>
 				</span>
 
-				<div class="flex flex-col gap-1.5">
+				<div class="flex flex-col gap-1.5 group-has-[:checked]:opacity-60">
 					<p class="text-text m-0 font-sans text-[1.0625rem] leading-[1.6] whitespace-pre-line">
 						{step.text}
 					</p>

@@ -976,17 +976,30 @@ test.describe('Landing page (logged out)', () => {
 		expect(sizes[1]).toBe(sizes[0]);
 	});
 
-	test('ticking an ingredient or a step fills its square clay', async ({ page }) => {
+	test('ticking an ingredient or a step fills its square full clay; the text dims, not the square', async ({
+		page
+	}) => {
 		await page.setViewportSize({ width: 1280, height: 900 });
 		await gotoClassicCookies(page);
 		const clay = 'rgb(178, 60, 0)';
+		const ink3 = 'rgb(111, 105, 96)';
+		// The opacity a box is painted at: its own times every ancestor's.
+		const painted = (el: Element) => {
+			let o = 1;
+			for (let e: Element | null = el; e; e = e.parentElement) o *= +getComputedStyle(e).opacity;
+			return Math.round(o * 100) / 100;
+		};
 		for (const section of ['#ingredients', '#method']) {
 			const row = page.locator(`${section} label`).first();
+			const tick = row.locator('.tick');
+			// A control's edge: Ink 3, not Rule 2 at 1.35:1.
+			expect(await tick.evaluate((el) => getComputedStyle(el).borderTopColor), section).toBe(ink3);
 			await row.click();
-			const fill = await row
-				.locator('.tick')
-				.evaluate((el) => getComputedStyle(el).backgroundColor);
+			const fill = await tick.evaluate((el) => getComputedStyle(el).backgroundColor);
 			expect(fill, section).toBe(clay);
+			expect(await tick.evaluate(painted), section).toBe(1);
+			const text = row.locator('.tick ~ *').last();
+			expect(await text.evaluate(painted), section).toBe(0.6);
 		}
 	});
 
