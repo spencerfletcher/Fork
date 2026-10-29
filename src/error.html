@@ -3,7 +3,7 @@
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<title>%sveltekit.status% · Fork</title>
+		<title>%sveltekit.error.message% — Fork</title>
 		<!-- SvelteKit renders this page when the app itself cannot: a crashed
 		     root layout or a failed render. No app CSS reaches it, so it carries
 		     Fork's bar, paper and type on its own, from the shipped fonts. -->
@@ -15,10 +15,22 @@
 				src: url('%sveltekit.assets%/fonts/bitter-latin-500-normal.woff2') format('woff2');
 			}
 			@font-face {
+				font-family: 'Bitter';
+				font-weight: 600;
+				font-display: swap;
+				src: url('%sveltekit.assets%/fonts/bitter-latin-600-normal.woff2') format('woff2');
+			}
+			@font-face {
 				font-family: 'Source Sans 3';
 				font-weight: 400;
 				font-display: swap;
 				src: url('%sveltekit.assets%/fonts/source-sans-3-latin-400-normal.woff2') format('woff2');
+			}
+			@font-face {
+				font-family: 'Source Sans 3';
+				font-weight: 500;
+				font-display: swap;
+				src: url('%sveltekit.assets%/fonts/source-sans-3-latin-500-normal.woff2') format('woff2');
 			}
 			@font-face {
 				font-family: 'Source Sans 3';
@@ -46,27 +58,23 @@
 				line-height: 1.5;
 				-webkit-font-smoothing: antialiased;
 			}
+			/* Navbar.svelte's bar: 20px outside the 1200 cap, 52 tall on a phone. */
 			.bar {
 				background: #1a1408;
-				height: 56px;
+				height: 52px;
+				padding: 0 20px;
 				display: flex;
 				align-items: center;
+			}
+			@media (min-width: 768px) {
+				.bar {
+					height: 56px;
+				}
 			}
 			.inner {
 				width: 100%;
 				max-width: 1200px;
 				margin: 0 auto;
-				padding: 0 24px;
-			}
-			@media (min-width: 1280px) {
-				.inner {
-					padding: 0 40px;
-				}
-			}
-			@media (max-width: 699px) {
-				.inner {
-					padding: 0 18px;
-				}
 			}
 			.brand {
 				display: inline-block;
@@ -107,19 +115,36 @@
 				font-size: 1.0625rem;
 				color: #4a443e;
 			}
-			.home {
-				display: inline-block;
+			.actions {
+				display: flex;
+				flex-wrap: wrap;
+				justify-content: center;
+				gap: 12px;
 				margin-top: 24px;
-				padding: 12px 16px;
+			}
+			.btn-primary,
+			.btn-ghost {
+				display: inline-block;
 				border-radius: 6px;
-				background: #eca620;
 				color: #1a1714;
-				font-weight: 600;
 				font-size: 0.9375rem;
 				text-decoration: none;
 			}
-			.home:hover {
+			.btn-primary {
+				padding: 12px 16px;
+				background: #eca620;
+				font-weight: 600;
+			}
+			.btn-primary:hover {
 				background: #dc980a;
+			}
+			.btn-ghost {
+				padding: 11px 16px;
+				border: 1px solid #1a1714;
+				font-weight: 500;
+			}
+			.btn-ghost:hover {
+				background: #f5e9e0;
 			}
 			:focus-visible {
 				outline: 2px solid #b23c00;
@@ -142,7 +167,12 @@
 			<main>
 				<h1>Error %sveltekit.status% – %sveltekit.error.message%</h1>
 				<p class="lede">Something went wrong on Fork's side, not yours. Try again in a moment.</p>
-				<a href="/" class="home">Go home</a>
+				<!-- Reloads; without JavaScript the link to this same URL loads it again. -->
+				<div class="actions">
+					<!-- prettier-ignore -->
+					<a href="" class="btn-primary" onclick="location.reload(); return false">Try again</a>
+					<a href="/" class="btn-ghost">Go home</a>
+				</div>
 			</main>
 		</div>
 	</body>
