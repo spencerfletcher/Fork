@@ -70,6 +70,27 @@ describe('parseStepText', () => {
 	test('whitespace-only text gives no steps', () => {
 		expect(parseStepText(' \n\n ')).toEqual([]);
 	});
+
+	test('a transcribed list loses its numbers: the page numbers steps itself', () => {
+		expect(parseStepText('1. Cream the butter.\n\n2) Fold in the flour.')).toEqual([
+			{ text: 'Cream the butter.' },
+			{ text: 'Fold in the flour.' }
+		]);
+	});
+
+	test('a numbered line starts a step even without a blank line before it', () => {
+		expect(parseStepText('1. Mix.\ntip: gently\n2. Rest 10 minutes.\n3.  Bake.')).toEqual([
+			{ text: 'Mix.', annotation: { type: 'tip', text: 'gently' } },
+			{ text: 'Rest 10 minutes.' },
+			{ text: 'Bake.' }
+		]);
+	});
+
+	test('a number that is not a list marker stays: a decimal, or one mid-step', () => {
+		expect(parseStepText('1.5 cups of milk, warmed.\nHeat to 180.')).toEqual([
+			{ text: '1.5 cups of milk, warmed.\nHeat to 180.' }
+		]);
+	});
 });
 
 describe('stepsToText', () => {
