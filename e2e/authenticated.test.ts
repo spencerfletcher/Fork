@@ -222,6 +222,49 @@ test.describe('New recipe page', () => {
 		expect([box!.width, box!.height]).toEqual([44, 44]);
 	});
 
+	test('the open tag list flows out of the box: flush, one shared edge, square where they meet, the ring around both', async ({
+		page
+	}) => {
+		await gotoHydrated(page, '/recipes/new');
+		const input = page.getByRole('combobox', { name: /tag/i });
+		const look = (el: Element) => {
+			const s = getComputedStyle(el);
+			return {
+				top: el.getBoundingClientRect().top,
+				bottom: el.getBoundingClientRect().bottom,
+				borderTop: s.borderTopWidth,
+				radii: [
+					s.borderTopLeftRadius,
+					s.borderTopRightRadius,
+					s.borderBottomRightRadius,
+					s.borderBottomLeftRadius
+				],
+				outline: `${s.outlineStyle} ${s.outlineColor} ${s.outlineOffset}`
+			};
+		};
+		const closed = await input.evaluate(look);
+		for (const width of [1280, 390]) {
+			await page.setViewportSize({ width, height: 900 });
+			await input.blur();
+			await input.focus();
+			const menu = page.getByRole('listbox');
+			await expect(menu).toBeVisible();
+			const box = await input.evaluate(look);
+			const list = await menu.evaluate(look);
+			expect(list.top).toBeCloseTo(box.bottom, 1);
+			expect(list.borderTop).toBe('0px');
+			expect(box.radii).toEqual([closed.radii[0], closed.radii[1], '0px', '0px']);
+			expect(list.radii.slice(0, 2)).toEqual(['0px', '0px']);
+			expect(list.radii[2]).not.toBe('0px');
+			// The box's ring carries on around the list instead of crossing it.
+			expect(box.outline).toMatch(/^solid /);
+			expect(list.outline).toBe(box.outline);
+			await page.keyboard.press('Escape');
+			await expect(menu).toBeHidden();
+			expect((await input.evaluate(look)).radii).toEqual(closed.radii);
+		}
+	});
+
 	test('the tag list opens in view when the box sits at the foot of the screen, on a phone and at a desktop width', async ({
 		page
 	}) => {

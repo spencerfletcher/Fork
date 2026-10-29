@@ -83,6 +83,19 @@ describe('TagInput', () => {
 		expect(screen.getByRole('listbox')).toBeInTheDocument();
 	});
 
+	test('while the list is open the box and the list are one object: the wrapper says so, and only then', async () => {
+		render(TagInput, { props: { allTags } });
+		const wrapper = getInput().parentElement!;
+		expect(wrapper).toContainElement(getInput());
+		expect(wrapper).not.toHaveClass('tag-combo--open');
+		await fireEvent.focus(getInput());
+		expect(wrapper).toContainElement(screen.getByRole('listbox'));
+		expect(wrapper).toHaveClass('tag-combo--open');
+		await fireEvent.keyDown(getInput(), { key: 'Escape' });
+		expect(screen.queryByRole('listbox')).toBeNull();
+		expect(wrapper).not.toHaveClass('tag-combo--open');
+	});
+
 	test('opening the list scrolls it into view, nearest, after a tick', async () => {
 		// jsdom has no scrollIntoView; lend one for this test only.
 		const scroll = vi.fn();

@@ -114,8 +114,8 @@
 		</div>
 	{/if}
 
-	<!-- Combobox input -->
-	<div class="relative">
+	<!-- Combobox input; open, the list flows out of it as one object. -->
+	<div class="tag-combo relative" class:tag-combo--open={showDropdown}>
 		<input
 			id="tag-combobox"
 			type="text"
@@ -228,21 +228,39 @@
 		}
 	}
 
+	/* Open, the box and the list are one object: square where they meet, the
+	   box's bottom border their one shared edge, the first option against it. */
+	.tag-combo--open input {
+		border-bottom-right-radius: 0;
+		border-bottom-left-radius: 0;
+	}
+
 	.tag-menu {
 		position: absolute;
-		top: calc(100% + 4px);
+		top: 100%;
 		right: 0;
 		left: 0;
 		z-index: 50;
 		margin: 0;
-		padding: 0.25rem 0;
+		padding: 0 0 0.25rem;
 		max-height: 240px;
 		overflow-y: auto;
 		list-style: none;
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-lg);
+		border: 1px solid var(--color-input-border);
+		border-top: 0;
+		border-radius: 0 0 var(--radius-lg) var(--radius-lg);
 		background: var(--color-surface);
 		box-shadow: var(--shadow-raised);
+		/* Nothing drawn above its top edge: no shadow over the box, and no ring
+		   segment across the join. */
+		clip-path: inset(0 -100vmax -100vmax);
+	}
+
+	/* The box's ring carries on around the list; the box's own bottom segment
+	   is under the list and the list's top one is clipped, so it encloses both. */
+	.tag-combo:has(input:focus-visible) .tag-menu {
+		outline: 2px solid var(--color-accent);
+		outline-offset: 2px;
 	}
 
 	.tag-option {
