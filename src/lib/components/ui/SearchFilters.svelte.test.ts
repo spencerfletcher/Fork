@@ -12,7 +12,14 @@ const availableTags = [
 
 const input = () => screen.getByRole('searchbox');
 
-beforeEach(() => gotoMock.mockClear());
+// jsdom has no layout, so no scrollIntoView; a stub records the calls.
+const scrollIntoView = vi.fn();
+Element.prototype.scrollIntoView = scrollIntoView;
+
+beforeEach(() => {
+	gotoMock.mockClear();
+	scrollIntoView.mockClear();
+});
 
 describe('SearchFilters', () => {
 	test('typing then clicking a tag navigates with what was typed, no delay', async () => {
@@ -34,6 +41,15 @@ describe('SearchFilters', () => {
 		render(SearchFilters, { props: { availableTags } });
 		await fireEvent.click(screen.getByRole('button', { name: 'Dessert' }));
 		expect(gotoMock.mock.calls[0][1]).toMatchObject({ reset: false });
+	});
+
+	test('a pressed filter is scrolled into view once the row re-renders', async () => {
+		render(SearchFilters, { props: { availableTags } });
+		const baking = screen.getByRole('button', { name: 'Baking' });
+		await fireEvent.click(baking);
+		await vi.waitFor(() => expect(scrollIntoView).toHaveBeenCalledTimes(1));
+		expect(scrollIntoView.mock.contexts[0]).toBe(baking);
+		expect(scrollIntoView.mock.calls[0][0]).toMatchObject({ inline: 'nearest' });
 	});
 
 	test('Clear all leads the row, so it is in reach on a phone without scrolling', () => {

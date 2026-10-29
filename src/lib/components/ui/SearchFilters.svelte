@@ -51,11 +51,18 @@
 
 	// Tags apply on click; the search box applies on submit. Both read the
 	// current query, so a tag click right after typing carries the new text.
-	function handleTagToggle(tagSlug: string) {
+	// A first press inserts "Clear all" at the row's front and pushes every pill
+	// right, so on a phone the pressed one is scrolled back into view. The
+	// buttons follow availableTags' order, so its index finds the button.
+	async function handleTagToggle(tagSlug: string) {
 		selectedTags = selectedTags.includes(tagSlug)
 			? selectedTags.filter((slug) => slug !== tagSlug)
 			: [...selectedTags, tagSlug];
-		applyFilters();
+		await applyFilters();
+		const i = availableTags.findIndex((tag) => tag.slug === tagSlug);
+		filters
+			.querySelectorAll('.tag-tabs button:not(.tag-tabs__clear)')
+			[i]?.scrollIntoView({ inline: 'nearest', block: 'nearest' });
 	}
 
 	let filters: HTMLDivElement;

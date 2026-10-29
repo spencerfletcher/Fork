@@ -217,6 +217,33 @@ test.describe('Search filters', () => {
 	});
 });
 
+test.describe('Search filters on a phone', () => {
+	test('pressing the last filter scrolls its pill, ring and all, into view', async ({ page }) => {
+		await page.setViewportSize({ width: 390, height: 844 });
+		await page.goto('/search');
+		const row = page.getByRole('group', { name: 'Filter by tag' });
+		const last = row.getByRole('button').last();
+		await last.focus();
+		await page.keyboard.press('Enter');
+		await expect(last).toHaveAttribute('aria-pressed', 'true');
+		await expect(last).toBeFocused();
+		// "Clear all" now leads the row, pushing every pill right. The ring sits
+		// 4px outside the pill (2px offset, 2px width).
+		await expect
+			.poll(() =>
+				last.evaluate((el) => {
+					const r = el.getBoundingClientRect();
+					const s = getComputedStyle(el, '::before');
+					const clip = el.parentElement!.getBoundingClientRect();
+					const ringLeft = r.left + parseFloat(s.left) - 4;
+					const ringRight = r.right - parseFloat(s.right) + 4;
+					return ringLeft >= Math.max(0, clip.left) && ringRight <= Math.min(390, clip.right);
+				})
+			)
+			.toBe(true);
+	});
+});
+
 test.describe('Spacing', () => {
 	test('search results sit on the 8px scale under the filters', async ({ page }) => {
 		await page.goto('/search?q=cookie');

@@ -537,6 +537,9 @@
 		.tag-tabs {
 			margin: -19px -18px -4px;
 			padding: 4px 18px;
+			/* A pill scrolled into view stops on the gutter, so its ring (10px
+			   outside the button) stays on screen. */
+			scroll-padding-inline: 18px;
 		}
 	}
 
