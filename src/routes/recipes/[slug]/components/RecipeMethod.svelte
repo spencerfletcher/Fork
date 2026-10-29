@@ -20,12 +20,12 @@
 			     square before the numeral is the checkbox's picture: empty, then clay
 			     when checked (decided 29 October 2026). -->
 			<label
-				class="has-[:focus-visible]:outline-accent grid cursor-pointer [grid-template-columns:44px_1fr] items-baseline gap-[18px] select-none has-[:checked]:line-through has-[:checked]:opacity-60 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2">
-				<input type="checkbox" class="peer sr-only" />
+				class="group has-[:focus-visible]:outline-accent grid cursor-pointer [grid-template-columns:44px_1fr] items-baseline gap-[18px] select-none has-[:checked]:line-through has-[:checked]:opacity-60 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2">
+				<input type="checkbox" class="sr-only" />
 				<span
 					class="text-accent inline-flex items-baseline gap-2.5 font-serif text-[1.125rem] font-medium">
 					<span
-						class="tick border-border-2 peer-checked:bg-accent peer-checked:border-accent size-3.5 shrink-0 rounded-[3px] border"
+						class="tick border-border-2 group-has-[:checked]:bg-accent group-has-[:checked]:border-accent size-3.5 shrink-0 rounded-[3px] border"
 						aria-hidden="true">
 					</span>
 					{n}

@@ -976,6 +976,20 @@ test.describe('Landing page (logged out)', () => {
 		expect(sizes[1]).toBe(sizes[0]);
 	});
 
+	test('ticking an ingredient or a step fills its square clay', async ({ page }) => {
+		await page.setViewportSize({ width: 1280, height: 900 });
+		await gotoClassicCookies(page);
+		const clay = 'rgb(178, 60, 0)';
+		for (const section of ['#ingredients', '#method']) {
+			const row = page.locator(`${section} label`).first();
+			await row.click();
+			const fill = await row
+				.locator('.tick')
+				.evaluate((el) => getComputedStyle(el).backgroundColor);
+			expect(fill, section).toBe(clay);
+		}
+	});
+
 	test('the landing hero sits on the page paper, with only the bar in espresso', async ({
 		page
 	}) => {

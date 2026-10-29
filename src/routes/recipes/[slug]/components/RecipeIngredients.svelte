@@ -55,10 +55,10 @@
 			     square at the row start is the checkbox's picture: empty, then clay
 			     when checked (decided 29 October 2026). -->
 			<label
-				class="border-border text-text has-[:focus-visible]:outline-accent flex cursor-pointer items-baseline gap-2.5 border-b py-2.5 text-base leading-[1.5] select-none has-[:checked]:line-through has-[:checked]:opacity-60 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2">
-				<input type="checkbox" class="peer sr-only" />
+				class="group border-border text-text has-[:focus-visible]:outline-accent flex cursor-pointer items-baseline gap-2.5 border-b py-2.5 text-base leading-[1.5] select-none has-[:checked]:line-through has-[:checked]:opacity-60 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2">
+				<input type="checkbox" class="sr-only" />
 				<span
-					class="tick border-border-2 peer-checked:bg-accent peer-checked:border-accent size-3.5 shrink-0 translate-y-[2px] rounded-[3px] border"
+					class="tick border-border-2 group-has-[:checked]:bg-accent group-has-[:checked]:border-accent size-3.5 shrink-0 translate-y-[2px] rounded-[3px] border"
 					aria-hidden="true">
 				</span>
 				<span class="min-w-0">

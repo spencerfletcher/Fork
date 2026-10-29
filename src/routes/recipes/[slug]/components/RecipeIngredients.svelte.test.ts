@@ -108,9 +108,9 @@ describe('RecipeIngredients', () => {
 		const box = screen.getByRole('checkbox');
 		const tick = row.querySelector('.tick')!;
 		// The input stays native and hidden; the square only draws its state.
-		expect(box).toHaveClass('sr-only', 'peer');
+		expect(box).toHaveClass('sr-only');
 		expect(tick).toHaveAttribute('aria-hidden', 'true');
-		expect(tick).toHaveClass('peer-checked:bg-accent');
+		expect(tick).toHaveClass('group-has-[:checked]:bg-accent');
 		expect(box.nextElementSibling).toBe(tick);
 		expect(
 			tick.compareDocumentPosition(screen.getByText('1 cup')) & Node.DOCUMENT_POSITION_FOLLOWING
