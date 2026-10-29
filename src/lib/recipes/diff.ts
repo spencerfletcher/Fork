@@ -107,7 +107,8 @@ function ingredientRow(from: Ingredient | undefined, to: Ingredient): Ingredient
 
 /**
  * Diff two ingredient lists by ingredient name (case-insensitive).
- * Removed rows come first, then the `to` list in its own order.
+ * The `to` list in its own order, with each removed ingredient kept at the
+ * position it had in the old list, so a deleted last line is reported last.
  *
  * Known v1 limitations:
  * - Renamed ingredients show as removed+added (no fuzzy matching).
@@ -115,13 +116,17 @@ function ingredientRow(from: Ingredient | undefined, to: Ingredient): Ingredient
 export function diffIngredients(from: Ingredient[], to: Ingredient[]): IngredientDiffRow[] {
 	const fromByName = new Map(from.map((i) => [nameKey(i), i]));
 	const toNames = new Set(to.map(nameKey));
-	// Iterating the map rather than `from` means a name listed twice in the old
-	// version is reported removed once, matching how it was matched.
-	const removed = [...fromByName.values()]
-		.filter((i) => !toNames.has(nameKey(i)))
-		.map((ingredient): IngredientDiffRow => ({ status: 'removed', ingredient }));
-	const rest = to.map((i) => ingredientRow(fromByName.get(nameKey(i)), i));
-	return [...removed, ...rest];
+	const rows = to.map((i) => ingredientRow(fromByName.get(nameKey(i)), i));
+	// A name listed twice in the old version is reported removed once, at its
+	// first position. Splicing in ascending order keeps every old index true.
+	const seen = new Set<string>();
+	from.forEach((ingredient, index) => {
+		const key = nameKey(ingredient);
+		if (toNames.has(key) || seen.has(key)) return;
+		seen.add(key);
+		rows.splice(index, 0, { status: 'removed', ingredient });
+	});
+	return rows;
 }
 
 /**

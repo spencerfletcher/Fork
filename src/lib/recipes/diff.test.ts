@@ -141,6 +141,19 @@ describe('diffIngredients', () => {
 			.map((r) => r.ingredient.name);
 		expect(outputNames).toEqual(['b', 'a', 'c']);
 	});
+
+	test('a removed ingredient keeps its old position in the list', () => {
+		const from = [ing('flour'), ing('sugar'), ing('butter')];
+		const to = [ing('flour'), ing('butter')];
+		const result = diffIngredients(from, to);
+		expect(result.map((r) => r.status)).toEqual(['unchanged', 'removed', 'unchanged']);
+	});
+
+	test('an ingredient removed from the end is listed last', () => {
+		const from = [ing('flour'), ing('salt')];
+		const to = [ing('flour')];
+		expect(diffIngredients(from, to).map((r) => r.status)).toEqual(['unchanged', 'removed']);
+	});
 });
 
 // ─── diffSteps ────────────────────────────────────────────────────────────────
