@@ -59,6 +59,14 @@
 	<span class="sr-only">to</span>
 	{' '}{/snippet}
 
+<!-- The unseen stop keeps a screen reader from running the number into the
+     text: "5. Gradually stir", not "5 Gradually stir". Kept on one line: a
+     break before the stop would put a space in front of it. -->
+{#snippet stepNum(n: number)}
+	<!-- prettier-ignore -->
+	<span class="step-num">{n}<span class="sr-only">.</span></span>
+{/snippet}
+
 {#snippet change(from: string, to: string)}<del class="diff-removed">{from}</del>
 	{@render toWord()}
 	<ins class="diff-added">{to}</ins>{/snippet}
@@ -83,8 +91,9 @@
 {/snippet}
 
 <!-- Two columns where there is room for them. This is a container query, not a
-     viewport one: the landing page and the compare page both give the diff a
-     column wide enough to split at 48rem, and it stacks on its own below that. -->
+     viewport one: the landing page and the compare page both put the diff in
+     the site's 1200px column, which is 61rem wide at a 1024 viewport, so the
+     panels sit side by side from 1024 and stack on their own below that. -->
 <!-- Title, description, servings and times. Only rendered when something
      changed: an empty Details panel would be noise above every diff. -->
 {#if metaDiff.length > 0}
@@ -118,7 +127,7 @@
 {/if}
 
 <div class="@container">
-	<div class="grid gap-x-8 @3xl:grid-cols-2">
+	<div class="grid gap-x-8 @min-[61rem]:grid-cols-2">
 		{#snippet ingredientRows()}
 			{#each ingredientDiff as row, i (i)}
 				<div class="diff-row diff-{row.status}">
@@ -142,7 +151,7 @@
 					<!-- A removed step has no position in the new version, so numbering it
 					     would imply the steps after it had shifted. -->
 					{#if row.status !== 'removed'}
-						<span class="step-num">{row.stepNumber}</span>
+						{@render stepNum(row.stepNumber)}
 					{/if}
 					<span class="diff-content whitespace-pre-line">
 						{#if row.status === 'modified'}
@@ -220,17 +229,16 @@
 
 	/* ── Row status ─────────────────────────────────────────────────────────── */
 
+	/* A modified row, its ~ included, is ink: not the grey of the unchanged rows
+	   it must stand apart from, and not clay, which would read too close to the
+	   removal red (decided 29 October 2026). */
 	.diff-modified {
-		color: var(--color-text-2);
+		color: var(--color-text);
 	}
 
 	/* Unchanged rows recede so the changed ones stand out. */
 	.diff-unchanged,
 	.diff-unchanged .step-num {
-		color: var(--color-text-3);
-	}
-
-	.diff-modified .diff-gutter {
 		color: var(--color-text-3);
 	}
 

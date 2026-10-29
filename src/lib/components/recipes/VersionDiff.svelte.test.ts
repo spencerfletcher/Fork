@@ -30,7 +30,7 @@ function renderDiff(
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
 describe('VersionDiff', () => {
-	test('renders an Ingredients and a Method section, in the recipe page\'s words', () => {
+	test("renders an Ingredients and a Method section, in the recipe page's words", () => {
 		renderDiff();
 		expect(screen.getByText('Ingredients')).toBeInTheDocument();
 		expect(screen.getByText('Method')).toBeInTheDocument();
@@ -210,8 +210,25 @@ describe('VersionDiff', () => {
 			[],
 			[{ status: 'added', stepNumber: 3, step: { text: 'Fold gently.' } } as StepDiffRow]
 		);
-		expect(container.querySelector('.step-num')?.textContent?.trim()).toBe('3');
+		expect(container.querySelector('.step-num')?.textContent?.trim()).toBe('3.');
 		expect(screen.getByText('Fold gently.')).toBeInTheDocument();
+	});
+
+	test('a step number ends in an unseen stop, so a screen reader separates it from the text', () => {
+		// Without it a modified step is announced as "Changed: 5 Gradually stir".
+		const { container } = renderDiff(
+			[],
+			[
+				{
+					status: 'modified',
+					stepNumber: 5,
+					segments: [{ type: 'added', text: 'Gradually stir.' }]
+				}
+			]
+		);
+		expect(text(rowWith(container, 'Gradually'))).toBe('Changed: ~ 5. Gradually stir.');
+		const stop = container.querySelector('.step-num .sr-only');
+		expect(stop).toHaveTextContent('.');
 	});
 
 	test('omits the step number on a removed step', () => {
