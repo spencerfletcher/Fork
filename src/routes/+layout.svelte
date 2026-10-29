@@ -69,6 +69,7 @@
 		left: var(--space-5);
 		top: 8px;
 		z-index: 60;
+		min-height: 44px;
 		padding: 8px 16px;
 		border-radius: 999px;
 		background: var(--color-marigold);

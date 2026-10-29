@@ -42,7 +42,7 @@ test.describe('Navbar when logged in', () => {
 
 	test('does not show the Login link', async ({ page }) => {
 		await page.goto('/');
-		await expect(page.getByRole('link', { name: /^login$/i })).not.toBeVisible();
+		await expect(page.getByRole('link', { name: /^log in$/i })).not.toBeVisible();
 	});
 });
 

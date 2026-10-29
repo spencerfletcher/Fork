@@ -24,12 +24,12 @@ function makeUser(email: string): User {
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
 describe('Navbar', () => {
-	test('shows Login link when user is not logged in', () => {
+	test('shows the Log in link when user is not logged in', () => {
 		render(Navbar, { props: { user: null } });
-		expect(screen.getByRole('link', { name: /login/i })).toBeInTheDocument();
+		expect(screen.getByRole('link', { name: /^log in$/i })).toBeInTheDocument();
 	});
 
-	test('shows Sign Up link when user is not logged in', () => {
+	test('shows the Sign up link when user is not logged in', () => {
 		render(Navbar, { props: { user: null } });
 		expect(screen.getByRole('link', { name: /sign up/i })).toBeInTheDocument();
 	});
@@ -49,9 +49,9 @@ describe('Navbar', () => {
 		expect(screen.getByRole('button', { name: /logout/i })).toBeInTheDocument();
 	});
 
-	test('does not show Login link when logged in', () => {
+	test('does not show the Log in link when logged in', () => {
 		render(Navbar, { props: { user: makeUser('chef@example.com') } });
-		expect(screen.queryByRole('link', { name: /^login$/i })).not.toBeInTheDocument();
+		expect(screen.queryByRole('link', { name: /^log in$/i })).not.toBeInTheDocument();
 	});
 
 	test('logo links to the home page', () => {

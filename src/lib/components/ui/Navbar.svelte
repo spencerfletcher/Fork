@@ -65,8 +65,8 @@
 						<button type="submit" class="navbar-link logout-btn">Logout</button>
 					</form>
 				{:else}
-					<a href="/login" class="navbar-link">Login</a>
-					<a href="/signup" class="navbar-link">Sign Up</a>
+					<a href="/login" class="navbar-link">Log in</a>
+					<a href="/signup" class="navbar-link">Sign up</a>
 				{/if}
 				<!-- Signed-in only. /recipes/new redirects to /login, so showing the
 				     page's most prominent control to a logged-out visitor sends them
@@ -76,7 +76,7 @@
 						href="/recipes/new"
 						class="nav-cta"
 						class:opacity-75={page.url.pathname === '/recipes/new'}>
-						+ New Recipe
+						+ New recipe
 					</a>
 				{/if}
 			</div>
@@ -144,7 +144,7 @@
 				{/each}
 				{#if user}
 					<li>
-						<a href="/recipes/new" onclick={closeMenu} class="mobile-link">New Recipe</a>
+						<a href="/recipes/new" onclick={closeMenu} class="mobile-link">New recipe</a>
 					</li>
 				{/if}
 			</ul>
@@ -172,8 +172,8 @@
 						</button>
 					</form>
 				{:else}
-					<a href="/login" onclick={closeMenu} class="mobile-link">Login</a>
-					<a href="/signup" onclick={closeMenu} class="mobile-link">Sign Up</a>
+					<a href="/login" onclick={closeMenu} class="mobile-link">Log in</a>
+					<a href="/signup" onclick={closeMenu} class="mobile-link">Sign up</a>
 				{/if}
 			</div>
 		</div>
@@ -182,6 +182,10 @@
 
 <style>
 	.nav-brand {
+		display: inline-block;
+		/* 44px tall on a phone, where it is the only way home. */
+		padding: 4px 0;
+		margin: -4px 0;
 		font-family: var(--font-serif);
 		font-size: 1.375rem;
 		font-weight: 600;
@@ -256,7 +260,9 @@
 		background: none;
 		border: none;
 		cursor: pointer;
-		padding: 0;
+		/* A 24px hit on a 20px line without moving the text. */
+		padding: 4px 0;
+		margin: -4px 0;
 		transition: color 0.15s ease;
 	}
 
