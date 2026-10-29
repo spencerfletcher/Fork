@@ -17,15 +17,14 @@
 		aria-invalid={error ? 'true' : undefined}
 		aria-describedby={error ? 'steps-error' : undefined}>
 	</textarea>
-	<!-- The syntax is taught while there is nothing in the box, like the placeholder. -->
 	{#if error}
 		<p class="field-error" id="steps-error" role="alert">{error}</p>
-	{:else if value.trim() === ''}
-		<p class="form-hint">
-			Separate steps with a blank line. Add a note under a step with tip:, warning: or substitution:
-			on its own line.
-		</p>
 	{/if}
+	<!-- The syntax stays in view while typing, after the placeholder has gone. -->
+	<p class="form-hint">
+		Separate steps with a blank line. Add a note under a step with tip:, warning: or substitution:
+		on its own line.
+	</p>
 </div>
 
 <style>

@@ -13,7 +13,7 @@ describe('StepEditor', () => {
 		expect(box().name).toBe('steps');
 	});
 
-	test('explains blank-line separation and the note keywords while the box is empty', () => {
+	test('explains blank-line separation and the note keywords', () => {
 		render(StepEditor, { props: { value: '' } });
 		const hint = screen.getByText(/blank line/i);
 		expect(hint).toHaveTextContent('tip:');
@@ -21,18 +21,19 @@ describe('StepEditor', () => {
 		expect(hint).toHaveTextContent('substitution:');
 	});
 
-	test('drops the hint once something is typed and brings it back when the box empties', async () => {
-		render(StepEditor, { props: { value: 'Mix.' } });
-		expect(screen.queryByText(/blank line/i)).toBeNull();
-		await fireEvent.input(box(), { target: { value: '' } });
+	test('keeps the hint while there is text in the box', async () => {
+		render(StepEditor, { props: { value: '' } });
+		await fireEvent.input(box(), { target: { value: 'Mix.' } });
 		expect(screen.getByText(/blank line/i)).toBeInTheDocument();
 	});
 
-	test('an error replaces the hint, marks the box invalid and describes it', () => {
+	test('an error sits above the hint, marks the box invalid and describes it', () => {
 		render(StepEditor, { props: { value: '', error: 'At least one step is required' } });
 		expect(box()).toHaveAttribute('aria-invalid', 'true');
 		expect(box()).toHaveAccessibleDescription('At least one step is required');
-		expect(screen.queryByText(/blank line/i)).toBeNull();
+		const error = screen.getByRole('alert');
+		const hint = screen.getByText(/blank line/i);
+		expect(error.compareDocumentPosition(hint) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 	});
 
 	test('accepts input', async () => {
