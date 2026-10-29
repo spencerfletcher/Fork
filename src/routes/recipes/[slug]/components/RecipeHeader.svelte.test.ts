@@ -159,7 +159,7 @@ describe('RecipeHeader byline', () => {
 		expect(byline(second.container)).not.toMatch(/fork/);
 	});
 
-	test('viewing an older version says so and offers the way back', () => {
+	test('viewing an older version says so and offers the way back', async () => {
 		const { container } = renderHeader({
 			currentVersion: { ...V1, ...makeVersion(2, 'Add espresso powder') },
 			versions: THREE,
@@ -174,7 +174,17 @@ describe('RecipeHeader byline', () => {
 			'href',
 			'/recipes/my-fork'
 		);
-		expect(screen.queryByRole('link', { name: /compare/i })).toBeNull();
+		// The history is still reachable: "v2 of 3" opens the other versions, each
+		// compared with the one being read, older to newer.
+		expect(screen.getByText('Initial recipe')).not.toBeVisible();
+		await fireEvent.click(screen.getByRole('button', { name: 'v2 of 3' }));
+		expect(screen.getByText('Initial recipe')).toBeVisible();
+		expect(screen.queryByRole('link', { name: 'v2' })).toBeNull();
+		const compares = screen.getAllByRole('link', { name: 'Compare with v2' });
+		expect(compares.map((a) => a.getAttribute('href'))).toEqual([
+			'/recipes/my-fork/diff?from=2&to=3',
+			'/recipes/my-fork/diff?from=1&to=2'
+		]);
 	});
 
 	test('the version count opens the other versions, each with a compare against this one', async () => {
@@ -188,7 +198,7 @@ describe('RecipeHeader byline', () => {
 		);
 		// The version being read is already on the page, so it is not listed again.
 		expect(screen.queryByRole('link', { name: 'v3' })).toBeNull();
-		const compares = screen.getAllByRole('link', { name: 'Compare' });
+		const compares = screen.getAllByRole('link', { name: 'Compare with v3' });
 		expect(compares.map((a) => a.getAttribute('href'))).toEqual([
 			'/recipes/my-fork/diff?from=2&to=3',
 			'/recipes/my-fork/diff?from=1&to=3'

@@ -42,7 +42,11 @@
 						else error = 'Could not fork this recipe. Try again.';
 					};
 				}}>
-				<button type="submit" class="btn-primary" disabled={forking} aria-busy={forking}>
+				<button
+					type="submit"
+					class="btn-primary"
+					disabled={forking}
+					aria-busy={forking || undefined}>
 					<svg
 						class="size-4"
 						viewBox="0 0 16 16"

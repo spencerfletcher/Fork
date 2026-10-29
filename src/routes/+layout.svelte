@@ -14,6 +14,25 @@
 	// their loader; anything they omit falls back to the site defaults.
 	const meta: PageMeta = $derived({ ...DEFAULT_META, ...(page.data.meta ?? {}) });
 	const canonical = $derived(page.url.origin + page.url.pathname);
+
+	// The skip link is the page's first tab stop. On a recipe it lands on the
+	// recipe itself, past the header; elsewhere on the main content.
+	const skipTarget = $derived(page.route.id === '/recipes/[slug]' ? 'recipe' : 'main');
+	const skipLabel = $derived(skipTarget === 'recipe' ? 'Skip to ingredients' : 'Skip to content');
+
+	// Focusing a block taller than the screen only scrolls it "nearest"; put it
+	// at the top ourselves, under any bar pinned there.
+	function skip(event: MouseEvent) {
+		const target = document.getElementById(skipTarget);
+		if (!target) return;
+		event.preventDefault();
+		target.focus({ preventScroll: true });
+		const pinned = [...document.querySelectorAll<HTMLElement>('[data-pinned]')].reduce(
+			(h, el) => (getComputedStyle(el).position === 'sticky' ? h + el.offsetHeight : h),
+			0
+		);
+		window.scrollTo({ top: target.getBoundingClientRect().top + window.scrollY - pinned - 16 });
+	}
 </script>
 
 <svelte:head>
@@ -35,9 +54,33 @@
 </svelte:head>
 
 <div class="flex min-h-dvh flex-col">
+	<a href="#{skipTarget}" class="skip-link" onclick={skip}>{skipLabel}</a>
 	<Navbar user={data.user} profile={data.profile} />
 
-	<main class="flex-grow">
+	<main id="main" class="flex-grow outline-none" tabindex="-1">
 		{@render children()}
 	</main>
 </div>
+
+<style>
+	/* Out of the way until it has focus, then a pill over the navbar's left. */
+	.skip-link {
+		position: absolute;
+		left: var(--space-5);
+		top: 8px;
+		z-index: 60;
+		padding: 8px 16px;
+		border-radius: 999px;
+		background: var(--color-marigold);
+		color: var(--color-text);
+		font-family: var(--font-sans);
+		font-size: 0.9375rem;
+		font-weight: 600;
+		text-decoration: none;
+		transform: translateY(-200%);
+	}
+
+	.skip-link:focus-visible {
+		transform: none;
+	}
+</style>

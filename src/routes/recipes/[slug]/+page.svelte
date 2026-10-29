@@ -20,15 +20,6 @@
 	// scrolled to the end, since a short method never reaches the top.
 	let methodSection: HTMLElement | undefined = $state();
 
-	// Focusing a block taller than the screen only scrolls it "nearest", which
-	// leaves the hero's bottom half showing; put the recipe at the top ourselves.
-	function skipToRecipe(event: MouseEvent) {
-		const recipe = document.getElementById('recipe');
-		if (!recipe) return;
-		event.preventDefault();
-		recipe.focus({ preventScroll: true });
-		window.scrollTo({ top: recipe.getBoundingClientRect().top + window.scrollY - 16 });
-	}
 	let onMethod = $state(false);
 	function onScroll() {
 		if (!methodSection) return;
@@ -40,9 +31,6 @@
 <svelte:window onscroll={onScroll} />
 
 <article class="min-h-dvh">
-	<!-- A keyboard cook skips the header's eight stops. -->
-	<a href="#recipe" class="skip-link" onclick={skipToRecipe}>Skip to ingredients</a>
-
 	<!-- The hero: the recipe's text beside its photo. Title, deck and byline
 	     first, so a stranger reads what this version is before anything else. -->
 	<div class="hero">
@@ -74,7 +62,7 @@
 
 	<hr class="rule" />
 
-	<nav class="section-tabs" aria-label="Recipe sections">
+	<nav class="section-tabs" aria-label="Recipe sections" data-pinned>
 		<a href="#ingredients" aria-current={onMethod ? undefined : 'true'}>Ingredients</a>
 		<a href="#method" aria-current={onMethod ? 'true' : undefined}>Method</a>
 	</nav>
@@ -103,32 +91,8 @@
 		padding: 0 var(--space-5);
 	}
 
-	/* Out of the way until it has focus, then a pill at the top left. */
-	.skip-link {
-		position: absolute;
-		left: var(--space-5);
-		top: 8px;
-		padding: 8px 16px;
-		border-radius: 999px;
-		background: var(--color-marigold);
-		color: var(--color-text);
-		font-family: var(--font-sans);
-		font-size: 0.9375rem;
-		font-weight: 600;
-		text-decoration: none;
-		transform: translateY(-200%);
-	}
-
-	/* Above the navbar, which is z-50. */
-	.skip-link:focus-visible {
-		transform: none;
-		z-index: 60;
-	}
-
-	/* The skip link lands here, with the rule above the recipe at the top of
-	   the screen; focus then moves on to the first ingredient. */
+	/* The skip link lands here; focus then moves on to the first ingredient. */
 	.content-layout {
-		scroll-margin-top: 16px;
 		outline: none;
 	}
 

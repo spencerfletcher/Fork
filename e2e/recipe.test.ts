@@ -542,12 +542,9 @@ test.describe('Recipe detail page', () => {
 	test('a keyboard cook can skip from the navbar to the ingredients', async ({ page }) => {
 		await page.setViewportSize({ width: 1280, height: 900 });
 		await gotoClassicCookies(page);
-		// The navbar's stops come first; the skip link is the page's own first stop,
-		// before the header's eight.
+		// The very first Tab: the skip link lives in the layout, before the navbar.
 		const skip = page.getByRole('link', { name: 'Skip to ingredients' });
-		for (let i = 0; i < 12 && !(await skip.evaluate((el) => el === document.activeElement)); i++) {
-			await page.keyboard.press('Tab');
-		}
+		await page.keyboard.press('Tab');
 		await expect(skip).toBeFocused();
 		await expect(skip).toBeInViewport();
 		// Visible on top of the navbar, not under it.
@@ -572,6 +569,34 @@ test.describe('Recipe detail page', () => {
 		// The next Tab lands on the first ingredient, not back in the header.
 		await page.keyboard.press('Tab');
 		await expect(page.locator('#ingredients input[type="checkbox"]').first()).toBeFocused();
+	});
+
+	test('on a phone the skip link lands the first ingredient clear of the tab bar', async ({
+		page
+	}) => {
+		await page.setViewportSize({ width: 390, height: 844 });
+		await gotoClassicCookies(page);
+		await page.keyboard.press('Tab');
+		await expect(page.getByRole('link', { name: 'Skip to ingredients' })).toBeFocused();
+		await page.keyboard.press('Enter');
+		await page.waitForTimeout(200);
+		const bar = await page.locator('.section-tabs').boundingBox();
+		const row = await page.locator('#ingredients label').first().boundingBox();
+		expect(row!.y).toBeGreaterThanOrEqual(bar!.y + bar!.height);
+	});
+
+	test('while viewing an older version the history still opens, comparing with that version', async ({
+		page
+	}) => {
+		await gotoClassicCookies(page);
+		const recipeUrl = page.url().split('?')[0];
+		await page.goto(`${recipeUrl}?version=2`);
+		await page.getByRole('button', { name: 'v2 of 3' }).click();
+		await expect(page.locator('#version-history li')).toHaveCount(2);
+		await expect(page.getByRole('link', { name: 'Compare with v2' }).first()).toHaveAttribute(
+			'href',
+			/diff\?from=2&to=3$/
+		);
 	});
 
 	test('every inline link in the header has a 24px hit box', async ({ page }) => {

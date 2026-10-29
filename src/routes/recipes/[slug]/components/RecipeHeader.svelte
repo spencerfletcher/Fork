@@ -99,7 +99,15 @@
 				<span class="version">v{n}</span>
 			{/if}
 			{#if isViewingHistory}
-				<span>v{n} of {count}</span>
+				<button
+					type="button"
+					class="versions-toggle"
+					bind:this={toggle}
+					aria-expanded={open}
+					aria-controls="version-history"
+					onclick={() => (open = !open)}>
+					v{n} of {count}
+				</button>
 				<span>Viewing history</span>
 				<a href="/recipes/{recipe.slug}">Back to v{latest}</a>
 			{:else}
@@ -125,19 +133,19 @@
 	</div>
 
 	<!-- The other versions, newest first: the one being read is already on the
-	     page, so it is not repeated. Compare sits beside the version it compares. -->
-	{#if count > 1 && !isViewingHistory}
+	     page, so it is not repeated. Each compares itself with the one being read,
+	     older to newer. -->
+	{#if count > 1}
 		<ul id="version-history" class="history m-0 list-none p-0 font-mono" hidden={!open}>
 			{#each versions.filter((v) => v.versionNumber !== n) as version (version.id)}
+				{@const v = version.versionNumber}
 				<li>
-					<a href="/recipes/{recipe.slug}?version={version.versionNumber}" class="version-number">
-						v{version.versionNumber}
-					</a>
+					<a href="/recipes/{recipe.slug}?version={v}" class="version-number">v{v}</a>
 					<span class="text-text-2">{version.commitMessage}</span>
 					<a
-						href="/recipes/{recipe.slug}/diff?from={version.versionNumber}&to={n}"
+						href="/recipes/{recipe.slug}/diff?from={Math.min(v, n)}&to={Math.max(v, n)}"
 						class="compare whitespace-nowrap">
-						Compare
+						Compare with v{n}
 					</a>
 				</li>
 			{/each}
