@@ -134,6 +134,40 @@ test.describe('New recipe page', () => {
 		}
 	});
 
+	test("a placeholder on an invalid box's pink fill passes 4.5:1, and stays Ink 3 on a valid one", async ({
+		page
+	}) => {
+		const contrast = (fg: string, bg: string) => {
+			const lum = (c: string) => {
+				const [r, g, b] = c
+					.match(/\d+(\.\d+)?/g)!
+					.slice(0, 3)
+					.map(Number);
+				const f = (v: number) => {
+					const s = v / 255;
+					return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+				};
+				return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+			};
+			const [a, b] = [lum(fg), lum(bg)].sort((x, y) => y - x);
+			return (a + 0.05) / (b + 0.05);
+		};
+		await gotoHydrated(page, '/recipes/new');
+		const steps = page.getByLabel('Steps');
+		const colours = () =>
+			steps.evaluate((el) => ({
+				placeholder: getComputedStyle(el, '::placeholder').color,
+				fill: getComputedStyle(el).backgroundColor
+			}));
+		expect((await colours()).placeholder).toBe('rgb(111, 105, 96)');
+		await steps.focus();
+		await steps.blur();
+		await expect(steps).toHaveAttribute('aria-invalid', 'true');
+		const invalid = await colours();
+		expect(invalid.fill).toBe('rgb(246, 227, 224)');
+		expect(contrast(invalid.placeholder, invalid.fill)).toBeGreaterThanOrEqual(4.5);
+	});
+
 	test('the required asterisk is Ink 3 at rest, not the error red', async ({ page }) => {
 		await gotoHydrated(page, '/recipes/new');
 		const star = page.locator('label[for="title"] .required');
