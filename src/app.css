@@ -927,6 +927,20 @@
 		text-decoration: underline;
 	}
 
+	/* A closing link in the arrow form ("All recipes →"): 24px tall at desktop
+	   from its own line, 44px on a phone by padding pulled back by margin, so
+	   the text does not move (decided 29 October 2026). */
+	.arrow-link {
+		display: inline-block;
+	}
+
+	@media (max-width: 699px) {
+		.arrow-link {
+			padding: 9px 0;
+			margin-block: -9px;
+		}
+	}
+
 	/* The "nothing here" paragraph shown when a list query returns no rows.
 	   Shared by the feed, search, favourites and tag pages. */
 	.empty-state {

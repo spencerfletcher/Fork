@@ -53,7 +53,7 @@
 							<RecipeCard {recipe} index={i} />
 						{/each}
 					</div>
-					<p class="all-recipes"><a href="/recipes">All recipes</a></p>
+					<p class="all-recipes"><a href="/recipes" class="arrow-link">All recipes →</a></p>
 				{:else}
 					<p class="empty-state">
 						No recipes yet. <a href="/recipes/new">Create the first one →</a>

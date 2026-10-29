@@ -76,8 +76,11 @@ describe('/+page.svelte', () => {
 		expect(screen.queryByRole('heading', { name: 'Recipes' })).toBeNull();
 		expect(screen.queryByText('Recipes worth forking.')).toBeNull();
 		expect(container.querySelector('hr')).toBeNull();
-		const all = screen.getByRole('link', { name: 'All recipes' });
+		// The arrow form every other closing link uses, on the shared hit-area
+		// class (decided 29 October 2026).
+		const all = screen.getByRole('link', { name: 'All recipes →' });
 		expect(all).toHaveAttribute('href', '/recipes');
+		expect(all).toHaveClass('arrow-link');
 		const grid = container.querySelector('.recipe-grid')!;
 		expect(grid.compareDocumentPosition(all) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 		// One column, the site's: the hero, the diff and the grid all sit inside

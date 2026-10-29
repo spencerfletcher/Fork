@@ -39,26 +39,20 @@
 		}
 	}
 
+	/* The size is the site's one h1 clamp (decided 29 October 2026). */
 	.hero-title {
 		margin: 0;
 		font-family: var(--font-serif);
-		font-size: 2.75rem;
 		line-height: 1.1;
 		/* Without this the headline breaks as "Recipes, under / version /
 		   control." at phone widths, stranding a word per line. */
 		text-wrap: balance;
 	}
 
-	@media (min-width: 640px) {
-		.hero-title {
-			font-size: 3.5rem;
-		}
-	}
-
 	.hero-lede {
 		max-width: 62ch;
 		margin: 1.25rem 0 2rem;
-		font-size: 1.05rem;
+		font-size: 1.0625rem;
 		line-height: 1.6;
 		color: var(--color-text-2);
 		text-wrap: pretty;
