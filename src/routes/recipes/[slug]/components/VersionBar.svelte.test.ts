@@ -49,6 +49,7 @@ describe('VersionBar', () => {
 		expect(current.querySelector('.version-number .sr-only')).toHaveTextContent(
 			'Version 3, the latest'
 		);
+
 		expect(current.querySelector('.message')).toHaveTextContent('Chill the dough');
 		expect(current.querySelector('.message')).toHaveClass('clamped');
 		const toggle = screen.getByRole('button', { name: '3 versions' });
@@ -111,15 +112,17 @@ describe('VersionBar', () => {
 		expect(current.querySelector('.version-number .sr-only')).toHaveTextContent(
 			'Version 2 of 3, an older version'
 		);
+
 		expect(current).toHaveTextContent('Older version');
 		expect(screen.getByRole('link', { name: 'Back to v3' })).toHaveAttribute(
 			'href',
 			'/recipes/my-fork'
 		);
-		// Each control carries its own separator, so a wrapped line never ends in one.
-		for (const item of current.querySelectorAll('.controls .item')) {
-			expect(item.textContent!.trim()).not.toMatch(/·$/);
-		}
+		// The separators are drawn by CSS between items, never typed, so no
+		// wrapped line can start or end with one.
+		expect(current.querySelectorAll('.controls .item')).toHaveLength(3);
+		expect(current.querySelector('.controls')!.textContent).not.toContain('·');
+
 		expect(screen.queryByRole('link', { name: /compare/i })).toBeNull();
 		await fireEvent.click(screen.getByRole('button', { name: '3 versions' }));
 		// v3's row compares with v2, the one being read; v2's own line still has none.

@@ -27,7 +27,8 @@
 	<p class="details text-text-2 m-0 font-sans text-base leading-[1.5]">
 		{#each pairs as [label, value], i (label)}
 			{#if i > 0}{' '}
-				<span class="dot" aria-hidden="true">·</span>
+				<span class="dot text-text-3" aria-hidden="true">·</span>
+
 				{' '}{/if}
 			<span class="pair whitespace-nowrap">
 				<span class="text-text font-semibold">{value}</span>
@@ -38,8 +39,8 @@
 {/if}
 
 <style>
+	/* Ink 3: Rule 2 vanished into the paper (29 October 2026). */
 	.dot {
 		padding: 0 8px;
-		color: var(--color-border-2);
 	}
 </style>

@@ -61,16 +61,14 @@
 				<span aria-hidden="true">v{n}</span>
 			</span>
 			<span class="message text-text" class:clamped={!open}>{currentVersion.commitMessage}</span>
-			<!-- Each item carries its own separator, so a wrapped line never ends in one. -->
+			<!-- The separators are drawn between items by CSS, never typed, so no
+			     wrapped line can begin or end with one. -->
 			<span class="controls text-text-2">
 				{#if isViewingHistory}
 					<span class="item">Older version</span>
-					<span class="item">
-						· <a href="/recipes/{recipe.slug}">Back to v{latest}</a>
-					</span>
+					<span class="item"><a href="/recipes/{recipe.slug}">Back to v{latest}</a></span>
 				{/if}
 				<span class="item">
-					{#if isViewingHistory}·{/if}
 					<button
 						type="button"
 						class="versions-toggle"
@@ -184,6 +182,10 @@
 		white-space: nowrap;
 	}
 
+	.item + .item::before {
+		content: '· ';
+	}
+
 	.version-bar a,
 	.versions-toggle {
 		color: var(--color-accent);
@@ -260,6 +262,18 @@
 		.history li {
 			flex-wrap: wrap;
 			row-gap: 4px;
+		}
+
+		/* The controls wrap as items 10px apart with no dots at all, so a line
+		   that starts on "3 versions" does not start on a separator. */
+		.controls {
+			display: flex;
+			flex-wrap: wrap;
+			column-gap: 10px;
+		}
+
+		.item + .item::before {
+			content: none;
 		}
 
 		/* Outranks the 4px hit rule above; inline-block so the padding counts. */

@@ -796,6 +796,35 @@ test.describe('Recipe detail page', () => {
 		);
 		expect(short).toEqual([]);
 	});
+
+	test('the bar’s separators are drawn, not typed, and a phone line never starts or ends with one', async ({
+		page
+	}) => {
+		await gotoClassicCookies(page);
+		const recipeUrl = page.url().split('?')[0];
+		const controls = page.locator('.version-bar .current .controls');
+		const dots = () =>
+			controls
+				.locator('.item')
+				.evaluateAll((els) => els.map((el) => getComputedStyle(el, '::before').content));
+		// Desktop: a dot before every item after the first, none typed into the text.
+		await page.setViewportSize({ width: 1280, height: 900 });
+		await page.goto(`${recipeUrl}?version=2`);
+		expect(await dots()).toEqual(['none', '"· "', '"· "']);
+		expect(await controls.textContent()).not.toContain('·');
+		// Phone: the items wrap with a 10px gap and no dots, so no line can
+		// begin or end with one.
+		await page.setViewportSize({ width: 390, height: 900 });
+		await page.goto(`${recipeUrl}?version=2`);
+		expect(await dots()).toEqual(['none', 'none', 'none']);
+		expect(await controls.evaluate((el) => getComputedStyle(el).columnGap)).toBe('10px');
+	});
+
+	test('the measure’s dots are visible: Ink 3, not a rule colour', async ({ page }) => {
+		await gotoClassicCookies(page);
+		const dot = page.locator('.details .dot').first();
+		expect(await dot.evaluate((el) => getComputedStyle(el).color)).toBe('rgb(111, 105, 96)');
+	});
 });
 
 test.describe('Landing page (logged out)', () => {

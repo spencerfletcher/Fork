@@ -35,6 +35,8 @@ describe('Details', () => {
 		});
 		expect(line(container)).toBe('45 min cook · 1 serving');
 		expect(container.querySelectorAll('.dot')).toHaveLength(1);
+		// Ink 3, so the dot can be seen; Rule 2 vanished into the paper.
+		expect(container.querySelector('.dot')).toHaveClass('text-text-3');
 	});
 
 	test('renders nothing when there is nothing to show', () => {
