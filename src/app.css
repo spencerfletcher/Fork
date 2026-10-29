@@ -421,15 +421,6 @@
 			margin: -19px -18px -4px;
 			padding: 4px 18px;
 		}
-
-		.tag-tabs a,
-		.tag-tabs button {
-			padding-top: 15px;
-		}
-
-		.tag-tabs button[aria-pressed='true']::before {
-			top: 13px;
-		}
 	}
 
 	.tag-tabs a,
@@ -479,6 +470,18 @@
 
 	.tag-tabs .tag-tabs__clear {
 		color: var(--color-text-3);
+	}
+
+	/* After the base rules above, which would otherwise win on source order. */
+	@media (max-width: 699px) {
+		.tag-tabs a,
+		.tag-tabs button {
+			padding-top: 15px;
+		}
+
+		.tag-tabs button[aria-pressed='true']::before {
+			top: 13px;
+		}
 	}
 
 	.eyebrow-label.section-heading {
