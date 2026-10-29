@@ -36,8 +36,10 @@
 			<p class="empty-state mt-6">
 				{#if filtered}
 					No recipes found. Try adjusting your search or clearing some filters.
+					<a href="/search">Clear filters</a>
 				{:else}
 					Enter a recipe name or select tags to find recipes.
+					<a href="/recipes">All recipes</a>
 				{/if}
 			</p>
 		{/if}

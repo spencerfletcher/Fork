@@ -401,8 +401,8 @@
 	.tag-tabs {
 		display: flex;
 		gap: 16px;
-		padding: 4px;
-		margin: -4px;
+		padding: 4px 8px;
+		margin: -4px -8px;
 		overflow-x: auto;
 		white-space: nowrap;
 		scrollbar-width: none;
@@ -426,6 +426,10 @@
 		.tag-tabs button {
 			padding-top: 15px;
 		}
+
+		.tag-tabs button[aria-pressed='true']::before {
+			top: 13px;
+		}
 	}
 
 	.tag-tabs a,
@@ -447,11 +451,30 @@
 		color: var(--color-text);
 	}
 
-	.tag-tabs a[aria-current='page'],
-	.tag-tabs button[aria-pressed='true'] {
+	.tag-tabs a[aria-current='page'] {
 		color: var(--color-text);
 		font-weight: 600;
 		border-bottom-color: var(--color-accent);
+	}
+
+	/* A pressed filter is a tag pill (1px Ink 2 border, Ink 2 text), not the
+	   current page's underline: it is a state, not a place. The pill is drawn
+	   around the text band only, so the phone's padding above stays a hit area
+	   and the text never moves (8px of pill each side, pulled back by margin). */
+	.tag-tabs button[aria-pressed='true'] {
+		position: relative;
+		padding-inline: 8px;
+		margin-inline: -8px;
+		color: var(--color-text-2);
+	}
+
+	.tag-tabs button[aria-pressed='true']::before {
+		content: '';
+		position: absolute;
+		inset: -2px 0 2px;
+		border: 1px solid var(--color-text-2);
+		border-radius: var(--radius-pill);
+		pointer-events: none;
 	}
 
 	.tag-tabs .tag-tabs__clear {
