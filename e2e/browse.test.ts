@@ -92,6 +92,16 @@ test.describe('Search filters', () => {
 	});
 });
 
+test.describe('Spacing', () => {
+	test('search results sit on the 8px scale under the filters', async ({ page }) => {
+		await page.goto('/search?q=cookie');
+		const margin = await page
+			.locator('section.results')
+			.evaluate((el) => getComputedStyle(el).marginTop);
+		expect(margin).toBe('24px');
+	});
+});
+
 test.describe('Recipe cards', () => {
 	test('the author link is a 24px target at desktop', async ({ page }) => {
 		await page.setViewportSize({ width: 1280, height: 900 });

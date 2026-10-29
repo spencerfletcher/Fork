@@ -42,7 +42,8 @@
 				{#if filtered}
 					No favorites match your filters. Try adjusting your search.
 				{:else}
-					No favorites yet. <a href="/" class="explore-link">Explore recipes →</a>
+					No favorites yet. Tap the star on any recipe.
+					<a href="/" class="arrow-link">Explore recipes →</a>
 				{/if}
 			</p>
 		{/if}
@@ -51,14 +52,6 @@
 
 <style>
 	.results {
-		margin-top: 26px;
-	}
-
-	/* On a phone the one link reaches a thumb's 44px by padding, not a button. */
-	@media (max-width: 699px) {
-		.explore-link {
-			display: inline-block;
-			padding: 11px 0;
-		}
+		margin-top: var(--space-5);
 	}
 </style>

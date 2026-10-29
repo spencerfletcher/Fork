@@ -32,8 +32,10 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 		.filter((f) => f.isPublic || f.authorId === user.id)
 		.map((f) => f.recipeId);
 
+	// With nothing favorited a query or tags filter nothing: the page hears of
+	// neither, so it says "No favorites yet" rather than "No favorites match".
 	if (favoriteIds.length === 0) {
-		return { favoriteRecipes: [], allTags: [], searchQuery, selectedTags: tagSlugs, meta: META };
+		return { favoriteRecipes: [], allTags: [], searchQuery: '', selectedTags: [], meta: META };
 	}
 
 	// Chips come from every favourite, not the filtered subset, or narrowing by

@@ -54,6 +54,6 @@
 
 <style>
 	.results {
-		margin-top: 26px;
+		margin-top: var(--space-5);
 	}
 </style>

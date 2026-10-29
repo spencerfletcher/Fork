@@ -147,6 +147,13 @@ describe('favorites load', () => {
 		expect(findManyMock).not.toHaveBeenCalled();
 	});
 
+	test('with no favourites a query or tags in the URL filter nothing, so the page is not told of them', async () => {
+		// Otherwise it shows the filters and "No favorites match", which is false.
+		mockFavourites([]);
+		const result = await loadResult(makeEvent('?q=cookie&tags=dessert'));
+		expect(result).toMatchObject({ searchQuery: '', selectedTags: [] });
+	});
+
 	test('hides a favourite whose recipe has since been made private by its owner', async () => {
 		mockFavouriteRows([{ recipeId: 1, isPublic: false, authorId: 'someone-else' }]);
 

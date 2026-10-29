@@ -31,11 +31,12 @@ describe('Favorites page', () => {
 		// (decided 29 October 2026).
 		renderFavorites();
 		expect(screen.queryByRole('searchbox')).toBeNull();
-		expect(screen.getByText(/No favorites yet/)).toBeInTheDocument();
-		const explore = screen.getByRole('link', { name: /explore recipes/i });
+		// It says where favoriting happens (decided 29 October 2026).
+		expect(screen.getByText(/No favorites yet\. Tap the star on any recipe\./)).toBeInTheDocument();
+		// The arrow form: 24px at desktop, a 44px thumb target on a phone.
+		const explore = screen.getByRole('link', { name: 'Explore recipes →' });
 		expect(explore).toHaveAttribute('href', '/');
-		// A 44px thumb target on a phone, by padding, not a button.
-		expect(explore).toHaveClass('explore-link');
+		expect(explore).toHaveClass('arrow-link');
 	});
 
 	test('with favorites the search and tag filters render', () => {
