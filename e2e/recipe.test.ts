@@ -82,18 +82,27 @@ test.describe('Recipe detail page', () => {
 		const recipeUrl = page.url().split('?')[0];
 		await page.goto(`${recipeUrl}?version=2`);
 		await page.waitForLoadState('networkidle');
-		// The bar reads "v2 Older version · Back to v3 · 3 versions <message>": the
-		// state leads, right after the chip.
+		// The bar reads "v2 Older version <message>", then "Back to v3 · 3 versions"
+		// at the right: the state alone leads, right after the chip.
 		const bar = page.locator('.version-bar');
 		await expect(bar).toContainText('Older version');
 		await expect(bar.locator('.current .version-number')).toContainText('v2');
 		await expect(bar.locator('.current .message')).toContainText(SEED[0].versions[1].commitMessage);
 		await expect(page.getByRole('link', { name: 'Back to v3' })).toBeVisible();
 		const chip = await bar.locator('.current .version-number').boundingBox();
-		const state = await bar.locator('.current .controls').boundingBox();
+		const state = await bar.locator('.current .state').boundingBox();
 		const note = await bar.locator('.current .message').boundingBox();
+		const controls = await bar.locator('.current .controls').boundingBox();
+		await expect(bar.locator('.current .state')).toHaveText('Older version');
 		expect(state!.x).toBeGreaterThan(chip!.x);
 		expect(note!.x).toBeGreaterThan(state!.x + state!.width - 1);
+		expect(controls!.x).toBeGreaterThan(note!.x + note!.width - 1);
+		// The toggle stands where the latest version keeps it.
+		const toggle = page.getByRole('button', { name: '3 versions' });
+		const older = (await toggle.boundingBox())!;
+		await page.goto(recipeUrl);
+		const latest = (await toggle.boundingBox())!;
+		expect(Math.abs(older.x + older.width - (latest.x + latest.width))).toBeLessThan(1);
 	});
 
 	test('Compare link on v2 navigates to diff page', async ({ page }) => {
@@ -391,21 +400,35 @@ test.describe('Recipe detail page', () => {
 		expect(new Set(messages).size).toBe(1);
 	});
 
-	test('on an iPad an older version leads with its state beside the chip, the note on its own row under it, and the tabs keep their gap', async ({
+	test('on an iPad an older version reads its state and note beside the chip, the controls on their own row under them, and the tabs keep their gap', async ({
 		page
 	}) => {
 		await page.setViewportSize({ width: 768, height: 1024 });
 		await gotoClassicCookies(page);
-		await page.goto(`${page.url().split('?')[0]}?version=2`);
-		const chip = await page.locator('.version-bar .current .version-number').boundingBox();
-		const note = await page.locator('.version-bar .current .message').boundingBox();
-		const controls = await page.locator('.version-bar .current .controls').boundingBox();
-		expect(note!.width).toBeGreaterThan(400);
-		expect(Math.abs(controls!.y - chip!.y)).toBeLessThan(6);
-		expect(note!.y).toBeGreaterThanOrEqual(controls!.y + controls!.height - 1);
+		const recipeUrl = page.url().split('?')[0];
+		await page.goto(`${recipeUrl}?version=2`);
+		const box = async (part: string) =>
+			(await page.locator(`.version-bar .current ${part}`).boundingBox())!;
+		let [chip, state, note, controls] = await Promise.all(
+			['.version-number', '.state', '.message', '.controls'].map(box)
+		);
+		expect(note.width).toBeGreaterThan(400);
+		expect(Math.abs(state.y - chip.y)).toBeLessThan(6);
+		expect(Math.abs(note.y - state.y)).toBeLessThan(1);
+		expect(controls.y).toBeGreaterThanOrEqual(note.y + note.height - 1);
 		const bar = await page.locator('.version-bar').boundingBox();
 		const tabs = await page.locator('.section-tabs').boundingBox();
 		expect(tabs!.y - (bar!.y + bar!.height)).toBeGreaterThanOrEqual(16);
+		// On a phone the note takes a row of its own between the state and the
+		// controls, indented to the note's column.
+		await page.setViewportSize({ width: 390, height: 900 });
+		[chip, state, note, controls] = await Promise.all(
+			['.version-number', '.state', '.message', '.controls'].map(box)
+		);
+		expect(Math.abs(state.y - chip.y)).toBeLessThan(6);
+		expect(note.y).toBeGreaterThanOrEqual(state.y + state.height - 1);
+		expect(controls.y).toBeGreaterThanOrEqual(note.y + note.height - 1);
+		expect(Math.abs(note.x - state.x)).toBeLessThan(1);
 	});
 
 	test('on a phone every link and button in the bar is 44px tall', async ({ page }) => {
@@ -938,14 +961,30 @@ test.describe('Recipe detail page', () => {
 		// Desktop: a dot before every item after the first, none typed into the text.
 		await page.setViewportSize({ width: 1280, height: 900 });
 		await page.goto(`${recipeUrl}?version=2`);
-		expect(await dots()).toEqual(['none', '"· "', '"· "']);
+		expect(await dots()).toEqual(['none', '"· "']);
 		expect(await controls.textContent()).not.toContain('·');
 		// Phone: the items wrap with a 10px gap and no dots, so no line can
 		// begin or end with one.
 		await page.setViewportSize({ width: 390, height: 900 });
 		await page.goto(`${recipeUrl}?version=2`);
-		expect(await dots()).toEqual(['none', 'none', 'none']);
+		expect(await dots()).toEqual(['none', 'none']);
 		expect(await controls.evaluate((el) => getComputedStyle(el).columnGap)).toBe('10px');
+		// At every width an item with a dot shares its line with the item before
+		// it, so no line starts with one; the dot is the item's ::before, so none
+		// can end a line either.
+		for (const width of [1280, 1024, 768, 390, 320]) {
+			await page.setViewportSize({ width, height: 900 });
+			const stranded = await controls
+				.locator('.item')
+				.evaluateAll((els) =>
+					els.filter(
+						(el, i) =>
+							getComputedStyle(el, '::before').content !== 'none' &&
+							Math.abs(el.getBoundingClientRect().top - els[i - 1].getBoundingClientRect().top) > 1
+					)
+				);
+			expect(stranded, `${width}`).toHaveLength(0);
+		}
 	});
 
 	test('the measure’s dots are drawn in Ink 3 between pairs, and a phone drops them for a 10px gap', async ({

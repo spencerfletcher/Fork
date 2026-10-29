@@ -14,7 +14,7 @@ function makeVersion(versionNumber: number, commitMessage: string) {
 /** The bar line's parts in reading order. */
 const order = (current: Element) =>
 	[...current.children].map((el) =>
-		['version-number', 'message', 'controls'].find((c) => el.classList.contains(c))
+		['version-number', 'state', 'message', 'controls'].find((c) => el.classList.contains(c))
 	);
 
 const THREE = [
@@ -122,17 +122,18 @@ describe('VersionBar', () => {
 			/^Version 2 of 3, an older version\.$/
 		);
 
-		expect(current).toHaveTextContent('Older version');
-		// The state leads, right after the chip: "v2 Older version · Back to v3 ·
-		// 3 versions", then the note.
-		expect(order(current)).toEqual(['version-number', 'controls', 'message']);
+		// The state alone leads, right after the chip, then the note; the controls
+		// keep the right end, where the latest keeps its toggle.
+		expect(order(current)).toEqual(['version-number', 'state', 'message', 'controls']);
+		expect(current.querySelector('.state')).toHaveTextContent(/^Older version$/);
 		expect(screen.getByRole('link', { name: 'Back to v3' })).toHaveAttribute(
 			'href',
 			'/recipes/my-fork'
 		);
 		// The separators are drawn by CSS between items, never typed, so no
 		// wrapped line can start or end with one.
-		expect(current.querySelectorAll('.controls .item')).toHaveLength(3);
+		expect(current.querySelectorAll('.controls .item')).toHaveLength(2);
+		expect(current.querySelector('.controls')).not.toHaveTextContent('Older version');
 		expect(current.querySelector('.controls')!.textContent).not.toContain('·');
 
 		expect(screen.queryByRole('link', { name: /compare/i })).toBeNull();
