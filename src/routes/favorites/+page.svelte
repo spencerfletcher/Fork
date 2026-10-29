@@ -15,10 +15,15 @@
 			<h1>Favorites</h1>
 		</div>
 
-		<SearchFilters
-			initialQuery={data.searchQuery}
-			initialTags={data.selectedTags}
-			availableTags={data.allTags} />
+		<!-- No filters over an empty list: a search box with nothing to find
+		     invites a query. They stay while a filter is active so it can be
+		     widened again (decided 29 October 2026). -->
+		{#if recipes.length > 0 || filtered}
+			<SearchFilters
+				initialQuery={data.searchQuery}
+				initialTags={data.selectedTags}
+				availableTags={data.allTags} />
+		{/if}
 
 		{#if recipes.length > 0}
 			<section class="results">
@@ -37,7 +42,7 @@
 				{#if filtered}
 					No favorites match your filters. Try adjusting your search.
 				{:else}
-					No favorites yet. <a href="/">Explore recipes →</a>
+					No favorites yet. <a href="/" class="explore-link">Explore recipes →</a>
 				{/if}
 			</p>
 		{/if}
@@ -47,5 +52,13 @@
 <style>
 	.results {
 		margin-top: 26px;
+	}
+
+	/* On a phone the one link reaches a thumb's 44px by padding, not a button. */
+	@media (max-width: 699px) {
+		.explore-link {
+			display: inline-block;
+			padding: 11px 0;
+		}
 	}
 </style>

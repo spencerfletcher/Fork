@@ -504,3 +504,23 @@ test.describe('Compare page', () => {
 		}
 	});
 });
+
+// ─── Favorites ────────────────────────────────────────────────────────────────
+
+test.describe('Favorites', () => {
+	test('with no favorites the page is just the empty state, and its link is a thumb target on a phone', async ({
+		page
+	}) => {
+		// The seed user has favorited nothing, and this test favorites nothing:
+		// a search box over an empty list invites a query with nothing to find
+		// (decided 29 October 2026).
+		await page.setViewportSize({ width: 390, height: 844 });
+		await page.goto('/favorites');
+		await expect(page.getByRole('heading', { level: 1, name: 'Favorites' })).toBeVisible();
+		await expect(page.getByRole('searchbox')).toHaveCount(0);
+		const explore = page.getByRole('link', { name: /explore recipes/i });
+		await expect(explore).toBeVisible();
+		const box = await explore.boundingBox();
+		expect(box!.height).toBeGreaterThanOrEqual(44);
+	});
+});
