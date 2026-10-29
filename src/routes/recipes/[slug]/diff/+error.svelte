@@ -1,0 +1,30 @@
+<script lang="ts">
+	import { page } from '$app/state';
+
+	// A bad range is a 400 and the recipe still exists, so the way back is to
+	// it. A 404 means there is no recipe to go back to; home is the only way.
+	const recipeUrl = $derived(page.status === 400 ? `/recipes/${page.params.slug}` : null);
+</script>
+
+<div class="page">
+	<div class="page-inner">
+		<div class="py-8 text-center">
+			<p class="text-accent mb-3 font-mono text-[4rem] leading-none font-bold">
+				{page.status}
+			</p>
+			<h1 class="m-0 mb-3 text-[1.5rem]">{page.error?.message || 'An error occurred'}</h1>
+			<p class="text-text-3 m-0 mb-6">
+				{#if recipeUrl}
+					Pick two of the recipe's versions to compare.
+				{:else}
+					The page you're looking for doesn't exist or something went wrong.
+				{/if}
+			</p>
+			{#if recipeUrl}
+				<a href={recipeUrl} class="btn-primary">Back to the recipe</a>
+			{:else}
+				<a href="/" class="btn-primary">Go Home</a>
+			{/if}
+		</div>
+	</div>
+</div>

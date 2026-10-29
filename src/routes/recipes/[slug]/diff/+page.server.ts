@@ -1,4 +1,4 @@
-import { error } from '@sveltejs/kit';
+import { error, redirect } from '@sveltejs/kit';
 import { db } from '#lib/server/db/index.js';
 import { recipes, recipeVersions } from '#lib/server/db/schema.js';
 import { eq, asc } from 'drizzle-orm';
@@ -26,14 +26,20 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 	const fromParam = url.searchParams.get('from');
 	const toParam = url.searchParams.get('to');
 
-	const fromNum = fromParam ? parseInt(fromParam, 10) : allVersions[0].versionNumber;
-	const toNum = toParam ? parseInt(toParam, 10) : allVersions[allVersions.length - 1].versionNumber;
+	// Number, not parseInt: "1.5" and "abc" are not versions, and neither is
+	// worth echoing back in the message.
+	const fromNum = fromParam ? Number(fromParam) : allVersions[0].versionNumber;
+	const toNum = toParam ? Number(toParam) : allVersions[allVersions.length - 1].versionNumber;
 
 	const fromVersion = allVersions.find((v) => v.versionNumber === fromNum);
 	const toVersion = allVersions.find((v) => v.versionNumber === toNum);
 
-	if (!fromVersion) throw error(400, `Version ${fromNum} not found`);
-	if (!toVersion) throw error(400, `Version ${toNum} not found`);
+	if (!fromVersion || !toVersion) throw error(400, `Version not found in ${recipe.title}`);
+
+	// The diff always reads older to newer; a reversed pair is swapped in the
+	// URL too, so the pickers and the address agree.
+	if (fromNum > toNum)
+		throw redirect(303, `/recipes/${recipe.slug}/diff?from=${toNum}&to=${fromNum}`);
 
 	const ingredientDiff = diffIngredients(fromVersion.ingredients, toVersion.ingredients);
 	const stepDiff = diffSteps(fromVersion.steps, toVersion.steps);
@@ -46,6 +52,10 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 		metaDiff,
 		ingredientDiff,
 		stepDiff,
-		allVersions
+		allVersions,
+		meta: {
+			title: `v${fromNum} → v${toNum} · ${recipe.title}`,
+			description: `What changed between v${fromNum} and v${toNum} of ${recipe.title} on Fork.`
+		}
 	};
 };
