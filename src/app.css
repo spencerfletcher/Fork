@@ -1054,3 +1054,15 @@
 		gap: var(--space-3);
 	}
 }
+
+/* Asked for less motion, every transition and animation finishes at once:
+   near zero rather than none, so transitionend and animationend still fire. */
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+	}
+}

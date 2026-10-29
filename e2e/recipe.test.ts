@@ -1197,6 +1197,18 @@ test.describe('Recipe detail page', () => {
 		await expect(img).toHaveAttribute('alt', '');
 	});
 
+	test('asked for reduced motion, transitions finish at once: the history chevron turns without its 0.15s', async ({
+		page
+	}) => {
+		await gotoClassicCookies(page);
+		const chevron = page.locator('.version-bar .chevron');
+		const duration = () =>
+			chevron.evaluate((el) => parseFloat(getComputedStyle(el).transitionDuration));
+		expect(await duration()).toBe(0.15);
+		await page.emulateMedia({ reducedMotion: 'reduce' });
+		expect(await duration()).toBeLessThanOrEqual(0.001);
+	});
+
 	test('selected text sits on marigold in ink', async ({ page }) => {
 		await gotoClassicCookies(page);
 		const selection = await page
