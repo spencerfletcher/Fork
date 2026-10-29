@@ -103,6 +103,28 @@ test.describe('New recipe page', () => {
 		await expect(title).not.toHaveAttribute('aria-invalid', 'true');
 	});
 
+	test('Tags: the list opens on focus, arrows and Enter pick without Tab stops, and the remove button is 16px (44 on a phone)', async ({
+		page
+	}) => {
+		await gotoHydrated(page, '/recipes/new');
+		const input = page.getByRole('combobox', { name: /tag/i });
+		await input.focus();
+		await expect(page.getByRole('listbox')).toBeVisible();
+		await page.keyboard.press('ArrowDown');
+		const first = page.getByRole('option').first();
+		await expect(first).toHaveAttribute('aria-selected', 'true');
+		await expect(input).toHaveAttribute('aria-activedescendant', await first.getAttribute('id'));
+		const name = (await first.textContent())!.trim();
+		await page.keyboard.press('Enter');
+		const remove = page.getByRole('button', { name: `Remove ${name}` });
+		await expect(remove).toBeVisible();
+		let box = await remove.boundingBox();
+		expect([box!.width, box!.height]).toEqual([16, 16]);
+		await page.setViewportSize({ width: 390, height: 900 });
+		box = await remove.boundingBox();
+		expect([box!.width, box!.height]).toEqual([44, 44]);
+	});
+
 	test('empty editors keep room to type into, instead of collapsing to one line', async ({
 		page
 	}) => {
@@ -202,9 +224,8 @@ test.describe('Edit recipe page', () => {
 					return el.getAttribute('name') || el.id || el.textContent?.trim() || '';
 				});
 				seen.push(name);
-				// The tag combobox opens its suggestion list on focus and Tab would
-				// walk the options; Escape closes it, as a keyboard user would.
-				if (name === 'tag-combobox') await page.keyboard.press('Escape');
+				// The tag combobox opens its suggestion list on focus; its options are
+				// not Tab stops, so Tab walks straight past them.
 				await page.keyboard.press('Tab');
 			}
 			return seen;

@@ -14,12 +14,67 @@ function getInput() {
 	return screen.getByRole('combobox');
 }
 
+function option(name: RegExp) {
+	return screen.getByRole('option', { name });
+}
+
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
 describe('TagInput', () => {
-	test('renders a combobox input', () => {
+	test('renders a combobox input with an accessible name', () => {
 		render(TagInput, { props: { allTags } });
-		expect(getInput()).toBeInTheDocument();
+		expect(screen.getByRole('combobox', { name: /tag/i })).toBeInTheDocument();
+	});
+
+	test('each option is the element that carries aria-selected and is not a Tab stop', async () => {
+		render(TagInput, { props: { allTags } });
+		await fireEvent.focus(getInput());
+		const options = screen.getAllByRole('option');
+		expect(options).toHaveLength(3);
+		for (const o of options) {
+			expect(o).toHaveAttribute('tabindex', '-1');
+			expect(o).toHaveAttribute('aria-selected', 'false');
+			expect(o.querySelector('button')).toBeNull();
+		}
+		expect(screen.queryByRole('button', { name: /^Dessert$/ })).toBeNull();
+	});
+
+	test('ArrowDown moves the active option, named by aria-activedescendant, and Enter picks it', async () => {
+		const { container } = render(TagInput, { props: { allTags } });
+		const input = getInput();
+		await fireEvent.focus(input);
+		expect(input).not.toHaveAttribute('aria-activedescendant');
+		await fireEvent.keyDown(input, { key: 'ArrowDown' });
+		expect(input).toHaveAttribute('aria-activedescendant', option(/^Dessert$/).id);
+		expect(option(/^Dessert$/)).toHaveAttribute('aria-selected', 'true');
+		await fireEvent.keyDown(input, { key: 'ArrowDown' });
+		expect(input).toHaveAttribute('aria-activedescendant', option(/^Baking$/).id);
+		expect(option(/^Dessert$/)).toHaveAttribute('aria-selected', 'false');
+		await fireEvent.keyDown(input, { key: 'Enter' });
+		expect(container.querySelector('input[type="hidden"][name="tags"]')).toHaveValue('Baking');
+		expect(input).not.toHaveAttribute('aria-activedescendant');
+	});
+
+	test('ArrowUp from the top wraps to the last option, and the Create option is reachable', async () => {
+		const { container } = render(TagInput, { props: { allTags } });
+		const input = getInput();
+		await fireEvent.focus(input);
+		await fireEvent.keyDown(input, { key: 'ArrowUp' });
+		expect(input).toHaveAttribute('aria-activedescendant', option(/^Dinner$/).id);
+		await fireEvent.input(input, { target: { value: 'Vegan' } });
+		expect(input).not.toHaveAttribute('aria-activedescendant');
+		await fireEvent.keyDown(input, { key: 'ArrowDown' });
+		expect(option(/Create/)).toHaveAttribute('aria-selected', 'true');
+		await fireEvent.keyDown(input, { key: 'Enter' });
+		expect(container.querySelector('input[type="hidden"][name="tags"]')).toHaveValue('Vegan');
+	});
+
+	test('Escape closes the list', async () => {
+		render(TagInput, { props: { allTags } });
+		await fireEvent.focus(getInput());
+		expect(screen.getByRole('listbox')).toBeInTheDocument();
+		await fireEvent.keyDown(getInput(), { key: 'Escape' });
+		expect(screen.queryByRole('listbox')).toBeNull();
 	});
 
 	test('shows all suggestions when focused with empty query', async () => {
@@ -61,8 +116,7 @@ describe('TagInput', () => {
 	test('selecting a suggestion adds it as a pill', async () => {
 		render(TagInput, { props: { allTags } });
 		await fireEvent.focus(getInput());
-		const dessertBtn = screen.getByRole('button', { name: /^Dessert$/i });
-		await fireEvent.click(dessertBtn);
+		await fireEvent.click(option(/^Dessert$/i));
 		// Pill should appear
 		expect(screen.getAllByText('Dessert').length).toBeGreaterThanOrEqual(1);
 	});
@@ -70,8 +124,7 @@ describe('TagInput', () => {
 	test('selected tag is removed from suggestions', async () => {
 		render(TagInput, { props: { allTags } });
 		await fireEvent.focus(getInput());
-		const dessertBtn = screen.getByRole('button', { name: /^Dessert$/i });
-		await fireEvent.click(dessertBtn);
+		await fireEvent.click(option(/^Dessert$/i));
 		// Re-focus to open dropdown
 		await fireEvent.focus(getInput());
 		// Dessert should no longer appear in the dropdown list options
@@ -83,21 +136,19 @@ describe('TagInput', () => {
 	test('removing a pill deselects the tag', async () => {
 		render(TagInput, { props: { allTags } });
 		await fireEvent.focus(getInput());
-		const dessertBtn = screen.getByRole('button', { name: /^Dessert$/i });
-		await fireEvent.click(dessertBtn);
+		await fireEvent.click(option(/^Dessert$/i));
 		// Click the × button on the pill
 		const removeBtn = screen.getByRole('button', { name: /remove dessert/i });
 		await fireEvent.click(removeBtn);
 		// Re-focus — Dessert should be in suggestions again
 		await fireEvent.focus(getInput());
-		expect(screen.getByRole('button', { name: /^Dessert$/i })).toBeInTheDocument();
+		expect(option(/^Dessert$/i)).toBeInTheDocument();
 	});
 
 	test('creates a hidden input for each selected tag', async () => {
 		const { container } = render(TagInput, { props: { allTags } });
 		await fireEvent.focus(getInput());
-		const bakingBtn = screen.getByRole('button', { name: /^Baking$/i });
-		await fireEvent.click(bakingBtn);
+		await fireEvent.click(option(/^Baking$/i));
 		const hidden = container.querySelectorAll('input[type="hidden"][name="tags"]');
 		expect(hidden).toHaveLength(1);
 		expect(hidden[0]).toHaveValue('Baking');
@@ -107,10 +158,10 @@ describe('TagInput', () => {
 		const { container } = render(TagInput, { props: { allTags } });
 		// Select Dessert
 		await fireEvent.focus(getInput());
-		await fireEvent.click(screen.getByRole('button', { name: /^Dessert$/i }));
+		await fireEvent.click(option(/^Dessert$/i));
 		// Select Baking
 		await fireEvent.focus(getInput());
-		await fireEvent.click(screen.getByRole('button', { name: /^Baking$/i }));
+		await fireEvent.click(option(/^Baking$/i));
 		const hidden = container.querySelectorAll('input[type="hidden"][name="tags"]');
 		expect(hidden).toHaveLength(2);
 	});

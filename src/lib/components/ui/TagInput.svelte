@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { tick } from 'svelte';
 	import { tagKey } from '#lib/recipes/tags.js';
 
 	let {
@@ -11,6 +12,9 @@
 
 	let query = $state('');
 	let open = $state(false);
+	// Index of the arrowed-to option: the suggestions in order, then Create.
+	// -1 is none; typing, picking and closing all reset it.
+	let active = $state(-1);
 	let inputEl: HTMLInputElement;
 	let rootEl: HTMLDivElement;
 
@@ -31,27 +35,41 @@
 	);
 
 	const showDropdown = $derived(open && (suggestions.length > 0 || canCreate));
+	const count = $derived(suggestions.length + (canCreate ? 1 : 0));
 
 	function pick(name: string) {
 		if (!isSelected(name)) selected = [...selected, name];
 		query = '';
+		active = -1;
 	}
 
 	function remove(name: string) {
 		selected = selected.filter((s) => s !== name);
 	}
 
-	// Enter takes the first suggestion, or creates the typed tag when nothing
-	// matches, so a tag can be added without leaving the keyboard. Arrowing
-	// down reaches the option buttons, which are plain buttons.
+	// The options are not Tab stops: arrows move the active one and Enter takes
+	// it. Without an active option Enter takes the first suggestion, or creates
+	// the typed tag when nothing matches, so a tag is added without leaving the
+	// keyboard.
 	function handleKeydown(e: KeyboardEvent) {
+		if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+			e.preventDefault();
+			open = true;
+			if (count === 0) return;
+			active = e.key === 'ArrowDown' ? (active + 1) % count : active <= 0 ? count - 1 : active - 1;
+			tick().then(() =>
+				document.getElementById(`tag-option-${active}`)?.scrollIntoView?.({ block: 'nearest' })
+			);
+		}
 		if (e.key === 'Enter') {
 			e.preventDefault();
-			if (suggestions.length > 0 && query.trim() !== '') pick(suggestions[0].name);
+			if (active >= 0) pick(active < suggestions.length ? suggestions[active].name : query.trim());
+			else if (suggestions.length > 0 && query.trim() !== '') pick(suggestions[0].name);
 			else if (canCreate) pick(query.trim());
 		}
 		if (e.key === 'Escape') {
 			open = false;
+			active = -1;
 			inputEl.blur();
 		}
 	}
@@ -61,6 +79,7 @@
 		setTimeout(() => {
 			if (!rootEl.contains(document.activeElement)) {
 				open = false;
+				active = -1;
 			}
 		}, 150);
 	}
@@ -100,66 +119,73 @@
 			bind:value={query}
 			onfocus={() => (open = true)}
 			onblur={handleBlur}
-			oninput={() => (open = true)}
+			oninput={() => {
+				open = true;
+				active = -1;
+			}}
 			onkeydown={handleKeydown}
 			autocomplete="off"
 			role="combobox"
+			aria-label="Search or create a tag"
 			aria-expanded={showDropdown}
 			aria-haspopup="listbox"
 			aria-autocomplete="list"
-			aria-controls="tag-listbox" />
+			aria-controls="tag-listbox"
+			aria-activedescendant={active >= 0 ? `tag-option-${active}` : undefined} />
 
 		{#if showDropdown}
 			<ul class="tag-menu" role="listbox" id="tag-listbox">
-				{#each suggestions as tag (tag.id)}
+				{#each suggestions as tag, i (tag.id)}
+					<!-- The keyboard is on the input (arrows, Enter), as a combobox has it. -->
+					<!-- svelte-ignore a11y_click_events_have_key_events -->
 					<li
-						class="border-border border-b [&:last-child]:border-b-0"
+						id="tag-option-{i}"
+						class="tag-option border-border border-b [&:last-child]:border-b-0"
 						role="option"
-						aria-selected="false">
-						<button
-							type="button"
-							class="tag-option"
-							onmousedown={(e) => e.preventDefault()}
-							onclick={() => pick(tag.name)}>
-							<svg
-								class="text-text-3 size-4 shrink-0"
-								viewBox="0 0 16 16"
-								fill="none"
-								aria-hidden="true">
-								<path
-									d="M2 2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 0 1.414l-4.586 4.586a1 1 0 0 1-1.414 0L2.293 8.293A1 1 0 0 1 2 7.586V2Z"
-									stroke="currentColor"
-									stroke-width="1.25"
-									stroke-linejoin="round" />
-								<circle cx="5.5" cy="5.5" r="1" fill="currentColor" />
-							</svg>
-							{tag.name}
-						</button>
+						tabindex="-1"
+						aria-selected={active === i}
+						onmousedown={(e) => e.preventDefault()}
+						onclick={() => pick(tag.name)}>
+						<svg
+							class="text-text-3 size-4 shrink-0"
+							viewBox="0 0 16 16"
+							fill="none"
+							aria-hidden="true">
+							<path
+								d="M2 2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 0 1.414l-4.586 4.586a1 1 0 0 1-1.414 0L2.293 8.293A1 1 0 0 1 2 7.586V2Z"
+								stroke="currentColor"
+								stroke-width="1.25"
+								stroke-linejoin="round" />
+							<circle cx="5.5" cy="5.5" r="1" fill="currentColor" />
+						</svg>
+						{tag.name}
 					</li>
 				{/each}
 
 				{#if canCreate}
-					<li class="border-border border-t" role="option" aria-selected="false">
-						<button
-							type="button"
-							class="tag-option tag-option--create"
-							onmousedown={(e) => e.preventDefault()}
-							onclick={() => pick(query.trim())}>
-							<svg
-								class="text-accent size-4 shrink-0"
-								viewBox="0 0 16 16"
-								fill="none"
-								aria-hidden="true">
-								<path
-									d="M8 3v10M3 8h10"
-									stroke="currentColor"
-									stroke-width="1.5"
-									stroke-linecap="round" />
-							</svg>
-							<span>
-								Create <strong>“{query.trim()}”</strong>
-							</span>
-						</button>
+					<!-- svelte-ignore a11y_click_events_have_key_events -->
+					<li
+						id="tag-option-{suggestions.length}"
+						class="tag-option tag-option--create border-border border-t"
+						role="option"
+						tabindex="-1"
+						aria-selected={active === suggestions.length}
+						onmousedown={(e) => e.preventDefault()}
+						onclick={() => pick(query.trim())}>
+						<svg
+							class="text-accent size-4 shrink-0"
+							viewBox="0 0 16 16"
+							fill="none"
+							aria-hidden="true">
+							<path
+								d="M8 3v10M3 8h10"
+								stroke="currentColor"
+								stroke-width="1.5"
+								stroke-linecap="round" />
+						</svg>
+						<span>
+							Create <strong>“{query.trim()}”</strong>
+						</span>
 					</li>
 				{/if}
 			</ul>
@@ -169,7 +195,11 @@
 
 <style>
 	.tag-remove {
-		width: auto;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 16px;
+		height: 16px;
 		padding: 0;
 		border: none;
 		background: transparent;
@@ -182,6 +212,15 @@
 
 	.tag-remove:hover {
 		color: var(--color-text);
+	}
+
+	/* A 44px hit on a phone, grown outward so the glyph stays where it is. */
+	@media (max-width: 699px) {
+		.tag-remove {
+			width: 44px;
+			height: 44px;
+			margin: -14px;
+		}
 	}
 
 	.tag-menu {
@@ -203,20 +242,16 @@
 
 	.tag-option {
 		display: flex;
-		width: 100%;
 		align-items: center;
 		gap: 0.75rem;
 		padding: 0.75rem 1rem;
-		border: none;
-		border-radius: 0;
-		background: transparent;
 		font-size: 0.9rem;
-		text-align: left;
 		cursor: pointer;
 		color: var(--color-text);
 	}
 
-	.tag-option:hover {
+	.tag-option:hover,
+	.tag-option[aria-selected='true'] {
 		background: var(--color-surface-2);
 	}
 

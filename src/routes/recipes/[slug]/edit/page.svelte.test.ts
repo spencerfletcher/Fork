@@ -133,7 +133,7 @@ describe('Edit page form', () => {
 		await fireEvent.click(screen.getByRole('button', { name: 'Remove Dessert' }));
 		expect(screen.getByText('Editing v2 · saves settings only')).toBeInTheDocument();
 		await fireEvent.focus(screen.getByRole('combobox'));
-		await fireEvent.click(screen.getByRole('option', { name: /Dessert/ }).querySelector('button')!);
+		await fireEvent.click(screen.getByRole('option', { name: /Dessert/ }));
 		expect(screen.getByText('Editing v2')).toBeInTheDocument();
 	});
 
