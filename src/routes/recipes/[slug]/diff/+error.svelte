@@ -10,34 +10,53 @@
 	const oneVersion = $derived(page.error?.message.startsWith('Need at least two versions'));
 </script>
 
-<div class="page">
-	<div class="page-inner">
-		<div class="py-8 text-center">
-			<p class="text-accent mb-3 font-mono text-[4rem] leading-none font-bold">
-				{page.status}
-			</p>
-			<h1 class="m-0 mb-3 text-[1.5rem]">{page.error?.message || 'An error occurred'}</h1>
-			<p class="text-text-3 m-0 mb-6">
-				{#if oneVersion}
-					Save a change to the recipe, then compare it with the original.
-				{:else if recipeUrl}
-					Pick two of the recipe's versions to compare.
-				{:else}
-					The page you're looking for doesn't exist or something went wrong.
-				{/if}
-			</p>
-			{#if recipeUrl && !oneVersion}
-				<!-- The heading asks for two versions, so the main action is a pair: the
-				     bare compare URL, which the loader reads as first to latest. -->
-				<div class="flex flex-wrap justify-center gap-3">
-					<a href="{recipeUrl}/diff" class="btn-primary">Compare first and latest</a>
-					<a href={recipeUrl} class="btn-ghost">Back to the recipe</a>
-				</div>
+<!-- The root error page's format: the code and the message in the h1 at the
+     site size, centred on the screen, nothing boxed. -->
+<div class="auth-page">
+	<div class="error-page text-center">
+		<h1 class="m-0">Error {page.status} – {page.error?.message || 'An error occurred'}</h1>
+		<p class="lede text-text-2 m-0">
+			{#if oneVersion}
+				Save a change to the recipe, then compare it with the original.
 			{:else if recipeUrl}
-				<a href={recipeUrl} class="btn-primary">Back to the recipe</a>
+				Pick two of the recipe's versions to compare.
 			{:else}
-				<a href="/" class="btn-primary">Go Home</a>
+				The page you're looking for doesn't exist or something went wrong.
 			{/if}
-		</div>
+		</p>
+		{#if recipeUrl && !oneVersion}
+			<!-- The heading asks for two versions, so the main action is a pair: the
+			     bare compare URL, which the loader reads as first to latest. -->
+			<div class="actions">
+				<a href="{recipeUrl}/diff" class="btn-primary">Compare first and latest</a>
+				<a href={recipeUrl} class="btn-ghost">Back to the recipe</a>
+			</div>
+		{:else if recipeUrl}
+			<div class="actions"><a href={recipeUrl} class="btn-primary">Back to the recipe</a></div>
+		{:else}
+			<div class="actions"><a href="/" class="btn-primary">Go home</a></div>
+		{/if}
 	</div>
 </div>
+
+<style>
+	/* The root error page's measure, lede and spacing. */
+	.error-page {
+		max-width: 65ch;
+		padding-bottom: var(--space-7);
+	}
+
+	.lede {
+		margin-top: 8px;
+		font-size: 1.0625rem;
+		line-height: 1.5;
+	}
+
+	.actions {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: 12px;
+		margin-top: 24px;
+	}
+</style>
