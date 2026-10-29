@@ -169,4 +169,14 @@
 		padding: 4px 0;
 		margin: -4px 0;
 	}
+
+	/* On a phone the same links reach a thumb's 44px, as the bar's do. */
+	@media (max-width: 699px) {
+		.byline :global(a),
+		.tags a {
+			display: inline-block;
+			padding: 11px 0;
+			margin-block: -11px;
+		}
+	}
 </style>

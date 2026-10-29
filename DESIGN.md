@@ -272,6 +272,8 @@ Decided 29 October 2026, revised twice the same day: first the commit message le
 - **Measure:** one sans line at 1rem, value then label for all three: `15 min prep · 13 min cook · 36 servings`, values 600 ink, labels Ink 2, dots in Rule 2. A pair never splits; the line wraps only at the dots. No rule above it.
 - **Tags:** a comma-separated line at 1rem; each tag a clay 600 link, ink on hover, the commas Ink 2 (revised 29 October 2026: grey tags carried no link affordance).
 - **Actions:** the 44px pills (see Buttons), unpinned, directly after the tags.
+- **Hit areas:** the byline's author link and the tag links reach 24px on desktop and 44px on a phone (below 700px) without moving the text, with the padding trick the bar uses (`display: inline-block; padding: 11px 0; margin-block: -11px`; decided 29 October 2026).
+
 - **Spacing** down the column: 8, 8, 8, 8, 16 (tags were 2px under the measure until 29 October 2026; now the same 8 as every other line). The column ends where it ends; it is never stretched to the photo.
 - **Photo:** 3:2 beside the header, capped at 340px tall, 6px corners. Stacked below 1024px it sits directly under the title, before the byline.
 - **Ingredients:** a measured line bolds its measure ("**2¼ cups** (281g) all-purpose flour"); a counted line is all measure, so it is bold whole ("**2 large eggs** (≈100g)"); a line with no number is plain. On every width.

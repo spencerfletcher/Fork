@@ -784,6 +784,18 @@ test.describe('Recipe detail page', () => {
 		expect(last!.y).toBeGreaterThanOrEqual(0);
 		expect(last!.y + last!.height).toBeLessThanOrEqual(700);
 	});
+
+	test('on a phone every inline link in the header is 44px tall', async ({ page }) => {
+		await page.setViewportSize({ width: 390, height: 900 });
+		await gotoClassicCookies(page);
+		const short = await page.locator('header.recipe-header a').evaluateAll((els) =>
+			els
+				.filter((el) => el.getClientRects().length > 0)
+				.map((el) => ({ text: el.textContent!.trim(), h: el.getBoundingClientRect().height }))
+				.filter((r) => r.h < 44)
+		);
+		expect(short).toEqual([]);
+	});
 });
 
 test.describe('Landing page (logged out)', () => {
