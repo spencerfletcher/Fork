@@ -168,7 +168,7 @@ Clay and marigold were raised in chroma from #a4512b and #e8a83a: same hues, sam
 
 ### Named Rules
 
-**The Clay Is Text Rule.** Clay never fills a shape. It colours titles, links and version marks. Its hover is ink.
+**The Clay Is Text Rule.** Clay never fills a shape, with one named exception: the strike-row square fills clay when ticked (decided 29 October 2026). It colours titles, links and version marks. Its hover is ink.
 
 ## Typography
 
@@ -292,7 +292,7 @@ Decided 29 October 2026, revised twice the same day: first the commit message le
 - **Photo:** 3:2 beside the header, capped at 340px tall, 6px corners. Stacked below 1024px it sits directly under the title, before the byline.
 - **Ingredients:** a measured line bolds its measure ("**2¼ cups** (281g) all-purpose flour"); a counted line is all measure, so it is bold whole ("**2 large eggs** (≈100g)"); a line with no number is plain. On every width.
 - **Sections below 1024px:** the Ingredients | Method bar is a switch, not a jump: one section shows, the other is hidden, and switching puts the section's top under the bar. Decided 29 October 2026 because scrolling past one section to reach the other felt bad.
-- **Version bar** (under the hero; its bottom edge is the divider, there is no page rule; absent on a one-version recipe): lifted paper, 1px Rule, 6px corners, 12px 16px padding, no shadow, the page's gutters. One mono 0.875rem line: the version number as the marigold chip (0.75rem 600, ink on marigold; the other rows' numbers are clay), the note in ink clamped to one line while closed (two lines below 700px, where a line holds half as much; decided 29 October 2026), then at the right "3 versions ▾" (the one toggle, 12px chevron that flips). The current line carries no compare of its own, open or closed; each other row compares itself with the one being read (decided 29 October 2026). Viewing an older version the line reads "v2 · note · Older version · Back to v3 · 3 versions ▾", and v3's row below reads "Compare with v2". Open: the note runs in full and the other versions list under a rule, each row (number and message) a link to that version, in Ink 2 darkening on hover, with "Compare with vN" at the right. Below 1024 the controls drop under the note rather than crush it; on a phone each link and the toggle are 44px tall and each row's compare sits under it. The dots between the controls are drawn by CSS between items (`.item + .item::before`), never typed, so no line begins or ends with one; below 700px the items wrap 10px apart with no dots at all (decided 29 October 2026). Escape closes the list only while focus is inside the bar.
+- **Version bar** (under the hero; its bottom edge is the divider, there is no page rule; absent on a one-version recipe): lifted paper, 1px Rule, 6px corners, 12px 16px padding, no shadow, the page's gutters. One mono 0.875rem line: the version number as the marigold chip (0.75rem 600, ink on marigold; the other rows' numbers are clay), the note in ink clamped to one line while closed (two lines below 1024px, where the controls already have a row of their own; decided 29 October 2026), then at the right "3 versions ▾" (the one toggle, 12px chevron that flips). The current line carries no compare of its own, open or closed; each other row compares itself with the one being read (decided 29 October 2026). Viewing an older version the line leads with its state after the chip, "v2 Older version · Back to v3 · 3 versions ▾" and then the note (below 1024 the note takes its own row under them), and v3's row below reads "Compare with v2". Open: the note runs in full and the other versions list under a rule, each row (number and message) a link to that version, in Ink 2 darkening on hover, with "Compare with vN" at the right. Below 1024 the controls drop under the note rather than crush it; on a phone each link and the toggle are 44px tall and each row's compare sits under it. The dots between the controls are drawn by CSS between items (`.item + .item::before`), never typed, so no line begins or ends with one; below 700px the items wrap 10px apart with no dots at all (decided 29 October 2026). Escape closes the list only while focus is inside the bar.
 
 No italic, no uppercase in the header, no chip in the header, no note in the header.
 
@@ -321,7 +321,7 @@ End of day, 29 October 2026 (Spencer's decisions): a closed picker shows only it
 ### Don't:
 
 - **Don't** add a second dark surface, a gradient, a blur or a glow.
-- **Don't** fill anything with clay, or colour text marigold.
+- **Don't** fill anything with clay (the ticked strike square is the one exception), or colour text marigold.
 - **Don't** put a shadow on a card, strip or button at rest.
 - **Don't** invent proof: no ratings, counts, testimonials or press.
 - **Don't** let the version UI crowd the recipe; where it harms reading, reduce it on that surface rather than the whole system.
