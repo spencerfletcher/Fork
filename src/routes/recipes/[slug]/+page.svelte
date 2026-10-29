@@ -170,9 +170,15 @@
 		align-self: stretch;
 	}
 
+	/* A long list scrolls inside the aside rather than past the screen: capped
+	   to the viewport less 24px above and below, with a thin Rule 2 bar. */
 	.sidebar-sticky {
 		position: sticky;
 		top: 24px;
+		max-height: calc(100dvh - 48px);
+		overflow-y: auto;
+		scrollbar-width: thin;
+		scrollbar-color: var(--color-border-2) transparent;
 	}
 
 	.main {
@@ -278,6 +284,8 @@
 
 		.sidebar-sticky {
 			position: static;
+			max-height: none;
+			overflow-y: visible;
 		}
 	}
 

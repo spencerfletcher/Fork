@@ -198,7 +198,7 @@ Clay and marigold were raised in chroma from #a4512b and #e8a83a: same hues, sam
 
 One centred column, `max-width: 1200px`, with 24px side gutters on desktop and 18px on phones (`.page`, `.page-inner`). Spacing follows an 8px scale (4, 8, 12, 16, 24, 32, 48, 64); Tailwind `p-5` to `p-8` are mapped onto the 24, 32, 48 and 64 steps.
 
-Recipe grids are 2 columns on a phone, 3 from 700px, 4 from 1100px, with 24px gaps. The recipe page body is a 380px aside beside a reading column with a 48px gap; the aside is sticky at 24px. Tag tabs are a single scrolling row that bleeds to the screen edge on phones.
+Recipe grids are 2 columns on a phone, 3 from 700px, 4 from 1100px, with 24px gaps. The recipe page body is a 380px aside beside a reading column with a 48px gap; the aside is sticky at 24px and, when the list is taller than the screen, scrolls inside itself (`max-height: calc(100dvh - 48px)`, thin Rule 2 scrollbar; decided 29 October 2026). Below 1024px it is static and uncapped. Tag tabs are a single scrolling row that bleeds to the screen edge on phones.
 
 Breakpoints: 699px (phone), 768px (navbar collapses below it), 1024px, 1100px.
 

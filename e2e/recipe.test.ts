@@ -755,9 +755,39 @@ test.describe('Recipe detail page', () => {
 		);
 		for (const bottom of bottoms) expect(Math.abs(bottom - bottoms[0])).toBeLessThan(1);
 	});
+
+	test('on a short desktop a long ingredient list scrolls inside the sticky aside', async ({
+		page
+	}) => {
+		await page.setViewportSize({ width: 1280, height: 700 });
+		await gotoClassicCookies(page);
+		// Three times the seed's rows: well past a 700px screen.
+		await page.evaluate(() => {
+			const list = document.querySelector('#ingredients h2 + div')!;
+			for (let i = 0; i < 2; i++) list.append(...[...list.children].map((c) => c.cloneNode(true)));
+		});
+		const sticky = page.locator('.sidebar-sticky');
+		const box = await sticky.evaluate((el) => ({
+			height: el.getBoundingClientRect().height,
+			scrollHeight: el.scrollHeight,
+			overflowY: getComputedStyle(el).overflowY
+		}));
+		// Capped to the viewport less its 24px top and bottom, and scrolling inside.
+		expect(box.height).toBeLessThanOrEqual(700 - 48);
+		expect(box.scrollHeight).toBeGreaterThan(box.height);
+		expect(box.overflowY).toBe('auto');
+		// Pinned, the last row is reached by scrolling the aside, not the page.
+		await page.mouse.wheel(0, 3000);
+		await page.waitForTimeout(200);
+		await sticky.evaluate((el) => (el.scrollTop = el.scrollHeight));
+		const last = await page.locator('#ingredients label').last().boundingBox();
+		expect(last!.y).toBeGreaterThanOrEqual(0);
+		expect(last!.y + last!.height).toBeLessThanOrEqual(700);
+	});
 });
 
 test.describe('Landing page (logged out)', () => {
+
 	test('logged-out visitors see the premise and a diff', async ({ page }) => {
 		await page.goto('/');
 		const browseLink = page.getByRole('link', { name: /browse recipes/i });
