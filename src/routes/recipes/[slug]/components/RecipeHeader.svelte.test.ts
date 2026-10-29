@@ -2,6 +2,7 @@ import { describe, test, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/svelte';
 import { createRawSnippet } from 'svelte';
 import RecipeHeader from './RecipeHeader.svelte';
+import source from './RecipeHeader.svelte?raw';
 import type { ComponentProps } from 'svelte';
 import { makeContent } from '#lib/recipes/fixtures.js';
 
@@ -120,6 +121,13 @@ describe('RecipeHeader byline', () => {
 		expect(byline(container)).toBe('By @chef · 1 fork');
 		expect(container.querySelector('.byline a[href*="/diff"]')).toBeNull();
 		expect(screen.getAllByRole('link', { name: '@chef' })).toHaveLength(1);
+	});
+
+	test('the handle keeps the Username face: the byline overrides neither its family nor its size', () => {
+		// "By" is sans, "@author" is mono clay at the byline's size, "· 1 fork"
+		// is sans. The byline's sans exception was withdrawn on 29 October 2026;
+		// jsdom applies no component CSS, so the override is read from the source.
+		expect(source).not.toMatch(/:global\(\.username\)/);
 	});
 
 	test('no forks: the byline is just the author', () => {

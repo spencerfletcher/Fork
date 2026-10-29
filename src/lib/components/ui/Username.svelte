@@ -1,5 +1,6 @@
 <script lang="ts">
-	// One look for a username wherever it appears: mono, linked to the profile.
+	// One look for a username wherever it appears: mono, linked to the profile,
+	// at the size of the line it sits in (Pencil Rule, 29 October 2026).
 	let {
 		username,
 		tone = 'paper',
@@ -15,7 +16,6 @@
 	/* Clay like every other link in running text; ink on hover. */
 	.username {
 		font-family: var(--font-mono);
-		font-size: 0.75rem;
 		color: var(--color-accent);
 		text-decoration: none;
 		transition: color 0.15s ease;

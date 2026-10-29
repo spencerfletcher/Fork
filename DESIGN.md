@@ -190,7 +190,7 @@ Clay and marigold were raised in chroma from #a4512b and #e8a83a: same hues, sam
 
 ### Named Rules
 
-**The Pencil Rule.** Anything that is history or measurement (version number, date, grams, diff text) is set in JetBrains Mono. Anything that is the recipe (title, description, ingredients, steps) is not. The reader tells the two apart by face alone. One exception, decided 29 October 2026: the recipe byline and its fork count ("By @author · 1 fork") are sans at the byline size; the version and its history are mono in the bar under the hero.
+**The Pencil Rule.** Anything that is history or measurement (version number, date, grams, diff text) is set in JetBrains Mono. Anything that is the recipe (title, description, ingredients, steps) is not. The reader tells the two apart by face alone. Usernames are identifiers and are set in mono like version numbers and dates: clay, at the size of the line they sit in, so the byline reads "By" sans, "@author" mono, "· 1 fork" sans. The byline's sans exception, decided earlier on 29 October 2026, was withdrawn the same day; the version and its history stay mono in the bar under the hero.
 
 **The One Clay Line Rule.** Clay running text is the h1 and links. Headings below h1 are ink.
 

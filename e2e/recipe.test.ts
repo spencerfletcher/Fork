@@ -1163,6 +1163,24 @@ test.describe('Usernames', () => {
 		const author = page.locator('.recipe-header a.username').first();
 		expect(await author.evaluate((el) => getComputedStyle(el).color)).toBe('rgb(178, 60, 0)');
 	});
+
+	test('the byline handle is mono at the byline size; "By" and the forks are sans', async ({
+		page
+	}) => {
+		// Usernames are identifiers, mono like version numbers and dates, at the
+		// size of the line they sit in (decided 29 October 2026).
+		await gotoClassicCookies(page);
+		const byline = page.locator('.recipe-header .byline');
+		const face = (el: Element) => {
+			const s = getComputedStyle(el);
+			return { family: s.fontFamily, size: s.fontSize };
+		};
+		const line = await byline.evaluate(face);
+		const handle = await byline.locator('a.username').evaluate(face);
+		expect(handle.family).toMatch(/JetBrains Mono/);
+		expect(line.family).not.toMatch(/JetBrains Mono/);
+		expect(handle.size).toBe(line.size);
+	});
 });
 
 test.describe('Profile page', () => {

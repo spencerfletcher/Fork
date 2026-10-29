@@ -98,18 +98,14 @@
 		color: var(--color-accent);
 	}
 
-	/* Who and the forks: one sans line, 600, links clay; the username keeps
-	   the byline's own face and size. */
+	/* Who and the forks: one line, 600, links clay. "By" and the forks are
+	   sans; the handle keeps the Username face, mono at this line's size
+	   (decided 29 October 2026). */
 	.byline {
 		margin-top: 8px;
 		font-size: 1rem;
 		font-weight: 600;
 		line-height: 1.5;
-	}
-
-	.byline :global(.username) {
-		font-family: inherit;
-		font-size: inherit;
 	}
 
 	.attribution {
