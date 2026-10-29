@@ -762,6 +762,19 @@ test.describe('Recipe detail page', () => {
 		await expect(page.locator('#ingredients input[type="checkbox"]').first()).toBeFocused();
 	});
 
+	test('a recipe that is not there skips to the content, not to a missing #recipe', async ({
+		page
+	}) => {
+		const response = await page.goto('/recipes/no-such-recipe');
+		expect(response!.status()).toBe(404);
+		await page.keyboard.press('Tab');
+		const skip = page.getByRole('link', { name: 'Skip to content' });
+		await expect(skip).toBeFocused();
+		await expect(skip).toHaveAttribute('href', '#main');
+		await page.keyboard.press('Enter');
+		await expect(page.locator('#main')).toBeFocused();
+	});
+
 	test('on a phone the skip link lands the first ingredient clear of the tab bar', async ({
 		page
 	}) => {

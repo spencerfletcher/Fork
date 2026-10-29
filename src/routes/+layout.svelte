@@ -21,8 +21,11 @@
 	const canonical = $derived(page.url.origin + page.url.pathname);
 
 	// The skip link is the page's first tab stop. On a recipe it lands on the
-	// recipe itself, past the header; elsewhere on the main content.
-	const skipTarget = $derived(page.route.id === '/recipes/[slug]' ? 'recipe' : 'main');
+	// recipe itself, past the header; elsewhere on the main content, as on a
+	// recipe that failed to load, which has no #recipe.
+	const skipTarget = $derived(
+		page.route.id === '/recipes/[slug]' && !page.error ? 'recipe' : 'main'
+	);
 	const skipLabel = $derived(skipTarget === 'recipe' ? 'Skip to ingredients' : 'Skip to content');
 
 	// Focusing a block taller than the screen only scrolls it "nearest"; put it
