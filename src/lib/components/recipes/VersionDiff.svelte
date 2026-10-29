@@ -21,6 +21,10 @@
 		headingLevel?: 2 | 3;
 	} = $props();
 
+	// Each panel's list is named by its heading; the prefix keeps two diffs on
+	// one page apart.
+	const uid = $props.id();
+
 	const LABEL = { title: 'Title', description: 'Description', imageUrl: 'Photo' } as const;
 
 	// Zero is a value; only null is "not set".
@@ -78,10 +82,17 @@
 <!-- prettier-ignore -->
 {#snippet segments(list: InlineSegment[])}{#each list as seg, i (i)}{#if seg.type === 'added'}{#if list[i - 1]?.type !== 'removed'}<span class="sr-only">{' added: '}</span>{/if}<ins class="diff-added">{seg.text}</ins>{:else if seg.type === 'removed'}{#if list[i + 1]?.type !== 'added'}<span class="sr-only">{' removed: '}</span>{/if}<del class="diff-removed">{seg.text}</del>{#if list[i + 1]?.type === 'added'}{@render toWord()}{/if}{:else}{seg.text}{/if}{/each}{/snippet}
 
+<!-- A list of rows, so a reader hears the count; an empty panel holds only
+     "No changes" and is not a list. -->
 {#snippet panel(title: string, isEmpty: boolean, rows: import('svelte').Snippet)}
 	<section class="diff-section">
-		<svelte:element this={`h${headingLevel}`} class="eyebrow-label mb-3">{title}</svelte:element>
-		<div class="diff-panel">
+		<svelte:element this={`h${headingLevel}`} id="{uid}-{title}" class="eyebrow-label mb-3">
+			{title}
+		</svelte:element>
+		<div
+			class="diff-panel"
+			role={isEmpty ? undefined : 'list'}
+			aria-labelledby={isEmpty ? undefined : `${uid}-${title}`}>
 			{@render rows()}
 			{#if isEmpty}
 				<p class="diff-empty">No changes</p>
@@ -99,7 +110,7 @@
 {#if metaDiff.length > 0}
 	{#snippet metaRows()}
 		{#each metaDiff as row (row.field)}
-			<div class="diff-row diff-modified">
+			<div class="diff-row diff-modified" role="listitem">
 				{@render gutter('modified')}
 				<span class="diff-content diff-content--meta">
 					{#if row.field === 'imageUrl'}
@@ -132,7 +143,7 @@
 	<div class="diff-columns grid gap-x-5 @min-[61rem]:grid-cols-2">
 		{#snippet ingredientRows()}
 			{#each ingredientDiff as row, i (i)}
-				<div class="diff-row diff-{row.status}">
+				<div class="diff-row diff-{row.status}" role="listitem">
 					{@render gutter(row.status)}
 					<span class="diff-content">
 						{#if row.status === 'modified'}
@@ -148,7 +159,7 @@
 
 		{#snippet stepRows()}
 			{#each stepDiff as row, i (i)}
-				<div class="diff-row diff-{row.status}">
+				<div class="diff-row diff-{row.status}" role="listitem">
 					{@render gutter(row.status)}
 					<!-- A removed step has no position in the new version, so numbering it
 					     would imply the steps after it had shifted. -->

@@ -110,6 +110,16 @@ test.describe('Compare page', () => {
 		for (const n of [0, 1]) expect(await hitHeight(numbers.nth(n))).toBeGreaterThanOrEqual(44);
 	});
 
+	test('each diff panel is a list in the browser’s tree, one item per row', async ({ page }) => {
+		await openCookiesCompare(page, '?from=1&to=3');
+		for (const name of ['Details', 'Ingredients', 'Method']) {
+			const list = page.getByRole('list', { name });
+			const rows = await list.locator('.diff-row').count();
+			expect(rows).toBeGreaterThan(0);
+			await expect(list.getByRole('listitem')).toHaveCount(rows);
+		}
+	});
+
 	test('the same version on both sides is named once in the tab', async ({ page }) => {
 		await openCookiesCompare(page, '?from=2&to=2');
 		await expect(page).toHaveTitle(/^v2 · same version · /);

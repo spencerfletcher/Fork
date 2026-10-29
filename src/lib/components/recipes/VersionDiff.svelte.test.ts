@@ -1,8 +1,8 @@
 import { describe, test, expect } from 'vitest';
-import { render, screen } from '@testing-library/svelte';
+import { render, screen, within } from '@testing-library/svelte';
 import VersionDiff from './VersionDiff.svelte';
 import type { IngredientDiffRow, MetaDiffRow, StepDiffRow } from '#lib/recipes/diff.js';
-import { makeIngredient } from '#lib/recipes/fixtures.js';
+import { makeIngredient, makeStep } from '#lib/recipes/fixtures.js';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -40,6 +40,33 @@ describe('VersionDiff', () => {
 	test('says "No changes" in each empty section', () => {
 		renderDiff();
 		expect(screen.getAllByText('No changes')).toHaveLength(2);
+	});
+
+	test('each panel is a list named by its heading, one item per row, so a reader hears the count', () => {
+		const ingredients = [
+			{ status: 'added', ingredient: ingredient('flour', '2') },
+			{ status: 'unchanged', ingredient: ingredient('salt') },
+			{ status: 'removed', ingredient: ingredient('butter') }
+		] as IngredientDiffRow[];
+		const steps = [
+			{ status: 'unchanged', stepNumber: 1, step: makeStep('Mix.') },
+			{ status: 'added', stepNumber: 2, step: makeStep('Rest.') }
+		] as StepDiffRow[];
+		const meta: MetaDiffRow[] = [{ field: 'title', from: 'Cookies', to: 'Biscuits' }];
+		renderDiff(ingredients, steps, meta);
+		for (const [name, rows] of [
+			['Details', meta],
+			['Ingredients', ingredients],
+			['Method', steps]
+		] as const) {
+			const list = screen.getByRole('list', { name });
+			expect(within(list).getAllByRole('listitem')).toHaveLength(rows.length);
+		}
+	});
+
+	test('an empty panel is not a list: it says "No changes"', () => {
+		renderDiff();
+		expect(screen.queryAllByRole('list')).toHaveLength(0);
 	});
 
 	test('renders no Details section when metaDiff is empty', () => {
