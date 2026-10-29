@@ -19,6 +19,7 @@ Open product calls carried over from the repository reconciliation (the rest of 
 
 Ideas from the original MVP design that are not covered by a milestone. Kept as one line each; the document's palette, layout sketches and Bits UI plan are superseded (see `todo/DESIGN.md`).
 
+- Tag suggestions ranked by the recipe itself (Spencer, 29 October 2026): the editor's Tags box already lists tags before you type; it should order them by fit, so a recipe titled "cookies" offers Dessert and American first. Needs a small scorer over title, description and ingredients against tag names, no new data.
 - In-place tag filtering on the browse page: today the tabs link to `/tags/{slug}`; filtering the sectioned page without a navigation needs the browse loader to take a tag and the sections to recompute.
 - Browse sections past their caps: a side-scrolling row or a "see more" link per section (Recent 8, Most forked 4) once the collection outgrows them.
 - Dark mode: the dark token set is recorded in the design directions, nothing is built.
