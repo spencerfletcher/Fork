@@ -19,8 +19,44 @@
 
 	type CardVersion = typeof data.fromVersion;
 
-	function navigate() {
-		goto(`?from=${fromSelect}&to=${toSelect}`);
+	const sameVersion = $derived(fromVersion.versionNumber === toVersion.versionNumber);
+	// The latest version is the plain recipe URL; an older one is named.
+	const readHref = $derived(
+		toVersion.versionNumber === allVersions[allVersions.length - 1].versionNumber
+			? `/recipes/${recipe.slug}`
+			: `/recipes/${recipe.slug}?version=${toVersion.versionNumber}`
+	);
+
+	const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
+
+	// "3 details · 3 ingredients · 2 steps changed", from the rows already loaded.
+	const summary = $derived.by(() => {
+		const changed = (rows: { status: string }[]) =>
+			rows.filter((row) => row.status !== 'unchanged').length;
+		const groups: [number, string][] = [
+			[metaDiff.length, 'detail'],
+			[changed(ingredientDiff), 'ingredient'],
+			[changed(stepDiff), 'step']
+		];
+		const parts = groups.filter(([n]) => n > 0).map(([n, word]) => plural(n, word));
+		return parts.length > 0 ? `${parts.join(' · ')} changed` : 'No changes';
+	});
+
+	// The card's measure in the recipe page's words: value then label.
+	const measure = (v: CardVersion): [string, string][] => {
+		const pairs: [string, string | null][] = [
+			['prep', v.prepTimeMinutes ? formatTime(v.prepTimeMinutes) : null],
+			['cook', v.cookTimeMinutes ? formatTime(v.cookTimeMinutes) : null],
+			[v.servings === 1 ? 'serving' : 'servings', v.servings ? String(v.servings) : null],
+			[v.ingredients.length === 1 ? 'ingredient' : 'ingredients', String(v.ingredients.length)]
+		];
+		return pairs.filter((pair): pair is [string, string] => pair[1] !== null);
+	};
+
+	async function navigate(id: string) {
+		await goto(`?from=${fromSelect}&to=${toSelect}`);
+		// Navigation lands focus on the body; the picker that was changed keeps it.
+		document.getElementById(id)?.focus();
 	}
 
 	// The viewer's own day. The server renders in its zone and the browser may
@@ -37,7 +73,7 @@
 		{value}
 		onchange={(e) => {
 			set(Number(e.currentTarget.value));
-			navigate();
+			navigate(id);
 		}}>
 		{#each allVersions as v (v.versionNumber)}
 			<option value={v.versionNumber}>v{v.versionNumber}: {v.commitMessage}</option>
@@ -66,28 +102,15 @@
 				<dd>{v.title}</dd>
 			</div>
 		</dl>
-		<dl>
-			{#if v.servings}<div>
-					<dt>Serves</dt>
-					&#32;
-					<dd>{v.servings}</dd>
-				</div>{/if}
-			{#if v.prepTimeMinutes}<div>
-					<dt>Prep</dt>
-					&#32;
-					<dd>{formatTime(v.prepTimeMinutes)}</dd>
-				</div>{/if}
-			{#if v.cookTimeMinutes}<div>
-					<dt>Cook</dt>
-					&#32;
-					<dd>{formatTime(v.cookTimeMinutes)}</dd>
-				</div>{/if}
-			<div>
-				<dt>Ingredients</dt>
-				&#32;
-				<dd>{v.ingredients.length}</dd>
-			</div>
-		</dl>
+		<p class="version-card__measure">
+			{#each measure(v) as [label, value], i (label)}
+				{#if i > 0}<span class="dot" aria-hidden="true">·</span>{/if}
+				<span class="whitespace-nowrap">
+					<span class="value">{value}</span>
+					{label}
+				</span>
+			{/each}
+		</p>
 	</article>
 {/snippet}
 
@@ -95,6 +118,13 @@
 	<div class="compare">
 		<a href="/recipes/{recipe.slug}" class="back-link">← {recipe.title}</a>
 		<h1>Compare versions</h1>
+		{#if sameVersion}
+			<p class="same-version">
+				v{toVersion.versionNumber} is on both sides; pick another version.
+			</p>
+		{:else}
+			<p class="summary">{summary}</p>
+		{/if}
 
 		<div class="version-picker">
 			{@render picker('from-select', 'From', fromSelect, (v) => (fromSelect = v))}
@@ -107,7 +137,10 @@
 			{@render card(toVersion, true)}
 		</div>
 
-		<VersionDiff {metaDiff} {ingredientDiff} {stepDiff} headingLevel={2} />
+		{#if !sameVersion}
+			<VersionDiff {metaDiff} {ingredientDiff} {stepDiff} headingLevel={2} />
+			<a href={readHref} class="read-link">Read v{toVersion.versionNumber}</a>
+		{/if}
 	</div>
 </div>
 
@@ -120,9 +153,20 @@
 	}
 
 	h1 {
-		margin: 0 0 12px;
-		font-size: 2.125rem;
+		margin: 0 0 8px;
+		font-size: clamp(1.75rem, 1.2rem + 1.8vw, 2.5rem);
 		line-height: 1.1;
+	}
+
+	.summary,
+	.same-version {
+		margin: 0 0 16px;
+		color: var(--color-text-2);
+	}
+
+	.read-link {
+		display: inline-block;
+		font-weight: 600;
 	}
 
 	.version-picker {
@@ -178,9 +222,14 @@
 		font-weight: 600;
 	}
 
+	.version-card__head :global(.username) {
+		font-size: inherit;
+	}
+
+	/* The system's chip, at the card number's size. */
 	.version-card--to .version-card__number {
 		padding: 0 6px;
-		border-radius: 3px;
+		border-radius: var(--radius-sm);
 		background: var(--color-marigold);
 		color: var(--color-text);
 	}
@@ -215,9 +264,27 @@
 		color: var(--color-text-3);
 	}
 
+	.version-card__measure {
+		margin: 0;
+		font-size: 0.875rem;
+		color: var(--color-text-2);
+	}
+
+	.version-card__measure .value {
+		font-weight: 600;
+		color: var(--color-text);
+	}
+
+	.version-card__measure .dot {
+		margin: 0 4px;
+		color: var(--color-text-3);
+	}
+
 	@media (max-width: 699px) {
-		h1 {
-			font-size: 1.625rem;
+		.read-link {
+			display: inline-flex;
+			align-items: center;
+			min-height: 44px;
 		}
 
 		.version-picker {

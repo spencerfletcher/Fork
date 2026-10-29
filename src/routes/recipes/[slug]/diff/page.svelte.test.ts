@@ -1,7 +1,7 @@
 import { describe, test, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/svelte';
 import DiffPage from './+page.svelte';
-import type { IngredientDiffRow, StepDiffRow } from '#lib/recipes/diff.js';
+import type { IngredientDiffRow, MetaDiffRow, StepDiffRow } from '#lib/recipes/diff.js';
 import { makeContent, makeIngredient as ing } from '#lib/recipes/fixtures.js';
 
 // ─── SvelteKit module mocks ───────────────────────────────────────────────────
@@ -40,6 +40,7 @@ const V2 = {
 
 function makeData(
 	overrides: {
+		metaDiff?: MetaDiffRow[];
 		ingredientDiff?: IngredientDiffRow[];
 		stepDiff?: StepDiffRow[];
 		fromVersion?: typeof V1;
@@ -52,7 +53,7 @@ function makeData(
 		fromVersion: overrides.fromVersion ?? V1,
 		toVersion: overrides.toVersion ?? V2,
 		allVersions: overrides.allVersions ?? [V1, V2],
-		metaDiff: [],
+		metaDiff: overrides.metaDiff ?? [],
 		ingredientDiff: overrides.ingredientDiff ?? [],
 		stepDiff: overrides.stepDiff ?? [],
 		user: null
@@ -167,10 +168,11 @@ describe('Diff page', () => {
 		expect(cards[0]).toHaveTextContent('v1');
 		expect(cards[0]).toHaveTextContent('28 Feb 2026');
 		expect(cards[0]).toHaveTextContent('Initial recipe');
-		expect(cards[0]).toHaveTextContent('Serves 48');
-		expect(cards[0]).toHaveTextContent('Cook 11 min');
-		expect(cards[0]).toHaveTextContent('Ingredients 2');
-		expect(cards[0]).not.toHaveTextContent('Prep');
+		// The measure in the recipe page's words: value then label.
+		expect(cards[0]).toHaveTextContent('48 servings');
+		expect(cards[0]).toHaveTextContent('11 min cook');
+		expect(cards[0]).toHaveTextContent('2 ingredients');
+		expect(cards[0]).not.toHaveTextContent('prep');
 		expect(cards[1]).toHaveClass('version-card--to');
 		expect(cards[1].querySelector('.version-card__message')).toBeInTheDocument();
 	});
@@ -213,7 +215,7 @@ describe('Diff page', () => {
 		const { container } = render(DiffPage, {
 			props: { data: makeData({ fromVersion: { ...V1, cookTimeMinutes: 240 } }) }
 		});
-		expect(container.querySelector('article.version-card')).toHaveTextContent('Cook 4h');
+		expect(container.querySelector('article.version-card')).toHaveTextContent('4h cook');
 	});
 
 	test('every text in a card may break anywhere, so a long title cannot widen it', () => {
@@ -231,6 +233,65 @@ describe('Diff page', () => {
 	test('the stacked commit bar is gone', () => {
 		const { container } = render(DiffPage, { props: { data: makeData() } });
 		expect(container.querySelector('.commit-bar')).toBeNull();
+	});
+
+	test('one sans line under the h1 counts the changed rows by group, omitting empty groups', () => {
+		render(DiffPage, {
+			props: {
+				data: makeData({
+					metaDiff: [{ field: 'servings', from: 4, to: 8 }],
+					ingredientDiff: [
+						{ status: 'added', ingredient: ing('1 tsp salt') },
+						{ status: 'unchanged', ingredient: ing('2 cups flour') },
+						{ status: 'modified', segments: [{ type: 'added', text: '2 eggs' }] }
+					],
+					stepDiff: [
+						{ status: 'unchanged', stepNumber: 1, step: { text: 'Mix.' } },
+						{ status: 'removed', step: { text: 'Rest.' } }
+					]
+				})
+			}
+		});
+		expect(screen.getByText('1 detail · 2 ingredients · 1 step changed')).toBeInTheDocument();
+	});
+
+	test('the summary says "2 steps changed" when only steps changed, and "No changes" when nothing did', () => {
+		const steps: StepDiffRow[] = [
+			{ status: 'added', stepNumber: 1, step: { text: 'Mix.' } },
+			{ status: 'added', stepNumber: 2, step: { text: 'Bake.' } }
+		];
+		const { unmount } = render(DiffPage, { props: { data: makeData({ stepDiff: steps }) } });
+		expect(screen.getByText('2 steps changed')).toBeInTheDocument();
+		unmount();
+		render(DiffPage, { props: { data: makeData() } });
+		expect(screen.getByText('No changes', { selector: '.summary' })).toBeInTheDocument();
+	});
+
+	test('the same version on both sides says so and renders no diff panels', () => {
+		const { container } = render(DiffPage, {
+			props: { data: makeData({ fromVersion: V2, toVersion: V2 }) }
+		});
+		expect(screen.getByText('v2 is on both sides; pick another version.')).toBeInTheDocument();
+		expect(container.querySelector('.diff-panel')).toBeNull();
+		expect(container.querySelector('.summary')).toBeNull();
+		expect(screen.queryByRole('link', { name: 'Read v2' })).toBeNull();
+	});
+
+	test('after the last row a link reads the To version, plain when it is the latest', () => {
+		render(DiffPage, { props: { data: makeData() } });
+		expect(screen.getByRole('link', { name: 'Read v2' })).toHaveAttribute(
+			'href',
+			'/recipes/classic-cookies'
+		);
+	});
+
+	test('the Read link names the version when To is not the latest', () => {
+		const V3 = { ...V2, versionNumber: 3, commitMessage: 'Less sugar' };
+		render(DiffPage, { props: { data: makeData({ allVersions: [V1, V2, V3] }) } });
+		expect(screen.getByRole('link', { name: 'Read v2' })).toHaveAttribute(
+			'href',
+			'/recipes/classic-cookies?version=2'
+		);
 	});
 
 	test('version pickers follow the loaded range, e.g. after back/forward navigation', async () => {
