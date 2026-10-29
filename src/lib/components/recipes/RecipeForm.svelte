@@ -91,7 +91,11 @@
 	const outcome = $derived.by(() => {
 		if (!dirty || submitting || !nextVersion || groups === null) return '';
 		if (groups.length > 0) return `saves as v${nextVersion}`;
-		if (settingsChanged) return 'saves settings only';
+		// A typed message is never dropped: with it, a settings change is saved
+		// as a version carrying it.
+		if (settingsChanged) {
+			return draft.commitMessage.trim() ? `saves as v${nextVersion}` : 'saves settings only';
+		}
 		return '';
 	});
 

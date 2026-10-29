@@ -164,6 +164,17 @@ describe('Edit page form', () => {
 		expect(screen.getByText('Editing v2 · saves settings only')).toBeInTheDocument();
 	});
 
+	test('a message typed on a settings-only change promises a version, since the save keeps it', async () => {
+		render(EditPage, { props: { data: makeData(), form: null } });
+		await fireEvent.click(screen.getByLabelText(/public/i));
+		expect(screen.getByText('Editing v2 · saves settings only')).toBeInTheDocument();
+		const message = screen.getByLabelText(/what changed/i);
+		await fireEvent.input(message, { target: { value: 'Private for now' } });
+		expect(screen.getByText('Editing v2 · saves as v3')).toBeInTheDocument();
+		await fireEvent.input(message, { target: { value: '  ' } });
+		expect(screen.getByText('Editing v2 · saves settings only')).toBeInTheDocument();
+	});
+
 	test('choosing a photo file counts as a content change at once, before the preview loads', async () => {
 		render(EditPage, { props: { data: makeData(), form: null } });
 		const file = new File(['x'], 'c.png', { type: 'image/png' });

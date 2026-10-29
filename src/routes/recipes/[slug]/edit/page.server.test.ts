@@ -284,6 +284,30 @@ describe('save', () => {
 		expect(set).not.toHaveProperty('title');
 	});
 
+	test('a typed message on a settings-only save is kept: a version carrying it and the latest content', async () => {
+		await save({
+			...UNCHANGED,
+			isPublic: '',
+			tags: ['Dessert'],
+			commitMessage: ' Private for now '
+		});
+		const [version] = versionInserts();
+		expect(versionInserts()).toHaveLength(1);
+		expect(version).toMatchObject({
+			recipeId: 1,
+			versionNumber: 3,
+			commitMessage: 'Private for now',
+			title: 'Cookies',
+			servings: 4,
+			imageUrl: 'https://cdn/old.png',
+			createdBy: 'owner-123'
+		});
+		expect(version.steps).toEqual(LATEST.steps);
+		expect(syncTagsMock).toHaveBeenCalledWith(tx, 1, ['Dessert']);
+		expect(tx.update).toHaveBeenCalledTimes(1);
+		expect(tx.updateChain.set.mock.calls[0][0]).toMatchObject({ isPublic: false });
+	});
+
 	test('removeImage is a content change: a version without the photo, and the copy cleared', async () => {
 		await save({ ...UNCHANGED, removeImage: 'on' });
 		expect(versionInserts()[0]).toMatchObject({ imageUrl: null, versionNumber: 3 });
