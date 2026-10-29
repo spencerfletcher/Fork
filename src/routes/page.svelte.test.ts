@@ -55,6 +55,40 @@ describe('/+page.svelte', () => {
 		expect(screen.getByRole('heading', { level: 2, name: 'Recent' })).toBeInTheDocument();
 	});
 
+	test("landing mode ends on the browse page's section pattern: a Recent eyebrow, the cards, an All recipes link", () => {
+		// The pre-redesign header ("Recipes" h2, "Recipes worth forking.", a rule)
+		// sat under the sample diff; the landing now uses the section pattern
+		// /recipes renders and closes with a way to the rest (29 October 2026).
+		const { container } = render(Page, {
+			props: {
+				data: {
+					recipes: [{ id: 1, slug: 'a', title: 'A', updatedAt: new Date(), forkCount: 0 }],
+					user: null,
+					profile: null,
+					mode: 'landing',
+					tags: [],
+					sampleDiff: null
+				} as never
+			}
+		});
+		const recent = screen.getByRole('heading', { level: 2, name: 'Recent' });
+		expect(recent).toHaveClass('eyebrow-label', 'section-heading');
+		expect(screen.queryByRole('heading', { name: 'Recipes' })).toBeNull();
+		expect(screen.queryByText('Recipes worth forking.')).toBeNull();
+		expect(container.querySelector('hr')).toBeNull();
+		const all = screen.getByRole('link', { name: 'All recipes' });
+		expect(all).toHaveAttribute('href', '/recipes');
+		const grid = container.querySelector('.recipe-grid')!;
+		expect(grid.compareDocumentPosition(all) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+		// One column, the site's: the hero, the diff and the grid all sit inside
+		// the page's own gutters rather than each bringing their own.
+		expect(container.querySelectorAll('.page-inner')).toHaveLength(1);
+		expect(container.querySelector('.page-inner')).toContainElement(
+			screen.getByRole('heading', { level: 1 })
+		);
+		expect(container.querySelector('.page-inner')).toContainElement(grid as HTMLElement);
+	});
+
 	test('feed mode renders no LandingHero', () => {
 		render(Page, {
 			props: {

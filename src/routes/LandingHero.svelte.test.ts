@@ -3,11 +3,11 @@ import { render, screen } from '@testing-library/svelte';
 import LandingHero from './LandingHero.svelte';
 
 describe('LandingHero', () => {
-	test('"Browse recipes" always links to /search', () => {
+	test('"Browse recipes" links to the browse page, not an empty search form', () => {
 		render(LandingHero, { props: {} });
 		expect(screen.getByRole('link', { name: /browse recipes/i })).toHaveAttribute(
 			'href',
-			'/search'
+			'/recipes'
 		);
 	});
 

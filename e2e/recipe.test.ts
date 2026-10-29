@@ -932,11 +932,17 @@ test.describe('Landing page (logged out)', () => {
 		await page.goto('/');
 		const browseLink = page.getByRole('link', { name: /browse recipes/i });
 		await expect(browseLink).toBeVisible();
-		// The primary CTA must lead to the actual public recipe index, not the
-		// auth-gated "My Recipes" page — /search with no query lists every
-		// visible recipe for a guest.
-		await expect(browseLink).toHaveAttribute('href', '/search');
+		// The primary CTA leads to the public recipe index, not to an empty
+		// search form (decided 29 October 2026).
+		await expect(browseLink).toHaveAttribute('href', '/recipes');
 		await expect(page.locator('.diff-content').first()).toBeVisible();
+		// The page ends on the newest recipes under the browse page's section
+		// pattern, with a way to the rest.
+		await expect(page.getByRole('heading', { level: 2, name: 'Recent' })).toBeVisible();
+		await expect(page.getByRole('link', { name: 'All recipes' })).toHaveAttribute(
+			'href',
+			'/recipes'
+		);
 	});
 
 	test('the open phone menu dims the page but not the bar above it', async ({ page }) => {
@@ -1009,15 +1015,23 @@ test.describe('Landing page (logged out)', () => {
 		}
 	});
 
-	test('the landing page shares its left edge with browse', async ({ page }) => {
-		await page.setViewportSize({ width: 1200, height: 900 });
-		await page.goto('/recipes');
-		const browse = await page.getByRole('heading', { level: 1 }).boundingBox();
-		await page.goto('/');
-		const hero = await page.getByRole('heading', { level: 1 }).boundingBox();
-		const diff = await page.getByRole('heading', { name: 'A real change, diffed' }).boundingBox();
-		expect(Math.abs(hero!.x - browse!.x)).toBeLessThan(1);
-		expect(Math.abs(diff!.x - browse!.x)).toBeLessThan(1);
+	test('the landing page shares one left edge with browse: hero, diff and grid', async ({
+		page
+	}) => {
+		// At 1200 the two old paddings agreed by chance; at 1280 the hero and the
+		// diff sat at 64 while the grid and browse sat at 40.
+		for (const width of [1280, 390]) {
+			await page.setViewportSize({ width, height: 900 });
+			await page.goto('/recipes');
+			const browse = await page.getByRole('heading', { level: 1 }).boundingBox();
+			await page.goto('/');
+			const hero = await page.getByRole('heading', { level: 1 }).boundingBox();
+			const diff = await page.getByRole('heading', { name: 'A real change, diffed' }).boundingBox();
+			const grid = await page.locator('.recipe-grid').first().boundingBox();
+			expect(Math.abs(hero!.x - browse!.x)).toBeLessThan(1);
+			expect(Math.abs(diff!.x - browse!.x)).toBeLessThan(1);
+			expect(Math.abs(grid!.x - browse!.x)).toBeLessThan(1);
+		}
 	});
 
 	test('the landing page does not scroll sideways on mobile', async ({ page }) => {

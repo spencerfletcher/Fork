@@ -14,7 +14,7 @@
 			<span>Fork any recipe and your changes keep their attribution.</span>
 		</p>
 		<div class="hero-actions">
-			<a href="/search" class="btn-primary">Browse recipes</a>
+			<a href="/recipes" class="btn-primary">Browse recipes</a>
 			{#if !isLoggedIn}
 				<a href="/signup" class="btn-ghost">Sign up</a>
 			{/if}
@@ -25,17 +25,17 @@
 <style>
 	/* On the page's paper, like every other page: only the bar is espresso.
 	   The headline takes the clay the other page titles use. */
-	/* The page gutter every list page uses, so the headline and the browse
-	   title share one left edge. */
+	/* No gutters or column of its own: the landing page renders the hero
+	   inside the site's `.page-inner`, so the headline, the diff and the grid
+	   share one left edge. The top padding adds to the page's own (24px, 16px
+	   on a phone) to keep the headline at 64px and 48px. */
 	.hero-inner {
-		max-width: var(--max-width);
-		margin: 0 auto;
-		padding: 3rem var(--space-5) 2.5rem;
+		padding: 2rem 0 2.5rem;
 	}
 
 	@media (min-width: 640px) {
 		.hero-inner {
-			padding: 4rem var(--space-5) 3rem;
+			padding: 2.5rem 0 3rem;
 		}
 	}
 
