@@ -99,20 +99,6 @@
 </div>
 
 <style>
-	/* The editor's mono rule catches every text input inside .form; the handle
-	   sits between two sans inputs and takes their face. */
-	.form input[type='text'] {
-		font-family: var(--font-sans);
-		font-size: 0.9375rem;
-		line-height: normal;
-	}
-
-	@media (max-width: 699px) {
-		.form input[type='text'] {
-			font-size: 1rem;
-		}
-	}
-
 	.form-hint {
 		margin: 0;
 	}

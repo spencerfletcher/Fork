@@ -587,7 +587,7 @@
 	/* In the editor every text box is mono (Spencer, 29 October 2026): what is
 	   typed is raw text under edit, not yet the recipe. One rule, so every
 	   single-line box is one height. */
-	.form :is(input[type='text'], input[type='number'], textarea) {
+	.editor .form :is(input[type='text'], input[type='number'], textarea) {
 		font-family: var(--font-mono);
 		font-size: 0.8125rem;
 		line-height: 1.6;
@@ -595,15 +595,15 @@
 
 	/* This layer beats the base layer's phone rule, so repeat it here. */
 	@media (max-width: 699px) {
-		.form :is(input[type='text'], input[type='number'], textarea) {
+		.editor .form :is(input[type='text'], input[type='number'], textarea) {
 			font-size: 1rem;
 		}
 	}
 
 	/* Editor layout: settings on the left, the long text on the right, one
-	   column when there is no room for two. */
+	   column when there is no room for two. The site's one width. */
 	.editor {
-		max-width: 864px;
+		max-width: var(--max-width);
 		margin: 0 auto;
 	}
 
@@ -633,7 +633,7 @@
 	.form-grid {
 		display: grid;
 		grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-		gap: 28px;
+		gap: 40px;
 	}
 
 	.form-col {
