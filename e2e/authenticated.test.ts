@@ -31,13 +31,13 @@ test.describe('Landing page when logged in', () => {
 // ─── Navbar (logged in) ───────────────────────────────────────────────────────
 
 test.describe('Navbar when logged in', () => {
-	test('shows the username link and a Logout button', async ({ page }) => {
+	test('shows the username link and a Log out button', async ({ page }) => {
 		await page.goto('/');
 		// Scope to the navbar: recipe cards also link to the author's profile, and
 		// the mobile menu duplicates the navbar link.
 		const navbar = page.getByRole('navigation').first();
 		await expect(navbar.getByRole('link', { name: '@spencerfletcher' }).first()).toBeVisible();
-		await expect(page.getByRole('button', { name: /logout/i }).first()).toBeVisible();
+		await expect(page.getByRole('button', { name: 'Log out' }).first()).toBeVisible();
 	});
 
 	test('does not show the Login link', async ({ page }) => {
