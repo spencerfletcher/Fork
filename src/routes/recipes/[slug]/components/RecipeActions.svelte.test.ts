@@ -94,8 +94,23 @@ describe('RecipeActions primary action', () => {
 		expect(document.querySelector('dialog')).toBeNull();
 	});
 
-	test('logged out, there is nothing to do and nothing is rendered', () => {
-		const { container } = render(RecipeActions, { props: makeProps({ canFavorite: false }) });
+	test('logged out, Fork and Favorite lead to login and back here', () => {
+		render(RecipeActions, {
+			props: makeProps({ canFavorite: false, loginHref: '/login?redirectTo=%2Frecipes%2Fcookies' })
+		});
+		const fork = screen.getByRole('link', { name: 'Fork this recipe' });
+		expect(fork).toHaveClass('btn-primary');
+		expect(fork).toHaveAttribute('href', '/login?redirectTo=%2Frecipes%2Fcookies');
+		const favorite = screen.getByRole('link', { name: 'Favorite' });
+		expect(favorite).toHaveClass('btn-ghost');
+		expect(favorite).toHaveAttribute('href', '/login?redirectTo=%2Frecipes%2Fcookies');
+		expect(document.querySelector('form')).toBeNull();
+	});
+
+	test('logged out on an older version, nothing is rendered', () => {
+		const { container } = render(RecipeActions, {
+			props: makeProps({ canFavorite: false, isViewingHistory: true, loginHref: '/login' })
+		});
 		expect(container.querySelector('.actions')).toBeNull();
 	});
 

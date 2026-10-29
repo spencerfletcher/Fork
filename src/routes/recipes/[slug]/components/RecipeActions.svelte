@@ -8,7 +8,8 @@
 		canFavorite,
 		isOwner,
 		isViewingHistory,
-		initialFavorited
+		initialFavorited,
+		loginHref
 	}: {
 		recipe: Pick<Recipe, 'slug' | 'title'>;
 		canFork: boolean;
@@ -16,6 +17,8 @@
 		isOwner: boolean;
 		isViewingHistory: boolean;
 		initialFavorited: boolean;
+		/** Logged out: where Fork and Favorite send the visitor to sign in and come back. */
+		loginHref?: string;
 	} = $props();
 
 	// Writable derived: the click flips it optimistically, and it resets to the
@@ -25,7 +28,52 @@
 	let error = $state('');
 </script>
 
-{#if canFavorite || canFork || (isOwner && !isViewingHistory)}
+{#snippet forkIcon()}
+	<svg
+		class="size-4"
+		viewBox="0 0 16 16"
+		aria-hidden="true"
+		fill="none"
+		stroke="currentColor"
+		stroke-width="1.5"
+		stroke-linecap="round">
+		<path d="M4 3.5v2a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-2M8 7.5v5" />
+		<circle cx="4" cy="2.5" r="1.3" fill="currentColor" />
+		<circle cx="12" cy="2.5" r="1.3" fill="currentColor" />
+		<circle cx="8" cy="13.5" r="1.3" fill="currentColor" />
+	</svg>
+{/snippet}
+
+{#snippet starIcon(filled: boolean)}
+	<svg
+		class="size-4 transition-[fill] duration-150"
+		class:fill-accent={filled}
+		class:fill-none={!filled}
+		class:text-accent={filled}
+		xmlns="http://www.w3.org/2000/svg"
+		viewBox="0 0 24 24"
+		stroke-width="1.8"
+		stroke="currentColor">
+		<path
+			stroke-linecap="round"
+			stroke-linejoin="round"
+			d="M12 3.2l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17.2l-5.4 2.9 1-6.1L3.2 9.7l6.1-.9z" />
+	</svg>
+{/snippet}
+
+{#if loginHref && !isViewingHistory}
+	<!-- Logged out, the same two pills lead to sign-in and back to this page. -->
+	<div class="actions">
+		<a href={loginHref} class="btn-primary no-underline">
+			{@render forkIcon()}
+			Fork this recipe
+		</a>
+		<a href={loginHref} class="btn-ghost no-underline">
+			{@render starIcon(false)}
+			Favorite
+		</a>
+	</div>
+{:else if canFavorite || canFork || (isOwner && !isViewingHistory)}
 	<div class="actions">
 		{#if canFork}
 			<!-- One click. The server writes the first commit message itself. -->
@@ -47,19 +95,7 @@
 					class="btn-primary"
 					disabled={forking}
 					aria-busy={forking || undefined}>
-					<svg
-						class="size-4"
-						viewBox="0 0 16 16"
-						aria-hidden="true"
-						fill="none"
-						stroke="currentColor"
-						stroke-width="1.5"
-						stroke-linecap="round">
-						<path d="M4 3.5v2a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-2M8 7.5v5" />
-						<circle cx="4" cy="2.5" r="1.3" fill="currentColor" />
-						<circle cx="12" cy="2.5" r="1.3" fill="currentColor" />
-						<circle cx="8" cy="13.5" r="1.3" fill="currentColor" />
-					</svg>
+					{@render forkIcon()}
 					Fork this recipe
 				</button>
 			</form>
@@ -97,20 +133,7 @@
 					};
 				}}>
 				<button type="submit" class="btn-ghost flex items-center justify-center gap-2 no-underline">
-					<svg
-						class="size-4 transition-[fill] duration-150"
-						class:fill-accent={isFavorited}
-						class:fill-none={!isFavorited}
-						class:text-accent={isFavorited}
-						xmlns="http://www.w3.org/2000/svg"
-						viewBox="0 0 24 24"
-						stroke-width="1.8"
-						stroke="currentColor">
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							d="M12 3.2l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17.2l-5.4 2.9 1-6.1L3.2 9.7l6.1-.9z" />
-					</svg>
+					{@render starIcon(isFavorited)}
 					{isFavorited ? 'Favorited' : 'Favorite'}
 				</button>
 			</form>

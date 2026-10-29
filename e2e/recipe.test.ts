@@ -468,8 +468,8 @@ test.describe('Recipe detail page', () => {
 
 		const accent = 'rgb(236, 166, 32)';
 
-		// Nothing to act on without an account, so the byline chip is the only
-		// fill; the closed history's chip is hidden with it.
+		// Two fills: the byline chip and the Fork pill, which leads to login and
+		// back here; the closed history's chip is hidden with it.
 		const filled = await hero.evaluate(
 			(el, a) =>
 				[...el.querySelectorAll('*')]
@@ -477,8 +477,19 @@ test.describe('Recipe detail page', () => {
 					.map((n) => n.className),
 			accent
 		);
-		expect(filled).toEqual([expect.stringContaining('version')]);
-		await expect(hero.getByText('Fork this recipe')).toHaveCount(0);
+		expect(filled).toEqual([
+			expect.stringContaining('version'),
+			expect.stringContaining('btn-primary')
+		]);
+		const back = encodeURIComponent(new URL(page.url()).pathname);
+		await expect(hero.getByRole('link', { name: 'Fork this recipe' })).toHaveAttribute(
+			'href',
+			`/login?redirectTo=${back}`
+		);
+		await expect(hero.getByRole('link', { name: 'Favorite' })).toHaveAttribute(
+			'href',
+			`/login?redirectTo=${back}`
+		);
 
 		// Cook time is metadata, not a pill: no background of its own.
 		const time = page.getByText(/^\d+\s*(min|h)/).first();

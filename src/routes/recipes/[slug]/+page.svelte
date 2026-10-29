@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { page } from '$app/state';
 	import type { PageData } from './$types';
 	import RecipeHeader from './components/RecipeHeader.svelte';
 	import RecipeIngredients from './components/RecipeIngredients.svelte';
@@ -14,6 +15,11 @@
 	const isOwner = $derived(user?.id === recipe.authorId);
 	const canFork = $derived(!!user && !isOwner && !isViewingHistory);
 	const canFavorite = $derived(!!user && !isViewingHistory);
+	const loginHref = $derived(
+		user
+			? undefined
+			: `/login?redirectTo=${encodeURIComponent(page.url.pathname + page.url.search)}`
+	);
 
 	// Below 1024px the Ingredients | Method bar shows one section at a time in
 	// place of the other, so the reader never scrolls past one to reach the
@@ -47,7 +53,8 @@
 						{canFavorite}
 						{isOwner}
 						{isViewingHistory}
-						initialFavorited={data.isFavorited} />
+						initialFavorited={data.isFavorited}
+						{loginHref} />
 				{/snippet}
 			</RecipeHeader>
 		</div>
