@@ -7,25 +7,39 @@
 	}: { content: Pick<RecipeContent, 'prepTimeMinutes' | 'cookTimeMinutes' | 'servings'> } =
 		$props();
 
-	const rows = $derived.by(() => {
+	// Value then label, for all three: "15 min prep · 13 min cook · 36 servings".
+	const pairs = $derived.by(() => {
 		const all: [string, string | null][] = [
-			['Prep', content.prepTimeMinutes ? formatTime(content.prepTimeMinutes) : null],
-			['Cook', content.cookTimeMinutes ? formatTime(content.cookTimeMinutes) : null],
-			['Serves', content.servings ? String(content.servings) : null]
+			['prep', content.prepTimeMinutes ? formatTime(content.prepTimeMinutes) : null],
+			['cook', content.cookTimeMinutes ? formatTime(content.cookTimeMinutes) : null],
+			[
+				content.servings === 1 ? 'serving' : 'servings',
+				content.servings ? String(content.servings) : null
+			]
 		];
-		return all.filter((row): row is [string, string] => row[1] !== null);
+		return all.filter((pair): pair is [string, string] => pair[1] !== null);
 	});
 </script>
 
-<!-- The measure, one row where it fits and wrapping where it does not: a bold
-     label and a plain value, both the body face at the body size. -->
-{#if rows.length > 0}
-	<dl class="details m-0 flex flex-wrap gap-x-7 gap-y-1 p-0 font-sans text-base leading-[1.5]">
-		{#each rows as [label, value] (label)}
-			<div class="flex gap-2">
-				<dt class="text-text font-semibold">{label}</dt>
-				<dd class="text-text m-0">{value}</dd>
-			</div>
+<!-- The measure, one sans line at the body size: a 600 value and a plain
+     label. A pair never splits; the line wraps only at the dots. -->
+{#if pairs.length > 0}
+	<p class="details text-text-2 m-0 font-sans text-base leading-[1.5]">
+		{#each pairs as [label, value], i (label)}
+			{#if i > 0}{' '}
+				<span class="dot" aria-hidden="true">·</span>
+				{' '}{/if}
+			<span class="pair whitespace-nowrap">
+				<span class="text-text font-semibold">{value}</span>
+				{label}
+			</span>
 		{/each}
-	</dl>
+	</p>
 {/if}
+
+<style>
+	.dot {
+		padding: 0 8px;
+		color: var(--color-border-2);
+	}
+</style>

@@ -52,15 +52,15 @@ test.describe('Recipe detail page', () => {
 		// Click the stretched link (aria-label) rather than the h3 text node
 		await page.getByRole('link', { name: COOKIES_RE }).first().click();
 		await expect(page).toHaveURL(/\/recipes\//);
-		// The byline names the current version; the full history opens from the
+		// The byline carries the chip; the full history opens from the
 		// "3 versions" toggle. Assert on rendered content, not just wrapper count:
 		// a li-count check passes even if the messages render empty.
-		await expect(page.locator('.version-bar .version')).toHaveText('v3');
-		// v3's commit message leads the bar: the sentence the landing page showcases.
-		await expect(page.locator('.version-bar .commit')).toContainText('Chill the dough');
+		await expect(page.locator('.byline .version')).toContainText('v3');
 		await page.getByRole('button', { name: '3 versions' }).click();
-		// The version being read is already on the page: the list holds the other two.
-		await expect(page.locator('#version-history li')).toHaveCount(2);
+		// Every version is listed; v3's commit message leads it with the chip:
+		// the sentence the landing page showcases.
+		await expect(page.locator('#version-history li')).toHaveCount(3);
+		await expect(page.locator('#version-history li.current')).toContainText('Chill the dough');
 		await expect(page.locator('#version-history')).toContainText('Initial recipe');
 		// The forks sit in the byline, beside the versions.
 		await expect(page.locator('.byline')).toContainText('1 fork');
@@ -82,11 +82,13 @@ test.describe('Recipe detail page', () => {
 		const recipeUrl = page.url().split('?')[0];
 		await page.goto(`${recipeUrl}?version=2`);
 		await page.waitForLoadState('networkidle');
-		// The bar shows v2's message now, and the byline reads "v2 of 3 · Viewing history · Back to v3".
-		await expect(page.locator('.version-bar .commit')).toContainText(
+		// The byline reads "v2 · v2 of 3 · Older version · Back to v3"; v2's message
+		// leads the history it opens.
+		await expect(page.locator('.byline')).toContainText('v2 of 3');
+		await page.getByRole('button', { name: 'v2 of 3' }).click();
+		await expect(page.locator('#version-history li.current')).toContainText(
 			SEED[0].versions[1].commitMessage
 		);
-		await expect(page.locator('.byline')).toContainText('v2 of 3');
 		await expect(page.getByRole('link', { name: 'Back to v3' })).toBeVisible();
 	});
 
@@ -261,7 +263,7 @@ test.describe('Recipe detail page', () => {
 		await gotoClassicCookies(page);
 
 		const ingredients = page.getByRole('heading', { name: /ingredients/i }).first();
-		const details = page.locator('dl.details').first();
+		const details = page.locator('.details').first();
 		await ingredients.waitFor();
 		await details.waitFor();
 
@@ -304,6 +306,32 @@ test.describe('Recipe detail page', () => {
 		expect(photoBox).not.toBeNull();
 		expect(ingredientsBox).not.toBeNull();
 		expect(photoBox!.y).toBeLessThan(ingredientsBox!.y);
+	});
+
+	test('on a phone the photo sits between the title and the byline', async ({ page }) => {
+		await page.setViewportSize({ width: 390, height: 900 });
+		await gotoClassicCookies(page);
+		const title = await page.locator('h1').boundingBox();
+		const photo = await page.locator('.recipe-photo img').boundingBox();
+		const byline = await page.locator('.byline').boundingBox();
+		expect(photo!.y).toBeGreaterThan(title!.y + title!.height - 1);
+		expect(byline!.y).toBeGreaterThan(photo!.y + photo!.height - 1);
+	});
+
+	test('in the history every version number and every message start on the same x', async ({
+		page
+	}) => {
+		await page.setViewportSize({ width: 390, height: 900 });
+		await gotoClassicCookies(page);
+		await page.getByRole('button', { name: '3 versions' }).click();
+		const marks = await page
+			.locator('#version-history li > :first-child')
+			.evaluateAll((els) => els.map((el) => Math.round(el.getBoundingClientRect().width)));
+		const messages = await page
+			.locator('#version-history .message')
+			.evaluateAll((els) => els.map((el) => Math.round(el.getBoundingClientRect().left)));
+		expect(new Set(marks).size).toBe(1);
+		expect(new Set(messages).size).toBe(1);
 	});
 
 	test('on desktop, the ingredients sit beside the method, not below it', async ({ page }) => {
@@ -352,7 +380,7 @@ test.describe('Recipe detail page', () => {
 		await page.locator('#version-history').waitFor();
 		// A URL inside a message must wrap inside the panel, not widen the page.
 		const wrap = await page
-			.locator('#version-history li span')
+			.locator('#version-history .message')
 			.first()
 			.evaluate((el) => getComputedStyle(el).overflowWrap);
 		expect(wrap).toBe('anywhere');
@@ -440,11 +468,12 @@ test.describe('Recipe detail page', () => {
 
 		const accent = 'rgb(236, 166, 32)';
 
-		// Nothing to act on without an account, so the chip is the only fill.
+		// Nothing to act on without an account, so the byline chip is the only
+		// fill; the closed history's chip is hidden with it.
 		const filled = await hero.evaluate(
 			(el, a) =>
 				[...el.querySelectorAll('*')]
-					.filter((n) => getComputedStyle(n).backgroundColor === a)
+					.filter((n) => n.checkVisibility() && getComputedStyle(n).backgroundColor === a)
 					.map((n) => n.className),
 			accent
 		);
@@ -486,7 +515,7 @@ test.describe('Recipe detail page', () => {
 		// Hero: the photo takes the right half, top aligned with the text, 4:3 under 440px tall.
 		expect(photo!.x).toBeGreaterThan(header!.x + header!.width - 1);
 		expect(Math.abs(photo!.y - header!.y)).toBeLessThan(12);
-		expect(photo!.height).toBeLessThanOrEqual(440);
+		expect(photo!.height).toBeLessThanOrEqual(340);
 		// The byline comes before the description, which comes before the body.
 		expect(byline!.y).toBeLessThan(deck!.y);
 		expect(ingredients!.y).toBeGreaterThan(deck!.y + deck!.height);
@@ -499,7 +528,7 @@ test.describe('Recipe detail page', () => {
 		expect(color).toBe('rgb(178, 60, 0)');
 	});
 
-	test('on a phone and an iPad, a sticky tab bar reaches either section in one tap', async ({
+	test('on a phone and an iPad, the tab bar switches between the sections in place', async ({
 		page
 	}) => {
 		for (const width of [390, 768]) {
@@ -509,27 +538,44 @@ test.describe('Recipe detail page', () => {
 			await expect(tabs).toBeVisible();
 			// The bar sits inside the first screen, so neither section is a scroll away.
 			expect((await tabs.boundingBox())!.y).toBeLessThan(844);
-			await expect(tabs.getByRole('link', { name: 'Ingredients' })).toHaveAttribute(
+			await expect(tabs.getByRole('button', { name: 'Ingredients' })).toHaveAttribute(
 				'aria-current',
 				'true'
 			);
-			await tabs.getByRole('link', { name: 'Method' }).click();
+			await expect(page.locator('#ingredients')).toBeVisible();
+			await expect(page.locator('#method')).toBeHidden();
+			await tabs.getByRole('button', { name: 'Method' }).click();
+			await expect(tabs.getByRole('button', { name: 'Method' })).toHaveAttribute(
+				'aria-current',
+				'true'
+			);
+			await expect(page.locator('#method')).toBeVisible();
+			await expect(page.locator('#ingredients')).toBeHidden();
+			// Scrolled to the end of the method, Ingredients swaps in with the bar
+			// still on screen and its first row under the bar, never above it.
+			await page.mouse.wheel(0, 1500);
 			await page.waitForTimeout(200);
-			// Pinned at the top while the method is read, and marking it.
-			expect((await tabs.boundingBox())!.y).toBeLessThan(1);
-			await expect(tabs.getByRole('link', { name: 'Method' })).toHaveAttribute(
-				'aria-current',
-				'true'
-			);
+			await tabs.getByRole('button', { name: 'Ingredients' }).click();
+			await page.waitForTimeout(200);
+			await expect(page.locator('#ingredients')).toBeVisible();
+			await expect(page.locator('#method')).toBeHidden();
+			const bar = await tabs.boundingBox();
+			const row = await page.locator('#ingredients label').first().boundingBox();
+			expect(bar!.y).toBeGreaterThanOrEqual(0);
+			expect(row!.y).toBeGreaterThanOrEqual(bar!.y + bar!.height);
+			expect(row!.y).toBeLessThan(844);
 		}
 		await page.setViewportSize({ width: 1280, height: 900 });
 		await expect(page.locator('.section-tabs')).toBeHidden();
+		await expect(page.locator('#ingredients')).toBeVisible();
+		await expect(page.locator('#method')).toBeVisible();
 	});
 
-	test('on a phone the note runs in full, no clamp, no "more"', async ({ page }) => {
+	test('on a phone the note runs in full in the history, no clamp, no "more"', async ({ page }) => {
 		await page.setViewportSize({ width: 390, height: 900 });
 		await gotoClassicCookies(page);
-		const message = page.locator('.version-bar .commit');
+		await page.getByRole('button', { name: '3 versions' }).click();
+		const message = page.locator('#version-history li.current .message');
 		await expect(message).toContainText(SEED[0].versions.at(-1)!.commitMessage);
 		await expect(page.getByRole('button', { name: 'more' })).toHaveCount(0);
 		const { scrollHeight, clientHeight } = await message.evaluate((el) => ({
@@ -592,7 +638,9 @@ test.describe('Recipe detail page', () => {
 		const recipeUrl = page.url().split('?')[0];
 		await page.goto(`${recipeUrl}?version=2`);
 		await page.getByRole('button', { name: 'v2 of 3' }).click();
-		await expect(page.locator('#version-history li')).toHaveCount(2);
+		// Every version is listed; the one being read has no compare link.
+		await expect(page.locator('#version-history li')).toHaveCount(3);
+		await expect(page.locator('#version-history li.current')).toHaveText(/v2/);
 		await expect(page.getByRole('link', { name: 'Compare with v2' }).first()).toHaveAttribute(
 			'href',
 			/diff\?from=2&to=3$/

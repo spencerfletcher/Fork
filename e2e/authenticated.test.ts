@@ -274,7 +274,8 @@ test.describe('Edit recipe page', () => {
 			await page.getByRole('button', { name: 'Save', exact: true }).click();
 			await page.waitForURL(url);
 			await expectVersions(page, 2);
-			await expect(page.locator('.version-bar .commit')).toContainText('e2e test commit');
+			await page.locator('.byline .versions-toggle').click();
+			await expect(page.locator('#version-history li.current')).toContainText('e2e test commit');
 		} finally {
 			await deleteRecipe(page, url);
 		}
@@ -294,7 +295,7 @@ test.describe('Edit recipe page', () => {
 // The byline names the current version and, past the first, a "N versions"
 // count; the rows only render once that count is clicked.
 async function expectVersions(page: Page, n: number) {
-	await expect(page.locator('.version-bar .version')).toHaveText(`v${n}`);
+	await expect(page.locator('.byline .version')).toContainText(`v${n}`);
 	if (n > 1) await expect(page.locator('.byline .versions-toggle')).toHaveText(`${n} versions`);
 }
 
@@ -336,11 +337,11 @@ test.describe('One save', () => {
 			await page.getByRole('button', { name: 'Save', exact: true }).click();
 			await page.waitForURL(url);
 
-			await expect(page.getByText('Serves 8').first()).toBeVisible();
+			await expect(page.getByText('8 servings').first()).toBeVisible();
 			await expectVersions(page, 2);
 
 			await page.goto(`${url}?version=1`);
-			await expect(page.getByText('Serves 4').first()).toBeVisible();
+			await expect(page.getByText('4 servings').first()).toBeVisible();
 			await expect(page.getByText(/2 cups/).first()).toBeVisible();
 
 			await page.goto(`${url}/diff?from=1&to=2`);

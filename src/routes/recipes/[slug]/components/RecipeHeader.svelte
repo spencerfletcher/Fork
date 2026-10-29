@@ -58,12 +58,28 @@
 	}
 </script>
 
+{#snippet chevron()}
+	<svg
+		class="chevron"
+		class:up={open}
+		viewBox="0 0 12 12"
+		aria-hidden="true"
+		fill="none"
+		stroke="currentColor"
+		stroke-width="1.6"
+		stroke-linecap="round"
+		stroke-linejoin="round">
+		<path d="M2.5 4.5 6 8l3.5-3.5" />
+	</svg>
+{/snippet}
+
 <svelte:window onkeydown={onWindowKeydown} />
 
-<!-- One face below the title. The byline carries who and how many; the
-     description is plain body text; the only mono line is the version's
-     note, marked by its chip and a rule in the margin; then a rule, the
-     measure, the tags, the actions. -->
+<!-- One face below the title. The byline carries who, the forks, the version
+     chip and the history toggle; the commit message lives only in the history
+     it opens. Then the description, the measure on one line, the tags, the
+     actions. Nothing is boxed and nothing is pinned: the column ends where it
+     ends. Decided 29 October 2026. -->
 <header class="recipe-header">
 	<h1 class="title m-0 font-serif font-medium">{currentVersion.title}</h1>
 
@@ -71,21 +87,36 @@
 		{#if isViewingHistory}
 			{#if recipe.author}By <Username username={recipe.author.username} /> ·
 			{/if}
+			<span class="version font-mono">
+				<span class="sr-only">Version {n} of {count}, replaced</span>
+				<span aria-hidden="true">v{n}</span>
+			</span>
+			·
 			<button
 				type="button"
 				class="versions-toggle"
 				bind:this={toggle}
 				aria-expanded={open}
 				aria-controls="version-history"
+				aria-label="Version history, v{n} of {count}"
 				onclick={() => (open = !open)}>
 				v{n} of {count}
+				{@render chevron()}
 			</button>
-			· Viewing history ·
+			· Older version ·
 			<a href="/recipes/{recipe.slug}">Back to v{latest}</a>
 		{:else}
-			{#if recipe.author}By <Username username={recipe.author.username} />{/if}
+			{#if recipe.author}By <Username username={recipe.author.username} /> ·
+			{/if}
+			{#if forkCount > 0}
+				{forkCount} {forkCount === 1 ? 'fork' : 'forks'} ·
+			{/if}
+			<span class="version font-mono">
+				<span class="sr-only">Version {n}, the latest</span>
+				<span aria-hidden="true">v{n}</span>
+			</span>
 			{#if count > 1}
-				{#if recipe.author}·{/if}
+				·
 				<button
 					type="button"
 					class="versions-toggle"
@@ -94,13 +125,37 @@
 					aria-controls="version-history"
 					onclick={() => (open = !open)}>
 					{count} versions
+					{@render chevron()}
 				</button>
-			{/if}
-			{#if forkCount > 0}
-				· {forkCount} {forkCount === 1 ? 'fork' : 'forks'}
 			{/if}
 		{/if}
 	</p>
+
+	<!-- Every version, newest first, under the byline. The one being read keeps
+	     its chip and its message; each other version links to itself and
+	     compares itself with the one being read, older to newer. -->
+	{#if count > 1}
+		<ul id="version-history" class="history m-0 list-none p-0 font-mono" hidden={!open}>
+			{#each versions as version (version.id)}
+				{@const v = version.versionNumber}
+				<li class:current={v === n}>
+					{#if v === n}
+						<span class="version" aria-hidden="true">v{v}</span>
+						<span class="sr-only">Version {v}, {v === latest ? 'latest' : 'being read'}:</span>
+						<span class="message text-text">{version.commitMessage}</span>
+					{:else}
+						<a href="/recipes/{recipe.slug}?version={v}" class="version-number">v{v}</a>
+						<span class="message text-text-2">{version.commitMessage}</span>
+						<a
+							href="/recipes/{recipe.slug}/diff?from={Math.min(v, n)}&to={Math.max(v, n)}"
+							class="compare whitespace-nowrap">
+							Compare with v{n}
+						</a>
+					{/if}
+				</li>
+			{/each}
+		</ul>
+	{/if}
 
 	{#if recipe.parent}
 		<p class="attribution text-text-3 m-0 font-sans text-[0.875rem]">
@@ -118,50 +173,16 @@
 		<p class="description m-0">{currentVersion.description}</p>
 	{/if}
 
-	<!-- The version's note, in the margin: a chip and the message in mono. -->
-	<div class="version-bar">
-		<p class="commit-line m-0 font-mono">
-			<span class="sr-only">
-				{isViewingHistory ? `Version ${n} of ${count}:` : `Version ${n}, latest:`}
-			</span>
-			<span class="version" aria-hidden="true">v{n}</span>
-			<span class="commit">{currentVersion.commitMessage}</span>
-		</p>
-	</div>
+	<Details content={currentVersion} />
 
-	<!-- The other versions, newest first: the one being read is already on the
-	     page, so it is not repeated. Each compares itself with the one being read,
-	     older to newer. -->
-	{#if count > 1}
-		<ul id="version-history" class="history m-0 list-none p-0 font-mono" hidden={!open}>
-			{#each versions.filter((v) => v.versionNumber !== n) as version (version.id)}
-				{@const v = version.versionNumber}
-				<li>
-					<a href="/recipes/{recipe.slug}?version={v}" class="version-number">v{v}</a>
-					<span class="text-text-2">{version.commitMessage}</span>
-					<a
-						href="/recipes/{recipe.slug}/diff?from={Math.min(v, n)}&to={Math.max(v, n)}"
-						class="compare whitespace-nowrap">
-						Compare with v{n}
-					</a>
-				</li>
+	{#if tags.length > 0}
+		<p class="tags text-text-2 m-0 font-sans">
+			{#each tags as tag, i (tag.id)}
+				{#if i > 0},&#32;{/if}
+				<a href="/tags/{tag.slug}">{tag.name}</a>
 			{/each}
-		</ul>
+		</p>
 	{/if}
-
-	<hr class="rule" />
-
-	<div class="meta">
-		<Details content={currentVersion} />
-		{#if tags.length > 0}
-			<p class="tags text-text-2 m-0 font-sans">
-				{#each tags as tag, i (tag.id)}
-					{#if i > 0},&#32;{/if}
-					<a href="/tags/{tag.slug}">{tag.name}</a>
-				{/each}
-			</p>
-		{/if}
-	</div>
 
 	{#if actions}
 		<div class="actions-row">{@render actions()}</div>
@@ -169,10 +190,11 @@
 </header>
 
 <style>
+	/* 8, 8, 8, 2, 16 down the column: each line sets its own gap above. */
 	.recipe-header {
 		display: flex;
 		flex-direction: column;
-		gap: 16px;
+		gap: 0;
 	}
 
 	/* clamp() for fluid typography: 28px on a phone, 40px on a desktop. */
@@ -182,10 +204,10 @@
 		color: var(--color-accent);
 	}
 
-	/* Who and how many, bold, right under the title. Links are clay like the
-	   rest of the site; the username keeps the byline's own face and size. */
+	/* Who, the forks, the chip, the history: one sans line, 600, links clay;
+	   the username keeps the byline's own face and size. */
 	.byline {
-		margin-top: -8px;
+		margin-top: 8px;
 		font-size: 1rem;
 		font-weight: 600;
 		line-height: 1.5;
@@ -208,8 +230,12 @@
 		color: var(--color-text);
 	}
 
-	/* The toggle is a word in the sentence, not a button. */
+	/* The toggle is a word in the sentence, not a button, with a chevron that
+	   flips while the history is open. */
 	.versions-toggle {
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
 		padding: 0;
 		border: none;
 		background: none;
@@ -217,23 +243,19 @@
 		cursor: pointer;
 	}
 
-	.description {
-		font-size: 1.0625rem;
-		line-height: 1.5;
+	.chevron {
+		width: 12px;
+		height: 12px;
+		transition: transform 0.15s ease;
 	}
 
-	.commit-line {
-		display: flex;
-		align-items: baseline;
-		gap: 10px;
-		padding-left: 12px;
-		border-left: 2px solid var(--color-border-2);
-		font-size: 0.875rem;
-		line-height: 1.6;
-		color: var(--color-text-2);
+	.chevron.up {
+		transform: rotate(180deg);
 	}
 
+	/* The marigold chip: a badge, not a control. */
 	.version {
+		display: inline-block;
 		flex-shrink: 0;
 		padding: 0 6px;
 		border-radius: var(--radius-sm);
@@ -241,21 +263,36 @@
 		color: var(--color-text);
 		font-size: 0.75rem;
 		font-weight: 600;
+		line-height: 1.5;
+		vertical-align: 1px;
 	}
 
-	.commit {
-		min-width: 0;
+	.attribution {
+		margin-top: 8px;
 	}
 
+	/* Capped at a reading measure for the one-column widths and the no-photo
+	   page, where the column is wider than the photo would leave it. */
+	.description {
+		max-width: 65ch;
+		margin-top: 8px;
+		font-size: 1.0625rem;
+		line-height: 1.5;
+	}
+
+	/* Lifted paper, a rule, no shadow: the list sits in the flow under the
+	   byline, it does not float. */
 	.history {
 		display: flex;
 		flex-direction: column;
-		gap: 6px;
+		gap: 8px;
+		margin-top: 10px;
 		padding: 10px 14px;
 		background: var(--color-surface);
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-md);
 		font-size: 0.875rem;
+		line-height: 1.6;
 	}
 
 	.history li {
@@ -264,12 +301,20 @@
 		gap: 10px;
 	}
 
-	.history .text-text-2 {
+	/* The message shrinks and wraps under itself; the chip and the compare
+	   link keep their width. */
+	.history .message {
+		flex: 1 1 0;
+		min-width: 0;
 		overflow-wrap: anywhere;
 	}
 
-	.version-number {
+	/* The same width as the chip, so the numbers and the messages line up. */
+	.history .version-number {
 		flex-shrink: 0;
+		padding: 4px 6px;
+		margin: -4px 0;
+		font-size: 0.75rem;
 		font-weight: 600;
 		color: var(--color-accent);
 		text-decoration: none;
@@ -277,6 +322,7 @@
 
 	.history .compare {
 		margin-left: auto;
+		flex-shrink: 0;
 		color: var(--color-accent);
 		text-decoration: none;
 	}
@@ -285,20 +331,13 @@
 		color: var(--color-text);
 	}
 
-	.rule {
-		margin: 8px 0 0;
-		border: 0;
-		border-top: 1px solid var(--color-border-2);
-	}
-
-	.meta {
-		display: flex;
-		flex-direction: column;
-		gap: 8px;
+	.recipe-header :global(.details) {
+		margin-top: 8px;
 	}
 
 	.tags {
-		font-size: 0.875rem;
+		margin-top: 2px;
+		font-size: 1rem;
 		line-height: 1.5;
 	}
 
@@ -313,7 +352,7 @@
 
 	/* Logged out the snippet renders nothing; an empty row must not take a gap. */
 	.actions-row {
-		margin-top: 8px;
+		margin-top: 16px;
 	}
 
 	.actions-row:empty {
@@ -333,11 +372,12 @@
 	@media (max-width: 699px) {
 		.history li {
 			flex-wrap: wrap;
+			row-gap: 4px;
 		}
 
 		.history .compare {
 			flex-basis: 100%;
-			margin-left: 27px;
+			margin-left: 36px; /* chip width plus the row gap */
 		}
 	}
 </style>

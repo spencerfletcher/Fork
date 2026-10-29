@@ -184,13 +184,13 @@ Clay and marigold were raised in chroma from #a4512b and #e8a83a: same hues, sam
 - **Headline** (500, 1.75rem, 1.25, ink): h2 on pages that need a second serif level ("Recipes worth forking").
 - **Title** (500, 1.0625rem, 1.25): recipe card names in Bitter. Clay on a no-photo panel, ink on a photo card.
 - **Body** (400, 1rem, 1.65, ink): running text, ingredients, steps. Descriptions at 1.0625rem in Ink 2. Measure stays under about 72 characters.
-- **Sans label** (600, 0.6875rem, 0.08em, uppercase, Ink 3): the page's one uppercase label: section eyebrows ("Ingredients", "Method", "Recent"), form legends, the recipe page's Prep, Cook and Serves, and its phone section tabs at 0.75rem.
-- **Mono** (400, 0.75rem, 1.5): dates, diff rows and commit messages in history. On the recipe page mono is spent on one line only, the version's note (0.875rem, Ink 2, with the chip); the byline and the measure are sans. Gram weights are not mono: they sit inside a sans ingredient line at the line's own size, in Ink 3, so the strike runs through them as one line (decided 29 October 2026). The recipe page's tag line uses 0.875rem; step numerals are Bitter 1.125rem in clay. Diff and compare surfaces use 0.875rem. Card version marks use 600 at 0.6875rem.
+- **Sans label** (600, 0.6875rem, 0.08em, uppercase, Ink 3): the page's one uppercase label: section eyebrows ("Ingredients", "Method", "Recent"), form legends, and the recipe page's phone section tabs at 0.75rem. The recipe page's measure is not a label; see Version note.
+- **Mono** (400, 0.75rem, 1.5): dates, diff rows and commit messages in history. On the recipe page mono is spent on the version chip in the byline and on the history list it opens (0.875rem, Ink 2); the byline and the measure are sans (decided 29 October 2026). Gram weights are not mono: they sit inside a sans ingredient line at the line's own size, in Ink 3, so the strike runs through them as one line (decided 29 October 2026). The recipe page's tag line uses 1rem (decided 29 October 2026); step numerals are Bitter 1.125rem in clay. Diff and compare surfaces use 0.875rem. Card version marks use 600 at 0.6875rem.
 - **Also in use** and on the ramp: 0.8125rem (card meta, byline, numerals), 0.875rem (navbar links, diff), 0.9375rem (buttons, card body), 1.375rem (the wordmark).
 
 ### Named Rules
 
-**The Pencil Rule.** Anything that is history or measurement (version number, byline, date, fork count, grams, diff text) is set in JetBrains Mono. Anything that is the recipe (title, description, ingredients, steps) is not. The reader tells the two apart by face alone.
+**The Pencil Rule.** Anything that is history or measurement (version number, date, grams, diff text) is set in JetBrains Mono. Anything that is the recipe (title, description, ingredients, steps) is not. The reader tells the two apart by face alone. One exception, decided 29 October 2026: the recipe byline and its counts ("By @author · 1 fork · 3 versions") are sans at the byline size, so the only mono in that line is the version chip.
 
 **The One Clay Line Rule.** Clay running text is the h1 and links. Headings below h1 are ink.
 
@@ -260,7 +260,21 @@ A "Skip to content" link is the first tab stop on every page, hidden until focus
 
 ### Version note (signature)
 
-Decided 29 October 2026, after measuring eight reference headers (GitHub, GitLab, Hugging Face, npm, Serious Eats, Bon Appétit, King Arthur, NYT Cooking): one face below the title, all metadata at one size and one colour with weight as the only emphasis, the description as plain body text, colour spent once. The recipe header is title (Bitter, clay), byline (sans 1rem 600: "By @author · 3 versions · 1 fork", links clay), description (sans 1.0625rem ink), then the version's note: a marigold `v3` chip and the commit message in mono 0.875rem Ink 2 with a 2px Rule 2 edge in the margin, the only mono on the page. A 1px rule, then Prep · Cook · Serves as bold label and plain value at 1rem on one row (wrapping on a phone), the tags in Ink 2 with clay on hover, and the action pills. "3 versions" opens the list of the other versions under the note, each with "Compare with vN"; while viewing an older version the byline reads "v2 of 3 · Viewing history · Back to v3". No italic, no uppercase above the rule, no chip in the title.
+Decided 29 October 2026, revised the same day after mocking up the header in four layouts: the commit message leaves the closed header and lives only in the version list, so the header reads title, byline, description, measure, tags, actions, with nothing boxed and nothing pinned.
+
+- **Title:** Bitter, clay.
+- **Byline** (sans 1rem 600, links clay): `By @author · 1 fork · v3 · 3 versions ▾`. The chip is the marigold version chip in mono, a badge, not a control, with an sr-only "Version 3, latest:" prefix. "3 versions" is the one toggle: a word in the sentence at the byline size with a 12px chevron, which flips when open. While viewing an older version the byline keeps the chip and the chevron and reads "v2 · v2 of 3 ▾ · Older version · Back to v3" (revised 29 October 2026 after a critique: the state must be unmistakable).
+- **Description:** sans 1.0625rem ink, plain body text.
+- **Measure:** one sans line at 1rem, value then label for all three: `15 min prep · 13 min cook · 36 servings`, values 600 ink, labels Ink 2, dots in Rule 2. A pair never splits; the line wraps only at the dots. No rule above it.
+- **Tags:** a comma-separated line at 1rem, Ink 2, clay on hover.
+- **Actions:** the 44px pills (see Buttons), unpinned, directly after the tags.
+- **Spacing** down the column: 8, 8, 8, 2, 16. The column ends where it ends; it is never stretched to the photo.
+- **Photo:** 3:2 beside the header, capped at 340px tall, 6px corners. Stacked below 1024px it sits directly under the title, before the byline.
+- **Ingredients:** a measured line bolds its measure ("**2¼ cups** (281g) all-purpose flour"); a counted line is all measure, so it is bold whole ("**2 large eggs** (≈100g)"); a line with no number is plain. On every width.
+- **Sections below 1024px:** the Ingredients | Method bar is a switch, not a jump: one section shows, the other is hidden, and switching puts the section's top under the bar. Decided 29 October 2026 because scrolling past one section to reach the other felt bad.
+- **History list** (opened by "3 versions", under the byline): lifted paper, 1px Rule, 6px corners, 10px 14px padding, no shadow. Rows in mono 0.875rem: the current version's row carries the chip and its message in ink; each other version its number in clay 600, its message in Ink 2, and "Compare with vN" at the right.
+
+No italic, no uppercase in the header, no chip in the title, no note under the description.
 
 ### Diff rows (signature)
 
