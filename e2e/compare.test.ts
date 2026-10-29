@@ -28,12 +28,18 @@ test.describe('Compare page', () => {
 		await openCookiesCompare(page);
 		const from = page.getByRole('combobox', { name: 'From version' });
 		await expect(from).toHaveValue('2');
-		await expect(page.locator('.picker__face').first()).toHaveText(/^v2\s*▾$/);
-		// The select's own text is not drawn; only the face shows.
-		expect(await from.evaluate((el) => getComputedStyle(el).color)).toBe('rgba(0, 0, 0, 0)');
+		// The select draws its own text: no face over it.
+		await expect(page.locator('.picker__face')).toHaveCount(0);
+		expect(await from.evaluate((el: HTMLSelectElement) => el.selectedOptions[0].text)).toBe('v2');
+		expect(await from.evaluate((el) => getComputedStyle(el).color)).not.toBe('rgba(0, 0, 0, 0)');
 		expect((await from.boundingBox())!.width).toBeLessThan(100);
-		// The open list carries the message.
+		// Pressed, the list carries the message and the box keeps its width.
+		const closed = (await from.boundingBox())!.width;
+		await from.dispatchEvent('pointerdown');
 		await expect(from.locator('option').nth(1)).toHaveText(/^v2 · \S/);
+		expect((await from.boundingBox())!.width).toBe(closed);
+		await from.press('Escape');
+		await expect(from.locator('option').nth(1)).toHaveText('v2');
 		const arrow = page.locator('.version-picker__arrow');
 		await expect(arrow).toHaveAttribute('aria-hidden', 'true');
 		const [arrowFont, selectFont] = await Promise.all([
@@ -47,26 +53,42 @@ test.describe('Compare page', () => {
 	test('the caret sits at the right edge of the picker at every width, so it reads as a select', async ({
 		page
 	}) => {
-		// The gap between caret and picker edge is the face's own padding and
-		// border, nothing more; on a phone the picker is ~164px wide.
+		// The gap between the caret and the select's right edge is the select's
+		// own padding and border, nothing more; on a phone the picker is ~164px.
 		const caretGap = (n: number) =>
 			page
 				.locator('.picker')
 				.nth(n)
 				.evaluate((picker) => {
-					const face = picker.querySelector('.picker__face')!;
-					const caret = face.querySelector('.picker__caret')!;
-					const s = getComputedStyle(face);
-					const inset = parseFloat(s.paddingRight) + parseFloat(s.borderRightWidth);
-					return picker.getBoundingClientRect().right - caret.getBoundingClientRect().right - inset;
+					const select = picker.querySelector('select')!;
+					const caret = picker.querySelector('.picker__caret')!;
+					return select.getBoundingClientRect().right - caret.getBoundingClientRect().right;
 				});
 		await page.setViewportSize({ width: 390, height: 900 });
 		await openCookiesCompare(page);
-		expect((await page.locator('.picker').first().boundingBox())!.width).toBeGreaterThan(120);
-		for (const n of [0, 1]) expect(Math.abs(await caretGap(n))).toBeLessThanOrEqual(1);
+		expect((await page.locator('.picker select').first().boundingBox())!.width).toBeGreaterThan(
+			120
+		);
+		for (const n of [0, 1]) expect(await caretGap(n)).toBeLessThanOrEqual(12);
 		await page.setViewportSize({ width: 1280, height: 900 });
-		expect((await page.locator('.picker').first().boundingBox())!.width).toBeLessThan(100);
-		for (const n of [0, 1]) expect(Math.abs(await caretGap(n))).toBeLessThanOrEqual(1);
+		expect((await page.locator('.picker select').first().boundingBox())!.width).toBeLessThan(100);
+		for (const n of [0, 1]) expect(await caretGap(n)).toBeLessThanOrEqual(12);
+	});
+
+	test('in forced colours the picker keeps its version and its caret, unclipped', async ({
+		page
+	}) => {
+		await page.emulateMedia({ forcedColors: 'active' });
+		for (const width of [1280, 390]) {
+			await page.setViewportSize({ width, height: 900 });
+			await openCookiesCompare(page);
+			const from = page.getByRole('combobox', { name: 'From version' });
+			expect(await from.evaluate((el: HTMLSelectElement) => el.selectedOptions[0].text)).toBe('v2');
+			const caret = page.locator('.picker__caret').first();
+			await expect(caret).toBeVisible();
+			const [c, f] = [(await caret.boundingBox())!, (await from.boundingBox())!];
+			expect(c.x + c.width).toBeLessThanOrEqual(f.x + f.width);
+		}
 	});
 
 	test('at 1280 Method starts on the To card’s left edge; Details runs the column', async ({

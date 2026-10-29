@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { flushSync } from 'svelte';
 	import { goto } from '$app/navigation';
 	import VersionDiff from '#lib/components/recipes/VersionDiff.svelte';
 	import Username from '#lib/components/ui/Username.svelte';
@@ -26,6 +27,25 @@
 			? `/recipes/${recipe.slug}`
 			: `/recipes/${recipe.slug}?version=${v.versionNumber}`;
 
+	// The picker whose list is open: its options carry each message, "v2 ·
+	// Increased vanilla"; closed, they read "v2", so the select is its own face
+	// (decided 29 October 2026). Opened by a press or the keys that open a
+	// select; never by focus, since the page refocuses the picker after it
+	// navigates. ponytail: a list closed by re-pressing it or by picking the
+	// current value keeps the long labels until blur; no event says it closed.
+	let openPicker = $state<string | null>(null);
+
+	function open(id: string) {
+		// Before the browser draws the list, so it opens with the messages.
+		flushSync(() => (openPicker = id));
+	}
+
+	const opensList = (e: KeyboardEvent) =>
+		e.key === ' ' || e.key === 'Enter' || (e.altKey && e.key === 'ArrowDown');
+
+	// The closed width, in the select's own mono ch: the longest short label.
+	const labelChars = $derived(Math.max(...allVersions.map((v) => `v${v.versionNumber}`.length)));
+
 	async function navigate(id: string) {
 		await goto(`?from=${fromSelect}&to=${toSelect}`);
 		// Navigation lands focus on the body; the picker that was changed keeps it.
@@ -39,29 +59,31 @@
 		d?.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 </script>
 
-<!-- Closed, a picker shows the version alone; open, each option carries its
-     message (decided 29 October 2026). The native select still does the work:
-     its own text is transparent under a face drawn in flow, which also gives
-     the picker its natural width. The face is aria-hidden, since the select's
-     value already names the version and its message. -->
 {#snippet picker(id: string, label: string, value: number, set: (v: number) => void)}
-	<span class="picker">
-		<span class="picker__face" aria-hidden="true">
-			v{value}
-			<span class="picker__caret">▾</span>
-		</span>
+	<span class="picker" style:--label-chars={labelChars}>
 		<select
 			{id}
 			{value}
 			aria-label={label}
+			onpointerdown={() => open(id)}
+			onkeydown={(e) => {
+				if (opensList(e)) open(id);
+				else if (e.key === 'Escape') openPicker = null;
+			}}
+			onblur={() => (openPicker = null)}
 			onchange={(e) => {
+				openPicker = null;
 				set(Number(e.currentTarget.value));
 				navigate(id);
 			}}>
 			{#each allVersions as v (v.versionNumber)}
-				<option value={v.versionNumber}>v{v.versionNumber} · {v.commitMessage}</option>
+				<option value={v.versionNumber}>
+					v{v.versionNumber}{openPicker === id ? ` · ${v.commitMessage}` : ''}
+				</option>
 			{/each}
 		</select>
+		<!-- A glyph rather than a background image, so forced colours paint it. -->
+		<span class="picker__caret" aria-hidden="true">▾</span>
 	</span>
 {/snippet}
 
@@ -142,49 +164,28 @@
 		min-width: 0;
 	}
 
-	/* The face and the select share one box: the face in flow sizes it, the
-	   select fills it, transparent text, and takes every click and key. */
-	.picker__face,
+	/* Sized to the short label, so the box does not grow when the list opens
+	   and its labels lengthen; the right padding holds a space and the caret. */
 	.version-picker select {
 		font-family: var(--font-mono);
 		font-size: 0.875rem;
 		line-height: 1.5;
-		padding: 6px 10px;
-	}
-
-	/* The caret at the face's right edge, so a phone's wide picker reads as a
-	   select rather than a text field; at desktop the face's natural width keeps
-	   it one space from the number. */
-	.picker__face {
-		display: flex;
-		justify-content: space-between;
-		gap: 1ch;
-		position: relative;
-		z-index: 1;
-		border: 1px solid transparent;
-		color: var(--color-text);
-		white-space: nowrap;
-		pointer-events: none;
-	}
-
-	.version-picker select {
-		position: absolute;
-		inset: 0;
-		width: 100%;
-		min-width: 0;
+		padding: 6px calc(10px + 2ch) 6px 10px;
+		width: calc((var(--label-chars) + 2) * 1ch + 22px);
 		appearance: none;
-		color: transparent;
+		white-space: nowrap;
+		text-overflow: clip;
 	}
 
-	.version-picker option {
+	.picker__caret {
+		position: absolute;
+		right: 11px;
+		top: 50%;
+		translate: 0 -50%;
+		font-family: var(--font-mono);
+		font-size: 0.875rem;
 		color: var(--color-text);
-	}
-
-	/* Forced colours paint the select's text back in; the face steps aside. */
-	@media (forced-colors: active) {
-		.picker__face {
-			visibility: hidden;
-		}
+		pointer-events: none;
 	}
 
 	/* Mono at the select's size, so it reads as part of the range. */
@@ -283,20 +284,16 @@
 			flex: 1;
 		}
 
-		.picker__face {
-			flex: 1;
-		}
-
-		.picker__face,
 		.version-picker select,
+		.picker__caret,
 		.version-picker__arrow {
 			/* 16px, or iOS zooms the picker on focus. */
 			font-size: 1rem;
 		}
 
-		.picker__face,
 		.version-picker select {
-			padding: 10px;
+			width: 100%;
+			padding: 10px calc(10px + 2ch) 10px 10px;
 		}
 
 		.version-cards {

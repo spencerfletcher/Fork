@@ -1,5 +1,5 @@
 import { describe, test, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/svelte';
+import { fireEvent, render, screen } from '@testing-library/svelte';
 import DiffPage from './+page.svelte';
 import type { IngredientDiffRow, MetaDiffRow, StepDiffRow } from '#lib/recipes/diff.js';
 import { makeContent, makeIngredient as ing } from '#lib/recipes/fixtures.js';
@@ -305,18 +305,62 @@ describe('Diff page', () => {
 		expect(screen.getByLabelText('To version')).toHaveValue('3');
 	});
 
-	test('a closed picker shows only the version; the list shows the version and its message', () => {
+	// The select is the only thing drawn: its options are short while the list
+	// is closed and carry the message while it is open (decided 29 October 2026).
+	const labels = (select: HTMLElement) =>
+		[...select.querySelectorAll('option')].map((o) => o.textContent);
+	const SHORT = [`v${V1.versionNumber}`, `v${V2.versionNumber}`];
+	const LONG = [
+		`v${V1.versionNumber} · ${V1.commitMessage}`,
+		`v${V2.versionNumber} · ${V2.commitMessage}`
+	];
+
+	test('a closed picker shows only the version, drawn by the select itself, with an unseen caret', () => {
 		const { container } = render(DiffPage, { props: { data: makeData() } });
 		const from = screen.getByRole('combobox', { name: 'From version' });
-		expect([...from.querySelectorAll('option')].map((o) => o.textContent)).toEqual([
-			'v1 · Initial recipe',
-			'v2 · Added espresso powder'
-		]);
-		// The closed face is drawn over the select, out of the accessibility tree:
-		// the select's own value already names the version and its message.
-		const faces = [...container.querySelectorAll('.picker__face')];
-		expect(faces.map((f) => f.textContent?.replace(/\s+/g, ' ').trim())).toEqual(['v1 ▾', 'v2 ▾']);
-		for (const face of faces) expect(face).toHaveAttribute('aria-hidden', 'true');
+		expect(labels(from)).toEqual(SHORT);
+		expect(container.querySelector('.picker__face')).toBeNull();
+		const carets = [...container.querySelectorAll('.picker__caret')];
+		expect(carets).toHaveLength(2);
+		for (const caret of carets) expect(caret).toHaveAttribute('aria-hidden', 'true');
+	});
+
+	test('pressing a picker opens its list with each message; choosing or leaving closes it', async () => {
+		render(DiffPage, { props: { data: makeData() } });
+		const from = screen.getByRole('combobox', { name: 'From version' });
+		const to = screen.getByRole('combobox', { name: 'To version' });
+		await fireEvent.pointerDown(from);
+		expect(labels(from)).toEqual(LONG);
+		// Only the pressed picker opens.
+		expect(labels(to)).toEqual(SHORT);
+		await fireEvent.change(from, { target: { value: String(V2.versionNumber) } });
+		expect(labels(from)).toEqual(SHORT);
+		await fireEvent.pointerDown(from);
+		await fireEvent.blur(from);
+		expect(labels(from)).toEqual(SHORT);
+		await fireEvent.pointerDown(from);
+		await fireEvent.keyDown(from, { key: 'Escape' });
+		expect(labels(from)).toEqual(SHORT);
+	});
+
+	test.each([
+		['Space', { key: ' ' }],
+		['Enter', { key: 'Enter' }],
+		['Alt+ArrowDown', { key: 'ArrowDown', altKey: true }]
+	])('%s opens the list with each message', async (_name, key) => {
+		render(DiffPage, { props: { data: makeData() } });
+		const to = screen.getByRole('combobox', { name: 'To version' });
+		await fireEvent.keyDown(to, key);
+		expect(labels(to)).toEqual(LONG);
+	});
+
+	test('focus alone, or ArrowDown without Alt, keeps the short labels', async () => {
+		// The page refocuses the picker after navigating; its face must read "v2".
+		render(DiffPage, { props: { data: makeData() } });
+		const to = screen.getByRole('combobox', { name: 'To version' });
+		await fireEvent.focus(to);
+		await fireEvent.keyDown(to, { key: 'ArrowDown' });
+		expect(labels(to)).toEqual(SHORT);
 	});
 
 	test('no From and To eyebrows: the selects are named, and the arrow between them is unseen', () => {
