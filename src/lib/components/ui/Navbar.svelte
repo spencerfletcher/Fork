@@ -78,7 +78,7 @@
 						<Username username={profile.username} tone="dark" current={onOwnProfile} />
 					{/if}
 					<form action="/logout" method="POST" use:enhance>
-						<button type="submit" class="navbar-link logout-btn">Logout</button>
+						<button type="submit" class="navbar-link logout-btn">Log out</button>
 					</form>
 				{:else}
 					<a href="/login" class="navbar-link" aria-current={current(path === '/login')}>Log in</a>
@@ -179,17 +179,15 @@
 					</li>
 				{/if}
 			</ul>
-			<div class="border-t border-white/[0.08] px-2 py-4">
+			<div class="mobile-account border-t border-white/[0.08] px-2 py-4">
 				{#if user}
 					<!-- The same name and type as the desktop bar. -->
 					{#if profile}
-						<div class="px-4 py-3">
-							<Username
-								username={profile.username}
-								tone="dark"
-								current={onOwnProfile}
-								onclick={closeMenu} />
-						</div>
+						<Username
+							username={profile.username}
+							tone="dark"
+							current={onOwnProfile}
+							onclick={closeMenu} />
 					{:else}
 						<p class="text-text-tan m-0 px-4 py-3 font-mono text-[0.75rem]">{user.email}</p>
 					{/if}
@@ -203,7 +201,7 @@
 							};
 						}}>
 						<button type="submit" class="mobile-link w-full border-none bg-transparent text-left">
-							Logout
+							Log out
 						</button>
 					</form>
 				{:else}
@@ -265,8 +263,9 @@
 		color: var(--color-text);
 	}
 
-	/* Clay vanishes on espresso, so the ring inside the bar is marigold. */
-	nav :focus-visible {
+	/* Clay vanishes on espresso, so the ring inside the bar is marigold.
+	   Global, so it reaches the Username component's link as well. */
+	nav :global(:focus-visible) {
 		outline-color: var(--color-marigold);
 	}
 
@@ -328,6 +327,14 @@
 		display: inline-block;
 		padding: 4px 0;
 		margin: -4px 0;
+	}
+
+	/* The handle in the phone menu: the padding on the link itself, like a
+	   .mobile-link row, so the whole row is its hit. */
+	.mobile-account :global(.username) {
+		display: block;
+		padding: var(--space-3) var(--space-4);
+		border-radius: var(--radius-sm);
 	}
 
 	/* Mobile link style */

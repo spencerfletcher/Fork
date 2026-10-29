@@ -36,19 +36,22 @@ describe('Navbar', () => {
 		expect(screen.getByRole('link', { name: /sign up/i })).toBeInTheDocument();
 	});
 
-	test('does not show Logout button when user is not logged in', () => {
+	test('does not show Log out when user is not logged in', () => {
 		render(Navbar, { props: { user: null } });
-		expect(screen.queryByRole('button', { name: /logout/i })).not.toBeInTheDocument();
+		expect(screen.queryByRole('button', { name: /log ?out/i })).not.toBeInTheDocument();
 	});
 
-	test('shows Logout button when user is logged in', () => {
+	test('shows Log out, the same verb form as Log in, when logged in', () => {
 		render(Navbar, { props: { user: makeUser('chef@example.com') } });
-		expect(screen.getByRole('button', { name: /logout/i })).toBeInTheDocument();
+		expect(screen.getByRole('button', { name: 'Log out' })).toBeInTheDocument();
+		expect(screen.queryByText('Logout')).toBeNull();
 	});
 
-	test('shows Logout button when logged in', () => {
+	test('the phone menu says Log out too', async () => {
 		render(Navbar, { props: { user: makeUser('chef@example.com') } });
-		expect(screen.getByRole('button', { name: /logout/i })).toBeInTheDocument();
+		await fireEvent.click(screen.getByRole('button', { name: /open main menu/i }));
+		const menu = within(document.getElementById('mobile-menu')!);
+		expect(menu.getByRole('button', { name: 'Log out' })).toBeInTheDocument();
 	});
 
 	test('does not show the Log in link when logged in', () => {
@@ -179,6 +182,38 @@ describe('Navbar', () => {
 			'/users/chefmaria'
 		);
 		expect(menu.queryByText('chef@example.com')).toBeNull();
+	});
+});
+
+// ─── Phone handle and focus ───────────────────────────────────────────────────
+
+describe('Navbar handle', () => {
+	// jsdom applies no component CSS, so the rules are read from the source.
+	const style = source.slice(source.indexOf('<style>'));
+
+	test('in the phone menu the padding is on the handle link itself, so the row is 44px', async () => {
+		const profile = {
+			id: 'user-abc',
+			username: 'chefmaria',
+			avatarUrl: null,
+			createdAt: new Date()
+		};
+		render(Navbar, { props: { user: makeUser('chef@example.com'), profile } });
+		await fireEvent.click(screen.getByRole('button', { name: /open main menu/i }));
+		const handle = within(document.getElementById('mobile-menu')!).getByRole('link', {
+			name: '@chefmaria'
+		});
+		// No padded wrapper: a padded div grows the row but not the link's hit.
+		expect(handle.parentElement).not.toHaveClass('py-3');
+		expect(style).toMatch(
+			/\.mobile-account :global\(\.username\)\s*{[^}]*display:\s*block;[^}]*padding:\s*var\(--space-3\) var\(--space-4\)/
+		);
+	});
+
+	test("the bar's marigold ring reaches the Username component's link", () => {
+		// A scoped `nav :focus-visible` matches only Navbar's own elements, so the
+		// handle kept the global clay ring (3.08:1 on espresso).
+		expect(style).toMatch(/nav :global\(:focus-visible\)\s*{[^}]*--color-marigold/);
 	});
 });
 
