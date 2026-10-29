@@ -466,9 +466,10 @@
 			height: 160px;
 		}
 
+		/* A thumb's 44px. */
 		.photo-remove {
-			width: 32px;
-			height: 32px;
+			width: 44px;
+			height: 44px;
 		}
 	}
 </style>

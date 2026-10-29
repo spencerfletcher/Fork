@@ -380,6 +380,34 @@ test.describe('Edit recipe page', () => {
 		}
 	});
 
+	test('the back link is a 24px target at desktop and 44px on a phone, and so is the photo remover there', async ({
+		page
+	}) => {
+		const url = await createRecipe(page, 'E2E Hit Sizes', '4');
+		try {
+			await gotoHydrated(page, `${url}/edit`);
+			const back = page.locator('.editor-header .back-link');
+			expect((await back.boundingBox())!.height).toBeGreaterThanOrEqual(24);
+			await page.setViewportSize({ width: 390, height: 900 });
+			expect((await back.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+			// A picked photo, not saved, brings up the remover.
+			await page.locator('input[name="image"]').setInputFiles({
+				name: 'dot.png',
+				mimeType: 'image/png',
+				buffer: Buffer.from(
+					'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
+					'base64'
+				)
+			});
+			const remove = page.getByRole('button', { name: 'Remove photo' });
+			const box = (await remove.boundingBox())!;
+			expect(box.width).toBeGreaterThanOrEqual(44);
+			expect(box.height).toBeGreaterThanOrEqual(44);
+		} finally {
+			await deleteRecipe(page, url);
+		}
+	});
+
 	test('a long ingredient list grows the editor on a phone and Save stays below it', async ({
 		page
 	}) => {
