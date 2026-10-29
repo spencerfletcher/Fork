@@ -15,6 +15,9 @@
 				? 'It may be an old link, or a recipe its author keeps private.'
 				: null
 	);
+	// A missing recipe may be one its author made private; a search is the way
+	// on from a shared link to it.
+	const recipeMissing = $derived(page.status === 404 && page.url.pathname.startsWith('/recipes/'));
 </script>
 
 <!-- Centred on the screen like the login page, nothing boxed (Spencer, 29
@@ -25,7 +28,12 @@
 		{#if lede}
 			<p class="lede text-text-2 m-0">{lede}</p>
 		{/if}
-		<a href="/" class="btn-primary">Go home</a>
+		<div class="actions">
+			<a href="/" class="btn-primary">Go home</a>
+			{#if recipeMissing}
+				<a href="/search" class="btn-ghost">Search recipes</a>
+			{/if}
+		</div>
 	</div>
 </div>
 
@@ -43,7 +51,11 @@
 		line-height: 1.5;
 	}
 
-	.error-page :global(.btn-primary) {
+	.actions {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: 12px;
 		margin-top: 24px;
 	}
 </style>

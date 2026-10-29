@@ -4,11 +4,16 @@ import ErrorPage from './+error.svelte';
 
 // The error page reads the status and the thrown message from page state.
 const state = vi.hoisted(() => ({
-	page: { status: 500, error: { message: 'Internal Error' } as { message: string } | null }
+	page: {
+		status: 500,
+		error: { message: 'Internal Error' } as { message: string } | null,
+		url: new URL('http://localhost/')
+	}
 }));
 vi.mock('$app/state', () => state);
 
-function renderError(status: number, message: string | null) {
+function renderError(status: number, message: string | null, path = '/') {
+	state.page.url = new URL(path, 'http://localhost');
 	state.page.status = status;
 	state.page.error = message === null ? null : { message };
 	return render(ErrorPage);
@@ -50,5 +55,20 @@ describe('error page', () => {
 		const { container } = renderError(500, 'Internal Error');
 		expect(container.querySelector('h1')!.className).not.toMatch(/rem/);
 		expect(container.querySelector('.font-mono')).toBeNull();
+	});
+
+	test('a recipe 404 offers a search beside home: a shared link to a now-private recipe has somewhere to go', () => {
+		renderError(404, 'Recipe not found', '/recipes/no-such-recipe');
+		const search = screen.getByRole('link', { name: 'Search recipes' });
+		expect(search).toHaveAttribute('href', '/search');
+		expect(search).toHaveClass('btn-ghost');
+		expect(screen.getByRole('link', { name: 'Go home' })).toHaveClass('btn-primary');
+	});
+
+	test('a 404 outside the recipes, or a recipe 500, offers home alone', () => {
+		renderError(404, 'Not found', '/no-such-page');
+		expect(screen.queryByRole('link', { name: 'Search recipes' })).toBeNull();
+		renderError(500, 'Internal Error', '/recipes/classic-cookies');
+		expect(screen.queryByRole('link', { name: 'Search recipes' })).toBeNull();
 	});
 });
