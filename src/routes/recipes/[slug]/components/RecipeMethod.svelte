@@ -16,11 +16,21 @@
 		{#each steps as step, i (i)}
 			{@const n = i + 1}
 			<!-- A native checkbox, visually hidden, carries the state and the keyboard
-			     behaviour; the label is the row and takes the struck-through look. -->
+			     behaviour; the label is the row and takes the struck-through look. The
+			     square before the numeral is the checkbox's picture: empty, then clay
+			     when checked (decided 29 October 2026). -->
 			<label
-				class="has-[:focus-visible]:outline-accent grid cursor-pointer [grid-template-columns:30px_1fr] items-baseline gap-[18px] select-none has-[:checked]:line-through has-[:checked]:opacity-60 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2">
-				<input type="checkbox" class="sr-only" />
-				<span class="text-accent font-serif text-[1.125rem] font-medium">{n}</span>
+				class="has-[:focus-visible]:outline-accent grid cursor-pointer [grid-template-columns:44px_1fr] items-baseline gap-[18px] select-none has-[:checked]:line-through has-[:checked]:opacity-60 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2">
+				<input type="checkbox" class="peer sr-only" />
+				<span
+					class="text-accent inline-flex items-baseline gap-2.5 font-serif text-[1.125rem] font-medium">
+					<span
+						class="tick border-border-2 peer-checked:bg-accent peer-checked:border-accent size-3.5 shrink-0 rounded-[3px] border"
+						aria-hidden="true">
+					</span>
+					{n}
+				</span>
+
 				<div class="flex flex-col gap-1.5">
 					<p class="text-text m-0 font-sans text-[1.0625rem] leading-[1.6] whitespace-pre-line">
 						{step.text}

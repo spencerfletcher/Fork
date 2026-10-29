@@ -51,23 +51,31 @@
 			{@const result = grams[i]}
 			{@const { bold, after } = parts(ingredient)}
 			<!-- A native checkbox, visually hidden, carries the state and the keyboard
-			     behaviour; the label is the row and takes the struck-through look. -->
+			     behaviour; the label is the row and takes the struck-through look. The
+			     square at the row start is the checkbox's picture: empty, then clay
+			     when checked (decided 29 October 2026). -->
 			<label
-				class="border-border text-text has-[:focus-visible]:outline-accent block cursor-pointer border-b py-2.5 text-base leading-[1.5] select-none has-[:checked]:line-through has-[:checked]:opacity-60 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2">
-				<input type="checkbox" class="sr-only" />
-				{#if bold}<span class="font-semibold">{bold}</span>{/if}
-				{#if result}
-					<!-- Same size as the line: WebKit strikes each inline box at its own
-					     font metrics, so a smaller span would get a lower, separate line. -->
-					<span
-						class="text-text-3"
-						title={result.approximate
-							? 'Typical weight for a whole item; actual items vary'
-							: undefined}>
-						{formatGrams(result)}
-					</span>
-				{/if}
-				{after}
+				class="border-border text-text has-[:focus-visible]:outline-accent flex cursor-pointer items-baseline gap-2.5 border-b py-2.5 text-base leading-[1.5] select-none has-[:checked]:line-through has-[:checked]:opacity-60 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2">
+				<input type="checkbox" class="peer sr-only" />
+				<span
+					class="tick border-border-2 peer-checked:bg-accent peer-checked:border-accent size-3.5 shrink-0 translate-y-[2px] rounded-[3px] border"
+					aria-hidden="true">
+				</span>
+				<span class="min-w-0">
+					{#if bold}<span class="font-semibold">{bold}</span>{/if}
+					{#if result}
+						<!-- Same size as the line: WebKit strikes each inline box at its own
+						     font metrics, so a smaller span would get a lower, separate line. -->
+						<span
+							class="text-text-3"
+							title={result.approximate
+								? 'Typical weight for a whole item; actual items vary'
+								: undefined}>
+							{formatGrams(result)}
+						</span>
+					{/if}
+					{after}
+				</span>
 			</label>
 		{/each}
 	</div>

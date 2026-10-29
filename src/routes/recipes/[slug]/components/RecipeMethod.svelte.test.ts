@@ -29,6 +29,14 @@ describe('RecipeMethod', () => {
 		expect(p).toHaveClass('whitespace-pre-line');
 	});
 
+	test('the square that pictures the checkbox sits in the number column, before the numeral', () => {
+		render(RecipeMethod, { props: { steps: [{ text: 'Mix.' }] } });
+		const tick = screen.getByText('1').querySelector('.tick')!;
+		expect(tick).toHaveAttribute('aria-hidden', 'true');
+		expect(tick).toHaveClass('peer-checked:bg-accent');
+		expect(screen.getByRole('checkbox')).toHaveClass('sr-only', 'peer');
+	});
+
 	test('each step is a native checkbox named by its text, toggled by clicking the row', async () => {
 		render(RecipeMethod, { props: { steps: [{ text: 'Mix.' }, { text: 'Bake.' }] } });
 		const bake = screen.getByRole('checkbox', { name: /Bake\./ });

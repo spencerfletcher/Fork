@@ -235,7 +235,6 @@ One exception, decided 28 October 2026: the recipe page's action row (Fork or Ed
 
 Fork is one click, decided 29 October 2026: the pill submits, the server makes the copy and redirects to it. No two-step confirm, no dialog. Logged out, the same pill leads to login and back to this page.
 
-
 ### Chips
 
 - **Version chip:** marigold fill, ink mono 600 text, 0 5px padding, 3px to 4px corners. On the recipe page it marks the version being read, not the latest: on an older version the chip stays marigold too (decided 29 October 2026; the critique's "older version wears the latest's mark" is closed by this ruling). The compare page's "To" chip and the recipe card's clay text mark do not yet follow this reading and are for their own rounds.
@@ -255,6 +254,7 @@ Fork is one click, decided 29 October 2026: the pill submits, the server makes t
 - **Focus:** the global clay ring.
 - **Error:** diff-remove text and border on diff-remove background.
 - **Textarea:** grows with content (`field-sizing: content`).
+- **Strike rows** (recipe page ingredients and steps, decided 29 October 2026): the input is a native checkbox, visually hidden, and the whole row is its label with a 44px hit; the row strikes through at 60% when checked. Its visible control is a 14px square, 1px Rule 2 border, 3px corners, filled clay when checked (no check mark), 10px before the text: at the row start on an ingredient row, before the numeral in the number column on a method row.
 
 ### Navigation
 

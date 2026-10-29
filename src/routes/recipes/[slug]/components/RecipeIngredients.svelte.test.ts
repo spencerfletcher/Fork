@@ -102,6 +102,21 @@ describe('RecipeIngredients', () => {
 		expect(rows()[0]).toHaveClass('has-[:focus-visible]:outline-2');
 	});
 
+	test('each row starts with a visible square that is the picture of its checkbox', () => {
+		renderWith('1 cup flour', [null]);
+		const row = rows()[0];
+		const box = screen.getByRole('checkbox');
+		const tick = row.querySelector('.tick')!;
+		// The input stays native and hidden; the square only draws its state.
+		expect(box).toHaveClass('sr-only', 'peer');
+		expect(tick).toHaveAttribute('aria-hidden', 'true');
+		expect(tick).toHaveClass('peer-checked:bg-accent');
+		expect(box.nextElementSibling).toBe(tick);
+		expect(
+			tick.compareDocumentPosition(screen.getByText('1 cup')) & Node.DOCUMENT_POSITION_FOLLOWING
+		).toBeTruthy();
+	});
+
 	test('each line is a native checkbox named by its text', async () => {
 		renderWith('1 cup flour\n2 eggs', [null, null]);
 		const flour = screen.getByRole('checkbox', { name: /1 cup flour/ });
