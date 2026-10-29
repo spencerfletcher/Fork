@@ -28,18 +28,17 @@
 
 	// The line as typed, split into what is set bold and what is not, with the
 	// weight between. A measured line bolds its measure and the weight sits
-	// before the name: "1 cup (125g) flour". A counted line bolds its leading
-	// number and the estimate trails: "2 large eggs (≈100g)". A line with no
-	// number ("salt to taste") has nothing to bold.
-	function parts(ingredient: Ingredient): { bold: string; rest: string; after: string } {
+	// before the name: "1 cup (125g) flour". A counted line is all measure, so
+	// it is bold whole and the estimate trails: "2 large eggs (≈100g)". A line
+	// with no number ("salt to taste") has nothing to bold.
+	function parts(ingredient: Ingredient): { bold: string; after: string } {
 		const { text, name, unit } = ingredient;
 		if (unit && text.endsWith(name)) {
 			const measure = text.slice(0, text.length - name.length).trimEnd();
-			return { bold: vulgar(measure), rest: '', after: name };
+			return { bold: vulgar(measure), after: name };
 		}
-		const m = text.match(/^(\d[\d/.,¼½¾⅓⅔⅛-]*)(\s+.*)$/);
-		if (!m) return { bold: '', rest: text, after: '' };
-		return { bold: vulgar(m[1]), rest: m[2], after: '' };
+		if (/^\d/.test(text)) return { bold: vulgar(text), after: '' };
+		return { bold: '', after: text };
 	}
 
 	const anyApproximate = $derived(grams.some((g) => g?.approximate));
@@ -50,13 +49,13 @@
 	<div class="m-0 p-0">
 		{#each ingredients as ingredient, i (i)}
 			{@const result = grams[i]}
-			{@const { bold, rest, after } = parts(ingredient)}
+			{@const { bold, after } = parts(ingredient)}
 			<!-- A native checkbox, visually hidden, carries the state and the keyboard
 			     behaviour; the label is the row and takes the struck-through look. -->
 			<label
 				class="border-border text-text has-[:focus-visible]:outline-accent block cursor-pointer border-b py-2.5 text-base leading-[1.5] select-none has-[:checked]:line-through has-[:checked]:opacity-60 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2">
 				<input type="checkbox" class="sr-only" />
-				{#if bold}<span class="font-semibold">{bold}</span>{/if}{rest}
+				{#if bold}<span class="font-semibold">{bold}</span>{/if}
 				{#if result}
 					<!-- Same size as the line: WebKit strikes each inline box at its own
 					     font metrics, so a smaller span would get a lower, separate line. -->

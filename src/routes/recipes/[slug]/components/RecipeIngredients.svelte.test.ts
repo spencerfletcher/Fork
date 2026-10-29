@@ -17,10 +17,10 @@ function rows() {
 }
 
 describe('RecipeIngredients', () => {
-	test('bolds the leading number on a counted line too, and nothing on a line without one', () => {
+	test('bolds the whole of a counted line, and nothing on a line without a number', () => {
 		renderWith('2 large eggs\nsalt to taste', [null, null]);
 		const [eggs, salt] = rows();
-		expect(eggs.querySelector('.font-semibold')).toHaveTextContent('2');
+		expect(eggs.querySelector('.font-semibold')).toHaveTextContent('2 large eggs');
 		expect(eggs).toHaveTextContent('2 large eggs');
 		expect(salt.querySelector('.font-semibold')).toBeNull();
 	});
