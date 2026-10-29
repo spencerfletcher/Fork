@@ -162,6 +162,63 @@ test.describe('Recipe detail page', () => {
 		await expect(modifiedRows).not.toHaveCount(before);
 	});
 
+	test('the compare tab names the range and the recipe', async ({ page }) => {
+		await gotoClassicCookies(page);
+		await openCompare(page);
+		await expect(page).toHaveTitle(`v2 → v3 · ${COOKIES} — Fork`);
+	});
+
+	test('the changed picker keeps focus after the compare page navigates', async ({ page }) => {
+		await gotoClassicCookies(page);
+		await openCompare(page);
+		await page.locator('#from-select').selectOption('1');
+		await expect(page).toHaveURL(/from=1/);
+		await expect(page.locator('#from-select')).toBeFocused();
+	});
+
+	test('the same version on both sides is one line, not a diff', async ({ page }) => {
+		await gotoClassicCookies(page);
+		await page.goto(page.url().split('?')[0] + '/diff?from=3&to=3');
+		await expect(page.getByText('v3 is on both sides; pick another version.')).toBeVisible();
+		await expect(page.locator('.diff-panel')).toHaveCount(0);
+	});
+
+	test('a reversed pair is read older to newer, in the URL and the pickers', async ({ page }) => {
+		await gotoClassicCookies(page);
+		await page.goto(page.url().split('?')[0] + '/diff?from=3&to=1');
+		await expect(page).toHaveURL(/from=1&to=3/);
+		await expect(page.locator('#from-select')).toHaveValue('1');
+		await expect(page.locator('#to-select')).toHaveValue('3');
+	});
+
+	test('after the diff a link reads the To version; the latest is the plain recipe URL', async ({
+		page
+	}) => {
+		await gotoClassicCookies(page);
+		const recipePath = new URL(page.url()).pathname;
+		await page.goto(recipePath + '/diff?from=2&to=3');
+		await expect(page.getByRole('link', { name: 'Read v3' })).toHaveAttribute('href', recipePath);
+		await page.goto(recipePath + '/diff?from=1&to=2');
+		await expect(page.getByRole('link', { name: 'Read v2' })).toHaveAttribute(
+			'href',
+			`${recipePath}?version=2`
+		);
+	});
+
+	test('a version that does not exist is a 400 that names the recipe and leads back to it', async ({
+		page
+	}) => {
+		await gotoClassicCookies(page);
+		const recipePath = new URL(page.url()).pathname;
+		const response = await page.goto(recipePath + '/diff?from=abc&to=3');
+		expect(response?.status()).toBe(400);
+		await expect(page.locator('h1')).toHaveText(`Version not found in ${COOKIES}`);
+		await expect(page.getByRole('link', { name: 'Back to the recipe' })).toHaveAttribute(
+			'href',
+			recipePath
+		);
+	});
+
 	test('diff-added and diff-removed text clear 4.5:1 against the surface actually behind them', async ({
 		page
 	}) => {
@@ -202,19 +259,14 @@ test.describe('Recipe detail page', () => {
 		});
 		expect(contrast(added.color, added.bg)).toBeGreaterThanOrEqual(4.5);
 
-		// ── Removed: reverse the compared range (v2 → v1) so "espresso powder" —
-		// present in v2, absent in v1 — renders as a genuinely removed whole row
-		// on its --color-remove-bg background. No fixture recipe has a real cross-version deletion, so the
-		// reversed range is what produces one without hardcoding a slug or altering
-		// seed data.
-		const diffUrl = new URL(page.url());
-		diffUrl.searchParams.set('from', '2');
-		diffUrl.searchParams.set('to', '1');
-		await page.goto(diffUrl.toString());
+		// ── Removed: no seed range deletes a whole row, and a reversed range now
+		// redirects to the older-to-newer pair, so the removed side measured here
+		// is the inline <del> of a modified row ("¾" → "½" cup sugar in v2 → v3).
+		// It carries the same --color-remove on --color-remove-bg as a removed row.
 
-		// The row's computed opacity (1 since the redesign) still enters the blend,
-		// so a future fade would be measured rather than assumed away.
-		const removedRow = page.locator('div.diff-removed').first();
+		// The element's computed opacity (1 since the redesign) still enters the
+		// blend, so a future fade would be measured rather than assumed away.
+		const removedRow = page.locator('.diff-content del.diff-removed').first();
 		await removedRow.waitFor();
 		const removed = await removedRow.evaluate((el) => {
 			const cs = getComputedStyle(el);
@@ -1032,7 +1084,7 @@ test.describe('Landing page (logged out)', () => {
 				.filter({ hasText: 'A real change, diffed' })
 				.first()
 				.locator('section')
-				.filter({ has: page.getByRole('heading', { name: /^(Ingredients|Steps)$/ }) });
+				.filter({ has: page.getByRole('heading', { name: /^(Ingredients|Method)$/ }) });
 
 		await page.setViewportSize({ width: 1440, height: 1800 });
 		await page.goto('/');
@@ -1066,7 +1118,9 @@ test.describe('Landing page (logged out)', () => {
 		const ingredients = panels.filter({
 			has: page.getByRole('heading', { name: 'Ingredients', exact: true })
 		});
-		const steps = panels.filter({ has: page.getByRole('heading', { name: 'Steps', exact: true }) });
+		const steps = panels.filter({
+			has: page.getByRole('heading', { name: 'Method', exact: true })
+		});
 		const a = await ingredients.boundingBox();
 		const b = await steps.boundingBox();
 		expect(Math.abs(a!.y - b!.y)).toBeLessThan(2);
@@ -1088,6 +1142,9 @@ test.describe('Landing page (logged out)', () => {
 			clientWidth: document.documentElement.clientWidth
 		}));
 		expect(doc.scrollWidth).toBeLessThanOrEqual(doc.clientWidth);
+		// The Read link after the diff is a 44px target on a phone.
+		const read = await page.getByRole('link', { name: /^Read v/ }).boundingBox();
+		expect(read!.height).toBeGreaterThanOrEqual(44);
 	});
 
 	test('the sample diff shows an actual change, not just unchanged rows', async ({ page }) => {

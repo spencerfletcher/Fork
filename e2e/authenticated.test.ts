@@ -349,10 +349,9 @@ test.describe('One save', () => {
 
 			await page.goto(`${url}/diff?from=1&to=2`);
 			const details = page.locator('section').filter({ hasText: 'Details' }).first();
-			await expect(details).toContainText('Servings');
-			await expect(details).toContainText('4');
-			await expect(details).toContainText('8');
-			await expect(details).toContainText('Cook time');
+			// Value then label, in the recipe page's words.
+			await expect(details).toContainText('4 to 8 servings');
+			await expect(details).toContainText('cook');
 		} finally {
 			await deleteRecipe(page, url);
 		}
