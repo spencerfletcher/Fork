@@ -1,7 +1,7 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { isActionFailure, isRedirect } from '@sveltejs/kit';
 import { invokeAction as invoke, formEvent } from '#lib/testing/actions.js';
-import { actions } from './+page.server';
+import { actions, load } from './+page.server';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -39,6 +39,20 @@ describe('login action', () => {
 		expect(result).toMatchObject({ status: 401, data: { message: 'Invalid login credentials' } });
 	});
 
+	test('redirects to a local redirectTo on success, and home when it is off-site', async () => {
+		signInWithPassword.mockResolvedValue({ error: null });
+		const local = await invoke(
+			actions.default as never,
+			makeEvent({ email: 'a@b.com', password: 'right', redirectTo: '/recipes/cookies?version=2' })
+		);
+		expect(local).toMatchObject({ status: 303, location: '/recipes/cookies?version=2' });
+		const offsite = await invoke(
+			actions.default as never,
+			makeEvent({ email: 'a@b.com', password: 'right', redirectTo: '//evil.example' })
+		);
+		expect(offsite).toMatchObject({ status: 303, location: '/' });
+	});
+
 	test('redirects home on success', async () => {
 		signInWithPassword.mockResolvedValue({ error: null });
 
@@ -49,5 +63,17 @@ describe('login action', () => {
 
 		expect(isRedirect(result)).toBe(true);
 		expect(result).toMatchObject({ status: 303, location: '/' });
+	});
+});
+
+describe('login load', () => {
+	test('hands a local redirectTo to the page and drops an off-site one', async () => {
+		const run = (redirectTo: string) =>
+			load({
+				locals: { user: null },
+				url: new URL(`http://x/login?redirectTo=${encodeURIComponent(redirectTo)}`)
+			} as never);
+		expect(await run('/recipes/cookies')).toEqual({ redirectTo: '/recipes/cookies' });
+		expect(await run('https://evil.example')).toEqual({ redirectTo: null });
 	});
 });

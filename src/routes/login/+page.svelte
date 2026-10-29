@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 
-	let { form }: { form: { message?: string } | null } = $props();
+	let { form, data }: { form: { message?: string } | null; data: { redirectTo: string | null } } =
+		$props();
 </script>
 
 <div class="auth-page">
@@ -16,6 +17,9 @@
 		{/if}
 
 		<form method="POST" use:enhance class="form">
+			{#if data.redirectTo}
+				<input type="hidden" name="redirectTo" value={data.redirectTo} />
+			{/if}
 			<div class="field">
 				<label for="email">Email</label>
 				<input id="email" name="email" type="email" required placeholder="you@example.com" />

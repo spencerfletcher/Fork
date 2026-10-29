@@ -5,11 +5,17 @@ import { text } from '#lib/recipes/validation.js';
 // Add a load function to redirect logged-in users away from the login page.
 // If a user with an active session tries to visit /login, they'll be
 // sent to their profile page instead.
-export const load: PageServerLoad = async ({ locals: { user } }) => {
+export const load: PageServerLoad = async ({ locals: { user }, url }) => {
 	if (user) {
 		throw redirect(303, '/'); // Or wherever you want logged-in users to go
 	}
+	return { redirectTo: localPath(url.searchParams.get('redirectTo')) };
 };
+
+// Only a path on this site: no scheme, no host, no protocol-relative "//".
+function localPath(value: string | null): string | null {
+	return value && value.startsWith('/') && !value.startsWith('//') ? value : null;
+}
 
 export const actions: Actions = {
 	default: async ({ request, locals: { supabase } }) => {
@@ -34,7 +40,7 @@ export const actions: Actions = {
 			return fail(401, { message: err.message });
 		}
 
-		// If login is successful, redirect the user to the homepage or their dashboard
-		throw redirect(303, '/');
+		// Back to the page that sent them here, or home.
+		throw redirect(303, localPath(text(formData, 'redirectTo')) ?? '/');
 	}
 };
