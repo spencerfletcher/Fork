@@ -15,7 +15,6 @@
 	// Index of the arrowed-to option: the suggestions in order, then Create.
 	// -1 is none; typing, picking and closing all reset it.
 	let active = $state(-1);
-	let inputEl: HTMLInputElement;
 	let rootEl: HTMLDivElement;
 
 	// Tag identity ignores case: "Vegan" and "vegan" are one tag here, as they
@@ -67,10 +66,10 @@
 			else if (suggestions.length > 0 && query.trim() !== '') pick(suggestions[0].name);
 			else if (canCreate) pick(query.trim());
 		}
+		// Escape closes the list but leaves the caret where it was.
 		if (e.key === 'Escape') {
 			open = false;
 			active = -1;
-			inputEl.blur();
 		}
 	}
 
@@ -113,7 +112,6 @@
 	<div class="relative">
 		<input
 			id="tag-combobox"
-			bind:this={inputEl}
 			type="text"
 			placeholder="Search or create a tag…"
 			bind:value={query}

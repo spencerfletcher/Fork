@@ -69,12 +69,17 @@ describe('TagInput', () => {
 		expect(container.querySelector('input[type="hidden"][name="tags"]')).toHaveValue('Vegan');
 	});
 
-	test('Escape closes the list', async () => {
+	test('Escape closes the list and keeps focus in the box, where an arrow opens it again', async () => {
 		render(TagInput, { props: { allTags } });
-		await fireEvent.focus(getInput());
+		const input = getInput();
+		input.focus();
+		await fireEvent.focus(input);
 		expect(screen.getByRole('listbox')).toBeInTheDocument();
-		await fireEvent.keyDown(getInput(), { key: 'Escape' });
+		await fireEvent.keyDown(input, { key: 'Escape' });
 		expect(screen.queryByRole('listbox')).toBeNull();
+		expect(input).toHaveFocus();
+		await fireEvent.keyDown(input, { key: 'ArrowDown' });
+		expect(screen.getByRole('listbox')).toBeInTheDocument();
 	});
 
 	test('shows all suggestions when focused with empty query', async () => {
