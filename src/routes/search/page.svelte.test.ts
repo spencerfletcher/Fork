@@ -45,6 +45,21 @@ describe('Search page empty state', () => {
 	test('with tags set, the message is followed by a Clear filters link', () => {
 		renderSearch({ searchQuery: 'zzzz', selectedTags: ['dessert'] });
 		expect(screen.getByText(/No recipes found/)).toBeInTheDocument();
+		// It clears the tags only: the query stays.
+		expect(screen.getByRole('link', { name: 'Clear filters' })).toHaveAttribute(
+			'href',
+			'/search?q=zzzz'
+		);
+	});
+
+	test('Clear filters keeps the query encoded, and with tags alone goes to bare /search', () => {
+		const { unmount } = renderSearch({ searchQuery: 'mac & cheese', selectedTags: ['dessert'] });
+		expect(screen.getByRole('link', { name: 'Clear filters' })).toHaveAttribute(
+			'href',
+			'/search?q=mac%20%26%20cheese'
+		);
+		unmount();
+		renderSearch({ selectedTags: ['dessert'] });
 		expect(screen.getByRole('link', { name: 'Clear filters' })).toHaveAttribute('href', '/search');
 	});
 

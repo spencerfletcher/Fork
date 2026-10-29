@@ -39,7 +39,13 @@
 				     2026). -->
 				{#if data.selectedTags.length > 0}
 					No recipes found. Try adjusting your search or clearing some filters.
-					<a href="/search">Clear filters</a>
+					<!-- Clears the tags only; the query stays. -->
+					<a
+						href={data.searchQuery
+							? `/search?q=${encodeURIComponent(data.searchQuery)}`
+							: '/search'}>
+						Clear filters
+					</a>
 				{:else if filtered}
 					No recipes found. Try another search.
 					<a href="/search">Clear search</a>

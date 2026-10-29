@@ -41,4 +41,31 @@ test.describe('Search results', () => {
 		await expect(filters.getByText('Unused', { exact: true })).toHaveCount(0);
 		await expect(filters.getByText('Dessert', { exact: true })).toHaveCount(1);
 	});
+
+	test('the empty-state links are 24px targets at desktop and 44px on a phone', async ({
+		page
+	}) => {
+		for (const [url, name] of [
+			['/search?q=zzzz', 'Clear search'],
+			['/search?q=zzzz&tags=dessert', 'Clear filters']
+		]) {
+			await page.setViewportSize({ width: 1280, height: 900 });
+			await page.goto(url);
+			const link = page.getByRole('link', { name });
+			const desktop = (await link.boundingBox())!;
+			expect(desktop.height).toBeGreaterThanOrEqual(24);
+			// The text keeps its size and weight: only the hit grows.
+			expect(await link.evaluate((el) => getComputedStyle(el).fontSize)).toBe('16px');
+			expect(await link.evaluate((el) => getComputedStyle(el).fontWeight)).toBe('400');
+			await page.setViewportSize({ width: 390, height: 900 });
+			expect((await link.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+		}
+	});
+
+	test('Clear filters with a query clears the tags only', async ({ page }) => {
+		await page.goto('/search?q=zzzz&tags=dessert');
+		await page.getByRole('link', { name: 'Clear filters' }).click();
+		await expect(page).toHaveURL(/\/search\?q=zzzz$/);
+		await expect(page.getByRole('searchbox')).toHaveValue('zzzz');
+	});
 });

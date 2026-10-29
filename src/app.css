@@ -950,13 +950,16 @@
 
 	/* A closing link in the arrow form ("All recipes →"): 24px tall at desktop
 	   from its own line, 44px on a phone by padding pulled back by margin, so
-	   the text does not move (decided 29 October 2026). */
-	.arrow-link {
+	   the text does not move (decided 29 October 2026). An empty state's
+	   links ("Clear search") take the same hits. */
+	.arrow-link,
+	.empty-state a {
 		display: inline-block;
 	}
 
 	@media (max-width: 699px) {
-		.arrow-link {
+		.arrow-link,
+		.empty-state a {
 			padding: 9px 0;
 			margin-block: -9px;
 		}
