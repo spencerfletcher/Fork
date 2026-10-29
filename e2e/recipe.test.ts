@@ -954,7 +954,9 @@ test.describe('Recipe detail page', () => {
 		expect(await dot.evaluate((el) => getComputedStyle(el).color)).toBe('rgb(111, 105, 96)');
 	});
 
-	test('on a phone the closed note shows two lines; on a desktop one', async ({ page }) => {
+	test('on a phone and an iPad the closed note shows two lines; on a desktop one', async ({
+		page
+	}) => {
 		await page.setViewportSize({ width: 390, height: 900 });
 		await gotoClassicCookies(page);
 		const message = page.locator('.version-bar .current .message');
@@ -973,6 +975,11 @@ test.describe('Recipe detail page', () => {
 		// Open, it runs in full.
 		await page.getByRole('button', { name: '3 versions' }).click();
 		expect((await measure()).clipped).toBe(false);
+		// An iPad's controls sit on their own row, so the note has the width for
+		// two lines; the seed's note fits them whole.
+		await page.setViewportSize({ width: 768, height: 1024 });
+		await gotoClassicCookies(page);
+		expect(await measure()).toEqual({ lines: 2, clamp: '2', clipped: false });
 		await page.setViewportSize({ width: 1280, height: 900 });
 		await gotoClassicCookies(page);
 		expect((await measure()).lines).toBe(1);

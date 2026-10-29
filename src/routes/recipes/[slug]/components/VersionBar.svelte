@@ -268,6 +268,16 @@
 			flex: 1 1 0;
 			min-width: 0;
 		}
+
+		/* The controls have a row of their own here, so the closed note gets two
+		   lines instead of one. Open, it still runs in full. */
+		.message.clamped {
+			display: -webkit-box;
+			-webkit-line-clamp: 2;
+			line-clamp: 2;
+			-webkit-box-orient: vertical;
+			white-space: normal;
+		}
 	}
 
 	/* On a phone the compare drops under each row, and every link and the
@@ -276,17 +286,6 @@
 		.history li {
 			flex-wrap: wrap;
 			row-gap: 4px;
-		}
-
-		/* A phone line is short, so the closed note gets two of them instead of
-		   one. Open, it still runs in full. */
-		.message.clamped {
-			display: -webkit-box;
-			-webkit-line-clamp: 2;
-			line-clamp: 2;
-			-webkit-box-orient: vertical;
-
-			white-space: normal;
 		}
 
 		/* The controls wrap as items 10px apart with no dots at all, so a line
