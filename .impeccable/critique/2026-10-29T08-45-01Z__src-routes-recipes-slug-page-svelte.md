@@ -10,6 +10,7 @@ target_fingerprint: "sha256:cb9f38f8bafa1ab6ffa6bfb38acfbe138bf76a22c05d6d0df7a8
 target_path: /Users/spfle/Dev/Fork/src/routes/recipes/[slug]/+page.svelte
 timestamp: 2026-10-29T08-45-01Z
 slug: src-routes-recipes-slug-page-svelte
+closed: true
 ---
 # Recipe page after the version bar move (29 October 2026, second sweep)
 
