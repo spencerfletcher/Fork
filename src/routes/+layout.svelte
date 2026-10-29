@@ -12,7 +12,12 @@
 
 	// The single source of head tags. Pages contribute by returning `meta` from
 	// their loader; anything they omit falls back to the site defaults.
-	const meta: PageMeta = $derived({ ...DEFAULT_META, ...(page.data.meta ?? {}) });
+	// A thrown load error carries no meta, so the error's own message titles the tab.
+	const meta: PageMeta = $derived({
+		...DEFAULT_META,
+		...(page.data.meta ?? {}),
+		...(page.error ? { title: page.error.message } : {})
+	});
 	const canonical = $derived(page.url.origin + page.url.pathname);
 
 	// The skip link is the page's first tab stop. On a recipe it lands on the
