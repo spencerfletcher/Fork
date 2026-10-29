@@ -4,7 +4,7 @@ import { tick } from 'svelte';
 import type { SubmitFunction } from '$app/forms';
 import EditPage from './+page.svelte';
 import { makeContent, makeIngredient, makeStep } from '#lib/recipes/fixtures.js';
-import type { RecipeDraft } from '#lib/recipes/validation.js';
+import { numberMessages, type RecipeDraft } from '#lib/recipes/validation.js';
 
 // Capture the form's submit callback so a test can drive the pending state by hand.
 const captured = vi.hoisted(() => ({ submits: [] as SubmitFunction[] }));
@@ -301,10 +301,23 @@ describe('Edit page form', () => {
 		await fireEvent.input(servings, { target: { value: '0' } });
 		await fireEvent.focusOut(servings);
 		expect(servings).toHaveAttribute('aria-invalid', 'true');
-		expect(servings).toHaveAccessibleDescription('Servings must be at least 1');
+		expect(servings).toHaveAccessibleDescription(numberMessages('servings').belowMin);
 		// A blur error is announced, not only shown.
-		expect(screen.getByRole('alert')).toHaveTextContent('Servings must be at least 1');
+		expect(screen.getByRole('alert')).toHaveTextContent(numberMessages('servings').belowMin);
 		expect(title()).not.toHaveAttribute('aria-invalid');
+	});
+
+	test.each([
+		['prepTimeMinutes', '-5', 'belowMin'],
+		['cookTimeMinutes', '1.5', 'whole'],
+		['cookTimeMinutes', '-1.5', 'whole'],
+		['servings', '2.5', 'whole']
+	] as const)("%s %j says the server's %s message on blur", async (name, value, kind) => {
+		render(EditPage, { props: { data: makeData(), form: null } });
+		const field = document.getElementById(name) as HTMLInputElement;
+		await fireEvent.input(field, { target: { value } });
+		await fireEvent.focusOut(field);
+		expect(field).toHaveAccessibleDescription(numberMessages(name)[kind]);
 	});
 
 	test('a server error for the ingredients lands under the ingredients box and focuses it', async () => {

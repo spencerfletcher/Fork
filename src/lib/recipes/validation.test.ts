@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import { parseContent, parseSettings, draftOf, type Result } from './validation';
+import { parseContent, parseSettings, draftOf, numberMessages, type Result } from './validation';
 
 function form(fields: Record<string, string | string[]>): FormData {
 	const fd = new FormData();
@@ -120,6 +120,23 @@ describe('parseContent', () => {
 
 		test.each(bad)('rejects prep time %j', (value) => {
 			expect(parseContent(form({ ...FULL, prepTimeMinutes: value }))).toEqual(rejected);
+		});
+
+		// The editor shows these same strings live, so the two must agree.
+		test.each([
+			['servings', '0', 'belowMin'],
+			['servings', '-3', 'belowMin'],
+			['servings', '2.5', 'whole'],
+			['prepTimeMinutes', '-5', 'belowMin'],
+			['prepTimeMinutes', '1.5', 'whole'],
+			['prepTimeMinutes', '-1.5', 'whole'],
+			['cookTimeMinutes', '-5', 'belowMin'],
+			['cookTimeMinutes', '1.5', 'whole']
+		] as const)('%s %j is refused with its %s message', (field, value, kind) => {
+			expect(parseContent(form({ ...FULL, [field]: value }))).toEqual({
+				ok: false,
+				error: numberMessages(field)[kind]
+			});
 		});
 
 		test('rejects zero servings', () => {

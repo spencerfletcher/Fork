@@ -8,20 +8,40 @@ import { normaliseTagNames } from './tags.js';
 // Largest value a Postgres `integer` column holds.
 const INT4_MAX = 2_147_483_647;
 
-/** A whole number from a text input: blank is absent, otherwise digits only within [min, INT4_MAX]. */
-const optionalInt = (min: number, label: string) =>
-	z
-		.string()
-		.trim()
-		.regex(/^\d*$/, `${label} must be a whole number`)
-		.transform((s) => (s === '' ? null : Number(s)))
-		.pipe(
-			z
-				.number()
-				.min(min, `${label} must be at least ${min}`)
-				.max(INT4_MAX, `${label} is too large`)
-				.nullable()
-		);
+/** The number fields: their name in messages, their floor, and what a whole one counts. */
+export const NUMBER_FIELDS = {
+	servings: { label: 'Servings', min: 1, unit: '' },
+	prepTimeMinutes: { label: 'Prep time', min: 0, unit: ' of minutes' },
+	cookTimeMinutes: { label: 'Cook time', min: 0, unit: ' of minutes' }
+} as const;
+
+export type NumberField = keyof typeof NUMBER_FIELDS;
+
+/** What a number field says when it is not whole, or below its floor; the editor shows the same live. */
+export function numberMessages(field: NumberField) {
+	const { label, min, unit } = NUMBER_FIELDS[field];
+	return {
+		whole: `${label} must be a whole number${unit}`,
+		belowMin: min === 0 ? `${label} can't be negative` : `${label} must be at least ${min}`
+	};
+}
+
+/** A whole number from a text input: blank is absent, otherwise an integer within [min, INT4_MAX]. */
+const optionalInt = (field: NumberField) => {
+	const { label, min } = NUMBER_FIELDS[field];
+	const messages = numberMessages(field);
+	return (
+		z
+			.string()
+			.trim()
+			// The sign passes here so a negative is told it is below the floor.
+			.regex(/^(-?\d+)?$/, messages.whole)
+			.transform((s) => (s === '' ? null : Number(s)))
+			.pipe(
+				z.number().min(min, messages.belowMin).max(INT4_MAX, `${label} is too large`).nullable()
+			)
+	);
+};
 
 /** Raw editor text, refused with the same message the editor shows live. */
 const bounded = (label: string, perLine: boolean) =>
@@ -36,9 +56,9 @@ const recipeContentSchema = z.object({
 		.string()
 		.trim()
 		.transform((s) => s || null),
-	servings: optionalInt(1, 'Servings'),
-	prepTimeMinutes: optionalInt(0, 'Prep time'),
-	cookTimeMinutes: optionalInt(0, 'Cook time'),
+	servings: optionalInt('servings'),
+	prepTimeMinutes: optionalInt('prepTimeMinutes'),
+	cookTimeMinutes: optionalInt('cookTimeMinutes'),
 	ingredients: bounded('Ingredients', true)
 		.transform(parseIngredientText)
 		.pipe(z.array(z.custom<Ingredient>()).min(1, 'At least one ingredient is required')),

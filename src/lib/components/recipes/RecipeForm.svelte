@@ -2,7 +2,13 @@
 	import type { Snippet } from 'svelte';
 	import { enhance, type SubmitFunction } from '$app/forms';
 	import { beforeNavigate } from '$app/navigation';
-	import { parseDraftContent, type RecipeDraft } from '#lib/recipes/validation.js';
+	import {
+		parseDraftContent,
+		numberMessages,
+		NUMBER_FIELDS,
+		type NumberField,
+		type RecipeDraft
+	} from '#lib/recipes/validation.js';
 	import { normaliseTagNames, tagKey } from '#lib/recipes/tags.js';
 	import { generatedCommitMessage } from '#lib/recipes/content.js';
 	import { draftChangedGroups } from '#lib/recipes/draftChanges.js';
@@ -138,25 +144,21 @@
 		ingredients: 'At least one ingredient is required',
 		steps: 'At least one step is required'
 	};
-	const NUMBER: Record<string, string> = {
-		servings: 'Servings',
-		prepTimeMinutes: 'Prep time',
-		cookTimeMinutes: 'Cook time'
-	};
 	let errors = $state<Record<string, string>>({});
 
 	function validate(target: EventTarget | null) {
 		const el = target as HTMLInputElement | HTMLTextAreaElement;
 		const name = el?.name;
-		if (!name || !(name in REQUIRED || name in NUMBER)) return;
+		if (!name || !(name in REQUIRED || name in NUMBER_FIELDS)) return;
 		const v = el.validity;
+		// Not whole before below the floor, in the server's order, so -1.5 says the same in both.
 		errors[name] = v.valid
 			? ''
 			: v.valueMissing
 				? REQUIRED[name]
-				: v.rangeUnderflow
-					? `${NUMBER[name]} must be at least ${(el as HTMLInputElement).min}`
-					: `${NUMBER[name]} must be a whole number`;
+				: v.rangeUnderflow && !v.stepMismatch
+					? numberMessages(name as NumberField).belowMin
+					: numberMessages(name as NumberField).whole;
 	}
 
 	// The field a server message names, so it can be shown there and focused.
