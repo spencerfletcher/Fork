@@ -2,7 +2,7 @@
 
 /* ── Fonts ────────────────────────────────────────────────────────────────────
    Self-hosted latin subsets, copied from @fontsource (static/fonts). The three
-   regular faces are preloaded in app.html. Each family has a metric-matched
+   regular faces and the three 600s are preloaded in app.html. Each family has a metric-matched
    fallback (Capsize arithmetic over the system font's tables) so the swap moves
    nothing: size-adjust = the web face's average advance over the fallback's,
    the overrides the web face's ascent and descent divided by that.
@@ -115,7 +115,8 @@
 
 @font-face {
 	font-family: 'JetBrains Mono Fallback';
-	src: local('Menlo');
+	/* Chromium matches local() by full or PostScript name; plain 'Menlo' never loads. */
+	src: local('Menlo Regular');
 	size-adjust: 99.66%;
 	ascent-override: 102.35%;
 	descent-override: 30.1%;

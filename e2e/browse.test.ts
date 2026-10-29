@@ -109,3 +109,30 @@ test.describe('Recipe cards', () => {
 		expect(await height(page, '.recipe-card a.meta-author')).toBeGreaterThanOrEqual(24);
 	});
 });
+
+test.describe('Fonts', () => {
+	test('the mono fallback face resolves to a local Menlo', async ({ page }) => {
+		// Chromium matches local() by full or PostScript name: "Menlo Regular", not "Menlo".
+		test.skip(process.platform !== 'darwin', 'Menlo ships with macOS only');
+		await page.goto('/recipes');
+		const status = await page.evaluate(async () => {
+			await document.fonts.load('12px "JetBrains Mono Fallback"');
+			return [...document.fonts].find((f) => f.family.includes('JetBrains Mono Fallback'))?.status;
+		});
+		expect(status).toBe('loaded');
+	});
+
+	test('the 600 weights are preloaded with the regular faces', async ({ page }) => {
+		await page.goto('/recipes');
+		const preloads = await page
+			.locator('link[rel="preload"][as="font"]')
+			.evaluateAll((els) => els.map((el) => el.getAttribute('href')!.split('/').pop()));
+		expect(preloads).toEqual(
+			expect.arrayContaining([
+				'bitter-latin-600-normal.woff2',
+				'source-sans-3-latin-600-normal.woff2',
+				'jetbrains-mono-latin-600-normal.woff2'
+			])
+		);
+	});
+});
