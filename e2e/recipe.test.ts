@@ -971,6 +971,30 @@ test.describe('Recipe detail page', () => {
 		}
 	});
 
+	test('on a narrow phone each action pill holds its label on one line', async ({ page }) => {
+		await gotoClassicCookies(page);
+		// 360 is the narrowest common Android width; below 375 Fork says "Fork".
+		for (const [width, fork] of [
+			[320, 'Fork'],
+			[360, 'Fork'],
+			[375, 'Fork this recipe']
+		] as const) {
+			await page.setViewportSize({ width, height: 900 });
+			const pills = await page.locator('.actions a, .actions button').evaluateAll((els) =>
+				els.map((el) => ({
+					text: (el as HTMLElement).innerText.trim(),
+					height: el.getBoundingClientRect().height,
+					overflow: el.scrollWidth - el.clientWidth
+				}))
+			);
+			expect(pills.map((p) => p.text)).toEqual([fork, 'Favorite']);
+			for (const pill of pills) {
+				expect(pill.height, `${width} ${pill.text}`).toBe(44);
+				expect(pill.overflow, `${width} ${pill.text}`).toBeLessThanOrEqual(0);
+			}
+		}
+	});
+
 	test('on a phone every inline link in the header is 44px tall', async ({ page }) => {
 		await page.setViewportSize({ width: 390, height: 900 });
 		await gotoClassicCookies(page);

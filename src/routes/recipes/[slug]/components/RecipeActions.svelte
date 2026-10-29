@@ -67,7 +67,13 @@
 	<div class="actions">
 		<a href={loginHref} class="btn-primary no-underline">
 			{@render forkIcon()}
-			Fork this recipe
+			<!-- Below 375 the pill's half of the row cannot hold the whole label on
+			     one line (it needs 157px), so it says "Fork". One span, so the gap
+			     cannot split it. -->
+			<span>
+				Fork
+				<span class="max-[375px]:hidden">this recipe</span>
+			</span>
 		</a>
 		<a href={loginHref} class="btn-ghost no-underline">
 			{@render starIcon(false)}
@@ -97,7 +103,10 @@
 					disabled={forking}
 					aria-busy={forking || undefined}>
 					{@render forkIcon()}
-					Fork this recipe
+					<span>
+						Fork
+						<span class="max-[375px]:hidden">this recipe</span>
+					</span>
 				</button>
 			</form>
 		{/if}
