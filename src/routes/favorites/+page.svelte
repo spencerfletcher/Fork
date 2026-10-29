@@ -42,7 +42,7 @@
 				{#if filtered}
 					No favorites match your filters. Try adjusting your search.
 				{:else}
-					No favorites yet. Tap the star on any recipe.
+					No favorites yet. Star any recipe.
 					<a href="/" class="arrow-link">Explore recipes →</a>
 				{/if}
 			</p>
@@ -53,5 +53,11 @@
 <style>
 	.results {
 		margin-top: var(--space-5);
+	}
+
+	/* Under a left-aligned h1 the empty state starts on its edge, not centred
+	   on a second axis; scoped while app.css's shared rule stays centred. */
+	.empty-state {
+		text-align: left;
 	}
 </style>

@@ -31,8 +31,9 @@ describe('Favorites page', () => {
 		// (decided 29 October 2026).
 		renderFavorites();
 		expect(screen.queryByRole('searchbox')).toBeNull();
-		// It says where favoriting happens (decided 29 October 2026).
-		expect(screen.getByText(/No favorites yet\. Tap the star on any recipe\./)).toBeInTheDocument();
+		// It says where favoriting happens, in a verb a mouse user can follow too.
+		expect(screen.getByText(/No favorites yet\. Star any recipe\./)).toBeInTheDocument();
+		expect(screen.queryByText(/Tap/)).toBeNull();
 		// The arrow form: 24px at desktop, a 44px thumb target on a phone.
 		const explore = screen.getByRole('link', { name: 'Explore recipes →' });
 		expect(explore).toHaveAttribute('href', '/');
