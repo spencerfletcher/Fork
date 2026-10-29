@@ -139,6 +139,8 @@
 
 	.card-title {
 		color: var(--color-text);
+		/* No one-word last line ("Cookies"). */
+		text-wrap: balance;
 	}
 
 	/* :has() targeting ancestor — no Tailwind equivalent */
