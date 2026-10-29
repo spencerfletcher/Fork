@@ -459,6 +459,11 @@
 		color: var(--color-text-3);
 	}
 
+	/* Clay, as the strike rows' ticked squares are, not the browser's blue. */
+	.inline-checkbox input {
+		accent-color: var(--color-accent);
+	}
+
 	/* A plain 1px Rule, like every other rule in the editor. */
 	.field-message {
 		border-top: 1px solid var(--color-border);
@@ -473,6 +478,12 @@
 		.photo-remove {
 			width: 44px;
 			height: 44px;
+		}
+
+		/* A thumb's 44px row from a 23px one, padded outward so the text stays put. */
+		.inline-checkbox {
+			padding-block: 10.5px;
+			margin-block: -10.5px;
 		}
 	}
 </style>

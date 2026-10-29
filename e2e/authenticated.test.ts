@@ -169,6 +169,33 @@ test.describe('New recipe page', () => {
 		expect(steps!.height).toBeGreaterThan(ingredients!.height);
 	});
 
+	test('the public checkbox is clay, and on a phone its row is a 44px target without moving the text', async ({
+		page
+	}) => {
+		await gotoHydrated(page, '/recipes/new');
+		const box = page.getByRole('checkbox', { name: /public/i });
+		const clay = await box.evaluate((el) => {
+			const probe = document.createElement('i');
+			probe.style.color = 'var(--color-accent)';
+			el.after(probe);
+			const color = getComputedStyle(probe).color;
+			probe.remove();
+			return color;
+		});
+		expect(await box.evaluate((el) => getComputedStyle(el).accentColor)).toBe(clay);
+		// The checkbox's distance below the tags box, which padding must not change.
+		const offset = async () => {
+			const tags = (await page.locator('.field-tags').boundingBox())!;
+			const b = (await box.boundingBox())!;
+			return b.y + b.height / 2 - (tags.y + tags.height);
+		};
+		const desktop = await offset();
+		await page.setViewportSize({ width: 390, height: 900 });
+		const row = page.locator('label:has(> input[name="isPublic"])');
+		expect((await row.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+		expect(await offset()).toBeCloseTo(desktop, 0);
+	});
+
 	test('creates a recipe and redirects to its detail page', async ({ page }) => {
 		let createdRecipeUrl: string | null = null;
 
