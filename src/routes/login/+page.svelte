@@ -60,6 +60,7 @@
 					type="password"
 					required
 					autocomplete="current-password" />
+				<a href="/forgot-password" class="forgot-link">Forgot password?</a>
 			</div>
 
 			<button type="submit" class="btn-primary auth-submit" disabled={pending}>
@@ -87,8 +88,18 @@
 		margin-block: -2px;
 	}
 
+	/* Supabase's own recovery flow, ahead of a settings page. Same hits as
+	   the switch link. */
+	.forgot-link {
+		align-self: flex-end;
+		font-size: 0.875rem;
+		padding-block: 2px;
+		margin-block: -2px;
+	}
+
 	@media (max-width: 699px) {
-		.auth-switch a {
+		.auth-switch a,
+		.forgot-link {
 			padding-block: 12px;
 			margin-block: -12px;
 		}

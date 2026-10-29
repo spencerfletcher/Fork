@@ -107,6 +107,29 @@ test.describe('Auth pages', () => {
 		expect(style).toEqual({ line: 'underline', wrap: 'nowrap' });
 	});
 
+	// Submits to the local Supabase stack, whose mail lands in its own inbox.
+	test('"Forgot password?" leads to a reset form that says the link was sent, not whether the account exists', async ({
+		page
+	}) => {
+		const email = process.env.E2E_USER_EMAIL ?? '';
+		await page.setViewportSize({ width: 1280, height: 900 });
+		await page.goto('/login');
+		const forgot = page.getByRole('link', { name: 'Forgot password?' });
+		expect((await forgot.boundingBox())!.height).toBeGreaterThanOrEqual(24);
+		await page.setViewportSize({ width: 390, height: 844 });
+		expect((await forgot.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+
+		await forgot.click();
+		await expect(page).toHaveURL('/forgot-password');
+		await page.getByLabel('Email').fill(email);
+		await page.getByRole('button', { name: 'Send reset link' }).click();
+
+		await expect(page.getByRole('heading', { level: 1 })).toHaveText('Check your email');
+		await expect(
+			page.getByText(`If ${email} has an account, a link to set a new password is on its way.`)
+		).toBeVisible();
+	});
+
 	test('new recipe page redirects unauthenticated users to login', async ({ page }) => {
 		await page.goto('/recipes/new');
 		// Should either redirect to /login or show an error — not the new recipe form

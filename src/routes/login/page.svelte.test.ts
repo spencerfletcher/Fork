@@ -55,6 +55,13 @@ describe('Login page', () => {
 		expect(screen.getByRole('link', { name: 'Create one' })).toHaveAttribute('href', '/signup');
 	});
 
+	test('"Forgot password?" sits under the password field and leads to the reset page', () => {
+		renderLogin();
+		const link = screen.getByRole('link', { name: 'Forgot password?' });
+		expect(link).toHaveAttribute('href', '/forgot-password');
+		expect(link.closest('.field')).toContainElement(screen.getByLabelText('Password'));
+	});
+
 	test('while the form is submitting the button is disabled and says so', async () => {
 		submits.length = 0;
 		renderLogin();

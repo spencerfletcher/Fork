@@ -1,0 +1,44 @@
+import { describe, test, expect, vi } from 'vitest';
+import { render, screen } from '@testing-library/svelte';
+import ForgotPasswordPage from './+page.svelte';
+
+vi.mock('$app/forms', () => ({ enhance: () => ({ destroy: () => {} }) }));
+
+type Form = { message?: string; sent?: boolean; email?: string } | null;
+
+const renderForgot = (form: Form = null) =>
+	render(ForgotPasswordPage, { props: { form, data: {} } as never });
+
+describe('Forgot password page', () => {
+	test('asks for the email and offers one action, "Send reset link"', () => {
+		renderForgot();
+		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Reset password');
+		const email = screen.getByLabelText('Email');
+		expect(email).toHaveAttribute('type', 'email');
+		expect(email).toHaveAttribute('autocomplete', 'email');
+		expect(email).toBeRequired();
+		expect(screen.getByRole('button', { name: 'Send reset link' })).toBeInTheDocument();
+		expect(screen.getByRole('link', { name: 'Log in' })).toHaveAttribute('href', '/login');
+	});
+
+	test('a failure shows in the alert and keeps the form', () => {
+		renderForgot({ message: 'Could not send the link. Try again in a minute.' });
+		expect(screen.getByRole('alert')).toHaveTextContent(
+			'Could not send the link. Try again in a minute.'
+		);
+		expect(screen.getByRole('button', { name: 'Send reset link' })).toBeInTheDocument();
+	});
+
+	test('once sent, the same card says so without saying whether the account exists', () => {
+		renderForgot({ sent: true, email: 'cook@b.com' });
+		const heading = screen.getByRole('heading', { level: 1 });
+		expect(heading).toHaveTextContent('Check your email');
+		// Focus moves to the new heading, so a screen reader hears the change.
+		expect(heading).toHaveFocus();
+		expect(
+			screen.getByText('If cook@b.com has an account, a link to set a new password is on its way.')
+		).toBeInTheDocument();
+		expect(screen.queryByRole('button', { name: 'Send reset link' })).toBeNull();
+		expect(screen.getByRole('link', { name: 'Log in' })).toHaveAttribute('href', '/login');
+	});
+});
