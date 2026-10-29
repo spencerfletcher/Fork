@@ -91,3 +91,11 @@ test.describe('Search filters', () => {
 		expect(box.x + box.width).toBeLessThanOrEqual(390);
 	});
 });
+
+test.describe('Recipe cards', () => {
+	test('the author link is a 24px target at desktop', async ({ page }) => {
+		await page.setViewportSize({ width: 1280, height: 900 });
+		await page.goto('/recipes');
+		expect(await height(page, '.recipe-card a.meta-author')).toBeGreaterThanOrEqual(24);
+	});
+});

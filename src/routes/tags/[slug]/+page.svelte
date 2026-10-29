@@ -22,8 +22,8 @@
 					{data.recipes.length === 1 ? 'recipe' : 'recipes'}
 				</h2>
 				<div class="recipe-grid">
-					{#each data.recipes as recipe (recipe.id)}
-						<RecipeCard {recipe} />
+					{#each data.recipes as recipe, i (recipe.id)}
+						<RecipeCard {recipe} index={i} />
 					{/each}
 				</div>
 			</section>

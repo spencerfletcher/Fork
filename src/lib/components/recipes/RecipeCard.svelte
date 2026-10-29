@@ -57,7 +57,7 @@
 </script>
 
 <div class="recipe-card">
-	<a {href} class="card-stretched-link" aria-label={recipe.title} tabindex="0"></a>
+	<a {href} class="card-stretched-link" aria-label={recipe.title}></a>
 
 	{#if recipe.imageUrl}
 		<div class="card-img-wrap">
@@ -177,6 +177,7 @@
 		line-clamp: 4;
 		overflow: hidden;
 		color: var(--color-accent);
+		text-wrap: balance;
 	}
 
 	.meta-row {
@@ -233,6 +234,9 @@
 		color: var(--color-accent);
 		text-decoration: none;
 		transition: color 0.15s ease;
+		/* A 24px hit at desktop without moving the text (decided 29 October 2026). */
+		padding-block: 3px;
+		margin-block: -3px;
 	}
 
 	a.meta-author:hover {

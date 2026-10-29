@@ -16,6 +16,31 @@ function renderSearch(overrides: Partial<typeof data> = {}) {
 	return render(SearchPage, { props: { data: { ...data, ...overrides } } as never });
 }
 
+describe('Search page results', () => {
+	test('cards know their place, so the first row of photos loads eagerly', () => {
+		const card = (id: number) => ({
+			id,
+			slug: `r${id}`,
+			title: `R${id}`,
+			description: null,
+			imageUrl: `https://img/${id}.jpg`,
+			parentId: null,
+			prepTimeMinutes: null,
+			cookTimeMinutes: null
+		});
+		const { container } = renderSearch({ recipes: [1, 2, 3, 4, 5].map(card) as never });
+		const imgs = [...container.querySelectorAll('img.card-img')];
+		expect(imgs[0]).toHaveAttribute('fetchpriority', 'high');
+		expect(imgs.map((img) => img.getAttribute('loading'))).toEqual([
+			'eager',
+			'eager',
+			'eager',
+			'eager',
+			'lazy'
+		]);
+	});
+});
+
 describe('Search page empty state', () => {
 	test('with tags set, the message is followed by a Clear filters link', () => {
 		renderSearch({ searchQuery: 'zzzz', selectedTags: ['dessert'] });

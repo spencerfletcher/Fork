@@ -110,6 +110,16 @@ describe('RecipeCard', () => {
 		expect(photo()).toEqual({ loading: 'lazy', priority: null });
 	});
 
+	test('the stretched link is a link and nothing more: no redundant tabindex', () => {
+		render(RecipeCard, { props: { recipe: makeRecipe() } });
+		expect(screen.getByRole('link', { name: 'Chocolate Cake' })).not.toHaveAttribute('tabindex');
+	});
+
+	test('the panel title balances its lines, like the photo title', () => {
+		const style = source.slice(source.indexOf('<style>'));
+		expect(style).toMatch(/\.card-panel-title\s*{[^}]*text-wrap:\s*balance/);
+	});
+
 	test('a recipe without a photo shows its title inside the panel and nowhere else', () => {
 		const { container } = render(RecipeCard, { props: { recipe: makeRecipe() } });
 		expect(screen.queryByRole('img')).toBeNull();
