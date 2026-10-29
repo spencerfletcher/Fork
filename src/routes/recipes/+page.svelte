@@ -27,17 +27,17 @@
 			{/if}
 		{:else if data.mine}
 			<div class="recipe-grid">
-				{#each data.recipes as recipe (recipe.id)}
-					<RecipeCard {recipe} />
+				{#each data.recipes as recipe, i (recipe.id)}
+					<RecipeCard {recipe} index={i} />
 				{/each}
 			</div>
 		{:else}
-			{#each browseSections(data.recipes) as section (section.title)}
+			{#each browseSections(data.recipes) as section, s (section.title)}
 				<section class="browse-section">
 					<h2 class="eyebrow-label section-heading">{section.title}</h2>
 					<div class="recipe-grid">
-						{#each section.recipes as recipe (recipe.id)}
-							<RecipeCard {recipe} />
+						{#each section.recipes as recipe, i (recipe.id)}
+							<RecipeCard {recipe} index={s === 0 ? i : undefined} />
 						{/each}
 					</div>
 				</section>

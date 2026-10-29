@@ -76,12 +76,38 @@ describe('RecipeCard', () => {
 		const { container } = render(RecipeCard, {
 			props: { recipe: makeRecipe({ imageUrl: 'https://img/cake.jpg' }) }
 		});
-		expect(screen.getByRole('img', { name: 'Chocolate Cake' })).toHaveAttribute(
-			'src',
-			'https://img/cake.jpg'
-		);
+		expect(container.querySelector('img.card-img')).toHaveAttribute('src', 'https://img/cake.jpg');
 		expect(container.querySelector('h3.card-title')).toHaveTextContent('Chocolate Cake');
 		expect(container.querySelector('.card-panel')).toBeNull();
+	});
+
+	test('the photo has an empty alt: the heading and the link already name the recipe', () => {
+		// The critique measured the title announced three times per card
+		// (aria-label, alt, h3). The link keeps its label; the photo is decorative.
+		const { container } = render(RecipeCard, {
+			props: { recipe: makeRecipe({ imageUrl: 'https://img/cake.jpg' }) }
+		});
+		expect(container.querySelector('img.card-img')).toHaveAttribute('alt', '');
+		expect(screen.getByRole('link', { name: 'Chocolate Cake' })).toHaveClass('card-stretched-link');
+	});
+
+	test('the first row of photos loads eagerly, the very first first; the rest lazily', () => {
+		const photo = (index?: number) => {
+			const { container, unmount } = render(RecipeCard, {
+				props: { recipe: makeRecipe({ imageUrl: 'https://img/cake.jpg' }), index }
+			});
+			const img = container.querySelector('img.card-img')!;
+			const attrs = {
+				loading: img.getAttribute('loading'),
+				priority: img.getAttribute('fetchpriority')
+			};
+			unmount();
+			return attrs;
+		};
+		expect(photo(0)).toEqual({ loading: 'eager', priority: 'high' });
+		expect(photo(3)).toEqual({ loading: 'eager', priority: null });
+		expect(photo(4)).toEqual({ loading: 'lazy', priority: null });
+		expect(photo()).toEqual({ loading: 'lazy', priority: null });
 	});
 
 	test('a recipe without a photo shows its title inside the panel and nowhere else', () => {

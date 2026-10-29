@@ -19,7 +19,12 @@
 		forkCount?: number;
 	}
 
-	let { recipe }: { recipe: CardRecipe } = $props();
+	// Position in the grid, when the page knows it: the first row's photos are
+	// fetched eagerly and the very first ahead of everything else. Without it
+	// the photo is lazy (decided 29 October 2026).
+	let { recipe, index }: { recipe: CardRecipe; index?: number } = $props();
+
+	const eager = $derived(index !== undefined && index < 4);
 
 	const href = $derived(`/recipes/${recipe.slug}`);
 
@@ -56,7 +61,14 @@
 
 	{#if recipe.imageUrl}
 		<div class="card-img-wrap">
-			<img src={recipe.imageUrl} alt={recipe.title} loading="lazy" class="card-img" />
+			<!-- alt is empty: the heading names the recipe and the stretched link
+			     carries it as its label, so a third announcement would be noise. -->
+			<img
+				src={recipe.imageUrl}
+				alt=""
+				loading={eager ? 'eager' : 'lazy'}
+				fetchpriority={index === 0 ? 'high' : undefined}
+				class="card-img" />
 		</div>
 		<h3 class="card-title">{recipe.title}</h3>
 	{:else}
