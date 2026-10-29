@@ -337,6 +337,24 @@ describe('Edit page form', () => {
 		expect(screen.queryByText(/choose the photo again/i)).toBeNull();
 	});
 
+	test('a photo is chosen with a ghost button over the hidden native input: Choose photo, or Replace photo over one', async () => {
+		const photoInput = () => document.querySelector('input[name="image"]') as HTMLInputElement;
+		const { unmount } = render(EditPage, { props: { data: makeData(), form: null } });
+		expect(photoInput()).toHaveClass('sr-only');
+		const button = photoInput().closest('label')!;
+		expect(button).toHaveClass('btn-ghost');
+		expect(button).toHaveTextContent(/^\s*Choose photo\s*$/);
+		expect(photoInput()).toHaveAccessibleName(/Choose photo/);
+		unmount();
+
+		render(EditPage, {
+			props: { data: makeData({ imageUrl: 'https://cdn/cookies.png' }), form: null }
+		});
+		expect(photoInput().closest('label')).toHaveTextContent('Replace photo');
+		await fireEvent.click(screen.getByRole('button', { name: /remove photo/i }));
+		expect(photoInput().closest('label')).toHaveTextContent('Choose photo');
+	});
+
 	test('shows the current photo and a Remove photo control that marks it for removal', async () => {
 		render(EditPage, {
 			props: { data: makeData({ imageUrl: 'https://cdn/cookies.png' }), form: null }

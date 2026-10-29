@@ -276,14 +276,19 @@
 							</button>
 						</div>
 					{/if}
-					<input
-						id="image"
-						name="image"
-						type="file"
-						accept="image/jpeg,image/png,image/webp,image/gif"
-						class="file-input"
-						bind:this={imageInput}
-						onchange={onImageChange} />
+					<!-- The native input, visually hidden, keeps the keyboard and the file
+					     dialog; the ghost button is its label and its picture. -->
+					<label class="btn-ghost photo-choose">
+						<input
+							id="image"
+							name="image"
+							type="file"
+							accept="image/jpeg,image/png,image/webp,image/gif"
+							class="sr-only"
+							bind:this={imageInput}
+							onchange={onImageChange} />
+						{preview || chosen ? 'Replace photo' : 'Choose photo'}
+					</label>
 					{#if draft.removeImage}
 						<input type="hidden" name="removeImage" value="on" />
 					{/if}
@@ -412,18 +417,28 @@
 		cursor: pointer;
 	}
 
-	.file-input {
-		border-style: dashed;
-		cursor: pointer;
-	}
-
 	/* field-sizing: content ignores rows; this keeps an empty box typeable. */
 	textarea[name='description'] {
 		min-height: calc(3lh + 18px);
 	}
 
-	.file-input:hover {
-		border-color: var(--color-accent);
+	/* One height with the single-line boxes beside it. */
+	.photo-choose {
+		align-self: flex-start;
+		display: inline-flex;
+		align-items: center;
+		min-height: 41px;
+		padding-block: 0;
+	}
+
+	.photo-choose:has(:focus-visible) {
+		outline: 2px solid var(--color-accent);
+		outline-offset: 2px;
+	}
+
+	/* A plain 1px Rule, like every other rule in the editor. */
+	.field-message {
+		border-top: 1px solid var(--color-border);
 	}
 
 	@media (max-width: 699px) {

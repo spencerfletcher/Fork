@@ -317,6 +317,37 @@ test.describe('Edit recipe page', () => {
 		}
 	});
 
+	test('the photo is a 41px ghost button over a hidden input, ringed when focused, and the rule above What changed? is a plain Rule', async ({
+		page
+	}) => {
+		const url = await createRecipe(page, 'E2E Photo Button', '4');
+		try {
+			await gotoHydrated(page, `${url}/edit`);
+			const input = page.locator('input[name="image"]');
+			const button = page.locator('label:has(> input[name="image"])');
+			await expect(button).toHaveText('Choose photo');
+			const look = await button.evaluate((el) => {
+				const s = getComputedStyle(el);
+				return { height: el.getBoundingClientRect().height, border: s.borderTopStyle };
+			});
+			expect(Math.round(look.height)).toBe(41);
+			expect(look.border).toBe('solid');
+			expect((await input.boundingBox())!.width).toBeLessThanOrEqual(1);
+			// Reached by Tab from the description, the hidden input rings its button.
+			await page.getByLabel('Description').focus();
+			await page.keyboard.press('Tab');
+			await expect(input).toBeFocused();
+			expect(await button.evaluate((el) => getComputedStyle(el).outlineStyle)).toBe('solid');
+			const rule = await page.locator('.field-message').evaluate((el) => {
+				const s = getComputedStyle(el);
+				return [s.borderTopStyle, s.borderTopWidth, s.borderTopColor];
+			});
+			expect(rule).toEqual(['solid', '1px', 'rgb(228, 222, 212)']);
+		} finally {
+			await deleteRecipe(page, url);
+		}
+	});
+
 	test('a long ingredient list grows the editor on a phone and Save stays below it', async ({
 		page
 	}) => {
