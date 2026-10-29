@@ -1,7 +1,18 @@
 <script lang="ts">
 	import type { Step, StepAnnotationType } from '#lib/recipes/types.js';
+	import { loadTicks, saveTicks } from './ticks';
 
-	let { steps }: { steps: Step[] } = $props();
+	let { steps, storageKey }: { steps: Step[]; storageKey: string } = $props();
+
+	// Writable derived: the ticks reload whenever the page moves to another
+	// version, and a click changes them. The server has no sessionStorage, so it
+	// renders none; hydration restores them.
+	let ticked = $derived(loadTicks(storageKey));
+
+	function toggle(i: number, on: boolean) {
+		ticked = on ? [...ticked, i] : ticked.filter((j) => j !== i);
+		saveTicks(storageKey, ticked);
+	}
 
 	const annotationColor: Record<StepAnnotationType, string> = {
 		tip: 'text-text-3',
@@ -22,7 +33,11 @@
 			     numeral and the text, so it never turns the clay salmon. -->
 			<label
 				class="group has-[:focus-visible]:outline-accent grid cursor-pointer [grid-template-columns:44px_1fr] items-baseline gap-[18px] select-none has-[:checked]:line-through has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2">
-				<input type="checkbox" class="sr-only" />
+				<input
+					type="checkbox"
+					class="sr-only"
+					checked={ticked.includes(i)}
+					onchange={(e) => toggle(i, e.currentTarget.checked)} />
 				<span class="inline-flex items-baseline gap-2.5">
 					<span
 						class="tick border-text-3 group-has-[:checked]:bg-accent group-has-[:checked]:border-accent size-3.5 shrink-0 rounded-[3px] border"

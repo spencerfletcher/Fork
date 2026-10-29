@@ -1,9 +1,23 @@
 <script lang="ts">
 	import type { Ingredient } from '#lib/recipes/types.js';
 	import type { GramResult } from '#lib/server/ingredientDensities.js';
+	import { loadTicks, saveTicks } from './ticks';
 
-	let { ingredients, grams }: { ingredients: Ingredient[]; grams: (GramResult | null)[] } =
-		$props();
+	let {
+		ingredients,
+		grams,
+		storageKey
+	}: { ingredients: Ingredient[]; grams: (GramResult | null)[]; storageKey: string } = $props();
+
+	// Writable derived: the ticks reload whenever the page moves to another
+	// version, and a click changes them. The server has no sessionStorage, so it
+	// renders none; hydration restores them.
+	let ticked = $derived(loadTicks(storageKey));
+
+	function toggle(i: number, on: boolean) {
+		ticked = on ? [...ticked, i] : ticked.filter((j) => j !== i);
+		saveTicks(storageKey, ticked);
+	}
 
 	// Whole grams, except below ten where a tenth matters: 5.7g, not 6g.
 	function round(g: number): number {
@@ -58,7 +72,11 @@
 			     row's height, so focusing it scrolls the whole row into view. -->
 			<label
 				class="group border-border text-text has-[:focus-visible]:outline-accent relative flex cursor-pointer items-baseline gap-2.5 border-b py-2.5 text-base leading-[1.5] select-none has-[:checked]:line-through has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2">
-				<input type="checkbox" class="sr-only top-0 h-full" />
+				<input
+					type="checkbox"
+					class="sr-only top-0 h-full"
+					checked={ticked.includes(i)}
+					onchange={(e) => toggle(i, e.currentTarget.checked)} />
 				<span
 					class="tick border-text-3 group-has-[:checked]:bg-accent group-has-[:checked]:border-accent size-3.5 shrink-0 translate-y-[2px] rounded-[3px] border"
 					aria-hidden="true">

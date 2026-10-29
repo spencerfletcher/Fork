@@ -6,6 +6,7 @@
 	import RecipeIngredients from './components/RecipeIngredients.svelte';
 	import RecipeMethod from './components/RecipeMethod.svelte';
 	import RecipeActions from './components/RecipeActions.svelte';
+	import { ticksKey } from './components/ticks';
 
 	let { data }: { data: PageData } = $props();
 
@@ -83,12 +84,17 @@
 	<div id="recipe" class="content-layout" tabindex="-1" data-tab={tab} bind:this={content}>
 		<aside class="min-w-0">
 			<div class="sidebar-sticky">
-				<RecipeIngredients ingredients={currentVersion.ingredients} grams={data.grams} />
+				<RecipeIngredients
+					ingredients={currentVersion.ingredients}
+					grams={data.grams}
+					storageKey={ticksKey(recipe.slug, currentVersion.versionNumber, 'ingredients')} />
 			</div>
 		</aside>
 
 		<div class="main min-w-0">
-			<RecipeMethod steps={currentVersion.steps} />
+			<RecipeMethod
+				steps={currentVersion.steps}
+				storageKey={ticksKey(recipe.slug, currentVersion.versionNumber, 'steps')} />
 		</div>
 	</div>
 </article>

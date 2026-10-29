@@ -971,6 +971,30 @@ test.describe('Recipe detail page', () => {
 		}
 	});
 
+	test('ticked rows survive a reload, and an older version keeps ticks of its own', async ({
+		page
+	}) => {
+		await page.setViewportSize({ width: 1280, height: 900 });
+		await gotoClassicCookies(page);
+		const recipeUrl = page.url().split('?')[0];
+		const ingredient = page.locator('#ingredients input').nth(1);
+		const step = page.locator('#method input').nth(2);
+		await page.locator('#ingredients label').nth(1).click();
+		await page.locator('#method label').nth(2).click();
+		await page.reload();
+		await expect(ingredient).toBeChecked();
+		await expect(step).toBeChecked();
+		await expect(page.locator('#recipe input:checked')).toHaveCount(2);
+		// v2 is another version: none of v3's ticks carry over.
+		await page.goto(`${recipeUrl}?version=2`);
+		await expect(page.locator('.version-bar .current .state')).toBeVisible();
+		await expect(page.locator('#recipe input:checked')).toHaveCount(0);
+		// Back on v3 by its own link, without a reload, they are still there.
+		await page.getByRole('link', { name: 'Back to v3' }).click();
+		await expect(ingredient).toBeChecked();
+		await expect(step).toBeChecked();
+	});
+
 	test('on a narrow phone each action pill holds its label on one line', async ({ page }) => {
 		await gotoClassicCookies(page);
 		// 360 is the narrowest common Android width; below 375 Fork says "Fork".
