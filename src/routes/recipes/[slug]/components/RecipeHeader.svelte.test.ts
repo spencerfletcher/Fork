@@ -52,30 +52,48 @@ function byline(container: HTMLElement) {
 // ─── Fork attribution ─────────────────────────────────────────────────────────
 
 describe('RecipeHeader fork attribution', () => {
-	test('links to a visible parent with its author', () => {
-		renderHeader({
+	// Decided 29 October 2026: the fork info folds into the byline, there is no
+	// attribution line, and the parent's author is not named (it is one click
+	// away on the parent).
+	test('a fork says so in the byline, linking the parent without its author', () => {
+		const { container } = renderHeader({
 			recipe: makeRecipe({
+				author: { id: 'u1', username: 'me' },
 				parentId: 42,
 				parent: { slug: 'original', title: 'The Original', author: { username: 'chef' } }
 			})
 		});
-		expect(screen.getByRole('link', { name: 'The Original' })).toHaveAttribute(
-			'href',
-			'/recipes/original'
-		);
-		// Usernames are the same linked mono everywhere, this line included.
-		expect(screen.getByRole('link', { name: '@chef' })).toHaveAttribute('href', '/users/chef');
+		expect(byline(container)).toBe('By @me · forked from The Original');
+		const parent = screen.getByRole('link', { name: 'The Original' });
+		expect(parent).toHaveAttribute('href', '/recipes/original');
+		expect(container.querySelector('.byline')).toContainElement(parent);
+		expect(screen.queryByRole('link', { name: '@chef' })).not.toBeInTheDocument();
+		expect(container.querySelector('.attribution')).toBeNull();
+	});
+
+	test('its own forks come before the parent, and only when there are any', () => {
+		const { container } = renderHeader({
+			forkCount: 2,
+			recipe: makeRecipe({
+				author: { id: 'u1', username: 'me' },
+				parentId: 42,
+				parent: { slug: 'original', title: 'The Original' }
+			})
+		});
+		expect(byline(container)).toBe('By @me · 2 forks · forked from The Original');
 	});
 
 	test('says the parent is private when the server withheld it', () => {
-		renderHeader({ recipe: makeRecipe({ parentId: 42, parent: null }) });
-		expect(screen.getByText('Forked from a private recipe')).toBeInTheDocument();
-		expect(screen.queryByRole('link')).not.toBeInTheDocument();
+		const { container } = renderHeader({
+			recipe: makeRecipe({ author: { id: 'u1', username: 'me' }, parentId: 42, parent: null })
+		});
+		expect(byline(container)).toBe('By @me · forked from a private recipe');
+		expect(screen.getAllByRole('link')).toHaveLength(1);
 	});
 
 	test('shows no attribution for a recipe that is not a fork', () => {
 		renderHeader();
-		expect(screen.queryByText(/Forked from/)).not.toBeInTheDocument();
+		expect(screen.queryByText(/forked from/i)).not.toBeInTheDocument();
 	});
 });
 

@@ -15,7 +15,7 @@
 
 	interface HeaderRecipe extends Pick<Recipe, 'slug' | 'parentId'> {
 		author?: { id: string; username: string } | null;
-		parent?: { slug: string; title: string; author?: { username: string } | null } | null;
+		parent?: { slug: string; title: string } | null;
 	}
 
 	let {
@@ -35,13 +35,16 @@
 	} = $props();
 </script>
 
-<!-- One face below the title. The byline carries who and the forks; the
+<!-- One face below the title. The byline carries who, the forks and the parent; the
      version and its note sit in the bar under the hero. Then the description,
      the measure on one line, the tags, the actions. Nothing is boxed and
      nothing is pinned: the column ends where it ends. Decided 29 October 2026. -->
 <header class="recipe-header">
 	<h1 class="title m-0 font-serif font-medium">{currentVersion.title}</h1>
 
+	<!-- Who, its own forks (only when it has any), and what it was forked from
+	     (the parent's title, not its author, who is one click away). One line;
+	     there is no separate attribution line. Decided 29 October 2026. -->
 	<p class="byline m-0 font-sans">
 		{#if recipe.author}By <Username username={recipe.author.username} />{/if}
 		{#if forkCount > 0}
@@ -49,19 +52,15 @@
 			{forkCount}
 			{forkCount === 1 ? 'fork' : 'forks'}
 		{/if}
+		{#if recipe.parent}
+			{#if recipe.author || forkCount > 0}·{/if}
+			forked from
+			<a href="/recipes/{recipe.parent.slug}">{recipe.parent.title}</a>
+		{:else if recipe.parentId}
+			{#if recipe.author || forkCount > 0}·{/if}
+			forked from a private recipe
+		{/if}
 	</p>
-
-	{#if recipe.parent}
-		<p class="attribution text-text-3 m-0 font-sans text-[0.875rem]">
-			Forked from
-			<a href="/recipes/{recipe.parent.slug}" class="text-accent">{recipe.parent.title}</a>
-			{#if recipe.parent.author}by <Username username={recipe.parent.author.username} />{/if}
-		</p>
-	{:else if recipe.parentId}
-		<p class="attribution text-text-3 m-0 font-sans text-[0.875rem]">
-			Forked from a private recipe
-		</p>
-	{/if}
 
 	{#if currentVersion.description}
 		<p class="description m-0">{currentVersion.description}</p>
@@ -99,10 +98,6 @@
 		font-size: 1rem;
 		font-weight: 600;
 		line-height: 1.5;
-	}
-
-	.attribution {
-		margin-top: 8px;
 	}
 
 	/* Capped at a reading measure for the one-column widths and the no-photo
