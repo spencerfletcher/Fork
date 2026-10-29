@@ -60,12 +60,11 @@
 		{/if}
 	</div>
 
-	<!-- The version bar: the hinge between the dish and the recipe. -->
+	<!-- The version bar: the hinge between the dish and the recipe. Its bottom
+	     edge is the divider; there is no rule. -->
 	<div class="bar-row">
 		<VersionBar {recipe} {currentVersion} versions={allVersions} {isViewingHistory} />
 	</div>
-
-	<hr class="rule" />
 
 	<nav class="section-tabs" aria-label="Recipe sections" data-pinned>
 		<button
@@ -148,20 +147,6 @@
 
 	.bar-row:empty {
 		display: none;
-	}
-
-	.rule {
-		max-width: var(--max-width);
-		margin: 26px var(--space-5) 0;
-		border: 0;
-		border-top: 1px solid var(--color-border);
-	}
-
-	@media (min-width: 1248px) {
-		.rule {
-			margin-left: auto;
-			margin-right: auto;
-		}
 	}
 
 	.section-tabs {
@@ -316,10 +301,6 @@
 		.recipe-photo img {
 			aspect-ratio: 21 / 9;
 			border-radius: 0;
-		}
-
-		.rule {
-			display: none;
 		}
 
 		.section-tabs {

@@ -137,7 +137,8 @@
 		color: var(--color-text);
 	}
 
-	/* One column for every number, so the messages line up. */
+	/* One column for every number, so the messages line up. The one being
+	   read is the marigold chip; the others are clay. */
 	.version-number {
 		flex-shrink: 0;
 		min-width: 26px;
@@ -145,6 +146,14 @@
 		font-size: 0.75rem;
 		font-weight: 600;
 		color: var(--color-accent);
+	}
+
+	.current .version-number {
+		padding: 0 6px;
+		border-radius: var(--radius-sm);
+		background: var(--color-marigold);
+		color: var(--color-text);
+		line-height: 1.5;
 	}
 
 	.message {
