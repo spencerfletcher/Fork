@@ -413,11 +413,18 @@
 	}
 
 	/* On a phone the row runs to the screen edge, so a tab is cut by the
-	   screen, not by the gutter. */
+	   screen, not by the gutter. Each tab reaches 44px by padding above the
+	   text, pulled back by the row's margin so the text and the underline stay
+	   where they are (the recipe header's trick). */
 	@media (max-width: 699px) {
 		.tag-tabs {
-			margin: -4px -18px;
+			margin: -19px -18px -4px;
 			padding: 4px 18px;
+		}
+
+		.tag-tabs a,
+		.tag-tabs button {
+			padding-top: 15px;
 		}
 	}
 
