@@ -82,4 +82,14 @@ describe('RecipeMethod', () => {
 		expect(JSON.parse(sessionStorage.getItem(KEY)!)).toEqual([0, 1]);
 		sessionStorage.clear();
 	});
+
+	test('the tick sits 18px from its numeral, the numeral 10px from the text, in a column that fits two digits', () => {
+		render(RecipeMethod, { props: { storageKey: KEY, steps: [{ text: 'Mix.' }] } });
+		const row = screen.getByRole('checkbox').closest('label')!;
+		const numeral = screen.getByText('1');
+		// The tick (14px), the 18px gap and "10" (22.7px) are 54.7px: one column
+		// width for every row keeps the text's left edge level past step 9.
+		expect(row).toHaveClass('gap-2.5', '[grid-template-columns:55px_1fr]');
+		expect(numeral.parentElement).toHaveClass('gap-[18px]');
+	});
 });
