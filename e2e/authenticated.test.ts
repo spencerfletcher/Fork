@@ -831,7 +831,9 @@ test.describe('Compare page', () => {
 		try {
 			const response = await page.goto(`${url}/diff`);
 			expect(response?.status()).toBe(400);
-			await expect(page.locator('h1')).toHaveText('Need at least two versions to compare');
+			await expect(page.locator('h1')).toHaveText(
+				'Error 400 – Need at least two versions to compare'
+			);
 			// Not "Pick two of the recipe's versions": there is only one.
 			await expect(page.getByText(/Pick two/)).toHaveCount(0);
 			await expect(
