@@ -364,6 +364,14 @@ test.describe('Edit recipe page', () => {
 			});
 			expect(Math.round(look.height)).toBe(41);
 			expect(look.border).toBe('solid');
+			// A button's voice, as Cancel has it, not the field labels' eyebrow.
+			const voice = (el: Element) => {
+				const s = getComputedStyle(el);
+				return [s.fontSize, s.fontWeight, s.textTransform, s.letterSpacing, s.color];
+			};
+			expect(await button.evaluate(voice)).toEqual(
+				await page.getByRole('link', { name: 'Cancel' }).evaluate(voice)
+			);
 			expect((await input.boundingBox())!.width).toBeLessThanOrEqual(1);
 			// Reached by Tab from the description, the hidden input rings its button.
 			await page.getByLabel('Description').focus();

@@ -436,13 +436,19 @@
 		min-height: calc(3lh + 18px);
 	}
 
-	/* One height with the single-line boxes beside it. */
+	/* One height with the single-line boxes beside it. It is a label, so it
+	   takes back the button's voice from the field labels' eyebrow. */
 	.photo-choose {
 		align-self: flex-start;
 		display: inline-flex;
 		align-items: center;
 		min-height: 41px;
 		padding-block: 0;
+		font-size: 0.9375rem;
+		font-weight: 500;
+		letter-spacing: normal;
+		text-transform: none;
+		color: var(--color-text);
 	}
 
 	.photo-choose:has(:focus-visible) {
