@@ -274,8 +274,7 @@ test.describe('Edit recipe page', () => {
 			await page.getByRole('button', { name: 'Save', exact: true }).click();
 			await page.waitForURL(url);
 			await expectVersions(page, 2);
-			await page.locator('.byline .versions-toggle').click();
-			await expect(page.locator('#version-history li.current')).toContainText('e2e test commit');
+			await expect(page.locator('.version-bar .current .message')).toContainText('e2e test commit');
 		} finally {
 			await deleteRecipe(page, url);
 		}
@@ -292,11 +291,15 @@ test.describe('Edit recipe page', () => {
  * hydrated the page races the client re-render: the fill clears the input,
  * hydration restores the server value, the fill then appends ("48").
  */
-// The byline names the current version and, past the first, a "N versions"
-// count; the rows only render once that count is clicked.
+// Past the first version a bar under the hero names the current one and
+// carries a "N versions" toggle; a one-version recipe has no bar.
 async function expectVersions(page: Page, n: number) {
-	await expect(page.locator('.byline .version')).toContainText(`v${n}`);
-	if (n > 1) await expect(page.locator('.byline .versions-toggle')).toHaveText(`${n} versions`);
+	if (n === 1) {
+		await expect(page.locator('.version-bar')).toHaveCount(0);
+		return;
+	}
+	await expect(page.locator('.version-bar .current .version-number')).toContainText(`v${n}`);
+	await expect(page.locator('.version-bar .versions-toggle')).toHaveText(`${n} versions`);
 }
 
 async function gotoHydrated(page: Page, url: string) {

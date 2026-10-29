@@ -1,5 +1,5 @@
 import { describe, test, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/svelte';
+import { render, screen } from '@testing-library/svelte';
 import { createRawSnippet } from 'svelte';
 import RecipeHeader from './RecipeHeader.svelte';
 import type { ComponentProps } from 'svelte';
@@ -28,20 +28,13 @@ const CONTENT = makeContent({
 
 const V1 = { ...makeVersion(1, 'Initial recipe'), ...CONTENT };
 const V3 = { ...makeVersion(3, 'Chill the dough'), ...CONTENT };
-const THREE = [
-	makeVersion(3, 'Chill the dough'),
-	makeVersion(2, 'Add espresso powder'),
-	makeVersion(1, 'Initial recipe')
-];
 
 function renderHeader(overrides: Partial<HeaderProps> = {}) {
 	return render(RecipeHeader, {
 		props: {
 			recipe: makeRecipe(),
 			currentVersion: V1,
-			versions: [makeVersion(1, 'Initial recipe')],
 			forkCount: 0,
-			isViewingHistory: false,
 			tags: [],
 			...overrides
 		}
@@ -94,7 +87,7 @@ describe('RecipeHeader chip', () => {
 	});
 
 	test('the description sits under the byline, before the measure', () => {
-		const { container } = renderHeader({ currentVersion: V3, versions: THREE });
+		const { container } = renderHeader({ currentVersion: V3 });
 		const byline = container.querySelector('.byline')!;
 		const description = container.querySelector('.description')!;
 		const details = container.querySelector('.details')!;
@@ -107,41 +100,33 @@ describe('RecipeHeader chip', () => {
 		).toBeTruthy();
 	});
 
-	test('the byline carries one marigold chip, a badge with its meaning for screen readers', () => {
-		const { container } = renderHeader({ currentVersion: V3, versions: THREE });
-		const chip = container.querySelector('.byline .version')!;
-		expect(chip).toHaveTextContent('v3');
-		expect(chip.tagName).not.toBe('BUTTON');
-		expect(chip.querySelector('.sr-only')).toHaveTextContent('Version 3, the latest');
-		// The commit message is not in the closed header: it lives in the history.
-		expect(container.querySelector('.version-bar')).toBeNull();
-		expect(screen.getByText('Chill the dough')).not.toBeVisible();
+	test('the closed header carries no version number and no note: both live in the bar', () => {
+		const { container } = renderHeader({ currentVersion: V3 });
+		expect(container.querySelector('.version')).toBeNull();
+		expect(screen.queryByText('Chill the dough')).toBeNull();
+		expect(screen.queryByRole('button', { name: /versions/ })).toBeNull();
 	});
 });
 
 // ─── The byline ───────────────────────────────────────────────────────────────
 
 describe('RecipeHeader byline', () => {
-	test('author, forks, chip and versions in one sans line; compare lives in the history', () => {
+	test('author and forks in one sans line; the version and its history live in the bar', () => {
 		const { container } = renderHeader({
 			recipe: makeRecipe({ author: { id: 'u1', username: 'chef' } }),
 			currentVersion: V3,
-			versions: THREE,
 			forkCount: 1
 		});
-		expect(byline(container)).toBe('By @chef · 1 fork · v3 · 3 versions');
+		expect(byline(container)).toBe('By @chef · 1 fork');
 		expect(container.querySelector('.byline a[href*="/diff"]')).toBeNull();
 		expect(screen.getAllByRole('link', { name: '@chef' })).toHaveLength(1);
 	});
 
-	test('a single version: the byline is just the author; no count, no compare', () => {
+	test('no forks: the byline is just the author', () => {
 		const { container } = renderHeader({
 			recipe: makeRecipe({ author: { id: 'u1', username: 'chef' } })
 		});
-		expect(byline(container)).toBe('By @chef · v1');
-		expect(container.querySelector('.byline .version')).toHaveTextContent('v1');
-		expect(screen.queryByRole('button', { name: /versions/ })).toBeNull();
-		expect(screen.queryByRole('link', { name: /compare/i })).toBeNull();
+		expect(byline(container)).toBe('By @chef');
 	});
 
 	test('forks are plural and absent when there are none', () => {
@@ -150,62 +135,6 @@ describe('RecipeHeader byline', () => {
 		unmount();
 		const second = renderHeader({ forkCount: 0 });
 		expect(byline(second.container)).not.toMatch(/fork/);
-	});
-
-	test('viewing an older version says so and offers the way back', async () => {
-		const { container } = renderHeader({
-			currentVersion: { ...V1, ...makeVersion(2, 'Add espresso powder') },
-			versions: THREE,
-			isViewingHistory: true
-		});
-		// The same chip and chevron as the latest, so the state is unmistakable.
-		expect(byline(container)).toBe('v2 · v2 of 3 · Older version · Back to v3');
-		expect(container.querySelector('.byline .version .sr-only')).toHaveTextContent(
-			'Version 2 of 3, replaced'
-		);
-		expect(container.querySelector('.byline .chevron')).not.toBeNull();
-		expect(screen.getByRole('link', { name: 'Back to v3' })).toHaveAttribute(
-			'href',
-			'/recipes/my-fork'
-		);
-		// The history is still reachable: "v2 of 3" opens every version. The one
-		// being read keeps its chip and message; the others compare with it.
-		expect(screen.getByText('Initial recipe')).not.toBeVisible();
-		await fireEvent.click(screen.getByRole('button', { name: /v2 of 3/ }));
-		expect(screen.getByText('Initial recipe')).toBeVisible();
-		expect(screen.getByText('Add espresso powder')).toBeVisible();
-		expect(screen.queryByRole('link', { name: 'v2' })).toBeNull();
-		expect(container.querySelector('#version-history li.current .version')).toHaveTextContent('v2');
-		const compares = screen.getAllByRole('link', { name: 'Compare with v2' });
-		expect(compares.map((a) => a.getAttribute('href'))).toEqual([
-			'/recipes/my-fork/diff?from=2&to=3',
-			'/recipes/my-fork/diff?from=1&to=2'
-		]);
-	});
-
-	test('the version count opens every version: this one with its message, the others with a compare', async () => {
-		const { container } = renderHeader({ currentVersion: V3, versions: THREE });
-		expect(screen.getByText('Add espresso powder')).not.toBeVisible();
-		await fireEvent.click(screen.getByRole('button', { name: '3 versions' }));
-		expect(screen.getByText('Add espresso powder')).toBeVisible();
-		// The whole row, number and message, is the link to that version.
-		expect(screen.getByRole('link', { name: 'v2 Add espresso powder' })).toHaveAttribute(
-			'href',
-			'/recipes/my-fork?version=2'
-		);
-		// The version being read leads the list with its chip and message, no link, no compare.
-		const current = container.querySelector('#version-history li.current')!;
-		expect(current).toBe(container.querySelector('#version-history li'));
-		expect(current.querySelector('.version')).toHaveTextContent('v3');
-		expect(current).toHaveTextContent('Chill the dough');
-		expect(current.querySelector('a')).toBeNull();
-		expect(screen.queryByRole('link', { name: 'v3' })).toBeNull();
-		expect(container.querySelectorAll('#version-history li')).toHaveLength(3);
-		const compares = screen.getAllByRole('link', { name: 'Compare with v3' });
-		expect(compares.map((a) => a.getAttribute('href'))).toEqual([
-			'/recipes/my-fork/diff?from=2&to=3',
-			'/recipes/my-fork/diff?from=1&to=3'
-		]);
 	});
 });
 
@@ -251,7 +180,6 @@ describe('RecipeHeader content', () => {
 	test('the action row is the last line of the header, after the meta', () => {
 		const { container } = renderHeader({
 			currentVersion: V3,
-			versions: THREE,
 			actions: createRawSnippet(() => ({ render: () => '<button>Fork this recipe</button>' }))
 		});
 		const button = screen.getByRole('button', { name: 'Fork this recipe' });

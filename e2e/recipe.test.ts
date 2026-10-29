@@ -52,17 +52,17 @@ test.describe('Recipe detail page', () => {
 		// Click the stretched link (aria-label) rather than the h3 text node
 		await page.getByRole('link', { name: COOKIES_RE }).first().click();
 		await expect(page).toHaveURL(/\/recipes\//);
-		// The byline carries the chip; the full history opens from the
-		// "3 versions" toggle. Assert on rendered content, not just wrapper count:
-		// a li-count check passes even if the messages render empty.
-		await expect(page.locator('.byline .version')).toContainText('v3');
+		// The bar under the hero names the version and its note; the other
+		// versions open from the "3 versions" toggle. Assert on rendered content,
+		// not just wrapper count: a li-count check passes even if the messages
+		// render empty.
+		const bar = page.locator('.version-bar');
+		await expect(bar.locator('.current .version-number')).toContainText('v3');
+		await expect(bar.locator('.current .message')).toContainText('Chill the dough');
 		await page.getByRole('button', { name: '3 versions' }).click();
-		// Every version is listed; v3's commit message leads it with the chip:
-		// the sentence the landing page showcases.
-		await expect(page.locator('#version-history li')).toHaveCount(3);
-		await expect(page.locator('#version-history li.current')).toContainText('Chill the dough');
+		await expect(page.locator('#version-history li')).toHaveCount(2);
 		await expect(page.locator('#version-history')).toContainText('Initial recipe');
-		// The forks sit in the byline, beside the versions.
+		// The forks sit in the byline.
 		await expect(page.locator('.byline')).toContainText('1 fork');
 	});
 
@@ -74,7 +74,7 @@ test.describe('Recipe detail page', () => {
 		await expect(page.getByText(COOKIES_RE)).toBeVisible();
 	});
 
-	test('viewing a specific version says so in the byline, with the way back', async ({ page }) => {
+	test('viewing a specific version says so in the bar, with the way back', async ({ page }) => {
 		await page.goto('/recipes');
 		await page.getByRole('link', { name: COOKIES_RE }).first().click();
 		await page.waitForURL(/\/recipes\//);
@@ -82,13 +82,11 @@ test.describe('Recipe detail page', () => {
 		const recipeUrl = page.url().split('?')[0];
 		await page.goto(`${recipeUrl}?version=2`);
 		await page.waitForLoadState('networkidle');
-		// The byline reads "v2 · v2 of 3 · Older version · Back to v3"; v2's message
-		// leads the history it opens.
-		await expect(page.locator('.byline')).toContainText('v2 of 3');
-		await page.getByRole('button', { name: 'v2 of 3' }).click();
-		await expect(page.locator('#version-history li.current')).toContainText(
-			SEED[0].versions[1].commitMessage
-		);
+		// The bar reads "v2 · <message> · Older version · Back to v3 · 3 versions".
+		const bar = page.locator('.version-bar');
+		await expect(bar).toContainText('Older version');
+		await expect(bar.locator('.current .version-number')).toContainText('v2');
+		await expect(bar.locator('.current .message')).toContainText(SEED[0].versions[1].commitMessage);
 		await expect(page.getByRole('link', { name: 'Back to v3' })).toBeVisible();
 	});
 
@@ -325,10 +323,10 @@ test.describe('Recipe detail page', () => {
 		await gotoClassicCookies(page);
 		await page.getByRole('button', { name: '3 versions' }).click();
 		const marks = await page
-			.locator('#version-history .version, #version-history .version-number')
+			.locator('.version-bar .version-number')
 			.evaluateAll((els) => els.map((el) => Math.round(el.getBoundingClientRect().width)));
 		const messages = await page
-			.locator('#version-history .message')
+			.locator('.version-bar .message')
 			.evaluateAll((els) => els.map((el) => Math.round(el.getBoundingClientRect().left)));
 		expect(new Set(marks).size).toBe(1);
 		expect(new Set(messages).size).toBe(1);
@@ -475,17 +473,14 @@ test.describe('Recipe detail page', () => {
 		expect(contrast(hero.color, hero.bg)).toBeGreaterThanOrEqual(4.5);
 	});
 
-	test('logged out, the hero fills the chip and the Fork pill, and no marigold text', async ({
-		page
-	}) => {
+	test('logged out, the hero fills only the Fork pill, and no marigold text', async ({ page }) => {
 		await gotoClassicCookies(page);
 		const hero = page.locator('.hero');
 		await hero.waitFor();
 
 		const accent = 'rgb(236, 166, 32)';
 
-		// Two fills: the byline chip and the Fork pill, which leads to login and
-		// back here; the closed history's chip is hidden with it.
+		// One fill: the Fork pill, which leads to login and back here.
 		const filled = await hero.evaluate(
 			(el, a) =>
 				[...el.querySelectorAll('*')]
@@ -493,10 +488,7 @@ test.describe('Recipe detail page', () => {
 					.map((n) => n.className),
 			accent
 		);
-		expect(filled).toEqual([
-			expect.stringContaining('version'),
-			expect.stringContaining('btn-primary')
-		]);
+		expect(filled).toEqual([expect.stringContaining('btn-primary')]);
 		const back = encodeURIComponent(new URL(page.url()).pathname);
 		await expect(hero.getByRole('link', { name: 'Fork this recipe' })).toHaveAttribute(
 			'href',
@@ -550,7 +542,7 @@ test.describe('Recipe detail page', () => {
 		expect(ingredients!.y).toBeLessThan(620);
 		expect(Math.abs(method!.x + method!.width - (photo!.x + photo!.width))).toBeLessThan(2);
 		const color = await page
-			.locator('.byline .versions-toggle')
+			.locator('.version-bar .versions-toggle')
 			.evaluate((el) => getComputedStyle(el).color);
 		expect(color).toBe('rgb(178, 60, 0)');
 	});
@@ -602,7 +594,7 @@ test.describe('Recipe detail page', () => {
 		await page.setViewportSize({ width: 390, height: 900 });
 		await gotoClassicCookies(page);
 		await page.getByRole('button', { name: '3 versions' }).click();
-		const message = page.locator('#version-history li.current .message');
+		const message = page.locator('.version-bar .current .message');
 		await expect(message).toContainText(SEED[0].versions.at(-1)!.commitMessage);
 		await expect(page.getByRole('button', { name: 'more' })).toHaveCount(0);
 		const { scrollHeight, clientHeight } = await message.evaluate((el) => ({
@@ -664,10 +656,10 @@ test.describe('Recipe detail page', () => {
 		await gotoClassicCookies(page);
 		const recipeUrl = page.url().split('?')[0];
 		await page.goto(`${recipeUrl}?version=2`);
-		await page.getByRole('button', { name: 'v2 of 3' }).click();
-		// Every version is listed; the one being read has no compare link.
-		await expect(page.locator('#version-history li')).toHaveCount(3);
-		await expect(page.locator('#version-history li.current')).toHaveText(/v2/);
+		await page.getByRole('button', { name: '3 versions' }).click();
+		// The other two are listed; the one being read is the bar's own line.
+		await expect(page.locator('#version-history li')).toHaveCount(2);
+		await expect(page.locator('.version-bar .current')).toHaveText(/v2/);
 		await expect(page.getByRole('link', { name: 'Compare with v2' }).first()).toHaveAttribute(
 			'href',
 			/diff\?from=2&to=3$/
@@ -678,7 +670,9 @@ test.describe('Recipe detail page', () => {
 		await page.setViewportSize({ width: 1280, height: 900 });
 		await gotoClassicCookies(page);
 		const short = await page
-			.locator('header.recipe-header a, header.recipe-header button')
+			.locator(
+				'header.recipe-header a, header.recipe-header button, .version-bar a, .version-bar button'
+			)
 			.evaluateAll((els) =>
 				els
 					.filter((el) => el.getClientRects().length > 0)
@@ -706,25 +700,29 @@ test.describe('Recipe detail page', () => {
 		expect(box!.width).toBeLessThanOrEqual(390);
 	});
 
-	test('the byline’s author, version, counts and compare link share one text baseline', async ({
+	test('the bar’s number, note, toggle and compare link share one text baseline', async ({
 		page
 	}) => {
 		await page.setViewportSize({ width: 1440, height: 900 });
 		await gotoClassicCookies(page);
-		await page.locator('.byline .versions-toggle').waitFor();
+		await page.locator('.version-bar .versions-toggle').waitFor();
 
 		// Each item's first text node, measured as a range so the button box
 		// does not count.
 		const bottoms = await page.evaluate(() =>
-			['.byline .username', '.versions-toggle'].map((sel) => {
-				const el = document.querySelector(sel)!;
-				const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
-				let node = walker.nextNode();
-				while (node && !node.textContent?.trim()) node = walker.nextNode();
-				const range = document.createRange();
-				range.selectNodeContents(node!);
-				return range.getBoundingClientRect().bottom;
-			})
+			// The number is 12px against 14px, so its text box ends higher even on
+			// the same baseline; the three 14px items are compared.
+			['.version-bar .current .message', '.versions-toggle', '.version-bar .current .compare'].map(
+				(sel) => {
+					const el = document.querySelector(sel)!;
+					const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+					let node = walker.nextNode();
+					while (node && !node.textContent?.trim()) node = walker.nextNode();
+					const range = document.createRange();
+					range.selectNodeContents(node!);
+					return range.getBoundingClientRect().bottom;
+				}
+			)
 		);
 		for (const bottom of bottoms) expect(Math.abs(bottom - bottoms[0])).toBeLessThan(1);
 	});

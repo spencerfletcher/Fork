@@ -2,6 +2,7 @@
 	import { page } from '$app/state';
 	import type { PageData } from './$types';
 	import RecipeHeader from './components/RecipeHeader.svelte';
+	import VersionBar from './components/VersionBar.svelte';
 	import RecipeIngredients from './components/RecipeIngredients.svelte';
 	import RecipeMethod from './components/RecipeMethod.svelte';
 	import RecipeActions from './components/RecipeActions.svelte';
@@ -39,13 +40,7 @@
 	     first, so a stranger reads what this version is before anything else. -->
 	<div class="hero">
 		<div class="hero-text">
-			<RecipeHeader
-				{recipe}
-				{currentVersion}
-				versions={allVersions}
-				forkCount={data.forkCount}
-				{isViewingHistory}
-				{tags}>
+			<RecipeHeader {recipe} {currentVersion} forkCount={data.forkCount} {tags}>
 				{#snippet actions()}
 					<RecipeActions
 						{recipe}
@@ -63,6 +58,11 @@
 				<img src={currentVersion.imageUrl} alt={currentVersion.title} />
 			</figure>
 		{/if}
+	</div>
+
+	<!-- The version bar: the hinge between the dish and the recipe. -->
+	<div class="bar-row">
+		<VersionBar {recipe} {currentVersion} versions={allVersions} {isViewingHistory} />
 	</div>
 
 	<hr class="rule" />
@@ -100,6 +100,7 @@
 <style>
 	/* The list pages' box: gutters outside a 1200px content width. */
 	.hero,
+	.bar-row,
 	.content-layout {
 		max-width: calc(var(--max-width) + 2 * var(--space-5));
 		margin: 0 auto;
@@ -139,6 +140,14 @@
 		max-height: 340px;
 		object-fit: cover;
 		border-radius: var(--radius-md);
+	}
+
+	.bar-row {
+		margin-top: 26px;
+	}
+
+	.bar-row:empty {
+		display: none;
 	}
 
 	.rule {
@@ -289,6 +298,7 @@
 
 	@media (max-width: 699px) {
 		.hero,
+		.bar-row,
 		.content-layout {
 			padding-left: 18px;
 			padding-right: 18px;

@@ -1,8 +1,12 @@
 ---
 version: 1
-slug: "src-routes-recipes-slug-page-svelte"
-primary_target: "src/routes/recipes/[slug]/+page.svelte"
-related_targets: ["src/routes/recipes/[slug]/components/RecipeActions.svelte","src/lib/components/recipes/VersionStrip.svelte"]
+slug: 'src-routes-recipes-slug-page-svelte'
+primary_target: 'src/routes/recipes/[slug]/+page.svelte'
+related_targets:
+  [
+    'src/routes/recipes/[slug]/components/RecipeActions.svelte',
+    'src/lib/components/recipes/VersionStrip.svelte'
+  ]
 ---
 
 # Recipe page
@@ -21,7 +25,7 @@ Primary task: read and cook. Secondary: fork (visitor), edit (owner), favorite, 
 
 Visual authority: DESIGN.md as it stands (cream paper, clay text accent, marigold action, Bitter, Source Sans 3, JetBrains Mono for history and measurement). Refinement inside the incumbent world, not a redesign.
 
-Thesis (revised 29 October, twice: after the header rethink against eight reference sites, then after four header mock-ups): one face below the title; the byline "By @author · 1 fork · v3 · 3 versions ▾" in bold sans with clay links, the marigold chip its only mono; the commit message lives only in the history the toggle opens; the description as plain body text; one measure line, value then label; tags in Ink 2; pills. Nothing boxed, nothing pinned, no rule; the column ends where it ends. Superseded thesis kept for the record: the description is the deck in sans; under it the version bar, unboxed: the marigold chip and the commit message at full length, then one mono byline with author and counts; Compare sits beside each earlier version in the history list. The note is italic Ink 2, the Method's tip voice. The header is three blocks at 24px: title and description; the bar; Prep/Cook/Serves in the eyebrow label with the tags on their own line beneath in sans Ink 2. A skip link leads from the navbar to the ingredients. The title chip and every other place the version number appeared are deleted.
+Thesis (revised 29 October, twice: after the header rethink against eight reference sites, then after four header mock-ups): one face below the title; the byline "By @author · 1 fork" in bold sans with clay links; the description as plain body text; one measure line, value then label; tags in Ink 2; pills. Nothing boxed, nothing pinned; the column ends where it ends. Under the hero, the version bar on lifted paper (board "Bar E", chosen 29 October over the byline chip and a bar above the title): clay mono number, the note clamped to one line, "3 versions ▾" and "Compare with v2" at the right; open, the other versions list under it as row links. Absent on a one-version recipe. Superseded thesis kept for the record: the description is the deck in sans; under it the version bar, unboxed: the marigold chip and the commit message at full length, then one mono byline with author and counts; Compare sits beside each earlier version in the history list. The note is italic Ink 2, the Method's tip voice. The header is three blocks at 24px: title and description; the bar; Prep/Cook/Serves in the eyebrow label with the tags on their own line beneath in sans Ink 2. A skip link leads from the navbar to the ingredients. The title chip and every other place the version number appeared are deleted.
 
 Focal moment: title, deck and byline together, with the photo beside them.
 
@@ -36,7 +40,7 @@ Production-ready page, all three compositions, both roles, with and without phot
 - Title: 2 to 60 characters, wraps to two lines at 52px on desktop and 36px on phone.
 - Deck: the current version's commit message, 10 to about 200 characters, up to three lines; on version 1 the deck is the description and the description line is not repeated.
 - Byline: `@author · v3 · 3 versions · 1 fork · Compare with v2`. Version 1 with no forks reads `@author · v1`. Counts are links; Compare is absent on v1. Date is dropped (history has it).
-- Viewing an older version: deck shows that version's message; byline reads `v2 · v2 of 3 ▾ · Older version · Back to v3` with the chip and chevron kept; actions hidden; no banner.
+- Viewing an older version: the bar reads `v2 · note · Older version · Back to v3 · 3 versions ▾ · Compare with v3`; actions hidden; no other banner.
 - Prep · Cook · Serves in one mono line, each time shown once, 13px minimum; any missing value is omitted, not shown blank.
 - Ingredients: 1 to about 30 rows, the measure bold (a counted line such as "2 large eggs" bold whole), grams inline in parentheses, estimated grams marked as today; rows strike on tap with a 44px hit area.
 - Method: 1 to about 20 steps, clay JetBrains Mono numerals, running to the content's right edge (Spencer, 28 October: no 72ch cap).
@@ -46,11 +50,11 @@ Production-ready page, all three compositions, both roles, with and without phot
 
 ## Interaction and layout
 
-Desktop, 1024 and up: hero 6/6, title block left (title, byline, description, measure, tags, actions), photo right at 3:2 capped at 340px. Below a 1px rule: the existing 380px aside, sticky, holding Ingredients; reading column holds Method, full remaining width. Board: Q1 Sentence on the design canvas.
+Desktop, 1024 and up: hero 6/6, title block left (title, byline, description, measure, tags, actions), photo right at 3:2 capped at 340px; the version bar full width under the hero, then the rule. Below a 1px rule: the existing 380px aside, sticky, holding Ingredients; reading column holds Method, full remaining width. Board: Q1 Sentence on the design canvas.
 
-iPad, 700 to 1023: single column. Title, photo as a 16:9 band capped around 300px, the rest of the header, then the sticky Ingredients | Method bar, which switches one section for the other in place (revised 29 October 2026: no jumping down the page).
+iPad, 700 to 1023: single column. Title, photo as a 16:9 band capped around 300px, the rest of the header, then the version bar, then the sticky Ingredients | Method bar, which switches one section for the other in place (revised 29 October 2026: no jumping down the page).
 
-Phone, up to 699: title, photo as a 21:9 crop around 150px, byline, description, measure, tags, actions full width at 44px, sticky tab bar under the navbar, then the chosen section only. Section headings are the tabs; no repeated labels. The tab bar sits inside the first screen and switches sections in one tap without moving down the page. Board: Q6 Phone.
+Phone, up to 699: title, photo as a 21:9 crop around 150px, byline, description, measure, tags, actions full width at 44px, the version bar, sticky tab bar under the navbar, then the chosen section only. Section headings are the tabs; no repeated labels. The tab bar sits inside the first screen and switches sections in one tap without moving down the page. Board: Q6 Phone.
 
 Hierarchy: title, deck, byline, description, meta, actions, photo. Clay is text only: title, links, numerals. Marigold is the primary button. Hover is ink. Heading order h1, h2 (Ingredients, Method), no skips.
 
