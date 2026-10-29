@@ -170,8 +170,10 @@
 	];
 	const fieldFor = (error: string) => FIELD_OF.find(([re]) => re.test(error))?.[1];
 
+	// Focus waits for the fieldset to be enabled again: the failed action's
+	// result lands while the form is still marked submitting.
 	$effect(() => {
-		if (!form) return;
+		if (!form || submitting) return;
 		const name = fieldFor(form.error);
 		if (!name) return;
 		errors[name] = form.error;
@@ -354,7 +356,6 @@
 					id="commitMessage"
 					name="commitMessage"
 					type="text"
-					class="field-mono"
 					{placeholder}
 					bind:value={draft.commitMessage} />
 			</div>

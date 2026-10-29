@@ -134,7 +134,8 @@
 			aria-activedescendant={active >= 0 ? `tag-option-${active}` : undefined} />
 
 		{#if showDropdown}
-			<ul class="tag-menu" role="listbox" id="tag-listbox">
+			<!-- tabindex -1: a scrollable box with nothing focusable inside would be a Tab stop. -->
+			<ul class="tag-menu" role="listbox" id="tag-listbox" tabindex="-1">
 				{#each suggestions as tag, i (tag.id)}
 					<!-- The keyboard is on the input (arrows, Enter), as a combobox has it. -->
 					<!-- svelte-ignore a11y_click_events_have_key_events -->
