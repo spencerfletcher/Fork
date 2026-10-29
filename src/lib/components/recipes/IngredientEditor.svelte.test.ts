@@ -37,10 +37,20 @@ describe('IngredientEditor', () => {
 		expect(box()).toHaveAccessibleDescription('At least one ingredient is required');
 	});
 
-	test('without an error the box carries neither aria-invalid nor a description', () => {
-		render(IngredientEditor, { props: { value: '' } });
+	test('without an error or a note the box carries neither aria-invalid nor a description, and no empty note is drawn', () => {
+		const { container } = render(IngredientEditor, { props: { value: '' } });
 		expect(box()).not.toHaveAttribute('aria-invalid');
 		expect(box()).not.toHaveAttribute('aria-describedby');
+		expect(container.querySelector('.form-hint')).toBeNull();
+	});
+
+	test('the note on lines that cannot be scaled describes the box, after the error', async () => {
+		render(IngredientEditor, { props: { value: '', error: 'An ingredient line is too long' } });
+		await type('1 cup flour\nsalt to taste');
+		expect(box()).toHaveAttribute('aria-describedby', 'ingredients-error ingredients-hint');
+		expect(box()).toHaveAccessibleDescription(
+			/^An ingredient line is too long These lines .*salt to taste$/
+		);
 	});
 
 	test('lists only the lines that did not parse', async () => {
@@ -56,8 +66,8 @@ describe('IngredientEditor', () => {
 	test('announces only when the number of lines that cannot be scaled changes, not on every keystroke', async () => {
 		const { container } = render(IngredientEditor, { props: { value: '' } });
 		const status = screen.getByRole('status');
-		expect(container.querySelector('.form-hint')).not.toHaveAttribute('aria-live');
 		await type('1 cup flour\nsalt');
+		expect(container.querySelector('.form-hint')).not.toHaveAttribute('aria-live');
 		expect(status).toHaveTextContent("1 line can't be scaled");
 		const node = status.firstChild;
 		await type('1 cup flour\nsalt to tas');

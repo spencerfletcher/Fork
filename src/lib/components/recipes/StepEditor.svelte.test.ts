@@ -27,10 +27,18 @@ describe('StepEditor', () => {
 		expect(screen.getByText(/blank line/i)).toBeInTheDocument();
 	});
 
-	test('an error sits above the hint, marks the box invalid and describes it', () => {
+	test('the hint describes the box, so a screen reader hears the syntax too', () => {
+		render(StepEditor, { props: { value: '' } });
+		expect(box()).not.toHaveAttribute('aria-invalid');
+		expect(box()).toHaveAccessibleDescription(
+			/^Separate steps with a blank line\..*on its own line\.$/
+		);
+	});
+
+	test('an error sits above the hint, marks the box invalid and describes it, error first', () => {
 		render(StepEditor, { props: { value: '', error: 'At least one step is required' } });
 		expect(box()).toHaveAttribute('aria-invalid', 'true');
-		expect(box()).toHaveAccessibleDescription('At least one step is required');
+		expect(box()).toHaveAccessibleDescription(/^At least one step is required Separate steps/);
 		const error = screen.getByRole('alert');
 		const hint = screen.getByText(/blank line/i);
 		expect(error.compareDocumentPosition(hint) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();

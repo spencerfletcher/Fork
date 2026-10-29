@@ -29,6 +29,13 @@
 				: ''
 	);
 
+	// The error first, then the note, when each is shown.
+	const describedBy = $derived(
+		[error && 'ingredients-error', (tooLong || unparsed.length > 0) && 'ingredients-hint']
+			.filter(Boolean)
+			.join(' ') || undefined
+	);
+
 	// What is typed is what comes back: the fraction as the recipe stores it.
 	const placeholder = '2¼ cups all-purpose flour\n2 large eggs';
 </script>
@@ -43,18 +50,18 @@
 		bind:value
 		{placeholder}
 		aria-invalid={error ? 'true' : undefined}
-		aria-describedby={error ? 'ingredients-error' : undefined}>
+		aria-describedby={describedBy}>
 	</textarea>
 	{#if error}
 		<p class="field-error" id="ingredients-error" role="alert">{error}</p>
 	{/if}
-	<p class="form-hint">
-		{#if tooLong}
-			{tooLong}. Shorten it before saving.
-		{:else if unparsed.length > 0}
+	{#if tooLong}
+		<p class="form-hint" id="ingredients-hint">{tooLong}. Shorten it before saving.</p>
+	{:else if unparsed.length > 0}
+		<p class="form-hint" id="ingredients-hint">
 			These lines will be saved as written but can't be scaled: {unparsed.join(', ')}
-		{/if}
-	</p>
+		</p>
+	{/if}
 	<!-- Always in the DOM so screen readers announce the text when it appears. -->
 	<p class="sr-only" role="status">
 		{#if announcement}{announcement}{/if}

@@ -125,7 +125,7 @@ describe('New recipe page validation errors', () => {
 		await fireEvent.focusOut(ingredients);
 		await fireEvent.focusOut(steps);
 		expect(ingredients).toHaveAccessibleDescription('At least one ingredient is required');
-		expect(steps).toHaveAccessibleDescription('At least one step is required');
+		expect(steps).toHaveAccessibleDescription(/^At least one step is required /);
 	});
 
 	test('refills the form from the returned draft after a failed save', async () => {
