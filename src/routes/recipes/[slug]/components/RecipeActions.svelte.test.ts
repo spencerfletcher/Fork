@@ -1,8 +1,27 @@
 import { describe, test, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/svelte';
+import { tick } from 'svelte';
 import RecipeActions from './RecipeActions.svelte';
 
-vi.mock('$app/forms', () => ({ enhance: () => ({ destroy: () => {} }) }));
+// Each form's enhance callback is captured so a test can play back a result.
+type Submit = (input: {
+	formElement: HTMLFormElement;
+}) => Promise<(opts: { result: { type: string }; update: () => Promise<void> }) => Promise<void>>;
+const { submits } = vi.hoisted(() => ({ submits: new Map<string, Submit>() }));
+vi.mock('$app/forms', () => ({
+	enhance: (form: HTMLFormElement, submit: Submit) => {
+		submits.set(form.getAttribute('action')!, submit);
+		return { destroy: () => {} };
+	}
+}));
+
+/** Runs the enhance flow for one form as SvelteKit would, ending in `result`. */
+async function playBack(action: string, result: { type: string; location?: string }) {
+	const form = document.querySelector<HTMLFormElement>(`form[action="${action}"]`)!;
+	const handler = await submits.get(action)!({ formElement: form });
+	await handler({ result, update: async () => {} });
+	await tick();
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -37,6 +56,24 @@ describe('RecipeActions save button', () => {
 		);
 
 		expect(screen.getByRole('button', { name: 'Favorite' })).toHaveTextContent('Favorite');
+	});
+});
+
+// ─── Failure states ───────────────────────────────────────────────────────────
+
+describe('RecipeActions when a request fails', () => {
+	test('a favourite that fails flips back and says so', async () => {
+		render(RecipeActions, { props: makeProps({ initialFavorited: false }) });
+		await playBack('?/toggleFavorite', { type: 'error' });
+		expect(screen.getByRole('button', { name: 'Favorite' })).toBeInTheDocument();
+		expect(screen.getByRole('alert')).toHaveTextContent(/could not save/i);
+	});
+
+	test('a fork that fails says so and offers the button again', async () => {
+		render(RecipeActions, { props: makeProps({ canFork: true }) });
+		await playBack('?/fork', { type: 'error' });
+		expect(screen.getByRole('alert')).toHaveTextContent(/could not fork/i);
+		expect(screen.getByRole('button', { name: 'Fork this recipe' })).not.toBeDisabled();
 	});
 });
 

@@ -19,6 +19,16 @@
 	// reader: Method once its heading is in the top third, or once the page is
 	// scrolled to the end, since a short method never reaches the top.
 	let methodSection: HTMLElement | undefined = $state();
+
+	// Focusing a block taller than the screen only scrolls it "nearest", which
+	// leaves the hero's bottom half showing; put the recipe at the top ourselves.
+	function skipToRecipe(event: MouseEvent) {
+		const recipe = document.getElementById('recipe');
+		if (!recipe) return;
+		event.preventDefault();
+		recipe.focus({ preventScroll: true });
+		window.scrollTo({ top: recipe.getBoundingClientRect().top + window.scrollY - 16 });
+	}
 	let onMethod = $state(false);
 	function onScroll() {
 		if (!methodSection) return;
@@ -31,7 +41,7 @@
 
 <article class="min-h-dvh">
 	<!-- A keyboard cook skips the header's eight stops. -->
-	<a href="#ingredients" class="skip-link">Skip to ingredients</a>
+	<a href="#recipe" class="skip-link" onclick={skipToRecipe}>Skip to ingredients</a>
 
 	<!-- The hero: the recipe's text beside its photo. Title, deck and byline
 	     first, so a stranger reads what this version is before anything else. -->
@@ -71,7 +81,7 @@
 
 	<!-- Ingredients stay in view beside the method on a desktop; the sidebar
 	     comes first in the DOM so the phone stack needs no reordering. -->
-	<div class="content-layout">
+	<div id="recipe" class="content-layout" tabindex="-1">
 		<aside class="min-w-0">
 			<div class="sidebar-sticky">
 				<RecipeIngredients ingredients={currentVersion.ingredients} grams={data.grams} />
@@ -109,9 +119,17 @@
 		transform: translateY(-200%);
 	}
 
+	/* Above the navbar, which is z-50. */
 	.skip-link:focus-visible {
 		transform: none;
-		z-index: 3;
+		z-index: 60;
+	}
+
+	/* The skip link lands here, with the rule above the recipe at the top of
+	   the screen; focus then moves on to the first ingredient. */
+	.content-layout {
+		scroll-margin-top: 16px;
+		outline: none;
 	}
 
 	.hero {

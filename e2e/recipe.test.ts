@@ -334,7 +334,7 @@ test.describe('Recipe detail page', () => {
 		// A long method: the seed's six steps are shorter than the ingredients,
 		// which leaves the sticky column nothing to do.
 		await page.evaluate(() => {
-			const list = document.querySelector('#method [role="list"]')!;
+			const list = document.querySelector('#method h2 + div')!;
 			for (let i = 0; i < 4; i++) list.append(...[...list.children].map((c) => c.cloneNode(true)));
 		});
 		await page.mouse.wheel(0, 1000);
@@ -550,12 +550,25 @@ test.describe('Recipe detail page', () => {
 		}
 		await expect(skip).toBeFocused();
 		await expect(skip).toBeInViewport();
+		// Visible on top of the navbar, not under it.
+		const onTop = await skip.evaluate((el) => {
+			const r = el.getBoundingClientRect();
+			return document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2) === el;
+		});
+		expect(onTop).toBe(true);
 		const headerFocusedBefore = await page.evaluate(
 			() => !!document.querySelector('header.recipe-header :focus')
 		);
 		expect(headerFocusedBefore).toBe(false);
 		await page.keyboard.press('Enter');
-		await expect(page).toHaveURL(/#ingredients$/);
+		await page.waitForTimeout(200);
+		// The recipe is as high as the page allows: at the top of the screen, or the
+		// page is scrolled to its end because a short recipe cannot go further.
+		const { y, atEnd } = await page.evaluate(() => ({
+			y: document.getElementById('ingredients')!.getBoundingClientRect().y,
+			atEnd: window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 1
+		}));
+		expect(y < 120 || atEnd).toBe(true);
 		// The next Tab lands on the first ingredient, not back in the header.
 		await page.keyboard.press('Tab');
 		await expect(page.locator('#ingredients input[type="checkbox"]').first()).toBeFocused();

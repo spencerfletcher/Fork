@@ -47,7 +47,7 @@
 
 <section id="ingredients" class="mb-3 scroll-mt-14">
 	<h2 class="eyebrow-label border-border mb-1 border-b pb-2">Ingredients</h2>
-	<div class="m-0 p-0" role="list">
+	<div class="m-0 p-0">
 		{#each ingredients as ingredient, i (i)}
 			{@const result = grams[i]}
 			{@const { bold, rest, after } = parts(ingredient)}

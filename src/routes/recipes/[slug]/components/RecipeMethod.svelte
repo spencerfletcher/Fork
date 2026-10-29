@@ -12,7 +12,7 @@
 
 <section id="method" class="mb-3 scroll-mt-14">
 	<h2 class="eyebrow-label border-border mb-3.5 border-b pb-2">Method</h2>
-	<div class="m-0 flex flex-col gap-[18px] p-0" role="list">
+	<div class="m-0 flex flex-col gap-[18px] p-0">
 		{#each steps as step, i (i)}
 			{@const n = i + 1}
 			<!-- A native checkbox, visually hidden, carries the state and the keyboard

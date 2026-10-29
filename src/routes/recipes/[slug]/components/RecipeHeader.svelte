@@ -67,7 +67,7 @@
 		<h1 class="title m-0 font-serif leading-[1.15] font-medium">{currentVersion.title}</h1>
 
 		{#if currentVersion.description}
-			<p class="description text-text-2 m-0">{currentVersion.description}</p>
+			<p class="description m-0">{currentVersion.description}</p>
 		{/if}
 
 		{#if recipe.parent}
@@ -180,15 +180,17 @@
 		color: var(--color-accent);
 	}
 
+	/* The recipe's own words, in the printed voice: ink, a step above body. */
 	.description {
-		font-size: 1.25rem;
-		line-height: 1.45;
+		font-size: 1.125rem;
+		line-height: 1.5;
+		color: var(--color-text);
 	}
 
 	.version-bar {
 		display: flex;
 		flex-direction: column;
-		gap: 2px;
+		gap: 6px;
 	}
 
 	.commit-line {
@@ -204,7 +206,7 @@
 		background: var(--color-marigold);
 		color: var(--color-text);
 		font-family: var(--font-mono);
-		font-size: 0.8125rem;
+		font-size: 0.75rem;
 		font-weight: 600;
 	}
 
@@ -341,13 +343,18 @@
 		margin: -4px 0;
 	}
 
+	/* Logged out the snippet renders nothing; an empty row must not take a gap. */
+	.actions-row:empty {
+		display: none;
+	}
+
 	@media (max-width: 699px) {
 		.recipe-header {
 			gap: 20px;
 		}
 
 		.description {
-			font-size: 1.125rem;
+			font-size: 1.0625rem;
 		}
 	}
 </style>

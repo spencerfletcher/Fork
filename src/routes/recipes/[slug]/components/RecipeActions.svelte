@@ -21,6 +21,8 @@
 	// Writable derived: the click flips it optimistically, and it resets to the
 	// prop whenever the page loads another recipe or reloads this one.
 	let isFavorited = $derived(initialFavorited);
+	let forking = $state(false);
+	let error = $state('');
 </script>
 
 {#if canFavorite || canFork || (isOwner && !isViewingHistory)}
@@ -31,12 +33,16 @@
 				method="POST"
 				action="?/fork"
 				use:enhance={() => {
+					forking = true;
+					error = '';
 					return async ({ result, update }) => {
+						forking = false;
 						if (result.type === 'redirect') window.location.href = result.location;
-						else await update();
+						else if (result.type === 'success') await update();
+						else error = 'Could not fork this recipe. Try again.';
 					};
 				}}>
-				<button type="submit" class="btn-primary">
+				<button type="submit" class="btn-primary" disabled={forking} aria-busy={forking}>
 					<svg
 						class="size-4"
 						viewBox="0 0 16 16"
@@ -78,7 +84,13 @@
 				action="?/toggleFavorite"
 				use:enhance={() => {
 					isFavorited = !isFavorited;
-					return async ({ update }) => update({ reset: false });
+					error = '';
+					return async ({ result, update }) => {
+						if (result.type === 'success') return update({ reset: false });
+						// Flip back: nothing was saved.
+						isFavorited = !isFavorited;
+						error = 'Could not save that. Try again.';
+					};
 				}}>
 				<button type="submit" class="btn-ghost flex items-center justify-center gap-2 no-underline">
 					<svg
@@ -98,6 +110,9 @@
 					{isFavorited ? 'Favorited' : 'Favorite'}
 				</button>
 			</form>
+		{/if}
+		{#if error}
+			<p class="form-error m-0 basis-full" role="alert">{error}</p>
 		{/if}
 	</div>
 {/if}
