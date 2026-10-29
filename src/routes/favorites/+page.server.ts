@@ -6,9 +6,11 @@ import { attachRecipeCounts } from '#lib/server/recipeCounts.js';
 import { byTagMatches, tagMatchCounts, visibleTags } from '#lib/server/tagFilter.js';
 import type { PageServerLoad } from './$types';
 
+const META = { title: 'Favorites' };
+
 export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 	if (!user) {
-		throw redirect(303, '/login');
+		throw redirect(303, '/login?redirectTo=/favorites');
 	}
 
 	const searchQuery = url.searchParams.get('q') || '';
@@ -31,7 +33,7 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 		.map((f) => f.recipeId);
 
 	if (favoriteIds.length === 0) {
-		return { favoriteRecipes: [], allTags: [], searchQuery, selectedTags: tagSlugs };
+		return { favoriteRecipes: [], allTags: [], searchQuery, selectedTags: tagSlugs, meta: META };
 	}
 
 	// Chips come from every favourite, not the filtered subset, or narrowing by
@@ -45,7 +47,7 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 		matchCounts = await tagMatchCounts(selectedTagIds, favoriteIds);
 		candidateIds = [...matchCounts.keys()];
 		if (candidateIds.length === 0) {
-			return { favoriteRecipes: [], allTags, searchQuery, selectedTags: tagSlugs };
+			return { favoriteRecipes: [], allTags, searchQuery, selectedTags: tagSlugs, meta: META };
 		}
 	}
 
@@ -66,5 +68,5 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 
 	const withCounts = await attachRecipeCounts(rows);
 
-	return { favoriteRecipes: withCounts, allTags, searchQuery, selectedTags: tagSlugs };
+	return { favoriteRecipes: withCounts, allTags, searchQuery, selectedTags: tagSlugs, meta: META };
 };

@@ -9,7 +9,7 @@ export const load: PageServerLoad = async ({ locals: { user }, url }) => {
 	if (user) {
 		throw redirect(303, '/'); // Or wherever you want logged-in users to go
 	}
-	return { redirectTo: localPath(url.searchParams.get('redirectTo')) };
+	return { redirectTo: localPath(url.searchParams.get('redirectTo')), meta: { title: 'Sign in' } };
 };
 
 // Only a path on this site: no scheme, no host, no protocol-relative "//".

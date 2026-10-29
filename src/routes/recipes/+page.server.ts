@@ -20,5 +20,10 @@ export const load: PageServerLoad = async ({ locals: { user } }) => {
 		user ? [] : visibleTags(eq(recipes.isPublic, true))
 	]);
 
-	return { recipes: await attachRecipeCounts(rows), mine: !!user, tags };
+	return {
+		recipes: await attachRecipeCounts(rows),
+		mine: !!user,
+		tags,
+		meta: { title: user ? 'My recipes' : 'Recipes' }
+	};
 };

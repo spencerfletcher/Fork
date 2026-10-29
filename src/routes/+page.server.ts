@@ -101,6 +101,8 @@ export const load: PageServerLoad = async ({ locals: { user } }) => {
 	}
 
 	return {
+		// The landing page keeps the branded default title.
+		...(user ? { meta: { title: 'Recipes' } } : {}),
 		mode: user ? ('feed' as const) : ('landing' as const),
 		recipes: withCounts,
 		// The feed is browse for a signed-in user, tabs included.

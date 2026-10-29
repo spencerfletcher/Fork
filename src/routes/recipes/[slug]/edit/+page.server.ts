@@ -37,7 +37,8 @@ export const load: PageServerLoad = async ({ params, locals: { user } }) => {
 	return {
 		recipe,
 		latestVersion: recipe.versions[0] ?? null,
-		allTags
+		allTags,
+		meta: { title: `Edit ${recipe.versions[0]?.title ?? 'recipe'}` }
 	};
 };
 

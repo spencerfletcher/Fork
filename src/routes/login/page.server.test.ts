@@ -73,7 +73,7 @@ describe('login load', () => {
 				locals: { user: null },
 				url: new URL(`http://x/login?redirectTo=${encodeURIComponent(redirectTo)}`)
 			} as never);
-		expect(await run('/recipes/cookies')).toEqual({ redirectTo: '/recipes/cookies' });
-		expect(await run('https://evil.example')).toEqual({ redirectTo: null });
+		expect(await run('/recipes/cookies')).toMatchObject({ redirectTo: '/recipes/cookies' });
+		expect(await run('https://evil.example')).toMatchObject({ redirectTo: null });
 	});
 });
