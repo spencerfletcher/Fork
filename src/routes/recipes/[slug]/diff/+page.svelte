@@ -76,7 +76,7 @@
 <div class="page">
 	<div class="page-inner compare">
 		<a href="/recipes/{recipe.slug}" class="back-link">← {recipe.title}</a>
-		<h1>Compare versions</h1>
+		<h1>Compare Versions</h1>
 		{#if sameVersion}
 			<p class="same-version">
 				v{toVersion.versionNumber} is on both sides; pick another version.

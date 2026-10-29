@@ -63,9 +63,9 @@ function makeData(
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
 describe('Diff page', () => {
-	test('renders the h1 "Compare versions" heading', () => {
+	test('renders the h1 "Compare Versions" heading', () => {
 		render(DiffPage, { props: { data: makeData() } });
-		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Compare versions');
+		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Compare Versions');
 	});
 
 	test('shows commit messages for both versions', () => {
