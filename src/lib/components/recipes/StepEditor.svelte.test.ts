@@ -13,12 +13,19 @@ describe('StepEditor', () => {
 		expect(box().name).toBe('steps');
 	});
 
-	test('explains blank-line separation and the note keywords', () => {
+	test('explains blank-line separation and the note keywords while the box is empty', () => {
 		render(StepEditor, { props: { value: '' } });
 		const hint = screen.getByText(/blank line/i);
 		expect(hint).toHaveTextContent('tip:');
 		expect(hint).toHaveTextContent('warning:');
 		expect(hint).toHaveTextContent('substitution:');
+	});
+
+	test('drops the hint once something is typed and brings it back when the box empties', async () => {
+		render(StepEditor, { props: { value: 'Mix.' } });
+		expect(screen.queryByText(/blank line/i)).toBeNull();
+		await fireEvent.input(box(), { target: { value: '' } });
+		expect(screen.getByText(/blank line/i)).toBeInTheDocument();
 	});
 
 	test('accepts input', async () => {
