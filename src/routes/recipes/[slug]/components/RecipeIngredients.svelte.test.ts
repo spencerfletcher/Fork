@@ -2,7 +2,7 @@ import { describe, test, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/svelte';
 import { parseIngredientText } from '#lib/recipes/ingredients.js';
 import RecipeIngredients from './RecipeIngredients.svelte';
-import { ticksKey } from './ticks';
+import { ticksKey, loadTicks, saveTicks } from './ticks';
 
 type GramResult = { grams: number; grams2: number | null; approximate: boolean } | null;
 
@@ -147,15 +147,15 @@ describe('RecipeIngredients', () => {
 	});
 
 	test('restores the ticks saved for this version, and saves each new one', async () => {
-		sessionStorage.setItem(KEY, JSON.stringify([1]));
+		saveTicks(KEY, [1]);
 		renderWith(LINES, [null, null, null]);
 		const boxes = screen.getAllByRole('checkbox');
 		await vi.waitFor(() => expect(boxes[1]).toBeChecked());
 		expect(boxes[0]).not.toBeChecked();
 		await fireEvent.click(boxes[0]);
-		expect(JSON.parse(sessionStorage.getItem(KEY)!)).toEqual([1, 0]);
+		expect(loadTicks(KEY)).toEqual([1, 0]);
 		await fireEvent.click(boxes[1]);
-		expect(JSON.parse(sessionStorage.getItem(KEY)!)).toEqual([0]);
-		sessionStorage.clear();
+		expect(loadTicks(KEY)).toEqual([0]);
+		localStorage.clear();
 	});
 });

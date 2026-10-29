@@ -5,7 +5,7 @@
 	let { steps, storageKey }: { steps: Step[]; storageKey: string } = $props();
 
 	// Writable derived: the ticks reload whenever the page moves to another
-	// version, and a click changes them. The server has no sessionStorage, so it
+	// version, and a click changes them. The server has no localStorage, so it
 	// renders none; hydration restores them.
 	let ticked = $derived(loadTicks(storageKey));
 

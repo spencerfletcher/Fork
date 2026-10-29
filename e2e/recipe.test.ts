@@ -971,8 +971,9 @@ test.describe('Recipe detail page', () => {
 		}
 	});
 
-	test('ticked rows survive a reload, and an older version keeps ticks of its own', async ({
-		page
+	test('ticked rows survive a reload and a new window, and an older version keeps ticks of its own', async ({
+		page,
+		browser
 	}) => {
 		await page.setViewportSize({ width: 1280, height: 900 });
 		await gotoClassicCookies(page);
@@ -985,6 +986,15 @@ test.describe('Recipe detail page', () => {
 		await expect(ingredient).toBeChecked();
 		await expect(step).toBeChecked();
 		await expect(page.locator('#recipe input:checked')).toHaveCount(2);
+		// A new window on the same storage origin has them too: localStorage, not
+		// one tab's sessionStorage.
+		const other = await browser.newContext({ storageState: await page.context().storageState() });
+		const tab = await other.newPage();
+		await tab.goto(recipeUrl);
+		await expect(tab.locator('#ingredients input').nth(1)).toBeChecked();
+		await expect(tab.locator('#method input').nth(2)).toBeChecked();
+		await expect(tab.locator('#recipe input:checked')).toHaveCount(2);
+		await other.close();
 		// v2 is another version: none of v3's ticks carry over.
 		await page.goto(`${recipeUrl}?version=2`);
 		await expect(page.locator('.version-bar .current .state')).toBeVisible();

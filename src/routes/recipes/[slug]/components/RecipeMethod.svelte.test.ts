@@ -1,7 +1,7 @@
 import { describe, test, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/svelte';
 import RecipeMethod from './RecipeMethod.svelte';
-import { ticksKey } from './ticks';
+import { ticksKey, loadTicks, saveTicks } from './ticks';
 
 const KEY = ticksKey('my-fork', 3, 'steps');
 
@@ -72,15 +72,15 @@ describe('RecipeMethod', () => {
 	});
 
 	test('restores the ticks saved for this version, and saves each new one', async () => {
-		sessionStorage.setItem(KEY, JSON.stringify([0]));
+		saveTicks(KEY, [0]);
 		render(RecipeMethod, {
 			props: { storageKey: KEY, steps: [{ text: 'Mix.' }, { text: 'Bake.' }] }
 		});
 		const boxes = screen.getAllByRole('checkbox');
 		await vi.waitFor(() => expect(boxes[0]).toBeChecked());
 		await fireEvent.click(boxes[1]);
-		expect(JSON.parse(sessionStorage.getItem(KEY)!)).toEqual([0, 1]);
-		sessionStorage.clear();
+		expect(loadTicks(KEY)).toEqual([0, 1]);
+		localStorage.clear();
 	});
 
 	test('the tick sits 18px from its numeral, the numeral 10px from the text, in a column that fits two digits', () => {
