@@ -237,7 +237,7 @@ Fork is one click, decided 29 October 2026: the pill submits, the server makes t
 
 ### Chips
 
-- **Version chip:** marigold fill, ink mono 600 text, 0 5px padding, 3px to 4px corners. On the recipe page it marks the version being read, not the latest: on an older version the chip stays marigold too (decided 29 October 2026; the critique's "older version wears the latest's mark" is closed by this ruling). The compare page's "To" chip and the recipe card's clay text mark do not yet follow this reading and are for their own rounds.
+- **Version chip:** marigold fill, ink mono 600 text, 0 6px padding, 4px corners. Marigold carries no fixed meaning: it is the vibrant accent, spent sparingly on bold things (the primary button, the chip). On the recipe page the chip marks the version being read, so it stays marigold on an older version too; on the compare page it marks the "To" side; the recipe card's version mark is clay text (decided 29 October 2026, Spencer: "marigold only as the version being read is not inherently true, it's just a vibrant accent colour we should use sparingly").
 
 - **Tags:** transparent pill, 1px Rule 2 border, Ink 2 text at 0.75rem 500. Hover fills clay tint and darkens the border. On espresso: tan text with a 22% white border.
 - **Tag tabs:** plain text at 0.875rem, Ink 2, 2px transparent underline; the current tab is ink, 600, with a clay underline.
