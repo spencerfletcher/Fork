@@ -48,7 +48,7 @@
 			<section class="browse-section">
 				<h2 class="eyebrow-label section-heading">Recent</h2>
 				{#if data.recipes.length > 0}
-					<div class="recipe-grid">
+					<div class="recipe-grid recent-strip">
 						<!-- No index: the grid sits below the fold at every width, so no
 						     photo here is worth fetching eagerly. -->
 						{#each data.recipes as recipe (recipe.id)}
@@ -99,5 +99,33 @@
 
 	.all-recipes {
 		margin: var(--space-4) 0 0;
+	}
+
+	/* Six recent cards, never more than two rows: 4 + 2 at four columns, 3 + 3
+	   at three. Two columns would need three, so a phone flows the cards into
+	   two rows by column, each column a two-column grid's width, and the strip
+	   scrolls sideways, bleeding to the screen edge like the tag tabs. The
+	   block padding keeps focus rings inside the scroll box. */
+	@media (max-width: 699px) {
+		.recent-strip {
+			grid-auto-flow: column;
+			grid-template-rows: repeat(2, auto);
+			grid-template-columns: none;
+			grid-auto-columns: calc((100% - var(--space-5)) / 2);
+			overflow-x: auto;
+			scroll-snap-type: x mandatory;
+			scroll-padding-inline: 18px;
+			scrollbar-width: none;
+			margin: -4px -18px;
+			padding: 4px 18px;
+		}
+
+		.recent-strip::-webkit-scrollbar {
+			display: none;
+		}
+
+		.recent-strip > :global(*) {
+			scroll-snap-align: start;
+		}
 	}
 </style>

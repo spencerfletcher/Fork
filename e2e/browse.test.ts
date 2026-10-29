@@ -7,7 +7,7 @@ const height = async (page: Page, selector: string) =>
 	(await page.locator(selector).first().boundingBox())!.height;
 
 test.describe('Landing page', () => {
-	test('four recent cards: one row at 1280, two by two on a phone', async ({ page }) => {
+	test("the seed's four recent cards: one row at 1280, two by two on a phone", async ({ page }) => {
 		await page.setViewportSize({ width: 1280, height: 900 });
 		await page.goto('/');
 		const cards = page.locator('.browse-section .recipe-card');
@@ -18,6 +18,48 @@ test.describe('Landing page', () => {
 		expect(await tops()).toBe(1);
 		await page.setViewportSize({ width: 390, height: 900 });
 		expect(await tops()).toBe(2);
+	});
+
+	test('six recent cards never take more than two rows; a phone scrolls them sideways', async ({
+		page
+	}) => {
+		// The seed has four, so two copies stand in for the fifth and sixth.
+		await page.setViewportSize({ width: 1280, height: 900 });
+		await page.goto('/');
+		const strip = page.locator('.recent-strip');
+		await strip.evaluate((el) => {
+			for (const card of [...el.children].slice(0, 2)) el.append(card.cloneNode(true));
+		});
+		const cards = strip.locator('.recipe-card');
+		await expect(cards).toHaveCount(6);
+		const rows = async () =>
+			new Set(await cards.evaluateAll((els) => els.map((el) => el.getBoundingClientRect().top)))
+				.size;
+		for (const width of [1280, 1024, 768, 390]) {
+			await page.setViewportSize({ width, height: 900 });
+			expect(await rows(), `${width}px`).toBe(2);
+		}
+
+		// At 390 the strip runs edge to edge, scrolls, and the page does not.
+		const box = await strip.evaluate((el) => {
+			const r = el.getBoundingClientRect();
+			const card = el.querySelector('.recipe-card')!.getBoundingClientRect();
+			return {
+				left: r.left,
+				right: r.right,
+				scrolls: el.scrollWidth > el.clientWidth,
+				cardWidth: card.width,
+				cardLeft: card.left,
+				page: document.documentElement.scrollWidth
+			};
+		});
+		expect(box.left).toBe(0);
+		expect(box.right).toBe(390);
+		expect(box.scrolls).toBe(true);
+		expect(box.page).toBe(390);
+		// Two columns' width on the 18px gutters: (390 - 36 - 24) / 2.
+		expect(box.cardLeft).toBe(18);
+		expect(box.cardWidth).toBeCloseTo((390 - 36 - 24) / 2, 0);
 	});
 
 	test('the hero h1 takes the site clamp and the lede sits on the ramp', async ({ page }) => {

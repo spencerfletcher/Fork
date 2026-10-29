@@ -177,10 +177,10 @@ describe('homepage load', () => {
 	});
 
 	test('counts only the recipes the landing page actually renders', async () => {
-		// The landing page shows four cards, one full row at 1280 and 2x2 on a
-		// phone (decided 29 October 2026). Aggregating over every public recipe
-		// to display four is work that grows with the size of the site for a page
-		// whose output does not.
+		// The landing page shows six cards in at most two rows (Spencer: "we can
+		// show 6 cards and i think 2 rows should be max"). Aggregating over every
+		// public recipe to display six is work that grows with the size of the
+		// site for a page whose output does not.
 		findManyMock.mockResolvedValue(
 			Array.from({ length: 20 }, (_, i) => ({
 				id: i + 1,
@@ -197,20 +197,20 @@ describe('homepage load', () => {
 			locals: { user: null }
 		} as unknown as Parameters<typeof load>[0]);
 
-		expect(result.recipes.length).toBe(4);
+		expect(result.recipes.length).toBe(6);
 		// Structural: compare the condition object against one built here, so the
 		// test fails if the loader widens the id set rather than merely if
 		// `.where` was called.
 		const whereArg = (versionChain.where as ReturnType<typeof vi.fn>).mock.calls[0][0];
-		expect(whereArg).toEqual(inArray(recipeVersions.recipeId, [1, 2, 3, 4]));
+		expect(whereArg).toEqual(inArray(recipeVersions.recipeId, [1, 2, 3, 4, 5, 6]));
 	});
 
-	test('still counts showcase candidates that fall outside the four rendered cards', async () => {
+	test('still counts showcase candidates that fall outside the six rendered cards', async () => {
 		// The diff picker needs version counts for the owner's recipes to know
 		// which have history — scoping the aggregate must not starve it.
 		const showcaseAuthor = { id: 'user-1', username: 'spencerfletcher' };
 		findManyMock.mockResolvedValue([
-			...Array.from({ length: 4 }, (_, i) => ({
+			...Array.from({ length: 6 }, (_, i) => ({
 				id: i + 1,
 				title: `R${i + 1}`,
 				slug: `r${i + 1}`,
@@ -231,7 +231,7 @@ describe('homepage load', () => {
 		} as unknown as Parameters<typeof load>[0]);
 
 		const whereArg = (versionChain.where as ReturnType<typeof vi.fn>).mock.calls[0][0];
-		expect(whereArg).toEqual(inArray(recipeVersions.recipeId, [1, 2, 3, 4, 9]));
+		expect(whereArg).toEqual(inArray(recipeVersions.recipeId, [1, 2, 3, 4, 5, 6, 9]));
 		expect(result.sampleDiff?.recipeTitle).toBe('Owned');
 	});
 

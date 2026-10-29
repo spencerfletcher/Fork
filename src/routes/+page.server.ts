@@ -34,12 +34,12 @@ export const load: PageServerLoad = async ({ locals: { user } }) => {
 		orderBy: (r, { desc }) => [desc(r.updatedAt)]
 	});
 
-	// The landing page renders four cards, a full row at 1280 and 2x2 on a phone
-	// (decided 29 October 2026); the feed renders everything. Counting
+	// The landing page renders six cards in at most two rows (Spencer, 29
+	// October 2026); the feed renders everything. Counting
 	// is scoped to the rows one of those two actually needs, plus the showcase
 	// candidates below, so the aggregates do not grow with the size of the site
 	// on a page whose output is fixed.
-	const displayed = user ? allRecipes : allRecipes.slice(0, 4);
+	const displayed = user ? allRecipes : allRecipes.slice(0, 6);
 	const showcasePool = user
 		? []
 		: allRecipes.filter((r) => r.author?.username === SHOWCASE_AUTHOR).slice(0, 5);
