@@ -23,6 +23,21 @@ describe('IngredientEditor', () => {
 		expect(screen.getByRole('status')).toBeEmptyDOMElement();
 	});
 
+	test('an error marks the box invalid and describes it, under its own id', () => {
+		render(IngredientEditor, {
+			props: { value: '', error: 'At least one ingredient is required' }
+		});
+		expect(box()).toHaveAttribute('aria-invalid', 'true');
+		expect(box()).toHaveAttribute('aria-describedby', 'ingredients-error');
+		expect(box()).toHaveAccessibleDescription('At least one ingredient is required');
+	});
+
+	test('without an error the box carries neither aria-invalid nor a description', () => {
+		render(IngredientEditor, { props: { value: '' } });
+		expect(box()).not.toHaveAttribute('aria-invalid');
+		expect(box()).not.toHaveAttribute('aria-describedby');
+	});
+
 	test('lists only the lines that did not parse', async () => {
 		render(IngredientEditor, { props: { value: '' } });
 		await type('1 cup flour\nsalt to taste\njuice of half a lemon');

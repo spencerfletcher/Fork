@@ -685,6 +685,20 @@
 		color: var(--color-remove);
 	}
 
+	/* Invalid fields wear the error tokens: the browser's own judgement after the
+	   user has been in the field, or ours once a message is attached. */
+	.form :is(input, textarea):is(:user-invalid, [aria-invalid='true']) {
+		border-color: var(--color-remove);
+		background: var(--color-remove-bg);
+		color: var(--color-remove);
+	}
+
+	.field-error {
+		margin: 0;
+		font-size: 0.875rem;
+		color: var(--color-remove);
+	}
+
 	/* ── Auth pages ── */
 
 	/* Under the 56px navbar; 100dvh here scrolled every auth page for nothing. */

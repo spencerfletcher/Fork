@@ -128,6 +128,61 @@
 		form?.draft?.hadPhoto === true && !chosen && !imageInput?.files?.length
 	);
 
+	// Inline errors, one per field name, in the server's own wording. A field is
+	// checked when it is left, when it blocks a submit, and on every keystroke
+	// once it carries an error, so the message and the browser's :user-invalid
+	// state come from the same validity and clear together.
+	const REQUIRED: Record<string, string> = {
+		title: 'Title is required',
+		ingredients: 'At least one ingredient is required',
+		steps: 'At least one step is required'
+	};
+	const NUMBER: Record<string, string> = {
+		servings: 'Servings',
+		prepTimeMinutes: 'Prep time',
+		cookTimeMinutes: 'Cook time'
+	};
+	let errors = $state<Record<string, string>>({});
+
+	function validate(target: EventTarget | null) {
+		const el = target as HTMLInputElement | HTMLTextAreaElement;
+		const name = el?.name;
+		if (!name || !(name in REQUIRED || name in NUMBER)) return;
+		const v = el.validity;
+		errors[name] = v.valid
+			? ''
+			: v.valueMissing
+				? REQUIRED[name]
+				: v.rangeUnderflow
+					? `${NUMBER[name]} must be at least ${(el as HTMLInputElement).min}`
+					: `${NUMBER[name]} must be a whole number`;
+	}
+
+	// The field a server message names, so it can be shown there and focused.
+	// Anything else (a conflict, an upload or database failure) stays global.
+	const FIELD_OF: Array<[RegExp, string]> = [
+		[/^Title/, 'title'],
+		[/^Servings/, 'servings'],
+		[/^Prep time/, 'prepTimeMinutes'],
+		[/^Cook time/, 'cookTimeMinutes'],
+		[/ingredient/i, 'ingredients'],
+		[/step/i, 'steps']
+	];
+	const fieldFor = (error: string) => FIELD_OF.find(([re]) => re.test(error))?.[1];
+
+	$effect(() => {
+		if (!form) return;
+		const name = fieldFor(form.error);
+		if (!name) return;
+		errors[name] = form.error;
+		document.getElementById(name)?.focus();
+	});
+
+	const globalError = $derived(form && !fieldFor(form.error) ? form.error : null);
+
+	const aria = (name: string) =>
+		errors[name] ? { 'aria-invalid': 'true' as const, 'aria-describedby': `${name}-error` } : {};
+
 	// Fields are disabled while saving, so nothing typed mid-request is lost by
 	// the redirect. FormData is built before this runs, so the submission is whole.
 	let submitting = $state(false);
@@ -156,7 +211,24 @@
 
 {@render header?.(outcome)}
 
-<form method="POST" {action} enctype="multipart/form-data" use:enhance={track} class="form">
+{#snippet fieldError(name: string)}
+	{#if errors[name]}
+		<p class="field-error" id="{name}-error">{errors[name]}</p>
+	{/if}
+{/snippet}
+
+<form
+	method="POST"
+	{action}
+	enctype="multipart/form-data"
+	use:enhance={track}
+	class="form"
+	onfocusout={(e) => validate(e.target)}
+	oninvalidcapture={(e) => validate(e.target)}
+	oninput={(e) => {
+		const name = (e.target as HTMLInputElement).name;
+		if (errors[name]) validate(e.target);
+	}}>
 	<fieldset disabled={submitting} class="contents">
 		{#if draft.editRevision}
 			<input type="hidden" name="editRevision" value={draft.editRevision} />
@@ -168,7 +240,14 @@
 					<label for="title">
 						Title <span class="required">*</span>
 					</label>
-					<input id="title" name="title" type="text" required bind:value={draft.title} />
+					<input
+						id="title"
+						name="title"
+						type="text"
+						required
+						bind:value={draft.title}
+						{...aria('title')} />
+					{@render fieldError('title')}
 				</div>
 
 				<div class="field">
@@ -218,7 +297,9 @@
 							type="number"
 							min="1"
 							value={draft.servings}
-							oninput={(e) => (draft.servings = e.currentTarget.value)} />
+							oninput={(e) => (draft.servings = e.currentTarget.value)}
+							{...aria('servings')} />
+						{@render fieldError('servings')}
 					</div>
 					<div class="field">
 						<label for="prepTimeMinutes">Prep (min)</label>
@@ -228,7 +309,9 @@
 							type="number"
 							min="0"
 							value={draft.prepTimeMinutes}
-							oninput={(e) => (draft.prepTimeMinutes = e.currentTarget.value)} />
+							oninput={(e) => (draft.prepTimeMinutes = e.currentTarget.value)}
+							{...aria('prepTimeMinutes')} />
+						{@render fieldError('prepTimeMinutes')}
 					</div>
 					<div class="field">
 						<label for="cookTimeMinutes">Cook (min)</label>
@@ -238,7 +321,9 @@
 							type="number"
 							min="0"
 							value={draft.cookTimeMinutes}
-							oninput={(e) => (draft.cookTimeMinutes = e.currentTarget.value)} />
+							oninput={(e) => (draft.cookTimeMinutes = e.currentTarget.value)}
+							{...aria('cookTimeMinutes')} />
+						{@render fieldError('cookTimeMinutes')}
 					</div>
 				</div>
 
@@ -255,8 +340,8 @@
 			</div>
 
 			<div class="form-col">
-				<IngredientEditor bind:value={draft.ingredients} />
-				<StepEditor bind:value={draft.steps} />
+				<IngredientEditor bind:value={draft.ingredients} error={errors.ingredients} />
+				<StepEditor bind:value={draft.steps} error={errors.steps} />
 			</div>
 		</div>
 
@@ -275,8 +360,8 @@
 			</div>
 		{/if}
 
-		{#if form?.error}
-			<p class="form-error" role="alert">{form.error}</p>
+		{#if globalError}
+			<p class="form-error" role="alert">{globalError}</p>
 		{/if}
 
 		<div class="form-actions">

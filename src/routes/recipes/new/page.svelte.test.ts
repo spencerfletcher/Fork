@@ -45,9 +45,50 @@ describe('New recipe page validation errors', () => {
 		expect(screen.queryByRole('alert')).not.toBeInTheDocument();
 	});
 
-	test('shows the returned error', () => {
+	test('a failed save puts the error under the field it names, marks it invalid and focuses it, with no global alert', async () => {
 		render(NewPage, { props: { data, form: failed({ title: '' }) } });
-		expect(screen.getByRole('alert')).toHaveTextContent('Title is required');
+		await tick();
+		const title = screen.getByLabelText(/^title/i);
+		expect(title).toHaveAttribute('aria-invalid', 'true');
+		expect(title).toHaveAccessibleDescription('Title is required');
+		expect(title).toHaveFocus();
+		expect(screen.queryByRole('alert')).toBeNull();
+	});
+
+	test('a failure no field owns stays the global alert', async () => {
+		render(NewPage, {
+			props: {
+				data,
+				form: failed({ title: 'Soup' }, 'Could not save the recipe. Please try again.')
+			}
+		});
+		await tick();
+		expect(screen.getByRole('alert')).toHaveTextContent('Could not save the recipe');
+		expect(document.querySelector('[aria-invalid="true"]')).toBeNull();
+	});
+
+	test("leaving Title empty marks it with the server's own wording before any save, and typing clears it", async () => {
+		render(NewPage, { props: { data, form: null } });
+		const title = screen.getByLabelText(/^title/i);
+		expect(title).not.toHaveAttribute('aria-invalid');
+		await fireEvent.focusOut(title);
+		expect(title).toHaveAttribute('aria-invalid', 'true');
+		expect(title).toHaveAccessibleDescription('Title is required');
+		await fireEvent.input(title, { target: { value: 'Soup' } });
+		expect(title).not.toHaveAttribute('aria-invalid');
+		expect(title).not.toHaveAccessibleDescription();
+	});
+
+	test('ingredients and steps are required fields that report it under the box', async () => {
+		render(NewPage, { props: { data, form: null } });
+		const ingredients = screen.getByLabelText('Ingredients');
+		const steps = screen.getByLabelText('Steps');
+		expect(ingredients).toBeRequired();
+		expect(steps).toBeRequired();
+		await fireEvent.focusOut(ingredients);
+		await fireEvent.focusOut(steps);
+		expect(ingredients).toHaveAccessibleDescription('At least one ingredient is required');
+		expect(steps).toHaveAccessibleDescription('At least one step is required');
 	});
 
 	test('refills the form from the returned draft after a failed save', async () => {

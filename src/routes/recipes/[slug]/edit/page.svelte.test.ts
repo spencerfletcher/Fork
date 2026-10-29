@@ -263,10 +263,37 @@ describe('Edit page form', () => {
 		);
 		expect(tags).toEqual(['Spicy']);
 		expect(screen.getByLabelText(/public/i)).toBeChecked();
-		expect(screen.getByRole('alert')).toHaveTextContent('Title is required');
+		expect(screen.queryByRole('alert')).toBeNull();
+		expect(title()).toHaveAttribute('aria-invalid', 'true');
+		expect(title()).toHaveAccessibleDescription('Title is required');
+		expect(title()).toHaveFocus();
 		// The draft is invalid, so there is nothing to promise, settings included.
 		expect(screen.getByText('Editing v2')).toBeInTheDocument();
 		expect(hiddenRevision()).toHaveValue('3');
+	});
+
+	test("a number below its floor is named under its own field with the server's wording", async () => {
+		render(EditPage, { props: { data: makeData(), form: null } });
+		const servings = screen.getByLabelText(/serves/i);
+		await fireEvent.input(servings, { target: { value: '0' } });
+		await fireEvent.focusOut(servings);
+		expect(servings).toHaveAttribute('aria-invalid', 'true');
+		expect(servings).toHaveAccessibleDescription('Servings must be at least 1');
+		expect(title()).not.toHaveAttribute('aria-invalid');
+	});
+
+	test('a server error for the ingredients lands under the ingredients box and focuses it', async () => {
+		render(EditPage, {
+			props: {
+				data: makeData(),
+				form: failed({ ingredients: 'x' }, 'An ingredient line is too long (300 characters max)')
+			}
+		});
+		await tick();
+		const box = screen.getByLabelText('Ingredients');
+		expect(box).toHaveAccessibleDescription(/too long/);
+		expect(box).toHaveFocus();
+		expect(screen.queryByRole('alert')).toBeNull();
 	});
 
 	test('shows the conflict message as an alert', async () => {

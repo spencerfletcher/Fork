@@ -84,6 +84,25 @@ test.describe('New recipe page', () => {
 		await expect(page.getByLabel('Steps')).toBeVisible();
 	});
 
+	test('a field left empty turns on the error tokens and says why in its own words, with no save', async ({
+		page
+	}) => {
+		await gotoHydrated(page, '/recipes/new');
+		const title = page.locator('input[name="title"]');
+		await title.focus();
+		await page.keyboard.press('Tab');
+		await expect(title).toHaveAttribute('aria-invalid', 'true');
+		await expect(page.locator('#title-error')).toHaveText('Title is required');
+		await expect(title).toHaveAccessibleDescription('Title is required');
+		// The DESIGN.md error tokens: remove on remove-bg.
+		expect(await title.evaluate((el) => getComputedStyle(el).borderColor)).toBe('rgb(163, 54, 43)');
+		expect(await title.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(
+			'rgb(246, 227, 224)'
+		);
+		await title.fill('Soup');
+		await expect(title).not.toHaveAttribute('aria-invalid', 'true');
+	});
+
 	test('empty editors keep room to type into, instead of collapsing to one line', async ({
 		page
 	}) => {
@@ -422,9 +441,13 @@ test.describe('One save', () => {
 			const long = '1 cup ' + 'x'.repeat(300);
 			await page.getByLabel('Ingredients').fill(long);
 			await page.getByRole('button', { name: 'Save', exact: true }).click();
-			await expect(page.getByRole('alert')).toContainText('An ingredient line is too long');
-			await expect(page.getByLabel('Ingredients')).toHaveValue(long);
-			await expect(page.getByLabel('Ingredients')).toBeEnabled();
+			const box = page.getByLabel('Ingredients');
+			await expect(box).toHaveAccessibleDescription(/An ingredient line is too long/);
+			await expect(box).toHaveAttribute('aria-invalid', 'true');
+			await expect(box).toBeFocused();
+			await expect(page.getByRole('alert')).toHaveCount(0);
+			await expect(box).toHaveValue(long);
+			await expect(box).toBeEnabled();
 		} finally {
 			await deleteRecipe(page, url);
 		}

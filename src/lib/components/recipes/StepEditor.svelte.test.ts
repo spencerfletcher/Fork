@@ -28,6 +28,13 @@ describe('StepEditor', () => {
 		expect(screen.getByText(/blank line/i)).toBeInTheDocument();
 	});
 
+	test('an error replaces the hint, marks the box invalid and describes it', () => {
+		render(StepEditor, { props: { value: '', error: 'At least one step is required' } });
+		expect(box()).toHaveAttribute('aria-invalid', 'true');
+		expect(box()).toHaveAccessibleDescription('At least one step is required');
+		expect(screen.queryByText(/blank line/i)).toBeNull();
+	});
+
 	test('accepts input', async () => {
 		render(StepEditor, { props: { value: '' } });
 		await fireEvent.input(box(), { target: { value: 'Chop.' } });

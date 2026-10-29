@@ -2,7 +2,7 @@
 	import { parseIngredientText } from '#lib/recipes/ingredients.js';
 	import { limitError } from '#lib/recipes/limits.js';
 
-	let { value = $bindable() }: { value: string } = $props();
+	let { value = $bindable(), error = '' }: { value: string; error?: string } = $props();
 
 	// The server rejects oversized text, so the parser is not run on it here
 	// either; the text stays in the box for the user to trim.
@@ -28,9 +28,15 @@
 		name="ingredients"
 		rows="11"
 		class="field-mono"
+		required
 		bind:value
-		{placeholder}>
+		{placeholder}
+		aria-invalid={error ? 'true' : undefined}
+		aria-describedby={error ? 'ingredients-error' : undefined}>
 	</textarea>
+	{#if error}
+		<p class="field-error" id="ingredients-error">{error}</p>
+	{/if}
 	<!-- Always in the DOM so screen readers announce the text when it appears. -->
 	<p class="form-hint" role="status" aria-live="polite">
 		{#if tooLong}
