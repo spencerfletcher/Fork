@@ -1272,7 +1272,9 @@ test.describe('Landing page (logged out)', () => {
 			await page.goto('/');
 			const hero = await page.getByRole('heading', { level: 1 }).boundingBox();
 			const diff = await page.getByRole('heading', { name: 'A real change, diffed' }).boundingBox();
-			const grid = await page.locator('.recipe-grid').first().boundingBox();
+			// Below 700px the Recent grid is a strip that bleeds to the screen edge
+			// and scrolls sideways, so its first card, not its box, sits on the edge.
+			const grid = await page.locator('.recipe-grid .recipe-card').first().boundingBox();
 			expect(Math.abs(hero!.x - browse!.x)).toBeLessThan(1);
 			expect(Math.abs(diff!.x - browse!.x)).toBeLessThan(1);
 			expect(Math.abs(grid!.x - browse!.x)).toBeLessThan(1);
@@ -1488,8 +1490,9 @@ test.describe('Usernames', () => {
 	test('the byline handle is mono at the byline size; "By" and the forks are sans', async ({
 		page
 	}) => {
-		// Usernames are identifiers, mono like version numbers and dates, at the
-		// size of the line they sit in (decided 29 October 2026).
+		// Usernames are identifiers, mono like version numbers and dates, one
+		// notch (0.9375em) under the line they sit in, since JetBrains Mono runs
+		// optically larger than the sans beside it (decided 29 October 2026).
 		await gotoClassicCookies(page);
 		const byline = page.locator('.recipe-header .byline');
 		const face = (el: Element) => {
@@ -1500,7 +1503,7 @@ test.describe('Usernames', () => {
 		const handle = await byline.locator('a.username').evaluate(face);
 		expect(handle.family).toMatch(/JetBrains Mono/);
 		expect(line.family).not.toMatch(/JetBrains Mono/);
-		expect(handle.size).toBe(line.size);
+		expect(parseFloat(handle.size)).toBeCloseTo(parseFloat(line.size) * 0.9375, 1);
 	});
 });
 
