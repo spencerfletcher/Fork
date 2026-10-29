@@ -183,7 +183,7 @@ Clay and marigold were raised in chroma from #a4512b and #e8a83a: same hues, sam
 - **Description** (400, 1.0625rem, 1.5, ink, Source Sans): a recipe's description under its byline, plain body text.
 - **Headline** (500, 1.75rem, 1.25, ink): h2 on pages that need a second serif level ("Recipes worth forking").
 - **Title** (500, 1.0625rem, 1.25): recipe card names in Bitter. Clay on a no-photo panel, ink on a photo card.
-- **Body** (400, 1rem, 1.65, ink): running text, ingredients, steps. Descriptions at 1.0625rem in Ink 2. Measure stays under about 72 characters.
+- **Body** (400, 1rem, 1.65, ink): running text, ingredients, steps. Descriptions at 1.0625rem in Ink 2. Measure stays under about 72 characters; method steps cap at 68ch inside their column while the step numbers and the Method rule span it (29 October 2026, reversing the 28 October "no cap").
 - **Sans label** (600, 0.6875rem, 0.08em, uppercase, Ink 3): the page's one uppercase label: section eyebrows ("Ingredients", "Method", "Recent"), form legends, and the recipe page's phone section tabs at 0.75rem. The recipe page's measure is not a label; see Version note.
 - **Mono** (400, 0.75rem, 1.5): dates, diff rows and commit messages in history. On the recipe page mono is spent on the version bar under the hero and nowhere in the header; the byline and the measure are sans (decided 29 October 2026). Gram weights are not mono: they sit inside a sans ingredient line at the line's own size, in Ink 3, so the strike runs through them as one line (decided 29 October 2026). The recipe page's tag line uses 1rem (decided 29 October 2026); step numerals are Bitter 1.125rem in clay. Diff and compare surfaces use 0.875rem. Card version marks use 600 at 0.6875rem.
 - **Also in use** and on the ramp: 0.8125rem (card meta, byline, numerals), 0.875rem (navbar links, diff), 0.9375rem (buttons, card body), 1.375rem (the wordmark).
@@ -266,7 +266,7 @@ Decided 29 October 2026, revised twice the same day: first the commit message le
 - **Byline** (sans 1rem 600, links clay): `By @author · 1 fork`. No version in the header.
 - **Description:** sans 1.0625rem ink, plain body text.
 - **Measure:** one sans line at 1rem, value then label for all three: `15 min prep · 13 min cook · 36 servings`, values 600 ink, labels Ink 2, dots in Rule 2. A pair never splits; the line wraps only at the dots. No rule above it.
-- **Tags:** a comma-separated line at 1rem, Ink 2, clay on hover.
+- **Tags:** a comma-separated line at 1rem; each tag a clay 600 link, ink on hover, the commas Ink 2 (revised 29 October 2026: grey tags carried no link affordance).
 - **Actions:** the 44px pills (see Buttons), unpinned, directly after the tags.
 - **Spacing** down the column: 8, 8, 8, 2, 16. The column ends where it ends; it is never stretched to the photo.
 - **Photo:** 3:2 beside the header, capped at 340px tall, 6px corners. Stacked below 1024px it sits directly under the title, before the byline.

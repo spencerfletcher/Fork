@@ -73,7 +73,7 @@
 		<p class="tags text-text-2 m-0 font-sans">
 			{#each tags as tag, i (tag.id)}
 				{#if i > 0},&#32;{/if}
-				<a href="/tags/{tag.slug}">{tag.name}</a>
+				<a href="/tags/{tag.slug}" class="text-accent font-semibold">{tag.name}</a>
 			{/each}
 		</p>
 	{/if}
@@ -144,13 +144,13 @@
 		line-height: 1.5;
 	}
 
+	/* Links like every other link on the site: clay, bold, ink on hover. */
 	.tags a {
-		color: inherit;
 		text-decoration: none;
 	}
 
 	.tags a:hover {
-		color: var(--color-accent);
+		color: var(--color-text);
 	}
 
 	/* Logged out the snippet renders nothing; an empty row must not take a gap. */
