@@ -226,11 +226,22 @@
 		color: var(--color-text-3);
 	}
 
-	/* The dot ends the item before it, so a wrapped line never starts with one. */
-	.byline > :not(:last-child)::after {
+	/* The dot ends the item before it, so a wrapped line never starts with one.
+	   :global so the Username component's own element takes it too. */
+	.byline > :global(:not(:last-child))::after {
 		content: '·';
 		margin-left: 8px;
 		color: var(--color-text-3);
+	}
+
+	/* The chip is a box, so its dot would paint inside the marigold; it keeps
+	   a gap instead. */
+	.byline > .version::after {
+		content: none;
+	}
+
+	.byline > .version {
+		margin-right: 4px;
 	}
 
 	.byline a,
