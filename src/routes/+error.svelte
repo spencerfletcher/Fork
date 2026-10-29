@@ -31,11 +31,11 @@
 
 <style>
 	.error-page {
-		max-width: 65ch;
 		padding-block: var(--space-6) var(--space-8);
 	}
 
 	.lede {
+		max-width: 65ch;
 		margin-top: 8px;
 		font-size: 1.0625rem;
 		line-height: 1.5;
