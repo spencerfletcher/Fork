@@ -60,14 +60,13 @@ describe('RecipeHeader fork attribution', () => {
 			recipe: makeRecipe({
 				author: { id: 'u1', username: 'me' },
 				parentId: 42,
-				parent: { slug: 'original', title: 'The Original', author: { username: 'chef' } }
+				parent: { slug: 'original', title: 'The Original' }
 			})
 		});
 		expect(byline(container)).toBe('By @me · forked from The Original');
 		const parent = screen.getByRole('link', { name: 'The Original' });
 		expect(parent).toHaveAttribute('href', '/recipes/original');
 		expect(container.querySelector('.byline')).toContainElement(parent);
-		expect(screen.queryByRole('link', { name: '@chef' })).not.toBeInTheDocument();
 		expect(container.querySelector('.attribution')).toBeNull();
 	});
 

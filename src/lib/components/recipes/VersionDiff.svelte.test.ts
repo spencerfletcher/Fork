@@ -1,6 +1,7 @@
 import { describe, test, expect } from 'vitest';
 import { render, screen, within } from '@testing-library/svelte';
 import VersionDiff from './VersionDiff.svelte';
+import source from './VersionDiff.svelte?raw';
 import type { IngredientDiffRow, MetaDiffRow, StepDiffRow } from '#lib/recipes/diff.js';
 import { makeIngredient, makeStep } from '#lib/recipes/fixtures.js';
 
@@ -354,5 +355,70 @@ describe('VersionDiff', () => {
 		expect(screen.queryAllByText('No changes')).toHaveLength(0);
 		expect(container.querySelectorAll('.diff-added')).toHaveLength(1);
 		expect(container.querySelectorAll('.diff-removed')).toHaveLength(1);
+	});
+});
+
+// ─── Folding (the landing page's phone) ──────────────────────────────────────
+
+describe('VersionDiff fold', () => {
+	// Below 700px the landing's sample folds each run of unchanged rows into one
+	// "N unchanged" row (Spencer: "in general folding unchanged rows would be
+	// good"). The compare page keeps every row, so fold is off by default.
+	const ingredients = [
+		{ status: 'unchanged', ingredient: ingredient('flour') },
+		{ status: 'unchanged', ingredient: ingredient('sugar') },
+		{ status: 'unchanged', ingredient: ingredient('salt') },
+		{ status: 'added', ingredient: ingredient('vanilla') },
+		{ status: 'unchanged', ingredient: ingredient('butter') },
+		{ status: 'removed', ingredient: ingredient('milk') }
+	] as IngredientDiffRow[];
+	const steps = [
+		{ status: 'modified', stepNumber: 1, segments: [{ type: 'equal', text: 'Mix.' }] },
+		{ status: 'unchanged', stepNumber: 2, step: makeStep('Rest.') },
+		{ status: 'unchanged', stepNumber: 3, step: makeStep('Bake.') }
+	] as StepDiffRow[];
+
+	const panelRows = (container: HTMLElement, name: string) =>
+		[...within(container).getByRole('list', { name }).children] as HTMLElement[];
+
+	test('off by default: every row shows and nothing folds', () => {
+		const { container } = renderDiff(ingredients, steps);
+		expect(container.querySelector('.diff-fold')).toBeNull();
+		expect(container.querySelector('.diff-folded')).toBeNull();
+	});
+
+	test('on: a run of two or more unchanged rows gets one "N unchanged" listitem after it', () => {
+		const { container } = render(VersionDiff, {
+			props: { metaDiff: [], ingredientDiff: ingredients, stepDiff: steps, fold: true }
+		});
+		const ing = panelRows(container, 'Ingredients');
+		expect(ing.map((r) => text(r))).toEqual([
+			expect.stringContaining('flour'),
+			expect.stringContaining('sugar'),
+			expect.stringContaining('salt'),
+			'3 unchanged',
+			expect.stringContaining('vanilla'),
+			expect.stringContaining('butter'),
+			expect.stringContaining('milk')
+		]);
+		expect(ing[3]).toHaveClass('diff-row', 'diff-fold');
+		expect(ing[3]).toHaveAttribute('role', 'listitem');
+		expect(ing.slice(0, 3).every((r) => r.classList.contains('diff-folded'))).toBe(true);
+		// A lone unchanged row is not worth a fold row of its own height.
+		expect(ing[5]).not.toHaveClass('diff-folded');
+
+		// A run at the end: the fold row is the panel's last row.
+		const method = panelRows(container, 'Method');
+		expect(text(method.at(-1))).toBe('2 unchanged');
+		expect(method.filter((r) => r.classList.contains('diff-folded'))).toHaveLength(2);
+	});
+
+	test('the fold shows only below 700px; wider, every row shows', () => {
+		// jsdom applies no component CSS, so the rules are read from the source.
+		const style = source.slice(source.indexOf('<style>'));
+		expect(style).toMatch(/\.diff-fold\s*{[^}]*display:\s*none/);
+		const phone = style.slice(style.indexOf('@media (max-width: 699px)'));
+		expect(phone).toMatch(/\.diff-folded\s*{[^}]*display:\s*none/);
+		expect(phone).toMatch(/\.diff-fold\s*{[^}]*display:\s*flex/);
 	});
 });

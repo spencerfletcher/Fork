@@ -183,4 +183,27 @@ describe('/+page.svelte', () => {
 		expect(rule).toMatch(/overflow-x:\s*auto/);
 		expect(rule).toMatch(/scroll-snap-type:\s*x/);
 	});
+
+	test('the landing sample folds its unchanged rows on a phone', () => {
+		const sampleDiff = {
+			recipeTitle: 'T',
+			recipeSlug: 't',
+			fromVersion: 1,
+			toVersion: 2,
+			commitMessage: null,
+			metaDiff: [],
+			ingredientDiff: [],
+			stepDiff: [
+				{ status: 'unchanged' as const, stepNumber: 1, step: { text: 'Mix.' } },
+				{ status: 'unchanged' as const, stepNumber: 2, step: { text: 'Rest.' } },
+				{ status: 'added' as const, stepNumber: 3, step: { text: 'Bake.' } }
+			]
+		};
+		const { container } = render(Page, {
+			props: {
+				data: { recipes: [], user: null, profile: null, mode: 'landing', tags: [], sampleDiff }
+			} as never
+		});
+		expect(container.querySelector('.diff-fold')).toHaveTextContent('2 unchanged');
+	});
 });

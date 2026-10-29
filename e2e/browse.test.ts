@@ -111,6 +111,24 @@ test.describe('Landing page', () => {
 			true
 		);
 	});
+
+	test('on a phone the sample diff folds its unchanged runs; wider, every row shows', async ({
+		page
+	}) => {
+		const shown = (sel: string) =>
+			page
+				.locator(sel)
+				.evaluateAll((els) => els.filter((el) => getComputedStyle(el).display !== 'none').length);
+		await page.setViewportSize({ width: 390, height: 844 });
+		await page.goto('/');
+		const folds = await shown('.diff-fold');
+		expect(folds).toBeGreaterThan(0);
+		expect(await shown('.diff-folded')).toBe(0);
+		await expect(page.locator('.diff-fold .diff-content').first()).toHaveText(/^\d+ unchanged$/);
+		await page.setViewportSize({ width: 1280, height: 900 });
+		expect(await shown('.diff-fold')).toBe(0);
+		expect(await shown('.diff-folded')).toBe(await page.locator('.diff-folded').count());
+	});
 });
 
 test.describe('Search filters', () => {

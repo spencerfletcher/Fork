@@ -29,7 +29,9 @@
 							<span class="commit-bar__message">{data.sampleDiff.commitMessage}</span>
 						{/if}
 					</div>
+					<!-- Folded on a phone, so the food comes up within a screen of it. -->
 					<VersionDiff
+						fold
 						metaDiff={data.sampleDiff.metaDiff}
 						ingredientDiff={data.sampleDiff.ingredientDiff}
 						stepDiff={data.sampleDiff.stepDiff} />
