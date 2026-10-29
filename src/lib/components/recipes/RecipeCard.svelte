@@ -233,7 +233,9 @@
 		position: relative;
 		z-index: 2;
 		font-family: var(--font-mono);
-		font-size: 0.75rem;
+		/* Username's one step under the line (0.9375), taken off the meta size:
+		   an em would resolve against the row, not this item's 13px. */
+		font-size: calc(0.8125rem * 0.9375);
 		color: var(--color-accent);
 		text-decoration: none;
 		transition: color 0.15s ease;

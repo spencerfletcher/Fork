@@ -2,6 +2,7 @@ import { describe, test, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/svelte';
 import RecipeCard from './RecipeCard.svelte';
 import source from './RecipeCard.svelte?raw';
+import usernameSource from '#lib/components/ui/Username.svelte?raw';
 
 const { mockGoto } = vi.hoisted(() => ({ mockGoto: vi.fn() }));
 vi.mock('$app/navigation', () => ({ goto: mockGoto }));
@@ -157,6 +158,15 @@ describe('RecipeCard', () => {
 		expect([...row.children].every((el) => el.classList.contains('meta-item'))).toBe(true);
 		const style = source.slice(source.indexOf('<style>'));
 		expect(style).toMatch(/\.meta-item \+ \.meta-item::before\s*{[^}]*content:\s*'·'/);
+	});
+
+	test("the author's handle is the Username step under the meta line's size", () => {
+		// jsdom applies no component CSS, so the sizes are read from the sources.
+		const ratio = usernameSource.match(/\.username\s*{[^}]*font-size:\s*([\d.]+)em/)![1];
+		const style = source.slice(source.indexOf('<style>'));
+		const line = style.match(/\.meta-item\s*{[^}]*font-size:\s*([^;]+);/)![1];
+		const author = style.match(/a\.meta-author\s*{[^}]*font-size:\s*([^;]+);/)![1];
+		expect(author).toBe(`calc(${line} * ${ratio})`);
 	});
 
 	test('below 1024 the dots go and the items sit 10px apart', () => {
