@@ -39,9 +39,10 @@ describe('fallback error page', () => {
 		);
 	});
 
-	test("the bar matches the app's: 20px outside the 1200 cap, 52px tall below 768, 56 from it", () => {
-		// Navbar.svelte: px-5 on the nav, max-w-[1200px] inside, h-[52px] md:h-14.
-		expect(html).toMatch(/\.bar\s*{[^}]*height:\s*52px[^}]*padding:\s*0 20px/);
+	test("the bar matches the app's: 24px outside the 1200 cap, 52px tall below 768, 56 from it", () => {
+		// Navbar.svelte: px-5 on the nav (--spacing-5, 1.5rem), max-w-[1200px]
+		// inside, h-[52px] md:h-14.
+		expect(html).toMatch(/\.bar\s*{[^}]*height:\s*52px[^}]*padding:\s*0 24px/);
 		expect(html).toMatch(/@media \(min-width: 768px\)\s*{\s*\.bar\s*{\s*height:\s*56px/);
 		const inner = /\.inner\s*{([^}]*)}/.exec(html)![1];
 		expect(inner).toMatch(/max-width:\s*1200px/);
