@@ -256,15 +256,15 @@
 
 	.byline,
 	.tags {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: baseline;
-		gap: 4px 8px;
 		font-size: 0.875rem;
 		line-height: 1.7;
 	}
 
 	.byline {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: 4px 8px;
 		color: var(--color-text-3);
 	}
 
