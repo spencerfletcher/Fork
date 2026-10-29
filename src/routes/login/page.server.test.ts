@@ -27,7 +27,7 @@ describe('login action', () => {
 		expect(signInWithPassword).not.toHaveBeenCalled();
 	});
 
-	test('returns a 401 failure with the Supabase message on bad credentials', async () => {
+	test("maps bad credentials to a 401 with the site's own sentence", async () => {
 		signInWithPassword.mockResolvedValue({ error: { message: 'Invalid login credentials' } });
 
 		const result = await invoke(
@@ -36,7 +36,24 @@ describe('login action', () => {
 		);
 
 		expect(isActionFailure(result)).toBe(true);
-		expect(result).toMatchObject({ status: 401, data: { message: 'Invalid login credentials' } });
+		expect(result).toMatchObject({
+			status: 401,
+			data: { message: "That email and password don't match." }
+		});
+	});
+
+	test('maps any other Supabase error to a generic sentence, never the raw message', async () => {
+		signInWithPassword.mockResolvedValue({ error: { message: 'Email rate limit exceeded' } });
+
+		const result = await invoke(
+			actions.default as never,
+			makeEvent({ email: 'a@b.com', password: 'right' })
+		);
+
+		expect(result).toMatchObject({
+			status: 401,
+			data: { message: 'Could not sign in. Try again.' }
+		});
 	});
 
 	test('redirects to a local redirectTo on success, and home when it is off-site', async () => {

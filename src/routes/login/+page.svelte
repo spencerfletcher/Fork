@@ -13,7 +13,7 @@
 		</div>
 
 		{#if form?.message}
-			<div class="auth-error">{form.message}</div>
+			<div class="auth-error" role="alert">{form.message}</div>
 		{/if}
 
 		<form method="POST" use:enhance class="form">

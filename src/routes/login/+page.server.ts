@@ -34,10 +34,14 @@ export const actions: Actions = {
 			password
 		});
 
-		// If Supabase returns an error (e.g., wrong password),
-		// send it back to the page to be displayed to the user.
+		// Supabase's raw message ("Invalid login credentials") never reaches the
+		// page: the site speaks in its own sentences.
 		if (err) {
-			return fail(401, { message: err.message });
+			const message =
+				err.code === 'invalid_credentials' || err.message === 'Invalid login credentials'
+					? "That email and password don't match."
+					: 'Could not sign in. Try again.';
+			return fail(401, { message });
 		}
 
 		// Back to the page that sent them here, or home.
