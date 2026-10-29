@@ -49,7 +49,7 @@ export const load: PageServerLoad = async ({ params, locals: { user } }) => {
 		meta: {
 			title: `@${profile.username}`,
 			description: clampDescription(
-				`${withCounts.length} public recipe${withCounts.length === 1 ? '' : 's'} and ${commitCount} commit${commitCount === 1 ? '' : 's'} on Fork.`
+				`${withCounts.length} public recipe${withCounts.length === 1 ? '' : 's'} and ${commitCount} change${commitCount === 1 ? '' : 's'} on Fork.`
 			)
 		}
 	};

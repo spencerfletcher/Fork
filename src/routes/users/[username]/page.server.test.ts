@@ -85,6 +85,8 @@ describe('users/[username] load', () => {
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const result = (await load(makeLoadEvent('chefmaria'))) as any;
 		expect(result.commitCount).toBe(7);
+		// The profile says "changes", not git's "commits", in its link preview too.
+		expect(result.meta.description).toBe('0 public recipes and 7 changes on Fork.');
 	});
 
 	test('tells the owner how many private recipes they have', async () => {

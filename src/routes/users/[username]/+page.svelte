@@ -20,11 +20,11 @@
 			<div class="profile-avatar" aria-hidden="true">{profile.username[0].toUpperCase()}</div>
 			<div class="profile-text">
 				<h1>@{profile.username}</h1>
-				<!-- History and dates in mono: the commits and the member date share
+				<!-- History and dates in mono: the changes and the member date share
 				     one line; the recipe count is the section eyebrow's. The dot
 				     between the items is drawn by CSS, never typed. -->
 				<p class="profile-stats">
-					<span class="stat">{commitCount} {commitCount === 1 ? 'commit' : 'commits'}</span>
+					<span class="stat">{commitCount} {commitCount === 1 ? 'change' : 'changes'}</span>
 					<span class="stat profile-since">Member since {memberSince}</span>
 				</p>
 				{#if privateCount > 0}

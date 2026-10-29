@@ -35,7 +35,7 @@ function renderProfile(overrides: Partial<typeof data> = {}) {
 }
 
 describe('Profile page', () => {
-	test('sits on paper: name as the page title, the commits and the member date in one mono line', () => {
+	test('sits on paper: name as the page title, the changes and the member date in one mono line', () => {
 		// The recipe count appears once, on the section eyebrow; "Member since"
 		// is a date, so it sits in the mono stats line, not a sans line of its
 		// own (decided 29 October 2026). The dot between them is drawn by CSS.
@@ -44,10 +44,15 @@ describe('Profile page', () => {
 		expect(container.querySelector('.bg-hero-bg')).toBeNull();
 		const stats = container.querySelector('.profile-stats')!;
 		expect(stats.textContent?.replace(/\s+/g, ' ').trim()).toBe(
-			'5 commits Member since October 2026'
+			'5 changes Member since October 2026'
 		);
 		expect(stats.querySelector('.profile-since')).not.toBeNull();
 		expect(screen.getAllByText(/2 recipes/)).toHaveLength(1);
+	});
+
+	test('one change is singular', () => {
+		const { container } = renderProfile({ commitCount: 1 });
+		expect(container.querySelector('.profile-stats .stat')).toHaveTextContent(/^1 change$/);
 	});
 
 	test('the owner sees one line under the stats for their private recipes; nobody else does', () => {
