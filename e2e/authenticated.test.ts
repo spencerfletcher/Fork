@@ -243,6 +243,17 @@ test.describe('New recipe page', () => {
 		expect(await offset()).toBeCloseTo(desktop, 0);
 	});
 
+	test('the public checkbox row is at least a 24px target at every desktop width', async ({
+		page
+	}) => {
+		await gotoHydrated(page, '/recipes/new');
+		const row = page.locator('label:has(> input[name="isPublic"])');
+		for (const width of [1280, 1024, 768]) {
+			await page.setViewportSize({ width, height: 900 });
+			expect((await row.boundingBox())!.height).toBeGreaterThanOrEqual(24);
+		}
+	});
+
 	test('creates a recipe and redirects to its detail page', async ({ page }) => {
 		let createdRecipeUrl: string | null = null;
 
@@ -274,6 +285,30 @@ test.describe('New recipe page', () => {
 				}, createdRecipeUrl);
 			}
 		}
+	});
+});
+
+test.describe('New recipe page on a touch screen', () => {
+	test.use({ hasTouch: true });
+
+	test('a coarse pointer gets the 44px checkbox row and photo remover at a desktop width', async ({
+		page
+	}) => {
+		await gotoHydrated(page, '/recipes/new');
+		expect(await page.evaluate(() => matchMedia('(pointer: coarse)').matches)).toBe(true);
+		const row = page.locator('label:has(> input[name="isPublic"])');
+		expect((await row.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+		await page.locator('input[name="image"]').setInputFiles({
+			name: 'dot.png',
+			mimeType: 'image/png',
+			buffer: Buffer.from(
+				'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
+				'base64'
+			)
+		});
+		const remove = (await page.getByRole('button', { name: 'Remove photo' }).boundingBox())!;
+		expect(remove.width).toBeGreaterThanOrEqual(44);
+		expect(remove.height).toBeGreaterThanOrEqual(44);
 	});
 });
 

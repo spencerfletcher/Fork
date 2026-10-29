@@ -509,6 +509,11 @@
 		color: var(--color-text-3);
 	}
 
+	/* A 24px target from a 23px line of text. */
+	.inline-checkbox {
+		min-height: 24px;
+	}
+
 	/* Clay, as the strike rows' ticked squares are, not the browser's blue. */
 	.inline-checkbox input {
 		accent-color: var(--color-accent);
@@ -523,17 +528,19 @@
 		.photo-preview {
 			height: 160px;
 		}
+	}
 
-		/* A thumb's 44px. */
+	/* A thumb's 44px, on a phone or any touch screen. */
+	@media (max-width: 699px), (pointer: coarse) {
 		.photo-remove {
 			width: 44px;
 			height: 44px;
 		}
 
-		/* A thumb's 44px row from a 23px one, padded outward so the text stays put. */
+		/* The 24px row grown to 44px outward, so the text stays put. */
 		.inline-checkbox {
-			padding-block: 10.5px;
-			margin-block: -10.5px;
+			min-height: 44px;
+			margin-block: -10px;
 		}
 	}
 </style>
