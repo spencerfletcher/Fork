@@ -37,6 +37,16 @@ describe('compare page error', () => {
 		);
 	});
 
+	test('a version that does not exist: the main action compares first and latest, back is secondary', () => {
+		// The heading asks for two versions, so the page offers a pair: the bare
+		// compare URL, which the loader reads as first to latest.
+		renderError(400, 'Version not found in Classic Cookies');
+		const compare = screen.getByRole('link', { name: 'Compare first and latest' });
+		expect(compare).toHaveAttribute('href', '/recipes/classic-cookies/diff');
+		expect(compare).toHaveClass('btn-primary');
+		expect(screen.getByRole('link', { name: 'Back to the recipe' })).not.toHaveClass('btn-primary');
+	});
+
 	test('one version: the helper line agrees with the message instead of asking for a pick', () => {
 		// "Pick two of the recipe's versions" under "Need at least two versions"
 		// contradicted itself (critique, 29 October 2026).
@@ -46,6 +56,8 @@ describe('compare page error', () => {
 			screen.getByText('Save a change to the recipe, then compare it with the original.')
 		).toBeInTheDocument();
 		expect(screen.getByRole('link', { name: 'Back to the recipe' })).toBeInTheDocument();
+		// There is no pair to compare.
+		expect(screen.queryByRole('link', { name: 'Compare first and latest' })).toBeNull();
 	});
 
 	test('a 404 keeps the generic line and goes home', () => {

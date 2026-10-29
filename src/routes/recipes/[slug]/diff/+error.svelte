@@ -26,7 +26,14 @@
 					The page you're looking for doesn't exist or something went wrong.
 				{/if}
 			</p>
-			{#if recipeUrl}
+			{#if recipeUrl && !oneVersion}
+				<!-- The heading asks for two versions, so the main action is a pair: the
+				     bare compare URL, which the loader reads as first to latest. -->
+				<div class="flex flex-wrap justify-center gap-3">
+					<a href="{recipeUrl}/diff" class="btn-primary">Compare first and latest</a>
+					<a href={recipeUrl} class="btn-ghost">Back to the recipe</a>
+				</div>
+			{:else if recipeUrl}
 				<a href={recipeUrl} class="btn-primary">Back to the recipe</a>
 			{:else}
 				<a href="/" class="btn-primary">Go Home</a>

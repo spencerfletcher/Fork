@@ -58,6 +58,15 @@ describe('compare page load', () => {
 		expect(data.meta.title).toBe('v2 · same version · Classic Cookies');
 	});
 
+	test('no range compares the first version with the latest (the error page links here)', async () => {
+		const data = (await loadWith('')) as {
+			fromVersion: { versionNumber: number };
+			toVersion: { versionNumber: number };
+		};
+		expect(data.fromVersion.versionNumber).toBe(RECIPE.versions[0].versionNumber);
+		expect(data.toVersion.versionNumber).toBe(RECIPE.versions.at(-1)?.versionNumber);
+	});
+
 	test('a reversed pair redirects to the same pair read older to newer', async () => {
 		const result = await loadWith('?from=3&to=1').catch((e: unknown) => e);
 		expect(isRedirect(result)).toBe(true);
