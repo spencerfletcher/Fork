@@ -181,6 +181,9 @@
 		overflow-y: auto;
 		scrollbar-width: thin;
 		scrollbar-color: var(--color-border-2) transparent;
+		/* A row focused by Tab scrolls clear of the 24px fade: the fade, the 4px
+		   ring, the row's 1px rule and a pixel to spare. */
+		scroll-padding-bottom: 30px;
 		/* The last row hidden below the fold is signalled by a 24px fade. The
 		   animation runs on the box's own scroll, so a list that fits has no
 		   timeline and no fade, and the fade lifts at the end of the scroll.

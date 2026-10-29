@@ -903,6 +903,41 @@ test.describe('Recipe detail page', () => {
 		expect(await mask()).toBe('none');
 	});
 
+	test('Tabbing down a long list keeps each focused row and its ring above the aside’s fade', async ({
+		page
+	}) => {
+		await page.setViewportSize({ width: 1280, height: 700 });
+		await gotoClassicCookies(page);
+		// 25 rows: well past a 700px screen, as a long real recipe would be.
+		await page.evaluate(() => {
+			const list = document.querySelector('#ingredients h2 + div')!;
+			const rows = [...list.children];
+			for (let i = 0; list.children.length < 25; i++)
+				list.append(rows[i % rows.length].cloneNode(true));
+		});
+		await page.keyboard.press('Tab');
+		await page.keyboard.press('Enter');
+		const rows = page.locator('#ingredients label');
+		await expect(rows).toHaveCount(25);
+		for (let i = 0; i < 25; i++) {
+			await page.keyboard.press('Tab');
+			await expect(rows.nth(i).locator('input')).toBeFocused();
+			const gap = await rows.nth(i).evaluate((el) => {
+				const s = getComputedStyle(el);
+				const ring =
+					el.getBoundingClientRect().bottom +
+					parseFloat(s.outlineWidth) +
+					parseFloat(s.outlineOffset);
+				const box = el.closest('.sidebar-sticky')!;
+				const fadeTop = box.getBoundingClientRect().top + box.clientTop + box.clientHeight - 24;
+				// Scrolled to its end, the fade lifts: the last rows may sit in it.
+				const faded = getComputedStyle(box).maskImage !== 'none';
+				return faded ? fadeTop - ring : 0;
+			});
+			expect(gap, `row ${i + 1}`).toBeGreaterThanOrEqual(0);
+		}
+	});
+
 	test('at 1024 and up a focused ingredient shows its whole ring inside the scrolling aside', async ({
 		page
 	}) => {
