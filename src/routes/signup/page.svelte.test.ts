@@ -91,9 +91,15 @@ describe('Sign-up page', () => {
 		expect(screen.queryByText(/sign in/i)).toBeNull();
 	});
 
-	test('the username states its rules as a pattern, and every field has its autocomplete token', () => {
+	test('the username states its rules as a pattern that browsers can compile, and every field has its autocomplete token', () => {
 		renderSignup();
-		expect(username()).toHaveAttribute('pattern', '[A-Za-z0-9_-]{3,30}');
+		// Browsers compile the pattern attribute with the regex v flag, under which an
+		// unescaped hyphen inside a character class is a syntax error and the whole
+		// pattern is silently dropped.
+		const pattern = new RegExp(`^(?:${username().getAttribute('pattern')})$`, 'v');
+		expect(pattern.test('jane_doe-1')).toBe(true);
+		expect(pattern.test('Jane Doe')).toBe(false);
+		expect(pattern.test('jo')).toBe(false);
 		expect(username()).toHaveAttribute('autocomplete', 'username');
 		expect(email()).toHaveAttribute('autocomplete', 'email');
 		expect(screen.getByLabelText('Password')).toHaveAttribute('autocomplete', 'new-password');

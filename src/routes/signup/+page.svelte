@@ -83,7 +83,7 @@
 					required
 					minlength="3"
 					maxlength="30"
-					pattern={'[A-Za-z0-9_-]{3,30}'}
+					pattern={'[A-Za-z0-9_\\-]{3,30}'}
 					autocomplete="username"
 					spellcheck="false"
 					bind:value={username}
