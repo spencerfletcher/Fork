@@ -188,7 +188,8 @@ describe('RecipeHeader byline', () => {
 		expect(screen.getByText('Add espresso powder')).not.toBeVisible();
 		await fireEvent.click(screen.getByRole('button', { name: '3 versions' }));
 		expect(screen.getByText('Add espresso powder')).toBeVisible();
-		expect(screen.getByRole('link', { name: 'v2' })).toHaveAttribute(
+		// The whole row, number and message, is the link to that version.
+		expect(screen.getByRole('link', { name: 'v2 Add espresso powder' })).toHaveAttribute(
 			'href',
 			'/recipes/my-fork?version=2'
 		);

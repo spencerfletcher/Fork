@@ -132,8 +132,9 @@
 	</p>
 
 	<!-- Every version, newest first, under the byline. The one being read keeps
-	     its chip and its message; each other version links to itself and
-	     compares itself with the one being read, older to newer. -->
+	     its chip and its message; each other row, number and message, is the
+	     link to that version, with a second link that compares it with the one
+	     being read, older to newer. -->
 	{#if count > 1}
 		<ul id="version-history" class="history m-0 list-none p-0 font-mono" hidden={!open}>
 			{#each versions as version (version.id)}
@@ -144,8 +145,10 @@
 						<span class="sr-only">Version {v}, {v === latest ? 'latest' : 'being read'}:</span>
 						<span class="message text-text">{version.commitMessage}</span>
 					{:else}
-						<a href="/recipes/{recipe.slug}?version={v}" class="version-number">v{v}</a>
-						<span class="message text-text-2">{version.commitMessage}</span>
+						<a href="/recipes/{recipe.slug}?version={v}" class="version-link">
+							<span class="version-number">v{v}</span>
+							<span class="message text-text-2">{version.commitMessage}</span>
+						</a>
 						<a
 							href="/recipes/{recipe.slug}/diff?from={Math.min(v, n)}&to={Math.max(v, n)}"
 							class="compare whitespace-nowrap">
@@ -309,15 +312,29 @@
 		overflow-wrap: anywhere;
 	}
 
+	/* The row is the link: the number in clay, the message in Ink 2 that
+	   darkens on hover, so the link reads as a row and not as a clay line. */
+	.history .version-link {
+		display: flex;
+		flex: 1 1 0;
+		min-width: 0;
+		align-items: baseline;
+		gap: 10px;
+		color: inherit;
+		text-decoration: none;
+	}
+
+	.history .version-link:hover .message {
+		color: var(--color-text);
+	}
+
 	/* The same width as the chip, so the numbers and the messages line up. */
 	.history .version-number {
 		flex-shrink: 0;
-		padding: 4px 6px;
-		margin: -4px 0;
+		padding: 0 6px;
 		font-size: 0.75rem;
 		font-weight: 600;
 		color: var(--color-accent);
-		text-decoration: none;
 	}
 
 	.history .compare {
@@ -369,10 +386,21 @@
 		margin: -4px 0;
 	}
 
+	/* On a phone each row is a thumb's height: the row link fills its li. */
 	@media (max-width: 699px) {
+		.history {
+			gap: 0;
+		}
+
 		.history li {
 			flex-wrap: wrap;
 			row-gap: 4px;
+			padding: 11px 0;
+		}
+
+		.history .version-link {
+			padding: 11px 0;
+			margin: -11px 0;
 		}
 
 		.history .compare {

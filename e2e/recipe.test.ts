@@ -325,13 +325,29 @@ test.describe('Recipe detail page', () => {
 		await gotoClassicCookies(page);
 		await page.getByRole('button', { name: '3 versions' }).click();
 		const marks = await page
-			.locator('#version-history li > :first-child')
+			.locator('#version-history .version, #version-history .version-number')
 			.evaluateAll((els) => els.map((el) => Math.round(el.getBoundingClientRect().width)));
 		const messages = await page
 			.locator('#version-history .message')
 			.evaluateAll((els) => els.map((el) => Math.round(el.getBoundingClientRect().left)));
 		expect(new Set(marks).size).toBe(1);
 		expect(new Set(messages).size).toBe(1);
+	});
+
+	test('on a phone each history row is a 44px link to its version, beside its compare link', async ({
+		page
+	}) => {
+		await page.setViewportSize({ width: 390, height: 900 });
+		await gotoClassicCookies(page);
+		await page.getByRole('button', { name: '3 versions' }).click();
+		const row = page.locator('#version-history .version-link').first();
+		await expect(row).toHaveAttribute('href', /\?version=2$/);
+		await expect(row).toContainText('Increased vanilla');
+		expect((await row.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+		await expect(page.getByRole('link', { name: 'Compare with v3' }).first()).toHaveAttribute(
+			'href',
+			/diff\?from=2&to=3$/
+		);
 	});
 
 	test('on desktop, the ingredients sit beside the method, not below it', async ({ page }) => {
@@ -459,7 +475,7 @@ test.describe('Recipe detail page', () => {
 		expect(contrast(hero.color, hero.bg)).toBeGreaterThanOrEqual(4.5);
 	});
 
-	test('logged out, the hero has one marigold fill, the version chip, and no marigold text', async ({
+	test('logged out, the hero fills the chip and the Fork pill, and no marigold text', async ({
 		page
 	}) => {
 		await gotoClassicCookies(page);
