@@ -184,6 +184,22 @@
 		overflow-y: auto;
 		scrollbar-width: thin;
 		scrollbar-color: var(--color-border-2) transparent;
+		/* The last row hidden below the fold is signalled by a 24px fade. The
+		   animation runs on the box's own scroll, so a list that fits has no
+		   timeline and no fade, and the fade lifts at the end of the scroll.
+		   Where scroll timelines are unsupported there is no fade at all. */
+		animation: aside-fade linear both;
+		animation-timeline: scroll(self);
+	}
+
+	@keyframes aside-fade {
+		0%,
+		99% {
+			mask-image: linear-gradient(to bottom, #000 calc(100% - 24px), transparent);
+		}
+		100% {
+			mask-image: none;
+		}
 	}
 
 	.main {
@@ -291,6 +307,7 @@
 			position: static;
 			max-height: none;
 			overflow-y: visible;
+			animation: none;
 		}
 	}
 

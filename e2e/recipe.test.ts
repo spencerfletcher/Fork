@@ -848,6 +848,30 @@ test.describe('Recipe detail page', () => {
 		expect(last!.y + last!.height).toBeLessThanOrEqual(700);
 	});
 
+	test('the aside fades its bottom 24px while the list runs past it, and not when it fits', async ({
+		page
+	}) => {
+		const mask = () =>
+			page.locator('.sidebar-sticky').evaluate((el) => getComputedStyle(el).maskImage);
+		// The seed's list fits a 900px screen: no fade.
+		await page.setViewportSize({ width: 1280, height: 900 });
+		await gotoClassicCookies(page);
+		expect(await mask()).toBe('none');
+		// Three times the rows on a 700px screen: the hidden rows are signalled.
+		await page.setViewportSize({ width: 1280, height: 700 });
+		await page.evaluate(() => {
+			const list = document.querySelector('#ingredients h2 + div')!;
+			for (let i = 0; i < 2; i++) list.append(...[...list.children].map((c) => c.cloneNode(true)));
+		});
+		await page.waitForTimeout(100);
+		expect(await mask()).toMatch(/linear-gradient\(.*rgba\(0, 0, 0, 0\)\)$/);
+		expect(await mask()).toContain('24px');
+		// Scrolled to its end, the last row shows whole.
+		await page.locator('.sidebar-sticky').evaluate((el) => (el.scrollTop = el.scrollHeight));
+		await page.waitForTimeout(100);
+		expect(await mask()).toBe('none');
+	});
+
 	test('at 1024 and up a focused ingredient shows its whole ring inside the scrolling aside', async ({
 		page
 	}) => {
