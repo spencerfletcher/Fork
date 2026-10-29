@@ -514,6 +514,28 @@ test.describe('One save', () => {
 // ─── Compare page ─────────────────────────────────────────────────────────────
 
 test.describe('Compare page', () => {
+	test('a recipe with one version is a 400 whose helper line agrees with its message', async ({
+		page
+	}) => {
+		const url = await createRecipe(page, 'E2E One Version', '4');
+		try {
+			const response = await page.goto(`${url}/diff`);
+			expect(response?.status()).toBe(400);
+			await expect(page.locator('h1')).toHaveText('Need at least two versions to compare');
+			// Not "Pick two of the recipe's versions": there is only one.
+			await expect(page.getByText(/Pick two/)).toHaveCount(0);
+			await expect(
+				page.getByText('Save a change to the recipe, then compare it with the original.')
+			).toBeVisible();
+			await expect(page.getByRole('link', { name: 'Back to the recipe' })).toHaveAttribute(
+				'href',
+				url
+			);
+		} finally {
+			await deleteRecipe(page, url);
+		}
+	});
+
 	test('a long unbroken title does not scroll the compare page sideways on a phone', async ({
 		page
 	}) => {
