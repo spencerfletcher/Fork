@@ -137,10 +137,22 @@ describe('Edit page form', () => {
 		expect(screen.getByText('Editing v2')).toBeInTheDocument();
 	});
 
-	test('typing only a commit message is not an unsaved change', async () => {
+	test('a message typed with nothing else changed promises a version and guards leaving; whitespace does not', async () => {
+		const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
 		render(EditPage, { props: { data: makeData(), form: null } });
-		await fireEvent.input(screen.getByLabelText(/what changed/i), { target: { value: 'note' } });
+		const message = screen.getByLabelText(/what changed/i);
+		await fireEvent.input(message, { target: { value: 'note' } });
+		expect(screen.getByText('Editing v2 · saves as v3')).toBeInTheDocument();
+		const cancel = vi.fn();
+		nav.guards[0]({ cancel, type: 'link' });
+		expect(confirm).toHaveBeenCalled();
+		expect(cancel).toHaveBeenCalled();
+
+		await fireEvent.input(message, { target: { value: '  ' } });
 		expect(screen.getByText('Editing v2')).toBeInTheDocument();
+		confirm.mockClear();
+		nav.guards[0]({ cancel: vi.fn(), type: 'link' });
+		expect(confirm).not.toHaveBeenCalled();
 	});
 
 	test('shows the version the save will write and what changed', async () => {

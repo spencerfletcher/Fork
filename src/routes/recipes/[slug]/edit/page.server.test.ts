@@ -254,8 +254,27 @@ describe('save', () => {
 		noWrites();
 	});
 
-	test('writes nothing when only the commit message changed', async () => {
-		await save({ ...UNCHANGED, commitMessage: 'Just a note' });
+	test('a message alone writes a version carrying it and the latest content, and bumps editRevision', async () => {
+		const result = await save({ ...UNCHANGED, commitMessage: ' Just a note ' });
+		expect(result.status).toBe(303);
+		const [version] = versionInserts();
+		expect(versionInserts()).toHaveLength(1);
+		expect(version).toMatchObject({
+			recipeId: 1,
+			versionNumber: 3,
+			commitMessage: 'Just a note',
+			title: 'Cookies',
+			imageUrl: 'https://cdn/old.png',
+			createdBy: 'owner-123'
+		});
+		expect(version.steps).toEqual(LATEST.steps);
+		expect(syncTagsMock).not.toHaveBeenCalled();
+		expect(tx.update).toHaveBeenCalledTimes(1);
+		expect(tx.updateChain.set.mock.calls[0][0]).not.toHaveProperty('isPublic');
+	});
+
+	test('a whitespace-only message is no message: nothing is written', async () => {
+		await save({ ...UNCHANGED, commitMessage: '   ' });
 		noWrites();
 	});
 

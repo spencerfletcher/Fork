@@ -44,8 +44,8 @@ export const load: PageServerLoad = async ({ params, locals: { user } }) => {
 
 export const actions: Actions = {
 	// One save for the whole edit form: settings are updated in place, and a
-	// new version is appended when the content changed, or when a settings
-	// change comes with a typed message, which would otherwise be dropped.
+	// new version is appended when the content changed or a message was typed,
+	// which is never dropped.
 	save: async ({ params, request, locals: { user, supabase } }) => {
 		if (!user) throw error(401, 'Login required');
 		const recipe = await db.query.recipes.findFirst({
@@ -115,8 +115,8 @@ export const actions: Actions = {
 				);
 				const visibilityChanged = locked.isPublic !== settings.value.isPublic;
 
-				if (!changed && !visibilityChanged && !tagsChanged) return 'unchanged';
 				const message = draft.commitMessage.trim();
+				if (!changed && !visibilityChanged && !tagsChanged && !message) return 'unchanged';
 
 				if (tagsChanged) await syncTags(tx, recipe.id, settings.value.tagNames);
 

@@ -56,11 +56,11 @@
 	const tagKeys = (tags: string[]) => normaliseTagNames(tags).map(tagKey).sort();
 
 	// Trimmed strings and sorted tags, so retyping the original reads as clean.
-	// The commit message describes a save; typing one is not itself a change.
+	// A typed message is a change: the save writes a version carrying it.
 	const serialise = (d: RecipeDraft) =>
 		JSON.stringify({
 			...d,
-			commitMessage: '',
+			commitMessage: d.commitMessage.trim(),
 			hadPhoto: false,
 			title: d.title.trim(),
 			description: d.description.trim(),
@@ -90,12 +90,9 @@
 
 	const outcome = $derived.by(() => {
 		if (!dirty || submitting || !nextVersion || groups === null) return '';
-		if (groups.length > 0) return `saves as v${nextVersion}`;
-		// A typed message is never dropped: with it, a settings change is saved
-		// as a version carrying it.
-		if (settingsChanged) {
-			return draft.commitMessage.trim() ? `saves as v${nextVersion}` : 'saves settings only';
-		}
+		// A typed message is never dropped: the save writes a version carrying it.
+		if (groups.length > 0 || draft.commitMessage.trim()) return `saves as v${nextVersion}`;
+		if (settingsChanged) return 'saves settings only';
 		return '';
 	});
 
@@ -359,7 +356,7 @@
 					<!-- The dot is for the eye; the name reads "…public applies to every version". -->
 					<span class="inline-checkbox__note">
 						<span aria-hidden="true">·</span>
-						 applies to every version
+						applies to every version
 					</span>
 				</label>
 			</div>
