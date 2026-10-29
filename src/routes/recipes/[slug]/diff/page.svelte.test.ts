@@ -1,6 +1,7 @@
 import { describe, test, expect, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import DiffPage from './+page.svelte';
+import source from './+page.svelte?raw';
 import type { IngredientDiffRow, MetaDiffRow, StepDiffRow } from '#lib/recipes/diff.js';
 import { makeContent, makeIngredient as ing } from '#lib/recipes/fixtures.js';
 
@@ -229,6 +230,17 @@ describe('Diff page', () => {
 		const head = container.querySelector('article.version-card .version-card__head')!;
 		expect(head.textContent?.replace(/\s+/g, ' ').trim()).toBe('v1 @chef · 28 Feb 2026');
 		expect(head.querySelector('.username')).toHaveAttribute('href', '/users/chef');
+	});
+
+	test("the card's username keeps Username's own step under the line, not the line's size", () => {
+		// Username sets itself 0.9375em of the line it sits in; a page rule
+		// giving it a size of its own flattens that ratio to 1. jsdom applies no
+		// component CSS, so the page's rules are read from the source; the e2e
+		// in compare.test.ts measures the ratio.
+		const style = source.slice(source.indexOf('<style>'));
+		const usernameRules = [...style.matchAll(/[^{}]*\.username\)?\s*{[^}]*}/g)].map((m) => m[0]);
+		expect(usernameRules.length).toBeGreaterThan(0);
+		for (const rule of usernameRules) expect(rule).not.toMatch(/font-size/);
 	});
 
 	test("shows the date in the viewer's own day", () => {

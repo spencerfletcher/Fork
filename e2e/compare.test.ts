@@ -1,4 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
+import { readFileSync } from 'node:fs';
 import { SEED } from '../src/lib/server/db/seedData';
 
 // The compare page after Spencer's end-of-day decisions (29 October 2026).
@@ -123,6 +124,29 @@ test.describe('Compare page', () => {
 		expect(box.height).toBeGreaterThanOrEqual(24);
 		await page.setViewportSize({ width: 390, height: 900 });
 		expect((await back.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+	});
+
+	test("a card's username is Username's own step under the line, at every width", async ({
+		page
+	}) => {
+		// The step is Username's em, read from its source so a change there
+		// moves this test with it.
+		const username = readFileSync('src/lib/components/ui/Username.svelte', 'utf8');
+		const step = Number(/\.username\s*{[^}]*font-size:\s*([\d.]+)em/.exec(username)![1]);
+		await openCookiesCompare(page);
+		const ratio = () =>
+			page
+				.locator('.version-card__head .username')
+				.first()
+				.evaluate(
+					(el) =>
+						parseFloat(getComputedStyle(el).fontSize) /
+						parseFloat(getComputedStyle(el.closest('.version-card__head')!).fontSize)
+				);
+		for (const width of [1280, 390]) {
+			await page.setViewportSize({ width, height: 900 });
+			expect(await ratio()).toBeCloseTo(step, 3);
+		}
 	});
 
 	test('on a phone the card number links are 44px targets', async ({ page }) => {

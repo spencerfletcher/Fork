@@ -230,10 +230,9 @@
 		font-weight: 600;
 	}
 
-	/* The username at the line's size, with a 24px hit that does not move it;
+	/* A 24px hit that does not move the username; its size is Username's own.
 	   :global so the Username component's element takes it. */
 	.version-card__head :global(.username) {
-		font-size: inherit;
 		padding: 4px 0;
 		margin: -4px 0;
 	}
