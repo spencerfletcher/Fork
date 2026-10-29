@@ -85,7 +85,8 @@
 		<input
 			type="search"
 			bind:value={searchQuery}
-			placeholder="Search recipes by title..."
+			aria-label="Search recipes by title"
+			placeholder="Search recipes by title…"
 			class="pl-10" />
 	</form>
 
