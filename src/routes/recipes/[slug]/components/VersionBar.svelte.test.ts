@@ -38,7 +38,7 @@ describe('VersionBar', () => {
 		expect(container.querySelector('.version-bar')).toBeNull();
 	});
 
-	test('the latest version, closed: number, message and the toggle; the compare waits for open', () => {
+	test('the latest version, closed: number, message and the toggle, no compare', () => {
 		const { container } = renderBar();
 		expect(container.querySelector('.version-bar')).toHaveAttribute(
 			'aria-label',
@@ -67,11 +67,8 @@ describe('VersionBar', () => {
 			'true'
 		);
 		expect(container.querySelector('.version-bar .current .message')).not.toHaveClass('clamped');
-		// Open, the current line compares with the one before, now one row below.
-		expect(screen.getByRole('link', { name: 'Compare with v2' })).toHaveAttribute(
-			'href',
-			'/recipes/my-fork/diff?from=2&to=3'
-		);
+		// The current line never carries a compare: each other row compares with it.
+		expect(container.querySelector('.version-bar .current .compare')).toBeNull();
 		expect(container.querySelectorAll('#version-history li')).toHaveLength(2);
 		expect(screen.getByRole('link', { name: 'v2 Add espresso powder' })).toHaveAttribute(
 			'href',
@@ -107,7 +104,7 @@ describe('VersionBar', () => {
 		expect(toggle).toHaveFocus();
 	});
 
-	test('an older version says so, offers the way back, and compares with the latest', async () => {
+	test('an older version says so and offers the way back; the rows compare with it', async () => {
 		const { container } = renderBar({ currentVersion: THREE[1], isViewingHistory: true });
 		const current = container.querySelector('.version-bar .current')!;
 		expect(current.querySelector('.version-number')).toHaveTextContent('v2');
@@ -123,12 +120,11 @@ describe('VersionBar', () => {
 		for (const item of current.querySelectorAll('.controls .item')) {
 			expect(item.textContent!.trim()).not.toMatch(/·$/);
 		}
-		expect(screen.queryByRole('link', { name: 'Compare with v3' })).toBeNull();
+		expect(screen.queryByRole('link', { name: /compare/i })).toBeNull();
 		await fireEvent.click(screen.getByRole('button', { name: '3 versions' }));
-		expect(screen.getAllByRole('link', { name: 'Compare with v3' })[0]).toHaveAttribute(
-			'href',
-			'/recipes/my-fork/diff?from=2&to=3'
-		);
+		// v3's row compares with v2, the one being read; v2's own line still has none.
+		expect(screen.queryByRole('link', { name: 'Compare with v3' })).toBeNull();
+		expect(container.querySelector('.version-bar .current .compare')).toBeNull();
 		expect(container.querySelectorAll('#version-history li')).toHaveLength(2);
 		const compares = screen.getAllByRole('link', { name: 'Compare with v2' });
 		expect(compares.map((a) => a.getAttribute('href'))).toEqual([

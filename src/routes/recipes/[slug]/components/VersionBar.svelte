@@ -20,10 +20,6 @@
 	const count = $derived(versions.length);
 	const latest = $derived(Math.max(...versions.map((v) => v.versionNumber)));
 	const n = $derived(currentVersion.versionNumber);
-	// The bar's own compare: the latest against the one before it, an older
-	// version against the latest.
-	const compareWith = $derived(isViewingHistory ? latest : n - 1);
-
 	let open = $state(false);
 	let toggle: HTMLButtonElement | undefined = $state();
 	let bar: HTMLElement | undefined = $state();
@@ -50,7 +46,8 @@
 <!-- The version bar: the hinge between the dish and the recipe, on lifted
      paper. One mono line names the version being read and its note; the
      toggle opens the other versions under it, each a link to itself with a
-     compare beside it. A recipe with one version has no bar. Decided 29
+     compare against the one being read beside it; the current line carries
+     no compare of its own. A recipe with one version has no bar. Decided 29
      October 2026 (board "Bar E"). -->
 {#if count > 1}
 	<section class="version-bar font-mono" aria-label="Version history" bind:this={bar}>
@@ -96,12 +93,6 @@
 						</svg>
 					</button>
 				</span>
-				<!-- The compare waits for open, when the version it names is one row below. -->
-				{#if open}
-					<span class="item">
-						· <a href={diff(n, compareWith)} class="compare">Compare with v{compareWith}</a>
-					</span>
-				{/if}
 			</span>
 		</div>
 

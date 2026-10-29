@@ -733,9 +733,7 @@ test.describe('Recipe detail page', () => {
 		expect(box!.width).toBeLessThanOrEqual(390);
 	});
 
-	test('the bar’s number, note, toggle and compare link share one text baseline', async ({
-		page
-	}) => {
+	test('the bar’s note and toggle share one text baseline', async ({ page }) => {
 		await page.setViewportSize({ width: 1440, height: 900 });
 		await gotoClassicCookies(page);
 		await page.getByRole('button', { name: '3 versions' }).click();
@@ -744,18 +742,16 @@ test.describe('Recipe detail page', () => {
 		// does not count.
 		const bottoms = await page.evaluate(() =>
 			// The number is 12px against 14px, so its text box ends higher even on
-			// the same baseline; the three 14px items are compared.
-			['.version-bar .current .message', '.versions-toggle', '.version-bar .current .compare'].map(
-				(sel) => {
-					const el = document.querySelector(sel)!;
-					const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
-					let node = walker.nextNode();
-					while (node && !node.textContent?.trim()) node = walker.nextNode();
-					const range = document.createRange();
-					range.selectNodeContents(node!);
-					return range.getBoundingClientRect().bottom;
-				}
-			)
+			// the same baseline; the two 14px items are compared.
+			['.version-bar .current .message', '.versions-toggle'].map((sel) => {
+				const el = document.querySelector(sel)!;
+				const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+				let node = walker.nextNode();
+				while (node && !node.textContent?.trim()) node = walker.nextNode();
+				const range = document.createRange();
+				range.selectNodeContents(node!);
+				return range.getBoundingClientRect().bottom;
+			})
 		);
 		for (const bottom of bottoms) expect(Math.abs(bottom - bottoms[0])).toBeLessThan(1);
 	});
