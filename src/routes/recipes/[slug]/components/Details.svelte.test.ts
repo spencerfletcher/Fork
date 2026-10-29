@@ -12,7 +12,10 @@ describe('Details', () => {
 		const { container } = render(Details, {
 			props: { content: makeContent({ servings: 6, prepTimeMinutes: 15, cookTimeMinutes: 45 }) }
 		});
-		expect(line(container)).toBe('15 min prep · 45 min cook · 6 servings');
+		// The dots between pairs are drawn by CSS, never typed, so no wrapped
+		// line can begin or end with one.
+		expect(line(container)).toBe('15 min prep 45 min cook 6 servings');
+		expect(container.querySelector('.dot')).toBeNull();
 		expect(container.querySelector('h2, h3, h4, dl')).toBeNull();
 	});
 
@@ -29,14 +32,12 @@ describe('Details', () => {
 		}
 	});
 
-	test('one serving is singular, and a missing value drops its pair and its dot', () => {
+	test('one serving is singular, and a missing value drops its pair', () => {
 		const { container } = render(Details, {
 			props: { content: makeContent({ servings: 1, prepTimeMinutes: null, cookTimeMinutes: 45 }) }
 		});
-		expect(line(container)).toBe('45 min cook · 1 serving');
-		expect(container.querySelectorAll('.dot')).toHaveLength(1);
-		// Ink 3, so the dot can be seen; Rule 2 vanished into the paper.
-		expect(container.querySelector('.dot')).toHaveClass('text-text-3');
+		expect(line(container)).toBe('45 min cook 1 serving');
+		expect(container.querySelectorAll('.pair')).toHaveLength(2);
 	});
 
 	test('renders nothing when there is nothing to show', () => {

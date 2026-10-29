@@ -948,10 +948,28 @@ test.describe('Recipe detail page', () => {
 		expect(await controls.evaluate((el) => getComputedStyle(el).columnGap)).toBe('10px');
 	});
 
-	test('the measure’s dots are visible: Ink 3, not a rule colour', async ({ page }) => {
+	test('the measure’s dots are drawn in Ink 3 between pairs, and a phone drops them for a 10px gap', async ({
+		page
+	}) => {
+		const details = page.locator('.details');
+		const dots = () =>
+			details
+				.locator('.pair')
+				.evaluateAll((els) => els.map((el) => getComputedStyle(el, '::before').content));
+		await page.setViewportSize({ width: 1280, height: 900 });
 		await gotoClassicCookies(page);
-		const dot = page.locator('.details .dot').first();
-		expect(await dot.evaluate((el) => getComputedStyle(el).color)).toBe('rgb(111, 105, 96)');
+		// None typed; one drawn before every pair after the first, in Ink 3.
+		expect(await details.textContent()).not.toContain('·');
+		expect(await dots()).toEqual(['none', '"·" / ""', '"·" / ""']);
+		const color = await details
+			.locator('.pair')
+			.nth(1)
+			.evaluate((el) => getComputedStyle(el, '::before').color);
+		expect(color).toBe('rgb(111, 105, 96)');
+		// At 320 nothing strands: the pairs wrap 10px apart with no dots at all.
+		await page.setViewportSize({ width: 320, height: 900 });
+		expect(await dots()).toEqual(['none', 'none', 'none']);
+		expect(await details.evaluate((el) => getComputedStyle(el).columnGap)).toBe('10px');
 	});
 
 	test('on a phone and an iPad the closed note shows two lines; on a desktop one', async ({

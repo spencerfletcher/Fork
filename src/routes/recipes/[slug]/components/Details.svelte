@@ -22,14 +22,12 @@
 </script>
 
 <!-- The measure, one sans line at the body size: a 600 value and a plain
-     label. A pair never splits; the line wraps only at the dots. -->
+     label. A pair never splits. The dots between pairs are drawn by CSS, never
+     typed, and a phone drops them for a gap, so no line strands one. -->
 {#if pairs.length > 0}
 	<p class="details text-text-2 m-0 font-sans text-base leading-[1.5]">
 		{#each pairs as [label, value], i (label)}
-			{#if i > 0}{' '}
-				<span class="dot text-text-3" aria-hidden="true">·</span>
-
-				{' '}{/if}
+			{#if i > 0}{' '}{/if}
 			<span class="pair whitespace-nowrap">
 				<span class="text-text font-semibold">{value}</span>
 				{label}
@@ -39,8 +37,24 @@
 {/if}
 
 <style>
-	/* Ink 3: Rule 2 vanished into the paper (29 October 2026). */
-	.dot {
-		padding: 0 8px;
+	/* Ink 3: Rule 2 vanished into the paper (29 October 2026). The right side
+	   stands in for the typed space that used to follow the dot. Empty alt
+	   text, so a screen reader does not read it out. */
+	.pair + .pair::before {
+		content: '·' / '';
+		padding: 0 12px 0 8px;
+		color: var(--color-text-3);
+	}
+
+	@media (max-width: 699px) {
+		.details {
+			display: flex;
+			flex-wrap: wrap;
+			column-gap: 10px;
+		}
+
+		.pair + .pair::before {
+			content: none;
+		}
 	}
 </style>
