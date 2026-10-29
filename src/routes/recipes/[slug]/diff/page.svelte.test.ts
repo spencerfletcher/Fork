@@ -133,7 +133,9 @@ describe('Diff page', () => {
 		// Step number circle should render inside the diff row
 		const stepNum = container.querySelector('.step-num');
 		expect(stepNum).not.toBeNull();
-		expect(stepNum!.textContent?.trim()).toBe('3');
+		// The number ends in an unseen stop so a screen reader does not run it
+		// into the text: "3. Stir in chips." rather than "3 Stir in chips".
+		expect(stepNum!.textContent?.trim()).toBe('3.');
 	});
 
 	test('removed step row does not show a step number circle', () => {
@@ -161,20 +163,53 @@ describe('Diff page', () => {
 		expect(backLink).toHaveAttribute('href', '/recipes/classic-cookies');
 	});
 
-	test('each version card shows its number, date, message and snapshot', () => {
+	test('each version card shows its number, date and message, and none of the facts', () => {
 		const { container } = render(DiffPage, { props: { data: makeData() } });
 		const cards = container.querySelectorAll('article.version-card');
 		expect(cards).toHaveLength(2);
 		expect(cards[0]).toHaveTextContent('v1');
 		expect(cards[0]).toHaveTextContent('28 Feb 2026');
 		expect(cards[0]).toHaveTextContent('Initial recipe');
-		// The measure in the recipe page's words: value then label.
-		expect(cards[0]).toHaveTextContent('48 servings');
-		expect(cards[0]).toHaveTextContent('11 min cook');
-		expect(cards[0]).toHaveTextContent('2 ingredients');
-		expect(cards[0]).not.toHaveTextContent('prep');
+		// The title, servings and times live in the Details panel with their
+		// del/ins; stating them again in the cards said each three times
+		// (decided 29 October 2026).
+		expect(cards[0]).not.toHaveTextContent('Classic Chocolate Chip Cookies');
+		expect(cards[0]).not.toHaveTextContent('servings');
+		expect(cards[0]).not.toHaveTextContent('cook');
+		expect(cards[0].querySelector('dl, .version-card__measure')).toBeNull();
 		expect(cards[1]).toHaveClass('version-card--to');
 		expect(cards[1].querySelector('.version-card__message')).toBeInTheDocument();
+	});
+
+	test('each card number links to its version, the latest to the plain recipe URL', () => {
+		const V3 = { ...V2, versionNumber: 3, commitMessage: 'Less sugar' };
+		const { container } = render(DiffPage, {
+			props: { data: makeData({ allVersions: [V1, V2, V3] }) }
+		});
+		const numbers = container.querySelectorAll('article.version-card a.version-card__number');
+		expect(numbers).toHaveLength(2);
+		expect(numbers[0]).toHaveTextContent('v1');
+		expect(numbers[0]).toHaveAttribute('href', '/recipes/classic-cookies?version=1');
+		expect(numbers[1]).toHaveAttribute('href', '/recipes/classic-cookies?version=2');
+	});
+
+	test('the To card number is a link to the latest version when it is the latest', () => {
+		const { container } = render(DiffPage, { props: { data: makeData() } });
+		const to = container.querySelector('article.version-card--to a.version-card__number');
+		expect(to).toHaveAttribute('href', '/recipes/classic-cookies');
+	});
+
+	test('there is no summary line under the h1', () => {
+		const { container } = render(DiffPage, {
+			props: {
+				data: makeData({
+					metaDiff: [{ field: 'servings', from: 4, to: 8 }],
+					ingredientDiff: [{ status: 'added', ingredient: ing('1 tsp salt') }]
+				})
+			}
+		});
+		expect(container.querySelector('.summary')).toBeNull();
+		expect(screen.queryByText(/changed$/)).toBeNull();
 	});
 
 	test('a card without a creator or a date shows neither, with no stray separator', () => {
@@ -193,7 +228,7 @@ describe('Diff page', () => {
 		});
 		const head = container.querySelector('article.version-card .version-card__head')!;
 		expect(head.textContent?.replace(/\s+/g, ' ').trim()).toBe('v1 @chef · 28 Feb 2026');
-		expect(head.querySelector('a')).toHaveAttribute('href', '/users/chef');
+		expect(head.querySelector('.username')).toHaveAttribute('href', '/users/chef');
 	});
 
 	test("shows the date in the viewer's own day", () => {
@@ -211,13 +246,6 @@ describe('Diff page', () => {
 		);
 	});
 
-	test('formats a long cook time the way the recipe page does', () => {
-		const { container } = render(DiffPage, {
-			props: { data: makeData({ fromVersion: { ...V1, cookTimeMinutes: 240 } }) }
-		});
-		expect(container.querySelector('article.version-card')).toHaveTextContent('4h cook');
-	});
-
 	test('every text in a card may break anywhere, so a long title cannot widen it', () => {
 		const { container } = render(DiffPage, { props: { data: makeData() } });
 		expect(container.querySelector('article.version-card')).toHaveClass('version-card');
@@ -233,38 +261,6 @@ describe('Diff page', () => {
 	test('the stacked commit bar is gone', () => {
 		const { container } = render(DiffPage, { props: { data: makeData() } });
 		expect(container.querySelector('.commit-bar')).toBeNull();
-	});
-
-	test('one sans line under the h1 counts the changed rows by group, omitting empty groups', () => {
-		render(DiffPage, {
-			props: {
-				data: makeData({
-					metaDiff: [{ field: 'servings', from: 4, to: 8 }],
-					ingredientDiff: [
-						{ status: 'added', ingredient: ing('1 tsp salt') },
-						{ status: 'unchanged', ingredient: ing('2 cups flour') },
-						{ status: 'modified', segments: [{ type: 'added', text: '2 eggs' }] }
-					],
-					stepDiff: [
-						{ status: 'unchanged', stepNumber: 1, step: { text: 'Mix.' } },
-						{ status: 'removed', step: { text: 'Rest.' } }
-					]
-				})
-			}
-		});
-		expect(screen.getByText('1 detail · 2 ingredients · 1 step changed')).toBeInTheDocument();
-	});
-
-	test('the summary says "2 steps changed" when only steps changed, and "No changes" when nothing did', () => {
-		const steps: StepDiffRow[] = [
-			{ status: 'added', stepNumber: 1, step: { text: 'Mix.' } },
-			{ status: 'added', stepNumber: 2, step: { text: 'Bake.' } }
-		];
-		const { unmount } = render(DiffPage, { props: { data: makeData({ stepDiff: steps }) } });
-		expect(screen.getByText('2 steps changed')).toBeInTheDocument();
-		unmount();
-		render(DiffPage, { props: { data: makeData() } });
-		expect(screen.getByText('No changes', { selector: '.summary' })).toBeInTheDocument();
 	});
 
 	test('the same version on both sides says so and renders no diff panels', () => {

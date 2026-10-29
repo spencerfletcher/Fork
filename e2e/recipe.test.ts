@@ -1122,12 +1122,16 @@ test.describe('Landing page (logged out)', () => {
 		expect(doc.scrollWidth).toBeLessThanOrEqual(doc.clientWidth);
 	});
 
-	test('the compare page splits the diff on a wide screen and stacks it on a phone', async ({
+	test('the compare page is the site column; the diff splits from 1024 and stacks below', async ({
 		page
 	}) => {
+		// The page used to carry its own 784px measure; every page is the 1200px
+		// column with the site gutters (decided 29 October 2026).
 		await page.setViewportSize({ width: 1440, height: 1800 });
 		await gotoClassicCookies(page);
 		await page.goto(page.url().split('?')[0] + '/diff');
+		const compare = page.locator('.compare');
+		expect((await compare.boundingBox())!.width).toBe(1200);
 		const panels = page.locator('section').filter({ has: page.locator('.eyebrow-label') });
 		const ingredients = panels.filter({
 			has: page.getByRole('heading', { name: 'Ingredients', exact: true })
@@ -1135,15 +1139,73 @@ test.describe('Landing page (logged out)', () => {
 		const steps = panels.filter({
 			has: page.getByRole('heading', { name: 'Method', exact: true })
 		});
-		const a = await ingredients.boundingBox();
-		const b = await steps.boundingBox();
-		expect(Math.abs(a!.y - b!.y)).toBeLessThan(2);
-		expect(b!.x).toBeGreaterThan(a!.x + a!.width - 1);
+		const sideBySide = async () => {
+			const a = await ingredients.boundingBox();
+			const b = await steps.boundingBox();
+			expect(Math.abs(a!.y - b!.y)).toBeLessThan(2);
+			expect(b!.x).toBeGreaterThan(a!.x + a!.width - 1);
+		};
+		await sideBySide();
+		// Each about half of the column.
+		expect((await ingredients.boundingBox())!.width).toBeGreaterThan(1200 * 0.4);
+
+		await page.setViewportSize({ width: 1024, height: 1800 });
+		await sideBySide();
+		expect((await ingredients.boundingBox())!.width).toBeGreaterThan((1024 - 48) * 0.4);
+
+		for (const width of [768, 390]) {
+			await page.setViewportSize({ width, height: 1800 });
+			const a2 = await ingredients.boundingBox();
+			const b2 = await steps.boundingBox();
+			expect(b2!.y).toBeGreaterThan(a2!.y + a2!.height - 40);
+		}
+	});
+
+	test('the modified marker and its row are ink; unchanged rows stay Ink 3', async ({ page }) => {
+		// The ~ was drawn in the same grey as the rows it should stand apart
+		// from. Ink, not clay: clay would read too close to the removal red
+		// (decided 29 October 2026).
+		await gotoClassicCookies(page);
+		await openCompare(page);
+		const color = (sel: string) =>
+			page
+				.locator(sel)
+				.first()
+				.evaluate((el) => getComputedStyle(el).color);
+		const ink = 'rgb(26, 23, 20)';
+		expect(await color('.diff-row.diff-modified .diff-gutter')).toBe(ink);
+		expect(await color('.diff-row.diff-modified .diff-content')).toBe(ink);
+		expect(await color('.diff-row.diff-unchanged .diff-content')).toBe('rgb(111, 105, 96)');
+		// Modified step numbers stay clay.
+		expect(await color('.diff-row.diff-modified .step-num')).toBe('rgb(178, 60, 0)');
+	});
+
+	test('each card number links to its version, so the older one is reachable; no summary line', async ({
+		page
+	}) => {
+		await gotoClassicCookies(page);
+		const recipePath = new URL(page.url()).pathname;
+		await page.goto(recipePath + '/diff?from=2&to=3');
+		const numbers = page.locator('article.version-card a.version-card__number');
+		await expect(numbers.nth(0)).toHaveAttribute('href', `${recipePath}?version=2`);
+		await expect(numbers.nth(1)).toHaveAttribute('href', recipePath);
+		await expect(page.locator('.summary')).toHaveCount(0);
+		await expect(page.getByText(/changed$/)).toHaveCount(0);
+	});
+
+	test('card usernames and the back link are 24px targets at desktop and 44px on a phone', async ({
+		page
+	}) => {
+		await gotoClassicCookies(page);
+		await openCompare(page);
+		const username = page.locator('article.version-card .version-card__head .username').first();
+		const back = page.locator('.compare .back-link');
+		expect((await username.boundingBox())!.height).toBeGreaterThanOrEqual(24);
+		expect((await back.boundingBox())!.height).toBeGreaterThanOrEqual(24);
 
 		await page.setViewportSize({ width: 390, height: 1800 });
-		const a2 = await ingredients.boundingBox();
-		const b2 = await steps.boundingBox();
-		expect(b2!.y).toBeGreaterThan(a2!.y + a2!.height - 40);
+		expect((await username.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+		expect((await back.boundingBox())!.height).toBeGreaterThanOrEqual(44);
 	});
 
 	test('the compare page does not scroll sideways on a phone', async ({ page }) => {

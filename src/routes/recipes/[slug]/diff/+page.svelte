@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import VersionDiff from '#lib/components/recipes/VersionDiff.svelte';
-	import { formatTime } from '#lib/helpers.js';
 	import Username from '#lib/components/ui/Username.svelte';
 	import type { PageData } from './$types';
 
@@ -20,38 +19,12 @@
 	type CardVersion = typeof data.fromVersion;
 
 	const sameVersion = $derived(fromVersion.versionNumber === toVersion.versionNumber);
+
 	// The latest version is the plain recipe URL; an older one is named.
-	const readHref = $derived(
-		toVersion.versionNumber === allVersions[allVersions.length - 1].versionNumber
+	const versionHref = (v: CardVersion) =>
+		v.versionNumber === allVersions[allVersions.length - 1].versionNumber
 			? `/recipes/${recipe.slug}`
-			: `/recipes/${recipe.slug}?version=${toVersion.versionNumber}`
-	);
-
-	const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
-
-	// "3 details · 3 ingredients · 2 steps changed", from the rows already loaded.
-	const summary = $derived.by(() => {
-		const changed = (rows: { status: string }[]) =>
-			rows.filter((row) => row.status !== 'unchanged').length;
-		const groups: [number, string][] = [
-			[metaDiff.length, 'detail'],
-			[changed(ingredientDiff), 'ingredient'],
-			[changed(stepDiff), 'step']
-		];
-		const parts = groups.filter(([n]) => n > 0).map(([n, word]) => plural(n, word));
-		return parts.length > 0 ? `${parts.join(' · ')} changed` : 'No changes';
-	});
-
-	// The card's measure in the recipe page's words: value then label.
-	const measure = (v: CardVersion): [string, string][] => {
-		const pairs: [string, string | null][] = [
-			['prep', v.prepTimeMinutes ? formatTime(v.prepTimeMinutes) : null],
-			['cook', v.cookTimeMinutes ? formatTime(v.cookTimeMinutes) : null],
-			[v.servings === 1 ? 'serving' : 'servings', v.servings ? String(v.servings) : null],
-			[v.ingredients.length === 1 ? 'ingredient' : 'ingredients', String(v.ingredients.length)]
-		];
-		return pairs.filter((pair): pair is [string, string] => pair[1] !== null);
-	};
+			: `/recipes/${recipe.slug}?version=${v.versionNumber}`;
 
 	async function navigate(id: string) {
 		await goto(`?from=${fromSelect}&to=${toSelect}`);
@@ -81,11 +54,13 @@
 	</select>
 {/snippet}
 
+<!-- Number, author, date and message. The title, servings and times are in
+     the Details panel with their del/ins; the cards do not state them again. -->
 {#snippet card(v: CardVersion, isTo: boolean)}
 	{@const date = when(v.createdAt)}
 	<article class="version-card" class:version-card--to={isTo}>
 		<div class="version-card__head">
-			<span class="version-card__number">v{v.versionNumber}</span>
+			<a href={versionHref(v)} class="version-card__number">v{v.versionNumber}</a>
 			{#if v.creator || date}
 				<span>
 					{#if v.creator}<Username username={v.creator.username} />{/if}
@@ -95,35 +70,17 @@
 			{/if}
 		</div>
 		<p class="version-card__message">{v.commitMessage}</p>
-		<dl>
-			<div>
-				<dt>Title</dt>
-				&#32;
-				<dd>{v.title}</dd>
-			</div>
-		</dl>
-		<p class="version-card__measure">
-			{#each measure(v) as [label, value], i (label)}
-				{#if i > 0}<span class="dot" aria-hidden="true">·</span>{/if}
-				<span class="whitespace-nowrap">
-					<span class="value">{value}</span>
-					{label}
-				</span>
-			{/each}
-		</p>
 	</article>
 {/snippet}
 
 <div class="page">
-	<div class="compare">
+	<div class="page-inner compare">
 		<a href="/recipes/{recipe.slug}" class="back-link">← {recipe.title}</a>
 		<h1>Compare versions</h1>
 		{#if sameVersion}
 			<p class="same-version">
 				v{toVersion.versionNumber} is on both sides; pick another version.
 			</p>
-		{:else}
-			<p class="summary">{summary}</p>
 		{/if}
 
 		<div class="version-picker">
@@ -139,29 +96,28 @@
 
 		{#if !sameVersion}
 			<VersionDiff {metaDiff} {ingredientDiff} {stepDiff} headingLevel={2} />
-			<a href={readHref} class="read-link">Read v{toVersion.versionNumber}</a>
+			<a href={versionHref(toVersion)} class="read-link">Read v{toVersion.versionNumber}</a>
 		{/if}
 	</div>
 </div>
 
 <style>
-	/* Wide enough for the diff's container query to put ingredients beside
-	   steps, which is how the board shows it. */
-	.compare {
-		max-width: 784px;
-		margin: 0 auto;
-	}
-
 	h1 {
 		margin: 0 0 8px;
 		font-size: clamp(1.75rem, 1.2rem + 1.8vw, 2.5rem);
 		line-height: 1.1;
 	}
 
-	.summary,
 	.same-version {
 		margin: 0 0 16px;
 		color: var(--color-text-2);
+	}
+
+	/* The back link's 24px hit, without moving the text: its global bottom
+	   margin less the padding that now sits inside it. */
+	.back-link {
+		padding: 4px 0;
+		margin: -4px 0 calc(var(--space-3) - 4px);
 	}
 
 	.read-link {
@@ -203,8 +159,8 @@
 		background: var(--color-surface);
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-lg);
-		/* A long unbroken title, name or message breaks rather than widening
-		   the card; inherited by every text inside. */
+		/* A long unbroken name or message breaks rather than widening the card;
+		   inherited by every text inside. */
 		overflow-wrap: anywhere;
 	}
 
@@ -222,8 +178,12 @@
 		font-weight: 600;
 	}
 
+	/* The username at the line's size, with a 24px hit that does not move it;
+	   :global so the Username component's element takes it. */
 	.version-card__head :global(.username) {
 		font-size: inherit;
+		padding: 4px 0;
+		margin: -4px 0;
 	}
 
 	/* The system's chip, at the card number's size. */
@@ -242,45 +202,19 @@
 		color: var(--color-text);
 	}
 
-	dl {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 4px 18px;
-		margin: 0;
-		font-size: 0.875rem;
-	}
-
-	dl:first-of-type {
-		margin-top: 4px;
-	}
-
-	dt,
-	dd {
-		display: inline;
-		margin: 0;
-	}
-
-	dt {
-		color: var(--color-text-3);
-	}
-
-	.version-card__measure {
-		margin: 0;
-		font-size: 0.875rem;
-		color: var(--color-text-2);
-	}
-
-	.version-card__measure .value {
-		font-weight: 600;
-		color: var(--color-text);
-	}
-
-	.version-card__measure .dot {
-		margin: 0 4px;
-		color: var(--color-text-3);
-	}
-
 	@media (max-width: 699px) {
+		/* The same links reach a thumb's 44px, as the recipe page's do. */
+		.back-link {
+			padding: 11px 0;
+			margin: -11px 0 calc(var(--space-3) - 11px);
+		}
+
+		.version-card__head :global(.username) {
+			display: inline-block;
+			padding: 11px 0;
+			margin-block: -11px;
+		}
+
 		.read-link {
 			display: inline-flex;
 			align-items: center;
