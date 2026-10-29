@@ -179,7 +179,7 @@ Clay and marigold were raised in chroma from #a4512b and #e8a83a: same hues, sam
 ### Hierarchy
 
 - **Display** (500, 2.5rem, 1.15, clay): page h1. Recipe titles, "Recipes", "Search", the profile handle. One clamp on every page, `clamp(1.75rem, 1.2rem + 1.8vw, 2.5rem)`, so phones get about 1.75rem (29 October 2026; no page sets its own h1 size).
-- **Byline** (600, 1rem, 1.5, ink, Source Sans): "By @author · 3 versions · 1 fork" under a recipe's title; the links clay.
+- **Byline** (600, 1rem, 1.5, ink, Source Sans): "By @author · 1 fork" under a recipe's title; the handle mono and clay at the line's size.
 - **Description** (400, 1.0625rem, 1.5, ink, Source Sans): a recipe's description under its byline, plain body text.
 - **Headline** (500, 1.75rem, 1.25, ink): h2 on pages that need a second serif level ("Recipes worth forking").
 - **Title** (500, 1.0625rem, 1.25): recipe card names in Bitter. Clay on a no-photo panel, ink on a photo card.
