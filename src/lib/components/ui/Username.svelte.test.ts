@@ -18,15 +18,18 @@ describe('Username', () => {
 });
 
 describe('Username face', () => {
-	test('is mono at the size of the line it sits in: no size of its own', () => {
+	test('is mono one notch under the line it sits in, never a size of its own', () => {
 		// Usernames are identifiers, set in mono like version numbers and dates
-		// (Pencil Rule, 29 October 2026). The size comes from the line: the
-		// byline's 1rem, the card's 0.75rem, the bar's 0.875rem. jsdom applies
-		// no component CSS, so the declaration is read from the source.
+		// (Pencil Rule, 29 October 2026). The size follows the line, in em, with
+		// a 0.9375 step down because JetBrains Mono runs optically larger than
+		// the sans and serif beside it at the same size (Spencer, 29 October
+		// 2026: the byline's handle read bigger than the words around it). jsdom
+		// applies no component CSS, so the declaration is read from the source.
 		render(Username, { props: { username: 'chefmaria' } });
 		expect(screen.getByRole('link', { name: '@chefmaria' })).toHaveClass('username');
 		const style = source.slice(source.indexOf('<style>'));
 		expect(style).toMatch(/\.username\s*{[^}]*font-family:\s*var\(--font-mono\)/);
-		expect(style).not.toMatch(/font-size/);
+		expect(style).toMatch(/\.username\s*{[^}]*font-size:\s*0\.9375em/);
+		expect(style).not.toMatch(/font-size:\s*[\d.]+(rem|px)/);
 	});
 });

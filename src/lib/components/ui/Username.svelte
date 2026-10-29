@@ -1,6 +1,7 @@
 <script lang="ts">
 	// One look for a username wherever it appears: mono, linked to the profile,
-	// at the size of the line it sits in (Pencil Rule, 29 October 2026).
+	// one notch under the size of the line it sits in (Pencil Rule, 29 October
+	// 2026): JetBrains Mono runs optically larger than the faces beside it.
 	// `current` marks the link as the page being shown (the owner's own handle
 	// in the bar, on their profile).
 	let {
@@ -29,6 +30,7 @@
 	/* Clay like every other link in running text; ink on hover. */
 	.username {
 		font-family: var(--font-mono);
+		font-size: 0.9375em;
 		color: var(--color-accent);
 		text-decoration: none;
 		transition: color 0.15s ease;
