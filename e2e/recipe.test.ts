@@ -82,20 +82,18 @@ test.describe('Recipe detail page', () => {
 		const recipeUrl = page.url().split('?')[0];
 		await page.goto(`${recipeUrl}?version=2`);
 		await page.waitForLoadState('networkidle');
-		// The bar reads "v2 Older version <message>", then "Back to v3 · 3 versions"
-		// at the right: the state alone leads, right after the chip.
+		// The bar reads "v2 <message>", then "Back to v3 · 3 versions" at the
+		// right; there is no "Older version" label (the chip's spoken text and
+		// "Back to v3" say it; Spencer, 29 October 2026).
 		const bar = page.locator('.version-bar');
-		await expect(bar).toContainText('Older version');
+		await expect(bar).not.toContainText('Older version');
 		await expect(bar.locator('.current .version-number')).toContainText('v2');
 		await expect(bar.locator('.current .message')).toContainText(SEED[0].versions[1].commitMessage);
 		await expect(page.getByRole('link', { name: 'Back to v3' })).toBeVisible();
 		const chip = await bar.locator('.current .version-number').boundingBox();
-		const state = await bar.locator('.current .state').boundingBox();
 		const note = await bar.locator('.current .message').boundingBox();
 		const controls = await bar.locator('.current .controls').boundingBox();
-		await expect(bar.locator('.current .state')).toHaveText('Older version');
-		expect(state!.x).toBeGreaterThan(chip!.x);
-		expect(note!.x).toBeGreaterThan(state!.x + state!.width - 1);
+		expect(note!.x).toBeGreaterThan(chip!.x + chip!.width - 1);
 		expect(controls!.x).toBeGreaterThan(note!.x + note!.width - 1);
 		// The toggle stands where the latest version keeps it.
 		const toggle = page.getByRole('button', { name: '3 versions' });
@@ -400,7 +398,7 @@ test.describe('Recipe detail page', () => {
 		expect(new Set(messages).size).toBe(1);
 	});
 
-	test('on an iPad an older version reads its state and note beside the chip, the controls on their own row under them, and the tabs keep their gap', async ({
+	test('on an iPad an older version reads its note beside the chip, the controls on their own row under them, and the tabs keep their gap', async ({
 		page
 	}) => {
 		await page.setViewportSize({ width: 768, height: 1024 });
@@ -409,26 +407,23 @@ test.describe('Recipe detail page', () => {
 		await page.goto(`${recipeUrl}?version=2`);
 		const box = async (part: string) =>
 			(await page.locator(`.version-bar .current ${part}`).boundingBox())!;
-		let [chip, state, note, controls] = await Promise.all(
-			['.version-number', '.state', '.message', '.controls'].map(box)
+		let [chip, note, controls] = await Promise.all(
+			['.version-number', '.message', '.controls'].map(box)
 		);
 		expect(note.width).toBeGreaterThan(400);
-		expect(Math.abs(state.y - chip.y)).toBeLessThan(6);
-		expect(Math.abs(note.y - state.y)).toBeLessThan(1);
+		expect(Math.abs(note.y - chip.y)).toBeLessThan(6);
 		expect(controls.y).toBeGreaterThanOrEqual(note.y + note.height - 1);
 		const bar = await page.locator('.version-bar').boundingBox();
 		const tabs = await page.locator('.section-tabs').boundingBox();
 		expect(tabs!.y - (bar!.y + bar!.height)).toBeGreaterThanOrEqual(16);
-		// On a phone the note takes a row of its own between the state and the
-		// controls, indented to the note's column.
+		// On a phone the note sits beside the chip like the latest version's, and
+		// the controls take their own row under it.
 		await page.setViewportSize({ width: 390, height: 900 });
-		[chip, state, note, controls] = await Promise.all(
-			['.version-number', '.state', '.message', '.controls'].map(box)
+		[chip, note, controls] = await Promise.all(
+			['.version-number', '.message', '.controls'].map(box)
 		);
-		expect(Math.abs(state.y - chip.y)).toBeLessThan(6);
-		expect(note.y).toBeGreaterThanOrEqual(state.y + state.height - 1);
+		expect(Math.abs(note.y - chip.y)).toBeLessThan(6);
 		expect(controls.y).toBeGreaterThanOrEqual(note.y + note.height - 1);
-		expect(Math.abs(note.x - state.x)).toBeLessThan(1);
 	});
 
 	test('on a phone every link and button in the bar is 44px tall', async ({ page }) => {
@@ -1010,7 +1005,7 @@ test.describe('Recipe detail page', () => {
 		await other.close();
 		// v2 is another version: none of v3's ticks carry over.
 		await page.goto(`${recipeUrl}?version=2`);
-		await expect(page.locator('.version-bar .current .state')).toBeVisible();
+		await expect(page.locator('.version-bar .current .version-number')).toContainText('v2');
 		await expect(page.locator('#recipe input:checked')).toHaveCount(0);
 		// Back on v3 by its own link, without a reload, they are still there.
 		await page.getByRole('link', { name: 'Back to v3' }).click();
@@ -1108,16 +1103,9 @@ test.describe('Recipe detail page', () => {
 		expect(await dots()).toEqual(['none', '"· "']);
 		// At every width an item with a dot shares its line with the item before
 		// it, so no line starts with one; the dot is the item's ::before, so none
-		// can end a line either. Below 700 the note still has a row of its own.
-		const state = page.locator('.version-bar .current .state');
-		const note = page.locator('.version-bar .current .message');
+		// can end a line either.
 		for (const width of [1280, 1024, 768, 390, 320]) {
 			await page.setViewportSize({ width, height: 900 });
-			if (width < 700) {
-				const s = (await state.boundingBox())!;
-				const m = (await note.boundingBox())!;
-				expect(m.y, `${width}: note under the state`).toBeGreaterThanOrEqual(s.y + s.height - 1);
-			}
 			const stranded = await controls
 				.locator('.item')
 				.evaluateAll((els) =>

@@ -93,9 +93,8 @@
 				</span>
 				<span aria-hidden="true">v{n}</span>
 			</span>
-			<!-- An older version leads with its state alone, right after the chip;
-			     the controls keep the right end on every version. -->
-			{#if isViewingHistory}<span class="state text-text-2">Older version</span>{/if}
+			<!-- No "Older version" label: the chip's spoken text says it, and the
+			     "Back to v3" control is clue enough for the eye (Spencer, 29 October 2026). -->
 			<span class="message text-text" class:clamped={!open}>{currentVersion.commitMessage}</span>
 			{@render controls()}
 		</div>
@@ -180,12 +179,10 @@
 		text-overflow: ellipsis;
 	}
 
-	.controls,
-	.state {
+	.controls {
 		flex-shrink: 0;
 	}
 
-	.state,
 	.item {
 		white-space: nowrap;
 	}
@@ -291,13 +288,6 @@
 			display: flex;
 			flex-wrap: wrap;
 			column-gap: 10px;
-		}
-
-		/* An older version's note takes a row of its own under the state, rather
-		   than a column a dozen characters wide beside it. */
-		.state + .message {
-			flex-basis: 100%;
-			margin-left: 36px;
 		}
 
 		/* Outranks the 4px hit rule above; inline-block so the padding counts. */

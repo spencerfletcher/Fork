@@ -15,7 +15,7 @@ function makeVersion(versionNumber: number, commitMessage: string) {
 /** The bar line's parts in reading order. */
 const order = (current: Element) =>
 	[...current.children].map((el) =>
-		['version-number', 'state', 'message', 'controls'].find((c) => el.classList.contains(c))
+		['version-number', 'message', 'controls'].find((c) => el.classList.contains(c))
 	);
 
 const THREE = [
@@ -123,10 +123,12 @@ describe('VersionBar', () => {
 			/^Version 2 of 3, an older version\.$/
 		);
 
-		// The state alone leads, right after the chip, then the note; the controls
-		// keep the right end, where the latest keeps its toggle.
-		expect(order(current)).toEqual(['version-number', 'state', 'message', 'controls']);
-		expect(current.querySelector('.state')).toHaveTextContent(/^Older version$/);
+		// No "Older version" label (Spencer, 29 October 2026): the chip's spoken
+		// text says it and "Back to v3" is clue enough. Chip, note, then the
+		// controls at the right end, where the latest keeps its toggle.
+		expect(order(current)).toEqual(['version-number', 'message', 'controls']);
+		expect(current.querySelector('.state')).toBeNull();
+		expect(current).not.toHaveTextContent('Older version');
 		expect(screen.getByRole('link', { name: 'Back to v3' })).toHaveAttribute(
 			'href',
 			'/recipes/my-fork'
@@ -134,7 +136,6 @@ describe('VersionBar', () => {
 		// The separators are drawn by CSS between items, never typed, so no
 		// wrapped line can start or end with one.
 		expect(current.querySelectorAll('.controls .item')).toHaveLength(2);
-		expect(current.querySelector('.controls')).not.toHaveTextContent('Older version');
 		expect(current.querySelector('.controls')!.textContent).not.toContain('·');
 		// A phone keeps the dot too, or "Back to v3" and "3 versions" read as one
 		// phrase. jsdom applies no component CSS, so the rule is read from the source.
