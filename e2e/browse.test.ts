@@ -43,13 +43,16 @@ test.describe('Landing page', () => {
 		// At 390 the strip runs edge to edge, scrolls, and the page does not.
 		const box = await strip.evaluate((el) => {
 			const r = el.getBoundingClientRect();
-			const card = el.querySelector('.recipe-card')!.getBoundingClientRect();
+			const cards = el.querySelectorAll('.recipe-card');
+			const card = cards[0].getBoundingClientRect();
 			return {
 				left: r.left,
 				right: r.right,
 				scrolls: el.scrollWidth > el.clientWidth,
 				cardWidth: card.width,
 				cardLeft: card.left,
+				// Flowed by column, two to a column: the fifth card opens the third.
+				thirdLeft: cards[4].getBoundingClientRect().left,
 				page: document.documentElement.scrollWidth
 			};
 		});
@@ -57,9 +60,11 @@ test.describe('Landing page', () => {
 		expect(box.right).toBe(390);
 		expect(box.scrolls).toBe(true);
 		expect(box.page).toBe(390);
-		// Two columns' width on the 18px gutters: (390 - 36 - 24) / 2.
+		// 2.25 columns on the 18px gutters, so the third peeks in at the edge
+		// and says the strip scrolls: (390 - 36 - 24) / 2.25.
 		expect(box.cardLeft).toBe(18);
-		expect(box.cardWidth).toBeCloseTo((390 - 36 - 24) / 2, 0);
+		expect(box.cardWidth).toBeCloseTo((390 - 36 - 24) / 2.25, 0);
+		expect(box.thirdLeft).toBeLessThan(390);
 	});
 
 	test('the hero h1 takes the site clamp and the lede sits on the ramp', async ({ page }) => {
