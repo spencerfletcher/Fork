@@ -41,7 +41,10 @@ test.describe('Auth pages', () => {
 		await expect(page.locator('.auth-subtitle')).toHaveText('Log in to see your favorites');
 	});
 
-	for (const [path, name] of [['/login', 'Create one']] as const) {
+	for (const [path, name] of [
+		['/login', 'Create one'],
+		['/signup', 'Log in']
+	] as const) {
 		test(`on ${path} the "${name}" switch link is a 44px target on a phone, 24px at desktop, without moving`, async ({
 			page
 		}) => {
@@ -73,6 +76,20 @@ test.describe('Auth pages', () => {
 		await page.getByLabel('Username').fill('jo_cooks');
 		await page.getByLabel('Username').blur();
 		await expect(rule).toBeHidden();
+	});
+
+	test('a rejected username is told to screen readers and its rule printed once', async ({
+		page
+	}) => {
+		await page.goto('/signup');
+		const field = page.getByLabel('Username');
+		await field.fill('Jane Doe');
+		await field.blur();
+		await expect(field).toHaveAttribute('aria-invalid', 'true');
+		await expect(field).toHaveAccessibleDescription(
+			/^Usernames are 3 to 30 characters: letters, digits, - or _ Your public handle/
+		);
+		await expect(page.getByText('3 to 30 letters, digits, - or _.')).toHaveCount(0);
 	});
 
 	test('a link inside the auth alert is underlined and stays on one line', async ({ page }) => {

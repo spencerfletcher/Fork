@@ -33,6 +33,17 @@
 	}
 
 	const usernameError = $derived(form?.errors?.username);
+
+	// One pattern for the attribute and the rule line. Browsers compile the
+	// attribute with the v flag, so the page reads it the same way.
+	const USERNAME_PATTERN = '[A-Za-z0-9_\\-]{3,30}';
+	const usernameRule = new RegExp(`^(?:${USERNAME_PATTERN})$`, 'v');
+
+	// The rule line shows once the user has left the field or a submit was
+	// stopped, as :user-invalid would, and screen readers are told too. It
+	// follows the value, so an email prefill that fixes the handle clears it.
+	let usernameLeft = $state(false);
+	const ruleShown = $derived(!usernameError && usernameLeft && !usernameRule.test(username));
 </script>
 
 <div class="auth-page">
@@ -83,24 +94,31 @@
 					required
 					minlength="3"
 					maxlength="30"
-					pattern={'[A-Za-z0-9_\\-]{3,30}'}
+					pattern={USERNAME_PATTERN}
 					autocomplete="username"
 					spellcheck="false"
 					bind:value={username}
 					oninput={() => (usernameEdited = true)}
-					aria-invalid={usernameError ? 'true' : undefined}
-					aria-describedby={usernameError ? 'username-error username-hint' : 'username-hint'} />
+					onblur={() => (usernameLeft = true)}
+					oninvalid={() => (usernameLeft = true)}
+					aria-invalid={usernameError || ruleShown ? 'true' : undefined}
+					aria-describedby={usernameError
+						? 'username-error username-hint'
+						: ruleShown
+							? 'username-rule username-hint'
+							: 'username-hint'} />
 				{#if usernameError}
 					<p class="field-error" id="username-error">{usernameError}</p>
-				{:else}
-					<!-- Shown by CSS once the browser judges the field invalid after the
-					     user has left it; the server's wording. -->
-					<p class="field-error username-rule">
+				{:else if ruleShown}
+					<!-- The server's wording. -->
+					<p class="field-error" id="username-rule">
 						Usernames are 3 to 30 characters: letters, digits, - or _
 					</p>
 				{/if}
+				<!-- While the rule line shows, the hint does not repeat it. -->
 				<p class="form-hint" id="username-hint">
-					3 to 30 letters, digits, - or _. Your public handle, shown on every recipe.
+					{#if !ruleShown}3 to 30 letters, digits, - or _.{/if}
+					Your public handle, shown on every recipe.
 				</p>
 			</div>
 
@@ -138,11 +156,18 @@
 		text-align: center;
 	}
 
-	.username-rule {
-		display: none;
+	/* The switch link reaches 24px at desktop and 44px on a phone by padding
+	   pulled back by margin, so the sentence does not move; as on login. */
+	.auth-switch a {
+		display: inline-block;
+		padding-block: 2px;
+		margin-block: -2px;
 	}
 
-	.field:has(input:user-invalid) .username-rule {
-		display: block;
+	@media (max-width: 699px) {
+		.auth-switch a {
+			padding-block: 12px;
+			margin-block: -12px;
+		}
 	}
 </style>

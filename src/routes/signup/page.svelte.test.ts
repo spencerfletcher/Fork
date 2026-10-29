@@ -70,6 +70,49 @@ describe('Sign-up page', () => {
 		expect(screen.queryByRole('alert')).toBeNull();
 	});
 
+	const RULE = 'Usernames are 3 to 30 characters: letters, digits, - or _';
+	const HINT_RULES = '3 to 30 letters, digits, - or _.';
+
+	test('a username the browser rejects, once the user leaves it: the rule line is described, the field invalid, the rule printed once', async () => {
+		renderSignup();
+		await fireEvent.input(username(), { target: { value: 'Jane Doe' } });
+		// Not while typing the first time: only once the user has left the field.
+		expect(screen.queryByText(RULE)).toBeNull();
+		expect(username()).not.toHaveAttribute('aria-invalid');
+		await fireEvent.blur(username());
+		const rule = screen.getByText(RULE);
+		expect(rule).toHaveClass('field-error');
+		expect(username()).toHaveAttribute('aria-invalid', 'true');
+		expect(username()).toHaveAccessibleDescription(
+			`${RULE} Your public handle, shown on every recipe.`
+		);
+		expect(screen.queryByText(HINT_RULES, { exact: false })).toBeNull();
+		// Fixed, it clears at once, and the hint has its rules back.
+		await fireEvent.input(username(), { target: { value: 'jane_doe' } });
+		expect(screen.queryByText(RULE)).toBeNull();
+		expect(username()).not.toHaveAttribute('aria-invalid');
+		expect(username()).toHaveAccessibleDescription(
+			`${HINT_RULES} Your public handle, shown on every recipe.`
+		);
+	});
+
+	test('a username left empty and then prefilled from the email clears its rule line', async () => {
+		renderSignup();
+		await fireEvent.blur(username());
+		expect(screen.getByText(RULE)).toBeInTheDocument();
+		await fireEvent.input(email(), { target: { value: 'jane@example.com' } });
+		expect(screen.queryByText(RULE)).toBeNull();
+		expect(username()).not.toHaveAttribute('aria-invalid');
+	});
+
+	test('a submit the browser stops marks the username as left, so its rule line shows', async () => {
+		renderSignup();
+		await fireEvent.input(username(), { target: { value: 'jo' } });
+		await fireEvent.invalid(username());
+		expect(screen.getByText(RULE)).toBeInTheDocument();
+		expect(username()).toHaveAttribute('aria-invalid', 'true');
+	});
+
 	test('a Supabase failure is announced in the alert block', () => {
 		renderSignup({ message: 'Could not create the account. Try again.' });
 		expect(screen.getByRole('alert')).toHaveTextContent('Could not create the account. Try again.');
