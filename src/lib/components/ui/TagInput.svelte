@@ -73,6 +73,12 @@
 		}
 	}
 
+	// The list opens below the box, which near the fold (or on a phone) is
+	// below the visible page; bring it in when it opens, as the arrows do.
+	function reveal(menu: HTMLElement) {
+		tick().then(() => menu.scrollIntoView?.({ block: 'nearest' }));
+	}
+
 	function handleBlur() {
 		// Delay so a click on an option lands before the list closes
 		setTimeout(() => {
@@ -133,7 +139,7 @@
 
 		{#if showDropdown}
 			<!-- tabindex -1: a scrollable box with nothing focusable inside would be a Tab stop. -->
-			<ul class="tag-menu" role="listbox" id="tag-listbox" tabindex="-1">
+			<ul class="tag-menu" role="listbox" id="tag-listbox" tabindex="-1" {@attach reveal}>
 				{#each suggestions as tag, i (tag.id)}
 					<!-- The keyboard is on the input (arrows, Enter), as a combobox has it. -->
 					<!-- svelte-ignore a11y_click_events_have_key_events -->

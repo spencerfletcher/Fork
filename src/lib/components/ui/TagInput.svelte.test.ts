@@ -1,4 +1,5 @@
-import { describe, test, expect } from 'vitest';
+import { describe, test, expect, vi } from 'vitest';
+import { tick } from 'svelte';
 import { render, screen, fireEvent } from '@testing-library/svelte';
 import TagInput from './TagInput.svelte';
 
@@ -80,6 +81,22 @@ describe('TagInput', () => {
 		expect(input).toHaveFocus();
 		await fireEvent.keyDown(input, { key: 'ArrowDown' });
 		expect(screen.getByRole('listbox')).toBeInTheDocument();
+	});
+
+	test('opening the list scrolls it into view, nearest, after a tick', async () => {
+		// jsdom has no scrollIntoView; lend one for this test only.
+		const scroll = vi.fn();
+		Element.prototype.scrollIntoView = scroll;
+		try {
+			render(TagInput, { props: { allTags } });
+			await fireEvent.focus(getInput());
+			await tick();
+			expect(scroll).toHaveBeenCalledWith({ block: 'nearest' });
+			expect(scroll.mock.contexts[0]).toBe(screen.getByRole('listbox'));
+		} finally {
+			// @ts-expect-error put the absence back
+			delete Element.prototype.scrollIntoView;
+		}
 	});
 
 	test('shows all suggestions when focused with empty query', async () => {

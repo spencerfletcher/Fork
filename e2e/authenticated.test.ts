@@ -157,6 +157,22 @@ test.describe('New recipe page', () => {
 		expect([box!.width, box!.height]).toEqual([44, 44]);
 	});
 
+	test('the tag list opens in view when the box sits at the foot of the screen, on a phone and at a desktop width', async ({
+		page
+	}) => {
+		for (const width of [390, 1280]) {
+			await page.setViewportSize({ width, height: 900 });
+			await gotoHydrated(page, '/recipes/new');
+			const input = page.getByRole('combobox', { name: /tag/i });
+			// A screen that ends just below the box, as the edit page's does with a photo.
+			const bottom = await input.evaluate((el) => el.getBoundingClientRect().bottom);
+			await page.setViewportSize({ width, height: Math.ceil(bottom) + 8 });
+			await input.click();
+			// Whole: the scroll lands on a whole pixel, so up to a pixel may be cut.
+			await expect(page.getByRole('listbox')).toBeInViewport({ ratio: 0.99 });
+		}
+	});
+
 	test('empty editors keep room to type into, instead of collapsing to one line', async ({
 		page
 	}) => {
