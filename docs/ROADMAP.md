@@ -283,7 +283,7 @@ The strongest opportunity identified in the Cooklang research. An attempt record
 
 These are the ones this project has already been bitten by. They are enforced in CI now, so following them is cheaper than working around them.
 
-- Schema changes go through a migration file in `supabase/migrations/`. `supabase start` replays the chain from empty on every push, so a broken migration fails CI.
+- Schema changes edit `schema.ts` and run `pnpm db:generate --name <what-changed>` in the same commit; the SQL lands in `drizzle/` and is reviewed like any other change. Apply with `pnpm db:migrate` locally and `pnpm db:migrate:prod` for the hosted database.
 - Tests before implementation: server logic, then component, then e2e.
-- Never `drizzle-kit push`, anywhere. It changes a database with no migration file, and `drizzle.config.ts` loads `.env.local` with `override: true`, so it can target a different database than you expect. M10 moves migrations to `drizzle-kit generate`.
+- Never `drizzle-kit push`, anywhere. It changes a database with no migration file, and `drizzle.config.ts` loads `.env.local` with `override: true`, so it can target a different database than you expect. (M10, shipped 27 October 2026, moved migrations to `drizzle-kit generate`.)
 - Do not add a feature to the README until it exists. The README's "Not built" section is the honest record.
