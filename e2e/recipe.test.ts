@@ -1005,6 +1005,39 @@ test.describe('Recipe detail page', () => {
 		await expect(step).toBeChecked();
 	});
 
+	test('a method numeral sits 10px from its text with one digit or two; the tick keeps the column start', async ({
+		page
+	}) => {
+		await gotoClassicCookies(page);
+		const url = page.url();
+		for (const width of [1280, 390]) {
+			await page.setViewportSize({ width, height: 900 });
+			await page.goto(url);
+			if (width < 1024)
+				await page.locator('.section-tabs').getByRole('button', { name: 'Method' }).click();
+			// The seed has no recipe of ten steps or more: copy the rendered rows to
+			// twelve and number them, so a two-digit numeral is measured in real CSS.
+			const gaps = await page.evaluate(() => {
+				const first = document.querySelector('#method label')!;
+				const list = first.parentElement!;
+				while (list.children.length < 12) list.append(first.cloneNode(true));
+				return [...list.querySelectorAll('label')].map((row, i) => {
+					const [tick, numeral] = row.querySelectorAll<HTMLElement>('.tick, .tick + span');
+					numeral.textContent = String(i + 1);
+					const text = row.querySelector('div')!.getBoundingClientRect();
+					return {
+						tickAtStart: tick.getBoundingClientRect().x - row.getBoundingClientRect().x,
+						numeralToText: text.x - numeral.getBoundingClientRect().right
+					};
+				});
+			});
+			for (const [i, gap] of gaps.entries()) {
+				expect(gap.tickAtStart, `${width}: step ${i + 1} tick`).toBeCloseTo(0, 0);
+				expect(gap.numeralToText, `${width}: step ${i + 1} numeral to text`).toBeCloseTo(10, 0);
+			}
+		}
+	});
+
 	test('on a narrow phone each action pill holds its label on one line', async ({ page }) => {
 		await gotoClassicCookies(page);
 		// 360 is the narrowest common Android width; below 375 Fork says "Fork".

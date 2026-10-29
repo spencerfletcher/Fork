@@ -30,9 +30,9 @@
 			     behaviour; the label is the row and takes the struck-through look. The
 			     square before the numeral is the checkbox's picture: an Ink 3 edge, then
 			     full clay when checked (decided 29 October 2026). The dim is on the
-			     numeral and the text, so it never turns the clay salmon. The tick sits
-			     18px from its numeral and the numeral 10px from the text; 55px holds the
-			     tick, that gap and a two-digit numeral, so every step's text starts on
+			     numeral and the text, so it never turns the clay salmon. The tick keeps
+			     the start of a 55px column and the numeral its end, so the numeral sits
+			     10px from the text with one digit or two, and every step's text starts on
 			     one edge. -->
 			<label
 				class="group has-[:focus-visible]:outline-accent grid cursor-pointer [grid-template-columns:55px_1fr] items-baseline gap-2.5 select-none has-[:checked]:line-through has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2">
@@ -41,7 +41,7 @@
 					class="sr-only"
 					checked={ticked.includes(i)}
 					onchange={(e) => toggle(i, e.currentTarget.checked)} />
-				<span class="inline-flex items-baseline gap-[18px]">
+				<span class="flex items-baseline justify-between">
 					<span
 						class="tick border-text-3 group-has-[:checked]:bg-accent group-has-[:checked]:border-accent size-3.5 shrink-0 rounded-[3px] border"
 						aria-hidden="true">

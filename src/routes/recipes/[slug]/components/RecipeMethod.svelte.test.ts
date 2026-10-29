@@ -83,13 +83,20 @@ describe('RecipeMethod', () => {
 		localStorage.clear();
 	});
 
-	test('the tick sits 18px from its numeral, the numeral 10px from the text, in a column that fits two digits', () => {
-		render(RecipeMethod, { props: { storageKey: KEY, steps: [{ text: 'Mix.' }] } });
-		const row = screen.getByRole('checkbox').closest('label')!;
-		const numeral = screen.getByText('1');
-		// The tick (14px), the 18px gap and "10" (22.7px) are 54.7px: one column
-		// width for every row keeps the text's left edge level past step 9.
-		expect(row).toHaveClass('gap-2.5', '[grid-template-columns:55px_1fr]');
-		expect(numeral.parentElement).toHaveClass('gap-[18px]');
+	test('the numeral sits at the end of its 55px column, 10px from the text, with one digit or two; the tick at the start', () => {
+		const steps = Array.from({ length: 12 }, (_, i) => ({ text: `Step ${i + 1}.` }));
+		render(RecipeMethod, { props: { storageKey: KEY, steps } });
+		// jsdom lays nothing out, so the gaps are pinned as the classes that make
+		// them: a 55px column, the 10px grid gap, and the numeral pushed to the
+		// column's end, so the gap to the text never depends on its width.
+		for (const n of ['1', '12']) {
+			const numeral = screen.getByText(n);
+			expect(numeral.closest('label')).toHaveClass('gap-2.5', '[grid-template-columns:55px_1fr]');
+			const column = numeral.parentElement!;
+			expect(column).toHaveClass('justify-between');
+			expect(column).not.toHaveClass('gap-[18px]');
+			expect(column.firstElementChild).toHaveClass('tick');
+			expect(column.lastElementChild).toBe(numeral);
+		}
 	});
 });
