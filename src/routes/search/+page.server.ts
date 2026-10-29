@@ -11,7 +11,7 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 	const tagSlugs = url.searchParams.get('tags')?.split(',').filter(Boolean) || [];
 
 	const searchMeta = (count: number) => ({
-		title: searchQuery ? `“${searchQuery}” — search` : 'Search',
+		title: searchQuery ? `“${searchQuery}” — Search` : 'Search',
 		description: clampDescription(
 			searchQuery
 				? `${count} recipe${count === 1 ? '' : 's'} matching “${searchQuery}” on Fork.`

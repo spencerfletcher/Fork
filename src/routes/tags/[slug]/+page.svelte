@@ -29,7 +29,7 @@
 			</section>
 		{:else}
 			<p class="empty-state">
-				No recipes with this tag yet. <a href="/">Explore all →</a>
+				No recipes with this tag yet. <a href={data.user ? '/' : '/recipes'}>Explore all →</a>
 			</p>
 		{/if}
 	</div>

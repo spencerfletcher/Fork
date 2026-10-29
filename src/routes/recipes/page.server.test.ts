@@ -38,6 +38,11 @@ describe('/recipes load', () => {
 		expect(result).toMatchObject({ mine: true });
 	});
 
+	test('the tab title matches the h1: "My Recipes" signed in, "Recipes" signed out', async () => {
+		expect(await load(event({ id: 'u1' }))).toMatchObject({ meta: { title: 'My Recipes' } });
+		expect(await load(event(null))).toMatchObject({ meta: { title: 'Recipes' } });
+	});
+
 	test('a guest gets the tags with public recipes, for the tabs', async () => {
 		const result = await load(event(null));
 		expect(visibleTagsMock.mock.calls[0][0]).toEqual(eq(recipes.isPublic, true));

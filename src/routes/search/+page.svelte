@@ -34,12 +34,18 @@
 			</section>
 		{:else}
 			<p class="empty-state mt-6">
-				{#if filtered}
+				<!-- Each link says what it does; All recipes goes where the tabs' All
+				     goes, since signed in /recipes is My Recipes (decided 29 October
+				     2026). -->
+				{#if data.selectedTags.length > 0}
 					No recipes found. Try adjusting your search or clearing some filters.
 					<a href="/search">Clear filters</a>
+				{:else if filtered}
+					No recipes found. Try another search.
+					<a href="/search">Clear search</a>
 				{:else}
 					Enter a recipe name or select tags to find recipes.
-					<a href="/recipes">All recipes</a>
+					<a href={data.user ? '/' : '/recipes'}>All recipes</a>
 				{/if}
 			</p>
 		{/if}

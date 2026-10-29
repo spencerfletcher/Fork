@@ -35,6 +35,14 @@ describe('search load', () => {
 		vi.clearAllMocks();
 	});
 
+	test('the tab title quotes the query and capitalises Search, as the h1 does', async () => {
+		selectDistinctMock.mockReturnValue(chain([]));
+		selectMock.mockReturnValue(chain([]));
+		findManyMock.mockResolvedValue([]);
+		const result = await loadResult(makeEvent('cookie'));
+		expect(result.meta.title).toBe('“cookie” — Search');
+	});
+
 	test('returns recipes carrying author and tag relations', async () => {
 		selectDistinctMock.mockReturnValue(chain([])); // tags for the filter UI
 		selectMock
