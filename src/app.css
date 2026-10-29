@@ -566,18 +566,18 @@
 	/* A pressed filter is a tag pill (1px Ink 2 border, Ink 2 text), not the
 	   current page's underline: it is a state, not a place. The pill is drawn
 	   around the text band only, so the phone's padding above stays a hit area
-	   and the text never moves (8px of pill each side, pulled back by margin). */
+	   and the text never moves: 6px of pill each side of the button, outside its
+	   box, so two pressed neighbours keep 4px of the row's 16px gap and the pill
+	   stays inside the row's 8px clip padding (decided 29 October 2026). */
 	.tag-tabs button[aria-pressed='true'] {
 		position: relative;
-		padding-inline: 8px;
-		margin-inline: -8px;
 		color: var(--color-text-2);
 	}
 
 	.tag-tabs button[aria-pressed='true']::before {
 		content: '';
 		position: absolute;
-		inset: -2px 0 2px;
+		inset: -2px -6px 2px;
 		border: 1px solid var(--color-text-2);
 		border-radius: var(--radius-pill);
 		pointer-events: none;

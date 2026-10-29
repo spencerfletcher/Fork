@@ -27,7 +27,9 @@
 		selectedTags = [...initialTags];
 	});
 
-	// Update URL when Apply button is clicked
+	// Navigates to the filtered URL. `reset: false` (SvelteKit 3's keepFocus and
+	// noScroll): a pressed filter keeps keyboard focus rather than dropping it to
+	// the body, and the page stays where it was (decided 29 October 2026).
 	function applyFilters() {
 		// A throwaway local used only to build the URL string, so it never needs to be reactive.
 		// eslint-disable-next-line svelte/prefer-svelte-reactivity
@@ -44,7 +46,7 @@
 		const queryString = params.toString();
 		const newURL = queryString ? `?${queryString}` : window.location.pathname;
 
-		goto(newURL);
+		return goto(newURL, { reset: false });
 	}
 
 	// Tags apply on click; the search box applies on submit. Both read the
@@ -56,13 +58,17 @@
 		applyFilters();
 	}
 
-	function handleClear() {
+	let filters: HTMLDivElement;
+
+	// Clear all leaves the row with the press, so focus moves to the first tag.
+	async function handleClear() {
 		selectedTags = [];
-		applyFilters();
+		await applyFilters();
+		filters.querySelector<HTMLButtonElement>('.tag-tabs button')?.focus();
 	}
 </script>
 
-<div class="search-filters">
+<div class="search-filters" bind:this={filters}>
 	<form
 		onsubmit={(e) => {
 			e.preventDefault();

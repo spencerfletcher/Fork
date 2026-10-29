@@ -30,7 +30,7 @@ test.describe('Search results', () => {
 
 	test('tags that match no recipe are not offered as filters', async ({ page }) => {
 		await page.goto('/search');
-		const filters = page.getByRole('navigation', { name: 'Filter by tag' });
+		const filters = page.getByRole('group', { name: 'Filter by tag' });
 		await filters.waitFor();
 
 		// 'Unused' is seeded deliberately with no recipes attached.

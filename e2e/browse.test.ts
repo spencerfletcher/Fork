@@ -44,3 +44,50 @@ test.describe('Landing page', () => {
 		expect((await all.boundingBox())!.height).toBeGreaterThanOrEqual(44);
 	});
 });
+
+test.describe('Search filters', () => {
+	test('a filter pressed from the keyboard keeps focus after the page navigates', async ({
+		page
+	}) => {
+		await page.goto('/search');
+		const dessert = page.getByRole('group', { name: 'Filter by tag' }).getByRole('button', {
+			name: 'Dessert'
+		});
+		await dessert.focus();
+		await page.keyboard.press('Enter');
+		await expect(page).toHaveURL(/tags=dessert/);
+		await expect(dessert).toHaveAttribute('aria-pressed', 'true');
+		await expect(dessert).toBeFocused();
+	});
+
+	test('on a phone, two pressed pills keep a gap, the first is not clipped, Clear all is in view', async ({
+		page
+	}) => {
+		await page.setViewportSize({ width: 390, height: 844 });
+		await page.goto('/search?q=cookie');
+		const row = page.getByRole('group', { name: 'Filter by tag' });
+		const tags = row.locator('button:not(.tag-tabs__clear)');
+		const [first, second] = await tags.evaluateAll((els) =>
+			els.slice(0, 2).map((el) => el.textContent!.trim().toLowerCase())
+		);
+		await page.goto(`/search?q=cookie&tags=${first},${second}`);
+		await expect(row.locator('button[aria-pressed="true"]')).toHaveCount(2);
+
+		// The pill is drawn by ::before; read its box from the button's rect.
+		const pills = await row.locator('button[aria-pressed="true"]').evaluateAll((els) =>
+			els.map((el) => {
+				const r = el.getBoundingClientRect();
+				const s = getComputedStyle(el, '::before');
+				return { left: r.left + parseFloat(s.left), right: r.right - parseFloat(s.right) };
+			})
+		);
+		expect(pills[1].left - pills[0].right).toBeGreaterThanOrEqual(4);
+		const clip = await row.evaluate((el) => el.getBoundingClientRect().left);
+		expect(pills[0].left).toBeGreaterThan(clip);
+
+		const clear = row.getByRole('button', { name: 'Clear all' });
+		const box = (await clear.boundingBox())!;
+		expect(box.x).toBeGreaterThanOrEqual(0);
+		expect(box.x + box.width).toBeLessThanOrEqual(390);
+	});
+});
