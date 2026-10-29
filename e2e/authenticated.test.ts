@@ -103,6 +103,12 @@ test.describe('New recipe page', () => {
 		await expect(title).not.toHaveAttribute('aria-invalid', 'true');
 	});
 
+	test('the required asterisk is Ink 3 at rest, not the error red', async ({ page }) => {
+		await gotoHydrated(page, '/recipes/new');
+		const star = page.locator('label[for="title"] .required');
+		expect(await star.evaluate((el) => getComputedStyle(el).color)).toBe('rgb(111, 105, 96)');
+	});
+
 	test('a blocked Create shows no browser bubble: the first empty field takes focus and its message is announced', async ({
 		page
 	}) => {

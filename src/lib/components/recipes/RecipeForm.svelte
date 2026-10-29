@@ -254,7 +254,7 @@
 			<div class="form-col">
 				<div class="field">
 					<label for="title">
-						Title <span class="required">*</span>
+						Title <span class="required" aria-hidden="true">*</span>
 					</label>
 					<input
 						id="title"
@@ -356,7 +356,11 @@
 				<label class="inline-checkbox">
 					<input type="checkbox" name="isPublic" bind:checked={draft.isPublic} />
 					Make this recipe public
-					<span class="inline-checkbox__note">· applies to every version</span>
+					<!-- The dot is for the eye; the name reads "…public applies to every version". -->
+					<span class="inline-checkbox__note">
+						<span aria-hidden="true">·</span>
+						 applies to every version
+					</span>
 				</label>
 			</div>
 
@@ -444,6 +448,12 @@
 	.photo-choose:has(:focus-visible) {
 		outline: 2px solid var(--color-accent);
 		outline-offset: 2px;
+	}
+
+	/* A mark, not an alarm: Ink 3 at rest. The input's required attribute is
+	   what a screen reader hears. */
+	.required {
+		color: var(--color-text-3);
 	}
 
 	/* A plain 1px Rule, like every other rule in the editor. */

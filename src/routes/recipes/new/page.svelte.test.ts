@@ -39,6 +39,21 @@ function failed(draft: Partial<typeof EMPTY_DRAFT>, error = 'Title is required')
 	return { error, draft: { ...EMPTY_DRAFT, ...draft } };
 }
 
+describe('New recipe page labels', () => {
+	test('the required asterisk is a mark for the eye only: Title is named Title and is required', () => {
+		render(NewPage, { props: { data, form: null } });
+		expect(screen.getByText('*')).toHaveAttribute('aria-hidden', 'true');
+		expect(screen.getByRole('textbox', { name: 'Title' })).toBeRequired();
+	});
+
+	test('the public checkbox is named without the middle dot its note shows', () => {
+		render(NewPage, { props: { data, form: null } });
+		const box = screen.getByRole('checkbox', { name: /public/i });
+		expect(box).toHaveAccessibleName('Make this recipe public applies to every version');
+		expect(box.closest('label')).toHaveTextContent('·');
+	});
+});
+
 describe('New recipe page validation errors', () => {
 	test('shows no alert without a failed action', () => {
 		render(NewPage, { props: { data, form: null } });
