@@ -52,7 +52,10 @@ describe('Profile page', () => {
 
 	test('the owner sees one line under the stats for their private recipes; nobody else does', () => {
 		const { unmount } = renderProfile({ privateCount: 3 });
-		expect(screen.getByText('You also have 3 private recipes')).toHaveClass('profile-private');
+		// It leads somewhere: My Recipes lists the private ones too.
+		const line = screen.getByRole('link', { name: 'You also have 3 private recipes' });
+		expect(line).toHaveAttribute('href', '/recipes');
+		expect(line.closest('p')).toHaveClass('profile-private');
 		unmount();
 		const one = renderProfile({ privateCount: 1 });
 		expect(screen.getByText('You also have 1 private recipe')).toBeInTheDocument();

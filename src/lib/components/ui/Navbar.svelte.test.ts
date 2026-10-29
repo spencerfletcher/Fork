@@ -60,6 +60,43 @@ describe('Navbar', () => {
 		const links = screen.getAllByRole('link', { name: /fork/i });
 		const logo = links.find((l) => l.getAttribute('href') === '/');
 		expect(logo).toBeInTheDocument();
+		// No stray space before the marigold stop.
+		expect(screen.getByRole('link', { name: 'Fork.' })).toBe(logo);
+	});
+
+	test('on your own profile your handle in the bar is the current page', () => {
+		const profile = {
+			id: 'user-abc',
+			username: 'chefmaria',
+			avatarUrl: null,
+			createdAt: new Date()
+		};
+		page.url = new URL('http://localhost/users/chefmaria');
+		try {
+			render(Navbar, { props: { user: makeUser('chef@example.com'), profile } });
+			expect(screen.getByRole('link', { name: '@chefmaria' })).toHaveAttribute(
+				'aria-current',
+				'page'
+			);
+		} finally {
+			page.url = new URL('http://localhost/');
+		}
+	});
+
+	test("elsewhere, and on someone else's profile, the handle is not current", () => {
+		const profile = {
+			id: 'user-abc',
+			username: 'chefmaria',
+			avatarUrl: null,
+			createdAt: new Date()
+		};
+		page.url = new URL('http://localhost/users/someoneelse');
+		try {
+			render(Navbar, { props: { user: makeUser('chef@example.com'), profile } });
+			expect(screen.getByRole('link', { name: '@chefmaria' })).not.toHaveAttribute('aria-current');
+		} finally {
+			page.url = new URL('http://localhost/');
+		}
 	});
 
 	test('shows New Recipe to a signed-in user', () => {

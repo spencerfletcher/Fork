@@ -20,6 +20,8 @@
 	// One list for both menus. Recipes is "active" anywhere under it except the
 	// new-recipe page, which has its own control, and on tag pages, which are
 	// Recipes filtered by one tag.
+	const onOwnProfile = $derived(!!profile && page.url.pathname === `/users/${profile.username}`);
+
 	const links = $derived([
 		{ href: '/search', label: 'Search', active: page.url.pathname === '/search' },
 		{
@@ -41,10 +43,9 @@
 		class="relative z-[100] mx-auto flex h-[52px] max-w-[1200px] items-center justify-between md:h-14">
 		<!-- Logo + nav links -->
 		<div class="flex items-center gap-6">
-			<a href="/" class="nav-brand" onclick={closeMenu}>
-				Fork
-				<span class="text-marigold">.</span>
-			</a>
+			<!-- One line, so the name is "Fork." with no space before the stop. -->
+			<!-- prettier-ignore -->
+			<a href="/" class="nav-brand" onclick={closeMenu}>Fork<span class="text-marigold">.</span></a>
 			<ul class="navbar-links m-0 hidden list-none gap-6 p-0 md:flex">
 				{#each links as link (link.href)}
 					<li>
@@ -56,10 +57,10 @@
 
 		<!-- Auth + CTA + hamburger -->
 		<div class="flex items-center gap-4">
-			<div class="hidden items-center gap-4 text-[0.875rem] md:flex">
+			<div class="navbar-account hidden items-center gap-4 text-[0.875rem] md:flex">
 				{#if user}
 					{#if profile}
-						<Username username={profile.username} tone="dark" />
+						<Username username={profile.username} tone="dark" current={onOwnProfile} />
 					{/if}
 					<form action="/logout" method="POST" use:enhance>
 						<button type="submit" class="navbar-link logout-btn">Logout</button>
@@ -153,7 +154,11 @@
 					<!-- The same name and type as the desktop bar. -->
 					{#if profile}
 						<div class="px-4 py-3">
-							<Username username={profile.username} tone="dark" onclick={closeMenu} />
+							<Username
+								username={profile.username}
+								tone="dark"
+								current={onOwnProfile}
+								onclick={closeMenu} />
 						</div>
 					{:else}
 						<p class="text-text-tan m-0 px-4 py-3 font-mono text-[0.75rem]">{user.email}</p>
@@ -273,6 +278,13 @@
 
 	.logout-btn {
 		font-size: 0.875rem;
+	}
+
+	/* The handle's 24px hit, like the links beside it, without moving it. */
+	.navbar-account :global(.username) {
+		display: inline-block;
+		padding: 4px 0;
+		margin: -4px 0;
 	}
 
 	/* Mobile link style */

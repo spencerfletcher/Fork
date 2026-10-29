@@ -28,8 +28,11 @@
 					<span class="stat profile-since">Member since {memberSince}</span>
 				</p>
 				{#if privateCount > 0}
+					<!-- A way on for the owner: My Recipes lists the private ones too. -->
 					<p class="profile-private">
-						You also have {privateCount} private {privateCount === 1 ? 'recipe' : 'recipes'}
+						<a href="/recipes">
+							You also have {privateCount} private {privateCount === 1 ? 'recipe' : 'recipes'}
+						</a>
 					</p>
 				{/if}
 			</div>

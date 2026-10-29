@@ -1,14 +1,27 @@
 <script lang="ts">
 	// One look for a username wherever it appears: mono, linked to the profile,
 	// at the size of the line it sits in (Pencil Rule, 29 October 2026).
+	// `current` marks the link as the page being shown (the owner's own handle
+	// in the bar, on their profile).
 	let {
 		username,
 		tone = 'paper',
+		current = false,
 		onclick
-	}: { username: string; tone?: 'paper' | 'dark'; onclick?: () => void } = $props();
+	}: {
+		username: string;
+		tone?: 'paper' | 'dark';
+		current?: boolean;
+		onclick?: () => void;
+	} = $props();
 </script>
 
-<a href="/users/{username}" class="username" class:on-dark={tone === 'dark'} {onclick}>
+<a
+	href="/users/{username}"
+	class="username"
+	class:on-dark={tone === 'dark'}
+	aria-current={current ? 'page' : undefined}
+	{onclick}>
 	@{username}
 </a>
 
