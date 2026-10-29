@@ -291,6 +291,8 @@ No italic, no uppercase in the header, no chip in the header, no note in the hea
 
 Mono at 0.875rem, one row per ingredient or step, a 1ch gutter for `+`, `−` or `~`, added and removed words on their semantic backgrounds. Rows are capped at 72 characters.
 
+29 October 2026, after the compare page critique (Spencer's decisions): unchanged rows are Ink 3 so the changed rows carry the page; added and removed keep their colours. The two sides of a change are `<del>` and `<ins>` with a real space and an unseen "to" between them, so "¾½ cup" reads and copies as "¾ to ½ cup"; the gutter glyph is aria-hidden and each changed row opens with an unseen "Changed:", "Added:" or "Removed:". The third panel is "Method", and the Details panel speaks the recipe page's measure, value then label: "4 to 8 servings", "11 min to 13 min cook". A removed ingredient keeps its old place in the list. Above the panels one sans line counts the change ("1 detail · 3 ingredients · 2 steps changed"), and after the last row one link reads the To version. The compare page's "To" chip is the version chip (marigold, 0 6px, 4px corners) at the card number's 18px rather than the bar's 12px: deliberate, it is the card's number, not a mark in a line.
+
 ## Do's and Don'ts
 
 ### Do:
