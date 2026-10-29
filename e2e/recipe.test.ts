@@ -830,7 +830,8 @@ test.describe('Recipe detail page', () => {
 		});
 		const sticky = page.locator('.sidebar-sticky');
 		const box = await sticky.evaluate((el) => ({
-			height: el.getBoundingClientRect().height,
+			// The list's own height: the box less the 4px that keeps focus rings whole.
+			height: el.getBoundingClientRect().height - 8,
 			scrollHeight: el.scrollHeight,
 			overflowY: getComputedStyle(el).overflowY
 		}));
@@ -845,6 +846,39 @@ test.describe('Recipe detail page', () => {
 		const last = await page.locator('#ingredients label').last().boundingBox();
 		expect(last!.y).toBeGreaterThanOrEqual(0);
 		expect(last!.y + last!.height).toBeLessThanOrEqual(700);
+	});
+
+	test('at 1024 and up a focused ingredient shows its whole ring inside the scrolling aside', async ({
+		page
+	}) => {
+		for (const width of [1024, 1280]) {
+			await page.setViewportSize({ width, height: 900 });
+			await gotoClassicCookies(page);
+			await page.keyboard.press('Tab');
+			await page.keyboard.press('Enter');
+			await page.keyboard.press('Tab');
+			const row = page.locator('#ingredients label').first();
+			await expect(row.locator('input')).toBeFocused();
+			const m = await row.evaluate((el) => {
+				const s = getComputedStyle(el);
+				const r = el.getBoundingClientRect();
+				// The ring reaches its width plus its offset beyond the row.
+				const reach = parseFloat(s.outlineWidth) + parseFloat(s.outlineOffset);
+				// overflow: auto clips at the scroll box's padding edge.
+				const box = el.closest('.sidebar-sticky')!;
+				const b = box.getBoundingClientRect();
+				return {
+					style: s.outlineStyle,
+					overflowY: getComputedStyle(box).overflowY,
+					left: r.left - reach - (b.left + box.clientLeft),
+					right: b.left + box.clientLeft + box.clientWidth - (r.right + reach)
+				};
+			});
+			expect(m.style, `${width}`).toBe('solid');
+			expect(m.overflowY, `${width}`).toBe('auto');
+			expect(m.left, `${width}: ring's left edge`).toBeGreaterThanOrEqual(0);
+			expect(m.right, `${width}: ring's right edge`).toBeGreaterThanOrEqual(0);
+		}
 	});
 
 	test('on a phone every inline link in the header is 44px tall', async ({ page }) => {

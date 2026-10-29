@@ -171,11 +171,16 @@
 	}
 
 	/* A long list scrolls inside the aside rather than past the screen: capped
-	   to the viewport less 24px above and below, with a thin Rule 2 bar. */
+	   to the viewport less 24px above and below, with a thin Rule 2 bar.
+	   overflow clips at the padding edge, so 4px of padding (the focus ring's
+	   2px plus its 2px offset) keeps a row's ring whole; the matching negative
+	   margin, top and height leave the list exactly where it was. */
 	.sidebar-sticky {
 		position: sticky;
-		top: 24px;
-		max-height: calc(100dvh - 48px);
+		top: 20px;
+		max-height: calc(100dvh - 40px);
+		padding: 4px;
+		margin: -4px;
 		overflow-y: auto;
 		scrollbar-width: thin;
 		scrollbar-color: var(--color-border-2) transparent;
