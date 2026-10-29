@@ -280,7 +280,7 @@
 		display: block;
 		padding: var(--space-3) var(--space-4);
 		font-family: var(--font-sans);
-		font-size: 0.95rem;
+		font-size: 0.9375rem;
 		font-weight: 500;
 		color: var(--color-text-tan);
 		text-decoration: none;

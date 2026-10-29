@@ -246,7 +246,7 @@
 		align-items: center;
 		gap: 0.75rem;
 		padding: 0.75rem 1rem;
-		font-size: 0.9rem;
+		font-size: 0.875rem;
 		cursor: pointer;
 		color: var(--color-text);
 	}

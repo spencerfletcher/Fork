@@ -86,7 +86,7 @@
 		background: var(--color-tint);
 		color: var(--color-accent);
 		font-family: var(--font-serif);
-		font-size: 2rem;
+		font-size: 1.75rem;
 		font-weight: 500;
 	}
 
@@ -119,7 +119,7 @@
 		.profile-avatar {
 			width: 56px;
 			height: 56px;
-			font-size: 1.5rem;
+			font-size: 1.375rem;
 		}
 	}
 </style>
