@@ -82,12 +82,18 @@ test.describe('Recipe detail page', () => {
 		const recipeUrl = page.url().split('?')[0];
 		await page.goto(`${recipeUrl}?version=2`);
 		await page.waitForLoadState('networkidle');
-		// The bar reads "v2 · <message> · Older version · Back to v3 · 3 versions".
+		// The bar reads "v2 Older version · Back to v3 · 3 versions <message>": the
+		// state leads, right after the chip.
 		const bar = page.locator('.version-bar');
 		await expect(bar).toContainText('Older version');
 		await expect(bar.locator('.current .version-number')).toContainText('v2');
 		await expect(bar.locator('.current .message')).toContainText(SEED[0].versions[1].commitMessage);
 		await expect(page.getByRole('link', { name: 'Back to v3' })).toBeVisible();
+		const chip = await bar.locator('.current .version-number').boundingBox();
+		const state = await bar.locator('.current .controls').boundingBox();
+		const note = await bar.locator('.current .message').boundingBox();
+		expect(state!.x).toBeGreaterThan(chip!.x);
+		expect(note!.x).toBeGreaterThan(state!.x + state!.width - 1);
 	});
 
 	test('Compare link on v2 navigates to diff page', async ({ page }) => {
@@ -385,16 +391,18 @@ test.describe('Recipe detail page', () => {
 		expect(new Set(messages).size).toBe(1);
 	});
 
-	test('on an iPad the older-version controls drop under the note and the tabs keep their gap', async ({
+	test('on an iPad an older version leads with its state beside the chip, the note on its own row under it, and the tabs keep their gap', async ({
 		page
 	}) => {
 		await page.setViewportSize({ width: 768, height: 1024 });
 		await gotoClassicCookies(page);
 		await page.goto(`${page.url().split('?')[0]}?version=2`);
+		const chip = await page.locator('.version-bar .current .version-number').boundingBox();
 		const note = await page.locator('.version-bar .current .message').boundingBox();
 		const controls = await page.locator('.version-bar .current .controls').boundingBox();
 		expect(note!.width).toBeGreaterThan(400);
-		expect(controls!.y).toBeGreaterThanOrEqual(note!.y + note!.height - 1);
+		expect(Math.abs(controls!.y - chip!.y)).toBeLessThan(6);
+		expect(note!.y).toBeGreaterThanOrEqual(controls!.y + controls!.height - 1);
 		const bar = await page.locator('.version-bar').boundingBox();
 		const tabs = await page.locator('.section-tabs').boundingBox();
 		expect(tabs!.y - (bar!.y + bar!.height)).toBeGreaterThanOrEqual(16);

@@ -43,6 +43,40 @@
 
 <svelte:window onkeydown={onWindowKeydown} />
 
+{#snippet controls()}
+	<!-- The separators are drawn between items by CSS, never typed, so no
+	     wrapped line can begin or end with one. -->
+	<span class="controls text-text-2">
+		{#if isViewingHistory}
+			<span class="item">Older version</span>
+			<span class="item"><a href="/recipes/{recipe.slug}">Back to v{latest}</a></span>
+		{/if}
+		<span class="item">
+			<button
+				type="button"
+				class="versions-toggle"
+				bind:this={toggle}
+				aria-expanded={open}
+				aria-controls="version-history"
+				onclick={() => (open = !open)}>
+				{count} versions
+				<svg
+					class="chevron"
+					class:up={open}
+					viewBox="0 0 12 12"
+					aria-hidden="true"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="1.6"
+					stroke-linecap="round"
+					stroke-linejoin="round">
+					<path d="M2.5 4.5 6 8l3.5-3.5" />
+				</svg>
+			</button>
+		</span>
+	</span>
+{/snippet}
+
 <!-- The version bar: the hinge between the dish and the recipe, on lifted
      paper. One mono line names the version being read and its note; the
      toggle opens the other versions under it, each a link to itself with a
@@ -60,38 +94,11 @@
 				</span>
 				<span aria-hidden="true">v{n}</span>
 			</span>
+			<!-- An older version leads with its state, right after the chip, then
+			     the note; the latest reads its note, then the toggle. -->
+			{#if isViewingHistory}{@render controls()}{/if}
 			<span class="message text-text" class:clamped={!open}>{currentVersion.commitMessage}</span>
-			<!-- The separators are drawn between items by CSS, never typed, so no
-			     wrapped line can begin or end with one. -->
-			<span class="controls text-text-2">
-				{#if isViewingHistory}
-					<span class="item">Older version</span>
-					<span class="item"><a href="/recipes/{recipe.slug}">Back to v{latest}</a></span>
-				{/if}
-				<span class="item">
-					<button
-						type="button"
-						class="versions-toggle"
-						bind:this={toggle}
-						aria-expanded={open}
-						aria-controls="version-history"
-						onclick={() => (open = !open)}>
-						{count} versions
-						<svg
-							class="chevron"
-							class:up={open}
-							viewBox="0 0 12 12"
-							aria-hidden="true"
-							fill="none"
-							stroke="currentColor"
-							stroke-width="1.6"
-							stroke-linecap="round"
-							stroke-linejoin="round">
-							<path d="M2.5 4.5 6 8l3.5-3.5" />
-						</svg>
-					</button>
-				</span>
-			</span>
+			{#if !isViewingHistory}{@render controls()}{/if}
 		</div>
 
 		<!-- The other versions, newest first. The whole row, number and message,
@@ -242,17 +249,24 @@
 		margin: -4px 0;
 	}
 
-	/* Stacked widths: the controls drop under the note rather than crush it.
-	   flex-shrink back on, or the basis plus the indent overflows the page. */
+	/* Stacked widths: whatever ends the line drops to a row of its own under
+	   the chip rather than crush the rest: the controls on the latest version,
+	   the note on an older one. flex-shrink back on, or the basis plus the
+	   indent overflows the page; the controls beside the chip may wrap. */
 	@media (max-width: 1023px) {
 		.current {
 			flex-wrap: wrap;
 			row-gap: 4px;
 		}
 
-		.controls {
+		.current > :last-child {
 			flex: 1 1 100%;
 			margin-left: 36px;
+		}
+
+		.current > .controls:not(:last-child) {
+			flex: 1 1 0;
+			min-width: 0;
 		}
 	}
 

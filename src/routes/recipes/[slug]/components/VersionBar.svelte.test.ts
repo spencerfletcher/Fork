@@ -11,6 +11,12 @@ function makeVersion(versionNumber: number, commitMessage: string) {
 	return { id: versionNumber, versionNumber, commitMessage };
 }
 
+/** The bar line's parts in reading order. */
+const order = (current: Element) =>
+	[...current.children].map((el) =>
+		['version-number', 'message', 'controls'].find((c) => el.classList.contains(c))
+	);
+
 const THREE = [
 	makeVersion(3, 'Chill the dough'),
 	makeVersion(2, 'Add espresso powder'),
@@ -59,6 +65,8 @@ describe('VersionBar', () => {
 		expect(screen.queryByRole('link', { name: 'Compare with v2' })).toBeNull();
 		expect(screen.getByText('Add espresso powder')).not.toBeVisible();
 		expect(screen.queryByText(/older version/i)).toBeNull();
+		// The latest reads its note first, then the toggle.
+		expect(order(current)).toEqual(['version-number', 'message', 'controls']);
 	});
 
 	test('opening lists the other versions as row links, each comparing with this one, and unclamps the message', async () => {
@@ -115,6 +123,9 @@ describe('VersionBar', () => {
 		);
 
 		expect(current).toHaveTextContent('Older version');
+		// The state leads, right after the chip: "v2 Older version · Back to v3 ·
+		// 3 versions", then the note.
+		expect(order(current)).toEqual(['version-number', 'controls', 'message']);
 		expect(screen.getByRole('link', { name: 'Back to v3' })).toHaveAttribute(
 			'href',
 			'/recipes/my-fork'
