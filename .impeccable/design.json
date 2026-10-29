@@ -405,7 +405,7 @@
 			"name": "Version bar",
 			"kind": "custom",
 			"refersTo": "card",
-			"description": "The version being read, what it changed, and one mono line of history; unboxed.",
+			"description": "The version being read and what it changed, then one mono line of history; unboxed, full length.",
 			"html": "<div class=\"ds-bar\"><p class=\"ds-bar-line\"><span class=\"ds-version\">v3</span><span class=\"ds-bar-msg\">Chill the dough and shift the sugar toward brown — thicker cookies, less cloying, smaller batch</span></p><p class=\"ds-byline\"><a href=\"#\">@spencerfletcher</a> · <a href=\"#\">3 versions</a> · 1 fork · <a href=\"#\">Compare with v2</a></p></div>",
 			"css": ".ds-bar{display:flex;flex-direction:column;gap:6px;max-width:560px;}.ds-bar p{margin:0}.ds-bar-line{display:flex;gap:10px;align-items:baseline;font-family:'Source Sans 3',sans-serif;font-size:17px;line-height:1.45;color:var(--color-text,#1a1714)}.ds-version{flex-shrink:0;display:inline-block;background:var(--color-marigold,#eca620);color:var(--color-text,#1a1714);font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;padding:0 6px;border-radius:4px}.ds-byline{font-family:'JetBrains Mono',monospace;font-size:14px;line-height:1.7;color:var(--color-text-3,#6f6960)}.ds-byline a{color:var(--color-accent,#b23c00);text-decoration:none}"
 		}

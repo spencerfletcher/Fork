@@ -21,7 +21,7 @@ Primary task: read and cook. Secondary: fork (visitor), edit (owner), favorite, 
 
 Visual authority: DESIGN.md as it stands (cream paper, clay text accent, marigold action, Bitter, Source Sans 3, JetBrains Mono for history and measurement). Refinement inside the incumbent world, not a redesign.
 
-Thesis (revised 28 October, evening, after the second critique): the description is the deck in sans; under it the version bar, unboxed: the marigold chip and the commit message clamped to two lines with a mono "more" when clipped, then one mono byline with author, counts and Compare. Tags are a mono line after it; Prep/Cook/Serves use the page's eyebrow label. The title chip and every other place the version number appeared are deleted.
+Thesis (revised 28 October, evening, after the second critique): the description is the deck in sans; under it the version bar, unboxed: the marigold chip and the commit message at full length, then one mono byline with author, counts and Compare. The header is three blocks at 24px: title and description; the bar; one meta line of Prep/Cook/Serves in the eyebrow label with the tags after them in sans Ink 2. The title chip and every other place the version number appeared are deleted.
 
 Focal moment: title, deck and byline together, with the photo beside them.
 

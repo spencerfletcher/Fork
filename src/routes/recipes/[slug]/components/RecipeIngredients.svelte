@@ -15,13 +15,31 @@
 		return `(${approximate ? '≈' : ''}${round(grams)}${range}g)`;
 	}
 
-	// The line as typed, split around where the weight goes. A measured line
-	// gets the weight where the measure sits, before the name: "1 cup (125g)
-	// flour". A counted line has no measure, so the estimate trails.
-	function parts(ingredient: Ingredient): [string, string] {
+	// "1/2" and its kin as the glyphs a cookbook sets.
+	const FRACTIONS: Record<string, string> = {
+		'1/2': '½',
+		'1/3': '⅓',
+		'2/3': '⅔',
+		'1/4': '¼',
+		'3/4': '¾',
+		'1/8': '⅛'
+	};
+	const vulgar = (s: string) => s.replace(/\b[123]\/[2348]\b/g, (f) => FRACTIONS[f] ?? f);
+
+	// The line as typed, split into what is set bold and what is not, with the
+	// weight between. A measured line bolds its measure and the weight sits
+	// before the name: "1 cup (125g) flour". A counted line bolds its leading
+	// number and the estimate trails: "2 large eggs (≈100g)". A line with no
+	// number ("salt to taste") has nothing to bold.
+	function parts(ingredient: Ingredient): { bold: string; rest: string; after: string } {
 		const { text, name, unit } = ingredient;
-		if (!unit || !text.endsWith(name)) return [text, ''];
-		return [text.slice(0, text.length - name.length).trimEnd(), name];
+		if (unit && text.endsWith(name)) {
+			const measure = text.slice(0, text.length - name.length).trimEnd();
+			return { bold: vulgar(measure), rest: '', after: name };
+		}
+		const m = text.match(/^(\d[\d/.,¼½¾⅓⅔⅛-]*)(\s+.*)$/);
+		if (!m) return { bold: '', rest: text, after: '' };
+		return { bold: vulgar(m[1]), rest: m[2], after: '' };
 	}
 
 	const anyApproximate = $derived(grams.some((g) => g?.approximate));
@@ -32,17 +50,13 @@
 	<div class="m-0 p-0" role="list">
 		{#each ingredients as ingredient, i (i)}
 			{@const result = grams[i]}
-			{@const [before, after] = parts(ingredient)}
+			{@const { bold, rest, after } = parts(ingredient)}
 			<!-- A native checkbox, visually hidden, carries the state and the keyboard
 			     behaviour; the label is the row and takes the struck-through look. -->
 			<label
 				class="border-border text-text has-[:focus-visible]:outline-accent block cursor-pointer border-b py-2.5 text-base leading-[1.5] select-none has-[:checked]:line-through has-[:checked]:opacity-40 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2">
 				<input type="checkbox" class="sr-only" />
-				{#if after}
-					<span class="font-semibold">{before}</span>
-				{:else}
-					{before}
-				{/if}
+				{#if bold}<span class="font-semibold">{bold}</span>{/if}{rest}
 				{#if result}
 					<!-- Same size as the line: WebKit strikes each inline box at its own
 					     font metrics, so a smaller span would get a lower, separate line. -->

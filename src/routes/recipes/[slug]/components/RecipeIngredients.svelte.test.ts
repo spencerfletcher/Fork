@@ -17,6 +17,20 @@ function rows() {
 }
 
 describe('RecipeIngredients', () => {
+	test('bolds the leading number on a counted line too, and nothing on a line without one', () => {
+		renderWith('2 large eggs\nsalt to taste', [null, null]);
+		const [eggs, salt] = rows();
+		expect(eggs.querySelector('.font-semibold')).toHaveTextContent('2');
+		expect(eggs).toHaveTextContent('2 large eggs');
+		expect(salt.querySelector('.font-semibold')).toBeNull();
+	});
+
+	test('sets a typed fraction as the cookbook glyph', () => {
+		renderWith('1/2 lemon\n1/4 cup sugar', [null, null]);
+		expect(rows()[0]).toHaveTextContent('½ lemon');
+		expect(rows()[1]).toHaveTextContent('¼ cup sugar');
+	});
+
 	test('is a section the tab bar can jump to, headed by an h2', () => {
 		const { container } = renderWith('1 cup flour', [null]);
 		expect(container.querySelector('section#ingredients')).not.toBeNull();

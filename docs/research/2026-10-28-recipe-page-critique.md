@@ -181,3 +181,7 @@ Each remaining question with a recommendation. "No" is a fine answer to any of t
 ## 11. Built, 28 October 2026
 
 The composition in section 4 shipped on master the same day, in nine commits from the fork server change to the page layout. Measured on the build at 1280: Ingredients at 575px with a photo and 499px without; on a phone, 817px with the tab bar at 749px. The whole e2e suite (82 tests) and unit suite (522) pass. Not done: a forks page for the "1 fork" count to link to, so the count is text; struck rows still reset on reload. `VersionStrip.svelte` and its test are no longer used by any page and are left for Spencer to delete.
+
+## 12. Second and third critiques, 28 and 29 October
+
+Re-scored after the build: 20/32, then 21/32 after a polish pass that unboxed the version bar, moved tags out of the hero's reading order and unified the label style. The third run's two P1s, the clamp's "more" (orphaned, undersized, stale after navigation) and a header with no rhythm, were closed the same night: the clamp is gone and the note runs at full length; the header is three blocks at 24px (title and description; chip, note and byline; one meta line of Prep/Cook/Serves with the tags after them in sans). Every ingredient row now bolds its leading quantity and typed fractions render as glyphs. Snapshots in `.impeccable/critique/`.

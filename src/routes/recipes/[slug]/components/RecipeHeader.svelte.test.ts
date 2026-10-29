@@ -113,13 +113,11 @@ describe('RecipeHeader version bar', () => {
 		expect(visible).toHaveLength(1);
 	});
 
-	test('the message is clamped to two lines and is not a button', () => {
+	test('the message runs in full: plain text, no clamp, no button', () => {
 		const { container } = renderHeader({ currentVersion: V3, versions: THREE });
 		const message = container.querySelector('.version-bar .commit')!;
-		expect(message).toHaveClass('clamped');
+		expect(message).not.toHaveClass('clamped');
 		expect(message.tagName).not.toBe('BUTTON');
-		// jsdom lays nothing out, so nothing is clipped and no "more" appears;
-		// the e2e suite covers the phone, where it does.
 		expect(screen.queryByRole('button', { name: 'more' })).toBeNull();
 	});
 });
@@ -216,11 +214,10 @@ describe('RecipeHeader content', () => {
 		const dessert = screen.getByRole('link', { name: 'Dessert' });
 		expect(dessert).toHaveAttribute('href', '/tags/dessert');
 		expect(dessert).not.toHaveClass('tag');
-		// No colour override: links are clay by default, and these should read as links.
-		expect(dessert.className).not.toMatch(/text-text/);
 		expect(dessert.parentElement).toHaveTextContent('Dessert, Baking');
-		// Set like the byline, a line of history, not a second byline in clay at body size.
-		expect(dessert.parentElement).toHaveClass('font-mono');
+		// Taxonomy, not history: the body face, quiet, on the meta line with the measure.
+		expect(dessert.parentElement).toHaveClass('font-sans');
+		expect(dessert.closest('.meta')!.querySelector('dl.details')).not.toBeNull();
 	});
 
 	test('carries no photo: that is the page’s to place', () => {

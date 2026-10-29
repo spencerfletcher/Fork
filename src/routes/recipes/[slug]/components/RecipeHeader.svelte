@@ -47,27 +47,9 @@
 	let open = $state(false);
 	let toggle: HTMLButtonElement | undefined = $state();
 
-	// The commit message shows two lines. Only when more is hidden does a
-	// "more" appear; the paragraph is never a button on its own.
-	let commit: HTMLElement | undefined = $state();
-	let clipped = $state(false);
-	let expanded = $state(false);
-	$effect(() => {
-		if (!commit) return;
-		const check = () => (clipped = commit!.scrollHeight > commit!.clientHeight + 1);
-		check();
-		if (typeof ResizeObserver === 'undefined') return;
-		const observer = new ResizeObserver(check);
-		observer.observe(commit);
-		return () => observer.disconnect();
-	});
-
 	// SvelteKit keeps this component mounted when only the query changes, so
 	// the history's own links would otherwise leave it open over the next view.
-	afterNavigate(() => {
-		open = false;
-		expanded = false;
-	});
+	afterNavigate(() => (open = false));
 
 	function onWindowKeydown(event: KeyboardEvent) {
 		if (!open || event.key !== 'Escape') return;
@@ -79,23 +61,27 @@
 <svelte:window onkeydown={onWindowKeydown} />
 
 <header class="recipe-header">
-	<h1 class="title m-0 font-serif leading-[1.15] font-medium">{currentVersion.title}</h1>
+	<!-- Three blocks: the recipe's own words, then the version's note and its
+	     history, then one quiet line of measure and tags. -->
+	<div class="lede">
+		<h1 class="title m-0 font-serif leading-[1.15] font-medium">{currentVersion.title}</h1>
 
-	{#if currentVersion.description}
-		<p class="description text-text-2 m-0">{currentVersion.description}</p>
-	{/if}
+		{#if currentVersion.description}
+			<p class="description text-text-2 m-0">{currentVersion.description}</p>
+		{/if}
 
-	{#if recipe.parent}
-		<p class="attribution text-text-3 m-0 font-sans text-[0.875rem]">
-			Forked from
-			<a href="/recipes/{recipe.parent.slug}" class="text-accent">{recipe.parent.title}</a>
-			{#if recipe.parent.author}by <Username username={recipe.parent.author.username} />{/if}
-		</p>
-	{:else if recipe.parentId}
-		<p class="attribution text-text-3 m-0 font-sans text-[0.875rem]">
-			Forked from a private recipe
-		</p>
-	{/if}
+		{#if recipe.parent}
+			<p class="attribution text-text-3 m-0 font-sans text-[0.875rem]">
+				Forked from
+				<a href="/recipes/{recipe.parent.slug}" class="text-accent">{recipe.parent.title}</a>
+				{#if recipe.parent.author}by <Username username={recipe.parent.author.username} />{/if}
+			</p>
+		{:else if recipe.parentId}
+			<p class="attribution text-text-3 m-0 font-sans text-[0.875rem]">
+				Forked from a private recipe
+			</p>
+		{/if}
+	</div>
 
 	<!-- The version bar, unboxed: the version being read and what it changed,
 	     then one mono line of history. The chip and the mono face are the
@@ -105,16 +91,7 @@
 		{#if count > 1}
 			<p class="commit-line m-0">
 				<span class="version">v{n}</span>
-				<span class="commit-text">
-					<span class="commit" class:clamped={!expanded} bind:this={commit}>
-						{currentVersion.commitMessage}
-					</span>
-					{#if clipped && !expanded}
-						<button type="button" class="more font-mono" onclick={() => (expanded = true)}>
-							more
-						</button>
-					{/if}
-				</span>
+				<span class="commit">{currentVersion.commitMessage}</span>
 			</p>
 		{/if}
 		<p class="byline m-0 font-mono">
@@ -168,16 +145,17 @@
 		</ul>
 	{/if}
 
-	{#if tags.length > 0}
-		<p class="tags text-text-3 m-0 font-mono">
-			{#each tags as tag, i (tag.id)}
-				{#if i > 0},&#32;{/if}
-				<a href="/tags/{tag.slug}">{tag.name}</a>
-			{/each}
-		</p>
-	{/if}
-
-	<Details content={currentVersion} />
+	<div class="meta">
+		<Details content={currentVersion} />
+		{#if tags.length > 0}
+			<p class="tags text-text-2 m-0 font-sans">
+				{#each tags as tag, i (tag.id)}
+					{#if i > 0},&#32;{/if}
+					<a href="/tags/{tag.slug}">{tag.name}</a>
+				{/each}
+			</p>
+		{/if}
+	</div>
 
 	{#if actions}
 		<div class="actions-row">{@render actions()}</div>
@@ -188,7 +166,13 @@
 	.recipe-header {
 		display: flex;
 		flex-direction: column;
-		gap: 12px;
+		gap: 24px;
+	}
+
+	.lede {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
 	}
 
 	/* clamp() for fluid typography: 28px on a phone, 40px on a desktop. */
@@ -225,39 +209,11 @@
 		font-weight: 600;
 	}
 
-	.commit-text {
+	.commit {
 		min-width: 0;
 		font-size: 1.0625rem;
 		line-height: 1.45;
 		color: var(--color-text);
-	}
-
-	.commit.clamped {
-		display: -webkit-box;
-		-webkit-line-clamp: 2;
-		line-clamp: 2;
-		-webkit-box-orient: vertical;
-		overflow: hidden;
-	}
-
-	/* "more" reads as a word in the margin, in the history's own face. */
-	.more {
-		padding: 0;
-		border: none;
-		background: none;
-		font-size: 0.875rem;
-		color: var(--color-accent);
-		cursor: pointer;
-	}
-
-	.more:hover {
-		color: var(--color-text);
-	}
-
-	.byline,
-	.tags {
-		font-size: 0.875rem;
-		line-height: 1.7;
 	}
 
 	.byline {
@@ -265,28 +221,58 @@
 		flex-wrap: wrap;
 		align-items: baseline;
 		gap: 4px 8px;
+		font-size: 0.875rem;
+		line-height: 1.7;
 		color: var(--color-text-3);
 	}
 
-	/* The dot belongs to the item after it, so a wrap never starts with one. */
-	.byline > :not(:first-child)::before {
+	/* The dot ends the item before it, so a wrapped line never starts with one. */
+	.byline > :not(:last-child)::after {
 		content: '·';
-		margin-right: 8px;
+		margin-left: 8px;
 		color: var(--color-text-3);
 	}
 
 	.byline a,
-	.tags a,
 	.versions-toggle {
 		color: var(--color-accent);
 		text-decoration: none;
 	}
 
 	.byline a:hover,
-	.tags a:hover,
 	.versions-toggle:hover,
 	.versions-toggle[aria-expanded='true'] {
 		color: var(--color-text);
+	}
+
+	/* Inline links reach a 24px hit without moving the text. */
+	.byline a,
+	.versions-toggle,
+	.tags a {
+		padding: 4px 0;
+		margin: -4px 0;
+	}
+
+	/* One quiet line: the measure, then the tags, both in the body face. */
+	.meta {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: 4px 20px;
+	}
+
+	.tags {
+		font-size: 0.875rem;
+		line-height: 1.7;
+	}
+
+	.tags a {
+		color: inherit;
+		text-decoration: none;
+	}
+
+	.tags a:hover {
+		color: var(--color-accent);
 	}
 
 	/* The toggle is a word in the sentence, not a button. */
@@ -335,13 +321,9 @@
 		color: var(--color-text);
 	}
 
-	.actions-row {
-		margin-top: 4px;
-	}
-
 	@media (max-width: 699px) {
 		.recipe-header {
-			gap: 10px;
+			gap: 20px;
 		}
 
 		.description {
