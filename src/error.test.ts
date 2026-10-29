@@ -19,6 +19,11 @@ describe('fallback error page', () => {
 		expect(html).toMatch(/<a href="\/"[^>]*>Go home<\/a>/);
 	});
 
+	test('sits centred on the screen like the login page', () => {
+		expect(html).toMatch(/min-height:\s*calc\(100dvh - 56px\)/);
+		expect(html).toMatch(/text-align:\s*center/);
+	});
+
 	test('loads only fonts the site ships, by their asset path', () => {
 		const fonts = [...html.matchAll(/%sveltekit\.assets%\/fonts\/([\w.-]+\.woff2)/g)].map(
 			(m) => m[1]

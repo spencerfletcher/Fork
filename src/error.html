@@ -81,9 +81,18 @@
 			.brand span {
 				color: #eca620;
 			}
+			/* Centred on the screen like the login page, nothing boxed. */
+			.centre {
+				min-height: calc(100dvh - 56px);
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				padding: 24px;
+			}
 			main {
 				max-width: 65ch;
-				padding: 48px 0 64px;
+				padding-bottom: 48px;
+				text-align: center;
 			}
 			h1 {
 				margin: 0;
@@ -129,7 +138,7 @@
 				<a href="/" class="brand">Fork<span>.</span></a>
 			</div>
 		</header>
-		<div class="inner">
+		<div class="centre">
 			<main>
 				<h1>Error %sveltekit.status% – %sveltekit.error.message%</h1>
 				<p class="lede">Something went wrong on Fork's side, not yours. Try again in a moment.</p>

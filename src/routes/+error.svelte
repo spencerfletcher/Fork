@@ -17,25 +17,27 @@
 	);
 </script>
 
-<div class="page">
-	<div class="page-inner">
-		<div class="error-page">
-			<h1 class="m-0">Error {page.status} – {message}</h1>
-			{#if lede}
-				<p class="lede text-text-2 m-0">{lede}</p>
-			{/if}
-			<a href="/" class="btn-primary">Go home</a>
-		</div>
+<!-- Centred on the screen like the login page, nothing boxed (Spencer, 29
+     October 2026). -->
+<div class="auth-page">
+	<div class="error-page text-center">
+		<h1 class="m-0">Error {page.status} – {message}</h1>
+		{#if lede}
+			<p class="lede text-text-2 m-0">{lede}</p>
+		{/if}
+		<a href="/" class="btn-primary">Go home</a>
 	</div>
 </div>
 
 <style>
 	.error-page {
-		padding-block: var(--space-6) var(--space-8);
+		max-width: 65ch;
+		/* Optically centred: the bar above is 56px of espresso, so the block
+		   sits a little above the exact middle of the paper. */
+		padding-bottom: var(--space-7);
 	}
 
 	.lede {
-		max-width: 65ch;
 		margin-top: 8px;
 		font-size: 1.0625rem;
 		line-height: 1.5;

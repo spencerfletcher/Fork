@@ -39,6 +39,13 @@ describe('error page', () => {
 		);
 	});
 
+	test('sits centred on the screen like the login page, text centred', () => {
+		const { container } = renderError(404, 'Recipe not found');
+		const block = container.querySelector('.auth-page .error-page')!;
+		expect(block).not.toBeNull();
+		expect(block.className).toMatch(/text-center/);
+	});
+
 	test('the title is the page h1 at the site size, not a display number', () => {
 		const { container } = renderError(500, 'Internal Error');
 		expect(container.querySelector('h1')!.className).not.toMatch(/rem/);
