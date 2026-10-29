@@ -274,7 +274,7 @@ describe('Edit page form', () => {
 		);
 		expect(tags).toEqual(['Spicy']);
 		expect(screen.getByLabelText(/public/i)).toBeChecked();
-		expect(screen.queryByRole('alert')).toBeNull();
+		expect(document.querySelector('.form-error')).toBeNull();
 		expect(title()).toHaveAttribute('aria-invalid', 'true');
 		expect(title()).toHaveAccessibleDescription('Title is required');
 		expect(title()).toHaveFocus();
@@ -290,6 +290,8 @@ describe('Edit page form', () => {
 		await fireEvent.focusOut(servings);
 		expect(servings).toHaveAttribute('aria-invalid', 'true');
 		expect(servings).toHaveAccessibleDescription('Servings must be at least 1');
+		// A blur error is announced, not only shown.
+		expect(screen.getByRole('alert')).toHaveTextContent('Servings must be at least 1');
 		expect(title()).not.toHaveAttribute('aria-invalid');
 	});
 
@@ -304,7 +306,8 @@ describe('Edit page form', () => {
 		const box = screen.getByLabelText('Ingredients');
 		expect(box).toHaveAccessibleDescription(/too long/);
 		expect(box).toHaveFocus();
-		expect(screen.queryByRole('alert')).toBeNull();
+		expect(screen.getByRole('alert')).toHaveAttribute('id', 'ingredients-error');
+		expect(document.querySelector('.form-error')).toBeNull();
 	});
 
 	test('shows the conflict message as an alert', async () => {

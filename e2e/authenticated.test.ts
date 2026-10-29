@@ -103,6 +103,32 @@ test.describe('New recipe page', () => {
 		await expect(title).not.toHaveAttribute('aria-invalid', 'true');
 	});
 
+	test('a blocked Create shows no browser bubble: the first empty field takes focus and its message is announced', async ({
+		page
+	}) => {
+		await gotoHydrated(page, '/recipes/new');
+		// Listened for on the fields themselves, which runs after the form's
+		// capturing handler, so this sees what it did.
+		await page.evaluate(() => {
+			const w = window as unknown as { invalids: boolean[] };
+			w.invalids = [];
+			for (const el of document.querySelectorAll('.form :is(input, textarea)')) {
+				el.addEventListener('invalid', (e) => w.invalids.push(e.defaultPrevented));
+			}
+		});
+		await page.getByLabel('Steps').fill('Mix.');
+		await page.getByRole('button', { name: /create recipe/i }).click();
+		const title = page.locator('input[name="title"]');
+		await expect(title).toBeFocused();
+		const prevented = await page.evaluate(
+			() => (window as unknown as { invalids: boolean[] }).invalids
+		);
+		// Title and Ingredients are empty: two invalid events, both cancelled.
+		expect(prevented).toEqual([true, true]);
+		await expect(page.getByRole('alert').first()).toHaveText('Title is required');
+		await expect(page).toHaveURL(/\/recipes\/new$/);
+	});
+
 	test('Tags: the list opens on focus, arrows and Enter pick without Tab stops, and the remove button is 16px (44 on a phone)', async ({
 		page
 	}) => {
@@ -533,7 +559,9 @@ test.describe('One save', () => {
 			await expect(box).toHaveAccessibleDescription(/An ingredient line is too long/);
 			await expect(box).toHaveAttribute('aria-invalid', 'true');
 			await expect(box).toBeFocused();
-			await expect(page.getByRole('alert')).toHaveCount(0);
+			// Announced at the field, not as the global alert.
+			await expect(page.locator('.form-error')).toHaveCount(0);
+			await expect(page.getByRole('alert')).toHaveAttribute('id', 'ingredients-error');
 			await expect(box).toHaveValue(long);
 			await expect(box).toBeEnabled();
 		} finally {

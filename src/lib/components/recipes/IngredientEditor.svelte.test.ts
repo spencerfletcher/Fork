@@ -44,13 +44,29 @@ describe('IngredientEditor', () => {
 	});
 
 	test('lists only the lines that did not parse', async () => {
-		render(IngredientEditor, { props: { value: '' } });
+		const { container } = render(IngredientEditor, { props: { value: '' } });
 		await type('1 cup flour\nsalt to taste\njuice of half a lemon');
-		const note = screen.getByRole('status');
+		const note = container.querySelector('.form-hint')!;
 		expect(note).toHaveTextContent('salt to taste');
 		expect(note).toHaveTextContent('juice of half a lemon');
 		expect(note).not.toHaveTextContent('1 cup flour');
 		expect(note).toHaveTextContent(/saved as written/i);
+	});
+
+	test('announces only when the number of lines that cannot be scaled changes, not on every keystroke', async () => {
+		const { container } = render(IngredientEditor, { props: { value: '' } });
+		const status = screen.getByRole('status');
+		expect(container.querySelector('.form-hint')).not.toHaveAttribute('aria-live');
+		await type('1 cup flour\nsalt');
+		expect(status).toHaveTextContent("1 line can't be scaled");
+		const node = status.firstChild;
+		await type('1 cup flour\nsalt to tas');
+		// The visible note follows the typing; the announcement does not move.
+		expect(container.querySelector('.form-hint')).toHaveTextContent('salt to tas');
+		expect(status).toHaveTextContent(/^1 line can't be scaled\.$/);
+		expect(status.firstChild).toBe(node);
+		await type('1 cup flour\nsalt to taste\npepper');
+		expect(status).toHaveTextContent("2 lines can't be scaled");
 	});
 
 	test('clears the note once every line parses', async () => {

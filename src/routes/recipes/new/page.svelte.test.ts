@@ -52,7 +52,29 @@ describe('New recipe page validation errors', () => {
 		expect(title).toHaveAttribute('aria-invalid', 'true');
 		expect(title).toHaveAccessibleDescription('Title is required');
 		expect(title).toHaveFocus();
-		expect(screen.queryByRole('alert')).toBeNull();
+		// Announced at the field; the global alert stays empty.
+		expect(screen.getByRole('alert')).toHaveAttribute('id', 'title-error');
+		expect(document.querySelector('.form-error')).toBeNull();
+	});
+
+	test('a blocked submit gets no browser bubble: the inline message speaks, and the first invalid field takes focus', async () => {
+		render(NewPage, { props: { data, form: null } });
+		const title = screen.getByLabelText(/^title/i);
+		const ingredients = screen.getByLabelText('Ingredients');
+		// The browser fires invalid on each bad field in order, cancelable.
+		const events = [title, ingredients].map((el) => {
+			const event = new Event('invalid', { cancelable: true });
+			el.dispatchEvent(event);
+			return event;
+		});
+		await tick();
+		expect(events.map((e) => e.defaultPrevented)).toEqual([true, true]);
+		expect(title).toHaveFocus();
+		// Each message is announced as it appears.
+		expect(screen.getAllByRole('alert').map((el) => el.textContent?.trim())).toEqual([
+			'Title is required',
+			'At least one ingredient is required'
+		]);
 	});
 
 	test('a failure no field owns stays the global alert', async () => {

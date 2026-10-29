@@ -186,6 +186,16 @@
 
 	const globalError = $derived(form && !fieldFor(form.error) ? form.error : null);
 
+	// A blocked submit fires invalid on each bad field in order. The inline
+	// message says it, so the browser's bubble, which would say it again, is
+	// cancelled; cancelling also stops the browser focusing the field, so the
+	// first invalid one is focused here.
+	function onInvalid(event: Event & { currentTarget: HTMLFormElement }) {
+		event.preventDefault();
+		validate(event.target);
+		event.currentTarget.querySelector<HTMLElement>(':is(input, textarea):invalid')?.focus();
+	}
+
 	const aria = (name: string) =>
 		errors[name] ? { 'aria-invalid': 'true' as const, 'aria-describedby': `${name}-error` } : {};
 
@@ -219,7 +229,7 @@
 
 {#snippet fieldError(name: string)}
 	{#if errors[name]}
-		<p class="field-error" id="{name}-error">{errors[name]}</p>
+		<p class="field-error" id="{name}-error" role="alert">{errors[name]}</p>
 	{/if}
 {/snippet}
 
@@ -230,7 +240,7 @@
 	use:enhance={track}
 	class="form"
 	onfocusout={(e) => validate(e.target)}
-	oninvalidcapture={(e) => validate(e.target)}
+	oninvalidcapture={onInvalid}
 	oninput={(e) => {
 		const name = (e.target as HTMLInputElement).name;
 		if (errors[name]) validate(e.target);
