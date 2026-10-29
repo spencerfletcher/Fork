@@ -43,7 +43,7 @@ Production-ready page, all three compositions, both roles, with and without phot
 - Viewing an older version: the bar reads `v2 · note · Older version · Back to v3 · 3 versions ▾ · Compare with v3`; actions hidden; no other banner.
 - Prep · Cook · Serves in one mono line, each time shown once, 13px minimum; any missing value is omitted, not shown blank.
 - Ingredients: 1 to about 30 rows, the measure bold (a counted line such as "2 large eggs" bold whole), grams inline in parentheses, estimated grams marked as today; rows strike on tap with a 44px hit area.
-- Method: 1 to about 20 steps, clay Bitter numerals; the column runs to the content's right edge, the step text caps at 68ch and rags right (29 October, reversing the 28 October "no cap" after two critiques measured ~103ch).
+- Method: 1 to about 20 steps, clay Bitter numerals; running to the content's right edge (Spencer, 28 October: no cap; a 68ch cap was tried on 29 October and reverted as too narrow). Critiques will keep measuring ~103ch; that is the decision, not a finding.
 - Photo: present or absent. Absent collapses the hero to a single left-aligned 760px column; nothing fills the space.
 - Roles: logged out (no action row at all; decided 28 October afternoon, a lone Fork read as odd and the login round trip was not worth it), visitor (Fork primary, Favorite ghost), owner (Edit primary, Favorite ghost, no Fork).
 - Fork: one click; the copy opens with a default first commit message naming the source author and version.

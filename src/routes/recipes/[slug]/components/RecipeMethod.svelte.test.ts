@@ -9,11 +9,6 @@ describe('RecipeMethod', () => {
 		expect(screen.getByText('2')).toBeInTheDocument();
 	});
 
-	test('step text wraps at a reading measure while the numbers span the column', () => {
-		render(RecipeMethod, { props: { steps: [{ text: 'Mix.' }] } });
-		expect(screen.getByText('Mix.')).toHaveClass('max-w-[68ch]');
-	});
-
 	test('is a section the tab bar can jump to, headed by an h2', () => {
 		const { container } = render(RecipeMethod, { props: { steps: [{ text: 'Mix.' }] } });
 		expect(container.querySelector('section#method')).not.toBeNull();
