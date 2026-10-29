@@ -44,6 +44,31 @@ test.describe('Compare page', () => {
 		await expect(page.getByText('From', { exact: true })).toHaveCount(0);
 	});
 
+	test('the caret sits at the right edge of the picker at every width, so it reads as a select', async ({
+		page
+	}) => {
+		// The gap between caret and picker edge is the face's own padding and
+		// border, nothing more; on a phone the picker is ~164px wide.
+		const caretGap = (n: number) =>
+			page
+				.locator('.picker')
+				.nth(n)
+				.evaluate((picker) => {
+					const face = picker.querySelector('.picker__face')!;
+					const caret = face.querySelector('.picker__caret')!;
+					const s = getComputedStyle(face);
+					const inset = parseFloat(s.paddingRight) + parseFloat(s.borderRightWidth);
+					return picker.getBoundingClientRect().right - caret.getBoundingClientRect().right - inset;
+				});
+		await page.setViewportSize({ width: 390, height: 900 });
+		await openCookiesCompare(page);
+		expect((await page.locator('.picker').first().boundingBox())!.width).toBeGreaterThan(120);
+		for (const n of [0, 1]) expect(Math.abs(await caretGap(n))).toBeLessThanOrEqual(1);
+		await page.setViewportSize({ width: 1280, height: 900 });
+		expect((await page.locator('.picker').first().boundingBox())!.width).toBeLessThan(100);
+		for (const n of [0, 1]) expect(Math.abs(await caretGap(n))).toBeLessThanOrEqual(1);
+	});
+
 	test('at 1280 Method starts on the To card’s left edge; Details runs the column', async ({
 		page
 	}) => {

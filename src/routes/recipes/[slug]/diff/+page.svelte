@@ -46,7 +46,10 @@
      value already names the version and its message. -->
 {#snippet picker(id: string, label: string, value: number, set: (v: number) => void)}
 	<span class="picker">
-		<span class="picker__face" aria-hidden="true">v{value} ▾</span>
+		<span class="picker__face" aria-hidden="true">
+			v{value}
+			<span class="picker__caret">▾</span>
+		</span>
 		<select
 			{id}
 			{value}
@@ -149,7 +152,13 @@
 		padding: 6px 10px;
 	}
 
+	/* The caret at the face's right edge, so a phone's wide picker reads as a
+	   select rather than a text field; at desktop the face's natural width keeps
+	   it one space from the number. */
 	.picker__face {
+		display: flex;
+		justify-content: space-between;
+		gap: 1ch;
 		position: relative;
 		z-index: 1;
 		border: 1px solid transparent;
