@@ -20,7 +20,16 @@
 				</h2>
 				<div class="recipe-grid">
 					{#each data.forks as recipe, i (recipe.id)}
-						<RecipeCard {recipe} index={i} />
+						<!-- Under the byline, the fork's first commit note: it names whose
+						     version it came from. Ink 3 at the meta row's size, two lines at most. -->
+						<div class="flex flex-col gap-1">
+							<RecipeCard {recipe} index={i} />
+							{#if recipe.forkNote}
+								<p class="text-text-3 m-0 line-clamp-2 font-sans text-[0.8125rem] leading-[1.5]">
+									{recipe.forkNote}
+								</p>
+							{/if}
+						</div>
 					{/each}
 				</div>
 			</section>

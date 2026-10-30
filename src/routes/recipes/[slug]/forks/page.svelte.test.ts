@@ -10,7 +10,8 @@ const card = (id: number) => ({
 	imageUrl: `https://img/${id}.jpg`,
 	parentId: 42,
 	prepTimeMinutes: null,
-	cookTimeMinutes: null
+	cookTimeMinutes: null,
+	forkNote: null as string | null
 });
 
 const data = {
@@ -50,6 +51,20 @@ describe('Forks page', () => {
 		const imgs = [...container.querySelectorAll('img.card-img')];
 		expect(imgs[0]).toHaveAttribute('fetchpriority', 'high');
 		expect(imgs.at(-1)).toHaveAttribute('loading', 'lazy');
+	});
+
+	test('under each card, the fork’s first commit note in Ink 3, clamped to two lines', () => {
+		const note = 'Forked from @owner’s v3';
+		const { container } = renderForks({ forks: [{ ...card(1), forkNote: note }, card(2)] });
+		const p = screen.getByText(note);
+		expect(p.tagName).toBe('P');
+		expect(p).toHaveClass('text-text-3', 'line-clamp-2', 'text-[0.8125rem]');
+		// After the card's byline, inside the same grid cell.
+		const cell = p.parentElement!;
+		expect(cell.parentElement).toHaveClass('recipe-grid');
+		expect(p.previousElementSibling).toHaveClass('recipe-card');
+		// A fork with no note gets no empty line.
+		expect(container.querySelectorAll('.recipe-grid p')).toHaveLength(1);
 	});
 
 	test('says so in one line when there are no forks', () => {
