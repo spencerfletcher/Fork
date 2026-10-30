@@ -214,4 +214,19 @@ test.describe('Compare page', () => {
 		await expect(page.getByLabel('To version')).toHaveValue('3');
 		await expect(from).toBeFocused();
 	});
+
+	test('a recipe that does not exist answers as the root page does: the private-recipe lede, home, and a search', async ({
+		page
+	}) => {
+		const response = await page.goto('/recipes/does-not-exist/diff');
+		expect(response?.status()).toBe(404);
+		await expect(
+			page.getByText('It may be an old link, or a recipe its author keeps private.')
+		).toBeVisible();
+		await expect(page.getByRole('link', { name: 'Go home' })).toHaveAttribute('href', '/');
+		await expect(page.getByRole('link', { name: 'Search recipes' })).toHaveAttribute(
+			'href',
+			'/search'
+		);
+	});
 });
