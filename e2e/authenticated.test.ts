@@ -99,10 +99,10 @@ test.describe('New recipe page', () => {
 		await expect(title).toHaveAttribute('aria-invalid', 'true');
 		await expect(page.locator('#title-error')).toHaveText('Title is required');
 		await expect(title).toHaveAccessibleDescription('Title is required');
-		// The DESIGN.md error tokens: remove on remove-bg.
+		// The red border, with no fill: an empty invalid box must not look filled.
 		expect(await title.evaluate((el) => getComputedStyle(el).borderColor)).toBe('rgb(163, 54, 43)');
 		expect(await title.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(
-			'rgb(246, 227, 224)'
+			'rgb(255, 253, 249)'
 		);
 		await title.fill('Soup');
 		await expect(title).not.toHaveAttribute('aria-invalid', 'true');
@@ -139,24 +139,9 @@ test.describe('New recipe page', () => {
 		}
 	});
 
-	test("a placeholder on an invalid box's pink fill passes 4.5:1, and stays Ink 3 on a valid one", async ({
+	test('an invalid box keeps the surface fill and its Ink 3 placeholder, so empty still looks empty', async ({
 		page
 	}) => {
-		const contrast = (fg: string, bg: string) => {
-			const lum = (c: string) => {
-				const [r, g, b] = c
-					.match(/\d+(\.\d+)?/g)!
-					.slice(0, 3)
-					.map(Number);
-				const f = (v: number) => {
-					const s = v / 255;
-					return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
-				};
-				return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
-			};
-			const [a, b] = [lum(fg), lum(bg)].sort((x, y) => y - x);
-			return (a + 0.05) / (b + 0.05);
-		};
 		await gotoHydrated(page, '/recipes/new');
 		const steps = page.getByLabel('Steps');
 		const colours = () =>
@@ -164,14 +149,13 @@ test.describe('New recipe page', () => {
 				placeholder: getComputedStyle(el, '::placeholder').color,
 				fill: getComputedStyle(el).backgroundColor
 			}));
-		expect((await colours()).placeholder).toBe('rgb(111, 105, 96)');
+		const valid = await colours();
+		expect(valid.placeholder).toBe('rgb(111, 105, 96)');
 		await steps.fill('x');
 		await steps.fill('');
 		await steps.blur();
 		await expect(steps).toHaveAttribute('aria-invalid', 'true');
-		const invalid = await colours();
-		expect(invalid.fill).toBe('rgb(246, 227, 224)');
-		expect(contrast(invalid.placeholder, invalid.fill)).toBeGreaterThanOrEqual(4.5);
+		expect(await colours()).toEqual(valid);
 	});
 
 	test('the required asterisk is Ink 3 at rest, not the error red', async ({ page }) => {

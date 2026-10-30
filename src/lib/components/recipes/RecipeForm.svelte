@@ -527,10 +527,11 @@
 		min-height: 24px;
 	}
 
-	/* Ink 3 is 4.39:1 on the error fill; Ink 2 passes there. Global, so it
-	   reaches the ingredient and step boxes inside their own components. */
-	.form :global(:is(input, textarea):is(:user-invalid, [aria-invalid='true'])::placeholder) {
-		color: var(--color-text-2);
+	/* No error fill in the editor: it made an empty invalid box look filled.
+	   The red border and the message carry it. Global, so it reaches the
+	   ingredient and step boxes inside their own components. */
+	.form :global(:is(input, textarea):is(:user-invalid, [aria-invalid='true'])) {
+		background: var(--color-surface);
 	}
 
 	/* Clay, as the strike rows' ticked squares are, not the browser's blue. */
