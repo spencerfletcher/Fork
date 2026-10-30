@@ -77,6 +77,38 @@ describe('Profile page', () => {
 	});
 });
 
+describe('Profile page owner action', () => {
+	const owner = { id: 'u1' };
+
+	test('the owner gets one action, New recipe →, after the recipe list', () => {
+		const { container } = render(ProfilePage, {
+			props: { data: { ...data, user: owner } } as never
+		});
+		const link = screen.getByRole('link', { name: 'New recipe →' });
+		expect(link).toHaveAttribute('href', '/recipes/new');
+		expect(link).toHaveClass('arrow-link');
+		const grid = container.querySelector('.recipe-grid')!;
+		expect(grid.compareDocumentPosition(link) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+	});
+
+	test('the owner with no public recipes still gets it, under the empty line', () => {
+		render(ProfilePage, {
+			props: { data: { ...data, recipes: [], user: owner } } as never
+		});
+		expect(screen.getByRole('link', { name: 'New recipe →' })).toBeInTheDocument();
+	});
+
+	test('another signed-in viewer and a signed-out visitor do not see it', () => {
+		const other = render(ProfilePage, {
+			props: { data: { ...data, user: { id: 'u2' } } } as never
+		});
+		expect(screen.queryByRole('link', { name: /New recipe/ })).toBeNull();
+		other.unmount();
+		render(ProfilePage, { props: { data: { ...data, user: null } } as never });
+		expect(screen.queryByRole('link', { name: /New recipe/ })).toBeNull();
+	});
+});
+
 describe('Profile page forced colours', () => {
 	test('the avatar circle has a transparent border, so it keeps its shape when the tint is stripped', () => {
 		const style = source.slice(source.indexOf('<style>'));

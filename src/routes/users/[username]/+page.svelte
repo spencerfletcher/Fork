@@ -6,6 +6,9 @@
 
 	const { profile, recipes, commitCount, privateCount } = $derived(data);
 
+	// data.user is the signed-in viewer, from the root layout.
+	const isOwner = $derived(data.user?.id === profile.id);
+
 	const memberSince = $derived(
 		new Date(profile.createdAt ?? Date.now()).toLocaleDateString('en-US', {
 			month: 'long',
@@ -52,6 +55,11 @@
 			</section>
 		{:else}
 			<p class="empty-state">No public recipes yet.</p>
+		{/if}
+
+		<!-- The page's one action, for its owner only. -->
+		{#if isOwner}
+			<p class="profile-new"><a href="/recipes/new" class="arrow-link">New recipe →</a></p>
 		{/if}
 	</div>
 </div>
@@ -115,6 +123,10 @@
 		margin: 0;
 		font-size: 0.875rem;
 		color: var(--color-text-3);
+	}
+
+	.profile-new {
+		margin: var(--space-4) 0 0;
 	}
 
 	@media (max-width: 699px) {
