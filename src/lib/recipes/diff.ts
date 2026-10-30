@@ -69,10 +69,49 @@ export function diffMeta(from: RecipeContent, to: RecipeContent): MetaDiffRow[] 
 
 /** Word-level segments between two strings, for highlighting inside a modified row. */
 export function diffInline(a: string, b: string): InlineSegment[] {
-	return diffWords(a, b).map((part) => ({
-		type: part.added ? 'added' : part.removed ? 'removed' : 'unchanged',
-		text: part.value
-	}));
+	return tidyEdges(
+		diffWords(a, b).map((part) => ({
+			type: part.added ? 'added' : part.removed ? 'removed' : 'unchanged',
+			text: part.value
+		}))
+	);
+}
+
+/**
+ * diffWords hands a changed run its surrounding spaces and a leading ", ", so
+ * the highlight spills onto blank space and punctuation. This moves both out
+ * of each added or removed run into the unchanged text beside it, merging
+ * neighbours. A run that is only punctuation keeps it: the comma is the change.
+ */
+export function tidyEdges(parts: InlineSegment[]): InlineSegment[] {
+	const out: InlineSegment[] = [];
+	const push = (type: InlineSegment['type'], text: string) => {
+		if (!text) return;
+		const last = out.at(-1);
+		if (last?.type === type) last.text += text;
+		else out.push({ type, text });
+	};
+	for (const { type, text } of parts) {
+		if (type === 'unchanged') {
+			push(type, text);
+			continue;
+		}
+		const trail = text.match(/\s*$/)![0];
+		let body = text.slice(0, text.length - trail.length);
+		let lead = body.match(/^\s*/)![0];
+		body = body.slice(lead.length);
+		// The trailing space is already off, so a lone "," has no space after it
+		// and stays in the run.
+		const punct = body.match(/^[,.;:]\s+/)?.[0] ?? '';
+		if (punct) {
+			lead += punct;
+			body = body.slice(punct.length);
+		}
+		push('unchanged', lead);
+		push(type, body);
+		push('unchanged', trail);
+	}
+	return out;
 }
 
 // Ingredients are matched across versions by name, so "flour" in one version

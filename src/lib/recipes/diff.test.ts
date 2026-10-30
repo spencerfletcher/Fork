@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import { diffIngredients, diffSteps, diffInline, diffMeta } from './diff';
+import { diffIngredients, diffSteps, diffInline, diffMeta, tidyEdges } from './diff';
 import { makeIngredient, makeStep as step, makeContent } from './fixtures';
 import type { Ingredient, StepAnnotation } from '#lib/recipes/types.js';
 
@@ -29,6 +29,79 @@ describe('diffInline', () => {
 		expect(result.some((s) => s.type === 'removed')).toBe(true);
 		expect(result.some((s) => s.type === 'added')).toBe(true);
 		expect(result.every((s) => s.type !== 'unchanged')).toBe(true);
+	});
+});
+
+// Highlights cover words only: the space and the leading ", " around a changed
+// run belong to the unchanged text beside it. Strings are the seed's.
+describe('diffInline edges', () => {
+	test('cookies step 5: the added clause starts after its comma', () => {
+		const from =
+			'Gradually stir in the flour mixture until just combined. Fold in chocolate chips.';
+		const added =
+			'Cover and chill the dough at least 2 hours — cold dough spreads less, so the extra brown sugar reads as chew rather than sprawl.';
+		const to = `Gradually stir in the flour mixture until just combined. Fold in chocolate chips, reserving a handful to press into the tops. ${added}`;
+		expect(diffInline(from, to)).toEqual([
+			{
+				type: 'unchanged',
+				text: 'Gradually stir in the flour mixture until just combined. Fold in chocolate chips, '
+			},
+			{ type: 'added', text: 'reserving a handful to press into the tops' },
+			{ type: 'unchanged', text: '. ' },
+			{ type: 'added', text: added }
+		]);
+	});
+
+	test('cookies step 6: "chilled" is highlighted without its trailing space', () => {
+		const from =
+			'Drop rounded tablespoons of dough onto prepared baking sheets. Bake 9–11 minutes until edges are golden. Cool on baking sheet for 5 minutes before transferring.';
+		const to =
+			'Drop rounded tablespoons of chilled dough onto prepared baking sheets, pressing the reserved chips into the tops. Bake 9–11 minutes until edges are golden. Sprinkle with flaky sea salt while still hot, then cool on baking sheet for 5 minutes before transferring.';
+		expect(diffInline(from, to)).toEqual([
+			{ type: 'unchanged', text: 'Drop rounded tablespoons of ' },
+			{ type: 'added', text: 'chilled' },
+			{ type: 'unchanged', text: ' dough onto prepared baking sheets, ' },
+			{ type: 'added', text: 'pressing the reserved chips into the tops' },
+			{ type: 'unchanged', text: '. Bake 9–11 minutes until edges are golden. ' },
+			{ type: 'removed', text: 'Cool' },
+			{ type: 'added', text: 'Sprinkle with flaky sea salt while still hot, then cool' },
+			{ type: 'unchanged', text: ' on baking sheet for 5 minutes before transferring.' }
+		]);
+	});
+
+	test('tikka masala step 1: the struck "and" leaves its space unstruck', () => {
+		const from =
+			'Combine chicken with yogurt, lemon juice, garam masala, cumin, coriander, and turmeric. Marinate at least 1 hour or overnight in the fridge.';
+		const to =
+			'Combine chicken with yogurt, lemon juice, garam masala, cumin, coriander, turmeric, and smoked paprika. Marinate at least 1 hour or overnight in the fridge.';
+		expect(diffInline(from, to)).toEqual([
+			{
+				type: 'unchanged',
+				text: 'Combine chicken with yogurt, lemon juice, garam masala, cumin, coriander, '
+			},
+			{ type: 'removed', text: 'and' },
+			{ type: 'unchanged', text: ' turmeric, ' },
+			{ type: 'added', text: 'and smoked paprika' },
+			{ type: 'unchanged', text: '. Marinate at least 1 hour or overnight in the fridge.' }
+		]);
+	});
+
+	test('a run that is only a space joins the unchanged text on both sides', () => {
+		expect(
+			tidyEdges([
+				{ type: 'unchanged', text: 'salt' },
+				{ type: 'added', text: ' ' },
+				{ type: 'unchanged', text: 'pepper' }
+			])
+		).toEqual([{ type: 'unchanged', text: 'salt pepper' }]);
+	});
+
+	test('a change that is only a comma keeps the comma highlighted', () => {
+		expect(diffInline('salt pepper', 'salt, pepper')).toEqual([
+			{ type: 'unchanged', text: 'salt' },
+			{ type: 'added', text: ',' },
+			{ type: 'unchanged', text: ' pepper' }
+		]);
 	});
 });
 
