@@ -65,6 +65,45 @@ describe('fallback error page', () => {
 		expect(html).not.toMatch(/fonts\.googleapis|app\.css/);
 	});
 
+	// Heights from the source: font size x line height + vertical padding + borders.
+	function rule(selector: string): string {
+		const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+		return new RegExp(`(?<!,)\\n\\t\\t\\t${escaped}\\s*{([^}]*)}`).exec(html)![1];
+	}
+	function px(block: string, prop: string): string | undefined {
+		return new RegExp(`(?:^|[^-])${prop}:\\s*([^;]+);`).exec(block)?.[1].trim();
+	}
+
+	test("both buttons are the app's 48.75px: 15px at 1.65, 11px padding, a 1px border", () => {
+		// app.css .btn-primary/.btn-ghost: 0.9375rem, body line-height 1.65,
+		// padding 11px 16px, a 1px border (transparent on the primary).
+		const shared = rule('.btn-primary,\n\t\t\t.btn-ghost');
+		expect(px(shared, 'font-size')).toBe('0.9375rem');
+		const lineHeight = Number(px(shared, 'line-height'));
+		for (const selector of ['.btn-primary', '.btn-ghost']) {
+			const block = rule(selector);
+			const padding = px(block, 'padding')!;
+			const border = px(block, 'border')!;
+			expect(padding).toBe('11px 16px');
+			expect(border).toMatch(/^1px solid /);
+			expect(15 * lineHeight + 2 * parseFloat(padding) + 2 * parseFloat(border)).toBe(48.75);
+		}
+	});
+
+	test('the primary keeps its box under forced colours with a transparent border', () => {
+		expect(px(rule('.btn-primary'), 'border')).toBe('1px solid transparent');
+	});
+
+	test("the wordmark link fits the phone bar's 52px", () => {
+		// 1.375rem at the body's 1.5 line height, plus its vertical padding.
+		const brand = rule('.brand');
+		expect(px(brand, 'line-height')).toBeUndefined();
+		expect(px(rule('body'), 'line-height')).toBe('1.5');
+		const height = 22 * 1.5 + 2 * parseFloat(px(brand, 'padding')!);
+		expect(height).toBeLessThanOrEqual(52);
+		expect(height).toBeGreaterThanOrEqual(44);
+	});
+
 	test('the title balances its lines, so "Recipe not found" never leaves one word dangling', () => {
 		expect(html).toMatch(/h1\s*{[^}]*text-wrap:\s*balance/);
 	});

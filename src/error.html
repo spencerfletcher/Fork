@@ -84,7 +84,8 @@
 				letter-spacing: -0.01em;
 				color: #f7f3ec;
 				text-decoration: none;
-				padding: 11px 0;
+				/* 33px of line plus 18 of padding, inside the phone bar's 52. */
+				padding: 9px 0;
 			}
 			.brand span {
 				color: #eca620;
@@ -129,10 +130,14 @@
 				border-radius: 6px;
 				color: #1a1714;
 				font-size: 0.9375rem;
+				line-height: 1.65;
 				text-decoration: none;
 			}
 			.btn-primary {
-				padding: 12px 16px;
+				padding: 11px 16px;
+				/* Transparent, so it shows only under forced colours, where the fill
+				   goes and the border is all that keeps the button a box. */
+				border: 1px solid transparent;
 				background: #eca620;
 				font-weight: 600;
 			}
