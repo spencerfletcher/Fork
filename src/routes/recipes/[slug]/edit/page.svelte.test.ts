@@ -295,6 +295,22 @@ describe('Edit page form', () => {
 		expect(hiddenRevision()).toHaveValue('3');
 	});
 
+	test('a blocked save says in the outcome line how many fields need attention, and focuses the first', async () => {
+		render(EditPage, { props: { data: makeData(), form: null } });
+		const ingredients = screen.getByLabelText('Ingredients');
+		await fireEvent.input(title(), { target: { value: '' } });
+		await fireEvent.input(ingredients, { target: { value: '' } });
+		// The browser fires invalid on each bad field in order when Save is pressed.
+		for (const el of [title(), ingredients]) {
+			el.dispatchEvent(new Event('invalid', { cancelable: true }));
+		}
+		await tick();
+		expect(screen.getByText('Editing v2 · 2 fields need attention')).toBeInTheDocument();
+		expect(title()).toHaveFocus();
+		await fireEvent.input(title(), { target: { value: 'Biscuits' } });
+		expect(screen.getByText('Editing v2 · 1 field needs attention')).toBeInTheDocument();
+	});
+
 	test("a number below its floor is named under its own field with the server's wording", async () => {
 		render(EditPage, { props: { data: makeData(), form: null } });
 		const servings = screen.getByLabelText(/serves/i);

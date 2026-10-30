@@ -84,13 +84,18 @@ test.describe('New recipe page', () => {
 		await expect(page.getByLabel('Steps')).toBeVisible();
 	});
 
-	test('a field left empty turns on the error tokens and says why in its own words, with no save', async ({
+	test('a field edited and left empty turns on the error tokens and says why in its own words, with no save; passing through says nothing', async ({
 		page
 	}) => {
 		await gotoHydrated(page, '/recipes/new');
 		const title = page.locator('input[name="title"]');
 		await title.focus();
 		await page.keyboard.press('Tab');
+		await expect(title).not.toHaveAttribute('aria-invalid');
+		await expect(title).not.toHaveCSS('border-color', 'rgb(163, 54, 43)');
+		await title.fill('S');
+		await title.fill('');
+		await title.blur();
 		await expect(title).toHaveAttribute('aria-invalid', 'true');
 		await expect(page.locator('#title-error')).toHaveText('Title is required');
 		await expect(title).toHaveAccessibleDescription('Title is required');
@@ -160,7 +165,8 @@ test.describe('New recipe page', () => {
 				fill: getComputedStyle(el).backgroundColor
 			}));
 		expect((await colours()).placeholder).toBe('rgb(111, 105, 96)');
-		await steps.focus();
+		await steps.fill('x');
+		await steps.fill('');
 		await steps.blur();
 		await expect(steps).toHaveAttribute('aria-invalid', 'true');
 		const invalid = await colours();

@@ -104,9 +104,25 @@ describe('New recipe page validation errors', () => {
 		expect(document.querySelector('[aria-invalid="true"]')).toBeNull();
 	});
 
-	test("leaving Title empty marks it with the server's own wording before any save, and typing clears it", async () => {
+	test('passing through the untouched required fields marks none of them', async () => {
+		render(NewPage, { props: { data, form: null } });
+		for (const field of [
+			screen.getByLabelText(/^title/i),
+			screen.getByLabelText('Ingredients'),
+			screen.getByLabelText('Steps')
+		]) {
+			await fireEvent.focusIn(field);
+			await fireEvent.focusOut(field);
+			expect(field).not.toHaveAttribute('aria-invalid');
+		}
+		expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+	});
+
+	test("leaving an edited Title empty marks it with the server's own wording before any save, and typing clears it", async () => {
 		render(NewPage, { props: { data, form: null } });
 		const title = screen.getByLabelText(/^title/i);
+		expect(title).not.toHaveAttribute('aria-invalid');
+		await fireEvent.input(title, { target: { value: '' } });
 		expect(title).not.toHaveAttribute('aria-invalid');
 		await fireEvent.focusOut(title);
 		expect(title).toHaveAttribute('aria-invalid', 'true');
@@ -122,8 +138,10 @@ describe('New recipe page validation errors', () => {
 		const steps = screen.getByLabelText('Steps');
 		expect(ingredients).toBeRequired();
 		expect(steps).toBeRequired();
-		await fireEvent.focusOut(ingredients);
-		await fireEvent.focusOut(steps);
+		for (const box of [ingredients, steps]) {
+			await fireEvent.input(box, { target: { value: '' } });
+			await fireEvent.focusOut(box);
+		}
 		expect(ingredients).toHaveAccessibleDescription('At least one ingredient is required');
 		expect(steps).toHaveAccessibleDescription(/^At least one step is required /);
 	});

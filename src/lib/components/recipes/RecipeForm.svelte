@@ -95,6 +95,9 @@
 	const settingsChanged = $derived(settings(draft) !== settings(baseline));
 
 	const outcome = $derived.by(() => {
+		if (blocked && errorCount > 0) {
+			return errorCount === 1 ? '1 field needs attention' : `${errorCount} fields need attention`;
+		}
 		if (!dirty || submitting || !nextVersion || groups === null) return '';
 		// A typed message is never dropped: the save writes a version carrying it.
 		if (groups.length > 0 || draft.commitMessage.trim()) return `saves as v${nextVersion}`;
@@ -149,15 +152,21 @@
 	);
 
 	// Inline errors, one per field name, in the server's own wording. A field is
-	// checked when it is left, when it blocks a submit, and on every keystroke
-	// once it carries an error, so the message and the browser's :user-invalid
-	// state come from the same validity and clear together.
+	// checked when it is left after an edit, when it blocks a submit, and on
+	// every keystroke once it carries an error, so the message and the browser's
+	// :user-invalid state come from the same validity and clear together.
+	// Passing through an untouched field says nothing, as the auth pages do.
 	const REQUIRED: Record<string, string> = {
 		title: 'Title is required',
 		ingredients: 'At least one ingredient is required',
 		steps: 'At least one step is required'
 	};
 	let errors = $state<Record<string, string>>({});
+	// Read only by handlers, so not state.
+	const edited: Record<string, boolean> = {};
+	// A blocked submit makes the outcome line count what still needs fixing.
+	let blocked = $state(false);
+	const errorCount = $derived(Object.values(errors).filter(Boolean).length);
 
 	function validate(target: EventTarget | null) {
 		const el = target as HTMLInputElement | HTMLTextAreaElement;
@@ -204,6 +213,7 @@
 	// first invalid one is focused here.
 	function onInvalid(event: Event & { currentTarget: HTMLFormElement }) {
 		event.preventDefault();
+		blocked = true;
 		validate(event.target);
 		event.currentTarget.querySelector<HTMLElement>(':is(input, textarea):invalid')?.focus();
 	}
@@ -251,10 +261,13 @@
 	enctype="multipart/form-data"
 	use:enhance={track}
 	class="form"
-	onfocusout={(e) => validate(e.target)}
+	onfocusout={(e) => {
+		if (edited[(e.target as HTMLInputElement).name]) validate(e.target);
+	}}
 	oninvalidcapture={onInvalid}
 	oninput={(e) => {
 		const name = (e.target as HTMLInputElement).name;
+		edited[name] = true;
 		if (errors[name]) validate(e.target);
 	}}>
 	<fieldset disabled={submitting} class="contents">
