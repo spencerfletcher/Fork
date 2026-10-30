@@ -354,15 +354,6 @@
 		color: var(--color-text-cream);
 	}
 
-	/* Current is cream against tan, which forced colours flatten to one colour;
-	   the underline keeps "you are here". */
-	@media (forced-colors: active) {
-		.navbar-link[aria-current='page'] {
-			text-decoration: underline;
-			text-underline-offset: 4px;
-		}
-	}
-
 	/* The handle's 24px hit, like the links beside it, without moving it.
 	   Capped so a 30-character handle (the sign-up max) ellipsises; 22ch shows
 	   a normal handle whole. Below the cap it shrinks only when the bar is full
@@ -409,5 +400,22 @@
 
 	.mobile-link[aria-current='page'] {
 		color: var(--color-text-cream);
+	}
+
+	/* Current is cream against tan, which forced colours flatten to one colour;
+	   an underline (an outline on the icon) keeps "you are here". Last, so it
+	   beats the base rules' text-decoration: none on source order. The icon's
+	   outline gives way to the focus ring while focused. */
+	@media (forced-colors: active) {
+		.navbar-link[aria-current='page'],
+		.mobile-link[aria-current='page'] {
+			text-decoration: underline;
+			text-underline-offset: 4px;
+		}
+
+		.nav-icon[aria-current='page']:not(:focus-visible) {
+			outline: 2px solid CanvasText;
+			outline-offset: -2px;
+		}
 	}
 </style>

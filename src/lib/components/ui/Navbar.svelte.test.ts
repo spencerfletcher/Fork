@@ -500,8 +500,22 @@ describe('Navbar forced colours', () => {
 		const style = source.slice(source.indexOf('<style>'));
 		const block = style.slice(style.indexOf('@media (forced-colors: active)'));
 		expect(style).toContain('@media (forced-colors: active)');
-		const rule = block.match(/\.navbar-link\[aria-current='page'\]\s*{([^}]*)}/)![1];
+		const rule = block.match(/\.navbar-link\[aria-current='page'\][^{]*{([^}]*)}/)![1];
 		expect(rule).toMatch(/text-decoration:\s*underline/);
 		expect(rule).toMatch(/text-underline-offset:\s*4px/);
+	});
+
+	// The phone menu row and the phone search icon mark current by colour too.
+	// The block sits after the base rules, which set `text-decoration: none`
+	// and would otherwise win on source order.
+	test('the phone menu row and search icon keep a current mark under forced colours', () => {
+		const style = source.slice(source.indexOf('<style>'));
+		const at = style.lastIndexOf('@media (forced-colors: active)');
+		expect(at).toBeGreaterThan(style.lastIndexOf('.mobile-link {'));
+		const block = style.slice(at);
+		const row = block.match(/\.mobile-link\[aria-current='page'\]\s*{([^}]*)}/)![1];
+		expect(row).toMatch(/text-decoration:\s*underline/);
+		const icon = block.match(/\.nav-icon\[aria-current='page'\][^{]*{([^}]*)}/)![1];
+		expect(icon).toMatch(/outline:\s*2px solid CanvasText/);
 	});
 });
