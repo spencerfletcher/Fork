@@ -92,6 +92,21 @@ describe('compare page load', () => {
 		expect(result).toMatchObject({ status: 400, body: { message } });
 	});
 
+	test("a missing numbered version carries the recipe's version count, so the page can name the range", async () => {
+		const result = await loadWith('?from=1&to=9').catch((e: unknown) => e);
+		expect(result).toMatchObject({
+			status: 400,
+			body: { message: 'Version 9 not found', versionCount: RECIPE.versions.length }
+		});
+	});
+
+	test('a non-number carries no count', async () => {
+		const result = (await loadWith('?from=abc&to=3').catch((e: unknown) => e)) as {
+			body: App.Error;
+		};
+		expect(result.body.versionCount).toBeUndefined();
+	});
+
 	test.each(['?from=abc&to=3', '?from=1.5&to=3', '?from=abc&to=12'])(
 		'a range that is not a version number (%s) is a 400 that echoes nothing, never NaN',
 		async (query) => {

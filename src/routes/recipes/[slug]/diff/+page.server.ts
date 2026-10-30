@@ -40,12 +40,13 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 		);
 		// Only whole numbers are named; "abc" or "1.5" is not a version to echo.
 		if (!missing.every(Number.isSafeInteger)) throw error(400, 'Version not found');
-		throw error(
-			400,
-			missing.length === 1
-				? `Version ${missing[0]} not found`
-				: `Versions ${missing[0]} and ${missing[1]} not found`
-		);
+		throw error(400, {
+			message:
+				missing.length === 1
+					? `Version ${missing[0]} not found`
+					: `Versions ${missing[0]} and ${missing[1]} not found`,
+			versionCount: allVersions.length
+		});
 	}
 
 	// The diff always reads older to newer; a reversed pair is swapped in the

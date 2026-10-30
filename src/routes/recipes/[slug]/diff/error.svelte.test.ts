@@ -8,7 +8,7 @@ import source from './+error.svelte?raw';
 const { pageState } = vi.hoisted(() => ({
 	pageState: {
 		status: 400,
-		error: { message: '' } as { message: string } | null,
+		error: { message: '' } as { message: string; versionCount?: number } | null,
 		params: { slug: 'classic-cookies' },
 		url: new URL('http://localhost/recipes/classic-cookies/diff'),
 		route: { id: '/recipes/[slug]/diff' }
@@ -17,25 +17,34 @@ const { pageState } = vi.hoisted(() => ({
 
 vi.mock('$app/state', () => ({ page: pageState }));
 
-function renderError(status: number, message: string) {
+function renderError(status: number, message: string, versionCount?: number) {
 	pageState.status = status;
-	pageState.error = { message };
+	pageState.error = { message, versionCount };
 	return render(ErrorPage);
 }
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
 describe('compare page error', () => {
-	test('a version that does not exist: pick two versions, and a way back to the recipe', () => {
-		renderError(400, 'Version 9 not found');
+	test('a version that does not exist: the lede names the versions there are, and a way back to the recipe', () => {
+		// The page has no picker, so "pick two" asked for something it could
+		// not offer; the range says what to type instead.
+		renderError(400, 'Version 9 not found', 3);
 		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
 			'Error 400 – Version 9 not found'
 		);
-		expect(screen.getByText("Pick two of the recipe's versions to compare.")).toBeInTheDocument();
+		expect(screen.getByText('It has v1 to v3.')).toBeInTheDocument();
+		expect(screen.queryByText(/Pick two/)).toBeNull();
 		expect(screen.getByRole('link', { name: 'Back to the recipe' })).toHaveAttribute(
 			'href',
 			'/recipes/classic-cookies'
 		);
+	});
+
+	test('a range that is not a number keeps the generic line', () => {
+		renderError(400, 'Version not found');
+		expect(screen.getByText("Pick two of the recipe's versions to compare.")).toBeInTheDocument();
+		expect(screen.queryByText(/It has/)).toBeNull();
 	});
 
 	test('a version that does not exist: the main action compares first and latest, back is secondary', () => {

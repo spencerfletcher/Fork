@@ -7,6 +7,12 @@ declare global {
 			user: User | null;
 		}
 
+		interface Error {
+			message: string;
+			// The compare 400 for a missing numbered version names the range.
+			versionCount?: number;
+		}
+
 		interface PageData {
 			user: User | null;
 		}

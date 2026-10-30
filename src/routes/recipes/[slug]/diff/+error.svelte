@@ -18,6 +18,8 @@
 		<p class="lede text-text-2 m-0">
 			{#if oneVersion}
 				Save a change to the recipe, then compare it with the original.
+			{:else if page.error?.versionCount}
+				It has v1 to v{page.error.versionCount}.
 			{:else if recipeUrl}
 				Pick two of the recipe's versions to compare.
 			{:else}
