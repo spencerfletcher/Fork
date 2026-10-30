@@ -169,4 +169,13 @@ describe('RecipeIngredients', () => {
 		expect(loadTicks(KEY)).toEqual([]);
 		expect(screen.queryByRole('button', { name: 'Clear ticks' })).toBeNull();
 	});
+
+	test('Clear ticks hands keyboard focus to the first line as it goes', async () => {
+		renderWith(LINES, [null, null, null]);
+		await fireEvent.click(rows()[2]);
+		const button = screen.getByRole('button', { name: 'Clear ticks' });
+		button.focus();
+		await fireEvent.click(button);
+		expect(document.activeElement).toBe(screen.getAllByRole('checkbox')[0]);
+	});
 });

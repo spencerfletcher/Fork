@@ -14,7 +14,10 @@
 		saveTicks(storageKey, ticked);
 	}
 
-	function clear() {
+	// The button leaves with the last tick, so focus moves to the list's first
+	// checkbox rather than dropping to the page.
+	function clear(e: MouseEvent & { currentTarget: HTMLButtonElement }) {
+		e.currentTarget.closest('section')?.querySelector('input')?.focus();
 		ticked = [];
 		saveTicks(storageKey, ticked);
 	}

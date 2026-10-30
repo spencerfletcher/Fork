@@ -96,6 +96,17 @@ describe('RecipeMethod', () => {
 		expect(screen.queryByRole('button', { name: 'Clear ticks' })).toBeNull();
 	});
 
+	test('Clear ticks hands keyboard focus to the first step as it goes', async () => {
+		render(RecipeMethod, {
+			props: { storageKey: KEY, steps: [makeStep('Mix.'), makeStep('Bake.')] }
+		});
+		await fireEvent.click(screen.getAllByRole('checkbox')[1]);
+		const button = screen.getByRole('button', { name: 'Clear ticks' });
+		button.focus();
+		await fireEvent.click(button);
+		expect(document.activeElement).toBe(screen.getAllByRole('checkbox')[0]);
+	});
+
 	test('the numeral sits at the end of its 55px column, 10px from the text, with one digit or two; the tick at the start', () => {
 		const steps = Array.from({ length: 12 }, (_, i) => ({ text: `Step ${i + 1}.` }));
 		render(RecipeMethod, { props: { storageKey: KEY, steps } });
