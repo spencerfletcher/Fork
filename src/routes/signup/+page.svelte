@@ -27,8 +27,16 @@
 	// Set by a press on the submit button, which comes before the email's blur
 	// in every browser; Safari gives the button no focus, so the blur names no
 	// target. Cleared when the email gains focus, so a stray press holds back
-	// nothing later.
+	// nothing later. The button left without a submit (a press dragged off, or
+	// Tab past it) shows what the press held back.
 	let submitPressed = false;
+
+	// A stopped submit fires invalid on every failing field in order, and the
+	// browser bubbles over the first one not cancelled. The email and username
+	// have their own messages, so they cancel and the first takes the focus
+	// itself; the password cancels when it is not first, so its bubble cannot
+	// cover their messages.
+	const firstInvalid = (field: HTMLInputElement) => field.form?.querySelector(':invalid') === field;
 
 	let email = $state('');
 	let username = $state('');
@@ -109,7 +117,9 @@
 							e.relatedTarget === e.currentTarget.form?.querySelector('[type="submit"]');
 						if (!toSubmit) emailLeft ||= emailEdited;
 					}}
-					oninvalid={() => {
+					oninvalid={(e) => {
+						e.preventDefault();
+						if (firstInvalid(e.currentTarget)) e.currentTarget.focus();
 						emailLeft = true;
 						emailValid = false;
 					}}
@@ -135,7 +145,11 @@
 					bind:value={username}
 					oninput={() => (usernameEdited = true)}
 					onblur={() => (usernameLeft = true)}
-					oninvalid={() => (usernameLeft = true)}
+					oninvalid={(e) => {
+						e.preventDefault();
+						if (firstInvalid(e.currentTarget)) e.currentTarget.focus();
+						usernameLeft = true;
+					}}
 					aria-invalid={usernameError || ruleShown ? 'true' : undefined}
 					aria-describedby={usernameError
 						? 'username-error username-hint'
@@ -166,6 +180,9 @@
 					required
 					minlength="6"
 					autocomplete="new-password"
+					oninvalid={(e) => {
+						if (!firstInvalid(e.currentTarget)) e.preventDefault();
+					}}
 					aria-describedby="password-hint" />
 				<p class="form-hint" id="password-hint">At least 6 characters</p>
 			</div>
@@ -174,7 +191,8 @@
 				type="submit"
 				class="btn-primary auth-submit"
 				disabled={pending}
-				onpointerdown={() => (submitPressed = true)}>
+				onpointerdown={() => (submitPressed = true)}
+				onblur={() => (emailLeft ||= emailEdited)}>
 				{pending ? 'Creating account…' : 'Create account'}
 			</button>
 			<p class="form-hint confirm-note">We'll email you a link to confirm.</p>

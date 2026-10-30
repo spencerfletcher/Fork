@@ -21,6 +21,20 @@ function renderSignup(form: Form = null, redirectTo: string | null = null) {
 
 const username = () => screen.getByLabelText('Username') as HTMLInputElement;
 const email = () => screen.getByLabelText('Email') as HTMLInputElement;
+const password = () => screen.getByLabelText('Password') as HTMLInputElement;
+
+// Runs the browser's check of the whole form, as a stopped submit does, and
+// reports per field whether the page cancelled its invalid event, which keeps
+// the browser's own bubble off the page.
+async function validate() {
+	const fields = [email(), username(), password()];
+	const cancelled = new Map<HTMLInputElement, boolean>();
+	for (const field of fields)
+		field.addEventListener('invalid', (e) => cancelled.set(field, e.defaultPrevented));
+	fields[0].form!.reportValidity();
+	await tick();
+	return cancelled;
+}
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
@@ -186,6 +200,52 @@ describe('Sign-up page', () => {
 		await fireEvent.focus(email());
 		await fireEvent.input(email(), { target: { value: 'jane@' } });
 		await fireEvent.blur(email(), { relatedTarget: null });
+		expect(screen.getByText(EMAIL_RULE)).toBeInTheDocument();
+	});
+
+	test("a stopped submit shows the page's messages instead of the browser's bubbles, focus on the email", async () => {
+		renderSignup();
+		await fireEvent.input(email(), { target: { value: 'jane@' } });
+		await fireEvent.input(username(), { target: { value: 'jo' } });
+		const cancelled = await validate();
+		expect(cancelled.get(email())).toBe(true);
+		expect(cancelled.get(username())).toBe(true);
+		expect(cancelled.get(password())).toBe(true);
+		expect(screen.getByText(EMAIL_RULE)).toBeInTheDocument();
+		expect(screen.getByText(RULE)).toBeInTheDocument();
+		expect(document.activeElement).toBe(email());
+	});
+
+	test("with a valid email, a stopped submit focuses the username and shows its rule, not the browser's bubble", async () => {
+		renderSignup();
+		await fireEvent.input(email(), { target: { value: 'jane@example.com' } });
+		await fireEvent.input(username(), { target: { value: 'jo' } });
+		const cancelled = await validate();
+		expect(cancelled.has(email())).toBe(false);
+		expect(cancelled.get(username())).toBe(true);
+		// The empty password after it would otherwise take the bubble and the focus.
+		expect(cancelled.get(password())).toBe(true);
+		expect(screen.getByText(RULE)).toBeInTheDocument();
+		expect(document.activeElement).toBe(username());
+	});
+
+	test("with a valid email and username, an empty password keeps the browser's own report", async () => {
+		renderSignup();
+		await fireEvent.input(email(), { target: { value: 'jane@example.com' } });
+		const cancelled = await validate();
+		expect(cancelled.has(username())).toBe(false);
+		expect(cancelled.get(password())).toBe(false);
+	});
+
+	// A press dragged off the button, or Tab past it, submits nothing, so
+	// nothing else would show the message the press held back.
+	test('the submit button left without a submit shows the held-back email message', async () => {
+		renderSignup();
+		const submit = screen.getByRole('button', { name: 'Create account' });
+		await fireEvent.input(email(), { target: { value: 'jane@' } });
+		await fireEvent.blur(email(), { relatedTarget: submit });
+		expect(screen.queryByText(EMAIL_RULE)).toBeNull();
+		await fireEvent.blur(submit);
 		expect(screen.getByText(EMAIL_RULE)).toBeInTheDocument();
 	});
 
