@@ -74,6 +74,7 @@
 					</p>
 				{/if}
 			</section>
+			<p class="signup-close"><a href="/signup" class="btn-ghost">Sign up to fork one</a></p>
 		</div>
 	</div>
 {:else}
@@ -120,6 +121,18 @@
 
 	.all-recipes {
 		margin: var(--space-4) 0 0;
+	}
+
+	/* A quiet closing line under the last section: on the column's left edge,
+	   centred on a phone. The ghost button is already a 44px+ hit. */
+	.signup-close {
+		margin: var(--space-6) 0 0;
+	}
+
+	@media (max-width: 699px) {
+		.signup-close {
+			text-align: center;
+		}
 	}
 
 	/* Six recent cards, never more than two rows: 4 + 2 at four columns, 3 + 3

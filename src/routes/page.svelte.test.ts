@@ -93,6 +93,41 @@ describe('/+page.svelte', () => {
 		expect(container.querySelector('.page-inner')).toContainElement(grid as HTMLElement);
 	});
 
+	test('a signed-out landing closes on a ghost "Sign up to fork one"; signed in adds nothing', () => {
+		// The quiet closing line after the last section (decided 29 October 2026):
+		// centred on a phone, on the column's left edge otherwise.
+		const recipes = [{ id: 1, slug: 'a', title: 'A', updatedAt: new Date(), forkCount: 0 }];
+		const { container, unmount } = render(Page, {
+			props: {
+				data: { recipes, user: null, profile: null, mode: 'landing', tags: [], sampleDiff: null }
+			} as never
+		});
+		const signup = screen.getByRole('link', { name: 'Sign up to fork one' });
+		expect(signup).toHaveAttribute('href', '/signup');
+		expect(signup).toHaveClass('btn-ghost');
+		const sections = container.querySelectorAll('section');
+		const last = sections[sections.length - 1];
+		expect(last.compareDocumentPosition(signup) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+		expect(last).not.toContainElement(signup);
+		const phone = source.slice(source.indexOf('@media (max-width: 699px)'));
+		expect(phone).toMatch(/\.signup-close\s*{[^}]*text-align:\s*center/);
+		unmount();
+
+		render(Page, {
+			props: {
+				data: {
+					recipes,
+					user: { id: 'u1', username: 'cook' },
+					profile: null,
+					mode: 'feed',
+					tags: [],
+					sampleDiff: null
+				}
+			} as never
+		});
+		expect(screen.queryByRole('link', { name: 'Sign up to fork one' })).toBeNull();
+	});
+
 	test('feed mode renders no LandingHero', () => {
 		render(Page, {
 			props: {
