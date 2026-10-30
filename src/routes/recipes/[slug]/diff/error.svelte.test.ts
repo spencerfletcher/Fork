@@ -1,6 +1,7 @@
 import { describe, test, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/svelte';
 import ErrorPage from './+error.svelte';
+import source from './+error.svelte?raw';
 
 // ─── SvelteKit module mocks ───────────────────────────────────────────────────
 
@@ -26,9 +27,9 @@ function renderError(status: number, message: string) {
 
 describe('compare page error', () => {
 	test('a version that does not exist: pick two versions, and a way back to the recipe', () => {
-		renderError(400, 'Version not found in Classic Cookies');
+		renderError(400, 'Version 9 not found');
 		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
-			'Error 400 – Version not found in Classic Cookies'
+			'Error 400 – Version 9 not found'
 		);
 		expect(screen.getByText("Pick two of the recipe's versions to compare.")).toBeInTheDocument();
 		expect(screen.getByRole('link', { name: 'Back to the recipe' })).toHaveAttribute(
@@ -40,7 +41,7 @@ describe('compare page error', () => {
 	test('a version that does not exist: the main action compares first and latest, back is secondary', () => {
 		// The heading asks for two versions, so the page offers a pair: the bare
 		// compare URL, which the loader reads as first to latest.
-		renderError(400, 'Version not found in Classic Cookies');
+		renderError(400, 'Version 9 not found');
 		const compare = screen.getByRole('link', { name: 'Compare first and latest' });
 		expect(compare).toHaveAttribute('href', '/recipes/classic-cookies/diff');
 		expect(compare).toHaveClass('btn-primary');
@@ -60,6 +61,10 @@ describe('compare page error', () => {
 		expect(screen.queryByRole('link', { name: 'Compare first and latest' })).toBeNull();
 	});
 
+	test('the title balances its lines, so "Version 9 not found" never leaves one word dangling', () => {
+		expect(source).toMatch(/h1\s*{[^}]*text-wrap:\s*balance/);
+	});
+
 	test('a 404 keeps the generic line and goes home', () => {
 		renderError(404, 'Recipe not found');
 		expect(screen.getByText(/doesn't exist or something went wrong/)).toBeInTheDocument();
@@ -67,7 +72,7 @@ describe('compare page error', () => {
 	});
 
 	test("takes the root error page's format: the code in the h1 at the site size, centred, no display number", () => {
-		const { container } = renderError(400, 'Version not found in Classic Cookies');
+		const { container } = renderError(400, 'Version 9 not found');
 		expect(container.querySelector('h1')!.className).not.toMatch(/rem/);
 		expect(container.querySelector('.font-mono')).toBeNull();
 		const block = container.querySelector('.auth-page .error-page')!;
