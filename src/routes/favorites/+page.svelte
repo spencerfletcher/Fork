@@ -38,7 +38,7 @@
 				</div>
 			</section>
 		{:else}
-			<p class="empty-state mt-6">
+			<p class="empty-state" class:mt-6={filtered}>
 				{#if filtered}
 					No favorites match your filters. Try adjusting your search.
 				{:else}
@@ -56,8 +56,11 @@
 	}
 
 	/* Under a left-aligned h1 the empty state starts on its edge, not centred
-	   on a second axis; scoped while app.css's shared rule stays centred. */
+	   on a second axis; scoped while app.css's shared rule stays centred. It
+	   sits the header's one gap below the h1, or the results' gap below the
+	   filters, without the shared rule's 2rem on top. */
 	.empty-state {
 		text-align: left;
+		padding-top: 0;
 	}
 </style>
