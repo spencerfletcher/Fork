@@ -26,6 +26,8 @@ test.describe('Landing page', () => {
 		// The seed has four, so two copies stand in for the fifth and sixth.
 		await page.setViewportSize({ width: 1280, height: 900 });
 		await page.goto('/');
+		// Clone only after hydration, or Svelte's hydration puts the four back.
+		await page.waitForLoadState('networkidle');
 		const strip = page.locator('.recent-strip');
 		await strip.evaluate((el) => {
 			for (const card of [...el.children].slice(0, 2)) el.append(card.cloneNode(true));
