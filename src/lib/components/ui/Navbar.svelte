@@ -17,6 +17,17 @@
 		isMenuOpen = false;
 	}
 
+	let nav: HTMLElement | undefined = $state();
+	let menuToggle: HTMLButtonElement | undefined = $state();
+
+	// Escape closes the phone menu only while focus is inside the nav, like the
+	// version bar; elsewhere the key belongs to whatever holds focus.
+	function onWindowKeydown(event: KeyboardEvent) {
+		if (!isMenuOpen || event.key !== 'Escape' || !nav?.contains(document.activeElement)) return;
+		closeMenu();
+		menuToggle?.focus();
+	}
+
 	// One list for both menus. Signed in, browse with tabs is the home page, so
 	// Recipes goes there and is current on it and on tag pages (Recipes
 	// filtered by one tag); My Recipes is /recipes. Signed out, /recipes is
@@ -50,7 +61,9 @@
 	const current = (active: boolean) => (active ? ('page' as const) : undefined);
 </script>
 
-<nav class="bg-navbar-bg relative z-50 px-5">
+<svelte:window onkeydown={onWindowKeydown} />
+
+<nav class="bg-navbar-bg relative z-50 px-5" bind:this={nav}>
 	<!-- Above the overlay, so the bar stays bright and tappable while the menu is open. -->
 	<div
 		class="relative z-[100] mx-auto flex h-[52px] max-w-[1200px] items-center justify-between md:h-14">
@@ -121,6 +134,7 @@
 			</a>
 			<button
 				type="button"
+				bind:this={menuToggle}
 				onclick={toggleMenu}
 				class="nav-menu-toggle"
 				aria-controls="mobile-menu"

@@ -339,3 +339,46 @@ describe('Navbar link face', () => {
 		expect(style).not.toMatch(/\.logout-btn\s*{[^}]*font-size/);
 	});
 });
+
+// ─── Phone menu Escape ────────────────────────────────────────────────────────
+
+describe('Navbar phone menu Escape', () => {
+	test('Escape inside the open menu closes it and returns focus to the menu button', async () => {
+		render(Navbar, { props: { user: makeUser('chef@example.com') } });
+		const toggle = screen.getByRole('button', { name: /open main menu/i });
+		await fireEvent.click(toggle);
+		const link = within(document.getElementById('mobile-menu')!).getByRole('link', {
+			name: 'Recipes'
+		});
+		link.focus();
+		await fireEvent.keyDown(link, { key: 'Escape' });
+		expect(document.getElementById('mobile-menu')).toBeNull();
+		expect(toggle).toHaveAttribute('aria-expanded', 'false');
+		expect(document.activeElement).toBe(toggle);
+	});
+
+	test('Escape on the menu button itself closes the open menu too', async () => {
+		render(Navbar, { props: { user: null } });
+		const toggle = screen.getByRole('button', { name: /open main menu/i });
+		await fireEvent.click(toggle);
+		toggle.focus();
+		await fireEvent.keyDown(toggle, { key: 'Escape' });
+		expect(document.getElementById('mobile-menu')).toBeNull();
+		expect(document.activeElement).toBe(toggle);
+	});
+
+	test('Escape with focus outside the nav leaves the menu open and focus where it was', async () => {
+		render(Navbar, { props: { user: null } });
+		await fireEvent.click(screen.getByRole('button', { name: /open main menu/i }));
+		const outside = document.createElement('button');
+		document.body.appendChild(outside);
+		try {
+			outside.focus();
+			await fireEvent.keyDown(outside, { key: 'Escape' });
+			expect(document.getElementById('mobile-menu')).not.toBeNull();
+			expect(document.activeElement).toBe(outside);
+		} finally {
+			outside.remove();
+		}
+	});
+});
