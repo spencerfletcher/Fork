@@ -385,16 +385,20 @@ describe('Diff page', () => {
 			'true'
 		);
 	});
-	test('the To chip keeps a box in forced colours: a transparent 1px border inside its 6px', () => {
-		// Forced colours strip the marigold fill; the border is what remains, as
-		// on the primary button. Padding gives up the border's pixel so the chip
-		// keeps its width.
+	test('the To chip keeps a box in forced colours: an inset transparent outline, so nothing moves', () => {
+		// Forced colours strip the marigold fill and force the outline's colour,
+		// so the outline is what remains. An outline takes no space, unlike a
+		// border, so the chip's 0 6px and the card's head stay as they were. It
+		// stands down on :focus-visible so the global focus ring still draws.
 		const style = source.slice(source.indexOf('<style>'));
 		const chip = style.match(/\.version-card--to \.version-card__number\s*{([^}]*)}/)?.[1] ?? '';
-		expect(chip).toMatch(/border:\s*1px solid transparent/);
-		expect(chip).toMatch(/padding:\s*0 5px/);
-		// The chip is a flex item, so its border would grow the card's head by 2px
-		// and drop the To message below the From one; the margin takes it back.
-		expect(chip).toMatch(/margin-block:\s*-1px/);
+		expect(chip).toMatch(/padding:\s*0 6px/);
+		expect(chip).not.toMatch(/border:|margin-block:|outline/);
+		const idle =
+			style.match(
+				/\.version-card--to \.version-card__number:not\(:focus-visible\)\s*{([^}]*)}/
+			)?.[1] ?? '';
+		expect(idle).toMatch(/outline:\s*1px solid transparent/);
+		expect(idle).toMatch(/outline-offset:\s*-1px/);
 	});
 });

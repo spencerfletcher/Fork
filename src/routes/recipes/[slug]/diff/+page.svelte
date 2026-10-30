@@ -237,17 +237,20 @@
 		margin: -4px 0;
 	}
 
-	/* The system's chip, at the card number's size. The border is transparent,
-	   so it shows only under forced colours, where the fill goes and the border
-	   keeps the chip a box; the padding gives up its pixel to keep the width,
-	   and the margin takes back the 2px the border adds to the card's head. */
+	/* The system's chip, at the card number's size. */
 	.version-card--to .version-card__number {
-		padding: 0 5px;
-		border: 1px solid transparent;
-		margin-block: -1px;
+		padding: 0 6px;
 		border-radius: var(--radius-sm);
 		background: var(--color-marigold);
 		color: var(--color-text);
+	}
+
+	/* Transparent, so it shows only under forced colours, where the fill goes
+	   and the outline keeps the chip a box; an outline takes no space. Off on
+	   :focus-visible, where it would beat the global focus ring. */
+	.version-card--to .version-card__number:not(:focus-visible) {
+		outline: 1px solid transparent;
+		outline-offset: -1px;
 	}
 
 	.version-card__message {
