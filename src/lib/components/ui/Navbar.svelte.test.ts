@@ -414,9 +414,14 @@ describe('Navbar fit at 768', () => {
 		expect(rule('\\.nav-cta')).toMatch(/white-space:\s*nowrap/);
 	});
 
-	test('the handle in the bar is capped at 14ch with an ellipsis, the full handle in its title', () => {
+	test('the handle in the bar is capped (22ch, 14ch below 1024) with an ellipsis, the full handle in its title', () => {
 		const handleRule = rule('\\.navbar-account :global\\(\\.username\\)');
-		expect(handleRule).toMatch(/max-width:\s*14ch/);
+		// 22ch shows "@spencerfletcher" whole on a wide screen; below 1024 the bar
+		// is tight and the cap drops to 14ch.
+		expect(handleRule).toMatch(/max-width:\s*22ch/);
+		expect(style).toMatch(
+			/@media \(max-width: 1023px\)\s*{\s*\.navbar-account :global\(\.username\)\s*{\s*max-width:\s*14ch;/
+		);
 		expect(handleRule).toMatch(/overflow:\s*hidden/);
 		expect(handleRule).toMatch(/text-overflow:\s*ellipsis/);
 		expect(handleRule).toMatch(/white-space:\s*nowrap/);

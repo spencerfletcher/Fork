@@ -355,15 +355,23 @@
 	}
 
 	/* The handle's 24px hit, like the links beside it, without moving it.
-	   Capped so a 30-character handle (the sign-up max) fits the bar at 768. */
+	   Capped so a 30-character handle (the sign-up max) ellipsises; 22ch shows
+	   a normal handle whole on a wide screen. */
 	.navbar-account :global(.username) {
 		display: block;
-		max-width: 14ch;
+		max-width: 22ch;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
 		padding: 4px 0;
 		margin: -4px 0;
+	}
+
+	/* Below 1024 the bar is tight: 14ch lets a 30-character handle fit at 768. */
+	@media (max-width: 1023px) {
+		.navbar-account :global(.username) {
+			max-width: 14ch;
+		}
 	}
 
 	/* The handle in the phone menu: the padding on the link itself, like a
