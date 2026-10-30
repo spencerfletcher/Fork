@@ -524,10 +524,8 @@ test.describe('Edit recipe page', () => {
 			expect(save!.width).toBeGreaterThan(cancel!.width);
 
 			await page.setViewportSize({ width: 390, height: 900 });
-			for (const name of ['title', 'commitMessage']) {
-				const size = await page
-					.locator(`input[name="${name}"]`)
-					.evaluate((el) => getComputedStyle(el).fontSize);
+			for (const box of ['textarea[name="title"]', 'input[name="commitMessage"]']) {
+				const size = await page.locator(box).evaluate((el) => getComputedStyle(el).fontSize);
 				expect(size).toBe('16px');
 			}
 		} finally {
