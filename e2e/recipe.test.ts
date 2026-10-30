@@ -438,13 +438,17 @@ test.describe('Recipe detail page', () => {
 		await page.setViewportSize({ width: 390, height: 900 });
 		await gotoClassicCookies(page);
 		await page.getByRole('button', { name: '3 versions' }).click();
-		const short = await page
-			.locator('.version-bar a, .version-bar button')
-			.evaluateAll((els) =>
-				els
-					.map((el) => ({ text: el.textContent!.trim(), h: el.getBoundingClientRect().height }))
-					.filter((r) => r.h < 44)
-			);
+		const short = await page.locator('.version-bar a, .version-bar button').evaluateAll((els) =>
+			els
+				// The toggle's box hugs its words; its hit is its ::before.
+				.map((el) => ({
+					text: el.textContent!.trim(),
+					h: el.matches('.versions-toggle')
+						? parseFloat(getComputedStyle(el, '::before').height)
+						: el.getBoundingClientRect().height
+				}))
+				.filter((r) => r.h < 44)
+		);
 		expect(short).toEqual([]);
 		// The compare under each row still indents to the message.
 		const message = await page.locator('#version-history .message').first().boundingBox();
@@ -873,7 +877,13 @@ test.describe('Recipe detail page', () => {
 			.evaluateAll((els) =>
 				els
 					.filter((el) => el.getClientRects().length > 0)
-					.map((el) => ({ text: el.textContent!.trim(), h: el.getBoundingClientRect().height }))
+					// The toggle's box hugs its words; its hit is its ::before.
+					.map((el) => ({
+						text: el.textContent!.trim(),
+						h: el.matches('.versions-toggle')
+							? parseFloat(getComputedStyle(el, '::before').height)
+							: el.getBoundingClientRect().height
+					}))
 					.filter((r) => r.h < 24)
 			);
 		expect(short).toEqual([]);
