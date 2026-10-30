@@ -184,11 +184,27 @@ describe('New recipe page editor state', () => {
 		expect(screen.getByLabelText(/title/i)).toBeEnabled();
 	});
 
-	test('says nothing about the outcome while typing; the leave guard carries the unsaved state', async () => {
+	test('the header line says the save makes v1, while typing too, and no helper sits beside Create', async () => {
 		render(NewPage, { props: { data, form: null } });
+		const line = screen.getByText('saves as v1');
+		expect(line).toHaveAttribute('aria-live', 'polite');
+		expect(line.closest('.editor-header')).not.toBeNull();
 		await fireEvent.input(screen.getByLabelText(/title/i), { target: { value: 'Brownies' } });
-		expect(screen.queryByText(/unsaved|saves/i)).not.toBeInTheDocument();
+		expect(line).toHaveTextContent('saves as v1');
 		expect(document.querySelector('.form-actions .form-hint')).toBeNull();
+	});
+
+	test('a blocked Create on the empty form counts the required fields in the header line', async () => {
+		render(NewPage, { props: { data, form: null } });
+		const form = screen.getByLabelText(/^title/i).closest('form')!;
+		const required = form.querySelectorAll(':is(input, textarea):required');
+		// The browser fires invalid on each empty required field when Create is pressed.
+		for (const el of required) el.dispatchEvent(new Event('invalid', { cancelable: true }));
+		await tick();
+		expect(screen.getByText(`${required.length} fields need attention`)).toHaveAttribute(
+			'aria-live',
+			'polite'
+		);
 	});
 
 	test('has Cancel to the recipe list and no commit message field', () => {
