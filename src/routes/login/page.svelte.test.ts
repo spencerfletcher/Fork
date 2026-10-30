@@ -19,6 +19,18 @@ function renderLogin(redirectTo: string | null = null) {
 
 const email = () => screen.getByLabelText('Email') as HTMLInputElement;
 
+// Runs the browser's check of the whole form, as a stopped submit does, and
+// reports per field whether the page cancelled its invalid event, which keeps
+// the browser's own bubble off the page.
+async function validate(...fields: HTMLInputElement[]) {
+	const cancelled = new Map<HTMLInputElement, boolean>();
+	for (const field of fields)
+		field.addEventListener('invalid', (e) => cancelled.set(field, e.defaultPrevented));
+	fields[0].form!.reportValidity();
+	await tick();
+	return cancelled;
+}
+
 describe('Login page', () => {
 	test('"Log in" everywhere: the subtitle and the button, under "Welcome back"', () => {
 		renderLogin();
@@ -137,6 +149,39 @@ describe('Login page', () => {
 		await fireEvent.focus(email());
 		await fireEvent.input(email(), { target: { value: 'jane@' } });
 		await fireEvent.blur(email(), { relatedTarget: null });
+		expect(screen.getByText(EMAIL_RULE)).toBeInTheDocument();
+	});
+
+	test("a stopped submit shows the page's email message instead of the browser's bubble, focus on the email", async () => {
+		renderLogin();
+		const password = screen.getByLabelText('Password') as HTMLInputElement;
+		await fireEvent.input(email(), { target: { value: 'jane@' } });
+		const cancelled = await validate(email(), password);
+		expect(cancelled.get(email())).toBe(true);
+		// The empty password after it would otherwise take the bubble and the focus.
+		expect(cancelled.get(password)).toBe(true);
+		expect(screen.getByText(EMAIL_RULE)).toBeInTheDocument();
+		expect(document.activeElement).toBe(email());
+	});
+
+	test("with a valid email, an empty password keeps the browser's own report", async () => {
+		renderLogin();
+		const password = screen.getByLabelText('Password') as HTMLInputElement;
+		await fireEvent.input(email(), { target: { value: 'jane@example.com' } });
+		const cancelled = await validate(email(), password);
+		expect(cancelled.has(email())).toBe(false);
+		expect(cancelled.get(password)).toBe(false);
+	});
+
+	// A press dragged off the button, or Tab past it, submits nothing, so
+	// nothing else would show the message the press held back.
+	test('the submit button left without a submit shows the held-back email message', async () => {
+		renderLogin();
+		const submit = screen.getByRole('button', { name: 'Log in' });
+		await fireEvent.input(email(), { target: { value: 'jane@' } });
+		await fireEvent.blur(email(), { relatedTarget: submit });
+		expect(screen.queryByText(EMAIL_RULE)).toBeNull();
+		await fireEvent.blur(submit);
 		expect(screen.getByText(EMAIL_RULE)).toBeInTheDocument();
 	});
 

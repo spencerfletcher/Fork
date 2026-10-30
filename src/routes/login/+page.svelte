@@ -17,8 +17,15 @@
 	// Set by a press on the submit button, which comes before the email's blur
 	// in every browser; Safari gives the button no focus, so the blur names no
 	// target. Cleared when the email gains focus, so a stray press holds back
-	// nothing later.
+	// nothing later. The button left without a submit (a press dragged off, or
+	// Tab past it) shows what the press held back.
 	let submitPressed = false;
+
+	// A stopped submit fires invalid on every failing field in order, and the
+	// browser bubbles over the first one not cancelled. The email has its own
+	// message, so it cancels and takes the focus itself; a later field cancels
+	// too, so its bubble cannot cover the email's message.
+	const firstInvalid = (field: HTMLInputElement) => field.form?.querySelector(':invalid') === field;
 
 	// Sent here from a page that needs an account, the subtitle says why.
 	const subtitle = $derived(
@@ -76,7 +83,9 @@
 							e.relatedTarget === e.currentTarget.form?.querySelector('[type="submit"]');
 						if (!toSubmit) emailLeft ||= emailEdited;
 					}}
-					oninvalid={() => {
+					oninvalid={(e) => {
+						e.preventDefault();
+						if (firstInvalid(e.currentTarget)) e.currentTarget.focus();
 						emailLeft = true;
 						emailValid = false;
 					}}
@@ -94,7 +103,10 @@
 					name="password"
 					type="password"
 					required
-					autocomplete="current-password" />
+					autocomplete="current-password"
+					oninvalid={(e) => {
+						if (!firstInvalid(e.currentTarget)) e.preventDefault();
+					}} />
 				<a href="/forgot-password" class="forgot-link">Forgot password?</a>
 			</div>
 
@@ -102,7 +114,8 @@
 				type="submit"
 				class="btn-primary auth-submit"
 				disabled={pending}
-				onpointerdown={() => (submitPressed = true)}>
+				onpointerdown={() => (submitPressed = true)}
+				onblur={() => (emailLeft ||= emailEdited)}>
 				{pending ? 'Logging in…' : 'Log in'}
 			</button>
 		</form>
