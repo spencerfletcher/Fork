@@ -233,6 +233,20 @@
 		};
 	};
 
+	// On a phone the bar covers the screen's bottom edge. A tall box tabbed into
+	// with only its top showing counts as in view, so the browser neither
+	// scrolls nor applies scroll-padding-bottom; this brings its bottom above
+	// the bar. Elsewhere the bar sits below every field and this never fires.
+	let actions: HTMLDivElement | undefined = $state();
+
+	function clearBar(e: FocusEvent) {
+		const el = e.target as HTMLElement;
+		if (!actions || actions.contains(el)) return;
+		if (el.getBoundingClientRect().bottom <= actions.getBoundingClientRect().top) return;
+		const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+		el.scrollIntoView({ block: 'nearest', behavior: reduce ? 'instant' : 'smooth' });
+	}
+
 	// Leaving a dirty form asks first. A tab close or hard reload cannot show
 	// our wording, so cancelling there hands the question to the browser. The
 	// save's own redirect happens while submitting, which never asks.
@@ -265,6 +279,7 @@
 		if (edited[(e.target as HTMLInputElement).name]) validate(e.target);
 	}}
 	oninvalidcapture={onInvalid}
+	onfocusin={clearBar}
 	oninput={(e) => {
 		const name = (e.target as HTMLInputElement).name;
 		edited[name] = true;
@@ -428,7 +443,7 @@
 			<p class="form-error" role="alert">{globalError}</p>
 		{/if}
 
-		<div class="form-actions">
+		<div class="form-actions" bind:this={actions}>
 			<button type="submit" class="btn-primary" disabled={submitting}>
 				{submitting ? 'Saving…' : submitLabel}
 			</button>

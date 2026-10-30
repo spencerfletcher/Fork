@@ -1,5 +1,15 @@
-import { describe, test, expect } from 'vitest';
+import { describe, test, expect, vi, beforeEach } from 'vitest';
+import { render, screen } from '@testing-library/svelte';
 import source from './RecipeForm.svelte?raw';
+import RecipeForm from './RecipeForm.svelte';
+import { draftOf } from '#lib/recipes/validation.js';
+
+vi.mock('$app/navigation', () => ({ beforeNavigate: () => {} }));
+vi.mock('$app/forms', () => ({ enhance: () => ({ destroy: () => {} }) }));
+
+// jsdom has no layout or scrolling: the rects are set by hand and the scroll recorded.
+const scrollIntoView = vi.fn();
+const reduced = { matches: false };
 
 // jsdom applies no component CSS, so the declarations are read from the source.
 const style = source.slice(source.indexOf('<style>'));
@@ -45,5 +55,59 @@ describe('RecipeForm invalid fields', () => {
 	// editor adds nothing, so the placeholder keeps its own colour.
 	test('the editor does not restyle an invalid box or its placeholder', () => {
 		expect(style).not.toMatch(/user-invalid|aria-invalid/);
+	});
+});
+
+describe('RecipeForm field focused under the phone bar', () => {
+	beforeEach(() => {
+		scrollIntoView.mockClear();
+		Element.prototype.scrollIntoView = scrollIntoView;
+		reduced.matches = false;
+		window.matchMedia = ((query: string) => ({
+			matches: query.includes('reduce') && reduced.matches
+		})) as never;
+	});
+
+	function setup(fieldBottom: number, barTop: number) {
+		render(RecipeForm, {
+			props: {
+				baseline: draftOf(new FormData()),
+				form: null,
+				allTags: [],
+				submitLabel: 'Create recipe',
+				cancelHref: '/recipes'
+			}
+		});
+		const field = screen.getByLabelText('Ingredients');
+		const bar = screen.getByRole('button', { name: 'Create recipe' }).parentElement!;
+		field.getBoundingClientRect = () => ({ bottom: fieldBottom }) as DOMRect;
+		bar.getBoundingClientRect = () => ({ top: barTop }) as DOMRect;
+		return field;
+	}
+
+	test('scrolls a field whose bottom is hidden by the bar to the nearest edge', () => {
+		setup(1000, 780).focus();
+		expect(scrollIntoView).toHaveBeenCalledTimes(1);
+		expect(scrollIntoView.mock.contexts[0]).toBe(screen.getByLabelText('Ingredients'));
+		expect(scrollIntoView.mock.calls[0][0]).toEqual({ block: 'nearest', behavior: 'smooth' });
+	});
+
+	test('jumps without animation under reduced motion', () => {
+		reduced.matches = true;
+		setup(1000, 780).focus();
+		expect(scrollIntoView.mock.calls[0][0]).toEqual({ block: 'nearest', behavior: 'instant' });
+	});
+
+	test('leaves a field clear of the bar where it is', () => {
+		setup(780, 780).focus();
+		expect(scrollIntoView).not.toHaveBeenCalled();
+	});
+
+	test("leaves the bar's own buttons where they are", () => {
+		setup(0, 780);
+		screen.getByRole('button', { name: 'Create recipe' }).getBoundingClientRect = () =>
+			({ bottom: 830 }) as DOMRect;
+		screen.getByRole('button', { name: 'Create recipe' }).focus();
+		expect(scrollIntoView).not.toHaveBeenCalled();
 	});
 });
