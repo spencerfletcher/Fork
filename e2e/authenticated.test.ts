@@ -200,7 +200,7 @@ test.describe('New recipe page', () => {
 		await expect(page).toHaveURL(/\/recipes\/new$/);
 	});
 
-	test('Tags: the list opens on focus, arrows and Enter pick without Tab stops, and the remove button is 16px (44 on a phone)', async ({
+	test('Tags: the list opens on focus, arrows and Enter pick without Tab stops, and the remove button hits 24px (44 on a phone)', async ({
 		page
 	}) => {
 		await gotoHydrated(page, '/recipes/new');
@@ -216,7 +216,7 @@ test.describe('New recipe page', () => {
 		const remove = page.getByRole('button', { name: `Remove ${name}` });
 		await expect(remove).toBeVisible();
 		let box = await remove.boundingBox();
-		expect([box!.width, box!.height]).toEqual([16, 16]);
+		expect([box!.width, box!.height]).toEqual([24, 24]);
 		await page.setViewportSize({ width: 390, height: 900 });
 		box = await remove.boundingBox();
 		expect([box!.width, box!.height]).toEqual([44, 44]);
