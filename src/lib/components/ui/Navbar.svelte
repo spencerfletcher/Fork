@@ -78,7 +78,7 @@
 						<Username username={profile.username} tone="dark" current={onOwnProfile} />
 					{/if}
 					<form action="/logout" method="POST" use:enhance>
-						<button type="submit" class="navbar-link logout-btn">Log out</button>
+						<button type="submit" class="navbar-link">Log out</button>
 					</form>
 				{:else}
 					<a href="/login" class="navbar-link" aria-current={current(path === '/login')}>Log in</a>
@@ -322,10 +322,6 @@
 	.navbar-link:hover,
 	.navbar-link[aria-current='page'] {
 		color: var(--color-text-cream);
-	}
-
-	.logout-btn {
-		font-size: 0.875rem;
 	}
 
 	/* The handle's 24px hit, like the links beside it, without moving it. */

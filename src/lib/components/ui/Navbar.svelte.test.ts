@@ -325,4 +325,17 @@ describe('Navbar link face', () => {
 			expect(rule(selector)).toMatch(/letter-spacing:\s*0\.08em/);
 		}
 	});
+
+	test("Log out takes the links' face and size, in the bar and the phone menu", async () => {
+		render(Navbar, { props: { user: makeUser('chef@example.com') } });
+		await fireEvent.click(screen.getByRole('button', { name: /open main menu/i }));
+		const menu = document.getElementById('mobile-menu')!;
+		const [bar, phone] = screen.getAllByRole('button', { name: 'Log out' });
+		expect(menu.contains(bar)).toBe(false);
+		expect(bar).toHaveClass('navbar-link');
+		expect(phone).toHaveClass('mobile-link');
+		expect(rule('.navbar-link')).toMatch(/font-size:\s*0\.9375rem/);
+		// No later rule may shrink the button below the links beside it.
+		expect(style).not.toMatch(/\.logout-btn\s*{[^}]*font-size/);
+	});
 });
