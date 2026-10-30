@@ -414,14 +414,12 @@ describe('Navbar fit at 768', () => {
 		expect(rule('\\.nav-cta')).toMatch(/white-space:\s*nowrap/);
 	});
 
-	test('the handle in the bar is capped (22ch, 14ch below 1024) with an ellipsis, the full handle in its title', () => {
+	test('the handle in the bar is capped at 22ch at every width with an ellipsis, the full handle in its title', () => {
 		const handleRule = rule('\\.navbar-account :global\\(\\.username\\)');
-		// 22ch shows "@spencerfletcher" whole on a wide screen; below 1024 the bar
-		// is tight and the cap drops to 14ch.
+		// 22ch shows "@spencerfletcher" whole wherever the bar has room; a fixed
+		// narrower cap below 1024 clipped it at 768 to 1023 even with room to spare.
 		expect(handleRule).toMatch(/max-width:\s*22ch/);
-		expect(style).toMatch(
-			/@media \(max-width: 1023px\)\s*{\s*\.navbar-account :global\(\.username\)\s*{\s*max-width:\s*14ch;/
-		);
+		expect(style).not.toMatch(/14ch/);
 		expect(handleRule).toMatch(/overflow:\s*hidden/);
 		expect(handleRule).toMatch(/text-overflow:\s*ellipsis/);
 		expect(handleRule).toMatch(/white-space:\s*nowrap/);
@@ -430,11 +428,26 @@ describe('Navbar fit at 768', () => {
 		expect(handle.closest(`[title="@${profile.username}"]`)).not.toBeNull();
 	});
 
-	test('the links cluster and the account cluster keep at least 16px between them', () => {
+	test('only the handle gives way when the bar is full: the links never shrink, the account side can', () => {
+		const { container } = render(Navbar, {
+			props: { user: makeUser('chef@example.com'), profile }
+		});
+		const links = container.querySelector('.navbar-links')!.parentElement!;
+		expect(links.classList).toContain('shrink-0');
+		const wrapper = container.querySelector(`[title="@${profile.username}"]`)!;
+		const account = container.querySelector('.navbar-account')!;
+		// Every box from the bar down to the handle may shrink below its content.
+		for (const el of [wrapper, account, account.parentElement!]) {
+			expect(el.classList).toContain('min-w-0');
+			expect(el.classList).toContain('shrink');
+		}
+	});
+
+	test('the links cluster and the account cluster keep 24px between them, so the handle does not read as a fifth link', () => {
 		const { container } = render(Navbar, { props: { user: null } });
 		const bar = container.querySelector('nav > div')!;
-		const gap = [...bar.classList].find((c) => /^gap-\d+$/.test(c));
-		expect(Number(gap?.slice(4)) * 4).toBeGreaterThanOrEqual(16);
+		// app.css overrides the spacing scale from 5 up: gap-5 is 24px, gap-6 32px.
+		expect(bar.classList).toContain('gap-5');
 	});
 });
 

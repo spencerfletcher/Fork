@@ -74,9 +74,9 @@
 <nav class="bg-navbar-bg relative z-50 px-5" bind:this={nav} onfocusout={onNavFocusout}>
 	<!-- Above the overlay, so the bar stays bright and tappable while the menu is open. -->
 	<div
-		class="relative z-[100] mx-auto flex h-[52px] max-w-[1200px] items-center justify-between gap-4 md:h-14">
-		<!-- Logo + nav links -->
-		<div class="flex items-center gap-6">
+		class="relative z-[100] mx-auto flex h-[52px] max-w-[1200px] items-center justify-between gap-5 md:h-14">
+		<!-- Logo + nav links. They never shrink; when the bar is full the handle gives way. -->
+		<div class="flex shrink-0 items-center gap-6">
 			<!-- One line, so the name is "Fork." with no space before the stop. -->
 			<!-- prettier-ignore -->
 			<a href="/" class="nav-brand" onclick={closeMenu}>Fork<span class="text-marigold">.</span></a>
@@ -92,12 +92,12 @@
 		</div>
 
 		<!-- Auth + CTA + hamburger -->
-		<div class="flex items-center gap-4">
-			<div class="navbar-account hidden items-center gap-4 text-[0.875rem] md:flex">
+		<div class="flex min-w-0 shrink items-center gap-4">
+			<div class="navbar-account hidden min-w-0 shrink items-center gap-4 text-[0.875rem] md:flex">
 				{#if user}
 					{#if profile}
 						<!-- The bar caps the handle; the title carries it whole. -->
-						<span title="@{profile.username}">
+						<span class="min-w-0 shrink" title="@{profile.username}">
 							<Username username={profile.username} tone="dark" current={onOwnProfile} />
 						</span>
 					{/if}
@@ -356,7 +356,8 @@
 
 	/* The handle's 24px hit, like the links beside it, without moving it.
 	   Capped so a 30-character handle (the sign-up max) ellipsises; 22ch shows
-	   a normal handle whole on a wide screen. */
+	   a normal handle whole. Below the cap it shrinks only when the bar is full
+	   (its wrappers are min-w-0 shrink, the links shrink-0). */
 	.navbar-account :global(.username) {
 		display: block;
 		max-width: 22ch;
@@ -365,13 +366,6 @@
 		white-space: nowrap;
 		padding: 4px 0;
 		margin: -4px 0;
-	}
-
-	/* Below 1024 the bar is tight: 14ch lets a 30-character handle fit at 768. */
-	@media (max-width: 1023px) {
-		.navbar-account :global(.username) {
-			max-width: 14ch;
-		}
 	}
 
 	/* The handle in the phone menu: the padding on the link itself, like a
