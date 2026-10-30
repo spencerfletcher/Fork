@@ -42,15 +42,14 @@
 <header class="recipe-header">
 	<h1 class="title m-0 font-serif font-medium">{currentVersion.title}</h1>
 
-	<!-- Who, its own forks (only when it has any), and what it was forked from
+	<!-- Who, its own forks (a link to their list, only when it has any), and what it was forked from
 	     (the parent's title, not its author, who is one click away). One line;
 	     there is no separate attribution line. Decided 29 October 2026. -->
 	<p class="byline m-0 font-sans">
 		{#if recipe.author}By <Username username={recipe.author.username} />{/if}
 		{#if forkCount > 0}
 			{#if recipe.author}·{/if}
-			{forkCount}
-			{forkCount === 1 ? 'fork' : 'forks'}
+			<a href="/recipes/{recipe.slug}/forks">{forkCount} {forkCount === 1 ? 'fork' : 'forks'}</a>
 		{/if}
 		{#if recipe.parent}
 			{#if recipe.author || forkCount > 0}·{/if}

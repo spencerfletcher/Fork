@@ -154,6 +154,14 @@ describe('RecipeHeader byline', () => {
 		expect(byline(container)).toBe('By @chef');
 	});
 
+	test('the fork count links to the list of forks', () => {
+		renderHeader({ forkCount: 2, recipe: makeRecipe({ slug: 'classic-cookies' }) });
+		expect(screen.getByRole('link', { name: '2 forks' })).toHaveAttribute(
+			'href',
+			'/recipes/classic-cookies/forks'
+		);
+	});
+
 	test('forks are plural and absent when there are none', () => {
 		const { container, unmount } = renderHeader({ forkCount: 2 });
 		expect(byline(container)).toContain('2 forks');

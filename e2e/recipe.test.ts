@@ -74,6 +74,14 @@ test.describe('Recipe detail page', () => {
 		await expect(page.getByText(COOKIES_RE)).toBeVisible();
 	});
 
+	test('the byline fork count opens the list of forks', async ({ page }) => {
+		await gotoClassicCookies(page);
+		await page.locator('.byline').getByRole('link', { name: '1 fork' }).click();
+		await expect(page).toHaveURL(/\/recipes\/[^/]+\/forks$/);
+		await expect(page.getByRole('heading', { level: 1 })).toContainText(`Forks of ${COOKIES}`);
+		await expect(page.getByRole('link', { name: FORK_RE }).first()).toBeVisible();
+	});
+
 	test('viewing a specific version says so in the bar, with the way back', async ({ page }) => {
 		await page.goto('/recipes');
 		await page.getByRole('link', { name: COOKIES_RE }).first().click();
