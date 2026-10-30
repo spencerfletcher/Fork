@@ -129,6 +129,13 @@
 		margin: var(--space-4) 0 0;
 	}
 
+	/* From 768 the bar shows + New recipe, so this line would repeat it. */
+	@media (min-width: 768px) {
+		.profile-new {
+			display: none;
+		}
+	}
+
 	@media (max-width: 699px) {
 		.profile-header {
 			gap: 14px;
