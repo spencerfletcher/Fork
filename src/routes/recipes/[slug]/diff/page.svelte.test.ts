@@ -385,4 +385,13 @@ describe('Diff page', () => {
 			'true'
 		);
 	});
+	test('the To chip keeps a box in forced colours: a transparent 1px border inside its 6px', () => {
+		// Forced colours strip the marigold fill; the border is what remains, as
+		// on the primary button. Padding gives up the border's pixel so the chip
+		// keeps its width.
+		const style = source.slice(source.indexOf('<style>'));
+		const chip = style.match(/\.version-card--to \.version-card__number\s*{([^}]*)}/)?.[1] ?? '';
+		expect(chip).toMatch(/border:\s*1px solid transparent/);
+		expect(chip).toMatch(/padding:\s*0 5px/);
+	});
 });

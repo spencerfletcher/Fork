@@ -237,9 +237,12 @@
 		margin: -4px 0;
 	}
 
-	/* The system's chip, at the card number's size. */
+	/* The system's chip, at the card number's size. The border is transparent,
+	   so it shows only under forced colours, where the fill goes and the border
+	   keeps the chip a box; the padding gives up its pixel to keep the width. */
 	.version-card--to .version-card__number {
-		padding: 0 6px;
+		padding: 0 5px;
+		border: 1px solid transparent;
 		border-radius: var(--radius-sm);
 		background: var(--color-marigold);
 		color: var(--color-text);
