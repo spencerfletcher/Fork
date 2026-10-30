@@ -19,6 +19,11 @@
 		saveTicks(storageKey, ticked);
 	}
 
+	function clear() {
+		ticked = [];
+		saveTicks(storageKey, ticked);
+	}
+
 	// Whole grams, except below ten where a tenth matters: 5.7g, not 6g.
 	function round(g: number): number {
 		return g < 10 ? Math.round(g * 10) / 10 : Math.round(g);
@@ -99,7 +104,22 @@
 			</label>
 		{/each}
 	</div>
-	{#if anyApproximate}
-		<p class="form-hint">Whole-item weights are estimates, not exact.</p>
+	<!-- The list's foot: the weights note at the start, Clear ticks at the end,
+	     only while a line is ticked. Clear ticks is Ink 3 at the note's size, a
+	     24px hit, 44px on a phone or under a coarse pointer. -->
+	{#if anyApproximate || ticked.length > 0}
+		<div class="flex items-baseline gap-4">
+			{#if anyApproximate}
+				<p class="form-hint">Whole-item weights are estimates, not exact.</p>
+			{/if}
+			{#if ticked.length > 0}
+				<button
+					type="button"
+					class="text-text-3 hover:text-text -my-0.5 ml-auto cursor-pointer py-0.5 text-sm max-[699px]:-my-3 max-[699px]:py-3 pointer-coarse:-my-3 pointer-coarse:py-3"
+					onclick={clear}>
+					Clear ticks
+				</button>
+			{/if}
+		</div>
 	{/if}
 </section>

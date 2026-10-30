@@ -14,6 +14,11 @@
 		saveTicks(storageKey, ticked);
 	}
 
+	function clear() {
+		ticked = [];
+		saveTicks(storageKey, ticked);
+	}
+
 	const annotationColor: Record<StepAnnotationType, string> = {
 		tip: 'text-text-3',
 		warning: 'text-remove',
@@ -69,4 +74,16 @@
 			</label>
 		{/each}
 	</div>
+	<!-- Clear ticks, only while a step is ticked: Ink 3 at the ingredients
+	     note's size, a 24px hit, 44px on a phone or under a coarse pointer. -->
+	{#if ticked.length > 0}
+		<div class="mt-3 flex">
+			<button
+				type="button"
+				class="text-text-3 hover:text-text -my-0.5 ml-auto cursor-pointer py-0.5 text-sm max-[699px]:-my-3 max-[699px]:py-3 pointer-coarse:-my-3 pointer-coarse:py-3"
+				onclick={clear}>
+				Clear ticks
+			</button>
+		</div>
+	{/if}
 </section>

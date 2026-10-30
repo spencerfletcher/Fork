@@ -2,6 +2,7 @@ import { describe, test, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/svelte';
 import RecipeMethod from './RecipeMethod.svelte';
 import { ticksKey, loadTicks, saveTicks } from './ticks';
+import { makeStep } from '#lib/recipes/fixtures.js';
 
 const KEY = ticksKey('my-fork', 3, 'steps');
 
@@ -81,6 +82,18 @@ describe('RecipeMethod', () => {
 		await fireEvent.click(boxes[1]);
 		expect(loadTicks(KEY)).toEqual([0, 1]);
 		localStorage.clear();
+	});
+
+	test('Clear ticks shows only once a step is ticked, and clears the list and its saved ticks', async () => {
+		render(RecipeMethod, {
+			props: { storageKey: KEY, steps: [makeStep('Mix.'), makeStep('Bake.')] }
+		});
+		expect(screen.queryByRole('button', { name: 'Clear ticks' })).toBeNull();
+		await fireEvent.click(screen.getAllByRole('checkbox')[1]);
+		await fireEvent.click(screen.getByRole('button', { name: 'Clear ticks' }));
+		for (const box of screen.getAllByRole('checkbox')) expect(box).not.toBeChecked();
+		expect(loadTicks(KEY)).toEqual([]);
+		expect(screen.queryByRole('button', { name: 'Clear ticks' })).toBeNull();
 	});
 
 	test('the numeral sits at the end of its 55px column, 10px from the text, with one digit or two; the tick at the start', () => {

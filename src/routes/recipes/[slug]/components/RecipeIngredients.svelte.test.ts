@@ -158,4 +158,15 @@ describe('RecipeIngredients', () => {
 		expect(loadTicks(KEY)).toEqual([0]);
 		localStorage.clear();
 	});
+
+	test('Clear ticks shows only once a line is ticked, and clears the list and its saved ticks', async () => {
+		renderWith(LINES, [null, null, null]);
+		expect(screen.queryByRole('button', { name: 'Clear ticks' })).toBeNull();
+		await fireEvent.click(rows()[0]);
+		await fireEvent.click(rows()[2]);
+		await fireEvent.click(screen.getByRole('button', { name: 'Clear ticks' }));
+		for (const box of screen.getAllByRole('checkbox')) expect(box).not.toBeChecked();
+		expect(loadTicks(KEY)).toEqual([]);
+		expect(screen.queryByRole('button', { name: 'Clear ticks' })).toBeNull();
+	});
 });
