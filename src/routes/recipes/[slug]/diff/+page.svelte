@@ -239,10 +239,12 @@
 
 	/* The system's chip, at the card number's size. The border is transparent,
 	   so it shows only under forced colours, where the fill goes and the border
-	   keeps the chip a box; the padding gives up its pixel to keep the width. */
+	   keeps the chip a box; the padding gives up its pixel to keep the width,
+	   and the margin takes back the 2px the border adds to the card's head. */
 	.version-card--to .version-card__number {
 		padding: 0 5px;
 		border: 1px solid transparent;
+		margin-block: -1px;
 		border-radius: var(--radius-sm);
 		background: var(--color-marigold);
 		color: var(--color-text);

@@ -393,5 +393,8 @@ describe('Diff page', () => {
 		const chip = style.match(/\.version-card--to \.version-card__number\s*{([^}]*)}/)?.[1] ?? '';
 		expect(chip).toMatch(/border:\s*1px solid transparent/);
 		expect(chip).toMatch(/padding:\s*0 5px/);
+		// The chip is a flex item, so its border would grow the card's head by 2px
+		// and drop the To message below the From one; the margin takes it back.
+		expect(chip).toMatch(/margin-block:\s*-1px/);
 	});
 });
