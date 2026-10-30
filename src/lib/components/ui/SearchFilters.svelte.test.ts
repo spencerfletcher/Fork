@@ -44,19 +44,14 @@ describe('SearchFilters', () => {
 		expect(gotoMock.mock.calls[0][1]).toMatchObject({ reset: false });
 	});
 
-	test('a pressed filter is scrolled into view once the row re-renders', async () => {
+	// Clear all sits at the row's end, so a press moves no pill and nothing
+	// needs scrolling back into view.
+	test('a filter press does not scroll the row', async () => {
 		render(SearchFilters, { props: { availableTags } });
-		const baking = screen.getByRole('button', { name: 'Baking' });
-		await fireEvent.click(baking);
-		await vi.waitFor(() => expect(scrollIntoView).toHaveBeenCalledTimes(1));
-		expect(scrollIntoView.mock.contexts[0]).toBe(baking);
-		expect(scrollIntoView.mock.calls[0][0]).toMatchObject({ inline: 'nearest' });
-	});
-
-	test('Clear all leads the row, so it is in reach on a phone without scrolling', () => {
-		render(SearchFilters, { props: { availableTags, initialTags: ['baking'] } });
-		const row = screen.getByRole('group', { name: 'Filter by tag' });
-		expect(row.querySelector('button')).toHaveTextContent('Clear all');
+		await fireEvent.click(screen.getByRole('button', { name: 'Baking' }));
+		await vi.waitFor(() => expect(gotoMock).toHaveBeenCalledTimes(1));
+		await Promise.resolve();
+		expect(scrollIntoView).not.toHaveBeenCalled();
 	});
 
 	test('Clear all is one navigation with no tags', async () => {

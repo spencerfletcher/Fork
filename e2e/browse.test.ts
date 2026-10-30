@@ -174,7 +174,7 @@ test.describe('Search filters', () => {
 		await expect(dessert).toBeFocused();
 	});
 
-	test('on a phone, two pressed pills keep a gap, the first is not clipped, Clear all is in view', async ({
+	test('on a phone, two pressed pills keep a gap, the first is not clipped, Clear all ends the row', async ({
 		page
 	}) => {
 		await page.setViewportSize({ width: 390, height: 844 });
@@ -199,10 +199,7 @@ test.describe('Search filters', () => {
 		const clip = await row.evaluate((el) => el.getBoundingClientRect().left);
 		expect(pills[0].left).toBeGreaterThan(clip);
 
-		const clear = row.getByRole('button', { name: 'Clear all' });
-		const box = (await clear.boundingBox())!;
-		expect(box.x).toBeGreaterThanOrEqual(0);
-		expect(box.x + box.width).toBeLessThanOrEqual(390);
+		await expect(row.getByRole('button').last()).toHaveText('Clear all');
 	});
 
 	test('a pressed filter with focus wears the ring on its pill, inside the row', async ({
@@ -250,13 +247,13 @@ test.describe('Search filters on a phone', () => {
 		await page.setViewportSize({ width: 390, height: 844 });
 		await page.goto('/search');
 		const row = page.getByRole('group', { name: 'Filter by tag' });
-		const last = row.getByRole('button').last();
+		// Clear all appears after the last tag once it is pressed, so skip it.
+		const last = row.locator('button:not(.tag-tabs__clear)').last();
 		await last.focus();
 		await page.keyboard.press('Enter');
 		await expect(last).toHaveAttribute('aria-pressed', 'true');
 		await expect(last).toBeFocused();
-		// "Clear all" now leads the row, pushing every pill right. The ring sits
-		// 4px outside the pill (2px offset, 2px width).
+		// The ring sits 4px outside the pill (2px offset, 2px width).
 		await expect
 			.poll(() =>
 				last.evaluate((el) => {
