@@ -5,19 +5,24 @@
 	// found" (Spencer, 29 October 2026). A 500 keeps SvelteKit's message and
 	// says in the lede that the fault is Fork's; a 404 names what a missing
 	// page can mean.
+	// SvelteKit's own message for an unmatched route is the title-case "Not
+	// Found"; it reads as Fork's sentence case instead.
 	const message = $derived(
-		page.error?.message || (page.status === 404 ? 'Page not found' : 'Something went wrong')
+		(page.error?.message === 'Not Found' ? null : page.error?.message) ||
+			(page.status === 404 ? 'Page not found' : 'Something went wrong')
 	);
+	// A missing recipe may be one its author made private; a search is the way
+	// on from a shared link to it. Any other missing page is only missing.
+	const recipeMissing = $derived(page.status === 404 && page.url.pathname.startsWith('/recipes/'));
 	const lede = $derived(
 		page.status >= 500
 			? "Something went wrong on Fork's side, not yours. Try again in a moment."
-			: page.status === 404
+			: recipeMissing
 				? 'It may be an old link, or a recipe its author keeps private.'
-				: null
+				: page.status === 404
+					? 'There is nothing at this address.'
+					: null
 	);
-	// A missing recipe may be one its author made private; a search is the way
-	// on from a shared link to it.
-	const recipeMissing = $derived(page.status === 404 && page.url.pathname.startsWith('/recipes/'));
 </script>
 
 <!-- Centred on the screen like the login page, nothing boxed (Spencer, 29

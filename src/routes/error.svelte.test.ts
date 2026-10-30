@@ -30,12 +30,21 @@ describe('error page', () => {
 		expect(screen.getByRole('link', { name: 'Go home' })).toHaveAttribute('href', '/');
 	});
 
-	test('a 404 keeps the thrown message in its title and explains what a missing page can mean', () => {
-		renderError(404, 'Recipe not found');
+	test('a recipe 404 keeps the thrown message in its title and says the recipe may be private', () => {
+		renderError(404, 'Recipe not found', '/recipes/no-such-recipe');
 		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
 			'Error 404 – Recipe not found'
 		);
 		expect(screen.getByText(/old link|private/)).toBeInTheDocument();
+	});
+
+	test("an unknown address titles SvelteKit's default 404 Page not found and blames no private recipe", () => {
+		renderError(404, 'Not Found', '/nope');
+		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
+			'Error 404 – Page not found'
+		);
+		expect(screen.getByText('There is nothing at this address.')).toBeInTheDocument();
+		expect(screen.queryByText(/private/)).toBeNull();
 	});
 
 	test('a 404 with no message says Page not found', () => {
