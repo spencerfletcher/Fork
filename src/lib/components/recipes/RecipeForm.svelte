@@ -298,13 +298,19 @@
 					<label for="title">
 						Title <span class="required" aria-hidden="true">*</span>
 					</label>
-					<input
+					<!-- A textarea so a long title wraps on a phone; still one line of text:
+					     Enter types nothing and a pasted newline becomes a space. -->
+					<textarea
 						id="title"
 						name="title"
-						type="text"
+						rows="1"
 						required
-						bind:value={draft.title}
-						{...aria('title')} />
+						bind:value={() => draft.title, (v) => (draft.title = v.replace(/[\r\n]+/g, ' '))}
+						onkeydown={(e) => {
+							if (e.key === 'Enter') e.preventDefault();
+						}}
+						{...aria('title')}>
+					</textarea>
 					{@render fieldError('title')}
 				</div>
 
@@ -500,6 +506,13 @@
 	/* field-sizing: content ignores rows; this keeps an empty box typeable. */
 	textarea[name='description'] {
 		min-height: calc(3lh + 18px);
+	}
+
+	/* One line tall where field-sizing is unsupported, as the input it replaced
+	   was; it grows only by wrapping, never by dragging. */
+	textarea[name='title'] {
+		min-height: calc(1lh + 20px);
+		resize: none;
 	}
 
 	.photo-actions {

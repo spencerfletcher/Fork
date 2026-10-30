@@ -136,7 +136,7 @@ test.describe('Auth pages', () => {
 		const url = page.url();
 		const isRedirected = url.includes('/login');
 		const hasForm = await page
-			.locator('input[name="title"]')
+			.locator('textarea[name="title"]')
 			.isVisible()
 			.catch(() => false);
 		// Either redirected OR no recipe form visible

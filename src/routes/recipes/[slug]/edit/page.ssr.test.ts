@@ -39,7 +39,6 @@ describe('edit page, server rendered', () => {
 			}
 		};
 		const { body } = render(EditPage, { props: { data, form } as never });
-		expect(body).toContain('value="Biscuits"');
-		expect(body).not.toContain('value="Cookies"');
+		expect(body).toMatch(/<textarea[^>]*name="title"[^>]*>Biscuits<\/textarea>/);
 	});
 });

@@ -74,7 +74,7 @@ test.describe('New recipe page', () => {
 
 	test('shows the title field and submit button', async ({ page }) => {
 		await page.goto('/recipes/new');
-		await expect(page.locator('input[name="title"]')).toBeVisible();
+		await expect(page.locator('textarea[name="title"]')).toBeVisible();
 		await expect(page.getByRole('button', { name: /create recipe/i })).toBeVisible();
 	});
 
@@ -88,7 +88,7 @@ test.describe('New recipe page', () => {
 		page
 	}) => {
 		await gotoHydrated(page, '/recipes/new');
-		const title = page.locator('input[name="title"]');
+		const title = page.locator('textarea[name="title"]');
 		await title.focus();
 		await page.keyboard.press('Tab');
 		await expect(title).not.toHaveAttribute('aria-invalid');
@@ -179,7 +179,7 @@ test.describe('New recipe page', () => {
 		});
 		await page.getByLabel('Steps').fill('Mix.');
 		await page.getByRole('button', { name: /create recipe/i }).click();
-		const title = page.locator('input[name="title"]');
+		const title = page.locator('textarea[name="title"]');
 		await expect(title).toBeFocused();
 		const prevented = await page.evaluate(
 			() => (window as unknown as { invalids: boolean[] }).invalids
@@ -337,7 +337,7 @@ test.describe('New recipe page', () => {
 		try {
 			await page.goto('/recipes/new');
 
-			await page.locator('input[name="title"]').fill('E2E Test Recipe');
+			await page.locator('textarea[name="title"]').fill('E2E Test Recipe');
 
 			await page.getByLabel('Ingredients').fill('2 cups flour');
 			await page.getByLabel('Steps').fill('Mix all ingredients.');
@@ -398,7 +398,7 @@ test.describe('Edit recipe page', () => {
 		await page.waitForURL(/\/recipes\//);
 		await page.getByRole('link', { name: /edit recipe/i }).click();
 		await page.waitForURL(/\/edit/);
-		await expect(page.locator('input[name="title"]')).toBeVisible();
+		await expect(page.locator('textarea[name="title"]')).toBeVisible();
 	});
 
 	test('re-saving an unchanged recipe writes no version and returns to it', async ({ page }) => {
@@ -434,7 +434,7 @@ test.describe('Edit recipe page', () => {
 			'Cancel'
 		];
 		const walk = async () => {
-			await page.locator('input[name="title"]').focus();
+			await page.locator('textarea[name="title"]').focus();
 			const seen: string[] = [];
 			for (let i = 0; i < expected.length; i++) {
 				const name = await page.evaluate(() => {
@@ -462,7 +462,7 @@ test.describe('Edit recipe page', () => {
 		const url = await createRecipe(page, 'E2E Guard', '4');
 		try {
 			await gotoHydrated(page, `${url}/edit`);
-			await page.locator('input[name="title"]').fill('E2E Guard Edited');
+			await page.locator('textarea[name="title"]').fill('E2E Guard Edited');
 			// Playwright dismisses dialogs on its own, so wait for the event itself:
 			// without the guard there is no dialog and the wait times out.
 			let dialog = page.waitForEvent('dialog');
@@ -471,7 +471,7 @@ test.describe('Edit recipe page', () => {
 			expect(d.message()).toBe('Leave without saving? Your changes will be lost.');
 			await d.dismiss();
 			await expect(page).toHaveURL(/\/edit$/);
-			await expect(page.locator('input[name="title"]')).toHaveValue('E2E Guard Edited');
+			await expect(page.locator('textarea[name="title"]')).toHaveValue('E2E Guard Edited');
 
 			dialog = page.waitForEvent('dialog');
 			await page.getByRole('link', { name: 'Cancel' }).click();
@@ -515,7 +515,7 @@ test.describe('Edit recipe page', () => {
 				expect(style.family).toContain('JetBrains Mono');
 				expect(style.size).toBe('13px');
 			}
-			const title = await page.locator('input[name="title"]').boundingBox();
+			const title = await page.locator('textarea[name="title"]').boundingBox();
 			const message = await page.locator('input[name="commitMessage"]').boundingBox();
 			expect(message!.height).toBe(title!.height);
 			const save = await page.getByRole('button', { name: 'Save', exact: true }).boundingBox();
@@ -690,7 +690,7 @@ async function gotoHydrated(page: Page, url: string) {
 
 async function createRecipe(page: Page, title: string, servings: string) {
 	await gotoHydrated(page, '/recipes/new');
-	await page.locator('input[name="title"]').fill(title);
+	await page.locator('textarea[name="title"]').fill(title);
 	await page.locator('input[name="servings"]').fill(servings);
 	await page.locator('input[name="cookTimeMinutes"]').fill('20');
 	await page.getByLabel('Ingredients').fill('2 cups flour');
@@ -742,7 +742,7 @@ test.describe('One save', () => {
 		const url = await createRecipe(page, 'E2E Before Rename', '4');
 		try {
 			await gotoHydrated(page, `${url}/edit`);
-			await page.locator('input[name="title"]').fill('E2E After Rename');
+			await page.locator('textarea[name="title"]').fill('E2E After Rename');
 			await page.getByRole('button', { name: 'Save', exact: true }).click();
 			await page.waitForURL(url);
 			await expect(page.locator('h1')).toContainText('E2E After Rename');
@@ -781,11 +781,11 @@ test.describe('One save', () => {
 			await page.getByRole('button', { name: 'Save', exact: true }).click();
 			await page.waitForURL(url);
 
-			await other.locator('input[name="title"]').fill('E2E Stale Edit');
+			await other.locator('textarea[name="title"]').fill('E2E Stale Edit');
 			await other.getByRole('button', { name: 'Save', exact: true }).click();
 			await expect(other.getByRole('alert')).toContainText(/changed in another tab/i);
-			await expect(other.locator('input[name="title"]')).toHaveValue('E2E Stale Edit');
-			await expect(other.locator('input[name="title"]')).toBeEnabled();
+			await expect(other.locator('textarea[name="title"]')).toHaveValue('E2E Stale Edit');
+			await expect(other.locator('textarea[name="title"]')).toBeEnabled();
 
 			await page.goto(url);
 			await expectVersions(page, 2);

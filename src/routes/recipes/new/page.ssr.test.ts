@@ -24,7 +24,7 @@ describe('new page, server rendered', () => {
 			}
 		};
 		const { body } = render(NewPage, { props: { data: { allTags: [] }, form } as never });
-		expect(body).toContain('value="Soup"');
+		expect(body).toMatch(/<textarea[^>]*name="title"[^>]*>Soup<\/textarea>/);
 		expect(body).toContain('value="-5"');
 	});
 });

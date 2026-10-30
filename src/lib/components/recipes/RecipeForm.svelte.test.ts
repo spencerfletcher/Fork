@@ -1,5 +1,5 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/svelte';
+import { render, screen, fireEvent } from '@testing-library/svelte';
 import source from './RecipeForm.svelte?raw';
 import { readFileSync } from 'node:fs';
 import RecipeForm from './RecipeForm.svelte';
@@ -131,5 +131,50 @@ describe('RecipeForm field focused under the phone bar', () => {
 			({ bottom: 830 }) as DOMRect;
 		screen.getByRole('button', { name: 'Create recipe' }).focus();
 		expect(scrollIntoView).not.toHaveBeenCalled();
+	});
+});
+
+describe('RecipeForm title box', () => {
+	const renderForm = () =>
+		render(RecipeForm, {
+			props: {
+				baseline: draftOf(new FormData()),
+				form: null,
+				allTags: [],
+				submitLabel: 'Create recipe',
+				cancelHref: '/recipes'
+			}
+		});
+
+	// A long title wraps on a phone instead of scrolling out of a 352px box.
+	test('is a one-row textarea named title, required', () => {
+		renderForm();
+		const title = screen.getByRole('textbox', { name: 'Title' });
+		expect(title.tagName).toBe('TEXTAREA');
+		expect(title).toHaveAttribute('name', 'title');
+		expect(title).toHaveAttribute('rows', '1');
+		expect(title).toBeRequired();
+	});
+
+	test('Enter cannot type a newline', () => {
+		renderForm();
+		const enter = new KeyboardEvent('keydown', { key: 'Enter', cancelable: true, bubbles: true });
+		screen.getByRole('textbox', { name: 'Title' }).dispatchEvent(enter);
+		expect(enter.defaultPrevented).toBe(true);
+	});
+
+	test('a pasted newline is flattened to a space', async () => {
+		renderForm();
+		const title = screen.getByRole('textbox', { name: 'Title' });
+		await fireEvent.input(title, { target: { value: 'Brown butter\ncookies\r\n' } });
+		expect(title).toHaveValue('Brown butter cookies ');
+	});
+
+	// field-sizing grows it; without it, rows="1" and this floor keep the input's height.
+	test("keeps the single-line boxes' height where field-sizing is unsupported, and no resize grip", () => {
+		const at = style.indexOf("textarea[name='title'] {");
+		const rule = style.slice(at, style.indexOf('}', at));
+		expect(rule).toMatch(/min-height:\s*calc\(1lh \+ 20px\)/);
+		expect(rule).toMatch(/resize:\s*none/);
 	});
 });
