@@ -42,8 +42,18 @@
 		active = -1;
 	}
 
-	function remove(name: string) {
+	// Focus goes to the pill that took this one's place, else the one before,
+	// else the input, so it never drops to the page.
+	async function remove(name: string) {
+		const i = selected.indexOf(name);
 		selected = selected.filter((s) => s !== name);
+		await tick();
+		const buttons = rootEl.querySelectorAll<HTMLButtonElement>('.tag-remove');
+		(
+			buttons[i] ??
+			buttons[i - 1] ??
+			rootEl.querySelector<HTMLInputElement>('#tag-combobox')
+		)?.focus();
 	}
 
 	// The options are not Tab stops: arrows move the active one and Enter takes
@@ -200,14 +210,13 @@
 
 <style>
 	.tag-remove {
+		position: relative;
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		/* A 24px hit around a 16px glyph box, grown outward so the pill keeps
-		   its size and the glyph stays where it is. */
-		width: 24px;
-		height: 24px;
-		margin: -4px;
+		/* The 16px glyph box, so the focus ring stays pill-sized. */
+		width: 16px;
+		height: 16px;
 		padding: 0;
 		border: none;
 		background: transparent;
@@ -218,16 +227,22 @@
 		transition: color 0.15s ease;
 	}
 
+	/* A 24px hit, grown outward on a pseudo so neither the pill nor the ring
+	   changes size. */
+	.tag-remove::before {
+		content: '';
+		position: absolute;
+		inset: -4px;
+	}
+
 	.tag-remove:hover {
 		color: var(--color-text);
 	}
 
 	/* A 44px hit on a phone or any touch screen, grown the same way. */
 	@media (max-width: 699px), (pointer: coarse) {
-		.tag-remove {
-			width: 44px;
-			height: 44px;
-			margin: -14px;
+		.tag-remove::before {
+			inset: -14px;
 		}
 	}
 
@@ -281,6 +296,14 @@
 	.tag-option:hover,
 	.tag-option[aria-selected='true'] {
 		background: var(--color-surface-2);
+	}
+
+	/* Forced colours drop the background, so the active option needs a line. */
+	@media (forced-colors: active) {
+		.tag-option[aria-selected='true'] {
+			outline: 2px solid Highlight;
+			outline-offset: -2px;
+		}
 	}
 
 	/* "Create <name>" — an action rather than an existing tag, so it takes the

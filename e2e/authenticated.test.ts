@@ -221,11 +221,17 @@ test.describe('New recipe page', () => {
 		await page.keyboard.press('Enter');
 		const remove = page.getByRole('button', { name: `Remove ${name}` });
 		await expect(remove).toBeVisible();
-		let box = await remove.boundingBox();
-		expect([box!.width, box!.height]).toEqual([24, 24]);
+		// The button (and its ring) is the 16px glyph box; the hit is its ::before.
+		const hit = () =>
+			remove.evaluate((el) => {
+				const s = getComputedStyle(el, '::before');
+				return [parseFloat(s.width), parseFloat(s.height)];
+			});
+		const box = await remove.boundingBox();
+		expect([box!.width, box!.height]).toEqual([16, 16]);
+		expect(await hit()).toEqual([24, 24]);
 		await page.setViewportSize({ width: 390, height: 900 });
-		box = await remove.boundingBox();
-		expect([box!.width, box!.height]).toEqual([44, 44]);
+		expect(await hit()).toEqual([44, 44]);
 	});
 
 	test('the open tag list flows out of the box: flush, one shared edge, square where they meet, the ring around both', async ({

@@ -244,16 +244,42 @@ describe('TagInput', () => {
 const style = source.slice(source.indexOf('<style>'));
 
 describe('TagInput tag pill remove button', () => {
-	test('is a 24px hit with a mouse, grown outward so the 16px glyph box stays put', () => {
+	// The button is the 16px glyph box, so its focus ring stays pill-sized; the
+	// hit grows outward on a ::before, so the pill keeps its size too.
+	test('is a 16px box with a 24px hit on a ::before with a mouse', () => {
 		expect(style).toMatch(
-			/\.tag-remove\s*{[^}]*width:\s*24px[^}]*height:\s*24px[^}]*margin:\s*-4px/
+			/\.tag-remove\s*{[^}]*position:\s*relative[^}]*width:\s*16px[^}]*height:\s*16px/
+		);
+		expect(style).toMatch(
+			/\.tag-remove::before\s*{[^}]*content:\s*''[^}]*position:\s*absolute[^}]*inset:\s*-4px/
 		);
 	});
 
 	test('is a 44px hit on a phone or under a coarse pointer, grown the same way', () => {
 		const media = style.slice(style.indexOf('@media (max-width: 699px), (pointer: coarse)'));
+		expect(media).toMatch(/^@media[^{]*{\s*\.tag-remove::before\s*{[^}]*inset:\s*-14px/);
+	});
+
+	test('removing a pill moves focus to the next pill, else the previous, else the input', async () => {
+		render(TagInput, { props: { allTags, selected: ['Dessert', 'Baking', 'Dinner'] } });
+		const remove = (name: string) => screen.getByRole('button', { name: `Remove ${name}` });
+		await fireEvent.click(remove('Baking'));
+		await tick();
+		expect(remove('Dinner')).toHaveFocus();
+		await fireEvent.click(remove('Dinner'));
+		await tick();
+		expect(remove('Dessert')).toHaveFocus();
+		await fireEvent.click(remove('Dessert'));
+		await tick();
+		expect(getInput()).toHaveFocus();
+	});
+});
+
+describe('TagInput forced colours', () => {
+	test('the active option draws an outline, since its background is dropped', () => {
+		const media = style.slice(style.indexOf('@media (forced-colors: active)'));
 		expect(media).toMatch(
-			/^@media[^{]*{\s*\.tag-remove\s*{[^}]*width:\s*44px[^}]*height:\s*44px[^}]*margin:\s*-14px/
+			/^@media[^{]*{\s*\.tag-option\[aria-selected='true'\]\s*{[^}]*outline:\s*2px solid/
 		);
 	});
 });
