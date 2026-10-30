@@ -41,15 +41,9 @@ describe('RecipeForm actions on a phone', () => {
 });
 
 describe('RecipeForm invalid fields', () => {
-	// A fill made an empty invalid box look filled; the red border and the
-	// message say it, and the placeholder keeps its own colour.
-	test('an invalid box keeps the plain surface, not the error fill', () => {
-		expect(style).toMatch(
-			/\.form :global\(:is\(input, textarea\):is\(:user-invalid, \[aria-invalid='true'\]\)\)\s*{[^}]*background:\s*var\(--color-surface\)/
-		);
-	});
-
-	test('the placeholder is not restyled on an invalid box', () => {
-		expect(style).not.toMatch(/user-invalid[^{]*::placeholder/);
+	// app.css styles every invalid field (red border and text, no fill); the
+	// editor adds nothing, so the placeholder keeps its own colour.
+	test('the editor does not restyle an invalid box or its placeholder', () => {
+		expect(style).not.toMatch(/user-invalid|aria-invalid/);
 	});
 });

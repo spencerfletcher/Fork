@@ -84,3 +84,21 @@ describe('app.css tokens', () => {
 		expect(h1).toContain('color: var(--color-accent)');
 	});
 });
+
+describe('app.css invalid fields', () => {
+	// A fill made an empty invalid box look filled; the red border and text say
+	// it, on every form.
+	const rule = css.slice(
+		css.indexOf(".form :is(input, textarea):is(:user-invalid, [aria-invalid='true']) {")
+	);
+	const block = rule.slice(0, rule.indexOf('}'));
+
+	test('an invalid field keeps the red border and text', () => {
+		expect(block).toMatch(/border-color:\s*var\(--color-remove\)/);
+		expect(block).toMatch(/[^-]color:\s*var\(--color-remove\)/);
+	});
+
+	test('an invalid field takes no error fill', () => {
+		expect(block).not.toMatch(/background/);
+	});
+});

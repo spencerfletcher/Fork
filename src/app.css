@@ -866,11 +866,11 @@
 		color: var(--color-remove);
 	}
 
-	/* Invalid fields wear the error tokens: the browser's own judgement after the
-	   user has been in the field, or ours once a message is attached. */
+	/* Invalid fields wear the error red: the browser's own judgement after the
+	   user has been in the field, or ours once a message is attached. No fill,
+	   which made an empty invalid box look filled. */
 	.form :is(input, textarea):is(:user-invalid, [aria-invalid='true']) {
 		border-color: var(--color-remove);
-		background: var(--color-remove-bg);
 		color: var(--color-remove);
 	}
 

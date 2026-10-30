@@ -527,13 +527,6 @@
 		min-height: 24px;
 	}
 
-	/* No error fill in the editor: it made an empty invalid box look filled.
-	   The red border and the message carry it. Global, so it reaches the
-	   ingredient and step boxes inside their own components. */
-	.form :global(:is(input, textarea):is(:user-invalid, [aria-invalid='true'])) {
-		background: var(--color-surface);
-	}
-
 	/* Clay, as the strike rows' ticked squares are, not the browser's blue. */
 	.inline-checkbox input {
 		accent-color: var(--color-accent);
