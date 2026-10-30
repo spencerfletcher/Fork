@@ -30,12 +30,15 @@
 			allTags={data.allTags}
 			submitLabel="Create recipe"
 			cancelHref="/recipes">
-			{#snippet header(outcome)}
+			{#snippet header(outcome, invalid)}
 				<div class="editor-header">
 					<div class="editor-title">
 						<h1>New Recipe</h1>
-						<!-- Always in the DOM, so the outcome is announced when it changes. -->
-						<span class="editing" aria-live="polite">{outcome || 'saves as v1'}</span>
+						<!-- Always in the DOM, so the outcome is announced when it changes.
+						     No promise while a field shows an error, as Edit makes none. -->
+						<span class="editing" aria-live="polite">
+							{outcome || (invalid ? '' : 'saves as v1')}
+						</span>
 					</div>
 				</div>
 			{/snippet}

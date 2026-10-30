@@ -196,6 +196,19 @@ describe('New recipe page editor state', () => {
 		expect(document.querySelector('.form-actions .form-hint')).toBeNull();
 	});
 
+	test('the header line promises v1 only while no field carries an error', async () => {
+		render(NewPage, { props: { data, form: null } });
+		const line = screen.getByText('saves as v1');
+		const title = screen.getByLabelText(/^title/i);
+		await fireEvent.input(title, { target: { value: 'Brownies' } });
+		await fireEvent.input(title, { target: { value: '' } });
+		await fireEvent.focusOut(title);
+		expect(title).toHaveAttribute('aria-invalid', 'true');
+		expect(line).toHaveTextContent(/^$/);
+		await fireEvent.input(title, { target: { value: 'Brownies' } });
+		expect(line).toHaveTextContent('saves as v1');
+	});
+
 	test('a blocked Create on the empty form counts the required fields in the header line', async () => {
 		render(NewPage, { props: { data, form: null } });
 		const form = screen.getByLabelText(/^title/i).closest('form')!;

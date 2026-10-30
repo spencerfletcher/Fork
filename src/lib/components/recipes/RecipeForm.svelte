@@ -43,8 +43,9 @@
 		 *  message field and the outcome the header line states. */
 		nextVersion?: number;
 		/** The page's header, handed the outcome of a save ("saves as v4",
-		 *  "saves settings only", or '' while the form is clean or invalid). */
-		header?: Snippet<[outcome: string]>;
+		 *  "saves settings only", or '' while the form is clean or invalid),
+		 *  and whether any field is showing an error. */
+		header?: Snippet<[outcome: string, invalid: boolean]>;
 	} = $props();
 
 	// The whole form as one object. A failed save hands back what was
@@ -263,7 +264,7 @@
 	});
 </script>
 
-{@render header?.(outcome)}
+{@render header?.(outcome, errorCount > 0)}
 
 {#snippet fieldError(name: string)}
 	{#if errors[name]}
