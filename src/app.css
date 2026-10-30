@@ -617,6 +617,15 @@
 		}
 	}
 
+	/* Forced colours paint the transparent underline every tab carries, so all
+	   would read as current; Canvas hides it, leaving the current tab's line. */
+	@media (forced-colors: active) {
+		.tag-tabs a:not([aria-current='page']),
+		.tag-tabs button {
+			border-bottom-color: Canvas;
+		}
+	}
+
 	.eyebrow-label.section-heading {
 		padding-bottom: 8px;
 		margin-bottom: 14px;

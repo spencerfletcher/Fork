@@ -114,3 +114,18 @@ describe('app.css buttons', () => {
 		expect(weight('.btn-ghost')).toBe(weight('.btn-primary'));
 	});
 });
+
+describe('app.css forced colours', () => {
+	// Every tag tab carries a transparent 2px underline, which forced colours
+	// would paint, marking every tab current. Canvas hides it again, so only
+	// the current tab keeps its line.
+	test('only the current tag tab keeps its underline', () => {
+		const blocks = css.split('@media (forced-colors: active)').slice(1);
+		const tabs = blocks.find((b) => b.includes('.tag-tabs'));
+		expect(tabs).toBeDefined();
+		const rule = tabs!.slice(0, tabs!.indexOf('}'));
+		expect(rule).toContain(".tag-tabs a:not([aria-current='page'])");
+		expect(rule).toContain('.tag-tabs button');
+		expect(rule).toMatch(/border-bottom-color:\s*Canvas/);
+	});
+});
