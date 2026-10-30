@@ -236,7 +236,7 @@
 
 <style>
 	.diff-section {
-		margin-bottom: 1.75rem;
+		margin-bottom: 1.5rem;
 	}
 
 	.diff-panel {

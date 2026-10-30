@@ -431,4 +431,9 @@ describe('VersionDiff fold', () => {
 		const weight = style.match(/\.diff-gutter\s*{[^}]*font-weight:\s*(\d+)/)?.[1];
 		expect(Number(weight)).toBe(Math.max(...monoWeights));
 	});
+
+	test('sections sit 24px apart, the page rhythm, not 28px', () => {
+		const style = source.slice(source.indexOf('<style>'));
+		expect(style).toMatch(/\.diff-section\s*{[^}]*margin-bottom:\s*1\.5rem/);
+	});
 });
