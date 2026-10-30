@@ -1,5 +1,5 @@
 import { describe, test, expect, vi } from 'vitest';
-import { fireEvent, render, screen } from '@testing-library/svelte';
+import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import DiffPage from './+page.svelte';
 import source from './+page.svelte?raw';
 import type { IngredientDiffRow, MetaDiffRow, StepDiffRow } from '#lib/recipes/diff.js';
@@ -7,7 +7,8 @@ import { makeContent, makeIngredient as ing } from '#lib/recipes/fixtures.js';
 
 // ─── SvelteKit module mocks ───────────────────────────────────────────────────
 
-vi.mock('$app/navigation', () => ({ goto: vi.fn() }));
+const { goto } = vi.hoisted(() => ({ goto: vi.fn() }));
+vi.mock('$app/navigation', () => ({ goto }));
 
 vi.mock('$app/state', () => ({
 	page: { url: new URL('http://localhost/'), params: {}, route: { id: null } }
@@ -315,6 +316,23 @@ describe('Diff page', () => {
 
 		expect(screen.getByLabelText('From version')).toHaveValue('2');
 		expect(screen.getByLabelText('To version')).toHaveValue('3');
+	});
+
+	test('a reversed pick swaps the pickers, goes to the ordered pair, and focus follows the picked version', async () => {
+		const V3 = { ...V2, versionNumber: 3, commitMessage: 'Less sugar' };
+		render(DiffPage, {
+			props: { data: makeData({ allVersions: [V1, V2, V3], fromVersion: V3, toVersion: V3 }) }
+		});
+		goto.mockClear();
+
+		const to = screen.getByLabelText('To version');
+		await fireEvent.change(to, { target: { value: '2' } });
+
+		expect(goto).toHaveBeenCalledWith('?from=2&to=3');
+		const from = screen.getByLabelText('From version');
+		expect(from).toHaveValue('2');
+		expect(to).toHaveValue('3');
+		await waitFor(() => expect(from).toHaveFocus());
 	});
 
 	// The select is the only thing drawn, and its options always carry the

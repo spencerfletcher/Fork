@@ -27,8 +27,19 @@
 			: `/recipes/${recipe.slug}?version=${v.versionNumber}`;
 
 	async function navigate(id: string) {
+		// A reversed pair is ordered here, as the loader would, so the pickers
+		// match the URL; the picked version is now in the other picker.
+		if (fromSelect > toSelect) {
+			[fromSelect, toSelect] = [toSelect, fromSelect];
+			// From 3 to 3, picking To 2 leaves To's state at 3, so Svelte writes
+			// nothing and the select would still read 2; set it by hand.
+			const picked = document.getElementById(id) as HTMLSelectElement | null;
+			if (picked) picked.value = String(id === 'from-select' ? fromSelect : toSelect);
+			id = id === 'from-select' ? 'to-select' : 'from-select';
+		}
 		await goto(`?from=${fromSelect}&to=${toSelect}`);
-		// Navigation lands focus on the body; the picker that was changed keeps it.
+		// Navigation lands focus on the body; focus goes back to the picker that
+		// holds the version just picked.
 		document.getElementById(id)?.focus();
 	}
 

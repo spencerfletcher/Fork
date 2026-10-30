@@ -202,4 +202,16 @@ test.describe('Compare page', () => {
 		await openCookiesCompare(page, '?from=2&to=2');
 		await expect(page).toHaveTitle(/^v2 · same version · /);
 	});
+
+	test('a reversed pick goes to the ordered pair, focus on the picker holding the picked version', async ({
+		page
+	}) => {
+		await openCookiesCompare(page, '?from=3&to=3');
+		await page.getByLabel('To version').selectOption('2');
+		await page.waitForURL(/\?from=2&to=3$/);
+		const from = page.getByLabel('From version');
+		await expect(from).toHaveValue('2');
+		await expect(page.getByLabel('To version')).toHaveValue('3');
+		await expect(from).toBeFocused();
+	});
 });
