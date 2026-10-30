@@ -66,7 +66,7 @@
 <nav class="bg-navbar-bg relative z-50 px-5" bind:this={nav}>
 	<!-- Above the overlay, so the bar stays bright and tappable while the menu is open. -->
 	<div
-		class="relative z-[100] mx-auto flex h-[52px] max-w-[1200px] items-center justify-between md:h-14">
+		class="relative z-[100] mx-auto flex h-[52px] max-w-[1200px] items-center justify-between gap-4 md:h-14">
 		<!-- Logo + nav links -->
 		<div class="flex items-center gap-6">
 			<!-- One line, so the name is "Fork." with no space before the stop. -->
@@ -88,7 +88,10 @@
 			<div class="navbar-account hidden items-center gap-4 text-[0.875rem] md:flex">
 				{#if user}
 					{#if profile}
-						<Username username={profile.username} tone="dark" current={onOwnProfile} />
+						<!-- The bar caps the handle; the title carries it whole. -->
+						<span title="@{profile.username}">
+							<Username username={profile.username} tone="dark" current={onOwnProfile} />
+						</span>
 					{/if}
 					<form action="/logout" method="POST" use:enhance>
 						<button type="submit" class="navbar-link">Log out</button>
@@ -330,6 +333,8 @@
 		/* A 24px hit on a 20px line without moving the text. */
 		padding: 4px 0;
 		margin: -4px 0;
+		/* At 768 a squeezed bar wrapped "My Recipes" and "Log out". */
+		white-space: nowrap;
 		transition: color 0.15s ease;
 	}
 
@@ -338,9 +343,14 @@
 		color: var(--color-text-cream);
 	}
 
-	/* The handle's 24px hit, like the links beside it, without moving it. */
+	/* The handle's 24px hit, like the links beside it, without moving it.
+	   Capped so a 30-character handle (the sign-up max) fits the bar at 768. */
 	.navbar-account :global(.username) {
-		display: inline-block;
+		display: block;
+		max-width: 14ch;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 		padding: 4px 0;
 		margin: -4px 0;
 	}

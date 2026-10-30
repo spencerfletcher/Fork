@@ -393,3 +393,42 @@ describe('Navbar phone menu Escape', () => {
 		}
 	});
 });
+
+// ─── Fit at 768 ───────────────────────────────────────────────────────────────
+
+// At 768 (iPad portrait) the two clusters met: with a 30-character handle (the
+// sign-up max) My Recipes and Log out wrapped, the action clipped and the page
+// scrolled sideways.
+describe('Navbar fit at 768', () => {
+	const style = source.slice(source.indexOf('<style>'));
+	const rule = (selector: string) => style.match(new RegExp(`${selector}\\s*{([^}]*)}`))![1];
+	const profile = {
+		id: 'user-abc',
+		username: 'a'.repeat(30),
+		avatarUrl: null,
+		createdAt: new Date()
+	};
+
+	test('links, Log out and the action never wrap', () => {
+		expect(rule('\\.navbar-link')).toMatch(/white-space:\s*nowrap/);
+		expect(rule('\\.nav-cta')).toMatch(/white-space:\s*nowrap/);
+	});
+
+	test('the handle in the bar is capped at 14ch with an ellipsis, the full handle in its title', () => {
+		const handleRule = rule('\\.navbar-account :global\\(\\.username\\)');
+		expect(handleRule).toMatch(/max-width:\s*14ch/);
+		expect(handleRule).toMatch(/overflow:\s*hidden/);
+		expect(handleRule).toMatch(/text-overflow:\s*ellipsis/);
+		expect(handleRule).toMatch(/white-space:\s*nowrap/);
+		render(Navbar, { props: { user: makeUser('chef@example.com'), profile } });
+		const handle = screen.getByRole('link', { name: `@${profile.username}` });
+		expect(handle.closest(`[title="@${profile.username}"]`)).not.toBeNull();
+	});
+
+	test('the links cluster and the account cluster keep at least 16px between them', () => {
+		const { container } = render(Navbar, { props: { user: null } });
+		const bar = container.querySelector('nav > div')!;
+		const gap = [...bar.classList].find((c) => /^gap-\d+$/.test(c));
+		expect(Number(gap?.slice(4)) * 4).toBeGreaterThanOrEqual(16);
+	});
+});
