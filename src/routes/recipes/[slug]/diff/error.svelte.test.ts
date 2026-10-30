@@ -33,7 +33,7 @@ describe('compare page error', () => {
 		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
 			'Error 400 – Version 9 not found'
 		);
-		expect(screen.getByText('It has v1 to v3.')).toBeInTheDocument();
+		expect(screen.getByText('This recipe has v1 to v3.')).toBeInTheDocument();
 		expect(screen.queryByText(/Pick two/)).toBeNull();
 		expect(screen.getByRole('link', { name: 'Back to the recipe' })).toHaveAttribute(
 			'href',
@@ -44,7 +44,7 @@ describe('compare page error', () => {
 	test('a range that is not a number keeps the generic line', () => {
 		renderError(400, 'Version not found');
 		expect(screen.getByText("Pick two of the recipe's versions to compare.")).toBeInTheDocument();
-		expect(screen.queryByText(/It has/)).toBeNull();
+		expect(screen.queryByText(/has v1/)).toBeNull();
 	});
 
 	test('a version that does not exist: the main action compares first and latest, back is secondary', () => {
@@ -74,10 +74,24 @@ describe('compare page error', () => {
 		expect(source).toMatch(/h1\s*{[^}]*text-wrap:\s*balance/);
 	});
 
-	test('a 404 keeps the generic line and goes home', () => {
+	test("a 404 takes the root page's missing-recipe lede, goes home, and offers a search", () => {
 		renderError(404, 'Recipe not found');
-		expect(screen.getByText(/doesn't exist or something went wrong/)).toBeInTheDocument();
+		expect(
+			screen.getByText('It may be an old link, or a recipe its author keeps private.')
+		).toBeInTheDocument();
 		expect(screen.getByRole('link', { name: 'Go home' })).toHaveAttribute('href', '/');
+		const search = screen.getByRole('link', { name: 'Search recipes' });
+		expect(search).toHaveAttribute('href', '/search');
+		expect(search).toHaveClass('btn-ghost');
+	});
+
+	test("a 500 takes the root page's lede and goes home, with no search", () => {
+		renderError(500, 'Internal Error');
+		expect(
+			screen.getByText("Something went wrong on Fork's side, not yours. Try again in a moment.")
+		).toBeInTheDocument();
+		expect(screen.getByRole('link', { name: 'Go home' })).toHaveAttribute('href', '/');
+		expect(screen.queryByRole('link', { name: 'Search recipes' })).toBeNull();
 	});
 
 	test("takes the root error page's format: the code in the h1 at the site size, centred, no display number", () => {

@@ -2,7 +2,8 @@
 	import { page } from '$app/state';
 
 	// A bad range is a 400 and the recipe still exists, so the way back is to
-	// it. A 404 means there is no recipe to go back to; home is the only way.
+	// it. A 404 means there is no recipe to go back to, so this page answers as
+	// the root error page does for a missing recipe: home, or a search.
 	const recipeUrl = $derived(page.status === 400 ? `/recipes/${page.params.slug}` : null);
 
 	// The helper line agrees with the loader's message: a recipe with one
@@ -19,11 +20,14 @@
 			{#if oneVersion}
 				Save a change to the recipe, then compare it with the original.
 			{:else if page.error?.versionCount}
-				It has v1 to v{page.error.versionCount}.
+				This recipe has v1 to v{page.error.versionCount}.
 			{:else if recipeUrl}
 				Pick two of the recipe's versions to compare.
-			{:else}
-				The page you're looking for doesn't exist or something went wrong.
+			{:else if page.status === 404}
+				<!-- The root error page's ledes, word for word. -->
+				It may be an old link, or a recipe its author keeps private.
+			{:else if page.status >= 500}
+				Something went wrong on Fork's side, not yours. Try again in a moment.
 			{/if}
 		</p>
 		{#if recipeUrl && !oneVersion}
@@ -36,7 +40,12 @@
 		{:else if recipeUrl}
 			<div class="actions"><a href={recipeUrl} class="btn-primary">Back to the recipe</a></div>
 		{:else}
-			<div class="actions"><a href="/" class="btn-primary">Go home</a></div>
+			<div class="actions">
+				<a href="/" class="btn-primary">Go home</a>
+				{#if page.status === 404}
+					<a href="/search" class="btn-ghost">Search recipes</a>
+				{/if}
+			</div>
 		{/if}
 	</div>
 </div>
