@@ -62,7 +62,12 @@
 						emailEdited = true;
 						emailValid = e.currentTarget.validity.valid;
 					}}
-					onblur={() => (emailLeft ||= emailEdited)}
+					onblur={(e) => {
+						// Left for the submit button, the message waits for the stopped submit:
+						// shown now, it would push the button from under the tap.
+						if (e.relatedTarget !== e.currentTarget.form?.querySelector('[type="submit"]'))
+							emailLeft ||= emailEdited;
+					}}
 					oninvalid={() => {
 						emailLeft = true;
 						emailValid = false;

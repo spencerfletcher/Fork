@@ -65,6 +65,27 @@ describe('Forgot password page', () => {
 		expect(email()).toHaveAttribute('aria-invalid', 'true');
 	});
 
+	// The message would push the button down between a tap's press and its
+	// release, so the tap would land on nothing; the stopped submit shows it.
+	test('an edited email left for the submit button shows no message until the browser stops the submit', async () => {
+		renderForgot();
+		const submit = screen.getByRole('button', { name: 'Send reset link' });
+		await fireEvent.input(email(), { target: { value: 'jane@' } });
+		await fireEvent.blur(email(), { relatedTarget: submit });
+		expect(screen.queryByText(EMAIL_RULE)).toBeNull();
+		expect(email()).not.toHaveAttribute('aria-invalid');
+		await fireEvent.invalid(email());
+		expect(screen.getByText(EMAIL_RULE)).toBeInTheDocument();
+		expect(email()).toHaveAttribute('aria-invalid', 'true');
+	});
+
+	test('an edited email left for anywhere but the submit button shows the message', async () => {
+		renderForgot();
+		await fireEvent.input(email(), { target: { value: 'jane@' } });
+		await fireEvent.blur(email(), { relatedTarget: document.body });
+		expect(screen.getByText(EMAIL_RULE)).toBeInTheDocument();
+	});
+
 	test('once sent, the same card says so without saying whether the account exists', () => {
 		renderForgot({ sent: true, email: 'cook@b.com' });
 		const heading = screen.getByRole('heading', { level: 1 });

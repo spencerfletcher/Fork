@@ -146,6 +146,27 @@ describe('Sign-up page', () => {
 		expect(email()).toHaveAttribute('aria-invalid', 'true');
 	});
 
+	// The message would push the button down between a tap's press and its
+	// release, so the tap would land on nothing; the stopped submit shows it.
+	test('an edited email left for the submit button shows no message until the browser stops the submit', async () => {
+		renderSignup();
+		const submit = screen.getByRole('button', { name: 'Create account' });
+		await fireEvent.input(email(), { target: { value: 'jane@' } });
+		await fireEvent.blur(email(), { relatedTarget: submit });
+		expect(screen.queryByText(EMAIL_RULE)).toBeNull();
+		expect(email()).not.toHaveAttribute('aria-invalid');
+		await fireEvent.invalid(email());
+		expect(screen.getByText(EMAIL_RULE)).toBeInTheDocument();
+		expect(email()).toHaveAttribute('aria-invalid', 'true');
+	});
+
+	test('an edited email left for anywhere but the submit button shows the message', async () => {
+		renderSignup();
+		await fireEvent.input(email(), { target: { value: 'jane@' } });
+		await fireEvent.blur(email(), { relatedTarget: document.body });
+		expect(screen.getByText(EMAIL_RULE)).toBeInTheDocument();
+	});
+
 	test('a Supabase failure is announced in the alert block', () => {
 		renderSignup({ message: 'Could not create the account. Try again.' });
 		expect(screen.getByRole('alert')).toHaveTextContent('Could not create the account. Try again.');
