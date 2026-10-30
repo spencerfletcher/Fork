@@ -354,6 +354,15 @@
 		color: var(--color-text-cream);
 	}
 
+	/* Current is cream against tan, which forced colours flatten to one colour;
+	   the underline keeps "you are here". */
+	@media (forced-colors: active) {
+		.navbar-link[aria-current='page'] {
+			text-decoration: underline;
+			text-underline-offset: 4px;
+		}
+	}
+
 	/* The handle's 24px hit, like the links beside it, without moving it.
 	   Capped so a 30-character handle (the sign-up max) ellipsises; 22ch shows
 	   a normal handle whole. Below the cap it shrinks only when the bar is full

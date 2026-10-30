@@ -493,4 +493,15 @@ describe('Navbar forced colours', () => {
 		// The border eats the padding's outer pixel, so the action stays 7px 14px tall and wide.
 		expect(cta).toMatch(/padding:\s*6px 13px/);
 	});
+
+	// Current is cream against tan, which forced colours flatten; an underline
+	// keeps "you are here".
+	test('the current link is underlined under forced colours', () => {
+		const style = source.slice(source.indexOf('<style>'));
+		const block = style.slice(style.indexOf('@media (forced-colors: active)'));
+		expect(style).toContain('@media (forced-colors: active)');
+		const rule = block.match(/\.navbar-link\[aria-current='page'\]\s*{([^}]*)}/)![1];
+		expect(rule).toMatch(/text-decoration:\s*underline/);
+		expect(rule).toMatch(/text-underline-offset:\s*4px/);
+	});
 });
