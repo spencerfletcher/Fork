@@ -14,7 +14,7 @@ const email = () => screen.getByLabelText('Email') as HTMLInputElement;
 describe('Forgot password page', () => {
 	test('asks for the email and offers one action, "Send reset link"', () => {
 		renderForgot();
-		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Reset password');
+		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Forgot your password?');
 		const email = screen.getByLabelText('Email');
 		expect(email).toHaveAttribute('type', 'email');
 		expect(email).toHaveAttribute('autocomplete', 'email');
@@ -72,5 +72,15 @@ describe('Forgot password page', () => {
 		).toBeInTheDocument();
 		expect(screen.queryByRole('button', { name: 'Send reset link' })).toBeNull();
 		expect(screen.getByRole('link', { name: 'Log in' })).toHaveAttribute('href', '/login');
+	});
+
+	test('"Send again" brings the form back with the address still in it, focused', async () => {
+		renderForgot({ sent: true, email: 'cook@b.com' });
+		expect(screen.getByText(/Didn't get it\?/)).toHaveTextContent("Didn't get it? Send again.");
+		await fireEvent.click(screen.getByRole('link', { name: 'Send again' }));
+		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Forgot your password?');
+		expect(email()).toHaveValue('cook@b.com');
+		expect(email()).toHaveFocus();
+		expect(screen.getByRole('button', { name: 'Send reset link' })).toBeInTheDocument();
 	});
 });

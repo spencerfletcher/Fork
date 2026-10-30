@@ -67,6 +67,6 @@ describe('forgot-password action', () => {
 
 describe('forgot-password load', () => {
 	test('the tab title matches the h1', async () => {
-		expect(await load({} as never)).toMatchObject({ meta: { title: 'Reset password' } });
+		expect(await load({} as never)).toMatchObject({ meta: { title: 'Forgot your password?' } });
 	});
 });

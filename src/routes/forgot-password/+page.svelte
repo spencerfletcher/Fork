@@ -13,21 +13,32 @@
 	let emailLeft = $state(false);
 	let emailValid = $state(true);
 	const emailShown = $derived(emailLeft && !emailValid);
+
+	// "Send again" brings the form back over the sent card, address kept.
+	let again = $state(false);
+	function sendAgain(e: MouseEvent) {
+		e.preventDefault();
+		again = true;
+	}
 </script>
 
 <div class="auth-page">
 	<div class="auth-card">
-		{#if form?.sent}
+		{#if form?.sent && !again}
 			<!-- The form gives way to this heading; focus follows so a screen reader hears it. -->
 			<div class="auth-header">
 				<h1 tabindex="-1" {@attach (heading) => heading.focus()}>Check your email</h1>
 				<p class="auth-subtitle">
 					If {form.email} has an account, a link to set a new password is on its way.
 				</p>
+				<!-- Without JavaScript the link still reaches the form, only empty.
+				     Unformatted so no space opens before the full stop. -->
+				<!-- prettier-ignore -->
+				<p class="auth-subtitle">Didn't get it? <a href="/forgot-password" onclick={sendAgain}>Send again</a>.</p>
 			</div>
 		{:else}
 			<div class="auth-header">
-				<h1>Reset password</h1>
+				<h1>Forgot your password?</h1>
 				<p class="auth-subtitle">We'll email you a link to set a new one.</p>
 			</div>
 
@@ -42,6 +53,7 @@
 					return async ({ update }) => {
 						await update();
 						pending = false;
+						again = false;
 					};
 				}}
 				class="form">
@@ -54,6 +66,10 @@
 						required
 						autocomplete="email"
 						placeholder="you@example.com"
+						value={again ? form?.email : undefined}
+						{@attach (field) => {
+							if (again) field.focus();
+						}}
 						oninput={(e) => {
 							emailEdited = true;
 							emailValid = e.currentTarget.validity.valid;
@@ -94,14 +110,16 @@
 
 	/* The switch link reaches 24px at desktop and 44px on a phone by padding
 	   pulled back by margin, so the sentence does not move; as on login. */
-	.auth-switch a {
+	.auth-switch a,
+	.auth-subtitle a {
 		display: inline-block;
 		padding-block: 2px;
 		margin-block: -2px;
 	}
 
 	@media (max-width: 699px) {
-		.auth-switch a {
+		.auth-switch a,
+		.auth-subtitle a {
 			padding-block: 12px;
 			margin-block: -12px;
 		}

@@ -2,7 +2,7 @@ import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { text } from '#lib/recipes/validation.js';
 
-export const load: PageServerLoad = async () => ({ meta: { title: 'Reset password' } });
+export const load: PageServerLoad = async () => ({ meta: { title: 'Forgot your password?' } });
 
 export const actions: Actions = {
 	default: async ({ request, url, locals: { supabase } }) => {
