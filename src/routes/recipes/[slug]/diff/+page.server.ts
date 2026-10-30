@@ -34,7 +34,19 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 	const fromVersion = allVersions.find((v) => v.versionNumber === fromNum);
 	const toVersion = allVersions.find((v) => v.versionNumber === toNum);
 
-	if (!fromVersion || !toVersion) throw error(400, `Version not found in ${recipe.title}`);
+	if (!fromVersion || !toVersion) {
+		const missing = [fromVersion ? null : fromNum, toVersion ? null : toNum].filter(
+			(n) => n !== null
+		);
+		// Only whole numbers are named; "abc" or "1.5" is not a version to echo.
+		if (!missing.every(Number.isSafeInteger)) throw error(400, 'Version not found');
+		throw error(
+			400,
+			missing.length === 1
+				? `Version ${missing[0]} not found`
+				: `Versions ${missing[0]} and ${missing[1]} not found`
+		);
+	}
 
 	// The diff always reads older to newer; a reversed pair is swapped in the
 	// URL too, so the pickers and the address agree.

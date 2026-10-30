@@ -82,15 +82,22 @@ describe('compare page load', () => {
 		expect(data.toVersion.versionNumber).toBe(2);
 	});
 
-	test.each(['?from=abc&to=3', '?from=1&to=9', '?from=1.5&to=3'])(
-		'a version that does not exist (%s) is a 400 that names the recipe, never NaN',
+	test.each([
+		['?from=1&to=9', 'Version 9 not found'],
+		['?from=12&to=3', 'Version 12 not found'],
+		['?from=9&to=12', 'Versions 9 and 12 not found']
+	])('a version that does not exist (%s) is a 400 that names it', async (query, message) => {
+		const result = await loadWith(query).catch((e: unknown) => e);
+		expect(isHttpError(result)).toBe(true);
+		expect(result).toMatchObject({ status: 400, body: { message } });
+	});
+
+	test.each(['?from=abc&to=3', '?from=1.5&to=3', '?from=abc&to=12'])(
+		'a range that is not a version number (%s) is a 400 that echoes nothing, never NaN',
 		async (query) => {
 			const result = await loadWith(query).catch((e: unknown) => e);
 			expect(isHttpError(result)).toBe(true);
-			expect(result).toMatchObject({
-				status: 400,
-				body: { message: 'Version not found in Classic Cookies' }
-			});
+			expect(result).toMatchObject({ status: 400, body: { message: 'Version not found' } });
 		}
 	);
 });

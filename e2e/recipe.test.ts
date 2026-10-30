@@ -218,15 +218,15 @@ test.describe('Recipe detail page', () => {
 		);
 	});
 
-	test('a version that does not exist is a 400 that names the recipe and leads back to it', async ({
+	test('a version that does not exist is a 400 that names it and leads back to the recipe', async ({
 		page
 	}) => {
 		await gotoClassicCookies(page);
 		const recipePath = new URL(page.url()).pathname;
-		const response = await page.goto(recipePath + '/diff?from=abc&to=3');
+		const response = await page.goto(recipePath + '/diff?from=1&to=9');
 		expect(response?.status()).toBe(400);
-		await expect(page.locator('h1')).toHaveText(`Error 400 – Version not found in ${COOKIES}`);
-		await expect(page).toHaveTitle(`Version not found in ${COOKIES} — Fork`);
+		await expect(page.locator('h1')).toHaveText('Error 400 – Version 9 not found');
+		await expect(page).toHaveTitle('Version 9 not found — Fork');
 		await expect(page.getByRole('link', { name: 'Back to the recipe' })).toHaveAttribute(
 			'href',
 			recipePath
