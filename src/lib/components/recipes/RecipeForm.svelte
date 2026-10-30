@@ -547,6 +547,26 @@
 		.photo-preview {
 			height: 160px;
 		}
+
+		/* Save and Cancel ride the screen's bottom edge, so a long form saves
+		   without a scroll to its end. Edge to edge across the 18px gutters,
+		   and above the home indicator. */
+		.form-actions {
+			position: sticky;
+			bottom: 0;
+			z-index: 1;
+			margin-inline: -18px;
+			padding: 8px 18px calc(8px + env(safe-area-inset-bottom));
+			background: var(--color-surface);
+			border-top: 1px solid var(--color-border);
+		}
+
+		/* A field focused by Tab stops above the bar: its height, the 4px ring
+		   and a pixel to spare. On html, which scrolls; keyed to the bar so the
+		   rule leaves with the editor. */
+		:global(html:has(.form-actions)) {
+			scroll-padding-bottom: calc(70px + env(safe-area-inset-bottom));
+		}
 	}
 
 	/* A thumb's 44px, on a phone or any touch screen. */
