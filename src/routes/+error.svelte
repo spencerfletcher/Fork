@@ -45,6 +45,10 @@
 		padding-bottom: var(--space-7);
 	}
 
+	h1 {
+		text-wrap: balance;
+	}
+
 	.lede {
 		margin-top: 8px;
 		font-size: 1.0625rem;

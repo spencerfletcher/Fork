@@ -1,6 +1,7 @@
 import { describe, test, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/svelte';
 import ErrorPage from './+error.svelte';
+import source from './+error.svelte?raw';
 
 // The error page reads the status and the thrown message from page state.
 const state = vi.hoisted(() => ({
@@ -70,5 +71,9 @@ describe('error page', () => {
 		expect(screen.queryByRole('link', { name: 'Search recipes' })).toBeNull();
 		renderError(500, 'Internal Error', '/recipes/classic-cookies');
 		expect(screen.queryByRole('link', { name: 'Search recipes' })).toBeNull();
+	});
+
+	test('the title balances its lines, so "Recipe not found" never leaves one word dangling', () => {
+		expect(source).toMatch(/h1\s*{[^}]*text-wrap:\s*balance/);
 	});
 });

@@ -64,4 +64,8 @@ describe('fallback error page', () => {
 		}
 		expect(html).not.toMatch(/fonts\.googleapis|app\.css/);
 	});
+
+	test('the title balances its lines, so "Recipe not found" never leaves one word dangling', () => {
+		expect(html).toMatch(/h1\s*{[^}]*text-wrap:\s*balance/);
+	});
 });
