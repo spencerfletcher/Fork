@@ -543,6 +543,12 @@
 			height: 44px;
 		}
 
+		/* The photo buttons leave the boxes' 41px for a thumb's 44px. */
+		.photo-choose,
+		.photo-keep {
+			min-height: 44px;
+		}
+
 		/* The 24px row grown to 44px outward, so the text stays put. */
 		.inline-checkbox {
 			min-height: 44px;
