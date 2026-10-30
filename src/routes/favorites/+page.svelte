@@ -42,7 +42,7 @@
 				{#if filtered}
 					No favorites match your filters. Try adjusting your search.
 				{:else}
-					No favorites yet. Star any recipe.
+					No favorites yet. Favorite a recipe from its page.
 					<a href="/" class="arrow-link">Explore recipes →</a>
 				{/if}
 			</p>
@@ -62,5 +62,14 @@
 	.empty-state {
 		text-align: left;
 		padding-top: 0;
+	}
+
+	/* On a phone the sentence wraps, so the link takes its own line rather
+	   than breaking mid-arrow. Only as wide as its words, so the tap stays on it. */
+	@media (max-width: 699px) {
+		.empty-state a {
+			display: block;
+			width: fit-content;
+		}
 	}
 </style>

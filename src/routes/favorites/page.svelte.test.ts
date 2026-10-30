@@ -32,8 +32,12 @@ describe('Favorites page', () => {
 		// (decided 29 October 2026).
 		renderFavorites();
 		expect(screen.queryByRole('searchbox')).toBeNull();
-		// It says where favoriting happens, in a verb a mouse user can follow too.
-		expect(screen.getByText(/No favorites yet\. Star any recipe\./)).toBeInTheDocument();
+		// It says where favoriting happens, in the recipe page button's own verb
+		// (RecipeActions: "Favorite").
+		expect(
+			screen.getByText(/No favorites yet\. Favorite a recipe from its page\./)
+		).toBeInTheDocument();
+		expect(screen.queryByText(/Star/)).toBeNull();
 		expect(screen.queryByText(/Tap/)).toBeNull();
 		// The arrow form: 24px at desktop, a 44px thumb target on a phone.
 		const explore = screen.getByRole('link', { name: 'Explore recipes →' });
@@ -58,6 +62,11 @@ describe('Favorites page', () => {
 		const empty = screen.getByText(/No favorites yet/);
 		expect(empty.className).not.toMatch(/\bmt-/);
 		expect(source).toMatch(/\.empty-state\s*{[^}]*padding-top:\s*0/);
+	});
+
+	test('on a phone "Explore recipes →" takes its own line under the sentence', () => {
+		const phone = source.slice(source.indexOf('@media (max-width: 699px)'));
+		expect(phone).toMatch(/\.empty-state a\s*{[^}]*display:\s*block/);
 	});
 
 	test("under the filters the empty state keeps the results' gap above it", () => {
