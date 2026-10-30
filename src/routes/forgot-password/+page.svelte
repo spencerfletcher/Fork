@@ -24,7 +24,8 @@
 	// Set by a press on the submit button, which comes before the email's blur
 	// in every browser; Safari gives the button no focus, so the blur names no
 	// target. Cleared when the email gains focus, so a stray press holds back
-	// nothing later.
+	// nothing later. The button left without a submit (a press dragged off, or
+	// Tab past it) shows what the press held back.
 	let submitPressed = false;
 
 	// "Send again" brings the form back over the sent card, address kept.
@@ -103,7 +104,10 @@
 								e.relatedTarget === e.currentTarget.form?.querySelector('[type="submit"]');
 							if (!toSubmit) emailLeft ||= emailEdited;
 						}}
-						oninvalid={() => {
+						oninvalid={(e) => {
+							// The page's own message stands in for the browser's bubble.
+							e.preventDefault();
+							e.currentTarget.focus();
 							emailLeft = true;
 							emailValid = false;
 						}}
@@ -118,7 +122,8 @@
 					type="submit"
 					class="btn-primary auth-submit"
 					disabled={pending}
-					onpointerdown={() => (submitPressed = true)}>
+					onpointerdown={() => (submitPressed = true)}
+					onblur={() => (emailLeft ||= emailEdited)}>
 					{pending ? 'Sending…' : 'Send reset link'}
 				</button>
 			</form>

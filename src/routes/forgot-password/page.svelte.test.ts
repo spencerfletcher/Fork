@@ -1,5 +1,6 @@
 import { describe, test, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/svelte';
+import { tick } from 'svelte';
 import ForgotPasswordPage from './+page.svelte';
 import { pageTitle } from '#lib/seo.js';
 
@@ -77,6 +78,30 @@ describe('Forgot password page', () => {
 		await fireEvent.invalid(email());
 		expect(screen.getByText(EMAIL_RULE)).toBeInTheDocument();
 		expect(email()).toHaveAttribute('aria-invalid', 'true');
+	});
+
+	test("a stopped submit shows the page's email message instead of the browser's bubble, focus on the email", async () => {
+		renderForgot();
+		await fireEvent.input(email(), { target: { value: 'jane@' } });
+		let cancelled: boolean | undefined;
+		email().addEventListener('invalid', (e) => (cancelled = e.defaultPrevented));
+		email().form!.reportValidity();
+		await tick();
+		expect(cancelled).toBe(true);
+		expect(screen.getByText(EMAIL_RULE)).toBeInTheDocument();
+		expect(document.activeElement).toBe(email());
+	});
+
+	// A press dragged off the button, or Tab past it, submits nothing, so
+	// nothing else would show the message the press held back.
+	test('the submit button left without a submit shows the held-back email message', async () => {
+		renderForgot();
+		const submit = screen.getByRole('button', { name: 'Send reset link' });
+		await fireEvent.input(email(), { target: { value: 'jane@' } });
+		await fireEvent.blur(email(), { relatedTarget: submit });
+		expect(screen.queryByText(EMAIL_RULE)).toBeNull();
+		await fireEvent.blur(submit);
+		expect(screen.getByText(EMAIL_RULE)).toBeInTheDocument();
 	});
 
 	test('an edited email left for anywhere but the submit button shows the message', async () => {
