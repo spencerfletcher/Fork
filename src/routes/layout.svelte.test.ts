@@ -2,6 +2,7 @@ import { describe, test, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/svelte';
 import { createRawSnippet } from 'svelte';
 import Layout from './+layout.svelte';
+import { pageTitle } from '#lib/seo.js';
 
 // The layout reads the route and any thrown error from page state.
 const state = vi.hoisted(() => ({
@@ -41,5 +42,17 @@ describe('layout skip link', () => {
 	test('any other page skips to the content', () => {
 		renderLayout('/recipes');
 		expect(screen.getByRole('link', { name: 'Skip to content' })).toHaveAttribute('href', '#main');
+	});
+});
+
+describe('layout tab title', () => {
+	test("SvelteKit's default 404 message titles the tab as the error page heads it: Page not found", () => {
+		renderLayout('/nope', { message: 'Not Found' });
+		expect(document.title).toBe(pageTitle('Page not found'));
+	});
+
+	test('any other thrown message titles the tab as it is', () => {
+		renderLayout('/recipes/[slug]', { message: 'Recipe not found' });
+		expect(document.title).toBe(pageTitle('Recipe not found'));
 	});
 });
