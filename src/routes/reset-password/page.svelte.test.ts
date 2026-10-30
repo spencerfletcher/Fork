@@ -35,4 +35,12 @@ describe('Reset password page', () => {
 			'/forgot-password'
 		);
 	});
+
+	test('an expired link carries the switch line back to log in, as the other auth pages do', () => {
+		renderReset(false);
+		const login = screen.getByRole('link', { name: 'Log in' });
+		expect(login).toHaveAttribute('href', '/login');
+		expect(login.closest('p')).toHaveClass('auth-switch');
+		expect(login.closest('p')).toHaveTextContent('Remembered it? Log in');
+	});
 });

@@ -53,6 +53,10 @@
 				<p class="auth-subtitle">A reset link works once, and not for long. Ask for a new one.</p>
 			</div>
 			<a href="/forgot-password" class="btn-primary auth-submit">Send a new link</a>
+
+			<p class="auth-switch">
+				Remembered it? <a href="/login">Log in</a>
+			</p>
 		{/if}
 	</div>
 </div>
@@ -60,5 +64,20 @@
 <style>
 	.form-hint {
 		margin: 0;
+	}
+
+	/* The switch link reaches 24px at desktop and 44px on a phone by padding
+	   pulled back by margin, so the sentence does not move; as on login. */
+	.auth-switch a {
+		display: inline-block;
+		padding-block: 2px;
+		margin-block: -2px;
+	}
+
+	@media (max-width: 699px) {
+		.auth-switch a {
+			padding-block: 12px;
+			margin-block: -12px;
+		}
 	}
 </style>
