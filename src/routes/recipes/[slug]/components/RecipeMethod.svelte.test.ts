@@ -1,6 +1,7 @@
 import { describe, test, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/svelte';
 import RecipeMethod from './RecipeMethod.svelte';
+import source from './RecipeMethod.svelte?raw';
 import { ticksKey, loadTicks, saveTicks } from './ticks';
 import { makeStep } from '#lib/recipes/fixtures.js';
 
@@ -50,16 +51,30 @@ describe('RecipeMethod', () => {
 		expect(screen.getByRole('checkbox')).toHaveClass('sr-only');
 	});
 
-	test('the square is drawn in Ink 3, and a ticked step dims its numeral and text, not the square', () => {
-		render(RecipeMethod, { props: { storageKey: KEY, steps: [{ text: 'Mix.' }] } });
+	test('the square is drawn in Ink 3, and a ticked step turns its numeral and text Ink 3, not the square', () => {
+		render(RecipeMethod, {
+			props: {
+				storageKey: KEY,
+				steps: [makeStep('Mix.', { type: 'warning', text: 'Hot.' })]
+			}
+		});
 		const row = screen.getByRole('checkbox').closest('label')!;
 		const tick = row.querySelector('.tick')!;
 		expect(tick).toHaveClass('border-text-3');
 		expect(tick).not.toHaveClass('border-border-2');
-		expect(row.className).not.toContain('opacity-60');
-		expect(tick.closest('.group-has-\\[\\:checked\\]\\:opacity-60')).toBeNull();
-		expect(screen.getByText('1')).toHaveClass('group-has-[:checked]:opacity-60');
-		expect(screen.getByText('Mix.').parentElement).toHaveClass('group-has-[:checked]:opacity-60');
+		expect(row.outerHTML).not.toContain('opacity');
+		expect(row).toHaveClass('has-[:checked]:line-through');
+		expect(tick).not.toHaveClass('group-has-[:checked]:text-text-3');
+		for (const text of ['1', 'Mix.', 'Hot.']) {
+			expect(screen.getByText(text)).toHaveClass('group-has-[:checked]:text-text-3');
+		}
+	});
+
+	test('in forced colours the square keeps its own paint, so a tick still shows', () => {
+		expect(source).toMatch(
+			/@media \(forced-colors: active\)\s*\{\s*\.tick\s*\{[^}]*forced-color-adjust: none;[^}]*border-color: CanvasText;/
+		);
+		expect(source).toMatch(/label:has\(:checked\) \.tick\s*\{[^}]*background-color: Highlight;/);
 	});
 
 	test('each step is a native checkbox named by its text, toggled by clicking the row', async () => {

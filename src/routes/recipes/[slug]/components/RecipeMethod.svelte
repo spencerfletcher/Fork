@@ -37,8 +37,8 @@
 			<!-- A native checkbox, visually hidden, carries the state and the keyboard
 			     behaviour; the label is the row and takes the struck-through look. The
 			     square before the numeral is the checkbox's picture: an Ink 3 edge, then
-			     full clay when checked (decided 29 October 2026). The dim is on the
-			     numeral and the text, so it never turns the clay salmon. The tick keeps
+			     full clay when checked (decided 29 October 2026). A ticked step's numeral
+			     and text turn Ink 3, 4.9:1 on paper; the square keeps full clay. The tick keeps
 			     the start of a 55px column and the numeral its end, so the numeral sits
 			     10px from the text with one digit or two, and every step's text starts on
 			     one edge. The hidden input spans the row's height, so focusing it
@@ -56,18 +56,19 @@
 						aria-hidden="true">
 					</span>
 					<span
-						class="text-accent font-serif text-[1.125rem] font-medium group-has-[:checked]:opacity-60">
+						class="text-accent group-has-[:checked]:text-text-3 font-serif text-[1.125rem] font-medium">
 						{n}
 					</span>
 				</span>
 
-				<div class="flex flex-col gap-1.5 group-has-[:checked]:opacity-60">
-					<p class="text-text m-0 font-sans text-[1.0625rem] leading-[1.6] whitespace-pre-line">
+				<div class="flex flex-col gap-1.5">
+					<p
+						class="text-text group-has-[:checked]:text-text-3 m-0 font-sans text-[1.0625rem] leading-[1.6] whitespace-pre-line">
 						{step.text}
 					</p>
 					{#if step.annotation}
 						<p
-							class="m-0 font-sans text-[0.9375rem] leading-[1.5] italic {annotationColor[
+							class="group-has-[:checked]:text-text-3 m-0 font-sans text-[0.9375rem] leading-[1.5] italic {annotationColor[
 								step.annotation.type
 							]}">
 							{step.annotation.text}
@@ -90,3 +91,19 @@
 		</div>
 	{/if}
 </section>
+
+<style>
+	/* Forced colours strip the clay fill, so a ticked square would look empty:
+	   the square keeps its own paint, in system colours. */
+	@media (forced-colors: active) {
+		.tick {
+			forced-color-adjust: none;
+			border-color: CanvasText;
+		}
+
+		label:has(:checked) .tick {
+			background-color: Highlight;
+			border-color: Highlight;
+		}
+	}
+</style>

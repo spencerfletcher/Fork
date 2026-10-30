@@ -1317,7 +1317,7 @@ test.describe('Landing page (logged out)', () => {
 		expect(sizes[1]).toBe(sizes[0]);
 	});
 
-	test('ticking an ingredient or a step fills its square full clay; the text dims, not the square', async ({
+	test('ticking an ingredient or a step fills its square full clay; the text turns Ink 3, not the square', async ({
 		page
 	}) => {
 		await page.setViewportSize({ width: 1280, height: 900 });
@@ -1339,8 +1339,10 @@ test.describe('Landing page (logged out)', () => {
 			const fill = await tick.evaluate((el) => getComputedStyle(el).backgroundColor);
 			expect(fill, section).toBe(clay);
 			expect(await tick.evaluate(painted), section).toBe(1);
-			const text = row.locator('.tick ~ *').last();
-			expect(await text.evaluate(painted), section).toBe(0.6);
+			// Ink 3 at full opacity, 4.9:1 on paper; an opacity dim fell under 4.5:1.
+			const text = row.locator(section === '#ingredients' ? '.tick + span' : 'p').first();
+			expect(await text.evaluate((el) => getComputedStyle(el).color), section).toBe(ink3);
+			expect(await text.evaluate(painted), section).toBe(1);
 		}
 	});
 

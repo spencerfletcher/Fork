@@ -75,8 +75,8 @@
 			<!-- A native checkbox, visually hidden, carries the state and the keyboard
 			     behaviour; the label is the row and takes the struck-through look. The
 			     square at the row start is the checkbox's picture: an Ink 3 edge, then
-			     full clay when checked (decided 29 October 2026). The dim is on the
-			     text, so it never turns the clay salmon. The hidden input spans the
+			     full clay when checked (decided 29 October 2026). A ticked row's text
+			     turns Ink 3, grams too, 4.9:1 on paper; the square keeps full clay. The hidden input spans the
 			     row's height, so focusing it scrolls the whole row into view. -->
 			<label
 				class="group border-border text-text has-[:focus-visible]:outline-accent relative flex cursor-pointer items-baseline gap-2.5 border-b py-2.5 text-base leading-[1.5] select-none has-[:checked]:line-through has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2">
@@ -89,7 +89,7 @@
 					class="tick border-text-3 group-has-[:checked]:bg-accent group-has-[:checked]:border-accent size-3.5 shrink-0 translate-y-[2px] rounded-[3px] border"
 					aria-hidden="true">
 				</span>
-				<span class="min-w-0 group-has-[:checked]:opacity-60">
+				<span class="group-has-[:checked]:text-text-3 min-w-0">
 					{#if bold}<span class="font-semibold">{bold}</span>{/if}
 					{#if result}
 						<!-- Same size as the line: WebKit strikes each inline box at its own
@@ -126,3 +126,19 @@
 		</div>
 	{/if}
 </section>
+
+<style>
+	/* Forced colours strip the clay fill, so a ticked square would look empty:
+	   the square keeps its own paint, in system colours. */
+	@media (forced-colors: active) {
+		.tick {
+			forced-color-adjust: none;
+			border-color: CanvasText;
+		}
+
+		label:has(:checked) .tick {
+			background-color: Highlight;
+			border-color: Highlight;
+		}
+	}
+</style>

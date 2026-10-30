@@ -2,6 +2,7 @@ import { describe, test, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/svelte';
 import { parseIngredientText } from '#lib/recipes/ingredients.js';
 import RecipeIngredients from './RecipeIngredients.svelte';
+import source from './RecipeIngredients.svelte?raw';
 import { ticksKey, loadTicks, saveTicks } from './ticks';
 
 type GramResult = { grams: number; grams2: number | null; approximate: boolean } | null;
@@ -122,18 +123,26 @@ describe('RecipeIngredients', () => {
 		).toBeTruthy();
 	});
 
-	test('the square is drawn in Ink 3, and a ticked row dims its text, not the square', () => {
+	test('the square is drawn in Ink 3, and a ticked row turns its text Ink 3, not the square', () => {
 		renderWith('1 cup flour', [{ grams: 125, grams2: null, approximate: false }]);
 		const row = rows()[0];
 		const tick = row.querySelector('.tick')!;
 		// Rule 2 was 1.35:1 on the paper; a control's edge needs 3:1.
 		expect(tick).toHaveClass('border-text-3');
 		expect(tick).not.toHaveClass('border-border-2');
-		// The dim on the row would turn the clay fill salmon: it sits on the text,
-		// grams included, so the checked square stays full clay.
-		expect(row.className).not.toContain('opacity-60');
-		expect(tick.nextElementSibling).toHaveClass('group-has-[:checked]:opacity-60');
+		// Ink 3 on the text, grams included (already Ink 3), 4.9:1 on paper; an
+		// opacity dim fell under 4.5:1 and would turn the clay fill salmon.
+		expect(row.outerHTML).not.toContain('opacity');
+		expect(row).toHaveClass('has-[:checked]:line-through');
+		expect(tick.nextElementSibling).toHaveClass('group-has-[:checked]:text-text-3');
 		expect(tick.nextElementSibling).toHaveTextContent('1 cup (125g) flour');
+	});
+
+	test('in forced colours the square keeps its own paint, so a tick still shows', () => {
+		expect(source).toMatch(
+			/@media \(forced-colors: active\)\s*\{\s*\.tick\s*\{[^}]*forced-color-adjust: none;[^}]*border-color: CanvasText;/
+		);
+		expect(source).toMatch(/label:has\(:checked\) \.tick\s*\{[^}]*background-color: Highlight;/);
 	});
 
 	test('each line is a native checkbox named by its text', async () => {
