@@ -432,3 +432,35 @@ describe('Navbar fit at 768', () => {
 		expect(Number(gap?.slice(4)) * 4).toBeGreaterThanOrEqual(16);
 	});
 });
+
+// ─── Phone menu focus ─────────────────────────────────────────────────────────
+
+describe('Navbar phone menu focus', () => {
+	test('focus leaving the nav closes the open menu, as the overlay click does', async () => {
+		render(Navbar, { props: { user: null } });
+		await fireEvent.click(screen.getByRole('button', { name: /open main menu/i }));
+		const signup = within(document.getElementById('mobile-menu')!).getByRole('link', {
+			name: 'Sign up'
+		});
+		const outside = document.createElement('button');
+		document.body.appendChild(outside);
+		try {
+			signup.focus();
+			await fireEvent.focusOut(signup, { relatedTarget: outside });
+			expect(document.getElementById('mobile-menu')).toBeNull();
+		} finally {
+			outside.remove();
+		}
+	});
+
+	test('focus moving within the nav keeps the menu open', async () => {
+		render(Navbar, { props: { user: null } });
+		const toggle = screen.getByRole('button', { name: /open main menu/i });
+		await fireEvent.click(toggle);
+		const login = within(document.getElementById('mobile-menu')!).getByRole('link', {
+			name: 'Log in'
+		});
+		await fireEvent.focusOut(toggle, { relatedTarget: login });
+		expect(document.getElementById('mobile-menu')).not.toBeNull();
+	});
+});

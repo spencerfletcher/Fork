@@ -28,6 +28,14 @@
 		menuToggle?.focus();
 	}
 
+	// Tabbing past the menu's last row left focus in the page under the open
+	// panel, where Escape no longer reaches it; leaving the nav closes it, as the
+	// overlay click does. A null target (a click on the panel's padding) stays.
+	function onNavFocusout(event: FocusEvent) {
+		const next = event.relatedTarget;
+		if (isMenuOpen && next instanceof Node && !nav?.contains(next)) closeMenu();
+	}
+
 	// One list for both menus. Signed in, browse with tabs is the home page, so
 	// Recipes goes there and is current on it and on tag pages (Recipes
 	// filtered by one tag); My Recipes is /recipes. Signed out, /recipes is
@@ -63,7 +71,7 @@
 
 <svelte:window onkeydown={onWindowKeydown} />
 
-<nav class="bg-navbar-bg relative z-50 px-5" bind:this={nav}>
+<nav class="bg-navbar-bg relative z-50 px-5" bind:this={nav} onfocusout={onNavFocusout}>
 	<!-- Above the overlay, so the bar stays bright and tappable while the menu is open. -->
 	<div
 		class="relative z-[100] mx-auto flex h-[52px] max-w-[1200px] items-center justify-between gap-4 md:h-14">
