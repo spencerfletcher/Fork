@@ -100,6 +100,13 @@
 </article>
 
 <style>
+	/* A row focused by Tab scrolls clear of the screen's edge: the 4px ring,
+	   the row's 1px rule and a pixel to spare. On html, which scrolls; keyed
+	   to #recipe so the rule leaves with the page. */
+	:global(html:has(#recipe)) {
+		scroll-padding-block: 6px;
+	}
+
 	/* The list pages' box: gutters outside a 1200px content width. */
 	.hero,
 	.bar-row,
@@ -282,9 +289,14 @@
 			border-bottom-color: var(--color-accent);
 		}
 
+		/* Under the pinned 46px tab bar as well: a row focused upward, and the
+		   section brought back by a tab switch, land below it. */
+		:global(html:has(#recipe)) {
+			scroll-padding-top: 52px;
+		}
+
 		.content-layout {
 			grid-template-columns: minmax(0, 1fr);
-			scroll-margin-top: 46px;
 		}
 
 		.content-layout[data-tab='ingredients'] .main,

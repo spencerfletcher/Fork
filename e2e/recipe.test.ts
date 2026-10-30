@@ -784,6 +784,61 @@ test.describe('Recipe detail page', () => {
 		expect(row!.y).toBeGreaterThanOrEqual(bar!.y + bar!.height);
 	});
 
+	test('a row focused by Tab or Shift+Tab shows whole, ring and all, clear of the screen edge and the tab bar', async ({
+		page
+	}) => {
+		// Every check-off row in reading order, then back again; at a desktop width
+		// both lists at once, on a phone each tab in turn.
+		const runs = [
+			{ width: 1280, height: 800, tab: null },
+			{ width: 390, height: 844, tab: 'Ingredients' },
+			{ width: 390, height: 844, tab: 'Method' }
+		];
+		for (const { width, height, tab } of runs) {
+			await page.setViewportSize({ width, height });
+			await gotoClassicCookies(page);
+			if (tab) await page.locator('.section-tabs').getByRole('button', { name: tab }).click();
+			const boxes = page.locator('#recipe input[type="checkbox"]:visible');
+			const count = await boxes.count();
+			expect(count).toBeGreaterThan(3);
+			await boxes.first().focus();
+			await page.evaluate(() => window.scrollTo(0, 0));
+			const order = [...Array(count).keys()];
+			for (const [key, steps] of [
+				['Tab', order.slice(1)],
+				['Shift+Tab', order.slice(0, -1).reverse()]
+			] as const) {
+				for (const i of steps) {
+					await page.keyboard.press(key);
+					await expect(boxes.nth(i)).toBeFocused();
+					const gap = await boxes.nth(i).evaluate((input) => {
+						// The ring is 2px wide at a 2px offset.
+						const row = input.closest('label')!.getBoundingClientRect();
+						const list = input.closest('.sidebar-sticky');
+						const own =
+							list && getComputedStyle(list).overflowY === 'auto'
+								? list.getBoundingClientRect()
+								: null;
+						const tabs = document.querySelector('.section-tabs')!;
+						const pinned =
+							getComputedStyle(tabs).position === 'sticky'
+								? tabs.getBoundingClientRect().bottom
+								: 0;
+						return {
+							top: row.top - 4 - Math.max(pinned, own?.top ?? 0),
+							bottom: Math.min(window.innerHeight, own?.bottom ?? Infinity) - (row.bottom + 4)
+						};
+					});
+					// Whole: the scroll lands on a whole pixel, so up to a pixel may be cut.
+					expect(gap.top, `${width} ${tab ?? ''} row ${i} after ${key}`).toBeGreaterThanOrEqual(-1);
+					expect(gap.bottom, `${width} ${tab ?? ''} row ${i} after ${key}`).toBeGreaterThanOrEqual(
+						-1
+					);
+				}
+			}
+		}
+	});
+
 	test('while viewing an older version the history still opens, comparing with that version', async ({
 		page
 	}) => {

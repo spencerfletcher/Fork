@@ -33,12 +33,13 @@
 			     numeral and the text, so it never turns the clay salmon. The tick keeps
 			     the start of a 55px column and the numeral its end, so the numeral sits
 			     10px from the text with one digit or two, and every step's text starts on
-			     one edge. -->
+			     one edge. The hidden input spans the row's height, so focusing it
+			     scrolls the whole step into view. -->
 			<label
-				class="group has-[:focus-visible]:outline-accent grid cursor-pointer [grid-template-columns:55px_1fr] items-baseline gap-2.5 select-none has-[:checked]:line-through has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2">
+				class="group has-[:focus-visible]:outline-accent relative grid cursor-pointer [grid-template-columns:55px_1fr] items-baseline gap-2.5 select-none has-[:checked]:line-through has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2">
 				<input
 					type="checkbox"
-					class="sr-only"
+					class="sr-only top-0 h-full"
 					checked={ticked.includes(i)}
 					onchange={(e) => toggle(i, e.currentTarget.checked)} />
 				<span class="flex items-baseline justify-between">
