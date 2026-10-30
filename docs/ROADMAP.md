@@ -7,7 +7,7 @@
 3. Serving scaling on the recipe page (temporary multiplier, no version written).
 4. Cooklang-derived items from `research/2026-10-23-cooklang.md`: cooking attempts (M17), export (M16), `.cook` import (M15 stage 6), ingredient use in steps.
 5. Social features (added 2026-10-29): pull requests back to the source recipe (M1), comments on versions (M3), following and a feed (M4), collections (M6), with the sharing defaults below settled first. The 2026-09 deferral of feeds and graph work no longer stands; order within the set is open.
-6. Recipe title band (added 2026-10-29): look into whether the earlier split header, a dark espresso band holding breadcrumb, title with the version chip, tags and the time/serves line, then the current body below it, reads better than the current single-surface header. Design study only, decide after a side-by-side.
+6. Recipe title band (added 2026-10-29): look into whether the earlier split header, a separate title band (lighter than the espresso of the old one, not the navbar colour) holding breadcrumb, title with the version chip, tags and the time/serves line, then the current body below it, reads better than the current single-surface header. Design study only, decide after a side-by-side.
 
 ## Sharing defaults — from the 2026-09 reconciliation
 
