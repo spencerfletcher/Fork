@@ -150,3 +150,62 @@ Run against 61dd3ab after the third build round (the phone bar's dot, 12-hour ti
 Decisions these need from Spencer: "1 fork" as a link to the one fork; "Clear ticks" under a ticked list; a closing line after the last step; required errors waiting for an edit or a blocked submit; a sticky Save/Cancel on the phone editor; the photo dimmed with "Removed" instead of vanishing; a ghost "Sign up to fork one" at the landing's end; the phone-menu handle stepped down; sentence case for "Welcome back" and "Create an account"; "Forgot your password?" as the first step's name and a send-again line; "Version 9 not found" on the compare 400; "8 changes" as a link; the hosted Supabase recovery template and redirect allow-list (one-way, Spencer's), and custom SMTP before real users get reset mail. No decision needed: the Log out size, Escape on the phone menu, the strip's focus scroll, the page-level scroll padding, the tag-pill × and the Create seam, the invalid placeholder one step darker, the phone photo buttons at 44, the 404 heading balance, the To chip's forced-colours border, the gutter at 600, the favorites padding, the bad-email message on the auth forms, DESIGN.md's navbar sizes and "+ New recipe".
 
 Still unverified: the compare picker's closed-face clipping in Firefox (Playwright's Firefox will not start inside the sandbox; `node clipcheck-ff.mjs` from `scratchpad/work3-compare/` with a preview on 4188 checks it by hand), so the picker keeps its label swap.
+
+## Sweeps 5 to 7 (30 October 2026, Opus agents, read-only reviewers, builders per surface)
+
+Sweep 5 ran against 27b7283, after the Final run's decided items had landed (Clear ticks, the sticky phone save bar, required errors after an edit, the forks list, the picker without its label swap, sentence-case auth headings). Sweep 6 ran against 81b69ec and sweep 7 against 9014834, each after a fix round on the sweep before it. A fourth round, on sweep 7's findings, landed at cf71d33 and has not been swept.
+
+| Surface           | Final run              | Sweep 5 | Sweep 6 | Sweep 7 |
+| ----------------- | ---------------------- | ------- | ------- | ------- |
+| Recipe page       | 33                     | 34      | 35      | 35/40   |
+| Editor            | 32                     | 31      | 33      | 34/40   |
+| Browse and navbar | 34                     | 33      | 34      | 34/40   |
+| Compare           | 31                     | 31      | 31      | 32/40   |
+| Favorites         | 31                     | 32      | 32      | 33/40   |
+| Sign-up           | 31                     | 33      | 32      | 33/40   |
+| Login             | 31                     | 33      | 33      | 33/40   |
+| Forgot password   | 34                     | 35      | 35      | 35/40   |
+| Reset password    | 30                     | 31      | 33      | 33/40   |
+| Profile           | 25                     | 25      | 26      | 27/32   |
+| Error pages       | 404 28, 400 30, 500 29 | 29      | 30      | 30/36   |
+
+Method: each sweep was six read-only reviewers (compare; recipe and forks pages; favorites, profile and error pages; browse and navbar; the four auth pages; the editor), each writing its snapshots to `.impeccable/critique/` and touching no source. Each fix round was five builders with disjoint file sets, DESIGN.md with one writer, and every fix test-first: a failing unit or component test, then the change. Builders never ran a build or e2e in the repo root, so a preview or test server never fought the reviewers' shared one. The sweeps stopped after sweep 7 because each round was returning about one point per surface, and nothing in the code has scored P1 since sweep 5's navbar collision at 768 (the hosted recovery template is still carried as P1, but it is a dashboard setting, not code).
+
+Fixed across the four rounds:
+
+- Navbar at 768: the bar fits with any handle, the handle capped at 22ch and shrinking only when the bar is full, 24px between the clusters; Log out in the links' small caps
+- Phone menu: Escape and focus leaving the nav close it and return focus to the toggle; the handle row steps down to 0.8125rem mono
+- Forced colours: the navbar action, the no-photo card panel, the profile avatar, the fallback's primary button, the version chip and the To chip keep their boxes; the current tag tab, navbar link, phone row and search icon keep a mark
+- Ticks: Clear ticks under a ticked list, focus to the list's first checkbox, the page kept still on a mouse click; ticked rows in Ink 3; the ticked square drawn in forced colours
+- Recipe page: page-level scroll padding so a focused row shows whole; Favorite reports its state with aria-pressed; the version toggle's hit on a pseudo so its ring hugs the text; the ghost button at 600
+- Forks page: "1 fork" links to a list of the recipe's forks, each card with its first commit note and the author kept on a phone
+- Editor validation: required fields wait for an edit or a blocked save (no red on pass-through); New gets the outcome line, promising v1 only while no field shows an error; Save and Cancel on a sticky phone bar, with a focused field and its hint scrolled clear of it; the tag pill × at 24px with a mouse and 44px on touch; the invalid fill dropped for a red border; the title wraps as a one-row textarea; a blank commit message names what it will save; a permanent ingredient format hint; photo buttons at 44px on a phone; no seam above Create
+- Auth: a bad email gets a message with aria-invalid on all three forms; the first tap on the submit button lands; the browser's bubble cancelled where the page has its own message, with the message shown when the button loses focus; sentence-case headings and tab titles that follow the step ("Check your email", "Link expired"); "Forgot your password?" with Send again; the expired card's Log in line
+- Compare: the gutter at the mono face's 600; the To chip's box; the 400 names the missing version and the recipe's range; the picker without its label swap; a reversed pick swaps the pickers and focus follows the picked version; word highlights keep spaces and leading punctuation out; the page at 16/24/24 and the diff's sections 24px apart; a missing recipe's compare URL shares the root 404's lede and Search
+- Error pages: balanced headings; an unknown address reads "Page not found" in the h1 and tab title; the fallback 500's buttons at the app's height and its wordmark inside the phone bar
+- Landing: a signed-out visit ends on a ghost "Sign up to fork one"; keyboard focus scrolls the phone strip
+- Favorites: the empty line one gap under the h1, naming the recipe page's Favorite button, with the link on its own line on a phone
+- Profile: the owner's "New recipe →" after the list, shown only below 768, where the bar has no New recipe
+- Search: the box says it matches name or ingredient, and its × clears the search, navigating only when the URL has a query
+
+Still open (all P3, no decision pending unless marked; lines as the sweep 7 snapshots give them):
+
+- Recipe page: Clear ticks has no undo (RecipeIngredients.svelte:24-28, RecipeMethod.svelte:17-23) (**Spencer's call**, rec accept)
+- Recipe page: ticks are kept 12 hours with nothing saying so (RecipeIngredients.svelte:113-127) (**Spencer's call**, rec accept silence)
+- Recipe page: the page ends flat; a closing line after the last step (**Spencer's call**)
+- Recipe page: one ingredient on a phone's first screen (773 of 844); alerts still read "Could not … Try again."; ticks render unticked in SSR and appear on hydration (unverified visually)
+- Forks page: 0.8125rem off the DESIGN.md ramp (forks/+page.svelte:29); the back link's "←" read aloud (aria-hidden); the byline may count fewer forks than /forks lists to their owner (unverified, no private fork in the seed)
+- Editor: the outcome line is not in the phone save bar (**Spencer's call**, rec no)
+- Editor: invalid and valid borders look the same in forced colours (app.css:872); aria-controls points at a missing listbox while closed (TagInput.svelte:147); the tag list opens on a Tab pass-through; focus starts on the body; nothing saves from a textarea by keyboard; the Create icon stays clay in forced colours (TagInput.svelte:189); only Title carries `*`; Serves against Servings; a 48px band under the phone bar at scroll end; the count line at the top edge after a blocked save at 1280 (unverified for real clicks)
+- Compare: no key for ~, strike and underline; "Cool" against "cool" is case-sensitive; each picker offers the other side's version; closed boxes clip long labels; the generic "Compare Versions" h1; unchanged rows unfolded on a phone (rec no)
+- Error pages: the compare 400's phone buttons stack at unequal widths (188 over 149); logged-out "Recipes" carries aria-current on a recipe 404 (the Navbar active test matches any /recipes/ path)
+- Browse and navbar: the right cluster sits 1px high and the handle 1.6px low; Log in and Sign up 32.8px tall beside 29px links; no srcset (RecipeCard.svelte); the search empty state centred under a left h1; "1 fork" wraps at 768; a tag-only search titles "Search"; the page behind the phone menu still scrolls
+- Favorites: the filtered-empty and list states are unexercised; a favorited card gives no sign the recipe gained a version
+- Profile: no sort or filter past about twelve recipes; the phone's New recipe link falls below the fold past about eight
+- Profile: "8 changes" as a link (**Spencer's call**)
+- Auth: show-password toggle on login and reset (**Spencer's call**); reset has no confirm field
+- Auth: the email message and sign-up's rule are not announced live (login +page.svelte:85-87, sign-up :118-120 and :147-152, forgot :112-114); hint punctuation differs (sign-up :150, :155, :170; reset :43); "jane@" prefills "jane" in the username; Send again does not mention spam (forgot :57); the reset subtitle leaves "one." alone at 1280 (text-wrap on .auth-subtitle, app.css:917); forgot's Log in ring meets the "?" at 1280
+
+Unverified: iOS Safari behaviour of the auth forms (no Safari here); the Firefox picker check was done by Spencer by eye; the hosted Supabase recovery template, redirect allow-list and SMTP are Spencer's one-way doors and remain.
+
+Flaky e2e: the full suite on a loaded machine (load average 35) failed two to four random timeouts per run while targeted reruns of the same tests passed; the landing strip test was hardened to clone its cards only after hydration (81b69ec).
