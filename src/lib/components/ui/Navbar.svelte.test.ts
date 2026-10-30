@@ -464,3 +464,15 @@ describe('Navbar phone menu focus', () => {
 		expect(document.getElementById('mobile-menu')).not.toBeNull();
 	});
 });
+
+// ─── Forced colours ───────────────────────────────────────────────────────────
+
+describe('Navbar forced colours', () => {
+	test('the action has a transparent border, so it keeps its box when the fill is stripped', () => {
+		const style = source.slice(source.indexOf('<style>'));
+		const cta = style.match(/\.nav-cta\s*{([^}]*)}/)![1];
+		expect(cta).toMatch(/border:\s*1px solid transparent/);
+		// The border eats the padding's outer pixel, so the action stays 7px 14px tall and wide.
+		expect(cta).toMatch(/padding:\s*6px 13px/);
+	});
+});

@@ -271,7 +271,10 @@
 	/* The one marigold fill in the navbar. Marigold means a primary action or
 	   the current version, so nothing else here may be filled with it. */
 	.nav-cta {
-		padding: 7px 14px;
+		padding: 6px 13px;
+		/* Transparent, so it shows only under forced colours, where the fill goes
+		   and the border is all that keeps the action a box. */
+		border: 1px solid transparent;
 		border-radius: var(--radius-md);
 		background: var(--color-marigold);
 		color: var(--color-text);
