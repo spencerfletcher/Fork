@@ -235,13 +235,15 @@
 
 	// On a phone the bar covers the screen's bottom edge. A tall box tabbed into
 	// with only its top showing counts as in view, so the browser neither
-	// scrolls nor applies scroll-padding-bottom; this brings its bottom above
-	// the bar. Elsewhere the bar sits below every field and this never fires.
+	// scrolls nor applies scroll-padding-bottom; this brings the whole field,
+	// its error and hint lines too, above the bar. Elsewhere the bar sits below
+	// every field and this never fires.
 	let actions: HTMLDivElement | undefined = $state();
 
 	function clearBar(e: FocusEvent) {
-		const el = e.target as HTMLElement;
-		if (!actions || actions.contains(el)) return;
+		const target = e.target as HTMLElement;
+		if (!actions || actions.contains(target)) return;
+		const el = target.closest('.field') ?? target;
 		if (el.getBoundingClientRect().bottom <= actions.getBoundingClientRect().top) return;
 		const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 		el.scrollIntoView({ block: 'nearest', behavior: reduce ? 'instant' : 'smooth' });

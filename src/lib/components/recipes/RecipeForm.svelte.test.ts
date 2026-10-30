@@ -68,6 +68,8 @@ describe('RecipeForm field focused under the phone bar', () => {
 		})) as never;
 	});
 
+	// The box itself always clears the bar here; only its block (label, box,
+	// hint) reaches under it, so a scroll of the box alone would not count.
 	function setup(fieldBottom: number, barTop: number) {
 		render(RecipeForm, {
 			props: {
@@ -78,17 +80,22 @@ describe('RecipeForm field focused under the phone bar', () => {
 				cancelHref: '/recipes'
 			}
 		});
-		const field = screen.getByLabelText('Ingredients');
+		const box = screen.getByLabelText('Ingredients');
 		const bar = screen.getByRole('button', { name: 'Create recipe' }).parentElement!;
-		field.getBoundingClientRect = () => ({ bottom: fieldBottom }) as DOMRect;
+		box.getBoundingClientRect = () => ({ bottom: barTop - 40 }) as DOMRect;
+		fieldOf(box).getBoundingClientRect = () => ({ bottom: fieldBottom }) as DOMRect;
 		bar.getBoundingClientRect = () => ({ top: barTop }) as DOMRect;
-		return field;
+		return box;
 	}
 
-	test('scrolls a field whose bottom is hidden by the bar to the nearest edge', () => {
+	const fieldOf = (box: HTMLElement) => box.closest('.field')!;
+
+	test('scrolls a field whose hint is hidden by the bar to the nearest edge, box and hint together', () => {
 		setup(1000, 780).focus();
 		expect(scrollIntoView).toHaveBeenCalledTimes(1);
-		expect(scrollIntoView.mock.contexts[0]).toBe(screen.getByLabelText('Ingredients'));
+		const field = fieldOf(screen.getByLabelText('Ingredients'));
+		expect(field).toContainElement(screen.getByText(/^One per line/));
+		expect(scrollIntoView.mock.contexts[0]).toBe(field);
 		expect(scrollIntoView.mock.calls[0][0]).toEqual({ block: 'nearest', behavior: 'smooth' });
 	});
 
