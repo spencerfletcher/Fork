@@ -244,3 +244,13 @@ describe('RecipeCard', () => {
 		expect(metaRow?.children).toHaveLength(1);
 	});
 });
+
+describe('RecipeCard forced colours', () => {
+	test('the no-photo panel has a transparent border, so it keeps its box when the tint is stripped', () => {
+		const style = source.slice(source.indexOf('<style>'));
+		const panel = style.match(/\.card-panel\s*{([^}]*padding[^}]*)}/)![1];
+		expect(panel).toMatch(/border:\s*1px solid transparent/);
+		// The border takes the padding's outer pixel, so the title stays 16px in.
+		expect(panel).toMatch(/padding:\s*15px;/);
+	});
+});

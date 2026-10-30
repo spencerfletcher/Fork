@@ -168,7 +168,10 @@
 	.card-panel {
 		display: flex;
 		align-items: flex-end;
-		padding: 16px;
+		/* 16px inside the border, which shows only under forced colours, where
+		   the tint goes and the border keeps the panel a box. */
+		padding: 15px;
+		border: 1px solid transparent;
 		background: var(--color-tint);
 	}
 
