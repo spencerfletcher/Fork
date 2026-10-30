@@ -46,6 +46,19 @@ describe('RecipeActions save button', () => {
 		expect(screen.getByRole('button', { name: 'Favorited' })).not.toHaveAttribute('aria-label');
 	});
 
+	test('is a toggle button: pressed while favourited, and flips as it submits', async () => {
+		render(RecipeActions, { props: makeProps({ initialFavorited: false }) });
+		expect(screen.getByRole('button', { name: 'Favorite' })).toHaveAttribute(
+			'aria-pressed',
+			'false'
+		);
+		await playBack('?/toggleFavorite', { type: 'success' });
+		expect(screen.getByRole('button', { name: 'Favorited' })).toHaveAttribute(
+			'aria-pressed',
+			'true'
+		);
+	});
+
 	test('the star is decoration: the word is the name', () => {
 		render(RecipeActions, { props: makeProps() });
 		const star = screen.getByRole('button', { name: 'Favorite' }).querySelector('svg')!;

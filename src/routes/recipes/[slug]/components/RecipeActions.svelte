@@ -142,7 +142,10 @@
 						error = 'Could not save that. Try again.';
 					};
 				}}>
-				<button type="submit" class="btn-ghost flex items-center justify-center gap-2 no-underline">
+				<button
+					type="submit"
+					class="btn-ghost flex items-center justify-center gap-2 no-underline"
+					aria-pressed={isFavorited}>
 					{@render starIcon(isFavorited)}
 					{isFavorited ? 'Favorited' : 'Favorite'}
 				</button>
