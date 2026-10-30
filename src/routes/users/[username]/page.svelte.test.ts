@@ -1,6 +1,7 @@
 import { describe, test, expect } from 'vitest';
 import { render, screen } from '@testing-library/svelte';
 import ProfilePage from './+page.svelte';
+import source from './+page.svelte?raw';
 
 const data = {
 	profile: { id: 'u1', username: 'chefmaria', avatarUrl: null, createdAt: new Date(2026, 9, 1) },
@@ -73,5 +74,13 @@ describe('Profile page', () => {
 		const { container } = renderProfile();
 		expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('2 recipes');
 		expect(container.querySelector('.recipe-grid')).not.toBeNull();
+	});
+});
+
+describe('Profile page forced colours', () => {
+	test('the avatar circle has a transparent border, so it keeps its shape when the tint is stripped', () => {
+		const style = source.slice(source.indexOf('<style>'));
+		const avatar = style.match(/\.profile-avatar\s*{([^}]*)}/)![1];
+		expect(avatar).toMatch(/border:\s*1px solid transparent/);
 	});
 });

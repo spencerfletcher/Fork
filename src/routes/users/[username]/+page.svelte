@@ -86,6 +86,9 @@
 		width: 72px;
 		height: 72px;
 		border-radius: 50%;
+		/* Inside the fixed size; shows only under forced colours, where the tint
+		   goes and the border keeps the circle. */
+		border: 1px solid transparent;
 		background: var(--color-tint);
 		color: var(--color-accent);
 		font-family: var(--font-serif);
