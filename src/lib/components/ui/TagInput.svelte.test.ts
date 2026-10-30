@@ -2,6 +2,7 @@ import { describe, test, expect, vi } from 'vitest';
 import { tick } from 'svelte';
 import { render, screen, fireEvent } from '@testing-library/svelte';
 import TagInput from './TagInput.svelte';
+import source from './TagInput.svelte?raw';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -236,5 +237,23 @@ describe('TagInput', () => {
 		expect(screen.queryByText(/Create/i)).not.toBeInTheDocument();
 		await fireEvent.keyDown(getInput(), { key: 'Enter' });
 		expect(container.querySelectorAll('input[type="hidden"][name="tags"]')).toHaveLength(1);
+	});
+});
+
+// jsdom applies no component CSS, so the declarations are read from the source.
+const style = source.slice(source.indexOf('<style>'));
+
+describe('TagInput tag pill remove button', () => {
+	test('is a 24px hit with a mouse, grown outward so the 16px glyph box stays put', () => {
+		expect(style).toMatch(
+			/\.tag-remove\s*{[^}]*width:\s*24px[^}]*height:\s*24px[^}]*margin:\s*-4px/
+		);
+	});
+
+	test('is a 44px hit on a phone or under a coarse pointer, grown the same way', () => {
+		const media = style.slice(style.indexOf('@media (max-width: 699px), (pointer: coarse)'));
+		expect(media).toMatch(
+			/^@media[^{]*{\s*\.tag-remove\s*{[^}]*width:\s*44px[^}]*height:\s*44px[^}]*margin:\s*-14px/
+		);
 	});
 });

@@ -203,8 +203,11 @@
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		width: 16px;
-		height: 16px;
+		/* A 24px hit around a 16px glyph box, grown outward so the pill keeps
+		   its size and the glyph stays where it is. */
+		width: 24px;
+		height: 24px;
+		margin: -4px;
 		padding: 0;
 		border: none;
 		background: transparent;
@@ -219,8 +222,8 @@
 		color: var(--color-text);
 	}
 
-	/* A 44px hit on a phone, grown outward so the glyph stays where it is. */
-	@media (max-width: 699px) {
+	/* A 44px hit on a phone or any touch screen, grown the same way. */
+	@media (max-width: 699px), (pointer: coarse) {
 		.tag-remove {
 			width: 44px;
 			height: 44px;
