@@ -164,6 +164,9 @@
 		background: var(--color-marigold);
 		color: var(--color-text);
 		line-height: 1.5;
+		/* Forced colours drop the fill; the outline, drawn inside, keeps the box. */
+		outline: 1px solid transparent;
+		outline-offset: -1px;
 	}
 
 	.message {

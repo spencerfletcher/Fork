@@ -154,4 +154,12 @@ describe('VersionBar', () => {
 			'/recipes/my-fork/diff?from=1&to=2'
 		]);
 	});
+
+	test('the chip keeps its box in forced colours: a transparent outline, inset so nothing moves', () => {
+		// Forced colours drop the marigold fill but draw the outline in the text colour.
+		const chip = /\.current \.version-number \{([^}]*)\}/.exec(source)![1];
+		expect(chip).toMatch(/outline: 1px solid transparent;/);
+		expect(chip).toMatch(/outline-offset: -1px;/);
+		expect(chip).not.toMatch(/border|margin/);
+	});
 });
