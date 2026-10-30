@@ -2,6 +2,7 @@ import { describe, test, expect } from 'vitest';
 import { render, screen, within } from '@testing-library/svelte';
 import VersionDiff from './VersionDiff.svelte';
 import source from './VersionDiff.svelte?raw';
+import { readFileSync } from 'node:fs';
 import type { IngredientDiffRow, MetaDiffRow, StepDiffRow } from '#lib/recipes/diff.js';
 import { makeIngredient, makeStep } from '#lib/recipes/fixtures.js';
 
@@ -420,5 +421,14 @@ describe('VersionDiff fold', () => {
 		const phone = style.slice(style.indexOf('@media (max-width: 1023px)'));
 		expect(phone).toMatch(/\.diff-folded\s*{[^}]*display:\s*none/);
 		expect(phone).toMatch(/\.diff-fold\s*{[^}]*display:\s*flex/);
+	});
+	test("the gutter is set at the mono face's heaviest shipped weight, never a synthesised bold", () => {
+		const appCss = readFileSync('src/app.css', 'utf8');
+		const monoWeights = [
+			...appCss.matchAll(/font-family:\s*'JetBrains Mono';[^}]*font-weight:\s*(\d+)/g)
+		].map((m) => Number(m[1]));
+		const style = source.slice(source.indexOf('<style>'));
+		const weight = style.match(/\.diff-gutter\s*{[^}]*font-weight:\s*(\d+)/)?.[1];
+		expect(Number(weight)).toBe(Math.max(...monoWeights));
 	});
 });

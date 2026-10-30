@@ -269,7 +269,7 @@
 	.diff-gutter {
 		width: 1ch;
 		flex-shrink: 0;
-		font-weight: 700;
+		font-weight: 600;
 		user-select: none;
 	}
 
