@@ -176,6 +176,26 @@ describe('RecipeCard', () => {
 		expect(narrow).toMatch(/\.meta-item \+ \.meta-item::before\s*{[^}]*display:\s*none/);
 	});
 
+	test('on a phone the author hides, unless the page asks for it at every width', () => {
+		// jsdom applies no component CSS, so the phone rule is read from the source.
+		const phone = source.slice(source.lastIndexOf('@media (max-width: 699px)'));
+		expect(phone).toMatch(
+			/\.recipe-card:not\(\.author-always\) \.meta-author\s*{\s*display:\s*none/
+		);
+
+		const author = { id: 'u1', username: 'chefmaria' };
+		const { container, unmount } = render(RecipeCard, {
+			props: { recipe: { ...makeRecipe(), author } }
+		});
+		expect(container.querySelector('.recipe-card')).not.toHaveClass('author-always');
+		unmount();
+
+		const kept = render(RecipeCard, {
+			props: { recipe: { ...makeRecipe(), author }, alwaysShowAuthor: true }
+		});
+		expect(kept.container.querySelector('.recipe-card')).toHaveClass('author-always');
+	});
+
 	test('shows @username link when author is present', () => {
 		const recipe = {
 			...makeRecipe(),

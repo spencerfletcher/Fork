@@ -21,8 +21,13 @@
 
 	// Position in the grid, when the page knows it: the first row's photos are
 	// fetched eagerly and the very first ahead of everything else. Without it
-	// the photo is lazy (decided 29 October 2026).
-	let { recipe, index }: { recipe: CardRecipe; index?: number } = $props();
+	// the photo is lazy (decided 29 October 2026). alwaysShowAuthor keeps the
+	// author on a phone, for a list whose point is who made each one (forks).
+	let {
+		recipe,
+		index,
+		alwaysShowAuthor = false
+	}: { recipe: CardRecipe; index?: number; alwaysShowAuthor?: boolean } = $props();
 
 	const eager = $derived(index !== undefined && index < 4);
 
@@ -59,7 +64,7 @@
 	});
 </script>
 
-<div class="recipe-card">
+<div class="recipe-card" class:author-always={alwaysShowAuthor}>
 	<a {href} class="card-stretched-link" aria-label={recipe.title}></a>
 
 	{#if recipe.imageUrl}
@@ -251,14 +256,15 @@
 		color: var(--color-text);
 	}
 
-	/* Phone: two columns leave no room for the author; the recipe page has it. */
+	/* Phone: two columns leave no room for the author; the recipe page has it.
+	   A page whose list is about who made each recipe keeps it. */
 	@media (max-width: 699px) {
 		.card-title,
 		.card-panel-title {
 			font-size: 0.9375rem;
 		}
 
-		.meta-author {
+		.recipe-card:not(.author-always) .meta-author {
 			display: none;
 		}
 	}

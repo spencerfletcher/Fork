@@ -53,18 +53,29 @@ describe('Forks page', () => {
 		expect(imgs.at(-1)).toHaveAttribute('loading', 'lazy');
 	});
 
-	test('under each card, the fork’s first commit note in Ink 3, clamped to two lines', () => {
+	test('under each card, the fork’s first commit note in Ink 3, clamped to three lines', () => {
 		const note = 'Forked from @owner’s v3';
 		const { container } = renderForks({ forks: [{ ...card(1), forkNote: note }, card(2)] });
 		const p = screen.getByText(note);
 		expect(p.tagName).toBe('P');
-		expect(p).toHaveClass('text-text-3', 'line-clamp-2', 'text-[0.8125rem]');
+		expect(p).toHaveClass('text-text-3', 'line-clamp-3', 'text-[0.8125rem]');
 		// After the card's byline, inside the same grid cell.
 		const cell = p.parentElement!;
 		expect(cell.parentElement).toHaveClass('recipe-grid');
 		expect(p.previousElementSibling).toHaveClass('recipe-card');
 		// A fork with no note gets no empty line.
 		expect(container.querySelectorAll('.recipe-grid p')).toHaveLength(1);
+	});
+
+	test('every card keeps its author on a phone, so the list says who forked', () => {
+		const forks = [1, 2].map((id) => ({
+			...card(id),
+			author: { id: `u${id}`, username: `cook${id}` }
+		}));
+		const { container } = renderForks({ forks });
+		const cards = container.querySelectorAll('.recipe-card');
+		expect(cards).toHaveLength(2);
+		for (const c of cards) expect(c).toHaveClass('author-always');
 	});
 
 	test('says so in one line when there are no forks', () => {
