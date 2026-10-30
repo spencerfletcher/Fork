@@ -257,3 +257,27 @@ describe('TagInput tag pill remove button', () => {
 		);
 	});
 });
+
+describe('TagInput Create option', () => {
+	// One 1px rule between Create and what sits above it: the last suggestion's
+	// bottom border, or the box's own bottom border when there is none.
+	test('draws no top border of its own under a suggestion', async () => {
+		render(TagInput, { props: { allTags } });
+		await fireEvent.focus(getInput());
+		await fireEvent.input(getInput(), { target: { value: 'd' } });
+		const options = screen.getAllByRole('option');
+		const create = options.at(-1)!;
+		expect(create).toHaveTextContent(/Create/);
+		expect(options.at(-2)).toHaveClass('border-b');
+		expect(create).not.toHaveClass('border-t');
+	});
+
+	test('draws no top border of its own straight under the box', async () => {
+		render(TagInput, { props: { allTags } });
+		await fireEvent.focus(getInput());
+		await fireEvent.input(getInput(), { target: { value: 'Vegan' } });
+		const options = screen.getAllByRole('option');
+		expect(options).toHaveLength(1);
+		expect(options[0]).not.toHaveClass('border-t');
+	});
+});

@@ -171,7 +171,7 @@
 					<!-- svelte-ignore a11y_click_events_have_key_events -->
 					<li
 						id="tag-option-{suggestions.length}"
-						class="tag-option tag-option--create border-border border-t"
+						class="tag-option tag-option--create"
 						role="option"
 						tabindex="-1"
 						aria-selected={active === suggestions.length}
