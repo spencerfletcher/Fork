@@ -106,9 +106,10 @@
 		return '';
 	});
 
-	const placeholder = $derived(
-		groups && groups.length > 0 ? generatedCommitMessage(groups) : 'What changed in this version?'
-	);
+	const generated = $derived(groups && groups.length > 0 ? generatedCommitMessage(groups) : null);
+	const placeholder = $derived(generated ?? 'What changed in this version?');
+	// A blank message saves the generated one, as the server trims; say so.
+	const savesGenerated = $derived(generated !== null && !draft.commitMessage.trim());
 
 	function onImageChange(e: Event) {
 		const file = (e.target as HTMLInputElement).files?.[0];
@@ -444,7 +445,11 @@
 					name="commitMessage"
 					type="text"
 					{placeholder}
+					aria-describedby={savesGenerated ? 'commitMessage-hint' : undefined}
 					bind:value={draft.commitMessage} />
+				{#if savesGenerated}
+					<p class="form-hint" id="commitMessage-hint">Left blank, saves as: {generated}</p>
+				{/if}
 			</div>
 		{/if}
 

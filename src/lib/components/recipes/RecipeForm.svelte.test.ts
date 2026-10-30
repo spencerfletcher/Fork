@@ -178,3 +178,41 @@ describe('RecipeForm title box', () => {
 		expect(rule).toMatch(/resize:\s*none/);
 	});
 });
+
+describe('RecipeForm commit message left blank', () => {
+	function renderEdit() {
+		const loaded = new FormData();
+		loaded.set('title', 'Cookies');
+		loaded.set('ingredients', '1 cup flour');
+		loaded.set('steps', 'Mix.');
+		render(RecipeForm, {
+			props: {
+				baseline: draftOf(loaded),
+				form: null,
+				allTags: [],
+				submitLabel: 'Save',
+				cancelHref: '/recipes/cookies',
+				nextVersion: 2
+			}
+		});
+		return screen.getByLabelText(/what changed/i);
+	}
+
+	// The placeholder is what the save writes; the hint says so in words.
+	test('says the placeholder is saved, under the box, until the cook types', async () => {
+		const message = renderEdit();
+		await fireEvent.input(screen.getByLabelText('Steps'), { target: { value: 'Mix well.' } });
+		const placeholder = message.getAttribute('placeholder');
+		const hint = screen.getByText(`Left blank, saves as: ${placeholder}`);
+		expect(hint).toHaveClass('form-hint');
+		expect(message).toHaveAccessibleDescription(hint.textContent!);
+		await fireEvent.input(message, { target: { value: 'Stirred longer' } });
+		expect(screen.queryByText(/^Left blank/)).not.toBeInTheDocument();
+	});
+
+	// The generic prompt is never saved: nothing changed, so no version is written.
+	test('says nothing while there is no change to describe', () => {
+		renderEdit();
+		expect(screen.queryByText(/^Left blank/)).not.toBeInTheDocument();
+	});
+});
