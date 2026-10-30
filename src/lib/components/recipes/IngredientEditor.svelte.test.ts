@@ -33,23 +33,38 @@ describe('IngredientEditor', () => {
 			props: { value: '', error: 'At least one ingredient is required' }
 		});
 		expect(box()).toHaveAttribute('aria-invalid', 'true');
-		expect(box()).toHaveAttribute('aria-describedby', 'ingredients-error');
-		expect(box()).toHaveAccessibleDescription('At least one ingredient is required');
+		expect(box()).toHaveAttribute('aria-describedby', 'ingredients-error ingredients-hint');
+		expect(box()).toHaveAccessibleDescription(/^At least one ingredient is required One per line/);
+		const hint = screen.getByText(/^One per line/);
+		expect(
+			screen.getByRole('alert').compareDocumentPosition(hint) & Node.DOCUMENT_POSITION_FOLLOWING
+		).toBeTruthy();
 	});
 
-	test('without an error or a note the box carries neither aria-invalid nor a description, and no empty note is drawn', () => {
+	test('without an error or a note the box is described by the format hint alone, and no empty note is drawn', () => {
 		const { container } = render(IngredientEditor, { props: { value: '' } });
 		expect(box()).not.toHaveAttribute('aria-invalid');
-		expect(box()).not.toHaveAttribute('aria-describedby');
-		expect(container.querySelector('.form-hint')).toBeNull();
+		expect(box()).toHaveAccessibleDescription(
+			'One per line: quantity, unit, ingredient — 2¼ cups flour'
+		);
+		expect(container.querySelector('#ingredients-note')).toBeNull();
+	});
+
+	test('keeps the format hint while there is text in the box', async () => {
+		render(IngredientEditor, { props: { value: '' } });
+		await type('1 cup flour');
+		expect(screen.getByText(/^One per line/)).toHaveClass('form-hint');
 	});
 
 	test('the note on lines that cannot be scaled describes the box, after the error', async () => {
 		render(IngredientEditor, { props: { value: '', error: 'An ingredient line is too long' } });
 		await type('1 cup flour\nsalt to taste');
-		expect(box()).toHaveAttribute('aria-describedby', 'ingredients-error ingredients-hint');
+		expect(box()).toHaveAttribute(
+			'aria-describedby',
+			'ingredients-error ingredients-note ingredients-hint'
+		);
 		expect(box()).toHaveAccessibleDescription(
-			/^An ingredient line is too long These lines .*salt to taste$/
+			/^An ingredient line is too long These lines .*salt to taste One per line/
 		);
 	});
 

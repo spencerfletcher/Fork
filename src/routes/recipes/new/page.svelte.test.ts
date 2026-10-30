@@ -142,7 +142,9 @@ describe('New recipe page validation errors', () => {
 			await fireEvent.input(box, { target: { value: '' } });
 			await fireEvent.focusOut(box);
 		}
-		expect(ingredients).toHaveAccessibleDescription('At least one ingredient is required');
+		expect(ingredients).toHaveAccessibleDescription(
+			/^At least one ingredient is required One per line/
+		);
 		expect(steps).toHaveAccessibleDescription(/^At least one step is required /);
 	});
 

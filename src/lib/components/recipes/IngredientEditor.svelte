@@ -29,11 +29,15 @@
 				: ''
 	);
 
-	// The error first, then the note, when each is shown.
+	// The error first, then the note, when each is shown, then the format.
 	const describedBy = $derived(
-		[error && 'ingredients-error', (tooLong || unparsed.length > 0) && 'ingredients-hint']
+		[
+			error && 'ingredients-error',
+			(tooLong || unparsed.length > 0) && 'ingredients-note',
+			'ingredients-hint'
+		]
 			.filter(Boolean)
-			.join(' ') || undefined
+			.join(' ')
 	);
 
 	// What is typed is what comes back: the fraction as the recipe stores it.
@@ -56,12 +60,16 @@
 		<p class="field-error" id="ingredients-error" role="alert">{error}</p>
 	{/if}
 	{#if tooLong}
-		<p class="form-hint" id="ingredients-hint">{tooLong}. Shorten it before saving.</p>
+		<p class="form-hint" id="ingredients-note">{tooLong}. Shorten it before saving.</p>
 	{:else if unparsed.length > 0}
-		<p class="form-hint" id="ingredients-hint">
+		<p class="form-hint" id="ingredients-note">
 			These lines will be saved as written but can't be scaled: {unparsed.join(', ')}
 		</p>
 	{/if}
+	<!-- The format stays in view while typing, after the placeholder has gone. -->
+	<p class="form-hint" id="ingredients-hint">
+		One per line: quantity, unit, ingredient — 2¼ cups flour
+	</p>
 	<!-- Always in the DOM so screen readers announce the text when it appears. -->
 	<p class="sr-only" role="status">
 		{#if announcement}{announcement}{/if}
