@@ -113,6 +113,39 @@ describe('Sign-up page', () => {
 		expect(username()).toHaveAttribute('aria-invalid', 'true');
 	});
 
+	const EMAIL_RULE = 'Enter an email address like name@example.com';
+
+	test('an email the browser rejects, once edited and left: the message is described and the field invalid', async () => {
+		renderSignup();
+		// Passing through without typing says nothing.
+		await fireEvent.blur(email());
+		expect(screen.queryByText(EMAIL_RULE)).toBeNull();
+		expect(email()).not.toHaveAttribute('aria-invalid');
+		await fireEvent.input(email(), { target: { value: 'jane@' } });
+		// Not while typing the first time.
+		expect(screen.queryByText(EMAIL_RULE)).toBeNull();
+		await fireEvent.blur(email());
+		expect(screen.getByText(EMAIL_RULE)).toHaveClass('field-error');
+		expect(email()).toHaveAttribute('aria-invalid', 'true');
+		expect(email()).toHaveAttribute('aria-describedby', 'email-error');
+		expect(email()).toHaveAccessibleDescription(EMAIL_RULE);
+		// Native validation stays underneath.
+		expect(email()).toHaveAttribute('type', 'email');
+		expect(email()).toBeRequired();
+		// Fixed, it clears at once.
+		await fireEvent.input(email(), { target: { value: 'jane@example.com' } });
+		expect(screen.queryByText(EMAIL_RULE)).toBeNull();
+		expect(email()).not.toHaveAttribute('aria-invalid');
+		expect(email()).not.toHaveAttribute('aria-describedby');
+	});
+
+	test('a submit the browser stops shows the email message', async () => {
+		renderSignup();
+		await fireEvent.invalid(email());
+		expect(screen.getByText(EMAIL_RULE)).toBeInTheDocument();
+		expect(email()).toHaveAttribute('aria-invalid', 'true');
+	});
+
 	test('a Supabase failure is announced in the alert block', () => {
 		renderSignup({ message: 'Could not create the account. Try again.' });
 		expect(screen.getByRole('alert')).toHaveTextContent('Could not create the account. Try again.');

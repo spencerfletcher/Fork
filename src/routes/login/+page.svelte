@@ -7,6 +7,14 @@
 	// Disabled while the request is out, so a second press cannot send it twice.
 	let pending = $state(false);
 
+	// The email message shows once the user has typed in the field and left
+	// it, or a submit was stopped, and follows the browser's own type="email"
+	// check, so it clears as soon as the address is fixed.
+	let emailEdited = $state(false);
+	let emailLeft = $state(false);
+	let emailValid = $state(true);
+	const emailShown = $derived(emailLeft && !emailValid);
+
 	// Sent here from a page that needs an account, the subtitle says why.
 	const subtitle = $derived(
 		!data.redirectTo
@@ -49,7 +57,21 @@
 					type="email"
 					required
 					autocomplete="email"
-					placeholder="you@example.com" />
+					placeholder="you@example.com"
+					oninput={(e) => {
+						emailEdited = true;
+						emailValid = e.currentTarget.validity.valid;
+					}}
+					onblur={() => (emailLeft ||= emailEdited)}
+					oninvalid={() => {
+						emailLeft = true;
+						emailValid = false;
+					}}
+					aria-invalid={emailShown ? 'true' : undefined}
+					aria-describedby={emailShown ? 'email-error' : undefined} />
+				{#if emailShown}
+					<p class="field-error" id="email-error">Enter an email address like name@example.com</p>
+				{/if}
 			</div>
 
 			<div class="field">
