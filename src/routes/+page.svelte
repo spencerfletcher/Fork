@@ -7,6 +7,14 @@
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
+
+	// Chromium does not scroll the phone strip to a card that takes keyboard
+	// focus, so the card is brought in by hand. No behavior is passed: the
+	// strip's CSS scroll-behavior decides, which honours reduced motion.
+	function revealFocusedCard(event: FocusEvent) {
+		const card = (event.target as Element).closest('.recent-strip > *');
+		card?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+	}
 </script>
 
 {#if data.mode === 'landing'}
@@ -52,7 +60,7 @@
 			<section class="browse-section">
 				<h2 class="eyebrow-label section-heading">Recent</h2>
 				{#if data.recipes.length > 0}
-					<div class="recipe-grid recent-strip">
+					<div class="recipe-grid recent-strip" onfocusin={revealFocusedCard}>
 						<!-- No index: the grid sits below the fold at every width, so no
 						     photo here is worth fetching eagerly. -->
 						{#each data.recipes as recipe (recipe.id)}
@@ -140,6 +148,12 @@
 
 		.recent-strip > :global(*) {
 			scroll-snap-align: start;
+		}
+	}
+
+	@media (max-width: 699px) and (prefers-reduced-motion: no-preference) {
+		.recent-strip {
+			scroll-behavior: smooth;
 		}
 	}
 </style>

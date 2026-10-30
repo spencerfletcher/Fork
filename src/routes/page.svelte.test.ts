@@ -1,6 +1,6 @@
 import { describe, test, expect } from 'vitest';
 import '@testing-library/jest-dom/vitest';
-import { render, screen, within } from '@testing-library/svelte';
+import { render, screen, within, fireEvent } from '@testing-library/svelte';
 import Page from './+page.svelte';
 import source from './+page.svelte?raw';
 
@@ -182,6 +182,35 @@ describe('/+page.svelte', () => {
 		expect(rule).toMatch(/grid-template-rows:\s*repeat\(2,/);
 		expect(rule).toMatch(/overflow-x:\s*auto/);
 		expect(rule).toMatch(/scroll-snap-type:\s*x/);
+	});
+
+	test('keyboard focus on a strip card scrolls that card into view, smoothly unless motion is reduced', async () => {
+		// Chromium does not scroll a horizontal scroller to a focused link inside
+		// a grid cell, so a tab past the third card landed off screen.
+		const recipes = [1, 2, 3].map((id) => ({ id, slug: `r${id}`, title: `R${id}`, forkCount: 0 }));
+		const { container } = render(Page, {
+			props: {
+				data: { recipes, user: null, profile: null, mode: 'landing', tags: [], sampleDiff: null }
+			} as never
+		});
+		const strip = container.querySelector('.recent-strip')!;
+		const card = strip.children[2] as HTMLElement;
+		const scrolled: { el: Element; arg: unknown }[] = [];
+		const original = Element.prototype.scrollIntoView;
+		Element.prototype.scrollIntoView = function (arg?: boolean | ScrollIntoViewOptions) {
+			scrolled.push({ el: this, arg });
+		};
+		try {
+			const link = card.querySelector('a')!;
+			await fireEvent.focusIn(link);
+			expect(scrolled).toEqual([{ el: card, arg: { block: 'nearest', inline: 'nearest' } }]);
+		} finally {
+			Element.prototype.scrollIntoView = original;
+		}
+		// No behavior is passed, so the strip's CSS scroll-behavior decides: smooth
+		// only under no-preference, so reduced motion gets an instant jump.
+		const motion = source.slice(source.indexOf('(prefers-reduced-motion: no-preference)'));
+		expect(motion).toMatch(/\.recent-strip\s*{[^}]*scroll-behavior:\s*smooth/);
 	});
 
 	test('the landing sample folds its unchanged rows on a phone', () => {
