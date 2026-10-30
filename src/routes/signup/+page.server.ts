@@ -12,7 +12,7 @@ export const load: PageServerLoad = async ({ locals: { user }, url }) => {
 	}
 	return {
 		redirectTo: localPath(url.searchParams.get('redirectTo')),
-		meta: { title: 'Create an Account' }
+		meta: { title: 'Create an account' }
 	};
 };
 

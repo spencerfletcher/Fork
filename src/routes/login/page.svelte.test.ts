@@ -20,9 +20,9 @@ function renderLogin(redirectTo: string | null = null) {
 const email = () => screen.getByLabelText('Email') as HTMLInputElement;
 
 describe('Login page', () => {
-	test('"Log in" everywhere: the subtitle and the button, under "Welcome Back"', () => {
+	test('"Log in" everywhere: the subtitle and the button, under "Welcome back"', () => {
 		renderLogin();
-		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Welcome Back');
+		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Welcome back');
 		expect(screen.getByText('Log in to your cookbook')).toBeInTheDocument();
 		expect(screen.getByRole('button', { name: 'Log in' })).toBeInTheDocument();
 		expect(screen.queryByText(/sign in/i)).toBeNull();

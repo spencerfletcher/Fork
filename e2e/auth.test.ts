@@ -67,7 +67,7 @@ test.describe('Auth pages', () => {
 	}) => {
 		await page.setViewportSize({ width: 390, height: 844 });
 		await page.goto('/signup');
-		await expect(page.getByRole('heading', { level: 1 })).toHaveText('Create an Account');
+		await expect(page.getByRole('heading', { level: 1 })).toHaveText('Create an account');
 		const rule = page.getByText('Usernames are 3 to 30 characters: letters, digits, - or _');
 		await expect(rule).toBeHidden();
 		await page.getByLabel('Username').fill('jo');

@@ -57,7 +57,7 @@
 <div class="auth-page">
 	<div class="auth-card">
 		<div class="auth-header">
-			<h1>Create an Account</h1>
+			<h1>Create an account</h1>
 			<p class="auth-subtitle">Start building your personal cookbook</p>
 		</div>
 

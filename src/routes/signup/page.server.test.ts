@@ -128,7 +128,7 @@ describe('signup load', () => {
 		load({ locals: { user: null }, url: new URL(`http://x/signup${query}`) } as never);
 
 	test('the tab title matches the h1', async () => {
-		expect(await run()).toMatchObject({ meta: { title: 'Create an Account' } });
+		expect(await run()).toMatchObject({ meta: { title: 'Create an account' } });
 	});
 
 	test('carries a local redirectTo from the login page, so Log in can hand it back', async () => {

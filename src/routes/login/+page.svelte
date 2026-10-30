@@ -28,7 +28,7 @@
 <div class="auth-page">
 	<div class="auth-card">
 		<div class="auth-header">
-			<h1>Welcome Back</h1>
+			<h1>Welcome back</h1>
 			<p class="auth-subtitle">{subtitle}</p>
 		</div>
 

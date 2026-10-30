@@ -158,9 +158,9 @@ describe('Sign-up page', () => {
 		expect(within(alert).getByRole('link', { name: 'Log in' })).toHaveAttribute('href', '/login');
 	});
 
-	test('"Create an Account", and "Log in" as the switch, handing back a redirectTo', () => {
+	test('"Create an account", and "Log in" as the switch, handing back a redirectTo', () => {
 		renderSignup({ message: 'That email already has an account.', registered: true }, '/favorites');
-		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Create an Account');
+		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Create an account');
 		for (const link of screen.getAllByRole('link', { name: 'Log in' })) {
 			expect(link).toHaveAttribute('href', '/login?redirectTo=%2Ffavorites');
 		}
