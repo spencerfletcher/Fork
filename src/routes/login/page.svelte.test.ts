@@ -118,6 +118,28 @@ describe('Login page', () => {
 		expect(screen.getByText(EMAIL_RULE)).toBeInTheDocument();
 	});
 
+	// Safari gives a tapped button no focus, so the blur names no target;
+	// the press on the button, which comes first, holds the message back.
+	test('an edited email left by a press on the submit button shows no message until the browser stops the submit', async () => {
+		renderLogin();
+		const submit = screen.getByRole('button', { name: 'Log in' });
+		await fireEvent.input(email(), { target: { value: 'jane@' } });
+		await fireEvent.pointerDown(submit);
+		await fireEvent.blur(email(), { relatedTarget: null });
+		expect(screen.queryByText(EMAIL_RULE)).toBeNull();
+		await fireEvent.invalid(email());
+		expect(screen.getByText(EMAIL_RULE)).toBeInTheDocument();
+	});
+
+	test('a press on the submit button does not hold back a later leaving of the email', async () => {
+		renderLogin();
+		await fireEvent.pointerDown(screen.getByRole('button', { name: 'Log in' }));
+		await fireEvent.focus(email());
+		await fireEvent.input(email(), { target: { value: 'jane@' } });
+		await fireEvent.blur(email(), { relatedTarget: null });
+		expect(screen.getByText(EMAIL_RULE)).toBeInTheDocument();
+	});
+
 	test('while the form is submitting the button is disabled and says so', async () => {
 		submits.length = 0;
 		renderLogin();

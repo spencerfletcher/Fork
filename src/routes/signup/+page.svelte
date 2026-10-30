@@ -24,6 +24,11 @@
 	let emailLeft = $state(false);
 	let emailValid = $state(true);
 	const emailShown = $derived(emailLeft && !emailValid);
+	// Set by a press on the submit button, which comes before the email's blur
+	// in every browser; Safari gives the button no focus, so the blur names no
+	// target. Cleared when the email gains focus, so a stray press holds back
+	// nothing later.
+	let submitPressed = false;
 
 	let email = $state('');
 	let username = $state('');
@@ -95,11 +100,14 @@
 						emailValid = e.currentTarget.validity.valid;
 						suggest();
 					}}
+					onfocus={() => (submitPressed = false)}
 					onblur={(e) => {
 						// Left for the submit button, the message waits for the stopped submit:
 						// shown now, it would push the button from under the tap.
-						if (e.relatedTarget !== e.currentTarget.form?.querySelector('[type="submit"]'))
-							emailLeft ||= emailEdited;
+						const toSubmit =
+							submitPressed ||
+							e.relatedTarget === e.currentTarget.form?.querySelector('[type="submit"]');
+						if (!toSubmit) emailLeft ||= emailEdited;
 					}}
 					oninvalid={() => {
 						emailLeft = true;
@@ -162,7 +170,11 @@
 				<p class="form-hint" id="password-hint">At least 6 characters</p>
 			</div>
 
-			<button type="submit" class="btn-primary auth-submit" disabled={pending}>
+			<button
+				type="submit"
+				class="btn-primary auth-submit"
+				disabled={pending}
+				onpointerdown={() => (submitPressed = true)}>
 				{pending ? 'Creating account…' : 'Create account'}
 			</button>
 			<p class="form-hint confirm-note">We'll email you a link to confirm.</p>

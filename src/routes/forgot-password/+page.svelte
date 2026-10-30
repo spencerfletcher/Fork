@@ -21,6 +21,11 @@
 	let emailLeft = $state(false);
 	let emailValid = $state(true);
 	const emailShown = $derived(emailLeft && !emailValid);
+	// Set by a press on the submit button, which comes before the email's blur
+	// in every browser; Safari gives the button no focus, so the blur names no
+	// target. Cleared when the email gains focus, so a stray press holds back
+	// nothing later.
+	let submitPressed = false;
 
 	// "Send again" brings the form back over the sent card, address kept.
 	let again = $state(false);
@@ -89,11 +94,14 @@
 							emailEdited = true;
 							emailValid = e.currentTarget.validity.valid;
 						}}
+						onfocus={() => (submitPressed = false)}
 						onblur={(e) => {
 							// Left for the submit button, the message waits for the stopped submit:
 							// shown now, it would push the button from under the tap.
-							if (e.relatedTarget !== e.currentTarget.form?.querySelector('[type="submit"]'))
-								emailLeft ||= emailEdited;
+							const toSubmit =
+								submitPressed ||
+								e.relatedTarget === e.currentTarget.form?.querySelector('[type="submit"]');
+							if (!toSubmit) emailLeft ||= emailEdited;
 						}}
 						oninvalid={() => {
 							emailLeft = true;
@@ -106,7 +114,11 @@
 					{/if}
 				</div>
 
-				<button type="submit" class="btn-primary auth-submit" disabled={pending}>
+				<button
+					type="submit"
+					class="btn-primary auth-submit"
+					disabled={pending}
+					onpointerdown={() => (submitPressed = true)}>
 					{pending ? 'Sending…' : 'Send reset link'}
 				</button>
 			</form>

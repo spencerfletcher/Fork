@@ -167,6 +167,28 @@ describe('Sign-up page', () => {
 		expect(screen.getByText(EMAIL_RULE)).toBeInTheDocument();
 	});
 
+	// Safari gives a tapped button no focus, so the blur names no target;
+	// the press on the button, which comes first, holds the message back.
+	test('an edited email left by a press on the submit button shows no message until the browser stops the submit', async () => {
+		renderSignup();
+		const submit = screen.getByRole('button', { name: 'Create account' });
+		await fireEvent.input(email(), { target: { value: 'jane@' } });
+		await fireEvent.pointerDown(submit);
+		await fireEvent.blur(email(), { relatedTarget: null });
+		expect(screen.queryByText(EMAIL_RULE)).toBeNull();
+		await fireEvent.invalid(email());
+		expect(screen.getByText(EMAIL_RULE)).toBeInTheDocument();
+	});
+
+	test('a press on the submit button does not hold back a later leaving of the email', async () => {
+		renderSignup();
+		await fireEvent.pointerDown(screen.getByRole('button', { name: 'Create account' }));
+		await fireEvent.focus(email());
+		await fireEvent.input(email(), { target: { value: 'jane@' } });
+		await fireEvent.blur(email(), { relatedTarget: null });
+		expect(screen.getByText(EMAIL_RULE)).toBeInTheDocument();
+	});
+
 	test('a Supabase failure is announced in the alert block', () => {
 		renderSignup({ message: 'Could not create the account. Try again.' });
 		expect(screen.getByRole('alert')).toHaveTextContent('Could not create the account. Try again.');
