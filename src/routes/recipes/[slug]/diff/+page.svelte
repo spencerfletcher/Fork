@@ -118,7 +118,7 @@
 
 <style>
 	h1 {
-		margin: 0 0 8px;
+		margin: 0 0 16px;
 		font-size: clamp(1.75rem, 1.2rem + 1.8vw, 2.5rem);
 		line-height: 1.1;
 	}
@@ -137,7 +137,7 @@
 		display: flex;
 		align-items: center;
 		gap: 12px;
-		margin-bottom: 22px;
+		margin-bottom: 24px;
 	}
 
 	.picker {
@@ -182,7 +182,7 @@
 		display: grid;
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 		gap: 24px;
-		margin-bottom: 26px;
+		margin-bottom: 24px;
 	}
 
 	.version-card {

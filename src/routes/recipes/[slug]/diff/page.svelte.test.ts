@@ -406,3 +406,11 @@ describe('Diff page', () => {
 		expect(idle).toMatch(/outline-offset:\s*-1px/);
 	});
 });
+
+describe('compare page spacing', () => {
+	test('heading, picker row and cards sit 16 / 24 / 24 apart, on the 8px scale', () => {
+		expect(source).toMatch(/\n\th1\s*{[^}]*margin:\s*0 0 16px;/);
+		expect(source).toMatch(/\.version-picker\s*{[^}]*margin-bottom:\s*24px;/);
+		expect(source).toMatch(/\.version-cards\s*{[^}]*margin-bottom:\s*24px;/);
+	});
+});
