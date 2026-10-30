@@ -1,7 +1,15 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 
-	let { form }: { form: { message?: string; sent?: boolean; email?: string } | null } = $props();
+	import { pageTitle } from '#lib/seo.js';
+
+	let {
+		form,
+		data
+	}: {
+		form: { message?: string; sent?: boolean; email?: string } | null;
+		data: { meta: { title: string } };
+	} = $props();
 
 	// Disabled while the request is out, so a second press cannot send it twice.
 	let pending = $state(false);
@@ -21,6 +29,13 @@
 		again = true;
 	}
 </script>
+
+<!-- The sent card is client state the loader cannot see, so the tab title
+     follows it here. A <title> is safe beside the layout's: Svelte keeps one
+     and the page's, written last, wins; the og tags stay with the layout. -->
+<svelte:head>
+	<title>{pageTitle(form?.sent && !again ? 'Check your email' : data.meta.title)}</title>
+</svelte:head>
 
 <div class="auth-page">
 	<div class="auth-card">

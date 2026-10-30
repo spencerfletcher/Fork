@@ -1,13 +1,17 @@
 import { describe, test, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/svelte';
 import ForgotPasswordPage from './+page.svelte';
+import { pageTitle } from '#lib/seo.js';
 
 vi.mock('$app/forms', () => ({ enhance: () => ({ destroy: () => {} }) }));
+
+// Not the real title, so the test proves the page reads it from the loader.
+const FORM_TITLE = 'Loader title';
 
 type Form = { message?: string; sent?: boolean; email?: string } | null;
 
 const renderForgot = (form: Form = null) =>
-	render(ForgotPasswordPage, { props: { form, data: {} } as never });
+	render(ForgotPasswordPage, { props: { form, data: { meta: { title: FORM_TITLE } } } as never });
 
 const email = () => screen.getByLabelText('Email') as HTMLInputElement;
 
@@ -72,6 +76,13 @@ describe('Forgot password page', () => {
 		).toBeInTheDocument();
 		expect(screen.queryByRole('button', { name: 'Send reset link' })).toBeNull();
 		expect(screen.getByRole('link', { name: 'Log in' })).toHaveAttribute('href', '/login');
+	});
+
+	test('the tab title follows the card: Check your email once sent, the loader title again on Send again', async () => {
+		renderForgot({ sent: true, email: 'cook@b.com' });
+		expect(document.title).toBe(pageTitle('Check your email'));
+		await fireEvent.click(screen.getByRole('link', { name: 'Send again' }));
+		expect(document.title).toBe(pageTitle(FORM_TITLE));
 	});
 
 	test('"Send again" brings the form back with the address still in it, focused', async () => {
