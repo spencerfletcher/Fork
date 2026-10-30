@@ -210,6 +210,17 @@ describe('Navbar handle', () => {
 		);
 	});
 
+	test('in the phone menu the handle steps down under the links, so the links are the loudest rows', () => {
+		// Mono lowercase at the username's usual 0.9375em out-shouted the small-caps
+		// rows; it stays mono (the Pencil Rule) and drops a notch in size.
+		const rem = (rule: string) => Number(rule.match(/font-size:\s*([\d.]+)rem/)![1]);
+		const linkRule = style.match(/\.mobile-link\s*{([^}]*)}/)![1];
+		const handleRule = style.match(/\.mobile-account :global\(\.username\)\s*{([^}]*)}/)![1];
+		const usualEm = Number(usernameSource.match(/font-size:\s*([\d.]+)em/)![1]);
+		expect(rem(handleRule)).toBeLessThan(rem(linkRule) * usualEm);
+		expect(handleRule).not.toMatch(/font-family/);
+	});
+
 	test("the bar's marigold ring reaches the Username component's link", () => {
 		// A scoped `nav :focus-visible` matches only Navbar's own elements, so the
 		// handle kept the global clay ring (3.08:1 on espresso).

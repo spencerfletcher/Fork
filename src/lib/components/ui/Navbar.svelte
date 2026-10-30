@@ -346,11 +346,14 @@
 	}
 
 	/* The handle in the phone menu: the padding on the link itself, like a
-	   .mobile-link row, so the whole row is its hit. */
+	   .mobile-link row, so the whole row is its hit. Mono lowercase at the
+	   usual 15px out-shouts the small-caps rows, so it steps down a notch and
+	   the links stay the loudest rows. */
 	.mobile-account :global(.username) {
 		display: block;
 		padding: var(--space-3) var(--space-4);
 		border-radius: var(--radius-sm);
+		font-size: 0.8125rem;
 	}
 
 	/* Mobile link style */
