@@ -20,9 +20,13 @@
 	}
 
 	// The button leaves with the last tick, so focus moves to the list's first
-	// checkbox rather than dropping to the page.
+	// checkbox rather than dropping to the page. A mouse click (detail > 0)
+	// keeps the page still; Enter or Space (detail 0) scrolls to where focus went.
 	function clear(e: MouseEvent & { currentTarget: HTMLButtonElement }) {
-		e.currentTarget.closest('section')?.querySelector('input')?.focus();
+		e.currentTarget
+			.closest('section')
+			?.querySelector('input')
+			?.focus({ preventScroll: e.detail > 0 });
 		ticked = [];
 		saveTicks(storageKey, ticked);
 	}

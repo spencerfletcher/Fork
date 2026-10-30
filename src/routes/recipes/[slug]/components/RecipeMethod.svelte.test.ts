@@ -138,4 +138,23 @@ describe('RecipeMethod', () => {
 			expect(column.lastElementChild).toBe(numeral);
 		}
 	});
+
+	// A mouse click (detail 1) must not scroll the page to the first step;
+	// Enter or Space (detail 0) may, so the keyboard user sees where focus went.
+	test('Clear ticks from a mouse moves focus without scrolling; from the keyboard it scrolls', async () => {
+		const focus = vi.spyOn(HTMLInputElement.prototype, 'focus');
+		render(RecipeMethod, {
+			props: { storageKey: KEY, steps: [makeStep('Mix.'), makeStep('Bake.')] }
+		});
+		await fireEvent.click(screen.getAllByRole('checkbox')[1]);
+		await fireEvent.click(screen.getByRole('button', { name: 'Clear ticks' }), { detail: 1 });
+		expect(focus).toHaveBeenLastCalledWith({ preventScroll: true });
+		expect(document.activeElement).toBe(screen.getAllByRole('checkbox')[0]);
+
+		await fireEvent.click(screen.getAllByRole('checkbox')[1]);
+		await fireEvent.click(screen.getByRole('button', { name: 'Clear ticks' }), { detail: 0 });
+		expect(focus).toHaveBeenLastCalledWith({ preventScroll: false });
+		expect(document.activeElement).toBe(screen.getAllByRole('checkbox')[0]);
+		focus.mockRestore();
+	});
 });
