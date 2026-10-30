@@ -122,6 +122,14 @@ describe('SearchFilters search box', () => {
 		expect(gotoMock.mock.calls[0][0]).toBe('?tags=baking');
 	});
 
+	// Enter on an empty box fires both `search` and submit; with no query in
+	// the URL there is nothing to clear, so only the submit navigates.
+	test('the search event does not navigate when the URL has no query', async () => {
+		render(SearchFilters, { props: { availableTags } });
+		await fireEvent(input(), new Event('search'));
+		expect(gotoMock).not.toHaveBeenCalled();
+	});
+
 	test("the × is drawn in the field's ink, not browser blue", () => {
 		const rule = source.match(/::-webkit-search-cancel-button\s*{([^}]*)}/)![1];
 		expect(rule).toMatch(/-webkit-appearance:\s*none/);

@@ -103,9 +103,11 @@
 				// The native × empties the field and fires `search` (so does Enter,
 				// which the form's submit already handles); only the emptied field
 				// needs applying here, so the results and the URL drop the query.
+				// initialQuery is the URL's q: without one there is nothing to clear,
+				// and Enter's submit would navigate a second time.
 				// Svelte's element types have no `onsearch`, hence `on`.
 				on(field, 'search', () => {
-					if (!searchQuery) applyFilters();
+					if (!searchQuery && initialQuery) applyFilters();
 				})}
 			aria-label="Search by name or ingredient"
 			placeholder="Search by name or ingredient…"
