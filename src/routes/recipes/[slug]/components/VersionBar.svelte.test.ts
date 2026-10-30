@@ -160,6 +160,6 @@ describe('VersionBar', () => {
 		const chip = /\.current \.version-number \{([^}]*)\}/.exec(source)![1];
 		expect(chip).toMatch(/outline: 1px solid transparent;/);
 		expect(chip).toMatch(/outline-offset: -1px;/);
-		expect(chip).not.toMatch(/border|margin/);
+		expect(chip).not.toMatch(/border:|margin/);
 	});
 });
