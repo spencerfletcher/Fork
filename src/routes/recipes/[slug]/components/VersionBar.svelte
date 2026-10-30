@@ -216,6 +216,14 @@
 		background: none;
 		font: inherit;
 		cursor: pointer;
+		position: relative;
+	}
+
+	/* Its hit grows on a pseudo, so the focus ring hugs the words: 24px here. */
+	.versions-toggle::before {
+		content: '';
+		position: absolute;
+		inset: -4px 0;
 	}
 
 	.chevron {
@@ -244,8 +252,7 @@
 
 	/* Inline links reach a 24px hit without moving the text. Last, so nothing
 	   above resets it. */
-	.version-bar a,
-	.versions-toggle {
+	.version-bar a {
 		padding: 4px 0;
 		margin: -4px 0;
 	}
@@ -295,7 +302,6 @@
 
 		/* Outranks the 4px hit rule above; inline-block so the padding counts. */
 		.version-bar .controls a,
-		.version-bar .versions-toggle,
 		.version-bar .history .compare,
 		.version-bar .version-link {
 			display: inline-block;
@@ -303,9 +309,14 @@
 			margin-block: -11px;
 		}
 
-		.version-bar .versions-toggle,
 		.version-bar .version-link {
 			display: inline-flex;
+		}
+
+		/* The toggle's 44px, on its pseudo: a ring this tall would cut through
+		   the note above. */
+		.versions-toggle::before {
+			inset: -11px 0;
 		}
 
 		.history {

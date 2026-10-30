@@ -162,4 +162,17 @@ describe('VersionBar', () => {
 		expect(chip).toMatch(/outline-offset: -1px;/);
 		expect(chip).not.toMatch(/border:|margin/);
 	});
+
+	test('the toggle grows its hit on a pseudo, so its focus ring hugs the words', () => {
+		// jsdom applies no component CSS, so the rules are read from the source.
+		const style = source.slice(source.indexOf('<style>'));
+		const padded = [...style.matchAll(/([^{}]*)\{[^}]*padding: (?:4|11)px 0;[^}]*\}/g)].map(
+			(m) => m[1]
+		);
+		for (const selectors of padded) expect(selectors).not.toMatch(/\.versions-toggle\b(?!::)/);
+		expect(style).toMatch(/\.versions-toggle \{[^}]*position: relative;/);
+		expect(style).toMatch(/\.versions-toggle::before \{[^}]*content: '';[^}]*inset: -4px 0;/);
+		const phone = style.slice(style.indexOf('@media (max-width: 699px)'));
+		expect(phone).toMatch(/\.versions-toggle::before \{\s*inset: -11px 0;/);
+	});
 });
