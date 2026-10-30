@@ -1,5 +1,5 @@
 import { describe, test, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/svelte';
+import { render, screen, fireEvent } from '@testing-library/svelte';
 import ForgotPasswordPage from './+page.svelte';
 
 vi.mock('$app/forms', () => ({ enhance: () => ({ destroy: () => {} }) }));
@@ -8,6 +8,8 @@ type Form = { message?: string; sent?: boolean; email?: string } | null;
 
 const renderForgot = (form: Form = null) =>
 	render(ForgotPasswordPage, { props: { form, data: {} } as never });
+
+const email = () => screen.getByLabelText('Email') as HTMLInputElement;
 
 describe('Forgot password page', () => {
 	test('asks for the email and offers one action, "Send reset link"', () => {
@@ -27,6 +29,36 @@ describe('Forgot password page', () => {
 			'Could not send the link. Try again in a minute.'
 		);
 		expect(screen.getByRole('button', { name: 'Send reset link' })).toBeInTheDocument();
+	});
+
+	const EMAIL_RULE = 'Enter an email address like name@example.com';
+
+	test('an email the browser rejects, once edited and left: the message is described and the field invalid', async () => {
+		renderForgot();
+		// Passing through without typing says nothing.
+		await fireEvent.blur(email());
+		expect(screen.queryByText(EMAIL_RULE)).toBeNull();
+		expect(email()).not.toHaveAttribute('aria-invalid');
+		await fireEvent.input(email(), { target: { value: 'jane@' } });
+		// Not while typing the first time.
+		expect(screen.queryByText(EMAIL_RULE)).toBeNull();
+		await fireEvent.blur(email());
+		expect(screen.getByText(EMAIL_RULE)).toHaveClass('field-error');
+		expect(email()).toHaveAttribute('aria-invalid', 'true');
+		expect(email()).toHaveAttribute('aria-describedby', 'email-error');
+		expect(email()).toHaveAccessibleDescription(EMAIL_RULE);
+		// Fixed, it clears at once.
+		await fireEvent.input(email(), { target: { value: 'jane@example.com' } });
+		expect(screen.queryByText(EMAIL_RULE)).toBeNull();
+		expect(email()).not.toHaveAttribute('aria-invalid');
+		expect(email()).not.toHaveAttribute('aria-describedby');
+	});
+
+	test('a submit the browser stops shows the email message', async () => {
+		renderForgot();
+		await fireEvent.invalid(email());
+		expect(screen.getByText(EMAIL_RULE)).toBeInTheDocument();
+		expect(email()).toHaveAttribute('aria-invalid', 'true');
 	});
 
 	test('once sent, the same card says so without saying whether the account exists', () => {
