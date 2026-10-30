@@ -21,8 +21,25 @@ const hitHeight = (el: Locator) =>
 		return node.getBoundingClientRect().height - parseFloat(s.top) - parseFloat(s.bottom);
 	});
 
+/** A select's text area, in its own font's ch. */
+const textAreaInCh = (select: Locator) =>
+	select.evaluate((el) => {
+		const s = getComputedStyle(el);
+		const probe = document.createElement('span');
+		Object.assign(probe.style, {
+			display: 'inline-block',
+			width: '1ch',
+			fontFamily: s.fontFamily,
+			fontSize: s.fontSize
+		});
+		document.body.append(probe);
+		const ch = probe.getBoundingClientRect().width;
+		probe.remove();
+		return (el.clientWidth - parseFloat(s.paddingLeft) - parseFloat(s.paddingRight)) / ch;
+	});
+
 test.describe('Compare page', () => {
-	test('closed pickers show only the version, at their natural width; the arrow is mono at their size', async ({
+	test('closed pickers show the version and its message, clipped at 22ch; the arrow is mono at their size', async ({
 		page
 	}) => {
 		await page.setViewportSize({ width: 1280, height: 900 });
@@ -31,16 +48,15 @@ test.describe('Compare page', () => {
 		await expect(from).toHaveValue('2');
 		// The select draws its own text: no face over it.
 		await expect(page.locator('.picker__face')).toHaveCount(0);
-		expect(await from.evaluate((el: HTMLSelectElement) => el.selectedOptions[0].text)).toBe('v2');
+		expect(await from.evaluate((el: HTMLSelectElement) => el.selectedOptions[0].text)).toMatch(
+			/^v2 · \S/
+		);
 		expect(await from.evaluate((el) => getComputedStyle(el).color)).not.toBe('rgba(0, 0, 0, 0)');
-		expect((await from.boundingBox())!.width).toBeLessThan(100);
-		// Pressed, the list carries the message and the box keeps its width.
-		const closed = (await from.boundingBox())!.width;
+		// 22ch of label, "v2 · Increased vanilla", not the message's own width.
+		expect(await textAreaInCh(from)).toBeCloseTo('v2 · Increased vanilla'.length, 0);
+		// Pressed, the list keeps the same labels: there is no swap.
 		await from.dispatchEvent('pointerdown');
 		await expect(from.locator('option').nth(1)).toHaveText(/^v2 · \S/);
-		expect((await from.boundingBox())!.width).toBe(closed);
-		await from.press('Escape');
-		await expect(from.locator('option').nth(1)).toHaveText('v2');
 		const arrow = page.locator('.version-picker__arrow');
 		await expect(arrow).toHaveAttribute('aria-hidden', 'true');
 		const [arrowFont, selectFont] = await Promise.all([
@@ -72,43 +88,25 @@ test.describe('Compare page', () => {
 		);
 		for (const n of [0, 1]) expect(await caretGap(n)).toBeLessThanOrEqual(12);
 		await page.setViewportSize({ width: 1280, height: 900 });
-		expect((await page.locator('.picker select').first().boundingBox())!.width).toBeLessThan(100);
+		expect((await page.locator('.picker select').first().boundingBox())!.width).toBeLessThan(300);
 		for (const n of [0, 1]) expect(await caretGap(n)).toBeLessThanOrEqual(12);
 	});
 
-	test('on a phone the open face clips to the version as at 1280, while the whole box stays the tap target', async ({
+	test('on a phone the closed box shows the long label clipped at the caret, the whole box the tap target', async ({
 		page
 	}) => {
-		// The select's text area is its longest short label in ch, so the long
-		// labels of an open list cannot show "v2 · Increase" cut mid-word.
 		await page.setViewportSize({ width: 390, height: 900 });
 		await openCookiesCompare(page);
 		const from = page.getByRole('combobox', { name: 'From version' });
-		await from.dispatchEvent('pointerdown');
-		await expect(from.locator('option').nth(1)).toHaveText(/^v2 · \S/);
-		const [textWidth, chars, ch] = await from.evaluate((el) => {
-			const s = getComputedStyle(el);
-			const probe = document.createElement('span');
-			Object.assign(probe.style, {
-				display: 'inline-block',
-				width: '1ch',
-				fontFamily: s.fontFamily,
-				fontSize: s.fontSize
-			});
-			document.body.append(probe);
-			const oneCh = probe.getBoundingClientRect().width;
-			probe.remove();
-			return [
-				el.clientWidth - parseFloat(s.paddingLeft) - parseFloat(s.paddingRight),
-				Number(getComputedStyle(el.parentElement!).getPropertyValue('--label-chars')),
-				oneCh
-			];
-		});
-		expect(textWidth).toBeCloseTo(chars * ch, 0);
+		expect(await from.evaluate((el: HTMLSelectElement) => el.selectedOptions[0].text)).toMatch(
+			/^v2 · \S/
+		);
+		// Room for more than "v2 · ", so the message starts in the closed box.
+		expect(await textAreaInCh(from)).toBeGreaterThan('v2 · '.length);
 		expect((await from.boundingBox())!.width).toBeGreaterThan(120);
 	});
 
-	test('in forced colours the picker keeps its version and its caret, unclipped', async ({
+	test('in forced colours the picker keeps its label and its caret, unclipped', async ({
 		page
 	}) => {
 		await page.emulateMedia({ forcedColors: 'active' });
@@ -116,7 +114,9 @@ test.describe('Compare page', () => {
 			await page.setViewportSize({ width, height: 900 });
 			await openCookiesCompare(page);
 			const from = page.getByRole('combobox', { name: 'From version' });
-			expect(await from.evaluate((el: HTMLSelectElement) => el.selectedOptions[0].text)).toBe('v2');
+			expect(await from.evaluate((el: HTMLSelectElement) => el.selectedOptions[0].text)).toMatch(
+				/^v2 · \S/
+			);
 			const caret = page.locator('.picker__caret').first();
 			await expect(caret).toBeVisible();
 			const [c, f] = [(await caret.boundingBox())!, (await from.boundingBox())!];

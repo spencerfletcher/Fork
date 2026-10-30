@@ -317,62 +317,48 @@ describe('Diff page', () => {
 		expect(screen.getByLabelText('To version')).toHaveValue('3');
 	});
 
-	// The select is the only thing drawn: its options are short while the list
-	// is closed and carry the message while it is open (decided 29 October 2026).
+	// The select is the only thing drawn, and its options always carry the
+	// message: every browser clips the long label cleanly at the box's edge.
 	const labels = (select: HTMLElement) =>
-		[...select.querySelectorAll('option')].map((o) => o.textContent);
-	const SHORT = [`v${V1.versionNumber}`, `v${V2.versionNumber}`];
+		[...select.querySelectorAll('option')].map((o) => o.textContent?.trim());
 	const LONG = [
 		`v${V1.versionNumber} · ${V1.commitMessage}`,
 		`v${V2.versionNumber} · ${V2.commitMessage}`
 	];
 
-	test('a closed picker shows only the version, drawn by the select itself, with an unseen caret', () => {
+	test('a picker shows each version with its message, drawn by the select itself, with an unseen caret', () => {
 		const { container } = render(DiffPage, { props: { data: makeData() } });
 		const from = screen.getByRole('combobox', { name: 'From version' });
-		expect(labels(from)).toEqual(SHORT);
+		expect(labels(from)).toEqual(LONG);
 		expect(container.querySelector('.picker__face')).toBeNull();
 		const carets = [...container.querySelectorAll('.picker__caret')];
 		expect(carets).toHaveLength(2);
 		for (const caret of carets) expect(caret).toHaveAttribute('aria-hidden', 'true');
 	});
 
-	test('pressing a picker opens its list with each message; choosing or leaving closes it', async () => {
+	test('opening a picker leaves its labels as they are: there is no swap', async () => {
 		render(DiffPage, { props: { data: makeData() } });
 		const from = screen.getByRole('combobox', { name: 'From version' });
-		const to = screen.getByRole('combobox', { name: 'To version' });
 		await fireEvent.pointerDown(from);
+		await fireEvent.keyDown(from, { key: ' ' });
 		expect(labels(from)).toEqual(LONG);
-		// Only the pressed picker opens.
-		expect(labels(to)).toEqual(SHORT);
-		await fireEvent.change(from, { target: { value: String(V2.versionNumber) } });
-		expect(labels(from)).toEqual(SHORT);
-		await fireEvent.pointerDown(from);
 		await fireEvent.blur(from);
-		expect(labels(from)).toEqual(SHORT);
-		await fireEvent.pointerDown(from);
-		await fireEvent.keyDown(from, { key: 'Escape' });
-		expect(labels(from)).toEqual(SHORT);
+		expect(labels(from)).toEqual(LONG);
 	});
 
-	test.each([
-		['Space', { key: ' ' }],
-		['Enter', { key: 'Enter' }],
-		['Alt+ArrowDown', { key: 'ArrowDown', altKey: true }]
-	])('%s opens the list with each message', async (_name, key) => {
-		render(DiffPage, { props: { data: makeData() } });
-		const to = screen.getByRole('combobox', { name: 'To version' });
-		await fireEvent.keyDown(to, key);
-		expect(labels(to)).toEqual(LONG);
+	test('at desktop the closed box is 24ch, 22ch of label, enough for "v2 · Increased vanilla"', () => {
+		// Without a width a select grows to its longest message and the two
+		// overflow the row; 24ch shows the version and the start of its message.
+		const style = source.slice(source.indexOf('<style>'));
+		expect(style).toMatch(/\.version-picker select\s*{[^}]*width:\s*calc\(24ch \+ 22px\)/);
+		expect(source).not.toMatch(/label-chars|labelChars/i);
 	});
 
-	test('focus alone, or ArrowDown without Alt, keeps the short labels', async () => {
-		// The page refocuses the picker after navigating; its face must read "v2".
-		render(DiffPage, { props: { data: makeData() } });
-		const to = screen.getByRole('combobox', { name: 'To version' });
-		await fireEvent.focus(to);
-		await fireEvent.keyDown(to, { key: 'ArrowDown' });
-		expect(labels(to)).toEqual(SHORT);
+	test('on a phone the select keeps its full text area, so the label clips at the caret', () => {
+		// The short-label text area only existed to clip an open list's long
+		// labels to "v2"; with no swap the closed box shows the long label.
+		const style = source.slice(source.indexOf('<style>'));
+		expect(style).not.toMatch(/calc\(100% - 12px/);
 	});
 
 	test('no From and To eyebrows: the selects are named, and the arrow between them is unseen', () => {

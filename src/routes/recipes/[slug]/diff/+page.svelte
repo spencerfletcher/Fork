@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { flushSync } from 'svelte';
 	import { goto } from '$app/navigation';
 	import VersionDiff from '#lib/components/recipes/VersionDiff.svelte';
 	import Username from '#lib/components/ui/Username.svelte';
@@ -27,25 +26,6 @@
 			? `/recipes/${recipe.slug}`
 			: `/recipes/${recipe.slug}?version=${v.versionNumber}`;
 
-	// The picker whose list is open: its options carry each message, "v2 ·
-	// Increased vanilla"; closed, they read "v2", so the select is its own face
-	// (decided 29 October 2026). Opened by a press or the keys that open a
-	// select; never by focus, since the page refocuses the picker after it
-	// navigates. ponytail: a list closed by re-pressing it or by picking the
-	// current value keeps the long labels until blur; no event says it closed.
-	let openPicker = $state<string | null>(null);
-
-	function open(id: string) {
-		// Before the browser draws the list, so it opens with the messages.
-		flushSync(() => (openPicker = id));
-	}
-
-	const opensList = (e: KeyboardEvent) =>
-		e.key === ' ' || e.key === 'Enter' || (e.altKey && e.key === 'ArrowDown');
-
-	// The closed width, in the select's own mono ch: the longest short label.
-	const labelChars = $derived(Math.max(...allVersions.map((v) => `v${v.versionNumber}`.length)));
-
 	async function navigate(id: string) {
 		await goto(`?from=${fromSelect}&to=${toSelect}`);
 		// Navigation lands focus on the body; the picker that was changed keeps it.
@@ -60,26 +40,17 @@
 </script>
 
 {#snippet picker(id: string, label: string, value: number, set: (v: number) => void)}
-	<span class="picker" style:--label-chars={labelChars}>
+	<span class="picker">
 		<select
 			{id}
 			{value}
 			aria-label={label}
-			onpointerdown={() => open(id)}
-			onkeydown={(e) => {
-				if (opensList(e)) open(id);
-				else if (e.key === 'Escape') openPicker = null;
-			}}
-			onblur={() => (openPicker = null)}
 			onchange={(e) => {
-				openPicker = null;
 				set(Number(e.currentTarget.value));
 				navigate(id);
 			}}>
 			{#each allVersions as v (v.versionNumber)}
-				<option value={v.versionNumber}>
-					v{v.versionNumber}{openPicker === id ? ` · ${v.commitMessage}` : ''}
-				</option>
+				<option value={v.versionNumber}>v{v.versionNumber} · {v.commitMessage}</option>
 			{/each}
 		</select>
 		<!-- A glyph rather than a background image, so forced colours paint it. -->
@@ -164,14 +135,15 @@
 		min-width: 0;
 	}
 
-	/* Sized to the short label, so the box does not grow when the list opens
-	   and its labels lengthen; the right padding holds a space and the caret. */
+	/* A fixed 24ch: 22ch of label, "v2 · Increased vanilla", then the right
+	   padding's space and caret. The long label clips at the box's edge
+	   rather than widening it. */
 	.version-picker select {
 		font-family: var(--font-mono);
 		font-size: 0.875rem;
 		line-height: 1.5;
 		padding: 6px calc(10px + 2ch) 6px 10px;
-		width: calc((var(--label-chars) + 2) * 1ch + 22px);
+		width: calc(24ch + 22px);
 		appearance: none;
 		white-space: nowrap;
 		text-overflow: clip;
@@ -300,14 +272,11 @@
 			font-size: 1rem;
 		}
 
-		/* Full width, so the whole box opens the list, but the text area is the
-		   short label's ch, as at 1280: an open list's long labels clip to "v2"
-		   rather than cut mid-word against the caret. The percentage is the
-		   picker's width, which the select fills; 12px is its left padding and
-		   border. */
+		/* Full width, so the whole box opens the list; the long label clips at
+		   the caret. */
 		.version-picker select {
 			width: 100%;
-			padding: 10px calc(100% - 12px - var(--label-chars) * 1ch) 10px 10px;
+			padding: 10px calc(10px + 2ch) 10px 10px;
 		}
 
 		.version-cards {
