@@ -90,6 +90,10 @@ describe('fallback error page', () => {
 		}
 	});
 
+	test("the ghost button takes the primary's weight, as app.css has it", () => {
+		expect(px(rule('.btn-ghost'), 'font-weight')).toBe(px(rule('.btn-primary'), 'font-weight'));
+	});
+
 	test('the primary keeps its box under forced colours with a transparent border', () => {
 		expect(px(rule('.btn-primary'), 'border')).toBe('1px solid transparent');
 	});

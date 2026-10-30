@@ -102,3 +102,15 @@ describe('app.css invalid fields', () => {
 		expect(block).not.toMatch(/background/);
 	});
 });
+
+describe('app.css buttons', () => {
+	const weight = (selector: string) =>
+		new RegExp(`\\n\\t\\${selector} \\{[^}]*font-weight:\\s*(\\d+)`).exec(css)?.[1];
+
+	// Favorite sits beside Fork and Edit in one row; a lighter ghost reads as
+	// the lesser control's text, not a peer.
+	test('the ghost button carries the primary button weight', () => {
+		expect(weight('.btn-primary')).toBe('600');
+		expect(weight('.btn-ghost')).toBe(weight('.btn-primary'));
+	});
+});

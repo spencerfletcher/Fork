@@ -450,7 +450,7 @@
 
 	.btn-ghost {
 		font-family: var(--font-sans);
-		font-weight: 500;
+		font-weight: 600;
 		font-size: 0.9375rem;
 		background: transparent;
 		color: var(--color-text);
