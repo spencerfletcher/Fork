@@ -2,7 +2,8 @@ import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { text } from '#lib/recipes/validation.js';
 
-const meta = { title: 'Reset password' };
+// The tab reads as the card heads itself: the form, or the expired link.
+const meta = (linkValid: boolean) => ({ title: linkValid ? 'Reset password' : 'Link expired' });
 
 /**
  * Set when the emailed link is traded for a session, so the password form is
@@ -32,10 +33,11 @@ export const load: PageServerLoad = async ({ url, cookies, locals: { supabase, u
 			cookies.set(_RECOVERY_COOKIE, '1', _RECOVERY_COOKIE_OPTIONS);
 			throw redirect(303, '/reset-password');
 		}
-		return { linkValid: false, meta };
+		return { linkValid: false, meta: meta(false) };
 	}
 
-	return { linkValid: user !== null && cookies.get(_RECOVERY_COOKIE) === '1', meta };
+	const linkValid = user !== null && cookies.get(_RECOVERY_COOKIE) === '1';
+	return { linkValid, meta: meta(linkValid) };
 };
 
 export const actions: Actions = {

@@ -70,7 +70,10 @@ describe('reset-password load', () => {
 	test('a used or expired link shows the expired state, even to a signed-in visitor', async () => {
 		exchangeCodeForSession.mockResolvedValue({ error: { message: 'invalid flow state' } });
 
-		expect(await runLoad('?code=old', USER)).toMatchObject({ linkValid: false });
+		expect(await runLoad('?code=old', USER)).toMatchObject({
+			linkValid: false,
+			meta: { title: 'Link expired' }
+		});
 	});
 
 	test('a good link leaves a short-lived recovery cookie behind', async () => {
@@ -91,7 +94,11 @@ describe('reset-password load', () => {
 		});
 		// A session that is merely signed in on this device (a shared kitchen
 		// tablet) does not get a password form.
-		expect(await runLoad('', USER)).toMatchObject({ linkValid: false });
+		// The expired card titles its tab as it heads itself.
+		expect(await runLoad('', USER)).toMatchObject({
+			linkValid: false,
+			meta: { title: 'Link expired' }
+		});
 		// Supabase's own error redirect (?error_code=otp_expired) lands here too.
 		expect(await runLoad('?error_code=otp_expired')).toMatchObject({ linkValid: false });
 		expect(exchangeCodeForSession).not.toHaveBeenCalled();
