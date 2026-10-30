@@ -1,6 +1,7 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/svelte';
 import source from './RecipeForm.svelte?raw';
+import { readFileSync } from 'node:fs';
 import RecipeForm from './RecipeForm.svelte';
 import { draftOf } from '#lib/recipes/validation.js';
 
@@ -19,6 +20,20 @@ describe('RecipeForm photo buttons', () => {
 		const media = style.slice(style.indexOf('@media (max-width: 699px), (pointer: coarse)'));
 		const block = media.slice(0, media.indexOf('\n\t}\n'));
 		expect(block).toMatch(/\.photo-choose,\s*\.photo-keep\s*{[^}]*min-height:\s*44px/);
+	});
+});
+
+describe('RecipeForm Choose photo', () => {
+	// The label takes back a button's voice, so its weight is the ghost button's, as Cancel's is.
+	test('is set at the ghost button weight', () => {
+		const weight = (css: string, selector: string) => {
+			const at = css.indexOf(`${selector} {`);
+			return css.slice(at, css.indexOf('}', at)).match(/font-weight:\s*(\d+)/)?.[1];
+		};
+		const appCss = readFileSync('src/app.css', 'utf8');
+		const ghost = weight(appCss, '.btn-ghost');
+		expect(ghost).toBeDefined();
+		expect(weight(style, '.photo-choose')).toBe(ghost);
 	});
 });
 

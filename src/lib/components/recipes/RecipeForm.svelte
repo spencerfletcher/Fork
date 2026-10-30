@@ -517,7 +517,7 @@
 		min-height: 41px;
 		padding-block: 0;
 		font-size: 0.9375rem;
-		font-weight: 500;
+		font-weight: 600;
 		letter-spacing: normal;
 		text-transform: none;
 		color: var(--color-text);
