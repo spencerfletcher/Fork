@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { on } from 'svelte/events';
 	import TagFilter from './TagFilter.svelte';
 	import type { Tag } from '#lib/server/db/schema.js';
 
@@ -98,8 +99,16 @@
 		<input
 			type="search"
 			bind:value={searchQuery}
-			aria-label="Search recipes by title"
-			placeholder="Search recipes by title…"
+			{@attach (field) =>
+				// The native × empties the field and fires `search` (so does Enter,
+				// which the form's submit already handles); only the emptied field
+				// needs applying here, so the results and the URL drop the query.
+				// Svelte's element types have no `onsearch`, hence `on`.
+				on(field, 'search', () => {
+					if (!searchQuery) applyFilters();
+				})}
+			aria-label="Search by name or ingredient"
+			placeholder="Search by name or ingredient…"
 			class="pl-10" />
 	</form>
 
@@ -115,6 +124,19 @@
 		display: flex;
 		flex-direction: column;
 		gap: 14px;
+	}
+
+	/* The native × in the field's ink rather than the browser's blue: a 16px
+	   glyph masked onto currentColor, centred in a 24px hit. */
+	.search-filters input::-webkit-search-cancel-button {
+		-webkit-appearance: none;
+		width: 24px;
+		height: 24px;
+		margin-right: -4px;
+		background-color: currentColor;
+		mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 4l8 8M12 4l-8 8' stroke='black' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E")
+			center / 16px no-repeat;
+		cursor: pointer;
 	}
 
 	@media (min-width: 1024px) {

@@ -1,6 +1,7 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/svelte';
 import SearchFilters from './SearchFilters.svelte';
+import source from './SearchFilters.svelte?raw';
 
 const { gotoMock } = vi.hoisted(() => ({ gotoMock: vi.fn() }));
 vi.mock('$app/navigation', () => ({ goto: gotoMock }));
@@ -90,5 +91,42 @@ describe('SearchFilters', () => {
 		render(SearchFilters, { props: { availableTags: [] } });
 		expect(screen.queryByRole('group', { name: 'Filter by tag' })).toBeNull();
 		expect(screen.queryByText(/no tags available/i)).toBeNull();
+	});
+});
+
+describe('SearchFilters search box', () => {
+	// The server matches title, description and ingredient names, so the box
+	// says so rather than promising titles only.
+	test('names what the search matches', () => {
+		render(SearchFilters, { props: { availableTags } });
+		expect(input()).toHaveAccessibleName('Search by name or ingredient');
+		expect(input()).toHaveAttribute('placeholder', 'Search by name or ingredient…');
+	});
+
+	// The native × empties the field and fires `search`; the results and the
+	// URL must clear with it.
+	test('emptying the field with the × navigates without the query', async () => {
+		render(SearchFilters, { props: { availableTags, initialQuery: 'garam' } });
+		await fireEvent.input(input(), { target: { value: '' } });
+		await fireEvent(input(), new Event('search'));
+		expect(gotoMock).toHaveBeenCalledTimes(1);
+		expect(gotoMock.mock.calls[0][0]).toBe(window.location.pathname);
+	});
+
+	test('the × keeps the selected tags', async () => {
+		render(SearchFilters, {
+			props: { availableTags, initialQuery: 'garam', initialTags: ['baking'] }
+		});
+		await fireEvent.input(input(), { target: { value: '' } });
+		await fireEvent(input(), new Event('search'));
+		expect(gotoMock.mock.calls[0][0]).toBe('?tags=baking');
+	});
+
+	test("the × is drawn in the field's ink, not browser blue", () => {
+		const rule = source.match(/::-webkit-search-cancel-button\s*{([^}]*)}/)![1];
+		expect(rule).toMatch(/-webkit-appearance:\s*none/);
+		expect(rule).toMatch(/background-color:\s*currentColor/);
+		expect(rule).toMatch(/width:\s*24px/);
+		expect(rule).toMatch(/center \/ 16px no-repeat/);
 	});
 });
