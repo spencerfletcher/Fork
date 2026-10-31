@@ -173,7 +173,7 @@
 		gap: 8px;
 		min-height: 44px;
 		padding: 8px 18px 8px 16px;
-		border-radius: 999px;
+		border-radius: var(--radius-pill);
 	}
 
 	/* Favorited: the word stays "Favorite" so the pill never changes width;
