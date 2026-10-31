@@ -805,11 +805,12 @@ test.describe('Recipe detail page', () => {
 	test('a row focused by Tab or Shift+Tab shows whole, ring and all, clear of the screen edge and the tab bar', async ({
 		page
 	}) => {
-		// Every check-off row in reading order, then back again, at a desktop width
-		// and on a phone's Ingredients tab; method steps have no ticks.
+		// Every check-off row in reading order, then back again; at a desktop width
+		// both lists at once, on a phone each tab in turn.
 		const runs = [
 			{ width: 1280, height: 800, tab: null },
-			{ width: 390, height: 844, tab: 'Ingredients' }
+			{ width: 390, height: 844, tab: 'Ingredients' },
+			{ width: 390, height: 844, tab: 'Method' }
 		];
 		for (const { width, height, tab } of runs) {
 			await page.setViewportSize({ width, height });
@@ -1068,17 +1069,21 @@ test.describe('Recipe detail page', () => {
 		await gotoClassicCookies(page);
 		const recipeUrl = page.url().split('?')[0];
 		const ingredient = page.locator('#ingredients input[type="checkbox"]').nth(1);
+		const step = page.locator('#method input').nth(2);
 		await page.locator('#ingredients label').nth(1).click();
+		await page.locator('#method label').nth(2).click();
 		await page.reload();
 		await expect(ingredient).toBeChecked();
-		await expect(page.locator('#recipe input:checked')).toHaveCount(1);
+		await expect(step).toBeChecked();
+		await expect(page.locator('#recipe input:checked')).toHaveCount(2);
 		// A new window on the same storage origin has them too: localStorage, not
 		// one tab's sessionStorage.
 		const other = await browser.newContext({ storageState: await page.context().storageState() });
 		const tab = await other.newPage();
 		await tab.goto(recipeUrl);
 		await expect(tab.locator('#ingredients input[type="checkbox"]').nth(1)).toBeChecked();
-		await expect(tab.locator('#recipe input:checked')).toHaveCount(1);
+		await expect(tab.locator('#method input').nth(2)).toBeChecked();
+		await expect(tab.locator('#recipe input:checked')).toHaveCount(2);
 		await other.close();
 		// v2 is another version: none of v3's ticks carry over.
 		await page.goto(`${recipeUrl}?version=2`);
@@ -1087,9 +1092,12 @@ test.describe('Recipe detail page', () => {
 		// Back on v3 by its own link, without a reload, they are still there.
 		await page.getByRole('link', { name: 'Back to v3' }).click();
 		await expect(ingredient).toBeChecked();
+		await expect(step).toBeChecked();
 	});
 
-	test('a method numeral sits 10px from its text with one digit or two', async ({ page }) => {
+	test('a method numeral sits 10px from its text with one digit or two, and the text keeps one edge near the row start', async ({
+		page
+	}) => {
 		await gotoClassicCookies(page);
 		const url = page.url();
 		for (const width of [1280, 390]) {
@@ -1103,15 +1111,32 @@ test.describe('Recipe detail page', () => {
 				const first = document.querySelector('#method li')!;
 				const list = first.parentElement!;
 				while (list.children.length < 12) list.append(first.cloneNode(true));
-				return [...list.querySelectorAll('li')].map((row, i) => {
+				return [...list.querySelectorAll('label')].map((row, i) => {
 					const numeral = row.querySelector('span')!;
 					numeral.textContent = String(i + 1);
+					const start = row.getBoundingClientRect().x;
 					const text = row.querySelector('div')!.getBoundingClientRect();
-					return text.x - numeral.getBoundingClientRect().right;
+					return {
+						numeralToText: text.x - numeral.getBoundingClientRect().right,
+						numeralInside: numeral.getBoundingClientRect().x - start,
+						textStart: text.x - start
+					};
 				});
 			});
-			for (const [i, gap] of gaps.entries())
-				expect(gap, `${width}: step ${i + 1} numeral to text`).toBeCloseTo(10, 0);
+			// No hole where a tick circle would sit: the 2ch column holds "12" and
+			// no more, so the text starts close to the row's edge, on one line.
+			for (const [i, gap] of gaps.entries()) {
+				expect(gap.numeralToText, `${width}: step ${i + 1} numeral to text`).toBeCloseTo(10, 0);
+				expect(
+					gap.numeralInside,
+					`${width}: step ${i + 1} numeral in its column`
+				).toBeGreaterThanOrEqual(0);
+				expect(gap.textStart, `${width}: step ${i + 1} text edge`).toBeCloseTo(
+					gaps[0].textStart,
+					0
+				);
+				expect(gap.textStart, `${width}: step ${i + 1} text edge`).toBeLessThan(40);
+			}
 		}
 	});
 
@@ -1323,7 +1348,7 @@ test.describe('Landing page (logged out)', () => {
 		expect(sizes[1]).toBe(sizes[0]);
 	});
 
-	test('ticking an ingredient fills its circle marigold with an ink check; the text turns Ink 3, not the circle', async ({
+	test('ticking an ingredient fills its circle marigold with an ink check, a step has no circle; the text turns Ink 3', async ({
 		page
 	}) => {
 		await page.setViewportSize({ width: 1280, height: 900 });
@@ -1358,6 +1383,13 @@ test.describe('Landing page (logged out)', () => {
 		const text = row.locator('.tick + span').first();
 		expect(await text.evaluate((el) => getComputedStyle(el).color)).toBe(ink3);
 		expect(await text.evaluate(painted)).toBe(1);
+		// A step ticks the same way with no circle drawn.
+		const step = page.locator('#method label').first();
+		await expect(step.locator('.tick')).toHaveCount(0);
+		await step.click();
+		const stepText = step.locator('p').first();
+		expect(await stepText.evaluate((el) => getComputedStyle(el).color)).toBe(ink3);
+		expect(await stepText.evaluate(painted)).toBe(1);
 	});
 
 	test('the landing hero sits on the page paper, with only the bar in espresso', async ({

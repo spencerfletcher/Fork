@@ -282,7 +282,7 @@ The strongest opportunity identified in the Cooklang research. An attempt record
 
 # M18 — Cooking mode (half day)
 
-Spencer, 30 October 2026: tie the wake lock into a mode rather than ship it bare. One toggle on the recipe page ("Cook" / "Done cooking") that: holds a screen wake lock while on (Screen Wake Lock API, released on hide or toggle off); keeps the ingredient ticks (already kept 12h in localStorage) and offers Clear ticks (method steps have no ticks since 31 October 2026); steps the method up one type size and widens the ingredient column so a phone propped on the counter reads from arm's length; hides the actions row and version bar while on. No data written. Later: a per-step timer (M11) lives inside this mode, and M17's attempt note is offered when the cook turns it off.
+Spencer, 30 October 2026: tie the wake lock into a mode rather than ship it bare. One toggle on the recipe page ("Cook" / "Done cooking") that: holds a screen wake lock while on (Screen Wake Lock API, released on hide or toggle off); keeps the ticks (already kept 12h in localStorage) and offers Clear ticks; steps the method up one type size and widens the ingredient column so a phone propped on the counter reads from arm's length; hides the actions row and version bar while on. No data written. Later: a per-step timer (M11) lives inside this mode, and M17's attempt note is offered when the cook turns it off.
 
 # M19 — Search match highlighting
 
@@ -290,7 +290,7 @@ Spencer, 31 October 2026: "on search recipes can show what part of their data ma
 
 # M20 — Revisit the tick affordance
 
-The recipe page's ingredient rows tick with a 16px circle, Rule 2 at rest and marigold with an ink check when ticked (31 October 2026). Spencer chose it as a stopgap: "keep box but make it ours for now but i want to revisit this later i don't love this solution either". Method steps have no ticks (31 October 2026), so this is the ingredients' affordance only. Option already considered: a whole-row press with a mark in the gutter. Settle it with a side-by-side, together with M18's cooking mode, which leans on the ticks hardest.
+The recipe page's strike rows tick with a 16px circle on ingredients, Ink 3 at rest and marigold with an ink check when ticked (31 October 2026). Spencer chose it as a stopgap: "keep box but make it ours for now but i want to revisit this later i don't love this solution either". Method rows tick with no circle since 31 October 2026. Options already considered: the step numeral becomes the tick on the method, and a whole-row press with a mark in the gutter. Settle it with a side-by-side, together with M18's cooking mode, which leans on the ticks hardest.
 
 ---
 
