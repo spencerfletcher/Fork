@@ -40,6 +40,7 @@ Ideas from the original MVP design that are not covered by a milestone. Kept as 
 - Rethink the Recipes / My Recipes / Favorites division (Spencer, 31 October 2026): "honestly i think the whole recipes/my recipes/favorites division needs some work - we need to decide where each of these will live and what makes sense." Deferred to the social work (priority 5, M4's feed) and M17's attempts, since his framing is "Strava but for logging meals made / recipes tried": where each list lives follows from what the feed and the log are.
 - Pantry, meal log and grocery pricing (v3 in the old plan): a separate product. Not before everything above.
 - Rejected then and still: ads, automatic prep-time estimates, "grams made" as a recipe field.
+- Declined (Spencer, 31 October 2026): page tabs on the recipe page (Recipe / History / Forks), mocked in the Letterboxd comparison: "the main draw for most people is the ingredients/methods, tabs only work when there's similar levels of desire for each view."
 
 ## Current direction — 2026-09-09
 
@@ -280,10 +281,11 @@ Portability as a guarantee, not a sentence. A documented archive per user or per
 
 The strongest opportunity identified in the Cooklang research. An attempt records: which version, batch size or multiplier, deviations from the formulation, and the outcome, in a few taps. Distinct from the saved formulation and from a proposed revision. Feeds the AI adaptation ("version 3 at half size with oat milk was too thin") and answers "which version did I cook last time, and did it help?". Must be effortless or it is no advantage; start with one free-text note plus the version and multiplier, structure later.
 
+Decided UI, the "Made it" shape from the Letterboxd mock (Spencer, 31 October 2026: "I like ... the made it item"): a third ghost pill, "Made it" with the pot icon, after Favorite in the action row. Logged, it takes Favorite's on-state (the marigold tint inside a marigold border) and shows a mono count, "Made it 3×". A log line closes the method: "You made this 3 times. Last: 12 Oct, v2, 'less chilli'", the version a link. Data: a `cook_log` table (user, recipe, version, cooked at, note) and its migration; the note needs an input somewhere (Done cooking is the natural moment, per M18). Open problem: "Made it 3×" widens the pill by the count, the width change Favorite's fixed "Favorite" label was chosen to avoid. Also open: the phone row, since the mock gave Made it the full-width row under Fork and Favorite that Cook now takes.
+
 # M18 — Cooking mode — **shipped 2026-10-31**
 
 Shipped as one Cook / Done cooking toggle in the recipe page's action row: a screen wake lock while on, the version bar and the other actions hidden, the method type a size up, ticks and Clear ticks kept, `?cook=1` in the URL (DESIGN.md Cooking mode). The ingredient column stays its width. Follow-ons: M11's per-step timer lives inside the mode, and M17's attempt note is offered on Done cooking. Original plan below.
-
 
 Spencer, 30 October 2026: tie the wake lock into a mode rather than ship it bare. One toggle on the recipe page ("Cook" / "Done cooking") that: holds a screen wake lock while on (Screen Wake Lock API, released on hide or toggle off); keeps the ticks (already kept 12h in localStorage) and offers Clear ticks; steps the method up one type size and widens the ingredient column so a phone propped on the counter reads from arm's length; hides the actions row and version bar while on. No data written. Later: a per-step timer (M11) lives inside this mode, and M17's attempt note is offered when the cook turns it off.
 
