@@ -36,8 +36,7 @@ Three things together, which a neighbouring recipe site cannot claim at once: a 
 - Gram weights are shown beside ingredients, computed from a local density table; whole-item weights are estimates and are labelled as such.
 - A recipe may have no photo. Layouts must hold without one.
 - Pre-production: the only real data is seed data (four recipes, one author). No backward compatibility with stored data is required.
-- Not in the product and must not be shown: pull requests, merging, comments, following, collections, ratings, macros, pricing, AI features, export.
-  - Pantry search is no longer excluded: M21 in `docs/ROADMAP.md` (pantry tracker and pantry-match search, added 31 October 2026) supersedes the earlier exclusion.
+- Design and mockups show only what is shipped or scheduled in `docs/ROADMAP.md`. A feature not on the roadmap is not a product decision against it; it is simply not drawn until Spencer schedules it.
 - Stack: SvelteKit, TypeScript, Tailwind 4, Drizzle, PostgreSQL on Supabase, deployed on Netlify at recipes.spencerfletcher.com.
 - Terminology: an ingredient's number is `quantity`; a saved edit is a version with a commit message; a copy is a fork.
 
