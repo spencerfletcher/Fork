@@ -44,11 +44,17 @@
 		open = true;
 	}
 
+	// The header's "N versions" links here as #versions; landing opens the list.
+	// A second click on the same hash fires no hashchange, so it only scrolls.
+	function onHashChange() {
+		if (location.hash === '#versions') open = true;
+	}
+
 	const diff = (a: number, b: number) =>
 		`/recipes/${recipe.slug}/diff?from=${Math.min(a, b)}&to=${Math.max(a, b)}`;
 </script>
 
-<svelte:window onkeydown={onWindowKeydown} />
+<svelte:window onkeydown={onWindowKeydown} onhashchange={onHashChange} />
 
 {#snippet controls()}
 	<!-- The separators are drawn between items by CSS, never typed, so no
@@ -92,6 +98,7 @@
 {#if count > 1}
 	<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions (the toggle is the keyboard control) -->
 	<section
+		id="versions"
 		class="version-bar font-mono"
 		class:closed={!open}
 		aria-label="Version history"

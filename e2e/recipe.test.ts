@@ -64,8 +64,8 @@ test.describe('Recipe detail page', () => {
 		await page.getByRole('button', { name: '3 versions' }).click();
 		await expect(page.locator('#version-history li')).toHaveCount(2);
 		await expect(page.locator('#version-history')).toContainText('Initial recipe');
-		// The forks sit in the byline.
-		await expect(page.locator('.byline')).toContainText('1 fork');
+		// The forks sit in the stats row under the byline.
+		await expect(page.locator('.recipe-header .stats')).toContainText('1 fork');
 	});
 
 	test('"Brown Butter Chocolate Chip Cookies" shows fork attribution', async ({ page }) => {
@@ -76,9 +76,20 @@ test.describe('Recipe detail page', () => {
 		await expect(page.getByText(COOKIES_RE)).toBeVisible();
 	});
 
-	test('the byline fork count opens the list of forks', async ({ page }) => {
+	test('the stats row counts forks, favorites and versions; the fork count opens the list of forks', async ({
+		page
+	}) => {
 		await gotoClassicCookies(page);
-		await page.locator('.byline').getByRole('link', { name: '1 fork' }).click();
+		const stats = page.locator('.recipe-header .stats');
+		await expect(stats).toHaveText(/1 fork\s*No favorites\s*3 versions/);
+		await expect(page.locator('.byline')).not.toContainText('fork');
+		// The version count opens the bar's list.
+		await stats.getByRole('link', { name: '3 versions' }).click();
+		await expect(page.getByRole('button', { name: '3 versions' })).toHaveAttribute(
+			'aria-expanded',
+			'true'
+		);
+		await stats.getByRole('link', { name: '1 fork' }).click();
 		await expect(page).toHaveURL(/\/recipes\/[^/]+\/forks$/);
 		await expect(page.getByRole('heading', { level: 1 })).toContainText(`Forks of ${COOKIES}`);
 		await expect(page.getByRole('link', { name: FORK_RE }).first()).toBeVisible();
@@ -704,9 +715,15 @@ test.describe('Recipe detail page', () => {
 		await page.setViewportSize({ width: 1280, height: 900 });
 		await gotoClassicCookies(page);
 		const tops = await Promise.all(
-			['h1', '.byline', '.description', 'header .tags', 'header .details', 'header .actions'].map(
-				async (sel) => (await page.locator(sel).first().boundingBox())!.y
-			)
+			[
+				'h1',
+				'.byline',
+				'header .stats',
+				'.description',
+				'header .tags',
+				'header .details',
+				'header .actions'
+			].map(async (sel) => (await page.locator(sel).first().boundingBox())!.y)
 		);
 		expect([...tops].sort((a, b) => a - b)).toEqual(tops);
 		const header = await page.locator('header.recipe-header').boundingBox();

@@ -3,6 +3,7 @@ import { chain } from '#lib/testing/drizzle.js';
 import { invokeAction as invoke, formEvent } from '#lib/testing/actions.js';
 import { actions, load } from './+page.server';
 import { makeIngredient, makeStep, makeContent } from '#lib/recipes/fixtures.js';
+import { favorites } from '#lib/server/db/schema.js';
 
 // ─── Hoisted mocks ────────────────────────────────────────────────────────────
 
@@ -328,6 +329,7 @@ async function loadData(user: { id: string; email: string } | null = null) {
 	return (await load(makeLoadEvent(user) as never)) as {
 		recipe: { parent: unknown; parentId: number | null };
 		forkCount: number;
+		favoriteCount: number;
 		currentVersion: { ingredients: unknown[] } | null;
 		grams: unknown[];
 		meta: { title: string; description: string; image: string };
@@ -346,6 +348,25 @@ describe('load: fork attribution', () => {
 		selectMock.mockReturnValue(chain([{ count: 2 }]));
 		const data = await loadData();
 		expect(data.forkCount).toBe(2);
+	});
+
+	test('counts the favorites on this recipe, from the favorites table', async () => {
+		findRecipeMock.mockResolvedValue(forkOf({ isPublic: true, authorId: 'original-author' }));
+		// Each count answers by the table it is read from, so the test does not
+		// lean on the order the loader asks in.
+		const favoriteRows = chain([{ count: 7 }]);
+		selectMock.mockImplementation(() => {
+			const q = chain();
+			q.from.mockImplementation((table: unknown) =>
+				table === favorites ? favoriteRows : chain([{ count: 2 }])
+			);
+			return q;
+		});
+		const data = await loadData();
+		expect(data.favoriteCount).toBe(7);
+		expect(data.forkCount).toBe(2);
+		// Counted for this recipe only.
+		expect(columnNames(favoriteRows.where.mock.calls[0][0])).toEqual(['recipe_id']);
 	});
 
 	test('includes a public parent', async () => {

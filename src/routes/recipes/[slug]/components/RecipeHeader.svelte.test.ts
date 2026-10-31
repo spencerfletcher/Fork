@@ -32,6 +32,8 @@ function renderHeader(overrides: Partial<HeaderProps> = {}) {
 			recipe: makeRecipe(),
 			currentVersion: V1,
 			forkCount: 0,
+			favoriteCount: 0,
+			versionCount: 1,
 			tags: [],
 			...overrides
 		}
@@ -66,7 +68,7 @@ describe('RecipeHeader fork attribution', () => {
 		expect(container.querySelector('.attribution')).toBeNull();
 	});
 
-	test('its own forks come before the parent, and only when there are any', () => {
+	test('its own forks are not in the byline: they moved to the stats row', () => {
 		const { container } = renderHeader({
 			forkCount: 2,
 			recipe: makeRecipe({
@@ -75,7 +77,8 @@ describe('RecipeHeader fork attribution', () => {
 				parent: { slug: 'original', title: 'The Original' }
 			})
 		});
-		expect(byline(container)).toBe('By @me · 2 forks · forked from The Original');
+		expect(byline(container)).toBe('By @me · forked from The Original');
+		expect(container.querySelector('.byline a[href$="/forks"]')).toBeNull();
 	});
 
 	test('says the parent is private when the server withheld it', () => {
@@ -125,19 +128,19 @@ describe('RecipeHeader chip', () => {
 // ─── The byline ───────────────────────────────────────────────────────────────
 
 describe('RecipeHeader byline', () => {
-	test('author and forks in one sans line; the version and its history live in the bar', () => {
+	test('the author in one sans line; forks go to the stats row, the version to the bar', () => {
 		const { container } = renderHeader({
 			recipe: makeRecipe({ author: { id: 'u1', username: 'chef' } }),
 			currentVersion: V3,
 			forkCount: 1
 		});
-		expect(byline(container)).toBe('By @chef · 1 fork');
+		expect(byline(container)).toBe('By @chef');
 		expect(container.querySelector('.byline a[href*="/diff"]')).toBeNull();
 		expect(screen.getAllByRole('link', { name: '@chef' })).toHaveLength(1);
 	});
 
 	test('the handle keeps the Username face: the byline overrides neither its family nor its size', () => {
-		// "By" is sans, "@author" is mono clay at the byline's size, "· 1 fork"
+		// "By" is sans, "@author" is mono clay at the byline's size, "· forked from"
 		// is sans. The byline's sans exception was withdrawn on 29 October 2026;
 		// jsdom applies no component CSS, so the override is read from the source.
 		expect(source).not.toMatch(/:global\(\.username\)/);
@@ -149,6 +152,40 @@ describe('RecipeHeader byline', () => {
 		});
 		expect(byline(container)).toBe('By @chef');
 	});
+});
+
+// ─── The stats row ────────────────────────────────────────────────────────────
+
+describe('RecipeHeader stats row', () => {
+	// Spencer, 31 October 2026: "I like the stats row 1b". Forks, favorites and
+	// versions under the byline, each an icon and its words; the words carry
+	// the meaning, the icons are decoration.
+	const stats = (container: HTMLElement) =>
+		[...container.querySelectorAll('.stats > *')].map((el) =>
+			el.textContent!.replace(/\s+/g, ' ').trim()
+		);
+
+	test('reads forks, favorites, versions, in that order, under the byline', () => {
+		const { container } = renderHeader({ forkCount: 2, favoriteCount: 14, versionCount: 3 });
+		expect(stats(container)).toEqual(['2 forks', '14 favorites', '3 versions']);
+		const row = container.querySelector('.stats')!;
+		const line = container.querySelector('.byline')!;
+		expect(line.compareDocumentPosition(row) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+		expect(row.compareDocumentPosition(container.querySelector('.description')!)).toBe(
+			Node.DOCUMENT_POSITION_FOLLOWING
+		);
+	});
+
+	test('one of each is singular', () => {
+		const { container } = renderHeader({ forkCount: 1, favoriteCount: 1, versionCount: 1 });
+		expect(stats(container)).toEqual(['1 fork', '1 favorite', '1 version']);
+	});
+
+	test('none says so in words, and an empty count is not a link', () => {
+		const { container } = renderHeader({ forkCount: 0, favoriteCount: 0, versionCount: 1 });
+		expect(stats(container)).toEqual(['No forks', 'No favorites', '1 version']);
+		expect(container.querySelector('.stats a')).toBeNull();
+	});
 
 	test('the fork count links to the list of forks', () => {
 		renderHeader({ forkCount: 2, recipe: makeRecipe({ slug: 'classic-cookies' }) });
@@ -158,12 +195,36 @@ describe('RecipeHeader byline', () => {
 		);
 	});
 
-	test('forks are plural and absent when there are none', () => {
-		const { container, unmount } = renderHeader({ forkCount: 2 });
-		expect(byline(container)).toContain('2 forks');
-		unmount();
-		const second = renderHeader({ forkCount: 0 });
-		expect(byline(second.container)).not.toMatch(/fork/);
+	test('the version count links to the version bar, which only exists with two or more', () => {
+		renderHeader({ versionCount: 3 });
+		expect(screen.getByRole('link', { name: '3 versions' })).toHaveAttribute('href', '#versions');
+	});
+
+	test('favorites are plain text, never a link', () => {
+		const { container } = renderHeader({ favoriteCount: 14 });
+		expect(screen.queryByRole('link', { name: /favorite/ })).toBeNull();
+		expect(stats(container)).toContain('14 favorites');
+	});
+
+	test('each item carries a 16px icon hidden from assistive tech', () => {
+		const { container } = renderHeader({ forkCount: 2, favoriteCount: 3, versionCount: 3 });
+		const icons = container.querySelectorAll('.stats svg');
+		expect(icons).toHaveLength(3);
+		for (const icon of icons) {
+			expect(icon).toHaveAttribute('aria-hidden', 'true');
+			expect(icon).toHaveClass('size-4');
+		}
+	});
+
+	test('the row takes the byline size, so the header keeps one metadata size', () => {
+		// jsdom applies no component CSS, so the rules are read from the source.
+		const rule = (name: string) =>
+			source.match(new RegExp(`\\n\\t\\.${name} \\{[^}]*\\}`))?.[0] ?? '';
+		const size = (css: string) => css.match(/font-size: ([^;]+);/)?.[1];
+		expect(size(rule('stats'))).toBeDefined();
+		expect(size(rule('stats'))).toBe(size(rule('byline')));
+		expect(rule('stats')).toMatch(/column-gap: 20px;/);
+		expect(rule('stats')).toMatch(/flex-wrap: wrap;/);
 	});
 });
 

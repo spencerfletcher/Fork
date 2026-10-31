@@ -167,6 +167,19 @@ describe('VersionBar', () => {
 		expect(toggle).toHaveAttribute('aria-expanded', 'true');
 	});
 
+	test("the header's version count lands on the bar as #versions and opens its list", async () => {
+		const { container } = renderBar();
+		expect(container.querySelector('.version-bar')).toHaveAttribute('id', 'versions');
+		const toggle = screen.getByRole('button', { name: '3 versions' });
+		window.location.hash = '#elsewhere';
+		await fireEvent(window, new HashChangeEvent('hashchange'));
+		expect(toggle).toHaveAttribute('aria-expanded', 'false');
+		window.location.hash = '#versions';
+		await fireEvent(window, new HashChangeEvent('hashchange'));
+		expect(toggle).toHaveAttribute('aria-expanded', 'true');
+		window.location.hash = '';
+	});
+
 	test('closed, a click on a link inside the bar does not open the list', async () => {
 		renderBar({ currentVersion: THREE[1], isViewingHistory: true });
 		const back = screen.getByRole('link', { name: 'Back to v3' });

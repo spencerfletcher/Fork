@@ -152,7 +152,8 @@ describe('RecipeActions favorited look', () => {
 		const forced = style.slice(style.indexOf('@media (forced-colors: active)'));
 		expect(forced.length).toBeLessThan(style.length);
 		expect(rule(pressed, forced)).toMatch(/border-width:\s*2px/);
-		const star = rule(`${pressed} svg`, forced);
+		// :global, because the star comes from Icons.svelte and scoped CSS would miss it.
+		const star = rule(`${pressed} :global(svg)`, forced);
 		expect(star).toMatch(/forced-color-adjust:\s*none/);
 		expect(star).toMatch(/fill:\s*Highlight/);
 	});

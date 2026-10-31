@@ -51,10 +51,10 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 		isViewingHistory = found.versionNumber !== latestVersion.versionNumber;
 	}
 
-	// Two independent lookups, one round trip. The fork count is public forks
+	// Independent lookups, one round trip. The fork count is public forks
 	// only, the same rule attachRecipeCounts applies on the lists, so a private
 	// fork cannot inflate the count on a page anyone can read.
-	const [favorite, forkRows] = await Promise.all([
+	const [favorite, forkRows, favoriteRows] = await Promise.all([
 		user
 			? db.query.favorites.findFirst({
 					where: and(eq(favorites.userId, user.id), eq(favorites.recipeId, recipe.id))
@@ -63,15 +63,18 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 		db
 			.select({ count: count() })
 			.from(recipes)
-			.where(and(eq(recipes.parentId, recipe.id), eq(recipes.isPublic, true)))
+			.where(and(eq(recipes.parentId, recipe.id), eq(recipes.isPublic, true))),
+		db.select({ count: count() }).from(favorites).where(eq(favorites.recipeId, recipe.id))
 	]);
 	const isFavorited = !!favorite;
 	const forkCount = Number(forkRows[0]?.count ?? 0);
+	const favoriteCount = Number(favoriteRows[0]?.count ?? 0);
 
 	return {
 		recipe: visibleRecipe,
 		currentVersion,
 		forkCount,
+		favoriteCount,
 		// Weights come from local tables at load time, so the page never pays for
 		// an external lookup; lines the tables do not know get null.
 		grams: currentVersion.ingredients.map(gramsFor),

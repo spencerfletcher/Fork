@@ -64,6 +64,8 @@
 					currentVersion={{ ...currentVersion, servings: stored > 0 ? serves : null }}
 					storedServings={stored}
 					forkCount={data.forkCount}
+					favoriteCount={data.favoriteCount}
+					versionCount={allVersions.length}
 					{tags}>
 					{#snippet actions()}
 						<RecipeActions
