@@ -113,7 +113,7 @@ describe('RecipeMethod', () => {
 		focus.mockRestore();
 	});
 
-	test('the numeral ends a 2ch column of its own face, 10px from the text, with one digit or two', () => {
+	test('the numeral ends a 2ch column of its own face, 16px from the text, with one digit or two', () => {
 		const steps = Array.from({ length: 12 }, (_, i) => makeStep(`Step ${i + 1}.`));
 		render(RecipeMethod, { props: { storageKey: KEY, steps } });
 		// jsdom lays nothing out, so the gaps are pinned as the classes that make
@@ -123,7 +123,7 @@ describe('RecipeMethod', () => {
 			const numeral = screen.getByText(n);
 			expect(numeral).toHaveClass('justify-self-end', 'tabular-nums');
 			expect(numeral.parentElement).toHaveClass(
-				'gap-2.5',
+				'gap-4',
 				'[grid-template-columns:2ch_1fr]',
 				'font-serif',
 				'text-[1.125rem]'

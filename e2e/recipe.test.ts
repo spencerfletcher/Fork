@@ -1126,7 +1126,7 @@ test.describe('Recipe detail page', () => {
 			// No hole where a tick circle would sit: the 2ch column holds "12" and
 			// no more, so the text starts close to the row's edge, on one line.
 			for (const [i, gap] of gaps.entries()) {
-				expect(gap.numeralToText, `${width}: step ${i + 1} numeral to text`).toBeCloseTo(10, 0);
+				expect(gap.numeralToText, `${width}: step ${i + 1} numeral to text`).toBeCloseTo(16, 0);
 				expect(
 					gap.numeralInside,
 					`${width}: step ${i + 1} numeral in its column`
