@@ -1,6 +1,7 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/svelte';
 import source from './RecipeForm.svelte?raw';
+import photoSource from './PhotoField.svelte?raw';
 import RecipeForm from './RecipeForm.svelte';
 import { draftOf } from '#lib/recipes/validation.js';
 
@@ -16,7 +17,10 @@ const style = source.slice(source.indexOf('<style>'));
 
 describe('RecipeForm photo buttons', () => {
 	test('reach 44px on a phone or under a coarse pointer', () => {
-		const media = style.slice(style.indexOf('@media (max-width: 699px), (pointer: coarse)'));
+		const photoStyle = photoSource.slice(photoSource.indexOf('<style>'));
+		const media = photoStyle.slice(
+			photoStyle.indexOf('@media (max-width: 699px), (pointer: coarse)')
+		);
 		const block = media.slice(0, media.indexOf('\n\t}\n'));
 		expect(block).toMatch(/\.photo-choose,\s*\.photo-keep\s*{[^}]*min-height:\s*44px/);
 	});

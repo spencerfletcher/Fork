@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { tick, type Snippet } from 'svelte';
+	import type { Snippet } from 'svelte';
 	import { enhance, type SubmitFunction } from '$app/forms';
 	import { beforeNavigate } from '$app/navigation';
 	import {
@@ -18,6 +18,7 @@
 	import TagInput from '#lib/components/ui/TagInput.svelte';
 	import IngredientEditor from './IngredientEditor.svelte';
 	import StepEditor from './StepEditor.svelte';
+	import PhotoField from './PhotoField.svelte';
 
 	let {
 		baseline,
@@ -77,13 +78,8 @@
 			tags: tagKeys(d.tags)
 		});
 
-	// Photo: `chosen` flips the moment a file is picked, since the server will
-	// write it whether or not the preview loads; the preview follows when the
-	// reader finishes. Otherwise the stored photo shows until marked for removal.
+	// A photo is picked: PhotoField sets it, the dirty check and the outcome read it.
 	let chosen = $state(false);
-	let chosenPreview = $state<string | null>(null);
-	let imageInput: HTMLInputElement | undefined = $state();
-	const preview = $derived(chosenPreview ?? (draft.removeImage ? null : imageUrl));
 
 	const dirty = $derived(chosen || serialise(draft) !== serialise(baseline));
 
@@ -114,47 +110,7 @@
 	// A blank message saves the generated one, as the server trims; say so.
 	const savesGenerated = $derived(generated !== null && !draft.commitMessage.trim());
 
-	function onImageChange(e: Event) {
-		const file = (e.target as HTMLInputElement).files?.[0];
-		chosen = !!file;
-		if (!file) {
-			chosenPreview = null;
-			return;
-		}
-		const reader = new FileReader();
-		reader.onload = () => {
-			chosenPreview = reader.result as string;
-		};
-		reader.readAsDataURL(file);
-		draft.removeImage = false;
-	}
-
-	// Each button takes the other's place, so focus follows to it.
-	let keepButton: HTMLButtonElement | undefined = $state();
-	let removeButton: HTMLButtonElement | undefined = $state();
-
-	async function removePhoto() {
-		chosen = false;
-		chosenPreview = null;
-		if (imageInput) imageInput.value = '';
-		if (imageUrl) draft.removeImage = true;
-		await tick();
-		keepButton?.focus();
-	}
-
-	// Undoes the removal alone; Cancel still discards every edit.
-	async function keepPhoto() {
-		draft.removeImage = false;
-		await tick();
-		removeButton?.focus();
-	}
-
-	// The server cannot echo a file back. After a failure the enhanced form is
-	// still mounted and usually keeps the selection; only ask when it is gone,
-	// and stop asking once a file is chosen again.
-	const photoLost = $derived(
-		form?.draft?.hadPhoto === true && !chosen && !imageInput?.files?.length
-	);
+	const numberFields = Object.keys(NUMBER_FIELDS) as NumberField[];
 
 	// Inline errors, one per field name, in the server's own wording. A field is
 	// checked when it is left after an edit, when it blocks a submit, and on
@@ -310,95 +266,32 @@
 					</textarea>
 				</div>
 
-				<div class="field">
-					<label for="image">Photo</label>
-					{#if preview}
-						<div class="photo-preview">
-							<img src={preview} alt="Preview" />
-							<button
-								type="button"
-								class="photo-remove"
-								bind:this={removeButton}
-								onclick={removePhoto}
-								aria-label="Remove photo">
-								×
-							</button>
-						</div>
-					{/if}
-					<!-- The native input, visually hidden, keeps the keyboard and the file
-					     dialog; the ghost button is its label and its picture. Its words
-					     alone name the input, which both labels would otherwise name twice. -->
-					<div class="photo-actions">
-						<label class="btn-ghost photo-choose">
-							<input
-								id="image"
-								name="image"
-								type="file"
-								accept="image/jpeg,image/png,image/webp,image/gif"
-								class="sr-only"
-								aria-labelledby="image-action"
-								bind:this={imageInput}
-								onchange={onImageChange} />
-							<span id="image-action">{preview || chosen ? 'Replace photo' : 'Choose photo'}</span>
-						</label>
-						{#if draft.removeImage}
-							<button
-								type="button"
-								class="btn-ghost photo-keep"
-								bind:this={keepButton}
-								onclick={keepPhoto}>
-								Keep photo
-							</button>
-						{/if}
-					</div>
-					{#if draft.removeImage}
-						<input type="hidden" name="removeImage" value="on" />
-					{/if}
-					{#if photoLost}
-						<p class="form-hint">Please choose the photo again.</p>
-					{/if}
-				</div>
+				<PhotoField
+					{imageUrl}
+					bind:removeImage={draft.removeImage}
+					bind:chosen
+					hadPhoto={form?.draft?.hadPhoto === true} />
 
 				<!-- Number fields stay strings so the dirty check compares like with like;
 				     bind:value on a number input would hand back numbers and null. -->
 				<div class="field-row">
-					<div class="field">
-						<label for="servings">Serves</label>
-						<input
-							id="servings"
-							name="servings"
-							type="number"
-							min="1"
-							value={draft.servings}
-							oninput={(e) => (draft.servings = e.currentTarget.value)}
-							{...aria('servings')} />
-					</div>
-					<div class="field">
-						<label for="prepTimeMinutes">Prep (min)</label>
-						<input
-							id="prepTimeMinutes"
-							name="prepTimeMinutes"
-							type="number"
-							min="0"
-							value={draft.prepTimeMinutes}
-							oninput={(e) => (draft.prepTimeMinutes = e.currentTarget.value)}
-							{...aria('prepTimeMinutes')} />
-					</div>
-					<div class="field">
-						<label for="cookTimeMinutes">Cook (min)</label>
-						<input
-							id="cookTimeMinutes"
-							name="cookTimeMinutes"
-							type="number"
-							min="0"
-							value={draft.cookTimeMinutes}
-							oninput={(e) => (draft.cookTimeMinutes = e.currentTarget.value)}
-							{...aria('cookTimeMinutes')} />
-					</div>
+					{#each numberFields as name (name)}
+						<div class="field">
+							<label for={name}>{NUMBER_FIELDS[name].formLabel}</label>
+							<input
+								id={name}
+								{name}
+								type="number"
+								min={NUMBER_FIELDS[name].min}
+								value={draft[name]}
+								oninput={(e) => (draft[name] = e.currentTarget.value)}
+								{...aria(name)} />
+						</div>
+					{/each}
 					<!-- Under the whole row, in field order: a 150px column would wrap them. -->
-					{@render fieldError('servings')}
-					{@render fieldError('prepTimeMinutes')}
-					{@render fieldError('cookTimeMinutes')}
+					{#each numberFields as name (name)}
+						{@render fieldError(name)}
+					{/each}
 				</div>
 
 				<fieldset class="field field-tags">
@@ -455,39 +348,6 @@
 </form>
 
 <style>
-	.photo-preview {
-		position: relative;
-		width: 100%;
-		height: 150px;
-		border-radius: var(--radius-md);
-		overflow: hidden;
-	}
-
-	.photo-preview img {
-		display: block;
-		width: 100%;
-		height: 100%;
-		object-fit: cover;
-	}
-
-	.photo-remove {
-		position: absolute;
-		top: 8px;
-		right: 8px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 28px;
-		height: 28px;
-		border: 0;
-		border-radius: 50%;
-		background: rgb(26 23 20 / 0.7);
-		color: var(--color-text-cream);
-		font-size: 1rem;
-		line-height: 1;
-		cursor: pointer;
-	}
-
 	/* The row's errors run its full width, a field's 8px under the boxes. */
 	.field-row {
 		row-gap: var(--space-2);
@@ -507,37 +367,6 @@
 	textarea[name='title'] {
 		min-height: calc(1lh + 20px);
 		resize: none;
-	}
-
-	.photo-actions {
-		display: flex;
-		flex-wrap: wrap;
-		gap: var(--space-2);
-	}
-
-	/* One height with the single-line boxes beside it. It is a label, so it
-	   takes back the button's voice from the field labels' eyebrow. */
-	.photo-choose {
-		align-self: flex-start;
-		display: inline-flex;
-		align-items: center;
-		min-height: 41px;
-		padding-block: 0;
-		font-size: 0.9375rem;
-		font-weight: 600;
-		letter-spacing: normal;
-		text-transform: none;
-		color: var(--color-text);
-	}
-
-	.photo-keep {
-		min-height: 41px;
-		padding-block: 0;
-	}
-
-	.photo-choose:has(:focus-visible) {
-		outline: 2px solid var(--color-accent);
-		outline-offset: 2px;
 	}
 
 	/* A mark, not an alarm: Ink 3 at rest. The input's required attribute is
@@ -562,10 +391,6 @@
 	}
 
 	@media (max-width: 699px) {
-		.photo-preview {
-			height: 160px;
-		}
-
 		/* Save and Cancel ride the screen's bottom edge, so a long form saves
 		   without a scroll to its end. Edge to edge across the 18px gutters,
 		   and above the home indicator. */
@@ -589,17 +414,6 @@
 
 	/* A thumb's 44px, on a phone or any touch screen. */
 	@media (max-width: 699px), (pointer: coarse) {
-		.photo-remove {
-			width: 44px;
-			height: 44px;
-		}
-
-		/* The photo buttons leave the boxes' 41px for a thumb's 44px. */
-		.photo-choose,
-		.photo-keep {
-			min-height: 44px;
-		}
-
 		/* The 24px row grown to 44px outward, so the text stays put. */
 		.inline-checkbox {
 			min-height: 44px;

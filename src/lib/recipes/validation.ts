@@ -8,11 +8,11 @@ import { normaliseTagNames } from './tags.js';
 // Largest value a Postgres `integer` column holds.
 const INT4_MAX = 2_147_483_647;
 
-/** The number fields: their name in messages, their floor, and what a whole one counts. */
+/** The number fields: their name in messages, their label on the form, their floor, and what a whole one counts. */
 export const NUMBER_FIELDS = {
-	servings: { label: 'Servings', min: 1, unit: '' },
-	prepTimeMinutes: { label: 'Prep time', min: 0, unit: ' of minutes' },
-	cookTimeMinutes: { label: 'Cook time', min: 0, unit: ' of minutes' }
+	servings: { label: 'Servings', formLabel: 'Serves', min: 1, unit: '' },
+	prepTimeMinutes: { label: 'Prep time', formLabel: 'Prep (min)', min: 0, unit: ' of minutes' },
+	cookTimeMinutes: { label: 'Cook time', formLabel: 'Cook (min)', min: 0, unit: ' of minutes' }
 } as const;
 
 export type NumberField = keyof typeof NUMBER_FIELDS;
