@@ -3,22 +3,24 @@ import { chain } from '#lib/testing/drizzle.js';
 import { invokeAction as invoke, formEvent } from '#lib/testing/actions.js';
 import { actions, load } from './+page.server';
 import { makeIngredient, makeStep, makeContent } from '#lib/recipes/fixtures.js';
-import { favorites } from '#lib/server/db/schema.js';
+import { favorites, recipes } from '#lib/server/db/schema.js';
 
 // ─── Hoisted mocks ────────────────────────────────────────────────────────────
 
 const {
 	findRecipeMock,
 	findFavoriteMock,
-	selectMock,
+	countMock,
 	dbInsert,
+	dbDelete,
 	transactionMock,
 	ensureProfileMock
 } = vi.hoisted(() => ({
 	findRecipeMock: vi.fn(),
 	findFavoriteMock: vi.fn(),
-	selectMock: vi.fn(),
+	countMock: vi.fn(),
 	dbInsert: vi.fn(),
+	dbDelete: vi.fn(),
 	transactionMock: vi.fn(),
 	ensureProfileMock: vi.fn().mockResolvedValue(undefined)
 }));
@@ -29,8 +31,9 @@ vi.mock('#lib/server/db/index.js', () => ({
 			recipes: { findFirst: findRecipeMock },
 			favorites: { findFirst: findFavoriteMock }
 		},
-		select: selectMock,
+		$count: countMock,
 		insert: dbInsert,
+		delete: dbDelete,
 		transaction: transactionMock
 	}
 }));
@@ -340,12 +343,12 @@ describe('load: fork attribution', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		findFavoriteMock.mockResolvedValue(undefined);
-		selectMock.mockReturnValue(chain([{ value: 0 }]));
+		countMock.mockResolvedValue(0);
 	});
 
 	test('counts public forks of the recipe', async () => {
 		findRecipeMock.mockResolvedValue(forkOf({ isPublic: true, authorId: 'original-author' }));
-		selectMock.mockReturnValue(chain([{ count: 2 }]));
+		countMock.mockImplementation(async (table: unknown) => (table === recipes ? 2 : 0));
 		const data = await loadData();
 		expect(data.forkCount).toBe(2);
 	});
@@ -354,19 +357,13 @@ describe('load: fork attribution', () => {
 		findRecipeMock.mockResolvedValue(forkOf({ isPublic: true, authorId: 'original-author' }));
 		// Each count answers by the table it is read from, so the test does not
 		// lean on the order the loader asks in.
-		const favoriteRows = chain([{ count: 7 }]);
-		selectMock.mockImplementation(() => {
-			const q = chain();
-			q.from.mockImplementation((table: unknown) =>
-				table === favorites ? favoriteRows : chain([{ count: 2 }])
-			);
-			return q;
-		});
+		countMock.mockImplementation(async (table: unknown) => (table === favorites ? 7 : 2));
 		const data = await loadData();
 		expect(data.favoriteCount).toBe(7);
 		expect(data.forkCount).toBe(2);
 		// Counted for this recipe only.
-		expect(columnNames(favoriteRows.where.mock.calls[0][0])).toEqual(['recipe_id']);
+		const [, filter] = countMock.mock.calls.find(([table]) => table === favorites)!;
+		expect(columnNames(filter)).toEqual(['recipe_id']);
 	});
 
 	test('includes a public parent', async () => {
@@ -422,12 +419,11 @@ describe('load: fork attribution', () => {
 
 	test('counts only public forks, so private forks stay invisible', async () => {
 		findRecipeMock.mockResolvedValue(forkOf({ isPublic: true, authorId: 'original-author' }));
-		const countQuery = chain([{ count: 1 }]);
-		selectMock.mockReturnValue(countQuery);
 		await loadData();
-		// The where clause must name is_public: a count of every fork would reveal
+		// The filter must name is_public: a count of every fork would reveal
 		// private forks by number.
-		expect(columnNames(countQuery.where.mock.calls[0][0])).toContain('is_public');
+		const [, filter] = countMock.mock.calls.find(([table]) => table === recipes)!;
+		expect(columnNames(filter)).toContain('is_public');
 	});
 });
 
@@ -456,5 +452,31 @@ describe("visibility: another user's private recipe", () => {
 		const result = await invoke(actions.fork as never, makeEvent({ user: FORKER }));
 		expect(result).toMatchObject({ status: 404, body: { message: 'Source recipe not found' } });
 		expect(transactionMock).not.toHaveBeenCalled();
+	});
+});
+
+// ─── toggleFavorite ───────────────────────────────────────────────────────────
+
+describe('toggleFavorite', () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+		findRecipeMock.mockResolvedValue({ ...SOURCE_RECIPE, isPublic: true });
+		dbInsert.mockReturnValue(chain());
+	});
+
+	test('a favorite is removed, and nothing is inserted', async () => {
+		dbDelete.mockReturnValue(chain([{ recipeId: SOURCE_RECIPE.id }]));
+		await invoke(actions.toggleFavorite as never, makeEvent({ user: FORKER }));
+		expect(dbDelete).toHaveBeenCalledWith(favorites);
+		expect(dbInsert).not.toHaveBeenCalled();
+	});
+
+	test('with nothing to remove, the recipe is favorited', async () => {
+		dbDelete.mockReturnValue(chain([]));
+		const insert = chain();
+		dbInsert.mockReturnValue(insert);
+		await invoke(actions.toggleFavorite as never, makeEvent({ user: FORKER }));
+		expect(dbInsert).toHaveBeenCalledWith(favorites);
+		expect(insert.values).toHaveBeenCalledWith({ userId: FORKER.id, recipeId: SOURCE_RECIPE.id });
 	});
 });

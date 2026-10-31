@@ -18,8 +18,7 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 		}
 	});
 
-	if (!recipe) throw error(404, 'Recipe not found');
-	if (!canView(recipe, locals.user)) throw error(404, 'Recipe not found');
+	if (!recipe || !canView(recipe, locals.user)) throw error(404, 'Recipe not found');
 	if (recipe.versions.length < 2) throw error(400, 'Need at least two versions to compare');
 
 	const allVersions = recipe.versions;

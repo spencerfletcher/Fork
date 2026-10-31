@@ -1,7 +1,7 @@
 import { error, redirect } from '@sveltejs/kit';
 import { db } from '#lib/server/db/index.js';
 import { recipes, recipeVersions, recipesToTags, favorites } from '#lib/server/db/schema.js';
-import { eq, desc, and, count } from 'drizzle-orm';
+import { eq, desc, and } from 'drizzle-orm';
 import { slugify, randomSuffix, plural } from '#lib/helpers.js';
 import { ensureProfile } from '#lib/server/profiles.js';
 import type { RecipeContent } from '#lib/recipes/types.js';
@@ -29,8 +29,7 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 		}
 	});
 
-	if (!recipe) throw error(404, 'Recipe not found');
-	if (!canView(recipe, user)) throw error(404, 'Recipe not found');
+	if (!recipe || !canView(recipe, user)) throw error(404, 'Recipe not found');
 
 	// A public fork can come from a private recipe. Readers who can't see that
 	// recipe get no parent data at all; parentId alone lets the page say so.
@@ -54,21 +53,16 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 	// Independent lookups, one round trip. The fork count is public forks
 	// only, the same rule attachRecipeCounts applies on the lists, so a private
 	// fork cannot inflate the count on a page anyone can read.
-	const [favorite, forkRows, favoriteRows] = await Promise.all([
+	const [favorite, forkCount, favoriteCount] = await Promise.all([
 		user
 			? db.query.favorites.findFirst({
 					where: and(eq(favorites.userId, user.id), eq(favorites.recipeId, recipe.id))
 				})
-			: Promise.resolve(undefined),
-		db
-			.select({ count: count() })
-			.from(recipes)
-			.where(and(eq(recipes.parentId, recipe.id), eq(recipes.isPublic, true))),
-		db.select({ count: count() }).from(favorites).where(eq(favorites.recipeId, recipe.id))
+			: undefined,
+		db.$count(recipes, and(eq(recipes.parentId, recipe.id), eq(recipes.isPublic, true))),
+		db.$count(favorites, eq(favorites.recipeId, recipe.id))
 	]);
 	const isFavorited = !!favorite;
-	const forkCount = Number(forkRows[0]?.count ?? 0);
-	const favoriteCount = Number(favoriteRows[0]?.count ?? 0);
 
 	return {
 		recipe: visibleRecipe,
@@ -100,18 +94,14 @@ export const actions: Actions = {
 		const recipe = await db.query.recipes.findFirst({
 			where: eq(recipes.slug, params.slug)
 		});
-		if (!recipe) throw error(404, 'Recipe not found');
-		if (!canView(recipe, user)) throw error(404, 'Recipe not found');
+		if (!recipe || !canView(recipe, user)) throw error(404, 'Recipe not found');
 
-		const existing = await db.query.favorites.findFirst({
-			where: and(eq(favorites.userId, user.id), eq(favorites.recipeId, recipe.id))
-		});
-
-		if (existing) {
-			await db
-				.delete(favorites)
-				.where(and(eq(favorites.userId, user.id), eq(favorites.recipeId, recipe.id)));
-		} else {
+		// Unfavorite if it was a favorite; otherwise nothing was deleted, so favorite it.
+		const removed = await db
+			.delete(favorites)
+			.where(and(eq(favorites.userId, user.id), eq(favorites.recipeId, recipe.id)))
+			.returning({ recipeId: favorites.recipeId });
+		if (removed.length === 0) {
 			await db.insert(favorites).values({ userId: user.id, recipeId: recipe.id });
 		}
 	},
@@ -129,8 +119,7 @@ export const actions: Actions = {
 			}
 		});
 
-		if (!source) throw error(404, 'Source recipe not found');
-		if (!canView(source, user)) throw error(404, 'Source recipe not found');
+		if (!source || !canView(source, user)) throw error(404, 'Source recipe not found');
 
 		const latestVersion = source.versions[0];
 		if (!latestVersion) throw error(400, 'Source recipe has no versions');

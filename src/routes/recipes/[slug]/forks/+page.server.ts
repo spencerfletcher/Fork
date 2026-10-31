@@ -11,8 +11,7 @@ import type { PageServerLoad } from './$types';
 // fork carries its first version's commit note, which names where it came from.
 export const load: PageServerLoad = async ({ params, locals: { user } }) => {
 	const recipe = await db.query.recipes.findFirst({ where: eq(recipes.slug, params.slug) });
-	if (!recipe) throw error(404, 'Recipe not found');
-	if (!canView(recipe, user)) throw error(404, 'Recipe not found');
+	if (!recipe || !canView(recipe, user)) throw error(404, 'Recipe not found');
 
 	const forks = await db.query.recipes.findMany({
 		where: and(eq(recipes.parentId, recipe.id), visibleTo(user)),
