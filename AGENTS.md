@@ -47,6 +47,7 @@ Full-stack recipe platform with git-style version control for recipes. Stack: Sv
 - Build recipe content fixtures with the helpers in `src/lib/recipes/fixtures.ts`, never with hand-written object literals, so a shape change touches one file
 - When a stored type changes shape, do the type and every reader as one vertical slice so `svelte-check` is green at the end of the task; server-first ordering is for new features
 - Run `pnpm test:unit` before committing; don't commit with failing unit tests
+- `pnpm test:e2e` runs against its own `fork_e2e` database, reset to the seed every run, so e2e tests may assume the seed; the dev database is never touched
 
 ## Deployment
 

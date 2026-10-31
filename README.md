@@ -136,12 +136,14 @@ Deploying a schema change to the live site is three steps close together: `pnpm 
 
 ```bash
 pnpm test:unit run   # unit + component tests (Vitest)
-pnpm test:e2e        # Playwright; requires a seeded database
+pnpm test:e2e        # Playwright, against its own fork_e2e database
 pnpm check           # svelte-check
 pnpm lint            # eslint + prettier
 ```
 
 Unit tests live next to their source (`Foo.svelte` → `Foo.svelte.test.ts`). Server logic runs in a Node environment, component tests in jsdom; the split is configured in `vite.config.ts`. CI runs type checking, linting, and the unit suite on every push. The Playwright job starts a local Supabase, which replays the migration chain from empty, seeds it, and runs the e2e suite against it.
+
+The e2e suite owns a database: `fork_e2e`, on the same local Supabase stack as the dev database. Before every run, `e2e/global-setup.ts` creates it if missing, applies the migrations and reseeds it (`pnpm db:migrate:e2e`, `pnpm db:seed:e2e`), so tests can assume the seed. Settings come from the committed `.env.e2e`, not `.env.local`. The suite previews on port 4174 and never reuses a running server. The dev `postgres` database is never touched. Auth is shared across the stack, so the suite signs in as its own user, `e2e@fork.local`, and the seed replaces only that one auth user.
 
 ## License
 
