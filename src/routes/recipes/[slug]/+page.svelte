@@ -9,6 +9,7 @@
 	import ServesControl from './components/ServesControl.svelte';
 	import { ticksKey } from './components/ticks';
 	import { parseServes } from '#lib/recipes/scale.js';
+	import { loginHref as buildLoginHref } from '#lib/auth/loginHref.js';
 
 	let { data }: { data: PageData } = $props();
 
@@ -20,9 +21,7 @@
 	const canFork = $derived(!!user && !isOwner && !isViewingHistory);
 	const canFavorite = $derived(!!user && !isViewingHistory);
 	const loginHref = $derived(
-		user
-			? undefined
-			: `/login?redirectTo=${encodeURIComponent(page.url.pathname + page.url.search)}`
+		user ? undefined : buildLoginHref(page.url.pathname + page.url.search)
 	);
 
 	// Serving scaling: a multiplier on the list, never saved. ?serves= sets it

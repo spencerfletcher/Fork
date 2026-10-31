@@ -5,6 +5,7 @@ import pageSource from './+page.svelte?raw';
 import type { PageData } from './$types';
 import { makeContent, makeIngredient } from '#lib/recipes/fixtures.js';
 import { FRACTIONS } from '#lib/recipes/scale.js';
+import { loginHref } from '#lib/auth/loginHref.js';
 
 // The page owns the serves: read from ?serves= on load, scaled into the
 // ingredient list. The control's own behaviour is in ServesControl's tests.
@@ -130,6 +131,16 @@ describe('recipe page title band', () => {
 	test('in forced colours only the pressed section tab keeps its underline', () => {
 		expect(pageSource).toMatch(
 			/@media \(forced-colors: active\) \{\s*\.section-tabs button:not\(\[aria-pressed='true'\]\) \{\s*border-bottom-color: Canvas;/
+		);
+	});
+});
+
+describe('recipe page logged out', () => {
+	test('Fork leads to login and back to this page, query included', () => {
+		load('?serves=8');
+		expect(screen.getByRole('link', { name: /Fork/ })).toHaveAttribute(
+			'href',
+			loginHref('/recipes/cookies?serves=8')
 		);
 	});
 });
