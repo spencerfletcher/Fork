@@ -37,11 +37,14 @@
 		toggle?.focus();
 	}
 
-	// Closed, the whole bar opens the list: a pointer convenience. The toggle
-	// stays the keyboard and ARIA control, and clicks on it or a link are theirs.
+	// Closed, the whole bar opens the list; open, the current line closes it: a
+	// pointer convenience. The toggle stays the keyboard and ARIA control, and
+	// clicks on it or a link are theirs. The history rows below are no target.
 	function onBarClick(event: MouseEvent) {
-		if ((event.target as Element).closest('a, button')) return;
-		open = true;
+		const target = event.target as Element;
+		if (target.closest('a, button')) return;
+		if (!open) open = true;
+		else if (target.closest('.current')) open = false;
 	}
 
 	// The header's "N versions" links here as #versions; landing opens the list.
@@ -148,7 +151,8 @@
 		line-height: 1.6;
 	}
 
-	.version-bar.closed {
+	.version-bar.closed,
+	.current {
 		cursor: pointer;
 	}
 

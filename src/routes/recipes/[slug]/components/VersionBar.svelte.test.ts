@@ -157,14 +157,23 @@ describe('VersionBar', () => {
 		const toggle = screen.getByRole('button', { name: '3 versions' });
 		await fireEvent.click(container.querySelector('.version-bar .current .message')!);
 		expect(toggle).toHaveAttribute('aria-expanded', 'true');
-		// Open, the bar is not a close target: only the toggle closes it.
-		await fireEvent.click(container.querySelector('.version-bar .current .message')!);
-		expect(toggle).toHaveAttribute('aria-expanded', 'true');
 		await fireEvent.click(toggle);
 		expect(toggle).toHaveAttribute('aria-expanded', 'false');
 		// The toggle's own click bubbles to the bar and must not fire twice.
 		await fireEvent.click(toggle);
 		expect(toggle).toHaveAttribute('aria-expanded', 'true');
+	});
+
+	test('open, a click on the current line closes the list; a click on a history row does not', async () => {
+		const { container } = renderBar();
+		const toggle = screen.getByRole('button', { name: '3 versions' });
+		await fireEvent.click(toggle);
+		const row = container.querySelector('#version-history li')!;
+		await fireEvent.click(row);
+		expect(toggle).toHaveAttribute('aria-expanded', 'true');
+		await fireEvent.click(container.querySelector('.version-bar .current .message')!);
+		expect(toggle).toHaveAttribute('aria-expanded', 'false');
+		expect(container.querySelector('#version-history')).not.toBeVisible();
 	});
 
 	test("the header's version count lands on the bar as #versions and opens its list", async () => {
@@ -191,13 +200,13 @@ describe('VersionBar', () => {
 		);
 	});
 
-	test('closed, the bar shows the pointer; open, it does not', async () => {
+	test('closed, the bar shows the pointer; open, only the current line does', async () => {
 		const { container } = renderBar();
 		const bar = container.querySelector('.version-bar')!;
 		expect(bar).toHaveClass('closed');
 		await fireEvent.click(screen.getByRole('button', { name: '3 versions' }));
 		expect(bar).not.toHaveClass('closed');
-		expect(source).toMatch(/\.version-bar\.closed \{[^}]*cursor: pointer;/);
+		expect(source).toMatch(/\.version-bar\.closed,\s*\.current \{[^}]*cursor: pointer;/);
 	});
 
 	test("hover and focus outline each other version's row in Ink 2, never the current line", () => {
