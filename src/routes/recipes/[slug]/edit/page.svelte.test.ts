@@ -20,9 +20,7 @@ vi.mock('$app/forms', () => ({
 
 /** The header's outcome line, matched on its whole text: its version ids sit in spans of their own. */
 const editingLine = (text: string) =>
-	screen.getByText(
-		(_, el) => !!el?.matches('.editing') && el.textContent === text
-	);
+	screen.getByText((_, el) => !!el?.matches('.editing') && el.textContent === text);
 
 /** Runs the captured submit callback as SvelteKit would, returning the finish step. */
 async function startSubmit() {

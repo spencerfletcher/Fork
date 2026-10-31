@@ -15,9 +15,7 @@ vi.mock('$app/forms', () => ({
 
 /** The header's outcome line, matched on its whole text: its version ids sit in spans of their own. */
 const editingLine = (text: string) =>
-	screen.getByText(
-		(_, el) => !!el?.matches('.editing') && el.textContent === text
-	);
+	screen.getByText((_, el) => !!el?.matches('.editing') && el.textContent === text);
 
 beforeEach(() => {
 	captured.submits.length = 0;

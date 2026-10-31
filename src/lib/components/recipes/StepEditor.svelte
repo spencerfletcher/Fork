@@ -27,7 +27,7 @@
 		<code>warning:</code>
 		or
 		<code>substitution:</code>
-		 on its own line.
+		on its own line.
 	</p>
 </div>
 
