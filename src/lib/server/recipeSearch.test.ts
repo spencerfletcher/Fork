@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import { desc } from 'drizzle-orm';
+import { desc, mapColumnsInSQLToAlias } from 'drizzle-orm';
 import { PgDialect } from 'drizzle-orm/pg-core';
 import { recipes } from './db/schema.js';
 import { parseFilters, textSearch } from './recipeSearch.js';
@@ -35,5 +35,16 @@ describe('textSearch', () => {
 		expect(orderBy).toHaveLength(2);
 		expect(new PgDialect().sqlToQuery(orderBy[0]).sql).toContain('ts_rank');
 		expect(orderBy[1]).toEqual(desc(recipes.updatedAt));
+	});
+
+	test('the ingredient subquery keeps its own table inside a relational findMany', () => {
+		// db.query.recipes.findMany rebinds every column in its where to the root
+		// alias; a raw sql fragment would turn recipe_versions.recipe_id into
+		// "recipes"."recipe_id", which does not exist.
+		const { where } = textSearch('cookie');
+		if (!where) throw new Error('expected a condition');
+		const { sql } = new PgDialect().sqlToQuery(mapColumnsInSQLToAlias(where, 'recipes'));
+		expect(sql).toContain('"recipe_versions"."recipe_id" = "recipes"."id"');
+		expect(sql).not.toContain('"recipes"."recipe_id"');
 	});
 });

@@ -1,4 +1,5 @@
-import { desc, or, sql, type SQL } from 'drizzle-orm';
+import { and, desc, eq, exists, or, sql, type SQL } from 'drizzle-orm';
+import { QueryBuilder } from 'drizzle-orm/pg-core';
 import { recipes, recipeVersions } from './db/schema.js';
 
 /** The `?q=` and `?tags=` filters shared by Search and Favorites. */
@@ -20,14 +21,22 @@ export function textSearch(query: string): { where: SQL | undefined; orderBy: SQ
 	const tsQuery = sql`websearch_to_tsquery('english', ${query})`;
 	const where = or(
 		sql`${recipes.fts} @@ ${tsQuery}`,
-		sql`exists (
-			SELECT 1 FROM ${recipeVersions}
-			WHERE ${recipeVersions.recipeId} = ${recipes.id}
-			AND to_tsvector('english', (
-				SELECT coalesce(string_agg(ing->>'name', ' '), '')
-				FROM jsonb_array_elements(${recipeVersions.ingredients}) AS ing
-			)) @@ ${tsQuery}
-		)`
+		// A builder subquery, not a raw sql fragment: db.query.findMany rebinds the
+		// columns of a raw fragment to its root alias ("recipes"."recipe_id").
+		exists(
+			new QueryBuilder()
+				.select({ one: sql`1` })
+				.from(recipeVersions)
+				.where(
+					and(
+						eq(recipeVersions.recipeId, recipes.id),
+						sql`to_tsvector('english', (
+							SELECT coalesce(string_agg(ing->>'name', ' '), '')
+							FROM jsonb_array_elements(${recipeVersions.ingredients}) AS ing
+						)) @@ ${tsQuery}`
+					)
+				)
+		)
 	);
 	return {
 		where,
