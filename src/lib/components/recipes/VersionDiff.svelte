@@ -7,6 +7,7 @@
 		StepDiffRow
 	} from '#lib/recipes/diff.js';
 	import { formatTime } from '#lib/helpers.js';
+	import { NUMBER_FIELDS, type NumberField } from '#lib/recipes/validation.js';
 
 	let {
 		metaDiff,
@@ -32,9 +33,8 @@
 
 	// The measure fields read as the recipe page's measure does: value then
 	// label, "4 to 8 servings", "11 min to 13 min cook".
-	type MeasureField = 'servings' | 'prepTimeMinutes' | 'cookTimeMinutes';
-	const isMeasure = (field: MetaField): field is MeasureField =>
-		field === 'servings' || field === 'prepTimeMinutes' || field === 'cookTimeMinutes';
+	type MeasureField = NumberField;
+	const isMeasure = (field: MetaField): field is MeasureField => field in NUMBER_FIELDS;
 	const measure = (field: MeasureField, value: string | number | null) =>
 		value === null || field === 'servings' ? show(value) : formatTime(Number(value));
 	const measureLabel = (field: MeasureField, to: string | number | null) =>

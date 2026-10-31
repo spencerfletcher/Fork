@@ -35,21 +35,20 @@ export type StepDiffRow =
 			annotation?: AnnotationDiff;
 	  };
 
-export type MetaField =
-	'title' | 'description' | 'imageUrl' | 'servings' | 'prepTimeMinutes' | 'cookTimeMinutes';
-export type MetaDiffRow = {
-	field: MetaField;
-	from: string | number | null;
-	to: string | number | null;
-};
-const META_FIELDS: MetaField[] = [
+const META_FIELDS = [
 	'title',
 	'description',
 	'imageUrl',
 	'servings',
 	'prepTimeMinutes',
 	'cookTimeMinutes'
-];
+] as const;
+export type MetaField = (typeof META_FIELDS)[number];
+export type MetaDiffRow = {
+	field: MetaField;
+	from: string | number | null;
+	to: string | number | null;
+};
 
 // One field's comparable value, normalised the same way changedGroups does.
 function metaValue(content: RecipeContent, field: MetaField): string | number | null {

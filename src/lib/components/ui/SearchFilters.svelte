@@ -14,19 +14,11 @@
 		availableTags: TagChip[];
 	} = $props();
 
-	// Seeded from the props once so the server render is filled in; the effect
-	// below follows later prop changes.
-	// svelte-ignore state_referenced_locally
-	let searchQuery = $state(initialQuery);
-	// svelte-ignore state_referenced_locally
-	let selectedTags = $state<string[]>([...initialTags]);
-
-	// The URL is the source of truth: a navigation (back button, a shared link)
-	// changes the props, and the fields follow rather than keeping stale input.
-	$effect(() => {
-		searchQuery = initialQuery;
-		selectedTags = [...initialTags];
-	});
+	// Writable derived: typing and pressing change them, and the URL stays the
+	// source of truth: a navigation (back button, a shared link) changes the
+	// props, and the fields follow rather than keeping stale input.
+	let searchQuery = $derived(initialQuery);
+	let selectedTags = $derived([...initialTags]);
 
 	// Navigates to the filtered URL. `reset: false` (SvelteKit 3's keepFocus and
 	// noScroll): a pressed filter keeps keyboard focus rather than dropping it to
