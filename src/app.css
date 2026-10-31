@@ -855,6 +855,59 @@
 		cursor: pointer;
 	}
 
+	/* The recipe page's strike rows: the picture of a visually hidden native
+	   checkbox (the row is its label). A Rule 2 circle at rest, an Ink 3 edge
+	   while the row is hovered, marigold with an ink check once ticked. */
+	.tick {
+		position: relative;
+		flex-shrink: 0;
+		width: 16px;
+		height: 16px;
+		border: 1px solid var(--color-border-2);
+		border-radius: 50%;
+	}
+
+	label:hover .tick {
+		border-color: var(--color-text-3);
+	}
+
+	label:has(:checked) .tick {
+		background-color: var(--color-marigold);
+		border-color: var(--color-marigold);
+	}
+
+	/* The check: the bottom and right edges of a small box, turned 45°. */
+	label:has(:checked) .tick::after {
+		content: '';
+		position: absolute;
+		left: 4.5px;
+		top: 1.5px;
+		width: 5px;
+		height: 9px;
+		border-style: solid;
+		border-width: 0 1.5px 1.5px 0;
+		border-color: var(--color-text);
+		transform: rotate(45deg);
+	}
+
+	/* Forced colours strip the marigold fill, so a ticked circle would look
+	   empty: it keeps its own paint, in system colours. */
+	@media (forced-colors: active) {
+		.tick {
+			forced-color-adjust: none;
+			border-color: CanvasText;
+		}
+
+		label:has(:checked) .tick {
+			background-color: Highlight;
+			border-color: Highlight;
+		}
+
+		label:has(:checked) .tick::after {
+			border-color: HighlightText;
+		}
+	}
+
 	.required {
 		color: var(--color-remove);
 	}

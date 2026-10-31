@@ -3,12 +3,14 @@ import { render, screen, fireEvent } from '@testing-library/svelte';
 import { parseIngredientText } from '#lib/recipes/ingredients.js';
 import RecipeIngredients from './RecipeIngredients.svelte';
 import source from './RecipeIngredients.svelte?raw';
+import { readFileSync } from 'node:fs';
 import { ticksKey, loadTicks, saveTicks } from './ticks';
 import { FRACTIONS } from '#lib/recipes/scale.js';
 
 type GramResult = { grams: number; grams2: number | null; approximate: boolean } | null;
 
 const KEY = ticksKey('my-fork', 3, 'ingredients');
+const appCss = readFileSync('src/app.css', 'utf8');
 
 function renderWith(text: string, grams: GramResult[]) {
 	return render(RecipeIngredients, {
@@ -109,41 +111,76 @@ describe('RecipeIngredients', () => {
 		expect(rows()[0]).toHaveClass('has-[:focus-visible]:outline-2');
 	});
 
-	test('each row starts with a visible square that is the picture of its checkbox', () => {
+	test('each row starts with a visible circle that is the picture of its checkbox', () => {
 		renderWith('1 cup flour', [null]);
 		const row = rows()[0];
 		const box = screen.getByRole('checkbox');
 		const tick = row.querySelector('.tick')!;
-		// The input stays native and hidden; the square only draws its state.
+		// The input stays native and hidden; the circle only draws its state,
+		// painted by the shared .tick rules in app.css, not by its own classes.
 		expect(box).toHaveClass('sr-only');
 		expect(tick).toHaveAttribute('aria-hidden', 'true');
-		expect(tick).toHaveClass('group-has-[:checked]:bg-accent');
+		expect(tick.className).not.toMatch(/border-|bg-|rounded|size-/);
 		expect(box.nextElementSibling).toBe(tick);
 		expect(
 			tick.compareDocumentPosition(screen.getByText('1 cup')) & Node.DOCUMENT_POSITION_FOLLOWING
 		).toBeTruthy();
 	});
 
-	test('the square is drawn in Ink 3, and a ticked row turns its text Ink 3, not the square', () => {
+	test('a ticked row turns its text Ink 3, grams included, and keeps its strike', () => {
 		renderWith('1 cup flour', [{ grams: 125, grams2: null, approximate: false }]);
 		const row = rows()[0];
 		const tick = row.querySelector('.tick')!;
-		// Rule 2 was 1.35:1 on the paper; a control's edge needs 3:1.
-		expect(tick).toHaveClass('border-text-3');
-		expect(tick).not.toHaveClass('border-border-2');
 		// Ink 3 on the text, grams included (already Ink 3), 4.9:1 on paper; an
-		// opacity dim fell under 4.5:1 and would turn the clay fill salmon.
+		// opacity dim fell under 4.5:1 and would wash out the marigold fill.
 		expect(row.outerHTML).not.toContain('opacity');
 		expect(row).toHaveClass('has-[:checked]:line-through');
 		expect(tick.nextElementSibling).toHaveClass('group-has-[:checked]:text-text-3');
 		expect(tick.nextElementSibling).toHaveTextContent('1 cup (125g) flour');
 	});
 
-	test('in forced colours the square keeps its own paint, so a tick still shows', () => {
-		expect(source).toMatch(
-			/@media \(forced-colors: active\)\s*\{\s*\.tick\s*\{[^}]*forced-color-adjust: none;[^}]*border-color: CanvasText;/
-		);
-		expect(source).toMatch(/label:has\(:checked\) \.tick\s*\{[^}]*background-color: Highlight;/);
+	test('the tick is styled once, in app.css, not in the component', () => {
+		expect(source).not.toMatch(/<style>/);
+	});
+
+	// Both lists share these rules; they are pinned here once.
+	describe('the shared .tick rules in app.css', () => {
+		const rule = (selector: string) => {
+			const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+			return new RegExp(`(?:^|\\n)\\s*${escaped}\\s*\\{([^}]*)\\}`, 'g');
+		};
+		const bodies = (selector: string) => [...appCss.matchAll(rule(selector))].map((m) => m[1]);
+
+		test('at rest a 16px circle with a 1px Rule 2 edge', () => {
+			const [rest] = bodies('.tick');
+			expect(rest).toMatch(/width: 16px;/);
+			expect(rest).toMatch(/height: 16px;/);
+			expect(rest).toMatch(/border-radius: 50%;/);
+			expect(rest).toMatch(/border: 1px solid var\(--color-border-2\);/);
+		});
+
+		test('hovering the row turns the edge Ink 3', () => {
+			expect(bodies('label:hover .tick')[0]).toMatch(/border-color: var\(--color-text-3\);/);
+		});
+
+		test('ticked, it fills marigold and draws an ink check', () => {
+			const [fill] = bodies('label:has(:checked) .tick');
+			expect(fill).toMatch(/background-color: var\(--color-marigold\);/);
+			expect(fill).toMatch(/border-color: var\(--color-marigold\);/);
+			expect(bodies('label:has(:checked) .tick::after')[0]).toMatch(
+				/border-color: var\(--color-text\);/
+			);
+		});
+
+		test('in forced colours the circle keeps its own paint, so a tick still shows', () => {
+			expect(appCss).toMatch(
+				/@media \(forced-colors: active\)\s*\{\s*\.tick\s*\{[^}]*forced-color-adjust: none;[^}]*border-color: CanvasText;/
+			);
+			expect(appCss).toMatch(/label:has\(:checked\) \.tick\s*\{[^}]*background-color: Highlight;/);
+			expect(appCss).toMatch(
+				/label:has\(:checked\) \.tick::after\s*\{[^}]*border-color: HighlightText;/
+			);
+		});
 	});
 
 	test('each line is a native checkbox named by its text', async () => {

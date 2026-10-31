@@ -43,15 +43,17 @@ describe('RecipeMethod', () => {
 		expect(p).toHaveClass('whitespace-pre-line');
 	});
 
-	test('the square that pictures the checkbox sits in the number column, before the numeral', () => {
+	test('the circle that pictures the checkbox sits in the number column, before the numeral', () => {
 		render(RecipeMethod, { props: { storageKey: KEY, steps: [{ text: 'Mix.' }] } });
 		const tick = screen.getByRole('checkbox').closest('label')!.querySelector('.tick')!;
+		// Painted by the shared .tick rules in app.css (pinned in the ingredients
+		// test), not by its own classes.
 		expect(tick).toHaveAttribute('aria-hidden', 'true');
-		expect(tick).toHaveClass('group-has-[:checked]:bg-accent');
+		expect(tick.className).not.toMatch(/border-|bg-|rounded|size-/);
 		expect(screen.getByRole('checkbox')).toHaveClass('sr-only');
 	});
 
-	test('the square is drawn in Ink 3, and a ticked step turns its numeral and text Ink 3, not the square', () => {
+	test('a ticked step turns its numeral and text Ink 3, not the circle, and keeps its strike', () => {
 		render(RecipeMethod, {
 			props: {
 				storageKey: KEY,
@@ -60,8 +62,6 @@ describe('RecipeMethod', () => {
 		});
 		const row = screen.getByRole('checkbox').closest('label')!;
 		const tick = row.querySelector('.tick')!;
-		expect(tick).toHaveClass('border-text-3');
-		expect(tick).not.toHaveClass('border-border-2');
 		expect(row.outerHTML).not.toContain('opacity');
 		expect(row).toHaveClass('has-[:checked]:line-through');
 		expect(tick).not.toHaveClass('group-has-[:checked]:text-text-3');
@@ -70,11 +70,8 @@ describe('RecipeMethod', () => {
 		}
 	});
 
-	test('in forced colours the square keeps its own paint, so a tick still shows', () => {
-		expect(source).toMatch(
-			/@media \(forced-colors: active\)\s*\{\s*\.tick\s*\{[^}]*forced-color-adjust: none;[^}]*border-color: CanvasText;/
-		);
-		expect(source).toMatch(/label:has\(:checked\) \.tick\s*\{[^}]*background-color: Highlight;/);
+	test('the tick is styled once, in app.css, not in the component', () => {
+		expect(source).not.toMatch(/<style>/);
 	});
 
 	test('each step is a native checkbox named by its text, toggled by clicking the row', async () => {

@@ -40,9 +40,9 @@
 			{@const n = i + 1}
 			<!-- A native checkbox, visually hidden, carries the state and the keyboard
 			     behaviour; the label is the row and takes the struck-through look. The
-			     square before the numeral is the checkbox's picture: an Ink 3 edge, then
-			     full clay when checked (decided 29 October 2026). A ticked step's numeral
-			     and text turn Ink 3, 4.9:1 on paper; the square keeps full clay. The tick keeps
+			     circle before the numeral is the checkbox's picture, drawn by .tick in
+			     app.css. A ticked step's numeral and text turn Ink 3, 4.9:1 on paper;
+			     the circle keeps its marigold. The tick keeps
 			     the start of a 55px column and the numeral its end, so the numeral sits
 			     10px from the text with one digit or two, and every step's text starts on
 			     one edge. The hidden input spans the row's height, so focusing it
@@ -55,10 +55,7 @@
 					checked={ticked.includes(i)}
 					onchange={(e) => toggle(i, e.currentTarget.checked)} />
 				<span class="flex items-baseline justify-between">
-					<span
-						class="tick border-text-3 group-has-[:checked]:bg-accent group-has-[:checked]:border-accent size-3.5 shrink-0 rounded-[3px] border"
-						aria-hidden="true">
-					</span>
+					<span class="tick" aria-hidden="true"></span>
 					<span
 						class="text-accent group-has-[:checked]:text-text-3 font-serif text-[1.125rem] font-medium">
 						{n}
@@ -95,19 +92,3 @@
 		</div>
 	{/if}
 </section>
-
-<style>
-	/* Forced colours strip the clay fill, so a ticked square would look empty:
-	   the square keeps its own paint, in system colours. */
-	@media (forced-colors: active) {
-		.tick {
-			forced-color-adjust: none;
-			border-color: CanvasText;
-		}
-
-		label:has(:checked) .tick {
-			background-color: Highlight;
-			border-color: Highlight;
-		}
-	}
-</style>
