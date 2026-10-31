@@ -10,7 +10,7 @@ export const actions: Actions = {
 		const email = text(formData, 'email').trim();
 
 		if (!email) {
-			return fail(400, { message: 'Enter your email.' });
+			return fail(400, { error: 'Enter your email.' });
 		}
 
 		// Supabase's own recovery flow: it answers the same for an unknown address,
@@ -21,7 +21,7 @@ export const actions: Actions = {
 
 		if (err) {
 			return fail(err.status || 500, {
-				message: 'Could not send the link. Try again in a minute.'
+				error: 'Could not send the link. Try again in a minute.'
 			});
 		}
 

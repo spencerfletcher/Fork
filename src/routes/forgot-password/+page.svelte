@@ -9,7 +9,7 @@
 		form,
 		data
 	}: {
-		form: { message?: string; sent?: boolean; email?: string } | null;
+		form: { error?: string; sent?: boolean; email?: string } | null;
 		data: { meta: { title: string } };
 	} = $props();
 
@@ -53,8 +53,8 @@
 				<p class="auth-subtitle">We'll email you a link to set a new one.</p>
 			</div>
 
-			{#if form?.message}
-				<div class="auth-error" role="alert">{form.message}</div>
+			{#if form?.error}
+				<div class="auth-error" role="alert">{form.error}</div>
 			{/if}
 
 			<form method="POST" use:enhance={submit.submit} class="form">

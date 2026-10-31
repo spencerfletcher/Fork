@@ -16,7 +16,7 @@
 		form,
 		data
 	}: {
-		form: { message?: string; registered?: boolean; errors?: { username?: string } } | null;
+		form: { error?: string; field?: 'username'; registered?: boolean } | null;
 		data: { redirectTo: string | null };
 	} = $props();
 
@@ -41,7 +41,7 @@
 		username = suggestUsername(email);
 	}
 
-	const usernameError = $derived(form?.errors?.username);
+	const usernameError = $derived(form?.field === 'username' ? form.error : undefined);
 
 	// One pattern for the attribute and the rule line. Browsers compile the
 	// attribute with the v flag, so the page reads it the same way.
@@ -61,9 +61,9 @@
 			<p class="auth-subtitle">Start building your personal cookbook</p>
 		</div>
 
-		{#if form?.message}
+		{#if form?.error && !form.field}
 			<div class="auth-error" role="alert">
-				{form.message}
+				{form.error}
 				{#if form.registered}
 					<a href={loginHref(data.redirectTo)}>Log in</a>
 				{/if}

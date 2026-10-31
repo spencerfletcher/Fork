@@ -3,8 +3,7 @@
 	import { pendingEnhance } from '#lib/pendingEnhance.svelte.js';
 	import { PASSWORD_MIN } from '#lib/auth/rules.js';
 
-	let { form, data }: { form: { message?: string } | null; data: { linkValid: boolean } } =
-		$props();
+	let { form, data }: { form: { error?: string } | null; data: { linkValid: boolean } } = $props();
 
 	// Disabled while the request is out, so a second press cannot send it twice.
 	const submit = pendingEnhance();
@@ -18,8 +17,8 @@
 				<p class="auth-subtitle">You'll be logged in once it's set.</p>
 			</div>
 
-			{#if form?.message}
-				<div class="auth-error" role="alert">{form.message}</div>
+			{#if form?.error}
+				<div class="auth-error" role="alert">{form.error}</div>
 			{/if}
 
 			<form method="POST" use:enhance={submit.submit} class="form">

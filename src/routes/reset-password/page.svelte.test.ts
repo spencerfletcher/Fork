@@ -5,7 +5,7 @@ import { PASSWORD_MIN } from '#lib/auth/rules.js';
 
 vi.mock('$app/forms', () => ({ enhance: () => ({ destroy: () => {} }) }));
 
-const renderReset = (linkValid: boolean, form: { message?: string } | null = null) =>
+const renderReset = (linkValid: boolean, form: { error?: string } | null = null) =>
 	render(ResetPasswordPage, { props: { form, data: { linkValid } } as never });
 
 describe('Reset password page', () => {
@@ -21,7 +21,7 @@ describe('Reset password page', () => {
 	});
 
 	test('a failure shows in the alert above the form', () => {
-		renderReset(true, { message: "That's your current password. Choose a new one." });
+		renderReset(true, { error: "That's your current password. Choose a new one." });
 		expect(screen.getByRole('alert')).toHaveTextContent(
 			"That's your current password. Choose a new one."
 		);

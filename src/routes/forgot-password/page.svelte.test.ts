@@ -9,7 +9,7 @@ vi.mock('$app/forms', () => ({ enhance: () => ({ destroy: () => {} }) }));
 // Not the real title, so the test proves the page reads it from the loader.
 const FORM_TITLE = 'Loader title';
 
-type Form = { message?: string; sent?: boolean; email?: string } | null;
+type Form = { error?: string; sent?: boolean; email?: string } | null;
 
 const renderForgot = (form: Form = null) =>
 	render(ForgotPasswordPage, { props: { form, data: { meta: { title: FORM_TITLE } } } as never });
@@ -29,7 +29,7 @@ describe('Forgot password page', () => {
 	});
 
 	test('a failure shows in the alert and keeps the form', () => {
-		renderForgot({ message: 'Could not send the link. Try again in a minute.' });
+		renderForgot({ error: 'Could not send the link. Try again in a minute.' });
 		expect(screen.getByRole('alert')).toHaveTextContent(
 			'Could not send the link. Try again in a minute.'
 		);

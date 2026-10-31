@@ -47,17 +47,17 @@ export const actions: Actions = {
 		const password = text(formData, 'password');
 
 		if (password.length < PASSWORD_MIN) {
-			return fail(400, { message: `Use at least ${PASSWORD_MIN} characters.` });
+			return fail(400, { error: `Use at least ${PASSWORD_MIN} characters.` });
 		}
 		if (!user || cookies.get(_RECOVERY_COOKIE) !== '1') {
-			return fail(401, { message: 'This link has expired. Ask for a new one.' });
+			return fail(401, { error: 'This link has expired. Ask for a new one.' });
 		}
 
 		const { error: err } = await supabase.auth.updateUser({ password });
 
 		if (err) {
 			return fail(err.status || 500, {
-				message:
+				error:
 					err.code === 'same_password'
 						? "That's your current password. Choose a new one."
 						: 'Could not set the password. Try again.'

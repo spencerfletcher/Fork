@@ -25,15 +25,15 @@ export const actions: Actions = {
 		const password = text(formData, 'password');
 
 		if (!email || !password) {
-			return fail(400, { message: 'Email and password are required.' });
+			return fail(400, { error: 'Email and password are required.' });
 		}
 		if (!validUsername(username)) {
-			return fail(400, { errors: { username: USERNAME_MESSAGE } });
+			return fail(400, { error: USERNAME_MESSAGE, field: 'username' });
 		}
 		// Checked before the auth user exists, so a taken handle costs nothing;
 		// ensureProfile still suffixes on the rare race between here and the insert.
 		if (await usernameTaken(username)) {
-			return fail(400, { errors: { username: 'That username is taken' } });
+			return fail(400, { error: 'That username is taken', field: 'username' });
 		}
 
 		const { data, error: err } = await supabase.auth.signUp({ email, password });
@@ -41,7 +41,7 @@ export const actions: Actions = {
 		if (err) {
 			const registered = /already registered/i.test(err.message);
 			return fail(err.status || 500, {
-				message: registered
+				error: registered
 					? 'That email already has an account.'
 					: 'Could not create the account. Try again.',
 				registered

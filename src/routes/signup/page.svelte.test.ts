@@ -14,7 +14,7 @@ vi.mock('$app/forms', () => ({
 	}
 }));
 
-type Form = { message?: string; registered?: boolean; errors?: { username?: string } } | null;
+type Form = { error?: string; field?: 'username'; registered?: boolean } | null;
 
 function renderSignup(form: Form = null, redirectTo: string | null = null) {
 	return render(SignupPage, { props: { form, data: { redirectTo } } as never });
@@ -80,7 +80,7 @@ describe('Sign-up page', () => {
 	});
 
 	test('a username error renders under the field and marks it invalid', () => {
-		renderSignup({ errors: { username: 'That username is taken' } });
+		renderSignup({ error: 'That username is taken', field: 'username' });
 		expect(username()).toHaveAttribute('aria-invalid', 'true');
 		expect(username()).toHaveAccessibleDescription(/That username is taken/);
 		expect(screen.getByText('That username is taken')).toHaveClass('field-error');
@@ -253,19 +253,19 @@ describe('Sign-up page', () => {
 	});
 
 	test('a Supabase failure is announced in the alert block', () => {
-		renderSignup({ message: 'Could not create the account. Try again.' });
+		renderSignup({ error: 'Could not create the account. Try again.' });
 		expect(screen.getByRole('alert')).toHaveTextContent('Could not create the account. Try again.');
 	});
 
 	test('an already registered email offers Log in inline', () => {
-		renderSignup({ message: 'That email already has an account.', registered: true });
+		renderSignup({ error: 'That email already has an account.', registered: true });
 		const alert = screen.getByRole('alert');
 		expect(alert).toHaveTextContent('That email already has an account.');
 		expect(within(alert).getByRole('link', { name: 'Log in' })).toHaveAttribute('href', '/login');
 	});
 
 	test('"Create an account", and "Log in" as the switch, handing back a redirectTo', () => {
-		renderSignup({ message: 'That email already has an account.', registered: true }, '/favorites');
+		renderSignup({ error: 'That email already has an account.', registered: true }, '/favorites');
 		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Create an account');
 		for (const link of screen.getAllByRole('link', { name: 'Log in' })) {
 			expect(link).toHaveAttribute('href', '/login?redirectTo=%2Ffavorites');

@@ -120,7 +120,7 @@ describe('reset-password action', () => {
 		expect(isActionFailure(result)).toBe(true);
 		expect(result).toMatchObject({
 			status: 400,
-			data: { message: `Use at least ${PASSWORD_MIN} characters.` }
+			data: { error: `Use at least ${PASSWORD_MIN} characters.` }
 		});
 		expect(updateUser).not.toHaveBeenCalled();
 	});
@@ -133,7 +133,7 @@ describe('reset-password action', () => {
 
 		expect(result).toMatchObject({
 			status: 401,
-			data: { message: 'This link has expired. Ask for a new one.' }
+			data: { error: 'This link has expired. Ask for a new one.' }
 		});
 		expect(updateUser).not.toHaveBeenCalled();
 	});
@@ -173,7 +173,7 @@ describe('reset-password action', () => {
 
 		expect(result).toMatchObject({
 			status: 422,
-			data: { message: "That's your current password. Choose a new one." }
+			data: { error: "That's your current password. Choose a new one." }
 		});
 	});
 
@@ -187,7 +187,7 @@ describe('reset-password action', () => {
 
 		expect(result).toMatchObject({
 			status: 500,
-			data: { message: 'Could not set the password. Try again.' }
+			data: { error: 'Could not set the password. Try again.' }
 		});
 	});
 });

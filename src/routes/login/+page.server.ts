@@ -18,7 +18,7 @@ export const actions: Actions = {
 		const password = text(formData, 'password');
 
 		if (!email || !password) {
-			return fail(400, { message: 'Email and password are required.' });
+			return fail(400, { error: 'Email and password are required.' });
 		}
 
 		// Use the Supabase client to sign the user in
@@ -34,7 +34,7 @@ export const actions: Actions = {
 				err.code === 'invalid_credentials' || err.message === 'Invalid login credentials'
 					? "That email and password don't match."
 					: 'Could not log in. Try again.';
-			return fail(401, { message });
+			return fail(401, { error: message });
 		}
 
 		// Back to the page that sent them here, or home.

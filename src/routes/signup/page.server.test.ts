@@ -39,7 +39,7 @@ describe('signup action', () => {
 		expect(isActionFailure(result)).toBe(true);
 		expect(result).toMatchObject({
 			status: 400,
-			data: { message: 'Email and password are required.' }
+			data: { error: 'Email and password are required.' }
 		});
 		expect(signUp).not.toHaveBeenCalled();
 	});
@@ -49,7 +49,10 @@ describe('signup action', () => {
 		async (username) => {
 			const result = await invoke(actions.default as never, makeEvent({ ...valid, username }));
 
-			expect(result).toMatchObject({ status: 400, data: { errors: { username: USERNAME_RULE } } });
+			expect(result).toMatchObject({
+				status: 400,
+				data: { error: USERNAME_RULE, field: 'username' }
+			});
 			expect(signUp).not.toHaveBeenCalled();
 		}
 	);
@@ -62,7 +65,7 @@ describe('signup action', () => {
 		expect(usernameTaken).toHaveBeenCalledWith('cook');
 		expect(result).toMatchObject({
 			status: 400,
-			data: { errors: { username: 'That username is taken' } }
+			data: { error: 'That username is taken', field: 'username' }
 		});
 		expect(signUp).not.toHaveBeenCalled();
 	});
@@ -87,7 +90,7 @@ describe('signup action', () => {
 		expect(isActionFailure(result)).toBe(true);
 		expect(result).toMatchObject({
 			status: 429,
-			data: { message: 'Could not create the account. Try again.' }
+			data: { error: 'Could not create the account. Try again.' }
 		});
 		expect(result).not.toMatchObject({ data: { registered: true } });
 	});

@@ -3,7 +3,7 @@
 	import { pendingEnhance } from '#lib/pendingEnhance.svelte.js';
 	import { EMAIL_MESSAGE, emailCheck, firstInvalid } from '#lib/auth/emailCheck.svelte.js';
 
-	let { form, data }: { form: { message?: string } | null; data: { redirectTo: string | null } } =
+	let { form, data }: { form: { error?: string } | null; data: { redirectTo: string | null } } =
 		$props();
 
 	// Disabled while the request is out, so a second press cannot send it twice.
@@ -32,8 +32,8 @@
 			<p class="auth-subtitle">{subtitle}</p>
 		</div>
 
-		{#if form?.message}
-			<div class="auth-error" role="alert">{form.message}</div>
+		{#if form?.error}
+			<div class="auth-error" role="alert">{form.error}</div>
 		{/if}
 
 		<form method="POST" use:enhance={submit.submit} class="form">
