@@ -177,6 +177,8 @@ test.describe('New recipe page', () => {
 
 			await page.getByLabel('Ingredients').fill('2 cups flour');
 			await page.getByLabel('Steps').fill('Mix all ingredients.');
+			// Private, so the guest project's seed counts never see it.
+			await page.getByLabel(/public/i).uncheck();
 
 			await page.getByRole('button', { name: /create recipe/i }).click();
 
@@ -404,6 +406,8 @@ async function createRecipe(page: Page, title: string, servings: string) {
 	await page.locator('input[name="cookTimeMinutes"]').fill('20');
 	await page.getByLabel('Ingredients').fill('2 cups flour');
 	await page.getByLabel('Steps').fill('Mix all ingredients.');
+	// Private, so the guest project's seed counts never see it.
+	await page.getByLabel(/public/i).uncheck();
 	await page.getByRole('button', { name: /create recipe/i }).click();
 	await page.waitForURL(/\/recipes\/(?!new)/);
 	return page.url().split('?')[0];
@@ -470,7 +474,10 @@ test.describe('One save', () => {
 		const url = await createRecipe(page, 'E2E Settings Only', '4');
 		try {
 			await gotoHydrated(page, `${url}/edit`);
-			await page.getByLabel(/public/i).uncheck();
+			// A tag is a setting; the recipe stays private.
+			await page.getByRole('combobox', { name: /tag/i }).focus();
+			await page.keyboard.press('ArrowDown');
+			await page.keyboard.press('Enter');
 			await page.getByRole('button', { name: 'Save', exact: true }).click();
 			await page.waitForURL(url);
 			await expectVersions(page, 1);
