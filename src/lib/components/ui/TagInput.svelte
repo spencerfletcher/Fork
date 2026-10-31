@@ -1,12 +1,13 @@
 <script lang="ts">
 	import { tick } from 'svelte';
 	import { tagKey } from '#lib/recipes/tags.js';
+	import type { TagChip } from '#lib/recipes/types.js';
 
 	let {
 		allTags,
 		selected = $bindable([])
 	}: {
-		allTags: Array<{ id: number; name: string; slug: string }>;
+		allTags: TagChip[];
 		selected?: string[];
 	} = $props();
 
@@ -35,6 +36,11 @@
 
 	const showDropdown = $derived(open && (suggestions.length > 0 || canCreate));
 	const count = $derived(suggestions.length + (canCreate ? 1 : 0));
+
+	function close() {
+		open = false;
+		active = -1;
+	}
 
 	function pick(name: string) {
 		if (!isSelected(name)) selected = [...selected, name];
@@ -80,10 +86,7 @@
 			else if (canCreate) pick(query.trim());
 		}
 		// Escape closes the list but leaves the caret where it was.
-		if (e.key === 'Escape') {
-			open = false;
-			active = -1;
-		}
+		if (e.key === 'Escape') close();
 	}
 
 	// The list opens below the box, which near the fold (or on a phone) is
@@ -100,33 +103,25 @@
 
 	function handlePointerdown(e: PointerEvent) {
 		pressedInside = rootEl.contains(e.target as Node);
-		if (!pressedInside) {
-			open = false;
-			active = -1;
-		}
+		if (!pressedInside) close();
 	}
 
 	// Close the instant focus leaves the component, with no timer to wait out.
 	function handleBlur(e: FocusEvent) {
 		if (pressedInside || rootEl.contains(e.relatedTarget as Node | null)) return;
-		open = false;
-		active = -1;
+		close();
 	}
 </script>
 
 <svelte:window onpointerdown={handlePointerdown} />
 
 <div class="flex flex-col gap-2" bind:this={rootEl}>
-	<!-- Hidden inputs consumed by the form action -->
-	{#each selected as tag (tag)}
-		<input type="hidden" name="tags" value={tag} />
-	{/each}
-
-	<!-- Selected pills -->
+	<!-- Selected pills, each carrying the hidden input the form action reads. -->
 	{#if selected.length > 0}
 		<div class="flex flex-wrap gap-2">
 			{#each selected as tag (tag)}
 				<span class="tag inline-flex items-center gap-1">
+					<input type="hidden" name="tags" value={tag} />
 					{tag}
 					<button
 						type="button"

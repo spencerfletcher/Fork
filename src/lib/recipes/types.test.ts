@@ -7,7 +7,8 @@ const consumers = [
 	'src/lib/server/tagFilter.ts',
 	'src/lib/components/ui/TagTabs.svelte',
 	'src/lib/components/ui/SearchFilters.svelte',
-	'src/lib/components/recipes/RecipeForm.svelte'
+	'src/lib/components/recipes/RecipeForm.svelte',
+	'src/lib/components/ui/TagInput.svelte'
 ];
 
 describe('TagChip', () => {
