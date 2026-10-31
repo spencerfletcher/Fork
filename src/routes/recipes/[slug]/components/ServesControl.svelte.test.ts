@@ -41,7 +41,7 @@ describe('ServesControl', () => {
 		expect(halve()).toHaveTextContent('÷2');
 		expect(double()).toHaveTextContent('×2');
 		expect(screen.queryByRole('button', { name: 'Reset' })).toBeNull();
-		expect(screen.queryByText(/^×\d/, { ignore: 'button' })).toBeNull();
+		expect(screen.queryByText(/^[\d.]+x$/)).toBeNull();
 	});
 
 	test('×2 doubles and writes ?serves= with a shallow replace', async () => {
@@ -71,7 +71,7 @@ describe('ServesControl', () => {
 
 	test('while scaled, the multiplier shows and Reset is offered', async () => {
 		renderControl(6);
-		expect(screen.getByText(`×${6 / STORED}`)).toBeInTheDocument();
+		expect(screen.getByText(`${6 / STORED}x`)).toBeInTheDocument();
 		expect(box()).toHaveValue('6');
 		expect(screen.getByText('servings')).toBeInTheDocument();
 	});

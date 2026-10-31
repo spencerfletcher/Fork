@@ -60,12 +60,12 @@ describe('recipe page scaling', () => {
 		expect(rows()[1]).toHaveTextContent('salt to taste');
 	});
 
-	test('typing 6 shows ×1.5 and scales', async () => {
+	test('typing 6 shows 1.5x and scales', async () => {
 		load();
 		await fireEvent.change(screen.getByRole('textbox', { name: 'Servings' }), {
 			target: { value: '6' }
 		});
-		expect(screen.getByText('×1.5')).toBeInTheDocument();
+		expect(screen.getByText('1.5x')).toBeInTheDocument();
 		expect(rows()[0]).toHaveTextContent(`1${FRACTIONS['1/2']} cups (188g) flour`);
 	});
 

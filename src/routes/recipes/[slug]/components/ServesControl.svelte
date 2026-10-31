@@ -60,7 +60,7 @@
 	</button>
 	<span class="label">{serves === 1 ? 'serving' : 'servings'}</span>
 	{#if serves !== stored}
-		<span class="factor">×{formatServes(serves / stored)}</span>
+		<span class="factor">{formatServes(serves / stored)}x</span>
 		<button type="button" class="reset" onclick={() => set(stored)}>Reset</button>
 	{/if}
 </span>
