@@ -1,29 +1,34 @@
 // Env loading for Node tooling (seed, migrations, Drizzle Studio, Playwright).
 // The app itself reads $env; this is for scripts that must choose a database
 // on purpose. Extensionless import so Playwright's loader can follow it.
-import { describeDbTarget } from './target';
+import { describeDbTarget, type DbTarget } from './target';
 
-export type DbTarget = 'local' | 'prod';
+export type { DbTarget };
 
-/** `DB_TARGET=prod` selects the hosted project; anything else is the local stack. */
+/**
+ * `DB_TARGET=prod` selects the hosted project, `DB_TARGET=e2e` the suite's own
+ * fork_e2e database on the local stack; anything else is the local stack.
+ */
 export function targetFromEnv(): DbTarget {
-	return process.env.DB_TARGET === 'prod' ? 'prod' : 'local';
+	const target = process.env.DB_TARGET;
+	return target === 'prod' || target === 'e2e' ? target : 'local';
 }
 
 /**
  * Loads the env files for `target` and refuses a mix-up before returning.
- * Variables already in the environment win; then `.env.local` (local only),
- * then `.env` fills whatever is still unset. Prod skips `.env.local` entirely,
+ * Variables already in the environment win; then `.env.local` (local) or
+ * `.env.e2e` (e2e), then `.env` fills whatever is still unset. Prod skips both,
  * so `.env` (hosted) is the only file read.
  */
 export function loadEnv(target: DbTarget) {
 	if (target === 'local') loadFile('.env.local');
+	if (target === 'e2e') loadFile('.env.e2e');
 	loadFile('.env');
 
 	const DATABASE_URL = required('DATABASE_URL');
 	const SUPABASE_URL = required('PUBLIC_SUPABASE_URL');
 	const description = describeDbTarget(
-		target === 'prod',
+		target,
 		DATABASE_URL,
 		SUPABASE_URL,
 		process.env.SUPABASE_PROJECT_ID
