@@ -31,7 +31,7 @@ describe('/+page.svelte', () => {
 		});
 		const headings = screen.getAllByRole('heading', { level: 1 });
 		expect(headings).toHaveLength(1);
-		expect(headings[0]).toHaveTextContent('Recipes, under version control.');
+		expect(headings[0]).toHaveTextContent('Recipes that remember every change.');
 	});
 
 	test('feed mode is browse: the tag tabs and a Recent section', () => {
@@ -134,7 +134,7 @@ describe('/+page.svelte', () => {
 				data: { recipes: [], user: null, profile: null, mode: 'feed', tags: [], sampleDiff: null }
 			}
 		});
-		expect(screen.queryByText('Recipes, under version control.')).not.toBeInTheDocument();
+		expect(screen.queryByText('Recipes that remember every change.')).not.toBeInTheDocument();
 	});
 
 	test('the compare link points at the same version range as the diff shown', () => {

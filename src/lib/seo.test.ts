@@ -46,4 +46,10 @@ describe('pageTitle', () => {
 	test('does not suffix the already-branded default', () => {
 		expect(pageTitle(DEFAULT_META.title)).toBe(DEFAULT_META.title);
 	});
+
+	test('the default title and description speak to a cook, not a programmer', () => {
+		expect(`${DEFAULT_META.title} ${DEFAULT_META.description}`).not.toMatch(
+			/commit|diff|git|version control/i
+		);
+	});
 });

@@ -21,9 +21,9 @@ export const SITE_URL = 'https://recipes.spencerfletcher.com';
 export const DEFAULT_IMAGE = `${SITE_URL}/og.jpg`;
 
 export const DEFAULT_META: PageMeta = {
-	title: 'Fork — git-style version control for recipes',
+	title: 'Fork — recipes that remember every change',
 	description:
-		'Every edit is a version with a commit message, any recipe can be forked, and any two versions can be diffed.',
+		'Keep every version of a recipe with a note on what changed and why, and fork someone’s recipe to make your own copy that still credits them.',
 	image: DEFAULT_IMAGE,
 	type: 'website'
 };

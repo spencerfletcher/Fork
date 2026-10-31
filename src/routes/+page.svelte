@@ -45,7 +45,7 @@
 			</section>
 			{#if data.sampleDiff}
 				<section class="pt-10">
-					<h2 class="eyebrow-label mb-3">A real change, diffed</h2>
+					<h2 class="eyebrow-label mb-3">One real change, before and after</h2>
 					<!-- The premise is that every edit carries a reason, so the sample has to
 					     show the reason and not only the change. -->
 					<div class="commit-bar">

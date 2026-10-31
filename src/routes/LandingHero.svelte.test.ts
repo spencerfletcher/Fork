@@ -30,4 +30,13 @@ describe('LandingHero', () => {
 		render(LandingHero, { props: {} });
 		expect(screen.queryByRole('link', { name: /see a diff/i })).not.toBeInTheDocument();
 	});
+
+	test('leads with the cooking benefit in plain words, and says what a fork is', () => {
+		// A first-time visitor need not know git (Spencer, 31 October 2026).
+		const { container } = render(LandingHero, { props: {} });
+		const copy = container.textContent ?? '';
+		expect(copy).not.toMatch(/commit|diff|version control|git/i);
+		expect(screen.getByText(/^Fork someone.s recipe/)).toHaveTextContent(/copy/);
+		expect(screen.getByText(/^Fork someone.s recipe/)).toHaveTextContent(/credits/);
+	});
 });

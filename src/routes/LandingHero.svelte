@@ -4,14 +4,16 @@
 
 <section class="hero">
 	<div class="hero-inner">
-		<h1 class="hero-title">Recipes, under version control.</h1>
+		<h1 class="hero-title">Recipes that remember every change.</h1>
 		<!-- The third claim this used to make — that you can compare two versions and
 		     see which ingredient moved — is cut deliberately. The diff immediately
 		     below demonstrates it, and asserting what you are about to show reads as
 		     padding. -->
+		<!-- The cooking benefit first, in a cook's words: no "commit" or "diff", and
+		     "fork" glossed where it first appears (Spencer, 31 October 2026). -->
 		<p class="hero-lede">
-			<span>Every edit is a version with a commit message.</span>
-			<span>Fork any recipe and your changes keep their attribution.</span>
+			<span>Edit a recipe and the old version stays, with a note on what changed.</span>
+			<span>Fork someone’s recipe to adapt your own copy; it still credits them.</span>
 		</p>
 		<div class="hero-actions">
 			<a href="/recipes" class="btn-primary">Browse recipes</a>

@@ -1521,7 +1521,9 @@ test.describe('Landing page (logged out)', () => {
 			const browse = await page.getByRole('heading', { level: 1 }).boundingBox();
 			await page.goto('/');
 			const hero = await page.getByRole('heading', { level: 1 }).boundingBox();
-			const diff = await page.getByRole('heading', { name: 'A real change, diffed' }).boundingBox();
+			const diff = await page
+				.getByRole('heading', { name: 'One real change, before and after' })
+				.boundingBox();
 			// Below 700px the Recent grid is a strip that bleeds to the screen edge
 			// and scrolls sideways, so its first card, not its box, sits on the edge.
 			const grid = await page.locator('.recipe-grid .recipe-card').first().boundingBox();
@@ -1592,7 +1594,7 @@ test.describe('Landing page (logged out)', () => {
 		const panels = () =>
 			page
 				.locator('section')
-				.filter({ hasText: 'A real change, diffed' })
+				.filter({ hasText: 'One real change, before and after' })
 				.first()
 				.locator('section')
 				.filter({ has: page.getByRole('heading', { name: /^(Ingredients|Method)$/ }) });

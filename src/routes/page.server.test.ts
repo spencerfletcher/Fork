@@ -134,7 +134,7 @@ describe('homepage load', () => {
 	test('skips a recipe whose latest two versions are identical, in favor of one that actually differs', async () => {
 		// B has more history than a recipe needs to qualify, but its latest two
 		// versions are a no-op commit (e.g. re-saved with no changes) — the
-		// landing page must not show "A real change, diffed" over an empty diff.
+		// landing page must not show "One real change, before and after" over an empty diff.
 		// C's latest two versions do differ, so C should be picked instead.
 		const showcaseAuthor = { id: 'user-1', username: 'spencerfletcher' };
 		findManyMock.mockResolvedValue([
