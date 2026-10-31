@@ -1,5 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { SEED } from '../src/lib/server/db/seedData';
+import { parseIngredientLine } from '../src/lib/recipes/ingredients';
+import { scaleIngredient } from '../src/lib/recipes/scale';
 
 // These tests assume the DB has been seeded with the demo data in seedData.ts:
 // cookies (3 versions, renamed in v3), a brown-butter fork of it, and a tikka
@@ -1640,6 +1642,45 @@ test.describe('Usernames', () => {
 		expect(handle.family).toMatch(/JetBrains Mono/);
 		expect(line.family).not.toMatch(/JetBrains Mono/);
 		expect(parseFloat(handle.size)).toBeCloseTo(parseFloat(line.size) * 0.9375, 1);
+	});
+});
+
+test.describe('Serving scaling', () => {
+	const latest = SEED[0].versions.at(-1)!;
+	const flour = parseIngredientLine(latest.ingredientsText.trim().split('\n')[0]);
+	const doubled = scaleIngredient(flour, null, 2).ingredient;
+	// The bold measure: the line less its name, since the weight sits between them.
+	const measure = ({ text, name }: { text: string; name: string }) =>
+		text.slice(0, text.length - name.length).trim();
+
+	test('×2 doubles a quantity and the URL, Reset clears both; 44px hits on a phone', async ({
+		page
+	}) => {
+		await page.setViewportSize({ width: 390, height: 900 });
+		await gotoClassicCookies(page);
+		const flourMeasure = page.locator('#ingredients label').first().locator('.font-semibold');
+		await expect(flourMeasure).toHaveText(measure(flour));
+
+		await page.getByRole('button', { name: 'Double servings' }).click();
+		await expect(page.getByRole('textbox', { name: 'Servings' })).toHaveValue(
+			String(latest.servings! * 2)
+		);
+		await expect(flourMeasure).toHaveText(measure(doubled));
+		expect(new URL(page.url()).searchParams.get('serves')).toBe(String(latest.servings! * 2));
+
+		for (const name of ['Halve servings', 'Double servings']) {
+			const box = (await page.getByRole('button', { name }).boundingBox())!;
+			expect(box.width).toBeGreaterThanOrEqual(44);
+			expect(box.height).toBeGreaterThanOrEqual(44);
+		}
+		const input = (await page.getByRole('textbox', { name: 'Servings' }).boundingBox())!;
+		expect(input.height).toBeGreaterThanOrEqual(44);
+		const reset = (await page.getByRole('button', { name: 'Reset' }).boundingBox())!;
+		expect(reset.height).toBeGreaterThanOrEqual(44);
+
+		await page.getByRole('button', { name: 'Reset' }).click();
+		await expect(flourMeasure).toHaveText(measure(flour));
+		expect(new URL(page.url()).searchParams.has('serves')).toBe(false);
 	});
 });
 
