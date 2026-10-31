@@ -321,6 +321,21 @@ Data it needs first: steps that carry their dependencies (which earlier steps ea
 
 ---
 
+## Apps to keep eyes on
+
+Added 31 October 2026 from `research/2026-10-31-feature-research.md`. Check each quarterly; note what they ship that Fork lacks.
+
+- **Fava** (iOS, no site beyond a privacy page): cook log with photos, streaks, follows, likes and comments. The closest thing to the cook-log half of M17 and the social feed.
+- **Morsel**: "Letterboxd for what friends are cooking", the same framing as Fork's social direction.
+- **Cooked This**, **Farelo**: cooking journals with a timeline of meals made; watch how they handle "made it again".
+- **Paprika**: the incumbent for power users; scaling, grocery lists and URL import are its table stakes.
+- **Crouton**, **Mela**: the polish bar on iOS; Crouton's step-by-step cook mode is the reference for M18.
+- **Samsung Food** (ex Whisk): mass-market free tier; watch its social and planning features.
+- **NYT Cooking**: editorial typography and the reading experience; the type benchmark.
+- **Mealie**, **Tandoor**: self-hosted, open source; not competitors for the mainstream, but their vote-ranked request trackers are the best public demand signal (unit conversion, sub-recipes, timers).
+- **Cooklang**: the markup; stays the import and export target.
+- **Beli**, **Letterboxd**, **Strava**: not cooking apps; the social and logging patterns Fork borrows from.
+
 ## Working agreements
 
 These are the ones this project has already been bitten by. They are enforced in CI now, so following them is cheaper than working around them.
