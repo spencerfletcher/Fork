@@ -2,6 +2,10 @@ import { describe, test, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/svelte';
 import ErrorPage from './+error.svelte';
 import source from './+error.svelte?raw';
+import { readFileSync } from 'node:fs';
+import { MISSING_RECIPE_LEDE, SERVER_ERROR_LEDE } from '#lib/errors/copy.js';
+
+const css = readFileSync('src/app.css', 'utf8');
 
 // ─── SvelteKit module mocks ───────────────────────────────────────────────────
 
@@ -71,14 +75,16 @@ describe('compare page error', () => {
 	});
 
 	test('the title balances its lines, so "Version 9 not found" never leaves one word dangling', () => {
-		expect(source).toMatch(/h1\s*{[^}]*text-wrap:\s*balance/);
+		expect(css).toMatch(/\.error-page h1\s*{[^}]*text-wrap:\s*balance/);
+	});
+
+	test("takes the root error page's styles from app.css, not a copy of them", () => {
+		expect(source).not.toContain('<style');
 	});
 
 	test("a 404 takes the root page's missing-recipe lede, goes home, and offers a search", () => {
 		renderError(404, 'Recipe not found');
-		expect(
-			screen.getByText('It may be an old link, or a recipe its author keeps private.')
-		).toBeInTheDocument();
+		expect(screen.getByText(MISSING_RECIPE_LEDE)).toBeInTheDocument();
 		expect(screen.getByRole('link', { name: 'Go home' })).toHaveAttribute('href', '/');
 		const search = screen.getByRole('link', { name: 'Search recipes' });
 		expect(search).toHaveAttribute('href', '/search');
@@ -87,9 +93,7 @@ describe('compare page error', () => {
 
 	test("a 500 takes the root page's lede and goes home, with no search", () => {
 		renderError(500, 'Internal Error');
-		expect(
-			screen.getByText("Something went wrong on Fork's side, not yours. Try again in a moment.")
-		).toBeInTheDocument();
+		expect(screen.getByText(SERVER_ERROR_LEDE)).toBeInTheDocument();
 		expect(screen.getByRole('link', { name: 'Go home' })).toHaveAttribute('href', '/');
 		expect(screen.queryByRole('link', { name: 'Search recipes' })).toBeNull();
 	});

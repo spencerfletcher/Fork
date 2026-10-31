@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import { MISSING_RECIPE_LEDE, SERVER_ERROR_LEDE } from '#lib/errors/copy.js';
 
 	// A bad range is a 400 and the recipe still exists, so the way back is to
 	// it. A 404 means there is no recipe to go back to, so this page answers as
@@ -16,7 +17,7 @@
 <div class="auth-page">
 	<div class="error-page text-center">
 		<h1 class="m-0">Error {page.status} – {page.error?.message || 'An error occurred'}</h1>
-		<p class="lede text-text-2 m-0">
+		<p class="lede text-text-2">
 			{#if oneVersion}
 				Save a change to the recipe, then compare it with the original.
 			{:else if page.error?.versionCount}
@@ -25,9 +26,9 @@
 				Pick two of the recipe's versions to compare.
 			{:else if page.status === 404}
 				<!-- The root error page's ledes, word for word. -->
-				It may be an old link, or a recipe its author keeps private.
+				{MISSING_RECIPE_LEDE}
 			{:else if page.status >= 500}
-				Something went wrong on Fork's side, not yours. Try again in a moment.
+				{SERVER_ERROR_LEDE}
 			{/if}
 		</p>
 		{#if recipeUrl && !oneVersion}
@@ -49,29 +50,3 @@
 		{/if}
 	</div>
 </div>
-
-<style>
-	/* The root error page's measure, lede and spacing. */
-	.error-page {
-		max-width: 65ch;
-		padding-bottom: var(--space-7);
-	}
-
-	h1 {
-		text-wrap: balance;
-	}
-
-	.lede {
-		margin-top: 8px;
-		font-size: 1.0625rem;
-		line-height: 1.5;
-	}
-
-	.actions {
-		display: flex;
-		flex-wrap: wrap;
-		justify-content: center;
-		gap: 12px;
-		margin-top: 24px;
-	}
-</style>

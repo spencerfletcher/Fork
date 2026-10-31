@@ -959,6 +959,35 @@
 		background: var(--color-bg);
 	}
 
+	/* Every error page: the code and message in the site h1, centred in an
+	   .auth-page, nothing boxed. */
+	.error-page {
+		max-width: 65ch;
+		/* Optically centred: the bar above is 56px of espresso, so the block
+		   sits a little above the exact middle of the paper. */
+		padding-bottom: var(--space-7);
+	}
+
+	.error-page h1 {
+		text-wrap: balance;
+	}
+
+	/* The margin is set whole here: a utility such as m-0 would outrank this
+	   layer. */
+	.error-page .lede {
+		margin: 8px 0 0;
+		font-size: 1.0625rem;
+		line-height: 1.5;
+	}
+
+	.error-page .actions {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: 12px;
+		margin-top: 24px;
+	}
+
 	.auth-card {
 		width: 100%;
 		max-width: 420px;

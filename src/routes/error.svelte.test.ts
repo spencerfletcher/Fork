@@ -2,6 +2,10 @@ import { describe, test, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/svelte';
 import ErrorPage from './+error.svelte';
 import source from './+error.svelte?raw';
+import { readFileSync } from 'node:fs';
+import { MISSING_RECIPE_LEDE, SERVER_ERROR_LEDE } from '#lib/errors/copy.js';
+
+const css = readFileSync('src/app.css', 'utf8');
 
 // The error page reads the status and the thrown message from page state.
 const state = vi.hoisted(() => ({
@@ -26,7 +30,7 @@ describe('error page', () => {
 		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
 			'Error 500 – Internal Error'
 		);
-		expect(screen.getByText(/on Fork's side/)).toBeInTheDocument();
+		expect(screen.getByText(SERVER_ERROR_LEDE)).toBeInTheDocument();
 		expect(screen.getByRole('link', { name: 'Go home' })).toHaveAttribute('href', '/');
 	});
 
@@ -35,7 +39,7 @@ describe('error page', () => {
 		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
 			'Error 404 – Recipe not found'
 		);
-		expect(screen.getByText(/old link|private/)).toBeInTheDocument();
+		expect(screen.getByText(MISSING_RECIPE_LEDE)).toBeInTheDocument();
 	});
 
 	test("an unknown address titles SvelteKit's default 404 Page not found and blames no private recipe", () => {
@@ -83,6 +87,13 @@ describe('error page', () => {
 	});
 
 	test('the title balances its lines, so "Recipe not found" never leaves one word dangling', () => {
-		expect(source).toMatch(/h1\s*{[^}]*text-wrap:\s*balance/);
+		expect(css).toMatch(/\.error-page h1\s*{[^}]*text-wrap:\s*balance/);
+	});
+
+	test("the measure, lede and actions are app.css's, shared with every error page", () => {
+		expect(source).not.toContain('<style');
+		for (const selector of ['.error-page', '.error-page .lede', '.error-page .actions']) {
+			expect(css).toContain(`\n\t${selector} {`);
+		}
 	});
 });
