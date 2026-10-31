@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import { formatDate, formatTime } from './helpers';
+import { formatDate, formatTime, plural } from './helpers';
 
 describe('formatTime', () => {
 	test('under an hour reads in minutes', () => {
@@ -24,5 +24,13 @@ describe('formatDate', () => {
 
 	test('takes other parts in the same locale', () => {
 		expect(formatDate(date, { month: 'long', year: 'numeric' })).toBe('February 2026');
+	});
+});
+
+describe('plural', () => {
+	test('one takes the noun as it is; any other count adds an s', () => {
+		expect(plural(1, 'fork')).toBe('1 fork');
+		expect(plural(0, 'fork')).toBe('0 forks');
+		expect(plural(2, 'public recipe')).toBe('2 public recipes');
 	});
 });

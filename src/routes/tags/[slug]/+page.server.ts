@@ -5,6 +5,7 @@ import { tags, recipes, recipesToTags } from '#lib/server/db/schema.js';
 import { attachRecipeCounts, CARD_WITH } from '#lib/server/recipeCounts.js';
 import { visibleTags } from '#lib/server/tagFilter.js';
 import { clampDescription } from '#lib/seo.js';
+import { plural } from '#lib/helpers.js';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params }) => {
@@ -35,7 +36,7 @@ export const load: PageServerLoad = async ({ params }) => {
 		meta: {
 			title: tag.name,
 			description: clampDescription(
-				`${withCounts.length} ${tag.name} recipe${withCounts.length === 1 ? '' : 's'} on Fork, each with its full version history.`
+				`${plural(withCounts.length, `${tag.name} recipe`)} on Fork, each with its full version history.`
 			)
 		}
 	};

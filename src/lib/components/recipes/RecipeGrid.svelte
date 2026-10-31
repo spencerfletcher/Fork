@@ -1,6 +1,7 @@
 <script lang="ts" generics="T extends ComponentProps<typeof RecipeCard>['recipe'] & { id: number }">
 	import type { ComponentProps, Snippet } from 'svelte';
 	import RecipeCard from './RecipeCard.svelte';
+	import { plural } from '#lib/helpers.js';
 
 	// A counted list of cards: "3 recipes" over the shared grid. card replaces
 	// the plain card when a page shows more under each (the forks list's note).
@@ -14,8 +15,7 @@
 
 <section class={className}>
 	<h2 class="eyebrow-label section-heading">
-		{recipes.length}
-		{recipes.length === 1 ? noun : `${noun}s`}
+		{plural(recipes.length, noun)}
 	</h2>
 	<div class="recipe-grid">
 		{#each recipes as recipe, i (recipe.id)}

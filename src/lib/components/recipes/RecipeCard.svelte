@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Recipe } from '#lib/server/db/schema.js';
-	import { formatTime } from '#lib/helpers.js';
+	import { formatTime, plural } from '#lib/helpers.js';
 
 	// Only what the card renders, so a column added to the table does not ripple
 	// into every card fixture.
@@ -67,7 +67,7 @@
 		}
 
 		if (recipe.forkCount) {
-			parts.push({ text: `${recipe.forkCount} ${recipe.forkCount === 1 ? 'fork' : 'forks'}` });
+			parts.push({ text: plural(recipe.forkCount, 'fork') });
 		}
 
 		return parts;

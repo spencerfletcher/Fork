@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { parseIngredientText } from '#lib/recipes/ingredients.js';
 	import { limitError } from '#lib/recipes/limits.js';
+	import { plural } from '#lib/helpers.js';
 
 	let { value = $bindable(), error = '' }: { value: string; error?: string } = $props();
 
@@ -25,7 +26,7 @@
 		tooLong
 			? `${tooLong}. Shorten it before saving.`
 			: unparsed.length > 0
-				? `${unparsed.length} ${unparsed.length === 1 ? 'line' : 'lines'} can't be scaled.`
+				? `${plural(unparsed.length, 'line')} can't be scaled.`
 				: ''
 	);
 

@@ -4,6 +4,7 @@ import { and, count, eq } from 'drizzle-orm';
 import { error } from '@sveltejs/kit';
 import { attachRecipeCounts } from '#lib/server/recipeCounts.js';
 import { clampDescription } from '#lib/seo.js';
+import { plural } from '#lib/helpers.js';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params, locals: { user } }) => {
@@ -46,7 +47,7 @@ export const load: PageServerLoad = async ({ params, locals: { user } }) => {
 		meta: {
 			title: `@${profile.username}`,
 			description: clampDescription(
-				`${withCounts.length} public recipe${withCounts.length === 1 ? '' : 's'} and ${commitCount} change${commitCount === 1 ? '' : 's'} on Fork.`
+				`${plural(withCounts.length, 'public recipe')} and ${plural(commitCount, 'change')} on Fork.`
 			)
 		}
 	};

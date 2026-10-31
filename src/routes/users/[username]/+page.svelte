@@ -1,6 +1,6 @@
 <script lang="ts">
 	import RecipeGrid from '#lib/components/recipes/RecipeGrid.svelte';
-	import { formatDate } from '#lib/helpers.js';
+	import { formatDate, plural } from '#lib/helpers.js';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -26,14 +26,14 @@
 				     one line; the recipe count is the section eyebrow's. The dot
 				     between the items is drawn by CSS, never typed. -->
 				<p class="profile-stats">
-					<span class="stat">{commitCount} {commitCount === 1 ? 'change' : 'changes'}</span>
+					<span class="stat">{plural(commitCount, 'change')}</span>
 					<span class="stat profile-since">Member since {memberSince}</span>
 				</p>
 				{#if privateCount > 0}
 					<!-- A way on for the owner: My Recipes lists the private ones too. -->
 					<p class="profile-private">
 						<a href="/recipes">
-							You also have {privateCount} private {privateCount === 1 ? 'recipe' : 'recipes'}
+							You also have {plural(privateCount, 'private recipe')}
 						</a>
 					</p>
 				{/if}

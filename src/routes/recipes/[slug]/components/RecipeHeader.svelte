@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import Username from '#lib/components/ui/Username.svelte';
+	import { plural } from '#lib/helpers.js';
 	import Details from './Details.svelte';
 	import { forkIcon, starIcon } from './Icons.svelte';
 	import type { Recipe } from '#lib/server/db/schema.js';
@@ -44,8 +45,7 @@
 	} = $props();
 
 	// "No forks", "1 fork", "2 forks".
-	const counted = (n: number, word: string) =>
-		n === 0 ? `No ${word}s` : `${n} ${word}${n === 1 ? '' : 's'}`;
+	const counted = (n: number, word: string) => (n === 0 ? `No ${word}s` : plural(n, word));
 </script>
 
 <!-- One face below the title. The byline carries who and the parent, the stats row the counts; the

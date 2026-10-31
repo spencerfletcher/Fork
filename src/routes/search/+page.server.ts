@@ -4,6 +4,7 @@ import { and, inArray } from 'drizzle-orm';
 import { attachRecipeCounts, CARD_WITH } from '#lib/server/recipeCounts.js';
 import { byTagMatches, tagMatchCounts, visibleTags } from '#lib/server/tagFilter.js';
 import { clampDescription } from '#lib/seo.js';
+import { plural } from '#lib/helpers.js';
 import { visibleTo } from '#lib/server/visibility.js';
 import { parseFilters, textSearch } from '#lib/server/recipeSearch.js';
 import type { PageServerLoad } from './$types';
@@ -15,7 +16,7 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 		title: searchQuery ? `“${searchQuery}” — Search` : 'Search',
 		description: clampDescription(
 			searchQuery
-				? `${count} recipe${count === 1 ? '' : 's'} matching “${searchQuery}” on Fork.`
+				? `${plural(count, 'recipe')} matching “${searchQuery}” on Fork.`
 				: 'Search recipes by name, description or ingredient.'
 		)
 	});

@@ -28,6 +28,11 @@ export function formatDate(
 	return date.toLocaleDateString('en-GB', options);
 }
 
+/** A count and its noun: "1 fork", "2 forks". Regular plurals only. */
+export function plural(n: number, word: string): string {
+	return `${n} ${word}${n === 1 ? '' : 's'}`;
+}
+
 /** Eight URL-safe random characters, appended to slugs so titles need not be unique. */
 export function randomSuffix(): string {
 	return crypto.randomUUID().slice(0, 8);

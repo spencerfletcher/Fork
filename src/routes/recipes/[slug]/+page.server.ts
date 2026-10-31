@@ -2,7 +2,7 @@ import { error, redirect } from '@sveltejs/kit';
 import { db } from '#lib/server/db/index.js';
 import { recipes, recipeVersions, recipesToTags, favorites } from '#lib/server/db/schema.js';
 import { eq, desc, and, count } from 'drizzle-orm';
-import { slugify, randomSuffix } from '#lib/helpers.js';
+import { slugify, randomSuffix, plural } from '#lib/helpers.js';
 import { ensureProfile } from '#lib/server/profiles.js';
 import type { RecipeContent } from '#lib/recipes/types.js';
 import { recipeCopies } from '#lib/recipes/content.js';
@@ -85,7 +85,7 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 			title: currentVersion.title,
 			description: clampDescription(
 				currentVersion.description ??
-					`${currentVersion.title} on Fork — ${recipe.versions.length} version${recipe.versions.length === 1 ? '' : 's'}, with the full history of what changed and why.`
+					`${currentVersion.title} on Fork — ${plural(recipe.versions.length, 'version')}, with the full history of what changed and why.`
 			),
 			image: absoluteImage(currentVersion.imageUrl),
 			type: 'article' as const
