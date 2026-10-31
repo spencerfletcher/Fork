@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import { formatServes, parseServes } from '#lib/recipes/scale.js';
+	import { MIN_SERVES, formatServes, parseServes } from '#lib/recipes/scale.js';
 
 	let {
 		stored,
@@ -26,8 +26,9 @@
 		goto(url, { shallow: true, replace: true, state: page.state });
 	}
 
-	// Applied on change (blur, or Enter, which blurs). An entry that does not
-	// read as servings is put back to the current value.
+	// Applied on change (blur, Enter, which blurs, or a step of the spinner or
+	// an arrow key). An entry that does not read as servings is put back to the
+	// current value.
 	function apply(input: HTMLInputElement) {
 		const next = parseServes(input.value, serves);
 		input.value = formatServes(next);
@@ -35,11 +36,14 @@
 	}
 </script>
 
-<!-- Text, not type="number": no native ±1 spinner or arrow-key step; the
-     number is typed (Spencer, 31 October 2026). -->
+<!-- The native spinner: the arrows and the up and down keys step by 1, and
+     step="any" keeps a typed 1.5 valid (Spencer, 31 October 2026: "add an up
+     down selector ... regular HTML one is fine"). -->
 <span class="serves">
 	<input
-		type="text"
+		type="number"
+		step="any"
+		min={MIN_SERVES}
 		inputmode="decimal"
 		aria-label="Servings"
 		value={formatServes(serves)}
@@ -71,7 +75,8 @@
 
 	input {
 		box-sizing: border-box;
-		width: 4ch;
+		/* Room for two digits and the spinner's arrows beside them. */
+		width: 5ch;
 		height: 24px;
 		padding: 0;
 		border: 0;
@@ -128,7 +133,6 @@
 		}
 
 		input {
-			width: 4ch;
 			height: 44px;
 			padding-top: 18px;
 			/* iOS zooms into a field under 16px. */

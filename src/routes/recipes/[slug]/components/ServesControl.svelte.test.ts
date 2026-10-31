@@ -1,6 +1,7 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/svelte';
 import ServesControl from './ServesControl.svelte';
+import { MIN_SERVES } from '#lib/recipes/scale.js';
 
 const { goto, page } = vi.hoisted(() => ({
 	goto: vi.fn(),
@@ -19,7 +20,7 @@ function renderControl(serves = STORED, stored = STORED) {
 	return { ...view, onchange, rerender };
 }
 
-const box = () => screen.getByRole<HTMLInputElement>('textbox', { name: 'Servings' });
+const box = () => screen.getByRole<HTMLInputElement>('spinbutton', { name: 'Servings' });
 
 /** The URL handed to the last shallow navigation. */
 function lastUrl(): URL {
@@ -33,12 +34,30 @@ beforeEach(() => goto.mockClear());
 describe('ServesControl', () => {
 	test('shows the stored serves in a decimal box then "servings", with no steps, note or Reset', () => {
 		renderControl();
-		expect(box()).toHaveValue(String(STORED));
+		expect(box()).toHaveValue(STORED);
 		expect(box()).toHaveAttribute('inputmode', 'decimal');
 		expect(screen.getByText('servings')).toBeInTheDocument();
 		// Spencer, 31 October 2026: the ÷2 and ×2 steps were clutter.
 		expect(screen.queryByRole('button')).toBeNull();
 		expect(screen.queryByText(/^[\d.]+x$/)).toBeNull();
+	});
+
+	// Spencer, 31 October 2026: "add an up down selector ... regular HTML one
+	// is fine". step="any" keeps a typed 1.5 valid; the arrows still step by 1.
+	test('the box is a native number spinner from the minimum serves, any step', () => {
+		renderControl();
+		expect(box()).toHaveAttribute('type', 'number');
+		expect(box()).toHaveAttribute('step', 'any');
+		expect(box()).toHaveAttribute('min', String(MIN_SERVES));
+	});
+
+	test('stepping up from the stored serves applies one more, as a change does', async () => {
+		const { onchange } = renderControl();
+		// A browser's arrow step sets the next value and fires change; jsdom
+		// cannot step under step="any", so the e2e spec presses ArrowUp.
+		await fireEvent.change(box(), { target: { value: String(STORED + 1) } });
+		expect(onchange).toHaveBeenCalledWith(STORED + 1);
+		expect(lastUrl().searchParams.get('serves')).toBe(String(STORED + 1));
 	});
 
 	test('typing a custom amount applies it on change and writes ?serves= with a shallow replace', async () => {
@@ -51,7 +70,7 @@ describe('ServesControl', () => {
 	test('while scaled, the multiplier shows and Reset is offered', async () => {
 		renderControl(6);
 		expect(screen.getByText(`${6 / STORED}x`)).toBeInTheDocument();
-		expect(box()).toHaveValue('6');
+		expect(box()).toHaveValue(6);
 		expect(screen.getByText('servings')).toBeInTheDocument();
 	});
 
@@ -73,7 +92,7 @@ describe('ServesControl', () => {
 		await fireEvent.change(box(), { target: { value: 'lots' } });
 		expect(onchange).not.toHaveBeenCalled();
 		expect(goto).not.toHaveBeenCalled();
-		expect(box()).toHaveValue(String(STORED));
+		expect(box()).toHaveValue(STORED);
 	});
 
 	test('Enter in the box blurs it, which applies it', async () => {
@@ -86,7 +105,7 @@ describe('ServesControl', () => {
 	test('the box follows the serves it is given', async () => {
 		const { rerender } = renderControl();
 		await rerender(9);
-		expect(box()).toHaveValue('9');
+		expect(box()).toHaveValue(9);
 	});
 
 	test('one serving reads singular', () => {

@@ -50,14 +50,14 @@ beforeEach(() => goto.mockClear());
 describe('recipe page scaling', () => {
 	test('at the stored serves the box reads them and the lines are as typed', () => {
 		load();
-		expect(screen.getByRole('textbox', { name: 'Servings' })).toHaveValue(String(STORED));
+		expect(screen.getByRole('spinbutton', { name: 'Servings' })).toHaveValue(STORED);
 		expect(rows()[0]).toHaveTextContent('1 cup (125g) flour');
 	});
 
 	test('the control sits in the Ingredients section; the header says Serves N as text', () => {
 		const { container } = load();
 		const ingredients = container.querySelector('#ingredients')!;
-		expect(ingredients).toContainElement(screen.getByRole('textbox', { name: 'Servings' }));
+		expect(ingredients).toContainElement(screen.getByRole('spinbutton', { name: 'Servings' }));
 		const header = container.querySelector('header')!;
 		expect(header.querySelector('input, .serves')).toBeNull();
 		expect(header.querySelector('.details')).toHaveTextContent(`Serves ${STORED}`);
@@ -65,10 +65,10 @@ describe('recipe page scaling', () => {
 
 	test('typing double the serves doubles the quantities; the unscalable line stays', async () => {
 		load();
-		await fireEvent.change(screen.getByRole('textbox', { name: 'Servings' }), {
+		await fireEvent.change(screen.getByRole('spinbutton', { name: 'Servings' }), {
 			target: { value: String(STORED * 2) }
 		});
-		expect(screen.getByRole('textbox', { name: 'Servings' })).toHaveValue(String(STORED * 2));
+		expect(screen.getByRole('spinbutton', { name: 'Servings' })).toHaveValue(STORED * 2);
 		expect(rows()[0]).toHaveTextContent('2 cups (250g) flour');
 		expect(rows()[1]).toHaveTextContent('salt to taste');
 		// The header stays truthful: it says the serves the list is scaled to.
@@ -77,7 +77,7 @@ describe('recipe page scaling', () => {
 
 	test('typing 6 shows 1.5x and scales', async () => {
 		load();
-		await fireEvent.change(screen.getByRole('textbox', { name: 'Servings' }), {
+		await fireEvent.change(screen.getByRole('spinbutton', { name: 'Servings' }), {
 			target: { value: '6' }
 		});
 		expect(screen.getByText('1.5x')).toBeInTheDocument();
@@ -87,20 +87,20 @@ describe('recipe page scaling', () => {
 	test('Reset restores the stored serves and the typed lines', async () => {
 		load('?serves=8');
 		await fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
-		expect(screen.getByRole('textbox', { name: 'Servings' })).toHaveValue(String(STORED));
+		expect(screen.getByRole('spinbutton', { name: 'Servings' })).toHaveValue(STORED);
 		expect(rows()[0]).toHaveTextContent('1 cup (125g) flour');
 		expect(new URL(goto.mock.lastCall![0]).searchParams.has('serves')).toBe(false);
 	});
 
 	test('?serves= on load applies', () => {
 		load('?serves=2');
-		expect(screen.getByRole('textbox', { name: 'Servings' })).toHaveValue('2');
+		expect(screen.getByRole('spinbutton', { name: 'Servings' })).toHaveValue(2);
 		expect(rows()[0]).toHaveTextContent(`${FRACTIONS['1/2']} cup (63g) flour`);
 	});
 
 	test('an invalid ?serves= is ignored', () => {
 		load('?serves=lots');
-		expect(screen.getByRole('textbox', { name: 'Servings' })).toHaveValue(String(STORED));
+		expect(screen.getByRole('spinbutton', { name: 'Servings' })).toHaveValue(STORED);
 		expect(rows()[0]).toHaveTextContent('1 cup (125g) flour');
 	});
 });

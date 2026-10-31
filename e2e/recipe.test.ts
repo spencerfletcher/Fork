@@ -830,7 +830,7 @@ test.describe('Recipe detail page', () => {
 		// The next Tab lands on the scale control at the list's head, not back in
 		// the header; past its box, the first ingredient.
 		await page.keyboard.press('Tab');
-		await expect(page.getByRole('textbox', { name: 'Servings' })).toBeFocused();
+		await expect(page.getByRole('spinbutton', { name: 'Servings' })).toBeFocused();
 		await page.keyboard.press('Tab');
 		await expect(page.locator('#ingredients input[type="checkbox"]').first()).toBeFocused();
 	});
@@ -1747,6 +1747,18 @@ test.describe('Serving scaling', () => {
 	const measure = ({ text, name }: { text: string; name: string }) =>
 		text.slice(0, text.length - name.length).trim();
 
+	test('the up and down keys step the serves by one and apply at once', async ({ page }) => {
+		await page.setViewportSize({ width: 1280, height: 900 });
+		await gotoClassicCookies(page);
+		const servings = page.getByRole('spinbutton', { name: 'Servings' });
+		await servings.press('ArrowUp');
+		await expect(servings).toHaveValue(String(latest.servings! + 1));
+		await expect(page).toHaveURL(new RegExp(`serves=${latest.servings! + 1}`));
+		await expect(page.locator('header .details')).toContainText(`Serves ${latest.servings! + 1}`);
+		await servings.press('ArrowDown');
+		await expect(page).not.toHaveURL(/serves=/);
+	});
+
 	test('typing double the serves doubles a quantity, the header and the URL, Reset clears them; 44px hits on a phone', async ({
 		page
 	}) => {
@@ -1759,8 +1771,9 @@ test.describe('Serving scaling', () => {
 		await expect(measureLine).toContainText(`Serves ${latest.servings}`);
 		// The header is plain text; the control lives with the list it scales.
 		await expect(page.locator('header').getByRole('textbox')).toHaveCount(0);
+		await expect(page.locator('header').getByRole('spinbutton')).toHaveCount(0);
 
-		const servings = ingredients.getByRole('textbox', { name: 'Servings' });
+		const servings = ingredients.getByRole('spinbutton', { name: 'Servings' });
 		await servings.fill(String(latest.servings! * 2));
 		await servings.press('Enter');
 		await expect(servings).toHaveValue(String(latest.servings! * 2));
@@ -1771,7 +1784,7 @@ test.describe('Serving scaling', () => {
 		const reset = (await page.getByRole('button', { name: 'Reset' }).boundingBox())!;
 		expect(reset.width).toBeGreaterThanOrEqual(44);
 		expect(reset.height).toBeGreaterThanOrEqual(44);
-		const input = (await page.getByRole('textbox', { name: 'Servings' }).boundingBox())!;
+		const input = (await page.getByRole('spinbutton', { name: 'Servings' }).boundingBox())!;
 		expect(input.height).toBeGreaterThanOrEqual(44);
 		// Its own row at the end of the column, above the list's first line.
 		const control = (await ingredients.locator('.serves').boundingBox())!;
@@ -1791,7 +1804,7 @@ test.describe('Serving scaling', () => {
 		await page.setViewportSize({ width: 1280, height: 900 });
 		await gotoClassicCookies(page);
 		const ingredients = page.locator('#ingredients');
-		const blank = await ingredients.getByRole('textbox', { name: 'Servings' }).evaluate((el) => {
+		const blank = await ingredients.getByRole('spinbutton', { name: 'Servings' }).evaluate((el) => {
 			const s = getComputedStyle(el);
 			return [s.borderTopWidth, s.borderLeftWidth, s.borderBottomWidth, s.backgroundColor];
 		});
