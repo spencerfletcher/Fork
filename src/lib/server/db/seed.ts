@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { createClient } from '@supabase/supabase-js';
@@ -90,7 +91,8 @@ async function seed() {
 			// search loader's innerJoin, which hides tags with zero recipes.
 			{ name: 'Unused', slug: slugify('Unused') }
 		])
-		.onConflictDoUpdate({ target: tags.name, set: { name: tags.name } })
+		// The incoming slug wins, so a reseed repairs a tag stored with a bad one.
+		.onConflictDoUpdate({ target: tags.name, set: { slug: sql`excluded.slug` } })
 		.returning({ id: tags.id, name: tags.name });
 
 	const tagId = (name: string) => tagRows.find((t) => t.name === name)!.id;
