@@ -310,6 +310,9 @@
 			width: 100%;
 		}
 
+		/* Cook takes its own row under Fork and Favorite, alone or not, so the
+		   band reads as two clean rows (Spencer, 31 October 2026). */
+		.cook,
 		.note {
 			grid-column: 1 / -1;
 		}

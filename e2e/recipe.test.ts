@@ -742,8 +742,9 @@ test.describe('Recipe detail page', () => {
 			await gotoClassicCookies(page);
 			const tabs = page.locator('.section-tabs');
 			await expect(tabs).toBeVisible();
-			// The bar sits inside the first screen, so neither section is a scroll away.
-			expect((await tabs.boundingBox())!.y).toBeLessThan(844);
+			// The band is the header; the bar lands within a screen and a quarter
+			// (Spencer, 31 October 2026: "Drop the first-screen rule for the tabs").
+			expect((await tabs.boundingBox())!.y).toBeLessThan(844 * 1.25);
 			// The tabs are toggle buttons: pressed marks the chosen section.
 			await expect(tabs.getByRole('button', { name: 'Ingredients' })).toHaveAttribute(
 				'aria-pressed',

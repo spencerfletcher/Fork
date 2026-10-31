@@ -288,6 +288,14 @@ describe('RecipeActions Cook toggle', () => {
 		expect(rule).toMatch(/border-color:\s*var\(--color-marigold\)/);
 	});
 
+	test('below 700px Cook spans the whole row under Fork and Favorite, so the band reads as two rows', () => {
+		// Spencer, 31 October 2026: "let Cook span its own full-width row under
+		// Fork and Favorite". jsdom applies no component CSS, so read the source.
+		const style = source.slice(source.indexOf('<style>'));
+		const phone = style.slice(style.indexOf('@media (max-width: 699px)'));
+		expect(phone).toMatch(/\.cook[,\s][^{}]*\{[^}]*grid-column:\s*1 \/ -1/);
+	});
+
 	test('Cook hands back true and writes ?cook=1, keeping a shallow ?serves=', async () => {
 		const oncook = vi.fn();
 		page.shallow = { url: new URL('http://localhost/recipes/cookies?serves=8') };
