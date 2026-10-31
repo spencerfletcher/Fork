@@ -295,4 +295,43 @@ describe('RecipeIngredients', () => {
 		expect(row).toHaveClass('border-b');
 		expect(heading).not.toHaveClass('border-b');
 	});
+
+	// Spencer: scaled items in the accent "to show that it's an estimate".
+	test('at a multiplier the rows scaling changed read clay, measure and weight; the rest stay', () => {
+		render(RecipeIngredients, {
+			props: {
+				ingredients: parseIngredientText(LINES),
+				grams: [{ grams: 281, grams2: null, approximate: false }, null, null],
+				storageKey: KEY,
+				factor: 2
+			}
+		});
+		const [flour, eggs, salt] = rows();
+		expect(flour.querySelector('.font-semibold')).toHaveClass('text-accent');
+		expect(screen.getByText('(562g)')).toHaveClass('text-accent');
+		expect(eggs.querySelector('.font-semibold')).toHaveClass('text-accent');
+		expect(salt.querySelector('.text-accent')).toBeNull();
+		expect(screen.getByText('Scaled quantities are estimates.')).toHaveClass('form-hint');
+	});
+
+	test('unscaled, nothing is clay and there is no estimate note', () => {
+		renderWith(LINES, [{ grams: 281, grams2: null, approximate: false }, null, null]);
+		expect(document.querySelector('label .text-accent')).toBeNull();
+		expect(screen.queryByText(/Scaled quantities/)).toBeNull();
+	});
+
+	test('scaled with whole-item weights, one note says both', () => {
+		render(RecipeIngredients, {
+			props: {
+				ingredients: parseIngredientText(LINES),
+				grams: [null, { grams: 100, grams2: null, approximate: true }, null],
+				storageKey: KEY,
+				factor: 2
+			}
+		});
+		expect(
+			screen.getByText('Scaled quantities and whole-item weights are estimates.')
+		).toBeInTheDocument();
+		expect(screen.queryByText('Whole-item weights are estimates, not exact.')).toBeNull();
+	});
 });

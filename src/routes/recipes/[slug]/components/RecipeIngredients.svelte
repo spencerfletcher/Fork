@@ -72,6 +72,19 @@
 	}
 
 	const anyApproximate = $derived(grams.some((g) => g?.approximate));
+	const anyScaled = $derived(
+		ingredients.some((typed, i) => scaleIngredient(typed, grams[i], factor).ingredient !== typed)
+	);
+	// One note for whatever on the list is an estimate.
+	const note = $derived(
+		anyScaled && anyApproximate
+			? 'Scaled quantities and whole-item weights are estimates.'
+			: anyScaled
+				? 'Scaled quantities are estimates.'
+				: anyApproximate
+					? 'Whole-item weights are estimates, not exact.'
+					: null
+	);
 </script>
 
 <section id="ingredients" class="mb-3 scroll-mt-14">
@@ -85,6 +98,9 @@
 		{#each ingredients as typed, i (i)}
 			{@const { ingredient, grams: result } = scaleIngredient(typed, grams[i], factor)}
 			{@const { bold, after } = parts(ingredient)}
+			<!-- A row scaling changed reads clay, measure and weight, as an estimate
+			     (Spencer, 31 October 2026); ticked, it recedes to Ink 3 like the rest. -->
+			{@const scaled = ingredient !== typed}
 			<!-- A native checkbox, visually hidden, carries the state and the keyboard
 			     behaviour; the label is the row and takes the struck-through look. The
 			     circle at the row start is the checkbox's picture, drawn by .tick in
@@ -100,12 +116,15 @@
 					onchange={(e) => toggle(i, e.currentTarget.checked)} />
 				<span class="tick translate-y-[2px]" aria-hidden="true"></span>
 				<span class="group-has-[:checked]:text-text-3 min-w-0">
-					{#if bold}<span class="font-semibold">{bold}</span>{/if}
+					{#if bold}<span
+							class={['font-semibold', scaled && 'text-accent group-has-[:checked]:text-text-3']}>
+							{bold}
+						</span>{/if}
 					{#if result}
 						<!-- Same size as the line: WebKit strikes each inline box at its own
 						     font metrics, so a smaller span would get a lower, separate line. -->
 						<span
-							class="text-text-3"
+							class={scaled ? 'text-accent group-has-[:checked]:text-text-3' : 'text-text-3'}
 							title={result.approximate
 								? 'Typical weight for a whole item; actual items vary'
 								: undefined}>
@@ -120,10 +139,10 @@
 	<!-- The list's foot: the weights note at the start, Clear ticks at the end,
 	     only while a line is ticked. Clear ticks is Ink 3 at the note's size, a
 	     24px hit, 44px on a phone or under a coarse pointer. -->
-	{#if anyApproximate || ticked.length > 0}
+	{#if note || ticked.length > 0}
 		<div class="flex items-baseline gap-4">
-			{#if anyApproximate}
-				<p class="form-hint">Whole-item weights are estimates, not exact.</p>
+			{#if note}
+				<p class="form-hint">{note}</p>
 			{/if}
 			{#if ticked.length > 0}
 				<button
