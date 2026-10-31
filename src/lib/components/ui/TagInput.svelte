@@ -66,7 +66,9 @@
 			e.preventDefault();
 			open = true;
 			if (count === 0) return;
-			active = e.key === 'ArrowDown' ? (active + 1) % count : active <= 0 ? count - 1 : active - 1;
+			// Both directions wrap: down from the last is the first, up from the first (or none) the last.
+			if (e.key === 'ArrowDown') active = (active + 1) % count;
+			else active = active <= 0 ? count - 1 : active - 1;
 			tick().then(() =>
 				document.getElementById(`tag-option-${active}`)?.scrollIntoView?.({ block: 'nearest' })
 			);

@@ -129,15 +129,15 @@
 		const el = target as HTMLInputElement | HTMLTextAreaElement;
 		const name = el?.name;
 		if (!name || !(name in REQUIRED_MESSAGES || name in NUMBER_FIELDS)) return;
-		const v = el.validity;
+		errors[name] = validityMessage(name, el.validity);
+	}
+
+	function validityMessage(name: string, v: ValidityState): string {
+		if (v.valid) return '';
+		if (v.valueMissing) return REQUIRED_MESSAGES[name as keyof typeof REQUIRED_MESSAGES];
 		// Not whole before below the floor, in the server's order, so -1.5 says the same in both.
-		errors[name] = v.valid
-			? ''
-			: v.valueMissing
-				? REQUIRED_MESSAGES[name as keyof typeof REQUIRED_MESSAGES]
-				: v.rangeUnderflow && !v.stepMismatch
-					? numberMessages(name as NumberField).belowMin
-					: numberMessages(name as NumberField).whole;
+		const messages = numberMessages(name as NumberField);
+		return v.rangeUnderflow && !v.stepMismatch ? messages.belowMin : messages.whole;
 	}
 
 	// A server message that names a field is shown there and focuses it.

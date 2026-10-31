@@ -37,14 +37,9 @@
 	const isMeasure = (field: MetaField): field is MeasureField => field in NUMBER_FIELDS;
 	const measure = (field: MeasureField, value: string | number | null) =>
 		value === null || field === 'servings' ? show(value) : formatTime(Number(value));
+	const TIME_LABEL = { prepTimeMinutes: 'prep', cookTimeMinutes: 'cook' } as const;
 	const measureLabel = (field: MeasureField, to: string | number | null) =>
-		field === 'prepTimeMinutes'
-			? 'prep'
-			: field === 'cookTimeMinutes'
-				? 'cook'
-				: to === 1
-					? 'serving'
-					: 'servings';
+		field === 'servings' ? (to === 1 ? 'serving' : 'servings') : TIME_LABEL[field];
 
 	const GUTTER = { added: '+', removed: '−', modified: '~', unchanged: ' ' } as const;
 	const PREFIX = { added: 'Added:', removed: 'Removed:', modified: 'Changed:' } as const;

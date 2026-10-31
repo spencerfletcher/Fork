@@ -7,7 +7,7 @@
 
 	// The server rejects oversized text, so the parser is not run on it here
 	// either; the text stays in the box for the user to trim.
-	const tooLong = $derived(limitError(value, 'Ingredients', true));
+	const tooLong = $derived(limitError(value, 'Ingredients'));
 
 	// Reparsed on every keystroke; ingredient lists are short enough that this
 	// is cheaper than a debounce would be to read.

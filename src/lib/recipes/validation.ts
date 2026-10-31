@@ -55,9 +55,9 @@ const optionalInt = (field: NumberField) => {
 };
 
 /** Raw editor text, refused with the same message the editor shows live. */
-const bounded = (label: string, perLine: boolean) =>
+const bounded = (label: typeof INGREDIENTS | typeof STEPS) =>
 	z.string().superRefine((s, ctx) => {
-		const message = limitError(s, label, perLine);
+		const message = limitError(s, label);
 		if (message) ctx.addIssue({ code: 'custom', message });
 	});
 
@@ -70,10 +70,10 @@ const recipeContentSchema = z.object({
 	servings: optionalInt('servings'),
 	prepTimeMinutes: optionalInt('prepTimeMinutes'),
 	cookTimeMinutes: optionalInt('cookTimeMinutes'),
-	ingredients: bounded(INGREDIENTS, true)
+	ingredients: bounded(INGREDIENTS)
 		.transform(parseIngredientText)
 		.pipe(z.array(z.custom<Ingredient>()).min(1, REQUIRED_MESSAGES.ingredients)),
-	steps: bounded(STEPS, false)
+	steps: bounded(STEPS)
 		.transform(parseStepText)
 		.pipe(z.array(z.custom<Step>()).min(1, REQUIRED_MESSAGES.steps))
 });

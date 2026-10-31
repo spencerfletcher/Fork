@@ -56,15 +56,13 @@
 		ingredients.some((typed, i) => scaleIngredient(typed, grams[i], factor).ingredient !== typed)
 	);
 	// One note for whatever on the list is an estimate.
-	const note = $derived(
-		anyScaled && anyApproximate
-			? 'Scaled quantities and whole-item weights are estimates.'
-			: anyScaled
-				? 'Scaled quantities are estimates.'
-				: anyApproximate
-					? 'Whole-item weights are estimates, not exact.'
-					: null
-	);
+	const note = $derived.by(() => {
+		if (anyScaled && anyApproximate)
+			return 'Scaled quantities and whole-item weights are estimates.';
+		if (anyScaled) return 'Scaled quantities are estimates.';
+		if (anyApproximate) return 'Whole-item weights are estimates, not exact.';
+		return null;
+	});
 </script>
 
 <section id="ingredients" class="mb-3 scroll-mt-14">

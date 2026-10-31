@@ -17,13 +17,11 @@
 	const emailField = emailCheck();
 
 	// Sent here from a page that needs an account, the subtitle says why.
-	const subtitle = $derived(
-		!data.redirectTo
-			? 'Log in to your cookbook'
-			: data.redirectTo.split('?')[0] === '/favorites'
-				? 'Log in to see your favorites'
-				: 'Log in to continue'
-	);
+	const subtitle = $derived.by(() => {
+		if (!data.redirectTo) return 'Log in to your cookbook';
+		if (data.redirectTo.split('?')[0] === '/favorites') return 'Log in to see your favorites';
+		return 'Log in to continue';
+	});
 </script>
 
 <div class="auth-page">

@@ -15,15 +15,12 @@
 	// A missing recipe may be one its author made private; a search is the way
 	// on from a shared link to it. Any other missing page is only missing.
 	const recipeMissing = $derived(page.status === 404 && page.url.pathname.startsWith('/recipes/'));
-	const lede = $derived(
-		page.status >= 500
-			? SERVER_ERROR_LEDE
-			: recipeMissing
-				? MISSING_RECIPE_LEDE
-				: page.status === 404
-					? 'There is nothing at this address.'
-					: null
-	);
+	const lede = $derived.by(() => {
+		if (page.status >= 500) return SERVER_ERROR_LEDE;
+		if (recipeMissing) return MISSING_RECIPE_LEDE;
+		if (page.status === 404) return 'There is nothing at this address.';
+		return null;
+	});
 </script>
 
 <!-- Centred on the screen like the login page, nothing boxed (Spencer, 29

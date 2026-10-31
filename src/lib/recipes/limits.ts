@@ -10,9 +10,11 @@ export const fieldTooLong = (label: string) =>
 	`${label} are too long (${MAX_FIELD.toLocaleString('en-US')} characters max)`;
 export const LINE_TOO_LONG = `An ingredient line is too long (${MAX_LINE} characters max)`;
 
-/** The limit message for a field's raw text, or null when it is within bounds. */
-export function limitError(text: string, label: string, perLine: boolean): string | null {
+/** The limit message for a field's raw text, or null when it is within bounds.
+ *  Only ingredient lines reach the parser, so only they are capped per line. */
+export function limitError(text: string, label: 'Ingredients' | 'Steps'): string | null {
 	if (text.length > MAX_FIELD) return fieldTooLong(label);
+	const perLine = label === 'Ingredients';
 	if (perLine && text.split('\n').some((line) => line.length > MAX_LINE)) return LINE_TOO_LONG;
 	return null;
 }
