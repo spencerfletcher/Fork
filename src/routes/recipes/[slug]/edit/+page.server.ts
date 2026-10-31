@@ -1,6 +1,5 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import { db } from '#lib/server/db/index.js';
-import { parseDraftContent, parseSettings, draftOf } from '#lib/recipes/validation.js';
 import { recipes, recipeVersions } from '#lib/server/db/schema.js';
 import { eq, desc, sql } from 'drizzle-orm';
 import type { PageServerLoad, Actions } from './$types';
@@ -12,12 +11,8 @@ import {
 } from '#lib/recipes/content.js';
 import { sameTags } from '#lib/recipes/tags.js';
 import type { RecipeContent } from '#lib/recipes/types.js';
-import {
-	imageFileFrom,
-	uploadRecipeImage,
-	removeRecipeImage,
-	type UploadedImage
-} from '#lib/server/images.js';
+import { removeRecipeImage } from '#lib/server/images.js';
+import { readSubmission, uploadPhoto } from '#lib/server/submission.js';
 import { syncTags, listTags } from '#lib/server/tags.js';
 import { loginHref } from '#lib/auth/loginHref.js';
 
@@ -62,12 +57,9 @@ export const actions: Actions = {
 		if (recipe.authorId !== user.id) throw error(403, 'Not authorized');
 
 		const formData = await request.formData();
-		// Everything as typed, handed back on any failure so nothing is lost.
-		const draft = draftOf(formData);
-		const content = parseDraftContent(draft);
-		if (!content.ok) return fail(400, { error: content.error, draft });
-		const settings = parseSettings(formData);
-		if (!settings.ok) return fail(400, { error: settings.error, draft });
+		const submission = readSubmission(formData);
+		if (!submission.ok) return submission.failure;
+		const { draft, content, settings } = submission;
 
 		if (!/^\d+$/.test(draft.editRevision)) {
 			return fail(400, { error: 'Invalid form state, reload the page', draft });
@@ -77,16 +69,9 @@ export const actions: Actions = {
 		// that counts is the one under the row lock below.
 		if (recipe.editRevision !== editRevision) return fail(409, { error: STALE_MESSAGE, draft });
 
-		// Storage is outside the transaction: upload first, remove on a failed save.
-		let image: UploadedImage | null = null;
-		const file = imageFileFrom(formData);
-		if (file) {
-			try {
-				image = await uploadRecipeImage(supabase, user.id, file);
-			} catch {
-				return fail(400, { error: 'Photo upload failed. Try again.', draft });
-			}
-		}
+		const upload = await uploadPhoto(formData, supabase, user.id, draft);
+		if (!upload.ok) return upload.failure;
+		const { image } = upload;
 
 		let outcome: 'stale' | 'forbidden' | 'saved' | 'unchanged';
 		try {
@@ -110,20 +95,20 @@ export const actions: Actions = {
 				// The photo is content: a new upload or a removal changes the version.
 				// Otherwise the latest version's photo carries forward unchanged.
 				const imageUrl = image ? image.url : draft.removeImage ? null : (latest?.imageUrl ?? null);
-				const submitted: RecipeContent = { ...content.value, imageUrl };
+				const submitted: RecipeContent = { ...content, imageUrl };
 				const changed = latest ? contentChanged(latest, submitted) : true;
 				const copies = recipeCopies(submitted);
 
 				const tagsChanged = !sameTags(
 					recipe.recipesToTags.map((r) => r.tag.name),
-					settings.value.tagNames
+					settings.tagNames
 				);
-				const visibilityChanged = locked.isPublic !== settings.value.isPublic;
+				const visibilityChanged = locked.isPublic !== settings.isPublic;
 
 				const message = draft.commitMessage.trim();
 				if (!changed && !visibilityChanged && !tagsChanged && !message) return 'unchanged';
 
-				if (tagsChanged) await syncTags(tx, recipe.id, settings.value.tagNames);
+				if (tagsChanged) await syncTags(tx, recipe.id, settings.tagNames);
 
 				if (changed || message) {
 					await tx.insert(recipeVersions).values({
@@ -143,7 +128,7 @@ export const actions: Actions = {
 					.update(recipes)
 					.set({
 						...(changed ? copies : {}),
-						...(visibilityChanged ? { isPublic: settings.value.isPublic } : {}),
+						...(visibilityChanged ? { isPublic: settings.isPublic } : {}),
 						editRevision: sql`${recipes.editRevision} + 1`,
 						updatedAt: new Date()
 					})
