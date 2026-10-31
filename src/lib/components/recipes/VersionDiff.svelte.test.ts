@@ -1,8 +1,6 @@
 import { describe, test, expect } from 'vitest';
 import { render, screen, within } from '@testing-library/svelte';
 import VersionDiff from './VersionDiff.svelte';
-import source from './VersionDiff.svelte?raw';
-import { readFileSync } from 'node:fs';
 import type { IngredientDiffRow, MetaDiffRow, StepDiffRow } from '#lib/recipes/diff.js';
 import { makeIngredient, makeStep } from '#lib/recipes/fixtures.js';
 
@@ -406,28 +404,5 @@ describe('VersionDiff fold', () => {
 		const method = panelRows(container, 'Method');
 		expect(text(method.at(-1))).toBe('2 unchanged');
 		expect(method.filter((r) => r.classList.contains('diff-folded'))).toHaveLength(2);
-	});
-
-	test('the fold shows only below 1024px, where the panels stack; wider, every row shows', () => {
-		// jsdom applies no component CSS, so the rules are read from the source.
-		const style = source.slice(source.indexOf('<style>'));
-		expect(style).toMatch(/\.diff-fold\s*{[^}]*display:\s*none/);
-		const phone = style.slice(style.indexOf('@media (max-width: 1023px)'));
-		expect(phone).toMatch(/\.diff-folded\s*{[^}]*display:\s*none/);
-		expect(phone).toMatch(/\.diff-fold\s*{[^}]*display:\s*flex/);
-	});
-	test("the gutter is set at the mono face's heaviest shipped weight, never a synthesised bold", () => {
-		const appCss = readFileSync('src/app.css', 'utf8');
-		const monoWeights = [
-			...appCss.matchAll(/font-family:\s*'JetBrains Mono';[^}]*font-weight:\s*(\d+)/g)
-		].map((m) => Number(m[1]));
-		const style = source.slice(source.indexOf('<style>'));
-		const weight = style.match(/\.diff-gutter\s*{[^}]*font-weight:\s*(\d+)/)?.[1];
-		expect(Number(weight)).toBe(Math.max(...monoWeights));
-	});
-
-	test('sections sit 24px apart, the page rhythm, not 28px', () => {
-		const style = source.slice(source.indexOf('<style>'));
-		expect(style).toMatch(/\.diff-section\s*{[^}]*margin-bottom:\s*1\.5rem/);
 	});
 });

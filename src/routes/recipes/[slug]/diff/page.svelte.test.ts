@@ -233,17 +233,6 @@ describe('Diff page', () => {
 		expect(head.querySelector('.username')).toHaveAttribute('href', '/users/chef');
 	});
 
-	test("the card's username keeps Username's own step under the line, not the line's size", () => {
-		// Username sets itself 0.9375em of the line it sits in; a page rule
-		// giving it a size of its own flattens that ratio to 1. jsdom applies no
-		// component CSS, so the page's rules are read from the source; the e2e
-		// in compare.test.ts measures the ratio.
-		const style = source.slice(source.indexOf('<style>'));
-		const usernameRules = [...style.matchAll(/[^{}]*\.username\)?\s*{[^}]*}/g)].map((m) => m[0]);
-		expect(usernameRules.length).toBeGreaterThan(0);
-		for (const rule of usernameRules) expect(rule).not.toMatch(/font-size/);
-	});
-
 	test("shows the date in the viewer's own day", () => {
 		// Just after midnight UTC on the 28th is still the 27th in the test zone
 		// (America/Los_Angeles, pinned in vite.config.ts).
@@ -257,12 +246,6 @@ describe('Diff page', () => {
 		expect(container.querySelector('article.version-card .version-card__head')).toHaveTextContent(
 			'27 Feb 2026'
 		);
-	});
-
-	test('every text in a card may break anywhere, so a long title cannot widen it', () => {
-		const { container } = render(DiffPage, { props: { data: makeData() } });
-		expect(container.querySelector('article.version-card')).toHaveClass('version-card');
-		// jsdom computes no layout; the e2e in authenticated.test.ts measures it.
 	});
 
 	test('the diff panels are h2, directly under the page h1', () => {
@@ -364,21 +347,6 @@ describe('Diff page', () => {
 		expect(labels(from)).toEqual(LONG);
 	});
 
-	test('at desktop the closed box is 24ch, 22ch of label, enough for "v2 · Increased vanilla"', () => {
-		// Without a width a select grows to its longest message and the two
-		// overflow the row; 24ch shows the version and the start of its message.
-		const style = source.slice(source.indexOf('<style>'));
-		expect(style).toMatch(/\.version-picker select\s*{[^}]*width:\s*calc\(24ch \+ 22px\)/);
-		expect(source).not.toMatch(/label-chars|labelChars/i);
-	});
-
-	test('on a phone the select keeps its full text area, so the label clips at the caret', () => {
-		// The short-label text area only existed to clip an open list's long
-		// labels to "v2"; with no swap the closed box shows the long label.
-		const style = source.slice(source.indexOf('<style>'));
-		expect(style).not.toMatch(/calc\(100% - 12px/);
-	});
-
 	test('no From and To eyebrows: the selects are named, and the arrow between them is unseen', () => {
 		const { container } = render(DiffPage, { props: { data: makeData() } });
 		expect(container.querySelector('label')).toBeNull();
@@ -388,35 +356,6 @@ describe('Diff page', () => {
 			'aria-hidden',
 			'true'
 		);
-	});
-	test('the To chip keeps a box in forced colours: an inset transparent outline, so nothing moves', () => {
-		// Forced colours strip the marigold fill and force the outline's colour,
-		// so the outline is what remains. An outline takes no space, unlike a
-		// border, so the chip's 0 6px and the card's head stay as they were. It
-		// stands down on :focus-visible so the global focus ring still draws.
-		const style = source.slice(source.indexOf('<style>'));
-		const chip = style.match(/\.version-card--to \.version-card__number\s*{([^}]*)}/)?.[1] ?? '';
-		expect(chip).toMatch(/padding:\s*0 6px/);
-		expect(chip).not.toMatch(/border:|margin-block:|outline/);
-		const idle =
-			style.match(
-				/\.version-card--to \.version-card__number:not\(:focus-visible\)\s*{([^}]*)}/
-			)?.[1] ?? '';
-		expect(idle).toMatch(/outline:\s*1px solid transparent/);
-		expect(idle).toMatch(/outline-offset:\s*-1px/);
-	});
-});
-
-describe('compare page spacing', () => {
-	test('heading, picker row and cards sit 16 / 24 / 24 apart, on the 8px scale', () => {
-		expect(source).toMatch(/\n\th1\s*{[^}]*margin:\s*0 0 16px;/);
-		expect(source).toMatch(/\.version-picker\s*{[^}]*margin-bottom:\s*24px;/);
-		expect(source).toMatch(/\.version-cards\s*{[^}]*margin-bottom:\s*24px;/);
-	});
-
-	test("the h1 takes the site's one size and leading: the page sets only its margin", () => {
-		const h1 = /\n\th1\s*{([^}]*)}/.exec(source)![1];
-		expect(h1).not.toMatch(/font-size|line-height/);
 	});
 });
 

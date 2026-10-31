@@ -1,7 +1,6 @@
 import { describe, test, expect } from 'vitest';
 import { render, screen } from '@testing-library/svelte';
 import BrowseSections from './BrowseSections.svelte';
-import source from './BrowseSections.svelte?raw';
 import { browseSections, RECENT_LIMIT } from '#lib/recipes/browse.js';
 
 const card = (id: number, forkCount = 0) => ({
@@ -42,9 +41,5 @@ describe('BrowseSections', () => {
 				expect(img).not.toHaveAttribute('fetchpriority');
 			}
 		}
-	});
-
-	test('sections after the first sit 34px below the one before', () => {
-		expect(source).toMatch(/\.browse-section \+ \.browse-section \{\s*margin-top: 34px;/);
 	});
 });

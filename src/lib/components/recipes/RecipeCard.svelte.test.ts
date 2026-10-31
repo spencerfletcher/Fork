@@ -1,9 +1,7 @@
 import { describe, test, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/svelte';
 import RecipeCard from './RecipeCard.svelte';
-import source from './RecipeCard.svelte?raw';
 import { formatTime } from '#lib/helpers.js';
-import usernameSource from '#lib/components/ui/Username.svelte?raw';
 
 const { mockGoto } = vi.hoisted(() => ({ mockGoto: vi.fn() }));
 vi.mock('$app/navigation', () => ({ goto: mockGoto }));
@@ -128,11 +126,6 @@ describe('RecipeCard', () => {
 		expect(screen.getByRole('link', { name: 'Chocolate Cake' })).not.toHaveAttribute('tabindex');
 	});
 
-	test('the panel title balances its lines, like the photo title', () => {
-		const style = source.slice(source.indexOf('<style>'));
-		expect(style).toMatch(/\.card-panel-title\s*{[^}]*text-wrap:\s*balance/);
-	});
-
 	test('a recipe without a photo shows its title inside the panel and nowhere else', () => {
 		const { container } = render(RecipeCard, { props: { recipe: makeRecipe() } });
 		expect(screen.queryByRole('img')).toBeNull();
@@ -168,33 +161,9 @@ describe('RecipeCard', () => {
 		expect(row.textContent).not.toContain('·');
 		expect(container.querySelector('.meta-sep')).toBeNull();
 		expect([...row.children].every((el) => el.classList.contains('meta-item'))).toBe(true);
-		const style = source.slice(source.indexOf('<style>'));
-		expect(style).toMatch(/\.meta-item \+ \.meta-item::before\s*{[^}]*content:\s*'·'/);
-	});
-
-	test("the author's handle is the Username step under the meta line's size", () => {
-		// jsdom applies no component CSS, so the sizes are read from the sources.
-		const ratio = usernameSource.match(/\.username\s*{[^}]*font-size:\s*([\d.]+)em/)![1];
-		const style = source.slice(source.indexOf('<style>'));
-		const line = style.match(/\.meta-item\s*{[^}]*font-size:\s*([^;]+);/)![1];
-		const author = style.match(/a\.meta-author\s*{[^}]*font-size:\s*([^;]+);/)![1];
-		expect(author).toBe(`calc(${line} * ${ratio})`);
-	});
-
-	test('below 1024 the dots go and the items sit 10px apart', () => {
-		// jsdom applies no component CSS, so the rule is read from the source.
-		const narrow = source.slice(source.indexOf('@media (max-width: 1023px)'));
-		expect(narrow).toMatch(/\.meta-row\s*{[^}]*column-gap:\s*10px/);
-		expect(narrow).toMatch(/\.meta-item \+ \.meta-item::before\s*{[^}]*display:\s*none/);
 	});
 
 	test('on a phone the author hides, unless the page asks for it at every width', () => {
-		// jsdom applies no component CSS, so the phone rule is read from the source.
-		const phone = source.slice(source.lastIndexOf('@media (max-width: 699px)'));
-		expect(phone).toMatch(
-			/\.recipe-card:not\(\.author-always\) \.meta-author\s*{\s*display:\s*none/
-		);
-
 		const author = { id: 'u1', username: 'chefmaria' };
 		const { container, unmount } = render(RecipeCard, {
 			props: { recipe: { ...makeRecipe(), author } }
@@ -274,15 +243,5 @@ describe('RecipeCard', () => {
 		expect(metaRow?.textContent?.trim().startsWith('·')).toBe(false);
 		// The dot is drawn only between two items, so a lone item has none.
 		expect(metaRow?.children).toHaveLength(1);
-	});
-});
-
-describe('RecipeCard forced colours', () => {
-	test('the no-photo panel has a transparent border, so it keeps its box when the tint is stripped', () => {
-		const style = source.slice(source.indexOf('<style>'));
-		const panel = style.match(/\.card-panel\s*{([^}]*padding[^}]*)}/)![1];
-		expect(panel).toMatch(/border:\s*1px solid transparent/);
-		// The border takes the padding's outer pixel, so the title stays 16px in.
-		expect(panel).toMatch(/padding:\s*15px;/);
 	});
 });

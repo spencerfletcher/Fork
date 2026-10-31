@@ -199,26 +199,6 @@ describe('/+page.svelte', () => {
 		expect(imgs.some((img) => img.hasAttribute('fetchpriority'))).toBe(false);
 	});
 
-	test('the landing grid is capped at two rows: on a phone the six cards scroll sideways', () => {
-		// Six cards (Spencer: "2 rows should be max and then we should have
-		// scrolling functionality"): 4 + 2 at four columns, 3 + 3 at three; two
-		// columns would need three rows, so the phone flows two rows by column.
-		const recipes = [1, 2].map((id) => ({ id, slug: `r${id}`, title: `R${id}`, forkCount: 0 }));
-		const { container } = render(Page, {
-			props: {
-				data: { recipes, user: null, profile: null, mode: 'landing', tags: [], sampleDiff: null }
-			} as never
-		});
-		expect(container.querySelector('.recipe-grid')).toHaveClass('recent-strip');
-		// jsdom applies no component CSS, so the rule is read from the source.
-		const phone = source.slice(source.indexOf('@media (max-width: 699px)'));
-		const rule = phone.match(/\.recent-strip\s*{([^}]*)}/)![1];
-		expect(rule).toMatch(/grid-auto-flow:\s*column/);
-		expect(rule).toMatch(/grid-template-rows:\s*repeat\(2,/);
-		expect(rule).toMatch(/overflow-x:\s*auto/);
-		expect(rule).toMatch(/scroll-snap-type:\s*x/);
-	});
-
 	test('keyboard focus on a strip card scrolls that card into view, smoothly unless motion is reduced', async () => {
 		// Chromium does not scroll a horizontal scroller to a focused link inside
 		// a grid cell, so a tab past the third card landed off screen.

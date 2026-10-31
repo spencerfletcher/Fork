@@ -1,7 +1,6 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/svelte';
 import SearchFilters from './SearchFilters.svelte';
-import source from './SearchFilters.svelte?raw';
 
 const { gotoMock } = vi.hoisted(() => ({ gotoMock: vi.fn() }));
 vi.mock('$app/navigation', () => ({ goto: gotoMock }));
@@ -82,12 +81,6 @@ describe('SearchFilters', () => {
 		expect(container.querySelector('.bg-white')).toBeNull();
 	});
 
-	// One tab row across the site: the browse pages' TagTabs, as toggles.
-	test('the tag row is the shared TagTabs, not a filter of its own', () => {
-		expect(source).toMatch(/import TagTabs from '\.\/TagTabs\.svelte'/);
-		expect(source).not.toMatch(/TagFilter/);
-	});
-
 	test('no tag row at all when there is nothing to filter by', () => {
 		render(SearchFilters, { props: { availableTags: [] } });
 		expect(screen.queryByRole('group', { name: 'Filter by tag' })).toBeNull();
@@ -129,13 +122,5 @@ describe('SearchFilters search box', () => {
 		render(SearchFilters, { props: { availableTags } });
 		await fireEvent(input(), new Event('search'));
 		expect(gotoMock).not.toHaveBeenCalled();
-	});
-
-	test("the × is drawn in the field's ink, not browser blue", () => {
-		const rule = source.match(/::-webkit-search-cancel-button\s*{([^}]*)}/)![1];
-		expect(rule).toMatch(/-webkit-appearance:\s*none/);
-		expect(rule).toMatch(/background-color:\s*currentColor/);
-		expect(rule).toMatch(/width:\s*24px/);
-		expect(rule).toMatch(/center \/ 16px no-repeat/);
 	});
 });

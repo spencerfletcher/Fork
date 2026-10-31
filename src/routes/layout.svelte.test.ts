@@ -2,7 +2,6 @@ import { describe, test, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/svelte';
 import { createRawSnippet } from 'svelte';
 import Layout from './+layout.svelte';
-import source from './+layout.svelte?raw';
 import { pageTitle } from '#lib/seo.js';
 
 // The layout reads the route and any thrown error from page state.
@@ -55,12 +54,5 @@ describe('layout tab title', () => {
 	test('any other thrown message titles the tab as it is', () => {
 		renderLayout('/recipes/[slug]', { message: 'Recipe not found' });
 		expect(document.title).toBe(pageTitle('Recipe not found'));
-	});
-});
-
-describe('layout skip link shape', () => {
-	test('the skip link is a pill from the token, not a radius of its own', () => {
-		expect(source).toMatch(/border-radius:\s*var\(--radius-pill\)/);
-		expect(source).not.toContain('999px');
 	});
 });

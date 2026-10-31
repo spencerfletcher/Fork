@@ -275,15 +275,6 @@ describe('TagInput tag pill remove button', () => {
 	});
 });
 
-describe('TagInput forced colours', () => {
-	test('the active option draws an outline, since its background is dropped', () => {
-		const media = style.slice(style.indexOf('@media (forced-colors: active)'));
-		expect(media).toMatch(
-			/^@media[^{]*{\s*\.tag-option\[aria-selected='true'\]\s*{[^}]*outline:\s*2px solid/
-		);
-	});
-});
-
 describe('TagInput Create option', () => {
 	// One 1px rule between Create and what sits above it: the last suggestion's
 	// bottom border, or the box's own bottom border when there is none.

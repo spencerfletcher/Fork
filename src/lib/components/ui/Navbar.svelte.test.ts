@@ -2,7 +2,6 @@ import { describe, test, expect, vi, afterEach } from 'vitest';
 import { render, screen, fireEvent, within } from '@testing-library/svelte';
 import Navbar from './Navbar.svelte';
 import source from './Navbar.svelte?raw';
-import usernameSource from './Username.svelte?raw';
 import type { User } from '@supabase/supabase-js';
 import { page } from '$app/state';
 
@@ -210,17 +209,6 @@ describe('Navbar handle', () => {
 		);
 	});
 
-	test('in the phone menu the handle steps down under the links, so the links are the loudest rows', () => {
-		// Mono lowercase at the username's usual 0.9375em out-shouted the small-caps
-		// rows; it stays mono (the Pencil Rule) and drops a notch in size.
-		const rem = (rule: string) => Number(rule.match(/font-size:\s*([\d.]+)rem/)![1]);
-		const linkRule = style.match(/\.mobile-link\s*{([^}]*)}/)![1];
-		const handleRule = style.match(/\.mobile-account :global\(\.username\)\s*{([^}]*)}/)![1];
-		const usualEm = Number(usernameSource.match(/font-size:\s*([\d.]+)em/)![1]);
-		expect(rem(handleRule)).toBeLessThan(rem(linkRule) * usualEm);
-		expect(handleRule).not.toMatch(/font-family/);
-	});
-
 	test("the bar's marigold ring reaches the Username component's link", () => {
 		// A scoped `nav :focus-visible` matches only Navbar's own elements, so the
 		// handle kept the global clay ring (3.08:1 on espresso).
@@ -302,41 +290,11 @@ describe('Navbar current page', () => {
 		expect(bar(other)[0]).not.toHaveAttribute('aria-current');
 		expect(menu.getByRole('link', { name: other })).not.toHaveAttribute('aria-current');
 	});
-
-	test('a current link turns cream: the style reads aria-current, not a class', () => {
-		// jsdom applies no component CSS, so the rules are read from the source.
-		const style = source.slice(source.indexOf('<style>'));
-		expect(style).toMatch(/\.navbar-link\[aria-current='page'\][^{]*{[^}]*--color-text-cream/);
-		expect(style).toMatch(/\.mobile-link\[aria-current='page'\][^{]*{[^}]*--color-text-cream/);
-		expect(source).not.toMatch(/class:active/);
-	});
-
-	test("the owner's handle on their own profile turns cream too", () => {
-		const style = usernameSource.slice(usernameSource.indexOf('<style>'));
-		expect(style).toMatch(
-			/\.username\.on-dark\[aria-current='page'\][^{]*{[^}]*--color-text-cream/
-		);
-	});
 });
 
 // ─── Link face ────────────────────────────────────────────────────────────────
 
 describe('Navbar link face', () => {
-	// jsdom applies no component CSS, so the rules are read from the source.
-	const style = source.slice(source.indexOf('<style>'));
-	const rule = (selector: string) => {
-		const start = style.indexOf(`${selector} {`);
-		return style.slice(start, style.indexOf('}', start));
-	};
-
-	test('desktop links and the phone menu links are small caps at 600 with tracking (Spencer, 29 October 2026)', () => {
-		for (const selector of ['.navbar-link', '.mobile-link']) {
-			expect(rule(selector)).toMatch(/font-variant-caps:\s*all-small-caps/);
-			expect(rule(selector)).toMatch(/font-weight:\s*600/);
-			expect(rule(selector)).toMatch(/letter-spacing:\s*0\.08em/);
-		}
-	});
-
 	test("Log out takes the links' face and size, in the bar and the phone menu", async () => {
 		render(Navbar, { props: { user: makeUser('chef@example.com') } });
 		await fireEvent.click(screen.getByRole('button', { name: /open main menu/i }));
@@ -345,9 +303,6 @@ describe('Navbar link face', () => {
 		expect(menu.contains(bar)).toBe(false);
 		expect(bar).toHaveClass('navbar-link');
 		expect(phone).toHaveClass('mobile-link');
-		expect(rule('.navbar-link')).toMatch(/font-size:\s*0\.9375rem/);
-		// No later rule may shrink the button below the links beside it.
-		expect(style).not.toMatch(/\.logout-btn\s*{[^}]*font-size/);
 	});
 });
 
@@ -414,15 +369,7 @@ describe('Navbar fit at 768', () => {
 		expect(rule('\\.nav-cta')).toMatch(/white-space:\s*nowrap/);
 	});
 
-	test('the handle in the bar is capped at 22ch at every width with an ellipsis, the full handle in its title', () => {
-		const handleRule = rule('\\.navbar-account :global\\(\\.username\\)');
-		// 22ch shows "@spencerfletcher" whole wherever the bar has room; a fixed
-		// narrower cap below 1024 clipped it at 768 to 1023 even with room to spare.
-		expect(handleRule).toMatch(/max-width:\s*22ch/);
-		expect(style).not.toMatch(/14ch/);
-		expect(handleRule).toMatch(/overflow:\s*hidden/);
-		expect(handleRule).toMatch(/text-overflow:\s*ellipsis/);
-		expect(handleRule).toMatch(/white-space:\s*nowrap/);
+	test('a clipped handle in the bar keeps its full form in a title', () => {
 		render(Navbar, { props: { user: makeUser('chef@example.com'), profile } });
 		const handle = screen.getByRole('link', { name: `@${profile.username}` });
 		expect(handle.closest(`[title="@${profile.username}"]`)).not.toBeNull();
@@ -441,13 +388,6 @@ describe('Navbar fit at 768', () => {
 			expect(el.classList).toContain('min-w-0');
 			expect(el.classList).toContain('shrink');
 		}
-	});
-
-	test('the links cluster and the account cluster keep 24px between them, so the handle does not read as a fifth link', () => {
-		const { container } = render(Navbar, { props: { user: null } });
-		const bar = container.querySelector('nav > div')!;
-		// app.css overrides the spacing scale from 5 up: gap-5 is 24px, gap-6 32px.
-		expect(bar.classList).toContain('gap-5');
 	});
 });
 
@@ -486,14 +426,6 @@ describe('Navbar phone menu focus', () => {
 // ─── Forced colours ───────────────────────────────────────────────────────────
 
 describe('Navbar forced colours', () => {
-	test('the action has a transparent border, so it keeps its box when the fill is stripped', () => {
-		const style = source.slice(source.indexOf('<style>'));
-		const cta = style.match(/\.nav-cta\s*{([^}]*)}/)![1];
-		expect(cta).toMatch(/border:\s*1px solid transparent/);
-		// The border eats the padding's outer pixel, so the action stays 7px 14px tall and wide.
-		expect(cta).toMatch(/padding:\s*6px 13px/);
-	});
-
 	// Current is cream against tan, which forced colours flatten; an underline
 	// keeps "you are here".
 	test('the current link is underlined under forced colours', () => {

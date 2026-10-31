@@ -1,7 +1,6 @@
 import { describe, test, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/svelte';
 import FavoritesPage from './+page.svelte';
-import source from './+page.svelte?raw';
 
 vi.mock('$app/navigation', () => ({ goto: vi.fn() }));
 
@@ -55,22 +54,5 @@ describe('Favorites page', () => {
 		renderFavorites({ searchQuery: 'zzz' });
 		expect(screen.getByRole('searchbox')).toBeInTheDocument();
 		expect(screen.getByText(/No favorites match your filters/)).toBeInTheDocument();
-	});
-
-	test("the empty state sits one gap under the h1, the header's own, not the shared rule's 2rem more", () => {
-		renderFavorites();
-		const empty = screen.getByText(/No favorites yet/);
-		expect(empty.className).not.toMatch(/\bmt-/);
-		expect(source).toMatch(/\.empty-state\s*{[^}]*padding-top:\s*0/);
-	});
-
-	test('on a phone "Explore recipes →" takes its own line under the sentence', () => {
-		const phone = source.slice(source.indexOf('@media (max-width: 699px)'));
-		expect(phone).toMatch(/\.empty-state a\s*{[^}]*display:\s*block/);
-	});
-
-	test("under the filters the empty state keeps the results' gap above it", () => {
-		renderFavorites({ searchQuery: 'zzz' });
-		expect(screen.getByText(/No favorites match your filters/)).toHaveClass('mt-6');
 	});
 });

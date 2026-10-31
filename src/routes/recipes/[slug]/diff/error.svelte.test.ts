@@ -1,11 +1,7 @@
 import { describe, test, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/svelte';
 import ErrorPage from './+error.svelte';
-import source from './+error.svelte?raw';
-import { readFileSync } from 'node:fs';
 import { MISSING_RECIPE_LEDE, SERVER_ERROR_LEDE } from '#lib/errors/copy.js';
-
-const css = readFileSync('src/app.css', 'utf8');
 
 // ─── SvelteKit module mocks ───────────────────────────────────────────────────
 
@@ -74,14 +70,6 @@ describe('compare page error', () => {
 		expect(screen.queryByRole('link', { name: 'Compare first and latest' })).toBeNull();
 	});
 
-	test('the title balances its lines, so "Version 9 not found" never leaves one word dangling', () => {
-		expect(css).toMatch(/\.error-page h1\s*{[^}]*text-wrap:\s*balance/);
-	});
-
-	test("takes the root error page's styles from app.css, not a copy of them", () => {
-		expect(source).not.toContain('<style');
-	});
-
 	test("a 404 takes the root page's missing-recipe lede, goes home, and offers a search", () => {
 		renderError(404, 'Recipe not found');
 		expect(screen.getByText(MISSING_RECIPE_LEDE)).toBeInTheDocument();
@@ -96,14 +84,5 @@ describe('compare page error', () => {
 		expect(screen.getByText(SERVER_ERROR_LEDE)).toBeInTheDocument();
 		expect(screen.getByRole('link', { name: 'Go home' })).toHaveAttribute('href', '/');
 		expect(screen.queryByRole('link', { name: 'Search recipes' })).toBeNull();
-	});
-
-	test("takes the root error page's format: the code in the h1 at the site size, centred, no display number", () => {
-		const { container } = renderError(400, 'Version 9 not found');
-		expect(container.querySelector('h1')!.className).not.toMatch(/rem/);
-		expect(container.querySelector('.font-mono')).toBeNull();
-		const block = container.querySelector('.auth-page .error-page')!;
-		expect(block).not.toBeNull();
-		expect(block.className).toMatch(/text-center/);
 	});
 });

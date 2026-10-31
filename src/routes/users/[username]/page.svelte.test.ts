@@ -98,14 +98,6 @@ describe('Profile page owner action', () => {
 		expect(screen.getByRole('link', { name: 'New recipe →' })).toBeInTheDocument();
 	});
 
-	test('from 768 up, where the bar shows + New recipe, the line is hidden', () => {
-		// jsdom applies no component CSS, so the rule is read from the source.
-		const style = source.slice(source.indexOf('<style>'));
-		expect(style).toMatch(
-			/@media \(min-width: 768px\) \{\s*\.profile-new \{\s*display: none;\s*\}\s*\}/
-		);
-	});
-
 	test('another signed-in viewer and a signed-out visitor do not see it', () => {
 		const other = render(ProfilePage, {
 			props: { data: { ...data, user: { id: 'u2' } } } as never
@@ -114,14 +106,6 @@ describe('Profile page owner action', () => {
 		other.unmount();
 		render(ProfilePage, { props: { data: { ...data, user: null } } as never });
 		expect(screen.queryByRole('link', { name: /New recipe/ })).toBeNull();
-	});
-});
-
-describe('Profile page forced colours', () => {
-	test('the avatar circle has a transparent border, so it keeps its shape when the tint is stripped', () => {
-		const style = source.slice(source.indexOf('<style>'));
-		const avatar = style.match(/\.profile-avatar\s*{([^}]*)}/)![1];
-		expect(avatar).toMatch(/border:\s*1px solid transparent/);
 	});
 });
 

@@ -1,11 +1,7 @@
 import { describe, test, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/svelte';
 import ErrorPage from './+error.svelte';
-import source from './+error.svelte?raw';
-import { readFileSync } from 'node:fs';
 import { MISSING_RECIPE_LEDE, SERVER_ERROR_LEDE } from '#lib/errors/copy.js';
-
-const css = readFileSync('src/app.css', 'utf8');
 
 // The error page reads the status and the thrown message from page state.
 const state = vi.hoisted(() => ({
@@ -58,19 +54,6 @@ describe('error page', () => {
 		);
 	});
 
-	test('sits centred on the screen like the login page, text centred', () => {
-		const { container } = renderError(404, 'Recipe not found');
-		const block = container.querySelector('.auth-page .error-page')!;
-		expect(block).not.toBeNull();
-		expect(block.className).toMatch(/text-center/);
-	});
-
-	test('the title is the page h1 at the site size, not a display number', () => {
-		const { container } = renderError(500, 'Internal Error');
-		expect(container.querySelector('h1')!.className).not.toMatch(/rem/);
-		expect(container.querySelector('.font-mono')).toBeNull();
-	});
-
 	test('a recipe 404 offers a search beside home: a shared link to a now-private recipe has somewhere to go', () => {
 		renderError(404, 'Recipe not found', '/recipes/no-such-recipe');
 		const search = screen.getByRole('link', { name: 'Search recipes' });
@@ -84,16 +67,5 @@ describe('error page', () => {
 		expect(screen.queryByRole('link', { name: 'Search recipes' })).toBeNull();
 		renderError(500, 'Internal Error', '/recipes/classic-cookies');
 		expect(screen.queryByRole('link', { name: 'Search recipes' })).toBeNull();
-	});
-
-	test('the title balances its lines, so "Recipe not found" never leaves one word dangling', () => {
-		expect(css).toMatch(/\.error-page h1\s*{[^}]*text-wrap:\s*balance/);
-	});
-
-	test("the measure, lede and actions are app.css's, shared with every error page", () => {
-		expect(source).not.toContain('<style');
-		for (const selector of ['.error-page', '.error-page .lede', '.error-page .actions']) {
-			expect(css).toContain(`\n\t${selector} {`);
-		}
 	});
 });

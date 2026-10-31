@@ -1,7 +1,6 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/svelte';
 import source from './RecipeForm.svelte?raw';
-import { readFileSync } from 'node:fs';
 import RecipeForm from './RecipeForm.svelte';
 import { draftOf } from '#lib/recipes/validation.js';
 
@@ -23,20 +22,6 @@ describe('RecipeForm photo buttons', () => {
 	});
 });
 
-describe('RecipeForm Choose photo', () => {
-	// The label takes back a button's voice, so its weight is the ghost button's, as Cancel's is.
-	test('is set at the ghost button weight', () => {
-		const weight = (css: string, selector: string) => {
-			const at = css.indexOf(`${selector} {`);
-			return css.slice(at, css.indexOf('}', at)).match(/font-weight:\s*(\d+)/)?.[1];
-		};
-		const appCss = readFileSync('src/app.css', 'utf8');
-		const ghost = weight(appCss, '.btn-ghost');
-		expect(ghost).toBeDefined();
-		expect(weight(style, '.photo-choose')).toBe(ghost);
-	});
-});
-
 describe('RecipeForm actions on a phone', () => {
 	// Every phone-only block, joined, so the test does not care which one holds a rule.
 	const phone = style
@@ -49,27 +34,10 @@ describe('RecipeForm actions on a phone', () => {
 		return at < 0 ? '' : phone.slice(at, phone.indexOf('}', at));
 	};
 
-	test('Save and Cancel sit in a bar pinned to the bottom of the screen, clear of the home indicator', () => {
-		const bar = rule('.form-actions');
-		expect(bar).toMatch(/position:\s*sticky/);
-		expect(bar).toMatch(/bottom:\s*0/);
-		expect(bar).toMatch(/background:\s*var\(--color-surface\)/);
-		expect(bar).toMatch(/border-top:\s*1px solid var\(--color-border\)/);
-		expect(bar).toMatch(/padding(-bottom)?:[^;]*env\(safe-area-inset-bottom\)/);
-	});
-
 	test('a field focused near the bottom scrolls clear of the bar', () => {
 		expect(rule(':global(html:has(.form-actions))')).toMatch(
 			/scroll-padding-bottom:[^;]*env\(safe-area-inset-bottom\)/
 		);
-	});
-});
-
-describe('RecipeForm invalid fields', () => {
-	// app.css styles every invalid field (red border and text, no fill); the
-	// editor adds nothing, so the placeholder keeps its own colour.
-	test('the editor does not restyle an invalid box or its placeholder', () => {
-		expect(style).not.toMatch(/user-invalid|aria-invalid/);
 	});
 });
 

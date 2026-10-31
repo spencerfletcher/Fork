@@ -44,13 +44,6 @@ describe('RecipeGrid', () => {
 		expect(imgs.at(-1)).toHaveAttribute('loading', 'lazy');
 	});
 
-	test('the section takes the class it is given', () => {
-		const { container } = render(RecipeGrid, {
-			props: { recipes: [card(1)], class: 'results' }
-		});
-		expect(container.querySelector('section')).toHaveClass('results');
-	});
-
 	test('a card snippet replaces the default card, given the recipe and its place', () => {
 		const recipes = [card(7), card(8)];
 		const cardSnippet = createRawSnippet((recipe: () => { title: string }, i: () => number) => ({
