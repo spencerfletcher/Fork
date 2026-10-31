@@ -17,6 +17,7 @@ vi.mock('#lib/server/db/index.js', () => ({
 }));
 
 import { load } from './+page.server';
+import { CARD_WITH } from '#lib/server/recipeCounts.js';
 import { and, desc, eq, or } from 'drizzle-orm';
 import { recipes } from '#lib/server/db/schema.js';
 import type { PageData } from './$types';
@@ -43,7 +44,7 @@ describe('search load', () => {
 		expect(result.meta.title).toBe('“cookie” — Search');
 	});
 
-	test('returns recipes carrying author and tag relations', async () => {
+	test('returns recipes carrying the author relation', async () => {
 		selectDistinctMock.mockReturnValue(chain([])); // tags for the filter UI
 		selectMock
 			.mockReturnValueOnce(chain([{ id: 2 }, { id: 1 }])) // pass 1: ranked FTS hits
@@ -60,17 +61,12 @@ describe('search load', () => {
 		expect(result.recipes.length).toBe(2);
 		for (const r of result.recipes) {
 			expect(r).toHaveProperty('author');
-			expect(r).toHaveProperty('recipesToTags');
 		}
 
-		// The fixture above returns author/recipesToTags regardless of what the
-		// loader asked for — assert the loader actually requests the relations,
-		// otherwise this test stays green even if `with:` is deleted.
-		expect(findManyMock).toHaveBeenCalledWith(
-			expect.objectContaining({
-				with: expect.objectContaining({ author: true, recipesToTags: expect.anything() })
-			})
-		);
+		// The fixture above returns an author regardless of what the loader asked
+		// for — assert the loader actually requests the relation, otherwise this
+		// test stays green even if `with:` is deleted.
+		expect(findManyMock).toHaveBeenCalledWith(expect.objectContaining({ with: CARD_WITH }));
 	});
 
 	test('a search is one relational query, ranked in the database', async () => {

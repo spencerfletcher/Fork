@@ -17,6 +17,7 @@ vi.mock('#lib/server/db/index.js', () => ({
 }));
 
 import { load } from './+page.server';
+import { CARD_WITH } from '#lib/server/recipeCounts.js';
 import { desc, type SQL } from 'drizzle-orm';
 import { PgDialect } from 'drizzle-orm/pg-core';
 import { recipes } from '#lib/server/db/schema.js';
@@ -72,13 +73,9 @@ describe('favorites load', () => {
 
 		expect(result.favoriteRecipes.length).toBe(1);
 		// The fixture returns an author regardless of what the loader asked for,
-		// so assert on the query itself — otherwise deleting `author: true` keeps
-		// this test green while the page silently loses its bylines.
-		expect(findManyMock).toHaveBeenCalledWith(
-			expect.objectContaining({
-				with: expect.objectContaining({ author: true, recipesToTags: expect.anything() })
-			})
-		);
+		// so assert on the query itself — otherwise deleting the author relation
+		// keeps this test green while the page silently loses its bylines.
+		expect(findManyMock).toHaveBeenCalledWith(expect.objectContaining({ with: CARD_WITH }));
 	});
 
 	test('fetches recipes with a single relational query when filtering by tag', async () => {

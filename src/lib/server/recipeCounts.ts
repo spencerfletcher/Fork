@@ -2,6 +2,9 @@ import { db } from '#lib/server/db/index.js';
 import { recipes, recipeVersions } from '#lib/server/db/schema.js';
 import { and, count, eq, inArray } from 'drizzle-orm';
 
+/** The relations a recipe card renders: its author's id and handle, nothing more. */
+export const CARD_WITH = { author: { columns: { id: true, username: true } } } as const;
+
 /**
  * Attach version and fork counts to a list of recipes.
  *

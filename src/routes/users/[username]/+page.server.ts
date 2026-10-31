@@ -16,9 +16,6 @@ export const load: PageServerLoad = async ({ params, locals: { user } }) => {
 	const [publicRecipes, commitResult] = await Promise.all([
 		db.query.recipes.findMany({
 			where: and(eq(recipes.authorId, profile.id), eq(recipes.isPublic, true)),
-			with: {
-				recipesToTags: { with: { tag: true } }
-			},
 			orderBy: (r, { desc }) => [desc(r.createdAt)]
 		}),
 		// Commits on public recipes only: the count appears in link previews,

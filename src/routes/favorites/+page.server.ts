@@ -2,7 +2,7 @@ import { redirect } from '@sveltejs/kit';
 import { db } from '#lib/server/db/index.js';
 import { recipes, favorites, recipesToTags } from '#lib/server/db/schema.js';
 import { eq, and, inArray } from 'drizzle-orm';
-import { attachRecipeCounts } from '#lib/server/recipeCounts.js';
+import { attachRecipeCounts, CARD_WITH } from '#lib/server/recipeCounts.js';
 import { byTagMatches, tagMatchCounts, visibleTags } from '#lib/server/tagFilter.js';
 import { canView } from '#lib/server/visibility.js';
 import { parseFilters, textSearch } from '#lib/server/recipeSearch.js';
@@ -57,10 +57,7 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 	const text = textSearch(searchQuery);
 	const rows = await db.query.recipes.findMany({
 		where: and(inArray(recipes.id, candidateIds), text.where),
-		with: {
-			recipesToTags: { with: { tag: true } },
-			author: true
-		},
+		with: CARD_WITH,
 		orderBy: text.orderBy
 	});
 

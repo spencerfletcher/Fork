@@ -2,7 +2,7 @@ import { db } from '#lib/server/db/index.js';
 import { recipes, recipeVersions } from '#lib/server/db/schema.js';
 import { desc, eq } from 'drizzle-orm';
 import { diffIngredients, diffMeta, diffSteps } from '#lib/recipes/diff.js';
-import { attachRecipeCounts } from '#lib/server/recipeCounts.js';
+import { attachRecipeCounts, CARD_WITH } from '#lib/server/recipeCounts.js';
 import { visibleTags } from '#lib/server/tagFilter.js';
 import type { PageServerLoad } from './$types';
 
@@ -26,10 +26,7 @@ type SampleDiff = {
 export const load: PageServerLoad = async ({ locals: { user } }) => {
 	const allRecipes = await db.query.recipes.findMany({
 		where: eq(recipes.isPublic, true),
-		with: {
-			recipesToTags: { with: { tag: true } },
-			author: true
-		},
+		with: CARD_WITH,
 		orderBy: (r, { desc }) => [desc(r.updatedAt)]
 	});
 

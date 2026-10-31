@@ -2,7 +2,7 @@ import { error } from '@sveltejs/kit';
 import { db } from '#lib/server/db/index.js';
 import { eq, and, exists, sql } from 'drizzle-orm';
 import { tags, recipes, recipesToTags } from '#lib/server/db/schema.js';
-import { attachRecipeCounts } from '#lib/server/recipeCounts.js';
+import { attachRecipeCounts, CARD_WITH } from '#lib/server/recipeCounts.js';
 import { visibleTags } from '#lib/server/tagFilter.js';
 import { clampDescription } from '#lib/seo.js';
 import type { PageServerLoad } from './$types';
@@ -22,7 +22,7 @@ export const load: PageServerLoad = async ({ params }) => {
 						.where(and(eq(recipesToTags.recipeId, recipes.id), eq(recipesToTags.tagId, tag.id)))
 				)
 			),
-			with: { recipesToTags: { with: { tag: true } }, author: true }
+			with: CARD_WITH
 		}),
 		visibleTags(eq(recipes.isPublic, true))
 	]);

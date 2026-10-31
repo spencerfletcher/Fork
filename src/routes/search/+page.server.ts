@@ -1,7 +1,7 @@
 import { db } from '#lib/server/db/index.js';
 import { recipes } from '#lib/server/db/schema.js';
 import { and, inArray } from 'drizzle-orm';
-import { attachRecipeCounts } from '#lib/server/recipeCounts.js';
+import { attachRecipeCounts, CARD_WITH } from '#lib/server/recipeCounts.js';
 import { byTagMatches, tagMatchCounts, visibleTags } from '#lib/server/tagFilter.js';
 import { clampDescription } from '#lib/seo.js';
 import { visibleTo } from '#lib/server/visibility.js';
@@ -42,7 +42,7 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 			matchCounts.size > 0 ? inArray(recipes.id, [...matchCounts.keys()]) : undefined,
 			text.where
 		),
-		with: { recipesToTags: { with: { tag: true } }, author: true },
+		with: CARD_WITH,
 		orderBy: text.orderBy
 	});
 

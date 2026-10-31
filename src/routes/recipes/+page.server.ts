@@ -1,7 +1,7 @@
 import { db } from '#lib/server/db/index.js';
 import { recipes } from '#lib/server/db/schema.js';
 import { eq } from 'drizzle-orm';
-import { attachRecipeCounts } from '#lib/server/recipeCounts.js';
+import { attachRecipeCounts, CARD_WITH } from '#lib/server/recipeCounts.js';
 import { visibleTags } from '#lib/server/tagFilter.js';
 import type { PageServerLoad } from './$types';
 
@@ -11,10 +11,7 @@ export const load: PageServerLoad = async ({ locals: { user } }) => {
 	const [rows, tags] = await Promise.all([
 		db.query.recipes.findMany({
 			where: user ? eq(recipes.authorId, user.id) : eq(recipes.isPublic, true),
-			with: {
-				recipesToTags: { with: { tag: true } },
-				author: true
-			},
+			with: CARD_WITH,
 			orderBy: (r, { desc }) => [desc(r.updatedAt)]
 		}),
 		user ? [] : visibleTags(eq(recipes.isPublic, true))

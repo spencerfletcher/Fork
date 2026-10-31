@@ -2,7 +2,7 @@ import { error } from '@sveltejs/kit';
 import { db } from '#lib/server/db/index.js';
 import { recipes, recipeVersions } from '#lib/server/db/schema.js';
 import { and, desc, eq } from 'drizzle-orm';
-import { attachRecipeCounts } from '#lib/server/recipeCounts.js';
+import { attachRecipeCounts, CARD_WITH } from '#lib/server/recipeCounts.js';
 import { canView, visibleTo } from '#lib/server/visibility.js';
 import type { PageServerLoad } from './$types';
 
@@ -17,8 +17,7 @@ export const load: PageServerLoad = async ({ params, locals: { user } }) => {
 	const forks = await db.query.recipes.findMany({
 		where: and(eq(recipes.parentId, recipe.id), visibleTo(user)),
 		with: {
-			recipesToTags: { with: { tag: true } },
-			author: true,
+			...CARD_WITH,
 			versions: { where: eq(recipeVersions.versionNumber, 1), columns: { commitMessage: true } }
 		},
 		orderBy: [desc(recipes.createdAt)]
