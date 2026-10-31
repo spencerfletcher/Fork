@@ -2,7 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { on } from 'svelte/events';
 	import TagTabs from './TagTabs.svelte';
-	import type { Tag } from '#lib/server/db/schema.js';
+	import type { TagChip } from '#lib/recipes/types.js';
 
 	let {
 		initialQuery = '',
@@ -11,7 +11,7 @@
 	}: {
 		initialQuery?: string;
 		initialTags?: string[];
-		availableTags: Pick<Tag, 'id' | 'name' | 'slug'>[];
+		availableTags: TagChip[];
 	} = $props();
 
 	// Seeded from the props once so the server render is filled in; the effect

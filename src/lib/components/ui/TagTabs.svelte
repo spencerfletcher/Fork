@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { TagChip } from '#lib/server/tagFilter.js';
+	import type { TagChip } from '#lib/recipes/types.js';
 
 	// Two uses, one look. Browse pages link: `active` is the current tag's slug,
 	// null means "All", and `allHref` moves the All tab for a signed-in user,

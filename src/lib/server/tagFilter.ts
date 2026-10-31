@@ -1,8 +1,7 @@
 import { and, eq, inArray, type SQL } from 'drizzle-orm';
 import { db } from './db/index.js';
 import { recipes, recipesToTags, tags } from './db/schema.js';
-
-export type TagChip = { id: number; name: string; slug: string };
+import type { TagChip } from '#lib/recipes/types.js';
 
 /**
  * Tags for the filter chips: only those on at least one recipe matching

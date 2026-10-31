@@ -33,3 +33,6 @@ export type RecipeContent = {
 	ingredients: Ingredient[];
 	steps: Step[];
 };
+
+// A tag as lists, chips and tabs show it.
+export type TagChip = { id: number; name: string; slug: string };

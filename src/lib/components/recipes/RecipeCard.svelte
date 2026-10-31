@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Recipe } from '#lib/server/db/schema.js';
 	import { formatTime } from '#lib/helpers.js';
+	import type { TagChip } from '#lib/recipes/types.js';
 
 	// Only what the card renders, so a column added to the table does not ripple
 	// into every card fixture.
@@ -14,7 +15,7 @@
 		| 'prepTimeMinutes'
 		| 'cookTimeMinutes'
 	> {
-		recipesToTags?: { tag: { id: number; name: string; slug: string } }[];
+		recipesToTags?: { tag: TagChip }[];
 		author?: { id: string; username: string } | null;
 		versionCount?: number;
 		forkCount?: number;

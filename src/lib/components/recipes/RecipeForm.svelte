@@ -10,6 +10,7 @@
 		type RecipeDraft
 	} from '#lib/recipes/validation.js';
 	import { normaliseTagNames, tagKey } from '#lib/recipes/tags.js';
+	import type { TagChip } from '#lib/recipes/types.js';
 	import { generatedCommitMessage } from '#lib/recipes/content.js';
 	import { draftChangedGroups } from '#lib/recipes/draftChanges.js';
 	import TagInput from '#lib/components/ui/TagInput.svelte';
@@ -31,7 +32,7 @@
 		baseline: RecipeDraft;
 		/** The failed action's result, if any; its draft refills the fields. */
 		form: { error: string; draft: RecipeDraft } | null;
-		allTags: Array<{ id: number; name: string; slug: string }>;
+		allTags: TagChip[];
 		/** Named action, e.g. `?/save`; omit for the route's default action. */
 		action?: string;
 		submitLabel: string;
