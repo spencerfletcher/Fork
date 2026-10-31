@@ -3,7 +3,7 @@
 	import Username from '#lib/components/ui/Username.svelte';
 	import Details from './Details.svelte';
 	import type { Recipe } from '#lib/server/db/schema.js';
-	import type { RecipeContent } from '#lib/recipes/types.js';
+	import type { RecipeContent, TagChip } from '#lib/recipes/types.js';
 
 	// Only what the header renders: the viewed version for the dish and the
 	// recipe row for where it lives. The version bar below the hero carries
@@ -32,7 +32,7 @@
 		storedServings?: number | null;
 		/** Public forks. */
 		forkCount: number;
-		tags: { id: number; name: string; slug: string }[];
+		tags: TagChip[];
 		/** The action row (Fork or Edit, Favorite), the last line of the header. */
 		actions?: Snippet;
 	} = $props();
