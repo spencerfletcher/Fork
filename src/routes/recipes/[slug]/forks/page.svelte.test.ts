@@ -6,7 +6,7 @@ const card = (id: number) => ({
 	id,
 	slug: `fork-${id}`,
 	title: `Fork ${id}`,
-	description: null,
+	description: null as string | null,
 	imageUrl: `https://img/${id}.jpg`,
 	parentId: 42,
 	prepTimeMinutes: null,
@@ -51,6 +51,17 @@ describe('Forks page', () => {
 		const imgs = [...container.querySelectorAll('img.card-img')];
 		expect(imgs[0]).toHaveAttribute('fetchpriority', 'high');
 		expect(imgs.at(-1)).toHaveAttribute('loading', 'lazy');
+	});
+
+	test('a fork card shows its commit note, not its description', () => {
+		const fork = {
+			...card(1),
+			description: 'Same cookies, more salt.',
+			forkNote: 'Forked from v3'
+		};
+		renderForks({ forks: [fork] });
+		expect(screen.getByText('Forked from v3')).toBeInTheDocument();
+		expect(screen.queryByText('Same cookies, more salt.')).toBeNull();
 	});
 
 	test('under each card, the fork’s first commit note', () => {

@@ -72,15 +72,39 @@ describe('RecipeCard', () => {
 		expect(screen.getByText('45 min cook')).toBeInTheDocument();
 	});
 
-	test('never shows a description, tags or a forked badge', () => {
+	test('never shows tags or a forked badge', () => {
 		const recipe = {
-			...makeRecipe({ description: 'A rich and moist cake.', parentId: 42 }),
+			...makeRecipe({ parentId: 42 }),
 			recipesToTags: [{ tag: { id: 1, name: 'Dessert', slug: 'dessert' } }]
 		};
 		const { container } = render(RecipeCard, { props: { recipe } });
-		expect(screen.queryByText('A rich and moist cake.')).toBeNull();
 		expect(screen.queryByRole('link', { name: 'Dessert' })).toBeNull();
 		expect(container.querySelector('.forked-badge')).toBeNull();
+	});
+
+	test('the description shows once, after the meta row', () => {
+		const description = 'A rich and moist cake.';
+		const { container } = render(RecipeCard, {
+			props: { recipe: makeRecipe({ description, prepTimeMinutes: 20 }) }
+		});
+		const line = screen.getByText(description);
+		expect(screen.getAllByText(description)).toHaveLength(1);
+		const meta = container.querySelector('.meta-row')!;
+		expect(meta.compareDocumentPosition(line) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+	});
+
+	test.each([null, '', '   '])('a recipe with no description (%j) adds no line', (description) => {
+		const { container } = render(RecipeCard, { props: { recipe: makeRecipe({ description }) } });
+		const card = container.querySelector('.recipe-card')!;
+		expect([...card.querySelectorAll('p')]).toHaveLength(0);
+	});
+
+	test('a page that brings its own line under the card can leave the description out', () => {
+		const description = 'A rich and moist cake.';
+		render(RecipeCard, {
+			props: { recipe: makeRecipe({ description }), showDescription: false }
+		});
+		expect(screen.queryByText(description)).toBeNull();
 	});
 
 	test('a recipe with a photo shows it with the title below', () => {

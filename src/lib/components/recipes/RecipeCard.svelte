@@ -25,11 +25,21 @@
 	// fetched eagerly and the very first ahead of everything else. Without it
 	// the photo is lazy (decided 29 October 2026). alwaysShowAuthor keeps the
 	// author on a phone, for a list whose point is who made each one (forks).
+	// showDescription off leaves the line under the meta row to the page (the
+	// forks list puts each fork's commit note there).
 	let {
 		recipe,
 		index,
-		alwaysShowAuthor = false
-	}: { recipe: CardRecipe; index?: number; alwaysShowAuthor?: boolean } = $props();
+		alwaysShowAuthor = false,
+		showDescription = true
+	}: {
+		recipe: CardRecipe;
+		index?: number;
+		alwaysShowAuthor?: boolean;
+		showDescription?: boolean;
+	} = $props();
+
+	const description = $derived(showDescription ? recipe.description?.trim() : '');
 
 	const eager = $derived(index !== undefined && index < 4);
 
@@ -98,6 +108,11 @@
 			{/if}
 		{/each}
 	</div>
+
+	<!-- At most one extra line: no description, no line (Spencer, 31 October 2026). -->
+	{#if description}
+		<p class="card-description">{description}</p>
+	{/if}
 </div>
 
 <style>
@@ -198,6 +213,19 @@
 		flex-wrap: wrap;
 		align-items: center;
 		gap: 5px;
+	}
+
+	/* One line, Ink 3 sans at the meta size, 4px under the meta row. */
+	.card-description {
+		margin: -6px 0 0;
+		display: -webkit-box;
+		-webkit-line-clamp: 1;
+		-webkit-box-orient: vertical;
+		line-clamp: 1;
+		overflow: hidden;
+		font-size: 0.8125rem;
+		line-height: 1.5;
+		color: var(--color-text-3);
 	}
 
 	.meta-item {
