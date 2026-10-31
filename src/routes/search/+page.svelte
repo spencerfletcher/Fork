@@ -1,5 +1,6 @@
 <script lang="ts">
 	import RecipeGrid from '#lib/components/recipes/RecipeGrid.svelte';
+	import { allRecipesHref } from '#lib/helpers.js';
 	import SearchFilters from '#lib/components/ui/SearchFilters.svelte';
 	import type { PageData } from './$types';
 
@@ -41,7 +42,7 @@
 					<a href="/search">Clear search</a>
 				{:else}
 					Enter a recipe name or select tags to find recipes.
-					<a href={data.user ? '/' : '/recipes'}>All recipes</a>
+					<a href={allRecipesHref(!!data.user)}>All recipes</a>
 				{/if}
 			</p>
 		{/if}

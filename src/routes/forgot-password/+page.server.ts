@@ -1,6 +1,6 @@
 import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { text } from '#lib/recipes/validation.js';
+import { text } from '#lib/helpers.js';
 
 export const load: PageServerLoad = async () => ({ meta: { title: 'Forgot your password?' } });
 

@@ -35,7 +35,7 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 	// With nothing favorited a query or tags filter nothing: the page hears of
 	// neither, so it says "No favorites yet" rather than "No favorites match".
 	if (favoriteIds.length === 0) {
-		return { favoriteRecipes: [], allTags: [], searchQuery: '', selectedTags: [], meta: META };
+		return { recipes: [], allTags: [], searchQuery: '', selectedTags: [], meta: META };
 	}
 
 	// Chips come from every favourite, not the filtered subset, or narrowing by
@@ -49,7 +49,7 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 		matchCounts = await tagMatchCounts(selectedTagIds, favoriteIds);
 		candidateIds = [...matchCounts.keys()];
 		if (candidateIds.length === 0) {
-			return { favoriteRecipes: [], allTags, searchQuery, selectedTags: tagSlugs, meta: META };
+			return { recipes: [], allTags, searchQuery, selectedTags: tagSlugs, meta: META };
 		}
 	}
 
@@ -66,5 +66,5 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 
 	const withCounts = await attachRecipeCounts(rows);
 
-	return { favoriteRecipes: withCounts, allTags, searchQuery, selectedTags: tagSlugs, meta: META };
+	return { recipes: withCounts, allTags, searchQuery, selectedTags: tagSlugs, meta: META };
 };

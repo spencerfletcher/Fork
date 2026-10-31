@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { pendingEnhance } from '#lib/pendingEnhance.svelte.js';
+	import { authHref } from '#lib/auth/loginHref.js';
 	import { EMAIL_MESSAGE, emailCheck, firstInvalid } from '#lib/auth/emailCheck.svelte.js';
 
 	let { form, data }: { form: { error?: string } | null; data: { redirectTo: string | null } } =
@@ -79,12 +80,7 @@
 		</form>
 
 		<p class="auth-switch">
-			Don't have an account? <a
-				href={data.redirectTo
-					? `/signup?redirectTo=${encodeURIComponent(data.redirectTo)}`
-					: '/signup'}>
-				Create one
-			</a>
+			Don't have an account? <a href={authHref('/signup', data.redirectTo)}>Create one</a>
 		</p>
 	</div>
 </div>

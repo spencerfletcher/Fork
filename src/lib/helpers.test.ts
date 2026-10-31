@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import { formatDate, formatTime, plural } from './helpers';
+import { allRecipesHref, formatDate, formatTime, plural } from './helpers';
 
 describe('formatTime', () => {
 	test('under an hour reads in minutes', () => {
@@ -32,5 +32,12 @@ describe('plural', () => {
 		expect(plural(1, 'fork')).toBe('1 fork');
 		expect(plural(0, 'fork')).toBe('0 forks');
 		expect(plural(2, 'public recipe')).toBe('2 public recipes');
+	});
+});
+
+describe('allRecipesHref', () => {
+	test('signed in, every public recipe is the home feed; signed out, /recipes', () => {
+		expect(allRecipesHref(true)).toBe('/');
+		expect(allRecipesHref(false)).toBe('/recipes');
 	});
 });

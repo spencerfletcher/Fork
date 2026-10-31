@@ -5,7 +5,7 @@
 
 	let { data }: { data: PageData } = $props();
 
-	const recipes = $derived(data.favoriteRecipes);
+	const recipes = $derived(data.recipes);
 	const filtered = $derived(!!data.searchQuery || data.selectedTags.length > 0);
 </script>
 

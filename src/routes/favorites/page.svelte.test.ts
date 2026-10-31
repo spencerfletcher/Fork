@@ -17,7 +17,7 @@ const RECIPE = {
 	cookTimeMinutes: null
 };
 
-const data = { favoriteRecipes: [], allTags: [], searchQuery: '', selectedTags: [] };
+const data = { recipes: [], allTags: [], searchQuery: '', selectedTags: [] };
 
 function renderFavorites(overrides: Partial<typeof data> = {}) {
 	return render(FavoritesPage, { props: { data: { ...data, ...overrides } } as never });
@@ -45,7 +45,7 @@ describe('Favorites page', () => {
 	});
 
 	test('with favorites the search and tag filters render', () => {
-		renderFavorites({ favoriteRecipes: [RECIPE] as never });
+		renderFavorites({ recipes: [RECIPE] as never });
 		expect(screen.getByRole('searchbox')).toBeInTheDocument();
 		expect(screen.getByRole('heading', { level: 2, name: '1 recipe' })).toBeInTheDocument();
 	});

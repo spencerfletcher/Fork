@@ -1,6 +1,6 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { text } from '#lib/recipes/validation.js';
+import { text } from '#lib/helpers.js';
 import { ensureProfile, usernameTaken } from '#lib/server/profiles.js';
 import { localPath } from '#lib/server/localPath.js';
 import { USERNAME_MESSAGE, normalizeUsername, validUsername } from '#lib/auth/rules.js';

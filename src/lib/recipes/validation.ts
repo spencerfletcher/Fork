@@ -4,6 +4,7 @@ import { parseIngredientText } from './ingredients.js';
 import { parseStepText } from './steps.js';
 import { LINE_TOO_LONG, fieldTooLong, limitError } from './limits.js';
 import { normaliseTagNames } from './tags.js';
+import { text } from '#lib/helpers.js';
 
 // Largest value a Postgres `integer` column holds.
 const INT4_MAX = 2_147_483_647;
@@ -103,12 +104,6 @@ export type RecipeDraft = {
 	hadPhoto: boolean;
 	removeImage: boolean;
 };
-
-/** A form field as a string: missing or non-string (a File) reads as empty. */
-export function text(formData: FormData, key: string): string {
-	const value = formData.get(key);
-	return typeof value === 'string' ? value : '';
-}
 
 function parse<T>(schema: z.ZodType<T>, input: unknown): Result<T> {
 	const result = schema.safeParse(input);

@@ -71,7 +71,7 @@ describe('favorites load', () => {
 
 		const result = await loadResult(makeEvent());
 
-		expect(result.favoriteRecipes.length).toBe(1);
+		expect(result.recipes.length).toBe(1);
 		// The fixture returns an author regardless of what the loader asked for,
 		// so assert on the query itself — otherwise deleting the author relation
 		// keeps this test green while the page silently loses its bylines.
@@ -113,7 +113,7 @@ describe('favorites load', () => {
 
 		const result = await loadResult(makeEvent('?tags=dessert,quick'));
 
-		expect(result.favoriteRecipes.map((r) => r.id)).toEqual([2, 1]);
+		expect(result.recipes.map((r) => r.id)).toEqual([2, 1]);
 	});
 
 	test('offers filter chips for every favourited tag, not only the filtered subset', async () => {
@@ -142,7 +142,7 @@ describe('favorites load', () => {
 
 		const result = await loadResult(makeEvent());
 
-		expect(result.favoriteRecipes).toEqual([]);
+		expect(result.recipes).toEqual([]);
 		expect(result.allTags).toEqual([]);
 		expect(findManyMock).not.toHaveBeenCalled();
 	});
@@ -159,7 +159,7 @@ describe('favorites load', () => {
 
 		const result = await loadResult(makeEvent());
 
-		expect(result.favoriteRecipes).toEqual([]);
+		expect(result.recipes).toEqual([]);
 		// Its tags must not leak through the filter chips either.
 		expect(result.allTags).toEqual([]);
 		expect(selectDistinctMock).not.toHaveBeenCalled();
@@ -173,7 +173,7 @@ describe('favorites load', () => {
 		const result = await loadResult(makeEvent());
 
 		expect(findManyMock).toHaveBeenCalledTimes(1);
-		expect(result.favoriteRecipes).toHaveLength(1);
+		expect(result.recipes).toHaveLength(1);
 	});
 
 	test("searches as Search does: the trimmed query against the recipe's text and its ingredient names", async () => {

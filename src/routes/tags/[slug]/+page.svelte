@@ -1,5 +1,6 @@
 <script lang="ts">
 	import RecipeGrid from '#lib/components/recipes/RecipeGrid.svelte';
+	import { allRecipesHref } from '#lib/helpers.js';
 	import TagTabs from '#lib/components/ui/TagTabs.svelte';
 	import type { PageData } from './$types';
 
@@ -10,7 +11,7 @@
 	<div class="page-inner">
 		<div class="browse-header">
 			<h1>{data.tag.name}</h1>
-			<TagTabs tags={data.tags} active={data.tag.slug} allHref={data.user ? '/' : '/recipes'} />
+			<TagTabs tags={data.tags} active={data.tag.slug} allHref={allRecipesHref(!!data.user)} />
 		</div>
 
 		{#if data.recipes.length > 0}
@@ -19,7 +20,7 @@
 			<RecipeGrid recipes={data.recipes} />
 		{:else}
 			<p class="empty-state">
-				No recipes with this tag yet. <a href={data.user ? '/' : '/recipes'}>Explore all →</a>
+				No recipes with this tag yet. <a href={allRecipesHref(!!data.user)}>Explore all →</a>
 			</p>
 		{/if}
 	</div>

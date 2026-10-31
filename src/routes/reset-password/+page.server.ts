@@ -1,6 +1,6 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { text } from '#lib/recipes/validation.js';
+import { text } from '#lib/helpers.js';
 import { PASSWORD_MIN } from '#lib/auth/rules.js';
 
 // The tab reads as the card heads itself: the form, or the expired link.
@@ -12,7 +12,7 @@ const meta = (linkValid: boolean) => ({ title: linkValid ? 'Reset password' : 'L
  * in on a shared device. Fifteen minutes is the link's own order of life.
  */
 export const _RECOVERY_COOKIE = 'pw-reset';
-const _RECOVERY_COOKIE_OPTIONS = {
+const RECOVERY_COOKIE_OPTIONS = {
 	path: '/reset-password',
 	httpOnly: true,
 	sameSite: 'lax',
@@ -31,7 +31,7 @@ export const load: PageServerLoad = async ({ url, cookies, locals: { supabase, u
 			? await supabase.auth.exchangeCodeForSession(code)
 			: await supabase.auth.verifyOtp({ type: 'recovery', token_hash: tokenHash! });
 		if (!error) {
-			cookies.set(_RECOVERY_COOKIE, '1', _RECOVERY_COOKIE_OPTIONS);
+			cookies.set(_RECOVERY_COOKIE, '1', RECOVERY_COOKIE_OPTIONS);
 			throw redirect(303, '/reset-password');
 		}
 		return { linkValid: false, meta: meta(false) };
@@ -66,7 +66,7 @@ export const actions: Actions = {
 
 		// The link is spent; the recovery session is a full session, so the cook
 		// is signed in.
-		cookies.delete(_RECOVERY_COOKIE, { path: _RECOVERY_COOKIE_OPTIONS.path });
+		cookies.delete(_RECOVERY_COOKIE, { path: RECOVERY_COOKIE_OPTIONS.path });
 		throw redirect(303, '/');
 	}
 };

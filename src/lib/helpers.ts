@@ -33,6 +33,17 @@ export function plural(n: number, word: string): string {
 	return `${n} ${word}${n === 1 ? '' : 's'}`;
 }
 
+/** Every public recipe: the home feed when signed in, where /recipes is your own. */
+export function allRecipesHref(signedIn: boolean): string {
+	return signedIn ? '/' : '/recipes';
+}
+
+/** A form field as a string: missing or non-string (a File) reads as empty. */
+export function text(formData: FormData, key: string): string {
+	const value = formData.get(key);
+	return typeof value === 'string' ? value : '';
+}
+
 /** Eight URL-safe random characters, appended to slugs so titles need not be unique. */
 export function randomSuffix(): string {
 	return crypto.randomUUID().slice(0, 8);

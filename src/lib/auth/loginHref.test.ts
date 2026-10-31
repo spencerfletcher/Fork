@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import { loginHref } from './loginHref.js';
+import { authHref, loginHref } from './loginHref.js';
 
 describe('loginHref', () => {
 	test('carries the page to come back to, encoded', () => {
@@ -17,5 +17,12 @@ describe('loginHref', () => {
 		const url = new URL(loginHref(path), 'http://x');
 		expect(url.pathname).toBe('/login');
 		expect(url.searchParams.get('redirectTo')).toBe(path);
+	});
+});
+
+describe('authHref', () => {
+	test('sign-up carries the path the same way', () => {
+		expect(authHref('/signup', '/favorites')).toBe('/signup?redirectTo=%2Ffavorites');
+		expect(authHref('/signup', null)).toBe('/signup');
 	});
 });
