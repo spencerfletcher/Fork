@@ -1,8 +1,3 @@
-<!-- TODO:
- - Add a link to allow users to request a resend of the email
- - Add text saying what the email is
- - Don't allow the user to access the page without an email param (i.e. they shouldn't be able to just type in the URL)
--->
 <div class="auth-page">
 	<div class="auth-card">
 		<div class="auth-header">
