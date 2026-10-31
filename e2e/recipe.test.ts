@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { SEED } from '../src/lib/server/db/seedData';
+import { gotoHydrated } from './helpers';
 import { parseIngredientLine } from '../src/lib/recipes/ingredients';
 import { scaleIngredient } from '../src/lib/recipes/scale';
 
@@ -1398,7 +1399,7 @@ test.describe('Landing page (logged out)', () => {
 
 	test('the open phone menu dims the page but not the bar above it', async ({ page }) => {
 		await page.setViewportSize({ width: 390, height: 844 });
-		await page.goto('/');
+		await gotoHydrated(page, '/');
 		await page.getByRole('button', { name: /open main menu/i }).click();
 		await page.locator('#mobile-menu').waitFor();
 		const brand = await page.getByRole('link', { name: /^fork/i }).first().boundingBox();

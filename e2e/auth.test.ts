@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './helpers';
 
 test.describe('Auth pages', () => {
 	test('login page renders an email input and password input', async ({ page }) => {
@@ -45,7 +46,7 @@ test.describe('Auth pages', () => {
 		page
 	}) => {
 		await page.setViewportSize({ width: 390, height: 844 });
-		await page.goto('/signup');
+		await gotoHydrated(page, '/signup');
 		await expect(page.getByRole('heading', { level: 1 })).toHaveText('Create an account');
 		const rule = page.getByText('Usernames are 3 to 30 characters: letters, digits, - or _');
 		await expect(rule).toBeHidden();
@@ -60,7 +61,7 @@ test.describe('Auth pages', () => {
 	test('a rejected username is told to screen readers and its rule printed once', async ({
 		page
 	}) => {
-		await page.goto('/signup');
+		await gotoHydrated(page, '/signup');
 		const field = page.getByLabel('Username');
 		await field.fill('Jane Doe');
 		await field.blur();

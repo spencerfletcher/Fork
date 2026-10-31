@@ -7,6 +7,7 @@
 
 import { expect, test, type Page } from '@playwright/test';
 import { SEED } from '../src/lib/server/db/seedData';
+import { gotoHydrated } from './helpers';
 
 const COOKIES_RE = new RegExp(SEED[0].versions.at(-1)!.title, 'i');
 
@@ -378,11 +379,6 @@ test.describe('Edit recipe page', () => {
 // Each scenario creates its own recipe and deletes it in `finally`, so the
 // seed stays untouched and the tests can run in parallel.
 
-/**
- * Navigate and wait for hydration. Filling a field before SvelteKit has
- * hydrated the page races the client re-render: the fill clears the input,
- * hydration restores the server value, the fill then appends ("48").
- */
 // Past the first version a bar under the hero names the current one and
 // carries a "N versions" toggle; a one-version recipe has no bar.
 async function expectVersions(page: Page, n: number) {
@@ -394,12 +390,11 @@ async function expectVersions(page: Page, n: number) {
 	await expect(page.locator('.version-bar .versions-toggle')).toHaveText(`${n} versions`);
 }
 
-async function gotoHydrated(page: Page, url: string) {
-	await page.goto(url);
-	await page.waitForLoadState('networkidle');
-}
-
 async function createRecipe(page: Page, title: string, servings: string) {
+	// A test that makes its own recipe also edits and deletes it: several
+	// saves and page loads, which outrun 10s on a machine running the whole
+	// suite in parallel. Triples the timeout for that test only.
+	test.slow();
 	await gotoHydrated(page, '/recipes/new');
 	await page.locator('textarea[name="title"]').fill(title);
 	await page.locator('input[name="servings"]').fill(servings);

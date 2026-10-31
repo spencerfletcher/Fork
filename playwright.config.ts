@@ -25,6 +25,11 @@ export default defineConfig({
 	},
 
 	testDir: 'e2e',
+	// Every test, not just every file, gets its own worker slot: the recipe
+	// file alone is 86 tests, which one worker ran back to back while the rest
+	// sat idle. Tests that act right after loading wait for hydration
+	// (e2e/helpers.ts gotoHydrated), since a loaded machine hydrates late.
+	fullyParallel: true,
 	timeout: 10000,
 	// A broad break (sign-in down, a layout crash) would otherwise wait out
 	// every test's timeout; ten failures are enough to see what broke.
