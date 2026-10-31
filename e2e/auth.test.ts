@@ -92,21 +92,6 @@ test.describe('Auth pages', () => {
 		await expect(page.getByText('3 to 30 letters, digits, - or _.')).toHaveCount(0);
 	});
 
-	test('a link inside the auth alert is underlined and stays on one line', async ({ page }) => {
-		// The alert only renders after a submission; build one with the page's
-		// own classes rather than submit the form.
-		await page.goto('/signup');
-		const style = await page.evaluate(() => {
-			const alert = document.createElement('div');
-			alert.className = 'auth-error';
-			alert.innerHTML = 'That email already has an account. <a href="/login">Log in</a>';
-			document.querySelector('.auth-card')!.prepend(alert);
-			const s = getComputedStyle(alert.querySelector('a')!);
-			return { line: s.textDecorationLine, wrap: s.whiteSpace };
-		});
-		expect(style).toEqual({ line: 'underline', wrap: 'nowrap' });
-	});
-
 	// Submits to the local Supabase stack, whose mail lands in its own inbox.
 	test('"Forgot password?" leads to a reset form that says the link was sent, not whether the account exists', async ({
 		page

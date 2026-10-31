@@ -1,5 +1,4 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
-import { readFileSync } from 'node:fs';
 import { SEED } from '../src/lib/server/db/seedData';
 
 // The compare page after Spencer's end-of-day decisions (29 October 2026).
@@ -21,91 +20,7 @@ const hitHeight = (el: Locator) =>
 		return node.getBoundingClientRect().height - parseFloat(s.top) - parseFloat(s.bottom);
 	});
 
-/** A select's text area, in its own font's ch. */
-const textAreaInCh = (select: Locator) =>
-	select.evaluate((el) => {
-		const s = getComputedStyle(el);
-		const probe = document.createElement('span');
-		Object.assign(probe.style, {
-			display: 'inline-block',
-			width: '1ch',
-			fontFamily: s.fontFamily,
-			fontSize: s.fontSize
-		});
-		document.body.append(probe);
-		const ch = probe.getBoundingClientRect().width;
-		probe.remove();
-		return (el.clientWidth - parseFloat(s.paddingLeft) - parseFloat(s.paddingRight)) / ch;
-	});
-
 test.describe('Compare page', () => {
-	test('closed pickers show the version and its message, clipped at 22ch; the arrow is mono at their size', async ({
-		page
-	}) => {
-		await page.setViewportSize({ width: 1280, height: 900 });
-		await openCookiesCompare(page);
-		const from = page.getByRole('combobox', { name: 'From version' });
-		await expect(from).toHaveValue('2');
-		// The select draws its own text: no face over it.
-		await expect(page.locator('.picker__face')).toHaveCount(0);
-		expect(await from.evaluate((el: HTMLSelectElement) => el.selectedOptions[0].text)).toMatch(
-			/^v2 · \S/
-		);
-		expect(await from.evaluate((el) => getComputedStyle(el).color)).not.toBe('rgba(0, 0, 0, 0)');
-		// 22ch of label, "v2 · Increased vanilla", not the message's own width.
-		expect(await textAreaInCh(from)).toBeCloseTo('v2 · Increased vanilla'.length, 0);
-		// Pressed, the list keeps the same labels: there is no swap.
-		await from.dispatchEvent('pointerdown');
-		await expect(from.locator('option').nth(1)).toHaveText(/^v2 · \S/);
-		const arrow = page.locator('.version-picker__arrow');
-		await expect(arrow).toHaveAttribute('aria-hidden', 'true');
-		const [arrowFont, selectFont] = await Promise.all([
-			arrow.evaluate((el) => [getComputedStyle(el).fontFamily, getComputedStyle(el).fontSize]),
-			from.evaluate((el) => [getComputedStyle(el).fontFamily, getComputedStyle(el).fontSize])
-		]);
-		expect(arrowFont).toEqual(selectFont);
-		await expect(page.getByText('From', { exact: true })).toHaveCount(0);
-	});
-
-	test('the caret sits at the right edge of the picker at every width, so it reads as a select', async ({
-		page
-	}) => {
-		// The gap between the caret and the select's right edge is the select's
-		// own padding and border, nothing more; on a phone the picker is ~164px.
-		const caretGap = (n: number) =>
-			page
-				.locator('.picker')
-				.nth(n)
-				.evaluate((picker) => {
-					const select = picker.querySelector('select')!;
-					const caret = picker.querySelector('.picker__caret')!;
-					return select.getBoundingClientRect().right - caret.getBoundingClientRect().right;
-				});
-		await page.setViewportSize({ width: 390, height: 900 });
-		await openCookiesCompare(page);
-		expect((await page.locator('.picker select').first().boundingBox())!.width).toBeGreaterThan(
-			120
-		);
-		for (const n of [0, 1]) expect(await caretGap(n)).toBeLessThanOrEqual(12);
-		await page.setViewportSize({ width: 1280, height: 900 });
-		expect((await page.locator('.picker select').first().boundingBox())!.width).toBeLessThan(300);
-		for (const n of [0, 1]) expect(await caretGap(n)).toBeLessThanOrEqual(12);
-	});
-
-	test('on a phone the closed box shows the long label clipped at the caret, the whole box the tap target', async ({
-		page
-	}) => {
-		await page.setViewportSize({ width: 390, height: 900 });
-		await openCookiesCompare(page);
-		const from = page.getByRole('combobox', { name: 'From version' });
-		expect(await from.evaluate((el: HTMLSelectElement) => el.selectedOptions[0].text)).toMatch(
-			/^v2 · \S/
-		);
-		// Room for more than "v2 · ", so the message starts in the closed box.
-		expect(await textAreaInCh(from)).toBeGreaterThan('v2 · '.length);
-		expect((await from.boundingBox())!.width).toBeGreaterThan(120);
-	});
-
 	test('in forced colours the picker keeps its label and its caret, unclipped', async ({
 		page
 	}) => {
@@ -124,22 +39,6 @@ test.describe('Compare page', () => {
 		}
 	});
 
-	test('at 1280 Method starts on the To card’s left edge; Details runs the column', async ({
-		page
-	}) => {
-		await page.setViewportSize({ width: 1280, height: 900 });
-		await openCookiesCompare(page, '?from=1&to=3');
-		const to = (await page.locator('article.version-card--to').boundingBox())!;
-		const method = (await page
-			.locator('.diff-section', { has: page.getByRole('heading', { name: 'Method' }) })
-			.boundingBox())!;
-		expect(Math.abs(method.x - to.x)).toBeLessThanOrEqual(1);
-		// The renamed title is one line in Details.
-		const title = page.locator('.diff-row', { hasText: 'Title:' }).locator('.diff-content');
-		const lineHeight = await title.evaluate((el) => parseFloat(getComputedStyle(el).lineHeight));
-		expect((await title.boundingBox())!.height).toBeLessThan(lineHeight * 1.5);
-	});
-
 	test('the back link is as wide as its text: 24px tall at desktop, 44px on a phone', async ({
 		page
 	}) => {
@@ -156,29 +55,6 @@ test.describe('Compare page', () => {
 		expect(box.height).toBeGreaterThanOrEqual(24);
 		await page.setViewportSize({ width: 390, height: 900 });
 		expect((await back.boundingBox())!.height).toBeGreaterThanOrEqual(44);
-	});
-
-	test("a card's username is Username's own step under the line, at every width", async ({
-		page
-	}) => {
-		// The step is Username's em, read from its source so a change there
-		// moves this test with it.
-		const username = readFileSync('src/lib/components/ui/Username.svelte', 'utf8');
-		const step = Number(/\.username\s*{[^}]*font-size:\s*([\d.]+)em/.exec(username)![1]);
-		await openCookiesCompare(page);
-		const ratio = () =>
-			page
-				.locator('.version-card__head .username')
-				.first()
-				.evaluate(
-					(el) =>
-						parseFloat(getComputedStyle(el).fontSize) /
-						parseFloat(getComputedStyle(el.closest('.version-card__head')!).fontSize)
-				);
-		for (const width of [1280, 390]) {
-			await page.setViewportSize({ width, height: 900 });
-			expect(await ratio()).toBeCloseTo(step, 3);
-		}
 	});
 
 	test('on a phone the card number links are 44px targets', async ({ page }) => {

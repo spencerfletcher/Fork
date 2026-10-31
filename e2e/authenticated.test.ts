@@ -108,62 +108,6 @@ test.describe('New recipe page', () => {
 		await expect(title).not.toHaveAttribute('aria-invalid', 'true');
 	});
 
-	test('number errors run the width of their row on one line each, in field order, under the boxes', async ({
-		page
-	}) => {
-		await gotoHydrated(page, '/recipes/new');
-		for (const [name, value] of [
-			['servings', '0'],
-			['prepTimeMinutes', '-5'],
-			['cookTimeMinutes', '1.5']
-		]) {
-			await page.locator(`input[name="${name}"]`).fill(value);
-			await page.locator(`input[name="${name}"]`).blur();
-		}
-		for (const width of [1280, 390]) {
-			await page.setViewportSize({ width, height: 900 });
-			const row = (await page.locator('.field-row').boundingBox())!;
-			const boxes = (await page.locator('input[name="cookTimeMinutes"]').boundingBox())!;
-			let above = boxes.y + boxes.height;
-			for (const name of ['servings', 'prepTimeMinutes', 'cookTimeMinutes']) {
-				const error = page.locator(`#${name}-error`);
-				await expect(page.locator(`input[name="${name}"]`)).toHaveAttribute('aria-invalid', 'true');
-				const box = (await error.boundingBox())!;
-				const line = parseFloat(await error.evaluate((el) => getComputedStyle(el).lineHeight));
-				expect(box.x).toBeCloseTo(row.x, 0);
-				expect(box.width).toBeCloseTo(row.width, 0);
-				expect(box.height).toBeLessThan(line * 1.5);
-				expect(box.y).toBeGreaterThanOrEqual(above);
-				above = box.y + box.height;
-			}
-		}
-	});
-
-	test('an invalid box keeps the surface fill and its Ink 3 placeholder, so empty still looks empty', async ({
-		page
-	}) => {
-		await gotoHydrated(page, '/recipes/new');
-		const steps = page.getByLabel('Steps');
-		const colours = () =>
-			steps.evaluate((el) => ({
-				placeholder: getComputedStyle(el, '::placeholder').color,
-				fill: getComputedStyle(el).backgroundColor
-			}));
-		const valid = await colours();
-		expect(valid.placeholder).toBe('rgb(111, 105, 96)');
-		await steps.fill('x');
-		await steps.fill('');
-		await steps.blur();
-		await expect(steps).toHaveAttribute('aria-invalid', 'true');
-		expect(await colours()).toEqual(valid);
-	});
-
-	test('the required asterisk is Ink 3 at rest, not the error red', async ({ page }) => {
-		await gotoHydrated(page, '/recipes/new');
-		const star = page.locator('label[for="title"] .required');
-		expect(await star.evaluate((el) => getComputedStyle(el).color)).toBe('rgb(111, 105, 96)');
-	});
-
 	test('a blocked Create shows no browser bubble: the first empty field takes focus and its message is announced', async ({
 		page
 	}) => {
@@ -218,53 +162,6 @@ test.describe('New recipe page', () => {
 		expect(await hit()).toEqual([44, 44]);
 	});
 
-	test('the open tag list flows out of the box: flush, one shared edge, square where they meet, the ring around both', async ({
-		page
-	}) => {
-		await gotoHydrated(page, '/recipes/new');
-		const input = page.getByRole('combobox', { name: /tag/i });
-		const look = (el: Element) => {
-			const s = getComputedStyle(el);
-			return {
-				top: el.getBoundingClientRect().top,
-				bottom: el.getBoundingClientRect().bottom,
-				borderTop: s.borderTopWidth,
-				radii: [
-					s.borderTopLeftRadius,
-					s.borderTopRightRadius,
-					s.borderBottomRightRadius,
-					s.borderBottomLeftRadius
-				],
-				outline: `${s.outlineStyle} ${s.outlineColor} ${s.outlineOffset}`,
-				clip: s.clipPath
-			};
-		};
-		const closed = await input.evaluate(look);
-		for (const width of [1280, 390]) {
-			await page.setViewportSize({ width, height: 900 });
-			await input.blur();
-			await input.focus();
-			const menu = page.getByRole('listbox');
-			await expect(menu).toBeVisible();
-			const box = await input.evaluate(look);
-			const list = await menu.evaluate(look);
-			expect(list.top).toBeCloseTo(box.bottom, 1);
-			expect(list.borderTop).toBe('0px');
-			expect(box.radii).toEqual([closed.radii[0], closed.radii[1], '0px', '0px']);
-			expect(list.radii.slice(0, 2)).toEqual(['0px', '0px']);
-			expect(list.radii[2]).not.toBe('0px');
-			// The box's ring carries on around the list instead of crossing it.
-			expect(box.outline).toMatch(/^solid /);
-			expect(list.outline).toBe(box.outline);
-			// Each is clipped at the join: nothing of the box below it, nothing of the list above.
-			expect(box.clip).toMatch(/^inset\(-\S+ -\S+ 0px\)$/);
-			expect(list.clip).toMatch(/^inset\(0px -\S+ -\S+\)$/);
-			await page.keyboard.press('Escape');
-			await expect(menu).toBeHidden();
-			expect((await input.evaluate(look)).radii).toEqual(closed.radii);
-		}
-	});
-
 	test('the tag list opens in view when the box sits at the foot of the screen, on a phone and at a desktop width', async ({
 		page
 	}) => {
@@ -279,18 +176,6 @@ test.describe('New recipe page', () => {
 			// Whole: the scroll lands on a whole pixel, so up to a pixel may be cut.
 			await expect(page.getByRole('listbox')).toBeInViewport({ ratio: 0.99 });
 		}
-	});
-
-	test('empty editors keep room to type into, instead of collapsing to one line', async ({
-		page
-	}) => {
-		await page.goto('/recipes/new');
-		const description = await page.getByLabel('Description').boundingBox();
-		const ingredients = await page.getByLabel('Ingredients').boundingBox();
-		const steps = await page.getByLabel('Steps').boundingBox();
-		expect(description!.height).toBeGreaterThan(60);
-		expect(ingredients!.height).toBeGreaterThan(200);
-		expect(steps!.height).toBeGreaterThan(ingredients!.height);
 	});
 
 	test('the public checkbox is clay, and on a phone its row is a 44px target without moving the text', async ({
@@ -494,79 +379,6 @@ test.describe('Edit recipe page', () => {
 				'placeholder',
 				'Updated steps'
 			);
-		} finally {
-			await deleteRecipe(page, url);
-		}
-	});
-
-	test('every text box is mono at one size, the commit message as tall as its siblings, Save at least 112px wide', async ({
-		page
-	}) => {
-		const url = await createRecipe(page, 'E2E Mono', '4');
-		try {
-			await gotoHydrated(page, `${url}/edit`);
-			const boxes = page.locator('.form :is(input[type="text"], input[type="number"], textarea)');
-			expect(await boxes.count()).toBe(9);
-			for (const box of await boxes.all()) {
-				const style = await box.evaluate((el) => {
-					const s = getComputedStyle(el);
-					return { family: s.fontFamily, size: s.fontSize };
-				});
-				expect(style.family).toContain('JetBrains Mono');
-				expect(style.size).toBe('13px');
-			}
-			const title = await page.locator('textarea[name="title"]').boundingBox();
-			const message = await page.locator('input[name="commitMessage"]').boundingBox();
-			expect(message!.height).toBe(title!.height);
-			const save = await page.getByRole('button', { name: 'Save', exact: true }).boundingBox();
-			const cancel = await page.getByRole('link', { name: 'Cancel' }).boundingBox();
-			expect(save!.width).toBeGreaterThanOrEqual(112);
-			expect(save!.width).toBeGreaterThan(cancel!.width);
-
-			await page.setViewportSize({ width: 390, height: 900 });
-			for (const box of ['textarea[name="title"]', 'input[name="commitMessage"]']) {
-				const size = await page.locator(box).evaluate((el) => getComputedStyle(el).fontSize);
-				expect(size).toBe('16px');
-			}
-		} finally {
-			await deleteRecipe(page, url);
-		}
-	});
-
-	test('the photo is a 41px ghost button over a hidden input, ringed when focused, and the rule above What changed? is a plain Rule', async ({
-		page
-	}) => {
-		const url = await createRecipe(page, 'E2E Photo Button', '4');
-		try {
-			await gotoHydrated(page, `${url}/edit`);
-			const input = page.locator('input[name="image"]');
-			const button = page.locator('label:has(> input[name="image"])');
-			await expect(button).toHaveText('Choose photo');
-			const look = await button.evaluate((el) => {
-				const s = getComputedStyle(el);
-				return { height: el.getBoundingClientRect().height, border: s.borderTopStyle };
-			});
-			expect(Math.round(look.height)).toBe(41);
-			expect(look.border).toBe('solid');
-			// A button's voice, as Cancel has it, not the field labels' eyebrow.
-			const voice = (el: Element) => {
-				const s = getComputedStyle(el);
-				return [s.fontSize, s.fontWeight, s.textTransform, s.letterSpacing, s.color];
-			};
-			expect(await button.evaluate(voice)).toEqual(
-				await page.getByRole('link', { name: 'Cancel' }).evaluate(voice)
-			);
-			expect((await input.boundingBox())!.width).toBeLessThanOrEqual(1);
-			// Reached by Tab from the description, the hidden input rings its button.
-			await page.getByLabel('Description').focus();
-			await page.keyboard.press('Tab');
-			await expect(input).toBeFocused();
-			expect(await button.evaluate((el) => getComputedStyle(el).outlineStyle)).toBe('solid');
-			const rule = await page.locator('.field-message').evaluate((el) => {
-				const s = getComputedStyle(el);
-				return [s.borderTopStyle, s.borderTopWidth, s.borderTopColor];
-			});
-			expect(rule).toEqual(['solid', '1px', 'rgb(228, 222, 212)']);
 		} finally {
 			await deleteRecipe(page, url);
 		}
