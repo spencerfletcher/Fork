@@ -58,6 +58,10 @@ export default defineConfig({
 		})
 	],
 	test: {
+		// Vitest 5's on-disk module cache fails to load +page.svelte's virtual
+		// CSS module under recipes/[slug] ("Invalid declaration: `page`"), even
+		// from an empty cache; the suite passes with it off.
+		experimental: { fsModuleCache: false },
 		projects: [
 			{
 				extends: './vite.config.ts',
