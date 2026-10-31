@@ -26,11 +26,13 @@
 		"// ── Database ─────────────────────────────────────────────────": "",
 		"db:generate": "drizzle-kit generate",
 		"db:migrate": "tsx scripts/db-migrate.ts",
+		"db:migrate:e2e": "DB_TARGET=e2e tsx scripts/db-migrate.ts",
 		"db:migrate:prod": "DB_TARGET=prod tsx scripts/db-migrate.ts",
 		"db:sql": "tsx scripts/db-sql.ts",
 		"db:sql:prod": "DB_TARGET=prod tsx scripts/db-sql.ts",
 		"db:studio": "drizzle-kit studio",
 		"db:seed": "tsx src/lib/server/db/seed.ts",
+		"db:seed:e2e": "DB_TARGET=e2e tsx src/lib/server/db/seed.ts",
 		"db:seed:prod": "DB_TARGET=prod tsx src/lib/server/db/seed.ts"
 	},
 	"devDependencies": {

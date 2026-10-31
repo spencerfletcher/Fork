@@ -1,8 +1,8 @@
 /**
  * Playwright global auth setup: logs in as the seed user once and saves the
  * browser storage state for every authenticated test, so the login round-trip
- * is paid once per run. Needs `pnpm db:seed` and E2E_USER_EMAIL /
- * E2E_USER_PASSWORD in .env.local (see .env.example).
+ * is paid once per run. E2E_USER_EMAIL / E2E_USER_PASSWORD come from .env.e2e,
+ * and global-setup seeds that user.
  */
 
 import { test as setup, expect } from '@playwright/test';

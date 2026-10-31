@@ -4,20 +4,24 @@ import { loadEnv } from './src/lib/server/db/env';
 
 // A built SvelteKit app resolves $env/dynamic/private from process.env at
 // runtime, and the preview server below inherits this process's environment,
-// so whatever loadEnv puts there is the database the suite writes to. 'local'
-// loads .env.local first and refuses a hosted DATABASE_URL outright: the
-// authenticated tests create recipes and versions, and once ran against
-// production by accident.
-loadEnv('local');
+// so whatever loadEnv puts there is the database the suite writes to. 'e2e'
+// loads .env.e2e first and refuses any database but the local fork_e2e, which
+// global-setup resets to the seed before every run; the dev database is never
+// touched. Process env outranks .env.local in Vite's env loading, so the
+// preview cannot fall back to the dev database.
+loadEnv('e2e');
 
 export const AUTH_FILE = path.join('e2e', '.auth', 'user.json');
 
 export default defineConfig({
+	globalSetup: './e2e/global-setup.ts',
+
 	webServer: {
-		command: 'pnpm build && pnpm preview',
-		port: 4173,
-		// Re-use an already-running preview server if present (faster local dev)
-		reuseExistingServer: !process.env.CI
+		// Its own port, never reused: a preview already running on 4173 serves
+		// the dev database.
+		command: 'pnpm build && pnpm preview --port 4174 --strictPort',
+		port: 4174,
+		reuseExistingServer: false
 	},
 
 	testDir: 'e2e',

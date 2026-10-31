@@ -88,7 +88,9 @@ jobs:
       # Auth, Storage and an empty Postgres; the schema comes from db:migrate below.
       - run: supabase start
 
-      # Publish the generated local keys and database URL to later steps.
+      # Publish the generated local keys and the suite's database, fork_e2e, to
+      # later steps (they outrank the workflow placeholders and .env.e2e). The
+      # seed and e2e users come from .env.e2e.
       - name: Export Supabase environment
         run: |
           eval "$(supabase status -o env)"
@@ -96,19 +98,15 @@ jobs:
             echo "PUBLIC_SUPABASE_URL=$API_URL"
             echo "PUBLIC_SUPABASE_ANON_KEY=$ANON_KEY"
             echo "SUPABASE_SECRET_KEY=$SERVICE_ROLE_KEY"
-            echo "DATABASE_URL=$DB_URL"
-            echo "SEED_USER_PASSWORD=Fork-Demo-2025!"
-            echo "E2E_USER_EMAIL=spencer@fork.dev"
-            echo "E2E_USER_PASSWORD=Fork-Demo-2025!"
+            echo "DATABASE_URL=${DB_URL%/postgres}/fork_e2e"
           } >> "$GITHUB_ENV"
 
       - run: pnpm exec svelte-kit sync
 
-      # Replays the Drizzle chain from empty, so this job also proves the
-      # migrations still build the schema from scratch.
-      - run: pnpm db:migrate
-
-      - run: pnpm db:seed
+      # Creates fork_e2e and replays the Drizzle chain from empty, so this job
+      # also proves the migrations still build the schema from scratch. The
+      # suite's global setup seeds it.
+      - run: pnpm db:migrate:e2e
 
       # The concurrent-save test needs a real Postgres; the unit job has none,
       # so it runs here where the local stack is up.
