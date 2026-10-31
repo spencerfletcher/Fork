@@ -1334,7 +1334,7 @@ test.describe('Landing page (logged out)', () => {
 	}) => {
 		await page.setViewportSize({ width: 1280, height: 900 });
 		await gotoClassicCookies(page);
-		const rule2 = 'rgb(217, 211, 200)';
+		const ink2 = 'rgb(74, 68, 62)';
 		const marigold = 'rgb(236, 166, 32)';
 		const ink = 'rgb(26, 23, 20)';
 		const ink3 = 'rgb(111, 105, 96)';
@@ -1352,9 +1352,9 @@ test.describe('Landing page (logged out)', () => {
 				const s = getComputedStyle(el);
 				return { edge: s.borderTopColor, width: s.width, radius: s.borderTopLeftRadius };
 			});
-			expect(rest, section).toEqual({ edge: rule2, width: '16px', radius: '50%' });
+			expect(rest, section).toEqual({ edge: ink3, width: '16px', radius: '50%' });
 			await row.hover();
-			expect(await tick.evaluate((el) => getComputedStyle(el).borderTopColor), section).toBe(ink3);
+			expect(await tick.evaluate((el) => getComputedStyle(el).borderTopColor), section).toBe(ink2);
 			await row.click();
 			const fill = await tick.evaluate((el) => getComputedStyle(el).backgroundColor);
 			expect(fill, section).toBe(marigold);

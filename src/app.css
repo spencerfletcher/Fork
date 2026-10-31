@@ -869,19 +869,19 @@
 	}
 
 	/* The recipe page's strike rows: the picture of a visually hidden native
-	   checkbox (the row is its label). A Rule 2 circle at rest, an Ink 3 edge
+	   checkbox (the row is its label). An Ink 3 circle at rest, an Ink 2 edge
 	   while the row is hovered, marigold with an ink check once ticked. */
 	.tick {
 		position: relative;
 		flex-shrink: 0;
 		width: 16px;
 		height: 16px;
-		border: 1px solid var(--color-border-2);
+		border: 1px solid var(--color-text-3);
 		border-radius: 50%;
 	}
 
 	label:hover .tick {
-		border-color: var(--color-text-3);
+		border-color: var(--color-text-2);
 	}
 
 	label:has(:checked) .tick {

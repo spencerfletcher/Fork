@@ -151,16 +151,16 @@ describe('RecipeIngredients', () => {
 		};
 		const bodies = (selector: string) => [...appCss.matchAll(rule(selector))].map((m) => m[1]);
 
-		test('at rest a 16px circle with a 1px Rule 2 edge', () => {
+		test('at rest a 16px circle with a 1px Ink 3 edge', () => {
 			const [rest] = bodies('.tick');
 			expect(rest).toMatch(/width: 16px;/);
 			expect(rest).toMatch(/height: 16px;/);
 			expect(rest).toMatch(/border-radius: 50%;/);
-			expect(rest).toMatch(/border: 1px solid var\(--color-border-2\);/);
+			expect(rest).toMatch(/border: 1px solid var\(--color-text-3\);/);
 		});
 
-		test('hovering the row turns the edge Ink 3', () => {
-			expect(bodies('label:hover .tick')[0]).toMatch(/border-color: var\(--color-text-3\);/);
+		test('hovering the row turns the edge Ink 2', () => {
+			expect(bodies('label:hover .tick')[0]).toMatch(/border-color: var\(--color-text-2\);/);
 		});
 
 		test('ticked, it fills marigold and draws an ink check', () => {
