@@ -4,7 +4,7 @@
 
 1. ~~One save, versioned content~~ shipped 2026-10-27 (`superpowers/specs/2026-10-23-one-save-design.md`), together with M10 Drizzle migrations and the operational cleanup.
 2. ~~UI redesign~~ built 2026-10-27 on the `redesign` branch (tokens, nav and shell, recipe page, card and grid, compare, edit and new), each step reviewed; the "as built" paragraphs in `research/2026-10-26-ui-design-directions.md` record what differs from the boards. Moved to the backlog during the build: in-place tag filtering, browse sections past their caps, dark mode. Older inputs: `todo/DESIGN.md`, `todo/TODO_UI.md`.
-3. ~~Serving scaling on the recipe page (temporary multiplier, no version written)~~ shipped 2026-10-31: `÷2 [serves] ×2` in the header's measure, the box editable for any amount from 0.25, quantities and grams scaled on the page only, `?serves=` in the URL (`src/lib/recipes/scale.ts`, DESIGN.md Scale control).
+3. ~~Serving scaling on the recipe page (temporary multiplier, no version written)~~ shipped 2026-10-31: a serves box in the Ingredients eyebrow row, editable for any amount from 0.25 (its ÷2 and ×2 steps cut the same day as clutter), the header's measure saying the scaled serves, quantities and grams scaled on the page only, `?serves=` in the URL (`src/lib/recipes/scale.ts`, DESIGN.md Scale control).
 4. Cooklang-derived items from `research/2026-10-23-cooklang.md`: cooking attempts (M17), export (M16), `.cook` import (M15 stage 6), ingredient use in steps.
 5. Social features (added 2026-10-29): pull requests back to the source recipe (M1), comments on versions (M3), following and a feed (M4), collections (M6), with the sharing defaults below settled first. The 2026-09 deferral of feeds and graph work no longer stands; order within the set is open.
 6. Recipe title band (added 2026-10-29): look into whether the earlier split header, a separate title band (lighter than the espresso of the old one, not the navbar colour) holding breadcrumb, title with the version chip, tags and the time/serves line, then the current body below it, reads better than the current single-surface header. Design study only, decide after a side-by-side.
@@ -30,7 +30,7 @@ Ideas from the original MVP design that are not covered by a milestone. Kept as 
 - Diff pages stay monospace (decided 2026-10-27).
 - Temperature toggle (°C / °F) on steps: temperatures are free text, so a render-time regex like the M11 timer match, no schema.
 - Print stylesheet for the recipe page: `@media print`, no nav or sidebar. An afternoon.
-- ~~Serving scaler on the recipe page: a stepper or ×½ / ×2 that re-renders parsed quantities in place; unparsed lines render as written with a mark. The parser already separates the two.~~ Shipped 2026-10-31 (ac2dfd0) as priority 3.
+- ~~Serving scaler on the recipe page: a serves control that re-renders parsed quantities in place; unparsed lines render as written with a mark. The parser already separates the two.~~ Shipped 2026-10-31 (ac2dfd0) as priority 3.
 - Restore or edit-from on the compare page: one secondary button in the "from" card that opens the editor seeded with that version's content.
 - Quantities inline in steps ("Whisk flour (280 g), baking soda (1 tsp)…") so cooking does not mean scrolling between the list and the method. Needs ingredient names matched to step text; after the redesign.
 - Nutrition (macros) per ingredient from USDA FoodData Central, after the M12 gram tables, since weights are the input.
@@ -291,6 +291,13 @@ Spencer, 31 October 2026: "on search recipes can show what part of their data ma
 # M20 — Revisit the tick affordance
 
 The recipe page's strike rows tick with a 16px circle on ingredients, Ink 3 at rest and marigold with an ink check when ticked (31 October 2026). Spencer chose it as a stopgap: "keep box but make it ours for now but i want to revisit this later i don't love this solution either". Method rows tick with no circle since 31 October 2026. Options already considered: the step numeral becomes the tick on the method, and a whole-row press with a mark in the gutter. Settle it with a side-by-side, together with M18's cooking mode, which leans on the ticks hardest.
+
+# M21 — Pantry tracker and pantry-match search
+
+Spencer, 31 October 2026: "feature idea to add to roadmap: pantry tracker, and ability to search by closest match to what's in the pantry."
+
+- A pantry list per user: the ingredients on hand, kept by name so they compare with the parsed ingredient lines.
+- A search mode that ranks recipes by how many of their ingredients the pantry covers, fewest missing first; it sits beside M8's ranking, and M19's highlighting can mark the missing ingredients on each card.
 
 ---
 
