@@ -495,20 +495,33 @@
 		margin: var(--space-2) 0 0;
 	}
 
-	/* Browse and tag pages: the title and the tag tabs share one baseline. The
-	   tabs wrap under the title when the row runs out of room. */
+	/* Every list page's title row. On browse and tag pages the title and the
+	   tag tabs share one baseline; the tabs wrap under the title when the row
+	   runs out of room, 24px under it, as the search filters sit. */
 	.browse-header {
 		display: flex;
 		flex-wrap: wrap;
 		align-items: baseline;
 		justify-content: space-between;
-		gap: 20px;
+		gap: var(--space-5) 20px;
 		margin-bottom: var(--space-5);
 		min-width: 0;
 	}
 
 	.browse-header h1 {
 		margin: 0;
+	}
+
+	/* Beside the title, the tabs' underline (4px padding, 2px line) hangs up to
+	   7px below the h1's box and would push the content down on browse pages
+	   only. The margin takes it back, so the content starts 24px under the h1 on
+	   every list page. */
+	@media (min-width: 700px) {
+		/* ponytail: if the tabs wrap under the title at this width (many tags),
+		   the content sits 17px under them, not 24. */
+		.browse-header .tag-tabs {
+			margin-bottom: -11px;
+		}
 	}
 
 	/* Both classes: .eyebrow-label is declared later in this layer and would
