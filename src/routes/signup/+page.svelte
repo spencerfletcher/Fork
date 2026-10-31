@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { loginHref } from '#lib/auth/loginHref.js';
 
 	let {
 		form,
@@ -8,11 +9,6 @@
 		form: { message?: string; registered?: boolean; errors?: { username?: string } } | null;
 		data: { redirectTo: string | null };
 	} = $props();
-
-	// Back to login with the page the visitor was headed for, if any.
-	const loginHref = $derived(
-		data.redirectTo ? `/login?redirectTo=${encodeURIComponent(data.redirectTo)}` : '/login'
-	);
 
 	// Disabled while the request is out, so a second press cannot send it twice.
 	let pending = $state(false);
@@ -78,7 +74,7 @@
 			<div class="auth-error" role="alert">
 				{form.message}
 				{#if form.registered}
-					<a href={loginHref}>Log in</a>
+					<a href={loginHref(data.redirectTo)}>Log in</a>
 				{/if}
 			</div>
 		{/if}
@@ -199,7 +195,7 @@
 		</form>
 
 		<p class="auth-switch">
-			Already have an account? <a href={loginHref}>Log in</a>
+			Already have an account? <a href={loginHref(data.redirectTo)}>Log in</a>
 		</p>
 	</div>
 </div>

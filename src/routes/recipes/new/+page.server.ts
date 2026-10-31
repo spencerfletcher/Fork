@@ -13,9 +13,10 @@ import {
 import { syncTags, listTags } from '#lib/server/tags.js';
 import type { RecipeContent } from '#lib/recipes/types.js';
 import { ensureProfile } from '#lib/server/profiles.js';
+import { loginHref } from '#lib/auth/loginHref.js';
 
-export const load: PageServerLoad = async ({ locals: { user } }) => {
-	if (!user) throw redirect(303, '/login');
+export const load: PageServerLoad = async ({ url, locals: { user } }) => {
+	if (!user) throw redirect(303, loginHref(url.pathname));
 
 	const allTags = await listTags();
 

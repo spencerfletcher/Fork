@@ -58,7 +58,7 @@ describe('favorites load', () => {
 	test('redirects anonymous visitors to the login page', async () => {
 		await expect(load(makeEvent('', null))).rejects.toMatchObject({
 			status: 303,
-			location: '/login?redirectTo=/favorites'
+			location: '/login?redirectTo=%2Ffavorites'
 		});
 	});
 

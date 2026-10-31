@@ -1,7 +1,7 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { chain } from '#lib/testing/drizzle.js';
 import { invokeAction as invoke, formEvent } from '#lib/testing/actions.js';
-import { actions } from './+page.server';
+import { actions, load } from './+page.server';
 import { makeContent, makeIngredient, makeStep } from '#lib/recipes/fixtures.js';
 
 // ─── Hoisted mocks (must be available inside vi.mock factory) ─────────────────
@@ -432,5 +432,19 @@ describe('save', () => {
 		});
 		expect(removeMock).toHaveBeenCalledWith(SUPABASE, 'owner-123/new.png');
 		error.mockRestore();
+	});
+});
+
+describe('edit load', () => {
+	test('a logged-out visitor is sent to log in and brought back to this editor', async () => {
+		const event = {
+			params: { slug: 'soup' },
+			url: new URL('http://x/recipes/soup/edit'),
+			locals: { user: null }
+		};
+		await expect(Promise.resolve().then(() => load(event as never))).rejects.toMatchObject({
+			status: 303,
+			location: '/login?redirectTo=%2Frecipes%2Fsoup%2Fedit'
+		});
 	});
 });

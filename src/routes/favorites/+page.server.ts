@@ -6,13 +6,14 @@ import { attachRecipeCounts } from '#lib/server/recipeCounts.js';
 import { byTagMatches, tagMatchCounts, visibleTags } from '#lib/server/tagFilter.js';
 import { canView } from '#lib/server/visibility.js';
 import { parseFilters, textSearch } from '#lib/server/recipeSearch.js';
+import { loginHref } from '#lib/auth/loginHref.js';
 import type { PageServerLoad } from './$types';
 
 const META = { title: 'Favorites' };
 
 export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 	if (!user) {
-		throw redirect(303, '/login?redirectTo=/favorites');
+		throw redirect(303, loginHref(url.pathname));
 	}
 
 	const { searchQuery, tagSlugs } = parseFilters(url);

@@ -14,12 +14,13 @@ import {
 	type UploadedImage
 } from '#lib/server/images.js';
 import { syncTags, listTags } from '#lib/server/tags.js';
+import { loginHref } from '#lib/auth/loginHref.js';
 
 const STALE_MESSAGE =
 	'This recipe was changed in another tab. Reload to see the latest version, then reapply your edits.';
 
-export const load: PageServerLoad = async ({ params, locals: { user } }) => {
-	if (!user) throw redirect(303, '/login');
+export const load: PageServerLoad = async ({ params, url, locals: { user } }) => {
+	if (!user) throw redirect(303, loginHref(url.pathname));
 
 	const recipe = await db.query.recipes.findFirst({
 		where: eq(recipes.slug, params.slug),

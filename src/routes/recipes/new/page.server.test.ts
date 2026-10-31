@@ -1,6 +1,6 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { chain } from '#lib/testing/drizzle.js';
-import { actions } from './+page.server';
+import { actions, load } from './+page.server';
 import { invokeAction, formEvent } from '#lib/testing/actions.js';
 
 const invoke = (event: unknown) => invokeAction(actions.default as never, event);
@@ -177,5 +177,15 @@ describe('new recipe action', () => {
 			draft: { title: 'Soup' }
 		});
 		error.mockRestore();
+	});
+});
+
+describe('new recipe load', () => {
+	test('a logged-out visitor is sent to log in and brought back here', async () => {
+		const event = { url: new URL('http://x/recipes/new'), locals: { user: null } };
+		await expect(Promise.resolve().then(() => load(event as never))).rejects.toMatchObject({
+			status: 303,
+			location: '/login?redirectTo=%2Frecipes%2Fnew'
+		});
 	});
 });
