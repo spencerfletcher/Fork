@@ -10,9 +10,7 @@
 	// data.user is the signed-in viewer, from the root layout.
 	const isOwner = $derived(data.user?.id === profile.id);
 
-	const memberSince = $derived(
-		formatDate(new Date(profile.createdAt ?? Date.now()), { month: 'long', year: 'numeric' })
-	);
+	const memberSince = $derived(formatDate(profile.createdAt, { month: 'long', year: 'numeric' }));
 </script>
 
 <div class="page">

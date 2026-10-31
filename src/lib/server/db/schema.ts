@@ -34,7 +34,7 @@ export const profiles = pgTable('profiles', {
 	id: text().primaryKey(), // Supabase auth user ID
 	username: text().notNull().unique(),
 	avatarUrl: text('avatar_url'),
-	createdAt: timestamp('created_at').defaultNow()
+	createdAt: timestamp('created_at').notNull().defaultNow()
 }).enableRLS();
 
 // ─── Recipes ─────────────────────────────────────────────────────────────────
@@ -60,8 +60,8 @@ export const recipes = pgTable(
 		forkedAt: timestamp('forked_at'),
 		// Visibility
 		isPublic: boolean('is_public').notNull().default(true),
-		createdAt: timestamp('created_at').defaultNow(),
-		updatedAt: timestamp('updated_at').defaultNow(),
+		createdAt: timestamp('created_at').notNull().defaultNow(),
+		updatedAt: timestamp('updated_at').notNull().defaultNow(),
 		// Bumped once per committed save (version or settings-only). The edit form
 		// sends it back and a save with a stale value is refused.
 		editRevision: integer('edit_revision').notNull().default(0),
@@ -112,7 +112,7 @@ export const favorites = pgTable(
 		recipeId: integer('recipe_id')
 			.notNull()
 			.references(() => recipes.id, { onDelete: 'cascade' }),
-		createdAt: timestamp('created_at').defaultNow()
+		createdAt: timestamp('created_at').notNull().defaultNow()
 	},
 	(table) => [primaryKey({ columns: [table.userId, table.recipeId] })]
 ).enableRLS();
@@ -136,7 +136,7 @@ export const recipeVersions = pgTable(
 		imageUrl: text('image_url'),
 		ingredients: jsonb().notNull().$type<Ingredient[]>(),
 		steps: jsonb().notNull().$type<Step[]>(),
-		createdAt: timestamp('created_at').defaultNow(),
+		createdAt: timestamp('created_at').notNull().defaultNow(),
 		createdBy: text('created_by').references(() => profiles.id, { onDelete: 'set null' })
 	},
 	(table) => [unique().on(table.recipeId, table.versionNumber)]

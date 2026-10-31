@@ -41,11 +41,6 @@ describe('browseSections', () => {
 		expect(browseSections(forked)[1].recipes).toHaveLength(4);
 	});
 
-	test('a recipe with no updatedAt sorts last', () => {
-		const sections = browseSections([{ id: 1, updatedAt: null, forkCount: 0 }, r(2, 3)]);
-		expect(sections[0].recipes.map((x) => x.id)).toEqual([2, 1]);
-	});
-
 	test('an empty list gives no sections', () => {
 		expect(browseSections([])).toEqual([]);
 	});

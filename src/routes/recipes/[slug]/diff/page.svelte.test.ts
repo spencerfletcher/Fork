@@ -1,6 +1,7 @@
 import { describe, test, expect, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import DiffPage from './+page.svelte';
+import { formatDate } from '#lib/helpers.js';
 import source from './+page.svelte?raw';
 import type { IngredientDiffRow, MetaDiffRow, StepDiffRow } from '#lib/recipes/diff.js';
 import { makeContent, makeIngredient as ing, makeStep } from '#lib/recipes/fixtures.js';
@@ -29,14 +30,14 @@ const V1 = {
 	versionNumber: 1,
 	commitMessage: 'Initial recipe',
 	creator: null as { id: string; username: string } | null,
-	createdAt: new Date(2026, 1, 28) as Date | null,
+	createdAt: new Date(2026, 1, 28),
 	...SNAPSHOT
 };
 const V2 = {
 	versionNumber: 2,
 	commitMessage: 'Added espresso powder',
 	creator: null as { id: string; username: string } | null,
-	createdAt: new Date(2026, 1, 28) as Date | null,
+	createdAt: new Date(2026, 1, 28),
 	...SNAPSHOT
 };
 
@@ -214,12 +215,12 @@ describe('Diff page', () => {
 		expect(screen.queryByText(/changed$/)).toBeNull();
 	});
 
-	test('a card without a creator or a date shows neither, with no stray separator', () => {
+	test('a card without a creator shows its date, with no stray separator', () => {
 		const { container } = render(DiffPage, {
-			props: { data: makeData({ fromVersion: { ...V1, createdAt: null, creator: null } }) }
+			props: { data: makeData({ fromVersion: { ...V1, creator: null } }) }
 		});
 		const header = container.querySelector('article.version-card .version-card__head');
-		expect(header?.textContent?.replace(/\s+/g, ' ').trim()).toBe('v1');
+		expect(header?.textContent?.replace(/\s+/g, ' ').trim()).toBe(`v1 ${formatDate(V1.createdAt)}`);
 	});
 
 	test('a card links its creator, then the date', () => {

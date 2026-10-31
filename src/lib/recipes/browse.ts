@@ -5,7 +5,7 @@
 export const RECENT_LIMIT = 8;
 export const FORKED_LIMIT = 4;
 
-export type BrowseRecipe = { id: number; updatedAt: Date | null; forkCount: number };
+export type BrowseRecipe = { id: number; updatedAt: Date; forkCount: number };
 
 export type BrowseSection<T> = {
 	title: 'Recent' | 'Most forked' | 'All recipes';
@@ -13,10 +13,8 @@ export type BrowseSection<T> = {
 };
 
 export function browseSections<T extends BrowseRecipe>(recipes: T[]): BrowseSection<T>[] {
-	// Newest first; a recipe with no date goes to the end rather than the top.
-	const byDate = [...recipes].sort(
-		(a, b) => (b.updatedAt?.getTime() ?? -Infinity) - (a.updatedAt?.getTime() ?? -Infinity)
-	);
+	// Newest first.
+	const byDate = [...recipes].sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
 	const recent = byDate.slice(0, RECENT_LIMIT);
 	// Only recipes not already on show as Recent, so a card never appears twice;
 	// on a small site the section is simply absent. Stable sort, so equal fork

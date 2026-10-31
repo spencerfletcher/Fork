@@ -43,11 +43,6 @@
 		// holds the version just picked.
 		document.getElementById(id)?.focus();
 	}
-
-	// The viewer's own day. The server renders in its zone and the browser may
-	// correct the text on hydration; a day that matches the reader's calendar
-	// is worth that.
-	const when = (d: Date | null) => (d ? formatDate(d) : undefined);
 </script>
 
 {#snippet picker(id: string, label: string, value: number, set: (v: number) => void)}
@@ -70,19 +65,19 @@
 {/snippet}
 
 <!-- Number, author, date and message. The title, servings and times are in
-     the Details panel with their del/ins; the cards do not state them again. -->
+     the Details panel with their del/ins; the cards do not state them again.
+     The date is the viewer's own day: the server renders in its zone and the
+     browser may correct the text on hydration; a day that matches the
+     reader's calendar is worth that. -->
 {#snippet card(v: CardVersion, isTo: boolean)}
-	{@const date = when(v.createdAt)}
 	<article class="version-card" class:version-card--to={isTo}>
 		<div class="version-card__head">
 			<a href={versionHref(v)} class="version-card__number">v{v.versionNumber}</a>
-			{#if v.creator || date}
-				<span>
-					{#if v.creator}<Username username={v.creator.username} />{/if}
-					{#if v.creator && date}·{/if}
-					{date ?? ''}
-				</span>
-			{/if}
+			<span>
+				{#if v.creator}<Username username={v.creator.username} />{/if}
+				{#if v.creator}·{/if}
+				{formatDate(v.createdAt)}
+			</span>
 		</div>
 		<p class="version-card__message">{v.commitMessage}</p>
 	</article>

@@ -29,6 +29,20 @@
       "when": 1793459956420,
       "tag": "0003_tags-slug-lowercase",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793464182845,
+      "tag": "0004_timestamps-not-null-data",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1793464193806,
+      "tag": "0005_timestamps-not-null",
+      "breakpoints": true
     }
   ]
 }
