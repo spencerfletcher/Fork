@@ -478,7 +478,8 @@ test.describe('Recipe detail page', () => {
 		await page.setViewportSize({ width: 1440, height: 1000 });
 		await gotoClassicCookies(page);
 
-		const ingredients = page.getByRole('heading', { name: /ingredients/i }).first();
+		// The column, not its eyebrow, which shares its row with the scale control.
+		const ingredients = page.locator('#ingredients');
 		const method = page.getByRole('heading', { name: /method/i }).first();
 		await ingredients.waitFor();
 		await method.waitFor();
@@ -766,8 +767,11 @@ test.describe('Recipe detail page', () => {
 			atEnd: window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 1
 		}));
 		expect(y < 120 || atEnd).toBe(true);
-		// The next Tab lands on the first ingredient, not back in the header.
+		// The next Tab lands on the scale control at the list's head, not back in
+		// the header; past its ÷2, box and ×2, the first ingredient.
 		await page.keyboard.press('Tab');
+		await expect(page.getByRole('button', { name: 'Halve servings' })).toBeFocused();
+		for (let i = 0; i < 3; i++) await page.keyboard.press('Tab');
 		await expect(page.locator('#ingredients input[type="checkbox"]').first()).toBeFocused();
 	});
 
@@ -938,7 +942,7 @@ test.describe('Recipe detail page', () => {
 		await gotoClassicCookies(page);
 		// Three times the seed's rows: well past a 700px screen.
 		await page.evaluate(() => {
-			const list = document.querySelector('#ingredients h2 + div')!;
+			const list = document.querySelector('#ingredients div:has(> h2) + div')!;
 			for (let i = 0; i < 2; i++) list.append(...[...list.children].map((c) => c.cloneNode(true)));
 		});
 		const sticky = page.locator('.sidebar-sticky');
@@ -973,7 +977,7 @@ test.describe('Recipe detail page', () => {
 		// Three times the rows on a 700px screen: the hidden rows are signalled.
 		await page.setViewportSize({ width: 1280, height: 700 });
 		await page.evaluate(() => {
-			const list = document.querySelector('#ingredients h2 + div')!;
+			const list = document.querySelector('#ingredients div:has(> h2) + div')!;
 			for (let i = 0; i < 2; i++) list.append(...[...list.children].map((c) => c.cloneNode(true)));
 		});
 		await page.waitForTimeout(100);
@@ -992,13 +996,15 @@ test.describe('Recipe detail page', () => {
 		await gotoClassicCookies(page);
 		// 25 rows: well past a 700px screen, as a long real recipe would be.
 		await page.evaluate(() => {
-			const list = document.querySelector('#ingredients h2 + div')!;
+			const list = document.querySelector('#ingredients div:has(> h2) + div')!;
 			const rows = [...list.children];
 			for (let i = 0; list.children.length < 25; i++)
 				list.append(rows[i % rows.length].cloneNode(true));
 		});
 		await page.keyboard.press('Tab');
 		await page.keyboard.press('Enter');
+		// Past the scale control's ÷2, box and ×2; the loop's first Tab reaches row 1.
+		for (let i = 0; i < 3; i++) await page.keyboard.press('Tab');
 		const rows = page.locator('#ingredients label');
 		await expect(rows).toHaveCount(25);
 		for (let i = 0; i < 25; i++) {
@@ -1028,7 +1034,8 @@ test.describe('Recipe detail page', () => {
 			await gotoClassicCookies(page);
 			await page.keyboard.press('Tab');
 			await page.keyboard.press('Enter');
-			await page.keyboard.press('Tab');
+			// Past the scale control's ÷2, box and ×2 to the first ingredient.
+			for (let i = 0; i < 4; i++) await page.keyboard.press('Tab');
 			const row = page.locator('#ingredients label').first();
 			await expect(row.locator('input')).toBeFocused();
 			const m = await row.evaluate((el) => {
@@ -1060,7 +1067,7 @@ test.describe('Recipe detail page', () => {
 		await page.setViewportSize({ width: 1280, height: 900 });
 		await gotoClassicCookies(page);
 		const recipeUrl = page.url().split('?')[0];
-		const ingredient = page.locator('#ingredients input').nth(1);
+		const ingredient = page.locator('#ingredients input[type="checkbox"]').nth(1);
 		await page.locator('#ingredients label').nth(1).click();
 		await page.reload();
 		await expect(ingredient).toBeChecked();
@@ -1070,7 +1077,7 @@ test.describe('Recipe detail page', () => {
 		const other = await browser.newContext({ storageState: await page.context().storageState() });
 		const tab = await other.newPage();
 		await tab.goto(recipeUrl);
-		await expect(tab.locator('#ingredients input').nth(1)).toBeChecked();
+		await expect(tab.locator('#ingredients input[type="checkbox"]').nth(1)).toBeChecked();
 		await expect(tab.locator('#recipe input:checked')).toHaveCount(1);
 		await other.close();
 		// v2 is another version: none of v3's ticks carry over.

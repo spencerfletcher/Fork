@@ -227,6 +227,21 @@ describe('RecipeIngredients', () => {
 		expect(document.activeElement).toBe(screen.getAllByRole('checkbox')[0]);
 	});
 
+	test('Clear ticks passes over the scale control’s box to the first line', async () => {
+		const control = createRawSnippet(() => ({ render: () => '<input aria-label="Servings" />' }));
+		render(RecipeIngredients, {
+			props: {
+				ingredients: parseIngredientText(LINES),
+				grams: [null, null, null],
+				storageKey: KEY,
+				control
+			}
+		});
+		await fireEvent.click(rows()[2]);
+		await fireEvent.click(screen.getByRole('button', { name: 'Clear ticks' }));
+		expect(document.activeElement).toBe(screen.getAllByRole('checkbox')[0]);
+	});
+
 	// A mouse click (detail 1) must not scroll the page to the first line;
 	// Enter or Space (detail 0) may, so the keyboard user sees where focus went.
 	test('Clear ticks from a mouse moves focus without scrolling; from the keyboard it scrolls', async () => {

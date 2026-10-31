@@ -37,7 +37,7 @@
 	function clear(e: MouseEvent & { currentTarget: HTMLButtonElement }) {
 		e.currentTarget
 			.closest('section')
-			?.querySelector('input')
+			?.querySelector<HTMLInputElement>('input[type="checkbox"]')
 			?.focus({ preventScroll: e.detail > 0 });
 		ticked = [];
 		saveTicks(storageKey, ticked);
