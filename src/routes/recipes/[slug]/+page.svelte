@@ -309,6 +309,15 @@
 			border-bottom-color: var(--color-accent);
 		}
 
+		/* Forced colours paint the transparent underline both tabs carry, so both
+		   would read as current; Canvas hides it, leaving the pressed tab's line,
+		   as TagTabs does in app.css. */
+		@media (forced-colors: active) {
+			.section-tabs button:not([aria-pressed='true']) {
+				border-bottom-color: Canvas;
+			}
+		}
+
 		/* Under the pinned 46px tab bar as well: a row focused upward, and the
 		   section brought back by a tab switch, land below it. */
 		:global(html:has(#recipe)) {

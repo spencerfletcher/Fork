@@ -126,4 +126,10 @@ describe('recipe page title band', () => {
 		expect(pageSource).toMatch(/grid-template-columns: minmax\(0, 1fr\) 504px;/);
 		expect(pageSource).toMatch(/aspect-ratio: 4 \/ 3;/);
 	});
+
+	test('in forced colours only the pressed section tab keeps its underline', () => {
+		expect(pageSource).toMatch(
+			/@media \(forced-colors: active\) \{\s*\.section-tabs button:not\(\[aria-pressed='true'\]\) \{\s*border-bottom-color: Canvas;/
+		);
+	});
 });

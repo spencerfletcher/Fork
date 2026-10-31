@@ -288,7 +288,7 @@ A "Skip to content" link is the first tab stop on every page, hidden until focus
 
 ### Browser surfaces
 
-The marks the browser draws are the system's own. Focus: one 2px clay ring with 2px offset on `:focus-visible`, marigold inside the navbar; on the open tag combobox the ring runs around box and list as one. Selection: `::selection` is marigold behind ink text, site-wide, the one fill (decided 29 October 2026). Overscroll: the strip above the page is espresso. The recipe page's phone section tabs are toggle buttons carrying `aria-pressed`; its hero photo is the one image above the fold and carries `fetchpriority="high"` and `decoding="async"`; the bar's screen-reader version line ends in a full stop so the note does not run into it.
+The marks the browser draws are the system's own. Focus: one 2px clay ring with 2px offset on `:focus-visible`, marigold inside the navbar; on the open tag combobox the ring runs around box and list as one. Selection: `::selection` is marigold behind ink text, site-wide, the one fill (decided 29 October 2026). Overscroll: the strip above the page is espresso. The recipe page's phone section tabs are toggle buttons carrying `aria-pressed`, and in forced colours an unpressed tab's transparent underline is painted Canvas so only the pressed tab shows a line, as the tag tabs do; its hero photo is the one image above the fold and carries `fetchpriority="high"` and `decoding="async"`; the bar's screen-reader version line ends in a full stop so the note does not run into it.
 
 ### Version note (signature)
 
