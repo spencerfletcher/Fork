@@ -264,19 +264,30 @@
 		transform: rotate(180deg);
 	}
 
+	/* No gap: each row's own padding spaces the rows, so two boxes never meet.
+	   The top padding is the old 10px less a row's 6px, so the first row's text
+	   stays where it was. */
 	.history {
 		display: flex;
 		flex-direction: column;
-		gap: 8px;
+		gap: 0;
 		margin-top: 10px;
-		padding-top: 10px;
+		padding-top: 4px;
 		border-top: 1px solid var(--color-border);
+	}
+
+	/* Each row is a box with room inside, pulled out by its own inline padding
+	   so the text keeps the note line's left edge. */
+	.history li {
+		padding: 6px 10px;
+		margin-inline: -10px;
+		border-radius: var(--radius-sm);
 	}
 
 	/* Every row here is another version; the current line is never outlined. */
 	.history li:hover,
 	.history li:focus-within {
-		outline: 1px solid var(--color-text-2);
+		outline: 1px solid var(--color-border-2);
 		outline-offset: -1px;
 	}
 
@@ -366,7 +377,7 @@
 		}
 
 		.history li {
-			padding: 11px 0;
+			padding: 11px 10px;
 		}
 
 		.history .compare {

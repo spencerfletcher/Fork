@@ -209,13 +209,13 @@ describe('VersionBar', () => {
 		expect(source).toMatch(/\.version-bar\.closed,\s*\.current \{[^}]*cursor: pointer;/);
 	});
 
-	test("hover and focus outline each other version's row in Ink 2, never the current line", () => {
+	test("hover and focus outline each other version's row in Rule 2, never the current line", () => {
 		// jsdom applies no component CSS, so the rule is read from the source. The
 		// list holds only the other versions; the current line lives in .current.
 		const style = source.slice(source.indexOf('<style>'));
 		const rule = /\.history li:hover,\s*\.history li:focus-within \{([^}]*)\}/.exec(style);
 		expect(rule).not.toBeNull();
-		expect(rule![1]).toMatch(/outline: 1px solid var\(--color-text-2\);/);
+		expect(rule![1]).toMatch(/outline: 1px solid var\(--color-border-2\);/);
 		expect(rule![1]).toMatch(/outline-offset: -1px;/);
 		expect(style).not.toMatch(/\.current[^{]*:hover[^{]*\{[^}]*outline/);
 		expect(style).toMatch(
