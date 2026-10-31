@@ -5,7 +5,11 @@ import { MIN_SERVES } from '#lib/recipes/scale.js';
 
 const { goto, page } = vi.hoisted(() => ({
 	goto: vi.fn(),
-	page: { url: new URL('http://localhost/recipes/cookies'), state: {} }
+	page: {
+		url: new URL('http://localhost/recipes/cookies'),
+		state: {},
+		shallow: null as { url: URL } | null
+	}
 }));
 vi.mock('$app/navigation', () => ({ goto }));
 vi.mock('$app/state', () => ({ page }));
@@ -29,7 +33,10 @@ function lastUrl(): URL {
 	return new URL(url);
 }
 
-beforeEach(() => goto.mockClear());
+beforeEach(() => {
+	goto.mockClear();
+	page.shallow = null;
+});
 
 describe('ServesControl', () => {
 	test('shows the stored serves in a decimal box then "servings", with no steps, note or Reset', () => {
@@ -111,5 +118,15 @@ describe('ServesControl', () => {
 	test('one serving reads singular', () => {
 		renderControl(1);
 		expect(screen.getByText('serving')).toBeInTheDocument();
+	});
+});
+
+describe('ServesControl and the other shallow writes', () => {
+	test('a scale after Cook keeps ?cook=1: it builds on the newest shallow URL', async () => {
+		page.shallow = { url: new URL('http://localhost/recipes/cookies?cook=1') };
+		renderControl();
+		await fireEvent.change(box(), { target: { value: String(STORED * 2) } });
+		expect(lastUrl().searchParams.get('cook')).toBe('1');
+		expect(lastUrl().searchParams.get('serves')).toBe(String(STORED * 2));
 	});
 });
