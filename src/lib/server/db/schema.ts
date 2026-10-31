@@ -57,7 +57,6 @@ export const recipes = pgTable(
 		cookTimeMinutes: integer('cook_time_minutes'),
 		// Fork lineage
 		parentId: integer('parent_id'), // the recipe it was forked from; a relation below, no FK in the database
-		forkedAt: timestamp('forked_at'),
 		// Visibility
 		isPublic: boolean('is_public').notNull().default(true),
 		createdAt: timestamp('created_at').notNull().defaultNow(),

@@ -20,7 +20,6 @@ function makeRecipe(overrides: Record<string, unknown> = {}) {
 		prepTimeMinutes: null,
 		cookTimeMinutes: null,
 		parentId: null,
-		forkedAt: null,
 		isPublic: true,
 		createdAt: new Date(),
 		updatedAt: new Date(),

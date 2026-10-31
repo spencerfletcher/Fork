@@ -143,8 +143,7 @@ export const actions: Actions = {
 					// Copies of version 1, per the ownership rule in schema.ts.
 					...copies,
 					isPublic: source.isPublic,
-					parentId: source.id,
-					forkedAt: new Date()
+					parentId: source.id
 				})
 				.returning();
 

@@ -220,7 +220,7 @@ export type SeedRecipe = {
 	slug: string; // prefix; a random suffix is added at insert
 	tags: string[];
 	isPublic: boolean;
-	forkOf?: { slug: string; forkedAt: string }; // parent's slug prefix
+	forkOf?: { slug: string }; // parent's slug prefix; the fork's createdAt is when it was forked
 	versions: SeedVersion[];
 };
 
@@ -283,7 +283,7 @@ export const SEED: SeedRecipe[] = [
 		slug: 'brown-butter-chocolate-chip-cookies',
 		tags: ['Dessert', 'Baking', 'American'],
 		isPublic: true,
-		forkOf: { slug: 'classic-chocolate-chip-cookies', forkedAt: '2026-03-01' },
+		forkOf: { slug: 'classic-chocolate-chip-cookies' },
 		versions: [
 			{
 				title: 'Brown Butter Chocolate Chip Cookies',

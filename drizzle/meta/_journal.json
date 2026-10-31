@@ -43,6 +43,13 @@
       "when": 1793464193806,
       "tag": "0005_timestamps-not-null",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793464409453,
+      "tag": "0006_drop-recipes-forked-at",
+      "breakpoints": true
     }
   ]
 }

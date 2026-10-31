@@ -102,7 +102,6 @@ const SOURCE_RECIPE = {
 	cookTimeMinutes: 1,
 	isPublic: true,
 	parentId: null,
-	forkedAt: null,
 	createdAt: new Date(),
 	updatedAt: new Date(),
 	editRevision: 3,
