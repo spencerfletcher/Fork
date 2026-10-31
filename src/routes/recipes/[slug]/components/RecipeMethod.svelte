@@ -47,7 +47,7 @@
 			     height, so focusing it scrolls the whole step into view. -->
 			<li>
 				<label
-					class="group has-[:focus-visible]:outline-accent relative grid cursor-pointer [grid-template-columns:2ch_1fr] items-baseline gap-2.5 font-serif text-[1.125rem] select-none has-[:checked]:line-through has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2">
+					class="group has-[:focus-visible]:outline-accent relative grid cursor-pointer [grid-template-columns:2ch_1fr] items-baseline gap-4 font-serif text-[1.125rem] select-none has-[:checked]:line-through has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2">
 					<input
 						type="checkbox"
 						class="sr-only top-0 h-full"
