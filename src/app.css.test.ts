@@ -125,7 +125,25 @@ describe('app.css forced colours', () => {
 		expect(tabs).toBeDefined();
 		const rule = tabs!.slice(0, tabs!.indexOf('}'));
 		expect(rule).toContain(".tag-tabs a:not([aria-current='page'])");
-		expect(rule).toContain('.tag-tabs button');
+		// A pressed filter is current too, so it keeps its line.
+		expect(rule).toContain(".tag-tabs button:not([aria-pressed='true'])");
 		expect(rule).toMatch(/border-bottom-color:\s*Canvas/);
+	});
+});
+
+describe('app.css tag tabs', () => {
+	const rule = (selector: string) => {
+		const start = css.indexOf(`\n\t${selector}`);
+		return start === -1 ? '' : css.slice(start, css.indexOf('}', start));
+	};
+
+	// Search and Favorites press the same tab the browse pages mark current:
+	// one rule, ink 600 over the clay underline, no pill.
+	test('a pressed filter wears the current tab underline', () => {
+		const current = rule(".tag-tabs a[aria-current='page'],");
+		expect(current).toContain(".tag-tabs button[aria-pressed='true']");
+		expect(current).toMatch(/border-bottom-color:\s*var\(--color-accent\)/);
+		expect(current).toMatch(/font-weight:\s*600/);
+		expect(css).not.toContain("button[aria-pressed='true']::before");
 	});
 });

@@ -82,6 +82,12 @@ describe('SearchFilters', () => {
 		expect(container.querySelector('.bg-white')).toBeNull();
 	});
 
+	// One tab row across the site: the browse pages' TagTabs, as toggles.
+	test('the tag row is the shared TagTabs, not a filter of its own', () => {
+		expect(source).toMatch(/import TagTabs from '\.\/TagTabs\.svelte'/);
+		expect(source).not.toMatch(/TagFilter/);
+	});
+
 	test('no tag row at all when there is nothing to filter by', () => {
 		render(SearchFilters, { props: { availableTags: [] } });
 		expect(screen.queryByRole('group', { name: 'Filter by tag' })).toBeNull();

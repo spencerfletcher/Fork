@@ -515,8 +515,7 @@
 	   otherwise reset the margin. */
 	/* Tag tabs: browse and tag pages link through them; search and favorites
 	   toggle them. One look for both. The row scrolls on a phone; the page
-	   never does. The padding/margin pair leaves room for the focus ring, 6px
-	   above for the ring on a pressed pill, which stands 2px above the text. */
+	   never does. The padding/margin pair leaves room for the focus ring. */
 	.tag-tabs {
 		display: flex;
 		gap: 16px;
@@ -539,7 +538,7 @@
 		.tag-tabs {
 			margin: -19px -18px -4px;
 			padding: 4px 18px;
-			/* A pill scrolled into view stops on the gutter, so its ring (10px
+			/* A tab scrolled into view stops on the gutter, so its ring (4px
 			   outside the button) stays on screen. */
 			scroll-padding-inline: 18px;
 		}
@@ -564,41 +563,30 @@
 		color: var(--color-text);
 	}
 
-	.tag-tabs a[aria-current='page'] {
+	/* A pressed filter is the current tab, several at once: the browse pages'
+	   look, not a pill (Spencer, 31 October 2026). */
+	.tag-tabs a[aria-current='page'],
+	.tag-tabs button[aria-pressed='true'] {
 		color: var(--color-text);
 		font-weight: 600;
 		border-bottom-color: var(--color-accent);
 	}
 
-	/* A pressed filter is a tag pill (1px Ink 2 border, Ink 2 text), not the
-	   current page's underline: it is a state, not a place. The pill is drawn
-	   around the text band only, so the phone's padding above stays a hit area
-	   and the text never moves: 6px of pill each side of the button, outside its
-	   box, so two pressed neighbours keep 4px of the row's 16px gap and the pill
-	   stays inside the row's 8px clip padding (decided 29 October 2026). */
-	.tag-tabs button[aria-pressed='true'] {
-		position: relative;
-		color: var(--color-text-2);
+	/* A press sets the name in 600, which is wider. Each toggle holds its 600
+	   width from the start (a hidden, zero-height copy of the name), so a press
+	   moves no neighbour; the name is centred in it. */
+	.tag-tabs button[data-label] {
+		display: inline-flex;
+		flex-direction: column;
+		align-items: center;
 	}
 
-	.tag-tabs button[aria-pressed='true']::before {
-		content: '';
-		position: absolute;
-		inset: -2px -6px 2px;
-		border: 1px solid var(--color-text-2);
-		border-radius: var(--radius-pill);
-		pointer-events: none;
-	}
-
-	/* Focused, the ring is drawn on the pill itself, so ring and pill agree
-	   rather than the pill's ends poking through a ring on the button box. */
-	.tag-tabs button[aria-pressed='true']:focus-visible {
-		outline: none;
-	}
-
-	.tag-tabs button[aria-pressed='true']:focus-visible::before {
-		outline: 2px solid var(--color-accent);
-		outline-offset: 2px;
+	.tag-tabs button[data-label]::after {
+		content: attr(data-label);
+		height: 0;
+		overflow: hidden;
+		visibility: hidden;
+		font-weight: 600;
 	}
 
 	.tag-tabs .tag-tabs__clear {
@@ -611,17 +599,13 @@
 		.tag-tabs button {
 			padding-top: 15px;
 		}
-
-		.tag-tabs button[aria-pressed='true']::before {
-			top: 13px;
-		}
 	}
 
 	/* Forced colours paint the transparent underline every tab carries, so all
 	   would read as current; Canvas hides it, leaving the current tab's line. */
 	@media (forced-colors: active) {
 		.tag-tabs a:not([aria-current='page']),
-		.tag-tabs button {
+		.tag-tabs button:not([aria-pressed='true']) {
 			border-bottom-color: Canvas;
 		}
 	}

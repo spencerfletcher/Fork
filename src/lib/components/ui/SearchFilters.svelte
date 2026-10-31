@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { on } from 'svelte/events';
-	import TagFilter from './TagFilter.svelte';
+	import TagTabs from './TagTabs.svelte';
 	import type { Tag } from '#lib/server/db/schema.js';
 
 	let {
@@ -107,10 +107,10 @@
 			class="pl-10" />
 	</form>
 
-	<TagFilter
-		{availableTags}
-		selectedTagSlugs={selectedTags}
-		onTagToggle={handleTagToggle}
+	<TagTabs
+		tags={availableTags}
+		selected={selectedTags}
+		onToggle={handleTagToggle}
 		onClear={handleClear} />
 </div>
 

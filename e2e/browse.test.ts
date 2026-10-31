@@ -174,35 +174,52 @@ test.describe('Search filters', () => {
 		await expect(dessert).toBeFocused();
 	});
 
-	test('on a phone, two pressed pills keep a gap, the first is not clipped, Clear all ends the row', async ({
+	test("a pressed filter wears the browse tabs' current underline, moves no neighbour, Clear all ends the row", async ({
 		page
 	}) => {
-		await page.setViewportSize({ width: 390, height: 844 });
-		await page.goto('/search?q=cookie');
-		const row = page.getByRole('group', { name: 'Filter by tag' });
-		const tags = row.locator('button:not(.tag-tabs__clear)');
-		const [first, second] = await tags.evaluateAll((els) =>
-			els.slice(0, 2).map((el) => el.textContent!.trim().toLowerCase())
-		);
-		await page.goto(`/search?q=cookie&tags=${first},${second}`);
-		await expect(row.locator('button[aria-pressed="true"]')).toHaveCount(2);
+		// The look to match: the browse page's current tab.
+		await page.goto('/recipes');
+		const current = await page
+			.getByRole('navigation', { name: 'Browse by tag' })
+			.getByRole('link', { name: 'All' })
+			.evaluate((el) => {
+				const s = getComputedStyle(el);
+				return [s.color, s.fontWeight, s.borderBottomColor, s.borderBottomWidth];
+			});
 
-		// The pill is drawn by ::before; read its box from the button's rect.
-		const pills = await row.locator('button[aria-pressed="true"]').evaluateAll((els) =>
-			els.map((el) => {
-				const r = el.getBoundingClientRect();
-				const s = getComputedStyle(el, '::before');
-				return { left: r.left + parseFloat(s.left), right: r.right - parseFloat(s.right) };
-			})
-		);
-		expect(pills[1].left - pills[0].right).toBeGreaterThanOrEqual(4);
-		const clip = await row.evaluate((el) => el.getBoundingClientRect().left);
-		expect(pills[0].left).toBeGreaterThan(clip);
+		for (const width of [1280, 390]) {
+			await page.setViewportSize({ width, height: 900 });
+			await page.goto('/search?q=cookie');
+			const row = page.getByRole('group', { name: 'Filter by tag' });
+			const tags = row.locator('button:not(.tag-tabs__clear)');
+			const lefts = () =>
+				tags.evaluateAll((els) => els.map((el) => el.getBoundingClientRect().left));
+			const before = await lefts();
+			const [first, second] = await tags.evaluateAll((els) =>
+				els.slice(0, 2).map((el) => el.textContent!.trim().toLowerCase())
+			);
 
-		await expect(row.getByRole('button').last()).toHaveText('Clear all');
+			await tags.first().click();
+			await expect(page).toHaveURL(new RegExp(`tags=${first}`));
+			await expect(tags.first()).toHaveAttribute('aria-pressed', 'true');
+			expect(await lefts()).toEqual(before);
+
+			await page.goto(`/search?q=cookie&tags=${first},${second}`);
+			const pressed = row.locator('button[aria-pressed="true"]');
+			await expect(pressed).toHaveCount(2);
+			for (const style of await pressed.evaluateAll((els) =>
+				els.map((el) => {
+					const s = getComputedStyle(el);
+					return [s.color, s.fontWeight, s.borderBottomColor, s.borderBottomWidth];
+				})
+			)) {
+				expect(style).toEqual(current);
+			}
+			await expect(row.getByRole('button').last()).toHaveText('Clear all');
+		}
 	});
 
-	test('a pressed filter with focus wears the ring on its pill, inside the row', async ({
+	test('a pressed filter with focus wears the ring on its own box, inside the row', async ({
 		page
 	}) => {
 		for (const width of [1280, 390]) {
@@ -213,37 +230,27 @@ test.describe('Search filters', () => {
 			await expect(dessert).toHaveAttribute('aria-pressed', 'true');
 			await dessert.focus();
 			const ring = await dessert.evaluate((el) => {
-				const own = getComputedStyle(el);
-				const pill = getComputedStyle(el, '::before');
+				const s = getComputedStyle(el);
 				return {
-					button: own.outlineStyle,
-					pill: pill.outlineStyle,
-					width: pill.outlineWidth,
-					offset: pill.outlineOffset,
+					style: s.outlineStyle,
+					width: s.outlineWidth,
+					offset: s.outlineOffset,
 					focused: el.matches(':focus-visible')
 				};
 			});
-			expect(ring).toEqual({
-				button: 'none',
-				pill: 'solid',
-				width: '2px',
-				offset: '2px',
-				focused: true
-			});
-			// The ring's top edge (pill top minus offset and width) is not clipped
+			expect(ring).toEqual({ style: 'solid', width: '2px', offset: '2px', focused: true });
+			// The ring's top edge (box top minus offset and width) is not clipped
 			// by the scrolling row.
-			const clipped = await dessert.evaluate((el) => {
-				const r = el.getBoundingClientRect();
-				const top = r.top + parseFloat(getComputedStyle(el, '::before').top) - 4;
-				return top < el.parentElement!.getBoundingClientRect().top;
-			});
+			const clipped = await dessert.evaluate(
+				(el) => el.getBoundingClientRect().top - 4 < el.parentElement!.getBoundingClientRect().top
+			);
 			expect(clipped).toBe(false);
 		}
 	});
 });
 
 test.describe('Search filters on a phone', () => {
-	test('pressing the last filter scrolls its pill, ring and all, into view', async ({ page }) => {
+	test('pressing the last filter scrolls it, ring and all, into view', async ({ page }) => {
 		await page.setViewportSize({ width: 390, height: 844 });
 		await page.goto('/search');
 		const row = page.getByRole('group', { name: 'Filter by tag' });
@@ -253,16 +260,13 @@ test.describe('Search filters on a phone', () => {
 		await page.keyboard.press('Enter');
 		await expect(last).toHaveAttribute('aria-pressed', 'true');
 		await expect(last).toBeFocused();
-		// The ring sits 4px outside the pill (2px offset, 2px width).
+		// The ring sits 4px outside the button (2px offset, 2px width).
 		await expect
 			.poll(() =>
 				last.evaluate((el) => {
 					const r = el.getBoundingClientRect();
-					const s = getComputedStyle(el, '::before');
 					const clip = el.parentElement!.getBoundingClientRect();
-					const ringLeft = r.left + parseFloat(s.left) - 4;
-					const ringRight = r.right - parseFloat(s.right) + 4;
-					return ringLeft >= Math.max(0, clip.left) && ringRight <= Math.min(390, clip.right);
+					return r.left - 4 >= Math.max(0, clip.left) && r.right + 4 <= Math.min(390, clip.right);
 				})
 			)
 			.toBe(true);
