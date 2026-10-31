@@ -719,11 +719,11 @@ test.describe('One save', () => {
 			await page.getByRole('button', { name: 'Save', exact: true }).click();
 			await page.waitForURL(url);
 
-			await expect(page.getByText('8 servings').first()).toBeVisible();
+			await expect(page.getByRole('textbox', { name: 'Servings' })).toHaveValue('8');
 			await expectVersions(page, 2);
 
 			await page.goto(`${url}?version=1`);
-			await expect(page.getByText('4 servings').first()).toBeVisible();
+			await expect(page.getByRole('textbox', { name: 'Servings' })).toHaveValue('4');
 			await expect(page.getByText(/2 cups/).first()).toBeVisible();
 
 			await page.goto(`${url}/diff?from=1&to=2`);
