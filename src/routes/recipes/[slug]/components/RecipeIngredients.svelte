@@ -1,13 +1,21 @@
 <script lang="ts">
 	import type { Ingredient } from '#lib/recipes/types.js';
 	import type { GramResult } from '#lib/server/ingredientDensities.js';
+	import { FRACTIONS, scaleIngredient } from '#lib/recipes/scale.js';
 	import { loadTicks, saveTicks } from './ticks';
 
 	let {
 		ingredients,
 		grams,
-		storageKey
-	}: { ingredients: Ingredient[]; grams: (GramResult | null)[]; storageKey: string } = $props();
+		storageKey,
+		factor = 1
+	}: {
+		ingredients: Ingredient[];
+		grams: (GramResult | null)[];
+		storageKey: string;
+		/** The serving multiplier; lines that cannot be scaled print as typed. */
+		factor?: number;
+	} = $props();
 
 	// Writable derived: the ticks reload whenever the page moves to another
 	// version, and a click changes them. The server has no localStorage, so it
@@ -42,15 +50,7 @@
 	}
 
 	// "1/2" and its kin as the glyphs a cookbook sets.
-	const FRACTIONS: Record<string, string> = {
-		'1/2': '½',
-		'1/3': '⅓',
-		'2/3': '⅔',
-		'1/4': '¼',
-		'3/4': '¾',
-		'1/8': '⅛'
-	};
-	const vulgar = (s: string) => s.replace(/\b[123]\/[2348]\b/g, (f) => FRACTIONS[f] ?? f);
+	const vulgar = (s: string) => s.replace(/\b[1-7]\/[2348]\b/g, (f) => FRACTIONS[f] ?? f);
 
 	// The line as typed, split into what is set bold and what is not, with the
 	// weight between. A measured line bolds its measure and the weight sits
@@ -63,7 +63,7 @@
 			const measure = text.slice(0, text.length - name.length).trimEnd();
 			return { bold: vulgar(measure), after: name };
 		}
-		if (/^\d/.test(text)) return { bold: vulgar(text), after: '' };
+		if (/^[\d¼-¾⅐-⅞]/.test(text)) return { bold: vulgar(text), after: '' };
 		return { bold: '', after: text };
 	}
 
@@ -73,8 +73,8 @@
 <section id="ingredients" class="mb-3 scroll-mt-14">
 	<h2 class="eyebrow-label border-border mb-1 border-b pb-2">Ingredients</h2>
 	<div class="m-0 p-0">
-		{#each ingredients as ingredient, i (i)}
-			{@const result = grams[i]}
+		{#each ingredients as typed, i (i)}
+			{@const { ingredient, grams: result } = scaleIngredient(typed, grams[i], factor)}
 			{@const { bold, after } = parts(ingredient)}
 			<!-- A native checkbox, visually hidden, carries the state and the keyboard
 			     behaviour; the label is the row and takes the struck-through look. The

@@ -4,6 +4,7 @@ import { parseIngredientText } from '#lib/recipes/ingredients.js';
 import RecipeIngredients from './RecipeIngredients.svelte';
 import source from './RecipeIngredients.svelte?raw';
 import { ticksKey, loadTicks, saveTicks } from './ticks';
+import { FRACTIONS } from '#lib/recipes/scale.js';
 
 type GramResult = { grams: number; grams2: number | null; approximate: boolean } | null;
 
@@ -203,5 +204,37 @@ describe('RecipeIngredients', () => {
 		expect(focus).toHaveBeenLastCalledWith({ preventScroll: false });
 		expect(document.activeElement).toBe(screen.getAllByRole('checkbox')[0]);
 		focus.mockRestore();
+	});
+
+	test('sets typed eighths past ⅛ as their glyphs too', () => {
+		renderWith('3/8 tsp salt', [null]);
+		expect(rows()[0]).toHaveTextContent(`${FRACTIONS['3/8']} tsp salt`);
+	});
+
+	test('at a multiplier, measures and weights scale; a line without a number stays as typed', () => {
+		render(RecipeIngredients, {
+			props: {
+				ingredients: parseIngredientText(LINES),
+				grams: [
+					{ grams: 281, grams2: null, approximate: false },
+					{ grams: 100, grams2: null, approximate: true },
+					null
+				],
+				storageKey: KEY,
+				factor: 2
+			}
+		});
+		expect(rows()[0]).toHaveTextContent(`4${FRACTIONS['1/2']} cups (562g) all-purpose flour`);
+		expect(rows()[0].querySelector('.font-semibold')).toHaveTextContent(
+			`4${FRACTIONS['1/2']} cups`
+		);
+		expect(rows()[1]).toHaveTextContent('4 large eggs (≈200g)');
+		expect(rows()[2]).toHaveTextContent('salt to taste');
+	});
+
+	test('a counted line that opens on a fraction glyph is bold whole, its weight trailing', () => {
+		renderWith('½ onion', [{ grams: 55, grams2: null, approximate: true }]);
+		expect(rows()[0].querySelector('.font-semibold')).toHaveTextContent('½ onion');
+		expect(rows()[0]).toHaveTextContent('½ onion (≈55g)');
 	});
 });

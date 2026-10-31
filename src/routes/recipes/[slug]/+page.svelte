@@ -6,7 +6,9 @@
 	import RecipeIngredients from './components/RecipeIngredients.svelte';
 	import RecipeMethod from './components/RecipeMethod.svelte';
 	import RecipeActions from './components/RecipeActions.svelte';
+	import ServesControl from './components/ServesControl.svelte';
 	import { ticksKey } from './components/ticks';
+	import { parseServes } from '#lib/recipes/scale.js';
 
 	let { data }: { data: PageData } = $props();
 
@@ -22,6 +24,14 @@
 			? undefined
 			: `/login?redirectTo=${encodeURIComponent(page.url.pathname + page.url.search)}`
 	);
+
+	// Serving scaling: a multiplier on the list, never saved. ?serves= sets it
+	// on load (server render included); the control writes it back with a
+	// shallow replace, which leaves page.url alone, so this stays the one
+	// owner until a real navigation re-reads the URL.
+	const stored = $derived(currentVersion.servings ?? 0);
+	let serves = $derived(parseServes(page.url.searchParams.get('serves'), stored));
+	const factor = $derived(stored > 0 ? serves / stored : 1);
 
 	// Below 1024px the Ingredients | Method bar shows one section at a time in
 	// place of the other, so the reader never scrolls past one to reach the
@@ -42,6 +52,9 @@
 	<div class="hero">
 		<div class="hero-text">
 			<RecipeHeader {recipe} {currentVersion} forkCount={data.forkCount} {tags}>
+				{#snippet servings()}
+					<ServesControl {stored} {serves} onchange={(next) => (serves = next)} />
+				{/snippet}
 				{#snippet actions()}
 					<RecipeActions
 						{recipe}
@@ -87,6 +100,7 @@
 				<RecipeIngredients
 					ingredients={currentVersion.ingredients}
 					grams={data.grams}
+					{factor}
 					storageKey={ticksKey(recipe.slug, currentVersion.versionNumber, 'ingredients')} />
 			</div>
 		</aside>

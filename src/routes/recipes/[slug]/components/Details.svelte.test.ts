@@ -1,5 +1,6 @@
 import { describe, test, expect } from 'vitest';
 import { render } from '@testing-library/svelte';
+import { createRawSnippet } from 'svelte';
 import Details from './Details.svelte';
 import { makeContent } from '#lib/recipes/fixtures.js';
 
@@ -47,5 +48,29 @@ describe('Details', () => {
 			}
 		});
 		expect(container.querySelector('.details')).toBeNull();
+	});
+
+	test('a servings snippet takes the place of the servings pair; the times keep theirs', () => {
+		const servings = createRawSnippet(() => ({
+			render: () => '<span class="control">control</span>'
+		}));
+		const { container } = render(Details, {
+			props: {
+				content: makeContent({ servings: 6, prepTimeMinutes: 15, cookTimeMinutes: 45 }),
+				servings
+			}
+		});
+		expect(line(container)).toBe('15 min prep 45 min cook control');
+		expect(container.querySelector('.pair .control')).not.toBeNull();
+	});
+
+	test('no stored servings, no snippet: there is nothing to scale from', () => {
+		const servings = createRawSnippet(() => ({
+			render: () => '<span class="control">control</span>'
+		}));
+		const { container } = render(Details, {
+			props: { content: makeContent({ servings: null, cookTimeMinutes: 45 }), servings }
+		});
+		expect(container.querySelector('.control')).toBeNull();
 	});
 });
