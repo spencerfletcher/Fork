@@ -66,19 +66,4 @@
 	.form-hint {
 		margin: 0;
 	}
-
-	/* The switch link reaches 24px at desktop and 44px on a phone by padding
-	   pulled back by margin, so the sentence does not move; as on login. */
-	.auth-switch a {
-		display: inline-block;
-		padding-block: 2px;
-		margin-block: -2px;
-	}
-
-	@media (max-width: 699px) {
-		.auth-switch a {
-			padding-block: 12px;
-			margin-block: -12px;
-		}
-	}
 </style>

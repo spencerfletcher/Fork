@@ -1047,6 +1047,21 @@
 		color: var(--color-text-2);
 	}
 
+	/* The switch link reaches 24px at desktop and 44px on a phone by padding
+	   pulled back by margin, so the sentence does not move. */
+	.auth-switch a {
+		display: inline-block;
+		padding-block: 2px;
+		margin-block: -2px;
+	}
+
+	@media (max-width: 699px) {
+		.auth-switch a {
+			padding-block: 12px;
+			margin-block: -12px;
+		}
+	}
+
 	/* ── Eyebrow label ── */
 
 	/* A closing link in the arrow form ("All recipes →"): 24px tall at desktop

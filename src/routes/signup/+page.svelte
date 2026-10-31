@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { EMAIL_MESSAGE, emailCheck, firstInvalid } from '#lib/auth/emailCheck.svelte.js';
 	import { loginHref } from '#lib/auth/loginHref.js';
 	import {
 		PASSWORD_MIN,
@@ -21,26 +22,12 @@
 	// Disabled while the request is out, so a second press cannot send it twice.
 	let pending = $state(false);
 
-	// The email message shows once the user has typed in the field and left
-	// it, or a submit was stopped, and follows the browser's own type="email"
-	// check, so it clears as soon as the address is fixed.
-	let emailEdited = $state(false);
-	let emailLeft = $state(false);
-	let emailValid = $state(true);
-	const emailShown = $derived(emailLeft && !emailValid);
-	// Set by a press on the submit button, which comes before the email's blur
-	// in every browser; Safari gives the button no focus, so the blur names no
-	// target. Cleared when the email gains focus, so a stray press holds back
-	// nothing later. The button left without a submit (a press dragged off, or
-	// Tab past it) shows what the press held back.
-	let submitPressed = false;
-
 	// A stopped submit fires invalid on every failing field in order, and the
 	// browser bubbles over the first one not cancelled. The email and username
 	// have their own messages, so they cancel and the first takes the focus
 	// itself; the password cancels when it is not first, so its bubble cannot
 	// cover their messages.
-	const firstInvalid = (field: HTMLInputElement) => field.form?.querySelector(':invalid') === field;
+	const emailField = emailCheck();
 
 	let email = $state('');
 	let username = $state('');
@@ -102,30 +89,13 @@
 					autocomplete="email"
 					placeholder="you@example.com"
 					bind:value={email}
+					{...emailField.field}
 					oninput={(e) => {
-						emailEdited = true;
-						emailValid = e.currentTarget.validity.valid;
+						emailField.field.oninput(e);
 						suggest();
-					}}
-					onfocus={() => (submitPressed = false)}
-					onblur={(e) => {
-						// Left for the submit button, the message waits for the stopped submit:
-						// shown now, it would push the button from under the tap.
-						const toSubmit =
-							submitPressed ||
-							e.relatedTarget === e.currentTarget.form?.querySelector('[type="submit"]');
-						if (!toSubmit) emailLeft ||= emailEdited;
-					}}
-					oninvalid={(e) => {
-						e.preventDefault();
-						if (firstInvalid(e.currentTarget)) e.currentTarget.focus();
-						emailLeft = true;
-						emailValid = false;
-					}}
-					aria-invalid={emailShown ? 'true' : undefined}
-					aria-describedby={emailShown ? 'email-error' : undefined} />
-				{#if emailShown}
-					<p class="field-error" id="email-error">Enter an email address like name@example.com</p>
+					}} />
+				{#if emailField.shown}
+					<p class="field-error" id="email-error">{EMAIL_MESSAGE}</p>
 				{/if}
 			</div>
 
@@ -188,8 +158,7 @@
 				type="submit"
 				class="btn-primary auth-submit"
 				disabled={pending}
-				onpointerdown={() => (submitPressed = true)}
-				onblur={() => (emailLeft ||= emailEdited)}>
+				{...emailField.button}>
 				{pending ? 'Creating account…' : 'Create account'}
 			</button>
 			<p class="form-hint confirm-note">We'll email you a link to confirm.</p>
@@ -208,20 +177,5 @@
 
 	.confirm-note {
 		text-align: center;
-	}
-
-	/* The switch link reaches 24px at desktop and 44px on a phone by padding
-	   pulled back by margin, so the sentence does not move; as on login. */
-	.auth-switch a {
-		display: inline-block;
-		padding-block: 2px;
-		margin-block: -2px;
-	}
-
-	@media (max-width: 699px) {
-		.auth-switch a {
-			padding-block: 12px;
-			margin-block: -12px;
-		}
 	}
 </style>
