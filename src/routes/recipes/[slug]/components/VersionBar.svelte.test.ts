@@ -155,6 +155,55 @@ describe('VersionBar', () => {
 		]);
 	});
 
+	test('closed, a click anywhere on the bar opens the list; the toggle still flips it once', async () => {
+		const { container } = renderBar();
+		const toggle = screen.getByRole('button', { name: '3 versions' });
+		await fireEvent.click(container.querySelector('.version-bar .current .message')!);
+		expect(toggle).toHaveAttribute('aria-expanded', 'true');
+		// Open, the bar is not a close target: only the toggle closes it.
+		await fireEvent.click(container.querySelector('.version-bar .current .message')!);
+		expect(toggle).toHaveAttribute('aria-expanded', 'true');
+		await fireEvent.click(toggle);
+		expect(toggle).toHaveAttribute('aria-expanded', 'false');
+		// The toggle's own click bubbles to the bar and must not fire twice.
+		await fireEvent.click(toggle);
+		expect(toggle).toHaveAttribute('aria-expanded', 'true');
+	});
+
+	test('closed, a click on a link inside the bar does not open the list', async () => {
+		renderBar({ currentVersion: THREE[1], isViewingHistory: true });
+		const back = screen.getByRole('link', { name: 'Back to v3' });
+		back.addEventListener('click', (e) => e.preventDefault());
+		await fireEvent.click(back);
+		expect(screen.getByRole('button', { name: '3 versions' })).toHaveAttribute(
+			'aria-expanded',
+			'false'
+		);
+	});
+
+	test('closed, the bar shows the pointer; open, it does not', async () => {
+		const { container } = renderBar();
+		const bar = container.querySelector('.version-bar')!;
+		expect(bar).toHaveClass('closed');
+		await fireEvent.click(screen.getByRole('button', { name: '3 versions' }));
+		expect(bar).not.toHaveClass('closed');
+		expect(source).toMatch(/\.version-bar\.closed \{[^}]*cursor: pointer;/);
+	});
+
+	test("hover and focus outline each other version's row in Ink 2, never the current line", () => {
+		// jsdom applies no component CSS, so the rule is read from the source. The
+		// list holds only the other versions; the current line lives in .current.
+		const style = source.slice(source.indexOf('<style>'));
+		const rule = /\.history li:hover,\s*\.history li:focus-within \{([^}]*)\}/.exec(style);
+		expect(rule).not.toBeNull();
+		expect(rule![1]).toMatch(/outline: 1px solid var\(--color-text-2\);/);
+		expect(rule![1]).toMatch(/outline-offset: -1px;/);
+		expect(style).not.toMatch(/\.current[^{]*:hover[^{]*\{[^}]*outline/);
+		expect(style).toMatch(
+			/@media \(forced-colors: active\) \{\s*\.history li:hover,\s*\.history li:focus-within \{\s*outline-color: CanvasText;/
+		);
+	});
+
 	test('the chip keeps its box in forced colours: a transparent outline, inset so nothing moves', () => {
 		// Forced colours drop the marigold fill but draw the outline in the text colour.
 		const chip = /\.current \.version-number \{([^}]*)\}/.exec(source)![1];

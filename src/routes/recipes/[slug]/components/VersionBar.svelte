@@ -37,6 +37,13 @@
 		toggle?.focus();
 	}
 
+	// Closed, the whole bar opens the list: a pointer convenience. The toggle
+	// stays the keyboard and ARIA control, and clicks on it or a link are theirs.
+	function onBarClick(event: MouseEvent) {
+		if ((event.target as Element).closest('a, button')) return;
+		open = true;
+	}
+
 	const diff = (a: number, b: number) =>
 		`/recipes/${recipe.slug}/diff?from=${Math.min(a, b)}&to=${Math.max(a, b)}`;
 </script>
@@ -83,7 +90,13 @@
      no compare of its own. A recipe with one version has no bar. Decided 29
      October 2026 (board "Bar E"). -->
 {#if count > 1}
-	<section class="version-bar font-mono" aria-label="Version history" bind:this={bar}>
+	<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions (the toggle is the keyboard control) -->
+	<section
+		class="version-bar font-mono"
+		class:closed={!open}
+		aria-label="Version history"
+		bind:this={bar}
+		onclick={onBarClick}>
 		<div class="current">
 			<span class="version-number">
 				<span class="sr-only">
@@ -126,6 +139,10 @@
 		border-radius: var(--radius-md);
 		font-size: 0.875rem;
 		line-height: 1.6;
+	}
+
+	.version-bar.closed {
+		cursor: pointer;
 	}
 
 	.current,
@@ -243,6 +260,20 @@
 		margin-top: 10px;
 		padding-top: 10px;
 		border-top: 1px solid var(--color-border);
+	}
+
+	/* Every row here is another version; the current line is never outlined. */
+	.history li:hover,
+	.history li:focus-within {
+		outline: 1px solid var(--color-text-2);
+		outline-offset: -1px;
+	}
+
+	@media (forced-colors: active) {
+		.history li:hover,
+		.history li:focus-within {
+			outline-color: CanvasText;
+		}
 	}
 
 	.history .compare {
