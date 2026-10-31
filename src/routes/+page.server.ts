@@ -19,7 +19,6 @@ type SampleDiff = {
 	fromVersion: number;
 	toVersion: number;
 	commitMessage: string | null;
-	metaDiff: ReturnType<typeof diffMeta>;
 	ingredientDiff: ReturnType<typeof diffIngredients>;
 	stepDiff: ReturnType<typeof diffSteps>;
 };
@@ -62,7 +61,11 @@ export const load: PageServerLoad = async ({ locals: { user } }) => {
 	// a one-line tweak does not beat a real rewrite and a diff with one panel
 	// all grey loses to a smaller one that moves both; ties keep the newer
 	// recipe. showcasePool is capped at five, one round trip each.
+	// The landing shows a compact before and after: the changed rows only, no
+	// Details (Spencer, 31 October 2026); the full comparison is a link away.
 	let best: { rank: [number, number]; diff: SampleDiff } | null = null;
+	const changedOnly = <T extends { status: string }>(rows: T[]) =>
+		rows.filter((r) => r.status !== 'unchanged');
 	const candidates = showcasePool.flatMap((r) => {
 		const counted = countedById.get(r.id);
 		return counted && counted.versionCount >= 2 ? [counted] : [];
@@ -78,9 +81,7 @@ export const load: PageServerLoad = async ({ locals: { user } }) => {
 		const metaDiff = diffMeta(from, to);
 		const ingredientDiff = diffIngredients(from.ingredients, to.ingredients);
 		const stepDiff = diffSteps(from.steps, to.steps);
-		const changed = (rows: { status: string }[]) =>
-			rows.filter((r) => r.status !== 'unchanged').length;
-		const [i, s] = [changed(ingredientDiff), changed(stepDiff)];
+		const [i, s] = [changedOnly(ingredientDiff).length, changedOnly(stepDiff).length];
 		const rank: [number, number] = [i > 0 && s > 0 ? 1 : 0, i + s + metaDiff.length];
 		const beatsBest =
 			!best || (rank[0] === best.rank[0] ? rank[1] > best.rank[1] : rank[0] > best.rank[0]);
@@ -94,9 +95,8 @@ export const load: PageServerLoad = async ({ locals: { user } }) => {
 				fromVersion: from.versionNumber,
 				toVersion: to.versionNumber,
 				commitMessage: to.commitMessage,
-				metaDiff,
-				ingredientDiff,
-				stepDiff
+				ingredientDiff: changedOnly(ingredientDiff),
+				stepDiff: changedOnly(stepDiff)
 			}
 		};
 	}

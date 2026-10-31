@@ -19,43 +19,12 @@
 
 {#if data.mode === 'landing'}
 	<!-- Logged out, the home page is one column on the site's own gutters: the
-	     hero, the sample diff, then the newest recipes under the browse page's
-	     section pattern, ending on a way to the rest (decided 29 October 2026). -->
+	     hero, the newest recipes under the browse page's section pattern, then
+	     a compact example of a change (Spencer, 31 October 2026: recent recipes
+	     higher, the example only the changed rows and the note). -->
 	<div class="page">
 		<div class="page-inner">
 			<LandingHero isLoggedIn={!!data.user} />
-			{#if data.sampleDiff}
-				<section class="pt-10 pb-8">
-					<h2 class="eyebrow-label mb-3">A real change, diffed</h2>
-					<!-- The premise is that every edit carries a reason, so the sample has to
-					     show the reason and not only the change. -->
-					<div class="commit-bar">
-						<span class="commit-bar__versions">
-							v{data.sampleDiff.fromVersion} → v{data.sampleDiff.toVersion}
-						</span>
-						{#if data.sampleDiff.commitMessage}
-							<span class="commit-bar__message">{data.sampleDiff.commitMessage}</span>
-						{/if}
-					</div>
-					<!-- Folded wherever the panels stack, so the food comes up sooner. -->
-					<div class="sample-diff">
-						<VersionDiff
-							fold
-							metaDiff={data.sampleDiff.metaDiff}
-							ingredientDiff={data.sampleDiff.ingredientDiff}
-							stepDiff={data.sampleDiff.stepDiff} />
-					</div>
-					<!-- The hero's "See a diff" button pointed here and was redundant beside
-					     the diff itself. The route to the interactive compare view still needs
-					     a signpost, so it sits under the thing it opens. -->
-					<a
-						class="arrow-link"
-						href="/recipes/{data.sampleDiff.recipeSlug}/diff?from={data.sampleDiff
-							.fromVersion}&to={data.sampleDiff.toVersion}">
-						Open the full comparison →
-					</a>
-				</section>
-			{/if}
 
 			<section class="browse-section">
 				<h2 class="eyebrow-label section-heading">Recent</h2>
@@ -74,6 +43,35 @@
 					</p>
 				{/if}
 			</section>
+			{#if data.sampleDiff}
+				<section class="pt-10">
+					<h2 class="eyebrow-label mb-3">A real change, diffed</h2>
+					<!-- The premise is that every edit carries a reason, so the sample has to
+					     show the reason and not only the change. -->
+					<div class="commit-bar">
+						<span class="commit-bar__versions">
+							v{data.sampleDiff.fromVersion} → v{data.sampleDiff.toVersion}
+						</span>
+						{#if data.sampleDiff.commitMessage}
+							<span class="commit-bar__message">{data.sampleDiff.commitMessage}</span>
+						{/if}
+					</div>
+					<!-- The changed rows only: the loader drops the unchanged ones and Details. -->
+					<VersionDiff
+						metaDiff={[]}
+						ingredientDiff={data.sampleDiff.ingredientDiff}
+						stepDiff={data.sampleDiff.stepDiff} />
+					<!-- The hero's "See a diff" button pointed here and was redundant beside
+					     the diff itself. The route to the interactive compare view still needs
+					     a signpost, so it sits under the thing it opens. -->
+					<a
+						class="arrow-link"
+						href="/recipes/{data.sampleDiff.recipeSlug}/diff?from={data.sampleDiff
+							.fromVersion}&to={data.sampleDiff.toVersion}">
+						Open the full comparison →
+					</a>
+				</section>
+			{/if}
 			<p class="signup-close"><a href="/signup" class="btn-ghost">Sign up to fork one</a></p>
 		</div>
 	</div>
@@ -97,15 +95,6 @@
 {/if}
 
 <style>
-	/* A phone drops the sample's Details panel, the only section at the diff's
-	   top level (Ingredients and Method sit inside its columns), so the first
-	   photo comes up a screen sooner; the compare page keeps it. */
-	@media (max-width: 699px) {
-		.sample-diff > :global(.diff-section) {
-			display: none;
-		}
-	}
-
 	.all-recipes {
 		margin: var(--space-4) 0 0;
 	}

@@ -322,6 +322,42 @@ describe('homepage load', () => {
 		expect(result.sampleDiff?.commitMessage).toBe('Chill the dough');
 	});
 
+	test('the sample carries only the rows that changed, and no Details', async () => {
+		// The landing shows a compact before and after, not the whole recipe.
+		const showcaseAuthor = { id: 'user-1', username: 'spencerfletcher' };
+		findManyMock.mockResolvedValue([
+			{ id: 1, title: 'Cookies', slug: 'cookies', recipesToTags: [], author: showcaseAuthor }
+		]);
+		selectMock
+			.mockReturnValueOnce(chain([{ recipeId: 1, count: 2 }]))
+			.mockReturnValueOnce(chain([]));
+		const kept = [ing('1 cup flour'), ing('2 eggs')];
+		recipeVersionsFindManyMock.mockResolvedValue([
+			{
+				...makeContent({ title: 'Better cookies' }),
+				versionNumber: 2,
+				ingredients: [ing('½ cup sugar'), ...kept],
+				steps: [{ text: 'Mix.' }, { text: 'Bake.' }, { text: 'Cool.' }]
+			},
+			{
+				...makeContent({ title: 'Cookies' }),
+				versionNumber: 1,
+				ingredients: [ing('¾ cup sugar'), ...kept],
+				steps: [{ text: 'Mix.' }, { text: 'Bake.' }]
+			}
+		]);
+
+		const result = await loadResult({
+			locals: { user: null }
+		} as unknown as Parameters<typeof load>[0]);
+
+		const sample = result.sampleDiff!;
+		expect(sample).not.toHaveProperty('metaDiff');
+		expect(sample.ingredientDiff.map((r) => r.status)).toEqual(['modified']);
+		expect(sample.stepDiff).toMatchObject([{ status: 'added', stepNumber: 3 }]);
+		expect(sample.stepDiff).toHaveLength(1);
+	});
+
 	test('picks the pair with the most changes, not merely the first that differs', async () => {
 		// The landing diff is the shop window. A one-line tweak on the newest
 		// recipe used to win it outright, including the version the e2e suite

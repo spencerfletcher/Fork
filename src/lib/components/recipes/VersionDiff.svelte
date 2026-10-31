@@ -12,43 +12,14 @@
 		metaDiff,
 		ingredientDiff,
 		stepDiff,
-		headingLevel = 3,
-		fold = false
+		headingLevel = 3
 	}: {
 		metaDiff: MetaDiffRow[];
 		ingredientDiff: IngredientDiffRow[];
 		stepDiff: StepDiffRow[];
 		/** The panel headings' level, so the page's outline has no gap. */
 		headingLevel?: 2 | 3;
-		/** Below 1024px, where the panels stack, show each run of unchanged rows
-		 *  as one "N unchanged" row (the landing page). The compare page keeps
-		 *  every row. */
-		fold?: boolean;
 	} = $props();
-
-	// Per row: the length of the unchanged run to fold after it (set on a
-	// run's last row), and whether the row sits inside a folded run. A lone
-	// unchanged row stays: its fold row would be the same height.
-	function foldPlan(rows: { status: string }[]) {
-		const after = rows.map(() => 0);
-		const hidden = rows.map(() => false);
-		let start = 0;
-		rows.forEach((row, i) => {
-			if (row.status !== 'unchanged') {
-				start = i + 1;
-				return;
-			}
-			const length = i - start + 1;
-			if (length > 1 && rows[i + 1]?.status !== 'unchanged') {
-				after[i] = length;
-				hidden.fill(true, start, i + 1);
-			}
-		});
-		return { after, hidden };
-	}
-
-	const ingredientFold = $derived(fold ? foldPlan(ingredientDiff) : null);
-	const stepFold = $derived(fold ? foldPlan(stepDiff) : null);
 
 	// Each panel's list is named by its heading; the prefix keeps two diffs on
 	// one page apart.
@@ -97,16 +68,6 @@
 <!-- The unseen stop keeps a screen reader from running the number into the
      text: "5. Gradually stir", not "5 Gradually stir". Kept on one line: a
      break before the stop would put a space in front of it. -->
-<!-- After a run of unchanged rows: shown in its place below 1024px. -->
-{#snippet foldRow(count: number | undefined)}
-	{#if count}
-		<div class="diff-row diff-fold" role="listitem">
-			{@render gutter('unchanged')}
-			<span class="diff-content">{count} unchanged</span>
-		</div>
-	{/if}
-{/snippet}
-
 {#snippet stepNum(n: number)}
 	<!-- prettier-ignore -->
 	<span class="step-num">{n}<span class="sr-only">.</span></span>
@@ -184,10 +145,7 @@
 	<div class="diff-columns grid gap-x-5 @min-[61rem]:grid-cols-2">
 		{#snippet ingredientRows()}
 			{#each ingredientDiff as row, i (i)}
-				<div
-					class="diff-row diff-{row.status}"
-					class:diff-folded={ingredientFold?.hidden[i]}
-					role="listitem">
+				<div class="diff-row diff-{row.status}" role="listitem">
 					{@render gutter(row.status)}
 					<span class="diff-content">
 						{#if row.status === 'modified'}
@@ -197,17 +155,13 @@
 						{/if}
 					</span>
 				</div>
-				{@render foldRow(ingredientFold?.after[i])}
 			{/each}
 		{/snippet}
 		{@render panel('Ingredients', ingredientDiff.length === 0, ingredientRows)}
 
 		{#snippet stepRows()}
 			{#each stepDiff as row, i (i)}
-				<div
-					class="diff-row diff-{row.status}"
-					class:diff-folded={stepFold?.hidden[i]}
-					role="listitem">
+				<div class="diff-row diff-{row.status}" role="listitem">
 					{@render gutter(row.status)}
 					<!-- A removed step has no position in the new version, so numbering it
 					     would imply the steps after it had shifted. -->
@@ -227,7 +181,6 @@
 						{/if}
 					</span>
 				</div>
-				{@render foldRow(stepFold?.after[i])}
 			{/each}
 		{/snippet}
 		{@render panel('Method', stepDiff.length === 0, stepRows)}
@@ -307,24 +260,6 @@
 	.diff-unchanged,
 	.diff-unchanged .step-num {
 		color: var(--color-text-3);
-	}
-
-	/* A folded run's stand-in: Ink 3 like the rows it replaces, and only where
-	   the panels stack (below the 61rem container at a 1024 viewport), where
-	   the run itself hides. */
-	.diff-fold {
-		display: none;
-		color: var(--color-text-3);
-	}
-
-	@media (max-width: 1023px) {
-		.diff-fold {
-			display: flex;
-		}
-
-		.diff-folded {
-			display: none;
-		}
 	}
 
 	.diff-row.diff-added {

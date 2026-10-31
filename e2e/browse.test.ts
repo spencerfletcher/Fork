@@ -43,26 +43,20 @@ test.describe('Landing page', () => {
 		);
 	});
 
-	test('wherever the panels stack the sample diff folds its unchanged runs; side by side, every row shows', async ({
+	test('the landing example sits under Recent and shows only the changed rows, with no Details', async ({
 		page
 	}) => {
-		const shown = (sel: string) =>
-			page
-				.locator(sel)
-				.evaluateAll((els) => els.filter((el) => getComputedStyle(el).display !== 'none').length);
-		await page.setViewportSize({ width: 390, height: 844 });
 		await page.goto('/');
-		const folds = await shown('.diff-fold');
-		expect(folds).toBeGreaterThan(0);
-		expect(await shown('.diff-folded')).toBe(0);
-		await expect(page.locator('.diff-fold .diff-content').first()).toHaveText(/^\d+ unchanged$/);
-		// A tablet stacks the panels too, so it folds the same runs.
-		await page.setViewportSize({ width: 768, height: 1024 });
-		expect(await shown('.diff-fold')).toBe(folds);
-		expect(await shown('.diff-folded')).toBe(0);
-		await page.setViewportSize({ width: 1280, height: 900 });
-		expect(await shown('.diff-fold')).toBe(0);
-		expect(await shown('.diff-folded')).toBe(await page.locator('.diff-folded').count());
+		const recent = page.getByRole('heading', { level: 2, name: 'Recent' });
+		const rows = page.locator('.diff-row');
+		expect(await rows.count()).toBeGreaterThan(0);
+		expect(await page.locator('.diff-row.diff-unchanged').count()).toBe(0);
+		await expect(page.getByRole('heading', { name: 'Details' })).toHaveCount(0);
+		const [recentY, firstRowY] = await Promise.all([
+			recent.evaluate((el) => el.getBoundingClientRect().top + scrollY),
+			rows.first().evaluate((el) => el.getBoundingClientRect().top + scrollY)
+		]);
+		expect(firstRowY).toBeGreaterThan(recentY);
 	});
 });
 

@@ -228,26 +228,33 @@ describe('/+page.svelte', () => {
 		expect(motion).toMatch(/\.recent-strip\s*{[^}]*scroll-behavior:\s*smooth/);
 	});
 
-	test('the landing sample folds its unchanged rows on a phone', () => {
+	test('the landing example is compact: Recent comes first, then only the changed rows and the note, no Details', () => {
 		const sampleDiff = {
 			recipeTitle: 'T',
 			recipeSlug: 't',
 			fromVersion: 1,
 			toVersion: 2,
-			commitMessage: null,
-			metaDiff: [],
+			commitMessage: 'Bake it',
 			ingredientDiff: [],
-			stepDiff: [
-				{ status: 'unchanged' as const, stepNumber: 1, step: { text: 'Mix.' } },
-				{ status: 'unchanged' as const, stepNumber: 2, step: { text: 'Rest.' } },
-				{ status: 'added' as const, stepNumber: 3, step: { text: 'Bake.' } }
-			]
+			stepDiff: [{ status: 'added' as const, stepNumber: 3, step: { text: 'Bake.' } }]
 		};
 		const { container } = render(Page, {
 			props: {
-				data: { recipes: [], user: null, profile: null, mode: 'landing', tags: [], sampleDiff }
+				data: {
+					recipes: [{ id: 1, slug: 'a', title: 'A', updatedAt: new Date(), forkCount: 0 }],
+					user: null,
+					profile: null,
+					mode: 'landing',
+					tags: [],
+					sampleDiff
+				}
 			} as never
 		});
-		expect(container.querySelector('.diff-fold')).toHaveTextContent('2 unchanged');
+		const recent = screen.getByRole('heading', { level: 2, name: 'Recent' });
+		const note = screen.getByText('Bake it');
+		expect(recent.compareDocumentPosition(note) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+		expect(screen.queryByRole('heading', { name: 'Details' })).toBeNull();
+		expect(container.querySelectorAll('.diff-row')).toHaveLength(1);
+		expect(screen.getByRole('link', { name: 'Open the full comparison →' })).toBeInTheDocument();
 	});
 });
