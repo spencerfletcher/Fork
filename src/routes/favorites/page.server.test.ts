@@ -17,6 +17,9 @@ vi.mock('#lib/server/db/index.js', () => ({
 }));
 
 import { load } from './+page.server';
+import { desc, type SQL } from 'drizzle-orm';
+import { PgDialect } from 'drizzle-orm/pg-core';
+import { recipes } from '#lib/server/db/schema.js';
 import type { PageData } from './$types';
 
 function makeEvent(search = '', user: { id: string } | null = { id: 'u1' }) {
@@ -174,5 +177,23 @@ describe('favorites load', () => {
 
 		expect(findManyMock).toHaveBeenCalledTimes(1);
 		expect(result.favoriteRecipes).toHaveLength(1);
+	});
+
+	test("searches as Search does: the trimmed query against the recipe's text and its ingredient names", async () => {
+		mockFavourites([1]);
+
+		const result = await loadResult(makeEvent('?q=%20butter%20'));
+
+		expect(result.searchQuery).toBe('butter');
+		const { sql, params } = new PgDialect().sqlToQuery(findManyMock.mock.calls[0][0].where as SQL);
+		expect(sql).toContain('"fts" @@ websearch_to_tsquery');
+		expect(sql).toContain("ing->>'name'");
+		expect(params).toContain('butter');
+	});
+
+	test('lists favourites newest change first', async () => {
+		mockFavourites([1, 2]);
+		await loadResult(makeEvent());
+		expect(findManyMock.mock.calls[0][0].orderBy).toEqual([desc(recipes.updatedAt)]);
 	});
 });

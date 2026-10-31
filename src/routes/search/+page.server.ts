@@ -1,15 +1,15 @@
 import { db } from '#lib/server/db/index.js';
-import { recipes, recipeVersions } from '#lib/server/db/schema.js';
-import { eq, and, or, inArray, desc, exists, sql } from 'drizzle-orm';
+import { recipes } from '#lib/server/db/schema.js';
+import { and, inArray } from 'drizzle-orm';
 import { attachRecipeCounts } from '#lib/server/recipeCounts.js';
 import { byTagMatches, tagMatchCounts, visibleTags } from '#lib/server/tagFilter.js';
 import { clampDescription } from '#lib/seo.js';
 import { visibleTo } from '#lib/server/visibility.js';
+import { parseFilters, textSearch } from '#lib/server/recipeSearch.js';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ url, locals: { user } }) => {
-	const searchQuery = url.searchParams.get('q')?.trim() || '';
-	const tagSlugs = url.searchParams.get('tags')?.split(',').filter(Boolean) || [];
+	const { searchQuery, tagSlugs } = parseFilters(url);
 
 	const searchMeta = (count: number) => ({
 		title: searchQuery ? `“${searchQuery}” — Search` : 'Search',
@@ -34,42 +34,16 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 		}
 	}
 
-	// A recipe matches the query on its own text (the generated fts column) or on
-	// an ingredient name in any of its versions. Text hits rank by relevance;
-	// ingredient-only hits score zero there and follow, newest first.
-	const tsQuery = searchQuery ? sql`websearch_to_tsquery('english', ${searchQuery})` : null;
-	const textMatch = tsQuery
-		? or(
-				sql`${recipes.fts} @@ ${tsQuery}`,
-				exists(
-					db
-						.select({ one: sql`1` })
-						.from(recipeVersions)
-						.where(
-							and(
-								eq(recipeVersions.recipeId, recipes.id),
-								sql`to_tsvector('english', (
-									SELECT coalesce(string_agg(ing->>'name', ' '), '')
-									FROM jsonb_array_elements(${recipeVersions.ingredients}) AS ing
-								)) @@ ${tsQuery}`
-							)
-						)
-				)
-			)
-		: undefined;
+	const text = textSearch(searchQuery);
 
 	const rows = await db.query.recipes.findMany({
 		where: and(
 			visibilityCondition,
 			matchCounts.size > 0 ? inArray(recipes.id, [...matchCounts.keys()]) : undefined,
-			textMatch
+			text.where
 		),
 		with: { recipesToTags: { with: { tag: true } }, author: true },
-		// Newest change first, the order browse uses; a ranked search keeps its
-		// text rank and uses it as the tiebreak.
-		orderBy: tsQuery
-			? [sql`ts_rank(${recipes.fts}, ${tsQuery}) DESC`, desc(recipes.updatedAt)]
-			: [desc(recipes.updatedAt)]
+		orderBy: text.orderBy
 	});
 
 	// Rank by how many selected tags matched, unless searching: FTS rank wins then.

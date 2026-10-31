@@ -1,10 +1,11 @@
 import { redirect } from '@sveltejs/kit';
 import { db } from '#lib/server/db/index.js';
 import { recipes, favorites, recipesToTags } from '#lib/server/db/schema.js';
-import { eq, and, ilike, inArray } from 'drizzle-orm';
+import { eq, and, inArray } from 'drizzle-orm';
 import { attachRecipeCounts } from '#lib/server/recipeCounts.js';
 import { byTagMatches, tagMatchCounts, visibleTags } from '#lib/server/tagFilter.js';
 import { canView } from '#lib/server/visibility.js';
+import { parseFilters, textSearch } from '#lib/server/recipeSearch.js';
 import type { PageServerLoad } from './$types';
 
 const META = { title: 'Favorites' };
@@ -14,8 +15,7 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 		throw redirect(303, '/login?redirectTo=/favorites');
 	}
 
-	const searchQuery = url.searchParams.get('q') || '';
-	const tagSlugs = url.searchParams.get('tags')?.split(',').filter(Boolean) || [];
+	const { searchQuery, tagSlugs } = parseFilters(url);
 
 	const favoriteMappings = await db
 		.select({
@@ -52,20 +52,19 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 		}
 	}
 
-	const conditions = [inArray(recipes.id, candidateIds)];
-	if (searchQuery) {
-		conditions.push(ilike(recipes.title, `%${searchQuery}%`));
-	}
-
+	// Search's matcher and order, so a favourite is found by an ingredient too.
+	const text = textSearch(searchQuery);
 	const rows = await db.query.recipes.findMany({
-		where: and(...conditions),
+		where: and(inArray(recipes.id, candidateIds), text.where),
 		with: {
 			recipesToTags: { with: { tag: true } },
 			author: true
-		}
+		},
+		orderBy: text.orderBy
 	});
 
-	if (matchCounts.size > 0) rows.sort(byTagMatches(matchCounts));
+	// Rank by how many selected tags matched, unless searching, as Search does.
+	if (!searchQuery && matchCounts.size > 0) rows.sort(byTagMatches(matchCounts));
 
 	const withCounts = await attachRecipeCounts(rows);
 
