@@ -1216,7 +1216,7 @@ test.describe('Recipe detail page', () => {
 					overflow: el.scrollWidth - el.clientWidth
 				}))
 			);
-			expect(pills.map((p) => p.text)).toEqual([fork, 'Favorite']);
+			expect(pills.map((p) => p.text)).toEqual([fork, 'Favorite', 'Cook']);
 			for (const pill of pills) {
 				expect(pill.height, `${width} ${pill.text}`).toBe(44);
 				expect(pill.overflow, `${width} ${pill.text}`).toBeLessThanOrEqual(0);
@@ -1823,6 +1823,149 @@ test.describe('Serving scaling', () => {
 		expect(control.x + control.width).toBeCloseTo(row.x + row.width, 0);
 		// The rule under both sits level with the Method rule.
 		expect(row.y + row.height).toBeCloseTo(method.y + method.height, 0);
+	});
+});
+
+// Cooking mode (M18). Headless Chromium has no screen to keep awake, so the
+// Screen Wake Lock API is replaced in the page by a stand-in that counts
+// requests and releases; the "may still sleep" test removes it instead.
+async function mockWakeLock(page: Page) {
+	await page.addInitScript(() => {
+		const log = { requests: 0, releases: 0 };
+		Object.assign(window, { wakeLockLog: log });
+		Object.defineProperty(navigator, 'wakeLock', {
+			configurable: true,
+			value: {
+				request: async () => {
+					log.requests++;
+					const sentinel = {
+						released: false,
+						release: async () => {
+							sentinel.released = true;
+							log.releases++;
+						}
+					};
+					return sentinel;
+				}
+			}
+		});
+	});
+}
+
+const wakeLockLog = (page: Page) =>
+	page.evaluate(
+		() => (window as unknown as { wakeLockLog: { requests: number; releases: number } }).wakeLockLog
+	);
+
+const stepSize = (page: Page) =>
+	page
+		.locator('#method .step-text')
+		.first()
+		.evaluate((el) => ({
+			text: getComputedStyle(el).fontSize,
+			line: getComputedStyle(el).lineHeight,
+			numeral: getComputedStyle(el.closest('label')!.querySelector('span')!).fontSize
+		}));
+
+test.describe('Cooking mode', () => {
+	test('Cook holds the screen awake, hides the bar and the actions and grows the method; Done restores it', async ({
+		page
+	}) => {
+		await page.setViewportSize({ width: 1280, height: 900 });
+		await mockWakeLock(page);
+		await gotoClassicCookies(page);
+		const cook = page.getByRole('button', { name: 'Cook' });
+		await expect(cook).toHaveAttribute('aria-pressed', 'false');
+		await expect(page.locator('.version-bar')).toBeVisible();
+		expect(await stepSize(page)).toEqual({ text: '17px', line: '27.2px', numeral: '18px' });
+		const width = (await cook.boundingBox())!.width;
+
+		await cook.click();
+		const done = page.getByRole('button', { name: 'Done cooking' });
+		await expect(done).toHaveAttribute('aria-pressed', 'true');
+		await expect(page).toHaveURL(/[?&]cook=1/);
+		await expect(page.locator('article[data-cooking]')).toHaveCount(1);
+		await expect(page.locator('.version-bar')).toHaveCount(0);
+		await expect(page.locator('.hero').getByRole('link', { name: /Fork|Favorite/ })).toHaveCount(0);
+		// The pill keeps its width, the band and the scaler stay.
+		expect((await done.boundingBox())!.width).toBeCloseTo(width, 0);
+		await expect(page.locator('.hero')).toBeVisible();
+		await expect(page.getByRole('spinbutton', { name: 'Servings' })).toBeVisible();
+		expect(await stepSize(page)).toEqual({ text: '20px', line: '31px', numeral: '21px' });
+		await expect.poll(() => wakeLockLog(page)).toEqual({ requests: 1, releases: 0 });
+		await expect(page.getByText('Your screen may still sleep.')).toHaveCount(0);
+
+		await done.click();
+		await expect(page.getByRole('button', { name: 'Cook' })).toHaveAttribute(
+			'aria-pressed',
+			'false'
+		);
+		await expect(page).not.toHaveURL(/cook=/);
+		await expect(page.locator('.version-bar')).toBeVisible();
+		await expect(
+			page.locator('.hero').getByRole('link', { name: 'Fork this recipe' })
+		).toBeVisible();
+		expect(await stepSize(page)).toEqual({ text: '17px', line: '27.2px', numeral: '18px' });
+		await expect.poll(() => wakeLockLog(page)).toEqual({ requests: 1, releases: 1 });
+	});
+
+	test('?cook=1 survives a reload and keeps a scale; a scale keeps ?cook=1', async ({ page }) => {
+		await mockWakeLock(page);
+		await gotoClassicCookies(page);
+		await page.getByRole('button', { name: 'Cook' }).click();
+		await expect(page).toHaveURL(/[?&]cook=1/);
+		const servings = page.getByRole('spinbutton', { name: 'Servings' });
+		await servings.fill('8');
+		await servings.press('Enter');
+		await expect(page).toHaveURL(/serves=8/);
+		await expect(page).toHaveURL(/[?&]cook=1/);
+
+		await page.reload();
+		await expect(page.getByRole('button', { name: 'Done cooking' })).toHaveAttribute(
+			'aria-pressed',
+			'true'
+		);
+		await expect(page.locator('.version-bar')).toHaveCount(0);
+		await expect(servings).toHaveValue('8');
+		await expect.poll(() => wakeLockLog(page)).toMatchObject({ requests: 1 });
+	});
+
+	test('without the Screen Wake Lock API the mode still works and says the screen may sleep', async ({
+		page
+	}) => {
+		await page.addInitScript(() => {
+			Reflect.deleteProperty(Navigator.prototype, 'wakeLock');
+		});
+		const errors: string[] = [];
+		page.on('pageerror', (e) => errors.push(e.message));
+		await gotoClassicCookies(page);
+		await page.getByRole('button', { name: 'Cook' }).click();
+		await expect(page.getByRole('button', { name: 'Done cooking' })).toBeVisible();
+		await expect(page.getByText('Your screen may still sleep.')).toBeVisible();
+		await expect(page.locator('.version-bar')).toHaveCount(0);
+		expect(errors).toEqual([]);
+	});
+
+	test('on a phone: 18px steps, and the toggle and the section tabs are 44px targets', async ({
+		page
+	}) => {
+		await page.setViewportSize({ width: 390, height: 844 });
+		await mockWakeLock(page);
+		await gotoClassicCookies(page);
+		await page.getByRole('button', { name: 'Cook' }).click();
+		const done = page.getByRole('button', { name: 'Done cooking' });
+		await expect(done).toBeVisible();
+		expect((await done.boundingBox())!.height).toBe(44);
+		const tabs = page.getByRole('navigation', { name: 'Recipe sections' }).getByRole('button');
+		for (const tab of await tabs.all())
+			expect((await tab.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+		await tabs.filter({ hasText: 'Method' }).click();
+		expect(await stepSize(page)).toEqual({ text: '18px', line: '27.9px', numeral: '19px' });
+		const doc = await page.evaluate(() => ({
+			scrollWidth: document.documentElement.scrollWidth,
+			clientWidth: document.documentElement.clientWidth
+		}));
+		expect(doc.scrollWidth).toBeLessThanOrEqual(doc.clientWidth);
 	});
 });
 

@@ -3,7 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/svelte';
 import Page from './+page.svelte';
 import pageSource from './+page.svelte?raw';
 import type { PageData } from './$types';
-import { makeContent, makeIngredient } from '#lib/recipes/fixtures.js';
+import { makeContent, makeIngredient, makeVersion } from '#lib/recipes/fixtures.js';
 import { FRACTIONS } from '#lib/recipes/scale.js';
 import { loginHref } from '#lib/auth/loginHref.js';
 
@@ -25,12 +25,13 @@ function makeData(imageUrl: string | null = null): PageData {
 		servings: STORED,
 		ingredients: [makeIngredient('1 cup flour'), makeIngredient('salt to taste')]
 	});
-	const version = { id: 1, versionNumber: 1, commitMessage: 'Initial recipe', ...content };
+	const version = { ...makeVersion(2, 'Chill the dough'), ...content };
 	// Only the fields the page reads; the load's full row types are not needed here.
 	return {
 		recipe: { slug: 'cookies', title: 'Cookies', parentId: null, authorId: 'a', recipesToTags: [] },
 		currentVersion: version,
-		allVersions: [version],
+		// Two versions, so the version bar renders.
+		allVersions: [version, { ...makeVersion(1, 'Initial recipe'), ...content }],
 		isViewingHistory: false,
 		forkCount: 0,
 		grams: [{ grams: 125, grams2: null, approximate: false }, null],
@@ -142,5 +143,54 @@ describe('recipe page logged out', () => {
 			'href',
 			loginHref('/recipes/cookies?serves=8')
 		);
+	});
+});
+
+describe('recipe page cooking mode', () => {
+	const article = () => document.querySelector('article')!;
+	const bar = () => document.querySelector('.bar-row');
+
+	test('not cooking: no data-cooking, the bar and the actions show, Cook unpressed', () => {
+		load();
+		expect(article()).not.toHaveAttribute('data-cooking');
+		expect(bar()).not.toBeNull();
+		expect(screen.getByRole('link', { name: /Fork/ })).toBeInTheDocument();
+		expect(screen.getByRole('button', { name: 'Cook' })).toHaveAttribute('aria-pressed', 'false');
+	});
+
+	test('Cook marks the page, hides the bar and the actions, and writes ?cook=1', async () => {
+		load();
+		await fireEvent.click(screen.getByRole('button', { name: 'Cook' }));
+		expect(article()).toHaveAttribute('data-cooking');
+		expect(bar()).toBeNull();
+		expect(screen.queryByRole('link', { name: /Fork|Favorite/ })).toBeNull();
+		expect(screen.getByRole('button', { name: 'Done cooking' })).toHaveAttribute(
+			'aria-pressed',
+			'true'
+		);
+		expect(new URL(goto.mock.lastCall![0]).searchParams.get('cook')).toBe('1');
+	});
+
+	test('?cook=1 on load opens in cooking mode; Done restores the page and drops it', async () => {
+		load('?cook=1');
+		expect(article()).toHaveAttribute('data-cooking');
+		expect(bar()).toBeNull();
+		await fireEvent.click(screen.getByRole('button', { name: 'Done cooking' }));
+		expect(article()).not.toHaveAttribute('data-cooking');
+		expect(bar()).not.toBeNull();
+		expect(screen.getByRole('link', { name: /Fork/ })).toBeInTheDocument();
+		expect(new URL(goto.mock.lastCall![0]).searchParams.has('cook')).toBe(false);
+	});
+
+	test('only ?cook=1 cooks', () => {
+		load('?cook=yes');
+		expect(article()).not.toHaveAttribute('data-cooking');
+	});
+
+	test('cooking keeps the ticks, the scaler and the section tabs', () => {
+		load('?cook=1');
+		expect(screen.getByRole('spinbutton', { name: 'Servings' })).toBeInTheDocument();
+		expect(screen.getAllByRole('checkbox').length).toBeGreaterThan(0);
+		expect(screen.getByRole('navigation', { name: 'Recipe sections' })).toBeInTheDocument();
 	});
 });

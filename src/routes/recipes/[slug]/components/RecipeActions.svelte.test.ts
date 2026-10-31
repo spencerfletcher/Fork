@@ -1,5 +1,5 @@
-import { describe, test, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/svelte';
+import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import RecipeActions from './RecipeActions.svelte';
 import source from './RecipeActions.svelte?raw';
@@ -16,6 +16,18 @@ vi.mock('$app/forms', () => ({
 		return { destroy: () => {} };
 	}
 }));
+
+// Cook writes ?cook=1 with the shallow replace the scaler uses.
+const { goto, page } = vi.hoisted(() => ({
+	goto: vi.fn(),
+	page: {
+		url: new URL('http://localhost/recipes/cookies'),
+		state: {},
+		shallow: null as { url: URL } | null
+	}
+}));
+vi.mock('$app/navigation', () => ({ goto }));
+vi.mock('$app/state', () => ({ page }));
 
 /** Runs the enhance flow for one form as SvelteKit would, ending in `result`. */
 async function playBack(action: string, result: { type: string; location?: string }) {
@@ -35,6 +47,8 @@ function makeProps(overrides: Record<string, unknown> = {}) {
 		isOwner: false,
 		isViewingHistory: false,
 		initialFavorited: false,
+		cooking: false,
+		oncook: () => {},
 		...overrides
 	};
 }
@@ -192,11 +206,12 @@ describe('RecipeActions primary action', () => {
 		expect(document.querySelector('form')).toBeNull();
 	});
 
-	test('logged out on an older version, nothing is rendered', () => {
-		const { container } = render(RecipeActions, {
+	test('logged out on an older version, only Cook is rendered', () => {
+		render(RecipeActions, {
 			props: makeProps({ canFavorite: false, isViewingHistory: true, loginHref: '/login' })
 		});
-		expect(container.querySelector('.actions')).toBeNull();
+		expect(screen.getAllByRole('button')).toEqual([screen.getByRole('button', { name: 'Cook' })]);
+		expect(screen.queryByRole('link')).toBeNull();
 	});
 
 	test('the owner gets Edit in marigold, first, since Fork is not offered', () => {
@@ -205,5 +220,210 @@ describe('RecipeActions primary action', () => {
 		expect(edit).toHaveClass('btn-primary');
 		const favorite = screen.getByRole('button', { name: /favorite/i });
 		expect(edit.compareDocumentPosition(favorite) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+	});
+});
+
+// ─── Cooking mode ─────────────────────────────────────────────────────────────
+
+/** The URL handed to the last shallow navigation. */
+function lastUrl(): URL {
+	const [url, opts] = goto.mock.lastCall!;
+	expect(opts).toMatchObject({ shallow: true, replace: true });
+	return new URL(url);
+}
+
+describe('RecipeActions Cook toggle', () => {
+	beforeEach(() => {
+		goto.mockClear();
+		page.shallow = null;
+	});
+
+	test.each([
+		['logged out', { canFavorite: false, loginHref: '/login' }],
+		['logged in', { canFork: true }],
+		['the owner', { isOwner: true }],
+		['on an older version', { canFavorite: false, isViewingHistory: true }]
+	])('%s, the row offers Cook as an unpressed ghost pill, last', (_, overrides) => {
+		const { container } = render(RecipeActions, { props: makeProps(overrides) });
+		const cook = screen.getByRole('button', { name: 'Cook' });
+		expect(cook).toHaveAttribute('aria-pressed', 'false');
+		expect(cook).toHaveClass('btn-ghost');
+		expect(container.querySelector('.actions')!.lastElementChild).toBe(cook);
+		expect(cook.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
+	});
+
+	test('cooking, it reads Done cooking, pressed, and the other actions go', () => {
+		render(RecipeActions, { props: makeProps({ canFork: true, cooking: true }) });
+		const done = screen.getByRole('button', { name: 'Done cooking' });
+		expect(done).toHaveAttribute('aria-pressed', 'true');
+		expect(screen.getAllByRole('button')).toEqual([done]);
+	});
+
+	test('logged out and cooking, the sign-in pills go too', () => {
+		render(RecipeActions, {
+			props: makeProps({ canFavorite: false, loginHref: '/login', cooking: true })
+		});
+		expect(screen.queryByRole('link')).toBeNull();
+	});
+
+	test('both words are always laid out, so the pill keeps one width', () => {
+		const { rerender } = render(RecipeActions, { props: makeProps() });
+		const cook = screen.getByRole('button', { name: 'Cook' });
+		const words = () =>
+			[...cook.querySelectorAll('.cook-label > span')].map((el) =>
+				el.textContent!.replace(/\s+/g, ' ').trim()
+			);
+		expect(words()).toEqual(['Cook', 'Done cooking']);
+		expect(cook.querySelector('[aria-hidden="true"].invisible')).toHaveTextContent('Done cooking');
+		rerender(makeProps({ cooking: true }));
+		expect(words()).toEqual(['Cook', 'Done cooking']);
+	});
+
+	test('pressed, the pill takes the Favorite on-state: marigold tint and border', () => {
+		const style = source.slice(source.indexOf('<style>'));
+		const start = style.indexOf(".cook[aria-pressed='true']");
+		expect(start).toBeGreaterThan(-1);
+		const rule = style.slice(start, style.indexOf('}', start));
+		expect(rule).toMatch(/background:\s*var\(--color-marigold-tint\)/);
+		expect(rule).toMatch(/border-color:\s*var\(--color-marigold\)/);
+	});
+
+	test('Cook hands back true and writes ?cook=1, keeping a shallow ?serves=', async () => {
+		const oncook = vi.fn();
+		page.shallow = { url: new URL('http://localhost/recipes/cookies?serves=8') };
+		render(RecipeActions, { props: makeProps({ oncook }) });
+		await fireEvent.click(screen.getByRole('button', { name: 'Cook' }));
+		expect(oncook).toHaveBeenCalledWith(true);
+		expect(lastUrl().searchParams.get('cook')).toBe('1');
+		expect(lastUrl().searchParams.get('serves')).toBe('8');
+		expect(lastUrl().pathname).toBe('/recipes/cookies');
+	});
+
+	test('Done cooking hands back false and drops ?cook', async () => {
+		const oncook = vi.fn();
+		page.url = new URL('http://localhost/recipes/cookies?cook=1&serves=2');
+		render(RecipeActions, { props: makeProps({ oncook, cooking: true }) });
+		await fireEvent.click(screen.getByRole('button', { name: 'Done cooking' }));
+		expect(oncook).toHaveBeenCalledWith(false);
+		expect(lastUrl().searchParams.has('cook')).toBe(false);
+		expect(lastUrl().searchParams.get('serves')).toBe('2');
+		page.url = new URL('http://localhost/recipes/cookies');
+	});
+});
+
+describe('RecipeActions wake lock', () => {
+	type Sentinel = { released: boolean; release: ReturnType<typeof vi.fn> };
+	let sentinels: Sentinel[];
+	let request: ReturnType<typeof vi.fn>;
+
+	function setVisibility(state: 'visible' | 'hidden') {
+		Object.defineProperty(document, 'visibilityState', { value: state, configurable: true });
+		document.dispatchEvent(new Event('visibilitychange'));
+	}
+
+	beforeEach(() => {
+		sentinels = [];
+		request = vi.fn(async () => {
+			const sentinel: Sentinel = {
+				released: false,
+				release: vi.fn(async () => {
+					sentinel.released = true;
+				})
+			};
+			sentinels.push(sentinel);
+			return sentinel;
+		});
+		Object.defineProperty(navigator, 'wakeLock', { value: { request }, configurable: true });
+	});
+
+	afterEach(() => {
+		Reflect.deleteProperty(navigator, 'wakeLock');
+		Reflect.deleteProperty(document, 'visibilityState');
+	});
+
+	test('not cooking, no lock is asked for', async () => {
+		render(RecipeActions, { props: makeProps() });
+		await tick();
+		expect(request).not.toHaveBeenCalled();
+	});
+
+	test('cooking, the screen lock is requested and no note shows', async () => {
+		render(RecipeActions, { props: makeProps({ cooking: true }) });
+		await tick();
+		expect(request).toHaveBeenCalledWith('screen');
+		expect(screen.queryByText('Your screen may still sleep.')).toBeNull();
+	});
+
+	test('the browser drops the lock when the tab hides; coming back asks again', async () => {
+		render(RecipeActions, { props: makeProps({ cooking: true }) });
+		await vi.waitFor(() => expect(sentinels).toHaveLength(1));
+		sentinels[0].released = true;
+		setVisibility('hidden');
+		expect(request).toHaveBeenCalledTimes(1);
+		setVisibility('visible');
+		expect(request).toHaveBeenCalledTimes(2);
+	});
+
+	test('a lock still held is not asked for twice', async () => {
+		render(RecipeActions, { props: makeProps({ cooking: true }) });
+		await vi.waitFor(() => expect(sentinels).toHaveLength(1));
+		setVisibility('visible');
+		expect(request).toHaveBeenCalledTimes(1);
+	});
+
+	test('Done releases the lock, and the tab coming back does not ask again', async () => {
+		const { rerender } = render(RecipeActions, { props: makeProps({ cooking: true }) });
+		await vi.waitFor(() => expect(sentinels).toHaveLength(1));
+		await rerender(makeProps({ cooking: false }));
+		expect(sentinels[0].release).toHaveBeenCalled();
+		setVisibility('visible');
+		expect(request).toHaveBeenCalledTimes(1);
+	});
+
+	test('leaving the page releases the lock', async () => {
+		const { unmount } = render(RecipeActions, { props: makeProps({ cooking: true }) });
+		await vi.waitFor(() => expect(sentinels).toHaveLength(1));
+		unmount();
+		expect(sentinels[0].release).toHaveBeenCalled();
+	});
+
+	test('unloading releases the lock', async () => {
+		render(RecipeActions, { props: makeProps({ cooking: true }) });
+		await vi.waitFor(() => expect(sentinels).toHaveLength(1));
+		window.dispatchEvent(new Event('pagehide'));
+		expect(sentinels[0].release).toHaveBeenCalled();
+		// Back from the back-forward cache, still cooking: the lock comes back.
+		setVisibility('visible');
+		expect(request).toHaveBeenCalledTimes(2);
+	});
+
+	test('a lock that arrives after Done is let go at once', async () => {
+		const { rerender } = render(RecipeActions, { props: makeProps({ cooking: true }) });
+		await rerender(makeProps({ cooking: false }));
+		await vi.waitFor(() => expect(sentinels).toHaveLength(1));
+		await vi.waitFor(() => expect(sentinels[0].release).toHaveBeenCalled());
+	});
+
+	test('a refused lock does not throw; cooking goes on', async () => {
+		request.mockRejectedValue(new DOMException('denied', 'NotAllowedError'));
+		render(RecipeActions, { props: makeProps({ cooking: true }) });
+		await tick();
+		await tick();
+		expect(screen.getByRole('button', { name: 'Done cooking' })).toBeInTheDocument();
+	});
+
+	test('without the API cooking still works and one line says the screen may sleep', async () => {
+		Reflect.deleteProperty(navigator, 'wakeLock');
+		render(RecipeActions, { props: makeProps({ cooking: true }) });
+		await tick();
+		expect(screen.getByRole('button', { name: 'Done cooking' })).toBeInTheDocument();
+		expect(screen.getByText('Your screen may still sleep.')).toHaveClass('text-text-3');
+	});
+
+	test('without the API and not cooking, no note', async () => {
+		Reflect.deleteProperty(navigator, 'wakeLock');
+		render(RecipeActions, { props: makeProps() });
+		await tick();
+		expect(screen.queryByText('Your screen may still sleep.')).toBeNull();
 	});
 });

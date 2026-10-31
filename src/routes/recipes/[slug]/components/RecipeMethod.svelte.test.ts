@@ -1,6 +1,7 @@
 import { describe, test, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/svelte';
 import RecipeMethod from './RecipeMethod.svelte';
+import source from './RecipeMethod.svelte?raw';
 import { ticksKey, loadTicks, saveTicks } from './ticks';
 import { makeStep } from '#lib/recipes/fixtures.js';
 
@@ -129,5 +130,38 @@ describe('RecipeMethod', () => {
 				'text-[1.125rem]'
 			);
 		}
+	});
+});
+
+// Cooking mode: the page root carries data-cooking and the method's CSS keys
+// off it, so no prop reaches this component. jsdom applies no component CSS,
+// so the rules are read from source; the e2e spec pins the computed sizes.
+describe('RecipeMethod while cooking', () => {
+	const style = source.slice(source.indexOf('<style>'));
+	const rule = (selector: string, from = style) => {
+		const start = from.indexOf(`${selector} {`);
+		expect(start, selector).toBeGreaterThan(-1);
+		return from.slice(start, from.indexOf('}', start));
+	};
+
+	test('the step row and its text carry the classes the cooking rules hang on', () => {
+		render(RecipeMethod, { props: { storageKey: KEY, steps: [makeStep('Mix.')] } });
+		const text = screen.getByText('Mix.');
+		expect(text).toHaveClass('step-text');
+		expect(text.closest('label')).toHaveClass('step');
+	});
+
+	test('the text goes up a step to 1.25rem on a 1.55 line, the numeral with it', () => {
+		expect(rule(':global([data-cooking]) .step-text')).toMatch(/font-size:\s*1\.25rem/);
+		expect(rule(':global([data-cooking]) .step-text')).toMatch(/line-height:\s*1\.55/);
+		// The numeral is the row's face: 21px against the text's 20, as 18 is to 17.
+		expect(rule(':global([data-cooking]) .step')).toMatch(/font-size:\s*1\.3125rem/);
+	});
+
+	test('on a phone the text is 1.125rem, the numeral 1.1875rem', () => {
+		const phone = style.slice(style.indexOf('@media (max-width: 699px)'));
+		expect(phone.length).toBeLessThan(style.length);
+		expect(rule(':global([data-cooking]) .step-text', phone)).toMatch(/font-size:\s*1\.125rem/);
+		expect(rule(':global([data-cooking]) .step', phone)).toMatch(/font-size:\s*1\.1875rem/);
 	});
 });

@@ -32,6 +32,11 @@
 	let serves = $derived(parseServes(page.url.searchParams.get('serves'), stored));
 	const factor = $derived(stored > 0 ? serves / stored : 1);
 
+	// Cooking mode: ?cook=1 on load, written back by the Cook toggle with the
+	// same shallow replace. The article's data-cooking is what the method's
+	// CSS keys off; the bar and the other actions are not rendered.
+	let cooking = $derived(page.url.searchParams.get('cook') === '1');
+
 	// Below 1024px the Ingredients | Method bar shows one section at a time in
 	// place of the other, so the reader never scrolls past one to reach the
 	// other. Switching brings the section's top back under the bar if the page
@@ -45,7 +50,7 @@
 	}
 </script>
 
-<article class="min-h-dvh">
+<article class="min-h-dvh" data-cooking={cooking || undefined}>
 	<!-- The title band: the recipe's words on deeper cream, its photo inset at
 	     the right. Title, byline and deck first, so a stranger reads what this
 	     version is before anything else; the photo is last, so a stacked band
@@ -68,7 +73,9 @@
 							{isOwner}
 							{isViewingHistory}
 							initialFavorited={data.isFavorited}
-							{loginHref} />
+							{loginHref}
+							{cooking}
+							oncook={(next) => (cooking = next)} />
 					{/snippet}
 				</RecipeHeader>
 			</div>
@@ -84,9 +91,11 @@
 
 	<!-- The version bar: the hinge between the dish and the recipe. Its bottom
 	     edge is the divider; there is no rule. -->
-	<div class="bar-row">
-		<VersionBar {recipe} {currentVersion} versions={allVersions} {isViewingHistory} />
-	</div>
+	{#if !cooking}
+		<div class="bar-row">
+			<VersionBar {recipe} {currentVersion} versions={allVersions} {isViewingHistory} />
+		</div>
+	{/if}
 
 	<!-- Toggle buttons, not links: pressed marks the section showing. -->
 	<nav class="section-tabs" aria-label="Recipe sections" data-pinned>
