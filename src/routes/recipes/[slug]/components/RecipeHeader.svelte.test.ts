@@ -182,6 +182,11 @@ describe('RecipeHeader content', () => {
 		expect(container.querySelector('header input, header button')).toBeNull();
 	});
 
+	test('hands the stored serves to the measure, so scaled serves read clay', () => {
+		renderHeader({ currentVersion: { ...V1, servings: 12 }, storedServings: 3 });
+		expect(screen.getByText('12')).toHaveClass('text-accent');
+	});
+
 	test('a blank servings on the viewed version shows no serves', () => {
 		renderHeader({ currentVersion: { ...V1, servings: null } });
 		expect(screen.queryByText(/Serves/)).toBeNull();

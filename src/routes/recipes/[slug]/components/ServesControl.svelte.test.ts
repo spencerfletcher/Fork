@@ -76,6 +76,15 @@ describe('ServesControl', () => {
 		expect(screen.getByText('servings')).toBeInTheDocument();
 	});
 
+	test('the number reads clay while scaled and ink at the stored serves', async () => {
+		const { rerender } = renderControl();
+		expect(box()).toHaveClass('text-text');
+		expect(box()).not.toHaveClass('text-accent');
+		await rerender(STORED * 2);
+		expect(box()).toHaveClass('text-accent');
+		expect(box()).not.toHaveClass('text-text');
+	});
+
 	test('Reset returns to the stored serves and drops the param', async () => {
 		const { onchange } = renderControl(6);
 		await fireEvent.click(screen.getByRole('button', { name: 'Reset' }));

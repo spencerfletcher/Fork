@@ -3,10 +3,15 @@
 	import { formatTime } from '#lib/helpers.js';
 
 	let {
-		content
+		content,
+		storedServings
 	}: {
 		content: Pick<RecipeContent, 'prepTimeMinutes' | 'cookTimeMinutes' | 'servings'>;
+		/** The version's own servings; when `content.servings` differs, they are scaled and read clay. */
+		storedServings?: number | null;
 	} = $props();
+
+	const scaled = $derived(storedServings != null && content.servings !== storedServings);
 
 	// The times value then label, the serves label then value:
 	// "15 min prep · 13 min cook · Serves 36".
@@ -31,7 +36,7 @@
 			<span class="pair whitespace-nowrap">
 				{#if label === 'Serves'}
 					{label}
-					<span class="text-text font-semibold">{value}</span>
+					<span class={['font-semibold', scaled ? 'text-accent' : 'text-text']}>{value}</span>
 				{:else}
 					<span class="text-text font-semibold">{value}</span>
 					{label}

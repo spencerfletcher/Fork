@@ -21,12 +21,15 @@
 	let {
 		recipe,
 		currentVersion,
+		storedServings,
 		forkCount,
 		tags,
 		actions
 	}: {
 		recipe: HeaderRecipe;
 		currentVersion: HeaderContent;
+		/** The version's own servings, when `currentVersion.servings` is the scaled serves. */
+		storedServings?: number | null;
 		/** Public forks. */
 		forkCount: number;
 		tags: { id: number; name: string; slug: string }[];
@@ -65,7 +68,7 @@
 		<p class="description m-0">{currentVersion.description}</p>
 	{/if}
 
-	<Details content={currentVersion} />
+	<Details content={currentVersion} {storedServings} />
 
 	{#if tags.length > 0}
 		<p class="tags text-text-2 m-0 font-sans">

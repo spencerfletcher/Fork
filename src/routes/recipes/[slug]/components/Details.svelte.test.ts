@@ -40,6 +40,21 @@ describe('Details', () => {
 		expect(container.querySelectorAll('.pair')).toHaveLength(2);
 	});
 
+	test('the serves value reads clay while it differs from the stored serves, ink otherwise', () => {
+		const scaled = render(Details, {
+			props: { content: makeContent({ servings: 8 }), storedServings: 4 }
+		});
+		expect(scaled.getByText('8')).toHaveClass('text-accent');
+		expect(scaled.getByText('8')).not.toHaveClass('text-text');
+		scaled.unmount();
+
+		const stored = render(Details, {
+			props: { content: makeContent({ servings: 4 }), storedServings: 4 }
+		});
+		expect(stored.getByText('4')).toHaveClass('text-text');
+		expect(stored.getByText('4')).not.toHaveClass('text-accent');
+	});
+
 	test('renders nothing when there is nothing to show', () => {
 		const { container } = render(Details, {
 			props: {

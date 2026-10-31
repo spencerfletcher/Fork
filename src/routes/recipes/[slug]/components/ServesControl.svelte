@@ -50,6 +50,7 @@
 		type="text"
 		inputmode="decimal"
 		aria-label="Servings"
+		class={serves === stored ? 'text-text' : 'text-accent'}
 		value={formatServes(serves)}
 		onchange={(e) => apply(e.currentTarget)}
 		onkeydown={(e) => {
@@ -114,7 +115,6 @@
 		background: transparent;
 		font: inherit;
 		font-weight: 600;
-		color: var(--color-text);
 		font-variant-numeric: tabular-nums;
 		text-align: center;
 	}
