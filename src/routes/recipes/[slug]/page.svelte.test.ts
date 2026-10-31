@@ -56,15 +56,16 @@ describe('recipe page scaling', () => {
 		const { container } = load();
 		const ingredients = container.querySelector('#ingredients')!;
 		expect(ingredients).toContainElement(screen.getByRole('textbox', { name: 'Servings' }));
-		expect(ingredients).toContainElement(screen.getByRole('button', { name: 'Double servings' }));
 		const header = container.querySelector('header')!;
 		expect(header.querySelector('input, .serves')).toBeNull();
 		expect(header.querySelector('.details')).toHaveTextContent(`Serves ${STORED}`);
 	});
 
-	test('×2 doubles the box and the quantities; the unscalable line stays', async () => {
+	test('typing double the serves doubles the quantities; the unscalable line stays', async () => {
 		load();
-		await fireEvent.click(screen.getByRole('button', { name: 'Double servings' }));
+		await fireEvent.change(screen.getByRole('textbox', { name: 'Servings' }), {
+			target: { value: String(STORED * 2) }
+		});
 		expect(screen.getByRole('textbox', { name: 'Servings' })).toHaveValue(String(STORED * 2));
 		expect(rows()[0]).toHaveTextContent('2 cups (250g) flour');
 		expect(rows()[1]).toHaveTextContent('salt to taste');

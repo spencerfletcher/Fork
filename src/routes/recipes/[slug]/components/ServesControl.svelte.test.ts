@@ -1,7 +1,6 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/svelte';
 import ServesControl from './ServesControl.svelte';
-import { MIN_SERVES } from '#lib/recipes/scale.js';
 
 const { goto, page } = vi.hoisted(() => ({
 	goto: vi.fn(),
@@ -21,8 +20,6 @@ function renderControl(serves = STORED, stored = STORED) {
 }
 
 const box = () => screen.getByRole<HTMLInputElement>('textbox', { name: 'Servings' });
-const halve = () => screen.getByRole('button', { name: 'Halve servings' });
-const double = () => screen.getByRole('button', { name: 'Double servings' });
 
 /** The URL handed to the last shallow navigation. */
 function lastUrl(): URL {
@@ -34,35 +31,17 @@ function lastUrl(): URL {
 beforeEach(() => goto.mockClear());
 
 describe('ServesControl', () => {
-	test('shows the stored serves in a decimal box between ÷2 and ×2, with no note or Reset', () => {
+	test('shows the stored serves in a decimal box then "servings", with no steps, note or Reset', () => {
 		renderControl();
 		expect(box()).toHaveValue(String(STORED));
 		expect(box()).toHaveAttribute('inputmode', 'decimal');
-		expect(halve()).toHaveTextContent('÷2');
-		expect(double()).toHaveTextContent('×2');
-		expect(screen.queryByRole('button', { name: 'Reset' })).toBeNull();
+		expect(screen.getByText('servings')).toBeInTheDocument();
+		// Spencer, 31 October 2026: the ÷2 and ×2 steps were clutter.
+		expect(screen.queryByRole('button')).toBeNull();
 		expect(screen.queryByText(/^[\d.]+x$/)).toBeNull();
 	});
 
-	test('×2 doubles and writes ?serves= with a shallow replace', async () => {
-		const { onchange } = renderControl();
-		await fireEvent.click(double());
-		expect(onchange).toHaveBeenCalledWith(STORED * 2);
-		expect(lastUrl().searchParams.get('serves')).toBe(String(STORED * 2));
-	});
-
-	test('÷2 halves', async () => {
-		const { onchange } = renderControl();
-		await fireEvent.click(halve());
-		expect(onchange).toHaveBeenCalledWith(STORED / 2);
-	});
-
-	test('÷2 is disabled once halving would go under the minimum', () => {
-		renderControl(MIN_SERVES);
-		expect(halve()).toBeDisabled();
-	});
-
-	test('typing a custom amount applies it on change', async () => {
+	test('typing a custom amount applies it on change and writes ?serves= with a shallow replace', async () => {
 		const { onchange } = renderControl();
 		await fireEvent.change(box(), { target: { value: '6' } });
 		expect(onchange).toHaveBeenCalledWith(6);
@@ -76,13 +55,10 @@ describe('ServesControl', () => {
 		expect(screen.getByText('servings')).toBeInTheDocument();
 	});
 
-	test('the number reads clay while scaled and ink at the stored serves', async () => {
-		const { rerender } = renderControl();
-		expect(box()).toHaveClass('text-text');
-		expect(box()).not.toHaveClass('text-accent');
-		await rerender(STORED * 2);
-		expect(box()).toHaveClass('text-accent');
-		expect(box()).not.toHaveClass('text-text');
+	// The box is what the reader edits, not an output: it stays ink while scaled.
+	test('the number does not read clay while scaled', () => {
+		const { container } = renderControl(STORED * 2);
+		expect(container.querySelector('.text-accent')).toBeNull();
 	});
 
 	test('Reset returns to the stored serves and drops the param', async () => {

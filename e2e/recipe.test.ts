@@ -768,10 +768,10 @@ test.describe('Recipe detail page', () => {
 		}));
 		expect(y < 120 || atEnd).toBe(true);
 		// The next Tab lands on the scale control at the list's head, not back in
-		// the header; past its ÷2, box and ×2, the first ingredient.
+		// the header; past its box, the first ingredient.
 		await page.keyboard.press('Tab');
-		await expect(page.getByRole('button', { name: 'Halve servings' })).toBeFocused();
-		for (let i = 0; i < 3; i++) await page.keyboard.press('Tab');
+		await expect(page.getByRole('textbox', { name: 'Servings' })).toBeFocused();
+		await page.keyboard.press('Tab');
 		await expect(page.locator('#ingredients input[type="checkbox"]').first()).toBeFocused();
 	});
 
@@ -1004,8 +1004,8 @@ test.describe('Recipe detail page', () => {
 		});
 		await page.keyboard.press('Tab');
 		await page.keyboard.press('Enter');
-		// Past the scale control's ÷2, box and ×2; the loop's first Tab reaches row 1.
-		for (let i = 0; i < 3; i++) await page.keyboard.press('Tab');
+		// Past the scale control's box; the loop's first Tab reaches row 1.
+		await page.keyboard.press('Tab');
 		const rows = page.locator('#ingredients label');
 		await expect(rows).toHaveCount(25);
 		for (let i = 0; i < 25; i++) {
@@ -1035,8 +1035,8 @@ test.describe('Recipe detail page', () => {
 			await gotoClassicCookies(page);
 			await page.keyboard.press('Tab');
 			await page.keyboard.press('Enter');
-			// Past the scale control's ÷2, box and ×2 to the first ingredient.
-			for (let i = 0; i < 4; i++) await page.keyboard.press('Tab');
+			// Past the scale control's box to the first ingredient.
+			for (let i = 0; i < 2; i++) await page.keyboard.press('Tab');
 			const row = page.locator('#ingredients label').first();
 			await expect(row.locator('input')).toBeFocused();
 			const m = await row.evaluate((el) => {
@@ -1687,7 +1687,7 @@ test.describe('Serving scaling', () => {
 	const measure = ({ text, name }: { text: string; name: string }) =>
 		text.slice(0, text.length - name.length).trim();
 
-	test('×2 doubles a quantity, the header and the URL, Reset clears them; 44px hits on a phone', async ({
+	test('typing double the serves doubles a quantity, the header and the URL, Reset clears them; 44px hits on a phone', async ({
 		page
 	}) => {
 		await page.setViewportSize({ width: 390, height: 900 });
@@ -1698,23 +1698,19 @@ test.describe('Serving scaling', () => {
 		await expect(flourMeasure).toHaveText(measure(flour));
 		await expect(measureLine).toContainText(`Serves ${latest.servings}`);
 		// The header is plain text; the control lives with the list it scales.
-		await expect(
-			page.locator('header').getByRole('button', { name: 'Double servings' })
-		).toHaveCount(0);
+		await expect(page.locator('header').getByRole('textbox')).toHaveCount(0);
 
-		await ingredients.getByRole('button', { name: 'Double servings' }).click();
-		await expect(ingredients.getByRole('textbox', { name: 'Servings' })).toHaveValue(
-			String(latest.servings! * 2)
-		);
+		const servings = ingredients.getByRole('textbox', { name: 'Servings' });
+		await servings.fill(String(latest.servings! * 2));
+		await servings.press('Enter');
+		await expect(servings).toHaveValue(String(latest.servings! * 2));
 		await expect(flourMeasure).toHaveText(measure(doubled));
 		await expect(measureLine).toContainText(`Serves ${latest.servings! * 2}`);
 		expect(new URL(page.url()).searchParams.get('serves')).toBe(String(latest.servings! * 2));
 
-		for (const name of ['Halve servings', 'Double servings', 'Reset']) {
-			const box = (await page.getByRole('button', { name }).boundingBox())!;
-			expect(box.width).toBeGreaterThanOrEqual(44);
-			expect(box.height).toBeGreaterThanOrEqual(44);
-		}
+		const reset = (await page.getByRole('button', { name: 'Reset' }).boundingBox())!;
+		expect(reset.width).toBeGreaterThanOrEqual(44);
+		expect(reset.height).toBeGreaterThanOrEqual(44);
 		const input = (await page.getByRole('textbox', { name: 'Servings' }).boundingBox())!;
 		expect(input.height).toBeGreaterThanOrEqual(44);
 		// Its own row at the end of the column, above the list's first line.
@@ -1735,18 +1731,6 @@ test.describe('Serving scaling', () => {
 		await page.setViewportSize({ width: 1280, height: 900 });
 		await gotoClassicCookies(page);
 		const ingredients = page.locator('#ingredients');
-		const style = (name: string) =>
-			ingredients.getByRole('button', { name }).evaluate((el) => {
-				const s = getComputedStyle(el);
-				return {
-					border: s.borderTopStyle,
-					bg: s.backgroundColor,
-					height: el.getBoundingClientRect().height
-				};
-			});
-		for (const name of ['Halve servings', 'Double servings']) {
-			expect(await style(name)).toEqual({ border: 'none', bg: 'rgba(0, 0, 0, 0)', height: 24 });
-		}
 		const blank = await ingredients.getByRole('textbox', { name: 'Servings' }).evaluate((el) => {
 			const s = getComputedStyle(el);
 			return [s.borderTopWidth, s.borderLeftWidth, s.borderBottomWidth, s.backgroundColor];

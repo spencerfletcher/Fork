@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import { MIN_SERVES, formatServes, parseServes } from '#lib/recipes/scale.js';
+	import { formatServes, parseServes } from '#lib/recipes/scale.js';
 
 	let {
 		stored,
@@ -35,30 +35,18 @@
 	}
 </script>
 
-<!-- Text, not type="number": no native ±1 spinner or arrow-key step, since
-     the steps are ×2 and ÷2 (Spencer, 31 October 2026). -->
+<!-- Text, not type="number": no native ±1 spinner or arrow-key step; the
+     number is typed (Spencer, 31 October 2026). -->
 <span class="serves">
-	<button
-		type="button"
-		class="step"
-		aria-label="Halve servings"
-		disabled={serves / 2 < MIN_SERVES}
-		onclick={() => set(serves / 2)}>
-		÷2
-	</button>
 	<input
 		type="text"
 		inputmode="decimal"
 		aria-label="Servings"
-		class={serves === stored ? 'text-text' : 'text-accent'}
 		value={formatServes(serves)}
 		onchange={(e) => apply(e.currentTarget)}
 		onkeydown={(e) => {
 			if (e.key === 'Enter') e.currentTarget.blur();
 		}} />
-	<button type="button" class="step" aria-label="Double servings" onclick={() => set(serves * 2)}>
-		×2
-	</button>
 	<span class="label">{serves === 1 ? 'serving' : 'servings'}</span>
 	{#if serves !== stored}
 		<span class="factor">{formatServes(serves / stored)}x</span>
@@ -67,9 +55,8 @@
 </span>
 
 <style>
-	/* Right of the Ingredients eyebrow, nothing boxed: the steps are Ink 2 text
-	   that underlines like a link, the number an underlined blank. Parts are
-	   24px tall. The negative margins leave the row the eyebrow's height, so
+	/* Right of the Ingredients eyebrow, nothing boxed: the number is an
+	   underlined blank. Parts are 24px tall. The negative margins leave the row the eyebrow's height, so
 	   its rule lines up with the Method rule beside it. */
 	.serves {
 		display: inline-flex;
@@ -80,28 +67,6 @@
 		line-height: 24px;
 		color: var(--color-text-2);
 		white-space: nowrap;
-	}
-
-	.step {
-		height: 24px;
-		padding: 0 2px;
-		border: 0;
-		background: none;
-		font: inherit;
-		font-weight: 600;
-		color: var(--color-text-2);
-		cursor: pointer;
-	}
-
-	.step:hover:not(:disabled),
-	.step:focus-visible {
-		text-decoration: underline;
-		text-underline-offset: 3px;
-	}
-
-	.step:disabled {
-		color: var(--color-text-3);
-		cursor: default;
 	}
 
 	input {
@@ -115,6 +80,8 @@
 		background: transparent;
 		font: inherit;
 		font-weight: 600;
+		/* Ink while scaled too: the reader edits it, it is not an output. */
+		color: var(--color-text);
 		font-variant-numeric: tabular-nums;
 		text-align: center;
 	}
@@ -146,17 +113,15 @@
 		color: var(--color-text);
 	}
 
-	/* A thumb's 44px on a phone. The steps and Reset are real 44px boxes, which
-	   read as space since nothing is drawn; the number's box grows upward so
-	   its rule stays under the digits. A pseudo cannot grow an input, and one
-	   on the steps would reach over the number. */
+	/* A thumb's 44px on a phone. Reset is a real 44px box, which reads as
+	   space since nothing is drawn; the number's box grows upward so its rule
+	   stays under the digits. A pseudo cannot grow an input. */
 	@media (max-width: 699px) {
 		.serves {
 			margin-block: 0;
 			gap: 0;
 		}
 
-		.step,
 		.reset {
 			min-width: 44px;
 			height: 44px;
