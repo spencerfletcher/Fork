@@ -50,3 +50,6 @@ docs/todo/*
 
 # tasteskill inspector output, regenerable
 .taste-skill/
+
+# Impeccable critique screenshots: local evidence, too heavy for git
+.impeccable/critique/evidence/
