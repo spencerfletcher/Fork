@@ -299,6 +299,26 @@ Spencer, 31 October 2026: "feature idea to add to roadmap: pantry tracker, and a
 - A pantry list per user: the ingredients on hand, kept by name so they compare with the parsed ingredient lines.
 - A search mode that ranks recipes by how many of their ingredients the pantry covers, fewest missing first; it sits beside M8's ranking, and M19's highlighting can mark the missing ingredients on each card.
 
+# M22 — Recipe as an ingredient (sub-recipes) (M to L)
+
+Spencer, 31 October 2026: "this is something i wanted to add tying recipes and ingredients together, especially useful for things like homemade dough or whatever ... yes let's add that definitely." Demand: Mealie's second most-upvoted request, [#1761](https://github.com/mealie-recipes/mealie/discussions/1761) (101 votes; `research/2026-10-31-feature-research.md`, candidate 8).
+
+- An ingredient line can reference another Fork recipe, with a serving multiple of it ("1× Pie dough").
+- The referencing version pins the sub-recipe's version, the way a lockfile pins a dependency, so a later change to the dough does not silently change the pie.
+- The recipe page shows the sub-recipe inline or as a link with its pinned version, and an "update to v4" affordance that saves a new version of the parent with the new pin.
+- Scaling flows through: the parent's serves multiplier scales the sub-recipe's quantities and grams.
+- The diff shows a pin change as its own line ("Pie dough v3 → v4").
+
+Ties to M11 (the sub-recipe's timers come with it), the backlog's quantities inline in steps (a step can name the sub-recipe the way it names an ingredient), and M23's timeline, where a sub-recipe is its own lane.
+
+# M23 — Step timeline view (idea stage, not scheduled)
+
+Spencer, 31 October 2026: "i want to have a sort of graphical view where we show independent steps in one row and how steps tie into eachother with timers along the y axis to an extent etc needs more maturity ideas wise but would be cool i think if not very popular."
+
+A graph of the method: independent steps sit side by side on one row, dependent steps follow below, and time runs down the page, with step timers (M11) giving the vertical scale. Sub-recipes (M22) are their own lanes that merge where they are used.
+
+Data it needs first: steps that carry their dependencies (which earlier steps each one waits on) and a duration, neither of which the step model stores today.
+
 ---
 
 ## Working agreements
