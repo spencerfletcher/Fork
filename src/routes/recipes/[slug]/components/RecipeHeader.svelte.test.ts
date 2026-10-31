@@ -4,7 +4,7 @@ import { createRawSnippet } from 'svelte';
 import RecipeHeader from './RecipeHeader.svelte';
 import source from './RecipeHeader.svelte?raw';
 import type { ComponentProps } from 'svelte';
-import { makeContent } from '#lib/recipes/fixtures.js';
+import { makeContent, makeVersion } from '#lib/recipes/fixtures.js';
 
 vi.mock('$app/navigation', () => ({ afterNavigate: () => {} }));
 
@@ -14,10 +14,6 @@ type HeaderProps = ComponentProps<typeof RecipeHeader>;
 
 function makeRecipe(overrides: Partial<HeaderProps['recipe']> = {}): HeaderProps['recipe'] {
 	return { slug: 'my-fork', parentId: null, parent: null, ...overrides };
-}
-
-function makeVersion(versionNumber: number, commitMessage: string) {
-	return { id: versionNumber, versionNumber, commitMessage };
 }
 
 const CONTENT = makeContent({
