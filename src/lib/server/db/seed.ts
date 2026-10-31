@@ -9,15 +9,17 @@ import { parseIngredientText } from '#lib/recipes/ingredients.js';
 import { parseStepText } from '#lib/recipes/steps.js';
 import { loadEnv, targetFromEnv } from './env';
 
-// `pnpm db:seed` targets the local stack; `pnpm db:seed:prod` sets DB_TARGET=prod
-// and loadEnv refuses a mix of local and hosted before anything is deleted.
+// `pnpm db:seed` targets the local stack, `pnpm db:seed:e2e` the suite's fork_e2e
+// and `pnpm db:seed:prod` the hosted project; loadEnv refuses a mix of local and hosted before anything is deleted.
 const env = loadEnv(targetFromEnv());
 const DATABASE_URL = env.DATABASE_URL;
 const SUPABASE_URL = env.SUPABASE_URL;
 const SUPABASE_SECRET_KEY = env.SUPABASE_SECRET_KEY;
 const TARGET = env.description;
 const SEED_USER_PASSWORD = process.env.SEED_USER_PASSWORD ?? 'Fork-Demo-2025!';
-const SEED_USER_EMAIL = 'spencer@fork.dev';
+// Auth is one schema per stack, shared by the dev and e2e databases, so each
+// seeds its own user (.env.e2e sets e2e@fork.local) and only that one is replaced.
+const SEED_USER_EMAIL = process.env.SEED_USER_EMAIL ?? 'spencer@fork.dev';
 
 // ─── Seed function ────────────────────────────────────────────────────────────
 
