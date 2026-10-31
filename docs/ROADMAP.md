@@ -280,7 +280,10 @@ Portability as a guarantee, not a sentence. A documented archive per user or per
 
 The strongest opportunity identified in the Cooklang research. An attempt records: which version, batch size or multiplier, deviations from the formulation, and the outcome, in a few taps. Distinct from the saved formulation and from a proposed revision. Feeds the AI adaptation ("version 3 at half size with oat milk was too thin") and answers "which version did I cook last time, and did it help?". Must be effortless or it is no advantage; start with one free-text note plus the version and multiplier, structure later.
 
-# M18 — Cooking mode (half day)
+# M18 — Cooking mode — **shipped 2026-10-31**
+
+Shipped as one Cook / Done cooking toggle in the recipe page's action row: a screen wake lock while on, the version bar and the other actions hidden, the method type a size up, ticks and Clear ticks kept, `?cook=1` in the URL (DESIGN.md Cooking mode). The ingredient column stays its width. Follow-ons: M11's per-step timer lives inside the mode, and M17's attempt note is offered on Done cooking. Original plan below.
+
 
 Spencer, 30 October 2026: tie the wake lock into a mode rather than ship it bare. One toggle on the recipe page ("Cook" / "Done cooking") that: holds a screen wake lock while on (Screen Wake Lock API, released on hide or toggle off); keeps the ticks (already kept 12h in localStorage) and offers Clear ticks; steps the method up one type size and widens the ingredient column so a phone propped on the counter reads from arm's length; hides the actions row and version bar while on. No data written. Later: a per-step timer (M11) lives inside this mode, and M17's attempt note is offered when the cook turns it off.
 
