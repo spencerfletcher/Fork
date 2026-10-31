@@ -2,6 +2,8 @@ import { describe, test, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import RecipeActions from './RecipeActions.svelte';
+import source from './RecipeActions.svelte?raw';
+import { readFileSync } from 'node:fs';
 
 // Each form's enhance callback is captured so a test can play back a result.
 type Submit = (input: {
@@ -40,10 +42,12 @@ function makeProps(overrides: Record<string, unknown> = {}) {
 // ─── Save button ──────────────────────────────────────────────────────────────
 
 describe('RecipeActions save button', () => {
-	test('reflects the initial favourite state', () => {
+	test('reflects the initial favourite state in aria-pressed, the word stays Favorite', () => {
 		render(RecipeActions, { props: makeProps({ initialFavorited: true }) });
 		// The visible word is the accessible name: no aria-label saying something else.
-		expect(screen.getByRole('button', { name: 'Favorited' })).not.toHaveAttribute('aria-label');
+		const button = screen.getByRole('button', { name: 'Favorite' });
+		expect(button).toHaveAttribute('aria-pressed', 'true');
+		expect(button).not.toHaveAttribute('aria-label');
 	});
 
 	test('is a toggle button: pressed while favourited, and flips as it submits', async () => {
@@ -53,7 +57,7 @@ describe('RecipeActions save button', () => {
 			'false'
 		);
 		await playBack('?/toggleFavorite', { type: 'success' });
-		expect(screen.getByRole('button', { name: 'Favorited' })).toHaveAttribute(
+		expect(screen.getByRole('button', { name: 'Favorite' })).toHaveAttribute(
 			'aria-pressed',
 			'true'
 		);
@@ -67,7 +71,7 @@ describe('RecipeActions save button', () => {
 
 	test('the favorited star is a marigold fill on an ink edge, not clay', () => {
 		render(RecipeActions, { props: makeProps({ initialFavorited: true }) });
-		const star = screen.getByRole('button', { name: 'Favorited' }).querySelector('svg')!;
+		const star = screen.getByRole('button', { name: 'Favorite' }).querySelector('svg')!;
 		expect(star).toHaveClass('fill-marigold');
 		expect(star).not.toHaveClass('fill-accent');
 		expect(star).not.toHaveClass('text-accent');
@@ -90,7 +94,53 @@ describe('RecipeActions save button', () => {
 			makeProps({ recipe: { slug: 'original', title: 'Original' }, initialFavorited: false })
 		);
 
-		expect(screen.getByRole('button', { name: 'Favorite' })).toHaveTextContent('Favorite');
+		expect(screen.getByRole('button', { name: 'Favorite' })).toHaveAttribute(
+			'aria-pressed',
+			'false'
+		);
+	});
+});
+
+// ─── Pressed look ─────────────────────────────────────────────────────────────
+
+describe('RecipeActions favorited look', () => {
+	// jsdom applies no component CSS, so the rules are read from the source.
+	const style = source.slice(source.indexOf('<style>'));
+	const rule = (selector: string, from = style) => {
+		const start = from.indexOf(`${selector} {`);
+		expect(start, selector).toBeGreaterThan(-1);
+		return from.slice(start, from.indexOf('}', start));
+	};
+	const pressed = ".favorite[aria-pressed='true']";
+
+	test('the favorite button carries the class the pressed rules hang on', () => {
+		render(RecipeActions, { props: makeProps() });
+		expect(screen.getByRole('button', { name: 'Favorite' })).toHaveClass('favorite');
+	});
+
+	test('pressed, the pill is the marigold tint with a marigold border (Spencer, 31 October 2026)', () => {
+		expect(rule(pressed)).toMatch(/background:\s*var\(--color-marigold-tint\)/);
+		expect(rule(pressed)).toMatch(/border-color:\s*var\(--color-marigold\)/);
+	});
+
+	test('pressed, hover goes a touch deeper so the button still reacts', () => {
+		expect(rule(`${pressed}:hover`)).toMatch(/background:\s*var\(--color-marigold-tint-hover\)/);
+	});
+
+	test('the tint tokens are defined once in app.css', () => {
+		const appCss = readFileSync('src/app.css', 'utf8');
+		const root = appCss.slice(appCss.indexOf(':root {'));
+		expect(root.match(/--color-marigold-tint:\s*#[0-9a-f]{6};/gi)).toHaveLength(1);
+		expect(root.match(/--color-marigold-tint-hover:\s*#[0-9a-f]{6};/gi)).toHaveLength(1);
+	});
+
+	test('forced colours: pressed gets a 2px border and a Highlight star, like the ticks', () => {
+		const forced = style.slice(style.indexOf('@media (forced-colors: active)'));
+		expect(forced.length).toBeLessThan(style.length);
+		expect(rule(pressed, forced)).toMatch(/border-width:\s*2px/);
+		const star = rule(`${pressed} svg`, forced);
+		expect(star).toMatch(/forced-color-adjust:\s*none/);
+		expect(star).toMatch(/fill:\s*Highlight/);
 	});
 });
 

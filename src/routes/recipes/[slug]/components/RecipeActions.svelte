@@ -143,10 +143,10 @@
 				}}>
 				<button
 					type="submit"
-					class="btn-ghost flex items-center justify-center gap-2 no-underline"
+					class="btn-ghost favorite flex items-center justify-center gap-2 no-underline"
 					aria-pressed={isFavorited}>
 					{@render starIcon(isFavorited)}
-					{isFavorited ? 'Favorited' : 'Favorite'}
+					Favorite
 				</button>
 			</form>
 		{/if}
@@ -174,6 +174,32 @@
 		min-height: 44px;
 		padding: 8px 18px 8px 16px;
 		border-radius: 999px;
+	}
+
+	/* Favorited: the word stays "Favorite" so the pill never changes width;
+	   the state is the pale marigold tint and border, quieter than the solid
+	   marigold Fork beside it (Spencer, 31 October 2026). */
+	.favorite[aria-pressed='true'] {
+		background: var(--color-marigold-tint);
+		border-color: var(--color-marigold);
+	}
+
+	.favorite[aria-pressed='true']:hover {
+		background: var(--color-marigold-tint-hover);
+	}
+
+	/* Forced colours strip the tint and the marigold star, so pressed keeps a
+	   heavier border and paints its star in Highlight, as the ticks do. */
+	@media (forced-colors: active) {
+		.favorite[aria-pressed='true'] {
+			border-width: 2px;
+		}
+
+		.favorite[aria-pressed='true'] svg {
+			forced-color-adjust: none;
+			fill: Highlight;
+			stroke: CanvasText;
+		}
 	}
 
 	@media (max-width: 699px) {

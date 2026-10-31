@@ -237,6 +237,9 @@
 	/* alias of the tint */
 	--color-marigold: #eca620;
 	--color-marigold-hover: #dc980a;
+	--color-marigold-tint: #fbefd0;
+	--color-marigold-tint-hover: #f7e4b6;
+	/* pale marigold — a pressed toggle (Favorite), ink on it */
 
 	/* Aliases kept so pages compile until their own redesign step */
 	--color-sienna: #1a1714;
