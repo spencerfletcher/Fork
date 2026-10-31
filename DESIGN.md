@@ -232,8 +232,7 @@ Flat, by tonal step. Paper, lifted paper, clay tint and espresso are the four su
 
 ### Shadow Vocabulary
 
-- **Raised** (`box-shadow: 0 4px 16px rgba(26, 23, 20, 0.12)`): native `<dialog>` opened with `showModal()`, over a `rgba(26, 20, 8, 0.5)` backdrop. The one true overlay.
-- **Card** (`box-shadow: 0 1px 3px rgba(26, 23, 20, 0.08), 0 1px 2px rgba(26, 23, 20, 0.05)`): legacy token still on the auth card and version strip. Under the flat rule it is to be removed, not reused.
+- **Raised** (`box-shadow: 0 4px 16px rgba(26, 23, 20, 0.12)`): the open tag list, the one true overlay.
 
 ### Named Rules
 
@@ -261,7 +260,7 @@ Fork is one click, decided 29 October 2026: the pill submits, the server makes t
 
 - **Version chip:** marigold fill, ink mono 600 text, 0 6px padding, 4px corners, and a 1px transparent outline drawn inside, so it keeps its box in forced colours, where the fill is dropped. Marigold carries no fixed meaning: it is the vibrant accent, spent sparingly on bold things (the primary button, the chip). On the recipe page the chip marks the version being read, so it stays marigold on an older version too; on the compare page it marks the "To" side; the recipe card's version mark is clay text (decided 29 October 2026, Spencer: "marigold only as the version being read is not inherently true, it's just a vibrant accent colour we should use sparingly").
 
-- **Tags:** transparent pill, 1px Rule 2 border, Ink 2 text at 0.75rem 500. Hover fills clay tint and darkens the border. On espresso: tan text with a 22% white border.
+- **Tags:** transparent pill, 1px Rule 2 border, Ink 2 text at 0.75rem 500. Hover fills clay tint and darkens the border.
 - **Tag tabs:** plain text at 0.875rem, Ink 2, 2px transparent underline; the current tab is ink, 600, with a clay underline. One component, `TagTabs`, for every tag row: the browse and tag pages link through it (a nav, one current tab, All first), and Search and Favorites toggle it (a group of toggle buttons with `aria-pressed`, no All). A pressed filter looks exactly like the current tab, and several can be pressed at once (Spencer, 31 October 2026: the pill was dropped). Each toggle holds its 600 width before it is pressed, so a press moves no neighbour. "Clear all" ends the row, in Ink 3, only while a tag is pressed, so a first pick inserts nothing before the tabs; a press keeps keyboard focus and does not scroll the page, and Clear all hands focus to the first tag (the row's 18px of scroll padding keeps a focused tab's ring from being clipped). On a phone every tab reaches 44px by padding above the text, pulled back by the row's margin. In forced colours the idle tabs' transparent underline is set to Canvas, so only the current or pressed tabs keep a line (forced colours would otherwise paint every tab's, marking all of them current).
 - **Search box** (search and favorites): the placeholder and name read "Search by name or ingredient…", since the server matches title, description and ingredient names, not titles only. Enter or a tag press applies the query. The native × empties the field and re-runs the search on its own, so the results and the URL drop `?q=` while the selected tags stay (only when the URL has a query, so Enter on an already empty box navigates once); it is drawn in the field's ink (a 16px glyph on `currentColor`, 24px hit), not the browser's blue.
 

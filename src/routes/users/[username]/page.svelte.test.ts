@@ -42,7 +42,6 @@ describe('Profile page', () => {
 		// own (decided 29 October 2026). The dot between them is drawn by CSS.
 		const { container } = renderProfile();
 		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('@chefmaria');
-		expect(container.querySelector('.bg-hero-bg')).toBeNull();
 		const stats = container.querySelector('.profile-stats')!;
 		expect(stats.textContent?.replace(/\s+/g, ' ').trim()).toBe(
 			'5 changes Member since October 2026'

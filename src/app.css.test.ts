@@ -57,7 +57,7 @@ describe('app.css tokens', () => {
 			.filter((f) => f.endsWith('.svelte'))
 			.filter((f) => {
 				const src = readFileSync(new URL(f, import.meta.url), 'utf8');
-				return src.includes('hero-bg') && /\baccent\b|accent-mid|accent-pale/.test(src);
+				return src.includes('navbar-bg') && /\baccent\b/.test(src);
 			});
 		expect(offenders).toEqual([]);
 	});

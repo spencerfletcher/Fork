@@ -133,7 +133,6 @@
 	--color-bg: var(--color-bg);
 	--color-surface: var(--color-surface);
 	--color-surface-2: var(--color-surface-2);
-	--color-hero-bg: var(--color-hero-bg);
 	--color-navbar-bg: var(--color-navbar-bg);
 
 	/* Text */
@@ -142,19 +141,12 @@
 	--color-text-3: var(--color-text-3);
 	--color-text-cream: var(--color-text-cream);
 	--color-text-tan: var(--color-text-tan);
-	--color-text-bronze: var(--color-text-bronze);
 
 	/* Accent */
 	--color-accent: var(--color-accent);
-	--color-accent-mid: var(--color-accent-mid);
-	--color-accent-pale: var(--color-accent-pale);
 	--color-marigold: var(--color-marigold);
 	--color-marigold-hover: var(--color-marigold-hover);
 	--color-tint: var(--color-tint);
-
-	/* Named accents */
-	--color-sienna: var(--color-sienna);
-	--color-paprika: var(--color-paprika);
 
 	/* Tags */
 	--color-tag: var(--color-tag);
@@ -173,7 +165,6 @@
 	--color-remove-bg: var(--color-remove-bg);
 
 	/* Shadows */
-	--shadow-card: var(--shadow-card);
 	--shadow-raised: var(--shadow-raised);
 
 	/* Typography */
@@ -188,7 +179,7 @@
 	--radius-pill: var(--radius-pill);
 }
 
-/* Spacing overrides: align p-5..p-8 with the project's --space-5..--space-8 */
+/* Spacing overrides: align p-5..p-8 with the 8px scale (24, 32, 48, 64px) */
 @theme {
 	--spacing-5: 1.5rem;
 	/* 24px */
@@ -210,8 +201,6 @@
 	/* paper — stat tiles inside cards */
 	--color-navbar-bg: #1a1408;
 	/* espresso — the navbar, the one dark surface */
-	--color-hero-bg: #1a1408;
-	/* alias of the navbar until the recipe hero is rebuilt on paper */
 	--color-tint: #f5e9e0;
 	/* clay tint — no-photo panels, hover fills */
 	--color-band: #efe8db;
@@ -228,24 +217,15 @@
 	/* Text on the espresso navbar */
 	--color-text-cream: #f7f3ec;
 	--color-text-tan: #b8a880;
-	--color-text-bronze: #b8a880;
 
 	/* Accent — clay is the only text accent: links, titles, version numbers.
 	   Marigold is the only fill, always with ink on it. Nothing else is coloured. */
 	--color-accent: #b23c00;
-	--color-accent-mid: #1a1714;
-	/* clay's hover is ink */
-	--color-accent-pale: #f5e9e0;
-	/* alias of the tint */
 	--color-marigold: #eca620;
 	--color-marigold-hover: #dc980a;
 	--color-marigold-tint: #fbefd0;
 	--color-marigold-tint-hover: #f7e4b6;
 	/* pale marigold — a pressed toggle (Favorite), ink on it */
-
-	/* Aliases kept so pages compile until their own redesign step */
-	--color-sienna: #1a1714;
-	--color-paprika: #922d23;
 
 	/* Tags */
 	--color-tag: #4a443e;
@@ -265,7 +245,6 @@
 	--color-remove-bg: #f6e3e0;
 
 	/* Elevation */
-	--shadow-card: 0 1px 3px rgba(26, 23, 20, 0.08), 0 1px 2px rgba(26, 23, 20, 0.05);
 	--shadow-raised: 0 4px 16px rgba(26, 23, 20, 0.12);
 
 	/* Typography */
@@ -282,7 +261,6 @@
 	--space-5: 24px;
 	--space-6: 32px;
 	--space-7: 48px;
-	--space-8: 64px;
 
 	/* Border radius */
 	--radius-sm: 4px;
@@ -499,16 +477,6 @@
 		margin: 0 auto;
 	}
 
-	.page-header {
-		margin-bottom: var(--space-4);
-	}
-
-	.page-subtitle {
-		font-size: 1.0625rem;
-		color: var(--color-text-2);
-		margin: var(--space-2) 0 0;
-	}
-
 	/* Every list page's title row. On browse and tag pages the title and the
 	   tag tabs share one baseline; the tabs wrap under the title when the row
 	   runs out of room, 24px under it, as the search filters sit. */
@@ -686,17 +654,6 @@
 	a.tag:hover {
 		background: var(--color-tag-hover-bg);
 		border-color: var(--color-tag);
-	}
-
-	/* The recipe hero sits on --color-hero-bg; the light border disappears there. */
-	.tag--on-dark {
-		color: var(--color-text-tan);
-		border-color: rgb(255 255 255 / 0.22);
-	}
-
-	a.tag--on-dark:hover {
-		background: rgb(255 255 255 / 0.08);
-		border-color: rgb(255 255 255 / 0.4);
 	}
 
 	/* ── Back link ── */
@@ -1122,11 +1079,6 @@
 	.commit-bar__message {
 		color: var(--color-text-2);
 		font-size: 0.9375rem;
-	}
-
-	.commit-bar__author {
-		color: var(--color-text-3);
-		font-size: 0.875rem;
 	}
 
 	.eyebrow-label {
