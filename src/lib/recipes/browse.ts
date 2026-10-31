@@ -5,7 +5,7 @@
 export const RECENT_LIMIT = 8;
 export const FORKED_LIMIT = 4;
 
-type BrowseRecipe = { id: number; updatedAt: Date | null; forkCount: number };
+export type BrowseRecipe = { id: number; updatedAt: Date | null; forkCount: number };
 
 export type BrowseSection<T> = {
 	title: 'Recent' | 'Most forked' | 'All recipes';

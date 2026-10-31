@@ -1,9 +1,9 @@
 <script lang="ts">
 	import RecipeCard from '#lib/components/recipes/RecipeCard.svelte';
+	import BrowseSections from '#lib/components/recipes/BrowseSections.svelte';
 	import VersionDiff from '#lib/components/recipes/VersionDiff.svelte';
 	import LandingHero from './LandingHero.svelte';
 	import TagTabs from '#lib/components/ui/TagTabs.svelte';
-	import { browseSections } from '#lib/recipes/browse.js';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -90,26 +90,13 @@
 					No recipes yet. <a href="/recipes/new">Create the first one →</a>
 				</p>
 			{:else}
-				{#each browseSections(data.recipes) as section, s (section.title)}
-					<section class="browse-section">
-						<h2 class="eyebrow-label section-heading">{section.title}</h2>
-						<div class="recipe-grid">
-							{#each section.recipes as recipe, i (recipe.id)}
-								<RecipeCard {recipe} index={s === 0 ? i : undefined} />
-							{/each}
-						</div>
-					</section>
-				{/each}
+				<BrowseSections recipes={data.recipes} />
 			{/if}
 		</div>
 	</div>
 {/if}
 
 <style>
-	.browse-section + .browse-section {
-		margin-top: 34px;
-	}
-
 	/* A phone drops the sample's Details panel, the only section at the diff's
 	   top level (Ingredients and Method sit inside its columns), so the first
 	   photo comes up a screen sooner; the compare page keeps it. */

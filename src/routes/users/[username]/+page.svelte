@@ -1,5 +1,5 @@
 <script lang="ts">
-	import RecipeCard from '#lib/components/recipes/RecipeCard.svelte';
+	import RecipeGrid from '#lib/components/recipes/RecipeGrid.svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -42,17 +42,7 @@
 		</header>
 
 		{#if recipes.length > 0}
-			<section>
-				<h2 class="eyebrow-label section-heading">
-					{recipes.length}
-					{recipes.length === 1 ? 'recipe' : 'recipes'}
-				</h2>
-				<div class="recipe-grid">
-					{#each recipes as recipe, i (recipe.id)}
-						<RecipeCard {recipe} index={i} />
-					{/each}
-				</div>
-			</section>
+			<RecipeGrid {recipes} />
 		{:else}
 			<p class="empty-state">No public recipes yet.</p>
 		{/if}

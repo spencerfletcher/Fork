@@ -1,5 +1,5 @@
 <script lang="ts">
-	import RecipeCard from '#lib/components/recipes/RecipeCard.svelte';
+	import RecipeGrid from '#lib/components/recipes/RecipeGrid.svelte';
 	import SearchFilters from '#lib/components/ui/SearchFilters.svelte';
 	import type { PageData } from './$types';
 
@@ -26,17 +26,7 @@
 		{/if}
 
 		{#if recipes.length > 0}
-			<section class="results">
-				<h2 class="eyebrow-label section-heading">
-					{recipes.length}
-					{recipes.length === 1 ? 'recipe' : 'recipes'}
-				</h2>
-				<div class="recipe-grid">
-					{#each recipes as recipe, i (recipe.id)}
-						<RecipeCard {recipe} index={i} />
-					{/each}
-				</div>
-			</section>
+			<RecipeGrid {recipes} class="results" />
 		{:else}
 			<p class="empty-state" class:mt-6={filtered}>
 				{#if filtered}
@@ -51,10 +41,6 @@
 </div>
 
 <style>
-	.results {
-		margin-top: var(--space-5);
-	}
-
 	/* Under a left-aligned h1 the empty state starts on its edge, not centred
 	   on a second axis; scoped while app.css's shared rule stays centred. It
 	   sits the header's one gap below the h1, or the results' gap below the

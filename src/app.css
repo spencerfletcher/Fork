@@ -632,6 +632,11 @@
 		border-bottom: 1px solid var(--color-border);
 	}
 
+	/* Search and Favorites: the counted grid under the filters. */
+	.results {
+		margin-top: var(--space-5);
+	}
+
 	.recipe-grid {
 		display: grid;
 		grid-template-columns: repeat(2, 1fr);

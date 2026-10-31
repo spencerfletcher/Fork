@@ -1,5 +1,5 @@
 <script lang="ts">
-	import RecipeCard from '#lib/components/recipes/RecipeCard.svelte';
+	import RecipeGrid from '#lib/components/recipes/RecipeGrid.svelte';
 	import TagTabs from '#lib/components/ui/TagTabs.svelte';
 	import type { PageData } from './$types';
 
@@ -16,17 +16,7 @@
 		{#if data.recipes.length > 0}
 			<!-- The same eyebrow-and-rule as a browse section, so the grid sits at
 			     the same height whichever tab is active. -->
-			<section>
-				<h2 class="eyebrow-label section-heading">
-					{data.recipes.length}
-					{data.recipes.length === 1 ? 'recipe' : 'recipes'}
-				</h2>
-				<div class="recipe-grid">
-					{#each data.recipes as recipe, i (recipe.id)}
-						<RecipeCard {recipe} index={i} />
-					{/each}
-				</div>
-			</section>
+			<RecipeGrid recipes={data.recipes} />
 		{:else}
 			<p class="empty-state">
 				No recipes with this tag yet. <a href={data.user ? '/' : '/recipes'}>Explore all →</a>

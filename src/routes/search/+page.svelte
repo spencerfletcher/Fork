@@ -1,5 +1,5 @@
 <script lang="ts">
-	import RecipeCard from '#lib/components/recipes/RecipeCard.svelte';
+	import RecipeGrid from '#lib/components/recipes/RecipeGrid.svelte';
 	import SearchFilters from '#lib/components/ui/SearchFilters.svelte';
 	import type { PageData } from './$types';
 
@@ -21,17 +21,7 @@
 			availableTags={data.allTags} />
 
 		{#if recipes.length > 0}
-			<section class="results">
-				<h2 class="eyebrow-label section-heading">
-					{recipes.length}
-					{recipes.length === 1 ? 'recipe' : 'recipes'}
-				</h2>
-				<div class="recipe-grid">
-					{#each recipes as recipe, i (recipe.id)}
-						<RecipeCard {recipe} index={i} />
-					{/each}
-				</div>
-			</section>
+			<RecipeGrid {recipes} class="results" />
 		{:else}
 			<p class="empty-state mt-6">
 				<!-- Each link says what it does; All recipes goes where the tabs' All
@@ -57,9 +47,3 @@
 		{/if}
 	</div>
 </div>
-
-<style>
-	.results {
-		margin-top: var(--space-5);
-	}
-</style>
