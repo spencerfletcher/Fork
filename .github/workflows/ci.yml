@@ -89,8 +89,9 @@ jobs:
       - run: supabase start
 
       # Publish the generated local keys and the suite's database, fork_e2e, to
-      # later steps (they outrank the workflow placeholders and .env.e2e). The
-      # seed and e2e users come from .env.e2e.
+      # later steps (they outrank the workflow placeholders and .env.e2e). CI has
+      # no .env.local, so this is where the keys come from; the seed and e2e
+      # users come from .env.e2e.
       - name: Export Supabase environment
         run: |
           eval "$(supabase status -o env)"

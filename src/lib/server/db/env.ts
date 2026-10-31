@@ -16,13 +16,15 @@ export function targetFromEnv(): DbTarget {
 
 /**
  * Loads the env files for `target` and refuses a mix-up before returning.
- * Variables already in the environment win; then `.env.local` (local) or
- * `.env.e2e` (e2e), then `.env` fills whatever is still unset. Prod skips both,
+ * Variables already in the environment win, and a file never overwrites a
+ * variable an earlier file set. Local reads `.env.local`; e2e reads `.env.e2e`
+ * (its database and users) and then `.env.local` (the stack's URL and keys), so
+ * `.env.e2e` overrides; `.env` fills whatever is still unset. Prod skips both,
  * so `.env` (hosted) is the only file read.
  */
 export function loadEnv(target: DbTarget) {
-	if (target === 'local') loadFile('.env.local');
 	if (target === 'e2e') loadFile('.env.e2e');
+	if (target !== 'prod') loadFile('.env.local');
 	loadFile('.env');
 
 	const DATABASE_URL = required('DATABASE_URL');

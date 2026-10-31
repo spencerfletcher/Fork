@@ -5,10 +5,10 @@ import { loadEnv } from './src/lib/server/db/env';
 // A built SvelteKit app resolves $env/dynamic/private from process.env at
 // runtime, and the preview server below inherits this process's environment,
 // so whatever loadEnv puts there is the database the suite writes to. 'e2e'
-// loads .env.e2e first and refuses any database but the local fork_e2e, which
-// global-setup resets to the seed before every run; the dev database is never
-// touched. Process env outranks .env.local in Vite's env loading, so the
-// preview cannot fall back to the dev database.
+// lays .env.e2e over .env.local and refuses any database but the local
+// fork_e2e, which global-setup resets to the seed before every run; the dev
+// database is never touched. Process env outranks .env.local in Vite's env
+// loading, so the preview cannot fall back to the dev database.
 loadEnv('e2e');
 
 export const AUTH_FILE = path.join('e2e', '.auth', 'user.json');
