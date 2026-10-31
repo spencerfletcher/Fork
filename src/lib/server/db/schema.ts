@@ -10,7 +10,8 @@ import {
 	jsonb,
 	customType,
 	index,
-	unique
+	unique,
+	check
 } from 'drizzle-orm/pg-core';
 import { relations, sql } from 'drizzle-orm';
 
@@ -75,11 +76,17 @@ export const recipes = pgTable(
 
 // ─── Tags ─────────────────────────────────────────────────────────────────────
 
-export const tags = pgTable('tags', {
-	id: serial().primaryKey(),
-	name: text().notNull().unique(),
-	slug: text().notNull().unique()
-}).enableRLS();
+// Slugs are stored lowercase because tag pages look them up lowercased; the
+// check holds that for every writer, scripts and hand-run SQL included.
+export const tags = pgTable(
+	'tags',
+	{
+		id: serial().primaryKey(),
+		name: text().notNull().unique(),
+		slug: text().notNull().unique()
+	},
+	(t) => [check('tags_slug_lowercase', sql`${t.slug} = lower(${t.slug})`)]
+).enableRLS();
 
 export const recipesToTags = pgTable(
 	'recipes_to_tags',

@@ -15,6 +15,20 @@
       "when": 1793077362952,
       "tag": "0001_photo-on-version",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793459936511,
+      "tag": "0002_tags-slug-lowercase-data",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1793459956420,
+      "tag": "0003_tags-slug-lowercase",
+      "breakpoints": true
     }
   ]
 }

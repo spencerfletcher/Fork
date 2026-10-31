@@ -1,0 +1,1 @@
+ALTER TABLE "tags" ADD CONSTRAINT "tags_slug_lowercase" CHECK ("tags"."slug" = lower("tags"."slug"));
