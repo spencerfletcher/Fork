@@ -3,7 +3,7 @@
 	import type { Ingredient } from '#lib/recipes/types.js';
 	import type { GramResult } from '#lib/server/ingredientDensities.js';
 	import { FRACTIONS, scaleIngredient } from '#lib/recipes/scale.js';
-	import { loadTicks, saveTicks } from './ticks';
+	import { tickList } from './ticks.svelte.js';
 
 	let {
 		ingredients,
@@ -21,27 +21,7 @@
 		control?: Snippet;
 	} = $props();
 
-	// Writable derived: the ticks reload whenever the page moves to another
-	// version, and a click changes them. The server has no localStorage, so it
-	// renders none; hydration restores them.
-	let ticked = $derived(loadTicks(storageKey));
-
-	function toggle(i: number, on: boolean) {
-		ticked = on ? [...ticked, i] : ticked.filter((j) => j !== i);
-		saveTicks(storageKey, ticked);
-	}
-
-	// The button leaves with the last tick, so focus moves to the list's first
-	// checkbox rather than dropping to the page. A mouse click (detail > 0)
-	// keeps the page still; Enter or Space (detail 0) scrolls to where focus went.
-	function clear(e: MouseEvent & { currentTarget: HTMLButtonElement }) {
-		e.currentTarget
-			.closest('section')
-			?.querySelector<HTMLInputElement>('input[type="checkbox"]')
-			?.focus({ preventScroll: e.detail > 0 });
-		ticked = [];
-		saveTicks(storageKey, ticked);
-	}
+	const ticks = tickList(() => storageKey);
 
 	// Whole grams, except below ten where a tenth matters: 5.7g, not 6g.
 	function round(g: number): number {
@@ -112,8 +92,8 @@
 				<input
 					type="checkbox"
 					class="sr-only top-0 h-full"
-					checked={ticked.includes(i)}
-					onchange={(e) => toggle(i, e.currentTarget.checked)} />
+					checked={ticks.ticked.includes(i)}
+					onchange={(e) => ticks.toggle(i, e.currentTarget.checked)} />
 				<span class="tick translate-y-[2px]" aria-hidden="true"></span>
 				<span class="group-has-[:checked]:text-text-3 min-w-0">
 					{#if bold}<span
@@ -139,18 +119,13 @@
 	<!-- The list's foot: the weights note at the start, Clear ticks at the end,
 	     only while a line is ticked. Clear ticks is Ink 3 at the note's size, a
 	     24px hit, 44px on a phone or under a coarse pointer. -->
-	{#if note || ticked.length > 0}
+	{#if note || ticks.ticked.length > 0}
 		<div class="flex items-baseline gap-4">
 			{#if note}
 				<p class="form-hint">{note}</p>
 			{/if}
-			{#if ticked.length > 0}
-				<button
-					type="button"
-					class="text-text-3 hover:text-text -my-0.5 ml-auto cursor-pointer py-0.5 text-sm max-[699px]:-my-3 max-[699px]:py-3 pointer-coarse:-my-3 pointer-coarse:py-3"
-					onclick={clear}>
-					Clear ticks
-				</button>
+			{#if ticks.ticked.length > 0}
+				<button type="button" class="clear-ticks" onclick={ticks.clear}>Clear ticks</button>
 			{/if}
 		</div>
 	{/if}

@@ -894,6 +894,32 @@
 		}
 	}
 
+	/* Clear ticks, under the recipe page's ingredients and method while a row is
+	   ticked: Ink 3 at the ingredients note's size, a 24px hit, 44px on a phone
+	   or under a coarse pointer. */
+	.clear-ticks {
+		margin-block: -2px;
+		margin-inline-start: auto;
+		padding-block: 2px;
+		font-size: 0.875rem;
+		line-height: calc(1.25 / 0.875);
+		color: var(--color-text-3);
+		cursor: pointer;
+	}
+
+	@media (hover: hover) {
+		.clear-ticks:hover {
+			color: var(--color-text);
+		}
+	}
+
+	@media (width < 699px), (pointer: coarse) {
+		.clear-ticks {
+			margin-block: -12px;
+			padding-block: 12px;
+		}
+	}
+
 	.required {
 		color: var(--color-remove);
 	}
