@@ -160,7 +160,7 @@ describe('new recipe action', () => {
 		const result = await invoke(makeEvent({ fields: FULL, file: new File(['x'], 'a.png') }));
 		expect(result.status).toBe(400);
 		expect(result.data).toMatchObject({
-			error: 'Photo upload failed. Please try again.',
+			error: 'Photo upload failed. Try again.',
 			draft: { title: 'Soup', hadPhoto: true }
 		});
 		expect(transactionMock).not.toHaveBeenCalled();
@@ -173,7 +173,7 @@ describe('new recipe action', () => {
 		expect(removeMock).toHaveBeenCalledWith(SUPABASE, 'user-1/img.png');
 		expect(result.status).toBe(500);
 		expect(result.data).toMatchObject({
-			error: 'Could not save the recipe. Please try again.',
+			error: 'Could not save the recipe. Try again.',
 			draft: { title: 'Soup' }
 		});
 		error.mockRestore();

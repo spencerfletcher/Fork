@@ -36,7 +36,7 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 	});
 
 	if (!recipe) throw error(404, 'Recipe not found');
-	if (recipe.authorId !== user.id) throw error(403, 'You do not own this recipe');
+	if (recipe.authorId !== user.id) throw error(403, 'Not authorized');
 
 	const allTags = await listTags();
 
@@ -84,7 +84,7 @@ export const actions: Actions = {
 			try {
 				image = await uploadRecipeImage(supabase, user.id, file);
 			} catch {
-				return fail(400, { error: 'Photo upload failed. Please try again.', draft });
+				return fail(400, { error: 'Photo upload failed. Try again.', draft });
 			}
 		}
 
@@ -153,7 +153,7 @@ export const actions: Actions = {
 		} catch (e) {
 			console.error('Could not save recipe', e);
 			if (image) await removeRecipeImage(supabase, image.path);
-			return fail(500, { error: 'Could not save the recipe. Please try again.', draft });
+			return fail(500, { error: 'Could not save the recipe. Try again.', draft });
 		}
 
 		if (outcome === 'stale' || outcome === 'forbidden') {

@@ -41,7 +41,7 @@ export const actions: Actions = {
 			await ensureProfile(user);
 		} catch (e) {
 			console.error('Could not ensure profile', e);
-			return fail(500, { error: 'Could not save the recipe. Please try again.', draft });
+			return fail(500, { error: 'Could not save the recipe. Try again.', draft });
 		}
 
 		// Storage is outside the transaction: upload first, remove on a failed save.
@@ -51,7 +51,7 @@ export const actions: Actions = {
 			try {
 				image = await uploadRecipeImage(supabase, user.id, file);
 			} catch {
-				return fail(400, { error: 'Photo upload failed. Please try again.', draft });
+				return fail(400, { error: 'Photo upload failed. Try again.', draft });
 			}
 		}
 
@@ -85,7 +85,7 @@ export const actions: Actions = {
 		} catch (e) {
 			console.error('Could not create recipe', e);
 			if (image) await removeRecipeImage(supabase, image.path);
-			return fail(500, { error: 'Could not save the recipe. Please try again.', draft });
+			return fail(500, { error: 'Could not save the recipe. Try again.', draft });
 		}
 
 		throw redirect(303, `/recipes/${slug}`);

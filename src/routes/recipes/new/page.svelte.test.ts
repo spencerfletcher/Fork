@@ -96,7 +96,7 @@ describe('New recipe page validation errors', () => {
 		render(NewPage, {
 			props: {
 				data,
-				form: failed({ title: 'Soup' }, 'Could not save the recipe. Please try again.')
+				form: failed({ title: 'Soup' }, 'Could not save the recipe. Try again.')
 			}
 		});
 		await tick();

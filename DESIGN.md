@@ -329,7 +329,8 @@ End of day, 29 October 2026 (Spencer's decisions): the native select is the only
 ### Do:
 
 - **Do** set version numbers, dates, handles, the version bar and diff text in JetBrains Mono. Gram weights stay sans inside their ingredient line; the card's time and fork count are sans.
-- **Do** say "Log in" for signing in and "Log out" for its opposite, everywhere: the navbar, the login page's tab, subtitle and button, and every link to it. "Sign up" is the other verb, and "Sign in" beside it differs by two letters.
+- **Do** say "Log in" for signing in and "Log out" for its opposite, everywhere: the navbar, the login page's tab, subtitle and button, and every link to it. "Sign up" is the other verb, and "Sign in" beside it differs by two letters. The confirm-email page's way on reads "Log in" too.
+- **Do** end a failure the cook can retry with "Try again.", never "Please try again.", and refuse an action on someone else's recipe with "Not authorized" (31 October 2026).
 - **Do** keep clay for titles, links and version marks, and marigold for the one action.
 - **Do** separate surfaces with a tone step or a 1px rule; reserve shadows for dialogs.
 - **Do** keep body text at 16px, ink, with a measure under about 72 characters.

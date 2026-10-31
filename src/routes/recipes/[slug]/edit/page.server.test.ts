@@ -407,7 +407,7 @@ describe('save', () => {
 		const result = await save(UNCHANGED, { file: new File(['x'], 'a.png') });
 		expect(result.status).toBe(400);
 		expect(result.data).toMatchObject({
-			error: 'Photo upload failed. Please try again.',
+			error: 'Photo upload failed. Try again.',
 			draft: { hadPhoto: true }
 		});
 		expect(transactionMock).not.toHaveBeenCalled();
@@ -427,7 +427,7 @@ describe('save', () => {
 		const result = await save({ ...UNCHANGED, servings: '8' }, { file: new File(['x'], 'a.png') });
 		expect(result.status).toBe(500);
 		expect(result.data).toMatchObject({
-			error: 'Could not save the recipe. Please try again.',
+			error: 'Could not save the recipe. Try again.',
 			draft: { servings: '8' }
 		});
 		expect(removeMock).toHaveBeenCalledWith(SUPABASE, 'owner-123/new.png');
@@ -436,6 +436,19 @@ describe('save', () => {
 });
 
 describe('edit load', () => {
+	test("another user's recipe is a 403 that says Not authorized, as the actions do", async () => {
+		findRecipeMock.mockResolvedValue(RECIPE);
+		const event = {
+			params: { slug: 'soup' },
+			url: new URL('http://x/recipes/soup/edit'),
+			locals: { user: OTHER }
+		};
+		await expect(Promise.resolve().then(() => load(event as never))).rejects.toMatchObject({
+			status: 403,
+			body: { message: 'Not authorized' }
+		});
+	});
+
 	test('a logged-out visitor is sent to log in and brought back to this editor', async () => {
 		const event = {
 			params: { slug: 'soup' },

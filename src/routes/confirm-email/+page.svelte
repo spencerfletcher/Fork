@@ -12,6 +12,6 @@
 				and log in.
 			</p>
 		</div>
-		<a href="/login" class="btn-primary auth-submit">Back to login</a>
+		<a href="/login" class="btn-primary auth-submit">Log in</a>
 	</div>
 </div>
