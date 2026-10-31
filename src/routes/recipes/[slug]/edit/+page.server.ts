@@ -1,6 +1,6 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import { db } from '#lib/server/db/index.js';
-import { parseContent, parseSettings, draftOf } from '#lib/recipes/validation.js';
+import { parseDraftContent, parseSettings, draftOf } from '#lib/recipes/validation.js';
 import { recipes, recipeVersions } from '#lib/server/db/schema.js';
 import { eq, desc, sql } from 'drizzle-orm';
 import type { PageServerLoad, Actions } from './$types';
@@ -64,7 +64,7 @@ export const actions: Actions = {
 		const formData = await request.formData();
 		// Everything as typed, handed back on any failure so nothing is lost.
 		const draft = draftOf(formData);
-		const content = parseContent(formData);
+		const content = parseDraftContent(draft);
 		if (!content.ok) return fail(400, { error: content.error, draft });
 		const settings = parseSettings(formData);
 		if (!settings.ok) return fail(400, { error: settings.error, draft });

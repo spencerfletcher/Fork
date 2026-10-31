@@ -1,7 +1,7 @@
 import { redirect, error, fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { db } from '#lib/server/db/index.js';
-import { parseContent, parseSettings, draftOf } from '#lib/recipes/validation.js';
+import { parseDraftContent, parseSettings, draftOf } from '#lib/recipes/validation.js';
 import { recipes, recipeVersions } from '#lib/server/db/schema.js';
 import { slugify, randomSuffix } from '#lib/helpers.js';
 import {
@@ -31,7 +31,7 @@ export const actions: Actions = {
 		const formData = await request.formData();
 		// Everything as typed, handed back on any failure so nothing is lost.
 		const draft = draftOf(formData);
-		const content = parseContent(formData);
+		const content = parseDraftContent(draft);
 		if (!content.ok) return fail(400, { error: content.error, draft });
 		const settings = parseSettings(formData);
 		if (!settings.ok) return fail(400, { error: settings.error, draft });

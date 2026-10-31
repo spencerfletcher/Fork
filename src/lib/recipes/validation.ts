@@ -2,7 +2,7 @@ import { z } from 'zod';
 import type { Ingredient, Step, RecipeContent } from './types.js';
 import { parseIngredientText } from './ingredients.js';
 import { parseStepText } from './steps.js';
-import { limitError } from './limits.js';
+import { LINE_TOO_LONG, fieldTooLong, limitError } from './limits.js';
 import { normaliseTagNames } from './tags.js';
 
 // Largest value a Postgres `integer` column holds.
@@ -17,18 +17,30 @@ export const NUMBER_FIELDS = {
 
 export type NumberField = keyof typeof NUMBER_FIELDS;
 
-/** What a number field says when it is not whole, or below its floor; the editor shows the same live. */
+/** What a number field says when it is not whole, below its floor or too large; the editor shows the same live. */
 export function numberMessages(field: NumberField) {
 	const { label, min, unit } = NUMBER_FIELDS[field];
 	return {
 		whole: `${label} must be a whole number${unit}`,
-		belowMin: min === 0 ? `${label} can't be negative` : `${label} must be at least ${min}`
+		belowMin: min === 0 ? `${label} can't be negative` : `${label} must be at least ${min}`,
+		tooLarge: `${label} is too large`
 	};
 }
 
+/** What a required field says when it is empty; the editor shows the same live. */
+export const REQUIRED_MESSAGES = {
+	title: 'Title is required',
+	ingredients: 'At least one ingredient is required',
+	steps: 'At least one step is required'
+} as const;
+
+// The labels the length limits name.
+const INGREDIENTS = 'Ingredients';
+const STEPS = 'Steps';
+
 /** A whole number from a text input: blank is absent, otherwise an integer within [min, INT4_MAX]. */
 const optionalInt = (field: NumberField) => {
-	const { label, min } = NUMBER_FIELDS[field];
+	const { min } = NUMBER_FIELDS[field];
 	const messages = numberMessages(field);
 	return (
 		z
@@ -37,9 +49,7 @@ const optionalInt = (field: NumberField) => {
 			// The sign passes here so a negative is told it is below the floor.
 			.regex(/^(-?\d+)?$/, messages.whole)
 			.transform((s) => (s === '' ? null : Number(s)))
-			.pipe(
-				z.number().min(min, messages.belowMin).max(INT4_MAX, `${label} is too large`).nullable()
-			)
+			.pipe(z.number().min(min, messages.belowMin).max(INT4_MAX, messages.tooLarge).nullable())
 	);
 };
 
@@ -51,7 +61,7 @@ const bounded = (label: string, perLine: boolean) =>
 	});
 
 const recipeContentSchema = z.object({
-	title: z.string().trim().min(1, 'Title is required'),
+	title: z.string().trim().min(1, REQUIRED_MESSAGES.title),
 	description: z
 		.string()
 		.trim()
@@ -59,12 +69,12 @@ const recipeContentSchema = z.object({
 	servings: optionalInt('servings'),
 	prepTimeMinutes: optionalInt('prepTimeMinutes'),
 	cookTimeMinutes: optionalInt('cookTimeMinutes'),
-	ingredients: bounded('Ingredients', true)
+	ingredients: bounded(INGREDIENTS, true)
 		.transform(parseIngredientText)
-		.pipe(z.array(z.custom<Ingredient>()).min(1, 'At least one ingredient is required')),
-	steps: bounded('Steps', false)
+		.pipe(z.array(z.custom<Ingredient>()).min(1, REQUIRED_MESSAGES.ingredients)),
+	steps: bounded(STEPS, false)
 		.transform(parseStepText)
-		.pipe(z.array(z.custom<Step>()).min(1, 'At least one step is required'))
+		.pipe(z.array(z.custom<Step>()).min(1, REQUIRED_MESSAGES.steps))
 });
 
 /** What a parser hands back: the typed value, or the first message to show the user. */
@@ -107,25 +117,16 @@ function parse<T>(schema: z.ZodType<T>, input: unknown): Result<T> {
 		: { ok: false, error: result.error.issues[0].message };
 }
 
-/** The versioned content from the recipe form: title, description, servings, times, ingredients, steps. */
-export function parseContent(formData: FormData): Result<ContentFields> {
-	return parse(recipeContentSchema, {
-		title: text(formData, 'title'),
-		description: text(formData, 'description'),
-		servings: text(formData, 'servings'),
-		prepTimeMinutes: text(formData, 'prepTimeMinutes'),
-		cookTimeMinutes: text(formData, 'cookTimeMinutes'),
-		ingredients: text(formData, 'ingredients'),
-		steps: text(formData, 'steps')
-	});
-}
-
 const settingsSchema = z.object({
 	isPublic: z.boolean(),
 	tagNames: z.array(z.string()).transform(normaliseTagNames)
 });
 
-/** The same content parse, fed from the form's own draft strings instead of FormData. */
+/**
+ * The versioned content (title, description, servings, times, ingredients,
+ * steps) from the form's draft strings: an action passes `draftOf(formData)`,
+ * the editor its live draft.
+ */
 export function parseDraftContent(draft: RecipeDraft): Result<ContentFields> {
 	return parse(recipeContentSchema, {
 		title: draft.title,
@@ -174,4 +175,23 @@ export function draftOf(formData: FormData): RecipeDraft {
 		hadPhoto: image instanceof File && image.size > 0,
 		removeImage: formData.get('removeImage') === 'on'
 	};
+}
+
+// Every message a content field can be refused with. A Record over the
+// fields, so a new one must say which messages are its own.
+const MESSAGES_OF: Record<keyof ContentFields, string[]> = {
+	title: [REQUIRED_MESSAGES.title],
+	description: [],
+	servings: Object.values(numberMessages('servings')),
+	prepTimeMinutes: Object.values(numberMessages('prepTimeMinutes')),
+	cookTimeMinutes: Object.values(numberMessages('cookTimeMinutes')),
+	ingredients: [REQUIRED_MESSAGES.ingredients, fieldTooLong(INGREDIENTS), LINE_TOO_LONG],
+	steps: [REQUIRED_MESSAGES.steps, fieldTooLong(STEPS)]
+};
+
+/** The field a content message belongs to, so the editor can show it there; undefined for any other message. */
+export function fieldOfMessage(message: string): keyof ContentFields | undefined {
+	return (Object.keys(MESSAGES_OF) as Array<keyof ContentFields>).find((field) =>
+		MESSAGES_OF[field].includes(message)
+	);
 }

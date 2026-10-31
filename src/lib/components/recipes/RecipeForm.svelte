@@ -5,7 +5,9 @@
 	import {
 		parseDraftContent,
 		numberMessages,
+		fieldOfMessage,
 		NUMBER_FIELDS,
+		REQUIRED_MESSAGES,
 		type NumberField,
 		type RecipeDraft
 	} from '#lib/recipes/validation.js';
@@ -159,11 +161,6 @@
 	// every keystroke once it carries an error, so the message and the browser's
 	// :user-invalid state come from the same validity and clear together.
 	// Passing through an untouched field says nothing, as the auth pages do.
-	const REQUIRED: Record<string, string> = {
-		title: 'Title is required',
-		ingredients: 'At least one ingredient is required',
-		steps: 'At least one step is required'
-	};
 	let errors = $state<Record<string, string>>({});
 	// Read only by handlers, so not state.
 	const edited: Record<string, boolean> = {};
@@ -174,41 +171,31 @@
 	function validate(target: EventTarget | null) {
 		const el = target as HTMLInputElement | HTMLTextAreaElement;
 		const name = el?.name;
-		if (!name || !(name in REQUIRED || name in NUMBER_FIELDS)) return;
+		if (!name || !(name in REQUIRED_MESSAGES || name in NUMBER_FIELDS)) return;
 		const v = el.validity;
 		// Not whole before below the floor, in the server's order, so -1.5 says the same in both.
 		errors[name] = v.valid
 			? ''
 			: v.valueMissing
-				? REQUIRED[name]
+				? REQUIRED_MESSAGES[name as keyof typeof REQUIRED_MESSAGES]
 				: v.rangeUnderflow && !v.stepMismatch
 					? numberMessages(name as NumberField).belowMin
 					: numberMessages(name as NumberField).whole;
 	}
 
-	// The field a server message names, so it can be shown there and focused.
+	// A server message that names a field is shown there and focuses it.
 	// Anything else (a conflict, an upload or database failure) stays global.
-	const FIELD_OF: Array<[RegExp, string]> = [
-		[/^Title/, 'title'],
-		[/^Servings/, 'servings'],
-		[/^Prep time/, 'prepTimeMinutes'],
-		[/^Cook time/, 'cookTimeMinutes'],
-		[/ingredient/i, 'ingredients'],
-		[/step/i, 'steps']
-	];
-	const fieldFor = (error: string) => FIELD_OF.find(([re]) => re.test(error))?.[1];
-
 	// Focus waits for the fieldset to be enabled again: the failed action's
 	// result lands while the form is still marked submitting.
 	$effect(() => {
 		if (!form || submitting) return;
-		const name = fieldFor(form.error);
+		const name = fieldOfMessage(form.error);
 		if (!name) return;
 		errors[name] = form.error;
 		document.getElementById(name)?.focus();
 	});
 
-	const globalError = $derived(form && !fieldFor(form.error) ? form.error : null);
+	const globalError = $derived(form && !fieldOfMessage(form.error) ? form.error : null);
 
 	// A blocked submit fires invalid on each bad field in order. The inline
 	// message says it, so the browser's bubble, which would say it again, is

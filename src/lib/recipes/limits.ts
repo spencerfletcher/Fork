@@ -6,13 +6,13 @@
 export const MAX_LINE = 300;
 export const MAX_FIELD = 20_000;
 
+export const fieldTooLong = (label: string) =>
+	`${label} are too long (${MAX_FIELD.toLocaleString('en-US')} characters max)`;
+export const LINE_TOO_LONG = `An ingredient line is too long (${MAX_LINE} characters max)`;
+
 /** The limit message for a field's raw text, or null when it is within bounds. */
 export function limitError(text: string, label: string, perLine: boolean): string | null {
-	if (text.length > MAX_FIELD) {
-		return `${label} are too long (${MAX_FIELD.toLocaleString('en-US')} characters max)`;
-	}
-	if (perLine && text.split('\n').some((line) => line.length > MAX_LINE)) {
-		return `An ingredient line is too long (${MAX_LINE} characters max)`;
-	}
+	if (text.length > MAX_FIELD) return fieldTooLong(label);
+	if (perLine && text.split('\n').some((line) => line.length > MAX_LINE)) return LINE_TOO_LONG;
 	return null;
 }

@@ -1,5 +1,14 @@
 import { describe, test, expect } from 'vitest';
-import { parseContent, parseSettings, draftOf, numberMessages, type Result } from './validation';
+import {
+	parseDraftContent,
+	parseSettings,
+	draftOf,
+	numberMessages,
+	fieldOfMessage,
+	REQUIRED_MESSAGES,
+	type Result
+} from './validation';
+import { MAX_FIELD, MAX_LINE } from './limits';
 
 function form(fields: Record<string, string | string[]>): FormData {
 	const fd = new FormData();
@@ -21,6 +30,8 @@ test('no longer exports the two-form parsers', async () => {
 	const mod = await import('./validation');
 	expect(mod).not.toHaveProperty('parseRecipeMeta');
 	expect(mod).not.toHaveProperty('parseRecipeContent');
+	// The content is parsed from the draft, so FormData is read in one place.
+	expect(mod).not.toHaveProperty('parseContent');
 });
 
 // ─── One-save parsers ─────────────────────────────────────────────────────────
@@ -35,7 +46,10 @@ const FULL = {
 	steps: 'Mix.\n\nBake.'
 };
 
-describe('parseContent', () => {
+// The content parse as an action runs it: the form's draft, then the parse.
+const parseContent = (fd: FormData) => parseDraftContent(draftOf(fd));
+
+describe('parseDraftContent(draftOf(form))', () => {
 	test('parses every content field from one form', () => {
 		const value = unwrap(parseContent(form(FULL)));
 		expect(value).toMatchObject({
@@ -170,6 +184,45 @@ describe('parseContent', () => {
 		expect(value.description).toBeNull();
 		expect(value.servings).toBeNull();
 		expect(value.prepTimeMinutes).toBeNull();
+	});
+});
+
+describe('the editor reads the same messages', () => {
+	test.each(Object.entries(REQUIRED_MESSAGES))(
+		'a blank %s is refused with %j',
+		(field, message) => {
+			expect(parseContent(form({ ...FULL, [field]: '  ' }))).toEqual({ ok: false, error: message });
+		}
+	);
+
+	// Every way each field can be refused, so a message the schema gives is
+	// one the editor can place under its field.
+	const REFUSALS: Array<[string, string]> = [
+		['title', ''],
+		['servings', 'x'],
+		['servings', '0'],
+		['servings', '2147483648'],
+		['prepTimeMinutes', '1.5'],
+		['prepTimeMinutes', '-5'],
+		['prepTimeMinutes', '2147483648'],
+		['cookTimeMinutes', '1.5'],
+		['cookTimeMinutes', '-5'],
+		['cookTimeMinutes', '2147483648'],
+		['ingredients', ''],
+		['ingredients', 'x'.repeat(MAX_LINE + 1)],
+		['ingredients', 'x\n'.repeat(MAX_FIELD)],
+		['steps', ''],
+		['steps', 'x'.repeat(MAX_FIELD + 1)]
+	];
+
+	test.each(REFUSALS)('%s %#: the message names its field', (field, value) => {
+		const result = parseContent(form({ ...FULL, [field]: value }));
+		if (result.ok) throw new Error('expected a refusal');
+		expect(fieldOfMessage(result.error)).toBe(field);
+	});
+
+	test('a message no field owns stays with the form', () => {
+		expect(fieldOfMessage('Could not save the recipe. Try again.')).toBeUndefined();
 	});
 });
 
