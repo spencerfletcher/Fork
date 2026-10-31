@@ -59,6 +59,9 @@ export function recipeCopies({
 	prepTimeMinutes,
 	cookTimeMinutes,
 	imageUrl
-}: RecipeContent) {
+}: Pick<
+	RecipeContent,
+	'title' | 'description' | 'servings' | 'prepTimeMinutes' | 'cookTimeMinutes' | 'imageUrl'
+>) {
 	return { title, description, servings, prepTimeMinutes, cookTimeMinutes, imageUrl };
 }

@@ -5,17 +5,19 @@ import { createClient } from '@supabase/supabase-js';
 
 import { recipes, tags, recipesToTags, recipeVersions, profiles } from './schema';
 import { slugify, randomSuffix } from '#lib/helpers.js';
+import { recipeCopies } from '#lib/recipes/content.js';
 import { SEED } from './seedData';
 import { parseIngredientText } from '#lib/recipes/ingredients.js';
 import { parseStepText } from '#lib/recipes/steps.js';
-import { loadEnv, targetFromEnv } from './env';
+import { loadEnv, required, targetFromEnv } from './env';
 
 // `pnpm db:seed` targets the local stack, `pnpm db:seed:e2e` the suite's fork_e2e
 // and `pnpm db:seed:prod` the hosted project; loadEnv refuses a mix of local and hosted before anything is deleted.
 const env = loadEnv(targetFromEnv());
 const DATABASE_URL = env.DATABASE_URL;
 const SUPABASE_URL = env.SUPABASE_URL;
-const SUPABASE_SECRET_KEY = env.SUPABASE_SECRET_KEY;
+// Only the seed needs the secret key (it creates the seed user); migrate and drizzle-kit run without it.
+const SUPABASE_SECRET_KEY = required('SUPABASE_SECRET_KEY');
 const TARGET = env.description;
 const SEED_USER_PASSWORD = process.env.SEED_USER_PASSWORD ?? 'Fork-Demo-2025!';
 // Auth is one schema per stack, shared by the dev and e2e databases, so each
@@ -80,17 +82,19 @@ async function seed() {
 	console.log('Seeding tags...');
 	const tagRows = await db
 		.insert(tags)
-		.values([
-			{ name: 'Dessert', slug: slugify('Dessert') },
-			{ name: 'Baking', slug: slugify('Baking') },
-			{ name: 'American', slug: slugify('American') },
-			{ name: 'Dinner', slug: slugify('Dinner') },
-			{ name: 'Indian', slug: slugify('Indian') },
-			{ name: 'Spicy', slug: slugify('Spicy') },
-			// Deliberately orphaned — attached to no recipe below. Exercises the
-			// search loader's innerJoin, which hides tags with zero recipes.
-			{ name: 'Unused', slug: slugify('Unused') }
-		])
+		.values(
+			[
+				'Dessert',
+				'Baking',
+				'American',
+				'Dinner',
+				'Indian',
+				'Spicy',
+				// Deliberately orphaned — attached to no recipe below. Exercises the
+				// search loader's innerJoin, which hides tags with zero recipes.
+				'Unused'
+			].map((name) => ({ name, slug: slugify(name) }))
+		)
 		// The incoming slug wins, so a reseed repairs a tag stored with a bad one.
 		.onConflictDoUpdate({ target: tags.name, set: { slug: sql`excluded.slug` } })
 		.returning({ id: tags.id, name: tags.name });
@@ -108,12 +112,7 @@ async function seed() {
 				authorId: userId,
 				slug: `${recipe.slug}-${randomSuffix()}`,
 				// Copies of the latest version, per the ownership rule in schema.ts.
-				title: latest.title,
-				description: latest.description,
-				servings: latest.servings,
-				prepTimeMinutes: latest.prepTimeMinutes,
-				cookTimeMinutes: latest.cookTimeMinutes,
-				imageUrl: latest.imageUrl,
+				...recipeCopies(latest),
 				isPublic: recipe.isPublic,
 				parentId: recipe.forkOf ? idBySlug.get(recipe.forkOf.slug) : null,
 				forkedAt: recipe.forkOf ? new Date(recipe.forkOf.forkedAt) : null,

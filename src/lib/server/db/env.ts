@@ -3,8 +3,6 @@
 // on purpose. Extensionless import so Playwright's loader can follow it.
 import { describeDbTarget, type DbTarget } from './target';
 
-export type { DbTarget };
-
 /**
  * `DB_TARGET=prod` selects the hosted project, `DB_TARGET=e2e` the suite's own
  * fork_e2e database on the local stack; anything else is the local stack.
@@ -35,12 +33,7 @@ export function loadEnv(target: DbTarget) {
 		SUPABASE_URL,
 		process.env.SUPABASE_PROJECT_ID
 	);
-	return {
-		description,
-		DATABASE_URL,
-		SUPABASE_URL,
-		SUPABASE_SECRET_KEY: required('SUPABASE_SECRET_KEY')
-	};
+	return { description, DATABASE_URL, SUPABASE_URL };
 }
 
 /** A missing file is fine: CI sets every variable in the environment and has none. */
@@ -52,7 +45,8 @@ function loadFile(path: string) {
 	}
 }
 
-function required(name: string): string {
+/** A variable loadEnv has loaded, or a throw naming it (never its value). */
+export function required(name: string): string {
 	const value = process.env[name];
 	if (!value) throw new Error(`${name} is not set`);
 	return value;

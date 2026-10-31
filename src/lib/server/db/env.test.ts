@@ -2,7 +2,7 @@ import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, test, vi } from 'vitest';
-import { loadEnv, targetFromEnv } from './env';
+import { loadEnv, required, targetFromEnv } from './env';
 
 const KEYS = ['DATABASE_URL', 'PUBLIC_SUPABASE_URL', 'SUPABASE_SECRET_KEY', 'DB_TARGET'];
 
@@ -43,10 +43,20 @@ describe('loadEnv', () => {
 			loadEnvFile(path === '.env.local' ? envLocal : path)
 		);
 		const env = loadEnv('e2e');
-		expect(env.SUPABASE_SECRET_KEY).toBe('key-from-env-local');
+		expect(required('SUPABASE_SECRET_KEY')).toBe('key-from-env-local');
 		expect(new URL(env.DATABASE_URL).pathname).toBe('/fork_e2e');
 		expect(new URL(env.SUPABASE_URL).hostname).toBe('127.0.0.1');
 		expect(env.description).toBe('e2e database fork_e2e');
+	});
+
+	// Migrate and drizzle-kit never touch Auth, so they load without the key.
+	test('loads without SUPABASE_SECRET_KEY, which only the seed asks for', () => {
+		for (const key of KEYS) vi.stubEnv(key, undefined);
+		vi.spyOn(process, 'loadEnvFile').mockImplementation(() => {});
+		vi.stubEnv('DATABASE_URL', 'postgresql://postgres:pw@127.0.0.1:54322/postgres');
+		vi.stubEnv('PUBLIC_SUPABASE_URL', 'http://127.0.0.1:54321');
+		expect(loadEnv('local').DATABASE_URL).toContain('54322');
+		expect(() => required('SUPABASE_SECRET_KEY')).toThrow('SUPABASE_SECRET_KEY is not set');
 	});
 
 	// Committed, so a secret scanner reads it: the stack's URL and keys stay in .env.local.
