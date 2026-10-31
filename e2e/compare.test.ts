@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { SEED } from '../src/lib/server/db/seedData';
+import { gotoHydrated } from './helpers';
 
 // The compare page after Spencer's end-of-day decisions (29 October 2026).
 // Seed: the cookies have three versions and v3 renames the recipe.
@@ -9,7 +10,7 @@ async function openCookiesCompare(page: Page, query = '?from=2&to=3') {
 	await page.goto('/recipes');
 	await page.getByRole('link', { name: COOKIES_RE }).first().click();
 	await page.waitForURL(/\/recipes\//);
-	await page.goto(new URL(page.url()).pathname + '/diff' + query);
+	await gotoHydrated(page, new URL(page.url()).pathname + '/diff' + query);
 	await page.locator('article.version-card').first().waitFor();
 }
 
