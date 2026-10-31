@@ -26,6 +26,9 @@ export default defineConfig({
 
 	testDir: 'e2e',
 	timeout: 10000,
+	// A broad break (sign-in down, a layout crash) would otherwise wait out
+	// every test's timeout; ten failures are enough to see what broke.
+	maxFailures: 10,
 	// Default is half the cores locally and one in CI. Each authenticated test
 	// creates and deletes its own recipe, so they do not collide when parallel.
 	workers: process.env.CI ? 2 : '80%',
