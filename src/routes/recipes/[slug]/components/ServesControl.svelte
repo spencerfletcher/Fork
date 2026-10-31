@@ -40,8 +40,14 @@
 
 <!-- The native spinner: the arrows and the up and down keys step by 1, and
      step="any" keeps a typed 1.5 valid (Spencer, 31 October 2026: "add an up
-     down selector ... regular HTML one is fine"). -->
+     down selector ... regular HTML one is fine"). The multiplier and Reset come
+     first: the control is right-aligned, so what appears or changes width grows
+     leftward and the box stays under the cursor (Spencer, 31 October 2026). -->
 <span class="serves">
+	{#if serves !== stored}
+		<span class="factor">{formatServes(serves / stored)}x</span>
+		<button type="button" class="reset" onclick={() => set(stored)}>Reset</button>
+	{/if}
 	<input
 		type="number"
 		step="any"
@@ -54,10 +60,6 @@
 			if (e.key === 'Enter') e.currentTarget.blur();
 		}} />
 	<span class="label">{serves === 1 ? 'serving' : 'servings'}</span>
-	{#if serves !== stored}
-		<span class="factor">{formatServes(serves / stored)}x</span>
-		<button type="button" class="reset" onclick={() => set(stored)}>Reset</button>
-	{/if}
 </span>
 
 <style>
@@ -98,7 +100,6 @@
 	}
 
 	.factor {
-		margin-left: 4px;
 		font-family: var(--font-mono);
 		font-size: 0.75rem;
 		color: var(--color-text-2);
@@ -114,6 +115,8 @@
 		font-weight: 600;
 		color: var(--color-accent);
 		cursor: pointer;
+		/* Reset belongs to the note, not the box: a step more room before it. */
+		margin-right: 4px;
 	}
 
 	.reset:hover {
@@ -132,6 +135,7 @@
 		.reset {
 			min-width: 44px;
 			height: 44px;
+			margin-right: 0;
 		}
 
 		input {
@@ -143,10 +147,6 @@
 
 		.label {
 			margin-left: 6px;
-		}
-
-		.factor {
-			margin-left: 10px;
 		}
 	}
 </style>

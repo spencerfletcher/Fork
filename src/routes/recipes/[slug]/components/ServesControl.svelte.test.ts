@@ -82,6 +82,17 @@ describe('ServesControl', () => {
 	});
 
 	// The box is what the reader edits, not an output: it stays ink while scaled.
+	test('the multiplier and Reset come before the box, so the box holds still as they change', () => {
+		renderControl(STORED * 1.5);
+		const note = screen.getByText(`${1.5}x`);
+		const reset = screen.getByRole('button', { name: 'Reset' });
+		const follows = (a: Node, b: Node) =>
+			!!(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
+		expect(follows(note, reset)).toBe(true);
+		expect(follows(reset, box())).toBe(true);
+		expect(follows(box(), screen.getByText('servings'))).toBe(true);
+	});
+
 	test('the number does not read clay while scaled', () => {
 		const { container } = renderControl(STORED * 2);
 		expect(container.querySelector('.text-accent')).toBeNull();
