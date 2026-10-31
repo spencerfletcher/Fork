@@ -307,3 +307,70 @@ describe('TagInput Create option', () => {
 		expect(options[0]).not.toHaveClass('border-t');
 	});
 });
+
+describe('TagInput closing', () => {
+	test('focus leaving for an outside element closes the list at once, with no timer', async () => {
+		vi.useFakeTimers();
+		try {
+			const outside = document.body.appendChild(document.createElement('button'));
+			render(TagInput, { props: { allTags } });
+			const input = getInput();
+			input.focus();
+			await fireEvent.focus(input);
+			expect(screen.getByRole('listbox')).toBeInTheDocument();
+			outside.focus();
+			await tick();
+			expect(screen.queryByRole('listbox')).toBeNull();
+			outside.remove();
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
+	test('a pointer press outside closes the list at once', async () => {
+		render(TagInput, { props: { allTags } });
+		const input = getInput();
+		input.focus();
+		await fireEvent.focus(input);
+		await fireEvent.pointerDown(document.body);
+		expect(screen.queryByRole('listbox')).toBeNull();
+	});
+
+	test('clicking a suggestion adds the tag and keeps focus in the box', async () => {
+		const { container } = render(TagInput, { props: { allTags } });
+		const input = getInput();
+		input.focus();
+		await fireEvent.focus(input);
+		const dessert = option(/^Dessert$/);
+		await fireEvent.pointerDown(dessert);
+		const pressed = await fireEvent.mouseDown(dessert);
+		expect(pressed).toBe(false); // default prevented: the input keeps focus
+		await fireEvent.click(dessert);
+		expect(container.querySelector('input[type="hidden"][name="tags"]')).toHaveValue('Dessert');
+		expect(input).toHaveFocus();
+	});
+
+	test('a blur with no relatedTarget during an option press (iOS Safari) still lets the click pick', async () => {
+		const { container } = render(TagInput, { props: { allTags } });
+		const input = getInput();
+		input.focus();
+		await fireEvent.focus(input);
+		const baking = option(/^Baking$/);
+		await fireEvent.pointerDown(baking);
+		await fireEvent.blur(input, { relatedTarget: null });
+		expect(screen.getByRole('listbox')).toBeInTheDocument();
+		await fireEvent.click(option(/^Baking$/));
+		expect(container.querySelector('input[type="hidden"][name="tags"]')).toHaveValue('Baking');
+	});
+
+	test('Tab out after an option press still closes the list', async () => {
+		render(TagInput, { props: { allTags } });
+		const input = getInput();
+		input.focus();
+		await fireEvent.focus(input);
+		await fireEvent.pointerDown(option(/^Baking$/));
+		await fireEvent.keyDown(input, { key: 'Tab' });
+		await fireEvent.blur(input, { relatedTarget: null });
+		expect(screen.queryByRole('listbox')).toBeNull();
+	});
+});

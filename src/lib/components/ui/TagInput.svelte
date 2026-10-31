@@ -61,6 +61,7 @@
 	// the typed tag when nothing matches, so a tag is added without leaving the
 	// keyboard.
 	function handleKeydown(e: KeyboardEvent) {
+		pressedInside = false;
 		if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
 			e.preventDefault();
 			open = true;
@@ -89,16 +90,29 @@
 		tick().then(() => menu.scrollIntoView?.({ block: 'nearest' }));
 	}
 
-	function handleBlur() {
-		// Delay so a click on an option lands before the list closes
-		setTimeout(() => {
-			if (!rootEl.contains(document.activeElement)) {
-				open = false;
-				active = -1;
-			}
-		}, 150);
+	// Set by a press inside the component (an option, a pill's remove), until
+	// the next press or key. An option's mousedown is prevented so the input
+	// keeps focus, but iOS Safari can still blur it with no relatedTarget; the
+	// flag keeps the list open for the click that follows.
+	let pressedInside = false;
+
+	function handlePointerdown(e: PointerEvent) {
+		pressedInside = rootEl.contains(e.target as Node);
+		if (!pressedInside) {
+			open = false;
+			active = -1;
+		}
+	}
+
+	// Close the instant focus leaves the component, with no timer to wait out.
+	function handleBlur(e: FocusEvent) {
+		if (pressedInside || rootEl.contains(e.relatedTarget as Node | null)) return;
+		open = false;
+		active = -1;
 	}
 </script>
+
+<svelte:window onpointerdown={handlePointerdown} />
 
 <div class="flex flex-col gap-2" bind:this={rootEl}>
 	<!-- Hidden inputs consumed by the form action -->
