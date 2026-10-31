@@ -333,9 +333,9 @@
 		   them from the capitals; the weight and tracking keep them from going
 		   faint on espresso. */
 		font-variant-caps: all-small-caps;
-		font-size: 0.9375rem;
+		font-size: 1rem;
 		font-weight: 600;
-		letter-spacing: 0.08em;
+		letter-spacing: 0.05em;
 		color: var(--color-text-tan);
 		text-decoration: none;
 		background: none;
@@ -387,7 +387,7 @@
 		font-variant-caps: all-small-caps;
 		font-size: 1rem;
 		font-weight: 600;
-		letter-spacing: 0.08em;
+		letter-spacing: 0.05em;
 		color: var(--color-text-tan);
 		text-decoration: none;
 		border-radius: var(--radius-sm);

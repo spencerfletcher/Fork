@@ -305,9 +305,9 @@
 			background: none;
 			cursor: pointer;
 			font-family: var(--font-sans);
-			font-size: 0.75rem;
+			font-size: 0.8125rem;
 			font-weight: 600;
-			letter-spacing: 0.08em;
+			letter-spacing: 0.05em;
 			text-transform: uppercase;
 			text-align: center;
 			color: var(--color-text-3);
