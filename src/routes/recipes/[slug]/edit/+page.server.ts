@@ -150,7 +150,6 @@ export const actions: Actions = {
 		throw redirect(303, `/recipes/${params.slug}`);
 	},
 
-	// Delete this recipe entirely
 	deleteRecipe: async ({ params, locals: { user } }) => {
 		if (!user) throw error(401, 'Login required');
 

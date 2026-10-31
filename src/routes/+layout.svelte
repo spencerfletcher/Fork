@@ -6,8 +6,6 @@
 	import { page } from '$app/state';
 	import { DEFAULT_META, SITE_NAME, pageTitle, type PageMeta } from '#lib/seo.js';
 
-	// This is the key change:
-	// We destructure BOTH `data` and `children` from the top-level props.
 	let { data, children }: { data: LayoutData; children: Snippet } = $props();
 
 	// The single source of head tags. Pages contribute by returning `meta` from

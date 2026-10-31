@@ -103,10 +103,6 @@
 	</section>
 {/snippet}
 
-<!-- Two columns where there is room for them. This is a container query, not a
-     viewport one: the landing page and the compare page both put the diff in
-     the site's 1200px column, which is 61rem wide at a 1024 viewport, so the
-     panels sit side by side from 1024 and stack on their own below that. -->
 <!-- Title, description, servings and times. Only rendered when something
      changed: an empty Details panel would be noise above every diff. -->
 {#if metaDiff.length > 0}
@@ -139,6 +135,10 @@
 	{@render panel('Details', false, metaRows)}
 {/if}
 
+<!-- Two columns where there is room for them. This is a container query, not a
+     viewport one: the landing page and the compare page both put the diff in
+     the site's 1200px column, which is 61rem wide at a 1024 viewport, so the
+     panels sit side by side from 1024 and stack on their own below that. -->
 <div class="@container">
 	<!-- The compare page's version cards' grid: two equal columns 24px apart, so
 	     Method starts on the To card's edge (decided 29 October 2026). -->

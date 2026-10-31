@@ -1081,7 +1081,7 @@
 	}
 
 	/* Commit context: which two versions a diff spans and why the change was made.
-	   Used above the landing page's sample diff and on the compare page. */
+	   Used above the landing page's sample diff. */
 	.commit-bar {
 		display: flex;
 		flex-wrap: wrap;

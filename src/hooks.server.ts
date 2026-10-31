@@ -25,7 +25,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 		filterSerializedResponseHeaders: (name) => name === 'content-range'
 	});
 
-	// Content-Security-Policy is NOT set here — it lives in svelte.config.js so
+	// Content-Security-Policy is NOT set here — it lives in vite.config.ts so
 	// SvelteKit can nonce its own inline bootstrap script.
 	response.headers.set('X-Content-Type-Options', 'nosniff');
 	response.headers.set('X-Frame-Options', 'DENY');

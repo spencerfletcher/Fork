@@ -17,7 +17,6 @@ export const actions: Actions = {
 		const email = text(formData, 'email');
 		const password = text(formData, 'password');
 
-		// Basic validation
 		if (!email || !password) {
 			return fail(400, { message: 'Email and password are required.' });
 		}

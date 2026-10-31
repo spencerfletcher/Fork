@@ -51,7 +51,6 @@ export const actions: Actions = {
 		// Best effort: the email may not be confirmed yet, but the profile row can exist.
 		if (data.user) await ensureProfile(data.user, username);
 
-		// By default, Supabase sends a confirmation email.
 		throw redirect(303, '/confirm-email');
 	}
 };

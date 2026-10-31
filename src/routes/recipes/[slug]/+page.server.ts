@@ -104,7 +104,6 @@ export const actions: Actions = {
 	fork: async ({ params, locals: { user } }) => {
 		if (!user) throw error(401, 'Login required to fork a recipe');
 
-		// Load source recipe + latest version
 		const source = await db.query.recipes.findFirst({
 			where: eq(recipes.slug, params.slug),
 			with: {
