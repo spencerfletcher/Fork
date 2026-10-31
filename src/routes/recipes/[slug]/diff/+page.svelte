@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation';
 	import VersionDiff from '#lib/components/recipes/VersionDiff.svelte';
 	import Username from '#lib/components/ui/Username.svelte';
+	import { formatDate } from '#lib/helpers.js';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -46,8 +47,7 @@
 	// The viewer's own day. The server renders in its zone and the browser may
 	// correct the text on hydration; a day that matches the reader's calendar
 	// is worth that.
-	const when = (d: Date | null) =>
-		d?.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+	const when = (d: Date | null) => (d ? formatDate(d) : undefined);
 </script>
 
 {#snippet picker(id: string, label: string, value: number, set: (v: number) => void)}

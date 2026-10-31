@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Recipe } from '#lib/server/db/schema.js';
+	import { formatTime } from '#lib/helpers.js';
 
 	// Only what the card renders, so a column added to the table does not ripple
 	// into every card fixture.
@@ -47,9 +48,9 @@
 		}
 
 		const { prepTimeMinutes: prep, cookTimeMinutes: cook } = recipe;
-		if (prep && cook) parts.push({ text: `${prep + cook} min` });
-		else if (prep) parts.push({ text: `${prep} min prep` });
-		else if (cook) parts.push({ text: `${cook} min cook` });
+		if (prep && cook) parts.push({ text: formatTime(prep + cook) });
+		else if (prep) parts.push({ text: `${formatTime(prep)} prep` });
+		else if (cook) parts.push({ text: `${formatTime(cook)} cook` });
 
 		// From v2 only: v1 is every unedited recipe and says nothing.
 		if ((recipe.versionCount ?? 0) > 1) {

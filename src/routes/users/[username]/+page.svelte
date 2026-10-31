@@ -1,5 +1,6 @@
 <script lang="ts">
 	import RecipeGrid from '#lib/components/recipes/RecipeGrid.svelte';
+	import { formatDate } from '#lib/helpers.js';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -10,10 +11,7 @@
 	const isOwner = $derived(data.user?.id === profile.id);
 
 	const memberSince = $derived(
-		new Date(profile.createdAt ?? Date.now()).toLocaleDateString('en-US', {
-			month: 'long',
-			year: 'numeric'
-		})
+		formatDate(new Date(profile.createdAt ?? Date.now()), { month: 'long', year: 'numeric' })
 	);
 </script>
 

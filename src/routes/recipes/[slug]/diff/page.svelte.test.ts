@@ -414,3 +414,10 @@ describe('compare page spacing', () => {
 		expect(source).toMatch(/\.version-cards\s*{[^}]*margin-bottom:\s*24px;/);
 	});
 });
+
+describe('compare page dates', () => {
+	test("version dates go through the site's one formatDate", () => {
+		expect(source).toContain('formatDate(');
+		expect(source).not.toContain('toLocaleDateString');
+	});
+});

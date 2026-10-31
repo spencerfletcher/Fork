@@ -20,6 +20,14 @@ export function formatTime(minutes: number): string {
 	return m > 0 ? `${h}h ${m}m` : `${h}h`;
 }
 
+/** A date in the site's one locale, en-GB: "28 Feb 2026" unless other parts are asked for. */
+export function formatDate(
+	date: Date,
+	options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short', year: 'numeric' }
+): string {
+	return date.toLocaleDateString('en-GB', options);
+}
+
 /** Eight URL-safe random characters, appended to slugs so titles need not be unique. */
 export function randomSuffix(): string {
 	return crypto.randomUUID().slice(0, 8);

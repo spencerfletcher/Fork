@@ -124,3 +124,10 @@ describe('Profile page forced colours', () => {
 		expect(avatar).toMatch(/border:\s*1px solid transparent/);
 	});
 });
+
+describe('Profile page dates', () => {
+	test("the member date goes through the site's one formatDate", () => {
+		expect(source).toContain('formatDate(');
+		expect(source).not.toContain('toLocaleDateString');
+	});
+});

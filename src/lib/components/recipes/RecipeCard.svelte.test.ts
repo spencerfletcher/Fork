@@ -2,6 +2,7 @@ import { describe, test, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/svelte';
 import RecipeCard from './RecipeCard.svelte';
 import source from './RecipeCard.svelte?raw';
+import { formatTime } from '#lib/helpers.js';
 import usernameSource from '#lib/components/ui/Username.svelte?raw';
 
 const { mockGoto } = vi.hoisted(() => ({ mockGoto: vi.fn() }));
@@ -50,6 +51,17 @@ describe('RecipeCard', () => {
 			props: { recipe: makeRecipe({ prepTimeMinutes: 20, cookTimeMinutes: 30 }) }
 		});
 		expect(screen.getByText('50 min')).toBeInTheDocument();
+	});
+
+	test('reads its times the way the recipe page does, in hours from an hour', () => {
+		const [prep, cook] = [30, 60];
+		const { unmount } = render(RecipeCard, {
+			props: { recipe: makeRecipe({ prepTimeMinutes: prep, cookTimeMinutes: cook }) }
+		});
+		expect(screen.getByText(formatTime(prep + cook))).toBeInTheDocument();
+		unmount();
+		render(RecipeCard, { props: { recipe: makeRecipe({ cookTimeMinutes: cook + prep }) } });
+		expect(screen.getByText(`${formatTime(cook + prep)} cook`)).toBeInTheDocument();
 	});
 
 	test('shows prep-only label when only prepTimeMinutes is set', () => {
