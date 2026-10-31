@@ -1,5 +1,5 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/svelte';
+import { render, screen, fireEvent, within } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import type { SubmitFunction } from '$app/forms';
 import EditPage from './+page.svelte';
@@ -17,6 +17,12 @@ vi.mock('$app/forms', () => ({
 		return { destroy: () => {} };
 	}
 }));
+
+/** The header's outcome line, matched on its whole text: its version ids sit in spans of their own. */
+const editingLine = (text: string) =>
+	screen.getByText(
+		(_, el) => !!el?.matches('.editing') && el.textContent === text
+	);
 
 /** Runs the captured submit callback as SvelteKit would, returning the finish step. */
 async function startSubmit() {
@@ -113,28 +119,37 @@ describe('Edit page form', () => {
 
 	test('the header line says what the save will write after an edit and drops it when the value is restored', async () => {
 		render(EditPage, { props: { data: makeData(), form: null } });
-		expect(screen.getByText('Editing v2')).toBeInTheDocument();
+		expect(editingLine('Editing v2')).toBeInTheDocument();
 		await fireEvent.input(title(), { target: { value: 'Biscuits' } });
-		expect(screen.getByText('Editing v2 · saves as v3')).toBeInTheDocument();
+		expect(editingLine('Editing v2 · saves as v3')).toBeInTheDocument();
 		await fireEvent.input(title(), { target: { value: 'Cookies' } });
-		expect(screen.getByText('Editing v2')).toBeInTheDocument();
+		expect(editingLine('Editing v2')).toBeInTheDocument();
 		expect(screen.queryByText(/saves/i)).toBeNull();
+	});
+
+	test('the header line sets each version id apart from the words around it', async () => {
+		render(EditPage, { props: { data: makeData(), form: null } });
+		expect(within(editingLine('Editing v2')).getByText('v2')).toBeInTheDocument();
+		await fireEvent.input(title(), { target: { value: 'Biscuits' } });
+		const line = editingLine('Editing v2 · saves as v3');
+		expect(within(line).getByText('v2')).toBeInTheDocument();
+		expect(within(line).getByText('v3')).toBeInTheDocument();
 	});
 
 	test('nothing about the outcome sits beside Save', async () => {
 		render(EditPage, { props: { data: makeData(), form: null } });
 		await fireEvent.input(title(), { target: { value: 'Biscuits' } });
 		expect(document.querySelector('.form-actions .form-hint')).toBeNull();
-		expect(screen.getByText(/saves as v3/).closest('.editor-header')).not.toBeNull();
+		expect(editingLine('Editing v2 · saves as v3').closest('.editor-header')).not.toBeNull();
 	});
 
 	test('treats a tag removed and added back as clean', async () => {
 		render(EditPage, { props: { data: makeData(), form: null } });
 		await fireEvent.click(screen.getByRole('button', { name: 'Remove Dessert' }));
-		expect(screen.getByText('Editing v2 · saves settings only')).toBeInTheDocument();
+		expect(editingLine('Editing v2 · saves settings only')).toBeInTheDocument();
 		await fireEvent.focus(screen.getByRole('combobox'));
 		await fireEvent.click(screen.getByRole('option', { name: /Dessert/ }));
-		expect(screen.getByText('Editing v2')).toBeInTheDocument();
+		expect(editingLine('Editing v2')).toBeInTheDocument();
 	});
 
 	test('a message typed with nothing else changed promises a version and guards leaving; whitespace does not', async () => {
@@ -142,14 +157,14 @@ describe('Edit page form', () => {
 		render(EditPage, { props: { data: makeData(), form: null } });
 		const message = screen.getByLabelText(/what changed/i);
 		await fireEvent.input(message, { target: { value: 'note' } });
-		expect(screen.getByText('Editing v2 · saves as v3')).toBeInTheDocument();
+		expect(editingLine('Editing v2 · saves as v3')).toBeInTheDocument();
 		const cancel = vi.fn();
 		nav.guards[0]({ cancel, type: 'link' });
 		expect(confirm).toHaveBeenCalled();
 		expect(cancel).toHaveBeenCalled();
 
 		await fireEvent.input(message, { target: { value: '  ' } });
-		expect(screen.getByText('Editing v2')).toBeInTheDocument();
+		expect(editingLine('Editing v2')).toBeInTheDocument();
 		confirm.mockClear();
 		nav.guards[0]({ cancel: vi.fn(), type: 'link' });
 		expect(confirm).not.toHaveBeenCalled();
@@ -163,7 +178,7 @@ describe('Edit page form', () => {
 		await fireEvent.input(screen.getByLabelText('Steps'), {
 			target: { value: 'Mix.\n\nBake longer.' }
 		});
-		expect(screen.getByText('Editing v2 · saves as v3')).toBeInTheDocument();
+		expect(editingLine('Editing v2 · saves as v3')).toBeInTheDocument();
 		expect(screen.getByLabelText(/what changed/i)).toHaveAttribute(
 			'placeholder',
 			'Updated ingredients, steps'
@@ -173,18 +188,18 @@ describe('Edit page form', () => {
 	test('a settings-only change says no version will be written', async () => {
 		render(EditPage, { props: { data: makeData(), form: null } });
 		await fireEvent.click(screen.getByLabelText(/public/i));
-		expect(screen.getByText('Editing v2 · saves settings only')).toBeInTheDocument();
+		expect(editingLine('Editing v2 · saves settings only')).toBeInTheDocument();
 	});
 
 	test('a message typed on a settings-only change promises a version, since the save keeps it', async () => {
 		render(EditPage, { props: { data: makeData(), form: null } });
 		await fireEvent.click(screen.getByLabelText(/public/i));
-		expect(screen.getByText('Editing v2 · saves settings only')).toBeInTheDocument();
+		expect(editingLine('Editing v2 · saves settings only')).toBeInTheDocument();
 		const message = screen.getByLabelText(/what changed/i);
 		await fireEvent.input(message, { target: { value: 'Private for now' } });
-		expect(screen.getByText('Editing v2 · saves as v3')).toBeInTheDocument();
+		expect(editingLine('Editing v2 · saves as v3')).toBeInTheDocument();
 		await fireEvent.input(message, { target: { value: '  ' } });
-		expect(screen.getByText('Editing v2 · saves settings only')).toBeInTheDocument();
+		expect(editingLine('Editing v2 · saves settings only')).toBeInTheDocument();
 	});
 
 	test('choosing a photo file counts as a content change at once, before the preview loads', async () => {
@@ -193,7 +208,7 @@ describe('Edit page form', () => {
 		const input = screen.getByLabelText('Choose photo') as HTMLInputElement;
 		Object.defineProperty(input, 'files', { value: [file] });
 		await fireEvent.change(input);
-		expect(screen.getByText('Editing v2 · saves as v3')).toBeInTheDocument();
+		expect(editingLine('Editing v2 · saves as v3')).toBeInTheDocument();
 	});
 
 	test('the placeholder falls back when nothing has changed', () => {
@@ -218,7 +233,7 @@ describe('Edit page form', () => {
 		render(EditPage, { props: { data: makeData(), form: null } });
 		await fireEvent.input(title(), { target: { value: '' } });
 		await fireEvent.click(screen.getByLabelText(/public/i));
-		expect(screen.getByText('Editing v2')).toBeInTheDocument();
+		expect(editingLine('Editing v2')).toBeInTheDocument();
 	});
 
 	test('a dirty form navigates away when the question is accepted', async () => {
@@ -268,7 +283,7 @@ describe('Edit page form', () => {
 			'/recipes/cookies'
 		);
 		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Edit Recipe');
-		expect(screen.getByText('Editing v2')).toBeInTheDocument();
+		expect(editingLine('Editing v2')).toBeInTheDocument();
 	});
 
 	test('refills every field from form.draft after a failure and shows the error, not an outcome', async () => {
@@ -291,7 +306,7 @@ describe('Edit page form', () => {
 		expect(title()).toHaveAccessibleDescription('Title is required');
 		expect(title()).toHaveFocus();
 		// The draft is invalid, so there is nothing to promise, settings included.
-		expect(screen.getByText('Editing v2')).toBeInTheDocument();
+		expect(editingLine('Editing v2')).toBeInTheDocument();
 		expect(hiddenRevision()).toHaveValue('3');
 	});
 
@@ -305,10 +320,10 @@ describe('Edit page form', () => {
 			el.dispatchEvent(new Event('invalid', { cancelable: true }));
 		}
 		await tick();
-		expect(screen.getByText('Editing v2 · 2 fields need attention')).toBeInTheDocument();
+		expect(editingLine('Editing v2 · 2 fields need attention')).toBeInTheDocument();
 		expect(title()).toHaveFocus();
 		await fireEvent.input(title(), { target: { value: 'Biscuits' } });
-		expect(screen.getByText('Editing v2 · 1 field needs attention')).toBeInTheDocument();
+		expect(editingLine('Editing v2 · 1 field needs attention')).toBeInTheDocument();
 	});
 
 	test("a number below its floor is named under its own field with the server's wording", async () => {
@@ -441,7 +456,7 @@ describe('Edit page form', () => {
 		await fireEvent.click(screen.getByRole('button', { name: /remove photo/i }));
 		expect(screen.queryByRole('img', { name: /preview/i })).toBeNull();
 		expect(document.querySelector('input[name="removeImage"]')).toHaveValue('on');
-		expect(screen.getByText('Editing v2 · saves as v3')).toBeInTheDocument();
+		expect(editingLine('Editing v2 · saves as v3')).toBeInTheDocument();
 	});
 
 	test('Keep photo, offered once the photo is marked for removal, brings it back and unmarks it', async () => {
@@ -467,6 +482,6 @@ describe('Edit page form', () => {
 		expect(screen.getByRole('button', { name: /remove photo/i })).toHaveFocus();
 		expect(document.querySelector('input[name="image"]')).toHaveAccessibleName('Replace photo');
 		// Nothing left to save: the form is clean again.
-		expect(screen.getByText('Editing v2')).toBeInTheDocument();
+		expect(editingLine('Editing v2')).toBeInTheDocument();
 	});
 });

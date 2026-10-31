@@ -1,5 +1,5 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/svelte';
+import { render, screen, fireEvent, within } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import type { SubmitFunction } from '$app/forms';
 import NewPage from './+page.svelte';
@@ -12,6 +12,12 @@ vi.mock('$app/forms', () => ({
 		return { destroy: () => {} };
 	}
 }));
+
+/** The header's outcome line, matched on its whole text: its version ids sit in spans of their own. */
+const editingLine = (text: string) =>
+	screen.getByText(
+		(_, el) => !!el?.matches('.editing') && el.textContent === text
+	);
 
 beforeEach(() => {
 	captured.submits.length = 0;
@@ -188,9 +194,10 @@ describe('New recipe page editor state', () => {
 
 	test('the header line says the save makes v1, while typing too, and no helper sits beside Create', async () => {
 		render(NewPage, { props: { data, form: null } });
-		const line = screen.getByText('saves as v1');
+		const line = editingLine('saves as v1');
 		expect(line).toHaveAttribute('aria-live', 'polite');
 		expect(line.closest('.editor-header')).not.toBeNull();
+		expect(within(line).getByText('v1')).toBeInTheDocument();
 		await fireEvent.input(screen.getByLabelText(/title/i), { target: { value: 'Brownies' } });
 		expect(line).toHaveTextContent('saves as v1');
 		expect(document.querySelector('.form-actions .form-hint')).toBeNull();
@@ -198,7 +205,7 @@ describe('New recipe page editor state', () => {
 
 	test('the header line promises v1 only while no field carries an error', async () => {
 		render(NewPage, { props: { data, form: null } });
-		const line = screen.getByText('saves as v1');
+		const line = editingLine('saves as v1');
 		const title = screen.getByLabelText(/^title/i);
 		await fireEvent.input(title, { target: { value: 'Brownies' } });
 		await fireEvent.input(title, { target: { value: '' } });

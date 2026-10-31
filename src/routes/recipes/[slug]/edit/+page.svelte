@@ -49,7 +49,9 @@
 						<h1>Edit Recipe</h1>
 						<!-- Always in the DOM, so the outcome is announced when it changes. -->
 						<span class="editing" aria-live="polite">
-							Editing v{current}{outcome ? ` · ${outcome}` : ''}
+							{#each `Editing v${current}${outcome ? ` · ${outcome}` : ''}`.split(/(v\d+)/) as part, i (i)}
+								{#if i % 2}<span class="mono-id">{part}</span>{:else}{part}{/if}
+							{/each}
 						</span>
 					</div>
 				</div>

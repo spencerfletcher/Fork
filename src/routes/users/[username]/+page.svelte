@@ -21,7 +21,8 @@
 			<div class="profile-avatar" aria-hidden="true">{profile.username[0].toUpperCase()}</div>
 			<div class="profile-text">
 				<h1>@{profile.username}</h1>
-				<!-- History and dates in mono: the changes and the member date share
+				<!-- The body face, like the owner's line under it (mono is for
+				     identifiers only, Spencer, 31 October 2026): the changes and the member date share
 				     one line; the recipe count is the section eyebrow's. The dot
 				     between the items is drawn by CSS, never typed. -->
 				<p class="profile-stats">
@@ -96,8 +97,8 @@
 		display: flex;
 		flex-wrap: wrap;
 		margin: 0;
-		font-family: var(--font-mono);
-		font-size: 0.75rem;
+		font-size: 0.875rem;
+		font-variant-numeric: tabular-nums;
 		color: var(--color-text-3);
 	}
 
@@ -106,7 +107,7 @@
 		margin: 0 6px;
 	}
 
-	/* The owner's one line: sans, like the body, under the mono stats. */
+	/* The owner's one line, the stats line's size and colour. */
 	.profile-private {
 		margin: 0;
 		font-size: 0.875rem;

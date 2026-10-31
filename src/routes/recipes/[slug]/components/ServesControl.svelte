@@ -100,8 +100,8 @@
 	}
 
 	.factor {
-		font-family: var(--font-mono);
 		font-size: 0.75rem;
+		font-variant-numeric: tabular-nums;
 		color: var(--color-text-2);
 	}
 

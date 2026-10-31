@@ -416,6 +416,15 @@
 		resize: vertical;
 	}
 
+	/* An identifier or a literal syntax token inside sans copy ("Editing v3",
+	   "tip:"): mono one notch under the line, as JetBrains Mono runs optically
+	   larger than the sans, like Username. */
+	code,
+	.mono-id {
+		font-family: var(--font-mono);
+		font-size: 0.9375em;
+	}
+
 	/* 16px on a phone, so iOS does not zoom a focused field. */
 	@media (max-width: 699px) {
 		input:not([type='checkbox']),
@@ -748,19 +757,16 @@
 		text-transform: none;
 	}
 
-	/* In the editor every text box is mono (Spencer, 29 October 2026): what is
-	   typed is raw text under edit, not yet the recipe. One rule, so every
-	   single-line box is one height. */
+	/* The editor's boxes are the body face, mono being for identifiers only
+	   (Spencer, 31 October 2026). One line height, so every single-line box is
+	   one height: 41px at desktop and 44px on a phone, the photo buttons' own. */
 	.editor .form :is(input[type='text'], input[type='number'], textarea) {
-		font-family: var(--font-mono);
-		font-size: 0.8125rem;
-		line-height: 1.6;
+		line-height: 1.4;
 	}
 
-	/* This layer beats the base layer's phone rule, so repeat it here. */
 	@media (max-width: 699px) {
 		.editor .form :is(input[type='text'], input[type='number'], textarea) {
-			font-size: 1rem;
+			line-height: 1.5;
 		}
 	}
 
@@ -788,9 +794,9 @@
 		margin: 0;
 	}
 
+	/* Body face; only its version ids are mono, in .mono-id spans. */
 	.editing {
-		font-family: var(--font-mono);
-		font-size: 0.75rem;
+		font-size: 0.875rem;
 		color: var(--color-text-3);
 	}
 

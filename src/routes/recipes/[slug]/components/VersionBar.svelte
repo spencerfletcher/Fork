@@ -93,7 +93,7 @@
 {/snippet}
 
 <!-- The version bar: the hinge between the dish and the recipe, on lifted
-     paper. One mono line names the version being read and its note; the
+     paper. One line names the version being read and its note; the
      toggle opens the other versions under it, each a link to itself with a
      compare against the one being read beside it; the current line carries
      no compare of its own. A recipe with one version has no bar. Decided 29
@@ -102,7 +102,7 @@
 	<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions (the toggle is the keyboard control) -->
 	<section
 		id="versions"
-		class="version-bar font-mono"
+		class="version-bar"
 		class:closed={!open}
 		aria-label="Version history"
 		bind:this={bar}
@@ -147,8 +147,10 @@
 		background: var(--color-surface);
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-md);
-		font-size: 0.875rem;
-		line-height: 1.6;
+		/* The body face: mono is for the version ids only (Spencer, 31 October
+		   2026). The line stays 22.4px, as it was in mono, so the bar holds its height. */
+		font-size: 0.9375rem;
+		line-height: 1.4rem;
 	}
 
 	.version-bar.closed,
@@ -181,6 +183,7 @@
 		flex-shrink: 0;
 		min-width: 26px;
 		text-align: center;
+		font-family: var(--font-mono);
 		font-size: 0.75rem;
 		font-weight: 600;
 		color: var(--color-accent);

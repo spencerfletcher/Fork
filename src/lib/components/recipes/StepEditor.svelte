@@ -22,8 +22,12 @@
 	{/if}
 	<!-- The syntax stays in view while typing, after the placeholder has gone. -->
 	<p class="form-hint" id="steps-hint">
-		Separate steps with a blank line. Add a note under a step with tip:, warning: or substitution:
-		on its own line.
+		Separate steps with a blank line. Add a note under a step with <code>tip:</code>
+		,
+		<code>warning:</code>
+		or
+		<code>substitution:</code>
+		 on its own line.
 	</p>
 </div>
 

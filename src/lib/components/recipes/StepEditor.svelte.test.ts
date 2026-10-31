@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/svelte';
+import { render, screen, fireEvent, within } from '@testing-library/svelte';
 import StepEditor from './StepEditor.svelte';
 
 function box() {
@@ -19,6 +19,14 @@ describe('StepEditor', () => {
 		expect(hint).toHaveTextContent('tip:');
 		expect(hint).toHaveTextContent('warning:');
 		expect(hint).toHaveTextContent('substitution:');
+	});
+
+	test('sets each note keyword apart as literal syntax', () => {
+		render(StepEditor, { props: { value: '' } });
+		const hint = screen.getByText(/blank line/i);
+		for (const keyword of ['tip:', 'warning:', 'substitution:']) {
+			expect(within(hint).getByText(keyword).tagName).toBe('CODE');
+		}
 	});
 
 	test('keeps the hint while there is text in the box', async () => {
