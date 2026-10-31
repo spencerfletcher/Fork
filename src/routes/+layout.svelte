@@ -83,7 +83,7 @@
 		z-index: 60;
 		min-height: 44px;
 		padding: 8px 16px;
-		border-radius: 999px;
+		border-radius: var(--radius-pill);
 		background: var(--color-marigold);
 		color: var(--color-text);
 		font-family: var(--font-sans);

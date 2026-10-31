@@ -413,6 +413,11 @@ describe('compare page spacing', () => {
 		expect(source).toMatch(/\.version-picker\s*{[^}]*margin-bottom:\s*24px;/);
 		expect(source).toMatch(/\.version-cards\s*{[^}]*margin-bottom:\s*24px;/);
 	});
+
+	test("the h1 takes the site's one size and leading: the page sets only its margin", () => {
+		const h1 = /\n\th1\s*{([^}]*)}/.exec(source)![1];
+		expect(h1).not.toMatch(/font-size|line-height/);
+	});
 });
 
 describe('compare page dates', () => {

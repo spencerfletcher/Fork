@@ -119,8 +119,6 @@
 <style>
 	h1 {
 		margin: 0 0 16px;
-		font-size: clamp(1.75rem, 1.2rem + 1.8vw, 2.5rem);
-		line-height: 1.1;
 	}
 
 	.same-version {
