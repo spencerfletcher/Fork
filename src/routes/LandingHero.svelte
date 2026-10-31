@@ -1,7 +1,3 @@
-<script lang="ts">
-	let { isLoggedIn = false }: { isLoggedIn?: boolean } = $props();
-</script>
-
 <section class="hero">
 	<div class="hero-inner">
 		<h1 class="hero-title">Recipes that remember every change.</h1>
@@ -17,9 +13,7 @@
 		</p>
 		<div class="hero-actions">
 			<a href="/recipes" class="btn-primary">Browse recipes</a>
-			{#if !isLoggedIn}
-				<a href="/signup" class="btn-ghost">Sign up</a>
-			{/if}
+			<a href="/signup" class="btn-ghost">Sign up</a>
 		</div>
 	</div>
 </section>

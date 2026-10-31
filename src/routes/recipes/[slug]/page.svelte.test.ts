@@ -32,7 +32,6 @@ function makeData(imageUrl: string | null = null): PageData {
 		currentVersion: version,
 		// Two versions, so the version bar renders.
 		allVersions: [version, { ...makeVersion(1, 'Initial recipe'), ...content }],
-		isViewingHistory: false,
 		forkCount: 0,
 		grams: [{ grams: 125, grams2: null, approximate: false }, null],
 		isFavorited: false,
@@ -143,6 +142,14 @@ describe('recipe page logged out', () => {
 			'href',
 			loginHref('/recipes/cookies?serves=8')
 		);
+	});
+
+	test('on an older version there is nothing to sign in for: no Fork or Favorite', () => {
+		page.url = new URL('http://localhost/recipes/cookies?version=1');
+		const data = makeData();
+		render(Page, { props: { data: { ...data, currentVersion: data.allVersions[1] } } });
+		expect(screen.queryByRole('link', { name: /Fork|Favorite/ })).toBeNull();
+		expect(screen.getByRole('link', { name: 'Back to v2' })).toBeInTheDocument();
 	});
 });
 

@@ -13,22 +13,22 @@
 	// a successful save redirects, a failed one keeps the page and its baseline.
 	// svelte-ignore state_referenced_locally
 	const baseline: RecipeDraft = {
-		title: latestVersion?.title ?? recipe.title,
-		description: latestVersion?.description ?? '',
-		servings: latestVersion?.servings?.toString() ?? '',
-		prepTimeMinutes: latestVersion?.prepTimeMinutes?.toString() ?? '',
-		cookTimeMinutes: latestVersion?.cookTimeMinutes?.toString() ?? '',
-		ingredients: ingredientsToText(latestVersion?.ingredients ?? []),
-		steps: stepsToText(latestVersion?.steps ?? []),
+		title: latestVersion.title,
+		description: latestVersion.description ?? '',
+		servings: latestVersion.servings?.toString() ?? '',
+		prepTimeMinutes: latestVersion.prepTimeMinutes?.toString() ?? '',
+		cookTimeMinutes: latestVersion.cookTimeMinutes?.toString() ?? '',
+		ingredients: ingredientsToText(latestVersion.ingredients),
+		steps: stepsToText(latestVersion.steps),
 		commitMessage: '',
 		editRevision: String(recipe.editRevision),
 		isPublic: recipe.isPublic,
-		tags: recipe.recipesToTags?.map((r) => r.tag.name) ?? [],
+		tags: recipe.recipesToTags.map((r) => r.tag.name),
 		hadPhoto: false,
 		removeImage: false
 	};
 
-	const current = $derived(latestVersion?.versionNumber ?? 0);
+	const current = $derived(latestVersion.versionNumber);
 </script>
 
 <div class="page">
@@ -40,7 +40,7 @@
 			action="?/save"
 			submitLabel="Save"
 			cancelHref="/recipes/{recipe.slug}"
-			imageUrl={latestVersion?.imageUrl ?? null}
+			imageUrl={latestVersion.imageUrl}
 			nextVersion={current + 1}>
 			{#snippet header(outcome)}
 				<div class="editor-header">

@@ -10,14 +10,14 @@
 <div class="page">
 	<div class="page-inner">
 		<div class="browse-header">
-			<h1>{data.mine ? 'My Recipes' : 'Recipes'}</h1>
-			{#if !data.mine}
+			<h1>{data.user ? 'My Recipes' : 'Recipes'}</h1>
+			{#if !data.user}
 				<TagTabs tags={data.tags} active={null} />
 			{/if}
 		</div>
 
 		{#if data.recipes.length === 0}
-			{#if data.mine}
+			{#if data.user}
 				<div class="flex flex-col items-center gap-5 py-8 text-center">
 					<p class="text-text-2 text-[1.0625rem]">You have no recipes yet.</p>
 					<a href="/recipes/new" class="btn-primary">Create your first recipe</a>
@@ -25,7 +25,7 @@
 			{:else}
 				<p class="empty-state">No public recipes yet.</p>
 			{/if}
-		{:else if data.mine}
+		{:else if data.user}
 			<RecipeGrid recipes={data.recipes} />
 		{:else}
 			<BrowseSections recipes={data.recipes} />

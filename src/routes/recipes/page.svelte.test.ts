@@ -17,7 +17,7 @@ const RECIPE = {
 describe('Recipes page, the owner list', () => {
 	test('the grid sits under an h2 eyebrow, so the headings do not skip from h1 to h3', () => {
 		render(RecipesPage, {
-			props: { data: { mine: true, recipes: [RECIPE], tags: [] } } as never
+			props: { data: { user: { id: 'u1' }, recipes: [RECIPE], tags: [] } } as never
 		});
 		expect(screen.getByRole('heading', { level: 1, name: 'My Recipes' })).toBeInTheDocument();
 		expect(screen.getByRole('heading', { level: 2, name: '1 recipe' })).toHaveClass(

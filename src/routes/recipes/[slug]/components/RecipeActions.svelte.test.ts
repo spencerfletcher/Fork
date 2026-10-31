@@ -44,8 +44,7 @@ function makeProps(overrides: Record<string, unknown> = {}) {
 		recipe: { slug: 'cookies', title: 'Cookies' },
 		canFork: false,
 		canFavorite: true,
-		isOwner: false,
-		isViewingHistory: false,
+		canEdit: false,
 		initialFavorited: false,
 		cooking: false,
 		oncook: () => {},
@@ -207,16 +206,14 @@ describe('RecipeActions primary action', () => {
 		expect(document.querySelector('form')).toBeNull();
 	});
 
-	test('logged out on an older version, only Cook is rendered', () => {
-		render(RecipeActions, {
-			props: makeProps({ canFavorite: false, isViewingHistory: true, loginHref: '/login' })
-		});
+	test('with nothing else offered (logged out on an older version), only Cook is rendered', () => {
+		render(RecipeActions, { props: makeProps({ canFavorite: false }) });
 		expect(screen.getAllByRole('button')).toEqual([screen.getByRole('button', { name: 'Cook' })]);
 		expect(screen.queryByRole('link')).toBeNull();
 	});
 
 	test('the owner gets Edit in marigold, first, since Fork is not offered', () => {
-		render(RecipeActions, { props: makeProps({ isOwner: true }) });
+		render(RecipeActions, { props: makeProps({ canEdit: true }) });
 		const edit = screen.getByRole('link', { name: /edit recipe/i });
 		expect(edit).toHaveClass('btn-primary');
 		const favorite = screen.getByRole('button', { name: /favorite/i });
@@ -242,8 +239,8 @@ describe('RecipeActions Cook toggle', () => {
 	test.each([
 		['logged out', { canFavorite: false, loginHref: '/login' }],
 		['logged in', { canFork: true }],
-		['the owner', { isOwner: true }],
-		['on an older version', { canFavorite: false, isViewingHistory: true }]
+		['the owner', { canEdit: true }],
+		['on an older version', { canFavorite: false }]
 	])('%s, the row offers Cook as an unpressed ghost pill, last', (_, overrides) => {
 		const { container } = render(RecipeActions, { props: makeProps(overrides) });
 		const cook = screen.getByRole('button', { name: 'Cook' });

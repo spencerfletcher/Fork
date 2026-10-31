@@ -29,13 +29,12 @@ describe('/recipes load', () => {
 	test('a guest sees every public recipe', async () => {
 		const result = await load(event(null));
 		expect(findManyMock.mock.calls[0][0].where).toEqual(eq(recipes.isPublic, true));
-		expect(result).toMatchObject({ mine: false, recipes: [{ id: 1 }] });
+		expect(result).toMatchObject({ recipes: [{ id: 1 }] });
 	});
 
 	test('a signed-in user sees their own recipes, private ones included', async () => {
-		const result = await load(event({ id: 'u1' }));
+		await load(event({ id: 'u1' }));
 		expect(findManyMock.mock.calls[0][0].where).toEqual(eq(recipes.authorId, 'u1'));
-		expect(result).toMatchObject({ mine: true });
 	});
 
 	test('the tab title matches the h1: "My Recipes" signed in, "Recipes" signed out', async () => {

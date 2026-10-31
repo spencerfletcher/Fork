@@ -12,15 +12,8 @@ describe('LandingHero', () => {
 	});
 
 	test('offers sign-up to a logged-out visitor', () => {
-		render(LandingHero, { props: { isLoggedIn: false } });
+		render(LandingHero, { props: {} });
 		expect(screen.getByRole('link', { name: /sign up/i })).toHaveAttribute('href', '/signup');
-	});
-
-	test('omits sign-up when the visitor is already logged in', () => {
-		// The hero is only rendered in landing mode, but a logged-in visitor can
-		// still reach it, and inviting them to sign up again is nonsense.
-		render(LandingHero, { props: { isLoggedIn: true } });
-		expect(screen.queryByRole('link', { name: /sign up/i })).not.toBeInTheDocument();
 	});
 
 	test('does not duplicate the diff link that sits below it', () => {

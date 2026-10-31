@@ -19,7 +19,6 @@ export const load: PageServerLoad = async ({ locals: { user } }) => {
 
 	return {
 		recipes: await attachRecipeCounts(rows),
-		mine: !!user,
 		tags,
 		meta: { title: user ? 'My Recipes' : 'Recipes' }
 	};

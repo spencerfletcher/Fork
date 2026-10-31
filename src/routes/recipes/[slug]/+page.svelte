@@ -13,15 +13,18 @@
 
 	let { data }: { data: PageData } = $props();
 
-	const { recipe, currentVersion, allVersions, isViewingHistory } = $derived(data);
+	const { recipe, currentVersion, allVersions } = $derived(data);
+	// allVersions is newest first.
+	const isViewingHistory = $derived(currentVersion.versionNumber !== allVersions[0].versionNumber);
 
 	const tags = $derived(recipe.recipesToTags?.map((r) => r.tag) ?? []);
 	const user = $derived(data.user);
 	const isOwner = $derived(user?.id === recipe.authorId);
 	const canFork = $derived(!!user && !isOwner && !isViewingHistory);
 	const canFavorite = $derived(!!user && !isViewingHistory);
+	const canEdit = $derived(isOwner && !isViewingHistory);
 	const loginHref = $derived(
-		user ? undefined : buildLoginHref(page.url.pathname + page.url.search)
+		user || isViewingHistory ? undefined : buildLoginHref(page.url.pathname + page.url.search)
 	);
 
 	// Serving scaling: a multiplier on the list, never saved. ?serves= sets it
@@ -72,8 +75,7 @@
 							{recipe}
 							{canFork}
 							{canFavorite}
-							{isOwner}
-							{isViewingHistory}
+							{canEdit}
 							initialFavorited={data.isFavorited}
 							{loginHref}
 							{cooking}

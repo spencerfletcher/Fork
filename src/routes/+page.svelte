@@ -17,14 +17,14 @@
 	}
 </script>
 
-{#if data.mode === 'landing'}
+{#if !data.user}
 	<!-- Logged out, the home page is one column on the site's own gutters: the
 	     hero, the newest recipes under the browse page's section pattern, then
 	     a compact example of a change (Spencer, 31 October 2026: recent recipes
 	     higher, the example only the changed rows and the note). -->
 	<div class="page">
 		<div class="page-inner">
-			<LandingHero isLoggedIn={!!data.user} />
+			<LandingHero />
 
 			<section class="browse-section">
 				<h2 class="eyebrow-label section-heading">Recent</h2>

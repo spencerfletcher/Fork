@@ -8,8 +8,7 @@
 		recipe,
 		canFork,
 		canFavorite,
-		isOwner,
-		isViewingHistory,
+		canEdit,
 		initialFavorited,
 		loginHref,
 		cooking,
@@ -18,10 +17,10 @@
 		recipe: Pick<Recipe, 'slug' | 'title'>;
 		canFork: boolean;
 		canFavorite: boolean;
-		isOwner: boolean;
-		isViewingHistory: boolean;
+		/** The owner on the latest version: Edit, in Fork's place. */
+		canEdit: boolean;
 		initialFavorited: boolean;
-		/** Logged out: where Fork and Favorite send the visitor to sign in and come back. */
+		/** Logged out on the latest version: where Fork and Favorite send the visitor to sign in and come back. */
 		loginHref?: string;
 		/** Cooking mode: Fork and Favorite step aside, the screen is kept awake. */
 		cooking: boolean;
@@ -81,7 +80,7 @@
 <div class="actions">
 	{#if cooking}
 		<!-- Cooking: only the Cook toggle stays. -->
-	{:else if loginHref && !isViewingHistory}
+	{:else if loginHref}
 		<!-- Logged out, the same two pills lead to sign-in and back to this page. -->
 		<a href={loginHref} class="btn-primary no-underline">
 			{@render forkIcon()}
@@ -127,7 +126,7 @@
 			</form>
 		{/if}
 
-		{#if isOwner && !isViewingHistory}
+		{#if canEdit}
 			<!-- The owner is not offered Fork, so Edit is their primary action. -->
 			<a href="/recipes/{recipe.slug}/edit" class="btn-primary no-underline">
 				<svg

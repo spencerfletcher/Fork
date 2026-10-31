@@ -4,10 +4,10 @@ import { recipes, recipeVersions } from '#lib/server/db/schema.js';
 import { eq, desc, sql } from 'drizzle-orm';
 import type { PageServerLoad, Actions } from './$types';
 import {
-	contentChanged,
 	changedGroups,
 	generatedCommitMessage,
-	recipeCopies
+	recipeCopies,
+	type ContentGroup
 } from '#lib/recipes/content.js';
 import { sameTags } from '#lib/recipes/tags.js';
 import type { RecipeContent } from '#lib/recipes/types.js';
@@ -32,14 +32,16 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 
 	if (!recipe) throw error(404, 'Recipe not found');
 	if (recipe.authorId !== user.id) throw error(403, 'Not authorized');
+	const latestVersion = recipe.versions[0];
+	if (!latestVersion) throw error(404, 'Recipe not found');
 
 	const allTags = await listTags();
 
 	return {
 		recipe,
-		latestVersion: recipe.versions[0] ?? null,
+		latestVersion,
 		allTags,
-		meta: { title: `Edit ${recipe.versions[0]?.title ?? 'recipe'}` }
+		meta: { title: `Edit ${latestVersion.title}` }
 	};
 };
 
@@ -96,7 +98,8 @@ export const actions: Actions = {
 				// Otherwise the latest version's photo carries forward unchanged.
 				const imageUrl = image ? image.url : draft.removeImage ? null : (latest?.imageUrl ?? null);
 				const submitted: RecipeContent = { ...content, imageUrl };
-				const changed = latest ? contentChanged(latest, submitted) : true;
+				const groups: ContentGroup[] = latest ? changedGroups(latest, submitted) : ['title'];
+				const changed = groups.length > 0;
 				const copies = recipeCopies(submitted);
 
 				const tagsChanged = !sameTags(
@@ -114,9 +117,7 @@ export const actions: Actions = {
 					await tx.insert(recipeVersions).values({
 						recipeId: recipe.id,
 						versionNumber: (latest?.versionNumber ?? 0) + 1,
-						commitMessage:
-							message ||
-							generatedCommitMessage(latest ? changedGroups(latest, submitted) : ['title']),
+						commitMessage: message || generatedCommitMessage(groups),
 						...submitted,
 						createdBy: user.id
 					});

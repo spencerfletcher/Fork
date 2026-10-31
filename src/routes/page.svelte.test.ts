@@ -8,7 +8,13 @@ describe('/+page.svelte', () => {
 	test('renders the site heading', () => {
 		render(Page, {
 			props: {
-				data: { recipes: [], user: null, profile: null, mode: 'feed', tags: [], sampleDiff: null }
+				data: {
+					recipes: [],
+					user: { id: 'u1' } as never,
+					profile: null,
+					tags: [],
+					sampleDiff: null
+				}
 			}
 		});
 		expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
@@ -23,7 +29,6 @@ describe('/+page.svelte', () => {
 					recipes: [],
 					user: null,
 					profile: null,
-					mode: 'landing',
 					tags: [],
 					sampleDiff: null
 				}
@@ -39,9 +44,8 @@ describe('/+page.svelte', () => {
 			props: {
 				data: {
 					recipes: [{ id: 1, slug: 'a', title: 'A', updatedAt: new Date(), forkCount: 0 }],
-					user: null,
+					user: { id: 'u1', username: 'cook' },
 					profile: null,
-					mode: 'feed',
 					tags: [{ id: 1, name: 'Dessert', slug: 'dessert' }],
 					sampleDiff: null
 				} as never
@@ -66,7 +70,6 @@ describe('/+page.svelte', () => {
 					recipes: [{ id: 1, slug: 'a', title: 'A', updatedAt: new Date(), forkCount: 0 }],
 					user: null,
 					profile: null,
-					mode: 'landing',
 					tags: [],
 					sampleDiff: null
 				} as never
@@ -99,7 +102,7 @@ describe('/+page.svelte', () => {
 		const recipes = [{ id: 1, slug: 'a', title: 'A', updatedAt: new Date(), forkCount: 0 }];
 		const { container, unmount } = render(Page, {
 			props: {
-				data: { recipes, user: null, profile: null, mode: 'landing', tags: [], sampleDiff: null }
+				data: { recipes, user: null, profile: null, tags: [], sampleDiff: null }
 			} as never
 		});
 		const signup = screen.getByRole('link', { name: 'Sign up to fork one' });
@@ -119,7 +122,6 @@ describe('/+page.svelte', () => {
 					recipes,
 					user: { id: 'u1', username: 'cook' },
 					profile: null,
-					mode: 'feed',
 					tags: [],
 					sampleDiff: null
 				}
@@ -131,7 +133,13 @@ describe('/+page.svelte', () => {
 	test('feed mode renders no LandingHero', () => {
 		render(Page, {
 			props: {
-				data: { recipes: [], user: null, profile: null, mode: 'feed', tags: [], sampleDiff: null }
+				data: {
+					recipes: [],
+					user: { id: 'u1' } as never,
+					profile: null,
+					tags: [],
+					sampleDiff: null
+				}
 			}
 		});
 		expect(screen.queryByText('Recipes that remember every change.')).not.toBeInTheDocument();
@@ -161,7 +169,7 @@ describe('/+page.svelte', () => {
 		};
 		render(Page, {
 			props: {
-				data: { recipes: [], user: null, profile: null, mode: 'landing', tags: [], sampleDiff }
+				data: { recipes: [], user: null, profile: null, tags: [], sampleDiff }
 			}
 		});
 
@@ -190,7 +198,7 @@ describe('/+page.svelte', () => {
 		}));
 		const { container } = render(Page, {
 			props: {
-				data: { recipes, user: null, profile: null, mode: 'landing', tags: [], sampleDiff: null }
+				data: { recipes, user: null, profile: null, tags: [], sampleDiff: null }
 			} as never
 		});
 		const imgs = [...container.querySelectorAll('img.card-img')];
@@ -205,7 +213,7 @@ describe('/+page.svelte', () => {
 		const recipes = [1, 2, 3].map((id) => ({ id, slug: `r${id}`, title: `R${id}`, forkCount: 0 }));
 		const { container } = render(Page, {
 			props: {
-				data: { recipes, user: null, profile: null, mode: 'landing', tags: [], sampleDiff: null }
+				data: { recipes, user: null, profile: null, tags: [], sampleDiff: null }
 			} as never
 		});
 		const strip = container.querySelector('.recent-strip')!;
@@ -244,7 +252,6 @@ describe('/+page.svelte', () => {
 					recipes: [{ id: 1, slug: 'a', title: 'A', updatedAt: new Date(), forkCount: 0 }],
 					user: null,
 					profile: null,
-					mode: 'landing',
 					tags: [],
 					sampleDiff
 				}

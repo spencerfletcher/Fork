@@ -18,7 +18,7 @@
 	} = $props();
 
 	const count = $derived(versions.length);
-	const latest = $derived(Math.max(...versions.map((v) => v.versionNumber)));
+	const latest = $derived(versions[0].versionNumber);
 	const n = $derived(currentVersion.versionNumber);
 	let open = $state(false);
 	let toggle: HTMLButtonElement | undefined = $state();
@@ -59,39 +59,6 @@
 
 <svelte:window onkeydown={onWindowKeydown} onhashchange={onHashChange} />
 
-{#snippet controls()}
-	<!-- The separators are drawn between items by CSS, never typed, so no
-	     wrapped line can begin or end with one. -->
-	<span class="controls text-text-2">
-		{#if isViewingHistory}
-			<span class="item"><a href="/recipes/{recipe.slug}">Back to v{latest}</a></span>
-		{/if}
-		<span class="item">
-			<button
-				type="button"
-				class="versions-toggle"
-				bind:this={toggle}
-				aria-expanded={open}
-				aria-controls="version-history"
-				onclick={() => (open = !open)}>
-				{count} versions
-				<svg
-					class="chevron"
-					class:up={open}
-					viewBox="0 0 12 12"
-					aria-hidden="true"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="1.6"
-					stroke-linecap="round"
-					stroke-linejoin="round">
-					<path d="M2.5 4.5 6 8l3.5-3.5" />
-				</svg>
-			</button>
-		</span>
-	</span>
-{/snippet}
-
 <!-- The version bar: the hinge between the dish and the recipe, on lifted
      paper. One line names the version being read and its note; the
      toggle opens the other versions under it, each a link to itself with a
@@ -119,7 +86,36 @@
 			<!-- No "Older version" label: the chip's spoken text says it, and the
 			     "Back to v3" control is clue enough for the eye (Spencer, 29 October 2026). -->
 			<span class="message text-text" class:clamped={!open}>{currentVersion.commitMessage}</span>
-			{@render controls()}
+			<!-- The separators are drawn between items by CSS, never typed, so no
+				     wrapped line can begin or end with one. -->
+			<span class="controls text-text-2">
+				{#if isViewingHistory}
+					<span class="item"><a href="/recipes/{recipe.slug}">Back to v{latest}</a></span>
+				{/if}
+				<span class="item">
+					<button
+						type="button"
+						class="versions-toggle"
+						bind:this={toggle}
+						aria-expanded={open}
+						aria-controls="version-history"
+						onclick={() => (open = !open)}>
+						{count} versions
+						<svg
+							class="chevron"
+							class:up={open}
+							viewBox="0 0 12 12"
+							aria-hidden="true"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="1.6"
+							stroke-linecap="round"
+							stroke-linejoin="round">
+							<path d="M2.5 4.5 6 8l3.5-3.5" />
+						</svg>
+					</button>
+				</span>
+			</span>
 		</div>
 
 		<!-- The other versions, newest first. The whole row, number and message,

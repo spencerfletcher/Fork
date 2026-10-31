@@ -40,15 +40,11 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 	// version in the same transaction as the recipe, so none is a broken row.
 	const latestVersion = recipe.versions[0];
 	if (!latestVersion) throw error(404, 'Recipe not found');
-	let currentVersion = latestVersion;
-	let isViewingHistory = false;
-
-	if (requestedVersion !== null) {
-		const found = recipe.versions.find((v) => v.versionNumber === requestedVersion);
-		if (!found) throw error(404, 'Version not found');
-		currentVersion = found;
-		isViewingHistory = found.versionNumber !== latestVersion.versionNumber;
-	}
+	const currentVersion =
+		requestedVersion === null
+			? latestVersion
+			: recipe.versions.find((v) => v.versionNumber === requestedVersion);
+	if (!currentVersion) throw error(404, 'Version not found');
 
 	// Independent lookups, one round trip. The fork count is public forks
 	// only, the same rule attachRecipeCounts applies on the lists, so a private
@@ -73,7 +69,6 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 		// an external lookup; lines the tables do not know get null.
 		grams: currentVersion.ingredients.map(gramsFor),
 		allVersions: recipe.versions,
-		isViewingHistory,
 		isFavorited,
 		meta: {
 			title: currentVersion.title,

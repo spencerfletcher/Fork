@@ -43,11 +43,6 @@ export function changedGroups(from: RecipeContent, to: RecipeContent): ContentGr
 	return CONTENT_GROUPS.filter((group) => !same(group, from, to));
 }
 
-/** Whether a save should write a new version. */
-export function contentChanged(from: RecipeContent, to: RecipeContent): boolean {
-	return changedGroups(from, to).length > 0;
-}
-
 /** The commit message used when the user leaves it blank, e.g. "Updated servings, ingredients". */
 export function generatedCommitMessage(groups: ContentGroup[]): string {
 	return 'Updated ' + groups.join(', ');

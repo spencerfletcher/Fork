@@ -1,11 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import {
-	changedGroups,
-	contentChanged,
-	generatedCommitMessage,
-	recipeCopies,
-	type ContentGroup
-} from './content';
+import { changedGroups, generatedCommitMessage, recipeCopies, type ContentGroup } from './content';
 import { getTableColumns } from 'drizzle-orm';
 import { recipes, recipeVersions } from '#lib/server/db/schema.js';
 import { makeContent, makeIngredient, makeStep } from './fixtures';
@@ -16,7 +10,6 @@ const base = makeContent();
 describe('changedGroups', () => {
 	test('identical contents are unchanged', () => {
 		expect(changedGroups(base, makeContent())).toEqual([]);
-		expect(contentChanged(base, makeContent())).toBe(false);
 	});
 
 	test.each<[string, Partial<RecipeContent>, ContentGroup]>([

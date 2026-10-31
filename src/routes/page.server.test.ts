@@ -109,28 +109,6 @@ describe('homepage load', () => {
 		expect(landing.tags).toEqual([]);
 	});
 
-	test('returns feed mode for a logged-in user', async () => {
-		findManyMock.mockResolvedValue([]);
-		selectMock.mockReturnValue(chain([]));
-
-		const result = await loadResult({
-			locals: { user: { id: 'u1' } }
-		} as unknown as Parameters<typeof load>[0]);
-
-		expect(result.mode).toBe('feed');
-	});
-
-	test('returns landing mode for an anonymous visitor', async () => {
-		findManyMock.mockResolvedValue([]);
-		selectMock.mockReturnValue(chain([]));
-
-		const result = await loadResult({
-			locals: { user: null }
-		} as unknown as Parameters<typeof load>[0]);
-
-		expect(result.mode).toBe('landing');
-	});
-
 	test('skips a recipe whose latest two versions are identical, in favor of one that actually differs', async () => {
 		// B has more history than a recipe needs to qualify, but its latest two
 		// versions are a no-op commit (e.g. re-saved with no changes) — the

@@ -51,7 +51,7 @@ const META_FIELDS: MetaField[] = [
 	'cookTimeMinutes'
 ];
 
-// One field's comparable value, normalised the same way contentChanged does.
+// One field's comparable value, normalised the same way changedGroups does.
 function metaValue(content: RecipeContent, field: MetaField): string | number | null {
 	if (field === 'title') return normaliseTitle(content.title);
 	if (field === 'description') return normaliseDescription(content.description);
