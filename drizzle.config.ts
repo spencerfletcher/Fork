@@ -5,6 +5,9 @@ import { loadEnv, targetFromEnv } from './src/lib/server/db/env';
 // loadEnv refuses unless SUPABASE_PROJECT_ID names it. `drizzle-kit generate`
 // only reads the schema; `migrate` goes through scripts/db-migrate.ts, which
 // runs the same check. `drizzle-kit push` stays banned (see AGENTS.md).
+// drizzle-kit loads `.env` (hosted) before this file runs, which would beat
+// `.env.local`; the package.json scripts point it at /dev/null so loadEnv
+// alone picks the file for the target.
 const { DATABASE_URL } = loadEnv(targetFromEnv());
 
 export default defineConfig({
