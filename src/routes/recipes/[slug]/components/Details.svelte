@@ -1,26 +1,20 @@
 <script lang="ts">
-	import type { Snippet } from 'svelte';
 	import type { RecipeContent } from '#lib/recipes/types.js';
 	import { formatTime } from '#lib/helpers.js';
 
 	let {
-		content,
-		servings
+		content
 	}: {
 		content: Pick<RecipeContent, 'prepTimeMinutes' | 'cookTimeMinutes' | 'servings'>;
-		/** Drawn in the servings pair's place (the recipe page's scale control); only when there are servings. */
-		servings?: Snippet;
 	} = $props();
 
-	// Value then label, for all three: "15 min prep · 13 min cook · 36 servings".
+	// The times value then label, the serves label then value:
+	// "15 min prep · 13 min cook · Serves 36".
 	const pairs = $derived.by(() => {
 		const all: [string, string | null][] = [
 			['prep', content.prepTimeMinutes ? formatTime(content.prepTimeMinutes) : null],
 			['cook', content.cookTimeMinutes ? formatTime(content.cookTimeMinutes) : null],
-			[
-				content.servings === 1 ? 'serving' : 'servings',
-				content.servings ? String(content.servings) : null
-			]
+			['Serves', content.servings ? String(content.servings) : null]
 		];
 		return all.filter((pair): pair is [string, string] => pair[1] !== null);
 	});
@@ -35,8 +29,9 @@
 			<!-- eslint-disable-next-line svelte/no-useless-mustaches -- a bare space between blocks is dropped -->
 			{#if i > 0}{' '}{/if}
 			<span class="pair whitespace-nowrap">
-				{#if servings && label.startsWith('serving')}
-					{@render servings()}
+				{#if label === 'Serves'}
+					{label}
+					<span class="text-text font-semibold">{value}</span>
 				{:else}
 					<span class="text-text font-semibold">{value}</span>
 					{label}

@@ -1,5 +1,6 @@
 import { describe, test, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/svelte';
+import { createRawSnippet } from 'svelte';
 import { parseIngredientText } from '#lib/recipes/ingredients.js';
 import RecipeIngredients from './RecipeIngredients.svelte';
 import source from './RecipeIngredients.svelte?raw';
@@ -273,5 +274,25 @@ describe('RecipeIngredients', () => {
 		renderWith('½ onion', [{ grams: 55, grams2: null, approximate: true }]);
 		expect(rows()[0].querySelector('.font-semibold')).toHaveTextContent('½ onion');
 		expect(rows()[0]).toHaveTextContent('½ onion (≈55g)');
+	});
+
+	test('a control sits in the eyebrow row after the heading, both above the one rule', () => {
+		const control = createRawSnippet(() => ({
+			render: () => '<span class="control">control</span>'
+		}));
+		render(RecipeIngredients, {
+			props: {
+				ingredients: parseIngredientText(LINES),
+				grams: [null, null, null],
+				storageKey: KEY,
+				control
+			}
+		});
+		const heading = screen.getByRole('heading', { name: 'Ingredients' });
+		const row = heading.parentElement!;
+		expect(row).toContainElement(screen.getByText('control'));
+		expect(heading.nextElementSibling).toHaveTextContent('control');
+		expect(row).toHaveClass('border-b');
+		expect(heading).not.toHaveClass('border-b');
 	});
 });

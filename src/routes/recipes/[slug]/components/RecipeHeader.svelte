@@ -23,7 +23,6 @@
 		currentVersion,
 		forkCount,
 		tags,
-		servings,
 		actions
 	}: {
 		recipe: HeaderRecipe;
@@ -31,8 +30,6 @@
 		/** Public forks. */
 		forkCount: number;
 		tags: { id: number; name: string; slug: string }[];
-		/** The scale control, in the measure where the servings sit. */
-		servings?: Snippet;
 		/** The action row (Fork or Edit, Favorite), the last line of the header. */
 		actions?: Snippet;
 	} = $props();
@@ -68,7 +65,7 @@
 		<p class="description m-0">{currentVersion.description}</p>
 	{/if}
 
-	<Details content={currentVersion} {servings} />
+	<Details content={currentVersion} />
 
 	{#if tags.length > 0}
 		<p class="tags text-text-2 m-0 font-sans">

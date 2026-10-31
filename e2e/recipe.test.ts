@@ -1663,34 +1663,85 @@ test.describe('Serving scaling', () => {
 	const measure = ({ text, name }: { text: string; name: string }) =>
 		text.slice(0, text.length - name.length).trim();
 
-	test('×2 doubles a quantity and the URL, Reset clears both; 44px hits on a phone', async ({
+	test('×2 doubles a quantity, the header and the URL, Reset clears them; 44px hits on a phone', async ({
 		page
 	}) => {
 		await page.setViewportSize({ width: 390, height: 900 });
 		await gotoClassicCookies(page);
-		const flourMeasure = page.locator('#ingredients label').first().locator('.font-semibold');
+		const ingredients = page.locator('#ingredients');
+		const flourMeasure = ingredients.locator('label').first().locator('.font-semibold');
+		const measureLine = page.locator('header .details');
 		await expect(flourMeasure).toHaveText(measure(flour));
+		await expect(measureLine).toContainText(`Serves ${latest.servings}`);
+		// The header is plain text; the control lives with the list it scales.
+		await expect(
+			page.locator('header').getByRole('button', { name: 'Double servings' })
+		).toHaveCount(0);
 
-		await page.getByRole('button', { name: 'Double servings' }).click();
-		await expect(page.getByRole('textbox', { name: 'Servings' })).toHaveValue(
+		await ingredients.getByRole('button', { name: 'Double servings' }).click();
+		await expect(ingredients.getByRole('textbox', { name: 'Servings' })).toHaveValue(
 			String(latest.servings! * 2)
 		);
 		await expect(flourMeasure).toHaveText(measure(doubled));
+		await expect(measureLine).toContainText(`Serves ${latest.servings! * 2}`);
 		expect(new URL(page.url()).searchParams.get('serves')).toBe(String(latest.servings! * 2));
 
-		for (const name of ['Halve servings', 'Double servings']) {
+		for (const name of ['Halve servings', 'Double servings', 'Reset']) {
 			const box = (await page.getByRole('button', { name }).boundingBox())!;
 			expect(box.width).toBeGreaterThanOrEqual(44);
 			expect(box.height).toBeGreaterThanOrEqual(44);
 		}
 		const input = (await page.getByRole('textbox', { name: 'Servings' }).boundingBox())!;
 		expect(input.height).toBeGreaterThanOrEqual(44);
-		const reset = (await page.getByRole('button', { name: 'Reset' }).boundingBox())!;
-		expect(reset.height).toBeGreaterThanOrEqual(44);
+		// Its own row at the end of the column, above the list's first line.
+		const control = (await ingredients.locator('.serves').boundingBox())!;
+		const firstRow = (await ingredients.locator('label').first().boundingBox())!;
+		expect(control.x + control.width).toBeCloseTo(firstRow.x + firstRow.width, 0);
+		expect(control.y + control.height).toBeLessThanOrEqual(firstRow.y);
 
 		await page.getByRole('button', { name: 'Reset' }).click();
 		await expect(flourMeasure).toHaveText(measure(flour));
+		await expect(measureLine).toContainText(`Serves ${latest.servings}`);
 		expect(new URL(page.url()).searchParams.has('serves')).toBe(false);
+	});
+
+	test('on a desktop the control is borderless text right of the eyebrow, and the two rules line up', async ({
+		page
+	}) => {
+		await page.setViewportSize({ width: 1280, height: 900 });
+		await gotoClassicCookies(page);
+		const ingredients = page.locator('#ingredients');
+		const style = (name: string) =>
+			ingredients.getByRole('button', { name }).evaluate((el) => {
+				const s = getComputedStyle(el);
+				return {
+					border: s.borderTopStyle,
+					bg: s.backgroundColor,
+					height: el.getBoundingClientRect().height
+				};
+			});
+		for (const name of ['Halve servings', 'Double servings']) {
+			expect(await style(name)).toEqual({ border: 'none', bg: 'rgba(0, 0, 0, 0)', height: 24 });
+		}
+		const blank = await ingredients.getByRole('textbox', { name: 'Servings' }).evaluate((el) => {
+			const s = getComputedStyle(el);
+			return [s.borderTopWidth, s.borderLeftWidth, s.borderBottomWidth, s.backgroundColor];
+		});
+		expect(blank).toEqual(['0px', '0px', '1px', 'rgba(0, 0, 0, 0)']);
+
+		const eyebrow = (await ingredients
+			.getByRole('heading', { name: 'Ingredients' })
+			.boundingBox())!;
+		const control = (await ingredients.locator('.serves').boundingBox())!;
+		const row = (await ingredients
+			.locator('.serves')
+			.evaluate((el) => el.parentElement!.getBoundingClientRect()))!;
+		const method = (await page.getByRole('heading', { name: 'Method' }).boundingBox())!;
+		// One line: the control beside the eyebrow, at the column's end.
+		expect(control.y).toBeLessThan(eyebrow.y + eyebrow.height);
+		expect(control.x + control.width).toBeCloseTo(row.x + row.width, 0);
+		// The rule under both sits level with the Method rule.
+		expect(row.y + row.height).toBeCloseTo(method.y + method.height, 0);
 	});
 });
 

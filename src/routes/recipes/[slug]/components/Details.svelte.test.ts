@@ -1,6 +1,5 @@
 import { describe, test, expect } from 'vitest';
 import { render } from '@testing-library/svelte';
-import { createRawSnippet } from 'svelte';
 import Details from './Details.svelte';
 import { makeContent } from '#lib/recipes/fixtures.js';
 
@@ -9,13 +8,13 @@ function line(container: HTMLElement) {
 }
 
 describe('Details', () => {
-	test('reads times and servings from the content, value then label, on one line', () => {
+	test('reads times value then label and the serves label then value, on one line', () => {
 		const { container } = render(Details, {
 			props: { content: makeContent({ servings: 6, prepTimeMinutes: 15, cookTimeMinutes: 45 }) }
 		});
 		// The dots between pairs are drawn by CSS, never typed, so no wrapped
 		// line can begin or end with one.
-		expect(line(container)).toBe('15 min prep 45 min cook 6 servings');
+		expect(line(container)).toBe('15 min prep 45 min cook Serves 6');
 		expect(container.querySelector('.dot')).toBeNull();
 		expect(container.querySelector('h2, h3, h4, dl')).toBeNull();
 	});
@@ -27,17 +26,17 @@ describe('Details', () => {
 		const pairs = [...container.querySelectorAll('.pair')].map((el) =>
 			el.textContent!.replace(/\s+/g, ' ').trim()
 		);
-		expect(pairs).toEqual(['15 min prep', '45 min cook', '6 servings']);
+		expect(pairs).toEqual(['15 min prep', '45 min cook', 'Serves 6']);
 		for (const el of container.querySelectorAll('.pair')) {
 			expect(el).toHaveClass('whitespace-nowrap');
 		}
 	});
 
-	test('one serving is singular, and a missing value drops its pair', () => {
+	test('one serving reads Serves 1, and a missing value drops its pair', () => {
 		const { container } = render(Details, {
 			props: { content: makeContent({ servings: 1, prepTimeMinutes: null, cookTimeMinutes: 45 }) }
 		});
-		expect(line(container)).toBe('45 min cook 1 serving');
+		expect(line(container)).toBe('45 min cook Serves 1');
 		expect(container.querySelectorAll('.pair')).toHaveLength(2);
 	});
 
@@ -48,29 +47,5 @@ describe('Details', () => {
 			}
 		});
 		expect(container.querySelector('.details')).toBeNull();
-	});
-
-	test('a servings snippet takes the place of the servings pair; the times keep theirs', () => {
-		const servings = createRawSnippet(() => ({
-			render: () => '<span class="control">control</span>'
-		}));
-		const { container } = render(Details, {
-			props: {
-				content: makeContent({ servings: 6, prepTimeMinutes: 15, cookTimeMinutes: 45 }),
-				servings
-			}
-		});
-		expect(line(container)).toBe('15 min prep 45 min cook control');
-		expect(container.querySelector('.pair .control')).not.toBeNull();
-	});
-
-	test('no stored servings, no snippet: there is nothing to scale from', () => {
-		const servings = createRawSnippet(() => ({
-			render: () => '<span class="control">control</span>'
-		}));
-		const { container } = render(Details, {
-			props: { content: makeContent({ servings: null, cookTimeMinutes: 45 }), servings }
-		});
-		expect(container.querySelector('.control')).toBeNull();
 	});
 });

@@ -51,10 +51,12 @@
 	     first, so a stranger reads what this version is before anything else. -->
 	<div class="hero">
 		<div class="hero-text">
-			<RecipeHeader {recipe} {currentVersion} forkCount={data.forkCount} {tags}>
-				{#snippet servings()}
-					<ServesControl {stored} {serves} onchange={(next) => (serves = next)} />
-				{/snippet}
+			<!-- The measure says the serves the list is scaled to, so it stays true. -->
+			<RecipeHeader
+				{recipe}
+				currentVersion={{ ...currentVersion, servings: stored > 0 ? serves : null }}
+				forkCount={data.forkCount}
+				{tags}>
 				{#snippet actions()}
 					<RecipeActions
 						{recipe}
@@ -101,7 +103,11 @@
 					ingredients={currentVersion.ingredients}
 					grams={data.grams}
 					{factor}
+					control={stored > 0 ? scaler : undefined}
 					storageKey={ticksKey(recipe.slug, currentVersion.versionNumber, 'ingredients')} />
+				{#snippet scaler()}
+					<ServesControl {stored} {serves} onchange={(next) => (serves = next)} />
+				{/snippet}
 			</div>
 		</aside>
 

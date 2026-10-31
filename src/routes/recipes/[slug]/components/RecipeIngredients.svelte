@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte';
 	import type { Ingredient } from '#lib/recipes/types.js';
 	import type { GramResult } from '#lib/server/ingredientDensities.js';
 	import { FRACTIONS, scaleIngredient } from '#lib/recipes/scale.js';
@@ -8,13 +9,16 @@
 		ingredients,
 		grams,
 		storageKey,
-		factor = 1
+		factor = 1,
+		control
 	}: {
 		ingredients: Ingredient[];
 		grams: (GramResult | null)[];
 		storageKey: string;
 		/** The serving multiplier; lines that cannot be scaled print as typed. */
 		factor?: number;
+		/** The scale control, right of the eyebrow, above the same rule. */
+		control?: Snippet;
 	} = $props();
 
 	// Writable derived: the ticks reload whenever the page moves to another
@@ -71,7 +75,12 @@
 </script>
 
 <section id="ingredients" class="mb-3 scroll-mt-14">
-	<h2 class="eyebrow-label border-border mb-1 border-b pb-2">Ingredients</h2>
+	<!-- The eyebrow and the control it scales share one baseline and one rule.
+	     It wraps under the eyebrow when the column is narrow, still at the end. -->
+	<div class="border-border mb-1 flex flex-wrap items-baseline gap-x-4 border-b pb-2">
+		<h2 class="eyebrow-label">Ingredients</h2>
+		{@render control?.()}
+	</div>
 	<div class="m-0 p-0">
 		{#each ingredients as typed, i (i)}
 			{@const { ingredient, grams: result } = scaleIngredient(typed, grams[i], factor)}

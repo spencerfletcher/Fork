@@ -66,36 +66,36 @@
 </span>
 
 <style>
-	/* One line in the measure: the value's ink 600 in the box, the label and
-	   steps Ink 2. Desktop parts are 24px tall, inside the line's own height. */
+	/* Right of the Ingredients eyebrow, nothing boxed: the steps are Ink 2 text
+	   that underlines like a link, the number an underlined blank. Parts are
+	   24px tall. The negative margins leave the row the eyebrow's height, so
+	   its rule lines up with the Method rule beside it. */
 	.serves {
 		display: inline-flex;
-		align-items: center;
-		gap: 4px;
+		align-items: baseline;
+		gap: 6px;
+		margin: -8px 0 -8px auto;
+		font-size: 0.9375rem;
+		line-height: 24px;
+		color: var(--color-text-2);
 		white-space: nowrap;
 	}
 
-	.step,
-	input {
-		box-sizing: border-box;
-		height: 24px;
-		border: 1px solid var(--color-border-2);
-		border-radius: var(--radius-sm);
-		font: inherit;
-	}
-
 	.step {
-		min-width: 28px;
-		padding: 0 4px;
+		height: 24px;
+		padding: 0 2px;
+		border: 0;
 		background: none;
-		color: var(--color-text-2);
+		font: inherit;
 		font-weight: 600;
+		color: var(--color-text-2);
 		cursor: pointer;
 	}
 
-	.step:hover:not(:disabled) {
-		background: var(--color-tint);
-		color: var(--color-text);
+	.step:hover:not(:disabled),
+	.step:focus-visible {
+		text-decoration: underline;
+		text-underline-offset: 3px;
 	}
 
 	.step:disabled {
@@ -104,31 +104,36 @@
 	}
 
 	input {
-		width: 5ch;
-		padding: 0 2px;
-		background: var(--color-surface);
-		color: var(--color-text);
+		box-sizing: border-box;
+		width: 4ch;
+		height: 24px;
+		padding: 0;
+		border: 0;
+		border-bottom: 1px solid var(--color-text-3);
+		border-radius: 0;
+		background: transparent;
+		font: inherit;
 		font-weight: 600;
+		color: var(--color-text);
 		font-variant-numeric: tabular-nums;
 		text-align: center;
 	}
 
-	.label {
-		margin-left: 2px;
+	input:focus {
+		border-bottom-color: var(--color-text-2);
 	}
 
 	.factor {
-		margin-left: 6px;
+		margin-left: 4px;
 		font-family: var(--font-mono);
 		font-size: 0.75rem;
 		color: var(--color-text-2);
 	}
 
-	/* A clay text action like the header's links, ink on hover; 24px hit by
-	   padding pulled back by margin, so the text does not move. */
+	/* A clay text action like the header's links, ink on hover; 24px tall on
+	   the control's line. */
 	.reset {
-		padding: 4px 0;
-		margin: -4px 0 -4px 4px;
+		padding: 0;
 		border: 0;
 		background: none;
 		font: inherit;
@@ -141,27 +146,36 @@
 		color: var(--color-text);
 	}
 
-	/* A thumb's 44px on a phone. The parts are real 44px boxes, so the control
-	   takes a taller row of its own when the measure wraps. */
+	/* A thumb's 44px on a phone. The steps and Reset are real 44px boxes, which
+	   read as space since nothing is drawn; the number's box grows upward so
+	   its rule stays under the digits. A pseudo cannot grow an input, and one
+	   on the steps would reach over the number. */
 	@media (max-width: 699px) {
+		.serves {
+			margin-block: 0;
+			gap: 0;
+		}
+
 		.step,
-		input {
+		.reset {
+			min-width: 44px;
 			height: 44px;
 		}
 
-		.step {
-			min-width: 44px;
-		}
-
 		input {
-			width: 6ch;
+			width: 4ch;
+			height: 44px;
+			padding-top: 18px;
 			/* iOS zooms into a field under 16px. */
 			font-size: 1rem;
 		}
 
-		.reset {
-			padding: 11px 0;
-			margin-block: -11px;
+		.label {
+			margin-left: 6px;
+		}
+
+		.factor {
+			margin-left: 10px;
 		}
 	}
 </style>

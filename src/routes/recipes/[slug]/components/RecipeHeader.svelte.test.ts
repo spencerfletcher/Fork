@@ -174,16 +174,17 @@ describe('RecipeHeader byline', () => {
 // ─── Header content ───────────────────────────────────────────────────────────
 
 describe('RecipeHeader content', () => {
-	test('shows the servings from the viewed version in the measure line', () => {
+	test('says the serves from the content it is given in the measure line, as plain text', () => {
 		const { container } = renderHeader();
 		expect(container.querySelector('.details')!.textContent!.replace(/\s+/g, ' ')).toContain(
-			'4 servings'
+			'Serves 4'
 		);
+		expect(container.querySelector('header input, header button')).toBeNull();
 	});
 
-	test('a blank servings on the viewed version shows no servings', () => {
+	test('a blank servings on the viewed version shows no serves', () => {
 		renderHeader({ currentVersion: { ...V1, servings: null } });
-		expect(screen.queryByText(/servings/)).toBeNull();
+		expect(screen.queryByText(/Serves/)).toBeNull();
 	});
 
 	test('lists tags as comma-separated links, not pills', () => {

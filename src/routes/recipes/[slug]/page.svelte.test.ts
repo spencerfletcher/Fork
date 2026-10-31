@@ -52,12 +52,24 @@ describe('recipe page scaling', () => {
 		expect(rows()[0]).toHaveTextContent('1 cup (125g) flour');
 	});
 
+	test('the control sits in the Ingredients section; the header says Serves N as text', () => {
+		const { container } = load();
+		const ingredients = container.querySelector('#ingredients')!;
+		expect(ingredients).toContainElement(screen.getByRole('textbox', { name: 'Servings' }));
+		expect(ingredients).toContainElement(screen.getByRole('button', { name: 'Double servings' }));
+		const header = container.querySelector('header')!;
+		expect(header.querySelector('input, .serves')).toBeNull();
+		expect(header.querySelector('.details')).toHaveTextContent(`Serves ${STORED}`);
+	});
+
 	test('×2 doubles the box and the quantities; the unscalable line stays', async () => {
 		load();
 		await fireEvent.click(screen.getByRole('button', { name: 'Double servings' }));
 		expect(screen.getByRole('textbox', { name: 'Servings' })).toHaveValue(String(STORED * 2));
 		expect(rows()[0]).toHaveTextContent('2 cups (250g) flour');
 		expect(rows()[1]).toHaveTextContent('salt to taste');
+		// The header stays truthful: it says the serves the list is scaled to.
+		expect(document.querySelector('header .details')).toHaveTextContent(`Serves ${STORED * 2}`);
 	});
 
 	test('typing 6 shows 1.5x and scales', async () => {
