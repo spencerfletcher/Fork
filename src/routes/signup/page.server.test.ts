@@ -2,6 +2,7 @@ import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { isActionFailure, isRedirect } from '@sveltejs/kit';
 import { invokeAction as invoke, formEvent } from '#lib/testing/actions.js';
 import { actions, load } from './+page.server';
+import { USERNAME_MESSAGE } from '#lib/auth/rules.js';
 
 // ─── Hoisted mocks (must be available inside vi.mock factory) ─────────────────
 
@@ -22,7 +23,7 @@ const makeEvent = (fields: Record<string, string>) =>
 
 const valid = { email: 'cook@b.com', username: 'cook', password: 'pw' };
 
-const USERNAME_RULE = 'Usernames are 3 to 30 characters: letters, digits, - or _';
+const USERNAME_RULE = USERNAME_MESSAGE;
 
 // ─── default action ───────────────────────────────────────────────────────────
 

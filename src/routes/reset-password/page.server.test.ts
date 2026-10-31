@@ -2,6 +2,7 @@ import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { isActionFailure, isRedirect } from '@sveltejs/kit';
 import { invokeAction as invoke, formEvent } from '#lib/testing/actions.js';
 import { actions, load, _RECOVERY_COOKIE } from './+page.server';
+import { PASSWORD_MIN } from '#lib/auth/rules.js';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -110,13 +111,16 @@ describe('reset-password load', () => {
 describe('reset-password action', () => {
 	beforeEach(() => vi.clearAllMocks());
 
-	test('refuses a password under 6 characters without calling Supabase', async () => {
-		const result = await invoke(actions.default as never, makeEvent({ password: '12345' }));
+	test('refuses a password under the minimum without calling Supabase', async () => {
+		const result = await invoke(
+			actions.default as never,
+			makeEvent({ password: 'x'.repeat(PASSWORD_MIN - 1) })
+		);
 
 		expect(isActionFailure(result)).toBe(true);
 		expect(result).toMatchObject({
 			status: 400,
-			data: { message: 'Use at least 6 characters.' }
+			data: { message: `Use at least ${PASSWORD_MIN} characters.` }
 		});
 		expect(updateUser).not.toHaveBeenCalled();
 	});

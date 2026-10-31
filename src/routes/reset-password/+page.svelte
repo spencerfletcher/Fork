@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { PASSWORD_MIN } from '#lib/auth/rules.js';
 
 	let { form, data }: { form: { message?: string } | null; data: { linkValid: boolean } } =
 		$props();
@@ -37,10 +38,10 @@
 						name="password"
 						type="password"
 						required
-						minlength="6"
+						minlength={PASSWORD_MIN}
 						autocomplete="new-password"
 						aria-describedby="password-hint" />
-					<p class="form-hint" id="password-hint">At least 6 characters</p>
+					<p class="form-hint" id="password-hint">At least {PASSWORD_MIN} characters</p>
 				</div>
 
 				<button type="submit" class="btn-primary auth-submit" disabled={pending}>

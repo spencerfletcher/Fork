@@ -1,6 +1,7 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { text } from '#lib/recipes/validation.js';
+import { PASSWORD_MIN } from '#lib/auth/rules.js';
 
 // The tab reads as the card heads itself: the form, or the expired link.
 const meta = (linkValid: boolean) => ({ title: linkValid ? 'Reset password' : 'Link expired' });
@@ -45,9 +46,8 @@ export const actions: Actions = {
 		const formData = await request.formData();
 		const password = text(formData, 'password');
 
-		// The sign-up's minimum.
-		if (password.length < 6) {
-			return fail(400, { message: 'Use at least 6 characters.' });
+		if (password.length < PASSWORD_MIN) {
+			return fail(400, { message: `Use at least ${PASSWORD_MIN} characters.` });
 		}
 		if (!user || cookies.get(_RECOVERY_COOKIE) !== '1') {
 			return fail(401, { message: 'This link has expired. Ask for a new one.' });

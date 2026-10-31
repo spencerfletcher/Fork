@@ -2,6 +2,7 @@ import { describe, test, expect, vi } from 'vitest';
 import { render, screen, fireEvent, within } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import SignupPage from './+page.svelte';
+import { PASSWORD_MIN, USERNAME_MAX, USERNAME_MESSAGE, USERNAME_MIN } from '#lib/auth/rules.js';
 
 // The enhance mock keeps the page's submit callback so a test can start a
 // submission without a server.
@@ -48,7 +49,7 @@ describe('Sign-up page', () => {
 		);
 		// The rules up front, on one line (decided 29 October 2026).
 		expect(username()).toHaveAccessibleDescription(
-			'3 to 30 letters, digits, - or _. Your public handle, shown on every recipe.'
+			`${USERNAME_MIN} to ${USERNAME_MAX} letters, digits, - or _. Your public handle, shown on every recipe.`
 		);
 	});
 
@@ -56,8 +57,10 @@ describe('Sign-up page', () => {
 		renderSignup();
 		await fireEvent.input(email(), { target: { value: 'Jane.Doe1987+fork@example.com' } });
 		expect(username().value).toBe('janedoe1987fork');
-		await fireEvent.input(email(), { target: { value: `${'a'.repeat(40)}@example.com` } });
-		expect(username().value).toBe('a'.repeat(30));
+		await fireEvent.input(email(), {
+			target: { value: `${'a'.repeat(USERNAME_MAX + 10)}@example.com` }
+		});
+		expect(username().value).toBe('a'.repeat(USERNAME_MAX));
 	});
 
 	test('a username the user typed is not overwritten by the email', async () => {
@@ -70,9 +73,9 @@ describe('Sign-up page', () => {
 	test('the password rule and the confirmation note are visible text, not placeholders', () => {
 		renderSignup();
 		const password = screen.getByLabelText('Password');
-		expect(password).toHaveAttribute('minlength', '6');
+		expect(password).toHaveAttribute('minlength', String(PASSWORD_MIN));
 		expect(password).not.toHaveAttribute('placeholder');
-		expect(password).toHaveAccessibleDescription('At least 6 characters');
+		expect(password).toHaveAccessibleDescription(`At least ${PASSWORD_MIN} characters`);
 		expect(screen.getByText("We'll email you a link to confirm.")).toBeInTheDocument();
 	});
 
@@ -84,8 +87,8 @@ describe('Sign-up page', () => {
 		expect(screen.queryByRole('alert')).toBeNull();
 	});
 
-	const RULE = 'Usernames are 3 to 30 characters: letters, digits, - or _';
-	const HINT_RULES = '3 to 30 letters, digits, - or _.';
+	const RULE = USERNAME_MESSAGE;
+	const HINT_RULES = `${USERNAME_MIN} to ${USERNAME_MAX} letters, digits, - or _.`;
 
 	test('a username the browser rejects, once the user leaves it: the rule line is described, the field invalid, the rule printed once', async () => {
 		renderSignup();

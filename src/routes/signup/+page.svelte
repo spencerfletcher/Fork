@@ -1,6 +1,14 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { loginHref } from '#lib/auth/loginHref.js';
+	import {
+		PASSWORD_MIN,
+		USERNAME_MAX,
+		USERNAME_MESSAGE,
+		USERNAME_MIN,
+		USERNAME_PATTERN,
+		suggestUsername
+	} from '#lib/auth/rules.js';
 
 	let {
 		form,
@@ -39,21 +47,16 @@
 	// Once the user has typed a handle of their own, the email stops suggesting one.
 	let usernameEdited = $state(false);
 
-	// The email prefix under the server's rules: lowercase, allowed characters, 30 at most.
+	// The email prefix under the server's rules.
 	function suggest() {
 		if (usernameEdited) return;
-		username = email
-			.split('@')[0]
-			.toLowerCase()
-			.replace(/[^a-z0-9_-]/g, '')
-			.slice(0, 30);
+		username = suggestUsername(email);
 	}
 
 	const usernameError = $derived(form?.errors?.username);
 
 	// One pattern for the attribute and the rule line. Browsers compile the
 	// attribute with the v flag, so the page reads it the same way.
-	const USERNAME_PATTERN = '[A-Za-z0-9_\\-]{3,30}';
 	const usernameRule = new RegExp(`^(?:${USERNAME_PATTERN})$`, 'v');
 
 	// The rule line shows once the user has left the field or a submit was
@@ -133,8 +136,8 @@
 					name="username"
 					type="text"
 					required
-					minlength="3"
-					maxlength="30"
+					minlength={USERNAME_MIN}
+					maxlength={USERNAME_MAX}
 					pattern={USERNAME_PATTERN}
 					autocomplete="username"
 					spellcheck="false"
@@ -156,13 +159,11 @@
 					<p class="field-error" id="username-error">{usernameError}</p>
 				{:else if ruleShown}
 					<!-- The server's wording. -->
-					<p class="field-error" id="username-rule">
-						Usernames are 3 to 30 characters: letters, digits, - or _
-					</p>
+					<p class="field-error" id="username-rule">{USERNAME_MESSAGE}</p>
 				{/if}
 				<!-- While the rule line shows, the hint does not repeat it. -->
 				<p class="form-hint" id="username-hint">
-					{#if !ruleShown}3 to 30 letters, digits, - or _.{/if}
+					{#if !ruleShown}{USERNAME_MIN} to {USERNAME_MAX} letters, digits, - or _.{/if}
 					Your public handle, shown on every recipe.
 				</p>
 			</div>
@@ -174,13 +175,13 @@
 					name="password"
 					type="password"
 					required
-					minlength="6"
+					minlength={PASSWORD_MIN}
 					autocomplete="new-password"
 					oninvalid={(e) => {
 						if (!firstInvalid(e.currentTarget)) e.preventDefault();
 					}}
 					aria-describedby="password-hint" />
-				<p class="form-hint" id="password-hint">At least 6 characters</p>
+				<p class="form-hint" id="password-hint">At least {PASSWORD_MIN} characters</p>
 			</div>
 
 			<button

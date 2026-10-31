@@ -1,6 +1,7 @@
 import { describe, test, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/svelte';
 import ResetPasswordPage from './+page.svelte';
+import { PASSWORD_MIN } from '#lib/auth/rules.js';
 
 vi.mock('$app/forms', () => ({ enhance: () => ({ destroy: () => {} }) }));
 
@@ -14,8 +15,8 @@ describe('Reset password page', () => {
 		const password = screen.getByLabelText('New password');
 		expect(password).toHaveAttribute('type', 'password');
 		expect(password).toHaveAttribute('autocomplete', 'new-password');
-		expect(password).toHaveAttribute('minlength', '6');
-		expect(password).toHaveAccessibleDescription('At least 6 characters');
+		expect(password).toHaveAttribute('minlength', String(PASSWORD_MIN));
+		expect(password).toHaveAccessibleDescription(`At least ${PASSWORD_MIN} characters`);
 		expect(screen.getByRole('button', { name: 'Set password' })).toBeInTheDocument();
 	});
 
