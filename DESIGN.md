@@ -169,6 +169,8 @@ Clay and marigold were raised in chroma from #a4512b and #e8a83a: same hues, sam
 
 ### Named Rules
 
+**The Dynamic Is Clay Rule.** Anything the reader changed on the page and that is not stored reads clay: the serves number once it differs from the stored value, every scaled quantity and its weight, and whatever the next live control produces. Clay here means "an estimate you asked for", not a link; the hover stays ink, and stored values stay ink (decided 31 October 2026, Spencer: "dynamic items should be represented with red – serving items, scaled serving ingredients, etc").
+
 **The Clay Is Text Rule.** Clay never fills a shape, with one named exception: the editor's public checkbox takes clay as its accent-color (decided 29 October 2026). It colours titles, links and version marks. Its hover is ink.
 
 ## Typography
