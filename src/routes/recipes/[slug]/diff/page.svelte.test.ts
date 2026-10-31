@@ -3,7 +3,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import DiffPage from './+page.svelte';
 import source from './+page.svelte?raw';
 import type { IngredientDiffRow, MetaDiffRow, StepDiffRow } from '#lib/recipes/diff.js';
-import { makeContent, makeIngredient as ing } from '#lib/recipes/fixtures.js';
+import { makeContent, makeIngredient as ing, makeStep } from '#lib/recipes/fixtures.js';
 
 // ─── SvelteKit module mocks ───────────────────────────────────────────────────
 
@@ -129,7 +129,7 @@ describe('Diff page', () => {
 
 	test('added step row shows the step number', () => {
 		const data = makeData({
-			stepDiff: [{ status: 'added', stepNumber: 3, step: { text: 'Stir in chips.' } }]
+			stepDiff: [{ status: 'added', stepNumber: 3, step: makeStep('Stir in chips.') }]
 		});
 		const { container } = render(DiffPage, { props: { data } });
 		// Step number circle should render inside the diff row
@@ -142,7 +142,7 @@ describe('Diff page', () => {
 
 	test('removed step row does not show a step number circle', () => {
 		const data = makeData({
-			stepDiff: [{ status: 'removed', step: { text: 'Old step.' } }]
+			stepDiff: [{ status: 'removed', step: makeStep('Old step.') }]
 		});
 		const { container } = render(DiffPage, { props: { data } });
 		// Per the component: {#if row.status !== 'removed'}<span class="step-num">

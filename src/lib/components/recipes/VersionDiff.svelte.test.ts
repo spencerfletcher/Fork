@@ -169,12 +169,10 @@ describe('VersionDiff', () => {
 	});
 
 	test('keeps line breaks inside a step row', () => {
-		const { container } = renderDiff(
-			[],
-			[{ status: 'added', stepNumber: 1, step: { text: 'Mix.\nRest.' } }]
-		);
+		const step = makeStep('Mix.\nRest.');
+		const { container } = renderDiff([], [{ status: 'added', stepNumber: 1, step }]);
 		const content = container.querySelector('.diff-content');
-		expect(content?.textContent?.trim()).toBe('Mix.\nRest.');
+		expect(content?.textContent?.trim()).toBe(step.text);
 		expect(content).toHaveClass('whitespace-pre-line');
 	});
 
@@ -281,12 +279,10 @@ describe('VersionDiff', () => {
 	});
 
 	test('shows the step number on an added step', () => {
-		const { container } = renderDiff(
-			[],
-			[{ status: 'added', stepNumber: 3, step: { text: 'Fold gently.' } } as StepDiffRow]
-		);
+		const step = makeStep('Fold gently.');
+		const { container } = renderDiff([], [{ status: 'added', stepNumber: 3, step } as StepDiffRow]);
 		expect(container.querySelector('.step-num')?.textContent?.trim()).toBe('3.');
-		expect(screen.getByText('Fold gently.')).toBeInTheDocument();
+		expect(screen.getByText(step.text)).toBeInTheDocument();
 	});
 
 	test('a step number ends in an unseen stop, so a screen reader separates it from the text', () => {
@@ -309,12 +305,10 @@ describe('VersionDiff', () => {
 	test('omits the step number on a removed step', () => {
 		// A removed step has no position in the new version, so numbering it
 		// would imply the following steps had shifted.
-		const { container } = renderDiff(
-			[],
-			[{ status: 'removed', step: { text: 'Chill overnight.' } } as StepDiffRow]
-		);
+		const step = makeStep('Chill overnight.');
+		const { container } = renderDiff([], [{ status: 'removed', step } as StepDiffRow]);
 		expect(container.querySelector('.step-num')).toBeNull();
-		expect(screen.getByText('Chill overnight.')).toBeInTheDocument();
+		expect(screen.getByText(step.text)).toBeInTheDocument();
 	});
 
 	test('renders an added annotation under a modified step', () => {
@@ -350,7 +344,7 @@ describe('VersionDiff', () => {
 	test('renders ingredient and step rows independently', () => {
 		const { container } = renderDiff(
 			[{ status: 'added', ingredient: ingredient('flour') } as IngredientDiffRow],
-			[{ status: 'removed', step: { text: 'Preheat.' } } as StepDiffRow]
+			[{ status: 'removed', step: makeStep('Preheat.') } as StepDiffRow]
 		);
 		// One section has content, so only one "No changes" placeholder remains.
 		expect(screen.queryAllByText('No changes')).toHaveLength(0);

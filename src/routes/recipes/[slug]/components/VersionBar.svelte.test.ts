@@ -3,14 +3,11 @@ import { render, screen, fireEvent } from '@testing-library/svelte';
 import VersionBar from './VersionBar.svelte';
 import source from './VersionBar.svelte?raw';
 import type { ComponentProps } from 'svelte';
+import { makeVersion } from '#lib/recipes/fixtures.js';
 
 vi.mock('$app/navigation', () => ({ afterNavigate: () => {} }));
 
 type Props = ComponentProps<typeof VersionBar>;
-
-function makeVersion(versionNumber: number, commitMessage: string) {
-	return { id: versionNumber, versionNumber, commitMessage };
-}
 
 /** The bar line's parts in reading order. */
 const order = (current: Element) =>

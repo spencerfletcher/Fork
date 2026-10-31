@@ -24,3 +24,8 @@ export function makeContent(overrides: Partial<RecipeContent> = {}): RecipeConte
 		...overrides
 	};
 }
+
+// A version as the version bar and header list it: number and commit message.
+export function makeVersion(versionNumber: number, commitMessage: string) {
+	return { id: versionNumber, versionNumber, commitMessage };
+}
