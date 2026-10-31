@@ -30,13 +30,14 @@ Ideas from the original MVP design that are not covered by a milestone. Kept as 
 - Diff pages stay monospace (decided 2026-10-27).
 - Temperature toggle (°C / °F) on steps: temperatures are free text, so a render-time regex like the M11 timer match, no schema.
 - Print stylesheet for the recipe page: `@media print`, no nav or sidebar. An afternoon.
-- Serving scaler on the recipe page: a stepper or ×½ / ×2 that re-renders parsed quantities in place; unparsed lines render as written with a mark. The parser already separates the two.
+- ~~Serving scaler on the recipe page: a stepper or ×½ / ×2 that re-renders parsed quantities in place; unparsed lines render as written with a mark. The parser already separates the two.~~ Shipped 2026-10-31 (ac2dfd0) as priority 3.
 - Restore or edit-from on the compare page: one secondary button in the "from" card that opens the editor seeded with that version's content.
 - Quantities inline in steps ("Whisk flour (280 g), baking soda (1 tsp)…") so cooking does not mean scrolling between the list and the method. Needs ingredient names matched to step text; after the redesign.
 - Nutrition (macros) per ingredient from USDA FoodData Central, after the M12 gram tables, since weights are the input.
 - Ratings: a private personal rating first, crowd-sourced later if the social loop exists.
 - AI recipe generation and adaptation from a prompt or chosen ingredients, reviewed in the form before saving; M14, M15 and M17 all mention consuming it.
 - Structured tag taxonomy (diet, cuisine, meal type) instead of one flat list, when the tag count makes one filter row unwieldy.
+- Rethink the Recipes / My Recipes / Favorites division (Spencer, 31 October 2026): "honestly i think the whole recipes/my recipes/favorites division needs some work - we need to decide where each of these will live and what makes sense." Deferred to the social work (priority 5, M4's feed) and M17's attempts, since his framing is "Strava but for logging meals made / recipes tried": where each list lives follows from what the feed and the log are.
 - Pantry, meal log and grocery pricing (v3 in the old plan): a separate product. Not before everything above.
 - Rejected then and still: ads, automatic prep-time estimates, "grams made" as a recipe field.
 
@@ -282,6 +283,14 @@ The strongest opportunity identified in the Cooklang research. An attempt record
 # M18 — Cooking mode (half day)
 
 Spencer, 30 October 2026: tie the wake lock into a mode rather than ship it bare. One toggle on the recipe page ("Cook" / "Done cooking") that: holds a screen wake lock while on (Screen Wake Lock API, released on hide or toggle off); keeps the ticks (already kept 12h in localStorage) and offers Clear ticks; steps the method up one type size and widens the ingredient column so a phone propped on the counter reads from arm's length; hides the actions row and version bar while on. No data written. Later: a per-step timer (M11) lives inside this mode, and M17's attempt note is offered when the cook turns it off.
+
+# M19 — Search match highlighting
+
+Spencer, 31 October 2026: "on search recipes can show what part of their data matched the query e.g. for cumin if it's in the title we can highlight that if it's an ingredient we can highlight that." A search result card marks where the query hit: the matched words in the title, or the matching ingredient line shown under the card when the hit is not in the title. Postgres `ts_headline` can mark the fragments server-side over the same fields the `tsvector` reads; pairs naturally with M8's ranking.
+
+# M20 — Revisit the tick affordance
+
+The recipe page's strike rows tick with a 16px circle, Rule 2 at rest and marigold with an ink check when ticked (31 October 2026). Spencer chose it as a stopgap: "keep box but make it ours for now but i want to revisit this later i don't love this solution either". Options already considered: the step numeral becomes the tick on the method, and a whole-row press with a mark in the gutter. Settle it with a side-by-side, together with M18's cooking mode, which leans on the ticks hardest.
 
 ---
 
