@@ -7,6 +7,7 @@ import { ensureProfile } from '#lib/server/profiles.js';
 import type { RecipeContent } from '#lib/recipes/types.js';
 import { absoluteImage, clampDescription } from '#lib/seo.js';
 import { gramsFor } from '#lib/server/ingredientDensities.js';
+import { canView } from '#lib/server/visibility.js';
 import type { PageServerLoad, Actions } from './$types';
 
 export const load: PageServerLoad = async ({ params, url, locals: { user } }) => {
@@ -28,12 +29,11 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 	});
 
 	if (!recipe) throw error(404, 'Recipe not found');
-	if (!recipe.isPublic && recipe.authorId !== user?.id) throw error(404, 'Recipe not found');
+	if (!canView(recipe, user)) throw error(404, 'Recipe not found');
 
 	// A public fork can come from a private recipe. Readers who can't see that
 	// recipe get no parent data at all; parentId alone lets the page say so.
-	const parentVisible =
-		recipe.parent !== null && (recipe.parent.isPublic || recipe.parent.authorId === user?.id);
+	const parentVisible = recipe.parent !== null && canView(recipe.parent, user);
 	const visibleRecipe = { ...recipe, parent: parentVisible ? recipe.parent : null };
 
 	// Resolve which version's content to display. Creation and forking write a
@@ -97,7 +97,7 @@ export const actions: Actions = {
 			where: eq(recipes.slug, params.slug)
 		});
 		if (!recipe) throw error(404, 'Recipe not found');
-		if (!recipe.isPublic && recipe.authorId !== user.id) throw error(404, 'Recipe not found');
+		if (!canView(recipe, user)) throw error(404, 'Recipe not found');
 
 		const existing = await db.query.favorites.findFirst({
 			where: and(eq(favorites.userId, user.id), eq(favorites.recipeId, recipe.id))
@@ -126,8 +126,7 @@ export const actions: Actions = {
 		});
 
 		if (!source) throw error(404, 'Source recipe not found');
-		if (!source.isPublic && source.authorId !== user.id)
-			throw error(404, 'Source recipe not found');
+		if (!canView(source, user)) throw error(404, 'Source recipe not found');
 
 		const latestVersion = source.versions[0];
 		if (!latestVersion) throw error(400, 'Source recipe has no versions');

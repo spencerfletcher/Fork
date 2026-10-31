@@ -409,3 +409,31 @@ describe('load: fork attribution', () => {
 		expect(columnNames(countQuery.where.mock.calls[0][0])).toContain('is_public');
 	});
 });
+
+// ─── visibility: a private recipe by another user ─────────────────────────────
+
+describe("visibility: another user's private recipe", () => {
+	const PRIVATE = { ...SOURCE_RECIPE, isPublic: false, parent: null };
+
+	beforeEach(() => {
+		vi.clearAllMocks();
+		findRecipeMock.mockResolvedValue(PRIVATE);
+	});
+
+	test('load answers 404, as for a missing recipe', async () => {
+		const result = await invoke(load as never, makeLoadEvent(FORKER));
+		expect(result).toMatchObject({ status: 404, body: { message: 'Recipe not found' } });
+	});
+
+	test('toggleFavorite answers 404 and saves nothing', async () => {
+		const result = await invoke(actions.toggleFavorite as never, makeEvent({ user: FORKER }));
+		expect(result).toMatchObject({ status: 404, body: { message: 'Recipe not found' } });
+		expect(dbInsert).not.toHaveBeenCalled();
+	});
+
+	test('fork answers 404 and copies nothing', async () => {
+		const result = await invoke(actions.fork as never, makeEvent({ user: FORKER }));
+		expect(result).toMatchObject({ status: 404, body: { message: 'Source recipe not found' } });
+		expect(transactionMock).not.toHaveBeenCalled();
+	});
+});

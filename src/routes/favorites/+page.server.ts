@@ -4,6 +4,7 @@ import { recipes, favorites, recipesToTags } from '#lib/server/db/schema.js';
 import { eq, and, ilike, inArray } from 'drizzle-orm';
 import { attachRecipeCounts } from '#lib/server/recipeCounts.js';
 import { byTagMatches, tagMatchCounts, visibleTags } from '#lib/server/tagFilter.js';
+import { canView } from '#lib/server/visibility.js';
 import type { PageServerLoad } from './$types';
 
 const META = { title: 'Favorites' };
@@ -28,9 +29,7 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 
 	// A favourited recipe can be made private by its owner later. Drop it here,
 	// before the filter chips and the recipe query, so neither reveals it.
-	const favoriteIds = favoriteMappings
-		.filter((f) => f.isPublic || f.authorId === user.id)
-		.map((f) => f.recipeId);
+	const favoriteIds = favoriteMappings.filter((f) => canView(f, user)).map((f) => f.recipeId);
 
 	// With nothing favorited a query or tags filter nothing: the page hears of
 	// neither, so it says "No favorites yet" rather than "No favorites match".

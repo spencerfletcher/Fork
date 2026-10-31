@@ -4,6 +4,7 @@ import { eq, and, or, inArray, desc, exists, sql } from 'drizzle-orm';
 import { attachRecipeCounts } from '#lib/server/recipeCounts.js';
 import { byTagMatches, tagMatchCounts, visibleTags } from '#lib/server/tagFilter.js';
 import { clampDescription } from '#lib/seo.js';
+import { visibleTo } from '#lib/server/visibility.js';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ url, locals: { user } }) => {
@@ -19,10 +20,7 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 		)
 	});
 
-	// Public recipes, or the user's own.
-	const visibilityCondition = user
-		? or(eq(recipes.isPublic, true), eq(recipes.authorId, user.id))
-		: eq(recipes.isPublic, true);
+	const visibilityCondition = visibleTo(user);
 
 	const allTags = await visibleTags(visibilityCondition);
 

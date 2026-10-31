@@ -17,14 +17,14 @@ vi.mock('#lib/server/db/index.js', () => ({
 }));
 
 import { load } from './+page.server';
-import { desc } from 'drizzle-orm';
+import { and, desc, eq, or } from 'drizzle-orm';
 import { recipes } from '#lib/server/db/schema.js';
 import type { PageData } from './$types';
 
-function makeEvent(query = '') {
+function makeEvent(query = '', user: { id: string } | null = null) {
 	return {
 		url: new URL(`http://localhost/search?q=${encodeURIComponent(query)}`),
-		locals: { user: null }
+		locals: { user }
 	} as unknown as Parameters<typeof load>[0];
 }
 
@@ -139,5 +139,28 @@ describe('search load', () => {
 		const joinedTables = tagsChain.innerJoin.mock.calls.map((call: unknown[]) => call[0]);
 		expect(joinedTables).toContain(recipes);
 		expect(tagsChain.where).toHaveBeenCalledTimes(1);
+	});
+});
+
+describe('search visibility', () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+		selectDistinctMock.mockReturnValue(chain([]));
+		selectMock.mockReturnValue(chain([]));
+		findManyMock.mockResolvedValue([]);
+	});
+
+	test("finds public recipes and the viewer's own, never another user's private ones", async () => {
+		const own = or(eq(recipes.isPublic, true), eq(recipes.authorId, 'viewer'));
+		await loadResult(makeEvent('', { id: 'viewer' }));
+		expect(findManyMock.mock.calls[0][0].where).toEqual(and(own, undefined, undefined));
+		expect(selectDistinctMock.mock.results[0].value.where).toHaveBeenCalledWith(own);
+	});
+
+	test('a logged-out visitor finds public recipes only', async () => {
+		const pub = eq(recipes.isPublic, true);
+		await loadResult(makeEvent(''));
+		expect(findManyMock.mock.calls[0][0].where).toEqual(and(pub, undefined, undefined));
+		expect(selectDistinctMock.mock.results[0].value.where).toHaveBeenCalledWith(pub);
 	});
 });

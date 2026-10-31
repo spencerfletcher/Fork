@@ -3,6 +3,7 @@ import { db } from '#lib/server/db/index.js';
 import { recipes, recipeVersions } from '#lib/server/db/schema.js';
 import { eq, asc } from 'drizzle-orm';
 import { diffIngredients, diffMeta, diffSteps } from '#lib/recipes/diff.js';
+import { canView } from '#lib/server/visibility.js';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params, url, locals }) => {
@@ -18,7 +19,7 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 	});
 
 	if (!recipe) throw error(404, 'Recipe not found');
-	if (!recipe.isPublic && recipe.authorId !== locals.user?.id) throw error(404, 'Recipe not found');
+	if (!canView(recipe, locals.user)) throw error(404, 'Recipe not found');
 	if (recipe.versions.length < 2) throw error(400, 'Need at least two versions to compare');
 
 	const allVersions = recipe.versions;

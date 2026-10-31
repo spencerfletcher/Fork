@@ -31,12 +31,12 @@ const RECIPE = {
 	versions: [version(1), version(2), version(3)]
 };
 
-function loadWith(query: string): Promise<unknown> {
+function loadWith(query: string, user: { id: string } | null = null): Promise<unknown> {
 	return Promise.resolve(
 		load({
 			params: { slug: 'classic-cookies' },
 			url: new URL(`http://localhost/recipes/classic-cookies/diff${query}`),
-			locals: { user: null }
+			locals: { user }
 		} as never)
 	);
 }
@@ -115,4 +115,18 @@ describe('compare page load', () => {
 			expect(result).toMatchObject({ status: 400, body: { message: 'Version not found' } });
 		}
 	);
+});
+
+describe('compare page visibility', () => {
+	test("another user's private recipe answers 404, as for a missing recipe", async () => {
+		findRecipeMock.mockResolvedValue({ ...RECIPE, isPublic: false });
+		const result = await loadWith('', { id: 'someone-else' }).catch((e: unknown) => e);
+		expect(result).toMatchObject({ status: 404, body: { message: 'Recipe not found' } });
+	});
+
+	test('its author can compare it', async () => {
+		findRecipeMock.mockResolvedValue({ ...RECIPE, isPublic: false });
+		const data = await loadWith('', { id: RECIPE.authorId });
+		expect(data).toMatchObject({ recipe: { slug: RECIPE.slug } });
+	});
 });
