@@ -1,0 +1,127 @@
+# Feature wishlist and competitor gaps — 31 October 2026
+
+Inputs: `docs/ROADMAP.md`, `PRODUCT.md`, then web research. **Reddit could not be read**: reddit.com and old.reddit.com refuse this crawler, so no Reddit thread is cited. Frequency instead comes from vote counts on the public trackers of the two biggest open-source recipe managers, read with the GitHub API on 31 October 2026: Mealie feature-request discussions (upvotes, all 1,372 discussions ranked) and Tandoor issues (thumbs-up). Hacker News comments come from the Algolia API. Votes measure self-hosters, a technical crowd; treat them as a lower bound on mainstream demand, not a survey.
+
+## (a) Top 15 candidates, ranked by user value against build cost
+
+Each entry gives what it is, the demand (with links), who ships it, how versioning makes it better, the size, and whether the roadmap already has it.
+
+1. **Cook mode with step timers.** One toggle: wake lock, bigger type, the current step highlighted, timers parsed from step text.
+   Demand: Mealie "special timer step" [#1573](https://github.com/mealie-recipes/mealie/discussions/1573) (35 votes); on HN tomblomfield wants "Hands-free voice control and being able to access recipe ingredients and steps without 5 pages of SEO-optimised prose" ([HN 43553031](https://news.ycombinator.com/item?id=43553031)).
+   Ships today: Paprika (keeps the screen on, auto-detects timers, highlights the step; [paprikaapp.com](https://www.paprikaapp.com/)), Mela (several recipes in cook mode, Live Activity timers), NYT Cooking (Cook Mode, 2025), Crouton (several timers).
+   Versioning angle: the session knows which version you are cooking, so turning cook mode off can offer the attempt note (M17).
+   Size S. Roadmap: **M18 + M11**.
+2. **Units: metric, US and imperial, plus °C/°F.** A per-viewer setting that converts at render time and is never written as a version.
+   Demand: the most-upvoted Mealie request of all, [#3881](https://github.com/mealie-recipes/mealie/discussions/3881) (111), plus [#2766](https://github.com/mealie-recipes/mealie/discussions/2766) (14); Tandoor [#345](https://github.com/TandoorRecipes/recipes/issues/345) (12) and volume-to-weight [#2510](https://github.com/TandoorRecipes/recipes/discussions/2510).
+   Ships today: Paprika, Crouton, Pestle.
+   Versioning angle: diffs compare quantities in the reader's units, so "200 g → 1 cup" stops showing as a change. The gram tables (M12) already do most of the work.
+   Size S–M. Roadmap: the backlog's temperature toggle covers part of it; the unit system is **new**.
+3. **"I cooked this" log (attempts).** One tap when you finish cooking: the version, the multiplier, a note, an optional photo, and what you changed.
+   Demand: Mealie recipe versioning [#880](https://github.com/mealie-recipes/mealie/discussions/880) (25) ("I have a lot of recipes that have slight variation to them based on who I am making it for and maybe the event"), and Mealie [#12](https://github.com/mealie-recipes/mealie/issues/12) "Feature: Version Control" (8).
+   Ships today: Fava, Larder and Cooked This log meals ([search summary](https://crumble.me/guides/letterboxd-for-restaurants)). None of them is tied to a recipe's history.
+   Versioning angle: "what I changed" can become a new version or a fork in one step. This is the core loop (see c).
+   Size M. Roadmap: **M17**.
+4. **Import from a URL.** Read schema.org JSON-LD and prefill the editor.
+   Demand: asked for in every HN Show HN thread on recipe apps ([7courses](https://news.ycombinator.com/item?id=2087598)) and on [Cronometer's forum](https://forums.cronometer.com/discussion/comment/9366); Instagram import, Mealie [#3846](https://github.com/mealie-recipes/mealie/discussions/3846) (18).
+   Ships today: everyone. Blog sites are where import quality differs between apps ([Slickdeals thread](https://slickdeals.net/f/16213756-paprika-recipe-manager-app-40-50-off-windows-mac-android-ios)).
+   Versioning angle: v1 records its source URL, and later edits show as diffs from the original as published.
+   Size M. Roadmap: **M15 stage 3**.
+5. **Quantities inline in steps, plus a total amount per ingredient.**
+   Demand: Tandoor's second most-voted issue, [#1325](https://github.com/TandoorRecipes/recipes/issues/1325) (20, "show the full required amount per ingredient"), [#2266](https://github.com/TandoorRecipes/recipes/issues/2266) (9) and [#2200](https://github.com/TandoorRecipes/recipes/discussions/2200).
+   Ships today: Scran and Cooklang put amounts in the step; mainstream apps do not.
+   Versioning angle: once ingredients are linked to steps, a diff can say "step 3 now uses the butter".
+   Size M. Roadmap: **backlog** ("quantities inline in steps").
+6. **Print and export (PDF, Markdown, .cook).**
+   Demand: Mealie [#1306](https://github.com/mealie-recipes/mealie/issues/1306) (20, open); on HN the PurePlates thread calls export the most important feature ([HN 41698328](https://news.ycombinator.com/item?id=41698328)); Paprika's print output gets praise ([HN 25849698](https://news.ycombinator.com/item?id=25849698)).
+   Ships today: Paprika and Tandoor; Mealie exports JSON only ([Cooklang comparison](https://cooklang.org/blog/42-tandoor-vs-mealie-vs-kitchenowl/)).
+   Versioning angle: export the full history, which no competitor can.
+   Size S (print) to M (archive). Roadmap: **backlog print + M16**.
+7. **Alternative and optional ingredients, with substitutions.**
+   Demand: Mealie [#3717](https://github.com/mealie-recipes/mealie/discussions/3717) (37); Tandoor [#1962](https://github.com/TandoorRecipes/recipes/discussions/1962) (6) and [#2724](https://github.com/TandoorRecipes/recipes/discussions/2724); allergen flags, Mealie [#6854](https://github.com/mealie-recipes/mealie/issues/6854).
+   Ships today: Plan to Eat offers per-ingredient swaps ([help page](https://learn.plantoeat.com/help/instant-ingredient-suggestions)); Samsung Food+ does AI swaps.
+   Versioning angle: show swaps backed by evidence, e.g. "4 forks replace butter with oil", counted from fork diffs.
+   Size M. Roadmap: **new**.
+8. **A recipe as an ingredient (sub-recipes).** Pie crust, stock, sauces.
+   Demand: Mealie's second most-upvoted request, [#1761](https://github.com/mealie-recipes/mealie/discussions/1761) (101).
+   Ships today: none of Paprika, Crouton, Pestle or AnyList claim it; whether Tandoor's step recipes do is unverified.
+   Versioning angle: the link pins a version ("uses Crust v2; v3 available, see diff"), the way a lockfile pins a dependency.
+   Size M–L. Roadmap: **new**.
+9. **Variants grouped under one parent.** Show a recipe's forks on its page instead of as separate recipes cluttering the feed.
+   Demand: Mealie [#880](https://github.com/mealie-recipes/mealie/discussions/880) asks for exactly this: "point them to a parent recipe… When you go to the parent recipe it would show you all the child recipe available."
+   Ships today: nobody; Fork's `parentId` already stores the link.
+   Size S. Roadmap: **backlog** (fork count opens a list of forks) and M5.
+10. **Household and friend sharing.**
+    Demand: on HN, "My only wish is they would implement a "family" option where I could easily share my library of recipes" ([HN 25849698](https://news.ycombinator.com/item?id=25849698)) and "If I had 1 request it would be a way to share recipes with friends" ([HN 29164882](https://news.ycombinator.com/item?id=29164882)); Mealie households [#2134](https://github.com/mealie-recipes/mealie/discussions/2134) (38) and [#2456](https://github.com/mealie-recipes/mealie/discussions/2456) (16).
+    Ships today: Pestle Households, AnyList, Crouton through iCloud.
+    Versioning angle: a shared library where every edit is attributed and reversible, so letting a partner edit is safe.
+    Size M. Roadmap: **sharing defaults + M6**.
+11. **Photos: several per recipe, per step, and from cooks.**
+    Demand: Tandoor [#1446](https://github.com/TandoorRecipes/recipes/issues/1446) (18) and [#287](https://github.com/TandoorRecipes/recipes/issues/287) (10); Mealie [#4134](https://github.com/mealie-recipes/mealie/discussions/4134) (23) and [#885](https://github.com/mealie-recipes/mealie/discussions/885) (19); on HN deng wants "real photos of how the result actually looks" ([HN 43553031](https://news.ycombinator.com/item?id=43553031)).
+    Ships today: Paprika (several images); Untappd and Strava put photos on check-ins.
+    Versioning angle: photos from attempts sit on the version that was cooked, so the gallery shows how the dish changed.
+    Size M. Roadmap: partly M17.
+12. **Grocery list from one or more recipes, sorted by aisle.**
+    Demand: Mealie [#1899](https://github.com/mealie-recipes/mealie/discussions/1899) (41) and [#5240](https://github.com/mealie-recipes/mealie/discussions/5240) (17); Bring! integration, Tandoor [#911](https://github.com/TandoorRecipes/recipes/issues/911) (18) and Mealie [#790](https://github.com/mealie-recipes/mealie/discussions/790) (24).
+    Ships today: AnyList (store layouts, Siri and Alexa; [features](https://www.anylist.com/features)), Paprika, ReciMe.
+    Versioning angle: weak; the list remembers the version and multiplier.
+    Size M. Roadmap: **new**; it sits next to M21 pantry.
+13. **Nutrition per serving.**
+    Demand: Mealie [#2748](https://github.com/mealie-recipes/mealie/discussions/2748) (65) and [#3743](https://github.com/mealie-recipes/mealie/discussions/3743) (37).
+    Ships today: Samsung Food, Cronometer.
+    Versioning angle: the diff shows the nutrition change ("−120 kcal per serving since v2").
+    Size M. Roadmap: **backlog**, after M12. PRODUCT.md currently excludes macros.
+14. **Import from a photo or PDF (OCR).**
+    Demand: Mealie [#1588](https://github.com/mealie-recipes/mealie/discussions/1588) (59), [#660](https://github.com/mealie-recipes/mealie/discussions/660) (15) and [#4260](https://github.com/mealie-recipes/mealie/discussions/4260) (13).
+    Ships today: Crouton, ReciMe (also handwriting), Pestle Pro.
+    Versioning angle: v1 is "as written on Grandma's card", which keeps the family record honest.
+    Size L. Roadmap: **M15 stage 4**.
+15. **Meal plan with iCal export.**
+    Demand: Mealie [#850](https://github.com/mealie-recipes/mealie/discussions/850) (50).
+    Ships today: Paprika, AnyList, Crouton, Pestle, ReciMe, Tandoor.
+    Versioning angle: little. Crowded and far from Fork's position.
+    Size L. Roadmap: **new**; recommend not building soon.
+
+Seen but not ranked: translating a recipe, Mealie [#3918](https://github.com/mealie-recipes/mealie/discussions/3918) (35) and [#1684](https://github.com/mealie-recipes/mealie/discussions/1684) (22); searching by excluded tags, [#3396](https://github.com/mealie-recipes/mealie/discussions/3396) (17); an equipment list, Tandoor [#301](https://github.com/TandoorRecipes/recipes/issues/301) (8); ranges such as "2–3 cloves", Mealie [#2989](https://github.com/mealie-recipes/mealie/discussions/2989) (13). There is also a scaling bug every scaler should test for: Paprika scales "1 large onion… about 2 cups" to "2 large onion" and leaves the cups unchanged ([HN 25849830](https://news.ycombinator.com/item?id=25849830)).
+
+## (b) Five gaps no popular app fills
+
+1. **The cook log tied to the version.** Meal-log apps (Fava, Larder, Cooked This) do not version recipes, and recipe managers do not log cooks. No app answers "which version did I make last time, and did the change help?". The versioning request is still an open discussion in Mealie ([#880](https://github.com/mealie-recipes/mealie/discussions/880)).
+2. **Substitutions with evidence behind them.** NYT Cooking's public notes are unstructured free text, and AI swaps are guesses. Nobody counts what real cooks actually changed. Fork's fork diffs can count it.
+3. **Sub-recipes pinned to a version.** The top Mealie request after unit conversion, with no change tracking anywhere.
+4. **A cook mode that works with a screen reader on the web.** A 2026 test found "Screen readers read the entire ingredient card before reaching step one, which is not how a cook works" and that the category scores poorly on screen readers ([Recipy](https://recipyapp.com/blog/ai-cooking-blind-low-vision-2026)). The one app built for blind cooks is iOS-only and voice-first ([APH](https://aphconnectcenter.org/technology/accessible-cooking-apps-for-blind-and-low-vision/)).
+5. **Formatting for neurodivergent cooks** (compound steps split into single actions, prep grouped first, actions in bold) exists only in niche apps: Scran, [Cooktus](https://www.informationisbeautifulawards.com/showcase/7305-cooktus-recepices-your-don-t-have-to-read), and a [UW thesis](https://minds.wisc.edu/items/c95e5e3c-6e21-4a3b-a047-363db4f0ac4d/full). No mainstream app offers it as a reading option.
+
+## (c) Social and versioning concept sketch
+
+1. The atom is a **cook**: a recipe, a version, a multiplier, an optional photo, one line of note, and optional tweaks. It is Strava's activity, Letterboxd's diary entry and Untappd's check-in.
+2. Tweaks are a structured diff against the version cooked. "Save as my take" turns them into a fork, and the fork credits the cook that produced it.
+3. The feed shows friends' cooks, not new recipes. Each card is the photo plus the diff chip ("v3 · −sugar, +miso"), so the diff is the thing people share.
+4. Kudos is one tap, the way Strava designed it to be easier than a comment ([Strava design](https://medium.com/strava-design/understanding-how-athletes-use-the-feed-aae986eaa818)). Comments come later (M3).
+5. A recipe page gains "cooked 14 times · 3 takes", which opens the cooks and the forks as one timeline.
+6. Your profile is a diary grid, as on Letterboxd: re-cooks count, and there is a year in review ("you made 41 recipes; most-changed: focaccia, 6 versions").
+7. Ranking by comparison, as on Beli: after a cook, ask "better or worse than last time?". It is cheaper than stars and directly useful to the cook ([Beli](https://startupsignals.substack.com/p/beli-your-food-diary-and-dining-advisor)).
+8. Trends from data Fork already holds: most forked this week, most cooked, and the most common tweak per recipe.
+9. A goal on the Goodreads model, "cook 52 new recipes this year", opt-in. No streak guilt by default.
+10. This answers the Recipes / My Recipes / Favorites question: Feed (friends' cooks), Cookbook (yours, your takes and saved recipes), Diary (your cooks).
+
+## (d) Accessibility and reaching more people
+
+- Order steps first for screen readers: a skip link to the method, each step a list item, and the current step announced in cook mode through `aria-live` ([Recipy](https://recipyapp.com/blog/ai-cooking-blind-low-vision-2026)).
+- Every control labelled; no images that carry ingredient text; no focus traps in dialogs.
+- Read steps aloud: `speechSynthesis` in cook mode, with "next" and "repeat". Voice commands are optional and later.
+- A large-type mode beyond M18's one-step bump: 150% and 200% sizes, and a layout that holds at 200% zoom.
+- A reading option that splits compound steps into single actions and bolds verbs and amounts (gap 5); an optional dyslexia-friendly typeface and wider line spacing.
+- Pair every colour cue with a text or time cue: ticks, diff colours, doneness ("until golden, about 8 min").
+- Metric, US and imperial units, °C/°F, and locale-aware decimals and fractions (candidate 2). Long run: translation (Mealie [#3918](https://github.com/mealie-recipes/mealie/discussions/3918)).
+- Allergen flags derived from ingredient names, plus substitutions (candidate 7). Always label them as estimates.
+- Print view and offline reading for kitchens without signal; a PWA cache of recently viewed recipes (M14).
+- Tap targets of at least 44px for wet or floury hands; cook mode advances by keyboard and by tapping anywhere on the screen.
+
+## (e) Sources
+
+- Vote counts from the GitHub API, 31 October 2026: [Mealie discussions](https://github.com/mealie-recipes/mealie/discussions), [Mealie issues](https://github.com/mealie-recipes/mealie/issues?q=is%3Aissue+sort%3Areactions-%2B1-desc), [Tandoor issues](https://github.com/TandoorRecipes/recipes/issues?q=is%3Aissue+sort%3Areactions-%2B1-desc).
+- HN: [43553031](https://news.ycombinator.com/item?id=43553031), [25849698](https://news.ycombinator.com/item?id=25849698), [29164882](https://news.ycombinator.com/item?id=29164882), [45565120](https://news.ycombinator.com/item?id=45565120) ("blind people could have custom recipe settings for their needs"), [41698328](https://news.ycombinator.com/item?id=41698328), [2087598](https://news.ycombinator.com/item?id=2087598).
+- Competitors: [Paprika](https://www.paprikaapp.com/), [Crouton](https://crouton.app/), [Pestle](https://pestlechef.app/) (Cook Together over SharePlay, Households), [ReciMe](https://www.recime.app/), [AnyList](https://www.anylist.com/features), [Samsung Food launch](https://news.samsung.com/global/samsung-announces-global-launch-of-samsung-food-an-ai-powered-personalized-food-and-recipe-service), [NYT Cooking on the App Store](https://apps.apple.com/us/app/nyt-cooking-quick-tasty-meals/id911422904), [Mela on the App Store](https://apps.apple.com/gb/app/id1548466041), [Tandoor vs Mealie vs KitchenOwl](https://cooklang.org/blog/42-tandoor-vs-mealie-vs-kitchenowl/). The Samsung Food site returned 403; its claims come from the press release.
+- Social: [Strava design research](https://medium.com/strava-design/understanding-how-athletes-use-the-feed-aae986eaa818), [Beli](https://startupsignals.substack.com/p/beli-your-food-diary-and-dining-advisor), [Untappd](https://en.wikipedia.org/wiki/Untappd), [Goodreads challenge](https://www.goodreads.com/blog/show/1130), [Letterboxd design guide](https://blakecrosley.com/guides/design/letterboxd), and cook-log apps via [Crumble's roundup](https://crumble.me/guides/letterboxd-for-restaurants) (fava-app.com could not be fetched).
+- Accessibility: [APH ConnectCenter](https://aphconnectcenter.org/technology/accessible-cooking-apps-for-blind-and-low-vision/), [Recipy 2026 test](https://recipyapp.com/blog/ai-cooking-blind-low-vision-2026) (written by a vendor), [Cooktus](https://www.informationisbeautifulawards.com/showcase/7305-cooktus-recepices-your-don-t-have-to-read), [UW thesis](https://minds.wisc.edu/items/c95e5e3c-6e21-4a3b-a047-363db4f0ac4d/full), [Plan to Eat substitutions](https://learn.plantoeat.com/help/instant-ingredient-suggestions).
+- Not verified: whether Tandoor supports sub-recipes; Samsung Food's current features; Fava's feature list.
