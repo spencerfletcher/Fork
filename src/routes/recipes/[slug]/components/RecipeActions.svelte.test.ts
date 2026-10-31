@@ -65,6 +65,22 @@ describe('RecipeActions save button', () => {
 		expect(star).toHaveAttribute('aria-hidden', 'true');
 	});
 
+	test('the favorited star is a marigold fill on an ink edge, not clay', () => {
+		render(RecipeActions, { props: makeProps({ initialFavorited: true }) });
+		const star = screen.getByRole('button', { name: 'Favorited' }).querySelector('svg')!;
+		expect(star).toHaveClass('fill-marigold');
+		expect(star).not.toHaveClass('fill-accent');
+		expect(star).not.toHaveClass('text-accent');
+		expect(star).toHaveAttribute('stroke', 'currentColor');
+	});
+
+	test('the unpressed star stays an outline in the button ink', () => {
+		render(RecipeActions, { props: makeProps({ initialFavorited: false }) });
+		const star = screen.getByRole('button', { name: 'Favorite' }).querySelector('svg')!;
+		expect(star).toHaveClass('fill-none');
+		expect(star).not.toHaveClass('fill-marigold');
+	});
+
 	test('follows the prop when the page moves to a recipe with a different state', async () => {
 		// Navigating from one recipe to another (e.g. a fork's "Forked from" link)
 		// reuses this component, so only the prop changes.

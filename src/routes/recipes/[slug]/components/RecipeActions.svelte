@@ -47,9 +47,8 @@
 {#snippet starIcon(filled: boolean)}
 	<svg
 		class="size-4 transition-[fill] duration-150"
-		class:fill-accent={filled}
+		class:fill-marigold={filled}
 		class:fill-none={!filled}
-		class:text-accent={filled}
 		xmlns="http://www.w3.org/2000/svg"
 		viewBox="0 0 24 24"
 		aria-hidden="true"
