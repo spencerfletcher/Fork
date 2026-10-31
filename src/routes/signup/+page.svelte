@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { pendingEnhance } from '#lib/pendingEnhance.svelte.js';
 	import { EMAIL_MESSAGE, emailCheck, firstInvalid } from '#lib/auth/emailCheck.svelte.js';
 	import { loginHref } from '#lib/auth/loginHref.js';
 	import {
@@ -20,7 +21,7 @@
 	} = $props();
 
 	// Disabled while the request is out, so a second press cannot send it twice.
-	let pending = $state(false);
+	const submit = pendingEnhance();
 
 	// A stopped submit fires invalid on every failing field in order, and the
 	// browser bubbles over the first one not cancelled. The email and username
@@ -69,16 +70,7 @@
 			</div>
 		{/if}
 
-		<form
-			method="POST"
-			use:enhance={() => {
-				pending = true;
-				return async ({ update }) => {
-					await update();
-					pending = false;
-				};
-			}}
-			class="form">
+		<form method="POST" use:enhance={submit.submit} class="form">
 			<div class="field">
 				<label for="email">Email</label>
 				<input
@@ -157,9 +149,9 @@
 			<button
 				type="submit"
 				class="btn-primary auth-submit"
-				disabled={pending}
+				disabled={submit.pending}
 				{...emailField.button}>
-				{pending ? 'Creating account…' : 'Create account'}
+				{submit.pending ? 'Creating account…' : 'Create account'}
 			</button>
 			<p class="form-hint confirm-note">We'll email you a link to confirm.</p>
 		</form>

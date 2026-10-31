@@ -1,12 +1,13 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { pendingEnhance } from '#lib/pendingEnhance.svelte.js';
 	import { PASSWORD_MIN } from '#lib/auth/rules.js';
 
 	let { form, data }: { form: { message?: string } | null; data: { linkValid: boolean } } =
 		$props();
 
 	// Disabled while the request is out, so a second press cannot send it twice.
-	let pending = $state(false);
+	const submit = pendingEnhance();
 </script>
 
 <div class="auth-page">
@@ -21,16 +22,7 @@
 				<div class="auth-error" role="alert">{form.message}</div>
 			{/if}
 
-			<form
-				method="POST"
-				use:enhance={() => {
-					pending = true;
-					return async ({ update }) => {
-						await update();
-						pending = false;
-					};
-				}}
-				class="form">
+			<form method="POST" use:enhance={submit.submit} class="form">
 				<div class="field">
 					<label for="password">New password</label>
 					<input
@@ -44,8 +36,8 @@
 					<p class="form-hint" id="password-hint">At least {PASSWORD_MIN} characters</p>
 				</div>
 
-				<button type="submit" class="btn-primary auth-submit" disabled={pending}>
-					{pending ? 'Setting password…' : 'Set password'}
+				<button type="submit" class="btn-primary auth-submit" disabled={submit.pending}>
+					{submit.pending ? 'Setting password…' : 'Set password'}
 				</button>
 			</form>
 		{:else}

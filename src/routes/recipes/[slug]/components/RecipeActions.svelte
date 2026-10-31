@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { goto } from '$app/navigation';
-	import { page } from '$app/state';
+	import { setShallowParam } from './shallowParam';
 	import type { Recipe } from '#lib/server/db/schema.js';
 	import { forkIcon, starIcon } from './Icons.svelte';
 
@@ -36,14 +35,10 @@
 	let error = $state('');
 
 	// The URL carries ?cook=1 so a reload or a shared link stays in the mode.
-	// The scaler's shallow replace leaves page.url behind, so the newest URL
-	// is page.shallow's when there is one.
 	function toggleCook() {
-		const url = new URL((page.shallow?.url ?? page.url).href);
-		if (cooking) url.searchParams.delete('cook');
-		else url.searchParams.set('cook', '1');
-		oncook(!cooking);
-		goto(url, { shallow: true, replace: true, state: page.state });
+		const next = !cooking;
+		oncook(next);
+		setShallowParam('cook', next ? '1' : null);
 	}
 
 	// The screen stays awake while cooking. The browser drops the lock when

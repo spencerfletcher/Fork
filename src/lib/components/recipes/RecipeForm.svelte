@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import { enhance, type SubmitFunction } from '$app/forms';
+	import { enhance } from '$app/forms';
+	import { pendingEnhance } from '#lib/pendingEnhance.svelte.js';
 	import { beforeNavigate } from '$app/navigation';
 	import {
 		parseDraftContent,
@@ -98,7 +99,7 @@
 		if (blocked && errorCount > 0) {
 			return errorCount === 1 ? '1 field needs attention' : `${errorCount} fields need attention`;
 		}
-		if (!dirty || submitting || !nextVersion || groups === null) return '';
+		if (!dirty || save.pending || !nextVersion || groups === null) return '';
 		// A typed message is never dropped: the save writes a version carrying it.
 		if (groups.length > 0 || draft.commitMessage.trim()) return `saves as v${nextVersion}`;
 		if (settingsChanged) return 'saves settings only';
@@ -144,7 +145,7 @@
 	// Focus waits for the fieldset to be enabled again: the failed action's
 	// result lands while the form is still marked submitting.
 	$effect(() => {
-		if (!form || submitting) return;
+		if (!form || save.pending) return;
 		const name = fieldOfMessage(form.error);
 		if (!name) return;
 		errors[name] = form.error;
@@ -169,15 +170,7 @@
 
 	// Fields are disabled while saving, so nothing typed mid-request is lost by
 	// the redirect. FormData is built before this runs, so the submission is whole.
-	let submitting = $state(false);
-
-	const track: SubmitFunction = () => {
-		submitting = true;
-		return async ({ update }) => {
-			await update({ reset: false });
-			submitting = false;
-		};
-	};
+	const save = pendingEnhance({ reset: false });
 
 	// On a phone the bar covers the screen's bottom edge. A tall box tabbed into
 	// with only its top showing counts as in view, so the browser neither
@@ -199,7 +192,7 @@
 	// our wording, so cancelling there hands the question to the browser. The
 	// save's own redirect happens while submitting, which never asks.
 	beforeNavigate((navigation) => {
-		if (!dirty || submitting) return;
+		if (!dirty || save.pending) return;
 		if (
 			navigation.type === 'leave' ||
 			!confirm('Leave without saving? Your changes will be lost.')
@@ -221,7 +214,7 @@
 	method="POST"
 	{action}
 	enctype="multipart/form-data"
-	use:enhance={track}
+	use:enhance={save.submit}
 	class="form"
 	onfocusout={(e) => {
 		if (edited[(e.target as HTMLInputElement).name]) validate(e.target);
@@ -233,7 +226,7 @@
 		edited[name] = true;
 		if (errors[name]) validate(e.target);
 	}}>
-	<fieldset disabled={submitting} class="contents">
+	<fieldset disabled={save.pending} class="contents">
 		{#if draft.editRevision}
 			<input type="hidden" name="editRevision" value={draft.editRevision} />
 		{/if}
@@ -339,8 +332,8 @@
 		{/if}
 
 		<div class="form-actions" bind:this={actions}>
-			<button type="submit" class="btn-primary" disabled={submitting}>
-				{submitting ? 'Saving…' : submitLabel}
+			<button type="submit" class="btn-primary" disabled={save.pending}>
+				{save.pending ? 'Saving…' : submitLabel}
 			</button>
 			<a href={cancelHref} class="btn-ghost">Cancel</a>
 		</div>

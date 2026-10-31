@@ -1,6 +1,5 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
-	import { page } from '$app/state';
+	import { setShallowParam } from './shallowParam';
 	import { MIN_SERVES, formatServes, parseServes } from '#lib/recipes/scale.js';
 
 	let {
@@ -15,17 +14,11 @@
 	} = $props();
 
 	// The URL carries the serves so a scaled link shares, and drops them at
-	// the stored value. A shallow replace: no navigation, no history entry per
-	// press (goto's form of replaceState, which SvelteKit 3 deprecates). That
-	// replace leaves page.url behind, so it builds on page.shallow's URL when
-	// there is one, keeping Cook's ?cook=1.
+	// the stored value.
 	function set(next: number) {
 		const rounded = Number(formatServes(next));
 		onchange(rounded);
-		const url = new URL((page.shallow?.url ?? page.url).href);
-		if (rounded === stored) url.searchParams.delete('serves');
-		else url.searchParams.set('serves', formatServes(rounded));
-		goto(url, { shallow: true, replace: true, state: page.state });
+		setShallowParam('serves', rounded === stored ? null : formatServes(rounded));
 	}
 
 	// Applied on change (blur, Enter, which blurs, or a step of the spinner or

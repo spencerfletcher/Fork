@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { pendingEnhance } from '#lib/pendingEnhance.svelte.js';
 	import { EMAIL_MESSAGE, emailCheck } from '#lib/auth/emailCheck.svelte.js';
 
 	import { pageTitle } from '#lib/seo.js';
@@ -13,7 +14,7 @@
 	} = $props();
 
 	// Disabled while the request is out, so a second press cannot send it twice.
-	let pending = $state(false);
+	const submit = pendingEnhance({ done: () => (again = false) });
 
 	const emailField = emailCheck();
 
@@ -56,17 +57,7 @@
 				<div class="auth-error" role="alert">{form.message}</div>
 			{/if}
 
-			<form
-				method="POST"
-				use:enhance={() => {
-					pending = true;
-					return async ({ update }) => {
-						await update();
-						pending = false;
-						again = false;
-					};
-				}}
-				class="form">
+			<form method="POST" use:enhance={submit.submit} class="form">
 				<div class="field">
 					<label for="email">Email</label>
 					<input
@@ -89,9 +80,9 @@
 				<button
 					type="submit"
 					class="btn-primary auth-submit"
-					disabled={pending}
+					disabled={submit.pending}
 					{...emailField.button}>
-					{pending ? 'Sending…' : 'Send reset link'}
+					{submit.pending ? 'Sending…' : 'Send reset link'}
 				</button>
 			</form>
 		{/if}
