@@ -4,7 +4,12 @@ import { parseContent, parseSettings, draftOf } from '#lib/recipes/validation.js
 import { recipes, recipeVersions } from '#lib/server/db/schema.js';
 import { eq, desc, sql } from 'drizzle-orm';
 import type { PageServerLoad, Actions } from './$types';
-import { contentChanged, changedGroups, generatedCommitMessage } from '#lib/recipes/content.js';
+import {
+	contentChanged,
+	changedGroups,
+	generatedCommitMessage,
+	recipeCopies
+} from '#lib/recipes/content.js';
 import { sameTags } from '#lib/recipes/tags.js';
 import type { RecipeContent } from '#lib/recipes/types.js';
 import {
@@ -107,8 +112,7 @@ export const actions: Actions = {
 				const imageUrl = image ? image.url : draft.removeImage ? null : (latest?.imageUrl ?? null);
 				const submitted: RecipeContent = { ...content.value, imageUrl };
 				const changed = latest ? contentChanged(latest, submitted) : true;
-				const { title, description, servings, prepTimeMinutes, cookTimeMinutes } = submitted;
-				const copies = { title, description, servings, prepTimeMinutes, cookTimeMinutes, imageUrl };
+				const copies = recipeCopies(submitted);
 
 				const tagsChanged = !sameTags(
 					recipe.recipesToTags.map((r) => r.tag.name),

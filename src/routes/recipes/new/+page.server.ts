@@ -12,6 +12,7 @@ import {
 } from '#lib/server/images.js';
 import { syncTags, listTags } from '#lib/server/tags.js';
 import type { RecipeContent } from '#lib/recipes/types.js';
+import { recipeCopies } from '#lib/recipes/content.js';
 import { ensureProfile } from '#lib/server/profiles.js';
 import { loginHref } from '#lib/auth/loginHref.js';
 
@@ -55,8 +56,8 @@ export const actions: Actions = {
 		}
 
 		const submitted: RecipeContent = { ...content.value, imageUrl: image?.url ?? null };
-		const { ingredients, steps, ...meta } = submitted;
-		const slug = `${slugify(meta.title)}-${randomSuffix()}`;
+		const copies = recipeCopies(submitted);
+		const slug = `${slugify(copies.title)}-${randomSuffix()}`;
 
 		try {
 			await db.transaction(async (tx) => {
@@ -65,7 +66,7 @@ export const actions: Actions = {
 					.values({
 						slug,
 						// Copies of version 1, per the ownership rule in schema.ts.
-						...meta,
+						...copies,
 						isPublic: settings.value.isPublic,
 						authorId: user.id
 					})
@@ -77,9 +78,7 @@ export const actions: Actions = {
 					recipeId: recipe.id,
 					versionNumber: 1,
 					commitMessage: 'Initial recipe',
-					...meta,
-					ingredients,
-					steps,
+					...submitted,
 					createdBy: user.id
 				});
 			});

@@ -5,6 +5,7 @@ import { eq, desc, and, count } from 'drizzle-orm';
 import { slugify, randomSuffix } from '#lib/helpers.js';
 import { ensureProfile } from '#lib/server/profiles.js';
 import type { RecipeContent } from '#lib/recipes/types.js';
+import { recipeCopies } from '#lib/recipes/content.js';
 import { absoluteImage, clampDescription } from '#lib/seo.js';
 import { gramsFor } from '#lib/server/ingredientDensities.js';
 import { canView } from '#lib/server/visibility.js';
@@ -140,18 +141,9 @@ export const actions: Actions = {
 
 		// One snapshot of the latest version is the whole content of the fork;
 		// the source row contributes only its settings and lineage.
-		const {
-			title,
-			description,
-			servings,
-			prepTimeMinutes,
-			cookTimeMinutes,
-			imageUrl,
-			ingredients,
-			steps
-		} = latestVersion;
-		const meta = { title, description, servings, prepTimeMinutes, cookTimeMinutes, imageUrl };
-		const snapshot: RecipeContent = { ...meta, ingredients, steps };
+		const copies = recipeCopies(latestVersion);
+		const { ingredients, steps } = latestVersion;
+		const snapshot: RecipeContent = { ...copies, ingredients, steps };
 		const slug = `${slugify(snapshot.title)}-${randomSuffix()}`;
 
 		let newSlug: string | null = null;
@@ -163,7 +155,7 @@ export const actions: Actions = {
 					authorId: user.id,
 					slug,
 					// Copies of version 1, per the ownership rule in schema.ts.
-					...meta,
+					...copies,
 					isPublic: source.isPublic,
 					parentId: source.id,
 					forkedAt: new Date()

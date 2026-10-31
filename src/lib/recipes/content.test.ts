@@ -3,8 +3,11 @@ import {
 	changedGroups,
 	contentChanged,
 	generatedCommitMessage,
+	recipeCopies,
 	type ContentGroup
 } from './content';
+import { getTableColumns } from 'drizzle-orm';
+import { recipes, recipeVersions } from '#lib/server/db/schema.js';
 import { makeContent, makeIngredient, makeStep } from './fixtures';
 import type { RecipeContent } from './types';
 
@@ -61,5 +64,53 @@ describe('generatedCommitMessage', () => {
 		expect(generatedCommitMessage(['servings', 'ingredients'])).toBe(
 			'Updated servings, ingredients'
 		);
+	});
+});
+
+describe('recipeCopies', () => {
+	// What a version holds that is not content, and the content that lives on
+	// versions only. Every other version column must be copied to the recipe
+	// row, so a new content column cannot be forgotten by create, edit or fork.
+	const VERSION_ONLY = [
+		'id',
+		'recipeId',
+		'versionNumber',
+		'commitMessage',
+		'createdAt',
+		'createdBy',
+		'ingredients',
+		'steps'
+	];
+
+	const content = makeContent({
+		title: 'Soup',
+		description: 'Warm.',
+		servings: 6,
+		prepTimeMinutes: 5,
+		cookTimeMinutes: 40,
+		imageUrl: 'https://img/soup.png'
+	});
+
+	test('copies every version column that is not named as version-only', () => {
+		const expected = Object.keys(getTableColumns(recipeVersions)).filter(
+			(c) => !VERSION_ONLY.includes(c)
+		);
+		expect(Object.keys(recipeCopies(content)).sort()).toEqual(expected.sort());
+	});
+
+	test('every copy is a column of the recipe row', () => {
+		const columns = Object.keys(getTableColumns(recipes));
+		for (const key of Object.keys(recipeCopies(content))) expect(columns).toContain(key);
+	});
+
+	test('the copies carry the content values', () => {
+		expect(recipeCopies(content)).toEqual({
+			title: content.title,
+			description: content.description,
+			servings: content.servings,
+			prepTimeMinutes: content.prepTimeMinutes,
+			cookTimeMinutes: content.cookTimeMinutes,
+			imageUrl: content.imageUrl
+		});
 	});
 });
