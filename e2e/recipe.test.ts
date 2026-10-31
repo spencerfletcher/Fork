@@ -502,7 +502,7 @@ test.describe('Recipe detail page', () => {
 		// A long method: the seed's six steps are shorter than the ingredients,
 		// which leaves the sticky column nothing to do.
 		await page.evaluate(() => {
-			const list = document.querySelector('#method h2 + div')!;
+			const list = document.querySelector('#method ol')!;
 			for (let i = 0; i < 4; i++) list.append(...[...list.children].map((c) => c.cloneNode(true)));
 		});
 		await page.mouse.wheel(0, 1000);
@@ -801,12 +801,11 @@ test.describe('Recipe detail page', () => {
 	test('a row focused by Tab or Shift+Tab shows whole, ring and all, clear of the screen edge and the tab bar', async ({
 		page
 	}) => {
-		// Every check-off row in reading order, then back again; at a desktop width
-		// both lists at once, on a phone each tab in turn.
+		// Every check-off row in reading order, then back again, at a desktop width
+		// and on a phone's Ingredients tab; method steps have no ticks.
 		const runs = [
 			{ width: 1280, height: 800, tab: null },
-			{ width: 390, height: 844, tab: 'Ingredients' },
-			{ width: 390, height: 844, tab: 'Method' }
+			{ width: 390, height: 844, tab: 'Ingredients' }
 		];
 		for (const { width, height, tab } of runs) {
 			await page.setViewportSize({ width, height });
@@ -1062,21 +1061,17 @@ test.describe('Recipe detail page', () => {
 		await gotoClassicCookies(page);
 		const recipeUrl = page.url().split('?')[0];
 		const ingredient = page.locator('#ingredients input').nth(1);
-		const step = page.locator('#method input').nth(2);
 		await page.locator('#ingredients label').nth(1).click();
-		await page.locator('#method label').nth(2).click();
 		await page.reload();
 		await expect(ingredient).toBeChecked();
-		await expect(step).toBeChecked();
-		await expect(page.locator('#recipe input:checked')).toHaveCount(2);
+		await expect(page.locator('#recipe input:checked')).toHaveCount(1);
 		// A new window on the same storage origin has them too: localStorage, not
 		// one tab's sessionStorage.
 		const other = await browser.newContext({ storageState: await page.context().storageState() });
 		const tab = await other.newPage();
 		await tab.goto(recipeUrl);
 		await expect(tab.locator('#ingredients input').nth(1)).toBeChecked();
-		await expect(tab.locator('#method input').nth(2)).toBeChecked();
-		await expect(tab.locator('#recipe input:checked')).toHaveCount(2);
+		await expect(tab.locator('#recipe input:checked')).toHaveCount(1);
 		await other.close();
 		// v2 is another version: none of v3's ticks carry over.
 		await page.goto(`${recipeUrl}?version=2`);
@@ -1085,12 +1080,9 @@ test.describe('Recipe detail page', () => {
 		// Back on v3 by its own link, without a reload, they are still there.
 		await page.getByRole('link', { name: 'Back to v3' }).click();
 		await expect(ingredient).toBeChecked();
-		await expect(step).toBeChecked();
 	});
 
-	test('a method numeral sits 10px from its text with one digit or two; the tick keeps the column start', async ({
-		page
-	}) => {
+	test('a method numeral sits 10px from its text with one digit or two', async ({ page }) => {
 		await gotoClassicCookies(page);
 		const url = page.url();
 		for (const width of [1280, 390]) {
@@ -1101,23 +1093,18 @@ test.describe('Recipe detail page', () => {
 			// The seed has no recipe of ten steps or more: copy the rendered rows to
 			// twelve and number them, so a two-digit numeral is measured in real CSS.
 			const gaps = await page.evaluate(() => {
-				const first = document.querySelector('#method label')!;
+				const first = document.querySelector('#method li')!;
 				const list = first.parentElement!;
 				while (list.children.length < 12) list.append(first.cloneNode(true));
-				return [...list.querySelectorAll('label')].map((row, i) => {
-					const [tick, numeral] = row.querySelectorAll<HTMLElement>('.tick, .tick + span');
+				return [...list.querySelectorAll('li')].map((row, i) => {
+					const numeral = row.querySelector('span')!;
 					numeral.textContent = String(i + 1);
 					const text = row.querySelector('div')!.getBoundingClientRect();
-					return {
-						tickAtStart: tick.getBoundingClientRect().x - row.getBoundingClientRect().x,
-						numeralToText: text.x - numeral.getBoundingClientRect().right
-					};
+					return text.x - numeral.getBoundingClientRect().right;
 				});
 			});
-			for (const [i, gap] of gaps.entries()) {
-				expect(gap.tickAtStart, `${width}: step ${i + 1} tick`).toBeCloseTo(0, 0);
-				expect(gap.numeralToText, `${width}: step ${i + 1} numeral to text`).toBeCloseTo(10, 0);
-			}
+			for (const [i, gap] of gaps.entries())
+				expect(gap, `${width}: step ${i + 1} numeral to text`).toBeCloseTo(10, 0);
 		}
 	});
 
@@ -1329,7 +1316,7 @@ test.describe('Landing page (logged out)', () => {
 		expect(sizes[1]).toBe(sizes[0]);
 	});
 
-	test('ticking an ingredient or a step fills its circle marigold with an ink check; the text turns Ink 3, not the circle', async ({
+	test('ticking an ingredient fills its circle marigold with an ink check; the text turns Ink 3, not the circle', async ({
 		page
 	}) => {
 		await page.setViewportSize({ width: 1280, height: 900 });
@@ -1344,28 +1331,26 @@ test.describe('Landing page (logged out)', () => {
 			for (let e: Element | null = el; e; e = e.parentElement) o *= +getComputedStyle(e).opacity;
 			return Math.round(o * 100) / 100;
 		};
-		for (const section of ['#ingredients', '#method']) {
-			const row = page.locator(`${section} label`).first();
-			const tick = row.locator('.tick');
-			await page.mouse.move(0, 0);
-			const rest = await tick.evaluate((el) => {
-				const s = getComputedStyle(el);
-				return { edge: s.borderTopColor, width: s.width, radius: s.borderTopLeftRadius };
-			});
-			expect(rest, section).toEqual({ edge: ink3, width: '16px', radius: '50%' });
-			await row.hover();
-			expect(await tick.evaluate((el) => getComputedStyle(el).borderTopColor), section).toBe(ink2);
-			await row.click();
-			const fill = await tick.evaluate((el) => getComputedStyle(el).backgroundColor);
-			expect(fill, section).toBe(marigold);
-			const check = await tick.evaluate((el) => getComputedStyle(el, '::after').borderRightColor);
-			expect(check, section).toBe(ink);
-			expect(await tick.evaluate(painted), section).toBe(1);
-			// Ink 3 at full opacity, 4.9:1 on paper; an opacity dim fell under 4.5:1.
-			const text = row.locator(section === '#ingredients' ? '.tick + span' : 'p').first();
-			expect(await text.evaluate((el) => getComputedStyle(el).color), section).toBe(ink3);
-			expect(await text.evaluate(painted), section).toBe(1);
-		}
+		const row = page.locator('#ingredients label').first();
+		const tick = row.locator('.tick');
+		await page.mouse.move(0, 0);
+		const rest = await tick.evaluate((el) => {
+			const s = getComputedStyle(el);
+			return { edge: s.borderTopColor, width: s.width, radius: s.borderTopLeftRadius };
+		});
+		expect(rest).toEqual({ edge: ink3, width: '16px', radius: '50%' });
+		await row.hover();
+		expect(await tick.evaluate((el) => getComputedStyle(el).borderTopColor)).toBe(ink2);
+		await row.click();
+		const fill = await tick.evaluate((el) => getComputedStyle(el).backgroundColor);
+		expect(fill).toBe(marigold);
+		const check = await tick.evaluate((el) => getComputedStyle(el, '::after').borderRightColor);
+		expect(check).toBe(ink);
+		expect(await tick.evaluate(painted)).toBe(1);
+		// Ink 3 at full opacity, 4.9:1 on paper; an opacity dim fell under 4.5:1.
+		const text = row.locator('.tick + span').first();
+		expect(await text.evaluate((el) => getComputedStyle(el).color)).toBe(ink3);
+		expect(await text.evaluate(painted)).toBe(1);
 	});
 
 	test('the landing hero sits on the page paper, with only the bar in espresso', async ({

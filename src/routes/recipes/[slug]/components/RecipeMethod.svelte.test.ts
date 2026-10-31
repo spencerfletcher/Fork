@@ -1,157 +1,55 @@
-import { describe, test, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/svelte';
+import { describe, test, expect } from 'vitest';
+import { render, screen } from '@testing-library/svelte';
 import RecipeMethod from './RecipeMethod.svelte';
-import source from './RecipeMethod.svelte?raw';
-import { ticksKey, loadTicks, saveTicks } from './ticks';
 import { makeStep } from '#lib/recipes/fixtures.js';
-
-const KEY = ticksKey('my-fork', 3, 'steps');
 
 describe('RecipeMethod', () => {
 	test('numbers steps by position, in the display face and clay', () => {
-		render(RecipeMethod, {
-			props: { storageKey: KEY, steps: [{ text: 'Mix.' }, { text: 'Bake.' }] }
-		});
+		render(RecipeMethod, { props: { steps: [makeStep('Mix.'), makeStep('Bake.')] } });
 		expect(screen.getByText('1')).toHaveClass('font-serif', 'text-accent');
 		expect(screen.getByText('2')).toBeInTheDocument();
 	});
 
 	test('is a section the tab bar can jump to, headed by an h2', () => {
-		const { container } = render(RecipeMethod, {
-			props: { storageKey: KEY, steps: [{ text: 'Mix.' }] }
-		});
+		const { container } = render(RecipeMethod, { props: { steps: [makeStep('Mix.')] } });
 		expect(container.querySelector('section#method')).not.toBeNull();
 		expect(screen.getByRole('heading', { level: 2, name: 'Method' })).toBeInTheDocument();
 	});
 
 	test('annotations keep their own tone', () => {
 		render(RecipeMethod, {
-			props: {
-				storageKey: KEY,
-				steps: [{ text: 'Bake.', annotation: { type: 'warning', text: 'Hot.' } }]
-			}
+			props: { steps: [makeStep('Bake.', { type: 'warning', text: 'Hot.' })] }
 		});
 		expect(screen.getByText('Hot.')).toHaveClass('text-remove');
 	});
 
 	test('keeps line breaks inside a step', () => {
-		render(RecipeMethod, {
-			props: { storageKey: KEY, steps: [{ text: 'Mix.\nRest 10 minutes.' }] }
-		});
+		render(RecipeMethod, { props: { steps: [makeStep('Mix.\nRest 10 minutes.')] } });
 		const p = screen.getByText(/Rest 10 minutes/);
 		expect(p.textContent).toBe('Mix.\nRest 10 minutes.');
 		expect(p).toHaveClass('whitespace-pre-line');
 	});
 
-	test('the circle that pictures the checkbox sits in the number column, before the numeral', () => {
-		render(RecipeMethod, { props: { storageKey: KEY, steps: [{ text: 'Mix.' }] } });
-		const tick = screen.getByRole('checkbox').closest('label')!.querySelector('.tick')!;
-		// Painted by the shared .tick rules in app.css (pinned in the ingredients
-		// test), not by its own classes.
-		expect(tick).toHaveAttribute('aria-hidden', 'true');
-		expect(tick.className).not.toMatch(/border-|bg-|rounded|size-/);
-		expect(screen.getByRole('checkbox')).toHaveClass('sr-only');
-	});
-
-	test('a ticked step turns its numeral and text Ink 3, not the circle, and keeps its strike', () => {
-		render(RecipeMethod, {
-			props: {
-				storageKey: KEY,
-				steps: [makeStep('Mix.', { type: 'warning', text: 'Hot.' })]
-			}
+	test('steps are a list a reader hears the count of, with nothing to tick and no Clear ticks', () => {
+		const { container } = render(RecipeMethod, {
+			props: { steps: [makeStep('Mix.'), makeStep('Bake.')] }
 		});
-		const row = screen.getByRole('checkbox').closest('label')!;
-		const tick = row.querySelector('.tick')!;
-		expect(row.outerHTML).not.toContain('opacity');
-		expect(row).toHaveClass('has-[:checked]:line-through');
-		expect(tick).not.toHaveClass('group-has-[:checked]:text-text-3');
-		for (const text of ['1', 'Mix.', 'Hot.']) {
-			expect(screen.getByText(text)).toHaveClass('group-has-[:checked]:text-text-3');
-		}
-	});
-
-	test('the tick is styled once, in app.css, not in the component', () => {
-		expect(source).not.toMatch(/<style>/);
-	});
-
-	test('each step is a native checkbox named by its text, toggled by clicking the row', async () => {
-		render(RecipeMethod, {
-			props: { storageKey: KEY, steps: [{ text: 'Mix.' }, { text: 'Bake.' }] }
-		});
-		const bake = screen.getByRole('checkbox', { name: /Bake\./ });
-		expect(bake).not.toBeChecked();
-		await fireEvent.click(bake.closest('label')!);
-		expect(bake).toBeChecked();
-	});
-
-	test('restores the ticks saved for this version, and saves each new one', async () => {
-		saveTicks(KEY, [0]);
-		render(RecipeMethod, {
-			props: { storageKey: KEY, steps: [{ text: 'Mix.' }, { text: 'Bake.' }] }
-		});
-		const boxes = screen.getAllByRole('checkbox');
-		await vi.waitFor(() => expect(boxes[0]).toBeChecked());
-		await fireEvent.click(boxes[1]);
-		expect(loadTicks(KEY)).toEqual([0, 1]);
-		localStorage.clear();
-	});
-
-	test('Clear ticks shows only once a step is ticked, and clears the list and its saved ticks', async () => {
-		render(RecipeMethod, {
-			props: { storageKey: KEY, steps: [makeStep('Mix.'), makeStep('Bake.')] }
-		});
+		expect(screen.getAllByRole('listitem')).toHaveLength(2);
+		expect(screen.queryByRole('checkbox')).toBeNull();
 		expect(screen.queryByRole('button', { name: 'Clear ticks' })).toBeNull();
-		await fireEvent.click(screen.getAllByRole('checkbox')[1]);
-		await fireEvent.click(screen.getByRole('button', { name: 'Clear ticks' }));
-		for (const box of screen.getAllByRole('checkbox')) expect(box).not.toBeChecked();
-		expect(loadTicks(KEY)).toEqual([]);
-		expect(screen.queryByRole('button', { name: 'Clear ticks' })).toBeNull();
+		expect(container.querySelector('.tick, label')).toBeNull();
 	});
 
-	test('Clear ticks hands keyboard focus to the first step as it goes', async () => {
-		render(RecipeMethod, {
-			props: { storageKey: KEY, steps: [makeStep('Mix.'), makeStep('Bake.')] }
-		});
-		await fireEvent.click(screen.getAllByRole('checkbox')[1]);
-		const button = screen.getByRole('button', { name: 'Clear ticks' });
-		button.focus();
-		await fireEvent.click(button);
-		expect(document.activeElement).toBe(screen.getAllByRole('checkbox')[0]);
-	});
-
-	test('the numeral sits at the end of its 55px column, 10px from the text, with one digit or two; the tick at the start', () => {
-		const steps = Array.from({ length: 12 }, (_, i) => ({ text: `Step ${i + 1}.` }));
-		render(RecipeMethod, { props: { storageKey: KEY, steps } });
+	test('the numeral sits at the end of its 55px column, 10px from the text, with one digit or two', () => {
+		const steps = Array.from({ length: 12 }, (_, i) => makeStep(`Step ${i + 1}.`));
+		render(RecipeMethod, { props: { steps } });
 		// jsdom lays nothing out, so the gaps are pinned as the classes that make
-		// them: a 55px column, the 10px grid gap, and the numeral pushed to the
-		// column's end, so the gap to the text never depends on its width.
+		// them: a 55px column, the 10px grid gap, and the numeral's box pushed to
+		// the column's end, so the gap to the text never depends on its width.
 		for (const n of ['1', '12']) {
 			const numeral = screen.getByText(n);
-			expect(numeral.closest('label')).toHaveClass('gap-2.5', '[grid-template-columns:55px_1fr]');
-			const column = numeral.parentElement!;
-			expect(column).toHaveClass('justify-between');
-			expect(column).not.toHaveClass('gap-[18px]');
-			expect(column.firstElementChild).toHaveClass('tick');
-			expect(column.lastElementChild).toBe(numeral);
+			expect(numeral).toHaveClass('justify-self-end');
+			expect(numeral.parentElement).toHaveClass('gap-2.5', '[grid-template-columns:55px_1fr]');
 		}
-	});
-
-	// A mouse click (detail 1) must not scroll the page to the first step;
-	// Enter or Space (detail 0) may, so the keyboard user sees where focus went.
-	test('Clear ticks from a mouse moves focus without scrolling; from the keyboard it scrolls', async () => {
-		const focus = vi.spyOn(HTMLInputElement.prototype, 'focus');
-		render(RecipeMethod, {
-			props: { storageKey: KEY, steps: [makeStep('Mix.'), makeStep('Bake.')] }
-		});
-		await fireEvent.click(screen.getAllByRole('checkbox')[1]);
-		await fireEvent.click(screen.getByRole('button', { name: 'Clear ticks' }), { detail: 1 });
-		expect(focus).toHaveBeenLastCalledWith({ preventScroll: true });
-		expect(document.activeElement).toBe(screen.getAllByRole('checkbox')[0]);
-
-		await fireEvent.click(screen.getAllByRole('checkbox')[1]);
-		await fireEvent.click(screen.getByRole('button', { name: 'Clear ticks' }), { detail: 0 });
-		expect(focus).toHaveBeenLastCalledWith({ preventScroll: false });
-		expect(document.activeElement).toBe(screen.getAllByRole('checkbox')[0]);
-		focus.mockRestore();
 	});
 });
