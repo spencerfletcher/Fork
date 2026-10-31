@@ -37,6 +37,7 @@ Ideas from the original MVP design that are not covered by a milestone. Kept as 
 - Ratings: a private personal rating first, crowd-sourced later if the social loop exists.
 - AI recipe generation and adaptation from a prompt or chosen ingredients, reviewed in the form before saving; M14, M15 and M17 all mention consuming it.
 - Structured tag taxonomy (diet, cuisine, meal type) instead of one flat list, when the tag count makes one filter row unwieldy.
+- Tag slugs for names with no English letters or digits (Spencer, 31 October 2026): `slugify` strips everything outside ASCII word characters, so a tag named only in another script ("日本") gets an empty slug, and a second such tag collides with it on the unique index. Needs a fallback (transliterate, or keep Unicode letters in the slug) and a check that the slug is not empty. The lowercase check (0003) already holds every writer to lowercase.
 - Rethink the Recipes / My Recipes / Favorites division (Spencer, 31 October 2026): "honestly i think the whole recipes/my recipes/favorites division needs some work - we need to decide where each of these will live and what makes sense." Deferred to the social work (priority 5, M4's feed) and M17's attempts, since his framing is "Strava but for logging meals made / recipes tried": where each list lives follows from what the feed and the log are.
 - Pantry, meal log and grocery pricing (v3 in the old plan): a separate product. Not before everything above.
 - Rejected then and still: ads, automatic prep-time estimates, "grams made" as a recipe field.
