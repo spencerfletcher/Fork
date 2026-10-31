@@ -382,14 +382,24 @@ test.describe('Recipe detail page', () => {
 		expect(photoBox!.y).toBeLessThan(ingredientsBox!.y);
 	});
 
-	test('on a phone the photo sits between the title and the byline', async ({ page }) => {
+	test('on a phone the photo closes the band, under the buttons, inset on the gutters', async ({
+		page
+	}) => {
 		await page.setViewportSize({ width: 390, height: 900 });
 		await gotoClassicCookies(page);
-		const title = await page.locator('h1').boundingBox();
+		const band = await page.locator('.hero').boundingBox();
+		const actions = await page.locator('header.recipe-header .actions').boundingBox();
 		const photo = await page.locator('.recipe-photo img').boundingBox();
-		const byline = await page.locator('.byline').boundingBox();
-		expect(photo!.y).toBeGreaterThan(title!.y + title!.height - 1);
-		expect(byline!.y).toBeGreaterThan(photo!.y + photo!.height - 1);
+		const bar = await page.locator('.version-bar').boundingBox();
+		expect(photo!.y - (actions!.y + actions!.height)).toBeCloseTo(24, 0);
+		expect(photo!.x).toBeCloseTo(18, 0);
+		expect(photo!.width).toBeCloseTo(390 - 2 * 18, 0);
+		expect(band!.y + band!.height - (photo!.y + photo!.height)).toBeCloseTo(18, 0);
+		expect(bar!.y - (band!.y + band!.height)).toBeCloseTo(18, 0);
+		const radius = await page
+			.locator('.recipe-photo img')
+			.evaluate((el) => getComputedStyle(el).borderRadius);
+		expect(radius).toBe('6px');
 	});
 
 	test('in the history every version number and every message start on the same x', async ({
@@ -641,11 +651,64 @@ test.describe('Recipe detail page', () => {
 		expect(coloredText).toBe(0);
 	});
 
-	test('the hero is the text beside the photo; below a rule, ingredients beside the method', async ({
+	test('the title band: cream, full width, the photo a 4:3 inset 24px from its top and bottom, the text centred beside it', async ({
 		page
 	}) => {
 		await page.setViewportSize({ width: 1280, height: 900 });
 		await gotoClassicCookies(page);
+		const band = page.locator('.hero');
+		expect(await band.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(
+			'rgb(239, 232, 219)'
+		);
+		const bandBox = await band.boundingBox();
+		expect(bandBox!.x).toBe(0);
+		expect(bandBox!.width).toBe(1280);
+		const photo = await page.locator('.recipe-photo img').boundingBox();
+		const text = await page.locator('.hero-text').boundingBox();
+		const bar = await page.locator('.version-bar').boundingBox();
+		// The wrap is 1200px centred: its right edge is at 40 + 1200.
+		expect(photo!.x + photo!.width).toBeCloseTo(1240, 0);
+		expect(photo!.width).toBeCloseTo(504, 0);
+		expect(photo!.height).toBeCloseTo(378, 0);
+		expect(photo!.y - bandBox!.y).toBeCloseTo(24, 0);
+		expect(bandBox!.y + bandBox!.height - (photo!.y + photo!.height)).toBeCloseTo(24, 0);
+		expect(text!.y + text!.height / 2).toBeCloseTo(photo!.y + photo!.height / 2, 0);
+		expect(text!.x + text!.width + 48).toBeCloseTo(photo!.x, 0);
+		// The version bar runs the wrap's width, 24px under the band.
+		expect(bar!.y - (bandBox!.y + bandBox!.height)).toBeCloseTo(24, 0);
+		expect(bar!.x).toBeCloseTo(40, 0);
+		expect(bar!.width).toBeCloseTo(1200, 0);
+	});
+
+	test('the description clamps at three lines with an ellipsis, desktop and phone', async ({
+		page
+	}) => {
+		await gotoClassicCookies(page);
+		const deck = page.locator('.description');
+		await deck.evaluate((el) => (el.textContent = 'A long description that runs on. '.repeat(40)));
+		for (const width of [1280, 390]) {
+			await page.setViewportSize({ width, height: 900 });
+			const { height, lineHeight, scrollHeight } = await deck.evaluate((el) => ({
+				height: el.getBoundingClientRect().height,
+				lineHeight: parseFloat(getComputedStyle(el).lineHeight),
+				scrollHeight: el.scrollHeight
+			}));
+			expect(height).toBeCloseTo(3 * lineHeight, 0);
+			expect(scrollHeight).toBeGreaterThan(height);
+		}
+	});
+
+	test('the band reads title, byline, deck, tags, measure, then the buttons; below it ingredients beside the method', async ({
+		page
+	}) => {
+		await page.setViewportSize({ width: 1280, height: 900 });
+		await gotoClassicCookies(page);
+		const tops = await Promise.all(
+			['h1', '.byline', '.description', 'header .tags', 'header .details', 'header .actions'].map(
+				async (sel) => (await page.locator(sel).first().boundingBox())!.y
+			)
+		);
+		expect([...tops].sort((a, b) => a - b)).toEqual(tops);
 		const header = await page.locator('header.recipe-header').boundingBox();
 		const photo = await page.locator('.recipe-photo img').boundingBox();
 		const deck = await page.locator('.description').boundingBox();
@@ -658,10 +721,7 @@ test.describe('Recipe detail page', () => {
 			.getByRole('heading', { name: /method/i })
 			.first()
 			.boundingBox();
-		// Hero: the photo takes the right half, top aligned with the text, 4:3 under 440px tall.
 		expect(photo!.x).toBeGreaterThan(header!.x + header!.width - 1);
-		expect(Math.abs(photo!.y - header!.y)).toBeLessThan(12);
-		expect(photo!.height).toBeLessThanOrEqual(340);
 		// The byline comes before the description, which comes before the body.
 		expect(byline!.y).toBeLessThan(deck!.y);
 		expect(ingredients!.y).toBeGreaterThan(deck!.y + deck!.height);
@@ -1417,8 +1477,8 @@ test.describe('Landing page (logged out)', () => {
 			const grid = await page.locator('.recipe-grid').first().boundingBox();
 			await gotoClassicCookies(page);
 			const title = await page.getByRole('heading', { level: 1 }).boundingBox();
-			// The hero's content box, inside its gutters.
-			const hero = await page.locator('.hero').evaluate((el) => {
+			// The band's wrap: its content box, inside its gutters.
+			const hero = await page.locator('.hero-inner').evaluate((el) => {
 				const { paddingLeft, paddingRight } = getComputedStyle(el);
 				const { x, width } = el.getBoundingClientRect();
 				return {

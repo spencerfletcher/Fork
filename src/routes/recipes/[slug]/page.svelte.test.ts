@@ -1,6 +1,7 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/svelte';
 import Page from './+page.svelte';
+import pageSource from './+page.svelte?raw';
 import type { PageData } from './$types';
 import { makeContent, makeIngredient } from '#lib/recipes/fixtures.js';
 import { FRACTIONS } from '#lib/recipes/scale.js';
@@ -17,8 +18,9 @@ vi.mock('$app/forms', () => ({ enhance: () => ({ destroy: () => {} }) }));
 
 const STORED = 4;
 
-function makeData(): PageData {
+function makeData(imageUrl: string | null = null): PageData {
 	const content = makeContent({
+		imageUrl,
 		servings: STORED,
 		ingredients: [makeIngredient('1 cup flour'), makeIngredient('salt to taste')]
 	});
@@ -100,5 +102,28 @@ describe('recipe page scaling', () => {
 		load('?serves=lots');
 		expect(screen.getByRole('textbox', { name: 'Servings' })).toHaveValue(String(STORED));
 		expect(rows()[0]).toHaveTextContent('1 cup (125g) flour');
+	});
+});
+
+describe('recipe page title band', () => {
+	test('the band holds the header, its actions and the photo after them', () => {
+		page.url = new URL('http://localhost/recipes/cookies');
+		const { container } = render(Page, { props: { data: makeData('https://img/cookies.jpg') } });
+		const band = container.querySelector('.hero')!;
+		const header = band.querySelector('header.recipe-header')!;
+		const photo = band.querySelector<HTMLElement>('.recipe-photo img')!;
+		expect(photo).not.toBeNull();
+		// Last in the band, so a stacked band reads words, buttons, then the photo.
+		expect(header.compareDocumentPosition(photo) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+		expect(band.querySelector('.hero-inner')!.lastElementChild).toContainElement(photo);
+		expect(header).toContainElement(screen.getByRole('link', { name: /Fork/ }));
+	});
+
+	test('the band is the --color-band cream, its photo a 4:3 inset of 504px', () => {
+		// jsdom applies no CSS, so the geometry is read from source; the e2e
+		// spec pins the band's computed colour.
+		expect(pageSource).toMatch(/\.hero \{[^}]*background: var\(--color-band\);/);
+		expect(pageSource).toMatch(/grid-template-columns: minmax\(0, 1fr\) 504px;/);
+		expect(pageSource).toMatch(/aspect-ratio: 4 \/ 3;/);
 	});
 });

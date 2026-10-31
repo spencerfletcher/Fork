@@ -214,6 +214,8 @@
 	/* alias of the navbar until the recipe hero is rebuilt on paper */
 	--color-tint: #f5e9e0;
 	/* clay tint — no-photo panels, hover fills */
+	--color-band: #efe8db;
+	/* deeper cream — the recipe page's title band, paper one step deeper */
 
 	/* Text on light backgrounds */
 	--color-text: #1a1714;

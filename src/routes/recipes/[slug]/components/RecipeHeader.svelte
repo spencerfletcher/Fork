@@ -39,9 +39,9 @@
 </script>
 
 <!-- One face below the title. The byline carries who, the forks and the parent; the
-     version and its note sit in the bar under the hero. Then the description,
-     the measure on one line, the tags, the actions. Nothing is boxed and
-     nothing is pinned: the column ends where it ends. Decided 29 October 2026. -->
+     version and its note sit in the bar under the band. Then the description,
+     the tags, the measure on one line, the actions (the order of the title
+     band, 31 October 2026). Nothing is boxed and nothing is pinned. -->
 <header class="recipe-header">
 	<h1 class="title m-0 font-serif font-medium">{currentVersion.title}</h1>
 
@@ -68,8 +68,6 @@
 		<p class="description m-0">{currentVersion.description}</p>
 	{/if}
 
-	<Details content={currentVersion} {storedServings} />
-
 	{#if tags.length > 0}
 		<p class="tags text-text-2 m-0 font-sans">
 			{#each tags as tag, i (tag.id)}
@@ -78,6 +76,8 @@
 			{/each}
 		</p>
 	{/if}
+
+	<Details content={currentVersion} {storedServings} />
 
 	{#if actions}
 		<div class="actions-row">{@render actions()}</div>
@@ -103,12 +103,18 @@
 	}
 
 	/* Capped at a reading measure for the one-column widths and the no-photo
-	   page, where the column is wider than the photo would leave it. */
+	   page, where the column is wider than the photo would leave it. Three
+	   lines at every width, then an ellipsis, so the band keeps its height. */
 	.description {
 		max-width: 65ch;
 		margin-top: 8px;
 		font-size: 1.0625rem;
 		line-height: 1.5;
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 3;
+		line-clamp: 3;
+		overflow: hidden;
 	}
 
 	.byline :global(a) {

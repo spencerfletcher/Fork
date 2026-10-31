@@ -47,36 +47,40 @@
 </script>
 
 <article class="min-h-dvh">
-	<!-- The hero: the recipe's text beside its photo. Title, deck and byline
-	     first, so a stranger reads what this version is before anything else. -->
+	<!-- The title band: the recipe's words on deeper cream, its photo inset at
+	     the right. Title, byline and deck first, so a stranger reads what this
+	     version is before anything else; the photo is last, so a stacked band
+	     reads words, buttons, then the photo. -->
 	<div class="hero">
-		<div class="hero-text">
-			<!-- The measure says the serves the list is scaled to, so it stays true. -->
-			<RecipeHeader
-				{recipe}
-				currentVersion={{ ...currentVersion, servings: stored > 0 ? serves : null }}
-				storedServings={stored}
-				forkCount={data.forkCount}
-				{tags}>
-				{#snippet actions()}
-					<RecipeActions
-						{recipe}
-						{canFork}
-						{canFavorite}
-						{isOwner}
-						{isViewingHistory}
-						initialFavorited={data.isFavorited}
-						{loginHref} />
-				{/snippet}
-			</RecipeHeader>
-		</div>
-		{#if currentVersion.imageUrl}
-			<figure class="recipe-photo m-0">
-				<!-- The one image above the fold: fetched first, decoded off the main
+		<div class="hero-inner">
+			<div class="hero-text">
+				<!-- The measure says the serves the list is scaled to, so it stays true. -->
+				<RecipeHeader
+					{recipe}
+					currentVersion={{ ...currentVersion, servings: stored > 0 ? serves : null }}
+					storedServings={stored}
+					forkCount={data.forkCount}
+					{tags}>
+					{#snippet actions()}
+						<RecipeActions
+							{recipe}
+							{canFork}
+							{canFavorite}
+							{isOwner}
+							{isViewingHistory}
+							initialFavorited={data.isFavorited}
+							{loginHref} />
+					{/snippet}
+				</RecipeHeader>
+			</div>
+			{#if currentVersion.imageUrl}
+				<figure class="recipe-photo m-0">
+					<!-- The one image above the fold: fetched first, decoded off the main
 				     thread. Decorative: the h1 beside it already names the recipe. -->
-				<img src={currentVersion.imageUrl} alt="" fetchpriority="high" decoding="async" />
-			</figure>
-		{/if}
+					<img src={currentVersion.imageUrl} alt="" fetchpriority="high" decoding="async" />
+				</figure>
+			{/if}
+		</div>
 	</div>
 
 	<!-- The version bar: the hinge between the dish and the recipe. Its bottom
@@ -129,7 +133,7 @@
 	}
 
 	/* The list pages' box: gutters outside a 1200px content width. */
-	.hero,
+	.hero-inner,
 	.bar-row,
 	.content-layout {
 		max-width: calc(var(--max-width) + 2 * var(--space-5));
@@ -142,38 +146,45 @@
 		outline: none;
 	}
 
+	/* The title band, full width in deeper cream (decided 31 October 2026,
+	   "B2 inset"): 24px of band above and below the photo, the text column
+	   centred beside it. */
 	.hero {
-		padding-top: 34px;
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		column-gap: 48px;
-		align-items: start;
+		background: var(--color-band);
+		padding: 24px 0;
 	}
 
-	/* No photo: one left-aligned reading column; nothing fills the other half. */
+	.hero-inner {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) 504px;
+		column-gap: 48px;
+		align-items: center;
+	}
+
+	/* No photo: words only, one 760px reading column, a roomier 40px of band. */
 	.hero:not(:has(.recipe-photo)) {
+		padding: 40px 0;
+	}
+
+	.hero-inner:not(:has(.recipe-photo)) {
 		grid-template-columns: minmax(0, 760px);
 	}
 
 	.hero-text {
-		display: flex;
-		flex-direction: column;
-		gap: 18px;
-		padding-top: 6px;
+		min-width: 0;
 	}
 
-	/* 3:2, capped so the header column is never far short of it. */
+	/* 4:3, inset: its right edge on the wrap's, 6px corners. */
 	.recipe-photo img {
 		display: block;
 		width: 100%;
-		aspect-ratio: 3 / 2;
-		max-height: 340px;
+		aspect-ratio: 4 / 3;
 		object-fit: cover;
 		border-radius: var(--radius-md);
 	}
 
 	.bar-row {
-		margin-top: 26px;
+		margin-top: 24px;
 	}
 
 	.bar-row:empty {
@@ -241,36 +252,24 @@
 		grid-row: 1;
 	}
 
-	/* iPad and phone: one column, the photo as a band, the tab bar pinned. */
-	/* Stacked, the photo goes straight under the title: the two wrappers
-	   dissolve so the header's lines and the photo share one column, ordered
-	   title, photo, the rest. The header's own margins set the rhythm. */
+	/* iPad and phone: one column, the band stacked (words, buttons, then the
+	   photo inset on the gutters), the tab bar pinned. */
 	@media (max-width: 1023px) {
-		.hero {
+		.hero-inner {
 			grid-template-columns: minmax(0, 1fr);
-			row-gap: 0;
 		}
 
-		.hero-text,
-		.hero-text :global(.recipe-header) {
-			display: contents;
-		}
-
-		.hero-text :global(.recipe-header > *) {
-			order: 2;
-		}
-
-		.hero-text :global(.recipe-header > .title) {
-			order: 0;
+		.hero:not(:has(.recipe-photo)) {
+			padding: 24px 0;
 		}
 
 		.recipe-photo {
-			order: 1;
-			margin: 22px 0 14px;
+			margin-top: 24px;
 		}
 
+		/* An iPad's full-width 4:3 would be 540px tall and push the section
+		   tabs off the first screen; a phone's is under the cap. */
 		.recipe-photo img {
-			aspect-ratio: 16 / 9;
 			max-height: 300px;
 		}
 
@@ -351,25 +350,20 @@
 	}
 
 	@media (max-width: 699px) {
-		.hero,
+		.hero-inner,
 		.bar-row,
 		.content-layout {
 			padding-left: 18px;
 			padding-right: 18px;
 		}
 
-		.hero {
-			padding-top: 20px;
+		/* The band below the photo matches the 18px gutters beside it. */
+		.hero:has(.recipe-photo) {
+			padding-bottom: 18px;
 		}
 
-		/* Edge to edge, a short crop: the recipe is what the screen is for. */
-		.recipe-photo {
-			margin: 16px -18px 8px;
-		}
-
-		.recipe-photo img {
-			aspect-ratio: 21 / 9;
-			border-radius: 0;
+		.bar-row {
+			margin-top: 18px;
 		}
 
 		.section-tabs {

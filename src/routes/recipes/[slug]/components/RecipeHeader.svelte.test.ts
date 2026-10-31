@@ -203,14 +203,23 @@ describe('RecipeHeader content', () => {
 		expect(dessert).toHaveAttribute('href', '/tags/dessert');
 		expect(dessert).not.toHaveClass('tag');
 		expect(dessert.parentElement).toHaveTextContent('Dessert, Baking');
-		// Taxonomy, not history: the body face under the measure; each tag a link
+		// Taxonomy, not history: the body face above the measure; each tag a link
 		// like every other link on the site, clay and bold, the commas quiet.
 		expect(dessert.parentElement).toHaveClass('font-sans', 'text-text-2');
 		expect(dessert).toHaveClass('text-accent', 'font-semibold');
 		const details = dessert.closest('header')!.querySelector('.details')!;
 		expect(
-			details.compareDocumentPosition(dessert) & Node.DOCUMENT_POSITION_FOLLOWING
+			dessert.compareDocumentPosition(details) & Node.DOCUMENT_POSITION_FOLLOWING
 		).toBeTruthy();
+	});
+
+	test('the description clamps at three lines with an ellipsis at every width', () => {
+		// jsdom applies no component CSS, so the clamp is read from the source:
+		// on the .description rule itself, not inside a media query.
+		const rule = source.match(/\n\t\.description \{[^}]*\}/)?.[0] ?? '';
+		expect(rule).toMatch(/line-clamp: 3;/);
+		expect(rule).toMatch(/-webkit-line-clamp: 3;/);
+		expect(rule).toMatch(/overflow: hidden;/);
 	});
 
 	test('carries no photo: that is the page’s to place', () => {
