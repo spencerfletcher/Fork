@@ -80,35 +80,6 @@ test.describe('Search filters', () => {
 		await expect(dessert).toHaveAttribute('aria-pressed', 'true');
 		await expect(dessert).toBeFocused();
 	});
-
-	test('a pressed filter with focus wears the ring on its own box, inside the row', async ({
-		page
-	}) => {
-		for (const width of [1280, 390]) {
-			await page.setViewportSize({ width, height: 900 });
-			await page.goto('/search?tags=dessert');
-			const row = page.getByRole('group', { name: 'Filter by tag' });
-			const dessert = row.getByRole('button', { name: 'Dessert' });
-			await expect(dessert).toHaveAttribute('aria-pressed', 'true');
-			await dessert.focus();
-			const ring = await dessert.evaluate((el) => {
-				const s = getComputedStyle(el);
-				return {
-					style: s.outlineStyle,
-					width: s.outlineWidth,
-					offset: s.outlineOffset,
-					focused: el.matches(':focus-visible')
-				};
-			});
-			expect(ring).toEqual({ style: 'solid', width: '2px', offset: '2px', focused: true });
-			// The ring's top edge (box top minus offset and width) is not clipped
-			// by the scrolling row.
-			const clipped = await dessert.evaluate(
-				(el) => el.getBoundingClientRect().top - 4 < el.parentElement!.getBoundingClientRect().top
-			);
-			expect(clipped).toBe(false);
-		}
-	});
 });
 
 test.describe('Search filters on a phone', () => {
@@ -140,29 +111,5 @@ test.describe('Recipe cards', () => {
 		await page.setViewportSize({ width: 1280, height: 900 });
 		await page.goto('/recipes');
 		expect(await height(page, '.recipe-card a.meta-author')).toBeGreaterThanOrEqual(24);
-	});
-});
-
-test.describe('Buttons', () => {
-	test('under forced colours the primary button keeps its box, the ghost beside it unmoved', async ({
-		page
-	}) => {
-		await page.goto('/');
-		const compare = await page
-			.getByRole('link', { name: 'Open the full comparison →' })
-			.getAttribute('href');
-		// A version that does not exist: the compare page's 400, with both buttons.
-		await page.emulateMedia({ forcedColors: 'active' });
-		await page.goto(compare!.replace(/to=\d+/, 'to=999'));
-		const primary = page.getByRole('link', { name: 'Compare first and latest' });
-		const ghost = page.getByRole('link', { name: 'Back to the recipe' });
-		const box = (el: Element) => {
-			const s = getComputedStyle(el);
-			return { width: s.borderTopWidth, style: s.borderTopStyle };
-		};
-		const p = await primary.evaluate(box);
-		expect(p.width).toBe('1px');
-		expect(p.style).toBe('solid');
-		expect((await primary.boundingBox())!.height).toBe((await ghost.boundingBox())!.height);
 	});
 });

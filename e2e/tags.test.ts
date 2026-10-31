@@ -58,34 +58,4 @@ test.describe('Tag tabs', () => {
 			page.getByRole('navigation', { name: 'Browse by tag' }).getByRole('link', { name: 'Dessert' })
 		).toHaveAttribute('aria-current', 'page');
 	});
-
-	test('the tab row scrolls on a phone without widening the page', async ({ page }) => {
-		await page.setViewportSize({ width: 390, height: 900 });
-		await page.goto('/recipes');
-		const nav = page.getByRole('navigation', { name: 'Browse by tag' });
-		await nav.waitFor();
-		const doc = await page.evaluate(() => ({
-			scrollWidth: document.documentElement.scrollWidth,
-			clientWidth: document.documentElement.clientWidth
-		}));
-		expect(doc.scrollWidth).toBeLessThanOrEqual(doc.clientWidth);
-		// The row itself is the thing that scrolls: it must actually overflow
-		// with the seed's tags, or this test proves nothing about scrolling.
-		const row = await nav.evaluate((el) => ({ scroll: el.scrollWidth, client: el.clientWidth }));
-		expect(row.scroll).toBeGreaterThan(row.client);
-	});
-
-	test('a focused tab keeps its whole focus ring inside the row', async ({ page }) => {
-		await page.goto('/recipes');
-		const nav = page.getByRole('navigation', { name: 'Browse by tag' });
-		const all = nav.getByRole('link', { name: 'All' });
-		await all.focus();
-		const n = await nav.boundingBox();
-		const a = await all.boundingBox();
-		// The ring is 2px wide at a 2px offset, so 4px outside the link box on
-		// every side; the scroll container clips anything past its own edges.
-		expect(a!.y - n!.y).toBeGreaterThanOrEqual(4);
-		expect(n!.y + n!.height - (a!.y + a!.height)).toBeGreaterThanOrEqual(4);
-		expect(a!.x - n!.x).toBeGreaterThanOrEqual(4);
-	});
 });

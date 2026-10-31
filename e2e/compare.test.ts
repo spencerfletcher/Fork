@@ -1,4 +1,4 @@
-import { expect, test, type Locator, type Page } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import { SEED } from '../src/lib/server/db/seedData';
 
 // The compare page after Spencer's end-of-day decisions (29 October 2026).
@@ -13,57 +13,7 @@ async function openCookiesCompare(page: Page, query = '?from=2&to=3') {
 	await page.locator('article.version-card').first().waitFor();
 }
 
-/** The hit box of an element whose target is widened by its ::before. */
-const hitHeight = (el: Locator) =>
-	el.evaluate((node) => {
-		const s = getComputedStyle(node, '::before');
-		return node.getBoundingClientRect().height - parseFloat(s.top) - parseFloat(s.bottom);
-	});
-
 test.describe('Compare page', () => {
-	test('in forced colours the picker keeps its label and its caret, unclipped', async ({
-		page
-	}) => {
-		await page.emulateMedia({ forcedColors: 'active' });
-		for (const width of [1280, 390]) {
-			await page.setViewportSize({ width, height: 900 });
-			await openCookiesCompare(page);
-			const from = page.getByRole('combobox', { name: 'From version' });
-			expect(await from.evaluate((el: HTMLSelectElement) => el.selectedOptions[0].text)).toMatch(
-				/^v2 · \S/
-			);
-			const caret = page.locator('.picker__caret').first();
-			await expect(caret).toBeVisible();
-			const [c, f] = [(await caret.boundingBox())!, (await from.boundingBox())!];
-			expect(c.x + c.width).toBeLessThanOrEqual(f.x + f.width);
-		}
-	});
-
-	test('the back link is as wide as its text: 24px tall at desktop, 44px on a phone', async ({
-		page
-	}) => {
-		await page.setViewportSize({ width: 1280, height: 900 });
-		await openCookiesCompare(page);
-		const back = page.locator('.compare .back-link');
-		const text = await back.evaluate((el) => {
-			const range = document.createRange();
-			range.selectNodeContents(el);
-			return range.getBoundingClientRect().width;
-		});
-		const box = (await back.boundingBox())!;
-		expect(box.width).toBeLessThanOrEqual(Math.ceil(text) + 1);
-		expect(box.height).toBeGreaterThanOrEqual(24);
-		await page.setViewportSize({ width: 390, height: 900 });
-		expect((await back.boundingBox())!.height).toBeGreaterThanOrEqual(44);
-	});
-
-	test('on a phone the card number links are 44px targets', async ({ page }) => {
-		await page.setViewportSize({ width: 390, height: 900 });
-		await openCookiesCompare(page);
-		const numbers = page.locator('a.version-card__number');
-		for (const n of [0, 1]) expect(await hitHeight(numbers.nth(n))).toBeGreaterThanOrEqual(44);
-	});
-
 	test('each diff panel is a list in the browser’s tree, one item per row', async ({ page }) => {
 		await openCookiesCompare(page, '?from=1&to=3');
 		for (const name of ['Details', 'Ingredients', 'Method']) {

@@ -52,7 +52,8 @@ export default defineConfig({
 				...devices['Desktop Chrome'],
 				storageState: AUTH_FILE
 			},
-			testMatch: /authenticated\.test\.ts/,
+			// invariants.test.ts runs here too, for its signed-in rows.
+			testMatch: /(authenticated|invariants)\.test\.ts/,
 			dependencies: ['setup']
 		}
 	]

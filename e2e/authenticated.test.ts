@@ -134,7 +134,7 @@ test.describe('New recipe page', () => {
 		await expect(page).toHaveURL(/\/recipes\/new$/);
 	});
 
-	test('Tags: the list opens on focus, arrows and Enter pick without Tab stops, and the remove button hits 24px (44 on a phone)', async ({
+	test('Tags: the list opens on focus, arrows and Enter pick without Tab stops', async ({
 		page
 	}) => {
 		await gotoHydrated(page, '/recipes/new');
@@ -149,17 +149,6 @@ test.describe('New recipe page', () => {
 		await page.keyboard.press('Enter');
 		const remove = page.getByRole('button', { name: `Remove ${name}` });
 		await expect(remove).toBeVisible();
-		// The button (and its ring) is the 16px glyph box; the hit is its ::before.
-		const hit = () =>
-			remove.evaluate((el) => {
-				const s = getComputedStyle(el, '::before');
-				return [parseFloat(s.width), parseFloat(s.height)];
-			});
-		const box = await remove.boundingBox();
-		expect([box!.width, box!.height]).toEqual([16, 16]);
-		expect(await hit()).toEqual([24, 24]);
-		await page.setViewportSize({ width: 390, height: 900 });
-		expect(await hit()).toEqual([44, 44]);
 	});
 
 	test('the tag list opens in view when the box sits at the foot of the screen, on a phone and at a desktop width', async ({
@@ -175,44 +164,6 @@ test.describe('New recipe page', () => {
 			await input.click();
 			// Whole: the scroll lands on a whole pixel, so up to a pixel may be cut.
 			await expect(page.getByRole('listbox')).toBeInViewport({ ratio: 0.99 });
-		}
-	});
-
-	test('the public checkbox is clay, and on a phone its row is a 44px target without moving the text', async ({
-		page
-	}) => {
-		await gotoHydrated(page, '/recipes/new');
-		const box = page.getByRole('checkbox', { name: /public/i });
-		const clay = await box.evaluate((el) => {
-			const probe = document.createElement('i');
-			probe.style.color = 'var(--color-accent)';
-			el.after(probe);
-			const color = getComputedStyle(probe).color;
-			probe.remove();
-			return color;
-		});
-		expect(await box.evaluate((el) => getComputedStyle(el).accentColor)).toBe(clay);
-		// The checkbox's distance below the tags box, which padding must not change.
-		const offset = async () => {
-			const tags = (await page.locator('.field-tags').boundingBox())!;
-			const b = (await box.boundingBox())!;
-			return b.y + b.height / 2 - (tags.y + tags.height);
-		};
-		const desktop = await offset();
-		await page.setViewportSize({ width: 390, height: 900 });
-		const row = page.locator('label:has(> input[name="isPublic"])');
-		expect((await row.boundingBox())!.height).toBeGreaterThanOrEqual(44);
-		expect(await offset()).toBeCloseTo(desktop, 0);
-	});
-
-	test('the public checkbox row is at least a 24px target at every desktop width', async ({
-		page
-	}) => {
-		await gotoHydrated(page, '/recipes/new');
-		const row = page.locator('label:has(> input[name="isPublic"])');
-		for (const width of [1280, 1024, 768]) {
-			await page.setViewportSize({ width, height: 900 });
-			expect((await row.boundingBox())!.height).toBeGreaterThanOrEqual(24);
 		}
 	});
 
@@ -247,30 +198,6 @@ test.describe('New recipe page', () => {
 				}, createdRecipeUrl);
 			}
 		}
-	});
-});
-
-test.describe('New recipe page on a touch screen', () => {
-	test.use({ hasTouch: true });
-
-	test('a coarse pointer gets the 44px checkbox row and photo remover at a desktop width', async ({
-		page
-	}) => {
-		await gotoHydrated(page, '/recipes/new');
-		expect(await page.evaluate(() => matchMedia('(pointer: coarse)').matches)).toBe(true);
-		const row = page.locator('label:has(> input[name="isPublic"])');
-		expect((await row.boundingBox())!.height).toBeGreaterThanOrEqual(44);
-		await page.locator('input[name="image"]').setInputFiles({
-			name: 'dot.png',
-			mimeType: 'image/png',
-			buffer: Buffer.from(
-				'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
-				'base64'
-			)
-		});
-		const remove = (await page.getByRole('button', { name: 'Remove photo' }).boundingBox())!;
-		expect(remove.width).toBeGreaterThanOrEqual(44);
-		expect(remove.height).toBeGreaterThanOrEqual(44);
 	});
 });
 
@@ -379,34 +306,6 @@ test.describe('Edit recipe page', () => {
 				'placeholder',
 				'Updated steps'
 			);
-		} finally {
-			await deleteRecipe(page, url);
-		}
-	});
-
-	test('the back link is a 24px target at desktop and 44px on a phone, and so is the photo remover there', async ({
-		page
-	}) => {
-		const url = await createRecipe(page, 'E2E Hit Sizes', '4');
-		try {
-			await gotoHydrated(page, `${url}/edit`);
-			const back = page.locator('.editor-header .back-link');
-			expect((await back.boundingBox())!.height).toBeGreaterThanOrEqual(24);
-			await page.setViewportSize({ width: 390, height: 900 });
-			expect((await back.boundingBox())!.height).toBeGreaterThanOrEqual(44);
-			// A picked photo, not saved, brings up the remover.
-			await page.locator('input[name="image"]').setInputFiles({
-				name: 'dot.png',
-				mimeType: 'image/png',
-				buffer: Buffer.from(
-					'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
-					'base64'
-				)
-			});
-			const remove = page.getByRole('button', { name: 'Remove photo' });
-			const box = (await remove.boundingBox())!;
-			expect(box.width).toBeGreaterThanOrEqual(44);
-			expect(box.height).toBeGreaterThanOrEqual(44);
 		} finally {
 			await deleteRecipe(page, url);
 		}
@@ -649,32 +548,6 @@ test.describe('Compare page', () => {
 				'href',
 				new URL(url).pathname
 			);
-		} finally {
-			await deleteRecipe(page, url);
-		}
-	});
-
-	test('a long unbroken title does not scroll the compare page sideways on a phone', async ({
-		page
-	}) => {
-		await page.setViewportSize({ width: 390, height: 1200 });
-		const url = await createRecipe(page, 'E2E' + 'x'.repeat(57), '4');
-		try {
-			await gotoHydrated(page, `${url}/edit`);
-			await page.getByLabel('Steps').fill('Mix, then bake.');
-			await page.getByRole('button', { name: 'Save', exact: true }).click();
-			await page.waitForURL(url);
-			await page.goto(`${url}/diff?from=1&to=2`);
-			await page.locator('article.version-card').first().waitFor();
-			const doc = await page.evaluate(() => ({
-				scrollWidth: document.documentElement.scrollWidth,
-				clientWidth: document.documentElement.clientWidth
-			}));
-			expect(doc.scrollWidth).toBeLessThanOrEqual(doc.clientWidth);
-			// 16px on a phone, or iOS zooms the picker on focus.
-			expect(
-				await page.locator('#from-select').evaluate((el) => getComputedStyle(el).fontSize)
-			).toBe('16px');
 		} finally {
 			await deleteRecipe(page, url);
 		}
