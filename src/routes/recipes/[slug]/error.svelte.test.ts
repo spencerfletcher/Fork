@@ -39,7 +39,7 @@ describe('recipe page error', () => {
 		expect(screen.queryByRole('link', { name: 'Go home' })).toBeNull();
 	});
 
-	test("a missing recipe answers as the root page does: its lede, home and a search", () => {
+	test('a missing recipe answers as the root page does: its lede, home and a search', () => {
 		renderError(404, 'Recipe not found');
 		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
 			'Error 404 – Recipe not found'

@@ -40,7 +40,7 @@
 
 					<div class="flex flex-col gap-1.5">
 						<p
-							class="step-text text-text [overflow-wrap:anywhere] group-has-[:checked]:text-text-3 m-0 font-sans text-[1.0625rem] leading-[1.6] whitespace-pre-line">
+							class="step-text text-text group-has-[:checked]:text-text-3 m-0 font-sans text-[1.0625rem] leading-[1.6] [overflow-wrap:anywhere] whitespace-pre-line">
 							{step.text}
 						</p>
 						{#if step.annotation}
