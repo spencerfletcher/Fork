@@ -424,6 +424,44 @@ describe('load: fork attribution', () => {
 		const [, filter] = countMock.mock.calls.find(([table]) => table === recipes)!;
 		expect(columnNames(filter)).toContain('is_public');
 	});
+
+	test("counts the viewer's own private forks too, as the forks page lists them", async () => {
+		findRecipeMock.mockResolvedValue(forkOf({ isPublic: true, authorId: 'original-author' }));
+		countMock.mockResolvedValue(1);
+		await loadData(FORKER);
+		const [, filter] = countMock.mock.calls.find(([table]) => table === recipes)!;
+		expect(columnNames(filter)).toEqual(
+			expect.arrayContaining(['parent_id', 'is_public', 'author_id'])
+		);
+	});
+});
+
+// ─── load: ?version= ──────────────────────────────────────────────────────────
+
+describe('load: ?version=', () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+		findFavoriteMock.mockResolvedValue(undefined);
+		countMock.mockResolvedValue(0);
+		findRecipeMock.mockResolvedValue(forkOf({ isPublic: true, authorId: 'original-author' }));
+	});
+
+	const loadVersion = (version: string) =>
+		invoke(load as never, {
+			...makeLoadEvent(),
+			url: new URL(`http://localhost/recipes/the-fork?version=${version}`)
+		});
+
+	test.each(['1abc', '1.5', ' 1', '-1'])('%j is not a version number: 404', async (version) => {
+		expect(await loadVersion(version)).toMatchObject({
+			status: 404,
+			body: { message: 'Version not found' }
+		});
+	});
+
+	test('a plain number the recipe has shows that version', async () => {
+		expect(await loadVersion('1')).toMatchObject({ currentVersion: { versionNumber: 1 } });
+	});
 });
 
 // ─── visibility: a private recipe by another user ─────────────────────────────

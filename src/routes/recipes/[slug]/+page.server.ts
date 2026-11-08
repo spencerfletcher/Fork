@@ -8,7 +8,7 @@ import type { RecipeContent } from '#lib/recipes/types.js';
 import { recipeCopies } from '#lib/recipes/content.js';
 import { absoluteImage, clampDescription } from '#lib/seo.js';
 import { gramsFor } from '#lib/server/ingredientDensities.js';
-import { canView } from '#lib/server/visibility.js';
+import { canView, visibleTo } from '#lib/server/visibility.js';
 import type { PageServerLoad, Actions } from './$types';
 
 export const load: PageServerLoad = async ({ params, url, locals: { user } }) => {
@@ -40,22 +40,24 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 	// version in the same transaction as the recipe, so none is a broken row.
 	const latestVersion = recipe.versions[0];
 	if (!latestVersion) throw error(404, 'Recipe not found');
+	// Digits only: parseInt alone reads ?version=2abc as 2.
+	if (versionParam && !/^\d+$/.test(versionParam)) throw error(404, 'Version not found');
 	const currentVersion =
 		requestedVersion === null
 			? latestVersion
 			: recipe.versions.find((v) => v.versionNumber === requestedVersion);
 	if (!currentVersion) throw error(404, 'Version not found');
 
-	// Independent lookups, one round trip. The fork count is public forks
-	// only, the same rule attachRecipeCounts applies on the lists, so a private
-	// fork cannot inflate the count on a page anyone can read.
+	// Independent lookups, one round trip. The fork count is the forks the
+	// viewer can see, the forks page's own rule: public ones and the viewer's
+	// own private ones, so nobody else's private fork shows in the number.
 	const [favorite, forkCount, favoriteCount] = await Promise.all([
 		user
 			? db.query.favorites.findFirst({
 					where: and(eq(favorites.userId, user.id), eq(favorites.recipeId, recipe.id))
 				})
 			: undefined,
-		db.$count(recipes, and(eq(recipes.parentId, recipe.id), eq(recipes.isPublic, true))),
+		db.$count(recipes, and(eq(recipes.parentId, recipe.id), visibleTo(user))),
 		db.$count(favorites, eq(favorites.recipeId, recipe.id))
 	]);
 	const isFavorited = !!favorite;

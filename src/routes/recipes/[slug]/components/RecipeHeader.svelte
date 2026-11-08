@@ -34,7 +34,7 @@
 		currentVersion: HeaderContent;
 		/** The version's own servings, when `currentVersion.servings` is the scaled serves. */
 		storedServings?: number | null;
-		/** Public forks. */
+		/** Forks the viewer can see: the public ones and their own. */
 		forkCount: number;
 		favoriteCount: number;
 		/** Every version of the recipe; the bar under the band lists them from two up. */
