@@ -1,6 +1,7 @@
 import { describe, test, expect } from 'vitest';
 import { render, screen, within } from '@testing-library/svelte';
 import VersionDiff from './VersionDiff.svelte';
+import source from './VersionDiff.svelte?raw';
 import type { IngredientDiffRow, MetaDiffRow, StepDiffRow } from '#lib/recipes/diff.js';
 import { makeIngredient, makeStep } from '#lib/recipes/fixtures.js';
 
@@ -348,5 +349,16 @@ describe('VersionDiff', () => {
 		expect(screen.queryAllByText('No changes')).toHaveLength(0);
 		expect(container.querySelectorAll('.diff-added')).toHaveLength(1);
 		expect(container.querySelectorAll('.diff-removed')).toHaveLength(1);
+	});
+});
+
+// A long unbroken ingredient or step must wrap inside its row rather than push
+// the diff wider than a phone: the flex item may shrink, and the word breaks.
+describe('VersionDiff long words', () => {
+	test('the row content can shrink and breaks a long word anywhere', () => {
+		const start = source.indexOf('\t.diff-content {');
+		const rule = source.slice(start, source.indexOf('}', start));
+		expect(rule).toMatch(/min-width:\s*0;/);
+		expect(rule).toMatch(/overflow-wrap:\s*anywhere;/);
 	});
 });

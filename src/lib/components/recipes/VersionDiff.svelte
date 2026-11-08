@@ -221,10 +221,14 @@
 		user-select: none;
 	}
 
+	/* min-width: 0 lets the flex item shrink below a long unbroken word, which
+	   then wraps instead of pushing the diff wider than a phone. */
 	.diff-content {
 		flex: 1;
+		min-width: 0;
 		max-width: 72ch;
 		line-height: 1.5;
+		overflow-wrap: anywhere;
 	}
 
 	/* Details runs the column, so a renamed title stays on one line. */

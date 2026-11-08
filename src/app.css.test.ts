@@ -78,3 +78,25 @@ describe('app.css forced colours', () => {
 		expect(rule).toMatch(/border-bottom-color:\s*Canvas/);
 	});
 });
+
+// A long unbroken word (a URL, a run of letters) must not widen the page on a
+// phone: the title breaks anywhere, and grid tracks may shrink below their content.
+describe('app.css long words', () => {
+	/** The bodies of every rule whose selector is exactly `selector`. */
+	const rules = (selector: string) =>
+		[...css.matchAll(/^\s*([^{}\n]+?)\s*\{([^{}]*)\}/gm)]
+			.filter((m) => m[1] === selector)
+			.map((m) => m[2]);
+
+	test('the base h1 breaks a long word anywhere', () => {
+		expect(rules('h1').some((body) => /overflow-wrap:\s*anywhere/.test(body))).toBe(true);
+	});
+
+	test('the card grid tracks can shrink below a long title at every breakpoint', () => {
+		const columns = rules('.recipe-grid')
+			.map((body) => body.match(/grid-template-columns:\s*([^;]+);/)?.[1])
+			.filter(Boolean);
+		expect(columns).toHaveLength(3);
+		for (const value of columns) expect(value).toMatch(/^repeat\(\d, minmax\(0, 1fr\)\)$/);
+	});
+});
