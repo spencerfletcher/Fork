@@ -104,6 +104,27 @@ describe('search load', () => {
 		expect(findManyMock.mock.calls[0][0].orderBy[1]).toEqual(desc(recipes.updatedAt));
 	});
 
+	// A slug no chip carries (renamed, mistyped) filters nothing: the page is
+	// told only of the tags it can show as pressed, and lists as if unfiltered.
+	test('an unknown tag slug is ignored, and only known slugs come back as selected', async () => {
+		selectDistinctMock.mockReturnValue(chain([{ id: 1, name: 'Dessert', slug: 'dessert' }]));
+		selectMock.mockReturnValue(chain([]));
+		findManyMock.mockResolvedValue([{ id: 5, author: null, recipesToTags: [] }]);
+		const event = (tags: string) =>
+			({
+				url: new URL(`http://localhost/search?tags=${tags}`),
+				locals: { user: null }
+			}) as unknown as Parameters<typeof load>[0];
+
+		const unknown = await loadResult(event('bogus'));
+		expect(unknown.selectedTags).toEqual([]);
+		expect(unknown.recipes.map((r) => r.id)).toEqual([5]);
+
+		selectMock.mockReturnValueOnce(chain([{ recipeId: 5 }]));
+		const mixed = await loadResult(event('bogus,dessert'));
+		expect(mixed.selectedTags).toEqual(['dessert']);
+	});
+
 	test('offers only tags that have at least one recipe', async () => {
 		// The tag query must join through recipes_to_tags rather than
 		// selecting the whole table.

@@ -13,7 +13,7 @@ const META = { title: 'Favorites' };
 
 export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 	if (!user) {
-		throw redirect(303, loginHref(url.pathname));
+		throw redirect(303, loginHref(url.pathname + url.search));
 	}
 
 	const { searchQuery, tagSlugs } = parseFilters(url);
@@ -42,14 +42,17 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 	// one tag would remove the chips needed to widen the filter again.
 	const allTags = await visibleTags(inArray(recipesToTags.recipeId, favoriteIds));
 
-	const selectedTagIds = allTags.filter((t) => tagSlugs.includes(t.slug)).map((t) => t.id);
+	// A slug no chip carries filters nothing, and the page hears only of the known ones.
+	const selected = allTags.filter((t) => tagSlugs.includes(t.slug));
+	const selectedTags = tagSlugs.filter((slug) => selected.some((t) => t.slug === slug));
+	const selectedTagIds = selected.map((t) => t.id);
 	let matchCounts = new Map<number, number>();
 	let candidateIds = favoriteIds;
 	if (selectedTagIds.length > 0) {
 		matchCounts = await tagMatchCounts(selectedTagIds, favoriteIds);
 		candidateIds = [...matchCounts.keys()];
 		if (candidateIds.length === 0) {
-			return { recipes: [], allTags, searchQuery, selectedTags: tagSlugs, meta: META };
+			return { recipes: [], allTags, searchQuery, selectedTags, meta: META };
 		}
 	}
 
@@ -66,5 +69,5 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 
 	const withCounts = await attachRecipeCounts(rows);
 
-	return { recipes: withCounts, allTags, searchQuery, selectedTags: tagSlugs, meta: META };
+	return { recipes: withCounts, allTags, searchQuery, selectedTags, meta: META };
 };

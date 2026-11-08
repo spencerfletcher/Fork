@@ -25,13 +25,15 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 
 	const allTags = await visibleTags(visibilityCondition);
 
-	// Tag filter: OR over the selected tags, ranked by how many matched below.
+	// Tag filter: OR over the selected tags, ranked by how many matched below. A
+	// slug no chip carries filters nothing, and the page hears only of the known ones.
+	const selected = allTags.filter((t) => tagSlugs.includes(t.slug));
+	const selectedTags = tagSlugs.filter((slug) => selected.some((t) => t.slug === slug));
 	let matchCounts = new Map<number, number>();
-	if (tagSlugs.length > 0) {
-		const tagIds = allTags.filter((t) => tagSlugs.includes(t.slug)).map((t) => t.id);
-		if (tagIds.length > 0) matchCounts = await tagMatchCounts(tagIds);
+	if (selected.length > 0) {
+		matchCounts = await tagMatchCounts(selected.map((t) => t.id));
 		if (matchCounts.size === 0) {
-			return { recipes: [], allTags, searchQuery, selectedTags: tagSlugs, meta: searchMeta(0) };
+			return { recipes: [], allTags, searchQuery, selectedTags, meta: searchMeta(0) };
 		}
 	}
 
@@ -56,7 +58,7 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 		recipes: withCounts,
 		allTags,
 		searchQuery,
-		selectedTags: tagSlugs,
+		selectedTags,
 		meta: searchMeta(withCounts.length)
 	};
 };

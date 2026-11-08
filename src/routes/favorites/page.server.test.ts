@@ -63,6 +63,39 @@ describe('favorites load', () => {
 		});
 	});
 
+	test('the login link brings the visitor back to the same filters', async () => {
+		await expect(load(makeEvent('?q=soup&tags=dessert', null))).rejects.toMatchObject({
+			status: 303,
+			location: `/login?redirectTo=${encodeURIComponent('/favorites?q=soup&tags=dessert')}`
+		});
+	});
+
+	// As Search does: a slug no chip carries (renamed, mistyped) filters nothing,
+	// and the page is told only of the tags it can show as pressed.
+	test('an unknown tag slug is ignored, and only known slugs come back as selected', async () => {
+		selectDistinctMock.mockReturnValue(chain([{ id: 7, name: 'Dessert', slug: 'dessert' }]));
+		mockFavourites([1, 2]);
+		findManyMock.mockResolvedValue([
+			{ id: 1, author: null, recipesToTags: [] },
+			{ id: 2, author: null, recipesToTags: [] }
+		]);
+
+		const result = await loadResult(makeEvent('?tags=bogus'));
+
+		expect(result.selectedTags).toEqual([]);
+		expect(result.recipes.map((r) => r.id)).toEqual([1, 2]);
+	});
+
+	test('a known slug beside an unknown one is the only one selected', async () => {
+		selectDistinctMock.mockReturnValue(chain([{ id: 7, name: 'Dessert', slug: 'dessert' }]));
+		mockFavourites([1, 2], chain([{ recipeId: 1 }]));
+		findManyMock.mockResolvedValue([{ id: 1, author: null, recipesToTags: [] }]);
+
+		const result = await loadResult(makeEvent('?tags=bogus,dessert'));
+
+		expect(result.selectedTags).toEqual(['dessert']);
+	});
+
 	test('requests the author relation, so cards are not rendered authorless', async () => {
 		mockFavourites([1]);
 		findManyMock.mockResolvedValue([
