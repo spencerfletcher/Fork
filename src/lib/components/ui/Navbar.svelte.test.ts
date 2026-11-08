@@ -259,6 +259,18 @@ describe('Navbar current page', () => {
 		}
 	);
 
+	test('signed in on /recipes/new, New recipe is current in both lists, and only there', async () => {
+		const { bar, menu } = await renderAt('/recipes/new', signedIn());
+		expect(bar('+ New recipe')[0]).toHaveAttribute('aria-current', 'page');
+		expect(menu.getByRole('link', { name: 'New recipe' })).toHaveAttribute('aria-current', 'page');
+	});
+
+	test('signed in elsewhere, New recipe is not current', async () => {
+		const { bar, menu } = await renderAt('/recipes', signedIn());
+		expect(bar('+ New recipe')[0]).not.toHaveAttribute('aria-current');
+		expect(menu.getByRole('link', { name: 'New recipe' })).not.toHaveAttribute('aria-current');
+	});
+
 	test('signed in on /recipes, My Recipes is current and Recipes is not', async () => {
 		const { bar, menu } = await renderAt('/recipes', signedIn());
 		expect(bar('My Recipes')[0]).toHaveAttribute('aria-current', 'page');

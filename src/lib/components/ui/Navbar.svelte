@@ -117,7 +117,8 @@
 					<a
 						href="/recipes/new"
 						class="nav-cta"
-						class:opacity-75={page.url.pathname === '/recipes/new'}>
+						class:opacity-75={page.url.pathname === '/recipes/new'}
+						aria-current={current(path === '/recipes/new')}>
 						+ New recipe
 					</a>
 				{/if}
@@ -200,7 +201,13 @@
 				{/each}
 				{#if user}
 					<li>
-						<a href="/recipes/new" onclick={closeMenu} class="mobile-link">New recipe</a>
+						<a
+							href="/recipes/new"
+							onclick={closeMenu}
+							class="mobile-link"
+							aria-current={current(path === '/recipes/new')}>
+							New recipe
+						</a>
 					</li>
 				{/if}
 			</ul>
