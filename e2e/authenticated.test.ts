@@ -419,6 +419,24 @@ async function deleteRecipe(page: Page, url: string) {
 	}, url);
 }
 
+test.describe('Delete recipe', () => {
+	test('the owner deletes a recipe from its editor, confirming first, and lands on My Recipes', async ({
+		page
+	}) => {
+		const url = await createRecipe(page, 'E2E Delete Me', '2');
+		await gotoHydrated(page, `${url}/edit`);
+		await page.getByRole('button', { name: 'Delete recipe' }).click();
+		const step = page.getByRole('group', { name: 'Delete E2E Delete Me?' });
+		await expect(step).toBeFocused();
+		await expect(step).toContainText('This cannot be undone.');
+		await page.getByRole('button', { name: 'Delete permanently' }).click();
+		await page.waitForURL(/\/recipes$/);
+
+		const response = await page.goto(url);
+		expect(response?.status()).toBe(404);
+	});
+});
+
 test.describe('One save', () => {
 	test('one save records servings, times and ingredients as a new version', async ({ page }) => {
 		const url = await createRecipe(page, 'E2E Four Servings', '4');
