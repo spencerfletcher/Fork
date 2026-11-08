@@ -80,3 +80,33 @@ describe('Search page empty state', () => {
 		expect(screen.getByRole('link', { name: 'All recipes' })).toHaveAttribute('href', '/');
 	});
 });
+
+// The results swap in place, so a screen reader hears the count from a status
+// region that is always in the DOM.
+describe('Search page result count', () => {
+	const card = {
+		id: 1,
+		slug: 'soup',
+		title: 'Soup',
+		description: null,
+		imageUrl: null,
+		parentId: null,
+		prepTimeMinutes: null,
+		cookTimeMinutes: null
+	};
+
+	test('a filtered search announces how many recipes it found', () => {
+		renderSearch({ searchQuery: 'soup', recipes: [card] as never });
+		expect(screen.getByRole('status')).toHaveTextContent('1 recipe found');
+	});
+
+	test('a filter with no results announces that nothing was found', () => {
+		renderSearch({ selectedTags: ['dessert'] });
+		expect(screen.getByRole('status')).toHaveTextContent('0 recipes found');
+	});
+
+	test('without a filter the region is present and silent', () => {
+		renderSearch({ recipes: [card, { ...card, id: 2, slug: 'stew' }] as never });
+		expect(screen.getByRole('status')).toBeEmptyDOMElement();
+	});
+});

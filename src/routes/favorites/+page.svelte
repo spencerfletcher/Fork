@@ -1,6 +1,7 @@
 <script lang="ts">
 	import RecipeGrid from '#lib/components/recipes/RecipeGrid.svelte';
 	import SearchFilters from '#lib/components/ui/SearchFilters.svelte';
+	import { plural } from '#lib/helpers.js';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -24,6 +25,11 @@
 				initialTags={data.selectedTags}
 				availableTags={data.allTags} />
 		{/if}
+
+		<!-- Always in the DOM so screen readers announce the count when it changes. -->
+		<p class="sr-only" role="status">
+			{#if filtered}{plural(recipes.length, 'favorite')} match{/if}
+		</p>
 
 		{#if recipes.length > 0}
 			<RecipeGrid {recipes} class="results" />

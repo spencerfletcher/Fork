@@ -56,3 +56,25 @@ describe('Favorites page', () => {
 		expect(screen.getByText(/No favorites match your filters/)).toBeInTheDocument();
 	});
 });
+
+// The results swap in place, so a screen reader hears the count from a status
+// region that is always in the DOM.
+describe('Favorites page result count', () => {
+	test('a filter announces how many favorites match', () => {
+		renderFavorites({
+			searchQuery: 'soup',
+			recipes: [RECIPE, { ...RECIPE, id: 2 }] as never
+		});
+		expect(screen.getByRole('status')).toHaveTextContent('2 favorites match');
+	});
+
+	test('a filter with no results announces that nothing matched', () => {
+		renderFavorites({ searchQuery: 'zzz' });
+		expect(screen.getByRole('status')).toHaveTextContent('0 favorites match');
+	});
+
+	test('without a filter the region is present and silent', () => {
+		renderFavorites({ recipes: [RECIPE] as never });
+		expect(screen.getByRole('status')).toBeEmptyDOMElement();
+	});
+});
