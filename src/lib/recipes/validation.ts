@@ -37,8 +37,9 @@ export const REQUIRED_MESSAGES = {
 
 /** The photo types the editor offers and a save stores. */
 export const PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'] as const;
-/** The largest photo a save stores. */
-export const PHOTO_MAX_BYTES = 10 * 1024 * 1024;
+/** The largest photo a save stores. Netlify buffers a function request at
+ *  6 MB, about 4.5 MB of binary, so this leaves room for the rest of the form. */
+export const PHOTO_MAX_BYTES = 4 * 1024 * 1024;
 export const PHOTO_TYPE_MESSAGE = 'Choose a JPEG, PNG, WebP or GIF photo.';
 export const PHOTO_SIZE_MESSAGE = `Choose a photo under ${PHOTO_MAX_BYTES / 1024 / 1024} MB.`;
 
