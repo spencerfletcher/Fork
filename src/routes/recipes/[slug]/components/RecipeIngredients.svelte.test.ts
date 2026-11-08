@@ -356,3 +356,35 @@ describe('RecipeIngredients', () => {
 		expect(screen.queryByText('Whole-item weights are estimates, not exact.')).toBeNull();
 	});
 });
+
+describe('RecipeIngredients groups', () => {
+	const GROUPED = 'salt\n# Dough\n2 cups flour\n2 large eggs\n# Icing\n1 cup sugar';
+
+	test('a group name heads its run of rows, in the serif, ink; rows before the first have none', () => {
+		const { container } = renderWith(GROUPED, [null, null, null, null]);
+		const headings = screen.getAllByRole('heading', { level: 3 });
+		expect(headings.map((h) => h.textContent!.trim())).toEqual(['Dough', 'Icing']);
+		for (const h of headings) {
+			expect(h).toHaveClass('font-serif', 'text-text');
+			expect(h).not.toHaveClass('text-accent');
+		}
+		// Document order: salt, Dough, flour, eggs, Icing, sugar.
+		const order = [...container.querySelectorAll('h3, label')].map((el) =>
+			el.textContent!.replace(/\s+/g, ' ').trim()
+		);
+		expect(order).toEqual(['salt', 'Dough', '2 cups flour', '2 large eggs', 'Icing', '1 cup sugar']);
+	});
+
+	test('ticks stay one per row, keyed by position across groups', () => {
+		renderWith(GROUPED, [null, null, null, null]);
+		const boxes = screen.getAllByRole('checkbox');
+		expect(boxes).toHaveLength(4);
+		fireEvent.click(boxes[3]);
+		expect(loadTicks(KEY)).toEqual([3]);
+	});
+
+	test('an ungrouped list draws no group heading', () => {
+		renderWith(LINES, [null, null, null]);
+		expect(screen.queryByRole('heading', { level: 3 })).toBeNull();
+	});
+});

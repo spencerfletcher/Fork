@@ -25,6 +25,13 @@ export function splitGroups(text: string): Section[] {
 		.filter((section, i) => i > 0 || section.text.trim().length > 0);
 }
 
+/** The group name to print above row `i`: its group, where that differs from
+ *  the row before; undefined for an ungrouped row or one inside a run. */
+export function groupStartingAt(rows: Array<{ group?: string }>, i: number): string | undefined {
+	const { group } = rows[i];
+	return group !== undefined && group !== rows[i - 1]?.group ? group : undefined;
+}
+
 /** The inverse of splitGroups: rows printed with `separator` between them, and
  *  a "# Name" line, a blank line above it, wherever the group changes. */
 export function joinGroups<T extends { group?: string }>(
@@ -34,9 +41,9 @@ export function joinGroups<T extends { group?: string }>(
 ): string {
 	let out = '';
 	rows.forEach((row, i) => {
-		const heading = row.group !== undefined && row.group !== rows[i - 1]?.group;
-		if (i > 0) out += heading ? '\n\n' : separator;
-		if (heading) out += `# ${row.group}\n`;
+		const heading = groupStartingAt(rows, i);
+		if (i > 0) out += heading !== undefined ? '\n\n' : separator;
+		if (heading !== undefined) out += `# ${heading}\n`;
 		out += print(row);
 	});
 	return out;

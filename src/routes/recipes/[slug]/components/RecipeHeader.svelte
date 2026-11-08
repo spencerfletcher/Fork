@@ -12,7 +12,13 @@
 	// the history.
 	type HeaderContent = Pick<
 		RecipeContent,
-		'title' | 'description' | 'servings' | 'prepTimeMinutes' | 'cookTimeMinutes' | 'imageUrl'
+		| 'title'
+		| 'description'
+		| 'servings'
+		| 'makes'
+		| 'prepTimeMinutes'
+		| 'cookTimeMinutes'
+		| 'imageUrl'
 	>;
 
 	interface HeaderRecipe extends Pick<Recipe, 'slug' | 'parentId'> {

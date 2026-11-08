@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Step, StepAnnotationType } from '#lib/recipes/types.js';
+	import { groupStartingAt } from '#lib/recipes/groups.js';
 	import { tickList } from './ticks.svelte.js';
 
 	let { steps, storageKey }: { steps: Step[]; storageKey: string } = $props();
@@ -25,7 +26,19 @@
 			     numeral's tabular digits; the numeral ends it, 10px from the text, and
 			     every step's text starts on one edge. The hidden input spans the row's
 			     height, so focusing it scrolls the whole step into view. -->
+			{@const group = groupStartingAt(steps, i)}
+			<!-- A group's name heads its first step, inside the item so the list stays
+			     a list of steps; the numbers run straight through the groups. -->
 			<li>
+				{#if group !== undefined}
+					<h3
+						class={[
+							'text-text m-0 mb-3 font-serif text-[1.0625rem] leading-[1.25] font-medium',
+							i > 0 && 'mt-2'
+						]}>
+						{group}
+					</h3>
+				{/if}
 				<label
 					class="step group has-[:focus-visible]:outline-accent relative grid cursor-pointer [grid-template-columns:2ch_minmax(0,1fr)] items-baseline gap-4 font-serif text-[1.125rem] select-none has-[:checked]:line-through has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2">
 					<input

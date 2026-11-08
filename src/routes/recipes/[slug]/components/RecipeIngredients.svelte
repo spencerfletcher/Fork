@@ -3,6 +3,7 @@
 	import type { Ingredient } from '#lib/recipes/types.js';
 	import type { GramResult } from '#lib/server/ingredientDensities.js';
 	import { FRACTIONS, scaleIngredient } from '#lib/recipes/scale.js';
+	import { groupStartingAt } from '#lib/recipes/groups.js';
 	import { tickList } from './ticks.svelte.js';
 
 	let {
@@ -79,6 +80,15 @@
 			<!-- A row scaling changed reads clay, measure and weight, as an estimate
 			     (Spencer, 31 October 2026); ticked, it recedes to Ink 3 like the rest. -->
 			{@const scaled = ingredient !== typed}
+			{@const group = groupStartingAt(ingredients, i)}
+			<!-- A group's name over its rows: the serif at title size, ink, 20px of air
+			     above (14 at the top of the list). Ungrouped rows draw nothing. -->
+			{#if group !== undefined}
+				<h3
+					class="text-text m-0 mt-5 mb-0.5 font-serif text-[1.0625rem] leading-[1.25] font-medium first:mt-3.5">
+					{group}
+				</h3>
+			{/if}
 			<!-- A native checkbox, visually hidden, carries the state and the keyboard
 			     behaviour; the label is the row and takes the struck-through look. The
 			     circle at the row start is the checkbox's picture, drawn by .tick in

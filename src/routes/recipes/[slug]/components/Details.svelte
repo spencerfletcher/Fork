@@ -1,25 +1,33 @@
 <script lang="ts">
 	import type { RecipeContent } from '#lib/recipes/types.js';
 	import { formatTime } from '#lib/helpers.js';
+	import { scaleMakes } from '#lib/recipes/scale.js';
 
 	let {
 		content,
 		storedServings
 	}: {
-		content: Pick<RecipeContent, 'prepTimeMinutes' | 'cookTimeMinutes' | 'servings'>;
+		content: Pick<RecipeContent, 'prepTimeMinutes' | 'cookTimeMinutes' | 'servings' | 'makes'>;
 		/** The version's own servings; when `content.servings` differs, they are scaled and read clay. */
 		storedServings?: number | null;
 	} = $props();
 
 	const scaled = $derived(storedServings != null && content.servings !== storedServings);
 
+	// The yield follows the servings multiplier; it never sets it.
+	const factor = $derived(
+		storedServings && content.servings ? content.servings / storedServings : 1
+	);
+	const makes = $derived(content.makes ? scaleMakes(content.makes, factor) : null);
+
 	// The times value then label, the serves label then value:
-	// "15 min prep · 13 min cook · Serves 36".
+	// "15 min prep · 13 min cook · Serves 36 · Makes 36 cookies".
 	const pairs = $derived.by(() => {
 		const all: [string, string | null][] = [
 			['prep', content.prepTimeMinutes ? formatTime(content.prepTimeMinutes) : null],
 			['cook', content.cookTimeMinutes ? formatTime(content.cookTimeMinutes) : null],
-			['Serves', content.servings ? String(content.servings) : null]
+			['Serves', content.servings ? String(content.servings) : null],
+			['Makes', makes?.text ?? null]
 		];
 		return all.filter((pair): pair is [string, string] => pair[1] !== null);
 	});
@@ -37,6 +45,12 @@
 				{#if label === 'Serves'}
 					{label}
 					<span class={['font-semibold', scaled ? 'text-accent' : 'text-text']}>{value}</span>
+				{:else if label === 'Makes'}
+					<!-- Scaled reads clay, as the serves do; a size or temperature it left
+					     alone says so in Ink 3, only while the recipe is scaled. -->
+					{label}
+					<span class={['font-semibold', makes?.scaled ? 'text-accent' : 'text-text']}>{value}</span>
+					{#if makes?.flagged}<span class="not-scaled text-text-3">not scaled</span>{/if}
 				{:else}
 					<span class="text-text font-semibold">{value}</span>
 					{label}
@@ -54,6 +68,12 @@
 		content: '·' / '';
 		padding: 0 12px 0 8px;
 		color: var(--color-text-3);
+	}
+
+	/* The marker's dot is drawn too, never typed, like the pairs'. */
+	.not-scaled::before {
+		content: '·' / '';
+		padding: 0 6px 0 4px;
 	}
 
 	@media (max-width: 699px) {

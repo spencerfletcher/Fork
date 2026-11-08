@@ -3,7 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/svelte';
 import RecipeMethod from './RecipeMethod.svelte';
 import source from './RecipeMethod.svelte?raw';
 import { ticksKey, loadTicks, saveTicks } from './ticks';
-import { makeStep } from '#lib/recipes/fixtures.js';
+import { inGroup, makeStep } from '#lib/recipes/fixtures.js';
 
 const KEY = ticksKey('my-fork', 3, 'steps');
 
@@ -169,5 +169,28 @@ describe('RecipeMethod while cooking', () => {
 		expect(phone.length).toBeLessThan(style.length);
 		expect(rule(':global([data-cooking]) .step-text', phone)).toMatch(/font-size:\s*1\.125rem/);
 		expect(rule(':global([data-cooking]) .step', phone)).toMatch(/font-size:\s*1\.1875rem/);
+	});
+});
+
+describe('RecipeMethod groups', () => {
+	const steps = [
+		...inGroup('Make the dough', [makeStep('Mix.'), makeStep('Knead.')]),
+		...inGroup('Bake', [makeStep('Bake.')])
+	];
+
+	test('a group name heads its steps, and numbering runs straight through the groups', () => {
+		const { container } = render(RecipeMethod, { props: { storageKey: KEY, steps } });
+		const headings = screen.getAllByRole('heading', { level: 3 });
+		expect(headings.map((h) => h.textContent!.trim())).toEqual(['Make the dough', 'Bake']);
+		expect(headings[0]).toHaveClass('font-serif', 'text-text');
+		// The heading sits inside the step's own list item, so the list stays a list of steps.
+		expect(container.querySelectorAll('ol > li')).toHaveLength(3);
+		expect(container.querySelector('ol > li:nth-child(3) h3')).toHaveTextContent('Bake');
+		expect(screen.getByText('3')).toHaveClass('text-accent');
+	});
+
+	test('ungrouped steps draw no group heading', () => {
+		render(RecipeMethod, { props: { storageKey: KEY, steps: [makeStep('Mix.'), makeStep('Bake.')] } });
+		expect(screen.queryByRole('heading', { level: 3 })).toBeNull();
 	});
 });
