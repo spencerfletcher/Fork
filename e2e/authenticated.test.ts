@@ -545,7 +545,7 @@ test.describe('Compare page', () => {
 			// Not "Pick two of the recipe's versions": there is only one.
 			await expect(page.getByText(/Pick two/)).toHaveCount(0);
 			await expect(
-				page.getByText('Save a change to the recipe, then compare it with the original.')
+				page.getByText('Once the recipe has a second version you can compare them here.')
 			).toBeVisible();
 			await expect(page.getByRole('link', { name: 'Back to the recipe' })).toHaveAttribute(
 				'href',
