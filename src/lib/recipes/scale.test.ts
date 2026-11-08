@@ -146,6 +146,30 @@ describe('scaleIngredient', () => {
 		expect(row.grams).toEqual(grams(20, 30));
 	});
 
+	test('tiny quantities keep their value in any unit: kg, tsp and a counted line', () => {
+		const small = 0.25 / 12;
+		expect(scaleIngredient(makeIngredient('0.006 kg saffron'), null, small).ingredient.text).toBe(
+			'0.0001 kg saffron'
+		);
+		expect(scaleIngredient(makeIngredient('1/8 tsp salt'), null, small).ingredient.text).toBe(
+			'0.003 tsp salt'
+		);
+		expect(scaleIngredient(makeIngredient('1 egg'), null, small).ingredient.text).toBe('0.02 egg');
+	});
+
+	test('a tiny range keeps both ends positive', () => {
+		expect(
+			scaleIngredient(makeIngredient('0.02-0.04 kg yeast'), null, 0.25 / 12).ingredient.text
+		).toBe('0.0004–0.0008 kg yeast');
+	});
+
+	test('a genuine zero stays zero at any multiplier', () => {
+		expect(scaleIngredient(makeIngredient('0 g sugar'), null, 2).ingredient.text).toBe('0 g sugar');
+		expect(scaleIngredient(makeIngredient('0 g sugar'), null, 0.25).ingredient.text).toBe(
+			'0 g sugar'
+		);
+	});
+
 	test('words between unit and name stay', () => {
 		expect(scaleIngredient(makeIngredient('1 cup of flour'), null, 2).ingredient.text).toBe(
 			'2 cups of flour'
