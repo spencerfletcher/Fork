@@ -23,22 +23,25 @@
 	const canFork = $derived(!!user && !isOwner && !isViewingHistory);
 	const canFavorite = $derived(!!user && !isViewingHistory);
 	const canEdit = $derived(isOwner && !isViewingHistory);
+	// The scaler and Cook write the URL with a shallow replace, which leaves
+	// page.url behind. A data reload (Favorite) or Back re-reads it, so the
+	// newest URL is page.shallow's when there is one.
+	const url = $derived(page.shallow?.url ?? page.url);
 	const loginHref = $derived(
-		user || isViewingHistory ? undefined : buildLoginHref(page.url.pathname + page.url.search)
+		user || isViewingHistory ? undefined : buildLoginHref(url.pathname + url.search)
 	);
 
 	// Serving scaling: a multiplier on the list, never saved. ?serves= sets it
 	// on load (server render included); the control writes it back with a
-	// shallow replace, which leaves page.url alone, so this stays the one
-	// owner until a real navigation re-reads the URL.
+	// shallow replace.
 	const stored = $derived(currentVersion.servings ?? 0);
-	let serves = $derived(parseServes(page.url.searchParams.get('serves'), stored));
+	let serves = $derived(parseServes(url.searchParams.get('serves'), stored));
 	const factor = $derived(stored > 0 ? serves / stored : 1);
 
 	// Cooking mode: ?cook=1 on load, written back by the Cook toggle with the
 	// same shallow replace. The article's data-cooking is what the method's
 	// CSS keys off; the bar and the other actions are not rendered.
-	let cooking = $derived(page.url.searchParams.get('cook') === '1');
+	let cooking = $derived(url.searchParams.get('cook') === '1');
 
 	// Below 1024px the Ingredients | Method bar shows one section at a time in
 	// place of the other, so the reader never scrolls past one to reach the

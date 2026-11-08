@@ -11,7 +11,11 @@ import { loginHref } from '#lib/auth/loginHref.js';
 // ingredient list. The control's own behaviour is in ServesControl's tests.
 const { goto, page } = vi.hoisted(() => ({
 	goto: vi.fn(),
-	page: { url: new URL('http://localhost/recipes/cookies'), state: {} }
+	page: {
+		url: new URL('http://localhost/recipes/cookies'),
+		state: {},
+		shallow: null as { url: URL } | null
+	}
 }));
 vi.mock('$app/navigation', () => ({ goto, afterNavigate: () => {} }));
 vi.mock('$app/state', () => ({ page }));
@@ -46,7 +50,10 @@ function load(search = '') {
 	return render(Page, { props: { data: makeData() } });
 }
 
-beforeEach(() => goto.mockClear());
+beforeEach(() => {
+	goto.mockClear();
+	page.shallow = null;
+});
 
 describe('recipe page scaling', () => {
 	test('at the stored serves the box reads them and the lines are as typed', () => {
@@ -150,6 +157,31 @@ describe('recipe page logged out', () => {
 		render(Page, { props: { data: { ...data, currentVersion: data.allVersions[1] } } });
 		expect(screen.queryByRole('link', { name: /Fork|Favorite/ })).toBeNull();
 		expect(screen.getByRole('link', { name: 'Back to v2' })).toBeInTheDocument();
+	});
+});
+
+// The scaler and Cook write the URL with a shallow replace, which leaves
+// page.url behind; a data reload (Favorite) or Back re-reads the page, so it
+// must read the newest URL, page.shallow's.
+describe('recipe page after a shallow replace', () => {
+	function loadShallow(search: string) {
+		page.url = new URL('http://localhost/recipes/cookies');
+		page.shallow = { url: new URL(`http://localhost/recipes/cookies${search}`) };
+		return render(Page, { props: { data: makeData() } });
+	}
+
+	test('the serves and Cook come from the shallow URL', () => {
+		loadShallow('?serves=8&cook=1');
+		expect(screen.getByRole('spinbutton', { name: 'Servings' })).toHaveValue(8);
+		expect(document.querySelector('article')).toHaveAttribute('data-cooking');
+	});
+
+	test('the login link comes back to the shallow URL', () => {
+		loadShallow('?serves=8');
+		expect(screen.getByRole('link', { name: /Fork/ })).toHaveAttribute(
+			'href',
+			loginHref('/recipes/cookies?serves=8')
+		);
 	});
 });
 
