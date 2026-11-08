@@ -53,6 +53,9 @@ export function photoError(file: File): string | null {
 const INGREDIENTS = 'Ingredients';
 const STEPS = 'Steps';
 
+// The HTML number input's grammar: a valid floating-point number.
+const NUMBER_TEXT = /^-?(\d+(\.\d+)?|\.\d+)([eE][-+]?\d+)?$/;
+
 /** A whole number from a text input: blank is absent, otherwise an integer within [min, INT4_MAX]. */
 const optionalInt = (field: NumberField) => {
 	const { min } = NUMBER_FIELDS[field];
@@ -61,8 +64,13 @@ const optionalInt = (field: NumberField) => {
 		z
 			.string()
 			.trim()
-			// The sign passes here so a negative is told it is below the floor.
-			.regex(/^(-?\d+)?$/, messages.whole)
+			// Whole by value, as a number input judges it, so "2.0" and "1e2" pass;
+			// only what such an input can send, so "0x10" and "+4" do not. The
+			// sign passes here so a negative is told it is below the floor.
+			.refine(
+				(s) => s === '' || (NUMBER_TEXT.test(s) && Number.isInteger(Number(s))),
+				messages.whole
+			)
 			.transform((s) => (s === '' ? null : Number(s)))
 			.pipe(z.number().min(min, messages.belowMin).max(INT4_MAX, messages.tooLarge).nullable())
 	);

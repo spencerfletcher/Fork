@@ -127,7 +127,7 @@ describe('parseDraftContent(draftOf(form))', () => {
 	});
 
 	describe('integer fields', () => {
-		const bad = ['x', '2.5', '2.0', '4people', '-3', '1e2', '0x10', '+4'];
+		const bad = ['x', '2.5', '4people', '-3', '0x10', '+4', '2.', '1e'];
 
 		test.each(bad)('rejects servings %j', (value) => {
 			expect(parseContent(form({ ...FULL, servings: value }))).toEqual(rejected);
@@ -135,6 +135,16 @@ describe('parseDraftContent(draftOf(form))', () => {
 
 		test.each(bad)('rejects prep time %j', (value) => {
 			expect(parseContent(form({ ...FULL, prepTimeMinutes: value }))).toEqual(rejected);
+		});
+
+		// A number input sends what was typed, and counts these as whole numbers.
+		test.each([
+			['2.0', 2],
+			['1e2', 100],
+			['4.00', 4],
+			['20E-1', 2]
+		] as const)('accepts servings %j as %d, as the number input does', (value, expected) => {
+			expect(unwrap(parseContent(form({ ...FULL, servings: value }))).servings).toBe(expected);
 		});
 
 		// The editor shows these same strings live, so the two must agree.
