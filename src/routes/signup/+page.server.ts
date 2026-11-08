@@ -5,20 +5,19 @@ import { ensureProfile, usernameTaken } from '#lib/server/profiles.js';
 import { localPath } from '#lib/server/localPath.js';
 import { USERNAME_MESSAGE, normalizeUsername, validUsername } from '#lib/auth/rules.js';
 
-// Redirect users who are already logged in away from the signup page. A
-// redirectTo from the login page is kept so "Log in" can hand it back.
+// Redirect users who are already logged in away from the signup page, to where
+// they were headed or home. A redirectTo from the login page is kept so "Log in"
+// can hand it back.
 export const load: PageServerLoad = async ({ locals: { user }, url }) => {
+	const redirectTo = localPath(url.searchParams.get('redirectTo'));
 	if (user) {
-		throw redirect(303, '/');
+		throw redirect(303, redirectTo ?? '/');
 	}
-	return {
-		redirectTo: localPath(url.searchParams.get('redirectTo')),
-		meta: { title: 'Create an account' }
-	};
+	return { redirectTo, meta: { title: 'Create an account' } };
 };
 
 export const actions: Actions = {
-	default: async ({ request, locals: { supabase } }) => {
+	default: async ({ request, url, locals: { supabase } }) => {
 		const formData = await request.formData();
 		const email = text(formData, 'email');
 		const username = normalizeUsername(text(formData, 'username'));
@@ -51,6 +50,12 @@ export const actions: Actions = {
 		// Best effort: the email may not be confirmed yet, but the profile row can exist.
 		if (data.user) await ensureProfile(data.user, username);
 
-		throw redirect(303, '/confirm-email');
+		// The form posts to its own URL, so the login page's redirectTo rides on to
+		// confirm-email's Log in.
+		const redirectTo = localPath(url.searchParams.get('redirectTo'));
+		throw redirect(
+			303,
+			redirectTo ? `/confirm-email?redirectTo=${encodeURIComponent(redirectTo)}` : '/confirm-email'
+		);
 	}
 };

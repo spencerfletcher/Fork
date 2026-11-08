@@ -1,3 +1,9 @@
+<script lang="ts">
+	import { loginHref } from '#lib/auth/loginHref.js';
+
+	let { data }: { data: { redirectTo: string | null } } = $props();
+</script>
+
 <div class="auth-page">
 	<div class="auth-card">
 		<div class="auth-header">
@@ -7,6 +13,6 @@
 				and log in.
 			</p>
 		</div>
-		<a href="/login" class="btn-primary auth-submit">Log in</a>
+		<a href={loginHref(data.redirectTo)} class="btn-primary auth-submit">Log in</a>
 	</div>
 </div>

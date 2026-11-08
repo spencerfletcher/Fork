@@ -18,8 +18,10 @@ vi.mock('#lib/server/profiles.js', () => ({ ensureProfile, usernameTaken }));
 const signUp = vi.fn();
 
 /** Builds a minimal RequestEvent-like object for the signup action. */
-const makeEvent = (fields: Record<string, string>) =>
-	formEvent({ fields, locals: { supabase: { auth: { signUp } } } });
+const makeEvent = (fields: Record<string, string>, query = '') => ({
+	...formEvent({ fields, locals: { supabase: { auth: { signUp } } } }),
+	url: new URL(`http://x/signup${query}`)
+});
 
 const valid = { email: 'cook@b.com', username: 'cook', password: 'pw' };
 
@@ -125,11 +127,45 @@ describe('signup action', () => {
 		expect(isRedirect(result)).toBe(true);
 		expect(result).toMatchObject({ status: 303, location: '/confirm-email' });
 	});
+
+	// The form posts to its own URL, so the login page's redirectTo is still there.
+	test('hands a local redirectTo on to the confirm-email page and drops an off-site one', async () => {
+		signUp.mockResolvedValue({ data: { user: { id: 'user-1' } }, error: null });
+
+		const local = await invoke(
+			actions.default as never,
+			makeEvent(valid, '?redirectTo=%2Frecipes%2Fcookies%3Fversion%3D2')
+		);
+		expect(local).toMatchObject({
+			status: 303,
+			location: '/confirm-email?redirectTo=%2Frecipes%2Fcookies%3Fversion%3D2'
+		});
+
+		const offsite = await invoke(
+			actions.default as never,
+			makeEvent(valid, '?redirectTo=%2F%2Fevil.example')
+		);
+		expect(offsite).toMatchObject({ status: 303, location: '/confirm-email' });
+	});
 });
 
 describe('signup load', () => {
 	const run = (query = '') =>
 		load({ locals: { user: null }, url: new URL(`http://x/signup${query}`) } as never);
+
+	test('a signed-in visitor goes to a local redirectTo, else home', async () => {
+		const signedIn = (query: string) =>
+			invoke(load as never, {
+				locals: { user: { id: 'u1' } },
+				url: new URL(`http://x/signup${query}`)
+			});
+		expect(await signedIn('?redirectTo=%2Ffavorites%3Fq%3Dsoup')).toMatchObject({
+			status: 303,
+			location: '/favorites?q=soup'
+		});
+		expect(await signedIn('?redirectTo=%2F%2Fevil.example')).toMatchObject({ location: '/' });
+		expect(await signedIn('')).toMatchObject({ location: '/' });
+	});
 
 	test('the tab title matches the h1', async () => {
 		expect(await run()).toMatchObject({ meta: { title: 'Create an account' } });

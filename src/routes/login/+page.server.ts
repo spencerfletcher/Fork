@@ -3,12 +3,13 @@ import type { Actions, PageServerLoad } from './$types';
 import { text } from '#lib/helpers.js';
 import { localPath } from '#lib/server/localPath.js';
 
-// A signed-in visitor has nothing to do here and goes home.
+// A signed-in visitor has nothing to do here and goes where they were headed, or home.
 export const load: PageServerLoad = async ({ locals: { user }, url }) => {
+	const redirectTo = localPath(url.searchParams.get('redirectTo'));
 	if (user) {
-		throw redirect(303, '/');
+		throw redirect(303, redirectTo ?? '/');
 	}
-	return { redirectTo: localPath(url.searchParams.get('redirectTo')), meta: { title: 'Log in' } };
+	return { redirectTo, meta: { title: 'Log in' } };
 };
 
 export const actions: Actions = {

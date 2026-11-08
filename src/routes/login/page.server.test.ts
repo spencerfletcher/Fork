@@ -84,6 +84,22 @@ describe('login action', () => {
 });
 
 describe('login load', () => {
+	test('a signed-in visitor goes to a local redirectTo, else home', async () => {
+		const signedIn = (query: string) =>
+			invoke(load as never, {
+				locals: { user: { id: 'u1' } },
+				url: new URL(`http://x/login${query}`)
+			});
+		expect(await signedIn('?redirectTo=%2Ffavorites%3Fq%3Dsoup')).toMatchObject({
+			status: 303,
+			location: '/favorites?q=soup'
+		});
+		expect(await signedIn('?redirectTo=https%3A%2F%2Fevil.example')).toMatchObject({
+			location: '/'
+		});
+		expect(await signedIn('')).toMatchObject({ location: '/' });
+	});
+
 	test('hands a local redirectTo to the page and drops an off-site one', async () => {
 		const run = (redirectTo: string) =>
 			load({
