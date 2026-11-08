@@ -1,5 +1,6 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/svelte';
+import { tick } from 'svelte';
 import source from './RecipeForm.svelte?raw';
 import photoSource from './PhotoField.svelte?raw';
 import RecipeForm from './RecipeForm.svelte';
@@ -41,6 +42,30 @@ describe('RecipeForm photo input', () => {
 			'accept',
 			PHOTO_TYPES.join(',')
 		);
+	});
+});
+
+describe('RecipeForm photo removed on a new recipe', () => {
+	// No stored photo, so no Keep photo takes the place of the ×: focus goes to the input.
+	test('focus moves to the photo input, not the page', async () => {
+		render(RecipeForm, {
+			props: {
+				baseline: draftOf(new FormData()),
+				form: null,
+				allTags: [],
+				submitLabel: 'Create recipe',
+				cancelHref: '/recipes'
+			}
+		});
+		const input = document.querySelector<HTMLInputElement>('input[type="file"]')!;
+		const file = new File(['x'], 'a.png', { type: PHOTO_TYPES[1] });
+		await fireEvent.change(input, { target: { files: [file] } });
+		const remove = await screen.findByRole('button', { name: 'Remove photo' });
+		remove.focus();
+		await fireEvent.click(remove);
+		await tick();
+		expect(screen.queryByRole('button', { name: 'Remove photo' })).toBeNull();
+		expect(document.activeElement).toBe(input);
 	});
 });
 

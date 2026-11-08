@@ -40,7 +40,8 @@
 		removeImage = false;
 	}
 
-	// Each button takes the other's place, so focus follows to it.
+	// Each button takes the other's place, so focus follows to it. With no
+	// stored photo there is nothing to keep, so focus goes to the input.
 	let keepButton: HTMLButtonElement | undefined = $state();
 	let removeButton: HTMLButtonElement | undefined = $state();
 
@@ -50,7 +51,7 @@
 		if (imageInput) imageInput.value = '';
 		if (imageUrl) removeImage = true;
 		await tick();
-		keepButton?.focus();
+		(keepButton ?? imageInput)?.focus();
 	}
 
 	// Undoes the removal alone; Cancel still discards every edit.
