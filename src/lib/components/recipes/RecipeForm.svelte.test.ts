@@ -4,7 +4,12 @@ import { tick } from 'svelte';
 import source from './RecipeForm.svelte?raw';
 import photoSource from './PhotoField.svelte?raw';
 import RecipeForm from './RecipeForm.svelte';
-import { draftOf, PHOTO_TYPES } from '#lib/recipes/validation.js';
+import {
+	draftOf,
+	PHOTO_TYPES,
+	PHOTO_MAX_BYTES,
+	PHOTO_SIZE_MESSAGE
+} from '#lib/recipes/validation.js';
 
 vi.mock('$app/navigation', () => ({ beforeNavigate: () => {} }));
 vi.mock('$app/forms', () => ({ enhance: () => ({ destroy: () => {} }) }));
@@ -42,6 +47,39 @@ describe('RecipeForm photo input', () => {
 			'accept',
 			PHOTO_TYPES.join(',')
 		);
+	});
+});
+
+describe('RecipeForm photo over the size cap', () => {
+	// The host refuses a big request before the action runs, so the check is here too.
+	test('says so under the field, marks the input invalid and clears it, so nothing is sent', async () => {
+		render(RecipeForm, {
+			props: {
+				baseline: draftOf(new FormData()),
+				form: null,
+				allTags: [],
+				submitLabel: 'Create recipe',
+				cancelHref: '/recipes'
+			}
+		});
+		const input = document.querySelector<HTMLInputElement>('input[type="file"]')!;
+		const pick = (bytes: number) =>
+			fireEvent.change(input, {
+				target: { files: [new File([new Uint8Array(bytes)], 'a.jpg', { type: PHOTO_TYPES[0] })] }
+			});
+		const clear = vi.spyOn(input, 'value', 'set');
+		await pick(PHOTO_MAX_BYTES + 1);
+		const error = screen.getByText(PHOTO_SIZE_MESSAGE);
+		expect(error).toHaveClass('field-error');
+		expect(error).toHaveAttribute('role', 'alert');
+		expect(input).toHaveAttribute('aria-invalid', 'true');
+		expect(input.getAttribute('aria-describedby')).toBe(error.id);
+		expect(clear).toHaveBeenCalledWith('');
+		expect(screen.getByText('Choose photo')).toBeInTheDocument();
+		await pick(PHOTO_MAX_BYTES);
+		expect(screen.queryByText(PHOTO_SIZE_MESSAGE)).toBeNull();
+		expect(input).not.toHaveAttribute('aria-invalid');
+		expect(screen.getByText('Replace photo')).toBeInTheDocument();
 	});
 });
 

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { tick } from 'svelte';
-	import { PHOTO_TYPES } from '#lib/recipes/validation.js';
+	import { PHOTO_TYPES, photoError } from '#lib/recipes/validation.js';
 
 	let {
 		imageUrl,
@@ -25,8 +25,21 @@
 	let imageInput: HTMLInputElement | undefined = $state();
 	const preview = $derived(chosenPreview ?? (removeImage ? null : imageUrl));
 
+	// A photo the save would refuse. The host buffers a request before the
+	// action runs, so a big file never reaches the server's check; it is
+	// refused here and cleared, so nothing oversized is sent.
+	let error = $state('');
+
 	function onImageChange(e: Event) {
-		const file = (e.target as HTMLInputElement).files?.[0];
+		const input = e.target as HTMLInputElement;
+		const file = input.files?.[0];
+		error = file ? (photoError(file) ?? '') : '';
+		if (error) {
+			input.value = '';
+			chosen = false;
+			chosenPreview = null;
+			return;
+		}
 		chosen = !!file;
 		if (!file) {
 			chosenPreview = null;
@@ -94,6 +107,8 @@
 				accept={PHOTO_TYPES.join(',')}
 				class="sr-only"
 				aria-labelledby="image-action"
+				aria-invalid={error ? 'true' : undefined}
+				aria-describedby={error ? 'image-error' : undefined}
 				bind:this={imageInput}
 				onchange={onImageChange} />
 			<span id="image-action">{preview || chosen ? 'Replace photo' : 'Choose photo'}</span>
@@ -106,6 +121,9 @@
 	</div>
 	{#if removeImage}
 		<input type="hidden" name="removeImage" value="on" />
+	{/if}
+	{#if error}
+		<p class="field-error" id="image-error" role="alert">{error}</p>
 	{/if}
 	{#if photoLost}
 		<p class="form-hint">Please choose the photo again.</p>
