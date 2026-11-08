@@ -372,7 +372,14 @@ describe('RecipeIngredients groups', () => {
 		const order = [...container.querySelectorAll('h3, label')].map((el) =>
 			el.textContent!.replace(/\s+/g, ' ').trim()
 		);
-		expect(order).toEqual(['salt', 'Dough', '2 cups flour', '2 large eggs', 'Icing', '1 cup sugar']);
+		expect(order).toEqual([
+			'salt',
+			'Dough',
+			'2 cups flour',
+			'2 large eggs',
+			'Icing',
+			'1 cup sugar'
+		]);
 	});
 
 	test('ticks stay one per row, keyed by position across groups', () => {

@@ -63,7 +63,9 @@ export function stepsToText(steps: Step[]): string {
 	return joinGroups(
 		steps,
 		(step) =>
-			step.annotation ? `${step.text}\n${step.annotation.type}: ${step.annotation.text}` : step.text,
+			step.annotation
+				? `${step.text}\n${step.annotation.type}: ${step.annotation.text}`
+				: step.text,
 		'\n\n'
 	);
 }

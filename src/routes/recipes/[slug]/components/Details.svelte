@@ -49,7 +49,9 @@
 					<!-- Scaled reads clay, as the serves do; a size or temperature it left
 					     alone says so in Ink 3, only while the recipe is scaled. -->
 					{label}
-					<span class={['font-semibold', makes?.scaled ? 'text-accent' : 'text-text']}>{value}</span>
+					<span class={['font-semibold', makes?.scaled ? 'text-accent' : 'text-text']}>
+						{value}
+					</span>
 					{#if makes?.flagged}<span class="not-scaled text-text-3">not scaled</span>{/if}
 				{:else}
 					<span class="text-text font-semibold">{value}</span>

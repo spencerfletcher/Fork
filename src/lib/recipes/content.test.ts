@@ -27,8 +27,9 @@ describe('changedGroups', () => {
 	});
 
 	test('moving a row into a group, or renaming the group, is a change in its list', () => {
-		expect(changedGroups(base, makeContent({ ingredients: inGroup('Dough', base.ingredients) })))
-			.toEqual(['ingredients']);
+		expect(
+			changedGroups(base, makeContent({ ingredients: inGroup('Dough', base.ingredients) }))
+		).toEqual(['ingredients']);
 		expect(
 			changedGroups(
 				makeContent({ steps: inGroup('Mix', base.steps) }),

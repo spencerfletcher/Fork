@@ -217,12 +217,15 @@ describe('scaleMakes', () => {
 		expect(scaleMakes(makes, factor)).toEqual({ text, scaled: true, flagged: false });
 	});
 
-	test.each([['one 9x13 pan'], ['9x13 pan'], ['8 × 8 in tin'], ['12 buns at 180°C'], ['1 loaf, 350 F']])(
-		'%j has a size or temperature: not scaled, and flagged so the page says so',
-		(makes) => {
-			expect(scaleMakes(makes, 2)).toEqual({ text: makes, scaled: false, flagged: true });
-		}
-	);
+	test.each([
+		['one 9x13 pan'],
+		['9x13 pan'],
+		['8 × 8 in tin'],
+		['12 buns at 180°C'],
+		['1 loaf, 350 F']
+	])('%j has a size or temperature: not scaled, and flagged so the page says so', (makes) => {
+		expect(scaleMakes(makes, 2)).toEqual({ text: makes, scaled: false, flagged: true });
+	});
 
 	test.each([['a dozen'], ['one loaf'], ['12-14 buns']])(
 		'%j has no single leading number: unchanged and not flagged',

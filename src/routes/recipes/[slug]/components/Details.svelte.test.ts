@@ -68,7 +68,12 @@ describe('Details', () => {
 		test('follows serves as label then value: "Serves 4 · Makes 12 buns"', () => {
 			const { container } = render(Details, {
 				props: {
-					content: makeContent({ servings: 4, makes: '12 buns', prepTimeMinutes: null, cookTimeMinutes: null })
+					content: makeContent({
+						servings: 4,
+						makes: '12 buns',
+						prepTimeMinutes: null,
+						cookTimeMinutes: null
+					})
 				}
 			});
 			expect(line(container)).toBe('Serves 4 Makes 12 buns');
@@ -78,7 +83,12 @@ describe('Details', () => {
 		test('reads alone when there are no servings, and is never read as servings', () => {
 			const { container } = render(Details, {
 				props: {
-					content: makeContent({ servings: null, makes: '12 buns', prepTimeMinutes: null, cookTimeMinutes: null })
+					content: makeContent({
+						servings: null,
+						makes: '12 buns',
+						prepTimeMinutes: null,
+						cookTimeMinutes: null
+					})
 				}
 			});
 			expect(line(container)).toBe('Makes 12 buns');

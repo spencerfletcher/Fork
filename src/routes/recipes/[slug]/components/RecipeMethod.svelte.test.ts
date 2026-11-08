@@ -190,7 +190,9 @@ describe('RecipeMethod groups', () => {
 	});
 
 	test('ungrouped steps draw no group heading', () => {
-		render(RecipeMethod, { props: { storageKey: KEY, steps: [makeStep('Mix.'), makeStep('Bake.')] } });
+		render(RecipeMethod, {
+			props: { storageKey: KEY, steps: [makeStep('Mix.'), makeStep('Bake.')] }
+		});
 		expect(screen.queryByRole('heading', { level: 3 })).toBeNull();
 	});
 });
