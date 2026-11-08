@@ -9,7 +9,6 @@ import { makeContent, makeIngredient, makeStep } from '#lib/recipes/fixtures.js'
 const {
 	findRecipeMock,
 	dbInsert,
-	dbDelete,
 	dbSelectDistinct,
 	transactionMock,
 	uploadMock,
@@ -17,7 +16,6 @@ const {
 	syncTagsMock
 } = vi.hoisted(() => ({
 	findRecipeMock: vi.fn(),
-	dbDelete: vi.fn(),
 	dbSelectDistinct: vi.fn(),
 	dbInsert: vi.fn().mockReturnValue({
 		values: vi.fn().mockReturnValue({
@@ -44,7 +42,6 @@ vi.mock('#lib/server/db/index.js', () => ({
 			tags: { findMany: vi.fn().mockResolvedValue([]) }
 		},
 		insert: dbInsert,
-		delete: dbDelete,
 		selectDistinct: dbSelectDistinct,
 		transaction: transactionMock
 	}
@@ -479,13 +476,19 @@ describe('deleteRecipe', () => {
 	});
 
 	let deleteChain: ReturnType<typeof chain>;
+	let tx: ReturnType<typeof makeTx>;
 
-	/** `kept` is what another recipe's versions still show once this one is gone. */
-	function setUp(recipe: unknown, kept: string[] = []) {
+	/** `kept` is what another recipe's versions still show once this one is gone.
+	 *  The versions are read, and the row deleted, inside the transaction. */
+	function setUp(recipe: { versions: unknown[] }, kept: string[] = []) {
 		vi.clearAllMocks();
 		findRecipeMock.mockResolvedValue(recipe);
-		deleteChain = chain();
-		dbDelete.mockReturnValue(deleteChain);
+		tx = makeTx();
+		Object.assign(tx.query.recipeVersions, {
+			findMany: vi.fn().mockResolvedValue(recipe.versions)
+		});
+		deleteChain = tx.deleteChain;
+		transactionMock.mockImplementation(async (fn: (t: unknown) => unknown) => fn(tx));
 		dbSelectDistinct.mockReturnValue(chain(kept.map((imageUrl) => ({ imageUrl }))));
 	}
 
@@ -495,7 +498,10 @@ describe('deleteRecipe', () => {
 	test("the owner's delete removes the row, each distinct photo once, and lands on /recipes", async () => {
 		setUp(withVersions(photo('a'), photo('a'), null, photo('b')));
 		const result = await del();
-		expect(dbDelete).toHaveBeenCalledTimes(1);
+		// Under the save action's row lock, so a save cannot land mid-delete.
+		expect(transactionMock).toHaveBeenCalledTimes(1);
+		expect(tx.lockFor).toHaveBeenCalledWith('update');
+		expect(tx.delete).toHaveBeenCalledTimes(1);
 		expect(deleteChain.where).toHaveBeenCalledTimes(1);
 		expect(removeMock).toHaveBeenCalledTimes(1);
 		expect(removeMock).toHaveBeenCalledWith(SUPABASE, 'owner-123/a.png', 'owner-123/b.png');
@@ -522,7 +528,7 @@ describe('deleteRecipe', () => {
 			status: 403,
 			data: { error: 'Not authorized', code: 'forbidden' }
 		});
-		expect(dbDelete).not.toHaveBeenCalled();
+		expect(transactionMock).not.toHaveBeenCalled();
 		expect(removeMock).not.toHaveBeenCalled();
 	});
 
@@ -530,7 +536,7 @@ describe('deleteRecipe', () => {
 		setUp(withVersions(photo('a')));
 		const result = await del(null);
 		expect(result).toMatchObject({ status: 401, data: { code: 'unauthenticated' } });
-		expect(dbDelete).not.toHaveBeenCalled();
+		expect(transactionMock).not.toHaveBeenCalled();
 	});
 });
 

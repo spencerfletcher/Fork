@@ -168,22 +168,28 @@ export const actions: Actions = {
 				code: 'unauthenticated'
 			});
 
-		const recipe = await db.query.recipes.findFirst({
-			where: eq(recipes.slug, params.slug),
-			with: { versions: { columns: { imageUrl: true } } }
-		});
+		const recipe = await db.query.recipes.findFirst({ where: eq(recipes.slug, params.slug) });
 		if (!recipe) throw error(404, 'Recipe not found');
 		if (recipe.authorId !== user.id)
 			return fail(403, { error: 'Not authorized', code: 'forbidden' });
 
-		await db.delete(recipes).where(eq(recipes.id, recipe.id));
+		// The save action's row lock: a save waits, then finds no row and removes
+		// its own upload, so every version's photo is in the read below.
+		const urls = await db.transaction(async (tx) => {
+			await tx.select().from(recipes).where(eq(recipes.id, recipe.id)).for('update');
+			const versions = await tx.query.recipeVersions.findMany({
+				where: eq(recipeVersions.recipeId, recipe.id),
+				columns: { imageUrl: true }
+			});
+			await tx.delete(recipes).where(eq(recipes.id, recipe.id));
+			return [...new Set(versions.flatMap((v) => v.imageUrl ?? []))];
+		});
 
 		// A fork's first version copies its parent's photo url, so a photo can be
 		// shown by other recipes; only the ones no remaining version shows go.
 		// Asked after the delete, so this recipe's own versions are not counted.
 		// ponytail: a fork committed between the delete and this read can still
 		// lose its photo; a lock shared with the fork action closes that if needed.
-		const urls = [...new Set(recipe.versions.flatMap((v) => v.imageUrl ?? []))];
 		if (urls.length > 0) {
 			const shown = await db
 				.selectDistinct({ imageUrl: recipeVersions.imageUrl })
