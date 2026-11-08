@@ -113,3 +113,51 @@ export function scaleIngredient(
 		}
 	};
 }
+
+// A yield's size or temperature ("one 9x13 pan", "at 180°C") is not a count,
+// so it is never multiplied; the page says it was left alone.
+const DIMENSION = /\d\s*[x×]\s*\d/;
+const TEMPERATURE = /°|\d\s*[FC]\b/;
+const GLYPHS = Object.values(FRACTIONS).join('');
+const GLYPH_VALUE: Record<string, number> = Object.fromEntries(
+	Object.entries(FRACTIONS).map(([fraction, glyph]) => {
+		const [numerator, denominator] = fraction.split('/').map(Number);
+		return [glyph, numerator / denominator];
+	})
+);
+// One leading number, optionally "about" or "≈" first: "12", "1.8", "1½",
+// "½", "1/2". A range ("12-14") or a number run into more digits is not one.
+const LEADING = new RegExp(
+	`^(about\\s+|≈\\s*)?(\\d+/\\d+|\\d+(?:\\.\\d+)?[${GLYPHS}]?|[${GLYPHS}])(?![\\d/.,–-])`,
+	'i'
+);
+
+function leadingValue(number: string): number {
+	if (number.includes('/')) {
+		const [numerator, denominator] = number.split('/').map(Number);
+		return numerator / denominator;
+	}
+	const glyph = GLYPH_VALUE[number.at(-1)!];
+	return glyph === undefined ? Number(number) : Number(number.slice(0, -1) || 0) + glyph;
+}
+
+/**
+ * A yield at a serving multiplier: its leading number scaled ("12 buns" at
+ * ×1.5 is "18 buns"), never the servings read from it. Text with a size or
+ * temperature is left as typed and flagged, so the page can say it was not
+ * scaled; text with no leading number ("a dozen") is left as typed, unflagged.
+ */
+export function scaleMakes(
+	makes: string,
+	factor: number
+): { text: string; scaled: boolean; flagged: boolean } {
+	const unchanged = { text: makes, scaled: false, flagged: false };
+	if (factor === 1) return unchanged;
+	if (DIMENSION.test(makes) || TEMPERATURE.test(makes)) return { ...unchanged, flagged: true };
+	const match = LEADING.exec(makes);
+	if (!match) return unchanged;
+	const value = leadingValue(match[2]);
+	if (!Number.isFinite(value) || value <= 0) return unchanged;
+	const text = (match[1] ?? '') + formatScaled(value * factor) + makes.slice(match[0].length);
+	return { text, scaled: true, flagged: false };
+}

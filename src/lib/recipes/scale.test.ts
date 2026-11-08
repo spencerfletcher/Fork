@@ -7,6 +7,7 @@ import {
 	formatServes,
 	parseServes,
 	scaleIngredient,
+	scaleMakes,
 	scaleQuantity
 } from './scale';
 
@@ -201,5 +202,36 @@ describe('scaleIngredient', () => {
 		const row = scaleIngredient(ingredient, g, 1);
 		expect(row.ingredient).toBe(ingredient);
 		expect(row.grams).toBe(g);
+	});
+});
+
+describe('scaleMakes', () => {
+	test.each([
+		['12 buns', 1.5, '18 buns'],
+		['about 1.8 L', 0.5, 'about 0.9 L'],
+		['≈ 2 loaves', 2, '≈ 4 loaves'],
+		['1½ L', 2, '3 L'],
+		['1/2 sheet cake', 2, '1 sheet cake'],
+		['36 cookies', 0.5, '18 cookies']
+	])('%j at ×%d reads %j, scaled', (makes, factor, text) => {
+		expect(scaleMakes(makes, factor)).toEqual({ text, scaled: true, flagged: false });
+	});
+
+	test.each([['one 9x13 pan'], ['9x13 pan'], ['8 × 8 in tin'], ['12 buns at 180°C'], ['1 loaf, 350 F']])(
+		'%j has a size or temperature: not scaled, and flagged so the page says so',
+		(makes) => {
+			expect(scaleMakes(makes, 2)).toEqual({ text: makes, scaled: false, flagged: true });
+		}
+	);
+
+	test.each([['a dozen'], ['one loaf'], ['12-14 buns']])(
+		'%j has no single leading number: unchanged and not flagged',
+		(makes) => {
+			expect(scaleMakes(makes, 2)).toEqual({ text: makes, scaled: false, flagged: false });
+		}
+	);
+
+	test.each([['12 buns'], ['9x13 pan']])('%j at ×1 is as typed, never flagged', (makes) => {
+		expect(scaleMakes(makes, 1)).toEqual({ text: makes, scaled: false, flagged: false });
 	});
 });
