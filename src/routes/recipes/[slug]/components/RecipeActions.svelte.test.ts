@@ -8,6 +8,7 @@ import { readFileSync } from 'node:fs';
 // Each form's enhance callback is captured so a test can play back a result.
 type Submit = (input: {
 	formElement: HTMLFormElement;
+	cancel: () => void;
 }) => Promise<(opts: { result: { type: string }; update: () => Promise<void> }) => Promise<void>>;
 const { submits } = vi.hoisted(() => ({ submits: new Map<string, Submit>() }));
 vi.mock('$app/forms', () => ({
@@ -18,21 +19,26 @@ vi.mock('$app/forms', () => ({
 }));
 
 // Cook writes ?cook=1 with the shallow replace the scaler uses.
-const { goto, page } = vi.hoisted(() => ({
+// afterNavigate's callbacks are kept so a test can play a navigation back.
+const { goto, page, navigated } = vi.hoisted(() => ({
 	goto: vi.fn(),
 	page: {
 		url: new URL('http://localhost/recipes/cookies'),
 		state: {},
 		shallow: null as { url: URL } | null
-	}
+	},
+	navigated: [] as (() => void)[]
 }));
-vi.mock('$app/navigation', () => ({ goto }));
+vi.mock('$app/navigation', () => ({
+	goto,
+	afterNavigate: (callback: () => void) => navigated.push(callback)
+}));
 vi.mock('$app/state', () => ({ page }));
 
 /** Runs the enhance flow for one form as SvelteKit would, ending in `result`. */
 async function playBack(action: string, result: { type: string; location?: string }) {
 	const form = document.querySelector<HTMLFormElement>(`form[action="${action}"]`)!;
-	const handler = await submits.get(action)!({ formElement: form });
+	const handler = await submits.get(action)!({ formElement: form, cancel: () => {} });
 	await handler({ result, update: async () => {} });
 	await tick();
 }
@@ -173,6 +179,41 @@ describe('RecipeActions when a request fails', () => {
 		await playBack('?/fork', { type: 'error' });
 		expect(screen.getByRole('alert')).toHaveTextContent(/could not fork/i);
 		expect(screen.getByRole('button', { name: 'Fork this recipe' })).not.toBeDisabled();
+	});
+
+	test('a fork that succeeds stays disabled while the browser leaves, so it cannot fork twice', async () => {
+		render(RecipeActions, { props: makeProps({ canFork: true }) });
+		await playBack('?/fork', { type: 'redirect', location: '/recipes/cookies-abc/edit' });
+		expect(screen.getByRole('button', { name: 'Fork this recipe' })).toBeDisabled();
+	});
+
+	test('the message goes when the page moves to another version or recipe', async () => {
+		navigated.length = 0;
+		render(RecipeActions, { props: makeProps() });
+		await playBack('?/toggleFavorite', { type: 'error' });
+		expect(screen.getByRole('alert')).toBeInTheDocument();
+		for (const callback of navigated) callback();
+		await tick();
+		expect(screen.queryByRole('alert')).toBeNull();
+	});
+
+	test('a second press while a favourite is saving is cancelled and flips nothing', async () => {
+		render(RecipeActions, { props: makeProps({ initialFavorited: false }) });
+		const form = document.querySelector<HTMLFormElement>('form[action="?/toggleFavorite"]')!;
+		const submit = submits.get('?/toggleFavorite')!;
+		const handler = await submit({ formElement: form, cancel: () => {} });
+		await tick();
+		const cancel = vi.fn();
+		await submit({ formElement: form, cancel });
+		await tick();
+		expect(cancel).toHaveBeenCalled();
+		const button = screen.getByRole('button', { name: 'Favorite' });
+		expect(button).toHaveAttribute('aria-pressed', 'true');
+		// Once the first answers, a press goes through again.
+		await handler({ result: { type: 'success' }, update: async () => {} });
+		const next = vi.fn();
+		await submit({ formElement: form, cancel: next });
+		expect(next).not.toHaveBeenCalled();
 	});
 });
 
@@ -423,7 +464,8 @@ describe('RecipeActions wake lock', () => {
 		render(RecipeActions, { props: makeProps({ cooking: true }) });
 		await tick();
 		expect(screen.getByRole('button', { name: 'Done cooking' })).toBeInTheDocument();
-		expect(screen.getByText('Your screen may still sleep.')).toHaveClass('text-text-3');
+		// Ink 2: Ink 3 is 4.46:1 on the band, under AA for this size.
+		expect(screen.getByText('Your screen may still sleep.')).toHaveClass('text-text-2');
 	});
 
 	test('without the API and not cooking, no note', async () => {

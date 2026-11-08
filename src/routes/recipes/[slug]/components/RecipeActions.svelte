@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { afterNavigate } from '$app/navigation';
 	import { setShallowParam } from './shallowParam';
 	import type { Recipe } from '#lib/server/db/schema.js';
 	import { forkIcon, starIcon } from './Icons.svelte';
@@ -31,7 +32,12 @@
 	// prop whenever the page loads another recipe or reloads this one.
 	let isFavorited = $derived(initialFavorited);
 	let forking = $state(false);
+	let saving = $state(false);
 	let error = $state('');
+
+	// SvelteKit keeps this component mounted across versions and recipes, so a
+	// failure message would otherwise stay over the next view.
+	afterNavigate(() => (error = ''));
 
 	// The URL carries ?cook=1 so a reload or a shared link stays in the mode.
 	function toggleCook() {
@@ -106,9 +112,14 @@
 					forking = true;
 					error = '';
 					return async ({ result, update }) => {
+						// Still disabled while the browser leaves for the new fork, so a
+						// second click cannot fork twice.
+						if (result.type === 'redirect') {
+							window.location.href = result.location;
+							return;
+						}
 						forking = false;
-						if (result.type === 'redirect') window.location.href = result.location;
-						else if (result.type === 'success') await update();
+						if (result.type === 'success') await update();
 						else error = 'Could not fork this recipe. Try again.';
 					};
 				}}>
@@ -147,10 +158,15 @@
 			<form
 				method="POST"
 				action="?/toggleFavorite"
-				use:enhance={() => {
+				use:enhance={({ cancel }) => {
+					// One request at a time: two toggles in flight could race on the
+					// server. Cancelled rather than disabled, so keyboard focus stays.
+					if (saving) return cancel();
+					saving = true;
 					isFavorited = !isFavorited;
 					error = '';
 					return async ({ result, update }) => {
+						saving = false;
 						if (result.type === 'success') return update({ reset: false });
 						// Flip back: nothing was saved.
 						isFavorited = !isFavorited;
@@ -195,7 +211,7 @@
 	</button>
 
 	{#if cooking && noWakeLock}
-		<p class="note text-text-3 m-0 basis-full text-sm">Your screen may still sleep.</p>
+		<p class="note text-text-2 m-0 basis-full text-sm">Your screen may still sleep.</p>
 	{/if}
 	{#if error}
 		<p class="form-error m-0 basis-full" role="alert">{error}</p>
