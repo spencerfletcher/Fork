@@ -68,9 +68,14 @@ const optionalInt = (field: NumberField) => {
 			// only what such an input can send, so "0x10" and "+4" do not. The
 			// sign passes here so a negative is told it is below the floor.
 			.refine(
-				(s) => s === '' || (NUMBER_TEXT.test(s) && Number.isInteger(Number(s))),
+				// An overflow to Infinity passes here, to be called too large next.
+				(s) =>
+					s === '' ||
+					(NUMBER_TEXT.test(s) && (!Number.isFinite(Number(s)) || Number.isInteger(Number(s)))),
 				messages.whole
 			)
+			// z.number() refuses Infinity with its own wording, so this says it first.
+			.refine((s) => s === '' || Number.isFinite(Number(s)), messages.tooLarge)
 			.transform((s) => (s === '' ? null : Number(s)))
 			.pipe(z.number().min(min, messages.belowMin).max(INT4_MAX, messages.tooLarge).nullable())
 	);

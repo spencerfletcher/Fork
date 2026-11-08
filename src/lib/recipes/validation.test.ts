@@ -156,7 +156,8 @@ describe('parseDraftContent(draftOf(form))', () => {
 			['prepTimeMinutes', '1.5', 'whole'],
 			['prepTimeMinutes', '-1.5', 'whole'],
 			['cookTimeMinutes', '-5', 'belowMin'],
-			['cookTimeMinutes', '1.5', 'whole']
+			['cookTimeMinutes', '1.5', 'whole'],
+			['servings', '1e400', 'tooLarge']
 		] as const)('%s %j is refused with its %s message', (field, value, kind) => {
 			expect(parseContent(form({ ...FULL, [field]: value }))).toEqual({
 				ok: false,
