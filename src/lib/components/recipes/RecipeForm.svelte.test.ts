@@ -76,11 +76,7 @@ describe('RecipeForm save error that names no field', () => {
 		render(RecipeForm, {
 			props: {
 				baseline,
-				form: {
-					error: 'Could not save the recipe. Try again.',
-					code: 'save_failed',
-					draft: baseline
-				},
+				form: { error: 'Could not save the recipe. Try again.', draft: baseline },
 				allTags: [],
 				submitLabel: 'Create recipe',
 				cancelHref: '/recipes'
