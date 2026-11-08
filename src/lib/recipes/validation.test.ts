@@ -7,9 +7,17 @@ import {
 	fieldOfMessage,
 	REQUIRED_MESSAGES,
 	tagNameMessage,
+	emptyGroupMessage,
 	type Result
 } from './validation';
-import { MAX_FIELD, MAX_LINE } from './limits';
+import {
+	MAKES_TOO_LONG,
+	MAX_FIELD,
+	MAX_GROUP_NAME,
+	MAX_LINE,
+	MAX_MAKES,
+	groupNameTooLong
+} from './limits';
 
 function form(fields: Record<string, string | string[]>): FormData {
 	const fd = new FormData();
@@ -126,6 +134,57 @@ describe('parseDraftContent(draftOf(form))', () => {
 		});
 	});
 
+	test('keeps the "# Name" groups on ingredients and steps', () => {
+		const value = unwrap(
+			parseContent(form({ ...FULL, ingredients: '# Dough\nflour', steps: '# Bake\nBake.' }))
+		);
+		expect(value.ingredients[0].group).toBe('Dough');
+		expect(value.steps[0].group).toBe('Bake');
+	});
+
+	test.each([
+		['ingredients', '# Dough\nflour\n# Filling\n\n# Icing\nsugar', 'Filling', 'ingredients'],
+		['steps', '# Mix\nMix.\n\n# Bake', 'Bake', 'steps']
+	])('a heading with nothing under it in %s is refused by name', (field, value, name, items) => {
+		expect(parseContent(form({ ...FULL, [field]: value }))).toEqual({
+			ok: false,
+			error: emptyGroupMessage(name, items as 'ingredients' | 'steps')
+		});
+		expect(emptyGroupMessage('Filling', 'ingredients')).toBe(
+			'“Filling” has no ingredients. Add some under it or delete the heading.'
+		);
+	});
+
+	test('a group name longer than the cap is refused', () => {
+		const name = 'x'.repeat(MAX_GROUP_NAME + 1);
+		expect(parseContent(form({ ...FULL, steps: `# ${name}\nMix.` }))).toEqual({
+			ok: false,
+			error: groupNameTooLong('steps')
+		});
+		const fits = unwrap(parseContent(form({ ...FULL, steps: `# ${name.slice(1)}\nMix.` })));
+		expect(fits.steps[0].group).toHaveLength(MAX_GROUP_NAME);
+	});
+
+	describe('makes', () => {
+		test('is trimmed, and blank or missing is null', () => {
+			expect(unwrap(parseContent(form({ ...FULL, makes: ' 12 buns ' }))).makes).toBe('12 buns');
+			expect(unwrap(parseContent(form({ ...FULL, makes: '   ' }))).makes).toBeNull();
+			expect(unwrap(parseContent(form(FULL))).makes).toBeNull();
+		});
+
+		test('longer than the cap is refused', () => {
+			expect(parseContent(form({ ...FULL, makes: 'x'.repeat(MAX_MAKES + 1) }))).toEqual({
+				ok: false,
+				error: MAKES_TOO_LONG
+			});
+		});
+
+		test('never sets servings', () => {
+			const value = unwrap(parseContent(form({ ...FULL, servings: '', makes: '12 buns' })));
+			expect(value.servings).toBeNull();
+		});
+	});
+
 	describe('integer fields', () => {
 		const bad = ['x', '2.5', '4people', '-3', '0x10', '+4', '2.', '1e'];
 
@@ -224,7 +283,12 @@ describe('the editor reads the same messages', () => {
 		['ingredients', 'x'.repeat(MAX_LINE + 1)],
 		['ingredients', 'x\n'.repeat(MAX_FIELD)],
 		['steps', ''],
-		['steps', 'x'.repeat(MAX_FIELD + 1)]
+		['steps', 'x'.repeat(MAX_FIELD + 1)],
+		['ingredients', '# Dough'],
+		['ingredients', `# ${'x'.repeat(MAX_GROUP_NAME + 1)}\nflour`],
+		['steps', '# Bake'],
+		['steps', `# ${'x'.repeat(MAX_GROUP_NAME + 1)}\nMix.`],
+		['makes', 'x'.repeat(MAX_MAKES + 1)]
 	];
 
 	test.each(REFUSALS)('%s %#: the message names its field', (field, value) => {
@@ -275,6 +339,7 @@ describe('draftOf', () => {
 		const fd = form({
 			...FULL,
 			prepTimeMinutes: '-5',
+			makes: ' 12 buns',
 			commitMessage: 'Tweak',
 			editRevision: '3',
 			isPublic: 'on',
@@ -287,6 +352,7 @@ describe('draftOf', () => {
 			servings: '4',
 			prepTimeMinutes: '-5',
 			cookTimeMinutes: '20',
+			makes: ' 12 buns',
 			ingredients: '1 cup flour\n2 eggs',
 			steps: 'Mix.\n\nBake.',
 			commitMessage: 'Tweak',

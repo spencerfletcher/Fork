@@ -31,6 +31,9 @@ export type RecipeContent = {
 	title: string;
 	description: string | null;
 	servings: number | null;
+	/** What one batch produces when that isn't portions ("12 buns"). Free
+	 *  text, never read as servings; the scale factor comes from servings alone. */
+	makes: string | null;
 	prepTimeMinutes: number | null;
 	cookTimeMinutes: number | null;
 	imageUrl: string | null;

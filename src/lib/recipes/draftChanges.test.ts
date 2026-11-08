@@ -6,6 +6,7 @@ const base: RecipeDraft = {
 	title: 'Cookies',
 	description: '',
 	servings: '4',
+	makes: '',
 	prepTimeMinutes: '10',
 	cookTimeMinutes: '20',
 	ingredients: '1 cup flour\n2 eggs',
@@ -22,6 +23,11 @@ describe('draftChangedGroups', () => {
 	const from = parseDraftContent(base);
 	test('an untouched draft changes nothing', () => {
 		expect(draftChangedGroups(from, { ...base }, false)).toEqual([]);
+	});
+
+	test('a typed yield is a yield change, and a heading an ingredients change', () => {
+		const draft = { ...base, makes: '12 buns', ingredients: '# Dough\n1 cup flour\n2 eggs' };
+		expect(draftChangedGroups(from, draft, false)).toEqual(['yield', 'ingredients']);
 	});
 
 	test('whitespace and a commit message are not changes', () => {

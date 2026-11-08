@@ -2,7 +2,7 @@ import { describe, test, expect } from 'vitest';
 import { changedGroups, generatedCommitMessage, recipeCopies, type ContentGroup } from './content';
 import { getTableColumns } from 'drizzle-orm';
 import { recipes, recipeVersions } from '#lib/server/db/schema.js';
-import { makeContent, makeIngredient, makeStep } from './fixtures';
+import { inGroup, makeContent, makeIngredient, makeStep } from './fixtures';
 import type { RecipeContent } from './types';
 
 const base = makeContent();
@@ -20,9 +20,27 @@ describe('changedGroups', () => {
 		['prepTimeMinutes', { prepTimeMinutes: 15 }, 'times'],
 		['cookTimeMinutes', { cookTimeMinutes: 25 }, 'times'],
 		['ingredients', { ingredients: [makeIngredient('2 cups flour')] }, 'ingredients'],
-		['steps', { steps: [makeStep('Stir.')] }, 'steps']
+		['steps', { steps: [makeStep('Stir.')] }, 'steps'],
+		['makes', { makes: '12 buns' }, 'yield']
 	])('%s alone is a change in its group', (_, overrides, group) => {
 		expect(changedGroups(base, makeContent(overrides))).toEqual([group]);
+	});
+
+	test('moving a row into a group, or renaming the group, is a change in its list', () => {
+		expect(changedGroups(base, makeContent({ ingredients: inGroup('Dough', base.ingredients) })))
+			.toEqual(['ingredients']);
+		expect(
+			changedGroups(
+				makeContent({ steps: inGroup('Mix', base.steps) }),
+				makeContent({ steps: inGroup('Stir', base.steps) })
+			)
+		).toEqual(['steps']);
+	});
+
+	test('a yield change reads "Updated yield"', () => {
+		expect(generatedCommitMessage(changedGroups(base, makeContent({ makes: '12 buns' })))).toBe(
+			'Updated yield'
+		);
 	});
 
 	test('groups come back in the fixed order whatever changed', () => {

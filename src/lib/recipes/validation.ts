@@ -1,8 +1,16 @@
 import { z } from 'zod';
 import type { Ingredient, Step, RecipeContent } from './types.js';
-import { parseIngredientText } from './ingredients.js';
-import { parseStepText } from './steps.js';
-import { LINE_TOO_LONG, fieldTooLong, limitError } from './limits.js';
+import { parseIngredientGroups } from './ingredients.js';
+import { parseStepGroups } from './steps.js';
+import {
+	LINE_TOO_LONG,
+	MAKES_TOO_LONG,
+	MAX_GROUP_NAME,
+	MAX_MAKES,
+	fieldTooLong,
+	groupNameTooLong,
+	limitError
+} from './limits.js';
 import { normaliseTagNames } from './tags.js';
 import { text, slugify } from '#lib/helpers.js';
 
@@ -82,6 +90,25 @@ const optionalInt = (field: NumberField) => {
 	);
 };
 
+// What a "# Name" heading with nothing under it says. The tail is fixed, so
+// fieldOfMessage can place the message whatever the name.
+const emptyGroupTail = (items: 'ingredients' | 'steps') =>
+	` has no ${items}. Add some under it or delete the heading.`;
+export const emptyGroupMessage = (name: string, items: 'ingredients' | 'steps') =>
+	`“${name}”${emptyGroupTail(items)}`;
+
+/** A box's groups, refused when a heading is empty or its name too long, then flattened. */
+const grouped = <T>(items: 'ingredients' | 'steps') =>
+	z
+		.custom<Array<{ group: string | undefined; rows: T[] }>>()
+		.superRefine((sections, ctx) => {
+			const empty = sections.find((s) => s.group !== undefined && s.rows.length === 0);
+			if (empty) ctx.addIssue({ code: 'custom', message: emptyGroupMessage(empty.group!, items) });
+			else if (sections.some((s) => (s.group?.length ?? 0) > MAX_GROUP_NAME))
+				ctx.addIssue({ code: 'custom', message: groupNameTooLong(items) });
+		})
+		.transform((sections) => sections.flatMap((s) => s.rows));
+
 /** Raw editor text, refused with the same message the editor shows live. */
 const bounded = (label: typeof INGREDIENTS | typeof STEPS) =>
 	z.string().superRefine((s, ctx) => {
@@ -96,13 +123,20 @@ const recipeContentSchema = z.object({
 		.trim()
 		.transform((s) => s || null),
 	servings: optionalInt('servings'),
+	makes: z
+		.string()
+		.trim()
+		.max(MAX_MAKES, MAKES_TOO_LONG)
+		.transform((s) => s || null),
 	prepTimeMinutes: optionalInt('prepTimeMinutes'),
 	cookTimeMinutes: optionalInt('cookTimeMinutes'),
 	ingredients: bounded(INGREDIENTS)
-		.transform(parseIngredientText)
+		.transform(parseIngredientGroups)
+		.pipe(grouped<Ingredient>('ingredients'))
 		.pipe(z.array(z.custom<Ingredient>()).min(1, REQUIRED_MESSAGES.ingredients)),
 	steps: bounded(STEPS)
-		.transform(parseStepText)
+		.transform(parseStepGroups)
+		.pipe(grouped<Step>('steps'))
 		.pipe(z.array(z.custom<Step>()).min(1, REQUIRED_MESSAGES.steps))
 });
 
@@ -121,6 +155,7 @@ export type RecipeDraft = {
 	title: string;
 	description: string;
 	servings: string;
+	makes: string;
 	prepTimeMinutes: string;
 	cookTimeMinutes: string;
 	ingredients: string;
@@ -166,6 +201,7 @@ export function parseDraftContent(draft: RecipeDraft): Result<ContentFields> {
 		title: draft.title,
 		description: draft.description,
 		servings: draft.servings,
+		makes: draft.makes,
 		prepTimeMinutes: draft.prepTimeMinutes,
 		cookTimeMinutes: draft.cookTimeMinutes,
 		ingredients: draft.ingredients,
@@ -197,6 +233,7 @@ export function draftOf(formData: FormData): RecipeDraft {
 		title: text(formData, 'title'),
 		description: text(formData, 'description'),
 		servings: text(formData, 'servings'),
+		makes: text(formData, 'makes'),
 		prepTimeMinutes: text(formData, 'prepTimeMinutes'),
 		cookTimeMinutes: text(formData, 'cookTimeMinutes'),
 		ingredients: text(formData, 'ingredients'),
@@ -217,15 +254,23 @@ const MESSAGES_OF: Record<keyof ContentFields, string[]> = {
 	title: [REQUIRED_MESSAGES.title],
 	description: [],
 	servings: Object.values(numberMessages('servings')),
+	makes: [MAKES_TOO_LONG],
 	prepTimeMinutes: Object.values(numberMessages('prepTimeMinutes')),
 	cookTimeMinutes: Object.values(numberMessages('cookTimeMinutes')),
-	ingredients: [REQUIRED_MESSAGES.ingredients, fieldTooLong(INGREDIENTS), LINE_TOO_LONG],
-	steps: [REQUIRED_MESSAGES.steps, fieldTooLong(STEPS)]
+	ingredients: [
+		REQUIRED_MESSAGES.ingredients,
+		fieldTooLong(INGREDIENTS),
+		LINE_TOO_LONG,
+		groupNameTooLong('ingredients')
+	],
+	steps: [REQUIRED_MESSAGES.steps, fieldTooLong(STEPS), groupNameTooLong('steps')]
 };
 
 /** The field a content message belongs to, so the editor can show it there; undefined for any other message. */
 export function fieldOfMessage(message: string): keyof ContentFields | undefined {
-	return (Object.keys(MESSAGES_OF) as Array<keyof ContentFields>).find((field) =>
-		MESSAGES_OF[field].includes(message)
+	return (Object.keys(MESSAGES_OF) as Array<keyof ContentFields>).find(
+		(field) =>
+			MESSAGES_OF[field].includes(message) ||
+			((field === 'ingredients' || field === 'steps') && message.endsWith(emptyGroupTail(field)))
 	);
 }

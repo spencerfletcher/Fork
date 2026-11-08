@@ -11,6 +11,7 @@ export const CONTENT_GROUPS = [
 	'description',
 	'photo',
 	'servings',
+	'yield',
 	'times',
 	'ingredients',
 	'steps'
@@ -29,9 +30,12 @@ const VIEW: Record<ContentGroup, (c: RecipeContent) => unknown> = {
 	description: (c) => normaliseDescription(c.description),
 	photo: (c) => c.imageUrl,
 	servings: (c) => c.servings,
+	yield: (c) => c.makes,
 	times: (c) => [c.prepTimeMinutes, c.cookTimeMinutes],
-	ingredients: (c) => c.ingredients.map((i) => i.text),
-	steps: (c) => c.steps.map((s) => [s.text, s.annotation?.type ?? '', s.annotation?.text ?? ''])
+	// The group is part of a row, so moving a line or renaming its heading counts.
+	ingredients: (c) => c.ingredients.map((i) => [i.group ?? '', i.text]),
+	steps: (c) =>
+		c.steps.map((s) => [s.group ?? '', s.text, s.annotation?.type ?? '', s.annotation?.text ?? ''])
 };
 
 /** The groups whose value differs, in CONTENT_GROUPS order. */

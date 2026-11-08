@@ -10,6 +10,14 @@ export const fieldTooLong = (label: string) =>
 	`${label} are too long (${MAX_FIELD.toLocaleString('en-US')} characters max)`;
 export const LINE_TOO_LONG = `An ingredient line is too long (${MAX_LINE} characters max)`;
 
+// A group name is a heading and a yield one phrase of the measure line; both
+// are short by nature, so the caps only stop a paste gone wrong.
+export const MAX_GROUP_NAME = 60;
+export const groupNameTooLong = (items: 'ingredients' | 'steps') =>
+	`${items === 'ingredients' ? 'An ingredient' : 'A step'} group name is too long (${MAX_GROUP_NAME} characters max)`;
+export const MAX_MAKES = 80;
+export const MAKES_TOO_LONG = `Makes is too long (${MAX_MAKES} characters max)`;
+
 /** The limit message for a field's raw text, or null when it is within bounds.
  *  Only ingredient lines reach the parser, so only they are capped per line. */
 export function limitError(text: string, label: 'Ingredients' | 'Steps'): string | null {

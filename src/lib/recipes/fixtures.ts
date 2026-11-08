@@ -21,6 +21,7 @@ export function makeContent(overrides: Partial<RecipeContent> = {}): RecipeConte
 		title: 'Cookies',
 		description: null,
 		servings: 4,
+		makes: null,
 		prepTimeMinutes: 10,
 		cookTimeMinutes: 20,
 		imageUrl: null,
