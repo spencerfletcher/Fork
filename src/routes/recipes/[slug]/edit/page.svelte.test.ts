@@ -3,7 +3,8 @@ import { render, screen, fireEvent, within } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import type { SubmitFunction } from '$app/forms';
 import EditPage from './+page.svelte';
-import { makeContent, makeIngredient, makeStep } from '#lib/recipes/fixtures.js';
+import { inGroup, makeContent, makeIngredient, makeStep } from '#lib/recipes/fixtures.js';
+import type { RecipeContent } from '#lib/recipes/types.js';
 import { numberMessages, type RecipeDraft } from '#lib/recipes/validation.js';
 import { UNREACHABLE_MESSAGE } from '#lib/pendingEnhance.svelte.js';
 
@@ -36,7 +37,7 @@ const TAGS = [
 	{ id: 3, name: 'Spicy', slug: 'spicy' }
 ];
 
-function makeData(overrides: { imageUrl?: string | null } = {}) {
+function makeData(overrides: { imageUrl?: string | null; content?: Partial<RecipeContent> } = {}) {
 	return {
 		recipe: {
 			slug: 'cookies',
@@ -57,7 +58,8 @@ function makeData(overrides: { imageUrl?: string | null } = {}) {
 				cookTimeMinutes: 20,
 				imageUrl: overrides.imageUrl ?? null,
 				ingredients: [makeIngredient('1 cup flour'), makeIngredient('2 eggs')],
-				steps: [makeStep('Mix.'), makeStep('Bake.', { type: 'tip', text: 'gently' })]
+				steps: [makeStep('Mix.'), makeStep('Bake.', { type: 'tip', text: 'gently' })],
+				...overrides.content
 			})
 		},
 		allTags: TAGS
@@ -70,6 +72,7 @@ function failed(draft: Partial<RecipeDraft>, error = 'Title is required') {
 		title: 'Cookies',
 		description: '',
 		servings: '4',
+		makes: '',
 		prepTimeMinutes: '10',
 		cookTimeMinutes: '20',
 		ingredients: '1 cup flour\n2 eggs',
@@ -110,6 +113,38 @@ describe('Edit page form', () => {
 		expect(screen.getByLabelText(/serves/i)).toHaveValue(4);
 		expect(screen.getByLabelText(/^ingredients/i)).toHaveValue('1 cup flour\n2 eggs');
 		expect(screen.getByLabelText(/^steps/i)).toHaveValue('Mix.\n\nBake.\ntip: gently');
+	});
+
+	test('a grouped version with a yield refills its "# Name" lines and Makes, and reads clean', () => {
+		render(EditPage, {
+			props: {
+				data: makeData({
+					content: {
+						makes: '24 cookies',
+						ingredients: inGroup('Dough', [
+							makeIngredient('1 cup flour'),
+							makeIngredient('2 eggs')
+						]),
+						steps: [makeStep('Preheat.'), ...inGroup('Bake', [makeStep('Bake.')])]
+					}
+				}),
+				form: null
+			}
+		});
+		expect(screen.getByLabelText(/^ingredients/i)).toHaveValue('# Dough\n1 cup flour\n2 eggs');
+		expect(screen.getByLabelText(/^steps/i)).toHaveValue('Preheat.\n\n# Bake\nBake.');
+		expect(screen.getByLabelText(/^Makes/)).toHaveValue('24 cookies');
+		expect(document.getElementById('ingredients-readback')).toHaveTextContent(
+			'Reads as 1 group: Dough 2 lines'
+		);
+		expect(document.querySelector('.editing')?.textContent ?? '').not.toMatch(/saves as/);
+	});
+
+	test('an ungrouped version with no yield refills as before, with Makes empty and no read-back', () => {
+		render(EditPage, { props: { data: makeData(), form: null } });
+		expect(screen.getByLabelText(/^Makes/)).toHaveValue('');
+		expect(document.getElementById('ingredients-readback')).toBeNull();
+		expect(document.getElementById('steps-readback')).toBeNull();
 	});
 
 	test('sends the loaded editRevision as a hidden field', () => {

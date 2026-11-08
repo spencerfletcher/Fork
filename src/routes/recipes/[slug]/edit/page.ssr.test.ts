@@ -26,6 +26,7 @@ describe('edit page, server rendered', () => {
 				title: 'Biscuits',
 				description: '',
 				servings: '4',
+				makes: '',
 				prepTimeMinutes: '10',
 				cookTimeMinutes: '20',
 				ingredients: '1 cup flour',

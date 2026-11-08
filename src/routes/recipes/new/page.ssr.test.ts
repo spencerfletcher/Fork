@@ -11,6 +11,7 @@ describe('new page, server rendered', () => {
 				title: 'Soup',
 				description: '',
 				servings: '',
+				makes: '',
 				prepTimeMinutes: '-5',
 				cookTimeMinutes: '',
 				ingredients: '',

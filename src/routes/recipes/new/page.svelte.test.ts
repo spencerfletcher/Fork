@@ -27,6 +27,7 @@ const EMPTY_DRAFT = {
 	title: '',
 	description: '',
 	servings: '',
+	makes: '',
 	prepTimeMinutes: '',
 	cookTimeMinutes: '',
 	ingredients: '',
