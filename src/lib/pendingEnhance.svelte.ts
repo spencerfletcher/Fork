@@ -23,7 +23,10 @@ export function pendingEnhance({
 		return async ({ result, update }) => {
 			try {
 				if (keepOnError && result.type === 'error') {
-					error = UNREACHABLE_MESSAGE;
+					// No status is a network failure; a 4xx is the server's own refusal.
+					const refused = result.status !== undefined && result.status < 500;
+					const message: unknown = result.error?.message;
+					error = refused && typeof message === 'string' ? message : UNREACHABLE_MESSAGE;
 					return;
 				}
 				await update({ reset });

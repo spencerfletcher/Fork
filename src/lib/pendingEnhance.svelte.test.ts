@@ -2,7 +2,11 @@ import { describe, test, expect, vi } from 'vitest';
 import { pendingEnhance, UNREACHABLE_MESSAGE } from './pendingEnhance.svelte.js';
 
 type Submit = ReturnType<typeof pendingEnhance>['submit'];
-type Result = { type: 'success' | 'failure' | 'redirect' | 'error' };
+type Result = {
+	type: 'success' | 'failure' | 'redirect' | 'error';
+	status?: number;
+	error?: { message: string };
+};
 type After = (opts: {
 	result: Result;
 	update: (options?: { reset?: boolean }) => Promise<void>;
@@ -46,6 +50,26 @@ describe('pendingEnhance', () => {
 		expect(form.pending).toBe(false);
 		expect(form.error).toBe(UNREACHABLE_MESSAGE);
 		expect(done).not.toHaveBeenCalled();
+	});
+
+	test("keepOnError: the server's own refusal says what it said, not that it was unreachable", async () => {
+		const form = pendingEnhance({ keepOnError: true });
+		const after = (await (form.submit as unknown as () => After)()) as After;
+		await after({
+			result: { type: 'error', status: 403, error: { message: 'Not authorized' } },
+			update: async () => {}
+		});
+		expect(form.error).toBe('Not authorized');
+	});
+
+	test('keepOnError: a server failure (5xx) is held as unreachable', async () => {
+		const form = pendingEnhance({ keepOnError: true });
+		const after = (await (form.submit as unknown as () => After)()) as After;
+		await after({
+			result: { type: 'error', status: 502, error: { message: 'Bad Gateway' } },
+			update: async () => {}
+		});
+		expect(form.error).toBe(UNREACHABLE_MESSAGE);
 	});
 
 	test('the held error clears on the next submit', async () => {
