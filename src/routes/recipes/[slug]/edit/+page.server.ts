@@ -1,8 +1,8 @@
-import { error, redirect } from '@sveltejs/kit';
+import { error, fail, redirect } from '@sveltejs/kit';
 import { db } from '#lib/server/db/index.js';
 import { recipes, recipeVersions } from '#lib/server/db/schema.js';
 import { draftOf } from '#lib/recipes/validation.js';
-import { eq, desc, sql } from 'drizzle-orm';
+import { eq, desc, inArray, sql } from 'drizzle-orm';
 import type { PageServerLoad, Actions } from './$types';
 import {
 	changedGroups,
@@ -12,7 +12,7 @@ import {
 } from '#lib/recipes/content.js';
 import { sameTags } from '#lib/recipes/tags.js';
 import type { RecipeContent } from '#lib/recipes/types.js';
-import { removeRecipeImage } from '#lib/server/images.js';
+import { imagePathOf, removeRecipeImage } from '#lib/server/images.js';
 import { readSubmission, uploadPhoto, saveFailure } from '#lib/server/submission.js';
 import { syncTags, listTags } from '#lib/server/tags.js';
 import { loginHref } from '#lib/auth/loginHref.js';
@@ -159,17 +159,42 @@ export const actions: Actions = {
 		throw redirect(303, `/recipes/${params.slug}`);
 	},
 
-	deleteRecipe: async ({ params, locals: { user } }) => {
-		if (!user) throw error(401, 'Login required');
+	// Permanent: the row, every version and its tag links (by FK cascade), then
+	// the photos. Forks keep their parentId and say the original was deleted.
+	deleteRecipe: async ({ params, locals: { user, supabase } }) => {
+		if (!user)
+			return fail(401, {
+				error: 'Your session ended. Log in in another tab, then delete again.',
+				code: 'unauthenticated'
+			});
 
 		const recipe = await db.query.recipes.findFirst({
-			where: eq(recipes.slug, params.slug)
+			where: eq(recipes.slug, params.slug),
+			with: { versions: { columns: { imageUrl: true } } }
 		});
 		if (!recipe) throw error(404, 'Recipe not found');
-		if (recipe.authorId !== user.id) throw error(403, 'Not authorized');
+		if (recipe.authorId !== user.id)
+			return fail(403, { error: 'Not authorized', code: 'forbidden' });
 
-		// recipeVersions and recipesToTags cascade-delete via FK
 		await db.delete(recipes).where(eq(recipes.id, recipe.id));
+
+		// A fork's first version copies its parent's photo url, so a photo can be
+		// shown by other recipes; only the ones no remaining version shows go.
+		// Asked after the delete, so this recipe's own versions are not counted.
+		// ponytail: a fork committed between the delete and this read can still
+		// lose its photo; a lock shared with the fork action closes that if needed.
+		const urls = [...new Set(recipe.versions.flatMap((v) => v.imageUrl ?? []))];
+		if (urls.length > 0) {
+			const shown = await db
+				.selectDistinct({ imageUrl: recipeVersions.imageUrl })
+				.from(recipeVersions)
+				.where(inArray(recipeVersions.imageUrl, urls));
+			const stillShown = new Set(shown.map((r) => r.imageUrl));
+			const paths = urls
+				.filter((url) => !stillShown.has(url))
+				.flatMap((url) => imagePathOf(url) ?? []);
+			if (paths.length > 0) await removeRecipeImage(supabase, ...paths);
+		}
 
 		throw redirect(303, '/recipes');
 	}

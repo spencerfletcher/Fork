@@ -1,6 +1,6 @@
 import { describe, test, expect, vi } from 'vitest';
-import type { SupabaseClient } from '@supabase/supabase-js';
-import { uploadRecipeImage, removeRecipeImage, imageFileFrom } from './images';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { uploadRecipeImage, removeRecipeImage, imageFileFrom, imagePathOf } from './images';
 
 /** A Supabase client whose storage bucket records calls and answers as told. */
 function storageMock(
@@ -45,6 +45,13 @@ describe('removeRecipeImage', () => {
 		expect(m.remove).toHaveBeenCalledWith(['user-1/abc.png']);
 	});
 
+	test('removes several paths in one call', async () => {
+		const m = storageMock();
+		await removeRecipeImage(m.supabase, 'user-1/a.png', 'user-1/b.png');
+		expect(m.remove).toHaveBeenCalledTimes(1);
+		expect(m.remove).toHaveBeenCalledWith(['user-1/a.png', 'user-1/b.png']);
+	});
+
 	test('swallows and logs a storage error', async () => {
 		const m = storageMock({ removeError: { message: 'gone' } });
 		const error = vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -70,5 +77,20 @@ describe('imageFileFrom', () => {
 		fd.append('image', new File([], '', { type: 'application/octet-stream' }));
 		expect(imageFileFrom(fd)).toBeNull();
 		expect(imageFileFrom(new FormData())).toBeNull();
+	});
+});
+
+describe('imagePathOf', () => {
+	// The URL the real client writes into imageUrl, so the reader is pinned to the writer.
+	const real = createClient('http://127.0.0.1:54321', 'anon-key');
+	const stored = (path: string) =>
+		real.storage.from('recipe-images').getPublicUrl(path).data.publicUrl;
+
+	test('reads the storage path back out of a public url the client wrote', () => {
+		expect(imagePathOf(stored('user-1/abc.png'))).toBe('user-1/abc.png');
+	});
+
+	test('is null for a photo that is not in the bucket', () => {
+		expect(imagePathOf('https://images.example.com/cake.jpg')).toBeNull();
 	});
 });

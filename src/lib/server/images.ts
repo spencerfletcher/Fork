@@ -27,13 +27,26 @@ export async function uploadRecipeImage(
 }
 
 /**
- * Best-effort cleanup of an upload the save did not end up using. Storage is
- * outside the database transaction, so this can fail after the rollback
- * succeeded; that leaves an orphaned file, which is logged, never surfaced.
+ * Best-effort cleanup of photos nothing uses any more: an upload a failed save
+ * did not keep, or a deleted recipe's. Storage is outside the database
+ * transaction, so this can fail after the database work succeeded; that leaves
+ * an orphaned file, which is logged, never surfaced.
  */
-export async function removeRecipeImage(supabase: SupabaseClient, path: string): Promise<void> {
-	const { error } = await supabase.storage.from(BUCKET).remove([path]);
-	if (error) console.error('Could not remove unused upload', path, error);
+export async function removeRecipeImage(
+	supabase: SupabaseClient,
+	...paths: string[]
+): Promise<void> {
+	const { error } = await supabase.storage.from(BUCKET).remove(paths);
+	if (error) console.error('Could not remove unused upload', paths.join(', '), error);
+}
+
+// Every public url the client hands out has this path, after the project's host.
+const PUBLIC_PATH = `/storage/v1/object/public/${BUCKET}/`;
+
+/** The bucket path a stored imageUrl points at, or null for a photo hosted anywhere else. */
+export function imagePathOf(url: string): string | null {
+	const at = url.indexOf(PUBLIC_PATH);
+	return at === -1 ? null : url.slice(at + PUBLIC_PATH.length);
 }
 
 /** The chosen photo from a multipart form, or null when the input was left empty. */

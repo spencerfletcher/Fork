@@ -6,19 +6,29 @@ import { makeContent, makeIngredient, makeStep } from '#lib/recipes/fixtures.js'
 
 // ─── Hoisted mocks (must be available inside vi.mock factory) ─────────────────
 
-const { findRecipeMock, dbInsert, transactionMock, uploadMock, removeMock, syncTagsMock } =
-	vi.hoisted(() => ({
-		findRecipeMock: vi.fn(),
-		dbInsert: vi.fn().mockReturnValue({
-			values: vi.fn().mockReturnValue({
-				onConflictDoNothing: vi.fn().mockResolvedValue(undefined)
-			})
-		}),
-		transactionMock: vi.fn(),
-		uploadMock: vi.fn(),
-		removeMock: vi.fn().mockResolvedValue(undefined),
-		syncTagsMock: vi.fn().mockResolvedValue(undefined)
-	}));
+const {
+	findRecipeMock,
+	dbInsert,
+	dbDelete,
+	dbSelectDistinct,
+	transactionMock,
+	uploadMock,
+	removeMock,
+	syncTagsMock
+} = vi.hoisted(() => ({
+	findRecipeMock: vi.fn(),
+	dbDelete: vi.fn(),
+	dbSelectDistinct: vi.fn(),
+	dbInsert: vi.fn().mockReturnValue({
+		values: vi.fn().mockReturnValue({
+			onConflictDoNothing: vi.fn().mockResolvedValue(undefined)
+		})
+	}),
+	transactionMock: vi.fn(),
+	uploadMock: vi.fn(),
+	removeMock: vi.fn().mockResolvedValue(undefined),
+	syncTagsMock: vi.fn().mockResolvedValue(undefined)
+}));
 
 vi.mock('#lib/server/images.js', async (importOriginal) => ({
 	...(await importOriginal<typeof import('#lib/server/images.js')>()),
@@ -34,6 +44,8 @@ vi.mock('#lib/server/db/index.js', () => ({
 			tags: { findMany: vi.fn().mockResolvedValue([]) }
 		},
 		insert: dbInsert,
+		delete: dbDelete,
+		selectDistinct: dbSelectDistinct,
 		transaction: transactionMock
 	}
 }));
@@ -451,6 +463,74 @@ describe('save', () => {
 		});
 		expect(removeMock).toHaveBeenCalledWith(SUPABASE, 'owner-123/new.png');
 		error.mockRestore();
+	});
+});
+
+// ─── deleteRecipe ─────────────────────────────────────────────────────────────
+
+describe('deleteRecipe', () => {
+	const photo = (name: string) =>
+		`http://127.0.0.1:54321/storage/v1/object/public/recipe-images/owner-123/${name}.png`;
+
+	/** The recipe with one version per photo url; null is a version with no photo. */
+	const withVersions = (...imageUrls: (string | null)[]) => ({
+		...RECIPE,
+		versions: imageUrls.map((imageUrl) => ({ imageUrl }))
+	});
+
+	let deleteChain: ReturnType<typeof chain>;
+
+	/** `kept` is what another recipe's versions still show once this one is gone. */
+	function setUp(recipe: unknown, kept: string[] = []) {
+		vi.clearAllMocks();
+		findRecipeMock.mockResolvedValue(recipe);
+		deleteChain = chain();
+		dbDelete.mockReturnValue(deleteChain);
+		dbSelectDistinct.mockReturnValue(chain(kept.map((imageUrl) => ({ imageUrl }))));
+	}
+
+	const del = (user: typeof OWNER | null = OWNER) =>
+		invoke(actions.deleteRecipe, makeEvent({ user }));
+
+	test("the owner's delete removes the row, each distinct photo once, and lands on /recipes", async () => {
+		setUp(withVersions(photo('a'), photo('a'), null, photo('b')));
+		const result = await del();
+		expect(dbDelete).toHaveBeenCalledTimes(1);
+		expect(deleteChain.where).toHaveBeenCalledTimes(1);
+		expect(removeMock).toHaveBeenCalledTimes(1);
+		expect(removeMock).toHaveBeenCalledWith(SUPABASE, 'owner-123/a.png', 'owner-123/b.png');
+		expect(result).toMatchObject({ status: 303, location: '/recipes' });
+	});
+
+	test("keeps a photo another recipe still shows, as a fork shows its parent's", async () => {
+		setUp(withVersions(photo('a'), photo('b')), [photo('a')]);
+		await del();
+		expect(removeMock).toHaveBeenCalledWith(SUPABASE, 'owner-123/b.png');
+	});
+
+	test('removes nothing from storage when no photo is in the bucket', async () => {
+		setUp(withVersions(null, 'https://images.example.com/cake.jpg'));
+		const result = await del();
+		expect(removeMock).not.toHaveBeenCalled();
+		expect(result).toMatchObject({ status: 303, location: '/recipes' });
+	});
+
+	test('refuses another user with a 403 in the { error, code } shape, deleting nothing', async () => {
+		setUp(withVersions(photo('a')));
+		const result = await del(OTHER);
+		expect(result).toMatchObject({
+			status: 403,
+			data: { error: 'Not authorized', code: 'forbidden' }
+		});
+		expect(dbDelete).not.toHaveBeenCalled();
+		expect(removeMock).not.toHaveBeenCalled();
+	});
+
+	test('a lapsed session is a 401 in the { error, code } shape', async () => {
+		setUp(withVersions(photo('a')));
+		const result = await del(null);
+		expect(result).toMatchObject({ status: 401, data: { code: 'unauthenticated' } });
+		expect(dbDelete).not.toHaveBeenCalled();
 	});
 });
 
