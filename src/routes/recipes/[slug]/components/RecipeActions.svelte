@@ -83,6 +83,13 @@
 	});
 </script>
 
+<!-- Back from the new fork can restore this page from the back-forward cache,
+     still disabled from the redirect; it is offered again. -->
+<svelte:window
+	onpageshow={(e) => {
+		if (e.persisted) forking = false;
+	}} />
+
 <div class="actions">
 	{#if cooking}
 		<!-- Cooking: only the Cook toggle stays. -->

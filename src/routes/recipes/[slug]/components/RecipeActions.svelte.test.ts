@@ -187,6 +187,16 @@ describe('RecipeActions when a request fails', () => {
 		expect(screen.getByRole('button', { name: 'Fork this recipe' })).toBeDisabled();
 	});
 
+	test('Back from the new fork, restored from the back-forward cache, offers Fork again', async () => {
+		render(RecipeActions, { props: makeProps({ canFork: true }) });
+		await playBack('?/fork', { type: 'redirect', location: '/recipes/cookies-abc/edit' });
+		const shown = new Event('pageshow');
+		Object.defineProperty(shown, 'persisted', { value: true });
+		window.dispatchEvent(shown);
+		await tick();
+		expect(screen.getByRole('button', { name: 'Fork this recipe' })).not.toBeDisabled();
+	});
+
 	test('the message goes when the page moves to another version or recipe', async () => {
 		navigated.length = 0;
 		render(RecipeActions, { props: makeProps() });
