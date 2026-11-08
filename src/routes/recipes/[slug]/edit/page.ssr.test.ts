@@ -40,5 +40,10 @@ describe('edit page, server rendered', () => {
 		};
 		const { body } = render(EditPage, { props: { data, form } as never });
 		expect(body).toMatch(/<textarea[^>]*name="title"[^>]*>Biscuits<\/textarea>/);
+		// The field's message too: the effect that places it never runs on the server.
+		expect(body).toMatch(/<p[^>]*id="title-error"[^>]*>Title is required<\/p>/);
+		expect(body).toMatch(
+			/<textarea[^>]*aria-invalid="true"[^>]*name="title"|name="title"[^>]*aria-invalid="true"/
+		);
 	});
 });

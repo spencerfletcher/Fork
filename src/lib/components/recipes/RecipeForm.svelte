@@ -118,7 +118,14 @@
 	// every keystroke once it carries an error, so the message and the browser's
 	// :user-invalid state come from the same validity and clear together.
 	// Passing through an untouched field says nothing, as the auth pages do.
-	let errors = $state<Record<string, string>>({});
+	// A server-rendered reply shows a field's message too, as the draft is
+	// shown: the initial state, since the effect below never runs there.
+	// svelte-ignore state_referenced_locally
+	const serverField = form ? fieldOfMessage(form.error) : undefined;
+	// svelte-ignore state_referenced_locally
+	let errors = $state<Record<string, string>>(
+		form && serverField ? { [serverField]: form.error } : {}
+	);
 	// Read only by handlers, so not state.
 	const edited: Record<string, boolean> = {};
 	// A blocked submit makes the outcome line count what still needs fixing.

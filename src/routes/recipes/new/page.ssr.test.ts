@@ -26,5 +26,10 @@ describe('new page, server rendered', () => {
 		const { body } = render(NewPage, { props: { data: { allTags: [] }, form } as never });
 		expect(body).toMatch(/<textarea[^>]*name="title"[^>]*>Soup<\/textarea>/);
 		expect(body).toContain('value="-5"');
+		// The field's message too: the effect that places it never runs on the server.
+		expect(body).toMatch(/<p[^>]*id="title-error"[^>]*>Title is required<\/p>/);
+		expect(body).toMatch(
+			/<textarea[^>]*aria-invalid="true"[^>]*name="title"|name="title"[^>]*aria-invalid="true"/
+		);
 	});
 });
