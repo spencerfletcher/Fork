@@ -68,6 +68,11 @@ describe('Favorites page result count', () => {
 		expect(screen.getByRole('status')).toHaveTextContent('2 favorites match');
 	});
 
+	test('one result reads as a sentence', () => {
+		renderFavorites({ searchQuery: 'soup', recipes: [RECIPE] as never });
+		expect(screen.getByRole('status')).toHaveTextContent('1 favorite matches');
+	});
+
 	test('a filter with no results announces that nothing matched', () => {
 		renderFavorites({ searchQuery: 'zzz' });
 		expect(screen.getByRole('status')).toHaveTextContent('0 favorites match');

@@ -36,9 +36,10 @@ function makeProfile(overrides = {}) {
 	};
 }
 
-function makeLoadEvent(username: string, viewerId: string | null = null) {
+function makeLoadEvent(username: string, viewerId: string | null = null, search = '') {
 	return {
 		params: { username },
+		url: new URL(`http://localhost/users/${username}${search}`),
 		locals: { user: viewerId ? { id: viewerId } : null }
 	} as Parameters<typeof load>[0];
 }
@@ -67,6 +68,13 @@ describe('users/[username] load', () => {
 			location: '/users/chefmaria'
 		});
 		expect(findProfileMock).not.toHaveBeenCalled();
+	});
+
+	test('the redirect keeps the query string and encodes the handle', async () => {
+		await expect(load(makeLoadEvent('Chef Maria', null, '?tab=forks'))).rejects.toMatchObject({
+			status: 301,
+			location: '/users/chef%20maria?tab=forks'
+		});
 	});
 
 	test('looks the username up as given when it is already lowercase', async () => {

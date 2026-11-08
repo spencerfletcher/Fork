@@ -7,10 +7,12 @@ import { clampDescription } from '#lib/seo.js';
 import { plural } from '#lib/helpers.js';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ params, locals: { user } }) => {
+export const load: PageServerLoad = async ({ params, url, locals: { user } }) => {
 	// Usernames are stored lowercased: one canonical URL per profile.
 	const username = params.username.toLowerCase();
-	if (username !== params.username) throw redirect(301, `/users/${username}`);
+	if (username !== params.username) {
+		throw redirect(301, `/users/${encodeURIComponent(username)}${url.search}`);
+	}
 	const profile = await db.query.profiles.findFirst({
 		where: eq(profiles.username, username)
 	});

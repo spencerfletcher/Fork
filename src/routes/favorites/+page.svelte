@@ -28,7 +28,8 @@
 
 		<!-- Always in the DOM so screen readers announce the count when it changes. -->
 		<p class="sr-only" role="status">
-			{#if filtered}{plural(recipes.length, 'favorite')} match{/if}
+			{#if filtered}{plural(recipes.length, 'favorite')}
+				{recipes.length === 1 ? 'matches' : 'match'}{/if}
 		</p>
 
 		{#if recipes.length > 0}
