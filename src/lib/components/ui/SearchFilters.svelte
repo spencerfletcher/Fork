@@ -80,8 +80,13 @@
 			<circle cx="11" cy="11" r="8" />
 			<path d="m21 21-4.35-4.35" />
 		</svg>
+		<!-- Named fields so the form also works as a plain GET before hydration. -->
+		{#if selectedTags.length > 0}
+			<input type="hidden" name="tags" value={selectedTags.join(',')} />
+		{/if}
 		<input
 			type="search"
+			name="q"
 			bind:value={searchQuery}
 			{@attach (field) =>
 				// The native × empties the field and fires `search` (so does Enter,

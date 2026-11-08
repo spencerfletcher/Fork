@@ -97,6 +97,23 @@ describe('SearchFilters search box', () => {
 		expect(input()).toHaveAttribute('placeholder', 'Search by name or ingredient…');
 	});
 
+	// Before hydration (or without JS) the form submits natively: a GET to the
+	// current page, which both Search and Favorites read `q` and `tags` from.
+	test('submits natively to the current page with q and the selected tags', () => {
+		render(SearchFilters, {
+			props: { availableTags, initialQuery: 'soup', initialTags: ['baking'] }
+		});
+		const form = input().closest('form')!;
+		expect(form).not.toHaveAttribute('action');
+		expect(new FormData(form).get('q')).toBe('soup');
+		expect(new FormData(form).get('tags')).toBe('baking');
+	});
+
+	test('no tags field when no tag is selected', () => {
+		render(SearchFilters, { props: { availableTags } });
+		expect(new FormData(input().closest('form')!).has('tags')).toBe(false);
+	});
+
 	// The native × empties the field and fires `search`; the results and the
 	// URL must clear with it.
 	test('emptying the field with the × navigates without the query', async () => {
