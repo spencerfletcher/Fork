@@ -446,6 +446,33 @@ describe('groups in a diff', () => {
 		expect(diffHeading(rows, 0)).toEqual({ name: 'Icing' });
 	});
 
+	test('one row moved to a new group while its old group keeps others is not a rename', () => {
+		const eggs = ing('eggs', '2', '');
+		const rows = diffIngredients(inGroup('Dough', [flour, eggs]), [
+			...inGroup('Top', [flour]),
+			...inGroup('Dough', [eggs])
+		]);
+		expect(diffHeading(rows, 0)).toEqual({ name: 'Top' });
+		expect(diffHeading(rows, 1)).toEqual({ name: 'Dough' });
+	});
+
+	test('a removed row between two rows of one group does not print the heading twice', () => {
+		const eggs = ing('eggs', '2', '');
+		const rows = diffIngredients([flour, sugar, eggs], inGroup('Dough', [flour, eggs]));
+		expect(rows.map((r) => r.status)).toEqual(['modified', 'removed', 'modified']);
+		expect(rows.map((_, i) => diffHeading(rows, i)?.name)).toEqual(['Dough', undefined, undefined]);
+	});
+
+	test('a removed row from another group heads itself, and the run after it is headed again', () => {
+		const eggs = ing('eggs', '2', '');
+		const rows = diffIngredients(
+			[...inGroup('Dough', [flour]), ...inGroup('Icing', [sugar])],
+			inGroup('Dough', [flour, eggs])
+		);
+		expect(rows.map((r) => r.status)).toEqual(['unchanged', 'removed', 'added']);
+		expect(rows.map((_, i) => diffHeading(rows, i)?.name)).toEqual(['Dough', 'Icing', 'Dough']);
+	});
+
 	test('a step whose group changed is modified, and keeps its number', () => {
 		const rows = diffSteps(inGroup('Mix', [step('Mix.')]), inGroup('Stir', [step('Mix.')]));
 		expect(rows).toEqual([

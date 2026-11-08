@@ -1,6 +1,5 @@
 import { diffWords } from 'diff';
 import { normaliseTitle, normaliseDescription } from './content.js';
-import { groupStartingAt } from './groups.js';
 import type {
 	Ingredient,
 	Step,
@@ -135,24 +134,34 @@ function rowGroup(row: IngredientDiffRow | StepDiffRow): string | undefined {
 
 /**
  * The group name to print above row `i` of a diff, as the recipe page prints
- * it: where the group differs from the row before. When every row of the run
- * came from one other group, that is a rename, and its old name is given too.
+ * it: where the group differs from the heading above. A removed row keeps its
+ * old group, so one spliced into a run heads itself only when that group
+ * differs, and a removed ungrouped row does not end the run around it. When
+ * every row of the run came from one other group, and no row of the new
+ * version is still in it, that is a rename, and its old name is given too.
  */
 export function diffHeading(
 	rows: Array<IngredientDiffRow | StepDiffRow>,
 	i: number
 ): { name: string; from?: string } | undefined {
-	const grouped = rows.map((row) => ({ group: rowGroup(row) }));
-	const name = groupStartingAt(grouped, i);
+	const groups = rows.map(rowGroup);
+	let current: string | undefined;
+	let name: string | undefined;
+	for (let j = 0; j <= i; j++) {
+		const group = groups[j];
+		name = group !== undefined && group !== current ? group : undefined;
+		if (group !== undefined || rows[j].status !== 'removed') current = group;
+	}
 	if (name === undefined) return undefined;
 	let end = i;
-	while (end < rows.length && grouped[end].group === name) end++;
+	while (end < rows.length && groups[end] === name) end++;
 	const run = rows.slice(i, end);
 	const from = run[0].status === 'modified' ? run[0].fromGroup : undefined;
 	const renamed =
 		from !== undefined &&
 		from !== name &&
-		run.every((row) => row.status === 'modified' && row.fromGroup === from);
+		run.every((row) => row.status === 'modified' && row.fromGroup === from) &&
+		!rows.some((row, j) => row.status !== 'removed' && groups[j] === from);
 	return renamed ? { name, from } : { name };
 }
 
