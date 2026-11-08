@@ -38,8 +38,9 @@
 					</div>
 					<p class="all-recipes"><a href="/recipes" class="arrow-link">All recipes →</a></p>
 				{:else}
+					<!-- Logged out: /recipes/new is behind the login wall, so start at signup. -->
 					<p class="empty-state">
-						No recipes yet. <a href="/recipes/new">Create the first one →</a>
+						No recipes yet. <a href="/signup">Create the first one →</a>
 					</p>
 				{/if}
 			</section>

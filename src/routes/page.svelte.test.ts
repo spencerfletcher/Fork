@@ -130,6 +130,27 @@ describe('/+page.svelte', () => {
 		expect(screen.queryByRole('link', { name: 'Sign up to fork one' })).toBeNull();
 	});
 
+	// Logged out, /recipes/new is behind the login wall; the way to create a
+	// recipe starts at signup.
+	test('the logged-out empty state sends "Create the first one" to signup', () => {
+		render(Page, {
+			props: {
+				data: {
+					recipes: [],
+					user: null,
+					profile: null,
+					mode: 'landing',
+					tags: [],
+					sampleDiff: null
+				}
+			} as never
+		});
+		expect(screen.getByRole('link', { name: 'Create the first one →' })).toHaveAttribute(
+			'href',
+			'/signup'
+		);
+	});
+
 	test('feed mode renders no LandingHero', () => {
 		render(Page, {
 			props: {
