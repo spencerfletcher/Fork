@@ -50,6 +50,13 @@
       "when": 1793464409453,
       "tag": "0006_drop-recipes-forked-at",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1794145069877,
+      "tag": "0007_version-makes",
+      "breakpoints": true
     }
   ]
 }

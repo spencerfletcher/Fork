@@ -182,25 +182,35 @@ Add chicken to the sauce. Pour in cream and stir to combine. Simmer 10 minutes, 
 Serve over basmati rice with warm naan bread. Garnish with fresh cilantro.
 `;
 
-const DAL_INGREDIENTS = `1 cup red lentils
+// Grouped, so the seed shows "# Name" headings on the page, in the editor
+// and in Cook; every other seed recipe is ungrouped.
+const DAL_INGREDIENTS = `# Dal
+1 cup red lentils
 3 cups water
 1 tsp ground turmeric
 1 tsp salt
+
+# Tarka
 2 tbsp butter
 1 tsp cumin seeds
 3 cloves garlic
 1 green chilli
 1 tomato
+
+# To finish
 1/2 lemon
 a handful of coriander leaves, to finish`;
 
-const DAL_STEPS = `Rinse the lentils, then put them in a pot with the water, turmeric and salt. Bring to a boil, then simmer uncovered for 20 minutes, skimming any foam, until the lentils collapse. Whisk to smooth it out.
+const DAL_STEPS = `# Dal
+Rinse the lentils, then put them in a pot with the water, turmeric and salt. Bring to a boil, then simmer uncovered for 20 minutes, skimming any foam, until the lentils collapse. Whisk to smooth it out.
 
+# Tarka
 Melt the butter in a small pan over medium heat. Add the cumin seeds and let them crackle, then the garlic and chilli, both thinly sliced. Cook until the garlic turns golden, about a minute.
 tip: Pull the pan the moment the garlic colours; it keeps cooking in the butter.
 
 Dice the tomato, add it to the pan and cook for two minutes until it softens.
 
+# To finish
 Pour the sizzling butter over the dal and stir it through. Squeeze in the lemon juice, taste for salt, and finish with the coriander.`;
 
 // ─── Recipes ──────────────────────────────────────────────────────────────────
@@ -229,6 +239,7 @@ const COOKIE_META = {
 	description:
 		'The definitive chocolate chip cookie — crisp edges, chewy centers, and pockets of melted chocolate in every bite.',
 	servings: 48,
+	makes: null,
 	prepTimeMinutes: 15,
 	cookTimeMinutes: 11,
 	imageUrl: 'https://images.unsplash.com/photo-1499636136210-6f4ee915583e?w=800&q=80'
@@ -239,6 +250,7 @@ const TIKKA_META = {
 	description:
 		'Rich, aromatic, and deeply satisfying — a restaurant-quality tikka masala built from a yogurt-marinated chicken and a slow-simmered tomato cream sauce.',
 	servings: 4,
+	makes: null,
 	prepTimeMinutes: 20,
 	cookTimeMinutes: 40,
 	imageUrl: 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=800&q=80'
@@ -290,6 +302,7 @@ export const SEED: SeedRecipe[] = [
 				description:
 					'A fork of the classic — brown butter adds a deep, nutty complexity that takes these cookies to another level.',
 				servings: 36,
+				makes: null,
 				prepTimeMinutes: 20,
 				cookTimeMinutes: 11,
 				ingredientsText: BROWN_BUTTER_INGREDIENTS,
@@ -341,6 +354,7 @@ export const SEED: SeedRecipe[] = [
 				description:
 					'Soft, spoonable dal in half an hour, finished with a sizzle of cumin, garlic and chilli in butter.',
 				servings: 4,
+				makes: 'about 1.8 L',
 				prepTimeMinutes: 10,
 				cookTimeMinutes: 25,
 				imageUrl: null,

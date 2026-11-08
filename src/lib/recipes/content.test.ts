@@ -90,7 +90,8 @@ describe('recipeCopies', () => {
 		'createdAt',
 		'createdBy',
 		'ingredients',
-		'steps'
+		'steps',
+		'makes'
 	];
 
 	const content = makeContent({

@@ -130,6 +130,8 @@ export const recipeVersions = pgTable(
 		title: text().notNull(),
 		description: text(),
 		servings: integer(),
+		// Yield as typed ("12 buns"); on versions only, since no list or search reads it.
+		makes: text(),
 		prepTimeMinutes: integer('prep_time_minutes'),
 		cookTimeMinutes: integer('cook_time_minutes'),
 		imageUrl: text('image_url'),

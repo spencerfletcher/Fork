@@ -54,7 +54,7 @@ export function generatedCommitMessage(groups: ContentGroup[]): string {
 
 /**
  * The content the recipe row keeps a copy of (schema.ts), for create, edit and
- * fork alike. Ingredients and steps live on versions only.
+ * fork alike. Ingredients, steps and makes live on versions only.
  */
 export function recipeCopies({
 	title,
