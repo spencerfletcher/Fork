@@ -1,0 +1,442 @@
+/* Fork MVP decision pack: the one shared stylesheet.
+   Tokens are copied from src/app.css :root with the same names and values, so
+   markup and values lift straight into the app. Component classes follow the
+   shipped look (app.css, DESIGN.md) and the 8 Nov mockups
+   (docs/design/2026-11-08-mvp). Board-only chrome is in section 12 and never ships.
+   Offline: every font is local, nothing here loads from the network. */
+
+/* ── 1. Fonts (local, paths relative to this file) ─────────────────────────── */
+@font-face { font-family: 'Bitter'; font-style: normal; font-weight: 500; font-display: swap; src: url('fonts/bitter-latin-500-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Bitter'; font-style: normal; font-weight: 600; font-display: swap; src: url('fonts/bitter-latin-600-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Source Sans 3'; font-style: normal; font-weight: 400; font-display: swap; src: url('fonts/source-sans-3-latin-400-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Source Sans 3'; font-style: italic; font-weight: 400; font-display: swap; src: url('fonts/source-sans-3-latin-400-italic.woff2') format('woff2'); }
+@font-face { font-family: 'Source Sans 3'; font-style: normal; font-weight: 500; font-display: swap; src: url('fonts/source-sans-3-latin-500-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Source Sans 3'; font-style: normal; font-weight: 600; font-display: swap; src: url('fonts/source-sans-3-latin-600-normal.woff2') format('woff2'); }
+@font-face { font-family: 'JetBrains Mono'; font-style: normal; font-weight: 400; font-display: swap; src: url('fonts/jetbrains-mono-latin-400-normal.woff2') format('woff2'); }
+@font-face { font-family: 'JetBrains Mono'; font-style: normal; font-weight: 600; font-display: swap; src: url('fonts/jetbrains-mono-latin-600-normal.woff2') format('woff2'); }
+/* Metric-matched system fallbacks, as app.css has them (local(), not network). */
+@font-face { font-family: 'Bitter Fallback'; src: local('Georgia'); size-adjust: 108.36%; ascent-override: 86.29%; descent-override: 24.46%; line-gap-override: 0%; }
+@font-face { font-family: 'Source Sans 3 Fallback'; src: local('Arial'); size-adjust: 97%; ascent-override: 105.57%; descent-override: 41.24%; line-gap-override: 0%; }
+@font-face { font-family: 'JetBrains Mono Fallback'; src: local('Menlo Regular'); size-adjust: 99.66%; ascent-override: 102.35%; descent-override: 30.1%; line-gap-override: 0%; }
+
+/* ── 2. Tokens (verbatim from src/app.css :root) ───────────────────────────── */
+:root {
+  /* Backgrounds */
+  --color-bg: #f7f3ec;          /* paper */
+  --color-surface: #fffdf9;     /* lifted paper: cards, inputs, dialogs */
+  --color-surface-2: #f7f3ec;   /* paper: stat tiles inside cards */
+  --color-navbar-bg: #1a1408;   /* espresso, the one dark surface */
+  --color-tint: #f5e9e0;        /* clay tint: no-photo panels, hover fills */
+  --color-band: #efe8db;        /* deeper cream: the recipe title band */
+  /* Text */
+  --color-text: #1a1714;        /* ink */
+  --color-text-2: #4a443e;      /* ink 2 */
+  --color-text-3: #6f6960;      /* ink 3, 4.9:1 on paper */
+  --color-text-cream: #f7f3ec;
+  --color-text-tan: #b8a880;
+  /* Accent: clay is the only text accent, marigold the only fill */
+  --color-accent: #b23c00;
+  --color-marigold: #eca620;
+  --color-marigold-hover: #dc980a;
+  --color-marigold-tint: #fbefd0;
+  --color-marigold-tint-hover: #f7e4b6;
+  /* Tags */
+  --color-tag: #4a443e;
+  --color-tag-border: #d9d3c8;
+  --color-tag-hover-bg: #f5e9e0;
+  /* Borders */
+  --color-border: #e4ded4;
+  --color-border-2: #d9d3c8;
+  --color-input-border: #d9d3c8;
+  /* Diff (remove text is also the form error colour) */
+  --color-add: #2f6b37;
+  --color-remove: #a3362b;
+  --color-add-bg: #e6f0e3;
+  --color-remove-bg: #f6e3e0;
+  /* Elevation: true overlays only */
+  --shadow-raised: 0 4px 16px rgba(26, 23, 20, 0.12);
+  /* Typography */
+  --font-serif: 'Bitter', 'Bitter Fallback', Georgia, serif;
+  --font-sans: 'Source Sans 3', 'Source Sans 3 Fallback', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', 'JetBrains Mono Fallback', 'Fira Code', monospace;
+  /* Spacing (8px base) */
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+  --space-5: 24px; --space-6: 32px; --space-7: 48px;
+  /* Radius */
+  --radius-sm: 4px; --radius-md: 6px; --radius-lg: 8px; --radius-pill: 100px;
+  /* Layout */
+  --max-width: 1200px;
+}
+
+/* ── 3. Base ───────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3, h4, p, ul, ol, figure, blockquote { margin: 0; }
+ul, ol { padding: 0; list-style: none; }
+img { display: block; max-width: 100%; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+[hidden] { display: none !important; }
+
+/* Hierarchy (DESIGN.md): h1 Display, clay, one clamp everywhere; h2 Headline ink;
+   h3 sans 600; h4 the uppercase eyebrow. */
+h1 {
+  font-family: var(--font-serif); font-weight: 500; line-height: 1.15;
+  font-size: clamp(1.75rem, 1.2rem + 1.8vw, 2.5rem);
+  color: var(--color-accent); overflow-wrap: anywhere; text-wrap: balance;
+}
+h2 { font-family: var(--font-serif); font-size: 1.75rem; font-weight: 500; line-height: 1.25; color: var(--color-text); }
+h3 { font-family: var(--font-sans); font-size: 1.0625rem; font-weight: 600; letter-spacing: 0.01em; color: var(--color-text); }
+h4, .eyebrow-label {
+  font-family: var(--font-sans); font-size: 0.75rem; font-weight: 600; line-height: 1.2;
+  letter-spacing: 0.05em; text-transform: uppercase; color: var(--color-text-3);
+}
+/* A group name ("Dough") over its rows: Bitter at the card-title step, ink. */
+.group-name { font-family: var(--font-serif); font-weight: 500; font-size: 1.0625rem; line-height: 1.25; color: var(--color-text); }
+
+a { color: var(--color-accent); text-decoration: none; }
+a:hover { color: var(--color-text); }
+
+/* One focus ring everywhere: 2px clay, 2px offset. Marigold inside the navbar. */
+:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+::selection { background: var(--color-marigold); color: var(--color-text); }
+::placeholder { color: var(--color-text-3); opacity: 1; }
+
+/* Pencil Rule: mono for identifiers only (version ids, handles, diffs). */
+.mono, code, .mono-id { font-family: var(--font-mono); font-size: 0.9375em; }
+.handle { font-family: var(--font-mono); font-size: 0.9375em; color: var(--color-accent); }
+.muted { color: var(--color-text-3); }
+.sr-only { position: absolute !important; width: 1px !important; height: 1px !important; padding: 0 !important; border: 0 !important; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.icon { width: 16px; height: 16px; flex-shrink: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+}
+
+/* ── 4. Buttons ────────────────────────────────────────────────────────────── */
+/* Shipped: 6px corners, 0.9375rem 600, 11px 16px, 48.8px tall. The 1px
+   transparent border keeps the box under forced colours. */
+.btn-primary, .btn-ghost, .btn-danger-ghost {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  font-family: var(--font-sans); font-weight: 600; font-size: 0.9375rem; line-height: 1.65;
+  border-radius: var(--radius-md); padding: 11px 16px; text-align: center; white-space: nowrap;
+  cursor: pointer; transition: background 0.15s ease;
+}
+.btn-primary { background: var(--color-marigold); color: var(--color-text); border: 1px solid transparent; }
+.btn-primary:hover { background: var(--color-marigold-hover); color: var(--color-text); }
+.btn-ghost { background: transparent; color: var(--color-text); border: 1px solid var(--color-text); }
+.btn-ghost:hover { background: var(--color-tint); color: var(--color-text); }
+/* A pressed toggle (Save, Done cooking): pale marigold inside a marigold edge. */
+.btn-ghost[aria-pressed='true'] { background: var(--color-marigold-tint); border-color: var(--color-marigold); }
+.btn-ghost[aria-pressed='true']:hover { background: var(--color-marigold-tint-hover); }
+/* Delete: an outline in the error red, never a red fill (clay/red are text). */
+.btn-danger-ghost { background: transparent; color: var(--color-remove); border: 1px solid var(--color-remove); }
+.btn-danger-ghost:hover { background: var(--color-remove-bg); color: var(--color-remove); }
+:is(.btn-primary, .btn-ghost, .btn-danger-ghost) svg { width: 16px; height: 16px; flex-shrink: 0; }
+:is(.btn-primary, .btn-ghost, .btn-danger-ghost):disabled { cursor: default; opacity: 1; color: var(--color-text-3); border-color: var(--color-border-2); background: transparent; }
+/* The recipe page's action row only: 44px pills with a leading icon. */
+.pill { border-radius: var(--radius-pill); min-height: 44px; padding: 8px 18px 8px 16px; }
+.btn-sm { padding: 5px 12px; font-size: 0.875rem; }
+@media (max-width: 699px) { .btn-sm { min-height: 44px; } }
+
+/* Quiet text control (Appreciate, Clear ticks, Keep recipe): Ink 2, ink on
+   hover, a 44px hit by padding pulled back by margin so the text does not move. */
+.text-btn, .btn-text {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 0.9375rem; font-weight: 600; color: var(--color-text-2);
+  padding: 10px 0; margin-block: -10px;
+}
+.text-btn:hover, .btn-text:hover { color: var(--color-text); }
+.text-btn[aria-pressed='true'] { color: var(--color-text); }
+.text-btn svg, .btn-text svg { width: 16px; height: 16px; }
+
+/* Closing links in the arrow form ("All recipes →"). */
+.arrow-link { display: inline-block; font-weight: 600; }
+.back-link { display: block; width: fit-content; font-size: 0.875rem; color: var(--color-text-3); padding: 4px 0; margin: -4px 0 8px; overflow-wrap: anywhere; }
+.back-link:hover { color: var(--color-text); }
+@media (max-width: 699px) {
+  .arrow-link { padding: 9px 0; margin-block: -9px; }
+  .back-link { padding: 11px 0; margin: -11px 0 1px; }
+}
+
+/* ── 5. Chips, tags, measure, dynamic values ───────────────────────────────── */
+/* Tag chip: transparent pill, Rule 2 edge, Ink 2. */
+.chip, .tag {
+  display: inline-block; font-family: var(--font-sans); font-size: 0.75rem; font-weight: 500; line-height: 1.5;
+  color: var(--color-tag); background: transparent; border: 1px solid var(--color-tag-border);
+  border-radius: var(--radius-pill); padding: 2px 9px; transition: background 0.15s, border-color 0.15s; align-self: center;
+}
+a.chip:hover, a.tag:hover { background: var(--color-tag-hover-bg); border-color: var(--color-tag); color: var(--color-tag); }
+/* Version chip: marigold, ink mono 600 (the one chip that is an identifier). */
+.vchip {
+  font-family: var(--font-mono); font-size: 0.75rem; font-weight: 600; background: var(--color-marigold);
+  color: var(--color-text); border-radius: var(--radius-sm); padding: 0 6px; outline: 1px solid transparent; outline-offset: -1px; align-self: center;
+}
+/* Other version ids in a line: clay mono. */
+.vid { font-family: var(--font-mono); font-size: 0.9375em; color: var(--color-accent); }
+
+/* Recipe tags line on the recipe page: comma-separated clay 600 links. */
+.tag-line { line-height: 1.5; color: var(--color-text-2); }
+.tag-line a { font-weight: 600; }
+
+/* Measure: one sans line, value 600 ink, label Ink 2, CSS-drawn Ink 3 dots.
+   Markup: <p class="measure"><span class="pair"><b>15 min</b> prep</span>... */
+.measure { display: flex; flex-wrap: wrap; line-height: 1.5; color: var(--color-text-2); }
+.measure b { font-weight: 600; color: var(--color-text); }
+.measure .pair { white-space: nowrap; }
+.measure .pair + .pair::before { content: '·' / ''; color: var(--color-text-3); padding: 0 0.45em; }
+@media (max-width: 699px) {
+  .measure { column-gap: 10px; }
+  .measure .pair + .pair::before { content: none; }
+}
+
+/* Dynamic Is Clay: a value the reader changed that is not stored (scaled serves,
+   scaled quantities and weights, scaled Makes). The control itself stays ink. */
+.dynamic, .measure b.dynamic, b.dynamic { color: var(--color-accent); }
+/* What scaling left alone (pan size, oven temperature), only while scaled. */
+.not-scaled { font-size: 0.875rem; font-weight: 400; color: var(--color-text-3); white-space: nowrap; }
+.not-scaled::before { content: '·' / ''; padding: 0 6px 0 4px; }
+
+/* Stats row: icon + words in Ink 2; links clay 600. 20px gaps, no dots. */
+.stats { display: flex; flex-wrap: wrap; column-gap: 20px; row-gap: 4px; line-height: 1.5; color: var(--color-text-2); }
+.stats .stat { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.stats a { font-weight: 600; }
+
+/* ── 6. Forms ──────────────────────────────────────────────────────────────── */
+/* Error timing (DESIGN.md, Inputs): an error shows only once the field was
+   edited and left, or a save was blocked. Passing through an untouched field
+   says nothing. Draw an error by adding aria-invalid="true" to the input and an
+   .error message under it; never show errors on first paint of a fresh form. */
+.form { display: flex; flex-direction: column; gap: var(--space-5); }
+.field { display: flex; flex-direction: column; gap: var(--space-2); }
+.label, .field > label:not([class]), .field legend {
+  font-family: var(--font-sans); font-size: 0.75rem; font-weight: 600; line-height: 1.2;
+  letter-spacing: 0.05em; text-transform: uppercase; color: var(--color-text-3); padding: 0;
+}
+.label .optional, .field .optional { font-weight: 400; letter-spacing: 0; text-transform: none; }
+.required-mark { color: var(--color-remove); }
+.input, .textarea, .select,
+input:not([type='checkbox']):not([type='radio']), textarea, select {
+  width: 100%; background: var(--color-surface); border: 1px solid var(--color-input-border);
+  border-radius: var(--radius-md); color: var(--color-text); font-family: var(--font-sans);
+  font-size: 0.9375rem; line-height: 1.4; padding: 9px 12px;
+}
+.textarea, textarea { field-sizing: content; resize: vertical; }
+:is(.input, .textarea, input, textarea)[aria-invalid='true'] { border-color: var(--color-remove); color: var(--color-remove); }
+.hint, .form-hint { font-size: 0.875rem; line-height: 1.5; color: var(--color-text-3); }
+.error, .field-error { font-size: 0.875rem; line-height: 1.5; color: var(--color-remove); }
+/* A failure no field owns (conflict, network): the boxed alert. */
+.form-error { background: var(--color-remove-bg); color: var(--color-remove); border: 1px solid var(--color-remove); border-radius: var(--radius-md); padding: var(--space-3) var(--space-4); font-size: 0.875rem; }
+.field-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4); }
+.field-row .error { grid-column: 1 / -1; }
+.form-actions { display: flex; align-items: center; gap: 14px; }
+.form-actions .btn-primary { min-width: 112px; }
+@media (max-width: 699px) {
+  .input, .textarea, .select,
+  input:not([type='checkbox']):not([type='radio']), textarea, select { font-size: 1rem; line-height: 1.5; }
+  /* The phone Save bar: pinned, a rule above, edge to edge across the gutters. */
+  .form-actions { position: sticky; bottom: 0; z-index: 4; margin: 0 -18px; padding: 12px 18px calc(12px + env(safe-area-inset-bottom)); background: var(--color-surface); border-top: 1px solid var(--color-border); }
+  .form-actions .btn-primary { flex: 1; }
+}
+/* Radios and checkboxes take clay (the named exception to Clay Is Text). */
+input[type='radio'], input[type='checkbox'] { accent-color: var(--color-accent); width: 16px; height: 16px; margin: 0; }
+.check-row { display: inline-flex; align-items: center; gap: var(--space-2); min-height: 24px; font-size: 0.875rem; cursor: pointer; }
+@media (max-width: 699px) { .check-row { min-height: 44px; } }
+/* Audience choice: labelled rows; the chosen one gets a 1px ink inset. */
+.choice { position: relative; display: grid; grid-template-columns: 20px 1fr; gap: 2px 10px; align-items: start; padding: 10px 12px; border: 1px solid var(--color-input-border); border-radius: var(--radius-md); background: var(--color-surface); cursor: pointer; }
+.choice input { margin-top: 4px; }
+.choice b { font-weight: 600; display: flex; align-items: center; gap: 6px; }
+.choice span { grid-column: 2; font-size: 0.875rem; line-height: 1.45; color: var(--color-text-2); }
+.choice:has(:checked) { border-color: var(--color-text); box-shadow: inset 0 0 0 1px var(--color-text); }
+
+/* Save state line in the editor header: sans 0.875rem Ink 3, version ids mono.
+   <p class="status-live" role="status">Editing <span class="mono-id">v3</span> ·
+   <strong>Unsaved changes</strong> · saves as <span class="mono-id">v4</span></p>
+   Modifiers: .is-saved (plain), .is-error (the count in error red). */
+.status-live { font-size: 0.875rem; line-height: 1.5; color: var(--color-text-3); }
+.status-live strong { font-weight: 600; color: var(--color-text); }
+.status-live.is-error strong { color: var(--color-remove); }
+
+/* ── 7. Recipe cards ───────────────────────────────────────────────────────── */
+/* No box: the 4:3 photo (6px corners) or the clay-tint panel is the only shape.
+   <a class="card" href><img class="card__photo" alt=""><h3 class="card__title">
+   <p class="card__meta measure">. Hover scales the photo and turns the title clay. */
+.recipe-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-5); }
+@media (min-width: 700px) { .recipe-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 1100px) { .recipe-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.card { display: flex; flex-direction: column; gap: 8px; color: var(--color-text); min-width: 0; }
+.card:hover { color: var(--color-text); }
+.card__media { aspect-ratio: 4 / 3; border-radius: var(--radius-md); overflow: hidden; }
+.card__photo { width: 100%; height: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--radius-md); transition: transform 0.2s ease; }
+.card:hover .card__photo { transform: scale(1.03); }
+.card__title {
+  font-family: var(--font-serif); font-weight: 500; font-size: 1.0625rem; line-height: 1.25; color: var(--color-text);
+  letter-spacing: 0; text-wrap: balance; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden;
+}
+.card:hover .card__title { color: var(--color-accent); }
+.card__meta { font-size: 0.8125rem; line-height: 1.5; color: var(--color-text-3); }
+.card__meta b { color: var(--color-text-3); font-weight: 400; }
+.card__meta .vid { font-size: 0.6875rem; font-weight: 600; }
+.card__desc { font-size: 0.8125rem; line-height: 1.5; color: var(--color-text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: -4px; }
+/* No photo: the clay-tint panel holds the layout, title inside it in clay
+   (clamped at four lines), 15px in from a 1px transparent edge. */
+.card--no-photo .card__media { background: var(--color-tint); border: 1px solid transparent; padding: 15px; display: flex; align-items: flex-end; }
+.card--no-photo .card__media .card__title { color: var(--color-accent); -webkit-line-clamp: 4; }
+.card--no-photo:hover .card__media .card__title { color: var(--color-text); }
+
+/* ── 8. People, surfaces, notes ────────────────────────────────────────────── */
+/* Avatar: clay-tint circle, Bitter initial in clay. 40px default. */
+.avatar {
+  width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0; border: 1px solid transparent;
+  background: var(--color-tint); color: var(--color-accent);
+  font-family: var(--font-serif); font-weight: 500; font-size: 1.125rem; line-height: 1;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.avatar--sm { width: 28px; height: 28px; font-size: 0.875rem; }
+.avatar--lg { width: 72px; height: 72px; font-size: 1.75rem; }
+@media (max-width: 699px) { .avatar--lg { width: 56px; height: 56px; font-size: 1.375rem; } }
+
+.rule { border: 0; border-top: 1px solid var(--color-border); margin: 0; }
+.rule--2 { border-top-color: var(--color-border-2); }
+.section-heading { padding-bottom: 8px; margin-bottom: 14px; border-bottom: 1px solid var(--color-border); }
+/* Lifted paper panel (compare cards, commit bar, version bar). */
+.surface { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: var(--space-4); }
+/* The title band: paper one step deeper, full width. */
+.band { background: var(--color-band); padding: var(--space-5) 0; }
+.band--no-photo { padding: 40px 0; }
+@media (max-width: 1023px) { .band--no-photo { padding: var(--space-5) 0; } }
+/* Private "only you" note: lifted paper, a lock and the label in Ink 2.
+   <div class="lock-note"><p class="lock-note__label"><svg/>Only you</p>...</div> */
+.lock-note { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 10px 12px; font-size: 0.9375rem; line-height: 1.5; }
+.lock-note__label { display: flex; align-items: center; gap: 6px; font-size: 0.8125rem; font-weight: 600; color: var(--color-text-2); margin-bottom: 2px; }
+.lock-note__label svg { width: 14px; height: 14px; }
+.lock-note a { font-weight: 600; }
+/* Overflow menu: the one true overlay, so it may carry the raised shadow. */
+.menu { background: var(--color-surface); border: 1px solid var(--color-border-2); border-radius: var(--radius-lg); box-shadow: var(--shadow-raised); padding: 6px; min-width: 220px; }
+.menu a, .menu button { display: block; width: 100%; text-align: left; padding: 10px 12px; border-radius: var(--radius-sm); color: var(--color-text); font-size: 0.9375rem; }
+.menu a:hover, .menu button:hover { background: var(--color-tint); }
+.menu .danger { color: var(--color-remove); }
+.empty-state { padding: 2rem 0; text-align: center; color: var(--color-text-3); }
+
+/* Strike-row tick (recipe ingredients): Ink 3 circle, marigold + ink check when ticked. */
+.tick { position: relative; flex-shrink: 0; width: 16px; height: 16px; border: 1px solid var(--color-text-3); border-radius: 50%; transform: translateY(2px); }
+label:hover .tick { border-color: var(--color-text-2); }
+label:has(:checked) .tick { background: var(--color-marigold); border-color: var(--color-marigold); }
+label:has(:checked) .tick::after { content: ''; position: absolute; left: 4.5px; top: 1.5px; width: 5px; height: 9px; border-style: solid; border-width: 0 1.5px 1.5px 0; border-color: var(--color-text); transform: rotate(45deg); }
+
+/* ── 9. Navigation ─────────────────────────────────────────────────────────── */
+/* Top bar: espresso, 56px (52 on a phone), 1200px inner column. Wordmark
+   "Fork." in Bitter cream with a marigold stop. Links in small caps, tan,
+   cream when current or hovered. Right: + New recipe (the bar's one fill) and
+   the avatar. Below 768 the links and New recipe go; the wordmark stays.
+   Markup: README-BUILDERS.md, "Navigation". */
+.nav-top { background: var(--color-navbar-bg); padding: 0 var(--space-5); }
+.nav-top__row { max-width: var(--max-width); margin: 0 auto; height: 56px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+.nav-top__left, .nav-top__right { display: flex; align-items: center; gap: 24px; min-width: 0; }
+.nav-top__brand { font-family: var(--font-serif); font-size: 1.375rem; font-weight: 600; line-height: 1; color: var(--color-text-cream); }
+.nav-top__brand span { color: var(--color-marigold); }
+.nav-top__brand:hover { color: var(--color-text-cream); }
+.nav-top__links { display: flex; gap: 24px; }
+.nav-top__links a {
+  font-size: 1rem; font-weight: 600; letter-spacing: 0.05em; font-variant-caps: all-small-caps;
+  color: var(--color-text-tan); white-space: nowrap;
+}
+.nav-top__links a:hover, .nav-top__links a[aria-current='page'] { color: var(--color-text-cream); }
+.nav-top__new { background: var(--color-marigold); color: var(--color-text); font-size: 0.875rem; font-weight: 600; padding: 6px 13px; border-radius: var(--radius-md); border: 1px solid transparent; white-space: nowrap; }
+.nav-top__new:hover { background: var(--color-marigold-hover); color: var(--color-text); }
+.nav-top .avatar { width: 32px; height: 32px; font-size: 0.9375rem; }
+.nav-top__login { font-size: 1rem; font-weight: 600; letter-spacing: 0.05em; font-variant-caps: all-small-caps; color: var(--color-text-tan); }
+.nav-top :focus-visible { outline-color: var(--color-marigold); }
+@media (forced-colors: active) { .nav-top__links a[aria-current='page'] { text-decoration: underline; text-underline-offset: 4px; } }
+
+/* Phone tab bar: lifted paper, a Rule 2 line above, four destinations with
+   icons, 56px tall (44px+ targets). Current: ink text and a 2px clay top edge.
+   Hidden in Cook and the editor, which pin their own bars (leave it out there). */
+.tab-bar { display: none; }
+@media (max-width: 767px) {
+  .nav-top { padding: 0 18px; }
+  .nav-top__row { height: 52px; }
+  .nav-top__links, .nav-top__new { display: none; }
+  .tab-bar {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+    background: var(--color-surface); border-top: 1px solid var(--color-border-2);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .tab-bar a {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+    min-height: 56px; padding: 8px 0 6px; margin-top: -1px; border-top: 2px solid transparent;
+    font-size: 0.75rem; font-weight: 600; line-height: 1.2; color: var(--color-text-2);
+  }
+  .tab-bar a svg { width: 22px; height: 22px; }
+  .tab-bar a:hover { color: var(--color-text); }
+  .tab-bar a[aria-current='page'] { color: var(--color-text); border-top-color: var(--color-accent); }
+  .tab-bar a:focus-visible { outline-offset: -4px; }
+  body:has(.tab-bar) { padding-bottom: calc(57px + env(safe-area-inset-bottom)); }
+}
+
+/* Tag tabs (Cookbook filters, Discover tags): text tabs, current ink 600 + clay underline. */
+.tag-tabs { display: flex; gap: 16px; overflow-x: auto; white-space: nowrap; scrollbar-width: none; padding: 6px 8px 4px; margin: -6px -8px -4px; }
+.tag-tabs a, .tag-tabs button { flex-shrink: 0; padding: 0 0 4px; border-bottom: 2px solid transparent; font-size: 0.875rem; color: var(--color-text-2); }
+.tag-tabs a:hover, .tag-tabs button:hover { color: var(--color-text); }
+.tag-tabs a[aria-current='page'], .tag-tabs button[aria-pressed='true'] { color: var(--color-text); font-weight: 600; border-bottom-color: var(--color-accent); }
+@media (max-width: 699px) {
+  .tag-tabs { margin: -19px -18px -4px; padding: 4px 18px; }
+  .tag-tabs a, .tag-tabs button { padding-top: 15px; }
+}
+
+/* ── 10. Layout ────────────────────────────────────────────────────────────── */
+/* The one 1200px column; 24px gutters (32 from 1280), 18px on a phone as shipped. */
+.page { max-width: calc(var(--max-width) + 48px); margin: 0 auto; padding: var(--space-5) var(--space-5) var(--space-7); }
+.page--flush { padding-top: 0; padding-bottom: 0; }
+@media (min-width: 1280px) { .page { max-width: calc(var(--max-width) + 64px); padding-inline: var(--space-6); } }
+@media (max-width: 699px) { .page { padding: 16px 18px var(--space-7); } }
+/* List page title row: h1 and its filters on one baseline, wrapping under. */
+.page-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--space-5) 20px; margin-bottom: var(--space-5); }
+/* Editor: settings 5 beside the long text 7, 40px apart; one column below 860. */
+.grid-5-7 { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 40px; }
+@media (max-width: 859px) { .grid-5-7 { grid-template-columns: minmax(0, 1fr); } }
+/* Recipe body: 380px ingredients beside the method, 48px apart; stacks under 768. */
+.cols { display: grid; grid-template-columns: 380px minmax(0, 1fr); column-gap: 48px; align-items: start; }
+@media (max-width: 767px) { .cols { grid-template-columns: minmax(0, 1fr); row-gap: var(--space-6); } }
+/* A single reading column (Friends feed, Log a meal). */
+.column-680 { max-width: 680px; }
+.stack > * + * { margin-top: var(--space-4); }
+
+/* ── 11. Legend chips (feature status) ─────────────────────────────────────── */
+/* Board vocabulary, but drawn in-system so they read calmly on the page. */
+.shipped, .planned { display: inline-block; font-size: 0.75rem; font-weight: 600; line-height: 1.5; padding: 1px 8px; border-radius: var(--radius-sm); color: var(--color-text); white-space: nowrap; vertical-align: 0.1em; align-self: center; }
+.shipped { background: var(--color-tint); }
+.planned { background: var(--color-marigold-tint); }
+
+/* ── 12. Board-only chrome (never ships) ───────────────────────────────────── */
+/* Which kind of page this is, pinned top-right under the navbar. */
+.proto-label, .static-label {
+  position: fixed; top: 64px; right: 8px; z-index: 50;
+  font: 600 0.75rem/1.2 var(--font-sans); letter-spacing: 0.02em;
+  padding: 5px 10px; border-radius: var(--radius-pill); border: 1px solid var(--color-text);
+  background: var(--color-surface); color: var(--color-text); pointer-events: none;
+}
+.proto-label { background: var(--color-marigold-tint); }
+.proto-label::before { content: 'Interactive prototype'; }
+.static-label::before { content: 'Static illustration'; }
+@media (max-width: 767px) { .proto-label, .static-label { top: 58px; } }
+/* Callout note: dashed clay edge, small sans. body.clean (?clean=1) hides them. */
+.annot {
+  border: 1px dashed var(--color-accent); border-radius: var(--radius-md);
+  background: var(--color-surface); color: var(--color-text-2);
+  font: 400 0.8125rem/1.45 var(--font-sans); padding: 8px 10px; margin: 8px 0; max-width: 46ch;
+}
+.annot strong { color: var(--color-text); font-weight: 600; }
+.annot--float { position: absolute; z-index: 30; margin: 0; width: max-content; max-width: 260px; }
+body.clean .annot { display: none; }

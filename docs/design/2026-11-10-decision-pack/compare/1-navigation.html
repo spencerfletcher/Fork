@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Compare 1 · Navigation · Fork</title>
+  <link rel="stylesheet" href="../assets/fork.css">
+  <link rel="stylesheet" href="../assets/board.css">
+  <script src="../assets/board.js" defer></script>
+  <style>
+    .notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px 32px; margin-top: 16px; }
+    .notes h3 { margin-bottom: 4px; }
+    .notes p { color: var(--color-text-2); max-width: 60ch; }
+    .pick { margin-top: 32px; padding: 16px; font-size: 1.0625rem; display: flex; flex-wrap: wrap; gap: 8px 24px; }
+    .pick span { white-space: nowrap; }
+  </style>
+</head>
+<body>
+<main class="board-page">
+  <header>
+    <a class="back-link" href="../index.html">← Decision pack</a>
+    <h1>Navigation and placement of frequent actions</h1>
+    <p>The same recipe page (Maria's Cardamom Cinnamon Buns, owner view) at the same sizes, with only the navigation and the action placement changed. Desktop is identical in both; the difference is on the phone.</p>
+  </header>
+
+  <section class="board-section">
+    <h2>A · Bottom tab bar, actions in the band <span class="planned">Planned</span></h2>
+    <p>Top bar on desktop; on a phone a bottom tab bar (Cookbook · Journal · Friends · Discover). Cook, then Edit recipe, sit in the title band under the measure.</p>
+    <div class="board" data-title="Variant A" data-src="../screens/recipe.html?state=owner&amp;variant=a"></div>
+  </section>
+
+  <section class="board-section">
+    <h2>B · Hamburger menu, pinned action bar <span class="shipped">Shipped nav</span></h2>
+    <p>Today's phone nav: search and a menu button, no tab bar. On a phone the actions leave the band and pin to the bottom of the screen: Cook, Edit recipe and a ⋯ overflow.</p>
+    <div class="board" data-title="Variant B" data-src="../screens/recipe.html?state=owner&amp;variant=b"></div>
+  </section>
+
+  <section class="board-section">
+    <h2>Decide</h2>
+    <div class="notes">
+      <div><h3>What changes</h3><p>Where the four destinations live on a phone, and whether the recipe's actions scroll away with the band or stay pinned. Desktop does not change.</p></div>
+      <div><h3>Why it matters</h3><p>Cookbook, Journal, Friends and Discover are the MVP; a menu hides three of them behind a tap. Cook is the action people come back for, often with messy hands.</p></div>
+      <div><h3>Recommendation: A</h3><p>Every destination one tap away, and the page keeps one bottom bar instead of two. Cook is the first, largest thing under the title, so it is seen before any scrolling.</p></div>
+      <div><h3>Downside of A</h3><p>Once you scroll into the method, Cook is off screen; you scroll back up or use the tab bar. The tab bar takes 57px of every phone screen.</p></div>
+      <div><h3>Downside of B</h3><p>Journal and Friends sit behind the menu, so the social half of the MVP is easy to miss. A pinned action bar plus Cook mode's own bars means a different bottom edge on each page.</p></div>
+    </div>
+    <p class="pick surface"><span>☐ A</span><span>☐ B</span><span>☐ Other: ____________________</span></p>
+  </section>
+</main>
+</body>
+</html>

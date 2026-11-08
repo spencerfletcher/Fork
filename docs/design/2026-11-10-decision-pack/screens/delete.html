@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Delete recipe · Fork</title>
+  <link rel="stylesheet" href="../assets/fork.css">
+  <script src="../assets/state.js" defer></script>
+  <style>
+    /* Delete, two steps, from the foot of the editor (shipped DeleteRecipe.svelte).
+       Both steps are drawn side by side as static panels. */
+    .intro { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+    .intro-line { margin-top: 6px; color: var(--color-text-2); max-width: 64ch; }
+    .steps { margin-top: 32px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px; align-items: start; }
+    .step-label { margin-bottom: 10px; font-family: var(--font-sans); font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-text-3); }
+    /* Each panel is a crop of the editor's last screen: the Save row, then 48px
+       down under a rule, the delete control. */
+    .crop { background: var(--color-bg); border: 1px dashed var(--color-border-2); border-radius: var(--radius-lg); padding: 24px; }
+    .crop .form-actions { position: static; margin: 0; padding: 0; background: none; border: 0; }
+    .crop .form-actions .btn-primary { flex: 0 0 auto; }
+    .danger-zone { margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--color-border); }
+    .confirm { background: var(--color-surface); border: 1px solid var(--color-border-2); border-radius: var(--radius-md); padding: 16px; }
+    .confirm p { max-width: 60ch; }
+    .confirm .buttons { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 12px; }
+    .after { margin-top: 32px; }
+    .after h2 { font-size: 1.25rem; }
+    .after ul { margin-top: 10px; display: grid; gap: 8px; color: var(--color-text-2); max-width: 72ch; }
+    .after li { padding-left: 16px; position: relative; }
+    .after li::before { content: '–' / ''; position: absolute; left: 0; color: var(--color-text-3); }
+    @media (max-width: 767px) {
+      .steps { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+      .crop { padding: 16px; }
+    }
+    @media (max-width: 699px) {
+      .confirm .buttons > * { flex: 1 1 100%; }
+    }
+  </style>
+</head>
+<body data-state="default">
+  <span class="static-label"></span>
+
+  <header class="nav-top">
+    <div class="nav-top__row">
+      <div class="nav-top__left">
+        <a class="nav-top__brand" href="cookbook.html">Fork<span>.</span></a>
+        <nav class="nav-top__links" aria-label="Main">
+          <a href="cookbook.html" aria-current="page">Cookbook</a>
+          <a href="journal.html">Journal</a>
+          <a href="friends.html">Friends</a>
+          <a href="discover.html">Discover</a>
+        </nav>
+      </div>
+      <div class="nav-top__right">
+        <a class="nav-top__new" href="editor.html?state=ordinary">+ New recipe</a>
+        <a class="avatar" href="#" aria-label="Maria Okafor, your profile">M</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="page">
+    <a class="back-link" href="recipe.html?state=owner">← Cardamom Cinnamon Buns with Brown Butter Glaze</a>
+    <div class="intro"><h1>Delete a recipe</h1><span class="shipped">Shipped</span></div>
+    <p class="intro-line">Owner only, at the foot of the editor. Two steps, no dialog: the first click opens the confirmation in place of the button.</p>
+
+    <div class="steps">
+      <section aria-labelledby="before">
+        <h2 class="step-label" id="before">Before</h2>
+        <div class="crop">
+          <div class="form-actions"><button class="btn-primary" type="button">Save changes</button><a class="text-btn" href="recipe.html?state=owner">Cancel</a></div>
+          <div class="danger-zone">
+            <button class="btn-danger-ghost" type="button">Delete recipe…</button>
+          </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="after-click">
+        <h2 class="step-label" id="after-click">After clicking</h2>
+        <div class="crop">
+          <div class="form-actions"><button class="btn-primary" type="button">Save changes</button><a class="text-btn" href="recipe.html?state=owner">Cancel</a></div>
+          <div class="danger-zone">
+            <div class="confirm" role="group" tabindex="-1" aria-label="Delete Cardamom Cinnamon Buns with Brown Butter Glaze?" aria-describedby="delete-explanation">
+              <p id="delete-explanation">This deletes all 3 versions and their photos. It can't be undone, and there is no trash. The 2 adaptations other cooks made stay theirs; they'll say "Original recipe deleted".</p>
+              <div class="buttons">
+                <button class="btn-danger-ghost" type="submit">Delete permanently</button>
+                <button class="btn-ghost" type="button">Keep recipe</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="annot"><strong>Focus</strong> moves to the panel, which speaks its question; Escape or Keep recipe puts the button back and returns focus to it.</p>
+      </section>
+    </div>
+
+    <section class="after" aria-labelledby="then">
+      <h2 id="then">Then</h2>
+      <ul>
+        <li>While it posts, both buttons are disabled and the first reads "Deleting…".</li>
+        <li>You land on Cookbook with the status line "Deleted Cardamom Cinnamon Buns with Brown Butter Glaze."</li>
+        <li>On each adaptation the byline reads "By <span class="handle">@devcooks</span> · Original recipe deleted", plain text, no link.</li>
+      </ul>
+    </section>
+  </main>
+</body>
+</html>

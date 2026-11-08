@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Discover · Fork</title>
+  <link rel="stylesheet" href="../assets/fork.css">
+  <script src="../assets/state.js" defer></script>
+  <style>
+    /* Discover: everyone's public recipes. Same card as Cookbook, but editorial:
+       the newest recipe leads large, the grid is three wide with more air, and
+       every card names its cook above the title. */
+    .head-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+    .lede { margin-top: 4px; color: var(--color-text-2); }
+    .filters { margin-top: 22px; }
+    .search { position: relative; max-width: 560px; }
+    .search svg { position: absolute; left: 12px; top: 0; bottom: 0; margin: auto 0; width: 16px; height: 16px; color: var(--color-text-3); pointer-events: none; }
+    .search input[type=search] { padding-left: 38px; min-height: 44px; }
+    .tags-row { margin-top: 18px; }
+    .order { margin: 28px 0 16px; padding-bottom: 8px; border-bottom: 1px solid var(--color-border); display: flex; justify-content: space-between; gap: 12px; }
+
+    .cook { display: flex; align-items: center; gap: 8px; font-size: 0.9375rem; color: var(--color-text-2); min-width: 0; }
+    .cook .name { font-weight: 600; color: var(--color-text); }
+    .cook .handle { overflow-wrap: anywhere; }
+
+    /* Featured: photo 7, words 5. */
+    .feature { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 40px; align-items: center; color: var(--color-text); }
+    .feature:hover { color: var(--color-text); }
+    .feature .card__media { aspect-ratio: 4 / 3; }
+    .feature__title { font-family: var(--font-serif); font-weight: 500; font-size: clamp(1.5rem, 1.1rem + 1.4vw, 2.25rem); line-height: 1.15; margin-top: 12px; text-wrap: balance; }
+    .feature:hover .feature__title { color: var(--color-accent); }
+    .feature .measure { margin-top: 12px; }
+    .feature .read { margin-top: 18px; font-weight: 600; color: var(--color-accent); }
+    .feature:hover .card__photo { transform: scale(1.02); }
+
+    .discover-grid { margin-top: 48px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 40px 32px; }
+    @media (min-width: 600px) { .discover-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (min-width: 1100px) { .discover-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 48px 32px; } }
+    .discover-grid .card { gap: 10px; }
+    .discover-grid .card__title { font-size: 1.1875rem; }
+    .card__meta { display: flex; flex-wrap: wrap; }
+    .card__meta > span + span::before { content: '·' / ''; padding: 0 6px; }
+
+    @media (max-width: 899px) {
+      .feature { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+      .feature__title { margin-top: 4px; }
+    }
+  </style>
+</head>
+<body data-state="default">
+  <span class="static-label"></span>
+
+  <header class="nav-top">
+    <div class="nav-top__row">
+      <div class="nav-top__left">
+        <a class="nav-top__brand" href="cookbook.html">Fork<span>.</span></a>
+        <nav class="nav-top__links" aria-label="Main">
+          <a href="cookbook.html">Cookbook</a>
+          <a href="journal.html">Journal</a>
+          <a href="friends.html">Friends</a>
+          <a href="discover.html" aria-current="page">Discover</a>
+        </nav>
+      </div>
+      <div class="nav-top__right">
+        <a class="nav-top__new" href="editor.html?state=ordinary">+ New recipe</a>
+        <a class="avatar" href="#" aria-label="Maria Okafor, your profile">M</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="page">
+    <div class="head-row"><h1>Discover</h1><span class="planned">Planned</span></div>
+    <p class="lede">Public recipes from every cook on Fork.</p>
+
+    <div class="filters">
+      <form class="search" role="search" onsubmit="return false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="search" name="q" aria-label="Search by name or ingredient" placeholder="Search by name or ingredient…">
+      </form>
+      <div class="tags-row">
+        <div class="tag-tabs" role="group" aria-label="Tags">
+          <button type="button" aria-pressed="true">All</button>
+          <button type="button" aria-pressed="false">baking</button>
+          <button type="button" aria-pressed="false">breakfast</button>
+          <button type="button" aria-pressed="false">brunch</button>
+          <button type="button" aria-pressed="false">eggs</button>
+          <button type="button" aria-pressed="false">vegetarian</button>
+          <button type="button" aria-pressed="false">weeknight</button>
+          <button type="button" aria-pressed="false">lentils</button>
+        </div>
+      </div>
+    </div>
+
+    <p class="order"><span class="eyebrow-label">Newest first</span><span class="muted" style="font-size:0.8125rem">10 recipes</span></p>
+
+    <a class="feature" href="recipe.html?state=visitor">
+      <div class="card__media"><img class="card__photo" src="../assets/photos/p10.jpg" alt=""></div>
+      <div>
+        <p class="cook"><span class="avatar avatar--sm" aria-hidden="true">P</span><span class="name">Priya Nair</span><span class="handle">@priyabakes</span></p>
+        <h2 class="feature__title">Pan-Seared Salmon with Cucumber Salsa</h2>
+        <p class="measure"><span class="pair"><b>25 min</b></span><span class="pair">Serves <b>2</b></span><span class="pair"><span class="vid">v2</span></span></p>
+        <p class="read">Open recipe →</p>
+      </div>
+    </a>
+    <p class="annot"><strong>Why it differs from Cookbook:</strong> Discover is for browsing strangers' food, so the newest recipe leads large, the grid is three wide with more air, and every card names its cook first. Cookbook is your shelf: four wide, uniform, no owner line on your own recipes. Same card underneath. Only public recipes appear here.</p>
+
+    <div class="discover-grid">
+      <a class="card" href="recipe.html?state=visitor">
+        <p class="cook"><span class="avatar avatar--sm" aria-hidden="true">P</span><span class="handle">@priyabakes</span></p>
+        <div class="card__media"><img class="card__photo" src="../assets/photos/p7.jpg" alt=""></div>
+        <h3 class="card__title">Charred Lemongrass Beef and Crispy Tofu Sharing Platter with Nuoc Cham and Toasted Cashews</h3>
+        <p class="card__meta"><span>1h 30m</span><span>Serves 6</span></p>
+      </a>
+      <a class="card card--no-photo" href="recipe.html?state=visitor">
+        <p class="cook"><span class="avatar avatar--sm" aria-hidden="true">D</span><span class="handle">@devcooks</span></p>
+        <div class="card__media"><h3 class="card__title">Shakshuka</h3></div>
+        <p class="card__meta"><span>35 min</span><span>Serves 2</span></p>
+      </a>
+      <a class="card" href="recipe.html?state=visitor">
+        <p class="cook"><span class="avatar avatar--sm" aria-hidden="true">D</span><span class="handle">@devcooks</span></p>
+        <div class="card__media"><img class="card__photo" src="../assets/photos/p8.jpg" alt=""></div>
+        <h3 class="card__title">Beet and Feta Salad with Orange</h3>
+        <p class="card__meta"><span>1h 10m</span><span>Serves 4</span><span class="vid">v2</span></p>
+      </a>
+      <a class="card" href="recipe.html?state=visitor">
+        <p class="cook"><span class="avatar avatar--sm" aria-hidden="true">S</span><span class="handle">@samlind</span></p>
+        <div class="card__media"><img class="card__photo" src="../assets/photos/p4.jpg" alt=""></div>
+        <h3 class="card__title">Salmon Poke Bowl</h3>
+        <p class="card__meta"><span>35 min</span><span>Serves 2</span><span class="vid">v3</span></p>
+      </a>
+      <a class="card" href="recipe.html?state=owner">
+        <p class="cook"><span class="avatar avatar--sm" aria-hidden="true">M</span><span class="handle">@chefmaria</span></p>
+        <div class="card__media"><img class="card__photo" src="../assets/photos/p3.jpg" alt=""></div>
+        <h3 class="card__title">Cardamom Cinnamon Buns with Brown Butter Glaze</h3>
+        <p class="card__meta"><span>1h 10m</span><span>Serves 12</span><span class="vid">v3</span></p>
+      </a>
+      <a class="card" href="recipe.html?state=owner">
+        <p class="cook"><span class="avatar avatar--sm" aria-hidden="true">M</span><span class="handle">@chefmaria</span></p>
+        <div class="card__media"><img class="card__photo" src="../assets/photos/p1.jpg" alt=""></div>
+        <h3 class="card__title">Weeknight Dal with Tarka</h3>
+        <p class="card__meta"><span>45 min</span><span>Serves 4</span><span class="vid">v2</span></p>
+      </a>
+      <a class="card card--no-photo" href="recipe.html?state=visitor">
+        <p class="cook"><span class="avatar avatar--sm" aria-hidden="true">S</span><span class="handle">@samlind</span></p>
+        <div class="card__media"><h3 class="card__title">Green Goddess Dressing</h3></div>
+        <p class="card__meta"><span>10 min prep</span><span>Serves 6</span></p>
+      </a>
+      <a class="card" href="recipe.html?state=owner">
+        <p class="cook"><span class="avatar avatar--sm" aria-hidden="true">M</span><span class="handle">@chefmaria</span></p>
+        <div class="card__media"><img class="card__photo" src="../assets/photos/p2.jpg" alt=""></div>
+        <h3 class="card__title">Brown Butter Chocolate Chip Cookies</h3>
+        <p class="card__meta"><span>30 min</span><span>Serves 24</span><span class="vid">v4</span></p>
+      </a>
+      <a class="card" href="recipe.html?state=owner">
+        <p class="cook"><span class="avatar avatar--sm" aria-hidden="true">M</span><span class="handle">@chefmaria</span></p>
+        <div class="card__media"><img class="card__photo" src="../assets/photos/p9.jpg" alt=""></div>
+        <h3 class="card__title">Pesto Farfalle with Cherry Tomatoes</h3>
+        <p class="card__meta"><span>25 min</span><span>Serves 4</span></p>
+      </a>
+    </div>
+  </main>
+
+  <nav class="tab-bar" aria-label="Main">
+    <a href="cookbook.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H19v14H5.5A1.5 1.5 0 0 0 4 19.5z"/><path d="M4 19.5A1.5 1.5 0 0 0 5.5 21H19v-3"/><path d="M9 8h6"/></svg>Cookbook</a>
+    <a href="journal.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 10h16M8 3v4M16 3v4M8 14h4"/></svg>Journal</a>
+    <a href="friends.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><circle cx="17" cy="9" r="2.5"/><path d="M17.5 14.5A5 5 0 0 1 21.5 19"/></svg>Friends</a>
+    <a href="discover.html" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></svg>Discover</a>
+  </nav>
+</body>
+</html>

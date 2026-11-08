@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Journal · Fork</title>
+  <link rel="stylesheet" href="../assets/fork.css">
+  <script src="../assets/state.js" defer></script>
+  <style>
+    /* Journal: Maria's own cooking record, grouped by month, day in the margin. */
+    .j-head { align-items: flex-end; max-width: 880px; }
+    h1 .planned { font-family: var(--font-sans); }
+    .j-head h1 { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 12px; }
+    .j-head .sub { margin-top: 4px; color: var(--color-text-2); }
+    .journal { max-width: 880px; }
+    .month { font-size: 1.375rem; padding-bottom: 8px; border-bottom: 1px solid var(--color-border-2); }
+    .month + .jentry { border-top: 0; }
+    * + .month { margin-top: var(--space-6); }
+
+    /* Entry: day | words | photo on desktop and tablet. */
+    .jentry {
+      display: grid; grid-template-columns: 64px minmax(0, 1fr) 200px;
+      grid-template-areas: 'day head photo' 'day body photo';
+      grid-template-rows: auto 1fr; column-gap: 24px;
+      padding: 24px 0; border-top: 1px solid var(--color-border);
+    }
+    .jentry--text { grid-template-columns: 64px minmax(0, 1fr); grid-template-areas: 'day head' 'day body'; }
+    .jday { grid-area: day; font-family: var(--font-serif); color: var(--color-text); text-align: center; }
+    .jday time { display: flex; flex-direction: column; align-items: center; }
+    .jday b { font-weight: 500; font-size: 2rem; line-height: 1; }
+    .jday span { font-family: var(--font-sans); font-size: 0.8125rem; color: var(--color-text-3); margin-top: 4px; }
+    .jhead { grid-area: head; min-width: 0; }
+    .jbody { grid-area: body; min-width: 0; }
+    .jphoto { grid-area: photo; }
+    .jphoto img { width: 100%; aspect-ratio: 3 / 2; object-fit: cover; border-radius: var(--radius-md); }
+    .jdish { font-family: var(--font-serif); font-weight: 500; font-size: 1.25rem; line-height: 1.25; letter-spacing: 0; }
+    .jsource { margin-top: 4px; font-size: 0.9375rem; color: var(--color-text-2); overflow-wrap: anywhere; }
+    .jsource a { font-weight: 600; }
+    .jsource .icon { vertical-align: -2px; margin-right: 4px; color: var(--color-text-3); }
+    .jmeta { margin-top: 4px; display: flex; flex-wrap: wrap; gap: 2px 16px; font-size: 0.9375rem; color: var(--color-text-2); }
+    .aud { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; color: var(--color-text); }
+    .aud-hint { margin-top: 2px; font-size: 0.875rem; color: var(--color-text-3); }
+    .caption { margin-top: 10px; font-size: 1.0625rem; line-height: 1.55; max-width: 60ch; }
+    .jbody .lock-note { margin-top: 12px; max-width: 60ch; }
+    .lock-note .arrow-link { margin-left: 4px; white-space: nowrap; }
+
+    /* Phone: the day goes inline above the dish, the photo becomes a thumbnail
+       beside the heading, so the photo never outgrows the words. */
+    @media (max-width: 699px) {
+      .jentry, .jentry--text {
+        grid-template-columns: minmax(0, 1fr) 112px; grid-template-areas: 'day day' 'head photo' 'body body';
+        grid-template-rows: auto; column-gap: 14px; padding: 20px 0;
+      }
+      .jentry--text { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'day' 'head' 'body'; }
+      .jday { text-align: left; margin-bottom: 4px; }
+      .jday time { flex-direction: row-reverse; justify-content: flex-end; align-items: baseline; gap: 6px; }
+      .jday time { font-family: var(--font-sans); font-size: 0.875rem; font-weight: 600; color: var(--color-text-2); }
+      .jday b { font-size: inherit; font-weight: inherit; }
+      .jday span { margin: 0; font-size: inherit; color: inherit; }
+      .jsource a { padding-block: 11px; margin-block: -11px; }
+      .jdish { font-size: 1.125rem; }
+      .j-head .btn-primary { width: 100%; }
+    }
+
+    /* Empty: what the page will hold, one action. */
+    .j-empty { max-width: 560px; padding: var(--space-6) 0; border-top: 1px solid var(--color-border); }
+    .j-empty h2 { font-size: 1.375rem; }
+    .j-empty p { margin-top: 8px; color: var(--color-text-2); }
+    .j-empty .btn-primary { margin-top: 20px; }
+
+    /* Log a cook: a page, one 680px column. */
+    .log { max-width: 680px; }
+    .log h1 { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 12px; margin-bottom: var(--space-5); }
+    .two-up { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+    .linked { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 10px 12px; background: var(--color-surface); border: 1px solid var(--color-input-border); border-radius: var(--radius-md); }
+    .linked a { font-weight: 600; overflow-wrap: anywhere; }
+    .or-line { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; font-size: 0.875rem; color: var(--color-text-3); }
+    .or-line .text-btn { font-size: 0.875rem; }
+    .photo-choose { align-self: flex-start; min-height: 41px; padding-block: 0; }
+    .photo-choose:has(:focus-visible) { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+    .lock-note.note-field { padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+    .note-field label { display: flex; align-items: center; gap: 6px; font-size: 0.8125rem; font-weight: 600; color: var(--color-text-2); }
+    .note-field label svg { width: 14px; height: 14px; }
+    .note-field textarea { background: var(--color-bg); }
+    .choices { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+    .choice { min-height: 44px; }
+    .log .form-actions .text-btn { margin-left: 4px; }
+    @media (max-width: 699px) {
+      .two-up, .choices { grid-template-columns: minmax(0, 1fr); }
+      .photo-choose { min-height: 44px; }
+    }
+    /* The log form pins its own Save bar on a phone, so it leaves out the tab bar (as the editor does). */
+    body[data-state='log-form'] { padding-bottom: 0; }
+  </style>
+</head>
+<body data-state="full">
+  <span class="static-label"></span>
+
+  <header class="nav-top">
+    <div class="nav-top__row">
+      <div class="nav-top__left">
+        <a class="nav-top__brand" href="cookbook.html">Fork<span>.</span></a>
+        <nav class="nav-top__links" aria-label="Main">
+          <a href="cookbook.html">Cookbook</a>
+          <a href="journal.html" aria-current="page">Journal</a>
+          <a href="friends.html">Friends</a>
+          <a href="discover.html">Discover</a>
+        </nav>
+      </div>
+      <div class="nav-top__right">
+        <a class="nav-top__new" href="editor.html?state=ordinary">+ New recipe</a>
+        <a class="avatar" href="#" aria-label="Maria Okafor, your profile">M</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="page">
+
+    <!-- ── Full and empty: the Journal list ───────────────────────────── -->
+    <div data-state-in="full empty">
+      <div class="page-head j-head">
+        <div>
+          <h1>Journal <span class="planned">Planned</span></h1>
+          <p class="sub" data-state-in="full">6 cooks since October</p>
+        </div>
+        <a class="btn-primary" href="journal.html?state=log-form" data-state-in="full">Log a cook</a>
+      </div>
+
+      <div class="journal" data-state-in="full">
+        <h2 class="month">November 2026</h2>
+
+        <article class="jentry">
+          <p class="jday"><time datetime="2026-11-08"><b>8</b><span>Sun</span></time></p>
+          <div class="jhead">
+            <h3 class="jdish">Cardamom Cinnamon Buns</h3>
+            <p class="jsource"><a href="recipe.html?state=owner">Cardamom Cinnamon Buns with Brown Butter Glaze <span class="vid">v3</span></a></p>
+            <p class="jmeta"><span>Served 12</span><span class="aud"><svg class="icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="5.5" r="2.2"/><path d="M2 13c.4-2.3 2-3.5 4-3.5s3.6 1.2 4 3.5"/><circle cx="11.3" cy="6" r="1.8"/><path d="M11 9.6c1.6.1 2.7 1.2 3 3"/></svg>Friends</span></p>
+          </div>
+          <figure class="jphoto"><img src="../assets/photos/p3.jpg" alt=""></figure>
+          <div class="jbody">
+            <p class="caption">Birthday brunch for Sam. The glaze set beautifully this time.</p>
+            <div class="lock-note">
+              <p class="lock-note__label"><svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg>Note for next time · only you</p>
+              <p>Proof the shaped buns 15 minutes longer; the middle ones were tight. <a class="arrow-link" href="editor.html?state=ordinary">Change the recipe →</a></p>
+            </div>
+          </div>
+        </article>
+
+        <article class="jentry">
+          <p class="jday"><time datetime="2026-11-04"><b>4</b><span>Wed</span></time></p>
+          <div class="jhead">
+            <h3 class="jdish">Weeknight Dal</h3>
+            <p class="jsource"><a href="recipe.html?state=owner">Weeknight Dal with Tarka <span class="vid">v2</span></a></p>
+            <p class="jmeta"><span>Served 4</span><span class="aud"><svg class="icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg>Only me</span></p>
+          </div>
+          <figure class="jphoto"><img src="../assets/photos/p1.jpg" alt=""></figure>
+          <div class="jbody">
+            <p class="caption">Doubled the garlic like v2 says. Worth it.</p>
+            <div class="lock-note">
+              <p class="lock-note__label"><svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg>Note for next time · only you</p>
+              <p>Try ½ tsp chilli flakes; ¼ was timid. <a class="arrow-link" href="editor.html?state=ordinary">Change the recipe →</a></p>
+            </div>
+          </div>
+        </article>
+
+        <h2 class="month">October 2026</h2>
+
+        <article class="jentry">
+          <p class="jday"><time datetime="2026-10-31"><b>31</b><span>Sat</span></time></p>
+          <div class="jhead">
+            <h3 class="jdish">Backyard kebab night</h3>
+            <p class="jsource">Improvised</p>
+            <p class="jmeta"><span>Served 8</span><span class="aud"><svg class="icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="5.5" r="2.2"/><path d="M2 13c.4-2.3 2-3.5 4-3.5s3.6 1.2 4 3.5"/><circle cx="11.3" cy="6" r="1.8"/><path d="M11 9.6c1.6.1 2.7 1.2 3 3"/></svg>Friends</span></p>
+          </div>
+          <figure class="jphoto"><img src="../assets/photos/p11.jpg" alt=""></figure>
+          <div class="jbody">
+            <p class="caption">Halloween cookout. Everything on skewers, nothing on plates.</p>
+          </div>
+        </article>
+
+        <article class="jentry jentry--text">
+          <p class="jday"><time datetime="2026-10-24"><b>24</b><span>Sat</span></time></p>
+          <div class="jhead">
+            <h3 class="jdish">Slow-roasted tomato sauce</h3>
+            <p class="jsource"><a href="recipe.html?state=no-photo">Grandmother's Slow-Roasted Tomato Sauce for the Freezer <span class="vid">v5</span></a> · <svg class="icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg>Only me recipe</p>
+            <p class="jmeta"><span>Made 3 jars</span><span class="aud"><svg class="icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="5.5" r="2.2"/><path d="M2 13c.4-2.3 2-3.5 4-3.5s3.6 1.2 4 3.5"/><circle cx="11.3" cy="6" r="1.8"/><path d="M11 9.6c1.6.1 2.7 1.2 3 3"/></svg>Friends</span></p>
+            <p class="aud-hint">Friends see the dish and caption, not the recipe.</p>
+          </div>
+          <div class="jbody">
+            <p class="caption">Freezer's stocked for winter.</p>
+            <div class="lock-note">
+              <p class="lock-note__label"><svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg>Note for next time · only you</p>
+              <p>Use the smaller roasting tin; the juices caught at the edges. <a class="arrow-link" href="editor.html?state=ordinary">Change the recipe →</a></p>
+            </div>
+          </div>
+        </article>
+
+        <article class="jentry jentry--text">
+          <p class="jday"><time datetime="2026-10-18"><b>18</b><span>Sun</span></time></p>
+          <div class="jhead">
+            <h3 class="jdish">Shakshuka</h3>
+            <p class="jsource"><a href="recipe.html?state=visitor">Dev's Shakshuka <span class="vid">v1</span></a></p>
+            <p class="jmeta"><span>Served 2</span><span class="aud"><svg class="icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg>Only me</span></p>
+          </div>
+          <div class="jbody">
+            <p class="caption">Slow Sunday. Dev was right about the cayenne.</p>
+            <div class="lock-note">
+              <p class="lock-note__label"><svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg>Note for next time · only you</p>
+              <p>Add the feta earlier so it softens. <a class="arrow-link" href="recipe.html?state=visitor">Make my version →</a></p>
+            </div>
+          </div>
+        </article>
+
+        <article class="jentry">
+          <p class="jday"><time datetime="2026-10-03"><b>3</b><span>Sat</span></time></p>
+          <div class="jhead">
+            <h3 class="jdish">Lamb meatballs</h3>
+            <p class="jsource"><svg class="icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 9a3 3 0 0 0 4.2 0l2-2a3 3 0 0 0-4.2-4.2l-.8.8M9 7a3 3 0 0 0-4.2 0l-2 2a3 3 0 0 0 4.2 4.2l.8-.8"/></svg><a href="#">seriouseats.com</a></p>
+            <p class="jmeta"><span>Served 4</span><span class="aud"><svg class="icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="5.5" r="2.2"/><path d="M2 13c.4-2.3 2-3.5 4-3.5s3.6 1.2 4 3.5"/><circle cx="11.3" cy="6" r="1.8"/><path d="M11 9.6c1.6.1 2.7 1.2 3 3"/></svg>Friends</span></p>
+          </div>
+          <figure class="jphoto"><img src="../assets/photos/p12.jpg" alt=""></figure>
+          <div class="jbody">
+            <p class="caption">From Serious Eats, halved the chilli for the kids.</p>
+            <div class="lock-note">
+              <p class="lock-note__label"><svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg>Note for next time · only you</p>
+              <p>Write this one up as my own recipe.</p>
+            </div>
+          </div>
+        </article>
+
+        <p class="annot"><strong>Why:</strong> audience is a word on every entry, never an icon alone. The note for next time is the only lifted paper on the page, so "only you" reads as a different kind of thing from the caption your friends see. No ratings or counts.</p>
+      </div>
+
+      <section class="j-empty" data-state-in="empty">
+        <h2>Nothing logged yet</h2>
+        <p>Log what you cook: a recipe, a link or something improvised. Only you see it unless you share it.</p>
+        <a class="btn-primary" href="journal.html?state=log-form">Log a cook</a>
+      </section>
+    </div>
+
+    <!-- ── Log a cook ─────────────────────────────────────────────────── -->
+    <div class="log" data-state-in="log-form">
+      <a class="back-link" href="journal.html?state=full">← Journal</a>
+      <h1>Log a cook <span class="planned">Planned</span></h1>
+
+      <form class="form" action="journal.html" onsubmit="return false">
+        <div class="field">
+          <label for="dish">Dish <span class="required-mark" aria-hidden="true">*</span></label>
+          <input id="dish" name="dish" type="text" required value="Cardamom Cinnamon Buns with Brown Butter Glaze">
+        </div>
+
+        <div class="two-up">
+          <div class="field">
+            <label for="date">Date <span class="required-mark" aria-hidden="true">*</span></label>
+            <input id="date" name="date" type="date" required value="2026-11-10">
+          </div>
+          <div class="field">
+            <label for="served">Servings <span class="optional">optional</span></label>
+            <input id="served" name="served" type="text" inputmode="decimal" value="12">
+          </div>
+        </div>
+
+        <div class="field">
+          <span class="label" id="from-label">From a recipe <span class="optional">optional</span></span>
+          <div class="linked" aria-labelledby="from-label">
+            <a href="recipe.html?state=owner">Cardamom Cinnamon Buns with Brown Butter Glaze <span class="vid">v3</span></a>
+            <button class="text-btn" type="button">Change</button>
+          </div>
+          <p class="or-line">Not from this recipe? <button class="text-btn" type="button">Improvised</button><button class="text-btn" type="button">Link</button></p>
+        </div>
+
+        <div class="field">
+          <span class="label">Photo <span class="optional">optional</span></span>
+          <label class="btn-ghost photo-choose"><input id="image" name="image" type="file" accept="image/jpeg,image/png,image/webp" class="sr-only" aria-labelledby="image-action"><span id="image-action">Choose photo</span></label>
+        </div>
+
+        <div class="field">
+          <label for="caption">Caption <span class="optional">optional</span></label>
+          <textarea id="caption" name="caption" rows="2" aria-describedby="caption-hint"></textarea>
+          <p class="hint" id="caption-hint">Whoever sees this cook sees the caption.</p>
+        </div>
+
+        <div class="lock-note note-field">
+          <label for="note"><svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg>Note for next time <span class="optional">optional</span></label>
+          <textarea id="note" name="note" rows="2" aria-describedby="note-hint"></textarea>
+          <p class="hint" id="note-hint">Only you ever see this.</p>
+        </div>
+
+        <fieldset class="field">
+          <legend>Who sees this cook</legend>
+          <div class="choices">
+            <label class="choice">
+              <input type="radio" name="audience" value="private" checked>
+              <b><svg class="icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg>Only me</b>
+              <span>It stays in your Journal. You can share it later.</span>
+            </label>
+            <label class="choice">
+              <input type="radio" name="audience" value="friends">
+              <b><svg class="icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="5.5" r="2.2"/><path d="M2 13c.4-2.3 2-3.5 4-3.5s3.6 1.2 4 3.5"/><circle cx="11.3" cy="6" r="1.8"/><path d="M11 9.6c1.6.1 2.7 1.2 3 3"/></svg>Friends</b>
+              <span>Dev and Sam see it in Friends.</span>
+            </label>
+          </div>
+          <p class="annot"><strong>Private recipe:</strong> when the linked recipe is Only me and Friends is chosen, a line appears under the choices: "Friends see the dish and your photo, not the recipe."</p>
+        </fieldset>
+
+        <div class="form-actions">
+          <button class="btn-primary" type="submit">Log it</button>
+          <a class="text-btn" href="journal.html?state=full">Cancel</a>
+        </div>
+        <div class="annot"><strong>After Log it:</strong> back on the Journal, the entry at the top and this line under the h1:
+          <p class="status-live" role="status"><strong>Logged</strong> · Tue 10 Nov</p></div>
+      </form>
+    </div>
+  </main>
+
+  <nav class="tab-bar" aria-label="Main" data-state-in="full empty">
+    <a href="cookbook.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H19v14H5.5A1.5 1.5 0 0 0 4 19.5z"/><path d="M4 19.5A1.5 1.5 0 0 0 5.5 21H19v-3"/><path d="M9 8h6"/></svg>Cookbook</a>
+    <a href="journal.html" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 10h16M8 3v4M16 3v4M8 14h4"/></svg>Journal</a>
+    <a href="friends.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><circle cx="17" cy="9" r="2.5"/><path d="M17.5 14.5A5 5 0 0 1 21.5 19"/></svg>Friends</a>
+    <a href="discover.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></svg>Discover</a>
+  </nav>
+</body>
+</html>

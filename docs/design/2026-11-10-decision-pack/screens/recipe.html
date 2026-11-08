@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Recipe · Fork</title>
+  <link rel="stylesheet" href="../assets/fork.css">
+  <script src="../assets/state.js" defer></script>
+  <style>
+    /* Recipe page, refined from docs/design/2026-11-08-mvp/recipe-overview.html.
+       Shipped structure: +page.svelte, RecipeHeader, RecipeActions, VersionBar,
+       ServesControl, RecipeIngredients, RecipeMethod. */
+
+    /* Title band: words left, 4:3 photo right (504px), as shipped. */
+    .band__inner { display: grid; grid-template-columns: minmax(0, 1fr) 504px; column-gap: 48px; align-items: center; }
+    .band--no-photo .band__inner { grid-template-columns: minmax(0, 760px); }
+    .recipe-photo img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--radius-md); }
+    .recipe-header { display: flex; flex-direction: column; min-width: 0; }
+    .recipe-header > * + * { margin-top: 8px; }
+    .byline { font-weight: 600; line-height: 1.5; overflow-wrap: anywhere; }
+    .byline .lock { display: inline-flex; align-items: center; gap: 6px; font-weight: 400; color: var(--color-text-2); }
+    .description { font-size: 1.0625rem; line-height: 1.5; max-width: 65ch; }
+    .actions { margin-top: 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+    .actions .login-line { font-weight: 600; margin-left: 8px; }
+    .actions .more { display: none; }
+    .personal { margin-top: 12px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; font-size: 0.9375rem; color: var(--color-text-2); }
+    .personal a { font-weight: 600; }
+
+    /* Version bar (shipped VersionBar): lifted paper, one line. */
+    .vbar-row { margin-top: 24px; }
+    .vbar { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 12px 16px; display: flex; align-items: baseline; gap: 12px; font-size: 0.9375rem; line-height: 1.5; }
+    .vbar .note { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .vbar .ctrl { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; color: var(--color-accent); font-weight: 600; }
+    .vbar .ctrl svg { width: 12px; height: 12px; }
+
+    /* Body: ingredients 380 beside the method. */
+    .content { padding-top: 26px; padding-bottom: 48px; display: grid; grid-template-columns: 380px minmax(0, 1fr); column-gap: 48px; align-items: start; }
+    .section-head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; border-bottom: 1px solid var(--color-border); padding-bottom: 8px; margin-bottom: 4px; min-height: 44px; }
+    .method > .section-head { margin-bottom: 18px; }
+
+    /* ServesControl: factor and Reset grow leftward, the box stays put. */
+    .serves { margin-left: auto; display: inline-flex; align-items: center; gap: 10px; font-size: 0.9375rem; color: var(--color-text-2); }
+    .serves input[type=number] { width: 7ch; padding: 4px 6px; text-align: center; font-weight: 600; }
+    .serves .factor { font-size: 0.8125rem; color: var(--color-text-2); }
+    .serves .reset { color: var(--color-accent); font-weight: 600; padding: 10px 0; margin-block: -10px; }
+
+    .ingredients .group-name { margin: 20px 0 2px; }
+    .ingredients .group-name:first-of-type { margin-top: 14px; }
+    .ing { position: relative; display: flex; align-items: baseline; gap: 10px; border-bottom: 1px solid var(--color-border); padding: 10px 0; line-height: 1.5; cursor: pointer; }
+    .ing input, .step input { position: absolute; inset: 0; opacity: 0; margin: 0; width: 100%; height: 100%; cursor: pointer; }
+    .ing input:focus-visible + .tick { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+    .ing b { font-weight: 600; }
+    .ing .g { color: var(--color-text-3); }
+    .ing:has(:checked) { text-decoration: line-through; color: var(--color-text-3); }
+    .ing:has(:checked) b { color: var(--color-text-3); }
+    .list-foot { margin-top: 10px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; }
+
+    .method .group-name { margin: 28px 0 12px; }
+    .method .section-head + .group-name { margin-top: 0; }
+    .steps { display: flex; flex-direction: column; gap: 18px; }
+    .step { position: relative; display: grid; grid-template-columns: 2ch minmax(0, 1fr); gap: 16px; align-items: baseline; cursor: pointer; }
+    .step .n { font-family: var(--font-serif); font-size: 1.125rem; font-weight: 500; color: var(--color-accent); justify-self: end; }
+    .step p { font-size: 1.0625rem; line-height: 1.6; }
+    .step .tip { font-size: 0.9375rem; line-height: 1.5; font-style: italic; color: var(--color-text-2); margin-top: 6px; }
+    .step:has(:checked) p { color: var(--color-text-3); text-decoration: line-through; }
+    .step:has(input:focus-visible) { outline: 2px solid var(--color-accent); outline-offset: 4px; border-radius: 2px; }
+
+    /* Scaled: swap the typed quantity for the scaled one; scaled rows read clay. */
+    .q2 { display: none; }
+    body:not([data-state=scaled]) .scaled-only { display: none; }
+    body[data-state=scaled] .q1 { display: none; }
+    body[data-state=scaled] .q2 { display: inline; }
+    body[data-state=scaled] .ing.sc :is(b, .g) { color: var(--color-accent); }
+    body:not([data-state=scaled]) .step .not-scaled { display: none; }
+    .scale-notice { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin: -6px 0 22px; font-size: 0.9375rem; color: var(--color-text-2); }
+
+    /* Section switch (shipped below 1024): Ingredients | Method. */
+    .section-tabs { display: none; }
+    @media (max-width: 1023px) {
+      .band__inner { grid-template-columns: minmax(0, 1fr); }
+      .recipe-photo { margin-top: 24px; }
+      .recipe-photo img { max-height: 300px; }
+      .section-tabs { display: grid; grid-template-columns: 1fr 1fr; position: sticky; top: 0; z-index: 2; margin-top: 16px; background: var(--color-bg); border-bottom: 1px solid var(--color-border-2); }
+      .section-tabs button { min-height: 44px; padding: 12px 0 10px; margin-bottom: -1px; border-bottom: 2px solid transparent; font-size: 0.8125rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--color-text-3); }
+      .section-tabs button[aria-pressed=true] { color: var(--color-text); border-bottom-color: var(--color-accent); }
+      .content { grid-template-columns: minmax(0, 1fr); }
+      .content[data-tab=ingredients] .method, .content[data-tab=method] .ingredients { display: none; }
+      .content .section-head .eyebrow-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+      .content .method > .section-head { display: none; }
+    }
+    @media (max-width: 699px) {
+      /* fork.css: the phone .page padding comes after .page--flush, so restate it. */
+      .page--flush { padding-top: 0; padding-bottom: 0; }
+      .band:not(.band--no-photo) { padding-bottom: 18px; }
+      .vbar-row { margin-top: 18px; }
+      .vbar { flex-wrap: wrap; }
+      .vbar .note { flex-basis: calc(100% - 40px); white-space: normal; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+      .vbar .ctrls { flex-basis: 100%; }
+      .content { padding-top: 18px; padding-bottom: 32px; }
+      /* Cook full width; the other two share a row. */
+      .actions { display: grid; grid-template-columns: 1fr 1fr; }
+      .actions .pill { width: 100%; }
+      .actions .span { grid-column: 1 / -1; }
+      .actions .login-line { grid-column: 1 / -1; margin: 4px 0 0; justify-self: center; padding: 10px 0; }
+      .step p { font-size: 1rem; }
+    }
+
+    /* ── Variant B (compare/1-navigation.html): shipped hamburger, no tab bar,
+       and on a phone the actions pin to the bottom as one bar. ── */
+    .nav-menu { display: none; }
+    @media (max-width: 767px) {
+      body[data-variant=b] .nav-menu { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; margin-right: -10px; color: var(--color-text-cream); }
+      body[data-variant=b] .nav-menu svg { width: 24px; height: 24px; }
+      body[data-variant=b] .nav-search { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; color: var(--color-text-tan); }
+      body[data-variant=b] .nav-search svg { width: 20px; height: 20px; }
+      body[data-variant=b] .nav-top .avatar { display: none; }
+      body[data-variant=b] .actions {
+        position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; margin: 0;
+        display: grid; grid-template-columns: 1fr 1fr 44px; gap: 8px;
+        padding: 10px 18px calc(10px + env(safe-area-inset-bottom));
+        background: var(--color-surface); border-top: 1px solid var(--color-border-2);
+      }
+      body[data-variant=b] .actions .span { grid-column: auto; }
+      body[data-variant=b] .actions .more { display: inline-flex; width: 44px; padding: 0; }
+      body[data-variant=b] { padding-bottom: 72px; }
+      body[data-variant=b] .personal { margin-top: 16px; }
+    }
+    .nav-search { display: none; }
+  </style>
+</head>
+<body data-state="owner" data-variant="a">
+  <span class="static-label"></span>
+
+  <header class="nav-top">
+    <div class="nav-top__row">
+      <div class="nav-top__left">
+        <a class="nav-top__brand" href="cookbook.html">Fork<span>.</span></a>
+        <nav class="nav-top__links" aria-label="Main" data-state-in="owner no-photo scaled">
+          <a href="cookbook.html" aria-current="page">Cookbook</a>
+          <a href="journal.html">Journal</a>
+          <a href="friends.html">Friends</a>
+          <a href="discover.html">Discover</a>
+        </nav>
+        <nav class="nav-top__links" aria-label="Main" data-state-in="visitor">
+          <a href="cookbook.html">Cookbook</a>
+          <a href="journal.html">Journal</a>
+          <a href="friends.html">Friends</a>
+          <a href="discover.html" aria-current="page">Discover</a>
+        </nav>
+      </div>
+      <div class="nav-top__right" data-state-in="owner visitor no-photo scaled">
+        <a class="nav-top__new" href="editor.html?state=ordinary">+ New recipe</a>
+        <a class="nav-search" href="discover.html" aria-label="Search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></a>
+        <a class="avatar" href="#" aria-label="Maria Okafor, your profile">M</a>
+        <button class="nav-menu" type="button" aria-expanded="false" aria-controls="mobile-menu"><span class="sr-only">Open main menu</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5"/></svg></button>
+      </div>
+      <div class="nav-top__right" data-state-in="signed-out">
+        <a class="nav-top__login" href="#">Log in</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ═══ Cardamom Cinnamon Buns: owner, signed-out, scaled ═══ -->
+  <main data-state-in="owner signed-out scaled">
+    <div class="band">
+      <div class="page page--flush band__inner">
+        <div class="recipe-header">
+          <h1>Cardamom Cinnamon Buns with Brown Butter Glaze</h1>
+          <p class="byline">By <a class="handle" href="#">@chefmaria</a></p>
+          <p class="description">Soft enriched buns with cardamom in the dough and the filling, finished with a nutty brown butter glaze while still warm.</p>
+          <p class="measure"><span class="pair"><b>45 min</b> prep</span><span class="pair"><b>25 min</b> cook</span><span class="pair">Serves <b class="q1">12</b><b class="q2 dynamic">24</b></span><span class="pair">Makes <b class="q1">12 buns</b><b class="q2 dynamic">24 buns</b></span></p>
+          <p class="tag-line"><a href="cookbook.html">baking</a>, <a href="cookbook.html">breakfast</a>, <a href="cookbook.html">weekend</a></p>
+          <p class="stats">
+            <span class="stat"><svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 3.5v2a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-2M8 7.5v5"/><circle cx="4" cy="2.5" r="1.3" fill="currentColor"/><circle cx="12" cy="2.5" r="1.3" fill="currentColor"/><circle cx="8" cy="13.5" r="1.3" fill="currentColor"/></svg><a href="#">2 adaptations</a></span>
+            <span class="stat"><svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M4 2.5h8v11l-4-3-4 3z"/></svg>14 saves</span>
+            <span class="stat"><svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M8 1.5v13"/><circle cx="8" cy="3" r="1.6" fill="var(--color-band)"/><circle cx="8" cy="8" r="1.6" fill="var(--color-band)"/><circle cx="8" cy="13" r="1.6" fill="currentColor"/></svg><a href="#versions">3 versions</a></span>
+          </p>
+          <div class="actions">
+            <a class="btn-primary pill span" href="cook.html?state=start"><svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 7.5h12M3.5 7.5v4a2 2 0 0 0 2 2h5a2 2 0 0 0 2-2v-4M6 5c0-1 1-1.2 1-2.5M9.5 5c0-1 1-1.2 1-2.5"/></svg>Cook</a>
+            <a class="btn-ghost pill span" href="editor.html?state=grouped" data-state-in="owner scaled"><svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.5 2.5l2 2L5 13H3v-2z"/></svg>Edit recipe</a>
+            <button class="btn-ghost pill more" type="button" aria-label="More actions" data-variant-in="b"><svg class="icon" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><circle cx="3" cy="8" r="1.4"/><circle cx="8" cy="8" r="1.4"/><circle cx="13" cy="8" r="1.4"/></svg></button>
+            <a class="login-line" href="#" data-state-in="signed-out">Log in to save</a>
+          </div>
+          <p class="annot" data-state-in="signed-out"><strong>Check:</strong> "Log in to save" reverses the 28 Oct call that a signed-out page invites no login round trip. Keep it, or Cook alone?</p>
+          <p class="personal" data-state-in="owner scaled"><span>You cooked this on Sun 8 Nov</span><a href="journal.html?state=log-form">Log a cook</a><span class="planned">Planned</span></p>
+        </div>
+        <figure class="recipe-photo"><img src="../assets/photos/p3.jpg" alt="Cardamom Cinnamon Buns with Brown Butter Glaze"></figure>
+      </div>
+    </div>
+
+    <div class="page page--flush vbar-row" id="versions">
+      <section class="vbar" aria-label="Version history">
+        <span class="vchip"><span class="sr-only">Version 3, the latest.</span><span aria-hidden="true">v3</span></span>
+        <span class="note">Brown butter glaze instead of cream cheese icing</span>
+        <span class="ctrls"><button class="ctrl" type="button" aria-expanded="false">3 versions <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5"/></svg></button></span>
+      </section>
+    </div>
+
+    <div class="page page--flush">
+      <nav class="section-tabs" aria-label="Recipe sections"><button type="button" aria-pressed="true" data-t="ingredients">Ingredients</button><button type="button" aria-pressed="false" data-t="method">Method</button></nav>
+      <div class="content" data-tab="ingredients">
+        <section class="ingredients" aria-labelledby="ing-h-buns">
+          <div class="section-head">
+            <h2 class="eyebrow-label" id="ing-h-buns">Ingredients</h2>
+            <span class="serves">
+              <span class="factor scaled-only">2x</span>
+              <button class="reset scaled-only" type="button">Reset</button>
+              <input class="q1" type="number" step="any" min="1" inputmode="decimal" aria-label="Servings" value="12">
+              <input class="q2" type="number" step="any" min="1" inputmode="decimal" aria-label="Servings" value="24">
+              <span>servings</span>
+            </span>
+          </div>
+
+          <h3 class="group-name">Dough</h3>
+          <label class="ing sc"><input type="checkbox"><span class="tick"></span><span><b><span class="q1">1 cup</span><span class="q2">2 cups</span></b> <span class="g"><span class="q1">(240 ml)</span><span class="q2">(480 ml)</span></span> whole milk, warmed</span></label>
+          <label class="ing sc"><input type="checkbox"><span class="tick"></span><span><b><span class="q1">7 g</span><span class="q2">14 g</span></b> instant yeast</span></label>
+          <label class="ing sc"><input type="checkbox"><span class="tick"></span><span><b><span class="q1">¼ cup</span><span class="q2">½ cup</span></b> <span class="g"><span class="q1">(50 g)</span><span class="q2">(100 g)</span></span> caster sugar</span></label>
+          <label class="ing sc"><input type="checkbox"><span class="tick"></span><span><b><span class="q1">1 large egg</span><span class="q2">2 large eggs</span></b></span></label>
+          <label class="ing sc"><input type="checkbox"><span class="tick"></span><span><b><span class="q1">2⅓ cups</span><span class="q2">4⅔ cups</span></b> <span class="g"><span class="q1">(295 g)</span><span class="q2">(590 g)</span></span> bread flour</span></label>
+          <label class="ing sc"><input type="checkbox"><span class="tick"></span><span><b><span class="q1">¾ tsp</span><span class="q2">1½ tsp</span></b> fine salt</span></label>
+          <label class="ing sc"><input type="checkbox"><span class="tick"></span><span><b><span class="q1">1½ tsp</span><span class="q2">3 tsp</span></b> ground cardamom</span></label>
+          <label class="ing sc"><input type="checkbox"><span class="tick"></span><span><b><span class="q1">¼ cup</span><span class="q2">½ cup</span></b> <span class="g"><span class="q1">(55 g)</span><span class="q2">(110 g)</span></span> unsalted butter, softened</span></label>
+
+          <h3 class="group-name">Filling</h3>
+          <label class="ing sc"><input type="checkbox"><span class="tick"></span><span><b><span class="q1">½ cup</span><span class="q2">1 cup</span></b> <span class="g"><span class="q1">(110 g)</span><span class="q2">(220 g)</span></span> unsalted butter, softened</span></label>
+          <label class="ing sc"><input type="checkbox"><span class="tick"></span><span><b><span class="q1">⅔ cup</span><span class="q2">1⅓ cups</span></b> <span class="g"><span class="q1">(130 g)</span><span class="q2">(260 g)</span></span> light brown sugar</span></label>
+          <label class="ing sc"><input type="checkbox"><span class="tick"></span><span><b><span class="q1">1 tbsp</span><span class="q2">2 tbsp</span></b> ground cinnamon</span></label>
+          <label class="ing sc"><input type="checkbox"><span class="tick"></span><span><b><span class="q1">1 tsp</span><span class="q2">2 tsp</span></b> ground cardamom</span></label>
+          <label class="ing"><input type="checkbox"><span class="tick"></span><span>pinch of salt</span></label>
+
+          <h3 class="group-name">Glaze</h3>
+          <label class="ing sc"><input type="checkbox"><span class="tick"></span><span><b><span class="q1">¼ cup</span><span class="q2">½ cup</span></b> <span class="g"><span class="q1">(55 g)</span><span class="q2">(110 g)</span></span> unsalted butter</span></label>
+          <label class="ing sc"><input type="checkbox"><span class="tick"></span><span><b><span class="q1">1½ cups</span><span class="q2">3 cups</span></b> <span class="g"><span class="q1">(180 g)</span><span class="q2">(360 g)</span></span> icing sugar</span></label>
+          <label class="ing sc"><input type="checkbox"><span class="tick"></span><span><b><span class="q1">2 tbsp</span><span class="q2">4 tbsp</span></b> milk</span></label>
+          <label class="ing sc"><input type="checkbox"><span class="tick"></span><span><b><span class="q1">½ tsp</span><span class="q2">1 tsp</span></b> vanilla extract</span></label>
+          <div class="list-foot scaled-only"><p class="hint">Scaled quantities are estimates.</p></div>
+        </section>
+
+        <section class="method" aria-labelledby="m-h-buns">
+          <div class="section-head"><h2 class="eyebrow-label" id="m-h-buns">Method</h2></div>
+          <p class="scale-notice scaled-only">Scaled ×2. Pan sizes and oven temperatures are not scaled; adjust bake time to the pan. <span class="planned">Planned</span></p>
+          <h3 class="group-name">Dough</h3>
+          <ol class="steps">
+            <li><label class="step"><input type="checkbox"><span class="n">1</span><div><p>Warm the milk to about 40 °C, whisk in the yeast and sugar, and leave for 5 minutes until foamy.</p></div></label></li>
+            <li><label class="step"><input type="checkbox"><span class="n">2</span><div><p>Add the egg, flour, salt and cardamom. Knead for 8 minutes, then work in the butter a piece at a time and knead 5 minutes more, until smooth and elastic.</p></div></label></li>
+            <li><label class="step"><input type="checkbox"><span class="n">3</span><div><p>Cover and leave somewhere warm for about 1 hour, until doubled.</p></div></label></li>
+          </ol>
+          <h3 class="group-name">Shape and bake</h3>
+          <ol class="steps" start="4">
+            <li><label class="step"><input type="checkbox"><span class="n">4</span><div><p>Beat the filling butter, brown sugar, cinnamon, cardamom and salt until smooth.</p></div></label></li>
+            <li><label class="step"><input type="checkbox"><span class="n">5</span><div><p>Roll the dough to a 40 × 30 cm rectangle, spread the filling to the edges, roll up from the long side and cut into 12.</p></div></label></li>
+            <li><label class="step"><input type="checkbox"><span class="n">6</span><div><p>Set the buns cut side up in a buttered 9x13 pan, cover and rise 45 minutes.<span class="not-scaled">9x13 pan · not scaled</span></p></div></label></li>
+            <li><label class="step"><input type="checkbox"><span class="n">7</span><div><p>Bake at 200 °C / 400 °F for 22–25 minutes, until deep golden.<span class="not-scaled">200 °C / 400 °F · not scaled</span></p><p class="tip">If the tops brown before the middles are done, cover loosely with foil for the last 5 minutes.</p></div></label></li>
+          </ol>
+          <h3 class="group-name">Glaze</h3>
+          <ol class="steps" start="8">
+            <li><label class="step"><input type="checkbox"><span class="n">8</span><div><p>Melt the butter over medium heat and keep swirling until it smells nutty and the solids turn brown. Cool 5 minutes.</p></div></label></li>
+            <li><label class="step"><input type="checkbox"><span class="n">9</span><div><p>Whisk in the icing sugar, milk and vanilla, and spread over the buns while they are still warm.</p></div></label></li>
+          </ol>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <!-- ═══ Shakshuka: Maria visiting Dev's recipe ═══ -->
+  <main data-state-in="visitor">
+    <div class="band band--no-photo">
+      <div class="page page--flush band__inner">
+        <div class="recipe-header">
+          <h1>Shakshuka</h1>
+          <p class="byline">By <a class="handle" href="friends.html">@devcooks</a></p>
+          <p class="description">Eggs poached in a cumin-spiced tomato and pepper sauce. Bring bread.</p>
+          <p class="measure"><span class="pair"><b>10 min</b> prep</span><span class="pair"><b>25 min</b> cook</span><span class="pair">Serves <b>2</b></span></p>
+          <p class="tag-line"><a href="discover.html">eggs</a>, <a href="discover.html">brunch</a>, <a href="discover.html">vegetarian</a></p>
+          <p class="stats">
+            <span class="stat"><svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 3.5v2a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-2M8 7.5v5"/><circle cx="4" cy="2.5" r="1.3" fill="currentColor"/><circle cx="12" cy="2.5" r="1.3" fill="currentColor"/><circle cx="8" cy="13.5" r="1.3" fill="currentColor"/></svg>No adaptations</span>
+            <span class="stat"><svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M4 2.5h8v11l-4-3-4 3z"/></svg>3 saves</span>
+            <span class="stat"><svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M8 1.5v13"/><circle cx="8" cy="3" r="1.6" fill="var(--color-band)"/><circle cx="8" cy="8" r="1.6" fill="var(--color-band)"/><circle cx="8" cy="13" r="1.6" fill="currentColor"/></svg>1 version</span>
+          </p>
+          <div class="actions">
+            <a class="btn-primary pill span" href="cook.html?state=start"><svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 7.5h12M3.5 7.5v4a2 2 0 0 0 2 2h5a2 2 0 0 0 2-2v-4M6 5c0-1 1-1.2 1-2.5M9.5 5c0-1 1-1.2 1-2.5"/></svg>Cook</a>
+            <button class="btn-ghost pill" type="button" aria-pressed="false"><svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M4 2.5h8v11l-4-3-4 3z"/></svg>Save</button>
+            <a class="btn-ghost pill" href="editor.html?state=ordinary"><svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 3.5v2a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-2M8 7.5v5"/><circle cx="4" cy="2.5" r="1.3" fill="currentColor"/><circle cx="12" cy="2.5" r="1.3" fill="currentColor"/><circle cx="8" cy="13.5" r="1.3" fill="currentColor"/></svg>Make my version</a>
+          </div>
+          <p class="annot"><span class="planned">Planned</span> Save and Make my version replace Favorite and Fork (same behaviour, new words).</p>
+          <p class="personal"><span>You cooked this on Sun 18 Oct</span><a href="journal.html?state=log-form">Log a cook</a></p>
+          <p class="annot"><strong>Adaptation byline</strong> <span class="shipped">Shipped</span> when the original is deleted: "By <span class="handle">@devcooks</span> · Original recipe deleted", plain text, no link.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="page page--flush">
+      <nav class="section-tabs" aria-label="Recipe sections"><button type="button" aria-pressed="true" data-t="ingredients">Ingredients</button><button type="button" aria-pressed="false" data-t="method">Method</button></nav>
+      <div class="content" data-tab="ingredients">
+        <section class="ingredients" aria-labelledby="ing-h-shak">
+          <div class="section-head">
+            <h2 class="eyebrow-label" id="ing-h-shak">Ingredients</h2>
+            <span class="serves"><input type="number" step="any" min="1" inputmode="decimal" aria-label="Servings" value="2"><span>servings</span></span>
+          </div>
+          <label class="ing"><input type="checkbox"><span class="tick"></span><span><b>2 tbsp</b> olive oil</span></label>
+          <label class="ing"><input type="checkbox"><span class="tick"></span><span><b>1 onion</b>, diced</span></label>
+          <label class="ing"><input type="checkbox"><span class="tick"></span><span><b>1 red pepper</b>, sliced</span></label>
+          <label class="ing"><input type="checkbox"><span class="tick"></span><span><b>2 cloves garlic</b>, crushed</span></label>
+          <label class="ing"><input type="checkbox"><span class="tick"></span><span><b>1 tsp</b> ground cumin</span></label>
+          <label class="ing"><input type="checkbox"><span class="tick"></span><span><b>1 tsp</b> sweet paprika</span></label>
+          <label class="ing"><input type="checkbox"><span class="tick"></span><span><b>¼ tsp</b> cayenne</span></label>
+          <label class="ing"><input type="checkbox"><span class="tick"></span><span><b>1 can</b> <span class="g">(400 g)</span> whole plum tomatoes</span></label>
+          <label class="ing"><input type="checkbox"><span class="tick"></span><span><b>½ tsp</b> salt</span></label>
+          <label class="ing"><input type="checkbox"><span class="tick"></span><span><b>4 large eggs</b></span></label>
+          <label class="ing"><input type="checkbox"><span class="tick"></span><span><b>50 g</b> feta, crumbled</span></label>
+          <label class="ing"><input type="checkbox"><span class="tick"></span><span>parsley, to serve</span></label>
+        </section>
+        <section class="method" aria-labelledby="m-h-shak">
+          <div class="section-head"><h2 class="eyebrow-label" id="m-h-shak">Method</h2></div>
+          <ol class="steps">
+            <li><label class="step"><input type="checkbox"><span class="n">1</span><div><p>Soften the onion and pepper in the oil over medium heat for 8 minutes.</p></div></label></li>
+            <li><label class="step"><input type="checkbox"><span class="n">2</span><div><p>Add the garlic and spices and cook 1 minute.</p></div></label></li>
+            <li><label class="step"><input type="checkbox"><span class="n">3</span><div><p>Add the tomatoes and salt, crush them with a spoon, and simmer 10 minutes until thick.</p></div></label></li>
+            <li><label class="step"><input type="checkbox"><span class="n">4</span><div><p>Make four wells, crack in the eggs, cover and cook 5–7 minutes until the whites are set.</p></div></label></li>
+            <li><label class="step"><input type="checkbox"><span class="n">5</span><div><p>Scatter with feta and parsley and serve from the pan.</p></div></label></li>
+          </ol>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <!-- ═══ Grandmother's Tomato Sauce: owner, Only me, no photo ═══ -->
+  <main data-state-in="no-photo">
+    <div class="band band--no-photo">
+      <div class="page page--flush band__inner">
+        <div class="recipe-header">
+          <h1>Grandmother's Slow-Roasted Tomato Sauce for the Freezer</h1>
+          <p class="byline">By <a class="handle" href="#">@chefmaria</a> · <span class="lock"><svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg>Only you can see this recipe</span></p>
+          <p class="description">Nonna Rosa's Sunday sauce, roasted low instead of stirred for hours. Makes enough to fill the freezer for winter.</p>
+          <p class="measure"><span class="pair"><b>15 min</b> prep</span><span class="pair"><b>3h</b> cook</span><span class="pair">Serves <b>8</b></span><span class="pair">Makes <b>3 jars</b></span></p>
+          <p class="tag-line"><a href="cookbook.html">sauce</a>, <a href="cookbook.html">make-ahead</a>, <a href="cookbook.html">freezer</a></p>
+          <p class="stats">
+            <span class="stat"><svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 3.5v2a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-2M8 7.5v5"/><circle cx="4" cy="2.5" r="1.3" fill="currentColor"/><circle cx="12" cy="2.5" r="1.3" fill="currentColor"/><circle cx="8" cy="13.5" r="1.3" fill="currentColor"/></svg>No adaptations</span>
+            <span class="stat"><svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M4 2.5h8v11l-4-3-4 3z"/></svg>No saves</span>
+            <span class="stat"><svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M8 1.5v13"/><circle cx="8" cy="3" r="1.6" fill="var(--color-band)"/><circle cx="8" cy="8" r="1.6" fill="var(--color-band)"/><circle cx="8" cy="13" r="1.6" fill="currentColor"/></svg><a href="#versions-sauce">5 versions</a></span>
+          </p>
+          <div class="actions">
+            <a class="btn-primary pill span" href="cook.html?state=start"><svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 7.5h12M3.5 7.5v4a2 2 0 0 0 2 2h5a2 2 0 0 0 2-2v-4M6 5c0-1 1-1.2 1-2.5M9.5 5c0-1 1-1.2 1-2.5"/></svg>Cook</a>
+            <a class="btn-ghost pill span" href="editor.html?state=privacy"><svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.5 2.5l2 2L5 13H3v-2z"/></svg>Edit recipe</a>
+          </div>
+          <p class="personal"><span>You cooked this on Sat 24 Oct</span><a href="journal.html?state=log-form">Log a cook</a></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="page page--flush vbar-row" id="versions-sauce">
+      <section class="vbar" aria-label="Version history">
+        <span class="vchip"><span class="sr-only">Version 5, the latest.</span><span aria-hidden="true">v5</span></span>
+        <span class="note">Lower oven to 150 °C, roast longer</span>
+        <span class="ctrls"><button class="ctrl" type="button" aria-expanded="false">5 versions <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5"/></svg></button></span>
+      </section>
+    </div>
+
+    <div class="page page--flush">
+      <nav class="section-tabs" aria-label="Recipe sections"><button type="button" aria-pressed="true" data-t="ingredients">Ingredients</button><button type="button" aria-pressed="false" data-t="method">Method</button></nav>
+      <div class="content" data-tab="ingredients">
+        <section class="ingredients" aria-labelledby="ing-h-sauce">
+          <div class="section-head">
+            <h2 class="eyebrow-label" id="ing-h-sauce">Ingredients</h2>
+            <span class="serves"><input type="number" step="any" min="1" inputmode="decimal" aria-label="Servings" value="8"><span>servings</span></span>
+          </div>
+          <label class="ing"><input type="checkbox"><span class="tick"></span><span><b>2 kg</b> ripe plum tomatoes, halved</span></label>
+          <label class="ing"><input type="checkbox"><span class="tick"></span><span><b>1 head garlic</b>, cloves peeled</span></label>
+          <label class="ing"><input type="checkbox"><span class="tick"></span><span><b>⅓ cup</b> <span class="g">(80 ml)</span> olive oil</span></label>
+          <label class="ing"><input type="checkbox"><span class="tick"></span><span><b>1½ tsp</b> flaky salt</span></label>
+          <label class="ing"><input type="checkbox"><span class="tick"></span><span><b>1 tsp</b> sugar</span></label>
+          <label class="ing"><input type="checkbox"><span class="tick"></span><span><b>½ tsp</b> chilli flakes</span></label>
+          <label class="ing"><input type="checkbox"><span class="tick"></span><span><b>1 small bunch</b> basil</span></label>
+        </section>
+        <section class="method" aria-labelledby="m-h-sauce">
+          <div class="section-head"><h2 class="eyebrow-label" id="m-h-sauce">Method</h2></div>
+          <ol class="steps">
+            <li><label class="step"><input type="checkbox"><span class="n">1</span><div><p>Heat the oven to 150 °C / 300 °F.</p></div></label></li>
+            <li><label class="step"><input type="checkbox"><span class="n">2</span><div><p>Toss the tomatoes, garlic, oil, salt, sugar and chilli flakes in a large roasting tin and turn the tomatoes cut side up.</p></div></label></li>
+            <li><label class="step"><input type="checkbox"><span class="n">3</span><div><p>Roast for 3 hours, until collapsed and caramelised at the edges.</p></div></label></li>
+            <li><label class="step"><input type="checkbox"><span class="n">4</span><div><p>Blend with the basil until as smooth as you like it.</p></div></label></li>
+            <li><label class="step"><input type="checkbox"><span class="n">5</span><div><p>Cool, divide between jars, leaving 2 cm at the top, and freeze for up to 6 months.</p></div></label></li>
+          </ol>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <div data-state-in="owner no-photo scaled"><div data-variant-in="a">
+    <nav class="tab-bar" aria-label="Main">
+      <a href="cookbook.html" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H19v14H5.5A1.5 1.5 0 0 0 4 19.5z"/><path d="M4 19.5A1.5 1.5 0 0 0 5.5 21H19v-3"/><path d="M9 8h6"/></svg>Cookbook</a>
+      <a href="journal.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 10h16M8 3v4M16 3v4M8 14h4"/></svg>Journal</a>
+      <a href="friends.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><circle cx="17" cy="9" r="2.5"/><path d="M17.5 14.5A5 5 0 0 1 21.5 19"/></svg>Friends</a>
+      <a href="discover.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></svg>Discover</a>
+    </nav>
+  </div></div>
+  <div data-state-in="visitor"><div data-variant-in="a">
+    <nav class="tab-bar" aria-label="Main">
+      <a href="cookbook.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H19v14H5.5A1.5 1.5 0 0 0 4 19.5z"/><path d="M4 19.5A1.5 1.5 0 0 0 5.5 21H19v-3"/><path d="M9 8h6"/></svg>Cookbook</a>
+      <a href="journal.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 10h16M8 3v4M16 3v4M8 14h4"/></svg>Journal</a>
+      <a href="friends.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><circle cx="17" cy="9" r="2.5"/><path d="M17.5 14.5A5 5 0 0 1 21.5 19"/></svg>Friends</a>
+      <a href="discover.html" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></svg>Discover</a>
+    </nav>
+  </div></div>
+
+  <script>
+    // Section switch (shipped below 1024px): one list at a time.
+    document.querySelectorAll('.section-tabs').forEach(function (nav) {
+      var content = nav.nextElementSibling;
+      nav.addEventListener('click', function (e) {
+        var b = e.target.closest('button');
+        if (!b) return;
+        nav.querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', String(x === b)); });
+        content.dataset.tab = b.dataset.t;
+      });
+    });
+  </script>
+</body>
+</html>

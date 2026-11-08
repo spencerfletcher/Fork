@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Editor toolbar · Fork</title>
+<link rel="stylesheet" href="../assets/fork.css">
+<link rel="stylesheet" href="../assets/board.css">
+<script src="../assets/board.js" defer></script>
+<style>
+  .notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px 32px; margin-top: 16px; max-width: 1100px; }
+  .notes h3 { margin-bottom: 4px; }
+  .notes p { color: var(--color-text-2); }
+  .vote { margin-top: 24px; font-size: 1.0625rem; font-weight: 600; letter-spacing: 0.02em; }
+</style>
+</head>
+<body>
+<main class="board-page">
+  <header>
+    <p><a class="back-link" href="../index.html#compare">← Decision pack</a></p>
+    <h1>Editor toolbar placement and live heading presentation</h1>
+    <p>Same grouped buns recipe in both. Both keep plain-text <code># Dough</code> headings with the <code>#</code> visible in Ink 3, and both insert <code># Section name</code> with the name selected. Each frame opens at Ingredients; scroll inside it for the rest of the form. What differs is where Insert lives and how a heading line looks while editing. Try A for real in the <a href="../prototype/editor.html">interactive prototype</a>.</p>
+  </header>
+
+  <section class="board-section">
+    <h2>A · Insert above each box, headings larger</h2>
+    <div class="board" data-title="A (recommended)" data-src="../screens/editor.html?state=grouped&amp;variant=a#ing-field"></div>
+  </section>
+
+  <section class="board-section">
+    <h2>B · One pinned Insert bar, headings heavier with a clay rule</h2>
+    <div class="board" data-title="B" data-src="../screens/editor.html?state=grouped&amp;variant=b#ing-field"></div>
+  </section>
+
+  <section class="board-section">
+    <h2>Decide</h2>
+    <div class="notes">
+      <div><h3>What changes</h3><p>A puts a folded “Insert” beside each box's label and draws a named heading line in Bitter 600, one step larger. B pins one Insert bar to the top of the form that acts on whichever box has focus, and keeps headings body size, heavier, marked by a 2px clay rule.</p></div>
+      <div><h3>Why it matters</h3><p>Insert is how someone who has never seen <code>#</code> finds sections, so it must sit where the typing happens. The heading's look is the only live proof that a line became a group before Save.</p></div>
+      <div><h3>Recommendation: A</h3><p>The control sits next to the box it changes, with no hidden “which box?” rule, and it folds away for the many recipes that never need it. Larger Bitter headings match the group names on the recipe page, so the editor previews the result.</p></div>
+      <div><h3>Downside of A</h3><p>Two Insert controls to discover, and a size change is a small jump as the first letter of a name is typed. The larger line also needs the contenteditable box; a plain textarea cannot do it.</p></div>
+      <div><h3>Downside of B</h3><p>A bar that targets “the focused box” loses its target when focus moves to the bar itself, which is confusing on a phone keyboard and for screen readers. The clay rule spends clay on a non-text mark, against Clay Is Text, and body-size headings read less like the page they become.</p></div>
+    </div>
+    <p class="vote">☐ A &nbsp; ☐ B &nbsp; ☐ Other: ____</p>
+  </section>
+</main>
+</body>
+</html>

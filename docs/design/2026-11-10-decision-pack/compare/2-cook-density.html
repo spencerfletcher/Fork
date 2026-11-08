@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cook density · Fork comparison</title>
+<link rel="stylesheet" href="../assets/fork.css">
+<link rel="stylesheet" href="../assets/board.css">
+<script src="../assets/board.js" defer></script>
+<style>
+  .notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px 32px; margin-top: 24px; }
+  .notes h3 { margin-bottom: 6px; }
+  .notes p { color: var(--color-text-2); max-width: 60ch; }
+  .notes .rec { grid-column: 1 / -1; }
+  .notes .rec p { color: var(--color-text); }
+  .vote { margin-top: 32px; font-size: 1.125rem; font-weight: 600; letter-spacing: 0.02em; }
+</style>
+</head>
+<body>
+<main class="board-page">
+  <header>
+    <p><a class="back-link" href="../index.html">← Decision pack</a></p>
+    <h1>Recipe/Cook density and hierarchy</h1>
+    <p>The same recipe (Cardamom Cinnamon Buns v3) in the same state (cooking, nothing ticked, 12 servings), at phone 390 and desktop 1280. Only the layout differs. Each frame is the live page: tick rows and switch tabs to try it.</p>
+  </header>
+
+  <section class="board-section">
+    <h2>A · Working layout (recommended)</h2>
+    <div class="board" data-title="A" data-src="../screens/cook.html?state=start&amp;variant=a"></div>
+  </section>
+
+  <section class="board-section">
+    <h2>B · Reading mode</h2>
+    <div class="board" data-title="B" data-src="../screens/cook.html?state=start&amp;variant=b"></div>
+  </section>
+
+  <section class="board-section">
+    <h2>Decide</h2>
+    <div class="notes">
+      <div>
+        <h3>What changes</h3>
+        <p>A keeps the collapsed strip with ingredients pinned in a left column beside the method at 1.125rem, and a phone switches between Ingredients and Method. B is one 680px column: a compact two-column checklist, then the method at 1.25rem with 32px between steps and group headings as section breaks. On a phone B is one long scroll with a floating “Ingredients ↑”.</p>
+      </div>
+      <div>
+        <h3>Why it matters</h3>
+        <p>Mid-cook the commonest look-up is a quantity while reading a step (“how much butter in the filling?”). Whether that costs a glance, a tap or a scroll decides how often the cook loses their place with dough on their hands.</p>
+      </div>
+      <div class="rec">
+        <h3>Recommendation: A</h3>
+        <p>Looking up a quantity while reading the method is the task we have observed, and A answers it with a glance on desktop and tablet and one tap on a phone that returns to the same step. It also keeps the research contract: expose the working recipe at once, preserve the desktop columns, and never let ingredient access lose the method position.</p>
+      </div>
+      <div>
+        <h3>Downside of A</h3>
+        <p>The method column is narrower and its type smaller, so it reads less like a book at arm's length. On a phone the two sections never show together, so a cook has to know to tap the switch.</p>
+      </div>
+      <div>
+        <h3>Downside of B</h3>
+        <p>On desktop the ingredients scroll away once the method starts, so every quantity check means a jump up and a hunt back down for the step. The floating button gets you to the list but not back to where you were.</p>
+      </div>
+    </div>
+    <p class="vote">☐ A &nbsp;&nbsp; ☐ B &nbsp;&nbsp; ☐ Other: ____________</p>
+  </section>
+</main>
+</body>
+</html>

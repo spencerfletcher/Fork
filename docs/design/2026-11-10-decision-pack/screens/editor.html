@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Edit recipe · Fork</title>
+<link rel="stylesheet" href="../assets/fork.css">
+<script src="../assets/state.js" defer></script>
+<style>
+  .editor-head { display: flex; flex-direction: column; gap: 6px; margin-bottom: 24px; }
+  .form-col { display: flex; flex-direction: column; gap: var(--space-5); min-width: 0; }
+
+  .measure-row { grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.7fr) minmax(0, 0.9fr) minmax(0, 0.9fr); row-gap: var(--space-2); }
+  .measure-row .hint { grid-column: 1 / -1; }
+  @media (max-width: 699px) { .measure-row { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+  .photo-row { display: flex; gap: 16px; align-items: flex-end; }
+  .photo-row img { width: 168px; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--radius-md); }
+  .photo-actions { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+  @media (max-width: 699px) { .photo-row img { width: 132px; } }
+
+  .tag-box { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; background: var(--color-surface); border: 1px solid var(--color-input-border); border-radius: var(--radius-md); padding: 6px 8px; }
+  .tag-box input:not([type]) { border: 0; padding: 4px; flex: 1; min-width: 120px; background: transparent; }
+  .tag-pill { display: inline-flex; align-items: center; gap: 2px; font-size: 0.875rem; color: var(--color-tag); border: 1px solid var(--color-tag-border); border-radius: var(--radius-pill); padding: 1px 2px 1px 10px; }
+  .tag-pill button { position: relative; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; color: var(--color-text-3); border-radius: 50%; }
+  .tag-pill button::after { content: ''; position: absolute; inset: -11px; }
+  .tag-pill svg { width: 12px; height: 12px; }
+
+  .choices { display: flex; flex-direction: column; gap: 8px; }
+
+  .field-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 24px; }
+  .insert-toggle { display: inline-flex; align-items: center; gap: 4px; font-size: 0.875rem; line-height: 1.2; font-weight: 600; color: var(--color-text-2); padding: 10px 6px; margin: -10px -6px; border-radius: var(--radius-sm); }
+  @media (max-width: 699px) { .insert-toggle { padding: 14px 8px; margin: -14px -8px; } }
+  .insert-toggle svg { width: 14px; height: 14px; }
+  .insert-toggle[aria-expanded='true'] svg { transform: rotate(180deg); }
+  .insert-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .insert-row .btn-ghost, .pinned-insert .btn-ghost { gap: 6px; }
+  .mark { font-weight: 600; color: var(--color-text-3); }
+
+  /* The box, as the prototype draws it (prototype/editor.html). Static here:
+     the # is a span, since nothing is edited. */
+  .ed {
+    display: block; width: 100%; background: var(--color-surface); border: 1px solid var(--color-input-border);
+    border-radius: var(--radius-md); padding: 9px 12px; color: var(--color-text);
+    font-family: var(--font-sans); font-size: 0.9375rem; line-height: 1.4; white-space: pre-wrap; overflow-wrap: anywhere;
+  }
+  .ed--ing { min-height: calc(11 * 1.4em + 20px); }
+  .ed--steps { min-height: calc(14 * 1.4em + 20px); }
+  .ed[aria-invalid='true'] { border-color: var(--color-remove); }
+  .ed .h { font-family: var(--font-serif); font-weight: 600; font-size: 1.1875em; line-height: 1.35; margin-top: 0.2em; }
+  .ed .h .mk, .ed .h-empty { color: var(--color-text-3); }
+  @media (max-width: 699px) { .ed { font-size: 1rem; line-height: 1.5; } .ed--ing { min-height: calc(11 * 1.5em + 20px); } .ed--steps { min-height: calc(14 * 1.5em + 20px); } }
+
+  /* Variant B (compare/3): heavier only, same size, a clay rule at the left;
+     one Insert bar pinned at the top of the form for whichever box has focus. */
+  body[data-variant='b'] .ed .h { font-family: var(--font-sans); font-size: 1em; line-height: inherit; margin: 0 0 0 -10px; padding-left: 8px; border-left: 2px solid var(--color-accent); }
+  .pinned-insert { position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 10px 0; background: var(--color-bg); border-bottom: 1px solid var(--color-border); }
+  .pinned-insert__label { font-size: 0.875rem; color: var(--color-text-3); }
+  .pinned-insert__label b { color: var(--color-text); font-weight: 600; }
+  /* A jump to a field (compare/3 opens at #ing-field) clears the pinned bar. */
+  body[data-variant='b'] .field { scroll-margin-top: 72px; }
+  .ring { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+
+  .readback { display: flex; flex-wrap: wrap; gap: 2px 0; font-size: 0.875rem; line-height: 1.5; color: var(--color-text-3); }
+  .readback b { color: var(--color-text); font-weight: 600; }
+  .readback .lead { margin-right: 0.4em; }
+  .readback .part + .part::before { content: '·' / ''; padding: 0 0.5em; }
+
+  .field-message { border-top: 1px solid var(--color-border); padding-top: var(--space-5); }
+  .danger-zone { margin-top: var(--space-7); padding-top: var(--space-5); border-top: 1px solid var(--color-border); }
+  .annot--wide { max-width: 60ch; }
+</style>
+</head>
+<body data-state="grouped" data-variant="a">
+<span class="static-label"></span>
+
+<header class="nav-top">
+  <div class="nav-top__row">
+    <div class="nav-top__left">
+      <a class="nav-top__brand" href="cookbook.html">Fork<span>.</span></a>
+      <nav class="nav-top__links" aria-label="Main">
+        <a href="cookbook.html" aria-current="page">Cookbook</a>
+        <a href="journal.html">Journal</a>
+        <a href="friends.html">Friends</a>
+        <a href="discover.html">Discover</a>
+      </nav>
+    </div>
+    <div class="nav-top__right">
+      <a class="nav-top__new" href="editor.html?state=ordinary">+ New recipe</a>
+      <a class="avatar" href="#" aria-label="Maria Okafor, your profile">M</a>
+    </div>
+  </div>
+</header>
+
+<main class="page">
+  <div class="editor-head">
+    <a class="back-link" id="back" href="recipe.html?state=owner">← Cardamom Cinnamon Buns with Brown Butter Glaze</a>
+    <h1>Edit recipe</h1>
+    <p class="status-live" id="status" role="status"></p>
+  </div>
+
+  <p class="annot annot--wide" data-state-in="ordinary"><strong>Why:</strong> an ordinary recipe is typed the way it always was. No <code>#</code> anywhere, no read-back line, and Insert stays folded away until someone wants a section. <span class="planned">Planned</span></p>
+  <div data-state-in="grouped">
+  <p class="annot annot--wide" data-variant-in="a"><strong>Why:</strong> a <code># Name</code> line grows into the group-name voice as soon as it has a name; the <code>#</code> stays, softer, so what you see is what you copy. Insert is open on Ingredients only to show both states. <span class="planned">Planned</span></p>
+  <p class="annot annot--wide" data-variant-in="b"><strong>Variant B:</strong> one Insert bar pinned above the form acts on the focused box (Ingredients here). Headings stay body size, heavier, with a clay rule. <span class="planned">Planned</span></p>
+  </div>
+  <p class="annot annot--wide" data-state-in="errors"><strong>Why:</strong> nothing is red until Save was blocked. Each message sits under its field in the shipped wording, the count in the header goes down as fields are fixed, and focus lands on the first field in error (Title), as the shipped form does. <span class="shipped">Shipped</span> wording</p>
+  <p class="annot annot--wide" data-state-in="privacy"><strong>Why:</strong> the unticked “Make this recipe public” checkbox never said who could see the recipe. Two named choices do, and a new recipe starts at Only me. <span class="planned">Planned</span></p>
+
+  <form class="form" onsubmit="return false" novalidate>
+    <div class="pinned-insert" data-variant-in="b">
+      <span class="pinned-insert__label">Insert into <b>Ingredients</b></span>
+      <button type="button" class="btn-ghost btn-sm"><span class="mark" aria-hidden="true">#</span>Section heading</button>
+    </div>
+
+    <div class="grid-5-7">
+      <div class="form-col">
+        <div class="field">
+          <label for="title">Title <span class="required-mark" aria-hidden="true">*</span></label>
+          <textarea id="title" name="title" rows="1"></textarea>
+          <p class="error" id="title-error" data-state-in="errors">Title is required</p>
+        </div>
+
+        <div class="field">
+          <label for="description">Description</label>
+          <textarea id="description" name="description" rows="3"></textarea>
+        </div>
+
+        <div class="field">
+          <span class="label">Photo</span>
+          <div class="photo-row" data-state-in="grouped errors privacy">
+            <img src="../assets/photos/p3.jpg" alt="Current photo">
+            <div class="photo-actions">
+              <button type="button" class="btn-ghost btn-sm">Replace photo</button>
+              <button type="button" class="text-btn">Remove photo</button>
+            </div>
+          </div>
+          <div data-state-in="ordinary"><button type="button" class="btn-ghost btn-sm">Choose photo</button></div>
+          <p class="error" id="image-error" data-state-in="errors">Choose a photo under 4 MB.</p>
+        </div>
+
+        <div class="field-row measure-row">
+          <div class="field"><label for="servings">Serves</label><input id="servings" type="number"></div>
+          <div class="field"><label for="makes">Makes <span class="optional">optional</span></label><input id="makes" type="text" placeholder="12 buns, 1 L stock"></div>
+          <div class="field"><label for="prep">Prep (min)</label><input id="prep" type="number"></div>
+          <div class="field"><label for="cook">Cook (min)</label><input id="cook" type="number"></div>
+          <p class="error" id="makes-error" data-state-in="errors">Makes is too long (80 characters max)</p>
+          <p class="hint">Makes is what one batch produces, when that isn't portions.</p>
+        </div>
+
+        <fieldset class="field">
+          <legend>Tags</legend>
+          <div class="tag-box" id="tags"><input aria-label="Add a tag" placeholder="Add a tag"></div>
+        </fieldset>
+
+        <fieldset class="field">
+          <legend>Who can see this recipe</legend>
+          <div class="choices">
+            <label class="choice"><input type="radio" name="visibility" id="vis-private"><b><svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg>Only me</b><span>Only you can see it. You can share it later.</span></label>
+            <label class="choice"><input type="radio" name="visibility" id="vis-public"><b><svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="8" r="6"/><path d="M2 8h12M8 2c1.8 1.7 2.6 3.7 2.6 6S9.8 12.3 8 14C6.2 12.3 5.4 10.3 5.4 8S6.2 3.7 8 2z"/></svg>Public</b><span>Anyone can find, save and adapt it.</span></label>
+          </div>
+          <p class="hint" data-state-in="privacy">Making this private doesn't hide existing adaptations.</p>
+        </fieldset>
+      </div>
+
+      <div class="form-col">
+        <div class="field" id="ing-field">
+          <div class="field-head">
+            <span class="label" id="ingredients-label">Ingredients <span class="required-mark" aria-hidden="true">*</span></span>
+            <button type="button" class="insert-toggle" id="ing-toggle" data-variant-in="a" aria-expanded="false">Insert<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+          </div>
+          <div class="insert-row" id="ing-row" hidden>
+            <button type="button" class="btn-ghost btn-sm"><span class="mark" aria-hidden="true">#</span>Section heading</button>
+          </div>
+          <div class="ed ed--ing" id="ingredients" role="textbox" aria-multiline="true" aria-readonly="true" aria-labelledby="ingredients-label"></div>
+          <p class="error" data-state-in="errors">“Glaze” has no ingredients. Add some under it or delete the heading.</p>
+          <p class="readback" id="ingredients-readback" hidden></p>
+          <p class="hint">One per line: quantity, unit, ingredient — 2¼ cups flour. A line like <code># Dough</code> starts a group.</p>
+        </div>
+
+        <div class="field">
+          <div class="field-head">
+            <span class="label" id="steps-label">Method <span class="required-mark" aria-hidden="true">*</span></span>
+            <button type="button" class="insert-toggle" data-variant-in="a" aria-expanded="false">Insert<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+          </div>
+          <div class="ed ed--steps" id="steps" role="textbox" aria-multiline="true" aria-readonly="true" aria-labelledby="steps-label"></div>
+          <p class="error" data-state-in="errors">A # line needs a group name after it, like # Bake.</p>
+          <p class="readback" id="steps-readback" hidden></p>
+          <p class="hint">Separate steps with a blank line. Add a note under a step with <code>tip:</code>, <code>warning:</code> or <code>substitution:</code> on its own line. A line like <code># Bake</code> starts a group.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="field field-message">
+      <label for="commitMessage">What changed? <span class="optional">optional</span></label>
+      <input id="commitMessage" type="text" placeholder="What changed?">
+      <p class="hint" data-state-in="grouped errors privacy">Left blank, saves as: Brown butter glaze instead of cream cheese icing</p>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn-primary">Save</button>
+      <a class="btn-ghost" href="recipe.html?state=owner">Cancel</a>
+    </div>
+  </form>
+
+  <section class="danger-zone" aria-label="Delete this recipe">
+    <a class="btn-ghost" href="delete.html">Delete recipe</a>
+  </section>
+</main>
+
+<script>
+// Render-only: fills the one form for the chosen state and draws each box's
+// lines with the same rules as the prototype (groups.ts HEADING, readBack).
+document.addEventListener('DOMContentLoaded', function () {
+  'use strict';
+  var state = document.body.dataset.state;
+
+  var BUNS_ING = '# Dough\n1 cup (240 ml) whole milk, warmed\n7 g instant yeast\n¼ cup (50 g) caster sugar\n1 large egg\n2⅓ cups (295 g) bread flour\n¾ tsp fine salt\n1½ tsp ground cardamom\n¼ cup (55 g) unsalted butter, softened\n\n# Filling\n½ cup (110 g) unsalted butter, softened\n⅔ cup (130 g) light brown sugar\n1 tbsp ground cinnamon\n1 tsp ground cardamom\npinch of salt\n\n# Glaze\n¼ cup (55 g) unsalted butter\n1½ cups (180 g) icing sugar\n2 tbsp milk\n½ tsp vanilla extract';
+  var BUNS_STEPS = '# Dough\nWarm the milk to about 40 °C, whisk in the yeast and sugar, and leave for 5 minutes until foamy.\n\nAdd the egg, flour, salt and cardamom. Knead for 8 minutes, then work in the butter a piece at a time and knead 5 minutes more, until smooth and elastic.\n\nCover and leave somewhere warm for about 1 hour, until doubled.\n\n# Shape and bake\nBeat the filling butter, brown sugar, cinnamon, cardamom and salt until smooth.\n\nRoll the dough to a 40 × 30 cm rectangle, spread the filling to the edges, roll up from the long side and cut into 12.\n\nSet the buns cut side up in a buttered 9x13 pan, cover and rise 45 minutes.\n\nBake at 200 °C / 400 °F for 22–25 minutes, until deep golden.\ntip: If the tops brown before the middles are done, cover loosely with foil for the last 5 minutes.\n\n# Glaze\nMelt the butter over medium heat and keep swirling until it smells nutty and the solids turn brown. Cool 5 minutes.\n\nWhisk in the icing sugar, milk and vanilla, and spread over the buns while they are still warm.';
+  var BUNS = {
+    back: 'Cardamom Cinnamon Buns with Brown Butter Glaze',
+    title: 'Cardamom Cinnamon Buns with Brown Butter Glaze',
+    description: 'Soft enriched buns with cardamom in the dough and the filling, finished with a nutty brown butter glaze while still warm.',
+    servings: '12', makes: '12 buns', prep: '45', cook: '25', tags: ['baking', 'breakfast', 'weekend'], isPublic: true,
+    ingredients: BUNS_ING, steps: BUNS_STEPS,
+    status: 'Editing <span class="mono-id">v3</span> · <strong>Unsaved changes</strong> · saves as <span class="mono-id">v4</span>'
+  };
+  var SAUCE = {
+    back: "Grandmother's Slow-Roasted Tomato Sauce for the Freezer",
+    title: "Grandmother's Slow-Roasted Tomato Sauce for the Freezer",
+    description: "Nonna Rosa's Sunday sauce, roasted low instead of stirred for hours. Makes enough to fill the freezer for winter.",
+    servings: '8', makes: '3 jars', prep: '15', cook: '180', tags: ['sauce', 'make-ahead', 'freezer'], isPublic: false,
+    ingredients: '2 kg ripe plum tomatoes, halved\n1 head garlic, cloves peeled\n⅓ cup (80 ml) olive oil\n1½ tsp flaky salt\n1 tsp sugar\n½ tsp chilli flakes\n1 small bunch basil',
+    steps: 'Heat the oven to 150 °C / 300 °F.\n\nToss the tomatoes, garlic, oil, salt, sugar and chilli flakes in a large roasting tin and turn the tomatoes cut side up.\n\nRoast for 3 hours, until collapsed and caramelised at the edges.\n\nBlend with the basil until as smooth as you like it.\n\nCool, divide between jars, leaving 2 cm at the top, and freeze for up to 6 months.',
+    status: 'Editing <span class="mono-id">v5</span> · saves as <span class="mono-id">v6</span>'
+  };
+  var r = state === 'ordinary' ? SAUCE : Object.assign({}, BUNS);
+  if (state === 'errors') {
+    r.title = '';
+    r.makes = '12 buns, or 16 smaller ones if you cut the rolled log into sixteen pieces instead';
+    r.ingredients = BUNS_ING.replace(/\n¼ cup \(55 g\) unsalted butter\n1½ cups[\s\S]*$/, '');
+    r.steps = BUNS_STEPS.replace('# Glaze', '#');
+    r.status = "Couldn't save: <strong>5 fields need attention</strong>";
+  }
+  if (state === 'privacy') r.isPublic = false;
+
+  document.getElementById('back').textContent = '← ' + r.back;
+  var status = document.getElementById('status');
+  status.innerHTML = r.status;
+  status.classList.toggle('is-error', state === 'errors');
+  ['title', 'description', 'servings', 'makes', 'prep', 'cook'].forEach(function (k) { document.getElementById(k).value = r[k]; });
+  document.getElementById(r.isPublic ? 'vis-public' : 'vis-private').checked = true;
+  var tagBox = document.getElementById('tags');
+  r.tags.forEach(function (t) {
+    var pill = document.createElement('span'); pill.className = 'tag-pill'; pill.textContent = t;
+    pill.insertAdjacentHTML('beforeend', '<button type="button" aria-label="Remove ' + t + '"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg></button>');
+    tagBox.insertBefore(pill, tagBox.lastElementChild);
+  });
+
+  var HEADING = /^\s*#(?:\s+(.*))?$/;
+  function plural(n, w) { return n + ' ' + w + (n === 1 ? '' : 's'); }
+  function sections(text, items) {
+    var out = [{ group: undefined, lines: [] }];
+    text.split('\n').forEach(function (line) {
+      var h = HEADING.exec(line);
+      if (h) out.push({ group: (h[1] || '').trim(), lines: [] }); else out[out.length - 1].lines.push(line);
+    });
+    return out.filter(function (s, i) { return i > 0 || s.lines.join('').trim(); }).map(function (s) {
+      var t = s.lines.join('\n');
+      var rows = items === 'ingredients' ? t.split('\n').filter(function (l) { return l.trim(); })
+        : t.trim().split(/\n\s*\n/).filter(function (b) { return b.trim(); });
+      return { group: s.group, rows: rows };
+    });
+  }
+  function draw(id, text, items) {
+    var box = document.getElementById(id);
+    text.split('\n').forEach(function (line) {
+      var div = document.createElement('div');
+      var h = HEADING.exec(line);
+      if (h && (h[1] || '').trim()) {
+        div.className = 'h';
+        var i = line.indexOf('#');
+        div.appendChild(document.createTextNode(line.slice(0, i)));
+        var mk = document.createElement('span'); mk.className = 'mk'; mk.textContent = '#'; div.appendChild(mk);
+        div.appendChild(document.createTextNode(line.slice(i + 1)));
+      } else {
+        if (h) div.className = 'h-empty';
+        if (line) div.textContent = line; else div.appendChild(document.createElement('br'));
+      }
+      box.appendChild(div);
+    });
+    var secs = sections(text, items);
+    if (!secs.some(function (s) { return s.group !== undefined; })) return;
+    var count = 0, rb = document.getElementById(id + '-readback');
+    var named = secs.filter(function (s) { return s.group !== undefined; }).length;
+    var parts = secs.map(function (s) {
+      var first = count + 1; count += s.rows.length;
+      var detail = !s.rows.length ? 'empty' : items === 'ingredients' ? plural(s.rows.length, 'line') : first === count ? String(first) : first + '–' + count;
+      var name = s.group === undefined ? 'Ungrouped' : '<b>' + (s.group || 'No name') + '</b>';
+      return ' <span class="part">' + name + ' ' + detail + '</span>';
+    });
+    var lead = items === 'steps' ? 'Reads as ' + plural(count, 'step') + ' in ' + plural(named, 'group') + ':' : 'Reads as ' + plural(named, 'group') + ':';
+    rb.innerHTML = '<span class="lead">' + lead + '</span>' + parts.join('');
+    rb.hidden = false;
+  }
+  draw('ingredients', r.ingredients, 'ingredients');
+  draw('steps', r.steps, 'steps');
+
+  // Insert open on Ingredients in the grouped picture only.
+  if (state === 'grouped' && document.body.dataset.variant !== 'b') {
+    document.getElementById('ing-toggle').setAttribute('aria-expanded', 'true');
+    document.getElementById('ing-row').hidden = false;
+  }
+  if (document.body.dataset.variant === 'b') document.getElementById('ingredients').classList.add('ring');
+
+  if (state === 'errors') {
+    [['title', 'title-error'], ['makes', 'makes-error'], ['ingredients'], ['steps']].forEach(function (f) {
+      var el = document.getElementById(f[0]); el.setAttribute('aria-invalid', 'true');
+      if (f[1]) el.setAttribute('aria-describedby', f[1]);
+    });
+    // Focus after a blocked save: the first field in error, as shipped.
+    document.getElementById('title').classList.add('ring');
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fork MVP design decision pack · 10 Nov 2026</title>
+<link rel="stylesheet" href="assets/fork.css">
+<link rel="stylesheet" href="assets/board.css">
+<script src="assets/board.js" defer></script>
+<style>
+  .legend { display: flex; flex-wrap: wrap; gap: 8px 24px; margin-top: 16px; font-size: 0.9375rem; color: var(--color-text-2); }
+  .legend span.tagline { display: inline-flex; align-items: center; gap: 8px; }
+  .legend .proto-label, .legend .static-label { position: static; pointer-events: auto; }
+  .toc { display: flex; flex-wrap: wrap; gap: 4px 18px; margin-top: 16px; font-size: 0.9375rem; }
+  .compare-list a, .docs a { font-weight: 600; }
+  .compare-list li, .docs li { margin-top: 6px; }
+</style>
+</head>
+<body>
+<main class="board-page">
+  <header>
+    <h1>Fork MVP design decision pack · 10 Nov 2026</h1>
+    <p>Open this file in Chrome or Safari. Nothing to install, no internet needed. Each screen is shown at phone (390) and desktop (1280); "Open full size ↗" opens the raw file. Content comes from <a href="CONTENT.md">CONTENT.md</a>.</p>
+    <div class="legend">
+      <span class="tagline"><span class="proto-label"></span> you can click and type</span>
+      <span class="tagline"><span class="static-label"></span> a picture of one state</span>
+      <span class="tagline"><span class="shipped">Shipped</span> live today</span>
+      <span class="tagline"><span class="planned">Planned</span> proposed for the MVP</span>
+    </div>
+    <nav class="toc" aria-label="Sections">
+      <a href="#decide">Decide</a><a href="#cookbook">Cookbook</a><a href="#discover">Discover</a><a href="#recipe">Recipe</a><a href="#cook">Cook</a><a href="#editor">Editor</a><a href="#delete">Delete</a><a href="#journal">Journal</a><a href="#friends">Friends</a><a href="#compare">Comparisons</a>
+    </nav>
+  </header>
+
+  <section class="board-section" id="decide">
+    <h2>Decide</h2>
+    <ul class="docs">
+      <li><a href="WORKSHEET.md">WORKSHEET.md</a>: the decisions to make, one at a time</li>
+      <li><a href="DESIGN-SUMMARY.md">DESIGN-SUMMARY.md</a>: what changes and why</li>
+    </ul>
+  </section>
+
+  <section class="board-section" id="cookbook">
+    <h2>Cookbook</h2>
+    <div class="board" data-title="Full" data-src="screens/cookbook.html?state=full"></div>
+    <div class="board" data-title="Saved filter" data-src="screens/cookbook.html?state=filter-saved"></div>
+    <div class="board" data-title="Search, no results" data-src="screens/cookbook.html?state=search-none"></div>
+    <div class="board" data-title="Empty" data-src="screens/cookbook.html?state=empty"></div>
+  </section>
+
+  <section class="board-section" id="discover">
+    <h2>Discover</h2>
+    <div class="board" data-title="Discover" data-src="screens/discover.html"></div>
+  </section>
+
+  <section class="board-section" id="recipe">
+    <h2>Recipe</h2>
+    <div class="board" data-title="Owner" data-tablet data-src="screens/recipe.html?state=owner"></div>
+    <div class="board" data-title="Visitor" data-src="screens/recipe.html?state=visitor"></div>
+    <div class="board" data-title="Signed out" data-src="screens/recipe.html?state=signed-out"></div>
+    <div class="board" data-title="No photo, Only me" data-src="screens/recipe.html?state=no-photo"></div>
+    <div class="board" data-title="Scaled ×2" data-src="screens/recipe.html?state=scaled"></div>
+  </section>
+
+  <section class="board-section" id="cook">
+    <h2>Cook</h2>
+    <div class="board" data-title="Start" data-src="screens/cook.html?state=start"></div>
+    <div class="board" data-title="Midway" data-src="screens/cook.html?state=midway"></div>
+  </section>
+
+  <section class="board-section" id="editor">
+    <h2>Editor</h2>
+    <div class="board" data-title="Interactive prototype" data-src="prototype/editor.html"></div>
+    <div class="board" data-title="Ordinary recipe" data-src="screens/editor.html?state=ordinary"></div>
+    <div class="board" data-title="Grouped recipe" data-src="screens/editor.html?state=grouped"></div>
+    <div class="board" data-title="Errors after a blocked save" data-src="screens/editor.html?state=errors"></div>
+    <div class="board" data-title="Who can see this" data-src="screens/editor.html?state=privacy"></div>
+  </section>
+
+  <section class="board-section" id="delete">
+    <h2>Delete</h2>
+    <div class="board" data-title="Delete, two steps" data-src="screens/delete.html"></div>
+  </section>
+
+  <section class="board-section" id="journal">
+    <h2>Journal</h2>
+    <div class="board" data-title="Full" data-src="screens/journal.html?state=full"></div>
+    <div class="board" data-title="Log a meal" data-src="screens/journal.html?state=log-form"></div>
+    <div class="board" data-title="Empty" data-src="screens/journal.html?state=empty"></div>
+  </section>
+
+  <section class="board-section" id="friends">
+    <h2>Friends</h2>
+    <div class="board" data-title="Full" data-src="screens/friends.html?state=full"></div>
+    <div class="board" data-title="Empty" data-src="screens/friends.html?state=empty"></div>
+  </section>
+
+  <section class="board-section" id="compare">
+    <h2>Comparisons</h2>
+    <ul class="compare-list">
+      <li><a href="compare/1-navigation.html">1 · Navigation</a></li>
+      <li><a href="compare/2-cook-density.html">2 · Cook density</a></li>
+      <li><a href="compare/3-editor-toolbar.html">3 · Editor toolbar</a></li>
+    </ul>
+  </section>
+</main>
+</body>
+</html>

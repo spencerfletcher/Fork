@@ -1,0 +1,28 @@
+/* Board pages (index, comparisons): screens framed in iframes at device sizes.
+   Link after fork.css. board.js builds the frames from <div class="board">. */
+.board-page { max-width: 1440px; margin: 0 auto; padding: 32px 24px 64px; }
+.board-page > header p { color: var(--color-text-2); max-width: 72ch; margin-top: 6px; }
+.board-section { margin-top: 48px; }
+.board-section > h2 { padding-bottom: 8px; border-bottom: 1px solid var(--color-border); }
+.board-section > p { color: var(--color-text-2); max-width: 72ch; margin-top: 8px; }
+
+.board { margin-top: 24px; }
+.board__title { font-weight: 600; margin-bottom: 8px; }
+.board__title .mono { color: var(--color-text-3); font-weight: 400; margin-left: 8px; }
+.board__frames { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; }
+
+.frame { margin: 0; min-width: 0; }
+.frame-phone { flex: 0 0 390px; }
+.frame-tablet { flex: 0 0 min(560px, 100%); }
+.frame-desktop { flex: 1 1 560px; }
+/* The box holds the scaled iframe; board.js sets its height and the scale. */
+.frame__box { position: relative; overflow: hidden; background: var(--color-bg); border: 1px solid var(--color-text); }
+.frame-phone .frame__box { border-radius: 24px; }
+.frame-tablet .frame__box { border-radius: 18px; }
+.frame-desktop .frame__box { border-radius: 8px; }
+.frame__box iframe { position: absolute; top: 0; left: 0; border: 0; transform-origin: 0 0; background: var(--color-bg); }
+.frame figcaption { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; margin-top: 6px; font-size: 0.8125rem; color: var(--color-text-3); }
+.frame figcaption a { font-weight: 600; }
+
+.missing { padding: 24px; color: var(--color-text-3); font-size: 0.875rem; }
+@media (max-width: 699px) { .board-page { padding: 20px 16px 48px; } .frame-phone { flex-basis: 100%; } }

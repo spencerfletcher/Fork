@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cookbook · Fork</title>
+  <link rel="stylesheet" href="../assets/fork.css">
+  <script src="../assets/state.js" defer></script>
+  <style>
+    /* Cookbook: My recipes + Favorites as one library with a filter.
+       Dense and uniform: 1 column on a phone (full-width photos lead),
+       2 from 600, 4 from 1100. Discover is the looser 3-column one. */
+    .head { margin-bottom: var(--space-5); }
+    .head .count { margin-top: 4px; color: var(--color-text-2); }
+
+    .filters { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 20px; }
+    .seg { display: inline-flex; border: 1px solid var(--color-border-2); border-radius: var(--radius-md); background: var(--color-surface); padding: 3px; }
+    .seg button { min-height: 38px; padding: 0 14px; border-radius: 4px; font-size: 0.9375rem; font-weight: 600; color: var(--color-text-2); }
+    .seg button .n { font-weight: 400; color: var(--color-text-3); margin-left: 4px; }
+    .seg button:hover { color: var(--color-text); }
+    .seg button[aria-pressed=true] { background: var(--color-marigold-tint); color: var(--color-text); box-shadow: inset 0 0 0 1px var(--color-marigold); }
+    .seg-wrap { display: flex; align-items: center; gap: 10px; }
+    .search { position: relative; flex: 1 1 320px; max-width: 480px; margin-left: auto; }
+    .search svg { position: absolute; left: 12px; top: 0; bottom: 0; margin: auto 0; width: 16px; height: 16px; color: var(--color-text-3); pointer-events: none; }
+    .search input[type=search] { padding-left: 38px; min-height: 44px; }
+    .tags-row { margin-top: 18px; }
+    .status { margin: 14px 0 18px; font-size: 0.875rem; color: var(--color-text-3); min-height: 1.3em; }
+
+    .cookbook-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 32px 24px; }
+    @media (min-width: 600px) { .cookbook-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (min-width: 1100px) { .cookbook-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+    .card__meta { display: flex; flex-wrap: wrap; align-items: center; column-gap: 0; }
+    .card__meta > span + span::before { content: '·' / ''; padding: 0 6px; }
+    .card__meta .lock { display: inline-flex; align-items: center; gap: 4px; }
+    .card__meta .lock svg { width: 12px; height: 12px; }
+    .card__src { font-size: 0.8125rem; line-height: 1.5; color: var(--color-text-3); margin-top: -6px; overflow-wrap: anywhere; }
+    @media (max-width: 599px) {
+      .card__title { font-size: 1.1875rem; }
+      .card--no-photo .card__media { padding: 20px; }
+    }
+
+    .none { padding: 40px 0 24px; max-width: 46ch; }
+    .none h2 { font-size: 1.375rem; }
+    .none p { margin-top: 6px; color: var(--color-text-2); }
+    .none .text-btn { margin-top: 18px; }
+
+    .empty { padding: 56px 0 24px; max-width: 46ch; margin: 0 auto; text-align: center; }
+    .empty p { margin-top: 8px; color: var(--color-text-2); }
+    .empty .actions { margin-top: 24px; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 12px 24px; }
+
+    @media (max-width: 767px) {
+      .search { flex-basis: 100%; max-width: none; margin-left: 0; }
+      .seg-wrap { width: 100%; }
+      .seg { flex: 1; }
+      .seg button { flex: 1; min-height: 40px; }
+    }
+  </style>
+</head>
+<body data-state="full">
+  <span class="static-label"></span>
+
+  <header class="nav-top">
+    <div class="nav-top__row">
+      <div class="nav-top__left">
+        <a class="nav-top__brand" href="cookbook.html">Fork<span>.</span></a>
+        <nav class="nav-top__links" aria-label="Main">
+          <a href="cookbook.html" aria-current="page">Cookbook</a>
+          <a href="journal.html">Journal</a>
+          <a href="friends.html">Friends</a>
+          <a href="discover.html">Discover</a>
+        </nav>
+      </div>
+      <div class="nav-top__right">
+        <a class="nav-top__new" href="editor.html?state=ordinary">+ New recipe</a>
+        <a class="avatar" href="#" aria-label="Maria Okafor, your profile">M</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="page">
+    <div class="head">
+      <h1>Cookbook</h1>
+      <p class="count" data-state-in="full search-none filter-saved">9 recipes: 6 yours, 3 saved from other cooks.</p>
+    </div>
+
+    <!-- Filters only over a library that has something to filter (decided 29 Oct). -->
+    <div data-state-in="full search-none filter-saved">
+      <div class="filters">
+        <div class="seg-wrap">
+          <div class="seg" role="group" aria-label="Show" data-state-in="full search-none">
+            <button type="button" aria-pressed="true">All<span class="n">9</span></button>
+            <button type="button" aria-pressed="false">Mine<span class="n">6</span></button>
+            <button type="button" aria-pressed="false">Saved<span class="n">3</span></button>
+          </div>
+          <div class="seg" role="group" aria-label="Show" data-state-in="filter-saved">
+            <button type="button" aria-pressed="false">All<span class="n">9</span></button>
+            <button type="button" aria-pressed="false">Mine<span class="n">6</span></button>
+            <button type="button" aria-pressed="true">Saved<span class="n">3</span></button>
+          </div>
+          <span class="planned">Planned</span>
+        </div>
+        <form class="search" role="search" onsubmit="return false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="search" name="q" aria-label="Search by name or ingredient" placeholder="Search by name or ingredient…" data-state-in="full filter-saved">
+          <input type="search" name="q" aria-label="Search by name or ingredient" value="saffron" data-state-in="search-none">
+        </form>
+      </div>
+      <div class="tags-row">
+        <div class="tag-tabs" role="group" aria-label="Tags">
+          <button type="button" aria-pressed="true">All</button>
+          <button type="button" aria-pressed="false">baking</button>
+          <button type="button" aria-pressed="false">breakfast</button>
+          <button type="button" aria-pressed="false">weeknight</button>
+          <button type="button" aria-pressed="false">vegetarian</button>
+          <button type="button" aria-pressed="false">sauce</button>
+          <button type="button" aria-pressed="false">make-ahead</button>
+          <button type="button" aria-pressed="false">freezer</button>
+        </div>
+      </div>
+      <!-- Always in the DOM so a screen reader hears the count change. -->
+      <p class="status" role="status"><span data-state-in="search-none">0 recipes match</span><span data-state-in="filter-saved">3 recipes match</span></p>
+    </div>
+
+    <div class="cookbook-grid" data-state-in="full filter-saved">
+      <a class="card" href="recipe.html?state=owner" data-state-in="full">
+        <div class="card__media"><img class="card__photo" src="../assets/photos/p3.jpg" alt=""></div>
+        <h2 class="card__title">Cardamom Cinnamon Buns with Brown Butter Glaze</h2>
+        <p class="card__meta"><span>1h 10m</span><span class="vid">v3</span></p>
+      </a>
+      <a class="card" href="recipe.html?state=owner" data-state-in="full">
+        <div class="card__media"><img class="card__photo" src="../assets/photos/p1.jpg" alt=""></div>
+        <h2 class="card__title">Weeknight Dal with Tarka</h2>
+        <p class="card__meta"><span>45 min</span><span class="vid">v2</span></p>
+      </a>
+      <a class="card" href="recipe.html?state=visitor">
+        <div class="card__media"><img class="card__photo" src="../assets/photos/p8.jpg" alt=""></div>
+        <h2 class="card__title">Beet and Feta Salad with Orange</h2>
+        <p class="card__meta"><span>1h 10m</span><span class="vid">v2</span></p>
+        <p class="card__src">Saved from <span class="handle">@devcooks</span></p>
+      </a>
+      <a class="card card--no-photo" href="recipe.html?state=no-photo" data-state-in="full">
+        <div class="card__media"><h2 class="card__title">Grandmother's Slow-Roasted Tomato Sauce for the Freezer</h2></div>
+        <p class="card__meta"><span class="lock"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg>Only me</span><span>3h 15m</span><span class="vid">v5</span></p>
+      </a>
+      <a class="card" href="recipe.html?state=visitor">
+        <div class="card__media"><img class="card__photo" src="../assets/photos/p4.jpg" alt=""></div>
+        <h2 class="card__title">Salmon Poke Bowl</h2>
+        <p class="card__meta"><span>35 min</span><span class="vid">v3</span></p>
+        <p class="card__src">Saved from <span class="handle">@samlind</span></p>
+      </a>
+      <a class="card" href="recipe.html?state=owner" data-state-in="full">
+        <div class="card__media"><img class="card__photo" src="../assets/photos/p2.jpg" alt=""></div>
+        <h2 class="card__title">Brown Butter Chocolate Chip Cookies</h2>
+        <p class="card__meta"><span>30 min</span><span class="vid">v4</span></p>
+      </a>
+      <a class="card card--no-photo" href="recipe.html?state=visitor">
+        <div class="card__media"><h2 class="card__title">Green Goddess Dressing</h2></div>
+        <p class="card__meta"><span>10 min prep</span></p>
+        <p class="card__src">Saved from <span class="handle">@samlind</span></p>
+      </a>
+      <a class="card card--no-photo" href="recipe.html?state=owner" data-state-in="full">
+        <div class="card__media"><h2 class="card__title">Overnight Oats with Grated Apple</h2></div>
+        <p class="card__meta"><span class="lock"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg>Only me</span><span>5 min prep</span><span class="vid">v2</span></p>
+      </a>
+      <a class="card" href="recipe.html?state=owner" data-state-in="full">
+        <div class="card__media"><img class="card__photo" src="../assets/photos/p9.jpg" alt=""></div>
+        <h2 class="card__title">Pesto Farfalle with Cherry Tomatoes</h2>
+        <p class="card__meta"><span>25 min</span></p>
+      </a>
+    </div>
+    <p class="annot" data-state-in="full"><strong>Why one grid:</strong> your recipes carry no owner line (they are yours); saved ones say whose they are. The lock marks Only me. Four columns at desktop keep it a dense library; Discover is looser.</p>
+
+    <div class="none" data-state-in="search-none">
+      <h2>No recipes match "saffron".</h2>
+      <p>Search looks at titles, descriptions and ingredients.</p>
+      <button class="text-btn" type="button">Clear search</button>
+    </div>
+
+    <div class="empty" data-state-in="empty">
+      <h2>Your cookbook is empty</h2>
+      <p>Recipes you write and recipes you save from others live here.</p>
+      <div class="actions">
+        <a class="btn-primary" href="editor.html?state=ordinary">New recipe</a>
+        <a class="arrow-link" href="discover.html">Discover recipes →</a>
+      </div>
+    </div>
+  </main>
+
+  <nav class="tab-bar" aria-label="Main">
+    <a href="cookbook.html" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H19v14H5.5A1.5 1.5 0 0 0 4 19.5z"/><path d="M4 19.5A1.5 1.5 0 0 0 5.5 21H19v-3"/><path d="M9 8h6"/></svg>Cookbook</a>
+    <a href="journal.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 10h16M8 3v4M16 3v4M8 14h4"/></svg>Journal</a>
+    <a href="friends.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><circle cx="17" cy="9" r="2.5"/><path d="M17.5 14.5A5 5 0 0 1 21.5 19"/></svg>Friends</a>
+    <a href="discover.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></svg>Discover</a>
+  </nav>
+</body>
+</html>

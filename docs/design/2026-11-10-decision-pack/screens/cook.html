@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cook · Fork</title>
+  <link rel="stylesheet" href="../assets/fork.css">
+  <script src="../assets/state.js" defer></script>
+  <style>
+    /* Cook: the recipe page's cooking state. The band collapses to one strip
+       that pins; ingredients and method lead. Variant A (default) keeps two
+       columns from 768; variant B (?variant=b) is one 680px reading column. */
+    .proto-label::before { content: 'Interactive prototype: ticks and section switch only'; }
+    /* Cook pins its strip where the label sits; the label moves to the foot so
+       it never covers Done cooking. */
+    .proto-label { top: auto; right: auto; bottom: 8px; left: 8px; }
+
+    :root { --strip-h: 80px; }
+    html { scroll-padding-top: calc(var(--strip-h) + 8px); }
+    .wrap { max-width: calc(var(--max-width) + 48px); margin: 0 auto; padding-inline: var(--space-5); }
+    @media (min-width: 1280px) { .wrap { max-width: calc(var(--max-width) + 64px); padding-inline: var(--space-6); } }
+    @media (max-width: 699px) { .wrap { padding-inline: 18px; } }
+
+    /* ── The strip: band cream, title over measure, Done cooking right. ── */
+    .cook-head { position: sticky; top: 0; z-index: 10; }
+    .strip { background: var(--color-band); }
+    .strip__row {
+      display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'title done' 'measure done';
+      align-items: center; column-gap: var(--space-5); min-height: var(--strip-h); padding-block: 12px;
+    }
+    .strip__title {
+      grid-area: title; font-family: var(--font-serif); font-weight: 500; font-size: 1.375rem; line-height: 1.25;
+      color: var(--color-accent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .strip .measure { grid-area: measure; margin-top: 2px; font-size: 0.9375rem; align-items: center; }
+    .strip .pill { grid-area: done; }
+    /* The serves box: shipped ScaleControl, borderless, a 1px Ink 3 rule under
+       the digits; the number stays ink because the reader edits it. */
+    .serves { display: inline-flex; align-items: center; gap: 6px; }
+    .strip .serves input[type='number'] {
+      width: 5ch; padding: 0 2px; height: 24px; text-align: center; font-weight: 600; font-size: 0.9375rem;
+      color: var(--color-text); background: transparent; border: 0; border-bottom: 1px solid var(--color-text-3); border-radius: 0;
+    }
+    .strip .serves input[type='number']:focus-visible { border-bottom-color: var(--color-text-2); }
+    .reset { font-weight: 600; font-size: 0.9375rem; }
+
+    /* What the strip cannot hold: the scale notice and the wake-lock line. */
+    .cook-status { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px 24px; padding-top: 14px; font-size: 0.875rem; line-height: 1.5; }
+    .cook-status .scaled-note { color: var(--color-text-2); }
+    .cook-status .scaled-note b { font-weight: 600; color: var(--color-text); }
+    .cook-status .wake { color: var(--color-text-3); margin-left: auto; display: inline-flex; align-items: baseline; gap: 8px; }
+
+    /* State: only the scaled spans of the state show. */
+    body:not([data-state='midway']) .m { display: none; }
+    body[data-state='midway'] .s { display: none; }
+
+    /* ── Body: ingredients 5 / method 7 from 1024; 4 / 8 at tablet. ── */
+    .cook-body { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); column-gap: 48px; align-items: start; padding-top: 18px; padding-bottom: var(--space-7); }
+    @media (min-width: 768px) and (max-width: 1023px) { .cook-body { grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); column-gap: 32px; } }
+    .sec-head { padding-bottom: 8px; border-bottom: 1px solid var(--color-border); }
+    .ings { position: sticky; top: calc(var(--strip-h) + 16px); max-height: calc(100dvh - var(--strip-h) - 32px); overflow-y: auto; padding: 4px; margin: -4px; scrollbar-width: thin; scrollbar-color: var(--color-border-2) transparent; animation: list-fade linear both; animation-timeline: scroll(self); }
+    /* Shipped: while rows sit below the fold the list's foot fades 24px. */
+    @keyframes list-fade { 0%, 99% { mask-image: linear-gradient(to bottom, #000 calc(100% - 24px), transparent); } 100% { mask-image: none; } }
+
+    /* Groups: Bitter name over its rows, in the list and in the method. */
+    .grp { margin-top: 22px; }
+    .ings .grp { margin-top: 18px; }
+    .ings .grp:first-of-type { margin-top: 14px; }
+
+    /* Ingredient strike rows: the whole row is the label, a 24px box at its start. */
+    .ing { position: relative; display: flex; align-items: flex-start; gap: 12px; padding: 8px 0; min-height: 41px; border-bottom: 1px solid var(--color-border); cursor: pointer; line-height: 1.5; }
+    .ing input, .step input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; margin: 0; cursor: pointer; }
+    .ing b { font-weight: 600; }
+    .ing .w { color: var(--color-text-2); }
+    .ing .w.dynamic, .ing b.dynamic { color: var(--color-accent); }
+    .box { position: relative; flex-shrink: 0; width: 24px; height: 24px; border: 1.5px solid var(--color-text-3); border-radius: var(--radius-sm); background: var(--color-surface); }
+    .ing:hover .box { border-color: var(--color-text-2); }
+    /* Ticked: struck through and receded to Ink 3, the check Ink 3 too, no fill
+       (marigold stays the primary's). */
+    .ing:has(:checked) { color: var(--color-text-3); text-decoration: line-through; }
+    .ing:has(:checked) :is(b, .w, .dynamic) { color: var(--color-text-3); }
+    .ing:has(:checked) .box::after { content: ''; position: absolute; left: 7px; top: 2.5px; width: 6px; height: 12px; border: solid var(--color-text-3); border-width: 0 2px 2px 0; transform: rotate(45deg); }
+    :is(.ing, .step):has(:focus-visible) { outline: 2px solid var(--color-accent); outline-offset: 2px; border-radius: 2px; }
+    @media (forced-colors: active) { .ing:has(:checked) .box { background: Highlight; } }
+
+    .list-foot { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; margin-top: 10px; font-size: 0.875rem; color: var(--color-text-3); }
+    .clear-ticks { display: none; font-size: 0.875rem; font-weight: 400; color: var(--color-text-3); padding: 10px 0; margin-block: -10px; margin-left: auto; }
+    .clear-ticks:hover { color: var(--color-text); }
+    [data-ticks]:has(:checked) .clear-ticks { display: inline-flex; }
+
+    /* Method: larger type for reading at arm's length; clay Bitter numerals in
+       a 2ch column; numbers run straight through the groups. */
+    .method .grp:first-of-type { margin-top: 16px; }
+    .steps { display: flex; flex-direction: column; gap: 18px; margin-top: 10px; }
+    .step { position: relative; display: grid; grid-template-columns: 2ch minmax(0, 1fr); gap: 16px; align-items: baseline; cursor: pointer; }
+    .step__n { font-family: var(--font-serif); font-weight: 500; font-size: 1.1875rem; color: var(--color-accent); justify-self: end; }
+    .step__text { font-size: 1.125rem; line-height: 1.6; max-width: 40em; }
+    .step__tip, .step__flag { display: block; }
+    .step__tip { margin-top: 6px; font-size: 0.9375rem; line-height: 1.5; font-style: italic; color: var(--color-text-3); }
+    .step__flag { margin-top: 4px; font-size: 0.875rem; color: var(--color-text-3); }
+    .step:has(:checked) { text-decoration: line-through; }
+    .step:has(:checked) :is(.step__n, .step__text) { color: var(--color-text-3); }
+
+    .method-end { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 24px; margin-top: 36px; padding-top: 20px; border-top: 1px solid var(--color-border); }
+    .method-end .text-btn { color: var(--color-accent); }
+    .method-end .text-btn:hover { color: var(--color-text); }
+
+    /* Section switch: phone only (two columns hold from 768). */
+    .section-tabs { display: none; }
+
+    @media (max-width: 767px) {
+      :root { --strip-h: 144px; }
+      .strip__row { grid-template-areas: 'title done' 'measure measure'; padding-block: 6px 4px; row-gap: 0; min-height: 0; column-gap: 12px; }
+      .strip__title { font-size: 1.125rem; }
+      .strip .measure { margin-top: 0; column-gap: 14px; }
+      .strip .serves input[type='number'] { height: 44px; font-size: 1rem; }
+      .cook-status .wake { margin-left: 0; }
+      .reset { padding: 11px 4px; margin-block: -11px; }
+      .section-tabs { display: grid; grid-template-columns: 1fr 1fr; background: var(--color-bg); border-bottom: 1px solid var(--color-border-2); padding-inline: 18px; }
+      .section-tabs button { min-height: 44px; padding: 13px 0 11px; margin-bottom: -1px; border-bottom: 2px solid transparent; font-size: 0.8125rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--color-text-3); }
+      .section-tabs button[aria-pressed='true'] { color: var(--color-text); border-bottom-color: var(--color-accent); }
+      .cook-body { grid-template-columns: minmax(0, 1fr); padding-top: 4px; }
+      .cook-body[data-tab='ingredients'] .method, .cook-body[data-tab='method'] .ings { display: none; }
+      .cook-body .sec-head { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+      .ings { position: static; max-height: none; overflow: visible; padding: 0; margin: 0; animation: none; }
+      .ing { min-height: 44px; padding: 10px 0; }
+      .step { min-height: 44px; }
+      .clear-ticks { padding: 14px 0; margin-block: -14px; }
+      .cook-status { padding-top: 10px; }
+    }
+    @media (max-width: 375px) { .done-long { display: none; } }
+
+    /* ── Variant B: reading mode. One 680px column, ingredients first as a
+       compact two-column checklist, method at 1.25rem, no switch. ── */
+    body[data-variant='b'] .wrap { max-width: calc(680px + 48px); }
+    body[data-variant='b'] .cook-body { display: block; }
+    body[data-variant='b'] .section-tabs { display: none; }
+    body[data-variant='b'] .cook-body .method, body[data-variant='b'] .cook-body .ings { display: block; }
+    body[data-variant='b'] .ings { position: static; max-height: none; overflow: visible; padding: 0; margin: 0; animation: none; }
+    body[data-variant='b'] .cook-body .sec-head { position: static; width: auto; height: auto; overflow: visible; clip-path: none; }
+    body[data-variant='b'] .ings { padding-top: 10px; }
+    body[data-variant='b'] .cook-body { padding-bottom: 96px; }
+    body[data-variant='b'] .ing { border-bottom: 0; min-height: 36px; padding: 6px 0; }
+    @media (min-width: 600px) { body[data-variant='b'] .ings ul { columns: 2; column-gap: 32px; } }
+    body[data-variant='b'] .ings li { break-inside: avoid; }
+    body[data-variant='b'] .method { margin-top: var(--space-7); }
+    body[data-variant='b'] .method .grp { margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--color-border); font-size: 1.375rem; }
+    body[data-variant='b'] .method .grp:first-of-type { margin-top: 20px; padding-top: 0; border-top: 0; }
+    body[data-variant='b'] .steps { gap: 32px; margin-top: 16px; }
+    body[data-variant='b'] .step__n { font-size: 1.3125rem; }
+    body[data-variant='b'] .step__text { font-size: 1.25rem; line-height: 1.55; }
+    @media (max-width: 767px) {
+      body[data-variant='b'] { --strip-h: 98px; }
+      body[data-variant='b'] .ing { min-height: 44px; }
+      body[data-variant='b'] .step__n { font-size: 1.1875rem; }
+      body[data-variant='b'] .step__text { font-size: 1.125rem; line-height: 1.6; }
+    }
+    /* B's way back to the list: one floating text button, lifted paper, no shadow. */
+    .jump {
+      position: fixed; right: 18px; bottom: calc(44px + env(safe-area-inset-bottom)); z-index: 9;
+      display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px;
+      background: var(--color-surface); border: 1px solid var(--color-border-2); border-radius: var(--radius-pill);
+      font-size: 0.9375rem; font-weight: 600; color: var(--color-text-2);
+    }
+    .jump:hover { color: var(--color-text); }
+
+    /* Callouts that only make sense at one width. */
+    .annot--phone, .annot--tablet { display: none; }
+    @media (max-width: 767px) { body[data-variant='a'] .annot--phone { display: block; } }
+    @media (min-width: 768px) and (max-width: 1023px) { body[data-variant='a'] .annot--tablet { display: block; } }
+    body.clean .annot--phone, body.clean .annot--tablet { display: none; }
+  </style>
+</head>
+<body data-state="start" data-variant="a">
+  <span class="proto-label"></span>
+
+  <header class="nav-top">
+    <div class="nav-top__row">
+      <div class="nav-top__left">
+        <a class="nav-top__brand" href="cookbook.html">Fork<span>.</span></a>
+        <nav class="nav-top__links" aria-label="Main">
+          <a href="cookbook.html" aria-current="page">Cookbook</a>
+          <a href="journal.html">Journal</a>
+          <a href="friends.html">Friends</a>
+          <a href="discover.html">Discover</a>
+        </nav>
+      </div>
+      <div class="nav-top__right">
+        <a class="nav-top__new" href="editor.html?state=ordinary">+ New recipe</a>
+        <a class="avatar" href="#" aria-label="Maria Okafor, your profile">M</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="cook-head">
+    <div class="strip">
+      <div class="wrap strip__row">
+        <h1 class="strip__title">Cardamom Cinnamon Buns with Brown Butter Glaze</h1>
+        <p class="measure">
+          <span class="pair serves"><label for="serves">Serves</label>
+            <input class="s" id="serves" type="number" inputmode="decimal" min="0.25" step="any" value="12">
+            <input class="m" id="serves-m" type="number" inputmode="decimal" min="0.25" step="any" value="24" aria-label="Serves">
+          </span>
+          <span class="pair">Makes <b class="s">12 buns</b><b class="m dynamic">24 buns</b></span>
+          <span class="pair m"><a class="reset" href="cook.html?state=start">Reset</a></span>
+        </p>
+        <button class="btn-ghost pill" type="button" aria-pressed="true" data-href="recipe.html?state=owner">
+          <svg class="icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7.5h12M3.5 7.5v4a2 2 0 0 0 2 2h5a2 2 0 0 0 2-2v-4M6 5c0-1 1-1.2 1-2.5M9.5 5c0-1 1-1.2 1-2.5"/></svg>
+          <span>Done<span class="done-long"> cooking</span></span>
+        </button>
+      </div>
+    </div>
+    <nav class="section-tabs" aria-label="Recipe sections">
+      <button type="button" aria-pressed="true" data-tab="ingredients">Ingredients</button>
+      <button type="button" aria-pressed="false" data-tab="method">Method</button>
+    </nav>
+  </div>
+
+  <main class="wrap cook-main">
+    <div class="cook-status">
+      <p class="scaled-note m" role="status"><b>Scaled ×2</b> · pan sizes and oven temperatures not scaled</p>
+      <p class="wake">Screen stays on while cooking <span class="shipped">Shipped</span></p>
+    </div>
+    <p class="annot annot--phone"><strong>Why:</strong> the strip and the switch pin together. Each tab keeps its own scroll, so checking a quantity never loses your step.</p>
+    <p class="annot annot--tablet"><strong>Tablet:</strong> two columns hold at 834 on a 4/8 split; long lines wrap to two, and the list never leaves the method's side.</p>
+
+    <div class="cook-body" data-tab="ingredients">
+      <aside class="ings" id="ingredients" aria-labelledby="ings-h" data-ticks>
+        <div class="sec-head"><h2 class="eyebrow-label" id="ings-h">Ingredients</h2></div>
+
+        <h3 class="group-name grp">Dough</h3>
+        <ul>
+          <li><label class="ing"><input type="checkbox" data-mid><span class="box"></span><span><b class="s">1 cup</b><b class="m dynamic">2 cups</b> <span class="w s">(240 ml)</span><span class="w m dynamic">(480 ml)</span> whole milk, warmed</span></label></li>
+          <li><label class="ing"><input type="checkbox" data-mid><span class="box"></span><span><b class="s">7 g</b><b class="m dynamic">14 g</b> instant yeast</span></label></li>
+          <li><label class="ing"><input type="checkbox" data-mid><span class="box"></span><span><b class="s">¼ cup</b><b class="m dynamic">½ cup</b> <span class="w s">(50 g)</span><span class="w m dynamic">(100 g)</span> caster sugar</span></label></li>
+          <li><label class="ing"><input type="checkbox" data-mid><span class="box"></span><span><b class="s">1 large egg</b><b class="m dynamic">2 large eggs</b></span></label></li>
+          <li><label class="ing"><input type="checkbox" data-mid><span class="box"></span><span><b class="s">2⅓ cups</b><b class="m dynamic">4⅔ cups</b> <span class="w s">(295 g)</span><span class="w m dynamic">(590 g)</span> bread flour</span></label></li>
+          <li><label class="ing"><input type="checkbox" data-mid><span class="box"></span><span><b class="s">¾ tsp</b><b class="m dynamic">1½ tsp</b> fine salt</span></label></li>
+          <li><label class="ing"><input type="checkbox"><span class="box"></span><span><b class="s">1½ tsp</b><b class="m dynamic">3 tsp</b> ground cardamom</span></label></li>
+          <li><label class="ing"><input type="checkbox"><span class="box"></span><span><b class="s">¼ cup</b><b class="m dynamic">½ cup</b> <span class="w s">(55 g)</span><span class="w m dynamic">(110 g)</span> unsalted butter, softened</span></label></li>
+        </ul>
+
+        <h3 class="group-name grp">Filling</h3>
+        <ul>
+          <li><label class="ing"><input type="checkbox"><span class="box"></span><span><b class="s">½ cup</b><b class="m dynamic">1 cup</b> <span class="w s">(110 g)</span><span class="w m dynamic">(220 g)</span> unsalted butter, softened</span></label></li>
+          <li><label class="ing"><input type="checkbox"><span class="box"></span><span><b class="s">⅔ cup</b><b class="m dynamic">1⅓ cups</b> <span class="w s">(130 g)</span><span class="w m dynamic">(260 g)</span> light brown sugar</span></label></li>
+          <li><label class="ing"><input type="checkbox"><span class="box"></span><span><b class="s">1 tbsp</b><b class="m dynamic">2 tbsp</b> ground cinnamon</span></label></li>
+          <li><label class="ing"><input type="checkbox"><span class="box"></span><span><b class="s">1 tsp</b><b class="m dynamic">2 tsp</b> ground cardamom</span></label></li>
+          <li><label class="ing"><input type="checkbox"><span class="box"></span><span>pinch of salt</span></label></li>
+        </ul>
+
+        <h3 class="group-name grp">Glaze</h3>
+        <ul>
+          <li><label class="ing"><input type="checkbox"><span class="box"></span><span><b class="s">¼ cup</b><b class="m dynamic">½ cup</b> <span class="w s">(55 g)</span><span class="w m dynamic">(110 g)</span> unsalted butter</span></label></li>
+          <li><label class="ing"><input type="checkbox"><span class="box"></span><span><b class="s">1½ cups</b><b class="m dynamic">3 cups</b> <span class="w s">(180 g)</span><span class="w m dynamic">(360 g)</span> icing sugar</span></label></li>
+          <li><label class="ing"><input type="checkbox"><span class="box"></span><span><b class="s">2 tbsp</b><b class="m dynamic">4 tbsp</b> milk</span></label></li>
+          <li><label class="ing"><input type="checkbox"><span class="box"></span><span><b class="s">½ tsp</b><b class="m dynamic">1 tsp</b> vanilla extract</span></label></li>
+        </ul>
+
+        <div class="list-foot">
+          <p class="m">Scaled quantities are estimates.</p>
+          <button class="clear-ticks" type="button">Clear ticks</button>
+        </div>
+      </aside>
+
+      <section class="method" id="method" aria-labelledby="method-h" data-ticks>
+        <div class="sec-head"><h2 class="eyebrow-label" id="method-h">Method</h2></div>
+
+        <h3 class="group-name grp">Dough</h3>
+        <ol class="steps">
+          <li><label class="step"><input type="checkbox"><span class="step__n">1<span class="sr-only">.</span></span><span><span class="step__text">Warm the milk to about 40 °C, whisk in the yeast and sugar, and leave for 5 minutes until foamy.</span></span></label></li>
+          <li><label class="step"><input type="checkbox"><span class="step__n">2<span class="sr-only">.</span></span><span><span class="step__text">Add the egg, flour, salt and cardamom. Knead for 8 minutes, then work in the butter a piece at a time and knead 5 minutes more, until smooth and elastic.</span></span></label></li>
+          <li><label class="step"><input type="checkbox"><span class="step__n">3<span class="sr-only">.</span></span><span><span class="step__text">Cover and leave somewhere warm for about 1 hour, until doubled.</span></span></label></li>
+        </ol>
+
+        <h3 class="group-name grp">Shape and bake</h3>
+        <ol class="steps" start="4">
+          <li><label class="step"><input type="checkbox"><span class="step__n">4<span class="sr-only">.</span></span><span><span class="step__text">Beat the filling butter, brown sugar, cinnamon, cardamom and salt until smooth.</span></span></label></li>
+          <li><label class="step"><input type="checkbox"><span class="step__n">5<span class="sr-only">.</span></span><span><span class="step__text">Roll the dough to a 40 × 30 cm rectangle, spread the filling to the edges, roll up from the long side and cut into 12.</span></span></label></li>
+          <li><label class="step"><input type="checkbox"><span class="step__n">6<span class="sr-only">.</span></span><span><span class="step__text">Set the buns cut side up in a buttered 9x13 pan, cover and rise 45 minutes.</span><span class="step__flag m">9x13 pan · not scaled</span></span></label></li>
+          <li><label class="step"><input type="checkbox"><span class="step__n">7<span class="sr-only">.</span></span><span><span class="step__text">Bake at 200 °C / 400 °F for 22–25 minutes, until deep golden.</span><span class="step__flag m">200 °C / 400 °F · not scaled</span><span class="step__tip">If the tops brown before the middles are done, cover loosely with foil for the last 5 minutes.</span></span></label></li>
+        </ol>
+        <p class="annot m"><strong>Planned:</strong> the pan and temperature markers in steps 6 and 7. Today only Makes carries “not scaled”.</p>
+
+        <h3 class="group-name grp">Glaze</h3>
+        <ol class="steps" start="8">
+          <li><label class="step"><input type="checkbox"><span class="step__n">8<span class="sr-only">.</span></span><span><span class="step__text">Melt the butter over medium heat and keep swirling until it smells nutty and the solids turn brown. Cool 5 minutes.</span></span></label></li>
+          <li><label class="step"><input type="checkbox"><span class="step__n">9<span class="sr-only">.</span></span><span><span class="step__text">Whisk in the icing sugar, milk and vanilla, and spread over the buns while they are still warm.</span></span></label></li>
+        </ol>
+
+        <div class="list-foot"><button class="clear-ticks" type="button">Clear ticks</button></div>
+
+        <div class="method-end">
+          <button class="btn-ghost" type="button" data-href="recipe.html?state=owner">Done cooking</button>
+          <a class="text-btn" href="journal.html?state=log-form">Log this cook</a>
+          <span class="planned">Planned</span>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <a class="jump" href="#ingredients" data-variant-in="b" hidden>Ingredients ↑</a>
+
+  <script>
+    // Runs after state.js (deferred scripts finish before DOMContentLoaded).
+    document.addEventListener('DOMContentLoaded', function () {
+      // Midway: the six ingredients a cook has measured out so far.
+      if (document.body.dataset.state === 'midway') {
+        document.querySelectorAll('[data-mid]').forEach(function (c) { c.checked = true; });
+      }
+      // Done cooking returns to the recipe page.
+      document.querySelectorAll('button[data-href]').forEach(function (b) {
+        b.addEventListener('click', function () { location.href = b.dataset.href; });
+      });
+      // Clear ticks empties its own list and hands focus to its first box.
+      document.querySelectorAll('.clear-ticks').forEach(function (b) {
+        b.addEventListener('click', function () {
+          var list = b.closest('[data-ticks]');
+          list.querySelectorAll('input:checked').forEach(function (c) { c.checked = false; });
+          list.querySelector('input').focus();
+        });
+      });
+      // Phone section switch: one section at a time; each remembers its own
+      // scroll, so a look at the quantities comes back to the same step.
+      var cookBody = document.querySelector('.cook-body');
+      var main = document.querySelector('.cook-main');
+      var head = document.querySelector('.cook-head');
+      var tabs = document.querySelectorAll('.section-tabs button');
+      var saved = {};
+      tabs.forEach(function (b) {
+        b.addEventListener('click', function () {
+          var from = cookBody.dataset.tab, to = b.dataset.tab;
+          if (from === to) return;
+          saved[from] = window.scrollY;
+          cookBody.dataset.tab = to;
+          tabs.forEach(function (t) { t.setAttribute('aria-pressed', String(t === b)); });
+          var top = main.getBoundingClientRect().top + window.scrollY - head.offsetHeight;
+          window.scrollTo(0, to in saved ? saved[to] : Math.min(window.scrollY, Math.max(0, top)));
+        });
+      });
+    });
+  </script>
+</body>
+</html>

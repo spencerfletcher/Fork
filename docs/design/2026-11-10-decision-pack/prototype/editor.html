@@ -1,0 +1,678 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Edit recipe · Fork</title>
+<link rel="stylesheet" href="../assets/fork.css">
+<script src="../assets/state.js" defer></script>
+<style>
+  .proto-label::after { content: ' · editor only'; }
+
+  /* Prototype notes (Try this, Limitations): board chrome, hidden by ?clean=1. */
+  .proto-notes { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+  .proto-notes .annot, .limits.annot { max-width: 72ch; margin: 0; }
+  .annot summary { cursor: pointer; font-weight: 600; color: var(--color-text); min-height: 24px; }
+  .annot ol, .annot ul { padding-left: 1.2em; margin-top: 6px; }
+  .annot ol { list-style: decimal; }
+  .annot ul { list-style: disc; }
+  .annot li + li { margin-top: 3px; }
+  .limits { margin-top: 32px !important; }
+  .limits h2 { font: 600 0.875rem/1.4 var(--font-sans); color: var(--color-text); margin-bottom: 4px; }
+
+  .editor-head { display: flex; flex-direction: column; gap: 6px; margin-bottom: 24px; }
+  .form-col { display: flex; flex-direction: column; gap: var(--space-5); min-width: 0; }
+
+  /* Serves · Makes · Prep · Cook in one row; Makes is words, so it gets the room. */
+  .measure-row { grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.7fr) minmax(0, 0.9fr) minmax(0, 0.9fr); row-gap: var(--space-2); }
+  .measure-row .hint { grid-column: 1 / -1; }
+  @media (max-width: 699px) { .measure-row { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+  /* Photo (PhotoField, static here). */
+  .photo-row { display: flex; gap: 16px; align-items: flex-end; }
+  .photo-row img { width: 168px; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--radius-md); }
+  .photo-actions { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+  @media (max-width: 699px) { .photo-row img { width: 132px; } }
+
+  /* Tags (TagInput, static here). */
+  .tag-box { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; background: var(--color-surface); border: 1px solid var(--color-input-border); border-radius: var(--radius-md); padding: 6px 8px; }
+  .tag-box input:not([type]) { border: 0; padding: 4px; flex: 1; min-width: 120px; background: transparent; }
+  .tag-pill { display: inline-flex; align-items: center; gap: 2px; font-size: 0.875rem; color: var(--color-tag); border: 1px solid var(--color-tag-border); border-radius: var(--radius-pill); padding: 1px 2px 1px 10px; }
+  .tag-pill button { position: relative; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; color: var(--color-text-3); border-radius: 50%; }
+  .tag-pill button::after { content: ''; position: absolute; inset: -11px; }
+  .tag-pill svg { width: 12px; height: 12px; }
+
+  .choices { display: flex; flex-direction: column; gap: 8px; }
+
+  /* Box header: the label left, Insert right, on one line. */
+  .field-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 24px; }
+  .insert-toggle { display: inline-flex; align-items: center; gap: 4px; font-size: 0.875rem; line-height: 1.2; font-weight: 600; color: var(--color-text-2); padding: 10px 6px; margin: -10px -6px; border-radius: var(--radius-sm); }
+  .insert-toggle:hover { color: var(--color-text); }
+  @media (max-width: 699px) { .insert-toggle { padding: 14px 8px; margin: -14px -8px; } }
+  .insert-toggle svg { width: 14px; height: 14px; transition: transform 0.15s ease; }
+  .insert-toggle[aria-expanded='true'] svg { transform: rotate(180deg); }
+  .insert-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .insert-row .btn-ghost { gap: 6px; }
+  .insert-row .mark { font-weight: 600; color: var(--color-text-3); }
+
+  /* The live box: one block per line. Ordinary lines read like the shipped
+     textarea; a "# Name" line is Bitter 600, a step larger, with the # in Ink 3.
+     The # is painted by a background clipped to the text (Ink 3 up to --mk,
+     the #'s right edge, ink after it, first visual line only) so the script
+     never splits a text node: the caret and the native undo stack survive. */
+  .ed {
+    display: block; width: 100%; background: var(--color-surface); border: 1px solid var(--color-input-border);
+    border-radius: var(--radius-md); padding: 9px 12px; color: var(--color-text); caret-color: var(--color-text);
+    font-family: var(--font-sans); font-size: 0.9375rem; line-height: 1.4;
+    white-space: pre-wrap; overflow-wrap: anywhere; cursor: text;
+  }
+  .ed--ing { min-height: calc(11 * 1.4em + 20px); }
+  .ed--steps { min-height: calc(14 * 1.4em + 20px); }
+  .ed[aria-invalid='true'] { border-color: var(--color-remove); }
+  .ed .h {
+    font-family: var(--font-serif); font-weight: 600; font-size: 1.1875em; line-height: 1.35; margin-top: 0.2em;
+    color: transparent;
+    background-image: linear-gradient(90deg, var(--color-text-3) var(--mk, 0px), var(--color-text) var(--mk, 0px)), linear-gradient(var(--color-text), var(--color-text));
+    background-size: 100% 1.35em, 100% 100%; background-repeat: no-repeat;
+    -webkit-background-clip: text; background-clip: text;
+  }
+  /* "#" or "# " while the name is still to come: the mark goes soft, no jump in size. */
+  .ed .h-empty { color: var(--color-text-3); }
+  /* The browser's own editing can wrap moved text in an inline-styled span
+     (Chrome does when a line is merged into a heading). Inert here, and the
+     serializer reads text only, so nothing styled is ever sent. */
+  .ed :not(div, br) { all: unset !important; }
+  @media (forced-colors: active) { .ed .h { color: CanvasText; background: none; } }
+  @media (max-width: 699px) { .ed { font-size: 1rem; line-height: 1.5; } .ed--ing { min-height: calc(11 * 1.5em + 20px); } .ed--steps { min-height: calc(14 * 1.5em + 20px); } }
+
+  /* Read-back (ReadBack.svelte): the hint's voice, group names ink. */
+  .readback { display: flex; flex-wrap: wrap; gap: 2px 0; font-size: 0.875rem; line-height: 1.5; color: var(--color-text-3); }
+  .readback b { color: var(--color-text); font-weight: 600; }
+  .readback .lead { margin-right: 0.4em; }
+  .readback .part + .part::before { content: '·' / ''; padding: 0 0.5em; }
+
+  .field-message { border-top: 1px solid var(--color-border); padding-top: var(--space-5); }
+  .offline { max-width: none; }
+
+  /* What would be sent: board chrome. */
+  .sent { margin-top: 24px; }
+  .sent summary { cursor: pointer; font-weight: 600; min-height: 24px; }
+  .sent pre { margin: 8px 0 0; padding: 12px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); font: 0.8125rem/1.5 var(--font-mono); white-space: pre-wrap; overflow-wrap: anywhere; max-height: 520px; overflow: auto; }
+</style>
+</head>
+<body>
+<span class="proto-label"></span>
+
+<header class="nav-top">
+  <div class="nav-top__row">
+    <div class="nav-top__left">
+      <a class="nav-top__brand" href="../screens/cookbook.html">Fork<span>.</span></a>
+      <nav class="nav-top__links" aria-label="Main">
+        <a href="../screens/cookbook.html" aria-current="page">Cookbook</a>
+        <a href="../screens/journal.html">Journal</a>
+        <a href="../screens/friends.html">Friends</a>
+        <a href="../screens/discover.html">Discover</a>
+      </nav>
+    </div>
+    <div class="nav-top__right">
+      <a class="nav-top__new" href="../screens/editor.html?state=ordinary">+ New recipe</a>
+      <a class="avatar" href="#" aria-label="Maria Okafor, your profile">M</a>
+    </div>
+  </div>
+</header>
+
+<main class="page">
+  <div class="proto-notes">
+    <details class="annot">
+      <summary>Try this</summary>
+      <ol>
+        <li>In Ingredients, click at the end of “pinch of salt”, press Enter and type <code># Spice</code>. The line grows and the # goes soft as you type the name.</li>
+        <li>Put the caret in the middle of a line, open <strong>Insert</strong> and choose <strong>Section heading</strong>. A new line appears under it with “Section name” selected; type over it.</li>
+        <li>Copy these three lines from another app and paste them into Method:<br><code># Filling</code> / <code>Mix the sugar and spices.</code> / <code>Spread to the edges.</code></li>
+        <li>Press Cmd+Z (Ctrl+Z) three times, then Shift+Cmd+Z. Typing, the inserted heading and the paste undo and redo like any text box.</li>
+        <li>Select from the middle of the Dough list down past <code># Filling</code>, copy, and paste it at the end of Method. Same lines, same styling.</li>
+        <li>Type a bare <code>#</code> on its own line, empty the Title, and press Save.</li>
+        <li>Open “What would be sent” at the bottom: it is the plain text the server receives, and how it splits.</li>
+      </ol>
+    </details>
+  </div>
+
+  <div class="editor-head">
+    <a class="back-link" href="../screens/recipe.html?state=owner">← Cardamom Cinnamon Buns with Brown Butter Glaze</a>
+    <h1>Edit recipe</h1>
+    <p class="status-live" id="status" role="status"></p>
+  </div>
+
+  <form class="form" id="form" novalidate>
+    <div class="grid-5-7">
+      <div class="form-col">
+        <div class="field">
+          <label for="title">Title <span class="required-mark" aria-hidden="true">*</span></label>
+          <textarea id="title" name="title" rows="1" required data-describe="title-error">Cardamom Cinnamon Buns with Brown Butter Glaze</textarea>
+        </div>
+
+        <div class="field">
+          <label for="description">Description</label>
+          <textarea id="description" name="description" rows="3">Soft enriched buns with cardamom in the dough and the filling, finished with a nutty brown butter glaze while still warm.</textarea>
+        </div>
+
+        <div class="field">
+          <span class="label">Photo</span>
+          <div class="photo-row">
+            <img src="../assets/photos/p3.jpg" alt="Current photo">
+            <div class="photo-actions">
+              <button type="button" class="btn-ghost btn-sm">Replace photo</button>
+              <button type="button" class="text-btn">Remove photo</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="field-row measure-row">
+          <div class="field"><label for="servings">Serves</label><input id="servings" name="servings" type="number" min="1" value="12"></div>
+          <div class="field"><label for="makes">Makes <span class="optional">optional</span></label><input id="makes" name="makes" type="text" value="12 buns" placeholder="12 buns, 1 L stock" data-describe="makes-error makes-hint"></div>
+          <div class="field"><label for="prep">Prep (min)</label><input id="prep" name="prep" type="number" min="0" value="45"></div>
+          <div class="field"><label for="cook">Cook (min)</label><input id="cook" name="cook" type="number" min="0" value="25"></div>
+          <p class="hint" id="makes-hint">Makes is what one batch produces, when that isn't portions.</p>
+        </div>
+
+        <fieldset class="field">
+          <legend>Tags</legend>
+          <div class="tag-box">
+            <span class="tag-pill">baking<button type="button" aria-label="Remove baking"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></span>
+            <span class="tag-pill">breakfast<button type="button" aria-label="Remove breakfast"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></span>
+            <span class="tag-pill">weekend<button type="button" aria-label="Remove weekend"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></span>
+            <input aria-label="Add a tag" placeholder="Add a tag">
+          </div>
+        </fieldset>
+
+        <fieldset class="field">
+          <legend>Who can see this recipe</legend>
+          <div class="choices">
+            <label class="choice"><input type="radio" name="visibility" value="private"><b><svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg>Only me</b><span>Only you can see it. You can share it later.</span></label>
+            <label class="choice"><input type="radio" name="visibility" value="public" checked><b><svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="8" r="6"/><path d="M2 8h12M8 2c1.8 1.7 2.6 3.7 2.6 6S9.8 12.3 8 14C6.2 12.3 5.4 10.3 5.4 8S6.2 3.7 8 2z"/></svg>Public</b><span>Anyone can find, save and adapt it.</span></label>
+          </div>
+        </fieldset>
+      </div>
+
+      <div class="form-col">
+        <div class="field" data-box="ingredients">
+          <div class="field-head">
+            <span class="label" id="ingredients-label">Ingredients <span class="required-mark" aria-hidden="true">*</span></span>
+            <button type="button" class="insert-toggle" aria-expanded="false" aria-controls="ingredients-insert">Insert<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+          </div>
+          <div class="insert-row" id="ingredients-insert" hidden>
+            <button type="button" class="btn-ghost btn-sm" data-insert="heading"><span class="mark" aria-hidden="true">#</span>Section heading</button>
+          </div>
+          <div class="ed ed--ing" id="ingredients" contenteditable="true" role="textbox" aria-multiline="true" aria-required="true" aria-labelledby="ingredients-label" spellcheck="true" data-items="ingredients" data-describe="ingredients-error ingredients-readback ingredients-hint"></div>
+          <p class="readback" id="ingredients-readback" hidden></p>
+          <p class="hint" id="ingredients-hint">One per line: quantity, unit, ingredient — 2¼ cups flour. A line like <code># Dough</code> starts a group.</p>
+        </div>
+
+        <div class="field" data-box="steps">
+          <div class="field-head">
+            <span class="label" id="steps-label">Method <span class="required-mark" aria-hidden="true">*</span></span>
+            <button type="button" class="insert-toggle" aria-expanded="false" aria-controls="steps-insert">Insert<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+          </div>
+          <div class="insert-row" id="steps-insert" hidden>
+            <button type="button" class="btn-ghost btn-sm" data-insert="heading"><span class="mark" aria-hidden="true">#</span>Section heading</button>
+          </div>
+          <div class="ed ed--steps" id="steps" contenteditable="true" role="textbox" aria-multiline="true" aria-required="true" aria-labelledby="steps-label" spellcheck="true" data-items="steps" data-describe="steps-error steps-readback steps-hint"></div>
+          <p class="readback" id="steps-readback" hidden></p>
+          <p class="hint" id="steps-hint">Separate steps with a blank line. Add a note under a step with <code>tip:</code>, <code>warning:</code> or <code>substitution:</code> on its own line. A line like <code># Bake</code> starts a group.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="field field-message">
+      <label for="commitMessage">What changed? <span class="optional">optional</span></label>
+      <input id="commitMessage" name="commitMessage" type="text" placeholder="What changed?" aria-describedby="commitMessage-hint">
+      <p class="hint" id="commitMessage-hint">Left blank, saves as: Brown butter glaze instead of cream cheese icing</p>
+    </div>
+
+    <p class="annot offline"><label class="check-row"><input type="checkbox" id="offline"> Simulate server unreachable</label></p>
+
+    <p class="form-error" id="form-error" role="alert" hidden></p>
+
+    <div class="form-actions">
+      <button type="submit" class="btn-primary" id="save">Save</button>
+      <a class="btn-ghost" href="../screens/recipe.html?state=owner">Cancel</a>
+    </div>
+  </form>
+
+  <details class="sent">
+    <summary>What would be sent</summary>
+    <pre id="sent"></pre>
+  </details>
+
+  <section class="annot limits" aria-labelledby="limits-h">
+    <h2 id="limits-h">How this works, and its limits</h2>
+    <ul>
+      <li><strong>Approach:</strong> each box is a <code>contenteditable</code> div with one block per line. After each input the script sets a class on a line, and one CSS variable (where the # ends), only when they change. It never rewrites text, so the caret, autocorrect and the browser's own undo stack are left alone. The soft # is a two-colour background clipped to the text, because <code>::first-letter</code> colours “# D” in both engines and the CSS Highlight API did not paint in the WebKit build here. Paste goes in as plain text through <code>insertText</code>, so it lands on the same undo stack.</li>
+      <li><strong>Verified, 9 Nov, in Playwright Chromium and WebKit (Safari 27.2 engine), 50 and 46 scripted checks, all passing:</strong> typing <code># Spice</code> styles the line (larger, 600, # measured); Insert → Section heading under a mid-line caret adds a line below with “Section name” selected, and typing replaces it; a pasted multi-line block with a <code># Drizzle</code> line splits the same way and arrives as plain text with no HTML; typed, inserted and pasted headings send identical text and parse identically; Cmd+Z undoes typing in runs (as a textarea does), the insert in one step and a paste in one step, and Shift+Cmd+Z redoes; Backspace merging a line into a heading undoes cleanly; Cmd+B does nothing; boxes grow; Save shows the shipped messages with aria-invalid, counts down as fields are fixed, focuses the first field in error, keeps everything on “server unreachable”, then saves as v4.</li>
+      <li><strong>Verified in Chromium only:</strong> real Cmd+C across a heading puts plain lines on the clipboard, and Cmd+V of them styles the heading. Shift+Tab from a box reaches Insert, Enter and Space open it, and Tab then Enter inserts. In WebKit the same works with Option+Tab, as Safari skips buttons on Tab by default.</li>
+      <li><strong>Not verified:</strong> real Safari on a Mac or iPhone, Firefox, iOS and Android autocorrect, dictation and the text-selection handles, a screen reader. WebKit paste was checked with a synthetic paste event, not the system clipboard.</li>
+      <li><strong>Known limits:</strong> dragging text inside a box copies rather than moves it (drops are forced to plain text). In Chrome, merging a line into a heading leaves a hidden styled span in the box (made inert by CSS, never sent). Redraws wait one task after each keystroke, because a same-moment DOM change ends Chrome's undo run. Photo, Tags and Cancel are pictures here. The shipped textarea cannot vary size by line, so shipping A means this box replaces it.</li>
+    </ul>
+  </section>
+</main>
+
+<script>
+(function () {
+  'use strict';
+
+  // ── Content (CONTENT.md, the buns). The steps are printed as the shipped
+  //    joinGroups prints them: blank line between steps, "# Name" with a
+  //    blank line above it.
+  var INGREDIENTS = [
+    '# Dough', '1 cup (240 ml) whole milk, warmed', '7 g instant yeast', '¼ cup (50 g) caster sugar', '1 large egg',
+    '2⅓ cups (295 g) bread flour', '¾ tsp fine salt', '1½ tsp ground cardamom', '¼ cup (55 g) unsalted butter, softened', '',
+    '# Filling', '½ cup (110 g) unsalted butter, softened', '⅔ cup (130 g) light brown sugar', '1 tbsp ground cinnamon',
+    '1 tsp ground cardamom', 'pinch of salt', '',
+    '# Glaze', '¼ cup (55 g) unsalted butter', '1½ cups (180 g) icing sugar', '2 tbsp milk', '½ tsp vanilla extract'
+  ].join('\n');
+  var STEPS = [
+    '# Dough',
+    'Warm the milk to about 40 °C, whisk in the yeast and sugar, and leave for 5 minutes until foamy.', '',
+    'Add the egg, flour, salt and cardamom. Knead for 8 minutes, then work in the butter a piece at a time and knead 5 minutes more, until smooth and elastic.', '',
+    'Cover and leave somewhere warm for about 1 hour, until doubled.', '',
+    '# Shape and bake',
+    'Beat the filling butter, brown sugar, cinnamon, cardamom and salt until smooth.', '',
+    'Roll the dough to a 40 × 30 cm rectangle, spread the filling to the edges, roll up from the long side and cut into 12.', '',
+    'Set the buns cut side up in a buttered 9x13 pan, cover and rise 45 minutes.', '',
+    'Bake at 200 °C / 400 °F for 22–25 minutes, until deep golden.',
+    'tip: If the tops brown before the middles are done, cover loosely with foil for the last 5 minutes.', '',
+    '# Glaze',
+    'Melt the butter over medium heat and keep swirling until it smells nutty and the solids turn brown. Cool 5 minutes.', '',
+    'Whisk in the icing sugar, milk and vanilla, and spread over the buns while they are still warm.'
+  ].join('\n');
+
+  // ── Shipped rules, ported from src/lib/recipes (groups.ts, steps.ts,
+  //    ingredients.ts, validation.ts, limits.ts). Same regexes, same words.
+  var HEADING = /^\s*#(?:\s+(.*))?$/;
+  var MAX_GROUP_NAME = 60;
+  var MAX_MAKES = 80;
+  var MSG = {
+    title: 'Title is required',
+    ingredients: 'At least one ingredient is required',
+    steps: 'At least one step is required',
+    makes: 'Makes is too long (' + MAX_MAKES + ' characters max)'
+  };
+  function plural(n, w) { return n + ' ' + w + (n === 1 ? '' : 's'); }
+  function unnamedGroupMessage(items) { return 'A # line needs a group name after it, like ' + (items === 'ingredients' ? '# Dough' : '# Bake') + '.'; }
+  function emptyGroupMessage(name, items) { return '“' + name + '” has no ' + items + '. Add some under it or delete the heading.'; }
+  function groupNameTooLong(items) { return (items === 'ingredients' ? 'An ingredient' : 'A step') + ' group name is too long (' + MAX_GROUP_NAME + ' characters max)'; }
+
+  function splitGroups(text) {
+    var sections = [{ group: undefined, lines: [] }];
+    text.replace(/\r\n/g, '\n').split('\n').forEach(function (line) {
+      var h = HEADING.exec(line);
+      if (h) sections.push({ group: (h[1] || '').trim(), lines: [] });
+      else sections[sections.length - 1].lines.push(line);
+    });
+    return sections
+      .map(function (s) { return { group: s.group, text: s.lines.join('\n') }; })
+      .filter(function (s, i) { return i > 0 || s.text.trim().length > 0; });
+  }
+  function parseLines(text) { return text.split('\n').map(function (l) { return l.trim(); }).filter(Boolean); }
+  function parseBlocks(text) {
+    return text.trim().split(/\n\s*\n/)
+      .reduce(function (all, b) { return all.concat(b.split(/\n(?=\s*\d+[.)]\s)/)); }, [])
+      .map(function (b) { return b.replace(/^\s*\d+[.)]\s+/, ''); })
+      .filter(function (b) { return b.trim().length > 0; })
+      .map(function (b) { return b.trim(); });
+  }
+  function parseGrouped(text, items) {
+    return splitGroups(text).map(function (s) {
+      return { group: s.group, rows: items === 'ingredients' ? parseLines(s.text) : parseBlocks(s.text) };
+    });
+  }
+  function readBack(sections, items) {
+    var named = sections.filter(function (s) { return s.group !== undefined; }).length;
+    if (named === 0) return null;
+    var count = 0;
+    var parts = sections.map(function (s) {
+      var first = count + 1;
+      count += s.rows.length;
+      var detail = s.rows.length === 0 ? 'empty'
+        : items === 'ingredients' ? plural(s.rows.length, 'line')
+        : first === count ? String(first) : first + '–' + count;
+      return { name: s.group, detail: detail };
+    });
+    var groups = plural(named, 'group');
+    return { lead: items === 'steps' ? 'Reads as ' + plural(count, 'step') + ' in ' + groups + ':' : 'Reads as ' + groups + ':', parts: parts };
+  }
+  function boxError(sections, items) {
+    var empty = sections.filter(function (s) { return s.group !== undefined && s.rows.length === 0; })[0];
+    if (sections.some(function (s) { return s.group === ''; })) return unnamedGroupMessage(items);
+    if (empty) return emptyGroupMessage(empty.group, items);
+    if (sections.some(function (s) { return (s.group || '').length > MAX_GROUP_NAME; })) return groupNameTooLong(items);
+    if (!sections.some(function (s) { return s.rows.length > 0; })) return MSG[items];
+    return '';
+  }
+
+  // ── The live box.
+  var BLOCK = /^(DIV|P|LI|PRE|BLOCKQUOTE|H[1-6])$/;
+  var boxes = Array.prototype.slice.call(document.querySelectorAll('.ed'));
+
+  function fill(box, text) {
+    box.textContent = '';
+    text.split('\n').forEach(function (line) {
+      var div = document.createElement('div');
+      if (line) div.textContent = line; else div.appendChild(document.createElement('br'));
+      box.appendChild(div);
+    });
+  }
+
+  // The box as lines of plain text: each block is a line, a <br> ends one,
+  // a trailing <br> in a block is only its placeholder.
+  function linesOf(root) {
+    var out = [], cur = null;
+    root.childNodes.forEach(function (n) {
+      if (n.nodeType === 3) {
+        if (!n.data) return;
+        n.data.split('\n').forEach(function (part, i) {
+          if (i > 0) { out.push(cur || ''); cur = null; }
+          cur = (cur || '') + part;
+        });
+      } else if (n.nodeName === 'BR') {
+        out.push(cur === null ? '' : cur); cur = null;
+      } else if (BLOCK.test(n.nodeName)) {
+        if (cur !== null) { out.push(cur); cur = null; }
+        var inner = linesOf(n);
+        out.push.apply(out, inner.length ? inner : ['']);
+      } else if (n.nodeType === 1) {
+        var inl = linesOf(n);
+        inl.forEach(function (part, i) {
+          if (i > 0) { out.push(cur || ''); cur = null; }
+          cur = (cur || '') + part;
+        });
+      }
+    });
+    if (cur !== null) out.push(cur);
+    return out;
+  }
+  function textOf(box) { return linesOf(box).join('\n').replace(/ /g, ' '); }
+
+  // A range over characters [start, end) of a line's text.
+  function rangeIn(el, start, end) {
+    var walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), n, at = 0, r = document.createRange(), started = false;
+    while ((n = walker.nextNode())) {
+      if (!started && start <= at + n.length) { r.setStart(n, start - at); started = true; }
+      if (started && end <= at + n.length) { r.setEnd(n, end - at); return r; }
+      at += n.length;
+    }
+    return null;
+  }
+
+  // Attributes only, and only when the value changes: no text node is
+  // touched, and an unchanged line is not written to at all (any write
+  // closes Chrome's run of typing, so Cmd+Z would undo a letter at a time).
+  function style(box) {
+    Array.prototype.forEach.call(box.children, function (line) {
+      if (!BLOCK.test(line.nodeName)) return;
+      var text = line.textContent.replace(/ /g, ' ');
+      var h = HEADING.exec(text);
+      var named = !!h && (h[1] || '').trim() !== '';
+      var want = named ? 'h' : h ? 'h-empty' : '';
+      if ((line.getAttribute('class') || '') !== want) {
+        if (want) line.setAttribute('class', want); else line.removeAttribute('class');
+      }
+      var mk = '';
+      if (named) {
+        var r = rangeIn(line, text.indexOf('#'), text.indexOf('#') + 1);
+        if (r) mk = (r.getBoundingClientRect().right - line.getBoundingClientRect().left).toFixed(1) + 'px';
+      }
+      if (line.style.getPropertyValue('--mk') !== mk) {
+        if (mk) line.style.setProperty('--mk', mk); else line.removeAttribute('style');
+      }
+    });
+  }
+
+  function renderReadBack(box) {
+    var items = box.dataset.items;
+    var rb = readBack(parseGrouped(textOf(box), items), items);
+    var el = document.getElementById(items + '-readback');
+    el.textContent = '';
+    el.hidden = !rb;
+    if (rb) {
+      var lead = document.createElement('span'); lead.className = 'lead'; lead.textContent = rb.lead; el.appendChild(lead);
+      rb.parts.forEach(function (p) {
+        // A real space between parts, for a screen reader and a copy; the flex row drops it.
+        el.appendChild(document.createTextNode(' '));
+        var part = document.createElement('span'); part.className = 'part';
+        if (p.name === undefined) part.appendChild(document.createTextNode('Ungrouped'));
+        else { var b = document.createElement('b'); b.textContent = p.name || 'No name'; part.appendChild(b); }
+        part.appendChild(document.createTextNode(' ' + p.detail));
+        el.appendChild(part);
+      });
+    }
+    describe(box);
+  }
+
+  function renderSent() {
+    var out = [];
+    boxes.forEach(function (box) {
+      var items = box.dataset.items, text = textOf(box);
+      out.push('── ' + items + ' (text, as sent) ──', text, '', '── ' + items + ' (as the server reads it) ──');
+      parseGrouped(text, items).forEach(function (s) {
+        out.push(s.group === undefined ? '(no group)' : '[' + (s.group || 'no name') + ']');
+        s.rows.forEach(function (row) { out.push('  · ' + row.replace(/\n/g, ' ⏎ ')); });
+      });
+      out.push('');
+    });
+    document.getElementById('sent').textContent = out.join('\n');
+  }
+
+  // aria-describedby from whichever of the listed ids are present and shown.
+  function describe(el) {
+    var ids = (el.dataset.describe || '').split(' ').filter(function (id) {
+      var d = document.getElementById(id); return d && !d.hidden;
+    });
+    var value = ids.join(' ');
+    // Written only on change: a write to the box closes Chrome's typing run (see style()).
+    if ((el.getAttribute('aria-describedby') || '') === value) return;
+    if (value) el.setAttribute('aria-describedby', value); else el.removeAttribute('aria-describedby');
+  }
+
+  // The last caret in each box, so Insert works after focus moved to the toolbar.
+  var lastRange = new Map();
+  // selectionchange is dispatched later, so blur (synchronous) saves it too:
+  // a quick Shift+Tab to Insert must not beat it.
+  function saveCaret() {
+    var sel = getSelection();
+    if (!sel.rangeCount) return;
+    boxes.forEach(function (box) { if (box.contains(sel.anchorNode)) lastRange.set(box, sel.getRangeAt(0).cloneRange()); });
+  }
+  document.addEventListener('selectionchange', saveCaret);
+  boxes.forEach(function (box) { box.addEventListener('blur', saveCaret); });
+
+  function lineOf(node, box) {
+    while (node && node.parentNode !== box) node = node.parentNode;
+    return node && node !== box && BLOCK.test(node.nodeName) ? node : null;
+  }
+
+  // Section heading: "# Section name" on its own line, the name selected.
+  // At the start of a line it goes above it; mid-line or at the end it goes
+  // on a new line below, so no ingredient is ever split. One insertText call,
+  // so it is one step on the browser's undo stack.
+  function insertHeading(box) {
+    var NAME = 'Section name', TEXT = '# ' + NAME;
+    var sel = getSelection();
+    var r = lastRange.get(box);
+    box.focus();
+    if (!r || !box.contains(r.startContainer)) { r = document.createRange(); r.selectNodeContents(box); r.collapse(false); }
+    r = r.cloneRange(); r.collapse(true);
+    var line = lineOf(r.startContainer, box);
+    var lineText = line ? line.textContent : '';
+    var before = 0;
+    if (line) { var pre = document.createRange(); pre.setStart(line, 0); pre.setEnd(r.startContainer, r.startOffset); before = pre.toString().length; }
+    var above = false, insert;
+    if (lineText.trim() === '') insert = TEXT;
+    else if (before === 0) { insert = TEXT + '\n'; above = true; }
+    else { r.selectNodeContents(line); r.collapse(false); insert = '\n' + TEXT; }
+    sel.removeAllRanges(); sel.addRange(r);
+    document.execCommand('insertText', false, insert);
+    var at = lineOf(getSelection().anchorNode, box);
+    var target = above && at ? at.previousElementSibling : at;
+    if (!target || target.textContent.indexOf(TEXT) === -1) {
+      target = Array.prototype.filter.call(box.children, function (l) { return l.textContent.indexOf(TEXT) !== -1; }).pop();
+    }
+    if (target) {
+      var i = target.textContent.indexOf(TEXT) + 2;
+      var nameRange = rangeIn(target, i, i + NAME.length);
+      if (nameRange) { sel.removeAllRanges(); sel.addRange(nameRange); }
+    }
+  }
+
+  boxes.forEach(function (box) {
+    // No bold, italic or other rich formatting from shortcuts.
+    box.addEventListener('beforeinput', function (e) { if (/^format/.test(e.inputType)) e.preventDefault(); });
+    // Paste is plain text, through the editing command, so undo still covers it.
+    box.addEventListener('paste', function (e) {
+      e.preventDefault();
+      var text = e.clipboardData.getData('text/plain');
+      if (text) document.execCommand('insertText', false, text.replace(/\r\n?/g, '\n'));
+    });
+    // A drop is plain text too (dragging inside a box therefore copies).
+    box.addEventListener('drop', function (e) {
+      var text = e.dataTransfer && e.dataTransfer.getData('text/plain');
+      if (!text) return;
+      e.preventDefault();
+      var r = document.caretRangeFromPoint ? document.caretRangeFromPoint(e.clientX, e.clientY) : null;
+      if (!r && document.caretPositionFromPoint) {
+        var p = document.caretPositionFromPoint(e.clientX, e.clientY);
+        if (p) { r = document.createRange(); r.setStart(p.offsetNode, p.offset); }
+      }
+      if (r) { var s = getSelection(); s.removeAllRanges(); s.addRange(r); }
+      document.execCommand('insertText', false, text.replace(/\r\n?/g, '\n'));
+    });
+    // Every redraw waits a task. Chrome ends its run of typing (one Cmd+Z per
+    // run) when the page replaces DOM nodes inside the input event itself,
+    // even outside the box; a moment later, it keeps the run.
+    box.addEventListener('input', function () { setTimeout(function () { style(box); renderReadBack(box); renderSent(); }); });
+    document.getElementById(box.dataset.items + '-label').addEventListener('click', function () { box.focus(); });
+    if ('ResizeObserver' in window) new ResizeObserver(function () { style(box); }).observe(box);
+  });
+
+  document.querySelectorAll('.insert-toggle').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var open = btn.getAttribute('aria-expanded') !== 'true';
+      btn.setAttribute('aria-expanded', String(open));
+      document.getElementById(btn.getAttribute('aria-controls')).hidden = !open;
+    });
+  });
+  document.querySelectorAll('[data-insert="heading"]').forEach(function (btn) {
+    var box = btn.closest('.field').querySelector('.ed');
+    // Keep the caret in the box when the button is pressed with a mouse.
+    btn.addEventListener('mousedown', function (e) { e.preventDefault(); });
+    btn.addEventListener('click', function () { insertHeading(box); });
+  });
+
+  // ── Save state and validation.
+  var form = document.getElementById('form');
+  var status = document.getElementById('status');
+  var saveBtn = document.getElementById('save');
+  var formError = document.getElementById('form-error');
+  var NETWORK = "Couldn't reach the server. Your changes are still here. Try again.";
+  var version = 3, phase = 'opened', errors = {};
+
+  function v(n) { return '<span class="mono-id">v' + n + '</span>'; }
+  function renderStatus() {
+    var count = Object.keys(errors).filter(function (k) { return errors[k]; }).length;
+    status.classList.toggle('is-error', phase === 'blocked' || phase === 'network');
+    if (phase === 'blocked') status.innerHTML = "Couldn't save: <strong>" + plural(count, 'field') + ' need' + (count === 1 ? 's' : '') + ' attention</strong>';
+    else if (phase === 'network') status.textContent = NETWORK;
+    else if (phase === 'saved') status.innerHTML = 'Saved as ' + v(version);
+    else if (phase === 'edited') status.innerHTML = 'Editing ' + v(version) + ' · <strong>Unsaved changes</strong> · saves as ' + v(version + 1);
+    else status.innerHTML = 'Editing ' + v(version) + ' · saves as ' + v(version + 1);
+  }
+
+  var FIELDS = ['title', 'makes', 'ingredients', 'steps'];
+  function check(name) {
+    var el = document.getElementById(name);
+    if (name === 'title') return el.value.trim() ? '' : MSG.title;
+    if (name === 'makes') return el.value.trim().length > MAX_MAKES ? MSG.makes : '';
+    return boxError(parseGrouped(textOf(el), name), name);
+  }
+  function showError(name, message) {
+    errors[name] = message;
+    var el = document.getElementById(name);
+    var p = document.getElementById(name + '-error');
+    if (message) {
+      if (!p) {
+        p = document.createElement('p'); p.className = 'error'; p.id = name + '-error'; p.setAttribute('role', 'alert');
+        // The row's message runs under the whole row; a box's sits right under it.
+        var after = name === 'makes' ? el.closest('.field') : el;
+        after.insertAdjacentElement('afterend', p);
+      }
+      p.textContent = message;
+      el.setAttribute('aria-invalid', 'true');
+    } else {
+      if (p) p.remove();
+      el.removeAttribute('aria-invalid');
+    }
+    describe(el);
+  }
+  function validate(name) { showError(name, check(name)); }
+
+  // Error timing: a field already in error re-checks as it is typed; the
+  // title and Makes also check when left after an edit. The boxes wait for
+  // Save, so a heading is never an error while it is still being named.
+  var edited = {};
+  form.addEventListener('input', function (e) { setTimeout(onInput, 0, e.target.id); });
+  function onInput(name) {
+    edited[name] = true;
+    formError.hidden = true;
+    if (errors[name] !== undefined && FIELDS.indexOf(name) !== -1) validate(name);
+    var left = Object.keys(errors).filter(function (k) { return errors[k]; }).length;
+    if (phase !== 'blocked' || left === 0) phase = 'edited';
+    renderStatus();
+  }
+  form.addEventListener('focusout', function (e) {
+    var name = e.target.id;
+    if ((name === 'title' || name === 'makes') && edited[name]) { validate(name); if (phase === 'blocked') renderStatus(); }
+  });
+  // The title is one line: Enter types nothing, a pasted newline becomes a space.
+  var title = document.getElementById('title');
+  title.addEventListener('keydown', function (e) { if (e.key === 'Enter') e.preventDefault(); });
+  title.addEventListener('input', function () { if (/[\r\n]/.test(title.value)) title.value = title.value.replace(/[\r\n]+/g, ' '); });
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    FIELDS.forEach(validate);
+    var bad = FIELDS.filter(function (n) { return errors[n]; });
+    formError.hidden = true;
+    if (bad.length) {
+      phase = 'blocked'; renderStatus();
+      document.getElementById(bad[0]).focus();
+      return;
+    }
+    saveBtn.disabled = true; saveBtn.textContent = 'Saving…';
+    setTimeout(function () {
+      saveBtn.disabled = false; saveBtn.textContent = 'Save';
+      if (document.getElementById('offline').checked) {
+        phase = 'network'; formError.textContent = NETWORK; formError.hidden = false;
+        saveBtn.focus();
+      } else {
+        version += 1; phase = 'saved';
+      }
+      renderStatus();
+    }, 500);
+  });
+
+  // ── Start.
+  fill(document.getElementById('ingredients'), INGREDIENTS);
+  fill(document.getElementById('steps'), STEPS);
+  boxes.forEach(function (box) { style(box); renderReadBack(box); });
+  ['title', 'makes'].forEach(function (n) { describe(document.getElementById(n)); });
+  renderStatus();
+  renderSent();
+  // Bitter changes the #'s width once it loads.
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { boxes.forEach(style); });
+
+  // For the Playwright checks in the decision pack (read-only).
+  window.__editor = { textOf: textOf, parseGrouped: parseGrouped };
+})();
+</script>
+</body>
+</html>
