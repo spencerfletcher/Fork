@@ -51,8 +51,10 @@ describe('formatScaled', () => {
 		// ⅛ tsp at 0.25 of 12 serves.
 		[0.125 * (0.25 / 12), '0.003'],
 		[0, '0'],
-		// Under a thousandth is nothing to measure, never "1e-7".
-		[1e-7, '0']
+		// A positive quantity stays positive whatever the unit: 0.0005 kg is half a gram.
+		[0.0005, '0.0005'],
+		[1e-7, '0.0000001'],
+		[0, '0']
 	])('%j → %j', (n, expected) => {
 		expect(formatScaled(n)).toBe(expected);
 	});

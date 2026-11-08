@@ -41,10 +41,11 @@ export function formatScaled(n: number): string {
 		}
 	}
 	const tenths = Math.round(n * 10) / 10;
-	// Under a tenth, one significant digit, so a tiny measure never reads 0;
-	// under a thousandth there is nothing to measure.
 	if (tenths > 0) return String(tenths);
-	return n < 0.001 ? '0' : String(Number(n.toPrecision(1)));
+	if (n <= 0) return '0';
+	// Under a tenth, one significant digit written out in full: a positive quantity
+	// stays positive whatever its unit (0.0005 kg is half a gram), and never "1e-7".
+	return n.toFixed(-Math.floor(Math.log10(n)));
 }
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
