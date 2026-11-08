@@ -14,7 +14,7 @@ const gitignorePath = fileURLToPath(new URL('./.gitignore', import.meta.url));
 export default ts.config(
 	includeIgnoreFile(gitignorePath),
 	// Installed third-party agent skills, not the project's code.
-	{ ignores: ['.agents/**'] },
+	{ ignores: ['.agents/**', '.claude/worktrees/**'] },
 	js.configs.recommended,
 	...ts.configs.recommended,
 	...svelte.configs.recommended,
