@@ -4,7 +4,7 @@ import IngredientEditor from './IngredientEditor.svelte';
 import { MAX_FIELD, MAX_LINE } from '#lib/recipes/limits.js';
 
 function box() {
-	return screen.getByLabelText('Ingredients') as HTMLTextAreaElement;
+	return screen.getByLabelText(/^ingredients/i) as HTMLTextAreaElement;
 }
 
 async function type(text: string) {

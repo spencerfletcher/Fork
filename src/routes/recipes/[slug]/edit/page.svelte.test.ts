@@ -107,8 +107,8 @@ describe('Edit page form', () => {
 		render(EditPage, { props: { data: makeData(), form: null } });
 		expect(title()).toHaveValue('Cookies');
 		expect(screen.getByLabelText(/serves/i)).toHaveValue(4);
-		expect(screen.getByLabelText('Ingredients')).toHaveValue('1 cup flour\n2 eggs');
-		expect(screen.getByLabelText('Steps')).toHaveValue('Mix.\n\nBake.\ntip: gently');
+		expect(screen.getByLabelText(/^ingredients/i)).toHaveValue('1 cup flour\n2 eggs');
+		expect(screen.getByLabelText(/^steps/i)).toHaveValue('Mix.\n\nBake.\ntip: gently');
 	});
 
 	test('sends the loaded editRevision as a hidden field', () => {
@@ -171,10 +171,10 @@ describe('Edit page form', () => {
 
 	test('shows the version the save will write and what changed', async () => {
 		render(EditPage, { props: { data: makeData(), form: null } });
-		await fireEvent.input(screen.getByLabelText('Ingredients'), {
+		await fireEvent.input(screen.getByLabelText(/^ingredients/i), {
 			target: { value: '1 cup flour\n3 eggs' }
 		});
-		await fireEvent.input(screen.getByLabelText('Steps'), {
+		await fireEvent.input(screen.getByLabelText(/^steps/i), {
 			target: { value: 'Mix.\n\nBake longer.' }
 		});
 		expect(editingLine('Editing v2 · saves as v3')).toBeInTheDocument();
@@ -311,7 +311,7 @@ describe('Edit page form', () => {
 
 	test('a blocked save says in the outcome line how many fields need attention, and focuses the first', async () => {
 		render(EditPage, { props: { data: makeData(), form: null } });
-		const ingredients = screen.getByLabelText('Ingredients');
+		const ingredients = screen.getByLabelText(/^ingredients/i);
 		await fireEvent.input(title(), { target: { value: '' } });
 		await fireEvent.input(ingredients, { target: { value: '' } });
 		// The browser fires invalid on each bad field in order when Save is pressed.
@@ -386,7 +386,7 @@ describe('Edit page form', () => {
 			}
 		});
 		await tick();
-		const box = screen.getByLabelText('Ingredients');
+		const box = screen.getByLabelText(/^ingredients/i);
 		expect(box).toHaveAccessibleDescription(/too long/);
 		expect(box).toHaveFocus();
 		expect(screen.getByRole('alert')).toHaveAttribute('id', 'ingredients-error');

@@ -373,8 +373,9 @@
 	}
 
 	/* A mark, not an alarm: Ink 3 at rest. The input's required attribute is
-	   what a screen reader hears. */
-	.required {
+	   what a screen reader hears. Global within the form, so the ingredient and
+	   step editors' marks match the title's. */
+	.form :global(.required) {
 		color: var(--color-text-3);
 	}
 

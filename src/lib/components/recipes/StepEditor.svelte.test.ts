@@ -3,7 +3,7 @@ import { render, screen, fireEvent, within } from '@testing-library/svelte';
 import StepEditor from './StepEditor.svelte';
 
 function box() {
-	return screen.getByLabelText('Steps') as HTMLTextAreaElement;
+	return screen.getByLabelText(/^steps/i) as HTMLTextAreaElement;
 }
 
 describe('StepEditor', () => {

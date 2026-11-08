@@ -6,7 +6,9 @@
 </script>
 
 <div class="field">
-	<label for="steps">Steps</label>
+	<label for="steps">
+		Steps <span class="required" aria-hidden="true">*</span>
+	</label>
 	<textarea
 		id="steps"
 		name="steps"

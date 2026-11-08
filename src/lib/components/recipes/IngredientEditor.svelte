@@ -46,7 +46,9 @@
 </script>
 
 <div class="field">
-	<label for="ingredients">Ingredients</label>
+	<label for="ingredients">
+		Ingredients <span class="required" aria-hidden="true">*</span>
+	</label>
 	<textarea
 		id="ingredients"
 		name="ingredients"

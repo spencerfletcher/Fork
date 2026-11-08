@@ -44,10 +44,15 @@ function failed(draft: Partial<typeof EMPTY_DRAFT>, error = 'Title is required')
 }
 
 describe('New recipe page labels', () => {
-	test('the required asterisk is a mark for the eye only: Title is named Title and is required', () => {
+	test('every required field marks its label with an asterisk for the eye only: the box keeps its plain name', () => {
 		render(NewPage, { props: { data, form: null } });
-		expect(screen.getByText('*')).toHaveAttribute('aria-hidden', 'true');
-		expect(screen.getByRole('textbox', { name: 'Title' })).toBeRequired();
+		for (const name of ['Title', 'Ingredients', 'Steps']) {
+			const box = screen.getByRole('textbox', { name });
+			const mark = document.querySelector(`label[for="${box.id}"] .required`);
+			expect(mark, name).toHaveTextContent('*');
+			expect(mark, name).toHaveAttribute('aria-hidden', 'true');
+			expect(box).toBeRequired();
+		}
 	});
 
 	test('the public checkbox is named without the middle dot its note shows', () => {
@@ -79,7 +84,7 @@ describe('New recipe page validation errors', () => {
 	test('a blocked submit gets no browser bubble: the inline message speaks, and the first invalid field takes focus', async () => {
 		render(NewPage, { props: { data, form: null } });
 		const title = screen.getByLabelText(/^title/i);
-		const ingredients = screen.getByLabelText('Ingredients');
+		const ingredients = screen.getByLabelText(/^ingredients/i);
 		// The browser fires invalid on each bad field in order, cancelable.
 		const events = [title, ingredients].map((el) => {
 			const event = new Event('invalid', { cancelable: true });
@@ -112,8 +117,8 @@ describe('New recipe page validation errors', () => {
 		render(NewPage, { props: { data, form: null } });
 		for (const field of [
 			screen.getByLabelText(/^title/i),
-			screen.getByLabelText('Ingredients'),
-			screen.getByLabelText('Steps')
+			screen.getByLabelText(/^ingredients/i),
+			screen.getByLabelText(/^steps/i)
 		]) {
 			await fireEvent.focusIn(field);
 			await fireEvent.focusOut(field);
@@ -138,8 +143,8 @@ describe('New recipe page validation errors', () => {
 
 	test('ingredients and steps are required fields that report it under the box', async () => {
 		render(NewPage, { props: { data, form: null } });
-		const ingredients = screen.getByLabelText('Ingredients');
-		const steps = screen.getByLabelText('Steps');
+		const ingredients = screen.getByLabelText(/^ingredients/i);
+		const steps = screen.getByLabelText(/^steps/i);
 		expect(ingredients).toBeRequired();
 		expect(steps).toBeRequired();
 		for (const box of [ingredients, steps]) {
@@ -236,10 +241,10 @@ describe('New recipe page editor state', () => {
 
 	test('starts with empty ingredient and step textareas in the form', () => {
 		render(NewPage, { props: { data, form: null } });
-		const ingredients = screen.getByLabelText('Ingredients');
+		const ingredients = screen.getByLabelText(/^ingredients/i);
 		expect(ingredients).toHaveValue('');
 		expect(ingredients).toHaveAttribute('name', 'ingredients');
 		expect(ingredients.closest('form')).not.toBeNull();
-		expect(screen.getByLabelText('Steps')).toHaveAttribute('name', 'steps');
+		expect(screen.getByLabelText(/^steps/i)).toHaveAttribute('name', 'steps');
 	});
 });

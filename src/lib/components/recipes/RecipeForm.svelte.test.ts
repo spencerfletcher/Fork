@@ -85,7 +85,7 @@ describe('RecipeForm field focused under the phone bar', () => {
 				cancelHref: '/recipes'
 			}
 		});
-		const box = screen.getByLabelText('Ingredients');
+		const box = screen.getByLabelText(/^ingredients/i);
 		const bar = screen.getByRole('button', { name: 'Create recipe' }).parentElement!;
 		box.getBoundingClientRect = () => ({ bottom: barTop - 40 }) as DOMRect;
 		fieldOf(box).getBoundingClientRect = () => ({ bottom: fieldBottom }) as DOMRect;
@@ -98,7 +98,7 @@ describe('RecipeForm field focused under the phone bar', () => {
 	test('scrolls a field whose hint is hidden by the bar to the nearest edge, box and hint together', () => {
 		setup(1000, 780).focus();
 		expect(scrollIntoView).toHaveBeenCalledTimes(1);
-		const field = fieldOf(screen.getByLabelText('Ingredients'));
+		const field = fieldOf(screen.getByLabelText(/^ingredients/i));
 		expect(field).toContainElement(screen.getByText(/^One per line/));
 		expect(scrollIntoView.mock.contexts[0]).toBe(field);
 		expect(scrollIntoView.mock.calls[0][0]).toEqual({ block: 'nearest', behavior: 'smooth' });
@@ -191,7 +191,7 @@ describe('RecipeForm commit message left blank', () => {
 	// The placeholder is what the save writes; the hint says so in words.
 	test('says the placeholder is saved, under the box, until the cook types', async () => {
 		const message = renderEdit();
-		await fireEvent.input(screen.getByLabelText('Steps'), { target: { value: 'Mix well.' } });
+		await fireEvent.input(screen.getByLabelText(/^steps/i), { target: { value: 'Mix well.' } });
 		const placeholder = message.getAttribute('placeholder');
 		const hint = screen.getByText(`Left blank, saves as: ${placeholder}`);
 		expect(hint).toHaveClass('form-hint');
