@@ -330,7 +330,7 @@ function columnNames(node: unknown, out: string[] = []): string[] {
 
 async function loadData(user: { id: string; email: string } | null = null) {
 	return (await load(makeLoadEvent(user) as never)) as {
-		recipe: { parent: unknown; parentId: number | null };
+		recipe: { parent: unknown; parentId: number | null; parentDeleted: boolean };
 		forkCount: number;
 		favoriteCount: number;
 		currentVersion: { ingredients: unknown[] } | null;
@@ -384,6 +384,17 @@ describe('load: fork attribution', () => {
 		findRecipeMock.mockResolvedValue(forkOf({ isPublic: false, authorId: 'original-author' }));
 		const data = await loadData(null);
 		expect(data.recipe.parent).toBeNull();
+	});
+
+	test('says the parent was deleted when its row is gone, and not for a private one', async () => {
+		findRecipeMock.mockResolvedValue({
+			...forkOf({ isPublic: true, authorId: 'a' }),
+			parent: null
+		});
+		expect((await loadData()).recipe).toMatchObject({ parent: null, parentDeleted: true });
+
+		findRecipeMock.mockResolvedValue(forkOf({ isPublic: false, authorId: 'original-author' }));
+		expect((await loadData(FORKER)).recipe).toMatchObject({ parentDeleted: false });
 	});
 
 	test("includes a private parent for the parent's owner", async () => {

@@ -34,8 +34,13 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 
 	// A public fork can come from a private recipe. Readers who can't see that
 	// recipe get no parent data at all; parentId alone lets the page say so.
+	// parentId has no FK, so a deleted parent leaves it pointing at no row.
 	const parentVisible = recipe.parent !== null && canView(recipe.parent, user);
-	const visibleRecipe = { ...recipe, parent: parentVisible ? recipe.parent : null };
+	const visibleRecipe = {
+		...recipe,
+		parent: parentVisible ? recipe.parent : null,
+		parentDeleted: recipe.parentId !== null && recipe.parent === null
+	};
 
 	// Resolve which version's content to display. Creation and forking write a
 	// version in the same transaction as the recipe, so none is a broken row.

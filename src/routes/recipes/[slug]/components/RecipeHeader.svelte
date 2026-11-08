@@ -18,6 +18,8 @@
 	interface HeaderRecipe extends Pick<Recipe, 'slug' | 'parentId'> {
 		author?: { id: string; username: string } | null;
 		parent?: { slug: string; title: string } | null;
+		/** parentId points at a recipe that was deleted, rather than one withheld as private. */
+		parentDeleted?: boolean;
 	}
 
 	let {
@@ -67,6 +69,9 @@
 			{#if recipe.author}·{/if}
 			forked from
 			<a href="/recipes/{recipe.parent.slug}">{recipe.parent.title}</a>
+		{:else if recipe.parentDeleted}
+			{#if recipe.author}·{/if}
+			Original recipe deleted
 		{:else if recipe.parentId}
 			{#if recipe.author}·{/if}
 			forked from a private recipe

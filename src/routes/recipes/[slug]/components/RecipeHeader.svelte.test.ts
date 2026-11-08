@@ -89,6 +89,19 @@ describe('RecipeHeader fork attribution', () => {
 		expect(screen.getAllByRole('link')).toHaveLength(1);
 	});
 
+	test('says the original was deleted, with no link, when the parent row is gone', () => {
+		const { container } = renderHeader({
+			recipe: makeRecipe({
+				author: { id: 'u1', username: 'me' },
+				parentId: 42,
+				parent: null,
+				parentDeleted: true
+			})
+		});
+		expect(byline(container)).toBe('By @me · Original recipe deleted');
+		expect(screen.getAllByRole('link')).toHaveLength(1);
+	});
+
 	test('shows no attribution for a recipe that is not a fork', () => {
 		renderHeader();
 		expect(screen.queryByText(/forked from/i)).not.toBeInTheDocument();
