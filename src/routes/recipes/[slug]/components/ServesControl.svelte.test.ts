@@ -105,6 +105,16 @@ describe('ServesControl', () => {
 		expect(lastUrl().searchParams.has('serves')).toBe(false);
 	});
 
+	test('Reset hands focus to the box as it leaves, so the keyboard is not dropped', async () => {
+		const { rerender } = renderControl(6);
+		const reset = screen.getByRole('button', { name: 'Reset' });
+		reset.focus();
+		await fireEvent.click(reset);
+		await rerender(STORED);
+		expect(screen.queryByRole('button', { name: 'Reset' })).toBeNull();
+		expect(box()).toHaveFocus();
+	});
+
 	test('an invalid entry is put back to the current serves, nothing changes', async () => {
 		const { onchange } = renderControl();
 		await fireEvent.change(box(), { target: { value: 'lots' } });

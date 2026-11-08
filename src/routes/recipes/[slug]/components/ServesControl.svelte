@@ -29,6 +29,14 @@
 		input.value = formatServes(next);
 		if (next !== serves) set(next);
 	}
+
+	// Reset leaves with the scaling, so focus moves to the box rather than
+	// dropping to the page. A mouse click (detail > 0) keeps the page still.
+	let box: HTMLInputElement | undefined = $state();
+	function reset(e: MouseEvent) {
+		box?.focus({ preventScroll: e.detail > 0 });
+		set(stored);
+	}
 </script>
 
 <!-- The native spinner: the arrows and the up and down keys step by 1, and
@@ -39,9 +47,10 @@
 <span class="serves">
 	{#if serves !== stored}
 		<span class="factor">{formatServes(serves / stored)}x</span>
-		<button type="button" class="reset" onclick={() => set(stored)}>Reset</button>
+		<button type="button" class="reset" onclick={reset}>Reset</button>
 	{/if}
 	<input
+		bind:this={box}
 		type="number"
 		step="any"
 		min={MIN_SERVES}
