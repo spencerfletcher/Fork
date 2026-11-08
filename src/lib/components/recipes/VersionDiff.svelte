@@ -1,10 +1,12 @@
 <script lang="ts">
-	import type {
-		IngredientDiffRow,
-		InlineSegment,
-		MetaDiffRow,
-		MetaField,
-		StepDiffRow
+	import type { Snippet } from 'svelte';
+	import {
+		diffHeading,
+		type IngredientDiffRow,
+		type InlineSegment,
+		type MetaDiffRow,
+		type MetaField,
+		type StepDiffRow
 	} from '#lib/recipes/diff.js';
 	import { formatTime } from '#lib/helpers.js';
 	import { NUMBER_FIELDS, type NumberField } from '#lib/recipes/validation.js';
@@ -26,7 +28,12 @@
 	// one page apart.
 	const uid = $props.id();
 
-	const LABEL = { title: 'Title', description: 'Description', imageUrl: 'Photo' } as const;
+	const LABEL = {
+		title: 'Title',
+		description: 'Description',
+		imageUrl: 'Photo',
+		makes: 'Makes'
+	} as const;
 
 	// Zero is a value; only null is "not set".
 	const show = (value: string | number | null) => (value === null ? '—' : String(value));
@@ -98,6 +105,29 @@
 	</section>
 {/snippet}
 
+<!-- A row that starts a group carries the group's name above it, inside its
+     own list item, so the list still counts one item per row; a renamed group
+     reads "old to new". Every other row is its own item, as before groups. -->
+{#snippet groupItem(
+	heading: ReturnType<typeof diffHeading>,
+	row: Snippet<[role: 'listitem' | undefined]>
+)}
+	{#if heading}
+		<div class="diff-item" role="listitem">
+			<svelte:element this={`h${headingLevel + 1}`} class="diff-group">
+				{#if heading.from !== undefined}
+					{@render change(heading.from, heading.name)}
+				{:else}
+					{heading.name}
+				{/if}
+			</svelte:element>
+			{@render row(undefined)}
+		</div>
+	{:else}
+		{@render row('listitem')}
+	{/if}
+{/snippet}
+
 <!-- Title, description, servings and times. Only rendered when something
      changed: an empty Details panel would be noise above every diff. -->
 {#if metaDiff.length > 0}
@@ -140,42 +170,48 @@
 	<div class="diff-columns grid gap-x-5 @min-[61rem]:grid-cols-2">
 		{#snippet ingredientRows()}
 			{#each ingredientDiff as row, i (i)}
-				<div class="diff-row diff-{row.status}" role="listitem">
-					{@render gutter(row.status)}
-					<span class="diff-content">
-						{#if row.status === 'modified'}
-							{@render segments(row.segments)}
-						{:else}
-							{row.ingredient.text}
-						{/if}
-					</span>
-				</div>
+				{#snippet line(role: 'listitem' | undefined)}
+					<div class="diff-row diff-{row.status}" {role}>
+						{@render gutter(row.status)}
+						<span class="diff-content">
+							{#if row.status === 'modified'}
+								{@render segments(row.segments)}
+							{:else}
+								{row.ingredient.text}
+							{/if}
+						</span>
+					</div>
+				{/snippet}
+				{@render groupItem(diffHeading(ingredientDiff, i), line)}
 			{/each}
 		{/snippet}
 		{@render panel('Ingredients', ingredientDiff.length === 0, ingredientRows)}
 
 		{#snippet stepRows()}
 			{#each stepDiff as row, i (i)}
-				<div class="diff-row diff-{row.status}" role="listitem">
-					{@render gutter(row.status)}
-					<!-- A removed step has no position in the new version, so numbering it
+				{#snippet line(role: 'listitem' | undefined)}
+					<div class="diff-row diff-{row.status}" {role}>
+						{@render gutter(row.status)}
+						<!-- A removed step has no position in the new version, so numbering it
 					     would imply the steps after it had shifted. -->
-					{#if row.status !== 'removed'}
-						{@render stepNum(row.stepNumber)}
-					{/if}
-					<span class="diff-content whitespace-pre-line">
-						{#if row.status === 'modified'}
-							{@render segments(row.segments)}
-							{#if row.annotation}
-								<span class="diff-annotation diff-{row.annotation.status}">
-									{row.annotation.type}: {@render segments(row.annotation.segments)}
-								</span>
-							{/if}
-						{:else}
-							{row.step.text}
+						{#if row.status !== 'removed'}
+							{@render stepNum(row.stepNumber)}
 						{/if}
-					</span>
-				</div>
+						<span class="diff-content whitespace-pre-line">
+							{#if row.status === 'modified'}
+								{@render segments(row.segments)}
+								{#if row.annotation}
+									<span class="diff-annotation diff-{row.annotation.status}">
+										{row.annotation.type}: {@render segments(row.annotation.segments)}
+									</span>
+								{/if}
+							{:else}
+								{row.step.text}
+							{/if}
+						</span>
+					</div>
+				{/snippet}
+				{@render groupItem(diffHeading(stepDiff, i), line)}
 			{/each}
 		{/snippet}
 		{@render panel('Method', stepDiff.length === 0, stepRows)}
@@ -212,6 +248,28 @@
 
 	.diff-row:last-child {
 		border-bottom: 0;
+	}
+
+	/* A group's first row sits in a wrapper that draws the rule instead. */
+	.diff-item {
+		border-bottom: 1px solid var(--color-border);
+	}
+
+	.diff-item:last-child,
+	.diff-item > .diff-row {
+		border-bottom: 0;
+	}
+
+	/* A group name in the recipe page's voice: words, not an identifier, so
+	   not the diff's mono. */
+	.diff-group {
+		margin: 0;
+		padding: 0.75rem 1rem 0;
+		font-family: var(--font-serif);
+		font-weight: 500;
+		font-size: 1.0625rem;
+		line-height: 1.25;
+		color: var(--color-text);
 	}
 
 	.diff-gutter {
@@ -275,13 +333,15 @@
 	/* ── Inline segments within a modified row ──────────────────────────────── */
 
 	/* Underlined as well as coloured, so a replaced word reads without colour. */
-	.diff-content .diff-added {
+	.diff-content .diff-added,
+	.diff-group .diff-added {
 		background: var(--color-add-bg);
 		color: var(--color-add);
 		text-decoration: underline;
 	}
 
-	.diff-content .diff-removed {
+	.diff-content .diff-removed,
+	.diff-group .diff-removed {
 		background: var(--color-remove-bg);
 		color: var(--color-remove);
 		text-decoration: line-through;

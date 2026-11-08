@@ -1,6 +1,6 @@
 import { describe, test, expect } from 'vitest';
-import { diffIngredients, diffSteps, diffInline, diffMeta, tidyEdges } from './diff';
-import { makeIngredient, makeStep as step, makeContent } from './fixtures';
+import { diffIngredients, diffSteps, diffInline, diffMeta, tidyEdges, diffHeading } from './diff';
+import { makeIngredient, makeStep as step, makeContent, inGroup } from './fixtures';
 import type { Ingredient, StepAnnotation } from '#lib/recipes/types.js';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -389,8 +389,81 @@ describe('diffMeta', () => {
 		]);
 	});
 
+	test('reports a changed yield, set or cleared, as a text field after servings', () => {
+		expect(diffMeta(base, makeContent({ servings: 8, makes: '12 buns' }))).toEqual([
+			{ field: 'servings', from: 4, to: 8 },
+			{ field: 'makes', from: null, to: '12 buns' }
+		]);
+		expect(diffMeta(makeContent({ makes: '12 buns' }), base)).toEqual([
+			{ field: 'makes', from: '12 buns', to: null }
+		]);
+	});
+
 	test('reports the normalised values, not the raw ones', () => {
 		const to = makeContent({ title: ' Biscuits ' });
 		expect(diffMeta(base, to)).toEqual([{ field: 'title', from: 'Cookies', to: 'Biscuits' }]);
+	});
+});
+
+// ─── Groups ───────────────────────────────────────────────────────────────────
+
+describe('groups in a diff', () => {
+	const flour = ing('flour');
+	const sugar = ing('sugar');
+
+	test('an ingredient moved into a group is a change, though its line is the same', () => {
+		const rows = diffIngredients([flour], inGroup('Dough', [flour]));
+		expect(rows).toEqual([
+			{ status: 'modified', segments: diffInline(flour.text, flour.text), group: 'Dough' }
+		]);
+	});
+
+	test('rows keep the group they are shown in: the new one, or the old one for a removal', () => {
+		const rows = diffIngredients(
+			[...inGroup('Dough', [flour]), ...inGroup('Icing', [sugar])],
+			inGroup('Dough', [flour])
+		);
+		expect(rows.map((r) => r.status)).toEqual(['unchanged', 'removed']);
+		expect(diffHeading(rows, 0)).toEqual({ name: 'Dough' });
+		expect(diffHeading(rows, 1)).toEqual({ name: 'Icing' });
+	});
+
+	test('a renamed group heads its run with the old name and the new', () => {
+		const rows = diffIngredients(
+			inGroup('Filling', [flour, sugar]),
+			inGroup('Swirl', [flour, sugar])
+		);
+		expect(rows.map((r) => r.status)).toEqual(['modified', 'modified']);
+		expect(diffHeading(rows, 0)).toEqual({ name: 'Swirl', from: 'Filling' });
+		expect(diffHeading(rows, 1)).toBeUndefined();
+	});
+
+	test('one row moved between groups names only its new group', () => {
+		const rows = diffIngredients(
+			[...inGroup('Dough', [flour]), ...inGroup('Icing', [sugar])],
+			inGroup('Icing', [flour, sugar])
+		);
+		expect(diffHeading(rows, 0)).toEqual({ name: 'Icing' });
+	});
+
+	test('a step whose group changed is modified, and keeps its number', () => {
+		const rows = diffSteps(inGroup('Mix', [step('Mix.')]), inGroup('Stir', [step('Mix.')]));
+		expect(rows).toEqual([
+			{
+				status: 'modified',
+				stepNumber: 1,
+				segments: diffInline('Mix.', 'Mix.'),
+				group: 'Stir',
+				fromGroup: 'Mix'
+			}
+		]);
+		expect(diffHeading(rows, 0)).toEqual({ name: 'Stir', from: 'Mix' });
+	});
+
+	test('an ungrouped diff has no headings and its rows are unchanged in shape', () => {
+		const rows = diffSteps([step('Mix.')], [step('Stir.')]);
+		expect(rows[0]).not.toHaveProperty('group');
+		expect(rows[0]).not.toHaveProperty('fromGroup');
+		expect(diffHeading(rows, 0)).toBeUndefined();
 	});
 });

@@ -1,5 +1,6 @@
 import { diffWords } from 'diff';
 import { normaliseTitle, normaliseDescription } from './content.js';
+import { groupStartingAt } from './groups.js';
 import type {
 	Ingredient,
 	Step,
@@ -13,9 +14,14 @@ export interface InlineSegment {
 	text: string;
 }
 
+// A modified row has no single ingredient or step to read a group from, so it
+// carries the group it is shown in and, when it had one, the group it came
+// from; both are absent for an ungrouped row.
+type Groups = { group?: string; fromGroup?: string };
+
 export type IngredientDiffRow =
 	| { status: 'added' | 'removed' | 'unchanged'; ingredient: Ingredient }
-	| { status: 'modified'; segments: InlineSegment[] };
+	| ({ status: 'modified'; segments: InlineSegment[] } & Groups);
 
 export type AnnotationDiff = {
 	status: 'added' | 'removed' | 'modified';
@@ -28,18 +34,19 @@ export type AnnotationDiff = {
 export type StepDiffRow =
 	| { status: 'added' | 'unchanged'; stepNumber: number; step: Step }
 	| { status: 'removed'; step: Step }
-	| {
+	| ({
 			status: 'modified';
 			stepNumber: number;
 			segments: InlineSegment[];
 			annotation?: AnnotationDiff;
-	  };
+	  } & Groups);
 
 const META_FIELDS = [
 	'title',
 	'description',
 	'imageUrl',
 	'servings',
+	'makes',
 	'prepTimeMinutes',
 	'cookTimeMinutes'
 ] as const;
@@ -113,6 +120,42 @@ export function tidyEdges(parts: InlineSegment[]): InlineSegment[] {
 	return out;
 }
 
+function groups(from: { group?: string }, to: { group?: string }): Groups {
+	return {
+		...(to.group !== undefined && { group: to.group }),
+		...(from.group !== undefined && { fromGroup: from.group })
+	};
+}
+
+/** The group a row sits in, in the version it is shown from. */
+function rowGroup(row: IngredientDiffRow | StepDiffRow): string | undefined {
+	if (row.status === 'modified') return row.group;
+	return 'ingredient' in row ? row.ingredient.group : row.step.group;
+}
+
+/**
+ * The group name to print above row `i` of a diff, as the recipe page prints
+ * it: where the group differs from the row before. When every row of the run
+ * came from one other group, that is a rename, and its old name is given too.
+ */
+export function diffHeading(
+	rows: Array<IngredientDiffRow | StepDiffRow>,
+	i: number
+): { name: string; from?: string } | undefined {
+	const grouped = rows.map((row) => ({ group: rowGroup(row) }));
+	const name = groupStartingAt(grouped, i);
+	if (name === undefined) return undefined;
+	let end = i;
+	while (end < rows.length && grouped[end].group === name) end++;
+	const run = rows.slice(i, end);
+	const from = run[0].status === 'modified' ? run[0].fromGroup : undefined;
+	const renamed =
+		from !== undefined &&
+		from !== name &&
+		run.every((row) => row.status === 'modified' && row.fromGroup === from);
+	return renamed ? { name, from } : { name };
+}
+
 // Ingredients are matched across versions by name, so "flour" in one version
 // pairs with "flour" in the other regardless of position or case.
 const nameKey = (i: Ingredient) => i.name.toLowerCase();
@@ -136,11 +179,15 @@ function ingredientRow(from: Ingredient | undefined, to: Ingredient): Ingredient
 	if (!from) return { status: 'added', ingredient: to };
 	// Same name with the same measurement is unchanged even if the typed text
 	// differs cosmetically ("1 cup" vs "1 cup  "); only a real change is shown.
+	// A move to another group is a change, even with the line untouched.
 	const same =
-		from.quantity === to.quantity && from.quantity2 === to.quantity2 && from.unit === to.unit;
+		from.quantity === to.quantity &&
+		from.quantity2 === to.quantity2 &&
+		from.unit === to.unit &&
+		from.group === to.group;
 	if (same) return { status: 'unchanged', ingredient: to };
 	// The inline diff is over the lines as typed, which is what the reader sees.
-	return { status: 'modified', segments: diffInline(from.text, to.text) };
+	return { status: 'modified', segments: diffInline(from.text, to.text), ...groups(from, to) };
 }
 
 /**
@@ -184,14 +231,15 @@ export function diffSteps(from: Step[], to: Step[]): StepDiffRow[] {
 		const fromStep = from[i];
 		if (!fromStep) return { status: 'added', stepNumber, step: toStep };
 		const annotation = annotationDiff(fromStep.annotation, toStep.annotation);
-		if (fromStep.text === toStep.text && !annotation) {
+		if (fromStep.text === toStep.text && !annotation && fromStep.group === toStep.group) {
 			return { status: 'unchanged', stepNumber, step: toStep };
 		}
 		return {
 			status: 'modified',
 			stepNumber,
 			segments: diffInline(fromStep.text, toStep.text),
-			...(annotation && { annotation })
+			...(annotation && { annotation }),
+			...groups(fromStep, toStep)
 		};
 	});
 	// Positions the new version does not reach are the removed steps; they come

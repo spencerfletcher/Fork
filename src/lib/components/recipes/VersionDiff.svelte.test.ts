@@ -2,8 +2,14 @@ import { describe, test, expect } from 'vitest';
 import { render, screen, within } from '@testing-library/svelte';
 import VersionDiff from './VersionDiff.svelte';
 import source from './VersionDiff.svelte?raw';
-import type { IngredientDiffRow, MetaDiffRow, StepDiffRow } from '#lib/recipes/diff.js';
-import { makeIngredient, makeStep } from '#lib/recipes/fixtures.js';
+import {
+	diffIngredients,
+	diffSteps,
+	type IngredientDiffRow,
+	type MetaDiffRow,
+	type StepDiffRow
+} from '#lib/recipes/diff.js';
+import { inGroup, makeIngredient, makeStep } from '#lib/recipes/fixtures.js';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -360,5 +366,52 @@ describe('VersionDiff long words', () => {
 		const rule = source.slice(start, source.indexOf('}', start));
 		expect(rule).toMatch(/min-width:\s*0;/);
 		expect(rule).toMatch(/overflow-wrap:\s*anywhere;/);
+	});
+});
+
+describe('VersionDiff groups', () => {
+	const flour = ingredient('flour');
+	const sugar = ingredient('sugar');
+
+	test('a Makes change reads as a labelled text row', () => {
+		const { container } = renderDiff([], [], [{ field: 'makes', from: null, to: '12 buns' }]);
+		expect(text(rowWith(container, 'Makes'))).toBe('Changed: ~ Makes: — to 12 buns');
+	});
+
+	test('a group name heads its run inside the first row’s item, so each row is still one item', () => {
+		const rows = diffIngredients(
+			[flour, sugar],
+			[...inGroup('Dough', [flour]), ...inGroup('Icing', [sugar])]
+		);
+		const steps = diffSteps([makeStep('Mix.')], inGroup('Bake', [makeStep('Mix.')]));
+		renderDiff(rows, steps);
+		const list = screen.getByRole('list', { name: 'Ingredients' });
+		const items = within(list).getAllByRole('listitem');
+		expect(items).toHaveLength(2);
+		expect(within(items[0]).getByRole('heading', { level: 4 })).toHaveTextContent('Dough');
+		expect(within(items[1]).getByRole('heading', { level: 4 })).toHaveTextContent('Icing');
+		const method = screen.getByRole('list', { name: 'Method' });
+		expect(within(method).getByRole('heading', { level: 4 })).toHaveTextContent('Bake');
+		// Group names are words, not identifiers: never the diff's mono.
+		expect(within(items[0]).getByRole('heading')).toHaveClass('diff-group');
+		expect(source).toMatch(/\.diff-group\s*{[^}]*font-family:\s*var\(--font-serif\)/);
+	});
+
+	test('a renamed group reads old to new in its heading', () => {
+		const rows = diffIngredients(
+			inGroup('Filling', [flour, sugar]),
+			inGroup('Swirl', [flour, sugar])
+		);
+		renderDiff(rows);
+		const heading = screen.getByRole('heading', { level: 4 });
+		expect(heading.querySelector('del')).toHaveTextContent('Filling');
+		expect(heading.querySelector('ins')).toHaveTextContent('Swirl');
+		expect(text(heading)).toBe('Filling to Swirl');
+	});
+
+	test('an ungrouped diff draws no group heading and no wrapper', () => {
+		const { container } = renderDiff(diffIngredients([flour], [sugar]));
+		expect(screen.queryByRole('heading', { level: 4 })).toBeNull();
+		expect(container.querySelector('.diff-item')).toBeNull();
 	});
 });
