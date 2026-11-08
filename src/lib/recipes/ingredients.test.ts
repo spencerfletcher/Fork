@@ -41,3 +41,27 @@ describe('ingredientsToText', () => {
 		expect(ingredientsToText(rows)).toBe('1 cup flour\n2 eggs');
 	});
 });
+
+describe('grouped ingredients', () => {
+	test('each row under a "# Name" line carries that group; rows before it carry none', () => {
+		const rows = parseIngredientText('salt\n# Dough\n1 cup flour\n2 eggs\n\n# Icing\n1 cup sugar');
+		expect(rows.map((i) => [i.group, i.text])).toEqual([
+			[undefined, 'salt'],
+			['Dough', '1 cup flour'],
+			['Dough', '2 eggs'],
+			['Icing', '1 cup sugar']
+		]);
+		expect(rows[0]).not.toHaveProperty('group');
+	});
+
+	test('an ungrouped list parses exactly as before: no group key at all', () => {
+		expect(parseIngredientText('1 cup flour\n2 eggs')).toEqual([
+			parseIngredientLine('1 cup flour'),
+			parseIngredientLine('2 eggs')
+		]);
+	});
+
+	test('a heading with no rows under it adds nothing', () => {
+		expect(parseIngredientText('# Dough\n# Icing\nsugar').map((i) => i.group)).toEqual(['Icing']);
+	});
+});

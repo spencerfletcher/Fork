@@ -7,6 +7,8 @@ export type Ingredient = {
 	quantity2: number | null;
 	unit: string;
 	name: string;
+	/** The "# Name" heading the line sits under; absent before the first one (groups.ts). */
+	group?: string;
 };
 
 export const STEP_ANNOTATION_TYPES = ['tip', 'warning', 'substitution'] as const;
@@ -17,10 +19,12 @@ export type StepAnnotation = {
 	text: string;
 };
 
-// Steps are numbered by their position in the list.
+// Steps are numbered by their position in the list, straight through groups.
 export type Step = {
 	text: string;
 	annotation?: StepAnnotation;
+	/** The "# Name" heading the step sits under; absent before the first one (groups.ts). */
+	group?: string;
 };
 
 export type RecipeContent = {

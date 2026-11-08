@@ -113,3 +113,24 @@ describe('stepsToText', () => {
 		expect(parseStepText(stepsToText(parsed))).toEqual(parsed);
 	});
 });
+
+describe('grouped steps', () => {
+	test('a "# Name" line groups the steps under it, with or without a blank line after it', () => {
+		const steps = parseStepText(
+			'Preheat.\n\n# Make the dough\nMix.\ntip: Gently.\n\nKnead.\n\n# Bake\n\nBake 20 minutes.'
+		);
+		expect(steps).toEqual([
+			{ text: 'Preheat.' },
+			{ text: 'Mix.', annotation: { type: 'tip', text: 'Gently.' }, group: 'Make the dough' },
+			{ text: 'Knead.', group: 'Make the dough' },
+			{ text: 'Bake 20 minutes.', group: 'Bake' }
+		]);
+	});
+
+	test('a heading ends the step above it even with no blank line between', () => {
+		expect(parseStepText('Mix.\n# Bake\nBake.').map((s) => [s.group, s.text])).toEqual([
+			[undefined, 'Mix.'],
+			['Bake', 'Bake.']
+		]);
+	});
+});

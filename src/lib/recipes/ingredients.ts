@@ -4,6 +4,7 @@
 // scaling and gram weights, and are null or empty when a line does not parse.
 import { parseIngredient } from 'parse-ingredient';
 import type { Ingredient } from './types.js';
+import { parseGrouped } from './groups.js';
 
 // Strict units: parse-ingredient's own list, minus size words, so "2 large
 // eggs" keeps "large eggs" as the name instead of reading "large" as a unit.
@@ -33,14 +34,24 @@ export function parseIngredientLine(line: string): Ingredient {
 	};
 }
 
-/** The textarea's contents to ingredients: one per non-blank line, Windows line endings tolerated. */
-export function parseIngredientText(text: string): Ingredient[] {
+/** One group's lines to ingredients: one per non-blank line. */
+function parseLines(text: string): Ingredient[] {
 	return text
-		.replace(/\r\n/g, '\n')
 		.split('\n')
 		.map((line) => line.trim())
 		.filter((line) => line.length > 0)
 		.map(parseIngredientLine);
+}
+
+/** The ingredients box by group, each line parsed; a heading with no lines has no rows. */
+export function parseIngredientGroups(text: string) {
+	return parseGrouped(text, parseLines);
+}
+
+/** The textarea's contents to ingredients: one per non-blank line, each under
+ *  the "# Name" line above it if any, Windows line endings tolerated. */
+export function parseIngredientText(text: string): Ingredient[] {
+	return parseIngredientGroups(text).flatMap((section) => section.rows);
 }
 
 /** The inverse of parseIngredientText, for refilling the editor from a saved version. */
