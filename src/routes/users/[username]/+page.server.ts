@@ -9,7 +9,7 @@ import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params, locals: { user } }) => {
 	const profile = await db.query.profiles.findFirst({
-		where: eq(profiles.username, params.username)
+		where: eq(profiles.username, params.username.toLowerCase())
 	});
 
 	if (!profile) throw error(404, 'User not found');

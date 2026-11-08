@@ -1,7 +1,8 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { chain } from '#lib/testing/drizzle.js';
 import { load } from './+page.server';
-import { recipes } from '#lib/server/db/schema.js';
+import { profiles, recipes } from '#lib/server/db/schema.js';
+import { eq } from 'drizzle-orm';
 
 // ─── Hoisted mocks ────────────────────────────────────────────────────────────
 
@@ -56,6 +57,14 @@ describe('users/[username] load', () => {
 	test('throws 404 when profile is not found', async () => {
 		findProfileMock.mockResolvedValue(null);
 		await expect(load(makeLoadEvent('nobody'))).rejects.toMatchObject({ status: 404 });
+	});
+
+	// Usernames are stored lowercased, so /users/ChefMaria finds chefmaria.
+	test('looks the username up lowercased', async () => {
+		findProfileMock.mockResolvedValue(makeProfile());
+		findRecipesMock.mockResolvedValue([]);
+		await load(makeLoadEvent('ChefMaria'));
+		expect(findProfileMock).toHaveBeenCalledWith({ where: eq(profiles.username, 'chefmaria') });
 	});
 
 	test('returns profile when found', async () => {
