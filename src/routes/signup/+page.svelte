@@ -43,6 +43,15 @@
 
 	const usernameError = $derived(form?.field === 'username' ? form.error : undefined);
 
+	// The submit button was disabled while the request was out, so focus fell to
+	// the body; a server error on the handle takes it, and the field's
+	// description reads the error out. Read through `form`, not the derived
+	// string, so the same error from a second submit takes the focus again.
+	let usernameInput: HTMLInputElement;
+	$effect(() => {
+		if (form?.field === 'username') usernameInput.focus();
+	});
+
 	// One pattern for the attribute and the rule line. Browsers compile the
 	// attribute with the v flag, so the page reads it the same way.
 	const usernameRule = new RegExp(`^(?:${USERNAME_PATTERN})$`, 'v');
@@ -103,6 +112,7 @@
 					pattern={USERNAME_PATTERN}
 					autocomplete="username"
 					spellcheck="false"
+					bind:this={usernameInput}
 					bind:value={username}
 					oninput={() => (usernameEdited = true)}
 					onblur={() => (usernameLeft = true)}

@@ -87,6 +87,22 @@ describe('Sign-up page', () => {
 		expect(screen.queryByRole('alert')).toBeNull();
 	});
 
+	// The submit button was disabled while the request was out, so focus fell to
+	// the body; the error the server sends back takes it, and is read out.
+	test('a username error from the server moves focus to the username', async () => {
+		const { rerender } = renderSignup();
+		expect(username()).not.toHaveFocus();
+		await rerender({ form: { error: 'That username is taken', field: 'username' } });
+		expect(username()).toHaveFocus();
+	});
+
+	test('the same username error a second time takes the focus again', async () => {
+		const { rerender } = renderSignup({ error: 'That username is taken', field: 'username' });
+		username().blur();
+		await rerender({ form: { error: 'That username is taken', field: 'username' } });
+		expect(username()).toHaveFocus();
+	});
+
 	const RULE = USERNAME_MESSAGE;
 	const HINT_RULES = `${USERNAME_MIN} to ${USERNAME_MAX} letters, digits, - or _.`;
 
