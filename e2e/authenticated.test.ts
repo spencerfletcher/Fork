@@ -241,6 +241,7 @@ test.describe('Edit recipe page', () => {
 			'servings',
 			'prepTimeMinutes',
 			'cookTimeMinutes',
+			'makes',
 			'tag-combobox',
 			'isPublic',
 			'ingredients',
