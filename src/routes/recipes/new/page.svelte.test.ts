@@ -184,7 +184,7 @@ describe('New recipe page editor state', () => {
 		await tick();
 		expect(screen.getByRole('button', { name: 'Saving…' })).toBeDisabled();
 		expect(screen.getByLabelText(/title/i)).toBeDisabled();
-		await finish({ update: async () => {} });
+		await finish({ result: { type: 'failure' }, update: async () => {} });
 		await tick();
 		expect(screen.getByRole('button', { name: 'Create recipe' })).toBeEnabled();
 		expect(screen.getByLabelText(/title/i)).toBeEnabled();

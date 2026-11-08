@@ -5,6 +5,7 @@ import type { SubmitFunction } from '$app/forms';
 import EditPage from './+page.svelte';
 import { makeContent, makeIngredient, makeStep } from '#lib/recipes/fixtures.js';
 import { numberMessages, type RecipeDraft } from '#lib/recipes/validation.js';
+import { UNREACHABLE_MESSAGE } from '#lib/pendingEnhance.svelte.js';
 
 // Capture the form's submit callback so a test can drive the pending state by hand.
 const captured = vi.hoisted(() => ({ submits: [] as SubmitFunction[] }));
@@ -26,7 +27,7 @@ const editingLine = (text: string) =>
 async function startSubmit() {
 	const finish = (await captured.submits[0]({} as never)) as (input: unknown) => Promise<void>;
 	await tick();
-	return () => finish({ update: async () => {} }).then(tick);
+	return () => finish({ result: { type: 'failure' }, update: async () => {} }).then(tick);
 }
 
 const TAGS = [
@@ -398,6 +399,20 @@ describe('Edit page form', () => {
 		});
 		await tick();
 		expect(screen.getByRole('alert')).toHaveTextContent(/changed in another tab/);
+	});
+
+	test('an unreachable server keeps the edits on the page and says so, without applying the error', async () => {
+		render(EditPage, { props: { data: makeData(), form: null } });
+		await fireEvent.input(title(), { target: { value: 'Cookies, edited' } });
+		const finish = (await captured.submits[0]({} as never)) as (input: unknown) => Promise<void>;
+		const update = vi.fn(async () => {});
+		await finish({ result: { type: 'error', error: new TypeError('fetch failed') }, update }).then(
+			tick
+		);
+		expect(update).not.toHaveBeenCalled();
+		expect(title()).toHaveValue('Cookies, edited');
+		expect(title()).toBeEnabled();
+		expect(screen.getByRole('alert')).toHaveTextContent(UNREACHABLE_MESSAGE);
 	});
 
 	test('disables every field while saving and re-enables them when it finishes', async () => {

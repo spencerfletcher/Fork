@@ -1,17 +1,35 @@
 import type { SubmitFunction } from '$app/forms';
 
+export const UNREACHABLE_MESSAGE = "Couldn't reach the server. Your changes are still here.";
+
 /**
  * A form's enhance callback that is `pending` from submit until the result has
  * been applied. `reset: false` keeps the fields as typed; `done` runs after.
+ * `keepOnError` holds an error result (a network failure or a thrown `error()`)
+ * as `error` instead of applying it: applying renders the error page over the
+ * form, which is not a navigation, so nothing typed survives and no guard asks.
  */
-export function pendingEnhance({ reset, done }: { reset?: boolean; done?: () => void } = {}) {
+export function pendingEnhance({
+	reset,
+	done,
+	keepOnError
+}: { reset?: boolean; done?: () => void; keepOnError?: boolean } = {}) {
 	let pending = $state(false);
+	let error = $state<string | null>(null);
 
 	const submit: SubmitFunction = () => {
 		pending = true;
-		return async ({ update }) => {
-			await update({ reset });
-			pending = false;
+		error = null;
+		return async ({ result, update }) => {
+			try {
+				if (keepOnError && result.type === 'error') {
+					error = UNREACHABLE_MESSAGE;
+					return;
+				}
+				await update({ reset });
+			} finally {
+				pending = false;
+			}
 			done?.();
 		};
 	};
@@ -19,6 +37,9 @@ export function pendingEnhance({ reset, done }: { reset?: boolean; done?: () => 
 	return {
 		get pending() {
 			return pending;
+		},
+		get error() {
+			return error;
 		},
 		submit
 	};

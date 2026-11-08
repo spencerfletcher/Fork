@@ -152,7 +152,9 @@
 		document.getElementById(name)?.focus();
 	});
 
-	const globalError = $derived(form && !fieldOfMessage(form.error) ? form.error : null);
+	const globalError = $derived(
+		save.error ?? (form && !fieldOfMessage(form.error) ? form.error : null)
+	);
 
 	// A blocked submit fires invalid on each bad field in order. The inline
 	// message says it, so the browser's bubble, which would say it again, is
@@ -170,7 +172,8 @@
 
 	// Fields are disabled while saving, so nothing typed mid-request is lost by
 	// the redirect. FormData is built before this runs, so the submission is whole.
-	const save = pendingEnhance({ reset: false });
+	// An unreachable server leaves the draft in place rather than an error page.
+	const save = pendingEnhance({ reset: false, keepOnError: true });
 
 	// On a phone the bar covers the screen's bottom edge. A tall box tabbed into
 	// with only its top showing counts as in view, so the browser neither
