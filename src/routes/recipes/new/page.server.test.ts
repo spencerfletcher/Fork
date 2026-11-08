@@ -2,6 +2,12 @@ import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { chain } from '#lib/testing/drizzle.js';
 import { actions, load } from './+page.server';
 import { invokeAction, formEvent } from '#lib/testing/actions.js';
+import {
+	PHOTO_TYPES,
+	PHOTO_MAX_BYTES,
+	PHOTO_TYPE_MESSAGE,
+	PHOTO_SIZE_MESSAGE
+} from '#lib/recipes/validation.js';
 
 const invoke = (event: unknown) => invokeAction(actions.default as never, event);
 
@@ -33,6 +39,7 @@ function makeTx() {
 }
 
 const USER = { id: 'user-1', email: 'u@test.com' };
+const PNG = () => new File(['x'], 'a.png', { type: 'image/png' });
 const SUPABASE = { storage: {} };
 
 const FULL = {
@@ -82,7 +89,7 @@ describe('new recipe action', () => {
 		const result = await invoke(
 			makeEvent({
 				fields: { ...FULL, title: '', prepTimeMinutes: '-5' },
-				file: new File(['x'], 'a.png')
+				file: PNG()
 			})
 		);
 		expect(result.status).toBe(400);
@@ -136,7 +143,7 @@ describe('new recipe action', () => {
 	test('a profile failure returns the draft before anything is uploaded', async () => {
 		ensureProfileMock.mockRejectedValueOnce(new Error('db down'));
 		const error = vi.spyOn(console, 'error').mockImplementation(() => {});
-		const result = await invoke(makeEvent({ fields: FULL, file: new File(['x'], 'a.png') }));
+		const result = await invoke(makeEvent({ fields: FULL, file: PNG() }));
 		expect(result.status).toBe(500);
 		expect(result.data).toMatchObject({ code: 'save_failed', draft: { title: 'Soup' } });
 		expect(uploadMock).not.toHaveBeenCalled();
@@ -153,9 +160,7 @@ describe('new recipe action', () => {
 			order.push('transaction');
 			return fn(tx);
 		});
-		await invoke(
-			makeEvent({ fields: FULL, file: new File(['x'], 'a.png', { type: 'image/png' }) })
-		);
+		await invoke(makeEvent({ fields: FULL, file: PNG() }));
 		expect(order).toEqual(['upload', 'transaction']);
 		expect(uploadMock).toHaveBeenCalledWith(SUPABASE, 'user-1', expect.any(File));
 		expect(tx.recipeInsert.values.mock.calls[0][0].imageUrl).toBe('https://cdn/img.png');
@@ -164,7 +169,7 @@ describe('new recipe action', () => {
 
 	test('a failed upload returns 400 with the draft and writes nothing', async () => {
 		uploadMock.mockRejectedValue(new Error('Photo upload failed'));
-		const result = await invoke(makeEvent({ fields: FULL, file: new File(['x'], 'a.png') }));
+		const result = await invoke(makeEvent({ fields: FULL, file: PNG() }));
 		expect(result.status).toBe(400);
 		expect(result.data).toMatchObject({
 			error: 'Photo upload failed. Try again.',
@@ -174,10 +179,40 @@ describe('new recipe action', () => {
 		expect(transactionMock).not.toHaveBeenCalled();
 	});
 
+	test('a photo of a type the editor does not offer is refused with the draft, and nothing is stored', async () => {
+		const result = await invoke(
+			makeEvent({ fields: FULL, file: new File(['x'], 'a.svg', { type: 'image/svg+xml' }) })
+		);
+		expect(result.status).toBe(400);
+		expect(result.data).toMatchObject({
+			error: PHOTO_TYPE_MESSAGE,
+			code: 'invalid',
+			draft: { title: 'Soup', hadPhoto: true }
+		});
+		expect(uploadMock).not.toHaveBeenCalled();
+		expect(transactionMock).not.toHaveBeenCalled();
+	});
+
+	test('a photo over the size cap is refused with the draft; one at the cap is stored', async () => {
+		const sized = (bytes: number) =>
+			new File([new Uint8Array(bytes)], 'big.jpg', { type: PHOTO_TYPES[0] });
+		const over = await invoke(makeEvent({ fields: FULL, file: sized(PHOTO_MAX_BYTES + 1) }));
+		expect(over.status).toBe(400);
+		expect(over.data).toMatchObject({
+			error: PHOTO_SIZE_MESSAGE,
+			code: 'invalid',
+			draft: { title: 'Soup' }
+		});
+		expect(uploadMock).not.toHaveBeenCalled();
+		const at = await invoke(makeEvent({ fields: FULL, file: sized(PHOTO_MAX_BYTES) }));
+		expect(at.status).toBe(303);
+		expect(uploadMock).toHaveBeenCalledOnce();
+	});
+
 	test('a failed transaction removes the new upload and returns the draft', async () => {
 		transactionMock.mockRejectedValue(new Error('db down'));
 		const error = vi.spyOn(console, 'error').mockImplementation(() => {});
-		const result = await invoke(makeEvent({ fields: FULL, file: new File(['x'], 'a.png') }));
+		const result = await invoke(makeEvent({ fields: FULL, file: PNG() }));
 		expect(removeMock).toHaveBeenCalledWith(SUPABASE, 'user-1/img.png');
 		expect(result.status).toBe(500);
 		expect(result.data).toMatchObject({

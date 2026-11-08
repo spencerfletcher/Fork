@@ -190,7 +190,7 @@ describe('save', () => {
 	test('returns 400 with the raw draft when validation fails, and uploads nothing', async () => {
 		const result = await save(
 			{ ...UNCHANGED, title: '', prepTimeMinutes: '-5' },
-			{ file: new File(['x'], 'a.png') }
+			{ file: new File(['x'], 'a.png', { type: 'image/png' }) }
 		);
 		expect(result.status).toBe(400);
 		expect(result.data).toMatchObject({
@@ -234,7 +234,10 @@ describe('save', () => {
 
 	test('a tab already stale on the loaded row is refused before it uploads anything', async () => {
 		findRecipeMock.mockResolvedValue({ ...RECIPE, editRevision: 2 });
-		const result = await save({ ...UNCHANGED, servings: '8' }, { file: new File(['x'], 'a.png') });
+		const result = await save(
+			{ ...UNCHANGED, servings: '8' },
+			{ file: new File(['x'], 'a.png', { type: 'image/png' }) }
+		);
 		expect(result.status).toBe(409);
 		expect(result.data).toMatchObject({ code: 'stale' });
 		expect(uploadMock).not.toHaveBeenCalled();
@@ -243,7 +246,7 @@ describe('save', () => {
 
 	test('losing ownership between load and lock is a 403, and a new upload is removed', async () => {
 		tx = makeTx({ locked: [{ ...LOCKED, authorId: 'someone-else' }] });
-		const result = await save(UNCHANGED, { file: new File(['x'], 'a.png') });
+		const result = await save(UNCHANGED, { file: new File(['x'], 'a.png', { type: 'image/png' }) });
 		expect(result.status).toBe(403);
 		expect(removeMock).toHaveBeenCalledWith(SUPABASE, 'owner-123/new.png');
 		expect(tx.insert).not.toHaveBeenCalled();
@@ -415,7 +418,7 @@ describe('save', () => {
 
 	test('a failed upload returns 400 with the draft and writes nothing', async () => {
 		uploadMock.mockRejectedValue(new Error('Photo upload failed'));
-		const result = await save(UNCHANGED, { file: new File(['x'], 'a.png') });
+		const result = await save(UNCHANGED, { file: new File(['x'], 'a.png', { type: 'image/png' }) });
 		expect(result.status).toBe(400);
 		expect(result.data).toMatchObject({
 			error: 'Photo upload failed. Try again.',
@@ -427,7 +430,7 @@ describe('save', () => {
 
 	test('an upload that succeeds before a 409 is removed, and the stored image is untouched', async () => {
 		tx = makeTx({ locked: [{ ...LOCKED, editRevision: 1 }] });
-		const result = await save(UNCHANGED, { file: new File(['x'], 'a.png') });
+		const result = await save(UNCHANGED, { file: new File(['x'], 'a.png', { type: 'image/png' }) });
 		expect(result.status).toBe(409);
 		expect(removeMock).toHaveBeenCalledWith(SUPABASE, 'owner-123/new.png');
 		noWrites();
@@ -436,7 +439,10 @@ describe('save', () => {
 	test('a throw inside the transaction removes the new upload and returns 500 with the draft', async () => {
 		transactionMock.mockRejectedValue(new Error('db down'));
 		const error = vi.spyOn(console, 'error').mockImplementation(() => {});
-		const result = await save({ ...UNCHANGED, servings: '8' }, { file: new File(['x'], 'a.png') });
+		const result = await save(
+			{ ...UNCHANGED, servings: '8' },
+			{ file: new File(['x'], 'a.png', { type: 'image/png' }) }
+		);
 		expect(result.status).toBe(500);
 		expect(result.data).toMatchObject({
 			error: 'Could not save the recipe. Try again.',

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { tick } from 'svelte';
+	import { PHOTO_TYPES } from '#lib/recipes/validation.js';
 
 	let {
 		imageUrl,
@@ -89,7 +90,7 @@
 				id="image"
 				name="image"
 				type="file"
-				accept="image/jpeg,image/png,image/webp,image/gif"
+				accept={PHOTO_TYPES.join(',')}
 				class="sr-only"
 				aria-labelledby="image-action"
 				bind:this={imageInput}

@@ -35,6 +35,20 @@ export const REQUIRED_MESSAGES = {
 	steps: 'At least one step is required'
 } as const;
 
+/** The photo types the editor offers and a save stores. */
+export const PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'] as const;
+/** The largest photo a save stores. */
+export const PHOTO_MAX_BYTES = 10 * 1024 * 1024;
+export const PHOTO_TYPE_MESSAGE = 'Choose a JPEG, PNG, WebP or GIF photo.';
+export const PHOTO_SIZE_MESSAGE = `Choose a photo under ${PHOTO_MAX_BYTES / 1024 / 1024} MB.`;
+
+/** Why a chosen photo cannot be stored, or null when it can. */
+export function photoError(file: File): string | null {
+	if (!(PHOTO_TYPES as readonly string[]).includes(file.type)) return PHOTO_TYPE_MESSAGE;
+	if (file.size > PHOTO_MAX_BYTES) return PHOTO_SIZE_MESSAGE;
+	return null;
+}
+
 // The labels the length limits name.
 const INGREDIENTS = 'Ingredients';
 const STEPS = 'Steps';

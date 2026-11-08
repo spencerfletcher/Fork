@@ -3,7 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/svelte';
 import source from './RecipeForm.svelte?raw';
 import photoSource from './PhotoField.svelte?raw';
 import RecipeForm from './RecipeForm.svelte';
-import { draftOf } from '#lib/recipes/validation.js';
+import { draftOf, PHOTO_TYPES } from '#lib/recipes/validation.js';
 
 vi.mock('$app/navigation', () => ({ beforeNavigate: () => {} }));
 vi.mock('$app/forms', () => ({ enhance: () => ({ destroy: () => {} }) }));
@@ -23,6 +23,24 @@ describe('RecipeForm photo buttons', () => {
 		);
 		const block = media.slice(0, media.indexOf('\n\t}\n'));
 		expect(block).toMatch(/\.photo-choose,\s*\.photo-keep\s*{[^}]*min-height:\s*44px/);
+	});
+});
+
+describe('RecipeForm photo input', () => {
+	test('offers the types a save stores', () => {
+		render(RecipeForm, {
+			props: {
+				baseline: draftOf(new FormData()),
+				form: null,
+				allTags: [],
+				submitLabel: 'Create recipe',
+				cancelHref: '/recipes'
+			}
+		});
+		expect(document.querySelector('input[type="file"]')).toHaveAttribute(
+			'accept',
+			PHOTO_TYPES.join(',')
+		);
 	});
 });
 

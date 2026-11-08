@@ -1,6 +1,6 @@
 import { fail } from '@sveltejs/kit';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { draftOf, parseDraftContent, parseSettings } from '#lib/recipes/validation.js';
+import { draftOf, parseDraftContent, parseSettings, photoError } from '#lib/recipes/validation.js';
 import { imageFileFrom, uploadRecipeImage } from '#lib/server/images.js';
 import type { RecipeDraft } from '#lib/recipes/validation.js';
 
@@ -45,6 +45,8 @@ export async function uploadPhoto(
 ) {
 	const file = imageFileFrom(formData);
 	if (!file) return { ok: true as const, image: null };
+	const refused = photoError(file);
+	if (refused) return { ok: false as const, failure: saveFailure(400, 'invalid', refused, draft) };
 	try {
 		return { ok: true as const, image: await uploadRecipeImage(supabase, userId, file) };
 	} catch {
