@@ -212,7 +212,10 @@ describe('scaleMakes', () => {
 		['≈ 2 loaves', 2, '≈ 4 loaves'],
 		['1½ L', 2, '3 L'],
 		['1/2 sheet cake', 2, '1 sheet cake'],
-		['36 cookies', 0.5, '18 cookies']
+		['36 cookies', 0.5, '18 cookies'],
+		['1 1/2 dozen', 1.5, '2¼ dozen'],
+		['1 ½ L', 2, '3 L'],
+		['about 2 1/2 cups', 2, 'about 5 cups']
 	])('%j at ×%d reads %j, scaled', (makes, factor, text) => {
 		expect(scaleMakes(makes, factor)).toEqual({ text, scaled: true, flagged: false });
 	});
@@ -222,12 +225,17 @@ describe('scaleMakes', () => {
 		['9x13 pan'],
 		['8 × 8 in tin'],
 		['12 buns at 180°C'],
-		['1 loaf, 350 F']
-	])('%j has a size or temperature: not scaled, and flagged so the page says so', (makes) => {
-		expect(scaleMakes(makes, 2)).toEqual({ text: makes, scaled: false, flagged: true });
-	});
+		['1 loaf, 350 F'],
+		['12-14 buns'],
+		['2 – 3 loaves']
+	])(
+		'%j has a size, temperature or range: not scaled, and flagged so the page says so',
+		(makes) => {
+			expect(scaleMakes(makes, 2)).toEqual({ text: makes, scaled: false, flagged: true });
+		}
+	);
 
-	test.each([['a dozen'], ['one loaf'], ['12-14 buns']])(
+	test.each([['a dozen'], ['one loaf']])(
 		'%j has no single leading number: unchanged and not flagged',
 		(makes) => {
 			expect(scaleMakes(makes, 2)).toEqual({ text: makes, scaled: false, flagged: false });
