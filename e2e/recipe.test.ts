@@ -1908,8 +1908,8 @@ test.describe('Cooking mode', () => {
 		await expect(page.locator('article[data-cooking]')).toHaveCount(1);
 		await expect(page.locator('.version-bar')).toHaveCount(0);
 		await expect(page.locator('.hero').getByRole('link', { name: /Fork|Favorite/ })).toHaveCount(0);
-		// The pill keeps its width, the band and the scaler stay.
-		expect((await done.boundingBox())!.width).toBeCloseTo(width, 0);
+		// The pill grows to its longer word (nothing beside it to shift); the band and the scaler stay.
+		expect((await done.boundingBox())!.width).toBeGreaterThan(width);
 		await expect(page.locator('.hero')).toBeVisible();
 		await expect(page.getByRole('spinbutton', { name: 'Servings' })).toBeVisible();
 		expect(await stepSize(page)).toEqual({ text: '20px', line: '31px', numeral: '21px' });
