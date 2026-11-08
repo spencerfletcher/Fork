@@ -28,6 +28,7 @@
 		favoriteCount,
 		versionCount,
 		tags,
+		cooking = false,
 		actions
 	}: {
 		recipe: HeaderRecipe;
@@ -40,6 +41,8 @@
 		/** Every version of the recipe; the bar under the band lists them from two up. */
 		versionCount: number;
 		tags: TagChip[];
+		/** Cooking mode hides the version bar, so the count does not link to it. */
+		cooking?: boolean;
 		/** The action row (Fork or Edit, Favorite), the last line of the header. */
 		actions?: Snippet;
 	} = $props();
@@ -101,7 +104,7 @@
 				<circle cx="8" cy="8" r="1.6" fill="var(--color-band)" />
 				<circle cx="8" cy="13" r="1.6" fill="currentColor" />
 			</svg>
-			{#if versionCount > 1}
+			{#if versionCount > 1 && !cooking}
 				<a href="#versions">{counted(versionCount, 'version')}</a>
 			{:else}
 				{counted(versionCount, 'version')}

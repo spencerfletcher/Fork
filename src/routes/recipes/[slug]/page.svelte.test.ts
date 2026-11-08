@@ -221,6 +221,14 @@ describe('recipe page cooking mode', () => {
 		expect(new URL(goto.mock.lastCall![0]).searchParams.has('cook')).toBe(false);
 	});
 
+	test('the header links its version count to the bar only while the bar is there', () => {
+		const { unmount } = load();
+		expect(screen.getByRole('link', { name: '2 versions' })).toHaveAttribute('href', '#versions');
+		unmount();
+		load('?cook=1');
+		expect(screen.queryByRole('link', { name: '2 versions' })).toBeNull();
+	});
+
 	test('only ?cook=1 cooks', () => {
 		load('?cook=yes');
 		expect(article()).not.toHaveAttribute('data-cooking');

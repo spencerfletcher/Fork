@@ -200,6 +200,12 @@ describe('RecipeHeader stats row', () => {
 		expect(screen.getByRole('link', { name: '3 versions' })).toHaveAttribute('href', '#versions');
 	});
 
+	test('cooking hides the version bar, so the version count is not a link to it', () => {
+		const { container } = renderHeader({ versionCount: 3, cooking: true });
+		expect(screen.queryByRole('link', { name: '3 versions' })).toBeNull();
+		expect(stats(container)).toContain('3 versions');
+	});
+
 	test('favorites are plain text, never a link', () => {
 		const { container } = renderHeader({ favoriteCount: 14 });
 		expect(screen.queryByRole('link', { name: /favorite/ })).toBeNull();

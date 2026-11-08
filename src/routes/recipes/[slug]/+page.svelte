@@ -78,7 +78,8 @@
 					forkCount={data.forkCount}
 					favoriteCount={data.favoriteCount}
 					versionCount={allVersions.length}
-					{tags}>
+					{tags}
+					{cooking}>
 					{#snippet actions()}
 						<RecipeActions
 							{recipe}
