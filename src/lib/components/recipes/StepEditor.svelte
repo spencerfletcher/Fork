@@ -47,7 +47,7 @@
 		<code>substitution:</code>
 		on its own line. A line like
 		<code># Bake</code>
-		 starts a group.
+		starts a group.
 	</p>
 </div>
 

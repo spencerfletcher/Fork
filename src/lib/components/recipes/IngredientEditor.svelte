@@ -80,7 +80,7 @@
 	<!-- The format stays in view while typing, after the placeholder has gone. -->
 	<p class="form-hint" id="ingredients-hint">
 		One per line: quantity, unit, ingredient — 2¼ cups flour. A line like <code># Dough</code>
-		 starts a group.
+		starts a group.
 	</p>
 	<!-- Always in the DOM so screen readers announce the text when it appears. -->
 	<p class="sr-only" role="status">
