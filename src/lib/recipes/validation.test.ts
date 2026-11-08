@@ -6,6 +6,7 @@ import {
 	numberMessages,
 	fieldOfMessage,
 	REQUIRED_MESSAGES,
+	tagNameMessage,
 	type Result
 } from './validation';
 import { MAX_FIELD, MAX_LINE } from './limits';
@@ -239,6 +240,22 @@ describe('parseSettings', () => {
 	test('trims, drops blanks and deduplicates tags case-insensitively, keeping the first spelling', () => {
 		const value = unwrap(parseSettings(form({ tags: ['Dessert', ' dessert ', '', 'Baking'] })));
 		expect(value.tagNames).toEqual(['Dessert', 'Baking']);
+	});
+
+	// A tag's link is its slug, built from ASCII letters and digits; with none there is no link.
+	test('refuses a tag name with no ASCII letter or digit, naming it', () => {
+		expect(parseSettings(form({ tags: ['Dessert', '日本'] }))).toEqual({
+			ok: false,
+			error: tagNameMessage('日本')
+		});
+		expect(tagNameMessage('日本')).toContain('日本');
+	});
+
+	test('a name with any ASCII letter or digit is kept', () => {
+		expect(unwrap(parseSettings(form({ tags: ['Café', '7-up'] }))).tagNames).toEqual([
+			'Café',
+			'7-up'
+		]);
 	});
 });
 

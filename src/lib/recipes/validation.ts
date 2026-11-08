@@ -4,7 +4,7 @@ import { parseIngredientText } from './ingredients.js';
 import { parseStepText } from './steps.js';
 import { LINE_TOO_LONG, fieldTooLong, limitError } from './limits.js';
 import { normaliseTagNames } from './tags.js';
-import { text } from '#lib/helpers.js';
+import { text, slugify } from '#lib/helpers.js';
 
 // Largest value a Postgres `integer` column holds.
 const INT4_MAX = 2_147_483_647;
@@ -126,9 +126,20 @@ function parse<T>(schema: z.ZodType<T>, input: unknown): Result<T> {
 		: { ok: false, error: result.error.issues[0].message };
 }
 
+/** What a tag name says when it makes no slug, so the tag would have no link. */
+export const tagNameMessage = (name: string) =>
+	`Tag "${name}" needs at least one letter or number from A to Z or 0 to 9`;
+
 const settingsSchema = z.object({
 	isPublic: z.boolean(),
-	tagNames: z.array(z.string()).transform(normaliseTagNames)
+	tagNames: z
+		.array(z.string())
+		.transform(normaliseTagNames)
+		.superRefine((names, ctx) => {
+			const unlinkable = names.find((name) => slugify(name) === '');
+			if (unlinkable !== undefined)
+				ctx.addIssue({ code: 'custom', message: tagNameMessage(unlinkable) });
+		})
 });
 
 /**
