@@ -137,12 +137,14 @@
 
 	<!-- Combobox input; open, the list flows out of it as one object. -->
 	<div class="tag-combo relative" class:tag-combo--open={showDropdown}>
+		<!-- Opens on a click, typing or an arrow, not on focus, so Tab passing
+		     through announces no list. -->
 		<input
 			id="tag-combobox"
 			type="text"
 			placeholder="Search or create a tag…"
 			bind:value={query}
-			onfocus={() => (open = true)}
+			onclick={() => (open = true)}
 			onblur={handleBlur}
 			oninput={() => {
 				open = true;

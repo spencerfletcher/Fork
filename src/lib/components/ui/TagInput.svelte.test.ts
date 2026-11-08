@@ -28,18 +28,36 @@ describe('TagInput', () => {
 		expect(screen.getByRole('combobox', { name: /tag/i })).toBeInTheDocument();
 	});
 
+	// Tab passing through the box must not announce a list nobody asked for.
+	test('focus alone leaves the list closed; a click, typing or ArrowDown opens it', async () => {
+		render(TagInput, { props: { allTags } });
+		const input = getInput();
+		input.focus();
+		await fireEvent.focus(input);
+		expect(input).toHaveAttribute('aria-expanded', 'false');
+		expect(screen.queryByRole('listbox')).toBeNull();
+		await fireEvent.click(input);
+		expect(input).toHaveAttribute('aria-expanded', 'true');
+		await fireEvent.keyDown(input, { key: 'Escape' });
+		await fireEvent.keyDown(input, { key: 'ArrowDown' });
+		expect(input).toHaveAttribute('aria-expanded', 'true');
+		await fireEvent.keyDown(input, { key: 'Escape' });
+		await fireEvent.input(input, { target: { value: 'd' } });
+		expect(input).toHaveAttribute('aria-expanded', 'true');
+	});
+
 	// aria-controls names an element that must exist.
 	test('aria-controls points at the list only while it is rendered', async () => {
 		render(TagInput, { props: { allTags } });
 		const input = getInput();
 		expect(input).not.toHaveAttribute('aria-controls');
-		await fireEvent.focus(input);
+		await fireEvent.click(input);
 		expect(input).toHaveAttribute('aria-controls', screen.getByRole('listbox').id);
 	});
 
 	test('each option is the element that carries aria-selected and is not a Tab stop', async () => {
 		render(TagInput, { props: { allTags } });
-		await fireEvent.focus(getInput());
+		await fireEvent.click(getInput());
 		const options = screen.getAllByRole('option');
 		expect(options).toHaveLength(3);
 		for (const o of options) {
@@ -53,7 +71,7 @@ describe('TagInput', () => {
 	test('ArrowDown moves the active option, named by aria-activedescendant, and Enter picks it', async () => {
 		const { container } = render(TagInput, { props: { allTags } });
 		const input = getInput();
-		await fireEvent.focus(input);
+		await fireEvent.click(input);
 		expect(input).not.toHaveAttribute('aria-activedescendant');
 		await fireEvent.keyDown(input, { key: 'ArrowDown' });
 		expect(input).toHaveAttribute('aria-activedescendant', option(/^Dessert$/).id);
@@ -69,7 +87,7 @@ describe('TagInput', () => {
 	test('ArrowUp from the top wraps to the last option, and the Create option is reachable', async () => {
 		const { container } = render(TagInput, { props: { allTags } });
 		const input = getInput();
-		await fireEvent.focus(input);
+		await fireEvent.click(input);
 		await fireEvent.keyDown(input, { key: 'ArrowUp' });
 		expect(input).toHaveAttribute('aria-activedescendant', option(/^Dinner$/).id);
 		await fireEvent.input(input, { target: { value: 'Vegan' } });
@@ -84,7 +102,7 @@ describe('TagInput', () => {
 		render(TagInput, { props: { allTags } });
 		const input = getInput();
 		input.focus();
-		await fireEvent.focus(input);
+		await fireEvent.click(input);
 		expect(screen.getByRole('listbox')).toBeInTheDocument();
 		await fireEvent.keyDown(input, { key: 'Escape' });
 		expect(screen.queryByRole('listbox')).toBeNull();
@@ -98,7 +116,7 @@ describe('TagInput', () => {
 		const wrapper = getInput().parentElement!;
 		expect(wrapper).toContainElement(getInput());
 		expect(wrapper).not.toHaveClass('tag-combo--open');
-		await fireEvent.focus(getInput());
+		await fireEvent.click(getInput());
 		expect(wrapper).toContainElement(screen.getByRole('listbox'));
 		expect(wrapper).toHaveClass('tag-combo--open');
 		await fireEvent.keyDown(getInput(), { key: 'Escape' });
@@ -112,7 +130,7 @@ describe('TagInput', () => {
 		Element.prototype.scrollIntoView = scroll;
 		try {
 			render(TagInput, { props: { allTags } });
-			await fireEvent.focus(getInput());
+			await fireEvent.click(getInput());
 			await tick();
 			expect(scroll).toHaveBeenCalledWith({ block: 'nearest' });
 			expect(scroll.mock.contexts[0]).toBe(screen.getByRole('listbox'));
@@ -122,9 +140,9 @@ describe('TagInput', () => {
 		}
 	});
 
-	test('shows all suggestions when focused with empty query', async () => {
+	test('shows all suggestions when clicked with empty query', async () => {
 		render(TagInput, { props: { allTags } });
-		await fireEvent.focus(getInput());
+		await fireEvent.click(getInput());
 		expect(screen.getByText('Dessert')).toBeInTheDocument();
 		expect(screen.getByText('Baking')).toBeInTheDocument();
 		expect(screen.getByText('Dinner')).toBeInTheDocument();
@@ -133,7 +151,7 @@ describe('TagInput', () => {
 	test('filters suggestions by query', async () => {
 		render(TagInput, { props: { allTags } });
 		const input = getInput();
-		await fireEvent.focus(input);
+		await fireEvent.click(input);
 		await fireEvent.input(input, { target: { value: 'des' } });
 		expect(screen.getByText('Dessert')).toBeInTheDocument();
 		expect(screen.queryByText('Baking')).not.toBeInTheDocument();
@@ -142,7 +160,7 @@ describe('TagInput', () => {
 	test('shows "Create" option for a query that does not match any existing tag', async () => {
 		render(TagInput, { props: { allTags } });
 		const input = getInput();
-		await fireEvent.focus(input);
+		await fireEvent.click(input);
 		await fireEvent.input(input, { target: { value: 'Vegan' } });
 		expect(screen.getByText(/Create/i)).toBeInTheDocument();
 		expect(screen.getByRole('option').textContent?.replace(/\s+/g, ' ').trim()).toBe(
@@ -153,14 +171,14 @@ describe('TagInput', () => {
 	test('does not show "Create" option when query exactly matches an existing tag', async () => {
 		render(TagInput, { props: { allTags } });
 		const input = getInput();
-		await fireEvent.focus(input);
+		await fireEvent.click(input);
 		await fireEvent.input(input, { target: { value: 'Dessert' } });
 		expect(screen.queryByText(/Create/i)).not.toBeInTheDocument();
 	});
 
 	test('selecting a suggestion adds it as a pill', async () => {
 		render(TagInput, { props: { allTags } });
-		await fireEvent.focus(getInput());
+		await fireEvent.click(getInput());
 		await fireEvent.click(option(/^Dessert$/i));
 		// Pill should appear
 		expect(screen.getAllByText('Dessert').length).toBeGreaterThanOrEqual(1);
@@ -168,10 +186,10 @@ describe('TagInput', () => {
 
 	test('selected tag is removed from suggestions', async () => {
 		render(TagInput, { props: { allTags } });
-		await fireEvent.focus(getInput());
+		await fireEvent.click(getInput());
 		await fireEvent.click(option(/^Dessert$/i));
 		// Re-focus to open dropdown
-		await fireEvent.focus(getInput());
+		await fireEvent.click(getInput());
 		// Dessert should no longer appear in the dropdown list options
 		const options = screen.getAllByRole('option');
 		const optionTexts = options.map((o) => o.textContent ?? '');
@@ -180,19 +198,19 @@ describe('TagInput', () => {
 
 	test('removing a pill deselects the tag', async () => {
 		render(TagInput, { props: { allTags } });
-		await fireEvent.focus(getInput());
+		await fireEvent.click(getInput());
 		await fireEvent.click(option(/^Dessert$/i));
 		// Click the × button on the pill
 		const removeBtn = screen.getByRole('button', { name: /remove dessert/i });
 		await fireEvent.click(removeBtn);
 		// Re-focus — Dessert should be in suggestions again
-		await fireEvent.focus(getInput());
+		await fireEvent.click(getInput());
 		expect(option(/^Dessert$/i)).toBeInTheDocument();
 	});
 
 	test('creates a hidden input for each selected tag', async () => {
 		const { container } = render(TagInput, { props: { allTags } });
-		await fireEvent.focus(getInput());
+		await fireEvent.click(getInput());
 		await fireEvent.click(option(/^Baking$/i));
 		const hidden = container.querySelectorAll('input[type="hidden"][name="tags"]');
 		expect(hidden).toHaveLength(1);
@@ -202,10 +220,10 @@ describe('TagInput', () => {
 	test('creates a hidden input per selected tag when multiple are selected', async () => {
 		const { container } = render(TagInput, { props: { allTags } });
 		// Select Dessert
-		await fireEvent.focus(getInput());
+		await fireEvent.click(getInput());
 		await fireEvent.click(option(/^Dessert$/i));
 		// Select Baking
-		await fireEvent.focus(getInput());
+		await fireEvent.click(getInput());
 		await fireEvent.click(option(/^Baking$/i));
 		const hidden = container.querySelectorAll('input[type="hidden"][name="tags"]');
 		expect(hidden).toHaveLength(2);
@@ -214,14 +232,14 @@ describe('TagInput', () => {
 	test('dropdown is closed when no suggestions match and canCreate is false', async () => {
 		render(TagInput, { props: { allTags: [] } });
 		const input = getInput();
-		await fireEvent.focus(input);
+		await fireEvent.click(input);
 		// No tags, empty query — nothing to show
 		expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
 	});
 
 	test('Enter picks the first matching suggestion, keyboard only', async () => {
 		const { container } = render(TagInput, { props: { allTags } });
-		await fireEvent.focus(getInput());
+		await fireEvent.click(getInput());
 		await fireEvent.input(getInput(), { target: { value: 'des' } });
 		await fireEvent.keyDown(getInput(), { key: 'Enter' });
 		const hidden = container.querySelectorAll('input[type="hidden"][name="tags"]');
@@ -231,7 +249,7 @@ describe('TagInput', () => {
 
 	test('Enter creates the typed tag when nothing matches', async () => {
 		const { container } = render(TagInput, { props: { allTags } });
-		await fireEvent.focus(getInput());
+		await fireEvent.click(getInput());
 		await fireEvent.input(getInput(), { target: { value: 'Vegan' } });
 		await fireEvent.keyDown(getInput(), { key: 'Enter' });
 		expect(container.querySelector('input[type="hidden"][name="tags"]')).toHaveValue('Vegan');
@@ -239,7 +257,7 @@ describe('TagInput', () => {
 
 	test('a created tag cannot be added again in a different case', async () => {
 		const { container } = render(TagInput, { props: { allTags } });
-		await fireEvent.focus(getInput());
+		await fireEvent.click(getInput());
 		await fireEvent.input(getInput(), { target: { value: 'Vegan' } });
 		await fireEvent.keyDown(getInput(), { key: 'Enter' });
 		await fireEvent.input(getInput(), { target: { value: 'vegan' } });
@@ -299,7 +317,7 @@ describe('TagInput Create option', () => {
 	// bottom border, or the box's own bottom border when there is none.
 	test('draws no top border of its own under a suggestion', async () => {
 		render(TagInput, { props: { allTags } });
-		await fireEvent.focus(getInput());
+		await fireEvent.click(getInput());
 		await fireEvent.input(getInput(), { target: { value: 'd' } });
 		const options = screen.getAllByRole('option');
 		const create = options.at(-1)!;
@@ -310,7 +328,7 @@ describe('TagInput Create option', () => {
 
 	test('draws no top border of its own straight under the box', async () => {
 		render(TagInput, { props: { allTags } });
-		await fireEvent.focus(getInput());
+		await fireEvent.click(getInput());
 		await fireEvent.input(getInput(), { target: { value: 'Vegan' } });
 		const options = screen.getAllByRole('option');
 		expect(options).toHaveLength(1);
@@ -326,7 +344,7 @@ describe('TagInput closing', () => {
 			render(TagInput, { props: { allTags } });
 			const input = getInput();
 			input.focus();
-			await fireEvent.focus(input);
+			await fireEvent.click(input);
 			expect(screen.getByRole('listbox')).toBeInTheDocument();
 			outside.focus();
 			await tick();
@@ -341,7 +359,7 @@ describe('TagInput closing', () => {
 		render(TagInput, { props: { allTags } });
 		const input = getInput();
 		input.focus();
-		await fireEvent.focus(input);
+		await fireEvent.click(input);
 		await fireEvent.pointerDown(document.body);
 		expect(screen.queryByRole('listbox')).toBeNull();
 	});
@@ -350,7 +368,7 @@ describe('TagInput closing', () => {
 		const { container } = render(TagInput, { props: { allTags } });
 		const input = getInput();
 		input.focus();
-		await fireEvent.focus(input);
+		await fireEvent.click(input);
 		const dessert = option(/^Dessert$/);
 		await fireEvent.pointerDown(dessert);
 		const pressed = await fireEvent.mouseDown(dessert);
@@ -364,7 +382,7 @@ describe('TagInput closing', () => {
 		const { container } = render(TagInput, { props: { allTags } });
 		const input = getInput();
 		input.focus();
-		await fireEvent.focus(input);
+		await fireEvent.click(input);
 		const baking = option(/^Baking$/);
 		await fireEvent.pointerDown(baking);
 		await fireEvent.blur(input, { relatedTarget: null });
@@ -377,7 +395,7 @@ describe('TagInput closing', () => {
 		render(TagInput, { props: { allTags } });
 		const input = getInput();
 		input.focus();
-		await fireEvent.focus(input);
+		await fireEvent.click(input);
 		await fireEvent.pointerDown(option(/^Baking$/));
 		await fireEvent.keyDown(input, { key: 'Tab' });
 		await fireEvent.blur(input, { relatedTarget: null });

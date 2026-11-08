@@ -135,14 +135,15 @@ test.describe('New recipe page', () => {
 		await expect(page).toHaveURL(/\/recipes\/new$/);
 	});
 
-	test('Tags: the list opens on focus, arrows and Enter pick without Tab stops', async ({
+	test('Tags: focus leaves the list shut, ArrowDown opens it, arrows and Enter pick without Tab stops', async ({
 		page
 	}) => {
 		await gotoHydrated(page, '/recipes/new');
 		const input = page.getByRole('combobox', { name: /tag/i });
 		await input.focus();
-		await expect(page.getByRole('listbox')).toBeVisible();
+		await expect(page.getByRole('listbox')).toBeHidden();
 		await page.keyboard.press('ArrowDown');
+		await expect(page.getByRole('listbox')).toBeVisible();
 		const first = page.getByRole('option').first();
 		await expect(first).toHaveAttribute('aria-selected', 'true');
 		await expect(input).toHaveAttribute('aria-activedescendant', await first.getAttribute('id'));
@@ -257,8 +258,8 @@ test.describe('Edit recipe page', () => {
 					return el.getAttribute('name') || el.id || el.textContent?.trim() || '';
 				});
 				seen.push(name);
-				// The tag combobox opens its suggestion list on focus; its options are
-				// not Tab stops, so Tab walks straight past them.
+				// The tag combobox's options are not Tab stops, so Tab walks straight
+				// past them.
 				await page.keyboard.press('Tab');
 			}
 			return seen;

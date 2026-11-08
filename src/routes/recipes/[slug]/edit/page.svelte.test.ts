@@ -146,7 +146,7 @@ describe('Edit page form', () => {
 		render(EditPage, { props: { data: makeData(), form: null } });
 		await fireEvent.click(screen.getByRole('button', { name: 'Remove Dessert' }));
 		expect(editingLine('Editing v2 · saves settings only')).toBeInTheDocument();
-		await fireEvent.focus(screen.getByRole('combobox'));
+		await fireEvent.click(screen.getByRole('combobox'));
 		await fireEvent.click(screen.getByRole('option', { name: /Dessert/ }));
 		expect(editingLine('Editing v2')).toBeInTheDocument();
 	});
