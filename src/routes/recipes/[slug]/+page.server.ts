@@ -136,8 +136,8 @@ export const actions: Actions = {
 		// One snapshot of the latest version is the whole content of the fork;
 		// the source row contributes only its settings and lineage.
 		const copies = recipeCopies(latestVersion);
-		const { ingredients, steps } = latestVersion;
-		const snapshot: RecipeContent = { ...copies, ingredients, steps };
+		const { makes, ingredients, steps } = latestVersion;
+		const snapshot: RecipeContent = { ...copies, makes, ingredients, steps };
 		const slug = `${slugify(snapshot.title)}-${randomSuffix()}`;
 
 		let newSlug: string | null = null;

@@ -3,7 +3,7 @@ import { chain } from '#lib/testing/drizzle.js';
 import { invokeAction as invoke, formEvent } from '#lib/testing/actions.js';
 import { actions, load } from './+page.server';
 import { VERSION_NOT_FOUND } from './versionError.js';
-import { makeIngredient, makeStep, makeContent } from '#lib/recipes/fixtures.js';
+import { inGroup, makeIngredient, makeStep, makeContent } from '#lib/recipes/fixtures.js';
 import { favorites, recipes } from '#lib/server/db/schema.js';
 
 // ─── Hoisted mocks ────────────────────────────────────────────────────────────
@@ -84,11 +84,12 @@ const LATEST = makeContent({
 	title: 'Classic Cookies',
 	description: 'Good cookies',
 	servings: 24,
+	makes: '24 cookies',
 	prepTimeMinutes: 20,
 	cookTimeMinutes: 12,
 	imageUrl: 'https://img/version.png',
-	ingredients: [makeIngredient('2 cups flour')],
-	steps: [makeStep('Mix.')]
+	ingredients: [makeIngredient('salt'), ...inGroup('Dough', [makeIngredient('2 cups flour')])],
+	steps: inGroup('Bake', [makeStep('Mix.')])
 });
 
 const SOURCE_RECIPE = {
