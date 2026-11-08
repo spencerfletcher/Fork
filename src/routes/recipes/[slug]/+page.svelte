@@ -46,8 +46,14 @@
 	// Below 1024px the Ingredients | Method bar shows one section at a time in
 	// place of the other, so the reader never scrolls past one to reach the
 	// other. Switching brings the section's top back under the bar if the page
-	// was scrolled into the old one.
-	let tab: 'ingredients' | 'method' = $state('ingredients');
+	// was scrolled into the old one. Writable derived: a parent or fork link
+	// keeps this page mounted, so another recipe opens on Ingredients again;
+	// keyed on the slug string, so a data reload of this one keeps the tab.
+	const slug = $derived(recipe.slug);
+	let tab = $derived.by((): 'ingredients' | 'method' => {
+		void slug;
+		return 'ingredients';
+	});
 	let content: HTMLElement | undefined = $state();
 
 	function show(next: typeof tab) {

@@ -233,3 +233,21 @@ describe('recipe page cooking mode', () => {
 		expect(screen.getByRole('navigation', { name: 'Recipe sections' })).toBeInTheDocument();
 	});
 });
+
+describe('recipe page section tabs', () => {
+	const pressed = (name: string) =>
+		screen.getByRole('button', { name }).getAttribute('aria-pressed');
+
+	test('a reload of the same recipe keeps Method; another recipe opens on Ingredients', async () => {
+		const { rerender } = load();
+		await fireEvent.click(screen.getByRole('button', { name: 'Method' }));
+		expect(pressed('Method')).toBe('true');
+		// A Favorite reloads the data: same recipe, new objects.
+		await rerender({ data: makeData() });
+		expect(pressed('Method')).toBe('true');
+		// A parent or fork link keeps this page mounted with another recipe.
+		const other = makeData();
+		await rerender({ data: { ...other, recipe: { ...other.recipe, slug: 'other-cookies' } } });
+		expect(pressed('Ingredients')).toBe('true');
+	});
+});
