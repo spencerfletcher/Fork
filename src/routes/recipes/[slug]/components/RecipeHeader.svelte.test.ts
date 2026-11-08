@@ -231,6 +231,12 @@ describe('RecipeHeader stats row', () => {
 // ─── Header content ───────────────────────────────────────────────────────────
 
 describe('RecipeHeader content', () => {
+	test('the title and byline break a long unbroken word, so a phone never scrolls sideways', () => {
+		const { container } = renderHeader();
+		expect(screen.getByRole('heading', { level: 1 })).toHaveClass('[overflow-wrap:anywhere]');
+		expect(container.querySelector('.byline')).toHaveClass('[overflow-wrap:anywhere]');
+	});
+
 	test('says the serves from the content it is given in the measure line, as plain text', () => {
 		const { container } = renderHeader();
 		expect(container.querySelector('.details')!.textContent!.replace(/\s+/g, ' ')).toContain(

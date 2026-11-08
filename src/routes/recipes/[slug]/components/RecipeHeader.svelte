@@ -53,12 +53,12 @@
      the tags, the measure on one line, the actions (the order of the title
      band, 31 October 2026). Nothing is boxed and nothing is pinned. -->
 <header class="recipe-header">
-	<h1 class="title m-0 font-serif font-medium">{currentVersion.title}</h1>
+	<h1 class="title m-0 font-serif font-medium [overflow-wrap:anywhere]">{currentVersion.title}</h1>
 
 	<!-- Who, and what it was forked from (the parent's title, not its author,
 	     who is one click away). One line; there is no separate attribution
 	     line. Decided 29 October 2026. -->
-	<p class="byline m-0 font-sans">
+	<p class="byline m-0 font-sans [overflow-wrap:anywhere]">
 		{#if recipe.author}By <Username username={recipe.author.username} />{/if}
 		{#if recipe.parent}
 			{#if recipe.author}·{/if}

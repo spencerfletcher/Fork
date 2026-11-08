@@ -27,7 +27,7 @@
 			     height, so focusing it scrolls the whole step into view. -->
 			<li>
 				<label
-					class="step group has-[:focus-visible]:outline-accent relative grid cursor-pointer [grid-template-columns:2ch_1fr] items-baseline gap-4 font-serif text-[1.125rem] select-none has-[:checked]:line-through has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2">
+					class="step group has-[:focus-visible]:outline-accent relative grid cursor-pointer [grid-template-columns:2ch_minmax(0,1fr)] items-baseline gap-4 font-serif text-[1.125rem] select-none has-[:checked]:line-through has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2">
 					<input
 						type="checkbox"
 						class="sr-only top-0 h-full"
@@ -40,7 +40,7 @@
 
 					<div class="flex flex-col gap-1.5">
 						<p
-							class="step-text text-text group-has-[:checked]:text-text-3 m-0 font-sans text-[1.0625rem] leading-[1.6] whitespace-pre-line">
+							class="step-text text-text [overflow-wrap:anywhere] group-has-[:checked]:text-text-3 m-0 font-sans text-[1.0625rem] leading-[1.6] whitespace-pre-line">
 							{step.text}
 						</p>
 						{#if step.annotation}

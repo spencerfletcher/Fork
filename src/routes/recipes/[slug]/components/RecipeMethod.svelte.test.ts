@@ -125,11 +125,17 @@ describe('RecipeMethod', () => {
 			expect(numeral).toHaveClass('justify-self-end', 'tabular-nums');
 			expect(numeral.parentElement).toHaveClass(
 				'gap-4',
-				'[grid-template-columns:2ch_1fr]',
+				// minmax(0, …): a long unbroken word wraps instead of widening the page.
+				'[grid-template-columns:2ch_minmax(0,1fr)]',
 				'font-serif',
 				'text-[1.125rem]'
 			);
 		}
+	});
+
+	test('a step breaks a long unbroken word, so a phone never scrolls sideways', () => {
+		render(RecipeMethod, { props: { storageKey: KEY, steps: [makeStep('Whisk.')] } });
+		expect(screen.getByText('Whisk.')).toHaveClass('[overflow-wrap:anywhere]');
 	});
 });
 

@@ -27,6 +27,12 @@ function rows() {
 }
 
 describe('RecipeIngredients', () => {
+	test('a line breaks a long unbroken word, so a phone never scrolls sideways', () => {
+		renderWith('salt to taste', [null]);
+		expect(rows()[0].lastElementChild).toHaveTextContent('salt to taste');
+		expect(rows()[0].lastElementChild).toHaveClass('min-w-0', '[overflow-wrap:anywhere]');
+	});
+
 	test('bolds the whole of a counted line, and nothing on a line without a number', () => {
 		renderWith('2 large eggs\nsalt to taste', [null, null]);
 		const [eggs, salt] = rows();

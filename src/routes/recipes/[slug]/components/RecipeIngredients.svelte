@@ -93,7 +93,7 @@
 					checked={ticks.ticked.includes(i)}
 					onchange={(e) => ticks.toggle(i, e.currentTarget.checked)} />
 				<span class="tick translate-y-[2px]" aria-hidden="true"></span>
-				<span class="group-has-[:checked]:text-text-3 min-w-0">
+				<span class="group-has-[:checked]:text-text-3 min-w-0 [overflow-wrap:anywhere]">
 					{#if bold}<span
 							class={['font-semibold', scaled && 'text-accent group-has-[:checked]:text-text-3']}>
 							{bold}
