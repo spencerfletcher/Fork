@@ -164,6 +164,7 @@ describe('signup load', () => {
 			location: '/favorites?q=soup'
 		});
 		expect(await signedIn('?redirectTo=%2F%2Fevil.example')).toMatchObject({ location: '/' });
+		expect(await signedIn('?redirectTo=%2F%5Cevil.example')).toMatchObject({ location: '/' });
 		expect(await signedIn('')).toMatchObject({ location: '/' });
 	});
 
