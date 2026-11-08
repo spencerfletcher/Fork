@@ -315,17 +315,14 @@ describe('RecipeActions Cook toggle', () => {
 		expect(screen.queryByRole('link')).toBeNull();
 	});
 
-	test('both words are always laid out, so the pill keeps one width', () => {
+	test('the pill holds only the word it shows, so no blank space is reserved', () => {
 		const { rerender } = render(RecipeActions, { props: makeProps() });
 		const cook = screen.getByRole('button', { name: 'Cook' });
-		const words = () =>
-			[...cook.querySelectorAll('.cook-label > span')].map((el) =>
-				el.textContent!.replace(/\s+/g, ' ').trim()
-			);
-		expect(words()).toEqual(['Cook', 'Done cooking']);
-		expect(cook.querySelector('[aria-hidden="true"].invisible')).toHaveTextContent('Done cooking');
+		const words = () => cook.textContent!.replace(/\s+/g, ' ').trim();
+		expect(words()).toBe('Cook');
+		expect(cook.querySelector('.invisible')).toBeNull();
 		rerender(makeProps({ cooking: true }));
-		expect(words()).toEqual(['Cook', 'Done cooking']);
+		expect(words()).toBe('Done cooking');
 	});
 
 	test('pressed, the pill takes the Favorite on-state: marigold tint and border', () => {

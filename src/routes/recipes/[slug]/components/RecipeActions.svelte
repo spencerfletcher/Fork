@@ -191,8 +191,8 @@
 		{/if}
 	{/if}
 
-	<!-- Visible to everyone. Both words are laid out in one cell, the unused
-	     one invisible, so the pill keeps one width either way. -->
+	<!-- Visible to everyone. Only the shown word is rendered: Fork and Favorite
+	     step aside while cooking, so the pill growing to "Done cooking" shifts nothing. -->
 	<button type="button" class="btn-ghost cook" aria-pressed={cooking} onclick={toggleCook}>
 		<svg
 			class="size-4"
@@ -206,15 +206,15 @@
 			<path
 				d="M2 7.5h12M3.5 7.5v4a2 2 0 0 0 2 2h5a2 2 0 0 0 2-2v-4M6 5c0-1 1-1.2 1-2.5M9.5 5c0-1 1-1.2 1-2.5" />
 		</svg>
-		<span class="cook-label">
-			<span class:invisible={cooking} aria-hidden={cooking || undefined}>Cook</span>
+		{#if cooking}
 			<!-- Below 375 "Done", as Fork drops "this recipe": half the row cannot
 			     hold "Done cooking" on one line. -->
-			<span class:invisible={!cooking} aria-hidden={!cooking || undefined}>
-				Done
-				<span class="max-[375px]:hidden">cooking</span>
+			<span>
+				Done <span class="max-[375px]:hidden">cooking</span>
 			</span>
-		</span>
+		{:else}
+			<span>Cook</span>
+		{/if}
 	</button>
 
 	{#if cooking && noWakeLock}
@@ -257,16 +257,6 @@
 	.cook[aria-pressed='true']:hover,
 	.favorite[aria-pressed='true']:hover {
 		background: var(--color-marigold-tint-hover);
-	}
-
-	/* The word starts at the icon, not centred in the wider word's box. */
-	.cook-label {
-		display: inline-grid;
-		justify-items: start;
-	}
-
-	.cook-label > span {
-		grid-area: 1 / 1;
 	}
 
 	/* Forced colours strip the tint and the marigold star, so pressed keeps a
