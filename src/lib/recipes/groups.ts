@@ -25,6 +25,23 @@ export function splitGroups(text: string): Section[] {
 		.filter((section, i) => i > 0 || section.text.trim().length > 0);
 }
 
+/** The inverse of splitGroups: rows printed with `separator` between them, and
+ *  a "# Name" line, a blank line above it, wherever the group changes. */
+export function joinGroups<T extends { group?: string }>(
+	rows: T[],
+	print: (row: T) => string,
+	separator: string
+): string {
+	let out = '';
+	rows.forEach((row, i) => {
+		const heading = row.group !== undefined && row.group !== rows[i - 1]?.group;
+		if (i > 0) out += heading ? '\n\n' : separator;
+		if (heading) out += `# ${row.group}\n`;
+		out += print(row);
+	});
+	return out;
+}
+
 /** Each section parsed by `parse`, its rows given the section's group. */
 export function parseGrouped<T extends object>(
 	text: string,

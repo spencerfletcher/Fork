@@ -1,5 +1,6 @@
 import { describe, test, expect } from 'vitest';
 import { parseIngredientLine, parseIngredientText, ingredientsToText } from './ingredients';
+import { inGroup, makeIngredient } from './fixtures';
 
 describe('parseIngredientLine', () => {
 	test.each([
@@ -63,5 +64,20 @@ describe('grouped ingredients', () => {
 
 	test('a heading with no rows under it adds nothing', () => {
 		expect(parseIngredientText('# Dough\n# Icing\nsugar').map((i) => i.group)).toEqual(['Icing']);
+	});
+
+	test('ingredientsToText writes a "# Name" line where the group changes, a blank line above it', () => {
+		const rows = [
+			makeIngredient('salt'),
+			...inGroup('Dough', [makeIngredient('1 cup flour'), makeIngredient('2 eggs')]),
+			...inGroup('Icing', [makeIngredient('1 cup sugar')])
+		];
+		const text = ingredientsToText(rows);
+		expect(text).toBe('salt\n\n# Dough\n1 cup flour\n2 eggs\n\n# Icing\n1 cup sugar');
+		expect(parseIngredientText(text)).toEqual(rows);
+	});
+
+	test('a list that starts grouped starts with its heading', () => {
+		expect(ingredientsToText(inGroup('Dough', [makeIngredient('flour')]))).toBe('# Dough\nflour');
 	});
 });

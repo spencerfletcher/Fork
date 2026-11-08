@@ -1,5 +1,6 @@
 import { describe, test, expect } from 'vitest';
 import { parseStepText, stepsToText } from './steps';
+import { inGroup, makeStep } from './fixtures';
 
 const EXAMPLE = [
 	'Cream the butter and sugars until pale.',
@@ -125,6 +126,22 @@ describe('grouped steps', () => {
 			{ text: 'Knead.', group: 'Make the dough' },
 			{ text: 'Bake 20 minutes.', group: 'Bake' }
 		]);
+	});
+
+	test('stepsToText writes a "# Name" line where the group changes, and reads back the same', () => {
+		const steps = [
+			makeStep('Preheat.'),
+			...inGroup('Make the dough', [
+				makeStep('Mix.', { type: 'tip', text: 'Gently.' }),
+				makeStep('Knead.')
+			]),
+			...inGroup('Bake', [makeStep('Bake.')])
+		];
+		const text = stepsToText(steps);
+		expect(text).toBe(
+			'Preheat.\n\n# Make the dough\nMix.\ntip: Gently.\n\nKnead.\n\n# Bake\nBake.'
+		);
+		expect(parseStepText(text)).toEqual(steps);
 	});
 
 	test('a heading ends the step above it even with no blank line between', () => {

@@ -4,7 +4,7 @@
 // scaling and gram weights, and are null or empty when a line does not parse.
 import { parseIngredient } from 'parse-ingredient';
 import type { Ingredient } from './types.js';
-import { parseGrouped } from './groups.js';
+import { joinGroups, parseGrouped } from './groups.js';
 
 // Strict units: parse-ingredient's own list, minus size words, so "2 large
 // eggs" keeps "large eggs" as the name instead of reading "large" as a unit.
@@ -56,5 +56,5 @@ export function parseIngredientText(text: string): Ingredient[] {
 
 /** The inverse of parseIngredientText, for refilling the editor from a saved version. */
 export function ingredientsToText(rows: Ingredient[]): string {
-	return rows.map((ingredient) => ingredient.text).join('\n');
+	return joinGroups(rows, (ingredient) => ingredient.text, '\n');
 }

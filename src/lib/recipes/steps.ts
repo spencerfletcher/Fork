@@ -5,7 +5,7 @@
 // exception: a transcribed list's "1." or "2)" is dropped, since the page
 // numbers the steps itself.
 import { STEP_ANNOTATION_TYPES, type Step, type StepAnnotationType } from './types.js';
-import { parseGrouped } from './groups.js';
+import { joinGroups, parseGrouped } from './groups.js';
 
 // A list marker at the start of a line: "1. " or "2) ", never "1.5 cups".
 const NUMBERED = /^\s*\d+[.)]\s+/;
@@ -60,9 +60,10 @@ function parseBlocks(text: string): Step[] {
 
 /** The inverse of parseStepText, for refilling the editor from a saved version. */
 export function stepsToText(steps: Step[]): string {
-	return steps
-		.map((step) =>
-			step.annotation ? `${step.text}\n${step.annotation.type}: ${step.annotation.text}` : step.text
-		)
-		.join('\n\n');
+	return joinGroups(
+		steps,
+		(step) =>
+			step.annotation ? `${step.text}\n${step.annotation.type}: ${step.annotation.text}` : step.text,
+		'\n\n'
+	);
 }

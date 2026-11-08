@@ -11,6 +11,11 @@ export function makeStep(text: string, annotation?: StepAnnotation): Step {
 	return annotation ? { text, annotation } : { text };
 }
 
+/** Rows as they parse under a "# Name" heading. */
+export function inGroup<T extends Ingredient | Step>(group: string, rows: T[]): T[] {
+	return rows.map((row) => ({ ...row, group }));
+}
+
 export function makeContent(overrides: Partial<RecipeContent> = {}): RecipeContent {
 	return {
 		title: 'Cookies',
