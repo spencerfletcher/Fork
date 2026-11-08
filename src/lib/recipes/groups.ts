@@ -3,7 +3,7 @@
 // group it sits under; rows before the first heading have none, and a recipe
 // with no heading stores exactly what it did before groups existed.
 
-import { plural } from '#lib/helpers.js';
+import { plural } from '../helpers.js';
 
 // A space after the #, as Markdown has it, so "#10 can tomatoes" stays a line.
 const HEADING = /^\s*#\s+(\S.*)$/;
