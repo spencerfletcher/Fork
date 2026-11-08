@@ -59,11 +59,20 @@ describe('users/[username] load', () => {
 		await expect(load(makeLoadEvent('nobody'))).rejects.toMatchObject({ status: 404 });
 	});
 
-	// Usernames are stored lowercased, so /users/ChefMaria finds chefmaria.
-	test('looks the username up lowercased', async () => {
+	// Usernames are stored lowercased, so /users/ChefMaria moves to the one
+	// canonical URL rather than serving a second copy of the page.
+	test('a mixed-case username redirects permanently to the lowercase path', async () => {
+		await expect(load(makeLoadEvent('ChefMaria'))).rejects.toMatchObject({
+			status: 301,
+			location: '/users/chefmaria'
+		});
+		expect(findProfileMock).not.toHaveBeenCalled();
+	});
+
+	test('looks the username up as given when it is already lowercase', async () => {
 		findProfileMock.mockResolvedValue(makeProfile());
 		findRecipesMock.mockResolvedValue([]);
-		await load(makeLoadEvent('ChefMaria'));
+		await load(makeLoadEvent('chefmaria'));
 		expect(findProfileMock).toHaveBeenCalledWith({ where: eq(profiles.username, 'chefmaria') });
 	});
 

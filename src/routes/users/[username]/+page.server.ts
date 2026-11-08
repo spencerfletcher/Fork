@@ -1,15 +1,18 @@
 import { db } from '#lib/server/db/index.js';
 import { profiles, recipes, recipeVersions } from '#lib/server/db/schema.js';
 import { and, count, eq } from 'drizzle-orm';
-import { error } from '@sveltejs/kit';
+import { error, redirect } from '@sveltejs/kit';
 import { attachRecipeCounts } from '#lib/server/recipeCounts.js';
 import { clampDescription } from '#lib/seo.js';
 import { plural } from '#lib/helpers.js';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params, locals: { user } }) => {
+	// Usernames are stored lowercased: one canonical URL per profile.
+	const username = params.username.toLowerCase();
+	if (username !== params.username) throw redirect(301, `/users/${username}`);
 	const profile = await db.query.profiles.findFirst({
-		where: eq(profiles.username, params.username.toLowerCase())
+		where: eq(profiles.username, username)
 	});
 
 	if (!profile) throw error(404, 'User not found');
