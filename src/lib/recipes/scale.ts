@@ -41,8 +41,10 @@ export function formatScaled(n: number): string {
 		}
 	}
 	const tenths = Math.round(n * 10) / 10;
-	// Under a tenth, one significant digit, so a tiny measure never reads 0.
-	return tenths > 0 ? String(tenths) : String(Number(n.toPrecision(1)));
+	// Under a tenth, one significant digit, so a tiny measure never reads 0;
+	// under a thousandth there is nothing to measure.
+	if (tenths > 0) return String(tenths);
+	return n < 0.001 ? '0' : String(Number(n.toPrecision(1)));
 }
 
 const round2 = (n: number) => Math.round(n * 100) / 100;

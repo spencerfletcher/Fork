@@ -50,7 +50,9 @@ describe('formatScaled', () => {
 		[0.03125, '0.03'],
 		// ⅛ tsp at 0.25 of 12 serves.
 		[0.125 * (0.25 / 12), '0.003'],
-		[0, '0']
+		[0, '0'],
+		// Under a thousandth is nothing to measure, never "1e-7".
+		[1e-7, '0']
 	])('%j → %j', (n, expected) => {
 		expect(formatScaled(n)).toBe(expected);
 	});
