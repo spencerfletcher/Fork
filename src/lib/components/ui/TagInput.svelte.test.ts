@@ -28,6 +28,15 @@ describe('TagInput', () => {
 		expect(screen.getByRole('combobox', { name: /tag/i })).toBeInTheDocument();
 	});
 
+	// aria-controls names an element that must exist.
+	test('aria-controls points at the list only while it is rendered', async () => {
+		render(TagInput, { props: { allTags } });
+		const input = getInput();
+		expect(input).not.toHaveAttribute('aria-controls');
+		await fireEvent.focus(input);
+		expect(input).toHaveAttribute('aria-controls', screen.getByRole('listbox').id);
+	});
+
 	test('each option is the element that carries aria-selected and is not a Tab stop', async () => {
 		render(TagInput, { props: { allTags } });
 		await fireEvent.focus(getInput());
@@ -272,6 +281,16 @@ describe('TagInput tag pill remove button', () => {
 		await fireEvent.click(remove('Dessert'));
 		await tick();
 		expect(getInput()).toHaveFocus();
+	});
+});
+
+describe('TagInput active option', () => {
+	// The hover tint is 1.09:1 on the list, too faint to find the arrowed-to option by.
+	test('is drawn with an accent line inside its edge, outside any media query', () => {
+		// One tab of indent: a top-level rule, not the forced-colours one.
+		expect(style).toMatch(
+			/\n\t\.tag-option\[aria-selected='true'\] {[^}]*outline: 2px solid var\(--color-accent\);[^}]*outline-offset: -2px;/
+		);
 	});
 });
 

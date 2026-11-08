@@ -155,7 +155,7 @@
 			aria-expanded={showDropdown}
 			aria-haspopup="listbox"
 			aria-autocomplete="list"
-			aria-controls="tag-listbox"
+			aria-controls={showDropdown ? 'tag-listbox' : undefined}
 			aria-activedescendant={active >= 0 ? `tag-option-${active}` : undefined} />
 
 		{#if showDropdown}
@@ -309,11 +309,16 @@
 		background: var(--color-surface-2);
 	}
 
-	/* Forced colours drop the background, so the active option needs a line. */
+	/* The tint alone is too faint to find the arrowed-to option by, so it
+	   takes a line inside its edge; forced colours draw it in Highlight. */
+	.tag-option[aria-selected='true'] {
+		outline: 2px solid var(--color-accent);
+		outline-offset: -2px;
+	}
+
 	@media (forced-colors: active) {
 		.tag-option[aria-selected='true'] {
-			outline: 2px solid Highlight;
-			outline-offset: -2px;
+			outline-color: Highlight;
 		}
 	}
 
