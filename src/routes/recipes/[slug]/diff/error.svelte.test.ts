@@ -62,9 +62,11 @@ describe('compare page error', () => {
 		// contradicted itself (critique, 29 October 2026).
 		renderError(400, 'Need at least two versions to compare');
 		expect(screen.queryByText(/Pick two/)).toBeNull();
+		// Anyone can land here, so the line names no action only the owner can take.
 		expect(
-			screen.getByText('Save a change to the recipe, then compare it with the original.')
+			screen.getByText('Once the recipe has a second version you can compare them here.')
 		).toBeInTheDocument();
+		expect(screen.queryByText(/Save a change/)).toBeNull();
 		expect(screen.getByRole('link', { name: 'Back to the recipe' })).toBeInTheDocument();
 		// There is no pair to compare.
 		expect(screen.queryByRole('link', { name: 'Compare first and latest' })).toBeNull();

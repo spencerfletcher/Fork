@@ -19,7 +19,7 @@
 		<h1 class="m-0">Error {page.status} – {page.error?.message || 'An error occurred'}</h1>
 		<p class="lede text-text-2">
 			{#if oneVersion}
-				Save a change to the recipe, then compare it with the original.
+				Once the recipe has a second version you can compare them here.
 			{:else if page.error?.versionCount}
 				This recipe has v1 to v{page.error.versionCount}.
 			{:else if recipeUrl}
