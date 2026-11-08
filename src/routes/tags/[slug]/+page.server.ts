@@ -23,7 +23,8 @@ export const load: PageServerLoad = async ({ params }) => {
 						.where(and(eq(recipesToTags.recipeId, recipes.id), eq(recipesToTags.tagId, tag.id)))
 				)
 			),
-			with: CARD_WITH
+			with: CARD_WITH,
+			orderBy: (r, { desc }) => [desc(r.updatedAt)]
 		}),
 		visibleTags(eq(recipes.isPublic, true))
 	]);

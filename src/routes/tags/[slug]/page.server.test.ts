@@ -1,6 +1,6 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { chain } from '#lib/testing/drizzle.js';
-import { eq } from 'drizzle-orm';
+import { desc, eq } from 'drizzle-orm';
 import { recipes } from '#lib/server/db/schema.js';
 
 const { findFirstMock, findManyMock, selectMock, visibleTagsMock } = vi.hoisted(() => ({
@@ -34,5 +34,11 @@ describe('/tags/[slug] load', () => {
 		const result = await load(event);
 		expect(visibleTagsMock.mock.calls[0][0]).toEqual(eq(recipes.isPublic, true));
 		expect(result).toMatchObject({ tags: [{ id: 1, name: 'Dessert', slug: 'dessert' }] });
+	});
+
+	test('lists the tagged recipes newest change first, as /recipes does', async () => {
+		await load(event);
+		const { orderBy } = findManyMock.mock.calls[0][0];
+		expect(orderBy(recipes, { desc })).toEqual([desc(recipes.updatedAt)]);
 	});
 });
