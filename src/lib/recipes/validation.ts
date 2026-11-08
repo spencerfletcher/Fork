@@ -97,13 +97,20 @@ const emptyGroupTail = (items: 'ingredients' | 'steps') =>
 export const emptyGroupMessage = (name: string, items: 'ingredients' | 'steps') =>
 	`“${name}”${emptyGroupTail(items)}`;
 
+/** What a "#" line with no name says, one wording per box so fieldOfMessage can place it. */
+export const unnamedGroupMessage = (items: 'ingredients' | 'steps') =>
+	`A # line needs a group name after it, like ${items === 'ingredients' ? '# Dough' : '# Bake'}.`;
+
 /** A box's groups, refused when a heading is empty or its name too long, then flattened. */
 const grouped = <T>(items: 'ingredients' | 'steps') =>
 	z
 		.custom<Array<{ group: string | undefined; rows: T[] }>>()
 		.superRefine((sections, ctx) => {
 			const empty = sections.find((s) => s.group !== undefined && s.rows.length === 0);
-			if (empty) ctx.addIssue({ code: 'custom', message: emptyGroupMessage(empty.group!, items) });
+			if (sections.some((s) => s.group === ''))
+				ctx.addIssue({ code: 'custom', message: unnamedGroupMessage(items) });
+			else if (empty)
+				ctx.addIssue({ code: 'custom', message: emptyGroupMessage(empty.group!, items) });
 			else if (sections.some((s) => (s.group?.length ?? 0) > MAX_GROUP_NAME))
 				ctx.addIssue({ code: 'custom', message: groupNameTooLong(items) });
 		})
@@ -261,9 +268,15 @@ const MESSAGES_OF: Record<keyof ContentFields, string[]> = {
 		REQUIRED_MESSAGES.ingredients,
 		fieldTooLong(INGREDIENTS),
 		LINE_TOO_LONG,
-		groupNameTooLong('ingredients')
+		groupNameTooLong('ingredients'),
+		unnamedGroupMessage('ingredients')
 	],
-	steps: [REQUIRED_MESSAGES.steps, fieldTooLong(STEPS), groupNameTooLong('steps')]
+	steps: [
+		REQUIRED_MESSAGES.steps,
+		fieldTooLong(STEPS),
+		groupNameTooLong('steps'),
+		unnamedGroupMessage('steps')
+	]
 };
 
 /** The field a content message belongs to, so the editor can show it there; undefined for any other message. */

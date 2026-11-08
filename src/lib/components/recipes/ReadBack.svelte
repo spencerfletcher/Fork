@@ -13,7 +13,7 @@
 		<!-- eslint-disable-next-line svelte/no-useless-mustaches -- a bare space between blocks is dropped -->
 		{#if i > 0}{' '}{/if}
 		<span class="part">
-			{#if part.name === undefined}Ungrouped{:else}<b>{part.name}</b>{/if}
+			{#if part.name === undefined}Ungrouped{:else}<b>{part.name || 'No name'}</b>{/if}
 			{part.detail}
 		</span>
 	{/each}

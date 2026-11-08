@@ -5,8 +5,10 @@
 
 import { plural } from '../helpers.js';
 
-// A space after the #, as Markdown has it, so "#10 can tomatoes" stays a line.
-const HEADING = /^\s*#\s+(\S.*)$/;
+// A space or the line's end after the #, as Markdown has it, so "#10 can
+// tomatoes" stays a line. A bare "#" is a heading with an empty name, which
+// validation refuses rather than saving "#" as a row.
+const HEADING = /^\s*#(?:\s+(.*))?$/;
 
 export type Section = { group: string | undefined; text: string };
 
@@ -19,7 +21,7 @@ export function splitGroups(text: string): Section[] {
 	];
 	for (const line of text.replace(/\r\n/g, '\n').split('\n')) {
 		const heading = HEADING.exec(line);
-		if (heading) sections.push({ group: heading[1].trim(), lines: [] });
+		if (heading) sections.push({ group: (heading[1] ?? '').trim(), lines: [] });
 		else sections.at(-1)!.lines.push(line);
 	}
 	return sections

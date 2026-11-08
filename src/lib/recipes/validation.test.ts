@@ -8,6 +8,7 @@ import {
 	REQUIRED_MESSAGES,
 	tagNameMessage,
 	emptyGroupMessage,
+	unnamedGroupMessage,
 	type Result
 } from './validation';
 import {
@@ -153,6 +154,18 @@ describe('parseDraftContent(draftOf(form))', () => {
 		expect(emptyGroupMessage('Filling', 'ingredients')).toBe(
 			'“Filling” has no ingredients. Add some under it or delete the heading.'
 		);
+	});
+
+	test.each([
+		['ingredients', 'flour\n#\nsugar'],
+		['steps', 'Mix.\n\n# \nBake.']
+	])('a heading with no name in %s is refused, and placed under that box', (field, value) => {
+		const result = parseContent(form({ ...FULL, [field]: value }));
+		expect(result).toEqual({
+			ok: false,
+			error: unnamedGroupMessage(field as 'ingredients' | 'steps')
+		});
+		if (!result.ok) expect(fieldOfMessage(result.error)).toBe(field);
 	});
 
 	test('a group name longer than the cap is refused', () => {

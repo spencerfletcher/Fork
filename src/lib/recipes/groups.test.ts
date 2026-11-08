@@ -30,9 +30,16 @@ describe('splitGroups', () => {
 		]);
 	});
 
-	test('# needs a space after it, so "#10 can" and a bare "#" stay lines', () => {
-		expect(splitGroups('1 #10 can tomatoes\n#10 can beans\n#')).toEqual([
-			{ group: undefined, text: '1 #10 can tomatoes\n#10 can beans\n#' }
+	test('# needs a space or the line end after it, so "#10 can" stays a line', () => {
+		expect(splitGroups('1 #10 can tomatoes\n#10 can beans')).toEqual([
+			{ group: undefined, text: '1 #10 can tomatoes\n#10 can beans' }
+		]);
+	});
+
+	test.each(['#', '# ', '  #  '])('a bare %j line is a heading with an empty name', (line) => {
+		expect(splitGroups(`flour\n${line}\nsugar`)).toEqual([
+			{ group: undefined, text: 'flour' },
+			{ group: '', text: 'sugar' }
 		]);
 	});
 
