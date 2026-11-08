@@ -95,10 +95,11 @@ beforeEach(() => {
 });
 
 describe('Edit page form', () => {
-	test('renders one form with one Save button', () => {
+	test('renders one save form with one Save button, and the delete form after it', async () => {
 		render(EditPage, { props: { data: makeData(), form: null } });
-		expect(document.querySelectorAll('form')).toHaveLength(1);
-		expect(document.querySelector('form')).toHaveAttribute('action', '?/save');
+		await fireEvent.click(screen.getByRole('button', { name: 'Delete recipe' }));
+		const actions = [...document.querySelectorAll('form')].map((f) => f.getAttribute('action'));
+		expect(actions).toEqual(['?/save', '?/deleteRecipe']);
 		expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument();
 		expect(screen.queryByRole('button', { name: /save info|save new version/i })).toBeNull();
 	});
@@ -273,6 +274,30 @@ describe('Edit page form', () => {
 		nav.guards[0]({ cancel, type: 'goto' });
 		expect(confirm).not.toHaveBeenCalled();
 		expect(cancel).not.toHaveBeenCalled();
+	});
+
+	test('the guard stays quiet while a delete is pending: its redirect leaves the dirty form', async () => {
+		const confirm = vi.spyOn(window, 'confirm');
+		render(EditPage, { props: { data: makeData(), form: null } });
+		await fireEvent.input(title(), { target: { value: 'Biscuits' } });
+		await fireEvent.click(screen.getByRole('button', { name: 'Delete recipe' }));
+		await captured.submits[1]({} as never);
+		await tick();
+		const cancel = vi.fn();
+		nav.guards[0]({ cancel, type: 'goto' });
+		expect(confirm).not.toHaveBeenCalled();
+		expect(cancel).not.toHaveBeenCalled();
+	});
+
+	test("a refused delete shows under Delete, not in the editor's error box", async () => {
+		render(EditPage, {
+			props: { data: makeData(), form: { error: 'Not authorized', code: 'forbidden' } as never }
+		});
+		await tick();
+		const alert = screen.getByRole('alert');
+		expect(alert).toHaveTextContent('Not authorized');
+		expect(alert.closest('.delete-recipe')).not.toBeNull();
+		expect(title()).toHaveValue('Cookies');
 	});
 
 	test('has Cancel back to the recipe beside Save, and the header names the version', () => {

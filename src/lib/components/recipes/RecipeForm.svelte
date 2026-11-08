@@ -30,7 +30,8 @@
 		cancelHref,
 		imageUrl = null,
 		nextVersion,
-		header
+		header,
+		leaving = false
 	}: {
 		/** What was loaded, as the form's strings. Dirty-checking compares against it. */
 		baseline: RecipeDraft;
@@ -51,6 +52,8 @@
 		 *  "saves settings only", or '' while the form is clean or invalid),
 		 *  and whether any field is showing an error. */
 		header?: Snippet<[outcome: string, invalid: boolean]>;
+		/** Another form on the page is leaving on purpose (a delete), so the guard stays quiet. */
+		leaving?: boolean;
 	} = $props();
 
 	// The whole form as one object. A failed save hands back what was
@@ -209,7 +212,7 @@
 	// our wording, so cancelling there hands the question to the browser. The
 	// save's own redirect happens while submitting, which never asks.
 	beforeNavigate((navigation) => {
-		if (!dirty || save.pending) return;
+		if (!dirty || save.pending || leaving) return;
 		if (
 			navigation.type === 'leave' ||
 			!confirm('Leave without saving? Your changes will be lost.')

@@ -4,6 +4,8 @@
 	import { ingredientsToText } from '#lib/recipes/ingredients.js';
 	import { stepsToText } from '#lib/recipes/steps.js';
 	import RecipeForm from '#lib/components/recipes/RecipeForm.svelte';
+	import { pendingEnhance } from '#lib/pendingEnhance.svelte.js';
+	import DeleteRecipe from './DeleteRecipe.svelte';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -29,13 +31,20 @@
 	};
 
 	const current = $derived(latestVersion.versionNumber);
+
+	// One ActionData for two forms: a failed save hands back its draft, a
+	// refused delete does not, so each failure goes to its own form.
+	const deletion = pendingEnhance({ keepOnError: true });
+	const saveForm = $derived(form?.draft ? form : null);
+	const deleteError = $derived(deletion.error ?? (form && !form.draft ? form.error : null));
 </script>
 
 <div class="page">
 	<div class="editor">
 		<RecipeForm
 			{baseline}
-			{form}
+			form={saveForm}
+			leaving={deletion.pending}
 			allTags={data.allTags}
 			action="?/save"
 			submitLabel="Save"
@@ -57,5 +66,6 @@
 				</div>
 			{/snippet}
 		</RecipeForm>
+		<DeleteRecipe title={latestVersion.title} {deletion} error={deleteError} />
 	</div>
 </div>
