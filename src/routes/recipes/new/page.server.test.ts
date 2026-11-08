@@ -67,9 +67,15 @@ beforeEach(() => {
 });
 
 describe('new recipe action', () => {
-	test('throws 401 when not logged in', async () => {
+	test('a lapsed session returns 401 with the draft, so nothing typed is lost', async () => {
 		const result = await invoke(makeEvent({ fields: FULL, user: null }));
 		expect(result.status).toBe(401);
+		expect(result.data).toMatchObject({
+			error: 'Log in again to save.',
+			code: 'unauthenticated',
+			draft: { title: 'Soup', tags: ['Dessert', 'Baking'] }
+		});
+		expect(transactionMock).not.toHaveBeenCalled();
 	});
 
 	test('returns 400 with the raw draft when validation fails, and uploads nothing', async () => {

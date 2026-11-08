@@ -167,8 +167,15 @@ describe('save', () => {
 		expect(syncTagsMock).not.toHaveBeenCalled();
 	};
 
-	test('throws 401 when not logged in', async () => {
-		expect((await save(UNCHANGED, { user: null })).status).toBe(401);
+	test('a lapsed session returns 401 with the draft, so nothing typed is lost', async () => {
+		const result = await save({ ...UNCHANGED, servings: '8' }, { user: null });
+		expect(result.status).toBe(401);
+		expect(result.data).toMatchObject({
+			error: 'Log in again to save.',
+			code: 'unauthenticated',
+			draft: { servings: '8' }
+		});
+		expect(transactionMock).not.toHaveBeenCalled();
 	});
 
 	test('throws 404 when recipe is not found', async () => {

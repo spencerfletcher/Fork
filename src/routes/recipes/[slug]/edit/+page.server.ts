@@ -1,6 +1,7 @@
 import { error, redirect } from '@sveltejs/kit';
 import { db } from '#lib/server/db/index.js';
 import { recipes, recipeVersions } from '#lib/server/db/schema.js';
+import { draftOf } from '#lib/recipes/validation.js';
 import { eq, desc, sql } from 'drizzle-orm';
 import type { PageServerLoad, Actions } from './$types';
 import {
@@ -50,7 +51,10 @@ export const actions: Actions = {
 	// new version is appended when the content changed or a message was typed,
 	// which is never dropped.
 	save: async ({ params, request, locals: { user, supabase } }) => {
-		if (!user) throw error(401, 'Login required');
+		const formData = await request.formData();
+		// A lapsed session hands the draft back too, so logging in again loses nothing.
+		if (!user)
+			return saveFailure(401, 'unauthenticated', 'Log in again to save.', draftOf(formData));
 		const recipe = await db.query.recipes.findFirst({
 			where: eq(recipes.slug, params.slug),
 			with: { recipesToTags: { with: { tag: true } } }
@@ -58,7 +62,6 @@ export const actions: Actions = {
 		if (!recipe) throw error(404, 'Recipe not found');
 		if (recipe.authorId !== user.id) throw error(403, 'Not authorized');
 
-		const formData = await request.formData();
 		const submission = readSubmission(formData);
 		if (!submission.ok) return submission.failure;
 		const { draft, content, settings } = submission;

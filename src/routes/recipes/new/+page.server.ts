@@ -1,7 +1,8 @@
-import { redirect, error } from '@sveltejs/kit';
+import { redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { db } from '#lib/server/db/index.js';
 import { recipes, recipeVersions } from '#lib/server/db/schema.js';
+import { draftOf } from '#lib/recipes/validation.js';
 import { slugify, randomSuffix } from '#lib/helpers.js';
 import { removeRecipeImage } from '#lib/server/images.js';
 import { readSubmission, uploadPhoto, saveFailure } from '#lib/server/submission.js';
@@ -21,9 +22,10 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 
 export const actions: Actions = {
 	default: async ({ request, locals: { user, supabase } }) => {
-		if (!user) throw error(401, 'Login required');
-
 		const formData = await request.formData();
+		// A lapsed session hands the draft back too, so logging in again loses nothing.
+		if (!user)
+			return saveFailure(401, 'unauthenticated', 'Log in again to save.', draftOf(formData));
 		const submission = readSubmission(formData);
 		if (!submission.ok) return submission.failure;
 		const { draft, content, settings } = submission;

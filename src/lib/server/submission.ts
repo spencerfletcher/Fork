@@ -10,7 +10,8 @@ import type { RecipeDraft } from '#lib/recipes/validation.js';
 // stored. Every failure hands the draft back, so nothing typed is lost.
 
 /** Why a save failed, for code that branches on it; `error` is what the reader sees. */
-export type SaveFailureCode = 'invalid' | 'stale' | 'upload_failed' | 'save_failed';
+export type SaveFailureCode =
+	'invalid' | 'stale' | 'upload_failed' | 'save_failed' | 'unauthenticated';
 
 /** A save's failure in the editor's shape: the message, its code and the draft as typed. */
 export function saveFailure(
