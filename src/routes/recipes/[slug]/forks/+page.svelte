@@ -8,7 +8,10 @@
 
 <div class="page">
 	<div class="page-inner">
-		<a href="/recipes/{data.recipe.slug}" class="back-link">← {data.recipe.title}</a>
+		<a href="/recipes/{data.recipe.slug}" class="back-link">
+			<span aria-hidden="true">←</span>
+			{data.recipe.title}
+		</a>
 		<div class="browse-header">
 			<h1>Forks of {data.recipe.title}</h1>
 		</div>

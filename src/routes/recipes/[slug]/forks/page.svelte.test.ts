@@ -29,10 +29,10 @@ describe('Forks page', () => {
 		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
 			`Forks of ${data.recipe.title}`
 		);
-		expect(screen.getByRole('link', { name: `← ${data.recipe.title}` })).toHaveAttribute(
-			'href',
-			`/recipes/${data.recipe.slug}`
-		);
+		// The arrow is drawn, not read aloud: the name is the recipe's title.
+		const back = screen.getByRole('link', { name: data.recipe.title });
+		expect(back).toHaveAttribute('href', `/recipes/${data.recipe.slug}`);
+		expect(back).toHaveTextContent(`← ${data.recipe.title}`);
 	});
 
 	test('renders a card per fork in the shared grid, in the order given', () => {
