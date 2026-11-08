@@ -2,6 +2,7 @@ import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { chain } from '#lib/testing/drizzle.js';
 import { invokeAction as invoke, formEvent } from '#lib/testing/actions.js';
 import { actions, load } from './+page.server';
+import { VERSION_NOT_FOUND } from './versionError.js';
 import { makeIngredient, makeStep, makeContent } from '#lib/recipes/fixtures.js';
 import { favorites, recipes } from '#lib/server/db/schema.js';
 
@@ -455,7 +456,7 @@ describe('load: ?version=', () => {
 	test.each(['1abc', '1.5', ' 1', '-1'])('%j is not a version number: 404', async (version) => {
 		expect(await loadVersion(version)).toMatchObject({
 			status: 404,
-			body: { message: 'Version not found' }
+			body: { message: VERSION_NOT_FOUND }
 		});
 	});
 

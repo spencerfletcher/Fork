@@ -1,13 +1,12 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import RootError from '../../+error.svelte';
+	import { VERSION_NOT_FOUND } from './versionError.js';
 
 	// An unknown ?version= is a 404 on a recipe that exists, so the way back
 	// is to it, as the compare page's error does. Every other error here (a
 	// missing recipe, the edit and forks pages) answers as the root page does.
-	const versionMissing = $derived(
-		page.status === 404 && page.error?.message === 'Version not found'
-	);
+	const versionMissing = $derived(page.status === 404 && page.error?.message === VERSION_NOT_FOUND);
 </script>
 
 {#if versionMissing}

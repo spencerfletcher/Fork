@@ -1,6 +1,7 @@
 import { describe, test, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/svelte';
 import ErrorPage from './+error.svelte';
+import { VERSION_NOT_FOUND } from './versionError.js';
 import { MISSING_RECIPE_LEDE, SERVER_ERROR_LEDE } from '#lib/errors/copy.js';
 
 // ─── SvelteKit module mocks ───────────────────────────────────────────────────
@@ -28,9 +29,9 @@ function renderError(status: number, message: string, path = '/recipes/classic-c
 describe('recipe page error', () => {
 	test('a version the recipe does not have: the way back is to the recipe', () => {
 		// The recipe exists, so the root page's "may be private" lede was wrong.
-		renderError(404, 'Version not found', '/recipes/classic-cookies?version=9');
+		renderError(404, VERSION_NOT_FOUND, '/recipes/classic-cookies?version=9');
 		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
-			'Error 404 – Version not found'
+			`Error 404 – ${VERSION_NOT_FOUND}`
 		);
 		expect(screen.queryByText(MISSING_RECIPE_LEDE)).toBeNull();
 		const back = screen.getByRole('link', { name: 'Back to the recipe' });

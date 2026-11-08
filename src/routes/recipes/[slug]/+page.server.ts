@@ -9,6 +9,7 @@ import { recipeCopies } from '#lib/recipes/content.js';
 import { absoluteImage, clampDescription } from '#lib/seo.js';
 import { gramsFor } from '#lib/server/ingredientDensities.js';
 import { canView, visibleTo } from '#lib/server/visibility.js';
+import { VERSION_NOT_FOUND } from './versionError.js';
 import type { PageServerLoad, Actions } from './$types';
 
 export const load: PageServerLoad = async ({ params, url, locals: { user } }) => {
@@ -41,12 +42,12 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 	const latestVersion = recipe.versions[0];
 	if (!latestVersion) throw error(404, 'Recipe not found');
 	// Digits only: parseInt alone reads ?version=2abc as 2.
-	if (versionParam && !/^\d+$/.test(versionParam)) throw error(404, 'Version not found');
+	if (versionParam && !/^\d+$/.test(versionParam)) throw error(404, VERSION_NOT_FOUND);
 	const currentVersion =
 		requestedVersion === null
 			? latestVersion
 			: recipe.versions.find((v) => v.versionNumber === requestedVersion);
-	if (!currentVersion) throw error(404, 'Version not found');
+	if (!currentVersion) throw error(404, VERSION_NOT_FOUND);
 
 	// Independent lookups, one round trip. The fork count is the forks the
 	// viewer can see, the forks page's own rule: public ones and the viewer's
