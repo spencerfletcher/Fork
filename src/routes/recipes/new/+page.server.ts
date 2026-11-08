@@ -13,7 +13,7 @@ import { ensureProfile } from '#lib/server/profiles.js';
 import { loginHref } from '#lib/auth/loginHref.js';
 
 export const load: PageServerLoad = async ({ url, locals: { user } }) => {
-	if (!user) throw redirect(303, loginHref(url.pathname));
+	if (!user) throw redirect(303, loginHref(url.pathname + url.search));
 
 	const allTags = await listTags();
 

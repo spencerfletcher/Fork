@@ -21,7 +21,7 @@ const STALE_MESSAGE =
 	'This recipe was changed in another tab. Reload to see the latest version, then reapply your edits.';
 
 export const load: PageServerLoad = async ({ params, url, locals: { user } }) => {
-	if (!user) throw redirect(303, loginHref(url.pathname));
+	if (!user) throw redirect(303, loginHref(url.pathname + url.search));
 
 	const recipe = await db.query.recipes.findFirst({
 		where: eq(recipes.slug, params.slug),

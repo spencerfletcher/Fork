@@ -465,12 +465,12 @@ describe('edit load', () => {
 	test('a logged-out visitor is sent to log in and brought back to this editor', async () => {
 		const event = {
 			params: { slug: 'soup' },
-			url: new URL('http://x/recipes/soup/edit'),
+			url: new URL('http://x/recipes/soup/edit?from=nav'),
 			locals: { user: null }
 		};
 		await expect(Promise.resolve().then(() => load(event as never))).rejects.toMatchObject({
 			status: 303,
-			location: '/login?redirectTo=%2Frecipes%2Fsoup%2Fedit'
+			location: '/login?redirectTo=%2Frecipes%2Fsoup%2Fedit%3Ffrom%3Dnav'
 		});
 	});
 });

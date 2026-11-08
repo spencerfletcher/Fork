@@ -191,10 +191,10 @@ describe('new recipe action', () => {
 
 describe('new recipe load', () => {
 	test('a logged-out visitor is sent to log in and brought back here', async () => {
-		const event = { url: new URL('http://x/recipes/new'), locals: { user: null } };
+		const event = { url: new URL('http://x/recipes/new?from=nav'), locals: { user: null } };
 		await expect(Promise.resolve().then(() => load(event as never))).rejects.toMatchObject({
 			status: 303,
-			location: '/login?redirectTo=%2Frecipes%2Fnew'
+			location: '/login?redirectTo=%2Frecipes%2Fnew%3Ffrom%3Dnav'
 		});
 	});
 });
