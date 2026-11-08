@@ -54,7 +54,12 @@ export const actions: Actions = {
 		const formData = await request.formData();
 		// A lapsed session hands the draft back too, so logging in again loses nothing.
 		if (!user)
-			return saveFailure(401, 'unauthenticated', 'Log in again to save.', draftOf(formData));
+			return saveFailure(
+				401,
+				'unauthenticated',
+				'Your session ended. Log in in another tab, then save again.',
+				draftOf(formData)
+			);
 		const recipe = await db.query.recipes.findFirst({
 			where: eq(recipes.slug, params.slug),
 			with: { recipesToTags: { with: { tag: true } } }

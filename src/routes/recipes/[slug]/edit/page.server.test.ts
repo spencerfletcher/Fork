@@ -171,7 +171,7 @@ describe('save', () => {
 		const result = await save({ ...UNCHANGED, servings: '8' }, { user: null });
 		expect(result.status).toBe(401);
 		expect(result.data).toMatchObject({
-			error: 'Log in again to save.',
+			error: 'Your session ended. Log in in another tab, then save again.',
 			code: 'unauthenticated',
 			draft: { servings: '8' }
 		});

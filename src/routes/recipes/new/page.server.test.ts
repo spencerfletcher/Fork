@@ -78,7 +78,7 @@ describe('new recipe action', () => {
 		const result = await invoke(makeEvent({ fields: FULL, user: null }));
 		expect(result.status).toBe(401);
 		expect(result.data).toMatchObject({
-			error: 'Log in again to save.',
+			error: 'Your session ended. Log in in another tab, then save again.',
 			code: 'unauthenticated',
 			draft: { title: 'Soup', tags: ['Dessert', 'Baking'] }
 		});
