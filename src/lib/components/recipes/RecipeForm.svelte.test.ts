@@ -8,8 +8,10 @@ import {
 	draftOf,
 	PHOTO_TYPES,
 	PHOTO_MAX_BYTES,
-	PHOTO_SIZE_MESSAGE
+	PHOTO_SIZE_MESSAGE,
+	emptyGroupMessage
 } from '#lib/recipes/validation.js';
+import { MAKES_TOO_LONG, MAX_MAKES } from '#lib/recipes/limits.js';
 
 vi.mock('$app/navigation', () => ({ beforeNavigate: () => {} }));
 vi.mock('$app/forms', () => ({ enhance: () => ({ destroy: () => {} }) }));
@@ -286,5 +288,51 @@ describe('RecipeForm commit message left blank', () => {
 	test('says nothing while there is no change to describe', () => {
 		renderEdit();
 		expect(screen.queryByText(/^Left blank/)).not.toBeInTheDocument();
+	});
+});
+
+describe('RecipeForm Makes', () => {
+	const props = (fields: Record<string, string>, error?: string) => {
+		const fd = new FormData();
+		for (const [k, v] of Object.entries(fields)) fd.append(k, v);
+		const baseline = draftOf(fd);
+		return {
+			baseline,
+			form: error ? { error, draft: baseline } : null,
+			allTags: [],
+			submitLabel: 'Save',
+			cancelHref: '/recipes'
+		};
+	};
+
+	test('an optional text field after the numbers, filled from the draft, with its hint', () => {
+		render(RecipeForm, { props: props({ makes: '12 buns' }) });
+		const input = screen.getByLabelText(/^Makes/) as HTMLInputElement;
+		expect(input).toHaveAttribute('type', 'text');
+		expect(input).toHaveAttribute('name', 'makes');
+		expect(input).toHaveAttribute('maxlength', String(MAX_MAKES));
+		expect(input).not.toBeRequired();
+		expect(input.value).toBe('12 buns');
+		expect(input).toHaveAccessibleDescription("What one batch produces, when that isn't portions.");
+		const serves = screen.getByLabelText('Serves');
+		expect(serves.compareDocumentPosition(input) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+	});
+
+	test("the server's Makes message sits under the field", async () => {
+		render(RecipeForm, { props: props({ makes: 'x' }, MAKES_TOO_LONG) });
+		await tick();
+		const input = screen.getByLabelText(/^Makes/);
+		expect(input).toHaveAttribute('aria-invalid', 'true');
+		expect(input).toHaveAccessibleDescription(
+			`${MAKES_TOO_LONG} What one batch produces, when that isn't portions.`
+		);
+	});
+
+	test("an empty group's message sits under the ingredients box", async () => {
+		const message = emptyGroupMessage('Filling', 'ingredients');
+		render(RecipeForm, { props: props({ ingredients: '# Filling' }, message) });
+		await tick();
+		expect(screen.getByLabelText(/^Ingredients/)).toHaveAttribute('aria-invalid', 'true');
+		expect(screen.getByRole('alert')).toHaveTextContent(message);
 	});
 });

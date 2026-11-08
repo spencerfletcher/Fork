@@ -45,7 +45,7 @@ describe('IngredientEditor', () => {
 		const { container } = render(IngredientEditor, { props: { value: '' } });
 		expect(box()).not.toHaveAttribute('aria-invalid');
 		expect(box()).toHaveAccessibleDescription(
-			'One per line: quantity, unit, ingredient — 2¼ cups flour'
+			'One per line: quantity, unit, ingredient — 2¼ cups flour. A line like # Dough starts a group.'
 		);
 		expect(container.querySelector('#ingredients-note')).toBeNull();
 	});
@@ -119,5 +119,39 @@ describe('IngredientEditor', () => {
 		expect(screen.getByRole('status')).toHaveTextContent(
 			`${MAX_FIELD.toLocaleString()} characters`
 		);
+	});
+
+	describe('groups', () => {
+		test('a "# Name" line gets a read-back of how the box splits, which the box names', async () => {
+			render(IngredientEditor, { props: { value: '' } });
+			await type('# Dough\n2 cups flour\n2 eggs\n# To finish\nsalt');
+			const readBack = document.getElementById('ingredients-readback')!;
+			expect(readBack.textContent!.replace(/\s+/g, ' ').trim()).toBe(
+				'Reads as 2 groups: Dough 2 lines To finish 1 line'
+			);
+			// Group names in ink 600, the rest in the hint's voice.
+			expect(readBack.querySelector('b')).toHaveTextContent('Dough');
+			expect(box().getAttribute('aria-describedby')).toContain('ingredients-readback');
+		});
+
+		test('an empty heading reads "empty" before the save refuses it', () => {
+			render(IngredientEditor, { props: { value: '# Dough\nflour\n# Filling\n# Icing\nsugar' } });
+			expect(document.getElementById('ingredients-readback')).toHaveTextContent(/Filling\s*empty/);
+		});
+
+		test('no "# Name" line, no read-back; the hint names the syntax', () => {
+			render(IngredientEditor, { props: { value: '1 cup flour' } });
+			expect(document.getElementById('ingredients-readback')).toBeNull();
+			const hint = document.getElementById('ingredients-hint')!;
+			expect(hint).toHaveTextContent(
+				'One per line: quantity, unit, ingredient — 2¼ cups flour. A line like # Dough starts a group.'
+			);
+			expect(hint.querySelector('code')).toHaveTextContent('# Dough');
+		});
+
+		test('a heading line is never reported as a line that cannot be scaled', () => {
+			render(IngredientEditor, { props: { value: '# Dough\n2 cups flour' } });
+			expect(screen.queryByText(/can't be scaled/)).toBeNull();
+		});
 	});
 });

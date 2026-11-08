@@ -15,6 +15,7 @@
 	import { normaliseTagNames, tagKey } from '#lib/recipes/tags.js';
 	import type { TagChip } from '#lib/recipes/types.js';
 	import { generatedCommitMessage } from '#lib/recipes/content.js';
+	import { MAX_MAKES } from '#lib/recipes/limits.js';
 	import { draftChangedGroups } from '#lib/recipes/draftChanges.js';
 	import TagInput from '#lib/components/ui/TagInput.svelte';
 	import IngredientEditor from './IngredientEditor.svelte';
@@ -305,6 +306,27 @@
 					{#each numberFields as name (name)}
 						{@render fieldError(name)}
 					{/each}
+				</div>
+
+				<!-- Yield, beside the portions rather than in place of them: it never sets
+				     servings, and scaling stays by servings. -->
+				<div class="field">
+					<label for="makes">
+						Makes <span class="optional">optional</span>
+					</label>
+					<input
+						id="makes"
+						name="makes"
+						type="text"
+						maxlength={MAX_MAKES}
+						placeholder="12 buns, 1 L stock"
+						bind:value={draft.makes}
+						aria-invalid={errors.makes ? 'true' : undefined}
+						aria-describedby={errors.makes ? 'makes-error makes-hint' : 'makes-hint'} />
+					{@render fieldError('makes')}
+					<p class="form-hint" id="makes-hint">
+						What one batch produces, when that isn't portions.
+					</p>
 				</div>
 
 				<fieldset class="field field-tags">

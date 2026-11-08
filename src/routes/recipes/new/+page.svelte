@@ -9,6 +9,7 @@
 		title: '',
 		description: '',
 		servings: '',
+		makes: '',
 		prepTimeMinutes: '',
 		cookTimeMinutes: '',
 		ingredients: '',

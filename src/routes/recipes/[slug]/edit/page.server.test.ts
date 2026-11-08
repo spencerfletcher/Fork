@@ -390,6 +390,28 @@ describe('save', () => {
 		expect(syncTagsMock).not.toHaveBeenCalled();
 	});
 
+	test('a yield and a group heading save as a version carrying both; the recipe row keeps no yield', async () => {
+		await save({
+			...UNCHANGED,
+			makes: ' 24 cookies ',
+			ingredients: '# Dough\n2 cups flour',
+			steps: '# Mix\nMix everything.'
+		});
+		const [version] = versionInserts();
+		expect(version.makes).toBe('24 cookies');
+		expect(version.servings).toBe(4);
+		expect(version.ingredients[0].group).toBe('Dough');
+		expect(version.steps[0].group).toBe('Mix');
+		expect(version.commitMessage).toBe('Updated yield, ingredients, steps');
+		expect(tx.updateChain.set.mock.calls[0][0]).not.toHaveProperty('makes');
+	});
+
+	test('a yield cleared to blank is a change to null', async () => {
+		tx = makeTx({ latest: { ...LATEST, makes: '24 cookies' } });
+		await save({ ...UNCHANGED, makes: '  ' });
+		expect(versionInserts()[0]).toMatchObject({ makes: null, commitMessage: 'Updated yield' });
+	});
+
 	test('uses the generated message when the field is blank', async () => {
 		await save({ ...UNCHANGED, servings: '8', ingredients: '4 cups flour', commitMessage: '  ' });
 		expect(versionInserts()[0].commitMessage).toBe('Updated servings, ingredients');

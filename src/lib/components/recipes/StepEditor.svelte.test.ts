@@ -39,7 +39,7 @@ describe('StepEditor', () => {
 		render(StepEditor, { props: { value: '' } });
 		expect(box()).not.toHaveAttribute('aria-invalid');
 		expect(box()).toHaveAccessibleDescription(
-			/^Separate steps with a blank line\..*on its own line\.$/
+			/^Separate steps with a blank line\..*on its own line\. A line like # Bake starts a group\.$/
 		);
 	});
 
@@ -56,5 +56,26 @@ describe('StepEditor', () => {
 		render(StepEditor, { props: { value: '' } });
 		await fireEvent.input(box(), { target: { value: 'Chop.' } });
 		expect(box().value).toBe('Chop.');
+	});
+
+	describe('groups', () => {
+		test('a "# Name" line gets a read-back of the steps each group holds, numbered straight through', async () => {
+			render(StepEditor, { props: { value: '' } });
+			await fireEvent.input(box(), {
+				target: { value: '# Make the dough\nMix.\n\nKnead.\n\n# Bake\nBake.' }
+			});
+			const readBack = document.getElementById('steps-readback')!;
+			expect(readBack.textContent!.replace(/\s+/g, ' ').trim()).toBe(
+				'Reads as 3 steps in 2 groups: Make the dough 1–2 Bake 3'
+			);
+			expect(box().getAttribute('aria-describedby')).toContain('steps-readback');
+		});
+
+		test('no "# Name" line, no read-back; the hint names the syntax', () => {
+			render(StepEditor, { props: { value: 'Mix.' } });
+			expect(document.getElementById('steps-readback')).toBeNull();
+			const hint = screen.getByText(/blank line/i);
+			expect(hint).toHaveTextContent('A line like # Bake starts a group.');
+		});
 	});
 });

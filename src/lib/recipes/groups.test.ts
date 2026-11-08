@@ -1,5 +1,7 @@
 import { describe, test, expect } from 'vitest';
-import { splitGroups } from './groups';
+import { readBack, splitGroups } from './groups';
+import { parseIngredientGroups } from './ingredients';
+import { parseStepGroups } from './steps';
 
 describe('splitGroups', () => {
 	test('text with no # line is one ungrouped section, as typed', () => {
@@ -36,5 +38,50 @@ describe('splitGroups', () => {
 
 	test('Windows line endings are tolerated', () => {
 		expect(splitGroups('# Dough\r\nflour')).toEqual([{ group: 'Dough', text: 'flour' }]);
+	});
+});
+
+describe('readBack', () => {
+	test('ingredients: the groups and their line counts', () => {
+		expect(
+			readBack(parseIngredientGroups('# Dough\nflour\neggs\n# To finish\nsalt'), 'ingredients')
+		).toEqual({
+			lead: 'Reads as 2 groups:',
+			parts: [
+				{ name: 'Dough', detail: '2 lines' },
+				{ name: 'To finish', detail: '1 line' }
+			]
+		});
+	});
+
+	test('steps: the step count, and each group its step numbers, counted straight through', () => {
+		const text =
+			'# Make the dough\nMix.\n\nKnead.\n\nRest.\n\nShape.\n\n# Bake\nBake.\n\nCool.\n\n# Serve\nEat.';
+		expect(readBack(parseStepGroups(text), 'steps')).toEqual({
+			lead: 'Reads as 7 steps in 3 groups:',
+			parts: [
+				{ name: 'Make the dough', detail: '1–4' },
+				{ name: 'Bake', detail: '5–6' },
+				{ name: 'Serve', detail: '7' }
+			]
+		});
+	});
+
+	test('an empty heading reads "empty"; lines before the first heading read as ungrouped', () => {
+		expect(
+			readBack(parseIngredientGroups('salt\n# Filling\n# Icing\nsugar'), 'ingredients')
+		).toEqual({
+			lead: 'Reads as 2 groups:',
+			parts: [
+				{ name: undefined, detail: '1 line' },
+				{ name: 'Filling', detail: 'empty' },
+				{ name: 'Icing', detail: '1 line' }
+			]
+		});
+	});
+
+	test('no heading, no read-back', () => {
+		expect(readBack(parseIngredientGroups('flour\neggs'), 'ingredients')).toBeNull();
+		expect(readBack(parseStepGroups('Mix.\n\nBake.'), 'steps')).toBeNull();
 	});
 });

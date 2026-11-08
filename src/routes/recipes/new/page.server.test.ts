@@ -140,6 +140,38 @@ describe('new recipe action', () => {
 		expect(result.location).toBe(`/recipes/${recipe.slug}`);
 	});
 
+	test('stores the yield and the groups on version 1, and no yield on the recipe row', async () => {
+		await invoke(
+			makeEvent({
+				fields: {
+					...FULL,
+					makes: '12 buns',
+					ingredients: '# Dough\n1 cup flour',
+					steps: '# Bake\nBake.'
+				}
+			})
+		);
+		const recipe = tx.recipeInsert.values.mock.calls[0][0];
+		const version = tx.versionInsert.values.mock.calls[0][0];
+		expect(version.makes).toBe('12 buns');
+		expect(version.servings).toBe(4);
+		expect(version.ingredients[0].group).toBe('Dough');
+		expect(version.steps[0].group).toBe('Bake');
+		expect(recipe).not.toHaveProperty('makes');
+	});
+
+	test('an empty group is refused with the draft, and nothing is written', async () => {
+		const result = await invoke(
+			makeEvent({ fields: { ...FULL, ingredients: '# Dough\nflour\n# Filling' } })
+		);
+		expect(result.status).toBe(400);
+		expect(result.data).toMatchObject({
+			code: 'invalid',
+			error: '“Filling” has no ingredients. Add some under it or delete the heading.'
+		});
+		expect(transactionMock).not.toHaveBeenCalled();
+	});
+
 	test('a profile failure returns the draft before anything is uploaded', async () => {
 		ensureProfileMock.mockRejectedValueOnce(new Error('db down'));
 		const error = vi.spyOn(console, 'error').mockImplementation(() => {});

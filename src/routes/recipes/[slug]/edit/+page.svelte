@@ -18,6 +18,7 @@
 		title: latestVersion.title,
 		description: latestVersion.description ?? '',
 		servings: latestVersion.servings?.toString() ?? '',
+		makes: latestVersion.makes ?? '',
 		prepTimeMinutes: latestVersion.prepTimeMinutes?.toString() ?? '',
 		cookTimeMinutes: latestVersion.cookTimeMinutes?.toString() ?? '',
 		ingredients: ingredientsToText(latestVersion.ingredients),

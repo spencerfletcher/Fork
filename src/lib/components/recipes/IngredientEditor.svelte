@@ -1,7 +1,9 @@
 <script lang="ts">
-	import { parseIngredientText } from '#lib/recipes/ingredients.js';
+	import { parseIngredientGroups } from '#lib/recipes/ingredients.js';
+	import { readBack } from '#lib/recipes/groups.js';
 	import { limitError } from '#lib/recipes/limits.js';
 	import { plural } from '#lib/helpers.js';
+	import ReadBack from './ReadBack.svelte';
 
 	let { value = $bindable(), error = '' }: { value: string; error?: string } = $props();
 
@@ -11,13 +13,15 @@
 
 	// Reparsed on every keystroke; ingredient lists are short enough that this
 	// is cheaper than a debounce would be to read.
+	const sections = $derived(tooLong ? [] : parseIngredientGroups(value));
 	const unparsed = $derived(
-		tooLong
-			? []
-			: parseIngredientText(value)
-					.filter((i) => i.quantity === null)
-					.map((i) => i.text)
+		sections
+			.flatMap((section) => section.rows)
+			.filter((i) => i.quantity === null)
+			.map((i) => i.text)
 	);
+	// Only a box with a "# Name" line has a split to show.
+	const groups = $derived(readBack(sections, 'ingredients'));
 
 	// What a screen reader hears: the count, so it speaks when a line stops or
 	// starts parsing, not on every keystroke inside one. The string only
@@ -30,10 +34,11 @@
 				: ''
 	);
 
-	// The error first, then the note, when each is shown, then the format.
+	// The error first, then the split and the note, when each is shown, then the format.
 	const describedBy = $derived(
 		[
 			error && 'ingredients-error',
+			groups && 'ingredients-readback',
 			(tooLong || unparsed.length > 0) && 'ingredients-note',
 			'ingredients-hint'
 		]
@@ -62,6 +67,9 @@
 	{#if error}
 		<p class="field-error" id="ingredients-error" role="alert">{error}</p>
 	{/if}
+	{#if groups}
+		<ReadBack id="ingredients-readback" value={groups} />
+	{/if}
 	{#if tooLong}
 		<p class="form-hint" id="ingredients-note">{tooLong}. Shorten it before saving.</p>
 	{:else if unparsed.length > 0}
@@ -71,7 +79,8 @@
 	{/if}
 	<!-- The format stays in view while typing, after the placeholder has gone. -->
 	<p class="form-hint" id="ingredients-hint">
-		One per line: quantity, unit, ingredient — 2¼ cups flour
+		One per line: quantity, unit, ingredient — 2¼ cups flour. A line like <code># Dough</code>
+		 starts a group.
 	</p>
 	<!-- Always in the DOM so screen readers announce the text when it appears. -->
 	<p class="sr-only" role="status">

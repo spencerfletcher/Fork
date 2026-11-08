@@ -1,5 +1,18 @@
 <script lang="ts">
+	import { parseStepGroups } from '#lib/recipes/steps.js';
+	import { readBack } from '#lib/recipes/groups.js';
+	import { limitError } from '#lib/recipes/limits.js';
+	import ReadBack from './ReadBack.svelte';
+
 	let { value = $bindable(), error = '' }: { value: string; error?: string } = $props();
+
+	// Oversized text is the server's to refuse; it is not parsed here.
+	const groups = $derived(
+		limitError(value, 'Steps') ? null : readBack(parseStepGroups(value), 'steps')
+	);
+	const describedBy = $derived(
+		[error && 'steps-error', groups && 'steps-readback', 'steps-hint'].filter(Boolean).join(' ')
+	);
 
 	const placeholder =
 		'Cream the butter and sugar.\n\nFold in the flour.\ntip: Stop when no dry streaks remain.';
@@ -17,10 +30,13 @@
 		bind:value
 		{placeholder}
 		aria-invalid={error ? 'true' : undefined}
-		aria-describedby={error ? 'steps-error steps-hint' : 'steps-hint'}>
+		aria-describedby={describedBy}>
 	</textarea>
 	{#if error}
 		<p class="field-error" id="steps-error" role="alert">{error}</p>
+	{/if}
+	{#if groups}
+		<ReadBack id="steps-readback" value={groups} />
 	{/if}
 	<!-- The syntax stays in view while typing, after the placeholder has gone. -->
 	<p class="form-hint" id="steps-hint">
@@ -29,7 +45,9 @@
 		<code>warning:</code>
 		or
 		<code>substitution:</code>
-		on its own line.
+		on its own line. A line like
+		<code># Bake</code>
+		 starts a group.
 	</p>
 </div>
 
