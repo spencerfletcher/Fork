@@ -574,3 +574,101 @@ test.describe('Compare page', () => {
 		}
 	});
 });
+
+// ─── Groups and yield ─────────────────────────────────────────────────────────
+
+test.describe('Groups and yield', () => {
+	// Create, edit, compare and fork: several saves and loads.
+	test.slow();
+
+	test('a pasted grouped recipe with a yield shows its groups and Makes, scales Makes, compares a renamed group, and forks with both', async ({
+		page
+	}) => {
+		const INGREDIENTS =
+			'# Dough\n3 cups bread flour\n1 cup warm milk\n\n# Filling\n½ cup brown sugar';
+		let url: string | null = null;
+		let forkUrl: string | null = null;
+		try {
+			await gotoHydrated(page, '/recipes/new');
+			await page.locator('textarea[name="title"]').fill('E2E Cinnamon Buns');
+			await page.locator('input[name="servings"]').fill('4');
+			await page.getByLabel(/^Makes/).fill('12 buns');
+			await page.getByLabel('Ingredients').fill(INGREDIENTS);
+			await page
+				.getByLabel('Steps')
+				.fill('# Make the dough\nMix.\n\nKnead.\n\n# Bake\nBake 25 minutes.');
+			// The split is read back before the save.
+			await expect(page.locator('#ingredients-readback')).toHaveText(
+				/Reads as 2 groups:\s*Dough 2 lines\s*Filling 1 line/
+			);
+			await expect(page.locator('#steps-readback')).toHaveText(
+				/Reads as 3 steps in 2 groups:\s*Make the dough 1–2\s*Bake 3/
+			);
+			// Private, so the guest project's seed counts never see it.
+			await page.getByLabel(/public/i).uncheck();
+			await page.getByRole('button', { name: /create recipe/i }).click();
+			await page.waitForURL(/\/recipes\/(?!new)/);
+			url = page.url().split('?')[0];
+
+			const ingredients = page.locator('#ingredients');
+			const method = page.locator('#method');
+			const measure = page.locator('.recipe-header .details');
+			await expect(ingredients.getByRole('heading', { level: 3 })).toHaveText(['Dough', 'Filling']);
+			await expect(method.getByRole('heading', { level: 3 })).toHaveText([
+				'Make the dough',
+				'Bake'
+			]);
+			// Steps number straight through the groups.
+			await expect(method.locator('li').nth(2)).toContainText('3');
+			await expect(measure).toHaveText(/Serves\s*4\s*Makes\s*12 buns/);
+
+			// Scaling servings scales the yield, in clay; it never reads servings from it.
+			await page.goto(`${url}?serves=6`);
+			await expect(measure.getByText('18 buns')).toHaveClass(/text-accent/);
+			await expect(ingredients.getByText(/4½ cups/)).toBeVisible();
+
+			// Cook keeps the headings.
+			await page.goto(`${url}?cook=1`);
+			await expect(method.getByRole('heading', { name: 'Bake' })).toBeVisible();
+
+			// A second version renames a group; the editor round-trips the headings.
+			await gotoHydrated(page, `${url}/edit`);
+			const box = page.getByLabel('Ingredients');
+			await expect(box).toHaveValue(INGREDIENTS);
+			await expect(page.getByLabel(/^Makes/)).toHaveValue('12 buns');
+			await box.fill(INGREDIENTS.replace('# Filling', '# Swirl'));
+			await page.getByRole('button', { name: 'Save', exact: true }).click();
+			await page.waitForURL(url);
+
+			await page.goto(`${url}/diff?from=1&to=2`);
+			const renamed = page.locator('.diff-group', { hasText: 'Swirl' });
+			await expect(renamed.locator('del')).toHaveText('Filling');
+			await expect(renamed.locator('ins')).toHaveText('Swirl');
+			await expect(page.locator('.diff-group', { hasText: 'Dough' }).locator('del')).toHaveCount(0);
+
+			// The owner can fork their own recipe by the action; the copy keeps both.
+			// The action protocol answers with where it redirects, as the enhanced button reads it.
+			const result = await page.evaluate(async (u) => {
+				const response = await fetch(`${u}?/fork`, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/x-www-form-urlencoded',
+						'x-sveltekit-action': 'true'
+					},
+					body: ''
+				});
+				return response.text();
+			}, url);
+			const { type, location } = JSON.parse(result) as { type: string; location: string };
+			expect({ type, location }).toMatchObject({ type: 'redirect', location: /\/edit$/ });
+			forkUrl = new URL(location.replace(/\/edit$/, ''), url).href;
+			await page.goto(forkUrl);
+			await expect(page.locator('.recipe-header .byline')).toContainText('forked from');
+			await expect(ingredients.getByRole('heading', { level: 3 })).toHaveText(['Dough', 'Swirl']);
+			await expect(measure).toContainText(/Makes\s*12 buns/);
+		} finally {
+			if (forkUrl) await deleteRecipe(page, forkUrl);
+			if (url) await deleteRecipe(page, url);
+		}
+	});
+});
