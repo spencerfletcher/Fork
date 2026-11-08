@@ -168,6 +168,13 @@
 		save.error ?? (form && !fieldOfMessage(form.error) ? form.error : null)
 	);
 
+	// The alert is announced, but the fieldset was disabled while saving, so
+	// focus fell to the page; Save sits beside the alert and is what retries.
+	let submitButton: HTMLButtonElement | undefined = $state();
+	$effect(() => {
+		if (globalError && !save.pending) submitButton?.focus();
+	});
+
 	// A blocked submit fires invalid on each bad field in order. The inline
 	// message says it, so the browser's bubble, which would say it again, is
 	// cancelled; cancelling also stops the browser focusing the field, so the
@@ -342,7 +349,7 @@
 		{/if}
 
 		<div class="form-actions" bind:this={actions}>
-			<button type="submit" class="btn-primary" disabled={save.pending}>
+			<button type="submit" class="btn-primary" disabled={save.pending} bind:this={submitButton}>
 				{save.pending ? 'Saving…' : submitLabel}
 			</button>
 			<a href={cancelHref} class="btn-ghost">Cancel</a>

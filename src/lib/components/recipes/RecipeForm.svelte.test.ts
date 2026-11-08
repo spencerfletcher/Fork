@@ -69,6 +69,29 @@ describe('RecipeForm photo removed on a new recipe', () => {
 	});
 });
 
+describe('RecipeForm save error that names no field', () => {
+	// The fieldset was disabled while saving, so focus fell to the page.
+	test('focus goes to the submit button beside the alert', async () => {
+		const baseline = draftOf(new FormData());
+		render(RecipeForm, {
+			props: {
+				baseline,
+				form: {
+					error: 'Could not save the recipe. Try again.',
+					code: 'save_failed',
+					draft: baseline
+				},
+				allTags: [],
+				submitLabel: 'Create recipe',
+				cancelHref: '/recipes'
+			}
+		});
+		await tick();
+		expect(screen.getByRole('alert')).toHaveTextContent('Could not save the recipe. Try again.');
+		expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Create recipe' }));
+	});
+});
+
 describe('RecipeForm actions on a phone', () => {
 	// Every phone-only block, joined, so the test does not care which one holds a rule.
 	const phone = style

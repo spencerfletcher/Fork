@@ -413,6 +413,7 @@ describe('Edit page form', () => {
 		expect(title()).toHaveValue('Cookies, edited');
 		expect(title()).toBeEnabled();
 		expect(screen.getByRole('alert')).toHaveTextContent(UNREACHABLE_MESSAGE);
+		expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Save' }));
 	});
 
 	test('disables every field while saving and re-enables them when it finishes', async () => {
