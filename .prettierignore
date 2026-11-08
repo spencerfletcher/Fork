@@ -29,3 +29,6 @@ drizzle/meta/
 # Research prose keeps its own formatting
 reports/
 research_notes/
+
+# Design mockups, generated standalone pages
+docs/design/2026-11-08-mvp/
