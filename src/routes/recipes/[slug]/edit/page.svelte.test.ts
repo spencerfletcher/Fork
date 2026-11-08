@@ -81,7 +81,7 @@ function failed(draft: Partial<RecipeDraft>, error = 'Title is required') {
 		hadPhoto: false,
 		removeImage: false
 	};
-	return { error, draft: { ...base, ...draft } };
+	return { error, code: 'invalid' as const, draft: { ...base, ...draft } };
 }
 
 const title = () => screen.getByLabelText(/^title/i) as HTMLInputElement;

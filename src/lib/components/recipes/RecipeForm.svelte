@@ -140,6 +140,11 @@
 		return v.rangeUnderflow && !v.stepMismatch ? messages.belowMin : messages.whole;
 	}
 
+	// Fields are disabled while saving, so nothing typed mid-request is lost by
+	// the redirect. FormData is built before this runs, so the submission is whole.
+	// An unreachable server leaves the draft in place rather than an error page.
+	const save = pendingEnhance({ reset: false, keepOnError: true });
+
 	// A server message that names a field is shown there and focuses it.
 	// Anything else (a conflict, an upload or database failure) stays global.
 	// Focus waits for the fieldset to be enabled again: the failed action's
@@ -169,11 +174,6 @@
 
 	const aria = (name: string) =>
 		errors[name] ? { 'aria-invalid': 'true' as const, 'aria-describedby': `${name}-error` } : {};
-
-	// Fields are disabled while saving, so nothing typed mid-request is lost by
-	// the redirect. FormData is built before this runs, so the submission is whole.
-	// An unreachable server leaves the draft in place rather than an error page.
-	const save = pendingEnhance({ reset: false, keepOnError: true });
 
 	// On a phone the bar covers the screen's bottom edge. A tall box tabbed into
 	// with only its top showing counts as in view, so the browser neither

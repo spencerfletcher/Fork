@@ -40,7 +40,7 @@ const EMPTY_DRAFT = {
 };
 
 function failed(draft: Partial<typeof EMPTY_DRAFT>, error = 'Title is required') {
-	return { error, draft: { ...EMPTY_DRAFT, ...draft } };
+	return { error, code: 'invalid' as const, draft: { ...EMPTY_DRAFT, ...draft } };
 }
 
 describe('New recipe page labels', () => {
