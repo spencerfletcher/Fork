@@ -1,10 +1,10 @@
-import { redirect, error, fail } from '@sveltejs/kit';
+import { redirect, error } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { db } from '#lib/server/db/index.js';
 import { recipes, recipeVersions } from '#lib/server/db/schema.js';
 import { slugify, randomSuffix } from '#lib/helpers.js';
 import { removeRecipeImage } from '#lib/server/images.js';
-import { readSubmission, uploadPhoto } from '#lib/server/submission.js';
+import { readSubmission, uploadPhoto, saveFailure } from '#lib/server/submission.js';
 import { syncTags, listTags } from '#lib/server/tags.js';
 import type { RecipeContent } from '#lib/recipes/types.js';
 import { recipeCopies } from '#lib/recipes/content.js';
@@ -33,7 +33,7 @@ export const actions: Actions = {
 			await ensureProfile(user);
 		} catch (e) {
 			console.error('Could not ensure profile', e);
-			return fail(500, { error: 'Could not save the recipe. Try again.', draft });
+			return saveFailure(500, 'save_failed', 'Could not save the recipe. Try again.', draft);
 		}
 
 		const upload = await uploadPhoto(formData, supabase, user.id, draft);
@@ -70,7 +70,7 @@ export const actions: Actions = {
 		} catch (e) {
 			console.error('Could not create recipe', e);
 			if (image) await removeRecipeImage(supabase, image.path);
-			return fail(500, { error: 'Could not save the recipe. Try again.', draft });
+			return saveFailure(500, 'save_failed', 'Could not save the recipe. Try again.', draft);
 		}
 
 		throw redirect(303, `/recipes/${slug}`);

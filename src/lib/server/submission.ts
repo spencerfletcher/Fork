@@ -9,15 +9,28 @@ import type { RecipeDraft } from '#lib/recipes/validation.js';
 // them (new ensures the profile, edit refuses a stale tab) before any file is
 // stored. Every failure hands the draft back, so nothing typed is lost.
 
+/** Why a save failed, for code that branches on it; `error` is what the reader sees. */
+export type SaveFailureCode = 'invalid' | 'stale' | 'upload_failed' | 'save_failed';
+
+/** A save's failure in the editor's shape: the message, its code and the draft as typed. */
+export function saveFailure(
+	status: number,
+	code: SaveFailureCode,
+	error: string,
+	draft: RecipeDraft
+) {
+	return fail(status, { error, code, draft });
+}
+
 /** The draft exactly as typed, its parsed content and its settings; or the 400 to return. */
 export function readSubmission(formData: FormData) {
 	const draft = draftOf(formData);
 	const content = parseDraftContent(draft);
 	if (!content.ok)
-		return { ok: false as const, failure: fail(400, { error: content.error, draft }) };
+		return { ok: false as const, failure: saveFailure(400, 'invalid', content.error, draft) };
 	const settings = parseSettings(formData);
 	if (!settings.ok)
-		return { ok: false as const, failure: fail(400, { error: settings.error, draft }) };
+		return { ok: false as const, failure: saveFailure(400, 'invalid', settings.error, draft) };
 	return { ok: true as const, draft, content: content.value, settings: settings.value };
 }
 
@@ -36,7 +49,7 @@ export async function uploadPhoto(
 	} catch {
 		return {
 			ok: false as const,
-			failure: fail(400, { error: 'Photo upload failed. Try again.', draft })
+			failure: saveFailure(400, 'upload_failed', 'Photo upload failed. Try again.', draft)
 		};
 	}
 }

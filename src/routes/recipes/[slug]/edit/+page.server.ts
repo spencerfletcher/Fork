@@ -1,4 +1,4 @@
-import { error, fail, redirect } from '@sveltejs/kit';
+import { error, redirect } from '@sveltejs/kit';
 import { db } from '#lib/server/db/index.js';
 import { recipes, recipeVersions } from '#lib/server/db/schema.js';
 import { eq, desc, sql } from 'drizzle-orm';
@@ -12,7 +12,7 @@ import {
 import { sameTags } from '#lib/recipes/tags.js';
 import type { RecipeContent } from '#lib/recipes/types.js';
 import { removeRecipeImage } from '#lib/server/images.js';
-import { readSubmission, uploadPhoto } from '#lib/server/submission.js';
+import { readSubmission, uploadPhoto, saveFailure } from '#lib/server/submission.js';
 import { syncTags, listTags } from '#lib/server/tags.js';
 import { loginHref } from '#lib/auth/loginHref.js';
 
@@ -64,12 +64,13 @@ export const actions: Actions = {
 		const { draft, content, settings } = submission;
 
 		if (!/^\d+$/.test(draft.editRevision)) {
-			return fail(400, { error: 'Invalid form state, reload the page', draft });
+			return saveFailure(400, 'invalid', 'Invalid form state, reload the page', draft);
 		}
 		const editRevision = Number(draft.editRevision);
 		// A tab that is already stale need not upload its photo first; the check
 		// that counts is the one under the row lock below.
-		if (recipe.editRevision !== editRevision) return fail(409, { error: STALE_MESSAGE, draft });
+		if (recipe.editRevision !== editRevision)
+			return saveFailure(409, 'stale', STALE_MESSAGE, draft);
 
 		const upload = await uploadPhoto(formData, supabase, user.id, draft);
 		if (!upload.ok) return upload.failure;
@@ -139,13 +140,13 @@ export const actions: Actions = {
 		} catch (e) {
 			console.error('Could not save recipe', e);
 			if (image) await removeRecipeImage(supabase, image.path);
-			return fail(500, { error: 'Could not save the recipe. Try again.', draft });
+			return saveFailure(500, 'save_failed', 'Could not save the recipe. Try again.', draft);
 		}
 
 		if (outcome === 'stale' || outcome === 'forbidden') {
 			if (image) await removeRecipeImage(supabase, image.path);
 			if (outcome === 'forbidden') throw error(403, 'Not authorized');
-			return fail(409, { error: STALE_MESSAGE, draft });
+			return saveFailure(409, 'stale', STALE_MESSAGE, draft);
 		}
 		throw redirect(303, `/recipes/${params.slug}`);
 	},

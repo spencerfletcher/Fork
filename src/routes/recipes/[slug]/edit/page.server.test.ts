@@ -188,6 +188,7 @@ describe('save', () => {
 		expect(result.status).toBe(400);
 		expect(result.data).toMatchObject({
 			error: 'Title is required',
+			code: 'invalid',
 			draft: { title: '', prepTimeMinutes: '-5', editRevision: '0', hadPhoto: true }
 		});
 		expect(uploadMock).not.toHaveBeenCalled();
@@ -198,6 +199,7 @@ describe('save', () => {
 		for (const editRevision of ['', 'abc', '1.5']) {
 			const result = await save({ ...UNCHANGED, editRevision });
 			expect(result.status).toBe(400);
+			expect(result.data).toMatchObject({ code: 'invalid' });
 		}
 		expect(transactionMock).not.toHaveBeenCalled();
 	});
@@ -216,6 +218,7 @@ describe('save', () => {
 		expect(result.status).toBe(409);
 		expect(result.data).toMatchObject({
 			error: STALE,
+			code: 'stale',
 			draft: { servings: '8', editRevision: '0' }
 		});
 		expect(tx.findLatest).not.toHaveBeenCalled();
@@ -226,6 +229,7 @@ describe('save', () => {
 		findRecipeMock.mockResolvedValue({ ...RECIPE, editRevision: 2 });
 		const result = await save({ ...UNCHANGED, servings: '8' }, { file: new File(['x'], 'a.png') });
 		expect(result.status).toBe(409);
+		expect(result.data).toMatchObject({ code: 'stale' });
 		expect(uploadMock).not.toHaveBeenCalled();
 		expect(transactionMock).not.toHaveBeenCalled();
 	});
@@ -408,6 +412,7 @@ describe('save', () => {
 		expect(result.status).toBe(400);
 		expect(result.data).toMatchObject({
 			error: 'Photo upload failed. Try again.',
+			code: 'upload_failed',
 			draft: { hadPhoto: true }
 		});
 		expect(transactionMock).not.toHaveBeenCalled();
@@ -428,6 +433,7 @@ describe('save', () => {
 		expect(result.status).toBe(500);
 		expect(result.data).toMatchObject({
 			error: 'Could not save the recipe. Try again.',
+			code: 'save_failed',
 			draft: { servings: '8' }
 		});
 		expect(removeMock).toHaveBeenCalledWith(SUPABASE, 'owner-123/new.png');

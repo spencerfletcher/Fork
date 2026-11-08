@@ -82,6 +82,7 @@ describe('new recipe action', () => {
 		expect(result.status).toBe(400);
 		expect(result.data).toMatchObject({
 			error: 'Title is required',
+			code: 'invalid',
 			draft: { title: '', prepTimeMinutes: '-5', tags: ['Dessert', 'Baking'], hadPhoto: true }
 		});
 		expect(uploadMock).not.toHaveBeenCalled();
@@ -131,7 +132,7 @@ describe('new recipe action', () => {
 		const error = vi.spyOn(console, 'error').mockImplementation(() => {});
 		const result = await invoke(makeEvent({ fields: FULL, file: new File(['x'], 'a.png') }));
 		expect(result.status).toBe(500);
-		expect(result.data).toMatchObject({ draft: { title: 'Soup' } });
+		expect(result.data).toMatchObject({ code: 'save_failed', draft: { title: 'Soup' } });
 		expect(uploadMock).not.toHaveBeenCalled();
 		error.mockRestore();
 	});
@@ -161,6 +162,7 @@ describe('new recipe action', () => {
 		expect(result.status).toBe(400);
 		expect(result.data).toMatchObject({
 			error: 'Photo upload failed. Try again.',
+			code: 'upload_failed',
 			draft: { title: 'Soup', hadPhoto: true }
 		});
 		expect(transactionMock).not.toHaveBeenCalled();
@@ -174,6 +176,7 @@ describe('new recipe action', () => {
 		expect(result.status).toBe(500);
 		expect(result.data).toMatchObject({
 			error: 'Could not save the recipe. Try again.',
+			code: 'save_failed',
 			draft: { title: 'Soup' }
 		});
 		error.mockRestore();
