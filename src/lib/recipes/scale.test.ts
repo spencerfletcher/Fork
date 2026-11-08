@@ -46,8 +46,11 @@ describe('formatScaled', () => {
 		// Rounding: float noise reads as the clean value.
 		[0.1 + 0.2 + 0.2, FRACTIONS['1/2']],
 		[2.999999, '3'],
-		// Too small for a tenth: two places rather than a zero.
-		[0.03125, '0.03']
+		// Too small for a tenth: one significant digit rather than a zero.
+		[0.03125, '0.03'],
+		// ⅛ tsp at 0.25 of 12 serves.
+		[0.125 * (0.25 / 12), '0.003'],
+		[0, '0']
 	])('%j → %j', (n, expected) => {
 		expect(formatScaled(n)).toBe(expected);
 	});
