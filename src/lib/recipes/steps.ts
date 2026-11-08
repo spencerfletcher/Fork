@@ -44,8 +44,9 @@ export function parseStepText(text: string): Step[] {
 		.trim()
 		.split(/\n\s*\n/)
 		.flatMap((block) => block.split(BEFORE_NUMBERED))
+		.map((block) => block.replace(NUMBERED, ''))
 		.filter((block) => block.trim().length > 0)
-		.map((block) => parseBlock(block.replace(NUMBERED, '')));
+		.map(parseBlock);
 }
 
 /** The inverse of parseStepText, for refilling the editor from a saved version. */

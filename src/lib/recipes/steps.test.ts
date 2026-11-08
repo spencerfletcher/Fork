@@ -78,6 +78,10 @@ describe('parseStepText', () => {
 		]);
 	});
 
+	test('a number with nothing after it is no step', () => {
+		expect(parseStepText('Mix.\n\n2. \n\nBake.')).toEqual([{ text: 'Mix.' }, { text: 'Bake.' }]);
+	});
+
 	test('a numbered line starts a step even without a blank line before it', () => {
 		expect(parseStepText('1. Mix.\ntip: gently\n2. Rest 10 minutes.\n3.  Bake.')).toEqual([
 			{ text: 'Mix.', annotation: { type: 'tip', text: 'gently' } },
