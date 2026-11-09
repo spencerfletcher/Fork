@@ -3,24 +3,32 @@ import { render, screen, fireEvent } from '@testing-library/svelte';
 import IngredientEditor from './IngredientEditor.svelte';
 import { MAX_FIELD, MAX_LINE } from '#lib/recipes/limits.js';
 
+// The live box a person types in, and the textarea behind it that submits.
 function box() {
-	return screen.getByLabelText(/^ingredients/i) as HTMLTextAreaElement;
+	return screen.getByRole('textbox', { name: 'Ingredients' });
 }
 
+function field() {
+	return document.querySelector<HTMLTextAreaElement>('textarea[name="ingredients"]')!;
+}
+
+// The box syncs its text to the field as an input event from it.
 async function type(text: string) {
-	await fireEvent.input(box(), { target: { value: text } });
+	await fireEvent.input(field(), { target: { value: text } });
 }
 
 describe('IngredientEditor', () => {
-	test('renders the value in a labelled textarea named for the form field', () => {
+	test('renders the value in a labelled box, over a textarea named for the form field', () => {
 		render(IngredientEditor, { props: { value: '1 cup flour\n2 eggs' } });
-		expect(box().value).toBe('1 cup flour\n2 eggs');
-		expect(box().name).toBe('ingredients');
+		expect([...box().children].map((line) => line.textContent)).toEqual(['1 cup flour', '2 eggs']);
+		expect(field().value).toBe('1 cup flour\n2 eggs');
+		expect(field().name).toBe('ingredients');
 	});
 
 	test('the placeholder shows what comes back: the fraction as it is stored, not "2 1/4"', () => {
 		render(IngredientEditor, { props: { value: '' } });
-		expect(box().placeholder).toBe('2¼ cups all-purpose flour\n2 large eggs');
+		expect(box()).toHaveAttribute('data-placeholder', '2¼ cups all-purpose flour\n2 large eggs');
+		expect(field().placeholder).toBe('2¼ cups all-purpose flour\n2 large eggs');
 	});
 
 	test('keeps an empty live region in the page when the box is empty, so later notes are announced', () => {
@@ -105,7 +113,7 @@ describe('IngredientEditor', () => {
 		render(IngredientEditor, { props: { value: '' } });
 		const line = '1 cup ' + 'x'.repeat(MAX_LINE);
 		await type(line);
-		expect(box().value).toBe(line);
+		expect(field().value).toBe(line);
 		expect(screen.getByRole('status')).toHaveTextContent(`${MAX_LINE} characters`);
 	});
 
@@ -115,7 +123,7 @@ describe('IngredientEditor', () => {
 			.fill('1 cup flour xxxxxxxx')
 			.join('\n');
 		await type(text);
-		expect(box().value).toBe(text);
+		expect(field().value).toBe(text);
 		expect(screen.getByRole('status')).toHaveTextContent(
 			`${MAX_FIELD.toLocaleString()} characters`
 		);

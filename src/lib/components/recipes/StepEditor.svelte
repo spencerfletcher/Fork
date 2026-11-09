@@ -3,8 +3,13 @@
 	import { readBack } from '#lib/recipes/groups.js';
 	import { limitError } from '#lib/recipes/limits.js';
 	import ReadBack from './ReadBack.svelte';
+	import GroupedTextEditor from './GroupedTextEditor.svelte';
 
-	let { value = $bindable(), error = '' }: { value: string; error?: string } = $props();
+	let {
+		value = $bindable(),
+		error = '',
+		disabled = false
+	}: { value: string; error?: string; disabled?: boolean } = $props();
 
 	// Oversized text is the server's to refuse; it is not parsed here.
 	const groups = $derived(
@@ -19,19 +24,15 @@
 </script>
 
 <div class="field">
-	<label for="steps">
-		Steps <span class="required" aria-hidden="true">*</span>
-	</label>
-	<textarea
+	<GroupedTextEditor
 		id="steps"
-		name="steps"
-		rows="14"
-		required
+		label="Method"
+		rows={14}
 		bind:value
 		{placeholder}
-		aria-invalid={error ? 'true' : undefined}
-		aria-describedby={describedBy}>
-	</textarea>
+		invalid={!!error}
+		{describedBy}
+		{disabled} />
 	{#if error}
 		<p class="field-error" id="steps-error" role="alert">{error}</p>
 	{/if}
@@ -50,10 +51,3 @@
 		starts a group.
 	</p>
 </div>
-
-<style>
-	/* field-sizing: content ignores rows; this keeps an empty box typeable. */
-	textarea {
-		min-height: calc(14lh + 20px);
-	}
-</style>

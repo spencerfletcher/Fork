@@ -77,11 +77,11 @@ describe('RecipeForm photo over the size cap', () => {
 		expect(input).toHaveAttribute('aria-invalid', 'true');
 		expect(input.getAttribute('aria-describedby')).toBe(error.id);
 		expect(clear).toHaveBeenCalledWith('');
-		expect(screen.getByText('Choose photo')).toBeInTheDocument();
+		expect(screen.getByText('Choose a photo')).toBeInTheDocument();
 		await pick(PHOTO_MAX_BYTES);
 		expect(screen.queryByText(PHOTO_SIZE_MESSAGE)).toBeNull();
 		expect(input).not.toHaveAttribute('aria-invalid');
-		expect(screen.getByText('Replace photo')).toBeInTheDocument();
+		expect(screen.getByLabelText('Replace photo')).toBe(input);
 	});
 });
 
@@ -275,7 +275,9 @@ describe('RecipeForm commit message left blank', () => {
 	// The placeholder is what the save writes; the hint says so in words.
 	test('says the placeholder is saved, under the box, until the cook types', async () => {
 		const message = renderEdit();
-		await fireEvent.input(screen.getByLabelText(/^steps/i), { target: { value: 'Mix well.' } });
+		await fireEvent.input(document.querySelector('textarea[name="steps"]')!, {
+			target: { value: 'Mix well.' }
+		});
 		const placeholder = message.getAttribute('placeholder');
 		const hint = screen.getByText(`Left blank, saves as: ${placeholder}`);
 		expect(hint).toHaveClass('form-hint');
@@ -334,5 +336,69 @@ describe('RecipeForm Makes', () => {
 		await tick();
 		expect(screen.getByLabelText(/^Ingredients/)).toHaveAttribute('aria-invalid', 'true');
 		expect(screen.getByRole('alert')).toHaveTextContent(message);
+	});
+});
+
+describe('RecipeForm audience', () => {
+	const renderWith = (visibility: string, extra: Record<string, unknown> = {}) => {
+		const loaded = new FormData();
+		loaded.set('title', 'Cookies');
+		loaded.set('ingredients', '1 cup flour');
+		loaded.set('steps', 'Mix.');
+		render(RecipeForm, {
+			props: {
+				baseline: { ...draftOf(loaded), visibility } as never,
+				form: null,
+				allTags: [],
+				submitLabel: 'Save',
+				cancelHref: '/recipes/cookies',
+				nextVersion: 2,
+				...extra
+			}
+		});
+	};
+
+	test('the stored audience is the checked radio, and a click moves it', async () => {
+		renderWith('friends');
+		expect(screen.getByRole('radio', { name: 'Friends' })).toBeChecked();
+		expect(screen.getByRole('radio', { name: 'Only me' })).not.toBeChecked();
+		await fireEvent.click(screen.getByRole('radio', { name: 'Public' }));
+		expect(screen.getByRole('radio', { name: 'Public' })).toBeChecked();
+		expect(screen.getByRole('radio', { name: 'Friends' })).not.toBeChecked();
+	});
+
+	test('with forks, each choice is described as leaving them too', () => {
+		renderWith('public', { hasForks: true });
+		expect(screen.getByRole('radio', { name: 'Only me' })).toHaveAccessibleDescription(
+			"Only you can see it. You can share it later. Making this more private doesn't hide existing forks."
+		);
+	});
+
+	test('without forks there is no hint', () => {
+		renderWith('public');
+		expect(screen.queryByText(/existing forks/)).toBeNull();
+	});
+});
+
+describe('RecipeForm blocked on a text box', () => {
+	// The browser fires invalid on the hidden textarea; focus goes to the box a person types in.
+	test('focuses the live box when the ingredients are the first invalid field', async () => {
+		const loaded = new FormData();
+		loaded.set('title', 'Cookies');
+		render(RecipeForm, {
+			props: {
+				baseline: draftOf(loaded) as never,
+				form: null,
+				allTags: [],
+				submitLabel: 'Create recipe',
+				cancelHref: '/recipes'
+			}
+		});
+		const field = document.querySelector('textarea[name="ingredients"]')!;
+		field.dispatchEvent(new Event('invalid', { cancelable: true }));
+		await tick();
+		const box = screen.getByRole('textbox', { name: 'Ingredients' });
+		expect(box).toHaveFocus();
+		expect(box).toHaveAccessibleDescription(/^At least one ingredient is required/);
 	});
 });

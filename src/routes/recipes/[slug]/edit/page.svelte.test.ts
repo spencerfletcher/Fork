@@ -88,6 +88,9 @@ function failed(draft: Partial<RecipeDraft>, error = 'Title is required') {
 }
 
 const title = () => screen.getByLabelText(/^title/i) as HTMLInputElement;
+// The textarea behind a live text box: what submits, and what the browser validates.
+const textField = (name: 'ingredients' | 'steps') =>
+	document.querySelector<HTMLTextAreaElement>(`textarea[name="${name}"]`)!;
 const hiddenRevision = () =>
 	document.querySelector('input[name="editRevision"]') as HTMLInputElement | null;
 
@@ -111,8 +114,8 @@ describe('Edit page form', () => {
 		render(EditPage, { props: { data: makeData(), form: null } });
 		expect(title()).toHaveValue('Cookies');
 		expect(screen.getByLabelText(/serves/i)).toHaveValue(4);
-		expect(screen.getByLabelText(/^ingredients/i)).toHaveValue('1 cup flour\n2 eggs');
-		expect(screen.getByLabelText(/^steps/i)).toHaveValue('Mix.\n\nBake.\ntip: gently');
+		expect(textField('ingredients')).toHaveValue('1 cup flour\n2 eggs');
+		expect(textField('steps')).toHaveValue('Mix.\n\nBake.\ntip: gently');
 	});
 
 	test('a grouped version with a yield refills its "# Name" lines and Makes, and reads clean', () => {
@@ -131,8 +134,8 @@ describe('Edit page form', () => {
 				form: null
 			}
 		});
-		expect(screen.getByLabelText(/^ingredients/i)).toHaveValue('# Dough\n1 cup flour\n2 eggs');
-		expect(screen.getByLabelText(/^steps/i)).toHaveValue('Preheat.\n\n# Bake\nBake.');
+		expect(textField('ingredients')).toHaveValue('# Dough\n1 cup flour\n2 eggs');
+		expect(textField('steps')).toHaveValue('Preheat.\n\n# Bake\nBake.');
 		expect(screen.getByLabelText(/^Makes/)).toHaveValue('24 cookies');
 		expect(document.getElementById('ingredients-readback')).toHaveTextContent(
 			'Reads as 1 group: Dough 2 lines'
@@ -207,10 +210,10 @@ describe('Edit page form', () => {
 
 	test('shows the version the save will write and what changed', async () => {
 		render(EditPage, { props: { data: makeData(), form: null } });
-		await fireEvent.input(screen.getByLabelText(/^ingredients/i), {
+		await fireEvent.input(textField('ingredients'), {
 			target: { value: '1 cup flour\n3 eggs' }
 		});
-		await fireEvent.input(screen.getByLabelText(/^steps/i), {
+		await fireEvent.input(textField('steps'), {
 			target: { value: 'Mix.\n\nBake longer.' }
 		});
 		expect(editingLine('Editing v2 · saves as v3')).toBeInTheDocument();
@@ -222,13 +225,13 @@ describe('Edit page form', () => {
 
 	test('a settings-only change says no version will be written', async () => {
 		render(EditPage, { props: { data: makeData(), form: null } });
-		await fireEvent.click(screen.getByLabelText(/public/i));
+		await fireEvent.click(screen.getByRole('radio', { name: 'Friends' }));
 		expect(editingLine('Editing v2 · saves settings only')).toBeInTheDocument();
 	});
 
 	test('a message typed on a settings-only change promises a version, since the save keeps it', async () => {
 		render(EditPage, { props: { data: makeData(), form: null } });
-		await fireEvent.click(screen.getByLabelText(/public/i));
+		await fireEvent.click(screen.getByRole('radio', { name: 'Friends' }));
 		expect(editingLine('Editing v2 · saves settings only')).toBeInTheDocument();
 		const message = screen.getByLabelText(/what changed/i);
 		await fireEvent.input(message, { target: { value: 'Private for now' } });
@@ -240,7 +243,7 @@ describe('Edit page form', () => {
 	test('choosing a photo file counts as a content change at once, before the preview loads', async () => {
 		render(EditPage, { props: { data: makeData(), form: null } });
 		const file = new File(['x'], 'c.png', { type: 'image/png' });
-		const input = screen.getByLabelText('Choose photo') as HTMLInputElement;
+		const input = screen.getByLabelText('Choose a photo') as HTMLInputElement;
 		Object.defineProperty(input, 'files', { value: [file] });
 		await fireEvent.change(input);
 		expect(editingLine('Editing v2 · saves as v3')).toBeInTheDocument();
@@ -267,7 +270,7 @@ describe('Edit page form', () => {
 	test('an invalid draft with a settings change promises nothing', async () => {
 		render(EditPage, { props: { data: makeData(), form: null } });
 		await fireEvent.input(title(), { target: { value: '' } });
-		await fireEvent.click(screen.getByLabelText(/public/i));
+		await fireEvent.click(screen.getByRole('radio', { name: 'Friends' }));
 		expect(editingLine('Editing v2')).toBeInTheDocument();
 	});
 
@@ -353,7 +356,7 @@ describe('Edit page form', () => {
 					title: 'Biscuits',
 					prepTimeMinutes: '-5',
 					tags: ['Spicy'],
-					visibility: 'public'
+					visibility: 'friends'
 				})
 			}
 		});
@@ -364,6 +367,7 @@ describe('Edit page form', () => {
 			(i) => (i as HTMLInputElement).value
 		);
 		expect(tags).toEqual(['Spicy']);
+		expect(screen.getByRole('radio', { name: 'Friends' })).toBeChecked();
 		expect(document.querySelector('.form-error')).toBeNull();
 		expect(title()).toHaveAttribute('aria-invalid', 'true');
 		expect(title()).toHaveAccessibleDescription('Title is required');
@@ -375,7 +379,7 @@ describe('Edit page form', () => {
 
 	test('a blocked save says in the outcome line how many fields need attention, and focuses the first', async () => {
 		render(EditPage, { props: { data: makeData(), form: null } });
-		const ingredients = screen.getByLabelText(/^ingredients/i);
+		const ingredients = textField('ingredients');
 		await fireEvent.input(title(), { target: { value: '' } });
 		await fireEvent.input(ingredients, { target: { value: '' } });
 		// The browser fires invalid on each bad field in order when Save is pressed.
@@ -502,15 +506,15 @@ describe('Edit page form', () => {
 		expect(screen.queryByText(/choose the photo again/i)).toBeNull();
 	});
 
-	test('a photo is chosen with a ghost button over the hidden native input: Choose photo, or Replace photo over one', async () => {
+	test('a photo is chosen with a text button over the hidden native input: Choose a photo, or Replace under one', async () => {
 		const photoInput = () => document.querySelector('input[name="image"]') as HTMLInputElement;
 		const { unmount } = render(EditPage, { props: { data: makeData(), form: null } });
 		expect(photoInput()).toHaveClass('sr-only');
 		const button = photoInput().closest('label')!;
-		expect(button).toHaveClass('btn-ghost');
-		expect(button).toHaveTextContent(/^\s*Choose photo\s*$/);
+		expect(button).toHaveClass('text-btn');
+		expect(button).toHaveTextContent(/^\s*Choose a photo\s*$/);
 		// One name, the button's, not the field label's "Photo" before it.
-		expect(photoInput()).toHaveAccessibleName('Choose photo');
+		expect(photoInput()).toHaveAccessibleName('Choose a photo');
 		unmount();
 
 		render(EditPage, {
@@ -518,8 +522,15 @@ describe('Edit page form', () => {
 		});
 		expect(photoInput().closest('label')).toHaveTextContent('Replace photo');
 		expect(photoInput()).toHaveAccessibleName('Replace photo');
-		await fireEvent.click(screen.getByRole('button', { name: /remove photo/i }));
-		expect(photoInput().closest('label')).toHaveTextContent('Choose photo');
+		// Below the photo, never over it.
+		const photo = screen.getByRole('img', { name: /preview/i });
+		const remove = screen.getByRole('button', { name: /remove photo/i });
+		for (const action of [photoInput().closest('label')!, remove]) {
+			expect(photo.contains(action)).toBe(false);
+			expect(photo.compareDocumentPosition(action) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+		}
+		await fireEvent.click(remove);
+		expect(photoInput().closest('label')).toHaveTextContent('Choose a photo');
 	});
 
 	test('shows the current photo and a Remove photo control that marks it for removal', async () => {
@@ -545,7 +556,7 @@ describe('Edit page form', () => {
 		await fireEvent.click(screen.getByRole('button', { name: /remove photo/i }));
 		await tick();
 		const keep = screen.getByRole('button', { name: 'Keep photo' });
-		expect(keep).toHaveClass('btn-ghost');
+		expect(keep).toHaveClass('text-btn');
 		expect(keep).toHaveAttribute('type', 'button');
 		// The control pressed has gone; focus lands on the way back, not the page.
 		expect(keep).toHaveFocus();

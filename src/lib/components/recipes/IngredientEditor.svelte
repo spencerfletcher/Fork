@@ -4,8 +4,13 @@
 	import { limitError } from '#lib/recipes/limits.js';
 	import { plural } from '#lib/helpers.js';
 	import ReadBack from './ReadBack.svelte';
+	import GroupedTextEditor from './GroupedTextEditor.svelte';
 
-	let { value = $bindable(), error = '' }: { value: string; error?: string } = $props();
+	let {
+		value = $bindable(),
+		error = '',
+		disabled = false
+	}: { value: string; error?: string; disabled?: boolean } = $props();
 
 	// The server rejects oversized text, so the parser is not run on it here
 	// either; the text stays in the box for the user to trim.
@@ -51,19 +56,15 @@
 </script>
 
 <div class="field">
-	<label for="ingredients">
-		Ingredients <span class="required" aria-hidden="true">*</span>
-	</label>
-	<textarea
+	<GroupedTextEditor
 		id="ingredients"
-		name="ingredients"
-		rows="11"
-		required
+		label="Ingredients"
+		rows={11}
 		bind:value
 		{placeholder}
-		aria-invalid={error ? 'true' : undefined}
-		aria-describedby={describedBy}>
-	</textarea>
+		invalid={!!error}
+		{describedBy}
+		{disabled} />
 	{#if error}
 		<p class="field-error" id="ingredients-error" role="alert">{error}</p>
 	{/if}
@@ -87,10 +88,3 @@
 		{#if announcement}{announcement}{/if}
 	</p>
 </div>
-
-<style>
-	/* field-sizing: content ignores rows; this keeps an empty box typeable. */
-	textarea {
-		min-height: calc(11lh + 20px);
-	}
-</style>

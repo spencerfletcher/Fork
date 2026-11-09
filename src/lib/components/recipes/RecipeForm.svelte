@@ -22,6 +22,21 @@
 	import StepEditor from './StepEditor.svelte';
 	import PhotoField from './PhotoField.svelte';
 
+	// Who can see the recipe, as the radio trio offers it, Only me first.
+	const AUDIENCES = [
+		{ value: 'private', label: 'Only me', note: 'Only you can see it. You can share it later.' },
+		{
+			value: 'friends',
+			label: 'Friends',
+			note: 'Approved friends can see, save and fork it. It stays out of Discover.'
+		},
+		{ value: 'public', label: 'Public', note: 'Anyone can find, save and fork it.' }
+	] as const;
+	type Visibility = (typeof AUDIENCES)[number]['value'];
+	// ponytail: slice A puts visibility on RecipeDraft in place of isPublic;
+	// drop this widening (and AUDIENCES' own type, if A exports one) on merge.
+	type Draft = RecipeDraft & { visibility: Visibility };
+
 	let {
 		baseline,
 		form,
@@ -32,12 +47,13 @@
 		imageUrl = null,
 		nextVersion,
 		header,
-		leaving = false
+		leaving = false,
+		hasForks = false
 	}: {
 		/** What was loaded, as the form's strings. Dirty-checking compares against it. */
-		baseline: RecipeDraft;
+		baseline: Draft;
 		/** The failed action's result, if any; its draft refills the fields. */
-		form: { error: string; draft: RecipeDraft } | null;
+		form: { error: string; draft: Draft } | null;
 		allTags: TagChip[];
 		/** Named action, e.g. `?/save`; omit for the route's default action. */
 		action?: string;
@@ -55,6 +71,8 @@
 		header?: Snippet<[outcome: string, invalid: boolean]>;
 		/** Another form on the page is leaving on purpose (a delete), so the guard stays quiet. */
 		leaving?: boolean;
+		/** The recipe has forks, which a narrower audience leaves where they are. */
+		hasForks?: boolean;
 	} = $props();
 
 	// The whole form as one object. A failed save hands back what was
@@ -63,7 +81,7 @@
 	// before hydration, or without JavaScript) already shows it; the effect
 	// covers later failures while the page stays mounted.
 	// svelte-ignore state_referenced_locally
-	let draft = $state<RecipeDraft>({ ...(form?.draft ?? baseline) });
+	let draft = $state<Draft>({ ...(form?.draft ?? baseline) });
 	$effect(() => {
 		if (form?.draft) draft = { ...form.draft };
 	});
@@ -73,7 +91,7 @@
 
 	// Trimmed strings and sorted tags, so retyping the original reads as clean.
 	// A typed message is a change: the save writes a version carrying it.
-	const serialise = (d: RecipeDraft) =>
+	const serialise = (d: Draft) =>
 		JSON.stringify({
 			...d,
 			commitMessage: d.commitMessage.trim(),
@@ -96,7 +114,7 @@
 	const groups = $derived(
 		nextVersion ? draftChangedGroups(baselineContent, draft, photoChanged) : []
 	);
-	const settings = (d: RecipeDraft) => JSON.stringify([d.isPublic, tagKeys(d.tags)]);
+	const settings = (d: Draft) => JSON.stringify([d.visibility, tagKeys(d.tags)]);
 	const settingsChanged = $derived(settings(draft) !== settings(baseline));
 
 	const outcome = $derived.by(() => {
@@ -187,7 +205,11 @@
 		event.preventDefault();
 		blocked = true;
 		validate(event.target);
-		event.currentTarget.querySelector<HTMLElement>(':is(input, textarea):invalid')?.focus();
+		const bad = event.currentTarget.querySelector<HTMLInputElement | HTMLTextAreaElement>(
+			':is(input, textarea):invalid'
+		);
+		// A text box's textarea is hidden behind its live box, which has taken its id.
+		(bad?.hidden ? document.getElementById(bad.name) : bad)?.focus();
 	}
 
 	const aria = (name: string) =>
@@ -224,6 +246,32 @@
 </script>
 
 {@render header?.(outcome, errorCount > 0)}
+
+{#snippet audienceIcon(value: Visibility)}
+	<svg
+		class="icon"
+		viewBox="0 0 16 16"
+		fill="none"
+		stroke="currentColor"
+		stroke-width="1.5"
+		stroke-linecap="round"
+		stroke-linejoin="round"
+		aria-hidden="true">
+		{#if value === 'private'}
+			<rect x="3" y="7" width="10" height="7" rx="1.5" />
+			<path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" />
+		{:else if value === 'friends'}
+			<circle cx="6" cy="5.5" r="2.5" />
+			<path d="M1.5 13.5c0-2.5 2-4 4.5-4s4.5 1.5 4.5 4" />
+			<circle cx="11.5" cy="6" r="2" />
+			<path d="M11 9.5c2 0 3.5 1.3 3.5 3.5" />
+		{:else}
+			<circle cx="8" cy="8" r="6" />
+			<path
+				d="M2 8h12M8 2c1.8 1.7 2.6 3.7 2.6 6S9.8 12.3 8 14C6.2 12.3 5.4 10.3 5.4 8S6.2 3.7 8 2z" />
+		{/if}
+	</svg>
+{/snippet}
 
 {#snippet fieldError(name: string)}
 	{#if errors[name]}
@@ -334,20 +382,42 @@
 					<TagInput {allTags} bind:selected={draft.tags} />
 				</fieldset>
 
-				<label class="inline-checkbox">
-					<input type="checkbox" name="isPublic" bind:checked={draft.isPublic} />
-					Make this recipe public
-					<!-- The dot is for the eye; the name reads "…public applies to every version". -->
-					<span class="inline-checkbox__note">
-						<span aria-hidden="true">·</span>
-						applies to every version
-					</span>
-				</label>
+				<fieldset class="audience">
+					<legend class="field-legend">Who can see this recipe</legend>
+					<div class="choices">
+						{#each AUDIENCES as audience (audience.value)}
+							<label class="choice">
+								<input
+									type="radio"
+									name="visibility"
+									value={audience.value}
+									bind:group={draft.visibility}
+									aria-labelledby="visibility-{audience.value}"
+									aria-describedby="visibility-{audience.value}-note{hasForks
+										? ' visibility-hint'
+										: ''}" />
+								<b id="visibility-{audience.value}">
+									{@render audienceIcon(audience.value)}
+									{audience.label}
+								</b>
+								<span id="visibility-{audience.value}-note">{audience.note}</span>
+							</label>
+						{/each}
+					</div>
+					{#if hasForks}
+						<p class="form-hint" id="visibility-hint">
+							Making this more private doesn't hide existing forks.
+						</p>
+					{/if}
+				</fieldset>
 			</div>
 
 			<div class="form-col">
-				<IngredientEditor bind:value={draft.ingredients} error={errors.ingredients} />
-				<StepEditor bind:value={draft.steps} error={errors.steps} />
+				<IngredientEditor
+					bind:value={draft.ingredients}
+					error={errors.ingredients}
+					disabled={save.pending} />
+				<StepEditor bind:value={draft.steps} error={errors.steps} disabled={save.pending} />
 			</div>
 		</div>
 
@@ -411,14 +481,69 @@
 		color: var(--color-text-3);
 	}
 
-	/* A 24px target from a 23px line of text. */
-	.inline-checkbox {
-		min-height: 24px;
+	.audience {
+		border: 0;
+		padding: 0;
+		margin: 0;
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-2);
 	}
 
-	/* Clay, as the strike rows' ticked squares are, not the browser's blue. */
-	.inline-checkbox input {
+	.audience .field-legend {
+		margin-bottom: 0;
+		padding: 0;
+	}
+
+	/* Icon, word and one sentence per audience; the chosen row gets a 1px ink inset. */
+	.choices {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+	}
+
+	.choice {
+		display: grid;
+		grid-template-columns: 20px 1fr;
+		gap: 2px 10px;
+		align-items: start;
+		padding: 10px 12px;
+		border: 1px solid var(--color-input-border);
+		border-radius: var(--radius-md);
+		background: var(--color-surface);
+		cursor: pointer;
+	}
+
+	/* Clay, as the checkbox it replaces was, not the browser's blue. */
+	.choice input {
+		margin: 4px 0 0;
 		accent-color: var(--color-accent);
+	}
+
+	.choice b {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		font-weight: 600;
+	}
+
+	.choice span {
+		grid-column: 2;
+		font-size: 0.875rem;
+		line-height: 1.45;
+		color: var(--color-text-2);
+	}
+
+	.choice:has(:checked) {
+		border-color: var(--color-text);
+		box-shadow: inset 0 0 0 1px var(--color-text);
+	}
+
+	.icon {
+		width: 16px;
+		height: 16px;
+		flex-shrink: 0;
 	}
 
 	/* A plain 1px Rule, like every other rule in the editor. */
@@ -445,15 +570,6 @@
 		   rule leaves with the editor. */
 		:global(html:has(.form-actions)) {
 			scroll-padding-bottom: calc(70px + env(safe-area-inset-bottom));
-		}
-	}
-
-	/* A thumb's 44px, on a phone or any touch screen. */
-	@media (max-width: 699px), (pointer: coarse) {
-		/* The 24px row grown to 44px outward, so the text stays put. */
-		.inline-checkbox {
-			min-height: 44px;
-			margin-block: -10px;
 		}
 	}
 </style>

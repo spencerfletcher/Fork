@@ -109,7 +109,7 @@ test.describe('New recipe page', () => {
 	test('shows ingredient and step editors', async ({ page }) => {
 		await page.goto('/recipes/new');
 		await expect(page.getByLabel('Ingredients')).toBeVisible();
-		await expect(page.getByLabel('Steps')).toBeVisible();
+		await expect(page.getByLabel('Method')).toBeVisible();
 	});
 
 	test('a field edited and left empty turns on the error tokens and says why in its own words, with no save; passing through says nothing', async ({
@@ -149,7 +149,7 @@ test.describe('New recipe page', () => {
 				el.addEventListener('invalid', (e) => w.invalids.push(e.defaultPrevented));
 			}
 		});
-		await page.getByLabel('Steps').fill('Mix.');
+		await page.getByLabel('Method').fill('Mix.');
 		await page.getByRole('button', { name: /create recipe/i }).click();
 		const title = page.locator('textarea[name="title"]');
 		await expect(title).toBeFocused();
@@ -205,9 +205,9 @@ test.describe('New recipe page', () => {
 			await page.locator('textarea[name="title"]').fill('E2E Test Recipe');
 
 			await page.getByLabel('Ingredients').fill('2 cups flour');
-			await page.getByLabel('Steps').fill('Mix all ingredients.');
+			await page.getByLabel('Method').fill('Mix all ingredients.');
 			// Private, so the guest project's seed counts never see it.
-			await page.getByLabel(/public/i).uncheck();
+			await page.getByRole('radio', { name: 'Only me' }).check();
 
 			await page.getByRole('button', { name: /create recipe/i }).click();
 
@@ -270,8 +270,11 @@ test.describe('Edit recipe page', () => {
 			'cookTimeMinutes',
 			'makes',
 			'tag-combobox',
-			'isPublic',
+			// One stop for the radio group, then each text box's Insert before it.
+			'visibility',
+			'Insert',
 			'ingredients',
+			'Insert',
 			'steps',
 			'commitMessage',
 			'Save',
@@ -332,7 +335,7 @@ test.describe('Edit recipe page', () => {
 		try {
 			await gotoHydrated(page, `${url}/edit`);
 			await expect(page.locator('.editing')).toHaveText('Editing v1');
-			await page.getByLabel('Steps').fill('Mix, then bake.');
+			await page.getByLabel('Method').fill('Mix, then bake.');
 			await expect(page.locator('.editing')).toHaveText('Editing v1 · saves as v2');
 			await expect(page.locator('input[name="commitMessage"]')).toHaveAttribute(
 				'placeholder',
@@ -372,7 +375,7 @@ test.describe('Edit recipe page', () => {
 		const url = await createRecipe(page, 'E2E Commit Message', '4');
 		try {
 			await gotoHydrated(page, `${url}/edit`);
-			await page.getByLabel('Steps').fill('Updated step text from e2e test.');
+			await page.getByLabel('Method').fill('Updated step text from e2e test.');
 			await page.locator('input[name="commitMessage"]').fill('e2e test commit');
 			await page.getByRole('button', { name: 'Save', exact: true }).click();
 			await page.waitForURL(url);
@@ -429,9 +432,9 @@ async function createRecipe(page: Page, title: string, servings: string) {
 	await page.locator('input[name="servings"]').fill(servings);
 	await page.locator('input[name="cookTimeMinutes"]').fill('20');
 	await page.getByLabel('Ingredients').fill('2 cups flour');
-	await page.getByLabel('Steps').fill('Mix all ingredients.');
+	await page.getByLabel('Method').fill('Mix all ingredients.');
 	// Private, so the guest project's seed counts never see it.
-	await page.getByLabel(/public/i).uncheck();
+	await page.getByRole('radio', { name: 'Only me' }).check();
 	await page.getByRole('button', { name: /create recipe/i }).click();
 	await page.waitForURL(/\/recipes\/(?!new)/);
 	return page.url().split('?')[0];
@@ -567,7 +570,7 @@ test.describe('One save', () => {
 			// Announced at the field, not as the global alert.
 			await expect(page.locator('.form-error')).toHaveCount(0);
 			await expect(page.getByRole('alert')).toHaveAttribute('id', 'ingredients-error');
-			await expect(box).toHaveValue(long);
+			await expect(page.locator('textarea[name="ingredients"]')).toHaveValue(long);
 			await expect(box).toBeEnabled();
 		} finally {
 			await deleteRecipe(page, url);
@@ -623,7 +626,7 @@ test.describe('Groups and yield', () => {
 			await page.getByLabel(/^Makes/).fill('12 buns');
 			await page.getByLabel('Ingredients').fill(INGREDIENTS);
 			await page
-				.getByLabel('Steps')
+				.getByLabel('Method')
 				.fill('# Make the dough\nMix.\n\nKnead.\n\n# Bake\nBake 25 minutes.');
 			// The split is read back before the save.
 			await expect(page.locator('#ingredients-readback')).toHaveText(
@@ -633,7 +636,7 @@ test.describe('Groups and yield', () => {
 				/Reads as 3 steps in 2 groups:\s*Make the dough 1–2\s*Bake 3/
 			);
 			// Private, so the guest project's seed counts never see it.
-			await page.getByLabel(/public/i).uncheck();
+			await page.getByRole('radio', { name: 'Only me' }).check();
 			await page.getByRole('button', { name: /create recipe/i }).click();
 			await page.waitForURL(/\/recipes\/(?!new)/);
 			url = page.url().split('?')[0];
@@ -662,7 +665,7 @@ test.describe('Groups and yield', () => {
 			// A second version renames a group; the editor round-trips the headings.
 			await gotoHydrated(page, `${url}/edit`);
 			const box = page.getByLabel('Ingredients');
-			await expect(box).toHaveValue(INGREDIENTS);
+			await expect(page.locator('textarea[name="ingredients"]')).toHaveValue(INGREDIENTS);
 			await expect(page.getByLabel(/^Makes/)).toHaveValue('12 buns');
 			await box.fill(INGREDIENTS.replace('# Filling', '# Swirl'));
 			await page.getByRole('button', { name: 'Save', exact: true }).click();
