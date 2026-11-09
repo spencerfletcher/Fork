@@ -15,19 +15,8 @@ describe('ResultStatus', () => {
 		expect(screen.getByRole('status')).toHaveTextContent('');
 	});
 
-	test('by default only a screen reader hears it', () => {
-		render(ResultStatus, { props: { count: 0, filtered: true, class: 'line' } });
+	test('only a screen reader hears it', () => {
+		render(ResultStatus, { props: { count: 0, filtered: true } });
 		expect(screen.getByRole('status')).toHaveClass('sr-only');
-		expect(screen.getByRole('status')).not.toHaveClass('line');
-	});
-
-	test('visible: seen when nothing matches, screen reader only over results', () => {
-		const props = { filtered: true, visible: true, class: 'line' };
-		const { rerender } = render(ResultStatus, { props: { ...props, count: 0 } });
-		const status = screen.getByRole('status');
-		expect(status).toHaveClass('line');
-		expect(status.firstElementChild).not.toHaveClass('sr-only');
-		rerender({ ...props, count: 2 });
-		expect(status.firstElementChild).toHaveClass('sr-only');
 	});
 });

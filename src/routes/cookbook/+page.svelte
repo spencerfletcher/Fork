@@ -71,7 +71,8 @@
 					availableTags={data.allTags} />
 			</div>
 
-			<ResultStatus count={data.recipes.length} {filtered} visible class="cookbook-status" />
+			<!-- Screen readers only (Spencer, 9 November 2026): the cards say the count. -->
+			<ResultStatus count={data.recipes.length} {filtered} />
 
 			{#if data.recipes.length > 0}
 				<div class="cookbook-grid">
@@ -109,10 +110,13 @@
 		}
 	}
 
+	/* The grid's row gap below, so the first cards sit as far from the tags as
+	   the next row does from them. */
 	.cookbook-filters {
 		display: flex;
 		flex-direction: column;
 		gap: 14px;
+		margin-bottom: 32px;
 	}
 
 	/* All · Mine · Saved: one bordered strip, the current segment marigold-tinted. */
@@ -193,13 +197,6 @@
 		.seg a[aria-current='page'] {
 			outline: 2px solid CanvasText;
 		}
-	}
-
-	:global(.cookbook-status) {
-		min-height: 1.3em;
-		margin: 14px 0 18px;
-		font-size: 0.875rem;
-		color: var(--color-text-3);
 	}
 
 	.cookbook-none {
