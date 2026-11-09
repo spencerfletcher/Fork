@@ -4,6 +4,8 @@
 
 Full-stack recipe platform with git-style version control for recipes. Stack: SvelteKit + TypeScript frontend, PostgreSQL backend. Live at recipes.spencerfletcher.com.
 
+Planning and design docs: start at `docs/README.md`, which names the current product and design direction.
+
 ## Architecture
 
 - SvelteKit handles routing, SSR, and API endpoints
