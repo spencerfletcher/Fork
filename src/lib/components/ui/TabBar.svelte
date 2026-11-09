@@ -89,6 +89,7 @@
 
 	.tab-bar a:hover {
 		color: var(--color-text);
+		background: var(--color-band);
 	}
 
 	.tab-bar a[aria-current='page'] {
