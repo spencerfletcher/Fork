@@ -9,8 +9,10 @@
 		fieldOfMessage,
 		NUMBER_FIELDS,
 		REQUIRED_MESSAGES,
+		VISIBILITIES,
 		type NumberField,
-		type RecipeDraft
+		type RecipeDraft,
+		type Visibility
 	} from '#lib/recipes/validation.js';
 	import { normaliseTagNames, tagKey } from '#lib/recipes/tags.js';
 	import type { TagChip } from '#lib/recipes/types.js';
@@ -22,20 +24,15 @@
 	import StepEditor from './StepEditor.svelte';
 	import PhotoField from './PhotoField.svelte';
 
-	// Who can see the recipe, as the radio trio offers it, Only me first.
-	const AUDIENCES = [
-		{ value: 'private', label: 'Only me', note: 'Only you can see it. You can share it later.' },
-		{
-			value: 'friends',
+	// The radio trio's copy, offered in VISIBILITIES order (Only me first).
+	const AUDIENCE_COPY: Record<Visibility, { label: string; note: string }> = {
+		private: { label: 'Only me', note: 'Only you can see it. You can share it later.' },
+		friends: {
 			label: 'Friends',
 			note: 'Approved friends can see, save and fork it. It stays out of Discover.'
 		},
-		{ value: 'public', label: 'Public', note: 'Anyone can find, save and fork it.' }
-	] as const;
-	type Visibility = (typeof AUDIENCES)[number]['value'];
-	// ponytail: slice A puts visibility on RecipeDraft in place of isPublic;
-	// drop this widening (and AUDIENCES' own type, if A exports one) on merge.
-	type Draft = RecipeDraft & { visibility: Visibility };
+		public: { label: 'Public', note: 'Anyone can find, save and fork it.' }
+	};
 
 	let {
 		baseline,
@@ -51,9 +48,9 @@
 		hasForks = false
 	}: {
 		/** What was loaded, as the form's strings. Dirty-checking compares against it. */
-		baseline: Draft;
+		baseline: RecipeDraft;
 		/** The failed action's result, if any; its draft refills the fields. */
-		form: { error: string; draft: Draft } | null;
+		form: { error: string; draft: RecipeDraft } | null;
 		allTags: TagChip[];
 		/** Named action, e.g. `?/save`; omit for the route's default action. */
 		action?: string;
@@ -81,7 +78,7 @@
 	// before hydration, or without JavaScript) already shows it; the effect
 	// covers later failures while the page stays mounted.
 	// svelte-ignore state_referenced_locally
-	let draft = $state<Draft>({ ...(form?.draft ?? baseline) });
+	let draft = $state<RecipeDraft>({ ...(form?.draft ?? baseline) });
 	$effect(() => {
 		if (form?.draft) draft = { ...form.draft };
 	});
@@ -91,7 +88,7 @@
 
 	// Trimmed strings and sorted tags, so retyping the original reads as clean.
 	// A typed message is a change: the save writes a version carrying it.
-	const serialise = (d: Draft) =>
+	const serialise = (d: RecipeDraft) =>
 		JSON.stringify({
 			...d,
 			commitMessage: d.commitMessage.trim(),
@@ -114,7 +111,7 @@
 	const groups = $derived(
 		nextVersion ? draftChangedGroups(baselineContent, draft, photoChanged) : []
 	);
-	const settings = (d: Draft) => JSON.stringify([d.visibility, tagKeys(d.tags)]);
+	const settings = (d: RecipeDraft) => JSON.stringify([d.visibility, tagKeys(d.tags)]);
 	const settingsChanged = $derived(settings(draft) !== settings(baseline));
 
 	const outcome = $derived.by(() => {
@@ -385,22 +382,20 @@
 				<fieldset class="audience">
 					<legend class="field-legend">Who can see this recipe</legend>
 					<div class="choices">
-						{#each AUDIENCES as audience (audience.value)}
+						{#each VISIBILITIES as value (value)}
 							<label class="choice">
 								<input
 									type="radio"
 									name="visibility"
-									value={audience.value}
+									{value}
 									bind:group={draft.visibility}
-									aria-labelledby="visibility-{audience.value}"
-									aria-describedby="visibility-{audience.value}-note{hasForks
-										? ' visibility-hint'
-										: ''}" />
-								<b id="visibility-{audience.value}">
-									{@render audienceIcon(audience.value)}
-									{audience.label}
+									aria-labelledby="visibility-{value}"
+									aria-describedby="visibility-{value}-note{hasForks ? ' visibility-hint' : ''}" />
+								<b id="visibility-{value}">
+									{@render audienceIcon(value)}
+									{AUDIENCE_COPY[value].label}
 								</b>
-								<span id="visibility-{audience.value}-note">{audience.note}</span>
+								<span id="visibility-{value}-note">{AUDIENCE_COPY[value].note}</span>
 							</label>
 						{/each}
 					</div>

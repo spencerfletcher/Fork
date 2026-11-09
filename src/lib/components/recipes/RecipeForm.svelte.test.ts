@@ -9,7 +9,8 @@ import {
 	PHOTO_TYPES,
 	PHOTO_MAX_BYTES,
 	PHOTO_SIZE_MESSAGE,
-	emptyGroupMessage
+	emptyGroupMessage,
+	type Visibility
 } from '#lib/recipes/validation.js';
 import { MAKES_TOO_LONG, MAX_MAKES } from '#lib/recipes/limits.js';
 
@@ -340,14 +341,14 @@ describe('RecipeForm Makes', () => {
 });
 
 describe('RecipeForm audience', () => {
-	const renderWith = (visibility: string, extra: Record<string, unknown> = {}) => {
+	const renderWith = (visibility: Visibility, extra: Record<string, unknown> = {}) => {
 		const loaded = new FormData();
 		loaded.set('title', 'Cookies');
 		loaded.set('ingredients', '1 cup flour');
 		loaded.set('steps', 'Mix.');
 		render(RecipeForm, {
 			props: {
-				baseline: { ...draftOf(loaded), visibility } as never,
+				baseline: { ...draftOf(loaded), visibility },
 				form: null,
 				allTags: [],
 				submitLabel: 'Save',
@@ -365,6 +366,13 @@ describe('RecipeForm audience', () => {
 		await fireEvent.click(screen.getByRole('radio', { name: 'Public' }));
 		expect(screen.getByRole('radio', { name: 'Public' })).toBeChecked();
 		expect(screen.getByRole('radio', { name: 'Friends' })).not.toBeChecked();
+	});
+
+	test('a private draft checks Only me by default', () => {
+		renderWith('private');
+		expect(screen.getByRole('radio', { name: 'Only me' })).toBeChecked();
+		expect(screen.getByRole('radio', { name: 'Friends' })).not.toBeChecked();
+		expect(screen.getByRole('radio', { name: 'Public' })).not.toBeChecked();
 	});
 
 	test('with forks, each choice is described as leaving them too', () => {
@@ -387,7 +395,7 @@ describe('RecipeForm blocked on a text box', () => {
 		loaded.set('title', 'Cookies');
 		render(RecipeForm, {
 			props: {
-				baseline: draftOf(loaded) as never,
+				baseline: draftOf(loaded),
 				form: null,
 				allTags: [],
 				submitLabel: 'Create recipe',
