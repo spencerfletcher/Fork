@@ -64,6 +64,13 @@
       "when": 1794203716151,
       "tag": "0008_recipe-visibility",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1794206373534,
+      "tag": "0009_journal-and-friends",
+      "breakpoints": true
     }
   ]
 }

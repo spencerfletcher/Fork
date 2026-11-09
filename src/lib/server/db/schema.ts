@@ -11,7 +11,9 @@ import {
 	customType,
 	index,
 	unique,
-	check
+	check,
+	date,
+	uniqueIndex
 } from 'drizzle-orm/pg-core';
 import { relations, sql } from 'drizzle-orm';
 
@@ -75,12 +77,13 @@ export const recipes = pgTable(
 
 // ─── Friendships ─────────────────────────────────────────────────────────────
 
-export const FRIENDSHIP_STATUSES = ['pending', 'accepted'] as const;
+export const FRIENDSHIP_STATUSES = ['pending', 'accepted', 'blocked'] as const;
 
 export type FriendshipStatus = (typeof FRIENDSHIP_STATUSES)[number];
 
-// One row per pair: the requester asked, the addressee answers. An accepted
-// row makes both people friends of each other, whichever way it was asked.
+// One row per pair, whichever way round: the requester asked, the addressee
+// answers. An accepted row makes both people friends of each other. A blocked
+// row's requester is the blocker. The pair index refuses a reverse duplicate.
 export const friendships = pgTable(
 	'friendships',
 	{
@@ -96,7 +99,96 @@ export const friendships = pgTable(
 	// The key serves lookups by requester; this index the other direction.
 	(table) => [
 		primaryKey({ columns: [table.requesterId, table.addresseeId] }),
-		index('friendships_addressee_idx').on(table.addresseeId)
+		index('friendships_addressee_idx').on(table.addresseeId),
+		uniqueIndex('friendships_pair_idx').on(
+			sql`least(${table.requesterId}, ${table.addresseeId})`,
+			sql`greatest(${table.requesterId}, ${table.addresseeId})`
+		),
+		check('friendships_not_self', sql`${table.requesterId} <> ${table.addresseeId}`)
+	]
+).enableRLS();
+
+// Mute hides the muted person's feed items from the muter only.
+export const mutes = pgTable(
+	'mutes',
+	{
+		muterId: text('muter_id')
+			.notNull()
+			.references(() => profiles.id, { onDelete: 'cascade' }),
+		mutedId: text('muted_id')
+			.notNull()
+			.references(() => profiles.id, { onDelete: 'cascade' }),
+		createdAt: timestamp('created_at').notNull().defaultNow()
+	},
+	(table) => [primaryKey({ columns: [table.muterId, table.mutedId] })]
+).enableRLS();
+
+export const REPORT_TARGETS = ['log_entry', 'recipe', 'user'] as const;
+
+export type ReportTarget = (typeof REPORT_TARGETS)[number];
+
+// Read by hand; moderation is manual. target_id is text so one column holds a
+// log entry or recipe id and a profile id alike.
+export const reports = pgTable('reports', {
+	id: serial().primaryKey(),
+	reporterId: text('reporter_id')
+		.notNull()
+		.references(() => profiles.id, { onDelete: 'cascade' }),
+	targetType: text('target_type').$type<ReportTarget>().notNull(),
+	targetId: text('target_id').notNull(),
+	reason: text().notNull(),
+	createdAt: timestamp('created_at').notNull().defaultNow()
+}).enableRLS();
+
+// ─── Journal ──────────────────────────────────────────────────────────────────
+
+export const LOG_AUDIENCES = ['private', 'friends'] as const;
+
+export type LogAudience = (typeof LOG_AUDIENCES)[number];
+
+// One log entry: what someone cooked, when, and who sees it. The source is
+// derived: a recipe id names the recipe, none means improvised. recipe_id has
+// no FK (like recipes.parent_id), so a deleted recipe leaves it pointing at no
+// row and the Journal can say "Recipe deleted" rather than "Improvised"; recipe
+// ids are serial and never reused.
+export const logEntries = pgTable(
+	'log_entries',
+	{
+		id: serial().primaryKey(),
+		userId: text('user_id')
+			.notNull()
+			.references(() => profiles.id, { onDelete: 'cascade' }),
+		recipeId: integer('recipe_id'),
+		versionId: integer('version_id').references(() => recipeVersions.id, {
+			onDelete: 'set null'
+		}),
+		dish: text().notNull(),
+		cookedOn: date('cooked_on').notNull(),
+		servings: integer(),
+		photoUrl: text('photo_url'),
+		caption: text(),
+		note: text(),
+		audience: text().$type<LogAudience>().notNull().default('private'),
+		createdAt: timestamp('created_at').notNull().defaultNow()
+	},
+	(table) => [index('log_entries_user_idx').on(table.userId, table.cookedOn)]
+).enableRLS();
+
+export const likes = pgTable(
+	'likes',
+	{
+		userId: text('user_id')
+			.notNull()
+			.references(() => profiles.id, { onDelete: 'cascade' }),
+		logEntryId: integer('log_entry_id')
+			.notNull()
+			.references(() => logEntries.id, { onDelete: 'cascade' }),
+		createdAt: timestamp('created_at').notNull().defaultNow()
+	},
+	// The key serves "did I like it"; this index the count per entry.
+	(table) => [
+		primaryKey({ columns: [table.userId, table.logEntryId] }),
+		index('likes_entry_idx').on(table.logEntryId)
 	]
 ).enableRLS();
 
@@ -235,3 +327,4 @@ export type Profile = InferSelectModel<typeof profiles>;
 export type Recipe = InferSelectModel<typeof recipes>;
 export type RecipeVersion = InferSelectModel<typeof recipeVersions>;
 export type Tag = InferSelectModel<typeof tags>;
+export type LogEntry = InferSelectModel<typeof logEntries>;
