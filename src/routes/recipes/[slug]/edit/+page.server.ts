@@ -16,7 +16,12 @@ import { imagePathOf, removeRecipeImage } from '#lib/server/images.js';
 import { readSubmission, uploadPhoto, saveFailure } from '#lib/server/submission.js';
 import { syncTags, listTags } from '#lib/server/tags.js';
 import { loginHref } from '#lib/auth/loginHref.js';
-import { canSetVisibility, WIDENS_PARENT } from '#lib/server/visibility.js';
+import {
+	canSetVisibility,
+	canViewRow,
+	LOST_PARENT_ACCESS,
+	WIDENS_PARENT
+} from '#lib/server/visibility.js';
 
 const STALE_MESSAGE =
 	'This recipe was changed in another tab. Reload to see the latest version, then reapply your edits.';
@@ -70,7 +75,7 @@ export const actions: Actions = {
 			where: eq(recipes.slug, params.slug),
 			with: {
 				recipesToTags: { with: { tag: true } },
-				parent: { columns: { visibility: true } }
+				parent: { columns: { visibility: true, authorId: true } }
 			}
 		});
 		if (!recipe) throw error(404, 'Recipe not found');
@@ -80,16 +85,19 @@ export const actions: Actions = {
 		if (!submission.ok) return submission.failure;
 		const { draft, content, settings } = submission;
 
-		// Forks never widen access past both the parent and the fork's own current
-		// audience, so a fork already wider than a narrowed parent keeps saving.
+		// Forks never widen access past both the parent, as the forker can see it
+		// now, and the fork's own current audience, so a fork already wider than a
+		// narrowed parent keeps saving. A Friends parent the forker lost sight of
+		// counts as private.
 		const { visibility } = settings;
-		const parentVisibility = recipe.parent?.visibility ?? null;
-		if (
-			parentVisibility !== null &&
-			parentVisibility !== 'public' &&
-			!canSetVisibility(parentVisibility, recipe.visibility, visibility)
-		) {
-			return saveFailure(400, 'invalid', WIDENS_PARENT[parentVisibility], draft);
+		const { parent } = recipe;
+		if (parent && parent.visibility !== 'public') {
+			const lostAccess = parent.visibility === 'friends' && !(await canViewRow(parent, user));
+			const seen = lostAccess ? 'private' : parent.visibility;
+			if (!canSetVisibility(seen, recipe.visibility, visibility)) {
+				const message = lostAccess ? LOST_PARENT_ACCESS : WIDENS_PARENT[parent.visibility];
+				return saveFailure(400, 'invalid', message, draft);
+			}
 		}
 
 		if (!/^\d+$/.test(draft.editRevision)) {

@@ -3,7 +3,7 @@ import { chain } from '#lib/testing/drizzle.js';
 import { invokeAction as invoke, formEvent } from '#lib/testing/actions.js';
 import { actions, load } from './+page.server';
 import { makeContent, makeIngredient, makeStep } from '#lib/recipes/fixtures.js';
-import { WIDENS_PARENT } from '#lib/server/visibility.js';
+import { LOST_PARENT_ACCESS, WIDENS_PARENT } from '#lib/server/visibility.js';
 import { PgDialect } from 'drizzle-orm/pg-core';
 import type { SQL } from 'drizzle-orm';
 import { recipes } from '#lib/server/db/schema.js';
@@ -18,9 +18,11 @@ const {
 	uploadMock,
 	removeMock,
 	syncTagsMock,
-	countMock
+	countMock,
+	canViewRowMock
 } = vi.hoisted(() => ({
 	countMock: vi.fn(),
+	canViewRowMock: vi.fn(),
 	findRecipeMock: vi.fn(),
 	dbSelectDistinct: vi.fn(),
 	dbInsert: vi.fn().mockReturnValue({
@@ -38,6 +40,10 @@ vi.mock('#lib/server/images.js', async (importOriginal) => ({
 	...(await importOriginal<typeof import('#lib/server/images.js')>()),
 	uploadRecipeImage: uploadMock,
 	removeRecipeImage: removeMock
+}));
+vi.mock('#lib/server/visibility.js', async (importOriginal) => ({
+	...(await importOriginal<typeof import('#lib/server/visibility.js')>()),
+	canViewRow: canViewRowMock
 }));
 vi.mock('#lib/server/tags.js', () => ({
 	syncTags: syncTagsMock,
@@ -439,10 +445,35 @@ describe('save', () => {
 	});
 
 	describe('a fork never widens access', () => {
+		const PARENT_AUTHOR = 'parent-author';
 		const forkOf = (parent: 'private' | 'friends', visibility = 'private') => ({
 			...RECIPE,
 			visibility,
-			parent: { visibility: parent }
+			parent: { visibility: parent, authorId: PARENT_AUTHOR }
+		});
+
+		// The forker still sees a Friends parent unless a test says otherwise.
+		beforeEach(() => canViewRowMock.mockResolvedValue(true));
+
+		test("a fork privatised by an unfriend cannot go back to Friends while the parent is out of the forker's sight", async () => {
+			findRecipeMock.mockResolvedValue(forkOf('friends', 'private'));
+			canViewRowMock.mockResolvedValue(false);
+			const result = await save({ ...UNCHANGED, visibility: 'friends' });
+			expect(result.status).toBe(400);
+			expect(result.data).toMatchObject({ error: LOST_PARENT_ACCESS, code: 'invalid' });
+			expect(canViewRowMock).toHaveBeenCalledWith(
+				{ visibility: 'friends', authorId: PARENT_AUTHOR },
+				OWNER
+			);
+			expect(transactionMock).not.toHaveBeenCalled();
+		});
+
+		test('re-friended, the same fork may be shared with friends again', async () => {
+			findRecipeMock.mockResolvedValue(forkOf('friends', 'private'));
+			canViewRowMock.mockResolvedValue(true);
+			const result = await save({ ...UNCHANGED, visibility: 'friends' });
+			expect(result?.status).not.toBe(400);
+			expect(tx.updateChain.set.mock.calls[0][0]).toMatchObject({ visibility: 'friends' });
 		});
 
 		test.each([

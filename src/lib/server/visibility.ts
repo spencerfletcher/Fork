@@ -62,6 +62,10 @@ export const WIDENS_PARENT: Record<Exclude<Visibility, 'public'>, string> = {
 	private: "This recipe was forked from a private recipe, so it can't be shared."
 };
 
+/** What a save is told when the forker can no longer see a Friends parent (an unfriend or block). */
+export const LOST_PARENT_ACCESS =
+	"This recipe was forked from one you can no longer see, so it can't be shared.";
+
 /**
  * Forks never widen access: a fork may not be set wider than both its parent is
  * now and it is itself now. Staying put or narrowing is always allowed, so a
