@@ -32,7 +32,6 @@ const data = {
 		}
 	],
 	commitCount: 5,
-	privateCount: 0,
 	relation: null as string | null
 };
 
@@ -58,20 +57,6 @@ describe('Profile page', () => {
 	test('one change is singular', () => {
 		const { container } = renderProfile({ commitCount: 1 });
 		expect(container.querySelector('.profile-stats .stat')).toHaveTextContent(/^1 change$/);
-	});
-
-	test('the owner sees one line under the stats for their private recipes; nobody else does', () => {
-		const { unmount } = renderProfile({ privateCount: 3 });
-		// It leads somewhere: the Cookbook lists the private ones too.
-		const line = screen.getByRole('link', { name: 'You also have 3 private recipes' });
-		expect(line).toHaveAttribute('href', '/cookbook');
-		expect(line.closest('p')).toHaveClass('profile-private');
-		unmount();
-		const one = renderProfile({ privateCount: 1 });
-		expect(screen.getByText('You also have 1 private recipe')).toBeInTheDocument();
-		one.unmount();
-		renderProfile();
-		expect(screen.queryByText(/private recipe/)).toBeNull();
 	});
 
 	test('lists the recipes under the same section heading and grid as browse', () => {

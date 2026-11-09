@@ -44,21 +44,10 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 
 	const commitCount = commitResult[0]?.commitCount ?? 0;
 
-	// Only the owner learns how much private work sits behind the page; for
-	// anyone else the number is not even computed.
-	const privateCount =
-		user?.id === profile.id
-			? await db.$count(
-					recipes,
-					and(eq(recipes.authorId, profile.id), eq(recipes.visibility, 'private'))
-				)
-			: 0;
-
 	return {
 		profile,
 		recipes: withCounts,
 		commitCount,
-		privateCount,
 		relation,
 		meta: {
 			title: `@${profile.username}`,

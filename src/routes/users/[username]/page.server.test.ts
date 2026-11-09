@@ -9,15 +9,12 @@ import { attachRecipeCounts } from '#lib/server/recipeCounts.js';
 
 // ─── Hoisted mocks ────────────────────────────────────────────────────────────
 
-const { findProfileMock, findRecipesMock, selectMock, countMock, relationMock } = vi.hoisted(
-	() => ({
-		findProfileMock: vi.fn(),
-		findRecipesMock: vi.fn(),
-		selectMock: vi.fn(),
-		countMock: vi.fn(),
-		relationMock: vi.fn()
-	})
-);
+const { findProfileMock, findRecipesMock, selectMock, relationMock } = vi.hoisted(() => ({
+	findProfileMock: vi.fn(),
+	findRecipesMock: vi.fn(),
+	selectMock: vi.fn(),
+	relationMock: vi.fn()
+}));
 
 vi.mock('#lib/server/friends.js', () => ({ relationOf: relationMock }));
 vi.mock('#lib/server/recipeCounts.js', async (importOriginal) => {
@@ -31,8 +28,7 @@ vi.mock('#lib/server/db/index.js', () => ({
 			profiles: { findFirst: findProfileMock },
 			recipes: { findMany: findRecipesMock }
 		},
-		select: selectMock,
-		$count: countMock
+		select: selectMock
 	}
 }));
 
@@ -173,27 +169,6 @@ describe('users/[username] load', () => {
 		expect(result.commitCount).toBe(7);
 		// The profile says "changes", not git's "commits", in its link preview too.
 		expect(result.meta.description).toBe('0 public recipes and 7 changes on Fork.');
-	});
-
-	test('tells the owner how many private recipes they have', async () => {
-		findProfileMock.mockResolvedValue(makeProfile());
-		findRecipesMock.mockResolvedValue([]);
-		countMock.mockResolvedValue(2);
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		const result = (await load(makeLoadEvent('chefmaria', 'user-1'))) as any;
-		expect(result.privateCount).toBe(2);
-	});
-
-	test('never counts private recipes for anyone but the owner', async () => {
-		findProfileMock.mockResolvedValue(makeProfile());
-		findRecipesMock.mockResolvedValue([]);
-		countMock.mockResolvedValue(2);
-		for (const viewer of [null, 'someone-else']) {
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			const result = (await load(makeLoadEvent('chefmaria', viewer))) as any;
-			expect(result.privateCount).toBe(0);
-		}
-		expect(countMock).not.toHaveBeenCalled();
 	});
 
 	test('counts only commits on public recipes, so private work stays hidden', async () => {

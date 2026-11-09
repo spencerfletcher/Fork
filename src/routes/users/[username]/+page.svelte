@@ -10,7 +10,7 @@
 
 	let { data }: { data: PageData } = $props();
 
-	const { profile, recipes, commitCount, privateCount } = $derived(data);
+	const { profile, recipes, commitCount } = $derived(data);
 
 	// data.user is the signed-in viewer, from the root layout.
 	const isOwner = $derived(data.user?.id === profile.id);
@@ -90,14 +90,6 @@
 						<button type="submit" class="btn-ghost">Unblock</button>
 					</form>
 				{/if}
-				{#if privateCount > 0}
-					<!-- A way on for the owner: the Cookbook lists the private ones too. -->
-					<p class="profile-private">
-						<a href="/cookbook">
-							You also have {plural(privateCount, 'private recipe')}
-						</a>
-					</p>
-				{/if}
 			</div>
 		</header>
 
@@ -146,13 +138,6 @@
 
 	.profile-stats {
 		--dot-space: 0 6px;
-	}
-
-	/* The owner's one line, the stats line's size and colour. */
-	.profile-private {
-		margin: 0;
-		font-size: 0.875rem;
-		color: var(--color-text-3);
 	}
 
 	.profile-new {
