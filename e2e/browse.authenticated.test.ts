@@ -32,6 +32,23 @@ test.describe('Cookbook filters', () => {
 	});
 });
 
+test.describe('Cookbook filter row', () => {
+	for (const width of [1280, 834]) {
+		test(`at ${width} the segments and the search box share a row, the box to the container's edge`, async ({
+			page
+		}) => {
+			await page.setViewportSize({ width, height: 900 });
+			await page.goto('/cookbook');
+			const inner = (await page.locator('.page-inner').first().boundingBox())!;
+			const seg = (await page.getByRole('group', { name: 'Show' }).boundingBox())!;
+			const search = (await page.getByRole('searchbox').boundingBox())!;
+			expect(Math.round(search.x + search.width)).toBe(Math.round(inner.x + inner.width));
+			expect(search.x).toBeGreaterThan(seg.x + seg.width);
+			expect(Math.abs(search.y + search.height / 2 - (seg.y + seg.height / 2))).toBeLessThan(2);
+		});
+	}
+});
+
 test.describe('Navbar at 768, signed in', () => {
 	test('the bar holds one row: links, the initial and the action fit', async ({ page }) => {
 		await page.setViewportSize({ width: 768, height: 900 });

@@ -171,6 +171,29 @@
 		color: var(--color-text-3);
 	}
 
+	/* From 768 the segments and the search box share a row, the box filling to
+	   the container's edge; the tag tabs keep the row below. */
+	@media (min-width: 768px) {
+		.cookbook-filters {
+			display: grid;
+			grid-template-columns: auto minmax(0, 1fr);
+			align-items: center;
+			gap: 14px 16px;
+		}
+
+		.cookbook-filters > :global(.search-filters) {
+			display: contents;
+		}
+
+		.cookbook-filters > :global(.search-filters > form.relative) {
+			max-width: none;
+		}
+
+		.cookbook-filters > :global(.search-filters > :not(form)) {
+			grid-column: 1 / -1;
+		}
+	}
+
 	/* A phone: the strip spans the column, three equal segments, 44px hits. */
 	@media (max-width: 767px) {
 		.seg {
