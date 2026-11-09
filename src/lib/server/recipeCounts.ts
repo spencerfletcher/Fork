@@ -32,7 +32,7 @@ export async function attachRecipeCounts<T extends { id: number }>(
 	const forkCounts = await db
 		.select({ parentId: recipes.parentId, count: count() })
 		.from(recipes)
-		.where(and(inArray(recipes.parentId, ids), eq(recipes.isPublic, true)))
+		.where(and(inArray(recipes.parentId, ids), eq(recipes.visibility, 'public')))
 		.groupBy(recipes.parentId);
 
 	const versionsById = new Map(versionCounts.map((r) => [r.recipeId, Number(r.count)]));
