@@ -4,11 +4,12 @@ import { expect, test } from '@playwright/test';
 // project. Tests that need no favorites live in favorites.authenticated.test.ts.
 
 test.describe('Navbar, signed in', () => {
-	test('the profile link is a 44px target at desktop', async ({ page }) => {
+	test('the avatar is a 44px target at desktop', async ({ page }) => {
 		await page.setViewportSize({ width: 1280, height: 900 });
 		await page.goto('/cookbook');
-		const profile = page.locator('nav a.nav-profile').first();
-		expect((await profile.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+		const avatar = (await page.locator('nav .nav-avatar-button').first().boundingBox())!;
+		expect(avatar.height).toBeGreaterThanOrEqual(44);
+		expect(avatar.width).toBeGreaterThanOrEqual(44);
 	});
 
 	test('/ is your Cookbook', async ({ page }) => {
@@ -37,7 +38,9 @@ test.describe('Navbar at 768, signed in', () => {
 		await page.setViewportSize({ width: 768, height: 900 });
 		await page.goto('/cookbook');
 		const bar = (await page.locator('nav').first().boundingBox())!;
-		const items = page.locator('nav .navbar-link, nav a.nav-profile, nav a[href="/recipes/new"]');
+		const items = page.locator(
+			'nav .navbar-link, nav .nav-avatar-button, nav a[href="/recipes/new"]'
+		);
 		await expect(items.first()).toBeVisible();
 		const boxes = await items.evaluateAll((els) =>
 			els
@@ -52,7 +55,7 @@ test.describe('Navbar at 768, signed in', () => {
 					};
 				})
 		);
-		// The four destinations, Log out, the profile link and + New recipe.
+		// The four destinations, the avatar and + New recipe.
 		expect(boxes.length).toBeGreaterThanOrEqual(6);
 		for (const box of boxes) {
 			expect(box.lines).toBe(1);
@@ -63,23 +66,9 @@ test.describe('Navbar at 768, signed in', () => {
 		expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
 			768
 		);
-		// Four destinations leave no room for the handle at 768: the initial
-		// stands for the account until 1024.
+		// The initial stands for the account at every width: no handle, no Log out.
 		await expect(page.locator('nav .nav-avatar').first()).toBeVisible();
-		await expect(page.locator('nav .nav-handle').first()).toBeHidden();
-	});
-
-	test('from 1024 the handle shows beside the initial, losing only a few characters', async ({
-		page
-	}) => {
-		await page.setViewportSize({ width: 1024, height: 900 });
-		await page.goto('/cookbook');
-		// The handle is what gives way when the bar is full, but only by a few
-		// characters: it is still the account, not a stub.
-		const handle = await page
-			.locator('nav .nav-handle')
-			.first()
-			.evaluate((el) => ({ shown: el.clientWidth, whole: el.scrollWidth }));
-		expect(handle.shown).toBeGreaterThanOrEqual(handle.whole * 0.75);
+		await expect(page.locator('nav').first()).not.toContainText('@spencerfletcher');
+		await expect(page.getByRole('button', { name: 'Log out' })).toHaveCount(0);
 	});
 });

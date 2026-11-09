@@ -1,0 +1,77 @@
+<script lang="ts">
+	import { tick, type Snippet } from 'svelte';
+
+	// The behaviour behind every small overlay (the ⋯ menu, the navbar's avatar
+	// menu): a button and the panel it shows. Opening focuses the panel's first
+	// control, Escape closes and hands focus back to the button, a press outside
+	// closes. Where the panel's items are menuitems, the arrow keys walk them.
+	// The consumer draws the button and the panel; this owns none of their look.
+	let {
+		trigger,
+		panel,
+		onopen
+	}: {
+		/** The consumer's button: spread the props onto it. */
+		trigger: Snippet<[{ 'aria-expanded': boolean; onclick: (e: MouseEvent) => void }]>;
+		/** Rendered only while open. */
+		panel: Snippet;
+		onopen?: () => void;
+	} = $props();
+
+	let open = $state(false);
+	let root: HTMLElement | undefined = $state();
+	let button: HTMLElement | undefined;
+
+	const controls = () =>
+		[...(root?.querySelectorAll<HTMLElement>('a[href], button, textarea') ?? [])].filter(
+			(el) => el !== button
+		);
+
+	async function toggle(e: MouseEvent) {
+		if (e.currentTarget instanceof HTMLElement) button = e.currentTarget;
+		open = !open;
+		if (open) {
+			onopen?.();
+			await tick();
+			controls()[0]?.focus();
+		}
+	}
+
+	function close() {
+		if (!open) return;
+		open = false;
+		button?.focus();
+	}
+
+	function onkeydown(e: KeyboardEvent) {
+		if (e.key === 'Escape') return close();
+		if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+		const items = [...(root?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? [])];
+		if (items.length === 0) return;
+		e.preventDefault();
+		const at = items.indexOf(document.activeElement as HTMLElement);
+		const step = e.key === 'ArrowDown' ? 1 : -1;
+		items[(at + step + items.length) % items.length].focus();
+	}
+</script>
+
+<svelte:window
+	onclick={(e) => {
+		// composedPath, not contains: a panel that swaps its content on press
+		// (Report, Block) leaves the target detached from root by now.
+		if (open && root && !e.composedPath().includes(root)) open = false;
+	}} />
+
+<!-- svelte-ignore a11y_no_static_element_interactions (keys bubble up from the controls inside) -->
+<div class="dropdown" bind:this={root} {onkeydown}>
+	{@render trigger({ 'aria-expanded': open, onclick: toggle })}
+	{#if open}
+		{@render panel()}
+	{/if}
+</div>
+
+<style>
+	.dropdown {
+		position: relative;
+	}
+</style>

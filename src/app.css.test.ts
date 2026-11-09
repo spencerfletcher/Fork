@@ -36,6 +36,8 @@ const pairs: [string, string, number][] = [
 	['--color-add', '--color-add-bg', 4.5],
 	['--color-remove', '--color-remove-bg', 4.5],
 	['--color-text', '--color-marigold', 4.5],
+	['--color-text', '--color-marigold-hover', 4.5],
+	['--color-text', '--color-band', 4.5],
 	['--color-text-tan', '--color-navbar-bg', 4.5],
 	['--color-text-cream', '--color-navbar-bg', 4.5],
 	['--color-marigold', '--color-navbar-bg', 3]
@@ -60,6 +62,23 @@ describe('app.css tokens', () => {
 				return src.includes('navbar-bg') && /\baccent\b/.test(src);
 			});
 		expect(offenders).toEqual([]);
+	});
+});
+
+// Hovers must be seen (decided 9 November 2026): the primary darkens clearly,
+// the ghost takes the band.
+describe('app.css hovers', () => {
+	const body = (selector: string) =>
+		css.match(new RegExp(`\\n\\s*${selector}\\s*\\{([^}]*)\\}`))![1];
+
+	test('the primary hover is a clearly darker marigold', () => {
+		expect(body('\\.btn-primary:hover')).toMatch(/background:\s*var\(--color-marigold-hover\)/);
+		const step = contrast(tokens['--color-marigold'], tokens['--color-marigold-hover']);
+		expect(step).toBeGreaterThanOrEqual(1.3);
+	});
+
+	test('the ghost hover fills with the band', () => {
+		expect(body('\\.btn-ghost:hover')).toMatch(/background:\s*var\(--color-band\)/);
 	});
 });
 

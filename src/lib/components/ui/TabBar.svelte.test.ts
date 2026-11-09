@@ -69,6 +69,12 @@ describe('TabBar', () => {
 		expect(source).toContain('env(safe-area-inset-bottom)');
 	});
 
+	test('hover: ink on the band', () => {
+		const hover = source.match(/\.tab-bar a:hover\s*\{([^}]*)\}/)![1];
+		expect(hover).toMatch(/color:\s*var\(--color-text\)/);
+		expect(hover).toMatch(/background:\s*var\(--color-band\)/);
+	});
+
 	test('below 768 only', () => {
 		expect(source).toMatch(/@media \(min-width: 768px\)\s*\{\s*\.tab-bar\s*\{\s*display:\s*none/);
 	});

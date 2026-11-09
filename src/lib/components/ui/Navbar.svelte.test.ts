@@ -1,5 +1,5 @@
 import { describe, test, expect, vi, afterEach } from 'vitest';
-import { render, screen, within } from '@testing-library/svelte';
+import { render, screen, within, fireEvent } from '@testing-library/svelte';
 import Navbar from './Navbar.svelte';
 import source from './Navbar.svelte?raw';
 import type { User } from '@supabase/supabase-js';
@@ -110,60 +110,109 @@ describe('Navbar signed in', () => {
 		);
 	});
 
-	test('the avatar and handle are one link to your profile', () => {
-		render(Navbar, { props: { user: signedIn(), profile } });
-		const link = screen.getByRole('link', { name: '@chefmaria, your profile' });
-		expect(link).toHaveAttribute('href', '/users/chefmaria');
-		expect(within(link).getByText('C')).toHaveClass('nav-avatar');
-		expect(link).toHaveTextContent('@chefmaria');
-		expect(link).toHaveAttribute('title', '@chefmaria');
+	// The avatar alone, at every width: no handle and no Log out in the bar
+	// (decided 9 November 2026). It opens a menu of Profile and Log out.
+	const avatar = () => screen.getByRole('button', { name: 'Your account, @chefmaria' });
+
+	test('the avatar is a menu button with no handle or Log out beside it', () => {
+		const { container } = render(Navbar, { props: { user: signedIn(), profile } });
+		const button = avatar();
+		expect(button).toHaveAttribute('aria-haspopup', 'menu');
+		expect(button).toHaveAttribute('aria-expanded', 'false');
+		expect(button).toHaveTextContent(/^\s*C\s*$/);
+		expect(container.querySelector('nav')).not.toHaveTextContent('@chefmaria');
+		expect(screen.queryByRole('button', { name: 'Log out' })).toBeNull();
+		expect(screen.queryByRole('link', { name: 'Log in' })).toBeNull();
 	});
 
-	test('on your own profile the profile link is the current page; elsewhere it is not', () => {
+	test('opening it shows Profile and Log out, focus on Profile', async () => {
+		render(Navbar, { props: { user: signedIn(), profile } });
+		await fireEvent.click(avatar());
+		expect(avatar()).toHaveAttribute('aria-expanded', 'true');
+		const menu = screen.getByRole('menu');
+		const items = within(menu).getAllByRole('menuitem');
+		expect(items.map((i) => i.textContent?.trim())).toEqual(['Profile', 'Log out']);
+		expect(items[0]).toHaveAttribute('href', '/users/chefmaria');
+		expect(items[0]).toHaveFocus();
+		// Log out is the same real form post it was in the bar.
+		expect(items[1].closest('form')).toHaveAttribute('action', '/logout');
+		expect(items[1].closest('form')).toHaveAttribute('method', 'POST');
+	});
+
+	test('arrow keys move between the items', async () => {
+		render(Navbar, { props: { user: signedIn(), profile } });
+		await fireEvent.click(avatar());
+		const [profileItem, logOut] = screen.getAllByRole('menuitem');
+		await fireEvent.keyDown(profileItem, { key: 'ArrowDown' });
+		expect(logOut).toHaveFocus();
+		await fireEvent.keyDown(logOut, { key: 'ArrowDown' });
+		expect(profileItem).toHaveFocus();
+		await fireEvent.keyDown(profileItem, { key: 'ArrowUp' });
+		expect(logOut).toHaveFocus();
+	});
+
+	test('Escape closes it and returns focus to the avatar', async () => {
+		render(Navbar, { props: { user: signedIn(), profile } });
+		await fireEvent.click(avatar());
+		await fireEvent.keyDown(screen.getAllByRole('menuitem')[0], { key: 'Escape' });
+		expect(screen.queryByRole('menu')).toBeNull();
+		expect(avatar()).toHaveAttribute('aria-expanded', 'false');
+		expect(avatar()).toHaveFocus();
+	});
+
+	test('a press outside closes it', async () => {
+		render(Navbar, { props: { user: signedIn(), profile } });
+		await fireEvent.click(avatar());
+		await fireEvent.click(screen.getByRole('link', { name: 'Fork.' }));
+		expect(screen.queryByRole('menu')).toBeNull();
+	});
+
+	test('on your own profile the avatar and Profile carry the mark; elsewhere neither does', async () => {
 		page.url = new URL('http://localhost/users/chefmaria');
 		const { unmount } = render(Navbar, { props: { user: signedIn(), profile } });
-		expect(screen.getByRole('link', { name: /your profile/ })).toHaveAttribute(
+		expect(avatar()).toHaveClass('current');
+		await fireEvent.click(avatar());
+		expect(screen.getByRole('menuitem', { name: 'Profile' })).toHaveAttribute(
 			'aria-current',
 			'page'
 		);
 		unmount();
 		page.url = new URL('http://localhost/users/someone');
 		render(Navbar, { props: { user: signedIn(), profile } });
-		expect(screen.getByRole('link', { name: /your profile/ })).not.toHaveAttribute('aria-current');
+		expect(avatar()).not.toHaveClass('current');
+		await fireEvent.click(avatar());
+		expect(screen.getByRole('menuitem', { name: 'Profile' })).not.toHaveAttribute('aria-current');
 	});
 
-	test('no profile link without a profile', () => {
+	test('without a profile the menu still offers Log out', async () => {
 		render(Navbar, { props: { user: signedIn() } });
-		expect(screen.queryByRole('link', { name: /your profile/ })).toBeNull();
-	});
-
-	test('Log out, the same verb form as Log in, a real form post', () => {
-		render(Navbar, { props: { user: signedIn(), profile } });
-		const button = screen.getByRole('button', { name: 'Log out' });
-		expect(button.closest('form')).toHaveAttribute('action', '/logout');
-		expect(screen.queryByRole('link', { name: 'Log in' })).toBeNull();
+		const button = screen.getByRole('button', { name: 'Your account' });
+		expect(button).toHaveTextContent('C');
+		await fireEvent.click(button);
+		const items = screen.getAllByRole('menuitem');
+		expect(items.map((i) => i.textContent?.trim())).toEqual(['Log out']);
 	});
 });
 
 describe('Navbar layout', () => {
 	const rule = (selector: string) => style.match(new RegExp(`${selector}\\s*{([^}]*)}`))![1];
 
-	test('links, Log out and the action never wrap', () => {
+	test('links and the action never wrap', () => {
 		expect(rule('\\.navbar-link')).toMatch(/white-space:\s*nowrap/);
 		expect(rule('\\.nav-cta')).toMatch(/white-space:\s*nowrap/);
 	});
 
-	test('only the handle gives way when the bar is full: the links never shrink', () => {
-		const long = { ...profile, username: 'a'.repeat(30) };
-		const { container } = render(Navbar, { props: { user: signedIn(), profile: long } });
+	test('the links never shrink', () => {
+		const { container } = render(Navbar, { props: { user: signedIn(), profile } });
 		expect(container.querySelector('.navbar-links')!.parentElement).toHaveClass('shrink-0');
-		const account = container.querySelector('.navbar-account')!;
-		expect(account).toHaveClass('min-w-0');
-		expect(account).toHaveClass('shrink');
-		expect(rule('\\.nav-handle')).toMatch(/text-overflow:\s*ellipsis/);
 	});
 
-	// The phone bar has no menu now, so Log in, Log out and the brand are thumb targets.
+	test('the avatar is a 44px target', () => {
+		expect(rule('\\.nav-avatar-button')).toMatch(/width:\s*44px/);
+		expect(rule('\\.nav-avatar-button')).toMatch(/height:\s*44px/);
+	});
+
+	// Log in and the brand are thumb targets on a phone.
 	test('below 768 the brand and the text links are 44px tall', () => {
 		const phone = style.match(/@media \(max-width: 767px\)\s*{([\s\S]*?)\n\t}/)![1];
 		const block = phone.match(/\.nav-brand,\s*\.navbar-link:not\(\.hidden\)\s*{([^}]*)}/)![1];
@@ -182,5 +231,7 @@ describe('Navbar layout', () => {
 		expect(link).toMatch(/text-decoration:\s*underline/);
 		const icon = block.match(/\.nav-icon\[aria-current='page'\][^{]*{([^}]*)}/)![1];
 		expect(icon).toMatch(/outline:\s*2px solid CanvasText/);
+		const avatar = block.match(/\.nav-avatar-button\.current[^{]*{([^}]*)}/)![1];
+		expect(avatar).toMatch(/outline:\s*2px solid CanvasText/);
 	});
 });
