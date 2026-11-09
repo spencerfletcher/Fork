@@ -37,7 +37,9 @@ const TAGS = [
 	{ id: 3, name: 'Spicy', slug: 'spicy' }
 ];
 
-function makeData(overrides: { imageUrl?: string | null; content?: Partial<RecipeContent> } = {}) {
+function makeData(
+	overrides: { imageUrl?: string | null; content?: Partial<RecipeContent>; forkCount?: number } = {}
+) {
 	return {
 		recipe: {
 			slug: 'cookies',
@@ -62,7 +64,8 @@ function makeData(overrides: { imageUrl?: string | null; content?: Partial<Recip
 				...overrides.content
 			})
 		},
-		allTags: TAGS
+		allTags: TAGS,
+		forkCount: overrides.forkCount ?? 0
 	} as never;
 }
 
@@ -98,6 +101,18 @@ beforeEach(() => {
 	captured.submits.length = 0;
 	nav.guards.length = 0;
 	vi.restoreAllMocks();
+});
+
+describe('Edit page forks hint', () => {
+	test('a recipe with forks shows the hint under the audience radios', () => {
+		render(EditPage, { props: { data: makeData({ forkCount: 2 }), form: null } });
+		expect(screen.getByText("Making this more private doesn't hide existing forks.")).toBeTruthy();
+	});
+
+	test('a recipe without forks has no hint', () => {
+		render(EditPage, { props: { data: makeData({ forkCount: 0 }), form: null } });
+		expect(screen.queryByText(/existing forks/)).toBeNull();
+	});
 });
 
 describe('Edit page form', () => {

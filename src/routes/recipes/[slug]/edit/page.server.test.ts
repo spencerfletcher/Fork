@@ -4,6 +4,9 @@ import { invokeAction as invoke, formEvent } from '#lib/testing/actions.js';
 import { actions, load } from './+page.server';
 import { makeContent, makeIngredient, makeStep } from '#lib/recipes/fixtures.js';
 import { WIDENS_PARENT } from '#lib/server/visibility.js';
+import { PgDialect } from 'drizzle-orm/pg-core';
+import type { SQL } from 'drizzle-orm';
+import { recipes } from '#lib/server/db/schema.js';
 
 // ─── Hoisted mocks (must be available inside vi.mock factory) ─────────────────
 
@@ -14,8 +17,10 @@ const {
 	transactionMock,
 	uploadMock,
 	removeMock,
-	syncTagsMock
+	syncTagsMock,
+	countMock
 } = vi.hoisted(() => ({
+	countMock: vi.fn(),
 	findRecipeMock: vi.fn(),
 	dbSelectDistinct: vi.fn(),
 	dbInsert: vi.fn().mockReturnValue({
@@ -34,7 +39,10 @@ vi.mock('#lib/server/images.js', async (importOriginal) => ({
 	uploadRecipeImage: uploadMock,
 	removeRecipeImage: removeMock
 }));
-vi.mock('#lib/server/tags.js', () => ({ syncTags: syncTagsMock }));
+vi.mock('#lib/server/tags.js', () => ({
+	syncTags: syncTagsMock,
+	listTags: vi.fn().mockResolvedValue([])
+}));
 
 vi.mock('#lib/server/db/index.js', () => ({
 	db: {
@@ -44,7 +52,8 @@ vi.mock('#lib/server/db/index.js', () => ({
 		},
 		insert: dbInsert,
 		selectDistinct: dbSelectDistinct,
-		transaction: transactionMock
+		transaction: transactionMock,
+		$count: countMock
 	}
 }));
 
@@ -606,6 +615,25 @@ describe('deleteRecipe', () => {
 });
 
 describe('edit load', () => {
+	test("forkCount counts this recipe's forks of any visibility, for the forks hint", async () => {
+		findRecipeMock.mockResolvedValue({ ...RECIPE, id: 42, versions: [LATEST] });
+		countMock.mockResolvedValue(3);
+		const event = {
+			params: { slug: 'soup' },
+			url: new URL('http://x/recipes/soup/edit'),
+			locals: { user: OWNER }
+		};
+		const data = (await load(event as never)) as { forkCount: number };
+		expect(data.forkCount).toBe(3);
+		const [table, filter] = countMock.mock.calls[0] as [unknown, SQL];
+		expect(table).toBe(recipes);
+		// Only the parent link: a private fork still means forks exist.
+		expect(new PgDialect().sqlToQuery(filter)).toMatchObject({
+			sql: '"recipes"."parent_id" = $1',
+			params: [42]
+		});
+	});
+
 	test("another user's recipe is a 403 that says Not authorized, as the actions do", async () => {
 		findRecipeMock.mockResolvedValue(RECIPE);
 		const event = {

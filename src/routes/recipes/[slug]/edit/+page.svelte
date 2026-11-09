@@ -51,7 +51,8 @@
 			submitLabel="Save"
 			cancelHref="/recipes/{recipe.slug}"
 			imageUrl={latestVersion.imageUrl}
-			nextVersion={current + 1}>
+			nextVersion={current + 1}
+			hasForks={data.forkCount > 0}>
 			{#snippet header(outcome)}
 				<div class="editor-header">
 					<a href="/recipes/{recipe.slug}" class="back-link">← {recipe.title}</a>

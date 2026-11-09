@@ -37,12 +37,17 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 	const latestVersion = recipe.versions[0];
 	if (!latestVersion) throw error(404, 'Recipe not found');
 
-	const allTags = await listTags();
+	// Any visibility: the forks hint is about whether forks exist, not who sees them.
+	const [allTags, forkCount] = await Promise.all([
+		listTags(),
+		db.$count(recipes, eq(recipes.parentId, recipe.id))
+	]);
 
 	return {
 		recipe,
 		latestVersion,
 		allTags,
+		forkCount,
 		meta: { title: `Edit ${latestVersion.title}` }
 	};
 };
