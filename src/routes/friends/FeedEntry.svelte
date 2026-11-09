@@ -5,6 +5,7 @@
 	import { likeIcon, saveIcon } from '#lib/components/Icons.svelte';
 	import { dayLabel, sourceHref } from '#lib/journal.js';
 	import { compactCount } from '#lib/helpers.js';
+	import { optimisticToggle } from '#lib/optimisticToggle.svelte.js';
 	import MoreMenu from './MoreMenu.svelte';
 	import type { FeedItem } from '#lib/server/friends.js';
 
@@ -16,13 +17,20 @@
 	const loggedOn = $derived(dayLabel(entry.createdAt));
 
 	// Optimistic, as the recipe page's Save: the press flips at once and flips
-	// back if the server refuses. Writable derived, so a reload resets them.
-	let liked = $derived(item.liked);
-	let likes = $derived(item.likes);
-	let saved = $derived(item.saved);
+	// back if the server refuses; a reload resets them.
 	let error = $state('');
-	let liking = false;
-	let saving = false;
+	const report = (message: string) => (error = message);
+	const like = optimisticToggle(() => item.liked, {
+		failure: 'Could not like that. Try again.',
+		report
+	});
+	const save = optimisticToggle(() => item.saved, {
+		failure: 'Could not save that. Try again.',
+		report
+	});
+	const liked = $derived(like.on);
+	const likes = $derived(item.likes + Number(liked) - Number(item.liked));
+	const saved = $derived(save.on);
 </script>
 
 <article class="entry">
@@ -68,23 +76,7 @@
 		<p class="source">Recipe deleted</p>
 	{/if}
 	<div class="actions">
-		<form
-			method="POST"
-			action="/friends?/like"
-			use:enhance={({ cancel }) => {
-				if (liking) return cancel();
-				liking = true;
-				liked = !liked;
-				likes += liked ? 1 : -1;
-				error = '';
-				return async ({ result }) => {
-					liking = false;
-					if (result.type === 'success') return;
-					liked = !liked;
-					likes += liked ? 1 : -1;
-					error = 'Could not like that. Try again.';
-				};
-			}}>
+		<form method="POST" action="/friends?/like" use:enhance={like.submit}>
 			<input type="hidden" name="entryId" value={entry.id} />
 			<button type="submit" class="text-btn text-btn--ink" aria-pressed={liked}>
 				{@render likeIcon(liked)}
@@ -93,21 +85,7 @@
 		</form>
 		<!-- Save only where a recipe the reader may see is attached, and not their own. -->
 		{#if source.kind === 'recipe' && !source.own}
-			<form
-				method="POST"
-				action="/recipes/{source.slug}?/toggleFavorite"
-				use:enhance={({ cancel }) => {
-					if (saving) return cancel();
-					saving = true;
-					saved = !saved;
-					error = '';
-					return async ({ result }) => {
-						saving = false;
-						if (result.type === 'success') return;
-						saved = !saved;
-						error = 'Could not save that. Try again.';
-					};
-				}}>
+			<form method="POST" action="/recipes/{source.slug}?/toggleFavorite" use:enhance={save.submit}>
 				<button type="submit" class="text-btn text-btn--ink" aria-pressed={saved}>
 					{@render saveIcon(saved)}
 					{saved ? 'Saved' : 'Save'}
