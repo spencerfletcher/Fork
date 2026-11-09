@@ -40,6 +40,7 @@ Planning and design docs: start at `docs/README.md`, which names the current pro
 - Same shape, reuse it. Different item, don't force it. A shape needed in two places becomes one shared piece in `src/lib/`, not two local copies
 - A build brief names the component or helper each item reuses, or says "extract a shared one". A review treats a hand-rolled duplicate of an existing piece as blocking
 - When parallel builders work at once, land or name the shared pieces first, then fan out
+- The [`code-health`](.agents/skills/code-health/SKILL.md) skill sweeps the repo for duplication (with a status row per shared component), dead code, drift and hygiene into one dated report under `docs/audits/`: monthly, after any build over ~1000 lines or more than two parallel slices, and before a production publish
 
 ## API / Endpoints
 
