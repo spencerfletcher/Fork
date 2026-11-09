@@ -3,6 +3,7 @@
 // both. Pure data: no runtime imports, so Playwright can load it too; the
 // ingredient and step text is parsed by seed.ts at insert time.
 import type { RecipeContent } from '../../recipes/types.js';
+import type { Visibility } from '../../recipes/validation.js';
 
 // ─── Seed data ────────────────────────────────────────────────────────────────
 
@@ -201,6 +202,35 @@ const DAL_INGREDIENTS = `# Dal
 1/2 lemon
 a handful of coriander leaves, to finish`;
 
+const SHAKSHUKA_INGREDIENTS = `2 tbsp olive oil
+1 onion
+1 bell pepper
+3 cloves garlic
+1 tsp ground cumin
+1 tsp smoked paprika
+800 g canned chopped tomatoes
+1 tsp salt
+6 eggs
+a handful of parsley, to finish`;
+
+const SHAKSHUKA_STEPS = `Warm the oil in a wide pan over medium heat. Add the onion and pepper, both sliced, and cook until soft, about 8 minutes.
+
+Stir in the sliced garlic, cumin and paprika and cook for a minute, until fragrant.
+
+Pour in the tomatoes with the salt and simmer for 10 minutes, until thick enough to hold a well.
+
+Make six wells, crack an egg into each, cover and cook for 6 to 8 minutes, until the whites set and the yolks still wobble. Scatter with parsley.`;
+
+const NOODLE_INGREDIENTS = `200 g udon noodles
+2 tbsp butter
+a spoonful of white miso
+1 tsp soy sauce
+2 green onions`;
+
+const NOODLE_STEPS = `Cook the noodles as the packet says, keeping a cup of the water.
+
+Melt the butter with the miso and soy sauce, loosen with a splash of the noodle water, toss the noodles through and top with sliced green onions.`;
+
 const DAL_STEPS = `# Dal
 Rinse the lentils, then put them in a pot with the water, turmeric and salt. Bring to a boil, then simmer uncovered for 20 minutes, skimming any foam, until the lentils collapse. Whisk to smooth it out.
 
@@ -226,10 +256,14 @@ export type SeedVersion = Omit<RecipeContent, 'ingredients' | 'steps'> & {
 	createdAt: string;
 };
 
+/** The seeded cooks; devcooks is an accepted friend of spencerfletcher. */
+export type SeedUsername = 'spencerfletcher' | 'devcooks';
+
 export type SeedRecipe = {
 	slug: string; // prefix; a random suffix is added at insert
+	author?: SeedUsername; // spencerfletcher when absent
 	tags: string[];
-	isPublic: boolean;
+	visibility: Visibility;
 	forkOf?: { slug: string }; // parent's slug prefix; the fork's createdAt is when it was forked
 	versions: SeedVersion[];
 };
@@ -260,7 +294,7 @@ export const SEED: SeedRecipe[] = [
 	{
 		slug: 'classic-chocolate-chip-cookies',
 		tags: ['Dessert', 'Baking', 'American'],
-		isPublic: true,
+		visibility: 'public',
 		versions: [
 			{
 				...COOKIE_META,
@@ -294,7 +328,7 @@ export const SEED: SeedRecipe[] = [
 	{
 		slug: 'brown-butter-chocolate-chip-cookies',
 		tags: ['Dessert', 'Baking', 'American'],
-		isPublic: true,
+		visibility: 'public',
 		forkOf: { slug: 'classic-chocolate-chip-cookies' },
 		versions: [
 			{
@@ -316,7 +350,7 @@ export const SEED: SeedRecipe[] = [
 	{
 		slug: 'chicken-tikka-masala',
 		tags: ['Dinner', 'Indian', 'Spicy'],
-		isPublic: true,
+		visibility: 'public',
 		versions: [
 			{
 				...TIKKA_META,
@@ -347,7 +381,7 @@ export const SEED: SeedRecipe[] = [
 	{
 		slug: 'red-lentil-dal',
 		tags: ['Dinner', 'Indian'],
-		isPublic: true,
+		visibility: 'public',
 		versions: [
 			{
 				title: 'Weeknight Red Lentil Dal',
@@ -362,6 +396,50 @@ export const SEED: SeedRecipe[] = [
 				stepsText: DAL_STEPS,
 				commitMessage: 'Initial recipe',
 				createdAt: '2026-02-14'
+			}
+		]
+	},
+	// A friend's recipes: one shared with friends (spencerfletcher sees it, the
+	// public does not), one private to devcooks. Neither has a photo.
+	{
+		slug: 'shakshuka',
+		author: 'devcooks',
+		tags: ['Dinner', 'Spicy'],
+		visibility: 'friends',
+		versions: [
+			{
+				title: 'Shakshuka',
+				description: 'Eggs poached in a smoky, spiced tomato and pepper sauce.',
+				servings: 3,
+				makes: null,
+				prepTimeMinutes: 10,
+				cookTimeMinutes: 30,
+				imageUrl: null,
+				ingredientsText: SHAKSHUKA_INGREDIENTS,
+				stepsText: SHAKSHUKA_STEPS,
+				commitMessage: 'Initial recipe',
+				createdAt: '2026-02-20'
+			}
+		]
+	},
+	{
+		slug: 'miso-butter-noodles',
+		author: 'devcooks',
+		tags: ['Dinner'],
+		visibility: 'private',
+		versions: [
+			{
+				title: 'Miso Butter Noodles',
+				description: null,
+				servings: 2,
+				makes: null,
+				prepTimeMinutes: 5,
+				cookTimeMinutes: 10,
+				imageUrl: null,
+				ingredientsText: NOODLE_INGREDIENTS,
+				stepsText: NOODLE_STEPS,
+				commitMessage: 'Initial recipe',
+				createdAt: '2026-02-22'
 			}
 		]
 	}

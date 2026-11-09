@@ -4,6 +4,7 @@ import { and, count, eq } from 'drizzle-orm';
 import { error, redirect } from '@sveltejs/kit';
 import { attachRecipeCounts } from '#lib/server/recipeCounts.js';
 import { clampDescription } from '#lib/seo.js';
+import { visibleTo } from '#lib/server/visibility.js';
 import { plural } from '#lib/helpers.js';
 import type { PageServerLoad } from './$types';
 
@@ -19,9 +20,10 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 
 	if (!profile) throw error(404, 'User not found');
 
-	const [publicRecipes, commitResult] = await Promise.all([
+	const [shownRecipes, commitResult] = await Promise.all([
 		db.query.recipes.findMany({
-			where: and(eq(recipes.authorId, profile.id), eq(recipes.isPublic, true)),
+			// Strangers see public recipes, friends also friends ones, the owner all.
+			where: and(eq(recipes.authorId, profile.id), visibleTo(user)),
 			orderBy: (r, { desc }) => [desc(r.createdAt)]
 		}),
 		// Commits on public recipes only: the count appears in link previews,
@@ -30,10 +32,12 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 			.select({ commitCount: count() })
 			.from(recipeVersions)
 			.innerJoin(recipes, eq(recipes.id, recipeVersions.recipeId))
-			.where(and(eq(recipeVersions.createdBy, profile.id), eq(recipes.isPublic, true)))
+			.where(and(eq(recipeVersions.createdBy, profile.id), eq(recipes.visibility, 'public')))
 	]);
 
-	const withCounts = await attachRecipeCounts(publicRecipes);
+	const withCounts = await attachRecipeCounts(shownRecipes);
+	// The link preview names public recipes only, whoever loaded the page.
+	const publicCount = withCounts.filter((r) => r.visibility === 'public').length;
 
 	const commitCount = commitResult[0]?.commitCount ?? 0;
 
@@ -41,7 +45,10 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 	// anyone else the number is not even computed.
 	const privateCount =
 		user?.id === profile.id
-			? await db.$count(recipes, and(eq(recipes.authorId, profile.id), eq(recipes.isPublic, false)))
+			? await db.$count(
+					recipes,
+					and(eq(recipes.authorId, profile.id), eq(recipes.visibility, 'private'))
+				)
 			: 0;
 
 	return {
@@ -52,7 +59,7 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 		meta: {
 			title: `@${profile.username}`,
 			description: clampDescription(
-				`${plural(withCounts.length, 'public recipe')} and ${plural(commitCount, 'change')} on Fork.`
+				`${plural(publicCount, 'public recipe')} and ${plural(commitCount, 'change')} on Fork.`
 			)
 		}
 	};

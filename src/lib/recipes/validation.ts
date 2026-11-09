@@ -153,8 +153,13 @@ export type Result<T> = { ok: true; value: T } | { ok: false; error: string };
 /** The content fields a form carries as text. The photo is a file and is resolved by the action. */
 export type ContentFields = Omit<RecipeContent, 'imageUrl'>;
 
+/** Who can see a recipe, narrowest first: the order is what "a fork never widens access" compares. */
+export const VISIBILITIES = ['private', 'friends', 'public'] as const;
+
+export type Visibility = (typeof VISIBILITIES)[number];
+
 export type Settings = {
-	isPublic: boolean;
+	visibility: Visibility;
 	tagNames: string[];
 };
 
@@ -169,7 +174,7 @@ export type RecipeDraft = {
 	steps: string;
 	commitMessage: string;
 	editRevision: string;
-	isPublic: boolean;
+	visibility: Visibility;
 	tags: string[];
 	hadPhoto: boolean;
 	removeImage: boolean;
@@ -187,7 +192,7 @@ export const tagNameMessage = (name: string) =>
 	`Tag "${name}" needs at least one letter or number from A to Z or 0 to 9`;
 
 const settingsSchema = z.object({
-	isPublic: z.boolean(),
+	visibility: z.enum(VISIBILITIES),
 	tagNames: z
 		.array(z.string())
 		.transform(normaliseTagNames)
@@ -216,6 +221,12 @@ export function parseDraftContent(draft: RecipeDraft): Result<ContentFields> {
 	});
 }
 
+/** The visibility radio's value; missing or unknown reads as private, the default. */
+function visibilityOf(formData: FormData): Visibility {
+	const value = text(formData, 'visibility');
+	return VISIBILITIES.find((v) => v === value) ?? 'private';
+}
+
 /** Tag names as submitted, before any trimming or deduplication. */
 function tagsOf(formData: FormData): string[] {
 	return formData.getAll('tags').filter((t): t is string => typeof t === 'string');
@@ -224,7 +235,7 @@ function tagsOf(formData: FormData): string[] {
 /** The recipe-level settings from the form: visibility and tags. The photo is a file, handled by the action. */
 export function parseSettings(formData: FormData): Result<Settings> {
 	return parse(settingsSchema, {
-		isPublic: formData.get('isPublic') === 'on',
+		visibility: visibilityOf(formData),
 		tagNames: tagsOf(formData)
 	});
 }
@@ -247,7 +258,7 @@ export function draftOf(formData: FormData): RecipeDraft {
 		steps: text(formData, 'steps'),
 		commitMessage: text(formData, 'commitMessage'),
 		editRevision: text(formData, 'editRevision'),
-		isPublic: formData.get('isPublic') === 'on',
+		visibility: visibilityOf(formData),
 		tags: tagsOf(formData),
 		// The file itself cannot be echoed back; the page uses this to say so.
 		hadPhoto: image instanceof File && image.size > 0,

@@ -2,7 +2,8 @@ import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { chain } from '#lib/testing/drizzle.js';
 import { load } from './+page.server';
 import { profiles, recipes } from '#lib/server/db/schema.js';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
+import { visibleTo } from '#lib/server/visibility.js';
 
 // ─── Hoisted mocks ────────────────────────────────────────────────────────────
 
@@ -90,6 +91,32 @@ describe('users/[username] load', () => {
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const result = (await load(makeLoadEvent('chefmaria'))) as any;
 		expect(result.profile.username).toBe('chefmaria');
+	});
+
+	test('lists what the viewer may see: public to strangers, friends recipes to friends, everything to the owner', async () => {
+		findProfileMock.mockResolvedValue(makeProfile());
+		findRecipesMock.mockResolvedValue([]);
+		for (const viewer of [null, 'someone-else', 'user-1']) {
+			findRecipesMock.mockClear();
+			await load(makeLoadEvent('chefmaria', viewer));
+			const user = viewer ? { id: viewer } : null;
+			expect(findRecipesMock.mock.calls[0][0].where).toEqual(
+				and(eq(recipes.authorId, 'user-1'), visibleTo(user))
+			);
+		}
+	});
+
+	test('the link preview counts public recipes only, even for the owner', async () => {
+		findProfileMock.mockResolvedValue(makeProfile());
+		findRecipesMock.mockResolvedValue([
+			{ id: 1, visibility: 'public' },
+			{ id: 2, visibility: 'friends' },
+			{ id: 3, visibility: 'private' }
+		]);
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const result = (await load(makeLoadEvent('chefmaria', 'user-1'))) as any;
+		expect(result.recipes).toHaveLength(3);
+		expect(result.meta.description).toBe('1 public recipe and 0 changes on Fork.');
 	});
 
 	test('returns public recipes for the user', async () => {

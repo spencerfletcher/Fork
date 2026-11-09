@@ -8,7 +8,7 @@ import type { RecipeContent } from '#lib/recipes/types.js';
 import { recipeCopies } from '#lib/recipes/content.js';
 import { absoluteImage, clampDescription } from '#lib/seo.js';
 import { gramsFor } from '#lib/server/ingredientDensities.js';
-import { canView, visibleTo } from '#lib/server/visibility.js';
+import { canViewRow, visibleTo } from '#lib/server/visibility.js';
 import { VERSION_NOT_FOUND } from './versionError.js';
 import type { PageServerLoad, Actions } from './$types';
 
@@ -30,12 +30,12 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 		}
 	});
 
-	if (!recipe || !canView(recipe, user)) throw error(404, 'Recipe not found');
+	if (!recipe || !(await canViewRow(recipe, user))) throw error(404, 'Recipe not found');
 
 	// A public fork can come from a private recipe. Readers who can't see that
 	// recipe get no parent data at all; parentId alone lets the page say so.
 	// parentId has no FK, so a deleted parent leaves it pointing at no row.
-	const parentVisible = recipe.parent !== null && canView(recipe.parent, user);
+	const parentVisible = recipe.parent !== null && (await canViewRow(recipe.parent, user));
 	const visibleRecipe = {
 		...recipe,
 		parent: parentVisible ? recipe.parent : null,
@@ -97,7 +97,7 @@ export const actions: Actions = {
 		const recipe = await db.query.recipes.findFirst({
 			where: eq(recipes.slug, params.slug)
 		});
-		if (!recipe || !canView(recipe, user)) throw error(404, 'Recipe not found');
+		if (!recipe || !(await canViewRow(recipe, user))) throw error(404, 'Recipe not found');
 
 		// Unfavorite if it was a favorite; otherwise nothing was deleted, so favorite it.
 		const removed = await db
@@ -121,7 +121,7 @@ export const actions: Actions = {
 			}
 		});
 
-		if (!source || !canView(source, user)) throw error(404, 'Source recipe not found');
+		if (!source || !(await canViewRow(source, user))) throw error(404, 'Source recipe not found');
 
 		const latestVersion = source.versions[0];
 		if (!latestVersion) throw error(400, 'Source recipe has no versions');
@@ -150,7 +150,8 @@ export const actions: Actions = {
 					slug,
 					// Copies of version 1, per the ownership rule in schema.ts.
 					...copies,
-					isPublic: source.isPublic,
+					// Every fork starts private; the editor may widen it up to the source's audience.
+					visibility: 'private',
 					parentId: source.id
 				})
 				.returning();

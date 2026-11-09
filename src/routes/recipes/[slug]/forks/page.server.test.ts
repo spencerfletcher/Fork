@@ -1,6 +1,6 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { chain } from '#lib/testing/drizzle.js';
-import { and, desc, eq, or } from 'drizzle-orm';
+import { and, desc, eq } from 'drizzle-orm';
 import { recipes, recipeVersions } from '#lib/server/db/schema.js';
 
 const { findFirstMock, findManyMock, selectMock } = vi.hoisted(() => ({
@@ -16,6 +16,7 @@ vi.mock('#lib/server/db/index.js', () => ({
 }));
 
 import { load } from './+page.server';
+import { visibleTo } from '#lib/server/visibility.js';
 
 const OWNER = { id: 'owner-id', email: 'owner@test.com' };
 const VISITOR = { id: 'visitor-id', email: 'visitor@test.com' };
@@ -23,7 +24,7 @@ const RECIPE = {
 	id: 42,
 	slug: 'classic-cookies',
 	title: 'Classic Cookies',
-	isPublic: true,
+	visibility: 'public',
 	authorId: OWNER.id
 };
 
@@ -52,31 +53,36 @@ describe('/recipes/[slug]/forks load', () => {
 	});
 
 	test('404s a private recipe to anyone but its author', async () => {
-		findFirstMock.mockResolvedValue({ ...RECIPE, isPublic: false });
+		findFirstMock.mockResolvedValue({ ...RECIPE, visibility: 'private' });
 		expect(await run(VISITOR)).toMatchObject({ status: 404 });
 		expect(await run(null)).toMatchObject({ status: 404 });
 	});
 
 	test('shows a private recipe’s forks to its author', async () => {
-		findFirstMock.mockResolvedValue({ ...RECIPE, isPublic: false });
+		findFirstMock.mockResolvedValue({ ...RECIPE, visibility: 'private' });
 		expect(await run(OWNER)).toMatchObject({ recipe: { slug: RECIPE.slug } });
 	});
 
 	test('a logged-out visitor sees the public forks only', async () => {
 		await run(null);
 		expect(forksQuery().where).toEqual(
-			and(eq(recipes.parentId, RECIPE.id), eq(recipes.isPublic, true))
+			and(eq(recipes.parentId, RECIPE.id), eq(recipes.visibility, 'public'))
 		);
 	});
 
-	test('a signed-in visitor also sees their own private forks', async () => {
+	test('a signed-in visitor sees the forks visibleTo allows them', async () => {
 		await run(VISITOR);
-		expect(forksQuery().where).toEqual(
-			and(
-				eq(recipes.parentId, RECIPE.id),
-				or(eq(recipes.isPublic, true), eq(recipes.authorId, VISITOR.id))
-			)
+		expect(forksQuery().where).toEqual(and(eq(recipes.parentId, RECIPE.id), visibleTo(VISITOR)));
+	});
+
+	test("shows a friends recipe's forks to a friend of its author, 404 to anyone else", async () => {
+		findFirstMock.mockResolvedValue({ ...RECIPE, visibility: 'friends' });
+		selectMock.mockReturnValueOnce(
+			chain([{ requesterId: RECIPE.authorId, addresseeId: VISITOR.id }])
 		);
+		expect(await run(VISITOR)).toMatchObject({ recipe: { slug: RECIPE.slug } });
+		selectMock.mockReturnValueOnce(chain([]));
+		expect(await run(VISITOR)).toMatchObject({ status: 404 });
 	});
 
 	test('lists the newest fork first', async () => {

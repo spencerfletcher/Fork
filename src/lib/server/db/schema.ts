@@ -1,4 +1,5 @@
 import type { Ingredient, Step } from '#lib/recipes/types.js';
+import type { Visibility } from '#lib/recipes/validation.js';
 import {
 	pgTable,
 	serial,
@@ -6,7 +7,6 @@ import {
 	integer,
 	timestamp,
 	primaryKey,
-	boolean,
 	jsonb,
 	customType,
 	index,
@@ -57,8 +57,8 @@ export const recipes = pgTable(
 		cookTimeMinutes: integer('cook_time_minutes'),
 		// Fork lineage
 		parentId: integer('parent_id'), // the recipe it was forked from; a relation below, no FK in the database
-		// Visibility
-		isPublic: boolean('is_public').notNull().default(true),
+		// Who can see it: see VISIBILITIES and #lib/server/visibility.ts.
+		visibility: text().$type<Visibility>().notNull().default('private'),
 		createdAt: timestamp('created_at').notNull().defaultNow(),
 		updatedAt: timestamp('updated_at').notNull().defaultNow(),
 		// Bumped once per committed save (version or settings-only). The edit form
@@ -71,6 +71,33 @@ export const recipes = pgTable(
 		)
 	},
 	(table) => [index('recipes_fts_idx').using('gin', table.fts)]
+).enableRLS();
+
+// ─── Friendships ─────────────────────────────────────────────────────────────
+
+export const FRIENDSHIP_STATUSES = ['pending', 'accepted'] as const;
+
+export type FriendshipStatus = (typeof FRIENDSHIP_STATUSES)[number];
+
+// One row per pair: the requester asked, the addressee answers. An accepted
+// row makes both people friends of each other, whichever way it was asked.
+export const friendships = pgTable(
+	'friendships',
+	{
+		requesterId: text('requester_id')
+			.notNull()
+			.references(() => profiles.id, { onDelete: 'cascade' }),
+		addresseeId: text('addressee_id')
+			.notNull()
+			.references(() => profiles.id, { onDelete: 'cascade' }),
+		status: text().$type<FriendshipStatus>().notNull(),
+		createdAt: timestamp('created_at').notNull().defaultNow()
+	},
+	// The key serves lookups by requester; this index the other direction.
+	(table) => [
+		primaryKey({ columns: [table.requesterId, table.addresseeId] }),
+		index('friendships_addressee_idx').on(table.addresseeId)
+	]
 ).enableRLS();
 
 // ─── Tags ─────────────────────────────────────────────────────────────────────

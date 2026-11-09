@@ -57,7 +57,9 @@ describe('attachRecipeCounts', () => {
 		expect(versionWhere).toEqual(inArray(recipeVersions.recipeId, [7, 9]));
 
 		const forkWhere = (forkChain.where as ReturnType<typeof vi.fn>).mock.calls[0][0];
-		expect(forkWhere).toEqual(and(inArray(recipes.parentId, [7, 9]), eq(recipes.isPublic, true)));
+		expect(forkWhere).toEqual(
+			and(inArray(recipes.parentId, [7, 9]), eq(recipes.visibility, 'public'))
+		);
 	});
 
 	test('returns an empty list without querying when given no recipes', async () => {

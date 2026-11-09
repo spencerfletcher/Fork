@@ -18,8 +18,9 @@ vi.mock('#lib/server/db/index.js', () => ({
 
 import { load } from './+page.server';
 import { CARD_WITH } from '#lib/server/recipeCounts.js';
-import { and, desc, eq, or } from 'drizzle-orm';
+import { and, desc, eq } from 'drizzle-orm';
 import { recipes } from '#lib/server/db/schema.js';
+import { visibleTo } from '#lib/server/visibility.js';
 import type { PageData } from './$types';
 
 function makeEvent(query = '', user: { id: string } | null = null) {
@@ -168,14 +169,14 @@ describe('search visibility', () => {
 	});
 
 	test("finds public recipes and the viewer's own, never another user's private ones", async () => {
-		const own = or(eq(recipes.isPublic, true), eq(recipes.authorId, 'viewer'));
+		const own = visibleTo({ id: 'viewer' });
 		await loadResult(makeEvent('', { id: 'viewer' }));
 		expect(findManyMock.mock.calls[0][0].where).toEqual(and(own, undefined, undefined));
 		expect(selectDistinctMock.mock.results[0].value.where).toHaveBeenCalledWith(own);
 	});
 
 	test('a logged-out visitor finds public recipes only', async () => {
-		const pub = eq(recipes.isPublic, true);
+		const pub = eq(recipes.visibility, 'public');
 		await loadResult(makeEvent(''));
 		expect(findManyMock.mock.calls[0][0].where).toEqual(and(pub, undefined, undefined));
 		expect(selectDistinctMock.mock.results[0].value.where).toHaveBeenCalledWith(pub);

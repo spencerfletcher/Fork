@@ -18,7 +18,7 @@ describe('new page, server rendered', () => {
 				steps: '',
 				commitMessage: '',
 				editRevision: '',
-				isPublic: true,
+				visibility: 'private',
 				tags: [],
 				hadPhoto: false,
 				removeImage: false

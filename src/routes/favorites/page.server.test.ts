@@ -22,6 +22,7 @@ import { desc, type SQL } from 'drizzle-orm';
 import { PgDialect } from 'drizzle-orm/pg-core';
 import { recipes } from '#lib/server/db/schema.js';
 import type { PageData } from './$types';
+import type { Visibility } from '#lib/recipes/validation.js';
 
 function makeEvent(search = '', user: { id: string } | null = { id: 'u1' }) {
 	return {
@@ -32,7 +33,7 @@ function makeEvent(search = '', user: { id: string } | null = { id: 'u1' }) {
 
 const loadResult = (event: Parameters<typeof load>[0]) => loadPage<PageData>(load, event);
 
-type FavouriteRow = { recipeId: number; isPublic: boolean; authorId: string };
+type FavouriteRow = { recipeId: number; visibility: Visibility; authorId: string };
 
 /** Wires the favourite lookup with explicit visibility, then the attachRecipeCounts aggregates. */
 function mockFavouriteRows(rows: FavouriteRow[], ...afterFavourites: ReturnType<typeof chain>[]) {
@@ -44,7 +45,7 @@ function mockFavouriteRows(rows: FavouriteRow[], ...afterFavourites: ReturnType<
 /** Favourites of public recipes by another author — the common case. */
 function mockFavourites(ids: number[], ...afterFavourites: ReturnType<typeof chain>[]) {
 	mockFavouriteRows(
-		ids.map((id) => ({ recipeId: id, isPublic: true, authorId: 'someone-else' })),
+		ids.map((id) => ({ recipeId: id, visibility: 'public', authorId: 'someone-else' })),
 		...afterFavourites
 	);
 }
@@ -188,7 +189,7 @@ describe('favorites load', () => {
 	});
 
 	test('hides a favourite whose recipe has since been made private by its owner', async () => {
-		mockFavouriteRows([{ recipeId: 1, isPublic: false, authorId: 'someone-else' }]);
+		mockFavouriteRows([{ recipeId: 1, visibility: 'private', authorId: 'someone-else' }]);
 
 		const result = await loadResult(makeEvent());
 
@@ -200,13 +201,25 @@ describe('favorites load', () => {
 	});
 
 	test("keeps a favourite of the user's own private recipe", async () => {
-		mockFavouriteRows([{ recipeId: 1, isPublic: false, authorId: 'u1' }]);
+		mockFavouriteRows([{ recipeId: 1, visibility: 'private', authorId: 'u1' }]);
 		findManyMock.mockResolvedValue([{ id: 1, author: null, recipesToTags: [] }]);
 
 		const result = await loadResult(makeEvent());
 
 		expect(findManyMock).toHaveBeenCalledTimes(1);
 		expect(result.recipes).toHaveLength(1);
+	});
+
+	test('keeps a saved friends recipe while its author is a friend, and drops it once they are not', async () => {
+		const row = { recipeId: 1, visibility: 'friends', authorId: 'friend' } as const;
+		mockFavouriteRows([row], chain([{ requesterId: 'friend', addresseeId: 'u1' }]));
+		findManyMock.mockResolvedValue([{ id: 1, author: null, recipesToTags: [] }]);
+		expect((await loadResult(makeEvent())).recipes).toHaveLength(1);
+
+		vi.clearAllMocks();
+		mockFavouriteRows([row], chain([]));
+		expect((await loadResult(makeEvent())).recipes).toEqual([]);
+		expect(findManyMock).not.toHaveBeenCalled();
 	});
 
 	test("searches as Search does: the trimmed query against the recipe's text and its ingredient names", async () => {

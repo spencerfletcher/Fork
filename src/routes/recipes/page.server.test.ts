@@ -28,7 +28,7 @@ beforeEach(() => {
 describe('/recipes load', () => {
 	test('a guest sees every public recipe', async () => {
 		const result = await load(event(null));
-		expect(findManyMock.mock.calls[0][0].where).toEqual(eq(recipes.isPublic, true));
+		expect(findManyMock.mock.calls[0][0].where).toEqual(eq(recipes.visibility, 'public'));
 		expect(result).toMatchObject({ recipes: [{ id: 1 }] });
 	});
 
@@ -44,7 +44,7 @@ describe('/recipes load', () => {
 
 	test('a guest gets the tags with public recipes, for the tabs', async () => {
 		const result = await load(event(null));
-		expect(visibleTagsMock.mock.calls[0][0]).toEqual(eq(recipes.isPublic, true));
+		expect(visibleTagsMock.mock.calls[0][0]).toEqual(eq(recipes.visibility, 'public'));
 		expect(result).toMatchObject({ tags: [{ id: 1, name: 'Dessert', slug: 'dessert' }] });
 	});
 

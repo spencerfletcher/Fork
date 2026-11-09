@@ -3,15 +3,15 @@ import { db } from '#lib/server/db/index.js';
 import { recipes, recipeVersions } from '#lib/server/db/schema.js';
 import { and, desc, eq } from 'drizzle-orm';
 import { attachRecipeCounts, CARD_WITH } from '#lib/server/recipeCounts.js';
-import { canView, visibleTo } from '#lib/server/visibility.js';
+import { canViewRow, visibleTo } from '#lib/server/visibility.js';
 import type { PageServerLoad } from './$types';
 
-// The recipe's forks, newest first: the public ones, and the visitor's own
-// private ones. The recipe itself is gated as its own page gates it. Each
+// The recipe's forks, newest first: the ones visibleTo lets the visitor see, their own
+// included. The recipe itself is gated as its own page gates it. Each
 // fork carries its first version's commit note, which names where it came from.
 export const load: PageServerLoad = async ({ params, locals: { user } }) => {
 	const recipe = await db.query.recipes.findFirst({ where: eq(recipes.slug, params.slug) });
-	if (!recipe || !canView(recipe, user)) throw error(404, 'Recipe not found');
+	if (!recipe || !(await canViewRow(recipe, user))) throw error(404, 'Recipe not found');
 
 	const forks = await db.query.recipes.findMany({
 		where: and(eq(recipes.parentId, recipe.id), visibleTo(user)),

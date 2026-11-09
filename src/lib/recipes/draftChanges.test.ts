@@ -13,7 +13,7 @@ const base: RecipeDraft = {
 	steps: 'Mix.\n\nBake.',
 	commitMessage: '',
 	editRevision: '3',
-	isPublic: true,
+	visibility: 'public',
 	tags: ['Dessert'],
 	hadPhoto: false,
 	removeImage: false
@@ -53,7 +53,9 @@ describe('draftChangedGroups', () => {
 	});
 
 	test('tags and visibility are settings, not content', () => {
-		expect(draftChangedGroups(from, { ...base, isPublic: false, tags: [] }, false)).toEqual([]);
+		expect(draftChangedGroups(from, { ...base, visibility: 'private', tags: [] }, false)).toEqual(
+			[]
+		);
 	});
 
 	test('an invalid draft is told apart from an unchanged one', () => {

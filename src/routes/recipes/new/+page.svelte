@@ -16,7 +16,7 @@
 		steps: '',
 		commitMessage: '',
 		editRevision: '',
-		isPublic: true,
+		visibility: 'private',
 		tags: [],
 		hadPhoto: false,
 		removeImage: false

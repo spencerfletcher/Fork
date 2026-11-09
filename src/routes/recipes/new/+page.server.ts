@@ -59,7 +59,7 @@ export const actions: Actions = {
 						slug,
 						// Copies of version 1, per the ownership rule in schema.ts.
 						...copies,
-						isPublic: settings.isPublic,
+						visibility: settings.visibility,
 						authorId: user.id
 					})
 					.returning({ id: recipes.id });

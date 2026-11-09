@@ -9,6 +9,7 @@ import {
 	tagNameMessage,
 	emptyGroupMessage,
 	unnamedGroupMessage,
+	VISIBILITIES,
 	type Result
 } from './validation';
 import {
@@ -317,12 +318,19 @@ describe('the editor reads the same messages', () => {
 
 describe('parseSettings', () => {
 	test('reads visibility and tags', () => {
-		const value = unwrap(parseSettings(form({ isPublic: 'on', tags: ['Dessert', 'Baking'] })));
-		expect(value).toEqual({ isPublic: true, tagNames: ['Dessert', 'Baking'] });
+		const value = unwrap(
+			parseSettings(form({ visibility: 'friends', tags: ['Dessert', 'Baking'] }))
+		);
+		expect(value).toEqual({ visibility: 'friends', tagNames: ['Dessert', 'Baking'] });
 	});
 
-	test('an unchecked box is private', () => {
-		expect(unwrap(parseSettings(form({}))).isPublic).toBe(false);
+	test.each(VISIBILITIES)('reads the %s radio', (visibility) => {
+		expect(unwrap(parseSettings(form({ visibility }))).visibility).toBe(visibility);
+	});
+
+	test('a missing or unknown visibility is private', () => {
+		expect(unwrap(parseSettings(form({}))).visibility).toBe('private');
+		expect(unwrap(parseSettings(form({ visibility: 'everyone' }))).visibility).toBe('private');
 	});
 
 	test('trims, drops blanks and deduplicates tags case-insensitively, keeping the first spelling', () => {
@@ -355,7 +363,7 @@ describe('draftOf', () => {
 			makes: ' 12 buns',
 			commitMessage: 'Tweak',
 			editRevision: '3',
-			isPublic: 'on',
+			visibility: 'public',
 			tags: ['Dessert'],
 			removeImage: 'on'
 		});
@@ -370,7 +378,7 @@ describe('draftOf', () => {
 			steps: 'Mix.\n\nBake.',
 			commitMessage: 'Tweak',
 			editRevision: '3',
-			isPublic: true,
+			visibility: 'public',
 			tags: ['Dessert'],
 			hadPhoto: false,
 			removeImage: true
@@ -381,7 +389,7 @@ describe('draftOf', () => {
 		expect(draftOf(form({}))).toMatchObject({
 			title: '',
 			tags: [],
-			isPublic: false,
+			visibility: 'private',
 			hadPhoto: false,
 			removeImage: false
 		});

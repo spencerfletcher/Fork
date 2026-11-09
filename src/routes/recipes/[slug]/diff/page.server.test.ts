@@ -2,13 +2,17 @@ import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { isHttpError, isRedirect } from '@sveltejs/kit';
 import { load } from './+page.server';
 import { makeContent } from '#lib/recipes/fixtures.js';
+import { chain } from '#lib/testing/drizzle.js';
 
 // ─── Hoisted mocks ────────────────────────────────────────────────────────────
 
-const { findRecipeMock } = vi.hoisted(() => ({ findRecipeMock: vi.fn() }));
+const { findRecipeMock, selectMock } = vi.hoisted(() => ({
+	findRecipeMock: vi.fn(),
+	selectMock: vi.fn()
+}));
 
 vi.mock('#lib/server/db/index.js', () => ({
-	db: { query: { recipes: { findFirst: findRecipeMock } } }
+	db: { query: { recipes: { findFirst: findRecipeMock } }, select: selectMock }
 }));
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -25,7 +29,7 @@ const RECIPE = {
 	id: 1,
 	slug: 'classic-cookies',
 	title: 'Classic Cookies',
-	isPublic: true,
+	visibility: 'public',
 	authorId: 'author',
 	author: { id: 'author', username: 'chef' },
 	versions: [version(1), version(2), version(3)]
@@ -119,14 +123,25 @@ describe('compare page load', () => {
 
 describe('compare page visibility', () => {
 	test("another user's private recipe answers 404, as for a missing recipe", async () => {
-		findRecipeMock.mockResolvedValue({ ...RECIPE, isPublic: false });
+		findRecipeMock.mockResolvedValue({ ...RECIPE, visibility: 'private' });
 		const result = await loadWith('', { id: 'someone-else' }).catch((e: unknown) => e);
 		expect(result).toMatchObject({ status: 404, body: { message: 'Recipe not found' } });
 	});
 
 	test('its author can compare it', async () => {
-		findRecipeMock.mockResolvedValue({ ...RECIPE, isPublic: false });
+		findRecipeMock.mockResolvedValue({ ...RECIPE, visibility: 'private' });
 		const data = await loadWith('', { id: RECIPE.authorId });
 		expect(data).toMatchObject({ recipe: { slug: RECIPE.slug } });
+	});
+
+	test("a friends recipe can be compared by the author's friend, not by anyone else", async () => {
+		findRecipeMock.mockResolvedValue({ ...RECIPE, visibility: 'friends' });
+		selectMock.mockReturnValueOnce(
+			chain([{ requesterId: 'friend', addresseeId: RECIPE.authorId }])
+		);
+		expect(await loadWith('', { id: 'friend' })).toMatchObject({ recipe: { slug: RECIPE.slug } });
+		selectMock.mockReturnValueOnce(chain([]));
+		const result = await loadWith('', { id: 'stranger' }).catch((e: unknown) => e);
+		expect(result).toMatchObject({ status: 404 });
 	});
 });

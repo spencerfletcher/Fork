@@ -50,7 +50,7 @@ const FULL = {
 	cookTimeMinutes: '20',
 	ingredients: '1 cup flour\n2 eggs',
 	steps: 'Mix.\n\nBake.',
-	isPublic: 'on',
+	visibility: 'friends',
 	tags: ['Dessert', 'Baking']
 };
 
@@ -102,6 +102,13 @@ describe('new recipe action', () => {
 		expect(transactionMock).not.toHaveBeenCalled();
 	});
 
+	test('a recipe sent with no visibility is private', async () => {
+		const fields: Record<string, string | string[]> = { ...FULL };
+		delete fields.visibility;
+		await invoke(makeEvent({ fields }));
+		expect(tx.recipeInsert.values.mock.calls[0][0].visibility).toBe('private');
+	});
+
 	test('inserts the recipe with the six copies equal to version 1, then redirects', async () => {
 		const result = await invoke(makeEvent({ fields: FULL }));
 		const recipe = tx.recipeInsert.values.mock.calls[0][0];
@@ -119,7 +126,7 @@ describe('new recipe action', () => {
 		expect(recipe).toMatchObject({
 			title: 'Soup',
 			servings: 4,
-			isPublic: true,
+			visibility: 'friends',
 			authorId: 'user-1',
 			imageUrl: null
 		});

@@ -15,7 +15,7 @@ export const load: PageServerLoad = async ({ params }) => {
 	const [tagged, allTags] = await Promise.all([
 		db.query.recipes.findMany({
 			where: and(
-				eq(recipes.isPublic, true),
+				eq(recipes.visibility, 'public'),
 				exists(
 					db
 						.select({ one: sql`1` })
@@ -26,7 +26,7 @@ export const load: PageServerLoad = async ({ params }) => {
 			with: CARD_WITH,
 			orderBy: (r, { desc }) => [desc(r.updatedAt)]
 		}),
-		visibleTags(eq(recipes.isPublic, true))
+		visibleTags(eq(recipes.visibility, 'public'))
 	]);
 	const withCounts = await attachRecipeCounts(tagged);
 

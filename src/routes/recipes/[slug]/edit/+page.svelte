@@ -25,7 +25,7 @@
 		steps: stepsToText(latestVersion.steps),
 		commitMessage: '',
 		editRevision: String(recipe.editRevision),
-		isPublic: recipe.isPublic,
+		visibility: recipe.visibility,
 		tags: recipe.recipesToTags.map((r) => r.tag.name),
 		hadPhoto: false,
 		removeImage: false

@@ -16,6 +16,7 @@ import { imagePathOf, removeRecipeImage } from '#lib/server/images.js';
 import { readSubmission, uploadPhoto, saveFailure } from '#lib/server/submission.js';
 import { syncTags, listTags } from '#lib/server/tags.js';
 import { loginHref } from '#lib/auth/loginHref.js';
+import { canSetVisibility, WIDENS_PARENT } from '#lib/server/visibility.js';
 
 const STALE_MESSAGE =
 	'This recipe was changed in another tab. Reload to see the latest version, then reapply your edits.';
@@ -62,7 +63,10 @@ export const actions: Actions = {
 			);
 		const recipe = await db.query.recipes.findFirst({
 			where: eq(recipes.slug, params.slug),
-			with: { recipesToTags: { with: { tag: true } } }
+			with: {
+				recipesToTags: { with: { tag: true } },
+				parent: { columns: { visibility: true } }
+			}
 		});
 		if (!recipe) throw error(404, 'Recipe not found');
 		if (recipe.authorId !== user.id) throw error(403, 'Not authorized');
@@ -70,6 +74,19 @@ export const actions: Actions = {
 		const submission = readSubmission(formData);
 		if (!submission.ok) return submission.failure;
 		const { draft, content, settings } = submission;
+
+		// Forks never widen access, checked on a change only: a fork already wider
+		// than a parent that has since narrowed keeps saving as it is.
+		const { visibility } = settings;
+		const parentVisibility = recipe.parent?.visibility ?? null;
+		if (
+			visibility !== recipe.visibility &&
+			parentVisibility !== null &&
+			parentVisibility !== 'public' &&
+			!canSetVisibility(parentVisibility, visibility)
+		) {
+			return saveFailure(400, 'invalid', WIDENS_PARENT[parentVisibility], draft);
+		}
 
 		if (!/^\d+$/.test(draft.editRevision)) {
 			return saveFailure(400, 'invalid', 'Invalid form state, reload the page', draft);
@@ -115,7 +132,7 @@ export const actions: Actions = {
 					recipe.recipesToTags.map((r) => r.tag.name),
 					settings.tagNames
 				);
-				const visibilityChanged = locked.isPublic !== settings.isPublic;
+				const visibilityChanged = locked.visibility !== visibility;
 
 				const message = draft.commitMessage.trim();
 				if (!changed && !visibilityChanged && !tagsChanged && !message) return 'unchanged';
@@ -138,7 +155,7 @@ export const actions: Actions = {
 					.update(recipes)
 					.set({
 						...(changed ? copies : {}),
-						...(visibilityChanged ? { isPublic: settings.isPublic } : {}),
+						...(visibilityChanged ? { visibility } : {}),
 						editRevision: sql`${recipes.editRevision} + 1`,
 						updatedAt: new Date()
 					})

@@ -3,6 +3,7 @@ import { render, screen, fireEvent, within } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import type { SubmitFunction } from '$app/forms';
 import NewPage from './+page.svelte';
+import type { Visibility } from '#lib/recipes/validation.js';
 
 const captured = vi.hoisted(() => ({ submits: [] as SubmitFunction[] }));
 vi.mock('$app/navigation', () => ({ beforeNavigate: () => {} }));
@@ -34,7 +35,7 @@ const EMPTY_DRAFT = {
 	steps: '',
 	commitMessage: '',
 	editRevision: '',
-	isPublic: true,
+	visibility: 'private' as Visibility,
 	tags: [] as string[],
 	hadPhoto: false,
 	removeImage: false
@@ -162,13 +163,17 @@ describe('New recipe page validation errors', () => {
 		render(NewPage, {
 			props: {
 				data,
-				form: failed({ title: 'Soup', prepTimeMinutes: '-5', tags: ['Dessert'], isPublic: false })
+				form: failed({
+					title: 'Soup',
+					prepTimeMinutes: '-5',
+					tags: ['Dessert'],
+					visibility: 'friends'
+				})
 			}
 		});
 		await tick();
 		expect(screen.getByLabelText(/title/i)).toHaveValue('Soup');
 		expect(screen.getByLabelText(/^prep/i)).toHaveValue(-5);
-		expect(screen.getByLabelText(/public/i)).not.toBeChecked();
 		expect(document.querySelector('input[name="tags"]')).toHaveValue('Dessert');
 	});
 

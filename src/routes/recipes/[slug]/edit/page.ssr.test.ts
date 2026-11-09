@@ -13,7 +13,7 @@ describe('edit page, server rendered', () => {
 				slug: 'cookies',
 				title: 'Cookies',
 				imageUrl: null,
-				isPublic: false,
+				visibility: 'private',
 				editRevision: 3,
 				recipesToTags: []
 			},
@@ -33,7 +33,7 @@ describe('edit page, server rendered', () => {
 				steps: 'Mix.',
 				commitMessage: '',
 				editRevision: '3',
-				isPublic: false,
+				visibility: 'private',
 				tags: [],
 				hadPhoto: false,
 				removeImage: false

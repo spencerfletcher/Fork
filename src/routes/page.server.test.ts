@@ -80,11 +80,11 @@ describe('homepage load', () => {
 		// Structural assertion, not a decorative "was .where called" check: this
 		// compares the exact condition object the loader passed to `.where()`
 		// against the same condition built directly from drizzle-orm here, so it
-		// fails if the loader drops the `isPublic` filter, uses the wrong column,
+		// fails if the loader drops the `visibility` filter, uses the wrong column,
 		// or the wrong literal — not just if `.where` was called at all.
 		const whereMock = forkChain.where as ReturnType<typeof vi.fn>;
 		const whereArg = whereMock.mock.calls[0][0];
-		expect(whereArg).toEqual(and(inArray(recipes.parentId, [1]), eq(recipes.isPublic, true)));
+		expect(whereArg).toEqual(and(inArray(recipes.parentId, [1]), eq(recipes.visibility, 'public')));
 	});
 
 	test('lists the newest change first, like browse', async () => {
@@ -101,7 +101,7 @@ describe('homepage load', () => {
 		selectMock.mockReturnValue(chain([]));
 		visibleTagsMock.mockResolvedValue([{ id: 1, name: 'Dessert', slug: 'dessert' }]);
 		const feed = await loadResult({ locals: { user: { id: 'u1' } } } as never);
-		expect(visibleTagsMock.mock.calls[0][0]).toEqual(eq(recipes.isPublic, true));
+		expect(visibleTagsMock.mock.calls[0][0]).toEqual(eq(recipes.visibility, 'public'));
 		expect(feed.tags).toEqual([{ id: 1, name: 'Dessert', slug: 'dessert' }]);
 		visibleTagsMock.mockClear();
 		const landing = await loadResult({ locals: { user: null } } as never);
