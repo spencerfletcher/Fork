@@ -196,11 +196,9 @@
 		flex-shrink: 0;
 	}
 
-	/* Capped at a reading measure for the one-column widths and the no-photo
-	   page, where the column is wider than the photo would leave it. Three
+	/* Fills the words column (Spencer, 9 November 2026: no early cap). Three
 	   lines at every width, then an ellipsis, so the band keeps its height. */
 	.description {
-		max-width: 65ch;
 		margin-top: 8px;
 		font-size: 1.0625rem;
 		line-height: 1.5;
