@@ -1399,7 +1399,7 @@ test.describe('Home and recipe pages (logged out)', () => {
 			order.push(await page.evaluate(() => document.activeElement?.textContent?.trim() ?? ''));
 			await page.keyboard.press('Tab');
 		}
-		expect(order).toEqual(['Cookbook', 'Journal', 'Friends', 'Discover']);
+		expect(order).toEqual(['Discover', 'Cookbook', 'Journal', 'Friends']);
 	});
 
 	test('a checked-off ingredient strikes through at one height, grams included', async ({

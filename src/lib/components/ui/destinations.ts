@@ -1,9 +1,9 @@
-/** The four places the app is organised around, in bar order (decision pack, 9 November 2026). */
+/** The four places the app is organised around, in bar order, Discover first (decided 9 November 2026). */
 export const DESTINATIONS = [
+	{ href: '/discover', label: 'Discover' },
 	{ href: '/cookbook', label: 'Cookbook' },
 	{ href: '/journal', label: 'Journal' },
-	{ href: '/friends', label: 'Friends' },
-	{ href: '/discover', label: 'Discover' }
+	{ href: '/friends', label: 'Friends' }
 ] as const;
 
 export type Destination = (typeof DESTINATIONS)[number];

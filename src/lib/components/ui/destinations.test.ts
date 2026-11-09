@@ -4,6 +4,18 @@ import { DESTINATIONS, isCurrent } from './destinations';
 const current = (path: string) =>
 	DESTINATIONS.filter((d) => isCurrent(d, path)).map((d) => d.label);
 
+describe('DESTINATIONS', () => {
+	// Discover first (Spencer, 9 November 2026), the bar and the tab bar alike.
+	test('bar order: Discover, Cookbook, Journal, Friends', () => {
+		expect(DESTINATIONS.map((d) => d.label)).toEqual([
+			'Discover',
+			'Cookbook',
+			'Journal',
+			'Friends'
+		]);
+	});
+});
+
 describe('isCurrent', () => {
 	test('each destination is current on its own path and below it', () => {
 		for (const d of DESTINATIONS) {
