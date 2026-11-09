@@ -10,7 +10,6 @@
 	let { data }: { data: Awaited<ReturnType<typeof loadDiscover>> } = $props();
 
 	const lead = $derived(data.lead);
-	const total = $derived(data.recipes.length + (lead ? 1 : 0));
 	const filtered = $derived(
 		!!data.searchQuery || data.selectedTags.length > 0 || !!data.friendsOnly
 	);
@@ -40,7 +39,7 @@
 				friendsOnly={data.friendsOnly} />
 		</div>
 
-		<ResultStatus count={total} {filtered} />
+		<ResultStatus count={data.recipes.length} {filtered} />
 
 		{#if lead}
 			<!-- The title link stretches over the card; the cook link sits above it,
@@ -98,7 +97,7 @@
 			<section class="grid-section">
 				<p class="order">
 					<span class="eyebrow-label">Newest first</span>
-					<span>{plural(total, 'recipe')}</span>
+					<span>{plural(data.recipes.length, 'recipe')}</span>
 				</p>
 				<div class="discover-grid">
 					{#each data.recipes as recipe, i (recipe.id)}
@@ -107,7 +106,7 @@
 					{/each}
 				</div>
 			</section>
-		{:else if !lead}
+		{:else}
 			<p class="empty">
 				{#if filtered}
 					No recipes match. Try another search or fewer filters.
