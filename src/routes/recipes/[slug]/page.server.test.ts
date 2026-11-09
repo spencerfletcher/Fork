@@ -4,7 +4,8 @@ import { invokeAction as invoke, formEvent } from '#lib/testing/actions.js';
 import { actions, load } from './+page.server';
 import { VERSION_NOT_FOUND } from './versionError.js';
 import { inGroup, makeIngredient, makeStep, makeContent } from '#lib/recipes/fixtures.js';
-import { favorites, recipes } from '#lib/server/db/schema.js';
+import { favorites, friendships, recipes } from '#lib/server/db/schema.js';
+import type { Visibility } from '#lib/recipes/validation.js';
 
 // ─── Hoisted mocks ────────────────────────────────────────────────────────────
 
@@ -12,6 +13,7 @@ const {
 	findRecipeMock,
 	findFavoriteMock,
 	countMock,
+	selectMock,
 	dbInsert,
 	dbDelete,
 	transactionMock,
@@ -20,6 +22,7 @@ const {
 	findRecipeMock: vi.fn(),
 	findFavoriteMock: vi.fn(),
 	countMock: vi.fn(),
+	selectMock: vi.fn(),
 	dbInsert: vi.fn(),
 	dbDelete: vi.fn(),
 	transactionMock: vi.fn(),
@@ -33,6 +36,7 @@ vi.mock('#lib/server/db/index.js', () => ({
 			favorites: { findFirst: findFavoriteMock }
 		},
 		$count: countMock,
+		select: selectMock,
 		insert: dbInsert,
 		delete: dbDelete,
 		transaction: transactionMock
@@ -102,7 +106,7 @@ const SOURCE_RECIPE = {
 	servings: 1,
 	prepTimeMinutes: 1,
 	cookTimeMinutes: 1,
-	isPublic: true,
+	visibility: 'public',
 	parentId: null,
 	createdAt: new Date(),
 	updatedAt: new Date(),
@@ -200,7 +204,7 @@ describe('fork', () => {
 		});
 	});
 
-	test('takes visibility and tags from the source recipe, the photo from its latest version, and nothing else from the row', async () => {
+	test('takes tags from the source recipe, the photo from its latest version, and nothing else from the row; the fork starts private', async () => {
 		findRecipeMock.mockResolvedValue(SOURCE_RECIPE);
 		const tx = makeTx({ newRecipeId: 99, newRecipeSlug: 'classic-cookies-abc12345' });
 		transactionMock.mockImplementationOnce(
@@ -211,7 +215,7 @@ describe('fork', () => {
 
 		const recipeValues = tx.insertChain.values.mock.calls[0][0];
 		expect(recipeValues.imageUrl).toBe('https://img/version.png');
-		expect(recipeValues.isPublic).toBe(true);
+		expect(recipeValues.visibility).toBe('private');
 		expect(recipeValues).not.toHaveProperty('id');
 		expect(recipeValues).not.toHaveProperty('editRevision');
 		expect(recipeValues).not.toHaveProperty('createdAt');
@@ -300,7 +304,7 @@ function makeLoadEvent(user: { id: string; email: string } | null = null) {
 }
 
 /** A public fork whose parent has the given visibility and owner. */
-function forkOf(parent: { isPublic: boolean; authorId: string }) {
+function forkOf(parent: { visibility: Visibility; authorId: string }) {
 	return {
 		...SOURCE_RECIPE,
 		id: 99,
@@ -348,14 +352,14 @@ describe('load: fork attribution', () => {
 	});
 
 	test('counts public forks of the recipe', async () => {
-		findRecipeMock.mockResolvedValue(forkOf({ isPublic: true, authorId: 'original-author' }));
+		findRecipeMock.mockResolvedValue(forkOf({ visibility: 'public', authorId: 'original-author' }));
 		countMock.mockImplementation(async (table: unknown) => (table === recipes ? 2 : 0));
 		const data = await loadData();
 		expect(data.forkCount).toBe(2);
 	});
 
 	test('counts the favorites on this recipe, from the favorites table', async () => {
-		findRecipeMock.mockResolvedValue(forkOf({ isPublic: true, authorId: 'original-author' }));
+		findRecipeMock.mockResolvedValue(forkOf({ visibility: 'public', authorId: 'original-author' }));
 		// Each count answers by the table it is read from, so the test does not
 		// lean on the order the loader asks in.
 		countMock.mockImplementation(async (table: unknown) => (table === favorites ? 7 : 2));
@@ -368,13 +372,15 @@ describe('load: fork attribution', () => {
 	});
 
 	test('includes a public parent', async () => {
-		findRecipeMock.mockResolvedValue(forkOf({ isPublic: true, authorId: 'original-author' }));
+		findRecipeMock.mockResolvedValue(forkOf({ visibility: 'public', authorId: 'original-author' }));
 		const data = await loadData();
 		expect(data.recipe.parent).toMatchObject({ slug: 'secret-original' });
 	});
 
 	test('withholds a private parent from a viewer who does not own it', async () => {
-		findRecipeMock.mockResolvedValue(forkOf({ isPublic: false, authorId: 'original-author' }));
+		findRecipeMock.mockResolvedValue(
+			forkOf({ visibility: 'private', authorId: 'original-author' })
+		);
 		const data = await loadData(FORKER);
 		expect(data.recipe.parent).toBeNull();
 		// parentId stays so the page can say it was forked from a private recipe.
@@ -382,30 +388,36 @@ describe('load: fork attribution', () => {
 	});
 
 	test('withholds a private parent from a logged-out viewer', async () => {
-		findRecipeMock.mockResolvedValue(forkOf({ isPublic: false, authorId: 'original-author' }));
+		findRecipeMock.mockResolvedValue(
+			forkOf({ visibility: 'private', authorId: 'original-author' })
+		);
 		const data = await loadData(null);
 		expect(data.recipe.parent).toBeNull();
 	});
 
 	test('says the parent was deleted when its row is gone, and not for a private one', async () => {
 		findRecipeMock.mockResolvedValue({
-			...forkOf({ isPublic: true, authorId: 'a' }),
+			...forkOf({ visibility: 'public', authorId: 'a' }),
 			parent: null
 		});
 		expect((await loadData()).recipe).toMatchObject({ parent: null, parentDeleted: true });
 
-		findRecipeMock.mockResolvedValue(forkOf({ isPublic: false, authorId: 'original-author' }));
+		findRecipeMock.mockResolvedValue(
+			forkOf({ visibility: 'private', authorId: 'original-author' })
+		);
 		expect((await loadData(FORKER)).recipe).toMatchObject({ parentDeleted: false });
 	});
 
 	test("includes a private parent for the parent's owner", async () => {
-		findRecipeMock.mockResolvedValue(forkOf({ isPublic: false, authorId: 'original-author' }));
+		findRecipeMock.mockResolvedValue(
+			forkOf({ visibility: 'private', authorId: 'original-author' })
+		);
 		const data = await loadData({ id: 'original-author', email: 'o@test.com' });
 		expect(data.recipe.parent).toMatchObject({ slug: 'secret-original' });
 	});
 
 	test('builds the page metadata from the shown version, not the recipe copy', async () => {
-		findRecipeMock.mockResolvedValue(forkOf({ isPublic: true, authorId: 'original-author' }));
+		findRecipeMock.mockResolvedValue(forkOf({ visibility: 'public', authorId: 'original-author' }));
 		const data = await loadData();
 		expect(data.meta.title).toBe('Classic Cookies');
 		expect(data.meta.description).toBe('Good cookies');
@@ -414,7 +426,7 @@ describe('load: fork attribution', () => {
 
 	test('404s a recipe with no version rather than rendering a broken page', async () => {
 		findRecipeMock.mockResolvedValue({
-			...forkOf({ isPublic: true, authorId: 'o' }),
+			...forkOf({ visibility: 'public', authorId: 'o' }),
 			versions: []
 		});
 		const result = await Promise.resolve()
@@ -424,27 +436,27 @@ describe('load: fork attribution', () => {
 	});
 
 	test('returns one gram result per ingredient of the shown version', async () => {
-		findRecipeMock.mockResolvedValue(forkOf({ isPublic: true, authorId: 'original-author' }));
+		findRecipeMock.mockResolvedValue(forkOf({ visibility: 'public', authorId: 'original-author' }));
 		const data = await loadData();
 		expect(data.grams).toHaveLength(data.currentVersion?.ingredients.length ?? -1);
 	});
 
 	test('counts only public forks, so private forks stay invisible', async () => {
-		findRecipeMock.mockResolvedValue(forkOf({ isPublic: true, authorId: 'original-author' }));
+		findRecipeMock.mockResolvedValue(forkOf({ visibility: 'public', authorId: 'original-author' }));
 		await loadData();
-		// The filter must name is_public: a count of every fork would reveal
+		// The filter must name visibility: a count of every fork would reveal
 		// private forks by number.
 		const [, filter] = countMock.mock.calls.find(([table]) => table === recipes)!;
-		expect(columnNames(filter)).toContain('is_public');
+		expect(columnNames(filter)).toContain('visibility');
 	});
 
 	test("counts the viewer's own private forks too, as the forks page lists them", async () => {
-		findRecipeMock.mockResolvedValue(forkOf({ isPublic: true, authorId: 'original-author' }));
+		findRecipeMock.mockResolvedValue(forkOf({ visibility: 'public', authorId: 'original-author' }));
 		countMock.mockResolvedValue(1);
 		await loadData(FORKER);
 		const [, filter] = countMock.mock.calls.find(([table]) => table === recipes)!;
 		expect(columnNames(filter)).toEqual(
-			expect.arrayContaining(['parent_id', 'is_public', 'author_id'])
+			expect.arrayContaining(['parent_id', 'visibility', 'author_id'])
 		);
 	});
 });
@@ -456,7 +468,7 @@ describe('load: ?version=', () => {
 		vi.clearAllMocks();
 		findFavoriteMock.mockResolvedValue(undefined);
 		countMock.mockResolvedValue(0);
-		findRecipeMock.mockResolvedValue(forkOf({ isPublic: true, authorId: 'original-author' }));
+		findRecipeMock.mockResolvedValue(forkOf({ visibility: 'public', authorId: 'original-author' }));
 	});
 
 	const loadVersion = (version: string) =>
@@ -480,7 +492,7 @@ describe('load: ?version=', () => {
 // ─── visibility: a private recipe by another user ─────────────────────────────
 
 describe("visibility: another user's private recipe", () => {
-	const PRIVATE = { ...SOURCE_RECIPE, isPublic: false, parent: null };
+	const PRIVATE = { ...SOURCE_RECIPE, visibility: 'private', parent: null };
 
 	beforeEach(() => {
 		vi.clearAllMocks();
@@ -510,7 +522,7 @@ describe("visibility: another user's private recipe", () => {
 describe('toggleFavorite', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
-		findRecipeMock.mockResolvedValue({ ...SOURCE_RECIPE, isPublic: true });
+		findRecipeMock.mockResolvedValue({ ...SOURCE_RECIPE, visibility: 'public' });
 		dbInsert.mockReturnValue(chain());
 	});
 
@@ -528,5 +540,84 @@ describe('toggleFavorite', () => {
 		await invoke(actions.toggleFavorite as never, makeEvent({ user: FORKER }));
 		expect(dbInsert).toHaveBeenCalledWith(favorites);
 		expect(insert.values).toHaveBeenCalledWith({ userId: FORKER.id, recipeId: SOURCE_RECIPE.id });
+	});
+});
+
+// ─── visibility: a friends recipe by another user ─────────────────────────────
+
+describe('visibility: a friends recipe', () => {
+	const FRIENDS = { ...SOURCE_RECIPE, visibility: 'friends', parent: null };
+
+	/** Friendship rows answer friendIdsOf, the only select these paths make. */
+	function friendsWith(...ids: string[]) {
+		selectMock.mockImplementation(() => {
+			const q = chain();
+			q.from.mockImplementation((table: unknown) =>
+				table === friendships
+					? chain(ids.map((id) => ({ requesterId: id, addresseeId: FORKER.id })))
+					: chain([])
+			);
+			return q;
+		});
+	}
+
+	beforeEach(() => {
+		vi.clearAllMocks();
+		findFavoriteMock.mockResolvedValue(undefined);
+		countMock.mockResolvedValue(0);
+		findRecipeMock.mockResolvedValue(FRIENDS);
+	});
+
+	test('load shows it to an accepted friend of the author', async () => {
+		friendsWith(SOURCE_RECIPE.authorId);
+		const data = await loadData(FORKER);
+		expect(data.recipe).toMatchObject({ slug: SOURCE_RECIPE.slug });
+	});
+
+	test('load answers 404 to a signed-in reader who is not a friend', async () => {
+		friendsWith('someone-else');
+		const result = await invoke(load as never, makeLoadEvent(FORKER));
+		expect(result).toMatchObject({ status: 404, body: { message: 'Recipe not found' } });
+	});
+
+	test('load answers 404 to a logged-out reader', async () => {
+		friendsWith(SOURCE_RECIPE.authorId);
+		const result = await invoke(load as never, makeLoadEvent(null));
+		expect(result).toMatchObject({ status: 404 });
+	});
+
+	test('a friend can fork it, and the fork starts private', async () => {
+		friendsWith(SOURCE_RECIPE.authorId);
+		const tx = makeTx();
+		transactionMock.mockImplementationOnce(
+			async (cb: (tx: ReturnType<typeof makeTx>) => Promise<void>) => cb(tx)
+		);
+		await invoke(actions.fork as never, makeEvent({ user: FORKER }));
+		expect(tx.insertChain.values.mock.calls[0][0].visibility).toBe('private');
+	});
+
+	test('a stranger cannot fork it', async () => {
+		friendsWith('someone-else');
+		const result = await invoke(actions.fork as never, makeEvent({ user: FORKER }));
+		expect(result).toMatchObject({ status: 404 });
+		expect(transactionMock).not.toHaveBeenCalled();
+	});
+
+	test("a friends parent is withheld from a reader who is not the parent author's friend", async () => {
+		friendsWith('someone-else');
+		findRecipeMock.mockResolvedValue(
+			forkOf({ visibility: 'friends', authorId: 'original-author' })
+		);
+		const data = await loadData(FORKER);
+		expect(data.recipe.parent).toBeNull();
+	});
+
+	test("a friends parent is shown to the parent author's friend", async () => {
+		friendsWith('original-author');
+		findRecipeMock.mockResolvedValue(
+			forkOf({ visibility: 'friends', authorId: 'original-author' })
+		);
+		const data = await loadData(FORKER);
+		expect(data.recipe.parent).toMatchObject({ slug: 'secret-original' });
 	});
 });
