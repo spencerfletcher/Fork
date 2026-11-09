@@ -1,6 +1,7 @@
 import { describe, test, expect, vi } from 'vitest';
 import { chain } from '#lib/testing/drizzle.js';
-import { syncTags, type Tx } from './tags';
+import { syncTags } from './tags';
+import type { Tx } from './db/index.js';
 
 // tags.ts imports the live db for listTags; the tests here only ever pass a tx in.
 vi.mock('./db/index.js', () => ({ db: {} }));

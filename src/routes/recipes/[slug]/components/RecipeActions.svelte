@@ -5,7 +5,7 @@
 	import { setShallowParam } from './shallowParam';
 	import type { Recipe } from '#lib/server/db/schema.js';
 	import { forkIcon, saveIcon } from '#lib/components/Icons.svelte';
-	import { compactCount } from '#lib/helpers.js';
+	import { compactCount, wholeNumber } from '#lib/helpers.js';
 	import { optimisticToggle } from '#lib/optimisticToggle.svelte.js';
 
 	let {
@@ -40,7 +40,9 @@
 	// The scaler writes ?serves= with a shallow replace, so the newest URL is page.shallow's.
 	const serves = $derived((page.shallow?.url ?? page.url).searchParams.get('serves'));
 	const logHref = $derived(
-		journalHref && serves && /^\d+$/.test(serves) ? `${journalHref}&serves=${serves}` : journalHref
+		journalHref && serves && wholeNumber(serves) !== null
+			? `${journalHref}&serves=${serves}`
+			: journalHref
 	);
 
 	let error = $state('');

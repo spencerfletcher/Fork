@@ -34,6 +34,9 @@ if (dev) cache.forkDbClient = client;
 
 export const db = drizzle(client, { schema });
 
+/** A transaction's handle, as `db.transaction` passes it. */
+export type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
 /** Closes the pool; the database tests call it in afterAll so no connection outlives the run. */
 export async function closeDb() {
 	if (cache.forkDbClient === client) delete cache.forkDbClient;

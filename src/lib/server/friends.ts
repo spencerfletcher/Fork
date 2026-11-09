@@ -1,6 +1,6 @@
 import { alias } from 'drizzle-orm/pg-core';
 import { and, count, desc, eq, inArray, ne, sql } from 'drizzle-orm';
-import { db } from './db/index.js';
+import { db, type Tx } from './db/index.js';
 import {
 	favorites,
 	friendships,
@@ -14,7 +14,6 @@ import {
 	type FriendshipStatus,
 	type ReportTarget
 } from './db/schema.js';
-import type { Tx } from './tags.js';
 import { eitherWay, friendIdsOf, onAlias, visibleTo, type Viewer } from './visibility.js';
 import { canSeeEntry, sourceColumns, sourceOf } from './journal.js';
 

@@ -343,10 +343,14 @@ describe('Edit page form', () => {
 	});
 
 	test("a refused delete shows under Delete, not in the editor's error box", async () => {
-		render(EditPage, {
-			props: { data: makeData(), form: { error: 'Not authorized', code: 'forbidden' } as never }
-		});
-		await tick();
+		render(EditPage, { props: { data: makeData(), form: null } });
+		await fireEvent.click(screen.getByRole('button', { name: 'Delete recipe' }));
+		// ownRecipe throws error(403); enhance hands it back as an error result.
+		const finish = (await captured.submits[1]({} as never)) as (input: unknown) => Promise<void>;
+		const update = vi.fn(async () => {});
+		const result = { type: 'error', status: 403, error: { message: 'Not authorized' } };
+		await finish({ result, update }).then(tick);
+		expect(update).not.toHaveBeenCalled();
 		const alert = screen.getByRole('alert');
 		expect(alert).toHaveTextContent('Not authorized');
 		// Under Delete recipe, on the actions row's right.
