@@ -2,13 +2,14 @@
 	import { enhance } from '$app/forms';
 	import { tick } from 'svelte';
 	import { moreIcon } from '#lib/components/journal/Icons.svelte';
+	import Dropdown from '#lib/components/ui/Dropdown.svelte';
 	import { BLOCK_SENTENCE } from '#lib/journal.js';
 	import type { ReportTarget } from '#lib/server/db/schema.js';
 
-	// The one overlay: Mute, Unfriend, Report, Block for a friend's feed item.
-	// A disclosure (a button and the list it shows), so Tab walks it; Escape
-	// and a press outside close it. Report and Block open a second step in
-	// place, so neither happens on one stray press.
+	// The ⋯ overlay: Mute, Unfriend, Report, Block for a friend's feed item.
+	// A disclosure (Dropdown: a button and the list it shows), so Tab walks it;
+	// Escape and a press outside close it. Report and Block open a second step
+	// in place, so neither happens on one stray press.
 	let {
 		userId,
 		username,
@@ -26,61 +27,26 @@
 		items?: ('mute' | 'unfriend' | 'report' | 'block')[];
 	} = $props();
 
-	let open = $state(false);
 	let step = $state<'menu' | 'report' | 'block' | 'reported'>('menu');
-	let root: HTMLElement | undefined = $state();
-	let button: HTMLButtonElement | undefined = $state();
-	let panel: HTMLElement | undefined = $state();
-
-	async function toggle() {
-		open = !open;
-		step = 'menu';
-		if (open) {
-			await tick();
-			panel?.querySelector<HTMLElement>('button, textarea')?.focus();
-		}
-	}
-
-	function close() {
-		if (!open) return;
-		open = false;
-		button?.focus();
-	}
+	let panelEl: HTMLElement | undefined = $state();
 
 	async function go(next: typeof step) {
 		step = next;
 		await tick();
-		panel?.querySelector<HTMLElement>('textarea, button[type="submit"]')?.focus();
+		panelEl?.querySelector<HTMLElement>('textarea, button[type="submit"]')?.focus();
 	}
 
 	const target = $derived(report ?? { type: 'user' as const, id: userId });
 </script>
 
-<svelte:window
-	onclick={(e) => {
-		// composedPath, not contains: Report and Block swap themselves out on
-		// press, so by now the target can be detached from root.
-		if (open && root && !e.composedPath().includes(root)) open = false;
-	}} />
-
-<!-- svelte-ignore a11y_no_static_element_interactions (Escape bubbles up from the controls inside) -->
-<div
-	class="more"
-	bind:this={root}
-	onkeydown={(e) => {
-		if (e.key === 'Escape') close();
-	}}>
-	<button
-		type="button"
-		class="more-button"
-		aria-label={label}
-		aria-expanded={open}
-		bind:this={button}
-		onclick={toggle}>
-		{@render moreIcon()}
-	</button>
-	{#if open}
-		<div class="panel" bind:this={panel}>
+<Dropdown onopen={() => (step = 'menu')}>
+	{#snippet trigger(props)}
+		<button type="button" class="more-button" aria-label={label} {...props}>
+			{@render moreIcon()}
+		</button>
+	{/snippet}
+	{#snippet panel()}
+		<div class="panel" bind:this={panelEl}>
 			{#if step === 'menu'}
 				{#if items.includes('mute')}
 					<form method="POST" action="/friends?/mute" use:enhance>
@@ -132,14 +98,10 @@
 				</form>
 			{/if}
 		</div>
-	{/if}
-</div>
+	{/snippet}
+</Dropdown>
 
 <style>
-	.more {
-		position: relative;
-	}
-
 	.more-button {
 		display: inline-flex;
 		align-items: center;
