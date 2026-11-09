@@ -337,4 +337,22 @@ describe('RecipeCard on Discover', () => {
 		);
 		expect(screen.getAllByText('@maria')).toHaveLength(1);
 	});
+
+	test('the avatar and handle are one profile link, ahead of the recipe link in tab order, with no link inside another', () => {
+		const { container } = render(RecipeCard, {
+			props: {
+				recipe: { ...makeRecipe(), author: { id: 'u3', username: 'maria' } },
+				variant: 'discover'
+			}
+		});
+		const profile = screen.getByRole('link', { name: '@maria' });
+		expect(profile).toHaveAttribute('href', '/users/maria');
+		expect(profile.querySelector('.card-avatar')).not.toBeNull();
+		const links = [...container.querySelectorAll('a')];
+		expect(links.map((a) => a.getAttribute('href'))).toEqual([
+			'/users/maria',
+			'/recipes/chocolate-cake-abc123'
+		]);
+		expect(container.querySelector('a a')).toBeNull();
+	});
 });

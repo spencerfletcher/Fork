@@ -95,16 +95,18 @@
 </script>
 
 <div class="recipe-card" class:author-always={alwaysShowAuthor} class:recipe-card--roomy={!isList}>
-	<a {href} class="card-stretched-link" aria-label={recipe.title}></a>
-
+	<!-- The cook is one link from avatar to handle, before the stretched recipe
+	     link so Tab reaches the profile first; a sibling, never nested. -->
 	{#if variant === 'discover' && recipe.author}
-		<p class="card-cook">
+		<a class="card-cook" href="/users/{recipe.author.username}">
 			<span class="card-avatar" aria-hidden="true">
 				{recipe.author.username.charAt(0).toUpperCase()}
 			</span>
-			<a class="card-handle" href="/users/{recipe.author.username}">@{recipe.author.username}</a>
-		</p>
+			<span class="card-handle">@{recipe.author.username}</span>
+		</a>
 	{/if}
+
+	<a {href} class="card-stretched-link" aria-label={recipe.title}></a>
 
 	{#if recipe.imageUrl}
 		<div class="card-img-wrap">
@@ -339,14 +341,32 @@
 		overflow-wrap: anywhere;
 	}
 
-	/* Discover's cook line, above the photo: a small initial avatar and the handle. */
+	/* Discover's cook link, above the photo: a small initial avatar and the
+	   handle, one hit area as wide as they are, above the stretched link. */
 	.card-cook {
+		position: relative;
+		z-index: 2;
 		display: flex;
+		align-self: flex-start;
 		align-items: center;
 		gap: 8px;
 		min-width: 0;
-		margin: 0;
+		max-width: 100%;
+		min-height: 24px;
 		font-size: 0.9375rem;
+		text-decoration: none;
+	}
+
+	.card-cook:hover .card-handle {
+		color: var(--color-text);
+	}
+
+	/* A 44px hit on a phone without moving the line. */
+	@media (max-width: 699px) {
+		.card-cook {
+			min-height: 44px;
+			margin-block: -8px;
+		}
 	}
 
 	.card-avatar {
