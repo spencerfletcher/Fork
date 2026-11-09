@@ -23,7 +23,7 @@ vi.mock('#lib/server/db/index.js', () => {
 	return { db };
 });
 
-import { feedFor, relationFrom, sendRequest, toggleLike } from './friends.js';
+import { blockIn, feedFor, relationFrom, sendRequest, toggleLike } from './friends.js';
 
 const ME = 'me';
 const THEM = 'them';
@@ -83,9 +83,71 @@ describe('sendRequest', () => {
 		expect(updateMock).not.toHaveBeenCalled();
 	});
 
+	// Both saw no row; the other request's insert won the pair index.
+	test('a crossing request (theirs landed first) is accepted instead of refused', async () => {
+		selectMock
+			.mockReturnValueOnce(chain([]))
+			.mockReturnValueOnce(chain([makePair(THEM, 'pending')]));
+		insertMock.mockReturnValue(chain([]));
+		expect(await sendRequest(ME, THEM)).toBe('accepted');
+		expect(updateMock.mock.results[0].value.set).toHaveBeenCalledWith({ status: 'accepted' });
+	});
+
+	test('a race lost to a block is still refused', async () => {
+		selectMock
+			.mockReturnValueOnce(chain([]))
+			.mockReturnValueOnce(chain([makePair(THEM, 'blocked')]));
+		insertMock.mockReturnValue(chain([]));
+		expect(await sendRequest(ME, THEM)).toBe('refused');
+		expect(updateMock).not.toHaveBeenCalled();
+	});
+
 	test('nobody can befriend themselves', async () => {
 		expect(await sendRequest(ME, ME)).toBe('refused');
 		expect(selectMock).not.toHaveBeenCalled();
+	});
+});
+
+describe('blockIn', () => {
+	const tx = { select: selectMock, insert: insertMock, update: updateMock, delete: deleteMock };
+	const blockedSet = { requesterId: ME, addresseeId: THEM, status: 'blocked' };
+	const blockWrites = () =>
+		updateMock.mock.results.filter((r) =>
+			r.value.set.mock.calls.some(([v]: [unknown]) => v && (v as { status?: string }).status)
+		);
+
+	test('with no row in the way, inserts the blocked row and updates no pair row', async () => {
+		selectMock.mockReturnValue(chain([]));
+		await blockIn(tx as never, ME, THEM);
+		expect(insertMock.mock.results[0].value.values).toHaveBeenCalledWith(blockedSet);
+		expect(blockWrites()).toHaveLength(0);
+	});
+
+	// A request inserted between the unfriend's delete and the block's insert.
+	test('a request that raced in is overwritten by the block, not a unique-index error', async () => {
+		selectMock
+			.mockReturnValueOnce(chain([]))
+			.mockReturnValueOnce(chain([]))
+			.mockReturnValueOnce(chain([]))
+			.mockReturnValueOnce(chain([makePair(THEM, 'pending')]))
+			.mockReturnValue(chain([]));
+		insertMock.mockReturnValue(chain([]));
+		await blockIn(tx as never, ME, THEM);
+		expect(insertMock.mock.results[0].value.onConflictDoNothing).toHaveBeenCalled();
+		const [write] = blockWrites();
+		expect(write.value.set).toHaveBeenCalledWith(blockedSet);
+	});
+
+	test('a block they raced in first is kept as theirs', async () => {
+		selectMock
+			.mockReturnValueOnce(chain([]))
+			.mockReturnValueOnce(chain([]))
+			.mockReturnValueOnce(chain([]))
+			.mockReturnValueOnce(chain([makePair(THEM, 'blocked')]))
+			.mockReturnValue(chain([]));
+		insertMock.mockReturnValue(chain([]));
+		await blockIn(tx as never, ME, THEM);
+		expect(blockWrites()).toHaveLength(0);
 	});
 });
 

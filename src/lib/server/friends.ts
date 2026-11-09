@@ -75,13 +75,17 @@ export async function sendRequest(
 			return 'accepted';
 		}
 		if (relation !== 'none') return 'refused';
-		// The pair index refuses a reverse request that raced this one.
+		// The pair index refuses a row that raced this one in; when that row is
+		// their request to me (crossing requests), accept it as above.
 		const inserted = await tx
 			.insert(friendships)
 			.values({ requesterId: me, addresseeId: them, status: 'pending' })
 			.onConflictDoNothing()
 			.returning({ requesterId: friendships.requesterId });
-		return inserted.length > 0 ? 'sent' : 'refused';
+		if (inserted.length > 0) return 'sent';
+		if (relationFrom(await pairRow(tx, me, them), me) !== 'received') return 'refused';
+		await acceptIn(tx, me, them);
+		return 'accepted';
 	});
 }
 
@@ -169,7 +173,20 @@ export async function blockIn(tx: Tx, me: string, them: string): Promise<void> {
 	const row = await pairRow(tx, me, them);
 	if (row?.status === 'blocked') return;
 	await unfriendIn(tx, me, them);
-	await tx.insert(friendships).values({ requesterId: me, addresseeId: them, status: 'blocked' });
+	const blocked = { requesterId: me, addresseeId: them, status: 'blocked' } as const;
+	const inserted = await tx
+		.insert(friendships)
+		.values(blocked)
+		.onConflictDoNothing()
+		.returning({ requesterId: friendships.requesterId });
+	if (inserted.length > 0) return;
+	// A request or accept raced in after the unfriend: the block takes the pair's
+	// one row, and the forks are privatised again for any friendship it briefly made.
+	// A block they raced in first stays theirs.
+	const raced = await pairRow(tx, me, them);
+	if (!raced || raced.status === 'blocked') return;
+	await tx.update(friendships).set(blocked).where(pairOf(me, them));
+	await privatiseForksIn(tx, me, them);
 }
 
 export function block(me: string, them: string): Promise<void> {
