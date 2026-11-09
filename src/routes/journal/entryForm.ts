@@ -1,6 +1,7 @@
-import { fail } from '@sveltejs/kit';
-import { text } from '#lib/helpers.js';
-import type { LogAudience } from '#lib/server/db/schema.js';
+import { failure, type FailureCode } from '#lib/server/actions.js';
+import { oneOf, text } from '#lib/helpers.js';
+import { LOG_AUDIENCES, type LogAudience } from '#lib/server/db/schema.js';
+import type { recipeChoices } from '#lib/server/journal.js';
 
 /** The form's fields as typed, for prefill and for handing back after a refusal. */
 export type EntryValues = {
@@ -15,14 +16,8 @@ export type EntryValues = {
 	link: string;
 };
 
-/** One recipe the form offers. */
-export type RecipeChoice = {
-	slug: string;
-	title: string;
-	visibility: 'private' | 'friends' | 'public';
-	/** Shown beside the title; picking a recipe links its latest version. */
-	latestVersion: number | null;
-};
+/** One recipe the form offers; its latestVersion is shown beside the title, and picking it links that version. */
+export type RecipeChoice = Awaited<ReturnType<typeof recipeChoices>>[number];
 
 export function valuesOf(formData: FormData): EntryValues {
 	return {
@@ -31,7 +26,7 @@ export function valuesOf(formData: FormData): EntryValues {
 		servings: text(formData, 'servings'),
 		caption: text(formData, 'caption'),
 		note: text(formData, 'note'),
-		audience: text(formData, 'audience') === 'friends' ? 'friends' : 'private',
+		audience: oneOf(LOG_AUDIENCES, text(formData, 'audience')) ?? 'private',
 		recipe: text(formData, 'recipe'),
 		version: text(formData, 'version'),
 		link: text(formData, 'link')
@@ -39,6 +34,6 @@ export function valuesOf(formData: FormData): EntryValues {
 }
 
 /** A refused save in the API's shape, with everything typed handed back. */
-export function entryFailure(status: number, code: string, error: string, formData: FormData) {
-	return fail(status, { error, code, values: valuesOf(formData) });
+export function entryFailure(status: number, code: FailureCode, error: string, formData: FormData) {
+	return failure(status, code, error, { values: valuesOf(formData) });
 }

@@ -33,7 +33,6 @@ export function plural(n: number, word: string): string {
 	return `${n} ${word}${n === 1 ? '' : 's'}`;
 }
 
-
 /** A form field as a string: missing or non-string (a File) reads as empty. */
 export function text(formData: FormData, key: string): string {
 	const value = formData.get(key);
@@ -43,4 +42,14 @@ export function text(formData: FormData, key: string): string {
 /** Eight URL-safe random characters, appended to slugs so titles need not be unique. */
 export function randomSuffix(): string {
 	return crypto.randomUUID().slice(0, 8);
+}
+
+/** `value` when it is one of `list`, else undefined, typed as the list's member. */
+export function oneOf<T extends string>(list: readonly T[], value: string | null): T | undefined {
+	return list.find((item) => item === value);
+}
+
+/** Digits only, as a number; anything else (signs, decimals, "2abc", which parseInt reads as 2) is null. */
+export function wholeNumber(value: string): number | null {
+	return /^\d+$/.test(value) ? Number(value) : null;
 }

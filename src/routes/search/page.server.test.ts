@@ -1,20 +1,11 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { chain } from '#lib/testing/drizzle.js';
-import { loadPage } from '#lib/testing/actions.js';
+import { loadEvent, loadPage } from '#lib/testing/actions.js';
 
-const { selectMock, selectDistinctMock, findManyMock } = vi.hoisted(() => ({
-	selectMock: vi.fn(),
-	selectDistinctMock: vi.fn(),
-	findManyMock: vi.fn()
-}));
-
-vi.mock('#lib/server/db/index.js', () => ({
-	db: {
-		select: selectMock,
-		selectDistinct: selectDistinctMock,
-		query: { recipes: { findMany: findManyMock } }
-	}
-}));
+const db = await vi.hoisted(async () => (await import('#lib/testing/drizzle.js')).mockDb());
+vi.mock('#lib/server/db/index.js', () => ({ db }));
+const { select: selectMock, selectDistinct: selectDistinctMock } = db;
+const findManyMock = db.query.recipes.findMany;
 
 import { load } from './+page.server';
 import { CARD_WITH } from '#lib/server/recipeCounts.js';
@@ -23,12 +14,8 @@ import { recipes } from '#lib/server/db/schema.js';
 import { visibleTo } from '#lib/server/visibility.js';
 import type { PageData } from './$types';
 
-function makeEvent(query = '', user: { id: string } | null = null) {
-	return {
-		url: new URL(`http://localhost/search?q=${encodeURIComponent(query)}`),
-		locals: { user }
-	} as unknown as Parameters<typeof load>[0];
-}
+const makeEvent = (query = '', user: { id: string } | null = null) =>
+	loadEvent({ path: `/search?q=${encodeURIComponent(query)}`, user });
 
 const loadResult = (event: Parameters<typeof load>[0]) => loadPage<PageData>(load, event);
 
@@ -48,8 +35,6 @@ describe('search load', () => {
 	test('returns recipes carrying the author relation', async () => {
 		selectDistinctMock.mockReturnValue(chain([])); // tags for the filter UI
 		selectMock
-			.mockReturnValueOnce(chain([{ id: 2 }, { id: 1 }])) // pass 1: ranked FTS hits
-			.mockReturnValueOnce(chain([])) // pass 2: no ingredient-only matches
 			.mockReturnValueOnce(chain([])) // attachRecipeCounts: version counts
 			.mockReturnValueOnce(chain([])); // attachRecipeCounts: fork counts
 		findManyMock.mockResolvedValue([

@@ -1,19 +1,20 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { chain } from '#lib/testing/drizzle.js';
-import { and, inArray, type SQL } from 'drizzle-orm';
+import { and, desc, eq, inArray, type SQL } from 'drizzle-orm';
 import { PgDialect } from 'drizzle-orm/pg-core';
 import { recipes, recipeVersions } from '#lib/server/db/schema.js';
 import { visibleTo } from './visibility';
 
-const { selectMock } = vi.hoisted(() => ({
-	selectMock: vi.fn()
+const { selectMock, findManyMock } = vi.hoisted(() => ({
+	selectMock: vi.fn(),
+	findManyMock: vi.fn()
 }));
 
 vi.mock('#lib/server/db/index.js', () => ({
-	db: { select: selectMock }
+	db: { select: selectMock, query: { recipes: { findMany: findManyMock } } }
 }));
 
-import { attachRecipeCounts } from './recipeCounts';
+import { attachRecipeCounts, cardList, CARD_WITH } from './recipeCounts';
 
 describe('attachRecipeCounts', () => {
 	beforeEach(() => {
@@ -82,5 +83,51 @@ describe('attachRecipeCounts', () => {
 
 		expect(result).toEqual([]);
 		expect(selectMock).not.toHaveBeenCalled();
+	});
+});
+
+describe('cardList', () => {
+	const viewer = { id: 'viewer-42' };
+	const WHERE = eq(recipes.visibility, 'public');
+	const ORDER = [desc(recipes.updatedAt)];
+
+	beforeEach(() => {
+		vi.clearAllMocks();
+		findManyMock.mockResolvedValue([{ id: 1 }, { id: 2 }, { id: 3 }]);
+		selectMock.mockReturnValue(chain([]));
+	});
+
+	test('reads the cards for the condition in its order, the card relations and the limit', async () => {
+		await cardList(WHERE, ORDER, viewer, { limit: 5 });
+		expect(findManyMock).toHaveBeenCalledWith({
+			where: WHERE,
+			with: CARD_WITH,
+			orderBy: ORDER,
+			limit: 5
+		});
+	});
+
+	test("keeps the query's order without a tag rank", async () => {
+		const rows = await cardList(WHERE, ORDER, viewer);
+		expect(rows.map((r) => r.id)).toEqual([1, 2, 3]);
+	});
+
+	test('puts recipes matching more selected tags first', async () => {
+		const rows = await cardList(WHERE, ORDER, viewer, {
+			tagRank: new Map([
+				[3, 2],
+				[2, 1]
+			])
+		});
+		expect(rows.map((r) => r.id)).toEqual([3, 2, 1]);
+	});
+
+	test("counts each card's forks for the viewer", async () => {
+		const forkChain = chain([]);
+		selectMock.mockReturnValueOnce(chain([])).mockReturnValueOnce(forkChain);
+		await cardList(WHERE, ORDER, viewer);
+		expect(forkChain.where.mock.calls[0][0]).toEqual(
+			and(inArray(recipes.parentId, [1, 2, 3]), visibleTo(viewer))
+		);
 	});
 });

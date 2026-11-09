@@ -215,11 +215,10 @@ describe('feedFor', () => {
 	test("reads only friends' Friends-level entries, never their private ones", async () => {
 		const entries = chain([]);
 		selectMock
-			.mockReturnValueOnce(chain([makePair(THEM, 'accepted')]))
 			.mockReturnValueOnce(chain([]))
 			.mockReturnValueOnce(entries)
 			.mockReturnValueOnce(chain([]));
-		expect(await feedFor({ id: ME })).toEqual([]);
+		expect(await feedFor({ id: ME }, [THEM])).toEqual([]);
 		const where = entries.where.mock.calls[0][0] as SQL;
 		expect(new PgDialect().sqlToQuery(where)).toMatchObject({
 			sql: '("log_entries"."user_id" in ($1) and "log_entries"."audience" = $2)',
@@ -228,10 +227,8 @@ describe('feedFor', () => {
 	});
 
 	test('with every friend muted, the feed is empty and reads nothing more', async () => {
-		selectMock
-			.mockReturnValueOnce(chain([makePair(THEM, 'accepted')]))
-			.mockReturnValueOnce(chain([{ id: THEM }]));
-		expect(await feedFor({ id: ME })).toEqual([]);
-		expect(selectMock).toHaveBeenCalledTimes(2);
+		selectMock.mockReturnValueOnce(chain([{ id: THEM }]));
+		expect(await feedFor({ id: ME }, [THEM])).toEqual([]);
+		expect(selectMock).toHaveBeenCalledTimes(1);
 	});
 });

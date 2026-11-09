@@ -1,5 +1,6 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { chain } from '#lib/testing/drizzle.js';
+import { loadEvent } from '#lib/testing/actions.js';
 import { load } from './+page.server';
 import { profiles, recipes } from '#lib/server/db/schema.js';
 import { and, eq } from 'drizzle-orm';
@@ -48,11 +49,11 @@ function makeProfile(overrides = {}) {
 }
 
 function makeLoadEvent(username: string, viewerId: string | null = null, search = '') {
-	return {
+	return loadEvent({
 		params: { username },
-		url: new URL(`http://localhost/users/${username}${search}`),
-		locals: { user: viewerId ? { id: viewerId } : null }
-	} as Parameters<typeof load>[0];
+		path: `/users/${username}${search}`,
+		user: viewerId ? { id: viewerId } : null
+	});
 }
 
 // ─── Tests ────────────────────────────────────────────────────────────────────

@@ -14,7 +14,6 @@ export const AUDIENCE_SENTENCE: Record<LogAudience, string> = {
 	friends: 'Your friends see it in Friends.'
 };
 
-/** Under the choices when the linked recipe is Only me and Friends is chosen. */
 /** The longest page link an entry may carry, as a URL's practical limit. */
 export const MAX_LINK = 2048;
 
@@ -24,6 +23,7 @@ export const MAX_LINK = 2048;
  */
 export const KEEP_SOURCE = ':keep';
 
+/** Under the choices when the linked recipe is Only me and Friends is chosen. */
 export const PRIVATE_RECIPE_HINT = 'Friends see the dish and your photo, not the recipe.';
 
 /** Under Block, wherever it is offered. */
@@ -32,7 +32,7 @@ export const BLOCK_SENTENCE =
 
 // cooked_on is a calendar day with no time zone; read and printed as UTC so
 // no reader's offset moves it to the day before.
-const day = (iso: string) => new Date(`${iso}T00:00:00Z`);
+export const day = (iso: string) => new Date(`${iso}T00:00:00Z`);
 
 /** "Sun 8 Nov", with the year only when it is not this year's. */
 export function dayLabel(iso: string, now: Date = new Date()): string {

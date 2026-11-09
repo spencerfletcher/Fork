@@ -41,6 +41,26 @@ export async function tagMatchCounts(
 	return counts;
 }
 
+/**
+ * The tags `slugs` names that are among `allTags` (the chips), in the URL's
+ * order, and the recipes carrying all of them (only among `withinIds` when
+ * given) with their match counts. A slug no chip carries filters nothing:
+ * `matches` is null when no known tag is selected.
+ */
+export async function tagSelection(allTags: TagChip[], slugs: string[], withinIds?: number[]) {
+	const selected = allTags.filter((t) => slugs.includes(t.slug));
+	const selectedTags = slugs.filter((slug) => selected.some((t) => t.slug === slug));
+	if (selected.length === 0) return { selectedTags, matches: null };
+	const matches =
+		withinIds?.length === 0
+			? new Map<number, number>()
+			: await tagMatchCounts(
+					selected.map((t) => t.id),
+					withinIds
+				);
+	return { selectedTags, matches };
+}
+
 /** Sort comparator: recipes matching more selected tags first. */
 export function byTagMatches(counts: Map<number, number>) {
 	return (a: { id: number }, b: { id: number }) =>

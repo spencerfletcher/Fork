@@ -5,25 +5,25 @@ import { logEntries } from '#lib/server/db/schema.js';
 import { ownEntry, recipeChoices } from '#lib/server/journal.js';
 import { KEEP_SOURCE } from '#lib/journal.js';
 import { imagePathOf, removeRecipeImage } from '#lib/server/images.js';
-import { loginHref } from '#lib/auth/loginHref.js';
+import { requireUser, SESSION_ENDED } from '#lib/server/actions.js';
+import { wholeNumber } from '#lib/helpers.js';
 import { entryFailure, type EntryValues, type RecipeChoice } from '../../entryForm.js';
 import { prepareEntry } from '../../save.server.js';
 import type { Actions, PageServerLoad } from './$types';
 
 const NOT_FOUND = 'Entry not found';
 
-function idOf(param: string): number {
-	if (!/^\d+$/.test(param)) throw error(404, NOT_FOUND);
-	return Number(param);
+/** The viewer's own entry at the `id` param, with its source; a 404 for a bad id or anyone else's. */
+async function entryAt(user: { id: string }, param: string) {
+	const id = wholeNumber(param);
+	const entry = id === null ? null : await ownEntry(user, id);
+	if (!entry) throw error(404, NOT_FOUND);
+	return entry;
 }
 
 export const load: PageServerLoad = async ({ params, url, locals: { user } }) => {
-	if (!user) throw redirect(303, loginHref(url.pathname + url.search));
-	const [entry, choices] = await Promise.all([
-		ownEntry(user, idOf(params.id)),
-		recipeChoices(user)
-	]);
-	if (!entry) throw error(404, NOT_FOUND);
+	requireUser(url, user);
+	const [entry, choices] = await Promise.all([entryAt(user, params.id), recipeChoices(user)]);
 
 	const { source } = entry;
 	let offered: RecipeChoice[] = choices;
@@ -68,28 +68,11 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 	};
 };
 
-/** The viewer's own stored row, or a 404 for anyone else's id. */
-async function storedRow(userId: string, id: number) {
-	const [row] = await db
-		.select()
-		.from(logEntries)
-		.where(and(eq(logEntries.id, id), eq(logEntries.userId, userId)))
-		.limit(1);
-	if (!row) throw error(404, NOT_FOUND);
-	return row;
-}
-
 export const actions: Actions = {
 	save: async ({ params, request, locals: { user, supabase } }) => {
 		const formData = await request.formData();
-		if (!user)
-			return entryFailure(
-				401,
-				'unauthenticated',
-				'Your session ended. Log in in another tab, then try again.',
-				formData
-			);
-		const stored = await storedRow(user.id, idOf(params.id));
+		if (!user) return entryFailure(401, 'unauthenticated', SESSION_ENDED('try again'), formData);
+		const stored = await entryAt(user, params.id);
 
 		const prepared = await prepareEntry(formData, user, supabase, stored);
 		if (!prepared.ok) return prepared.failure;
@@ -128,7 +111,7 @@ export const actions: Actions = {
 
 	deleteEntry: async ({ params, locals: { user, supabase } }) => {
 		if (!user) throw error(401, 'Login required');
-		const stored = await storedRow(user.id, idOf(params.id));
+		const stored = await entryAt(user, params.id);
 		await db
 			.delete(logEntries)
 			.where(and(eq(logEntries.id, stored.id), eq(logEntries.userId, user.id)));

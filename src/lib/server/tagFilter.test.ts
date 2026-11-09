@@ -2,7 +2,7 @@ import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { chain } from '#lib/testing/drizzle.js';
 import { eq } from 'drizzle-orm';
 import { recipes } from './db/schema';
-import { byTagMatches, tagMatchCounts, visibleTags } from './tagFilter';
+import { byTagMatches, tagMatchCounts, tagSelection, visibleTags } from './tagFilter';
 
 const { selectMock, selectDistinctMock } = vi.hoisted(() => ({
 	selectMock: vi.fn(),
@@ -36,6 +36,32 @@ describe('tagMatchCounts', () => {
 	test('leaves out recipes that match nothing', async () => {
 		selectMock.mockReturnValue(chain([]));
 		expect((await tagMatchCounts([1])).size).toBe(0);
+	});
+});
+
+describe('tagSelection', () => {
+	const CHIPS = [
+		{ id: 1, name: 'Baking', slug: 'baking' },
+		{ id: 2, name: 'Quick', slug: 'quick' }
+	];
+
+	test('no known slug selects nothing, filters nothing and asks nothing', async () => {
+		expect(await tagSelection(CHIPS, ['unknown'])).toEqual({ selectedTags: [], matches: null });
+		expect(selectMock).not.toHaveBeenCalled();
+	});
+
+	test("keeps the URL's order of the known slugs and matches every selected tag", async () => {
+		const c = chain([{ recipeId: 7 }, { recipeId: 7 }]);
+		selectMock.mockReturnValue(c);
+		const { selectedTags, matches } = await tagSelection(CHIPS, ['quick', 'nope', 'baking']);
+		expect(selectedTags).toEqual(['quick', 'baking']);
+		expect([...(matches?.keys() ?? [])]).toEqual([7]);
+	});
+
+	test('within no recipes there are no matches, and nothing is asked', async () => {
+		const { matches } = await tagSelection(CHIPS, ['baking'], []);
+		expect(matches?.size).toBe(0);
+		expect(selectMock).not.toHaveBeenCalled();
 	});
 });
 

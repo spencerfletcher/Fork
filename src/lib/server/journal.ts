@@ -1,7 +1,6 @@
-import { and, asc, desc, eq, inArray, or, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, sql, type SQL } from 'drizzle-orm';
 import { db } from './db/index.js';
 import {
-	favorites,
 	logEntries,
 	recipes,
 	recipeVersions,
@@ -10,12 +9,10 @@ import {
 	type LogEntry,
 	type Recipe
 } from './db/schema.js';
-import { canView, canViewRow, friendIdsOf, visibleTo } from './visibility.js';
+import { canView, friendIdsOf, inLibraryOf, viewableRecipe, type Viewer } from './visibility.js';
 import { numberMessages, type Result } from '#lib/recipes/validation.js';
-import { text } from '#lib/helpers.js';
-import { MAX_LINK } from '#lib/journal.js';
-
-type Viewer = { id: string };
+import { oneOf, text, wholeNumber } from '#lib/helpers.js';
+import { day, MAX_LINK } from '#lib/journal.js';
 
 export const MAX_DISH = 200;
 export const MAX_ENTRY_TEXT = 2000;
@@ -51,7 +48,7 @@ const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/;
 
 function isRealDay(value: string): boolean {
 	if (!ISO_DAY.test(value)) return false;
-	const date = new Date(`${value}T00:00:00Z`);
+	const date = day(value);
 	return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
 }
 
@@ -69,8 +66,8 @@ export function parseEntryForm(formData: FormData): Result<EntryFields> {
 	let servings: number | null = null;
 	if (servingsText) {
 		const messages = numberMessages('servings');
-		if (!/^\d+$/.test(servingsText)) return { ok: false, error: messages.whole };
-		servings = Number(servingsText);
+		servings = wholeNumber(servingsText);
+		if (servings === null) return { ok: false, error: messages.whole };
 		if (servings < 1) return { ok: false, error: messages.belowMin };
 		if (servings > 10_000) return { ok: false, error: messages.tooLarge };
 	}
@@ -81,11 +78,11 @@ export function parseEntryForm(formData: FormData): Result<EntryFields> {
 	if (note.length > MAX_ENTRY_TEXT) return { ok: false, error: ENTRY_MESSAGES.noteTooLong };
 
 	const audienceText = text(formData, 'audience');
-	const audience = LOG_AUDIENCES.find((a) => a === audienceText) ?? 'private';
+	const audience = oneOf(LOG_AUDIENCES, audienceText) ?? 'private';
 
 	const recipe = text(formData, 'recipe').trim() || null;
 	const versionText = text(formData, 'version').trim();
-	const version = recipe && /^\d+$/.test(versionText) ? Number(versionText) : null;
+	const version = recipe ? wholeNumber(versionText) : null;
 
 	const link = text(formData, 'link').trim();
 	if (link.length > MAX_LINK) return { ok: false, error: ENTRY_MESSAGES.linkTooLong };
@@ -131,15 +128,14 @@ export type LinkedRecipe = {
  * version number means the latest; a number the recipe does not have is refused.
  */
 export async function resolveRecipe(
-	viewer: Viewer,
+	viewer: NonNullable<Viewer>,
 	slug: string,
 	versionNumber: number | null
 ): Promise<LinkedRecipe | null> {
-	const recipe = await db.query.recipes.findFirst({
-		where: eq(recipes.slug, slug),
-		with: { versions: { orderBy: [desc(recipeVersions.versionNumber)] } }
+	const recipe = await viewableRecipe(slug, viewer, {
+		versions: { orderBy: [desc(recipeVersions.versionNumber)] }
 	});
-	if (!recipe || !(await canViewRow(recipe, viewer))) return null;
+	if (!recipe) return null;
 	const version =
 		versionNumber === null
 			? recipe.versions[0]
@@ -180,7 +176,11 @@ export type SourceRow = {
 };
 
 /** The source an entry shows `viewer`, by the recipes' one access rule. */
-export function sourceOf(row: SourceRow, viewer: Viewer, friendIds: string[]): EntrySource {
+export function sourceOf(
+	row: SourceRow,
+	viewer: NonNullable<Viewer>,
+	friendIds: string[]
+): EntrySource {
 	if (row.recipeId === null) {
 		if (row.sourceUrl === null) return { kind: 'improvised' };
 		const host = new URL(row.sourceUrl).hostname.replace(/^www\./, '');
@@ -201,7 +201,7 @@ export function sourceOf(row: SourceRow, viewer: Viewer, friendIds: string[]): E
 /** A Friends entry is seen by the owner's accepted friends; a private one by the owner alone. */
 export function canSeeEntry(
 	entry: Pick<LogEntry, 'userId' | 'audience'>,
-	viewer: Viewer | null,
+	viewer: Viewer,
 	friendIds: string[]
 ): boolean {
 	if (!viewer) return false;
@@ -220,15 +220,15 @@ export const sourceColumns = {
 	versionNumber: recipeVersions.versionNumber
 };
 
-/** Everything in someone's own Journal, newest cooked first, each with its source. */
-export async function journalOf(viewer: Viewer) {
+/** The viewer's own entries matching `where`, newest cooked first, each with its source. */
+async function ownEntries(viewer: NonNullable<Viewer>, where?: SQL) {
 	const [rows, friendIds] = await Promise.all([
 		db
 			.select({ entry: logEntries, ...sourceColumns })
 			.from(logEntries)
 			.leftJoin(recipes, eq(recipes.id, logEntries.recipeId))
 			.leftJoin(recipeVersions, eq(recipeVersions.id, logEntries.versionId))
-			.where(eq(logEntries.userId, viewer.id))
+			.where(and(eq(logEntries.userId, viewer.id), where))
 			.orderBy(desc(logEntries.cookedOn), desc(logEntries.createdAt)),
 		friendIdsOf(viewer.id)
 	]);
@@ -242,28 +242,15 @@ export async function journalOf(viewer: Viewer) {
 	}));
 }
 
+/** Everything in someone's own Journal, newest cooked first, each with its source. */
+export function journalOf(viewer: NonNullable<Viewer>) {
+	return ownEntries(viewer);
+}
+
 /** One of the viewer's own entries with its source, or null when it is not theirs. */
-export async function ownEntry(viewer: Viewer, id: number) {
-	const [rows, friendIds] = await Promise.all([
-		db
-			.select({ entry: logEntries, ...sourceColumns })
-			.from(logEntries)
-			.leftJoin(recipes, eq(recipes.id, logEntries.recipeId))
-			.leftJoin(recipeVersions, eq(recipeVersions.id, logEntries.versionId))
-			.where(and(eq(logEntries.id, id), eq(logEntries.userId, viewer.id)))
-			.limit(1),
-		friendIdsOf(viewer.id)
-	]);
-	const row = rows[0];
-	if (!row) return null;
-	return {
-		...row.entry,
-		source: sourceOf(
-			{ ...row, recipeId: row.entry.recipeId, sourceUrl: row.entry.sourceUrl },
-			viewer,
-			friendIds
-		)
-	};
+export async function ownEntry(viewer: NonNullable<Viewer>, id: number) {
+	const [entry] = await ownEntries(viewer, eq(logEntries.id, id));
+	return entry ?? null;
 }
 
 /** The viewer's most recent entry for a recipe, for the recipe page's personal line. */
@@ -294,22 +281,19 @@ export async function defaultAudience(userId: string): Promise<LogAudience> {
 }
 
 /** The recipes the form offers: the viewer's own and their saved ones, by title, each with its latest version. */
-export async function recipeChoices(viewer: Viewer) {
-	const saved = db
-		.select({ id: favorites.recipeId })
-		.from(favorites)
-		.where(eq(favorites.userId, viewer.id));
+export async function recipeChoices(viewer: NonNullable<Viewer>) {
 	return db
 		.select({
 			slug: recipes.slug,
 			title: recipes.title,
 			visibility: recipes.visibility,
-			latestVersion:
-				sql<number>`(SELECT max(${recipeVersions.versionNumber}) FROM ${recipeVersions} WHERE ${recipeVersions.recipeId} = ${recipes.id})`.mapWith(
-					Number
-				)
+			latestVersion: sql<
+				number | null
+			>`(SELECT max(${recipeVersions.versionNumber}) FROM ${recipeVersions} WHERE ${recipeVersions.recipeId} = ${recipes.id})`.mapWith(
+				(max: string | number | null) => (max === null ? null : Number(max))
+			)
 		})
 		.from(recipes)
-		.where(and(or(eq(recipes.authorId, viewer.id), inArray(recipes.id, saved)), visibleTo(viewer)))
+		.where(inLibraryOf(viewer))
 		.orderBy(asc(recipes.title));
 }

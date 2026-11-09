@@ -1,55 +1,44 @@
 import { describe, test, expect, beforeAll } from 'vitest';
 import { and, eq, inArray, or } from 'drizzle-orm';
 
-try {
-	process.loadEnvFile('.env.local');
-} catch {
-	// CI has no .env.local; it sets the variables itself.
-}
-const local = process.env.DATABASE_URL?.includes('127.0.0.1') ?? false;
+import { inRollback, localDb } from '#lib/testing/db.js';
+import type { Visibility } from '#lib/recipes/validation.js';
 
 // Runs only against the local Supabase stack, each test inside a transaction
 // that is always rolled back, so it leaves no row behind.
-describe.skipIf(!local)('unfriend and block, against the real database', () => {
-	let db: typeof import('#lib/server/db/index.js').db;
+describe.skipIf(!localDb)('unfriend and block, against the real database', () => {
 	let schema: typeof import('#lib/server/db/schema.js');
 	let friends: typeof import('./friends.js');
 
 	beforeAll(async () => {
-		({ db } = await import('#lib/server/db/index.js'));
 		schema = await import('#lib/server/db/schema.js');
 		friends = await import('./friends.js');
 	});
 
 	type Tx = import('./tags.js').Tx;
-	const ROLLBACK = 'rollback';
 
 	/** Runs `body` on a fresh pair of friends, A and B, then rolls everything back. */
 	async function withFriends(body: (tx: Tx, a: string, b: string) => Promise<void>) {
 		const stamp = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 		const a = `test-a-${stamp}`;
 		const b = `test-b-${stamp}`;
-		const error = await db
-			.transaction(async (tx) => {
-				await tx.insert(schema.profiles).values([
-					{ id: a, username: `a-${stamp}` },
-					{ id: b, username: `b-${stamp}` }
-				]);
-				await tx
-					.insert(schema.friendships)
-					.values({ requesterId: a, addresseeId: b, status: 'accepted' });
-				await body(tx, a, b);
-				throw new Error(ROLLBACK);
-			})
-			.catch((e: unknown) => e);
-		if (!(error instanceof Error) || error.message !== ROLLBACK) throw error;
+		await inRollback(async (tx) => {
+			await tx.insert(schema.profiles).values([
+				{ id: a, username: `a-${stamp}` },
+				{ id: b, username: `b-${stamp}` }
+			]);
+			await tx
+				.insert(schema.friendships)
+				.values({ requesterId: a, addresseeId: b, status: 'accepted' });
+			await body(tx, a, b);
+		});
 	}
 
 	let n = 0;
 	async function makeRecipe(
 		tx: Tx,
 		authorId: string,
-		visibility: 'private' | 'friends' | 'public',
+		visibility: Visibility,
 		parentId: number | null = null
 	) {
 		const [row] = await tx
@@ -79,6 +68,29 @@ describe.skipIf(!local)('unfriend and block, against the real database', () => {
 				)
 			);
 	}
+
+	test("visibleTo shows each friend the other's Friends recipes, whichever asked, and a stranger neither", async () => {
+		const { visibleTo } = await import('./visibility.js');
+		await withFriends(async (tx, a, b) => {
+			const aFriends = await makeRecipe(tx, a, 'friends');
+			const bFriends = await makeRecipe(tx, b, 'friends');
+			const ids = [aFriends.id, bFriends.id];
+			// Through db.query, whose where re-aliases columns: the friendships
+			// columns must stay on the subquery's own alias.
+			const seenBy = async (id: string) =>
+				(
+					await tx.query.recipes.findMany({
+						where: and(inArray(schema.recipes.id, ids), visibleTo({ id })),
+						columns: { id: true }
+					})
+				)
+					.map((r) => r.id)
+					.sort((x, y) => x - y);
+			expect(await seenBy(a)).toEqual(ids);
+			expect(await seenBy(b)).toEqual(ids);
+			expect(await seenBy(`stranger-${a}`)).toEqual([]);
+		});
+	});
 
 	test("unfriend privatises each side's forks of the other's Friends recipes, nothing else", async () => {
 		await withFriends(async (tx, a, b) => {

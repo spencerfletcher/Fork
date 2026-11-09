@@ -1,5 +1,5 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
-import { invokeAction, formEvent } from '#lib/testing/actions.js';
+import { invokeAction, formEvent, loadEvent } from '#lib/testing/actions.js';
 import { MAX_REPORT, OWN_LIKE } from '#lib/server/friends.js';
 import { actions, load } from './+page.server';
 
@@ -36,7 +36,10 @@ vi.mock('#lib/server/friends.js', async (importOriginal) => ({
 	feedFor: m.feedFor,
 	requestsFor: m.requestsFor
 }));
-vi.mock('#lib/server/visibility.js', () => ({ friendIdsOf: m.friendIdsOf }));
+vi.mock('#lib/server/visibility.js', async (importOriginal) => ({
+	...(await importOriginal<typeof import('#lib/server/visibility.js')>()),
+	friendIdsOf: m.friendIdsOf
+}));
 vi.mock('#lib/server/profiles.js', () => ({ ensureProfile: vi.fn().mockResolvedValue(undefined) }));
 
 const ME = { id: 'me' };
@@ -55,21 +58,22 @@ beforeEach(() => {
 
 describe('friends load', () => {
 	test('signed out goes to log in', async () => {
-		await expect(
-			load({ url: new URL('http://l/friends'), locals: { user: null } } as never)
-		).rejects.toMatchObject({ status: 303 });
+		await expect(load(loadEvent({ path: '/friends' }))).rejects.toMatchObject({ status: 303 });
 	});
 
 	test('the feed, the waiting requests and how many friends', async () => {
 		m.feedFor.mockResolvedValue([]);
 		m.requestsFor.mockResolvedValue([{ id: 'p', username: 'priyabakes', sentAt: new Date() }]);
 		m.friendIdsOf.mockResolvedValue(['a', 'b']);
-		const data = await load({ url: new URL('http://l/friends'), locals: { user: ME } } as never);
+		const data = await load(loadEvent({ path: '/friends', user: ME }));
 		expect(data).toMatchObject({
 			feed: [],
 			friendCount: 2,
 			requests: [{ username: 'priyabakes' }]
 		});
+		// One friends lookup: the feed is handed the ids the count uses.
+		expect(m.friendIdsOf).toHaveBeenCalledTimes(1);
+		expect(m.feedFor).toHaveBeenCalledWith(ME, ['a', 'b']);
 	});
 });
 

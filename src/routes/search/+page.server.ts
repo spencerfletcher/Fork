@@ -1,8 +1,7 @@
-import { db } from '#lib/server/db/index.js';
 import { recipes } from '#lib/server/db/schema.js';
 import { and, inArray } from 'drizzle-orm';
-import { attachRecipeCounts, CARD_WITH } from '#lib/server/recipeCounts.js';
-import { byTagMatches, tagMatchCounts, visibleTags } from '#lib/server/tagFilter.js';
+import { cardList } from '#lib/server/recipeCounts.js';
+import { tagSelection, visibleTags } from '#lib/server/tagFilter.js';
 import { clampDescription } from '#lib/seo.js';
 import { plural } from '#lib/helpers.js';
 import { visibleTo } from '#lib/server/visibility.js';
@@ -25,34 +24,24 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 
 	const allTags = await visibleTags(visibilityCondition);
 
-	// Tag filter: AND over the selected tags (tagMatchCounts). A
-	// slug no chip carries filters nothing, and the page hears only of the known ones.
-	const selected = allTags.filter((t) => tagSlugs.includes(t.slug));
-	const selectedTags = tagSlugs.filter((slug) => selected.some((t) => t.slug === slug));
-	let matchCounts = new Map<number, number>();
-	if (selected.length > 0) {
-		matchCounts = await tagMatchCounts(selected.map((t) => t.id));
-		if (matchCounts.size === 0) {
-			return { recipes: [], allTags, searchQuery, selectedTags, meta: searchMeta(0) };
-		}
+	// Tag filter: AND over the selected tags; the page hears only of the known ones.
+	const { selectedTags, matches } = await tagSelection(allTags, tagSlugs);
+	if (matches?.size === 0) {
+		return { recipes: [], allTags, searchQuery, selectedTags, meta: searchMeta(0) };
 	}
 
 	const text = textSearch(searchQuery);
-
-	const rows = await db.query.recipes.findMany({
-		where: and(
+	// Rank by how many selected tags matched, unless searching: FTS rank wins then.
+	const withCounts = await cardList(
+		and(
 			visibilityCondition,
-			matchCounts.size > 0 ? inArray(recipes.id, [...matchCounts.keys()]) : undefined,
+			matches ? inArray(recipes.id, [...matches.keys()]) : undefined,
 			text.where
 		),
-		with: CARD_WITH,
-		orderBy: text.orderBy
-	});
-
-	// Rank by how many selected tags matched, unless searching: FTS rank wins then.
-	if (!searchQuery && matchCounts.size > 0) rows.sort(byTagMatches(matchCounts));
-
-	const withCounts = await attachRecipeCounts(rows, user);
+		text.orderBy,
+		user,
+		{ tagRank: searchQuery ? null : matches }
+	);
 
 	return {
 		recipes: withCounts,

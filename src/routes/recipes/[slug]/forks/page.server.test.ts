@@ -1,6 +1,7 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { chain } from '#lib/testing/drizzle.js';
-import { and, desc, eq } from 'drizzle-orm';
+import { loadEvent } from '#lib/testing/actions.js';
+import { and, desc, eq, inArray } from 'drizzle-orm';
 import { recipes, recipeVersions } from '#lib/server/db/schema.js';
 
 const { findFirstMock, findManyMock, selectMock } = vi.hoisted(() => ({
@@ -29,7 +30,7 @@ const RECIPE = {
 };
 
 const makeEvent = (user: { id: string; email: string } | null = null) =>
-	({ params: { slug: RECIPE.slug }, locals: { user } }) as unknown as Parameters<typeof load>[0];
+	loadEvent({ params: { slug: RECIPE.slug }, user });
 
 const run = (user: { id: string; email: string } | null = null) =>
 	Promise.resolve()
@@ -96,6 +97,17 @@ describe('/recipes/[slug]/forks load', () => {
 		expect(data).toMatchObject({
 			forks: [{ id: 7, slug: 'my-cookies', versionCount: 0, forkCount: 0 }]
 		});
+	});
+
+	test("a signed-in visitor's card fork counts include the forks visibleTo lets them see", async () => {
+		findManyMock.mockResolvedValue([{ id: 7, slug: 'my-cookies', versions: [] }]);
+		const forkCounts = chain([]);
+		// attachRecipeCounts: version counts first, then fork counts.
+		selectMock.mockReturnValueOnce(chain([])).mockReturnValueOnce(forkCounts);
+		await run(VISITOR);
+		expect(forkCounts.where).toHaveBeenCalledWith(
+			and(inArray(recipes.parentId, [7]), visibleTo(VISITOR))
+		);
 	});
 
 	test('loads each fork’s first commit note in the same query', async () => {

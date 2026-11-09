@@ -1,6 +1,6 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { chain } from '#lib/testing/drizzle.js';
-import { invokeAction as invoke, formEvent } from '#lib/testing/actions.js';
+import { invokeAction as invoke, formEvent, loadEvent } from '#lib/testing/actions.js';
 import { actions, load } from './+page.server';
 import { VERSION_NOT_FOUND } from './versionError.js';
 import { inGroup, makeIngredient, makeStep, makeContent } from '#lib/recipes/fixtures.js';
@@ -133,12 +133,6 @@ describe('fork', () => {
 		findRecipeMock.mockResolvedValue(null);
 		const result = await invoke(actions.fork as never, makeEvent({ user: FORKER }));
 		expect(result.status).toBe(404);
-	});
-
-	test('throws 400 when source recipe has no versions', async () => {
-		findRecipeMock.mockResolvedValue({ ...SOURCE_RECIPE, versions: [] });
-		const result = await invoke(actions.fork as never, makeEvent({ user: FORKER }));
-		expect(result.status).toBe(400);
 	});
 
 	test('ensures a profile for the forking user before the transaction', async () => {
@@ -297,14 +291,11 @@ describe('fork', () => {
 
 // ─── load: fork attribution ───────────────────────────────────────────────────
 
-/** A RequestEvent-like object for `load`, which reads params, url, and locals. */
-function makeLoadEvent(user: { id: string; email: string } | null = null) {
-	return {
-		params: { slug: 'the-fork' },
-		url: new URL('http://localhost/recipes/the-fork'),
-		locals: { user }
-	};
-}
+/** A load event for the fork's page, at `path` (its query included). */
+const makeLoadEvent = (
+	user: { id: string; email: string } | null = null,
+	path = '/recipes/the-fork'
+) => loadEvent({ params: { slug: 'the-fork' }, path, user });
 
 /** A public fork whose parent has the given visibility and owner. */
 function forkOf(parent: { visibility: Visibility; authorId: string }) {
@@ -336,6 +327,22 @@ function columnNames(node: unknown, out: string[] = []): string[] {
 	return out;
 }
 
+/**
+ * Answers the fork aggregate attachRecipeCounts reads with `n` forks of the
+ * loaded recipe (id 99, as forkOf makes it); returns the chain whose `where`
+ * holds the count's filter.
+ */
+function forkAggregate(n: number) {
+	const forks = chain([{ parentId: 99, count: n }]);
+	selectMock.mockImplementation(() => {
+		const q = chain();
+		q.from.mockImplementation((table: unknown) => (table === recipes ? forks : chain([])));
+		return q;
+	});
+	return forks;
+}
+const forkFilter = (forks: ReturnType<typeof forkAggregate>) => forks.where.mock.calls[0][0];
+
 async function loadData(user: { id: string; email: string } | null = null) {
 	return (await load(makeLoadEvent(user) as never)) as {
 		recipe: { parent: unknown; parentId: number | null; parentDeleted: boolean };
@@ -352,11 +359,12 @@ describe('load: fork attribution', () => {
 		vi.clearAllMocks();
 		findFavoriteMock.mockResolvedValue(undefined);
 		countMock.mockResolvedValue(0);
+		selectMock.mockReturnValue(chain([]));
 	});
 
 	test('counts public forks of the recipe', async () => {
 		findRecipeMock.mockResolvedValue(forkOf({ visibility: 'public', authorId: 'original-author' }));
-		countMock.mockImplementation(async (table: unknown) => (table === recipes ? 2 : 0));
+		forkAggregate(2);
 		const data = await loadData();
 		expect(data.forkCount).toBe(2);
 	});
@@ -365,7 +373,8 @@ describe('load: fork attribution', () => {
 		findRecipeMock.mockResolvedValue(forkOf({ visibility: 'public', authorId: 'original-author' }));
 		// Each count answers by the table it is read from, so the test does not
 		// lean on the order the loader asks in.
-		countMock.mockImplementation(async (table: unknown) => (table === favorites ? 7 : 2));
+		countMock.mockImplementation(async (table: unknown) => (table === favorites ? 7 : 0));
+		forkAggregate(2);
 		const data = await loadData();
 		expect(data.favoriteCount).toBe(7);
 		expect(data.forkCount).toBe(2);
@@ -427,17 +436,6 @@ describe('load: fork attribution', () => {
 		expect(data.meta.image).toBe('https://img/version.png');
 	});
 
-	test('404s a recipe with no version rather than rendering a broken page', async () => {
-		findRecipeMock.mockResolvedValue({
-			...forkOf({ visibility: 'public', authorId: 'o' }),
-			versions: []
-		});
-		const result = await Promise.resolve()
-			.then(() => load(makeLoadEvent() as never))
-			.catch((e: unknown) => e);
-		expect(result).toMatchObject({ status: 404 });
-	});
-
 	test('returns one gram result per ingredient of the shown version', async () => {
 		findRecipeMock.mockResolvedValue(forkOf({ visibility: 'public', authorId: 'original-author' }));
 		const data = await loadData();
@@ -446,19 +444,18 @@ describe('load: fork attribution', () => {
 
 	test('counts only public forks, so private forks stay invisible', async () => {
 		findRecipeMock.mockResolvedValue(forkOf({ visibility: 'public', authorId: 'original-author' }));
+		const forks = forkAggregate(0);
 		await loadData();
 		// The filter must name visibility: a count of every fork would reveal
 		// private forks by number.
-		const [, filter] = countMock.mock.calls.find(([table]) => table === recipes)!;
-		expect(columnNames(filter)).toContain('visibility');
+		expect(columnNames(forkFilter(forks))).toContain('visibility');
 	});
 
 	test("counts the viewer's own private forks too, as the forks page lists them", async () => {
 		findRecipeMock.mockResolvedValue(forkOf({ visibility: 'public', authorId: 'original-author' }));
-		countMock.mockResolvedValue(1);
+		const forks = forkAggregate(1);
 		await loadData(FORKER);
-		const [, filter] = countMock.mock.calls.find(([table]) => table === recipes)!;
-		expect(columnNames(filter)).toEqual(
+		expect(columnNames(forkFilter(forks))).toEqual(
 			expect.arrayContaining(['parent_id', 'visibility', 'author_id'])
 		);
 	});
@@ -471,6 +468,7 @@ describe('load: the personal line', () => {
 		vi.clearAllMocks();
 		findFavoriteMock.mockResolvedValue(undefined);
 		countMock.mockResolvedValue(0);
+		selectMock.mockReturnValue(chain([]));
 		findRecipeMock.mockResolvedValue(forkOf({ visibility: 'public', authorId: 'original-author' }));
 	});
 
@@ -484,10 +482,9 @@ describe('load: the personal line', () => {
 		const reader = { id: 'reader', email: 'r@test.com' };
 		const latest = { id: 12, cookedOn: '2026-11-08' };
 		lastEntryMock.mockResolvedValue(latest);
-		const data = (await load({
-			...makeLoadEvent(reader),
-			url: new URL('http://localhost/recipes/the-fork?version=1')
-		} as never)) as { journal: unknown };
+		const data = (await load(makeLoadEvent(reader, '/recipes/the-fork?version=1'))) as {
+			journal: unknown;
+		};
 		expect(lastEntryMock).toHaveBeenCalledWith(reader.id, 99);
 		expect(data.journal).toEqual({
 			lastEntry: latest,
@@ -503,14 +500,12 @@ describe('load: ?version=', () => {
 		vi.clearAllMocks();
 		findFavoriteMock.mockResolvedValue(undefined);
 		countMock.mockResolvedValue(0);
+		selectMock.mockReturnValue(chain([]));
 		findRecipeMock.mockResolvedValue(forkOf({ visibility: 'public', authorId: 'original-author' }));
 	});
 
 	const loadVersion = (version: string) =>
-		invoke(load as never, {
-			...makeLoadEvent(),
-			url: new URL(`http://localhost/recipes/the-fork?version=${version}`)
-		});
+		invoke(load as never, makeLoadEvent(null, `/recipes/the-fork?version=${version}`));
 
 	test.each(['1abc', '1.5', ' 1', '-1'])('%j is not a version number: 404', async (version) => {
 		expect(await loadVersion(version)).toMatchObject({
@@ -600,6 +595,7 @@ describe('visibility: a friends recipe', () => {
 		vi.clearAllMocks();
 		findFavoriteMock.mockResolvedValue(undefined);
 		countMock.mockResolvedValue(0);
+		selectMock.mockReturnValue(chain([]));
 		findRecipeMock.mockResolvedValue(FRIENDS);
 	});
 

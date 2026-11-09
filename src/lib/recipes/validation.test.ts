@@ -1,4 +1,5 @@
 import { describe, test, expect } from 'vitest';
+import { formOf } from '#lib/testing/actions.js';
 import {
 	parseDraftContent,
 	parseSettings,
@@ -21,13 +22,7 @@ import {
 	groupNameTooLong
 } from './limits';
 
-function form(fields: Record<string, string | string[]>): FormData {
-	const fd = new FormData();
-	for (const [key, value] of Object.entries(fields)) {
-		for (const v of Array.isArray(value) ? value : [value]) fd.append(key, v);
-	}
-	return fd;
-}
+const form = (fields: Record<string, string | string[]>) => formOf(fields);
 
 const rejected = { ok: false, error: expect.any(String) };
 

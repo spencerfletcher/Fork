@@ -1,20 +1,11 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { chain } from '#lib/testing/drizzle.js';
-import { loadPage } from '#lib/testing/actions.js';
+import { loadEvent, loadPage } from '#lib/testing/actions.js';
 
-const { selectMock, selectDistinctMock, findManyMock } = vi.hoisted(() => ({
-	selectMock: vi.fn(),
-	selectDistinctMock: vi.fn(),
-	findManyMock: vi.fn()
-}));
-
-vi.mock('#lib/server/db/index.js', () => ({
-	db: {
-		select: selectMock,
-		selectDistinct: selectDistinctMock,
-		query: { recipes: { findMany: findManyMock } }
-	}
-}));
+const db = await vi.hoisted(async () => (await import('#lib/testing/drizzle.js')).mockDb());
+vi.mock('#lib/server/db/index.js', () => ({ db }));
+const { select: selectMock, selectDistinct: selectDistinctMock } = db;
+const findManyMock = db.query.recipes.findMany;
 
 import { load } from './+page.server';
 import { CARD_WITH } from '#lib/server/recipeCounts.js';
@@ -25,12 +16,8 @@ import type { PageData } from './$types';
 const USER = { id: 'cook-9' };
 const OTHER = 'someone-else';
 
-function makeEvent(search = '', user: { id: string } | null = USER) {
-	return {
-		url: new URL(`http://localhost/cookbook${search}`),
-		locals: { user }
-	} as unknown as Parameters<typeof load>[0];
-}
+const makeEvent = (search = '', user: { id: string } | null = USER) =>
+	loadEvent({ path: `/cookbook${search}`, user });
 
 const loadResult = (search = '') => loadPage<PageData>(load, makeEvent(search));
 const sqlOf = (q: SQL) => new PgDialect().sqlToQuery(q);

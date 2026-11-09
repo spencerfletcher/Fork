@@ -3,20 +3,12 @@ import { chain } from '#lib/testing/drizzle.js';
 import { PgDialect } from 'drizzle-orm/pg-core';
 import type { SQL } from 'drizzle-orm';
 
-const { selectMock, selectDistinctMock, findManyMock, friendIdsOfMock } = vi.hoisted(() => ({
-	selectMock: vi.fn(),
-	selectDistinctMock: vi.fn(),
-	findManyMock: vi.fn(),
-	friendIdsOfMock: vi.fn()
-}));
+const db = await vi.hoisted(async () => (await import('#lib/testing/drizzle.js')).mockDb());
+vi.mock('#lib/server/db/index.js', () => ({ db }));
+const { select: selectMock, selectDistinct: selectDistinctMock } = db;
+const findManyMock = db.query.recipes.findMany;
 
-vi.mock('#lib/server/db/index.js', () => ({
-	db: {
-		select: selectMock,
-		selectDistinct: selectDistinctMock,
-		query: { recipes: { findMany: findManyMock } }
-	}
-}));
+const { friendIdsOfMock } = vi.hoisted(() => ({ friendIdsOfMock: vi.fn() }));
 vi.mock('#lib/server/visibility.js', async (importOriginal) => ({
 	...(await importOriginal<typeof import('#lib/server/visibility.js')>()),
 	friendIdsOf: friendIdsOfMock

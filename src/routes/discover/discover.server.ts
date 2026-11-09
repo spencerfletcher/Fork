@@ -2,8 +2,8 @@ import { and, count, desc, eq, gt, gte, inArray, type SQL } from 'drizzle-orm';
 import { QueryBuilder } from 'drizzle-orm/pg-core';
 import { db } from '#lib/server/db/index.js';
 import { favorites, profiles, recipes, recipeVersions } from '#lib/server/db/schema.js';
-import { attachRecipeCounts, CARD_WITH } from '#lib/server/recipeCounts.js';
-import { tagMatchCounts, visibleTags, byTagMatches } from '#lib/server/tagFilter.js';
+import { cardList } from '#lib/server/recipeCounts.js';
+import { tagSelection, visibleTags } from '#lib/server/tagFilter.js';
 import { friendIdsOf, visibleTo } from '#lib/server/visibility.js';
 import { parseFilters, textSearch } from '#lib/server/recipeSearch.js';
 
@@ -35,17 +35,12 @@ export async function loadDiscover(url: URL, user: { id: string } | null) {
 
 	const visible = visibleTo(user);
 	const allTags = await visibleTags(visible);
-	const selected = allTags.filter((t) => tagSlugs.includes(t.slug));
-	const selectedTags = tagSlugs.filter((slug) => selected.some((t) => t.slug === slug));
+	const { selectedTags, matches } = await tagSelection(allTags, tagSlugs);
 
 	const base = { allTags, searchQuery, selectedTags, friendsOnly };
 	const empty = { ...base, lead: null, recentChanges: [], recipes: [] };
 
-	let matchCounts = new Map<number, number>();
-	if (selected.length > 0) {
-		matchCounts = await tagMatchCounts(selected.map((t) => t.id));
-		if (matchCounts.size === 0) return empty;
-	}
+	if (matches?.size === 0) return empty;
 	const friendIds = friendsOnly && user ? await friendIdsOf(user.id) : [];
 	if (friendsOnly && friendIds.length === 0) return empty;
 
@@ -63,23 +58,18 @@ export async function loadDiscover(url: URL, user: { id: string } | null) {
 		visible,
 		byHandle,
 		friendsOnly ? inArray(recipes.authorId, friendIds) : undefined,
-		matchCounts.size > 0 ? inArray(recipes.id, [...matchCounts.keys()]) : undefined,
+		matches ? inArray(recipes.id, [...matches.keys()]) : undefined,
 		text.where
 	);
-	const [rows, leadRows, recent] = await Promise.all([
-		db.query.recipes.findMany({
-			where: inSet,
-			with: CARD_WITH,
-			orderBy: text.orderBy,
+	const [counted, leadRows, recent] = await Promise.all([
+		cardList(inSet, text.orderBy, user, {
+			tagRank: searchQuery ? null : matches,
 			// ponytail: no pagination yet, P1 adds it
 			limit: DISCOVER_LIMIT
 		}),
 		mostSaved(inSet),
 		recentChanges(inSet)
 	]);
-	if (!searchQuery && matchCounts.size > 0) rows.sort(byTagMatches(matchCounts));
-
-	const counted = await attachRecipeCounts(rows, user);
 	// A text query orders by relevance, so the newest is not always first.
 	const newest = counted.reduce<(typeof counted)[number] | null>(
 		(a, r) => (!a || r.updatedAt > a.updatedAt ? r : a),

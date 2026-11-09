@@ -1,16 +1,12 @@
 import { describe, test, expect, beforeAll, afterAll, vi } from 'vitest';
 import { eq, inArray } from 'drizzle-orm';
+import { formEvent } from '#lib/testing/actions.js';
 
-try {
-	process.loadEnvFile('.env.local');
-} catch {
-	// CI has no .env.local; it sets the variables itself.
-}
-const local = process.env.DATABASE_URL?.includes('127.0.0.1') ?? false;
+import { localDb } from '#lib/testing/db.js';
 
 // Runs only against the local Supabase stack; the mock tests cover everything
 // else. This one proves the row lock and revision check hold under a real race.
-describe.skipIf(!local)('save, against the real database', () => {
+describe.skipIf(!localDb)('save, against the real database', () => {
 	// Imported in beforeAll, not at collection time: a skipped suite still runs
 	// its describe body, and the db module throws without DATABASE_URL.
 	let db: typeof import('#lib/server/db/index.js').db;
@@ -59,24 +55,21 @@ describe.skipIf(!local)('save, against the real database', () => {
 	});
 
 	function event(title: string) {
-		const fd = new FormData();
-		for (const [k, v] of Object.entries({
-			title,
-			description: '',
-			servings: '4',
-			prepTimeMinutes: '10',
-			cookTimeMinutes: '20',
-			ingredients: '1 cup flour',
-			steps: 'Mix.',
-			visibility: 'private',
-			editRevision: '0'
-		}))
-			fd.append(k, v);
-		return {
+		return formEvent({
+			fields: {
+				title,
+				description: '',
+				servings: '4',
+				prepTimeMinutes: '10',
+				cookTimeMinutes: '20',
+				ingredients: '1 cup flour',
+				steps: 'Mix.',
+				visibility: 'private',
+				editRevision: '0'
+			},
 			params: { slug },
-			request: { formData: async () => fd },
 			locals: { user: { id: userId, email: 'race@test.dev' }, supabase: {} }
-		};
+		});
 	}
 
 	test('two saves with the same revision: one wins, one gets 409, one version is written', async () => {
@@ -105,7 +98,7 @@ describe.skipIf(!local)('save, against the real database', () => {
 
 // Proves the "still shown elsewhere" query against real rows: a fork's first
 // version copies its parent's photo url.
-describe.skipIf(!local)('deleteRecipe, against the real database', () => {
+describe.skipIf(!localDb)('deleteRecipe, against the real database', () => {
 	let db: typeof import('#lib/server/db/index.js').db;
 	let recipes: typeof import('#lib/server/db/schema.js').recipes;
 	let recipeVersions: typeof import('#lib/server/db/schema.js').recipeVersions;

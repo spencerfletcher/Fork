@@ -27,3 +27,15 @@ export function chain(rows: unknown = undefined) {
 	for (const m of methods) c[m] = vi.fn().mockReturnValue(c);
 	return c as Record<string, ReturnType<typeof vi.fn>> & PromiseLike<unknown>;
 }
+
+/**
+ * The db the recipe list pages read (select, selectDistinct, the recipes
+ * findMany), each a vi.fn. vi.mock factories are hoisted above imports, so
+ * build it inside vi.hoisted:
+ *
+ *   const db = await vi.hoisted(async () => (await import('#lib/testing/drizzle.js')).mockDb());
+ *   vi.mock('#lib/server/db/index.js', () => ({ db }));
+ */
+export function mockDb() {
+	return { select: vi.fn(), selectDistinct: vi.fn(), query: { recipes: { findMany: vi.fn() } } };
+}
