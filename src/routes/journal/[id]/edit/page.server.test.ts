@@ -1,7 +1,7 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { chain } from '#lib/testing/drizzle.js';
 import { invokeAction, formEvent, loadPage } from '#lib/testing/actions.js';
-import { KEEP_SOURCE } from '#lib/server/journal.js';
+import { KEEP_SOURCE } from '#lib/journal.js';
 import { actions, load } from './+page.server';
 import type { PageData } from './$types';
 

@@ -15,6 +15,12 @@ export const AUDIENCE_SENTENCE: Record<LogAudience, string> = {
 };
 
 /** Under the choices when the linked recipe is Only me and Friends is chosen. */
+/**
+ * The recipe field's value that keeps an edited entry's stored source as it is.
+ * The colon is one slugify strips, so no recipe slug can equal it.
+ */
+export const KEEP_SOURCE = ':keep';
+
 export const PRIVATE_RECIPE_HINT = 'Friends see the dish and your photo, not the recipe.';
 
 /** Under Block, wherever it is offered. */

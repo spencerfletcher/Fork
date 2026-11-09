@@ -6,6 +6,7 @@
 	import {
 		AUDIENCE_LABEL,
 		AUDIENCE_SENTENCE,
+		KEEP_SOURCE,
 		PRIVATE_RECIPE_HINT,
 		localToday
 	} from '#lib/journal.js';
@@ -110,7 +111,7 @@
 		<select id="recipe" name="recipe" bind:value={recipe} onchange={() => (version = '')}>
 			<option value="">Improvised (no recipe)</option>
 			{#if keepLabel}
-				<option value="keep">{keepLabel}</option>
+				<option value={KEEP_SOURCE}>{keepLabel}</option>
 			{/if}
 			{#each choices as choice (choice.slug)}
 				<option value={choice.slug}>{choice.title}</option>

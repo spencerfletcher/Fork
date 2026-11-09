@@ -1,5 +1,13 @@
 import { describe, test, expect } from 'vitest';
-import { dayLabel, groupByMonth, localToday, marginDay, monthLabel } from './journal';
+import { slugify } from '#lib/helpers.js';
+import {
+	KEEP_SOURCE,
+	dayLabel,
+	groupByMonth,
+	localToday,
+	marginDay,
+	monthLabel
+} from './journal';
 
 const NOW = new Date('2026-11-10T12:00:00Z');
 
@@ -38,5 +46,13 @@ describe('groupByMonth', () => {
 describe('localToday', () => {
 	test('the local calendar day, zero padded', () => {
 		expect(localToday(new Date(2026, 0, 5, 23, 30))).toBe('2026-01-05');
+	});
+});
+
+describe('KEEP_SOURCE', () => {
+	// Recipe slugs are slugify output plus a suffix: word characters and hyphens only.
+	test('can never be a recipe slug', () => {
+		expect(slugify(KEEP_SOURCE)).not.toBe(KEEP_SOURCE);
+		expect(KEEP_SOURCE).toMatch(/[^\w-]/);
 	});
 });

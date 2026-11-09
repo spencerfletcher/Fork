@@ -1,7 +1,7 @@
 import { describe, test, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/svelte';
 import EntryForm from './EntryForm.svelte';
-import { AUDIENCE_SENTENCE, PRIVATE_RECIPE_HINT } from '#lib/journal.js';
+import { AUDIENCE_SENTENCE, KEEP_SOURCE, PRIVATE_RECIPE_HINT } from '#lib/journal.js';
 import type { EntryValues } from './entryForm';
 
 vi.mock('$app/forms', () => ({ enhance: () => ({ destroy: () => {} }) }));
@@ -44,6 +44,20 @@ describe('EntryForm', () => {
 		expect(screen.queryByText(PRIVATE_RECIPE_HINT)).toBeNull();
 		await fireEvent.click(screen.getByRole('radio', { name: 'Friends' }));
 		expect(screen.getByText(PRIVATE_RECIPE_HINT)).toBeInTheDocument();
+	});
+
+	test('a withheld source is kept by the KEEP_SOURCE option, selected', () => {
+		render(EntryForm, {
+			props: {
+				values: makeValues({ recipe: KEEP_SOURCE }),
+				choices: CHOICES,
+				submitLabel: 'Save',
+				keepLabel: 'Recipe deleted'
+			}
+		});
+		const keep = screen.getByRole('option', { name: 'Recipe deleted' }) as HTMLOptionElement;
+		expect(keep.value).toBe(KEEP_SOURCE);
+		expect(keep.selected).toBe(true);
 	});
 
 	test('changing the recipe drops the prefilled version, so the latest is linked', async () => {

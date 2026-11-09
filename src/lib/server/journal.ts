@@ -30,8 +30,6 @@ export const ENTRY_MESSAGES = {
 	recipeUnavailable: "That recipe isn't available. Choose another, or leave it out."
 } as const;
 
-/** The recipe field's value that keeps an edited entry's stored source as it is. */
-export const KEEP_SOURCE = 'keep';
 
 export type EntryFields = {
 	dish: string;

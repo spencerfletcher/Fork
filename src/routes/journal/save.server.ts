@@ -3,11 +3,11 @@ import { photoError } from '#lib/recipes/validation.js';
 import { imageFileFrom, uploadRecipeImage, type UploadedImage } from '#lib/server/images.js';
 import {
 	ENTRY_MESSAGES,
-	KEEP_SOURCE,
 	parseEntryForm,
 	resolveRecipe,
 	type EntryFields
 } from '#lib/server/journal.js';
+import { KEEP_SOURCE } from '#lib/journal.js';
 import { entryFailure } from './entryForm.js';
 
 type Stored = { recipeId: number | null; versionId: number | null };
