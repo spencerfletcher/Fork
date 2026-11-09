@@ -1,12 +1,11 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
-import { SEED } from '../src/lib/server/db/seedData';
+import { COOKIES_RE, gotoHydrated } from './helpers';
 
 // Site-wide invariants, one sweep per rule. The file runs in both projects:
 // `chromium` (signed out) sweeps the public rows and `chromium-auth` (the seed
 // user, who owns every seed recipe) the signed-in rows. The values are the
 // rules DESIGN.md states; layout details live there, not here.
 
-const COOKIES_RE = new RegExp(SEED[0].versions.at(-1)!.title, 'i');
 const DESKTOP = [1280, 1024, 768];
 const PHONE = 390;
 const DOT_PNG = {
@@ -25,10 +24,8 @@ type Open = (page: Page) => Promise<void | (() => Promise<void>)>;
 
 const goto =
 	(url: string): Open =>
-	async (page) => {
-		await page.goto(url);
-		await page.waitForLoadState('networkidle');
-	};
+	(page) =>
+		gotoHydrated(page, url);
 
 async function cookiesPath(page: Page) {
 	await page.goto('/discover');

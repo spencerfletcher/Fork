@@ -6,10 +6,7 @@
  */
 
 import { expect, test, type Page } from '@playwright/test';
-import { SEED } from '../src/lib/server/db/seedData';
-import { gotoHydrated } from './helpers';
-
-const COOKIES_RE = new RegExp(SEED[0].versions.at(-1)!.title, 'i');
+import { COOKIES_RE, gotoHydrated } from './helpers';
 
 // ─── Home (logged in) ─────────────────────────────────────────────────────────
 
