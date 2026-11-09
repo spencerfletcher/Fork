@@ -1,4 +1,4 @@
-import { and, count, desc, eq, gt, gte, inArray } from 'drizzle-orm';
+import { and, count, desc, eq, gt, gte, inArray, type SQL } from 'drizzle-orm';
 import { QueryBuilder } from 'drizzle-orm/pg-core';
 import { db } from '#lib/server/db/index.js';
 import { favorites, profiles, recipes, recipeVersions } from '#lib/server/db/schema.js';
@@ -7,7 +7,7 @@ import { tagMatchCounts, visibleTags, byTagMatches } from '#lib/server/tagFilter
 import { friendIdsOf, visibleTo } from '#lib/server/visibility.js';
 import { parseFilters, textSearch } from '#lib/server/recipeSearch.js';
 
-/** The lead card is the most-saved recipe over this many days, else the newest. */
+/** The lead card is the most-saved recipe in the set over this many days, else the set's newest. */
 export const LEAD_WINDOW_DAYS = 7;
 /** The most recipes one Discover page lists, lead included. */
 export const DISCOVER_LIMIT = 60;
@@ -18,9 +18,10 @@ const HANDLE = /^@([\w-]+)$/;
 
 /**
  * Discover, for `/discover` and the signed-out `/`: every recipe the viewer may
- * see (visibleTo), newest first. Unfiltered, a lead card and a Recent changes
- * row come first, drawn from the same set. Filters as Search: `q` (an `@handle`
- * word in it narrows to that cook), `tags`, and `friends=1` when signed in.
+ * see (visibleTo), newest first. A lead card and a Recent changes row come
+ * first, drawn from the same set, filtered or not. Filters as Search, all
+ * ANDed: `q` (an `@handle` word in it narrows to that cook), `tags`, and
+ * `friends=1` when signed in.
  */
 export async function loadDiscover(url: URL, user: { id: string } | null) {
 	const { searchQuery, tagSlugs } = parseFilters(url);
@@ -36,7 +37,6 @@ export async function loadDiscover(url: URL, user: { id: string } | null) {
 	const allTags = await visibleTags(visible);
 	const selected = allTags.filter((t) => tagSlugs.includes(t.slug));
 	const selectedTags = tagSlugs.filter((slug) => selected.some((t) => t.slug === slug));
-	const filtered = !!searchQuery || selected.length > 0 || !!friendsOnly;
 
 	const base = { allTags, searchQuery, selectedTags, friendsOnly };
 	const empty = { ...base, lead: null, recentChanges: [], recipes: [] };
@@ -59,29 +59,33 @@ export async function loadDiscover(url: URL, user: { id: string } | null) {
 			)
 		: undefined;
 
+	const inSet = and(
+		visible,
+		byHandle,
+		friendsOnly ? inArray(recipes.authorId, friendIds) : undefined,
+		matchCounts.size > 0 ? inArray(recipes.id, [...matchCounts.keys()]) : undefined,
+		text.where
+	);
 	const [rows, leadRows, recent] = await Promise.all([
 		db.query.recipes.findMany({
-			where: and(
-				visible,
-				byHandle,
-				friendsOnly ? inArray(recipes.authorId, friendIds) : undefined,
-				matchCounts.size > 0 ? inArray(recipes.id, [...matchCounts.keys()]) : undefined,
-				text.where
-			),
+			where: inSet,
 			with: CARD_WITH,
 			orderBy: text.orderBy,
 			// ponytail: no pagination yet, P1 adds it
 			limit: DISCOVER_LIMIT
 		}),
-		filtered ? [] : mostSaved(user),
-		filtered ? [] : recentChanges(user)
+		mostSaved(inSet),
+		recentChanges(inSet)
 	]);
 	if (!searchQuery && matchCounts.size > 0) rows.sort(byTagMatches(matchCounts));
 
 	const counted = await attachRecipeCounts(rows, user);
-	const lead = filtered
-		? null
-		: (counted.find((r) => r.id === leadRows[0]?.recipeId) ?? counted[0] ?? null);
+	// A text query orders by relevance, so the newest is not always first.
+	const newest = counted.reduce<(typeof counted)[number] | null>(
+		(a, r) => (!a || r.updatedAt > a.updatedAt ? r : a),
+		null
+	);
+	const lead = counted.find((r) => r.id === leadRows[0]?.recipeId) ?? newest;
 	return {
 		...base,
 		lead,
@@ -93,21 +97,21 @@ export async function loadDiscover(url: URL, user: { id: string } | null) {
 	};
 }
 
-/** The visible recipe saved most often in the lead window, if any was saved. */
-function mostSaved(user: { id: string } | null) {
+/** The recipe in `inSet` saved most often in the lead window, if any was saved. */
+function mostSaved(inSet: SQL | undefined) {
 	const since = new Date(Date.now() - LEAD_WINDOW_DAYS * 86_400_000);
 	return db
 		.select({ recipeId: favorites.recipeId, saves: count() })
 		.from(favorites)
 		.innerJoin(recipes, eq(recipes.id, favorites.recipeId))
-		.where(and(visibleTo(user), gte(favorites.createdAt, since)))
+		.where(and(inSet, gte(favorites.createdAt, since)))
 		.groupBy(favorites.recipeId)
 		.orderBy(desc(count()), desc(favorites.recipeId))
 		.limit(1);
 }
 
-/** The newest edits (v2 on) to visible recipes, each to diff against its predecessor. */
-function recentChanges(user: { id: string } | null) {
+/** The newest edits (v2 on) to recipes in `inSet`, each to diff against its predecessor. */
+function recentChanges(inSet: SQL | undefined) {
 	return db
 		.select({
 			versionNumber: recipeVersions.versionNumber,
@@ -119,7 +123,7 @@ function recentChanges(user: { id: string } | null) {
 		.from(recipeVersions)
 		.innerJoin(recipes, eq(recipes.id, recipeVersions.recipeId))
 		.leftJoin(profiles, eq(profiles.id, recipes.authorId))
-		.where(and(visibleTo(user), gt(recipeVersions.versionNumber, 1)))
+		.where(and(inSet, gt(recipeVersions.versionNumber, 1)))
 		.orderBy(desc(recipeVersions.createdAt))
 		.limit(RECENT_CHANGES);
 }

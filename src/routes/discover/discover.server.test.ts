@@ -35,7 +35,9 @@ const row = (id: number, username = 'maria') => ({
 	slug: `r-${id}`,
 	title: `Recipe ${id}`,
 	authorId: `a-${username}`,
-	author: { id: `a-${username}`, username }
+	author: { id: `a-${username}`, username },
+	// Lower ids changed later, so the default order (newest first) is by id.
+	updatedAt: new Date(Date.UTC(2026, 0, 10 - id))
 });
 const ROWS = [row(1), row(2), row(3, 'devcooks')];
 
@@ -148,15 +150,37 @@ describe('loadDiscover', () => {
 		expect(recentChain.limit).toHaveBeenCalledWith(RECENT_CHANGES);
 	});
 
-	test('a filtered list is one plain grid: no lead, no recent changes', async () => {
-		selectMock.mockReturnValue(chain([]));
+	test('a filter narrows the lead and Recent changes to the filtered set too', async () => {
+		const { leadChain, recentChain } = mockSelects([{ recipeId: 2, saves: 3 }], []);
 
 		const result = await loadDiscover(url('?q=dal'), VIEWER);
 
-		expect(result.lead).toBeNull();
-		expect(result.recentChanges).toEqual([]);
-		expect(result.recipes).toHaveLength(ROWS.length);
+		expect(result.lead?.id).toBe(2);
+		expect(result.recipes.map((r) => r.id)).toEqual([1, 3]);
 		expect(sqlOf(findManyMock.mock.calls[0][0].where).params).toContain('dal');
+		expect(sqlOf(leadChain.where.mock.calls[0][0]).params).toContain('dal');
+		expect(sqlOf(recentChain.where.mock.calls[0][0]).params).toContain('dal');
+	});
+
+	test('a tag filter narrows the lead query to the recipes carrying the tags', async () => {
+		selectDistinctMock.mockReturnValue(chain([{ id: 5, name: 'Baking', slug: 'baking' }]));
+		selectMock.mockReturnValueOnce(chain([{ recipeId: 42 }]));
+		const { leadChain } = mockSelects([], []);
+
+		await loadDiscover(url('?tags=baking'), VIEWER);
+
+		expect(sqlOf(leadChain.where.mock.calls[0][0]).params).toContain(42);
+	});
+
+	test('filtered with no saves this week, the newest recipe in the set leads', async () => {
+		// Text search orders by relevance, so the newest is not necessarily first.
+		findManyMock.mockResolvedValue([row(3), row(1), row(2)]);
+		mockSelects([], []);
+
+		const result = await loadDiscover(url('?q=dal'), VIEWER);
+
+		expect(result.lead?.id).toBe(1);
+		expect(result.recipes.map((r) => r.id)).toEqual([3, 2]);
 	});
 
 	test('an @handle in the query narrows to that cook and leaves the rest as text', async () => {
