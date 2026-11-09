@@ -537,3 +537,28 @@ describe('RecipeActions wake lock', () => {
 		expect(screen.queryByText('Your screen may still sleep.')).toBeNull();
 	});
 });
+
+// ─── Add to Journal while cooking ─────────────────────────────────────────────
+
+describe('RecipeActions Add to Journal', () => {
+	const HREF = '/journal/new?recipe=cookies&version=3';
+
+	test('beside Done cooking, carrying the version and the serves being cooked', () => {
+		page.shallow = { url: new URL('http://localhost/recipes/cookies?cook=1&serves=24') };
+		render(RecipeActions, { props: makeProps({ cooking: true, journalHref: HREF }) });
+		expect(screen.getByRole('link', { name: 'Add to Journal' })).toHaveAttribute(
+			'href',
+			`${HREF}&serves=24`
+		);
+		page.shallow = null;
+	});
+
+	test('not before Cook is pressed, and not signed out', () => {
+		const idle = render(RecipeActions, { props: makeProps({ journalHref: HREF }) });
+		expect(screen.queryByRole('link', { name: 'Add to Journal' })).toBeNull();
+		idle.unmount();
+
+		render(RecipeActions, { props: makeProps({ cooking: true }) });
+		expect(screen.queryByRole('link', { name: 'Add to Journal' })).toBeNull();
+	});
+});

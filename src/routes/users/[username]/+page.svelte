@@ -1,6 +1,8 @@
 <script lang="ts">
 	import RecipeGrid from '#lib/components/recipes/RecipeGrid.svelte';
 	import { formatDate, plural } from '#lib/helpers.js';
+	import { enhance } from '$app/forms';
+	import MoreMenu from '../../friends/MoreMenu.svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -27,6 +29,29 @@
 					<span class="stat">{plural(commitCount, 'change')}</span>
 					<span class="stat profile-since">Member since {memberSince}</span>
 				</p>
+				<!-- Nothing on your own profile, signed out, or when either side has blocked. -->
+				{#if data.relation === 'none'}
+					<form class="relation" method="POST" action="/friends?/request" use:enhance>
+						<input type="hidden" name="userId" value={profile.id} />
+						<button type="submit" class="btn-ghost">Add friend</button>
+					</form>
+				{:else if data.relation === 'sent'}
+					<p class="relation relation-state">Request sent</p>
+				{:else if data.relation === 'received'}
+					<form class="relation" method="POST" action="/friends?/accept" use:enhance>
+						<input type="hidden" name="userId" value={profile.id} />
+						<button type="submit" class="btn-primary">Accept request</button>
+					</form>
+				{:else if data.relation === 'friends'}
+					<div class="relation">
+						<span class="relation-state">Friends ✓</span>
+						<MoreMenu
+							userId={profile.id}
+							username={profile.username}
+							items={['unfriend', 'block']}
+							label="More for @{profile.username}" />
+					</div>
+				{/if}
 				{#if privateCount > 0}
 					<!-- A way on for the owner: My Recipes lists the private ones too. -->
 					<p class="profile-private">
@@ -114,6 +139,22 @@
 
 	.profile-new {
 		margin: var(--space-4) 0 0;
+	}
+
+	.relation {
+		display: flex;
+		align-items: center;
+		gap: 16px;
+		margin: 8px 0 0;
+	}
+
+	.relation button {
+		min-height: 44px;
+	}
+
+	.relation-state {
+		font-weight: 600;
+		color: var(--color-text-2);
 	}
 
 	/* From 768 the bar shows + New recipe, so this line would repeat it. */

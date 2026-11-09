@@ -2,6 +2,7 @@
 	import type { Snippet } from 'svelte';
 	import Username from '#lib/components/ui/Username.svelte';
 	import { plural } from '#lib/helpers.js';
+	import { dayLabel } from '#lib/journal.js';
 	import Details from './Details.svelte';
 	import { forkIcon } from './Icons.svelte';
 	import type { Recipe } from '#lib/server/db/schema.js';
@@ -36,7 +37,8 @@
 		versionCount,
 		tags,
 		cooking = false,
-		actions
+		actions,
+		journal = null
 	}: {
 		recipe: HeaderRecipe;
 		currentVersion: HeaderContent;
@@ -51,6 +53,8 @@
 		cooking?: boolean;
 		/** The action row (Cook, then Save and Fork or Edit), the last line of the header. */
 		actions?: Snippet;
+		/** Signed in: the personal line under the actions; null signed out. */
+		journal?: { lastEntry: { id: number; cookedOn: string } | null; addHref: string } | null;
 	} = $props();
 
 	// "No forks", "1 fork", "2 forks".
@@ -134,6 +138,19 @@
 
 	{#if actions}
 		<div class="actions-row">{@render actions()}</div>
+	{/if}
+
+	<!-- The personal line: when the reader last logged this recipe, and a way
+	     to log it again. Cook has its own Add to Journal beside Done cooking. -->
+	{#if journal && !cooking}
+		<p class="personal m-0 font-sans">
+			{#if journal.lastEntry}
+				You cooked this on
+				<a href="/journal#entry-{journal.lastEntry.id}">{dayLabel(journal.lastEntry.cookedOn)}</a>
+				·
+			{/if}
+			<a href={journal.addHref}>Add to Journal</a>
+		</p>
 	{/if}
 </header>
 
@@ -237,11 +254,30 @@
 		display: none;
 	}
 
+	/* The byline's size and Ink 2, links clay and 600 like the stats row's. */
+	.personal {
+		margin-top: 12px;
+		font-size: 1rem;
+		line-height: 1.5;
+		color: var(--color-text-2);
+	}
+
+	.personal a {
+		color: var(--color-accent);
+		font-weight: 600;
+		text-decoration: none;
+	}
+
+	.personal a:hover {
+		color: var(--color-text);
+	}
+
 	/* Inline links reach a 24px hit without moving the text. Last, so nothing
 	   above resets it, and :global so the Username component's element takes it. */
 	.byline :global(a),
 	.stats a,
-	.tags a {
+	.tags a,
+	.personal a {
 		padding: 4px 0;
 		margin: -4px 0;
 	}
@@ -250,7 +286,8 @@
 	@media (max-width: 699px) {
 		.byline :global(a),
 		.stats a,
-		.tags a {
+		.tags a,
+		.personal a {
 			display: inline-block;
 			padding: 11px 0;
 			margin-block: -11px;

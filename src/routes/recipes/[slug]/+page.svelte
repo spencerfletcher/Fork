@@ -84,7 +84,8 @@
 					forkCount={data.forkCount}
 					versionCount={allVersions.length}
 					{tags}
-					{cooking}>
+					{cooking}
+					journal={data.journal}>
 					{#snippet actions()}
 						<RecipeActions
 							{recipe}
@@ -95,6 +96,7 @@
 							favoriteCount={data.favoriteCount}
 							{loginHref}
 							{cooking}
+							journalHref={data.journal?.addHref}
 							oncook={(next) => (cooking = next)} />
 					{/snippet}
 				</RecipeHeader>

@@ -256,8 +256,9 @@ export type SeedVersion = Omit<RecipeContent, 'ingredients' | 'steps'> & {
 	createdAt: string;
 };
 
-/** The seeded cooks; devcooks is an accepted friend of spencerfletcher. */
-export type SeedUsername = 'spencerfletcher' | 'devcooks';
+/** The seeded people: devcooks is an accepted friend of spencerfletcher;
+ *  priyabakes has sent spencerfletcher a friend request. */
+export type SeedUsername = 'spencerfletcher' | 'devcooks' | 'priyabakes';
 
 export type SeedRecipe = {
 	slug: string; // prefix; a random suffix is added at insert
@@ -442,5 +443,85 @@ export const SEED: SeedRecipe[] = [
 				createdAt: '2026-02-22'
 			}
 		]
+	}
+];
+
+// ─── Journal ──────────────────────────────────────────────────────────────────
+
+/** One log entry; `recipe` is a seeded recipe's slug prefix, absent when improvised. */
+export type SeedLogEntry = {
+	user: SeedUsername;
+	recipe?: string;
+	version?: number; // the latest when absent
+	dish: string;
+	cookedOn: string;
+	servings: number | null;
+	photoUrl: string | null;
+	caption: string | null;
+	note: string | null;
+	audience: 'private' | 'friends';
+	createdAt: string;
+};
+
+export const SEED_LOG: SeedLogEntry[] = [
+	{
+		user: 'spencerfletcher',
+		recipe: 'chicken-tikka-masala',
+		dish: 'Chicken Tikka Masala',
+		cookedOn: '2026-11-08',
+		servings: 6,
+		photoUrl: TIKKA_META.imageUrl,
+		caption: 'Sunday dinner for six; doubled the naan.',
+		note: "Marinate overnight next time; four hours wasn't enough.",
+		audience: 'friends',
+		createdAt: '2026-11-08T20:00:00Z'
+	},
+	{
+		user: 'spencerfletcher',
+		recipe: 'red-lentil-dal',
+		dish: 'Weeknight Dal',
+		cookedOn: '2026-11-04',
+		servings: 4,
+		photoUrl: null,
+		caption: 'Doubled the garlic. Worth it.',
+		note: 'Try ½ tsp chilli flakes; ¼ was timid.',
+		audience: 'private',
+		createdAt: '2026-11-04T19:00:00Z'
+	},
+	{
+		user: 'spencerfletcher',
+		dish: 'Backyard kebab night',
+		cookedOn: '2026-10-31',
+		servings: 8,
+		photoUrl: null,
+		caption: 'Halloween cookout. Everything on skewers, nothing on plates.',
+		note: null,
+		audience: 'friends',
+		createdAt: '2026-11-01T09:00:00Z'
+	},
+	{
+		user: 'devcooks',
+		recipe: 'shakshuka',
+		dish: 'Shakshuka',
+		cookedOn: '2026-11-09',
+		servings: 2,
+		photoUrl: null,
+		caption: 'Brunch before the market. More cayenne than the recipe says.',
+		note: 'Crack the eggs into a cup first.',
+		audience: 'friends',
+		createdAt: '2026-11-09T11:00:00Z'
+	},
+	{
+		// A Friends entry on devcooks' Only me recipe: friends see the dish, not the recipe.
+		user: 'devcooks',
+		recipe: 'miso-butter-noodles',
+		dish: 'Miso Butter Noodles',
+		cookedOn: '2026-11-07',
+		servings: 1,
+		photoUrl: null,
+		caption: 'Late dinner, ten minutes start to finish.',
+		note: null,
+		audience: 'friends',
+		createdAt: '2026-11-07T22:00:00Z'
 	}
 ];

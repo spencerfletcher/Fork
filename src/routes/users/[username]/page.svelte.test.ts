@@ -1,7 +1,9 @@
-import { describe, test, expect } from 'vitest';
+import { describe, test, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/svelte';
 import ProfilePage from './+page.svelte';
 import source from './+page.svelte?raw';
+
+vi.mock('$app/forms', () => ({ enhance: () => ({ destroy: () => {} }) }));
 
 const data = {
 	profile: { id: 'u1', username: 'chefmaria', avatarUrl: null, createdAt: new Date(2026, 9, 1) },
@@ -28,7 +30,8 @@ const data = {
 		}
 	],
 	commitCount: 5,
-	privateCount: 0
+	privateCount: 0,
+	relation: null as string | null
 };
 
 function renderProfile(overrides: Partial<typeof data> = {}) {
@@ -112,5 +115,32 @@ describe('Profile page dates', () => {
 	test("the member date goes through the site's one formatDate", () => {
 		expect(source).toContain('formatDate(');
 		expect(source).not.toContain('toLocaleDateString');
+	});
+});
+
+describe('Profile relationship control', () => {
+	test.each([
+		['none', 'button', 'Add friend', '/friends?/request'],
+		['received', 'button', 'Accept request', '/friends?/accept']
+	])('%s offers %s "%s", posting to %s', (relation, role, name, action) => {
+		renderProfile({ relation });
+		const control = screen.getByRole(role as 'button', { name });
+		expect(control.closest('form')).toHaveAttribute('action', action);
+	});
+
+	test('a sent request and a friendship say so; friends get ⋯ with Unfriend and Block', () => {
+		const sent = renderProfile({ relation: 'sent' });
+		expect(screen.getByText('Request sent')).toBeInTheDocument();
+		sent.unmount();
+
+		renderProfile({ relation: 'friends' });
+		expect(screen.getByText('Friends ✓')).toBeInTheDocument();
+		expect(screen.getByRole('button', { name: 'More for @chefmaria' })).toBeInTheDocument();
+	});
+
+	test.each([null, 'self', 'blocked'])('%s shows no control at all', (relation) => {
+		renderProfile({ relation });
+		expect(screen.queryByRole('button', { name: /friend|request/i })).toBeNull();
+		expect(screen.queryByText(/Request sent|Friends ✓/)).toBeNull();
 	});
 });

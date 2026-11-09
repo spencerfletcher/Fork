@@ -9,6 +9,7 @@ import { recipeCopies } from '#lib/recipes/content.js';
 import { absoluteImage, clampDescription } from '#lib/seo.js';
 import { gramsFor } from '#lib/server/ingredientDensities.js';
 import { canViewRow, visibleTo } from '#lib/server/visibility.js';
+import { lastEntryFor } from '#lib/server/journal.js';
 import { VERSION_NOT_FOUND } from './versionError.js';
 import type { PageServerLoad, Actions } from './$types';
 
@@ -57,14 +58,16 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 	// Independent lookups, one round trip. The fork count is the forks the
 	// viewer can see, the forks page's own rule: public ones and the viewer's
 	// own private ones, so nobody else's private fork shows in the number.
-	const [favorite, forkCount, favoriteCount] = await Promise.all([
+	const [favorite, forkCount, favoriteCount, lastEntry] = await Promise.all([
 		user
 			? db.query.favorites.findFirst({
 					where: and(eq(favorites.userId, user.id), eq(favorites.recipeId, recipe.id))
 				})
 			: undefined,
 		db.$count(recipes, and(eq(recipes.parentId, recipe.id), visibleTo(user))),
-		db.$count(favorites, eq(favorites.recipeId, recipe.id))
+		db.$count(favorites, eq(favorites.recipeId, recipe.id)),
+		// The personal line: the reader's latest log entry of this recipe.
+		user ? lastEntryFor(user.id, recipe.id) : null
 	]);
 	const isFavorited = !!favorite;
 
@@ -78,6 +81,14 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 		grams: currentVersion.ingredients.map(gramsFor),
 		allVersions: recipe.versions,
 		isFavorited,
+		/** Signed in: the personal line's data; signed out there is no line. */
+		journal: user
+			? {
+					lastEntry,
+					// Add to Journal prefills the version being read.
+					addHref: `/journal/new?recipe=${encodeURIComponent(recipe.slug)}&version=${currentVersion.versionNumber}`
+				}
+			: null,
 		meta: {
 			title: currentVersion.title,
 			description: clampDescription(

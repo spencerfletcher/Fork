@@ -6,6 +6,7 @@ import { attachRecipeCounts } from '#lib/server/recipeCounts.js';
 import { clampDescription } from '#lib/seo.js';
 import { visibleTo } from '#lib/server/visibility.js';
 import { plural } from '#lib/helpers.js';
+import { relationOf } from '#lib/server/friends.js';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params, url, locals: { user } }) => {
@@ -20,7 +21,7 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 
 	if (!profile) throw error(404, 'User not found');
 
-	const [shownRecipes, commitResult] = await Promise.all([
+	const [shownRecipes, commitResult, relation] = await Promise.all([
 		db.query.recipes.findMany({
 			// Strangers see public recipes, friends also friends ones, the owner all.
 			where: and(eq(recipes.authorId, profile.id), visibleTo(user)),
@@ -32,7 +33,9 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 			.select({ commitCount: count() })
 			.from(recipeVersions)
 			.innerJoin(recipes, eq(recipes.id, recipeVersions.recipeId))
-			.where(and(eq(recipeVersions.createdBy, profile.id), eq(recipes.visibility, 'public')))
+			.where(and(eq(recipeVersions.createdBy, profile.id), eq(recipes.visibility, 'public'))),
+		// Where the viewer stands with this person, for the relationship control.
+		user ? relationOf(user.id, profile.id) : null
 	]);
 
 	const withCounts = await attachRecipeCounts(shownRecipes);
@@ -56,6 +59,7 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 		recipes: withCounts,
 		commitCount,
 		privateCount,
+		relation,
 		meta: {
 			title: `@${profile.username}`,
 			description: clampDescription(

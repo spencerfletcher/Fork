@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { afterNavigate } from '$app/navigation';
+	import { page } from '$app/state';
 	import { setShallowParam } from './shallowParam';
 	import type { Recipe } from '#lib/server/db/schema.js';
 	import { forkIcon, saveIcon } from './Icons.svelte';
@@ -15,7 +16,8 @@
 		favoriteCount,
 		loginHref,
 		cooking,
-		oncook
+		oncook,
+		journalHref
 	}: {
 		recipe: Pick<Recipe, 'slug' | 'title'>;
 		canFork: boolean;
@@ -30,7 +32,15 @@
 		/** Cooking mode: Save, Fork and Edit step aside, the screen is kept awake. */
 		cooking: boolean;
 		oncook: (cooking: boolean) => void;
+		/** Signed in: Add to Journal for the version being read; Cook adds the serves. */
+		journalHref?: string;
 	} = $props();
+
+	// The scaler writes ?serves= with a shallow replace, so the newest URL is page.shallow's.
+	const serves = $derived((page.shallow?.url ?? page.url).searchParams.get('serves'));
+	const logHref = $derived(
+		journalHref && serves && /^\d+$/.test(serves) ? `${journalHref}&serves=${serves}` : journalHref
+	);
 
 	// Writable derived: the click flips it optimistically, and it resets to the
 	// prop whenever the page loads another recipe or reloads this one.
@@ -126,7 +136,10 @@
 	</button>
 
 	{#if cooking}
-		<!-- Cooking: only the Cook toggle stays. -->
+		<!-- Cooking: the Cook toggle stays, with Add to Journal beside it. -->
+		{#if logHref}
+			<a href={logHref} class="btn-ghost log no-underline">Add to Journal</a>
+		{/if}
 	{:else if loginHref}
 		<!-- Logged out: a text link, not a pill, so Cook stays the one action. -->
 		<a href={loginHref} class="login">Log in to save</a>
@@ -298,6 +311,7 @@
 
 		.cook,
 		.edit,
+		.log,
 		.login,
 		.note {
 			grid-column: 1 / -1;
