@@ -254,9 +254,9 @@
 	}
 
 	/* Current is cream against tan, which forced colours flatten to one colour;
-	   an underline (an outline on the icon) keeps "you are here". Last, so it
-	   beats the base rules' text-decoration: none on source order. The icon's
-	   outline gives way to the focus ring while focused. */
+	   an underline (an outline on the icon and the avatar) keeps "you are here".
+	   Last, so it beats the base rules' text-decoration: none on source order.
+	   The outlines give way to the focus ring while focused. */
 	@media (forced-colors: active) {
 		.navbar-link[aria-current='page'],
 		.nav-profile[aria-current='page'] .nav-handle {
@@ -267,6 +267,11 @@
 		.nav-icon[aria-current='page']:not(:focus-visible) {
 			outline: 2px solid CanvasText;
 			outline-offset: -2px;
+		}
+
+		.nav-profile[aria-current='page']:not(:focus-visible) .nav-avatar {
+			outline: 2px solid CanvasText;
+			outline-offset: 2px;
 		}
 	}
 </style>
