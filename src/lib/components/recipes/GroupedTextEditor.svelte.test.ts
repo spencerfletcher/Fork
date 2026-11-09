@@ -8,7 +8,9 @@ import { SECTION_NAME } from '#lib/recipes/editorLines.js';
 // real caret, undo and paste are checked in a browser.
 const execCommand = vi.fn();
 const original = document.execCommand;
+// clearMocks keeps implementations, so each test starts from a clean "it worked".
 beforeEach(() => {
+	execCommand.mockReset().mockReturnValue(true);
 	document.execCommand = execCommand;
 });
 afterEach(() => {
@@ -126,6 +128,18 @@ describe('GroupedTextEditor', () => {
 		}
 	});
 
+	test('a bare text line is wrapped in a line, not cleared, keeping the caret', async () => {
+		render(GroupedTextEditor, props('flour'));
+		box().textContent = '# Dough';
+		caretAt(box().firstChild!, 3);
+		box().dispatchEvent(
+			new InputEvent('beforeinput', { inputType: 'insertText', data: 'x', bubbles: true })
+		);
+		expect(lines().map((l) => [l.nodeName, l.textContent])).toEqual([['DIV', '# Dough']]);
+		const sel = getSelection()!;
+		expect([sel.anchorNode, sel.anchorOffset]).toEqual([lines()[0].firstChild, 3]);
+	});
+
 	test('rich-text shortcuts do nothing', async () => {
 		render(GroupedTextEditor, props('flour'));
 		const bold = new InputEvent('beforeinput', {
@@ -196,6 +210,7 @@ describe('GroupedTextEditor', () => {
 				line.textContent = text.slice(1);
 				first.after(line);
 				caretAt(line.firstChild!, text.length - 1);
+				return true;
 			});
 			await fireEvent.click(toggle());
 			await fireEvent.click(item());

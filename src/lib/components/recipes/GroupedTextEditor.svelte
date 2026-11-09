@@ -201,16 +201,31 @@
 	}
 
 	// Select-all and delete leaves Chrome's box with no line at all, and text
-	// typed then is a bare text node no class can reach. Before anything lands
-	// in an empty box it gets one empty line back, with the caret in it. Only
-	// an empty box is written to, so no run of typing is cut short.
+	// typed then is a bare text node no class can reach. Before anything more
+	// lands, an empty box gets one empty line back and bare text is wrapped in
+	// one, the caret kept where it was. Only a box with no line is written to,
+	// so no run of typing is cut short.
 	function ensureLine() {
 		if (!box || [...box.children].some((c) => BLOCK.test(c.nodeName))) return;
-		fill(box, '');
+		const sel = getSelection();
+		let caret: [Node, number] | null = null;
+		if (box.textContent === '') {
+			fill(box, '');
+			caret = [box.firstChild!, 0];
+		} else {
+			// Moving nodes resets a range inside them, so the caret is read first.
+			if (sel?.rangeCount && box.contains(sel.anchorNode)) {
+				caret = [sel.anchorNode!, sel.anchorOffset];
+			}
+			const line = document.createElement('div');
+			line.append(...box.childNodes);
+			box.append(line);
+			if (!caret || caret[0] === box) caret = [line, line.childNodes.length];
+		}
 		const r = document.createRange();
-		r.setStart(box.firstChild!, 0);
-		getSelection()?.removeAllRanges();
-		getSelection()?.addRange(r);
+		r.setStart(...caret);
+		sel?.removeAllRanges();
+		sel?.addRange(r);
 	}
 
 	// Plain text through the editing command, so it lands on the undo stack.
