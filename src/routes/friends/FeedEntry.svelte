@@ -88,7 +88,7 @@
 			<form method="POST" action="/recipes/{source.slug}?/toggleFavorite" use:enhance={save.submit}>
 				<button type="submit" class="text-btn text-btn--ink" aria-pressed={saved}>
 					{@render saveIcon(saved)}
-					{saved ? 'Saved' : 'Save'}
+					{saved ? 'Recipe saved' : 'Save recipe'}
 				</button>
 			</form>
 		{/if}

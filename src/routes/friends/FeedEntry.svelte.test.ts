@@ -90,7 +90,7 @@ describe('FeedEntry', () => {
 
 	test("Save posts the recipe page's favorite toggle, and only for someone else's visible recipe", () => {
 		const { unmount } = render(FeedEntry, { props: { item: makeItem({ saved: true }) } });
-		const save = screen.getByRole('button', { name: 'Saved' });
+		const save = screen.getByRole('button', { name: 'Recipe saved' });
 		expect(save).toHaveAttribute('aria-pressed', 'true');
 		expect(save.closest('form')).toHaveAttribute('action', '/recipes/beet?/toggleFavorite');
 		unmount();

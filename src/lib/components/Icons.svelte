@@ -15,8 +15,7 @@
 		saveIcon,
 		journalIcon,
 		chevronIcon,
-		searchIcon,
-		headingIcon
+		searchIcon
 	};
 </script>
 
@@ -205,15 +204,3 @@
 {/snippet}
 
 <!-- The editor toolbar's Section heading: an H. -->
-{#snippet headingIcon()}
-	<svg
-		viewBox="0 0 16 16"
-		aria-hidden="true"
-		fill="none"
-		stroke="currentColor"
-		stroke-width="1.5"
-		stroke-linecap="round"
-		stroke-linejoin="round">
-		<path d="M4 3v10M12 3v10M4 8h8" />
-	</svg>
-{/snippet}

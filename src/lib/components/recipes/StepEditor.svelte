@@ -48,6 +48,6 @@
 		<b>substitution:</b>
 		on its own line. A line like
 		<b># Bake</b>
-		starts a group.
+		 starts a group.
 	</p>
 </div>
