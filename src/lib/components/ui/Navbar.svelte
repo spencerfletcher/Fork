@@ -4,19 +4,22 @@
 	import type { User } from '@supabase/supabase-js';
 	import type { Profile } from '#lib/server/db/schema.js';
 	import { DESTINATIONS, isCurrent } from './destinations.js';
+	import Dropdown from './Dropdown.svelte';
 
 	let { user, profile = null }: { user: User | null; profile?: Profile | null } = $props();
 
 	// The four destinations sit here from 768; a phone has the tab bar instead.
 	const path = $derived(page.url.pathname);
 	const onOwnProfile = $derived(!!profile && path === `/users/${profile.username}`);
+	// A signed-in account with no profile row yet still gets an initial and Log out.
+	const initial = $derived((profile?.username ?? user?.email ?? '?').charAt(0).toUpperCase());
 
 	const current = (active: boolean) => (active ? ('page' as const) : undefined);
 </script>
 
 <nav class="bg-navbar-bg relative z-50 px-5" aria-label="Site">
 	<div class="mx-auto flex h-[52px] max-w-[1200px] items-center justify-between gap-5 md:h-14">
-		<!-- Logo + destinations. They never shrink; when the bar is full the handle gives way. -->
+		<!-- Logo + destinations. They never shrink. -->
 		<div class="flex shrink-0 items-center gap-6">
 			<!-- One line, so the name is "Fork." with no space before the stop. -->
 			<!-- prettier-ignore -->
@@ -64,24 +67,37 @@
 				</svg>
 			</a>
 			{#if user}
-				{#if profile}
-					<!-- One link: the avatar's initial, and the handle beside it from 1024.
-					     The bar caps the handle; the title carries it whole. -->
-					<a
-						href="/users/{profile.username}"
-						class="nav-profile"
-						aria-label="@{profile.username}, your profile"
-						title="@{profile.username}"
-						aria-current={current(onOwnProfile)}>
-						<span class="nav-avatar" aria-hidden="true">
-							{profile.username.charAt(0).toUpperCase()}
-						</span>
-						<span class="nav-handle hidden lg:block">@{profile.username}</span>
-					</a>
-				{/if}
-				<form action="/logout" method="POST" use:enhance>
-					<button type="submit" class="navbar-link">Log out</button>
-				</form>
+				<!-- The avatar alone at every width, opening Profile and Log out
+				     (decided 9 November 2026). -->
+				<Dropdown>
+					{#snippet trigger(props)}
+						<button
+							type="button"
+							class="nav-avatar-button"
+							class:current={onOwnProfile}
+							aria-haspopup="menu"
+							aria-label={profile ? `Your account, @${profile.username}` : 'Your account'}
+							title={profile ? `@${profile.username}` : undefined}
+							{...props}>
+							<span class="nav-avatar" aria-hidden="true">{initial}</span>
+						</button>
+					{/snippet}
+					{#snippet panel()}
+						<div class="account-menu" role="menu">
+							{#if profile}
+								<a
+									href="/users/{profile.username}"
+									role="menuitem"
+									aria-current={current(onOwnProfile)}>
+									Profile
+								</a>
+							{/if}
+							<form action="/logout" method="POST" role="none" use:enhance>
+								<button type="submit" role="menuitem">Log out</button>
+							</form>
+						</div>
+					{/snippet}
+				</Dropdown>
 			{:else}
 				<a href="/login" class="navbar-link" aria-current={current(path === '/login')}>Log in</a>
 				<a
@@ -161,7 +177,7 @@
 		color: var(--color-text-cream);
 	}
 
-	/* Shared link style used for both desktop nav links and logout button */
+	/* The bar's text links: the destinations, Log in and Sign up. */
 	.navbar-link {
 		font-family: var(--font-sans);
 		/* Small caps at 600 with tracking (Spencer, 29 October 2026). The shipped
@@ -180,7 +196,7 @@
 		/* A 24px hit on a 20px line without moving the text. */
 		padding: 4px 0;
 		margin: -4px 0;
-		/* At 768 a squeezed bar must not wrap a destination or "Log out". */
+		/* At 768 a squeezed bar must not wrap a destination. */
 		white-space: nowrap;
 		transition: color 0.15s ease;
 	}
@@ -190,7 +206,7 @@
 		color: var(--color-text-cream);
 	}
 
-	/* A phone has no menu: Log in, Log out and the brand are thumb targets,
+	/* A phone has no menu: Log in and the brand are thumb targets,
 	   44px tall inside the 52px bar, text where it was. */
 	@media (max-width: 767px) {
 		/* :not(.hidden): Sign up stays a desktop link. */
@@ -204,20 +220,21 @@
 		}
 	}
 
-	/* The profile link: a 32px initial avatar (tint disc, Bitter initial in ink:
-	   no clay inside the espresso bar), with
-	   the handle beside it from 1024 (four destinations leave no room at
-	   768). Capped so a 30-character handle (the sign-up max) ellipsises;
-	   22ch shows a normal one whole. */
-	.nav-profile {
+	/* The avatar: a 32px initial (tint disc, Bitter initial in ink: no clay
+	   inside the espresso bar) centred in a 44px button. */
+	.nav-avatar-button {
 		display: flex;
-		min-width: 0;
 		align-items: center;
-		gap: 8px;
-		/* 44px tall on a phone without moving the avatar. */
-		padding: 6px 0;
-		margin: -6px 0;
-		text-decoration: none;
+		justify-content: center;
+		width: 44px;
+		height: 44px;
+		/* The disc, not the 44px box, sits at the bar's edge. */
+		margin-right: -6px;
+		padding: 0;
+		border: 0;
+		border-radius: 50%;
+		background: none;
+		cursor: pointer;
 	}
 
 	.nav-avatar {
@@ -235,22 +252,61 @@
 		font-size: 0.9375rem;
 		font-weight: 500;
 		line-height: 1;
+		transition: background 0.15s ease;
 	}
 
-	.nav-handle {
-		max-width: 22ch;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-		font-family: var(--font-mono);
-		font-size: 0.8125rem;
-		color: var(--color-text-tan);
-		transition: color 0.15s ease;
+	.nav-avatar-button:hover .nav-avatar,
+	.nav-avatar-button[aria-expanded='true'] .nav-avatar {
+		background: var(--color-text-cream);
 	}
 
-	.nav-profile:hover .nav-handle,
-	.nav-profile[aria-current='page'] .nav-handle {
-		color: var(--color-text-cream);
+	/* The ⋯ menu's overlay, on lifted paper under the bar: the one shadow. */
+	.account-menu {
+		position: absolute;
+		top: calc(100% + 6px);
+		right: 0;
+		display: flex;
+		flex-direction: column;
+		min-width: 180px;
+		padding: 6px;
+		background: var(--color-surface);
+		border: 1px solid var(--color-border-2);
+		border-radius: var(--radius-md);
+		box-shadow: var(--shadow-raised);
+	}
+
+	.account-menu a,
+	.account-menu button {
+		display: flex;
+		align-items: center;
+		width: 100%;
+		min-height: 44px;
+		padding: 0 12px;
+		border: 0;
+		border-radius: var(--radius-sm);
+		background: none;
+		font-family: var(--font-sans);
+		font-size: 0.9375rem;
+		font-weight: 600;
+		color: var(--color-text);
+		text-align: left;
+		text-decoration: none;
+		cursor: pointer;
+	}
+
+	.account-menu a:hover,
+	.account-menu button:hover {
+		background: var(--color-tint);
+		color: var(--color-text);
+	}
+
+	.account-menu form {
+		margin: 0;
+	}
+
+	/* On paper the ring is clay again, not the bar's marigold. */
+	.account-menu :global(:focus-visible) {
+		outline-color: var(--color-accent);
 	}
 
 	/* Current is cream against tan, which forced colours flatten to one colour;
@@ -258,8 +314,7 @@
 	   Last, so it beats the base rules' text-decoration: none on source order.
 	   The outlines give way to the focus ring while focused. */
 	@media (forced-colors: active) {
-		.navbar-link[aria-current='page'],
-		.nav-profile[aria-current='page'] .nav-handle {
+		.navbar-link[aria-current='page'] {
 			text-decoration: underline;
 			text-underline-offset: 4px;
 		}
@@ -269,7 +324,7 @@
 			outline-offset: -2px;
 		}
 
-		.nav-profile[aria-current='page']:not(:focus-visible) .nav-avatar {
+		.nav-avatar-button.current:not(:focus-visible) .nav-avatar {
 			outline: 2px solid CanvasText;
 			outline-offset: 2px;
 		}
