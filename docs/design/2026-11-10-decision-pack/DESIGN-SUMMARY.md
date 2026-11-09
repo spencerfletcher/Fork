@@ -1,6 +1,6 @@
 # Fork MVP design summary · decided 9 Nov 2026
 
-Builder-ready. Spencer reviewed the pack on 9 Nov 2026 (WORKSHEET.md holds his notes); this file is the direction with his decisions folded in. Where he overrode the pack's recommendation the line says so. Shipped and planned are as in `reports/Fork product roadmap.md`: groups, Makes, scaling notices on Makes, delete, cook mode, versions, compare, fork and favorite are shipped; Cookbook, Discover, the audience radios, the Insert toolbar, Journal and Friends are planned.
+Builder-ready. Spencer reviewed the pack on 9 Nov 2026 (WORKSHEET.md holds his notes); this file is the direction with his decisions folded in. Where he overrode the pack's recommendation the line says so. Shipped and planned are as in `docs/research/2026-11-08-product-roadmap/README.md`: groups, Makes, scaling notices on Makes, delete, cook mode, versions, compare, fork and favorite are shipped; Cookbook, Discover, the audience radios, the Insert toolbar, Journal and Friends are planned.
 
 Vocabulary: a **log entry** is one record in the Journal (never "a cook" as a noun). **Cook** is the cooking view of a recipe and the verb.
 
