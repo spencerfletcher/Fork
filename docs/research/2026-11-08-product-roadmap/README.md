@@ -449,6 +449,7 @@ Spencer re-phased these after reviewing the full post-MVP backlog. They override
 | Journal and log-entry data export | Passing mention | **P2** |
 | Easy import: text documents, Markdown files, other sites where possible | P1 paste/URL/files | **P2** (paste-first editor stays MVP) |
 | Comment moderation (report a comment, delete on your own entry) | Unlisted | **P2**, with comments |
+| Profile discovery: find friends and prolific cooks. A People scope in the global search (handle or name) with a friend-request control on the result, and a small "Cooks" strip on Discover ranked by public recipes and saves so prolific users surface | Unlisted (friend by URL or invite only) | **P2** (personalised suggestions stay P5 with algorithmic discovery) |
 | Desktop app for Fork (Mac first; likely a PWA or thin wrapper over the web app, decided with the native platform call) | Unlisted | **P5**, alongside the native iOS/Android decision |
 
 Settled later the same evening:
@@ -466,12 +467,39 @@ Settled later the same evening:
 
 **Save version.** One Save action, the moving favorite. "Keep this version" arrives later as an option on a saved recipe, with the state shown visibly on the recipe page ("Keeping v3" with "Follow latest version" to reverse), not only inside the menu. A kept version lasts across visits; a Cook URL selects the version for that cooking session only. Neither overrides access permissions.
 
+### Retain the cookbook-app inventory as a sourced candidate backlog
+
+**Spencer, 9 November 2026, confirmed after the coverage audit:** add all **87 entries** from the [Mac cookbook-app deep dive](../2026-11-09-cookbook-app-deep-dive/README.md) to the retained roadmap scope: the original 78 features/refinements and Q01–Q09. Refine, combine and sequence them as the relevant workstream is built; any trimming needs a recorded reason. The inventory is incorporated here by reference rather than duplicated, so its stable IDs, sources and decisions have one home. Approval to retain the full scope does not move later features into the MVP or remove the need to resolve an entry's uncertain behavior before implementation.
+
+| Retained IDs | Workstream and current placement |
+|---|---|
+| E01–E11 | Editor and recipe representation; accepted editor refinements now, advanced media/duplication later as already scoped. |
+| S01–S08 | Scaling and conversion, within the P2 scaler workstream. |
+| C01–C13 | Cooking, timers and session state; P2 timers, P3 multi-recipe coordination, P4 ingredient-step references remain distinct. |
+| L01–L11 | Library and retrieval; P1 manual collections/current-content relevance, P2 global search, rule-based collections later. |
+| I01–I08 | Capture and migration; paste-first editor remains MVP, easy import P2, richer OCR/social capture later. |
+| X01–X05 | Print and portability; preserve P1 print/archive and P2 Journal export, richer book production later. |
+| G01–G08 and M01–M06 | Shopping and planning; P3 workstreams with later refinements, not MVP gates. |
+| A01–A08 | Advanced recipes, household, creator, assistance and platform candidates; retain their existing dependencies and phase decisions. |
+| Q01–Q09 | Accepted roadmap additions from the coverage audit; resolve details within the relevant parsing, cooking, planning, search, capture, pantry and social workstreams. Fold overlapping work into existing IDs while preserving traceability. |
+
+**Three choices are already selected, not merely suggested candidates:** Paprika-like desktop editing with title/metadata left, photo right spanning those rows and ingredients/method below; equivalent `50%` / `1/2` / `0.5` scaler entry combined with a slider; and inline timers connected to a separate multi-recipe overview with persistent cooking-session state. These refine the current design and P2 scaler/timer work without moving Party Mode or the graphical view into the MVP.
+
+Use the [inventory’s source map and audit](../2026-11-09-cookbook-app-deep-dive/README.md#retain-additional-leads-without-pretending-the-sweep-is-exhaustive) to trace candidates to [Crouton evidence](../2026-11-09-cookbook-app-deep-dive/notes/crouton.md), [Paprika evidence](../2026-11-09-cookbook-app-deep-dive/notes/paprika.md) and [Recipe Keeper evidence](../2026-11-09-cookbook-app-deep-dive/notes/recipe-keeper.md), then to the linked official guides. **T** means tested, **V** visible control only and **D** developer-documented; proposed Fork adaptations are recommendations, not claims about competitor behavior.
+
+“Later” and “optional” preserve a candidate for consideration. They are not silent rejections. Combining entries should retain their IDs or record their replacement; rejecting an entry requires a concrete product, usability, reliability or cost reason recorded beside it. Competitor prevalence and user requests are meaningful inclusion signals, not grounds for dismissal and not automatic evidence of demand magnitude. This is a comprehensive sourced backlog from the researched surfaces, **not an exhaustive inventory of every platform, paid feature or interaction**, nor an instruction to build every candidate before launch. Remaining access and behavior tests are listed in the research report.
+
+**Discovery and delivery decision:** pause broad new-feature discovery until most of this scope has been built and used. Revisit the gaps exposed by actual cooking, the friend-group pilot and later independent users. Targeted reference checks needed to implement an accepted item correctly can continue; they are not a reason to reopen the whole competitive sweep. User-reported blockers, accessibility failures, privacy problems and data-loss risks should be addressed when found rather than waiting for the backlog to finish.
+
+For each coherent feature slice, record the user task it makes easier and verify the complete workflow, including applicable keyboard/mobile behavior, permissions, error/recovery states and realistic recipe data. Include a short real-use feedback pass after each phase, with fixes and refinements fed back into the existing workstreams. These are delivery requirements, not another feature expansion. The pilot can begin with the usable core; it does not wait for all 87 entries.
+
 ### Source register and limits
 
 | Evidence | Role and boundary |
 |---|---|
 | [Current product audit](current_product_audit.md) | Source-linked local capability inventory and bounded live checks, 8 Nov 2026; not authenticated/runtime certification. |
 | [Cookbook market research](cookbook_market.md) | Primary competitor documentation/prices and public cooking requests checked 8 Nov; documentation breadth is not hands-on quality. |
+| [Mac cookbook-app inventory](../2026-11-09-cookbook-app-deep-dive/README.md) | Native fixtures, targeted Mac tests and official guides, 9 Nov; 78 retained candidates plus nine exploration leads, with source map and explicit coverage gaps. |
 | [Advanced/quality/economics research](advanced_and_quality.md) | Standards, platform constraints, AI risks and unchanged scenario derivation; its older social sequencing is superseded here. |
 | [Social launch research](../2026-11-08-social-launch/social_launch.md) | Friend pilot, supply/permissions and acquisition recommendations; checked 8 Nov, no invitations or permissions assumed. |
 | [US copyright research](../2026-11-08-social-launch/us_copyright.md), [Canada copyright research](../2026-11-08-social-launch/canada_copyright.md) | Primary legal sources and qualified workflow guidance, checked 8 Nov; entity/territorial application and individual claims need counsel. Canadian consolidation retrieved current to 19 Oct; no exhaustive case-law audit. |
