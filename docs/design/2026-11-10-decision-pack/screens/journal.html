@@ -68,7 +68,7 @@
     .j-empty p { margin-top: 8px; color: var(--color-text-2); }
     .j-empty .btn-primary { margin-top: 20px; }
 
-    /* Log a cook: a page, one 680px column. */
+    /* Add to Journal: a page, one 680px column. */
     .log { max-width: 680px; }
     .log h1 { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 12px; margin-bottom: var(--space-5); }
     .two-up { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
@@ -123,7 +123,7 @@
           <h1>Journal <span class="planned">Planned</span></h1>
           <p class="sub" data-state-in="full">6 cooks since October</p>
         </div>
-        <a class="btn-primary" href="journal.html?state=log-form" data-state-in="full">Log a cook</a>
+        <a class="btn-primary" href="journal.html?state=log-form" data-state-in="full">Add to Journal</a>
       </div>
 
       <div class="journal" data-state-in="full">
@@ -234,14 +234,14 @@
       <section class="j-empty" data-state-in="empty">
         <h2>Nothing logged yet</h2>
         <p>Log what you cook: a recipe, a link or something improvised. Only you see it unless you share it.</p>
-        <a class="btn-primary" href="journal.html?state=log-form">Log a cook</a>
+        <a class="btn-primary" href="journal.html?state=log-form">Add to Journal</a>
       </section>
     </div>
 
-    <!-- ── Log a cook ─────────────────────────────────────────────────── -->
+    <!-- ── Add to Journal ─────────────────────────────────────────────────── -->
     <div class="log" data-state-in="log-form">
       <a class="back-link" href="journal.html?state=full">← Journal</a>
-      <h1>Log a cook <span class="planned">Planned</span></h1>
+      <h1>Add to Journal <span class="planned">Planned</span></h1>
 
       <form class="form" action="journal.html" onsubmit="return false">
         <div class="field">
@@ -287,7 +287,7 @@
         </div>
 
         <fieldset class="field">
-          <legend>Who sees this cook</legend>
+          <legend>Who sees this entry</legend>
           <div class="choices">
             <label class="choice">
               <input type="radio" name="audience" value="private" checked>

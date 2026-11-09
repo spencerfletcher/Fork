@@ -67,19 +67,20 @@
     .ings .grp { margin-top: 18px; }
     .ings .grp:first-of-type { margin-top: 14px; }
 
-    /* Ingredient strike rows: the whole row is the label, a 24px box at its start. */
+    /* Ingredient strike rows: the whole row is the label, the shipped 16px circle at its start (decided 9 Nov). */
     .ing { position: relative; display: flex; align-items: flex-start; gap: 12px; padding: 8px 0; min-height: 41px; border-bottom: 1px solid var(--color-border); cursor: pointer; line-height: 1.5; }
     .ing input, .step input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; margin: 0; cursor: pointer; }
     .ing b { font-weight: 600; }
     .ing .w { color: var(--color-text-2); }
     .ing .w.dynamic, .ing b.dynamic { color: var(--color-accent); }
-    .box { position: relative; flex-shrink: 0; width: 24px; height: 24px; border: 1.5px solid var(--color-text-3); border-radius: var(--radius-sm); background: var(--color-surface); }
+    .box { position: relative; flex-shrink: 0; width: 16px; height: 16px; border: 1px solid var(--color-text-3); border-radius: 50%; transform: translateY(2px); }
+    .ing:has(:checked) .box { background: var(--color-marigold); border-color: var(--color-marigold); }
     .ing:hover .box { border-color: var(--color-text-2); }
     /* Ticked: struck through and receded to Ink 3, the check Ink 3 too, no fill
        (marigold stays the primary's). */
     .ing:has(:checked) { color: var(--color-text-3); text-decoration: line-through; }
     .ing:has(:checked) :is(b, .w, .dynamic) { color: var(--color-text-3); }
-    .ing:has(:checked) .box::after { content: ''; position: absolute; left: 7px; top: 2.5px; width: 6px; height: 12px; border: solid var(--color-text-3); border-width: 0 2px 2px 0; transform: rotate(45deg); }
+    .ing:has(:checked) .box::after { content: ''; position: absolute; left: 4.5px; top: 1.5px; width: 5px; height: 9px; border: solid var(--color-text); border-width: 0 1.5px 1.5px 0; transform: rotate(45deg); }
     :is(.ing, .step):has(:focus-visible) { outline: 2px solid var(--color-accent); outline-offset: 2px; border-radius: 2px; }
     @media (forced-colors: active) { .ing:has(:checked) .box { background: Highlight; } }
 
@@ -292,7 +293,7 @@
 
         <div class="method-end">
           <button class="btn-ghost" type="button" data-href="recipe.html?state=owner">Done cooking</button>
-          <a class="text-btn" href="journal.html?state=log-form">Log this cook</a>
+          <a class="text-btn" href="journal.html?state=log-form">Add to Journal</a>
           <span class="planned">Planned</span>
         </div>
       </section>

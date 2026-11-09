@@ -51,7 +51,7 @@ Photo alt on cards is empty (the title names the recipe). In the recipe band, al
   - `v2` Sun 11 Oct: "More cardamom in the dough, 1 tsp to 1½ tsp"
   - `v1` Sat 26 Sep: "First bake"
 - **Adaptations:** "Cardamom Buns, Less Sweet" by `@devcooks` (from v2); "Vegan Cardamom Buns" by `@samlind` (from v3)
-- **Personal line (Maria):** You cooked this on Sun 8 Nov · Log a cook
+- **Personal line (Maria):** You cooked this on Sun 8 Nov · Add to Journal
 
 **Ingredients**
 
@@ -182,7 +182,7 @@ Method
 - **Measure:** `10 min prep · 25 min cook · Serves 2` (no Makes; the pair is omitted)
 - **Tags:** eggs, brunch, vegetarian
 - **Stats:** No adaptations · 3 saves · 1 version (plain text, no version bar)
-- **Maria's state on it:** not saved, not adapted (Save unpressed). She cooked it on Sun 18 Oct (personal line: "You cooked this on Sun 18 Oct · Log a cook").
+- **Maria's state on it:** not saved, not adapted (Save unpressed). She cooked it on Sun 18 Oct (personal line: "You cooked this on Sun 18 Oct · Add to Journal").
 
 Ingredients (ungrouped)
 - 2 tbsp olive oil
@@ -246,7 +246,7 @@ Captions and notes for next time (the note is on lifted paper, marked "Only you"
 5. **Shakshuka.** "Slow Sunday. Dev was right about the cayenne." Note: "Add the feta earlier so it softens."
 6. **Meatballs.** "From Serious Eats, halved the chilli for the kids." Note: "Write this one up as my own recipe."
 
-**Log a cook form** (`?state=log-form`), prefilled from Cook's "Log this cook" on the buns: Dish "Cardamom Cinnamon Buns" · Date "Tue 10 Nov 2026" · Recipe "Cardamom Cinnamon Buns with Brown Butter Glaze · v3" · Served "12" · Photo (optional) · Caption (optional) · Note for next time (optional, "Only you ever see this") · Who can see this: **Only me** (default) / Friends. Required: Dish and Date.
+**Add to Journal form** (`?state=log-form`), prefilled from Cook's "Add to Journal" on the buns: Dish "Cardamom Cinnamon Buns" · Date "Tue 10 Nov 2026" · Recipe "Cardamom Cinnamon Buns with Brown Butter Glaze · v3" · Served "12" · Photo (optional) · Caption (optional) · Note for next time (optional, "Only you ever see this") · Who can see this: **Only me** (default) / Friends. Required: Dish and Date.
 
 ## Friends feed (newest first; the page says "Newest first")
 
@@ -267,7 +267,7 @@ Entry actions: **Appreciate** · **Comment** · **Save** (Save only when a publi
 | Page | Heading | Line | Action |
 |---|---|---|---|
 | Cookbook | Your cookbook is empty | Recipes you write and recipes you save from others live here. | **New recipe** (primary) · Discover recipes → |
-| Journal | Nothing logged yet | Log what you cook: a recipe, a link or something improvised. Only you see it unless you share it. | **Log a cook** (primary) |
+| Journal | Nothing logged yet | Log what you cook: a recipe, a link or something improvised. Only you see it unless you share it. | **Add to Journal** (primary) |
 | Friends | No friends yet | When friends share what they cook, it shows up here, newest first. | **Invite a friend** (ghost) |
 | Search, no results | No recipes match "saffron". | Search looks at titles, descriptions and ingredients. | Clear search |
 
@@ -333,9 +333,9 @@ Copy that first appeared on a screen and is now canon. Where a screen and this f
 
 - **Cookbook:** count sentence "9 recipes: 6 yours, 3 saved from other cooks." · source line "Saved from @devcooks" · status lines "0 recipes match" / "3 recipes match" · grid 1 / 2 / 4 columns (600, 1100).
 - **Discover:** lede "Public recipes from every cook on Fork." · "Newest first" · "10 recipes" · lead card is the newest recipe · grid 1 / 2 / 3.
-- **Recipe:** scaled notice above the method "Scaled ×2. Pan sizes and oven temperatures are not scaled; adjust bake time to the pan." (planned) · tomato sauce personal line "You cooked this on Sat 24 Oct · Log a cook" · signed-out text link "Log in to save" (open question, see WORKSHEET) · visitor state is Dev's Shakshuka, which has no photo; the signed-out state carries the photo case.
+- **Recipe:** scaled notice above the method "Scaled ×2. Pan sizes and oven temperatures are not scaled; adjust bake time to the pan." (planned) · tomato sauce personal line "You cooked this on Sat 24 Oct · Add to Journal" · signed-out text link "Log in to save" (open question, see WORKSHEET) · visitor state is Dev's Shakshuka, which has no photo; the signed-out state carries the photo case.
 - **Delete:** trigger "Delete recipe…" in a red-outline ghost; confirm buttons "Delete permanently" / "Keep recipe"; editor Save row reads "Save changes · Cancel".
 - **Cook:** strip drops prep and cook times; serves box lives in the strip; ticked rows strike through in Ink 3 with no marigold; "Screen stays on while cooking" (shipped); notice "Scaled ×2 · pan sizes and oven temperatures not scaled"; step markers "9x13 pan · not scaled" and "200 °C / 400 °F · not scaled" are planned.
 - **Editor:** Makes error is the shipped "Makes is too long (80 characters max)" · read-back for steps "Reads as 9 steps in 3 groups: Dough 1–3 · …" · header count follows the real number of fields in error · the 81-character Makes example "12 buns, or 16 smaller ones if you cut the rolled log into sixteen pieces instead" · photo error "Choose a photo under 4 MB." · Insert menu holds Section heading only (no greyed Timer/Link).
-- **Journal:** "6 cooks since October" · "Served N" / "Made 3 jars" · "Only me recipe" · note hint "Only you ever see this." · private recipe shared to friends: "Friends see the dish and your photo, not the recipe." · Dev's recipe note links "Make my version →" · form label "Who sees this cook"; choice sentences "It stays in your Journal. You can share it later." / "Dev and Sam see it in Friends." · caption hint "Whoever sees this cook sees the caption."
+- **Journal:** "6 cooks since October" · "Served N" / "Made 3 jars" · "Only me recipe" · note hint "Only you ever see this." · private recipe shared to friends: "Friends see the dish and your photo, not the recipe." · Dev's recipe note links "Make my version →" · form label "Who sees this entry"; choice sentences "It stays in your Journal. You can share it later." / "Dev and Sam see it in Friends." · caption hint "Whoever sees this cook sees the caption."
 - **Friends:** no Comment action · Save only where a shareable recipe is attached, pressed as "Saved" when already in the Cookbook · "You and Sam" beside a pressed Appreciate · request actions ghost "Accept" + text "Ignore" · invite link shown as display text.
