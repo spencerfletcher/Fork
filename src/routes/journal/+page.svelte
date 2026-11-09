@@ -23,7 +23,7 @@
 </script>
 
 <div class="page">
-	<div class="page-inner journal">
+	<div class="page-inner">
 		<div class="j-head">
 			<div>
 				<h1>Journal</h1>
@@ -61,10 +61,6 @@
 </div>
 
 <style>
-	.journal {
-		max-width: 880px;
-	}
-
 	.j-head {
 		display: flex;
 		flex-wrap: wrap;

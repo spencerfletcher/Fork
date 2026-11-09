@@ -150,10 +150,10 @@
 		color: var(--color-text-2);
 	}
 
-	/* One 680px feed; the rail beside it from 1024. */
+	/* The feed fills the container; the 280px rail beside it from 1024. */
 	.f-layout {
 		display: grid;
-		grid-template-columns: minmax(0, 680px) 280px;
+		grid-template-columns: minmax(0, 1fr) 280px;
 		gap: 64px;
 		align-items: start;
 	}
@@ -339,7 +339,7 @@
 	   tablet, stacked on a phone; the invite drops its sentence. */
 	@media (max-width: 1023px) {
 		.f-layout {
-			grid-template-columns: minmax(0, 680px);
+			grid-template-columns: minmax(0, 1fr);
 			gap: var(--space-5);
 		}
 
