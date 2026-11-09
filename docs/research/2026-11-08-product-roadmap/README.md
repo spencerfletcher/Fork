@@ -422,6 +422,8 @@ Spencer reviewed the offline decision pack (`docs/design/2026-11-10-decision-pac
 | No public scores in the pilot | Unchanged for the MVP. A public recipe rating is a later recipe feature, not a Journal one. |
 | Durable drafts, Trash, Party mode, graphical view, AI | Unchanged: out of the MVP. |
 
+Settled the same evening when the build was authorised: forks of a Friends recipe may be Only me or Friends, never Public, enforced server-side; the 16px ticks stay with 44px phone hit areas; Cook pins to the version in the URL, survives reload, and hands version and serving scale to the Journal entry; Discover's lead card uses saves over the last 7 days; audiences are Only me / Friends / Public for recipes and Only me / Friends for Journal entries. Deferred features stay deferred.
+
 Not changed by the pack and still owed by the builds: the pilot's interim owner-data export, report/mute/block with manual moderation, profile pages gaining a friend request control and friends-level recipes, and the P1 cookbook items (collections, pins, search highlighting, paste/URL capture, print and archive) that the Cookbook grid must leave room for.
 
 ### Source register and limits

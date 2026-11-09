@@ -1,6 +1,6 @@
 # Fork MVP design summary · decided 9 Nov 2026
 
-Builder-ready. Spencer reviewed the pack on 9 Nov 2026 (WORKSHEET.md holds his notes); this file is the direction with his decisions folded in. Where he overrode the pack's recommendation the line says so. Shipped and planned are as in `docs/research/2026-11-08-product-roadmap/README.md`: groups, Makes, scaling notices on Makes, delete, cook mode, versions, compare, fork and favorite are shipped; Cookbook, Discover, the audience radios, the Insert toolbar, Journal and Friends are planned.
+**Build authorised 9 Nov 2026 (evening): implement this directly, no further mockup rounds; refine against the working app.** Spencer reviewed the pack on 9 Nov 2026 (WORKSHEET.md holds his notes); this file is the direction with his decisions folded in. Where he overrode the pack's recommendation the line says so. Shipped and planned are as in `docs/research/2026-11-08-product-roadmap/README.md`: groups, Makes, scaling notices on Makes, delete, cook mode, versions, compare, fork and favorite are shipped; Cookbook, Discover, the audience radios, the Insert toolbar, Journal and Friends are planned.
 
 Vocabulary: a **log entry** is one record in the Journal (never "a cook" as a noun). **Cook** is the cooking view of a recipe and the verb.
 
@@ -16,6 +16,7 @@ Paper `#f7f3ec`, ink, clay `#b23c00` as text only, marigold `#eca620` as the sin
 
 - **Recipe: Only me / Friends / Public.** Radio trio "Who can see this recipe", one sentence each, Only me default. Friends-level recipes are visible to approved friends (page, Save, Fork) and never appear in Discover. Making a recipe less visible never hides existing forks. Link sharing of a private recipe is later.
 - **Log entry: Only me / Friends.** Radio pair "Who sees this entry", Only me default; after the first approved friend the last choice is remembered. A friends-level entry on a private recipe says "Friends see the dish and your photo, not the recipe."
+- **Forks never widen access (decided 9 Nov, evening).** A fork of a Friends recipe may be Only me or Friends, never Public; a fork of a Public recipe may be anything. The server enforces this on create and on every later visibility change, not just the radio set.
 - Schema note for the builder: `recipes.isPublic` becomes a three-valued visibility (`'private' | 'friends' | 'public'` as const), and every recipe read (page, Cookbook Saved, Fork, Discover, profile) checks it.
 
 ## Navigation (comparison 1 · A, confirmed)
@@ -55,7 +56,8 @@ Paper `#f7f3ec`, ink, clay `#b23c00` as text only, marigold `#eca620` as the sin
 
 - The band collapses to one ~80px strip: title (Bitter 1.375rem clay), serves box, Makes, Done cooking. Prep and cook times drop out.
 - ≥1024: ingredients 5/12 sticky, method 7/12 at 1.125rem/1.6, clay Bitter numerals. 834: two columns 4/8. <768: strip and section switch pin together (144px); each tab keeps its own scroll position.
-- **Ticks stay the shipped 16px marigold circle** (Spencer's 31 Oct decision, confirmed 9 Nov; revisit candidate, roadmap M20). The pack's 24px square is withdrawn; `screens/cook.html` now draws the circle. Ticked rows strike through in Ink 3. No current-step marker.
+- **Cook is pinned to the version being read**: the existing version URL parameter carries into Cook, survives reload, and "Add to Journal" prefills that version and the serving scale (decided 9 Nov, evening).
+- **Ticks stay the shipped 16px marigold circle** with the shipped 44px row hit on phone (Spencer's 31 Oct decision, confirmed 9 Nov; revisit candidate, roadmap M20). The pack's 24px square is withdrawn; `screens/cook.html` now draws the circle. Ticked rows strike through in Ink 3. No current-step marker.
 - The method ends with "Done cooking" and "Add to Journal" (planned), which opens the Journal form prefilled with recipe, version, servings and today.
 
 ## Editor (comparison 3 · A, confirmed)
