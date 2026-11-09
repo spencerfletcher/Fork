@@ -141,7 +141,7 @@ describe('Discover', () => {
 
 	test('a filter with no match says so and offers to clear', () => {
 		renderDiscover({ searchQuery: 'saffron' });
-		expect(screen.getByRole('status')).toHaveTextContent('0 recipes found');
+		expect(screen.getByRole('status')).toHaveTextContent('0 recipes match');
 		expect(screen.getByRole('link', { name: 'Clear filters' })).toBeInTheDocument();
 	});
 });

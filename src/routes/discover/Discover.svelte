@@ -2,6 +2,7 @@
 	import Avatar from '#lib/components/ui/Avatar.svelte';
 	import RecipeCard from '#lib/components/recipes/RecipeCard.svelte';
 	import SearchFilters from '#lib/components/ui/SearchFilters.svelte';
+	import ResultStatus from '#lib/components/ui/ResultStatus.svelte';
 	import { formatTime, plural } from '#lib/helpers.js';
 	import type { loadDiscover } from './discover.server.js';
 
@@ -39,10 +40,7 @@
 				friendsOnly={data.friendsOnly} />
 		</div>
 
-		<!-- Always in the DOM so screen readers announce the count when it changes. -->
-		<p class="sr-only" role="status">
-			{#if filtered}{plural(total, 'recipe')} found{/if}
-		</p>
+		<ResultStatus count={total} {filtered} />
 
 		{#if lead}
 			<!-- The title link stretches over the card; the cook link sits above it,

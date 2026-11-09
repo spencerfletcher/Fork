@@ -96,12 +96,12 @@ describe('Search page result count', () => {
 
 	test('a filtered search announces how many recipes it found', () => {
 		renderSearch({ searchQuery: 'soup', recipes: [card] as never });
-		expect(screen.getByRole('status')).toHaveTextContent('1 recipe found');
+		expect(screen.getByRole('status')).toHaveTextContent('1 recipe matches');
 	});
 
 	test('a filter with no results announces that nothing was found', () => {
 		renderSearch({ selectedTags: ['dessert'] });
-		expect(screen.getByRole('status')).toHaveTextContent('0 recipes found');
+		expect(screen.getByRole('status')).toHaveTextContent('0 recipes match');
 	});
 
 	test('without a filter the region is present and silent', () => {

@@ -2,7 +2,7 @@ import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import RecipeActions from './RecipeActions.svelte';
-import { compactCount } from './compactCount';
+import { compactCount } from '#lib/helpers.js';
 import source from './RecipeActions.svelte?raw';
 import { readFileSync } from 'node:fs';
 

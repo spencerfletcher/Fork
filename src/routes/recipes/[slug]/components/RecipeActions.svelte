@@ -5,7 +5,7 @@
 	import { setShallowParam } from './shallowParam';
 	import type { Recipe } from '#lib/server/db/schema.js';
 	import { forkIcon, saveIcon } from '#lib/components/Icons.svelte';
-	import { compactCount } from './compactCount';
+	import { compactCount } from '#lib/helpers.js';
 
 	let {
 		recipe,

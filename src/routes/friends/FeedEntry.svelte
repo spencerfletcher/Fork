@@ -3,7 +3,8 @@
 	import Username from '#lib/components/ui/Username.svelte';
 	import Avatar from '#lib/components/ui/Avatar.svelte';
 	import { likeIcon, saveIcon } from '#lib/components/Icons.svelte';
-	import { dayLabel } from '#lib/journal.js';
+	import { dayLabel, sourceHref } from '#lib/journal.js';
+	import { compactCount } from '#lib/helpers.js';
 	import MoreMenu from './MoreMenu.svelte';
 	import type { FeedItem } from '#lib/server/friends.js';
 
@@ -12,7 +13,7 @@
 	const entry = $derived(item.entry);
 	const source = $derived(item.source);
 	const cooked = $derived(dayLabel(entry.cookedOn));
-	const loggedOn = $derived(dayLabel(entry.createdAt.toISOString().slice(0, 10)));
+	const loggedOn = $derived(dayLabel(entry.createdAt));
 
 	// Optimistic, as the recipe page's Save: the press flips at once and flips
 	// back if the server refuses. Writable derived, so a reload resets them.
@@ -46,11 +47,7 @@
 	{#if entry.caption}<p class="caption">{entry.caption}</p>{/if}
 	{#if source.kind === 'recipe'}
 		<p class="source">
-			<a
-				class="hit-link"
-				href="/recipes/{source.slug}{source.versionNumber
-					? `?version=${source.versionNumber}`
-					: ''}">
+			<a class="hit-link" href={sourceHref(source)}>
 				{source.title}{source.versionNumber ? ' · ' : ''}{#if source.versionNumber}<span
 						class="mono-id">
 						v{source.versionNumber}
@@ -91,7 +88,7 @@
 			<input type="hidden" name="entryId" value={entry.id} />
 			<button type="submit" class="text-btn text-btn--ink" aria-pressed={liked}>
 				{@render likeIcon(liked)}
-				<span>{likes > 0 ? `Like · ${likes}` : 'Like'}</span>
+				<span>{likes > 0 ? `Like · ${compactCount(likes)}` : 'Like'}</span>
 			</button>
 		</form>
 		<!-- Save only where a recipe the reader may see is attached, and not their own. -->
