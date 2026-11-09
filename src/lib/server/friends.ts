@@ -1,5 +1,5 @@
 import { alias } from 'drizzle-orm/pg-core';
-import { and, count, desc, eq, inArray, ne, or, sql } from 'drizzle-orm';
+import { and, count, desc, eq, inArray, ne, sql } from 'drizzle-orm';
 import { db } from './db/index.js';
 import {
 	favorites,
@@ -15,7 +15,7 @@ import {
 	type ReportTarget
 } from './db/schema.js';
 import type { Tx } from './tags.js';
-import { friendIdsOf, visibleTo } from './visibility.js';
+import { eitherWay, friendIdsOf, onAlias, visibleTo } from './visibility.js';
 import { canSeeEntry, sourceColumns, sourceOf } from './journal.js';
 
 type Viewer = { id: string };
@@ -37,10 +37,7 @@ export function relationFrom(row: PairRow | undefined, me: string): Exclude<Rela
 }
 
 const pairOf = (a: string, b: string) =>
-	or(
-		and(eq(friendships.requesterId, a), eq(friendships.addresseeId, b)),
-		and(eq(friendships.requesterId, b), eq(friendships.addresseeId, a))
-	);
+	eitherWay([friendships.requesterId, friendships.addresseeId], a, b);
 
 /** The one friendships row for a pair, whichever way round it was written. */
 async function pairRow(tx: Tx | typeof db, a: string, b: string): Promise<PairRow | undefined> {
@@ -258,7 +255,8 @@ export async function toggleLike(
 }
 
 // A blocked row between the liker and the entry's owner, either way round.
-const likerBlocked = sql`exists (select 1 from ${friendships} "bk" where "bk"."status" = 'blocked' and (("bk"."requester_id" = ${likes.userId} and "bk"."addressee_id" = ${logEntries.userId}) or ("bk"."addressee_id" = ${likes.userId} and "bk"."requester_id" = ${logEntries.userId})))`;
+const bk = (column: { name: string }) => onAlias('bk', column);
+const likerBlocked = sql`exists (select 1 from ${friendships} "bk" where ${bk(friendships.status)} = ${'blocked' satisfies FriendshipStatus} and ${eitherWay([bk(friendships.requesterId), bk(friendships.addresseeId)], likes.userId, logEntries.userId)})`;
 
 /** Like counts per entry, leaving out likes from anyone the owner blocked or was blocked by. */
 export async function likeCounts(

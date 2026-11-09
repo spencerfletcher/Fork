@@ -190,7 +190,7 @@ describe('visibleTo', () => {
 		const { sql, params } = new PgDialect().sqlToQuery(visibleTo(OTHER));
 		expect(params).toEqual(['public', OTHER.id, 'friends', 'accepted', OTHER.id, OTHER.id]);
 		expect(sql).toBe(
-			'("recipes"."visibility" = $1 or "recipes"."author_id" = $2 or ("recipes"."visibility" = $3 and exists (select 1 from "friendships" "fr" where "fr"."status" = $4 and (("fr"."requester_id" = $5 and "fr"."addressee_id" = "recipes"."author_id") or ("fr"."addressee_id" = $6 and "fr"."requester_id" = "recipes"."author_id")))))'
+			'("recipes"."visibility" = $1 or "recipes"."author_id" = $2 or ("recipes"."visibility" = $3 and exists (select 1 from "friendships" "fr" where "fr"."status" = $4 and (least("fr"."requester_id", "fr"."addressee_id") = least($5, "recipes"."author_id") and greatest("fr"."requester_id", "fr"."addressee_id") = greatest($6, "recipes"."author_id")))))'
 		);
 	});
 

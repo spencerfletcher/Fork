@@ -8,7 +8,8 @@ import {
 	type BuildQueryResult,
 	type DBQueryConfig,
 	type ExtractTablesWithRelations,
-	type SQL
+	type SQL,
+	type SQLWrapper
 } from 'drizzle-orm';
 import { QueryBuilder } from 'drizzle-orm/pg-core';
 import { db } from './db/index.js';
@@ -104,14 +105,31 @@ export async function friendIdsOf(userId: string): Promise<string[]> {
 	return rows.map((r) => (r.requesterId === userId ? r.addresseeId : r.requesterId));
 }
 
-// A friendships column on the subquery's alias, by name. As a column object it
-// would be re-aliased to the root table by db.query's where, becoming "recipes"."status".
-const fr = (column: { name: string }) => sql`"fr".${sql.identifier(column.name)}`;
+/**
+ * A friendships column on a subquery's alias, by name. As a column object it
+ * would be re-aliased to the root table by db.query's where, becoming "recipes"."status".
+ */
+export const onAlias = (alias: string, column: { name: string }) =>
+	sql`${sql.identifier(alias)}.${sql.identifier(column.name)}`;
+
+/**
+ * The friendships row `[requester, addressee]` is between `a` and `b`,
+ * whichever of them asked: the pair index's own least/greatest expressions.
+ */
+export function eitherWay(
+	[requester, addressee]: [SQLWrapper, SQLWrapper],
+	a: SQLWrapper | string,
+	b: SQLWrapper | string
+): SQL {
+	return sql`(least(${requester}, ${addressee}) = least(${a}, ${b}) and greatest(${requester}, ${addressee}) = greatest(${a}, ${b}))`;
+}
 
 /** The same rule as canView, as a query condition on `recipes`. */
 export function visibleTo(user: Viewer): SQL {
 	if (!user) return eq(recipes.visibility, 'public');
-	const authorIsFriend = sql`exists (select 1 from ${friendships} "fr" where ${fr(friendships.status)} = ${ACCEPTED} and ((${fr(friendships.requesterId)} = ${user.id} and ${fr(friendships.addresseeId)} = ${recipes.authorId}) or (${fr(friendships.addresseeId)} = ${user.id} and ${fr(friendships.requesterId)} = ${recipes.authorId})))`;
+	const fr = (column: { name: string }) => onAlias('fr', column);
+	const pair: [SQL, SQL] = [fr(friendships.requesterId), fr(friendships.addresseeId)];
+	const authorIsFriend = sql`exists (select 1 from ${friendships} "fr" where ${fr(friendships.status)} = ${ACCEPTED} and ${eitherWay(pair, user.id, recipes.authorId)})`;
 	return or(
 		eq(recipes.visibility, 'public'),
 		eq(recipes.authorId, user.id),

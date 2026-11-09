@@ -80,6 +80,29 @@ describe.skipIf(!local)('unfriend and block, against the real database', () => {
 			);
 	}
 
+	test("visibleTo shows each friend the other's Friends recipes, whichever asked, and a stranger neither", async () => {
+		const { visibleTo } = await import('./visibility.js');
+		await withFriends(async (tx, a, b) => {
+			const aFriends = await makeRecipe(tx, a, 'friends');
+			const bFriends = await makeRecipe(tx, b, 'friends');
+			const ids = [aFriends.id, bFriends.id];
+			// Through db.query, whose where re-aliases columns: the friendships
+			// columns must stay on the subquery's own alias.
+			const seenBy = async (id: string) =>
+				(
+					await tx.query.recipes.findMany({
+						where: and(inArray(schema.recipes.id, ids), visibleTo({ id })),
+						columns: { id: true }
+					})
+				)
+					.map((r) => r.id)
+					.sort((x, y) => x - y);
+			expect(await seenBy(a)).toEqual(ids);
+			expect(await seenBy(b)).toEqual(ids);
+			expect(await seenBy(`stranger-${a}`)).toEqual([]);
+		});
+	});
+
 	test("unfriend privatises each side's forks of the other's Friends recipes, nothing else", async () => {
 		await withFriends(async (tx, a, b) => {
 			const aFriends = await makeRecipe(tx, a, 'friends');

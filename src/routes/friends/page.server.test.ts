@@ -36,7 +36,10 @@ vi.mock('#lib/server/friends.js', async (importOriginal) => ({
 	feedFor: m.feedFor,
 	requestsFor: m.requestsFor
 }));
-vi.mock('#lib/server/visibility.js', () => ({ friendIdsOf: m.friendIdsOf }));
+vi.mock('#lib/server/visibility.js', async (importOriginal) => ({
+	...(await importOriginal<typeof import('#lib/server/visibility.js')>()),
+	friendIdsOf: m.friendIdsOf
+}));
 vi.mock('#lib/server/profiles.js', () => ({ ensureProfile: vi.fn().mockResolvedValue(undefined) }));
 
 const ME = { id: 'me' };
