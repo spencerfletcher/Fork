@@ -449,6 +449,7 @@ Spencer re-phased these after reviewing the full post-MVP backlog. They override
 | Journal and log-entry data export | Passing mention | **P2** |
 | Easy import: text documents, Markdown files, other sites where possible | P1 paste/URL/files | **P2** (paste-first editor stays MVP) |
 | Comment moderation (report a comment, delete on your own entry) | Unlisted | **P2**, with comments |
+| Desktop app for Fork (Mac first; likely a PWA or thin wrapper over the web app, decided with the native platform call) | Unlisted | **P5**, alongside the native iOS/Android decision |
 
 Settled later the same evening:
 
