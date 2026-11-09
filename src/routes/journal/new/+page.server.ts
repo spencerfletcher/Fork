@@ -26,7 +26,15 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 	// A recipe reached by link (a friend's, not saved) is offered too.
 	const offered: RecipeChoice[] =
 		linked && !choices.some((c) => c.slug === linked.slug)
-			? [{ slug: linked.slug, title: linked.title, visibility: linked.visibility }, ...choices]
+			? [
+					{
+						slug: linked.slug,
+						title: linked.title,
+						visibility: linked.visibility,
+						latestVersion: linked.versionNumber
+					},
+					...choices
+				]
 			: choices;
 
 	const values: EntryValues = {

@@ -29,7 +29,12 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 	let offered: RecipeChoice[] = choices;
 	if (source.kind === 'recipe' && !choices.some((c) => c.slug === source.slug)) {
 		offered = [
-			{ slug: source.slug, title: source.title, visibility: source.visibility },
+			{
+				slug: source.slug,
+				title: source.title,
+				visibility: source.visibility,
+				latestVersion: source.versionNumber
+			},
 			...choices
 		];
 	}

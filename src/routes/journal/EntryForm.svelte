@@ -62,6 +62,58 @@
 	});
 
 	const selected = $derived(choices.find((c) => c.slug === recipe));
+
+	// "From a recipe" is a combobox, as the editor's tag box is: type to
+	// filter, arrows move, Enter or a click takes one, Escape closes and puts
+	// the chosen title back. The hidden input carries the slug the server reads.
+	type Option = { value: string; label: string; version?: number | null };
+	const options: Option[] = $derived([
+		{ value: '', label: 'Improvised (no recipe)' },
+		...(keepLabel ? [{ value: KEEP_SOURCE, label: keepLabel }] : []),
+		...choices.map((c) => ({ value: c.slug, label: c.title, version: c.latestVersion }))
+	]);
+	const labelOf = (value: string) => options.find((o) => o.value === value)?.label ?? '';
+	// svelte-ignore state_referenced_locally
+	let query = $state(labelOf(values.recipe));
+	let typed = $state(false);
+	let open = $state(false);
+	let active = $state(-1);
+	const shown = $derived(
+		typed && query.trim()
+			? options.filter((o) => o.label.toLowerCase().includes(query.trim().toLowerCase()))
+			: options
+	);
+	const expanded = $derived(open && shown.length > 0);
+
+	function closeRecipes() {
+		open = false;
+		typed = false;
+		active = -1;
+		query = labelOf(recipe);
+	}
+
+	function pickRecipe(value: string) {
+		// Changing the recipe drops the version, so the latest is linked.
+		if (value !== recipe) version = '';
+		recipe = value;
+		closeRecipes();
+	}
+
+	function recipeKeydown(e: KeyboardEvent) {
+		if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+			e.preventDefault();
+			open = true;
+			if (shown.length === 0) return;
+			if (e.key === 'ArrowDown') active = (active + 1) % shown.length;
+			else active = active <= 0 ? shown.length - 1 : active - 1;
+		} else if (e.key === 'Enter' && open) {
+			e.preventDefault();
+			const option = shown[active] ?? (typed ? shown[0] : undefined);
+			if (option) pickRecipe(option.value);
+		} else if (e.key === 'Escape' && open) {
+			closeRecipes();
+		}
+	}
 	const showPrivateHint = $derived(selected?.visibility === 'private' && audience === 'friends');
 </script>
 
@@ -116,16 +168,52 @@
 		<label for="recipe">
 			From a recipe <span class="optional">optional</span>
 		</label>
-		<!-- Changing the recipe drops the version, so the latest is linked. -->
-		<select id="recipe" name="recipe" bind:value={recipe} onchange={() => (version = '')}>
-			<option value="">Improvised (no recipe)</option>
-			{#if keepLabel}
-				<option value={KEEP_SOURCE}>{keepLabel}</option>
+		<div class="recipe-combo">
+			<input
+				id="recipe"
+				type="text"
+				role="combobox"
+				autocomplete="off"
+				placeholder="Search your cookbook…"
+				bind:value={query}
+				onclick={() => (open = true)}
+				oninput={() => {
+					open = true;
+					typed = true;
+					active = -1;
+				}}
+				onblur={closeRecipes}
+				onkeydown={recipeKeydown}
+				aria-expanded={expanded}
+				aria-haspopup="listbox"
+				aria-autocomplete="list"
+				aria-controls={expanded ? 'recipe-listbox' : undefined}
+				aria-activedescendant={expanded && active >= 0 ? `recipe-option-${active}` : undefined} />
+			<input type="hidden" name="recipe" value={recipe} />
+			{#if expanded}
+				<ul
+					class="recipe-menu"
+					id="recipe-listbox"
+					role="listbox"
+					tabindex="-1"
+					aria-label="Recipes">
+					{#each shown as option, i (option.value)}
+						<!-- The keyboard stays on the input, as a combobox has it. -->
+						<!-- svelte-ignore a11y_click_events_have_key_events -->
+						<li
+							id="recipe-option-{i}"
+							role="option"
+							class:active={active === i}
+							aria-selected={option.value === recipe}
+							onmousedown={(e) => e.preventDefault()}
+							onclick={() => pickRecipe(option.value)}>
+							{option.label}
+							{#if option.version}<span class="mono-id">v{option.version}</span>{/if}
+						</li>
+					{/each}
+				</ul>
 			{/if}
-			{#each choices as choice (choice.slug)}
-				<option value={choice.slug}>{choice.title}</option>
-			{/each}
-		</select>
+		</div>
 		{#if version && selected}
 			<p class="form-hint">
 				Version <span class="mono-id">v{version}</span>
@@ -230,14 +318,50 @@
 		gap: var(--space-4);
 	}
 
-	select {
-		min-height: 41px;
-		padding: 8px 10px;
-		font: inherit;
-		color: var(--color-text);
+	.recipe-combo {
+		position: relative;
+	}
+
+	/* The tag box's open list: flush under the box, lifted, scrolling past eight rows. */
+	.recipe-menu {
+		position: absolute;
+		top: 100%;
+		left: 0;
+		right: 0;
+		z-index: 10;
+		max-height: 18rem;
+		overflow-y: auto;
+		margin: -1px 0 0;
+		padding: 0;
+		list-style: none;
 		background: var(--color-surface);
 		border: 1px solid var(--color-input-border);
-		border-radius: var(--radius-md);
+		border-radius: 0 0 var(--radius-md) var(--radius-md);
+		box-shadow: 0 8px 24px rgb(0 0 0 / 0.08);
+	}
+
+	.recipe-menu li {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 12px;
+		min-height: 44px;
+		padding: 11px 12px;
+		border-bottom: 1px solid var(--color-border);
+		cursor: pointer;
+	}
+
+	.recipe-menu li:last-child {
+		border-bottom: 0;
+	}
+
+	.recipe-menu li:hover,
+	.recipe-menu li.active {
+		background: var(--color-tint);
+	}
+
+	.recipe-menu .mono-id {
+		color: var(--color-accent);
 	}
 
 	/* The note's own lifted paper: the one thing on the form only you see. */
@@ -333,8 +457,7 @@
 			grid-template-columns: minmax(0, 1fr);
 		}
 
-		select {
-			min-height: 44px;
+		#recipe {
 			font-size: 16px;
 		}
 	}

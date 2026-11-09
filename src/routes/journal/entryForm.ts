@@ -20,6 +20,8 @@ export type RecipeChoice = {
 	slug: string;
 	title: string;
 	visibility: 'private' | 'friends' | 'public';
+	/** Shown beside the title; picking a recipe links its latest version. */
+	latestVersion: number | null;
 };
 
 export function valuesOf(formData: FormData): EntryValues {
