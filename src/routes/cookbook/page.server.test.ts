@@ -84,7 +84,8 @@ describe('/cookbook load', () => {
 		const libraryWhere = sqlOf(selectMock.mock.results[0].value.where.mock.calls[0][0]);
 		// Own by author id, saved through the favourites subquery, both under visibleTo.
 		expect(libraryWhere.sql).toContain('"favorites"');
-		expect(libraryWhere.params.filter((p) => p === USER.id).length).toBeGreaterThanOrEqual(3);
+		// visibleTo names the viewer three times; own-recipes and the favourites subquery once each.
+		expect(libraryWhere.params.filter((p) => p === USER.id)).toHaveLength(5);
 	});
 
 	test('counts the library by filter, whatever the filter shows', async () => {
