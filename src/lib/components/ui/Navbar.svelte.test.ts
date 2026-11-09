@@ -166,7 +166,7 @@ describe('Navbar layout', () => {
 	// The phone bar has no menu now, so Log in, Log out and the brand are thumb targets.
 	test('below 768 the brand and the text links are 44px tall', () => {
 		const phone = style.match(/@media \(max-width: 767px\)\s*{([\s\S]*?)\n\t}/)![1];
-		const block = phone.match(/\.nav-brand,\s*\.navbar-link\s*{([^}]*)}/)![1];
+		const block = phone.match(/\.nav-brand,\s*\.navbar-link:not\(\.hidden\)\s*{([^}]*)}/)![1];
 		expect(block).toMatch(/min-height:\s*44px/);
 	});
 

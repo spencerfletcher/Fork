@@ -193,8 +193,9 @@
 	/* A phone has no menu: Log in, Log out and the brand are thumb targets,
 	   44px tall inside the 52px bar, text where it was. */
 	@media (max-width: 767px) {
+		/* :not(.hidden): Sign up stays a desktop link. */
 		.nav-brand,
-		.navbar-link {
+		.navbar-link:not(.hidden) {
 			display: inline-flex;
 			align-items: center;
 			min-height: 44px;
