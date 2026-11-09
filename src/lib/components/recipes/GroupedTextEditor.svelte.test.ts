@@ -259,6 +259,25 @@ describe('GroupedTextEditor', () => {
 			expect(execCommand).toHaveBeenCalledWith('insertText', false, `# ${SECTION_NAME}\n`);
 		});
 
+		test('while saving, Insert and its item are disabled and insert nothing', async () => {
+			render(GroupedTextEditor, props('flour', { disabled: true }));
+			expect(toggle()).toBeDisabled();
+			const hiddenItem = screen.getByRole('button', { name: 'Section heading', hidden: true });
+			expect(hiddenItem).toBeDisabled();
+			hiddenItem.removeAttribute('disabled');
+			await fireEvent.click(hiddenItem);
+			expect(execCommand).not.toHaveBeenCalled();
+		});
+
+		test('Escape in the open menu closes it and returns focus to Insert', async () => {
+			render(GroupedTextEditor, props(''));
+			await fireEvent.click(toggle());
+			item().focus();
+			await fireEvent.keyDown(item(), { key: 'Escape' });
+			expect(toggle()).toHaveAttribute('aria-expanded', 'false');
+			expect(toggle()).toHaveFocus();
+		});
+
 		test('a mouse press on the item keeps the caret in the box', async () => {
 			render(GroupedTextEditor, props(''));
 			await fireEvent.click(toggle());

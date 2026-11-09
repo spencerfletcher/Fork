@@ -39,6 +39,7 @@
 	let textarea: HTMLTextAreaElement | undefined = $state();
 	let box: HTMLDivElement | undefined = $state();
 	let open = $state(false);
+	let toggle: HTMLButtonElement | undefined = $state();
 
 	const BLOCK = /^(DIV|P|LI|PRE|BLOCKQUOTE|H[1-6])$/;
 
@@ -265,7 +266,7 @@
 	// "# Section name" on its own line with the name selected, so typing
 	// replaces it. One insertText call: one step on the undo stack.
 	function insertHeading() {
-		if (!box) return;
+		if (!box || disabled) return;
 		const sel = getSelection();
 		if (!sel) return;
 		// Closed again, so Tab still runs label, Insert, box.
@@ -345,6 +346,8 @@
 			<button
 				type="button"
 				class="insert-toggle"
+				bind:this={toggle}
+				{disabled}
 				aria-expanded={open}
 				aria-controls="{id}-insert"
 				onclick={() => (open = !open)}>
@@ -363,11 +366,22 @@
 		{/if}
 	</div>
 	{#if enhanced}
-		<div class="insert-row" id="{id}-insert" hidden={!open}>
+		<!-- Escape closes the menu, back to its toggle, as a disclosure does. -->
+		<div
+			class="insert-row"
+			id="{id}-insert"
+			hidden={!open}
+			role="presentation"
+			onkeydown={(e) => {
+				if (e.key !== 'Escape') return;
+				open = false;
+				toggle?.focus();
+			}}>
 			<!-- mousedown would take the caret out of the box. -->
 			<button
 				type="button"
 				class="btn-ghost insert-item"
+				{disabled}
 				onmousedown={(e) => e.preventDefault()}
 				onclick={insertHeading}>
 				<span class="mark" aria-hidden="true">#</span>
