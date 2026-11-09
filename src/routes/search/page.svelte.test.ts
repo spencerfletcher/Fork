@@ -69,15 +69,14 @@ describe('Search page empty state', () => {
 		expect(screen.queryByRole('link', { name: 'Clear filters' })).toBeNull();
 	});
 
-	test('with nothing set, All recipes goes where the tabs’ All goes', () => {
-		// Signed in, /recipes is My Recipes; browse is the home page.
+	test('with nothing set, All recipes goes to Discover, where the tabs’ All goes', () => {
 		const { unmount } = renderSearch();
 		expect(screen.getByText(/Enter a recipe name/)).toBeInTheDocument();
-		expect(screen.getByRole('link', { name: 'All recipes' })).toHaveAttribute('href', '/recipes');
+		expect(screen.getByRole('link', { name: 'All recipes' })).toHaveAttribute('href', '/discover');
 		expect(screen.queryByRole('link', { name: 'Clear filters' })).toBeNull();
 		unmount();
 		renderSearch({ user: { id: 'u1' } });
-		expect(screen.getByRole('link', { name: 'All recipes' })).toHaveAttribute('href', '/');
+		expect(screen.getByRole('link', { name: 'All recipes' })).toHaveAttribute('href', '/discover');
 	});
 });
 

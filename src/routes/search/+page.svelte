@@ -1,6 +1,6 @@
 <script lang="ts">
 	import RecipeGrid from '#lib/components/recipes/RecipeGrid.svelte';
-	import { allRecipesHref, plural } from '#lib/helpers.js';
+	import { plural } from '#lib/helpers.js';
 	import SearchFilters from '#lib/components/ui/SearchFilters.svelte';
 	import type { PageData } from './$types';
 
@@ -31,8 +31,7 @@
 		{:else}
 			<p class="empty-state mt-6">
 				<!-- Each link says what it does; All recipes goes where the tabs' All
-				     goes, since signed in /recipes is My Recipes (decided 29 October
-				     2026). -->
+				     goes, Discover. -->
 				{#if data.selectedTags.length > 0}
 					No recipes found. Try adjusting your search or clearing some filters.
 					<!-- Clears the tags only; the query stays. -->
@@ -47,7 +46,7 @@
 					<a href="/search">Clear search</a>
 				{:else}
 					Enter a recipe name or select tags to find recipes.
-					<a href={allRecipesHref(!!data.user)}>All recipes</a>
+					<a href="/discover">All recipes</a>
 				{/if}
 			</p>
 		{/if}

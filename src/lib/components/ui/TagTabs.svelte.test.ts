@@ -10,7 +10,7 @@ const tags = [
 describe('TagTabs', () => {
 	test('links All to the browse page and each tag to its page', () => {
 		render(TagTabs, { props: { tags, active: null } });
-		expect(screen.getByRole('link', { name: 'All' })).toHaveAttribute('href', '/recipes');
+		expect(screen.getByRole('link', { name: 'All' })).toHaveAttribute('href', '/discover');
 		expect(screen.getByRole('link', { name: 'Dessert' })).toHaveAttribute('href', '/tags/dessert');
 	});
 
@@ -23,11 +23,6 @@ describe('TagTabs', () => {
 	test('All is current when no tag is active', () => {
 		render(TagTabs, { props: { tags, active: null } });
 		expect(screen.getByRole('link', { name: 'All' })).toHaveAttribute('aria-current', 'page');
-	});
-
-	test('All can point elsewhere, for a signed-in user whose /recipes is their own list', () => {
-		render(TagTabs, { props: { tags, active: 'dessert', allHref: '/' } });
-		expect(screen.getByRole('link', { name: 'All' })).toHaveAttribute('href', '/');
 	});
 });
 

@@ -1,12 +1,11 @@
 <script lang="ts">
 	import type { TagChip } from '#lib/recipes/types.js';
 
-	// Two uses, one look. Browse pages link: `active` is the current tag's slug,
-	// null means "All", and `allHref` moves the All tab for a signed-in user,
-	// whose /recipes is their own list. Search and Favorites toggle: `selected`
-	// holds every pressed slug, and the parent navigates on each press.
+	// Two uses, one look. Tag pages link: `active` is the current tag's slug,
+	// null means "All", which is Discover. Search, Cookbook and Discover toggle:
+	// `selected` holds every pressed slug, and the parent navigates on each press.
 	type Props = { tags: TagChip[] } & (
-		| { active: string | null; allHref?: string }
+		| { active: string | null }
 		| { selected: string[]; onToggle: (slug: string) => void; onClear: () => void }
 	);
 
@@ -34,7 +33,7 @@
 	{/if}
 {:else}
 	<nav class="tag-tabs" aria-label="Browse by tag">
-		<a href={mode.allHref ?? '/recipes'} aria-current={mode.active === null ? 'page' : undefined}>
+		<a href="/discover" aria-current={mode.active === null ? 'page' : undefined}>
 			All
 		</a>
 		{#each tags as tag (tag.id)}
