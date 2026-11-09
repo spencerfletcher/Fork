@@ -3,10 +3,10 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { createClient } from '@supabase/supabase-js';
 
-import { recipes, tags, recipesToTags, recipeVersions, profiles } from './schema';
+import { recipes, tags, recipesToTags, recipeVersions, profiles, friendships } from './schema';
 import { slugify, randomSuffix } from '#lib/helpers.js';
 import { recipeCopies } from '#lib/recipes/content.js';
-import { SEED } from './seedData';
+import { SEED, type SeedUsername } from './seedData';
 import { parseIngredientText } from '#lib/recipes/ingredients.js';
 import { parseStepText } from '#lib/recipes/steps.js';
 import { loadEnv, required, targetFromEnv } from './env';
@@ -23,6 +23,8 @@ const SEED_USER_PASSWORD = process.env.SEED_USER_PASSWORD ?? 'Fork-Demo-2025!';
 // Auth is one schema per stack, shared by the dev and e2e databases, so each
 // seeds its own user (.env.e2e sets e2e@fork.local) and only that one is replaced.
 const SEED_USER_EMAIL = process.env.SEED_USER_EMAIL ?? 'spencer@fork.dev';
+// The second cook, an accepted friend of the first; same password.
+const SEED_USER2_EMAIL = process.env.SEED_USER2_EMAIL ?? 'dev@fork.dev';
 
 // ─── Seed function ────────────────────────────────────────────────────────────
 
@@ -56,27 +58,33 @@ async function seed() {
 	await db.delete(recipes);
 	await db.delete(profiles);
 
-	// Delete existing seed user from Supabase Auth
+	// ── Create seed users (replacing any earlier ones in Auth) ───────────────
 	const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
-	const existingUser = existingUsers?.users?.find((u) => u.email === SEED_USER_EMAIL);
-	if (existingUser) {
-		console.log('Deleting existing seed user from Auth...');
-		await supabaseAdmin.auth.admin.deleteUser(existingUser.id);
+	async function createSeedUser(email: string, username: SeedUsername): Promise<string> {
+		const existing = existingUsers?.users?.find((u) => u.email === email);
+		if (existing) {
+			console.log(`Deleting existing ${email} from Auth...`);
+			await supabaseAdmin.auth.admin.deleteUser(existing.id);
+		}
+		const { data, error } = await supabaseAdmin.auth.admin.createUser({
+			email,
+			password: SEED_USER_PASSWORD,
+			email_confirm: true
+		});
+		if (error || !data.user) throw new Error(`Failed to create seed user: ${error?.message}`);
+		await db.insert(profiles).values({ id: data.user.id, username });
+		console.log(`Created user @${username} (${data.user.id})`);
+		return data.user.id;
 	}
-
-	// ── Create seed user ─────────────────────────────────────────────────────
-	console.log('Creating seed user...');
-	const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-		email: SEED_USER_EMAIL,
-		password: SEED_USER_PASSWORD,
-		email_confirm: true
+	const userIds: Record<SeedUsername, string> = {
+		spencerfletcher: await createSeedUser(SEED_USER_EMAIL, 'spencerfletcher'),
+		devcooks: await createSeedUser(SEED_USER2_EMAIL, 'devcooks')
+	};
+	await db.insert(friendships).values({
+		requesterId: userIds.devcooks,
+		addresseeId: userIds.spencerfletcher,
+		status: 'accepted'
 	});
-	if (authError || !authData.user) {
-		throw new Error(`Failed to create seed user: ${authError?.message}`);
-	}
-	const userId = authData.user.id;
-	await db.insert(profiles).values({ id: userId, username: 'spencerfletcher' });
-	console.log(`Created user @spencerfletcher (${userId})`);
 
 	// ── Seed tags ─────────────────────────────────────────────────────────────
 	console.log('Seeding tags...');
@@ -105,6 +113,7 @@ async function seed() {
 	const idBySlug = new Map<string, number>();
 	for (const recipe of SEED) {
 		const latest = recipe.versions.at(-1)!;
+		const userId = userIds[recipe.author ?? 'spencerfletcher'];
 		console.log(`Seeding ${latest.title}...`);
 		const [row] = await db
 			.insert(recipes)
@@ -113,7 +122,7 @@ async function seed() {
 				slug: `${recipe.slug}-${randomSuffix()}`,
 				// Copies of the latest version, per the ownership rule in schema.ts.
 				...recipeCopies(latest),
-				isPublic: recipe.isPublic,
+				visibility: recipe.visibility,
 				parentId: recipe.forkOf ? idBySlug.get(recipe.forkOf.slug) : null,
 				// Dated like its versions, so Recent and the feed order the seed the
 				// way real data would, not by insert order.
