@@ -140,16 +140,12 @@
 		<div class="actions-row">{@render actions()}</div>
 	{/if}
 
-	<!-- The personal line: when the reader last logged this recipe, and a way
-	     to log it again. Cook has its own Add to Journal beside Done cooking. -->
-	{#if journal && !cooking}
+	<!-- The personal line: when the reader last logged this recipe. Logging it
+	     again is the Add to Journal pill in the action row. -->
+	{#if journal?.lastEntry && !cooking}
 		<p class="personal m-0 font-sans">
-			{#if journal.lastEntry}
-				You cooked this on
-				<a href="/journal#entry-{journal.lastEntry.id}">{dayLabel(journal.lastEntry.cookedOn)}</a>
-				·
-			{/if}
-			<a href={journal.addHref}>Add to Journal</a>
+			You cooked this on
+			<a href="/journal#entry-{journal.lastEntry.id}">{dayLabel(journal.lastEntry.cookedOn)}</a>
 		</p>
 	{/if}
 </header>

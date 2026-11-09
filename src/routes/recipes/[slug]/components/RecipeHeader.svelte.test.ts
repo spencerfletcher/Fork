@@ -339,31 +339,33 @@ describe('RecipeHeader content', () => {
 describe('RecipeHeader personal line', () => {
 	const ADD = '/journal/new?recipe=my-fork&version=1';
 
-	test('a reader who logged it: the date links to that entry, then Add to Journal', () => {
+	test('a reader who logged it: the date links to that entry, and nothing else', () => {
 		const { container } = renderHeader({
 			journal: { lastEntry: { id: 12, cookedOn: '2026-11-08' }, addHref: ADD }
 		});
 		const line = container.querySelector('.personal')!;
-		expect(line.textContent!.replace(/\s+/g, ' ').trim()).toBe(
-			'You cooked this on Sun 8 Nov · Add to Journal'
-		);
+		expect(line.textContent!.replace(/\s+/g, ' ').trim()).toBe('You cooked this on Sun 8 Nov');
 		expect(screen.getByRole('link', { name: 'Sun 8 Nov' })).toHaveAttribute(
 			'href',
 			'/journal#entry-12'
 		);
-		expect(screen.getByRole('link', { name: 'Add to Journal' })).toHaveAttribute('href', ADD);
+		// Add to Journal is a pill in the action row, never a line below it.
+		expect(screen.queryByRole('link', { name: 'Add to Journal' })).toBeNull();
 	});
 
-	test('never logged: Add to Journal alone; signed out or cooking: no line', () => {
+	test('never logged, signed out or cooking: no line', () => {
 		const first = renderHeader({ journal: { lastEntry: null, addHref: ADD } });
-		expect(first.container.querySelector('.personal')!.textContent!.trim()).toBe('Add to Journal');
+		expect(first.container.querySelector('.personal')).toBeNull();
 		first.unmount();
 
 		const signedOut = renderHeader({ journal: null });
 		expect(signedOut.container.querySelector('.personal')).toBeNull();
 		signedOut.unmount();
 
-		const cooking = renderHeader({ journal: { lastEntry: null, addHref: ADD }, cooking: true });
+		const cooking = renderHeader({
+			journal: { lastEntry: { id: 12, cookedOn: '2026-11-08' }, addHref: ADD },
+			cooking: true
+		});
 		expect(cooking.container.querySelector('.personal')).toBeNull();
 	});
 });
