@@ -135,12 +135,6 @@ describe('fork', () => {
 		expect(result.status).toBe(404);
 	});
 
-	test('throws 400 when source recipe has no versions', async () => {
-		findRecipeMock.mockResolvedValue({ ...SOURCE_RECIPE, versions: [] });
-		const result = await invoke(actions.fork as never, makeEvent({ user: FORKER }));
-		expect(result.status).toBe(400);
-	});
-
 	test('ensures a profile for the forking user before the transaction', async () => {
 		findRecipeMock.mockResolvedValue(SOURCE_RECIPE);
 		const tx = makeTx({ newRecipeSlug: 'classic-cookies-abc12345' });
@@ -440,17 +434,6 @@ describe('load: fork attribution', () => {
 		expect(data.meta.title).toBe('Classic Cookies');
 		expect(data.meta.description).toBe('Good cookies');
 		expect(data.meta.image).toBe('https://img/version.png');
-	});
-
-	test('404s a recipe with no version rather than rendering a broken page', async () => {
-		findRecipeMock.mockResolvedValue({
-			...forkOf({ visibility: 'public', authorId: 'o' }),
-			versions: []
-		});
-		const result = await Promise.resolve()
-			.then(() => load(makeLoadEvent() as never))
-			.catch((e: unknown) => e);
-		expect(result).toMatchObject({ status: 404 });
 	});
 
 	test('returns one gram result per ingredient of the shown version', async () => {

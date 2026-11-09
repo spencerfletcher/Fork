@@ -9,12 +9,10 @@ import {
 	type LogEntry,
 	type Recipe
 } from './db/schema.js';
-import { canView, friendIdsOf, inLibraryOf, viewableRecipe } from './visibility.js';
+import { canView, friendIdsOf, inLibraryOf, viewableRecipe, type Viewer } from './visibility.js';
 import { numberMessages, type Result } from '#lib/recipes/validation.js';
 import { oneOf, text, wholeNumber } from '#lib/helpers.js';
 import { day, MAX_LINK } from '#lib/journal.js';
-
-type Viewer = { id: string };
 
 export const MAX_DISH = 200;
 export const MAX_ENTRY_TEXT = 2000;
@@ -130,7 +128,7 @@ export type LinkedRecipe = {
  * version number means the latest; a number the recipe does not have is refused.
  */
 export async function resolveRecipe(
-	viewer: Viewer,
+	viewer: NonNullable<Viewer>,
 	slug: string,
 	versionNumber: number | null
 ): Promise<LinkedRecipe | null> {
@@ -178,7 +176,11 @@ export type SourceRow = {
 };
 
 /** The source an entry shows `viewer`, by the recipes' one access rule. */
-export function sourceOf(row: SourceRow, viewer: Viewer, friendIds: string[]): EntrySource {
+export function sourceOf(
+	row: SourceRow,
+	viewer: NonNullable<Viewer>,
+	friendIds: string[]
+): EntrySource {
 	if (row.recipeId === null) {
 		if (row.sourceUrl === null) return { kind: 'improvised' };
 		const host = new URL(row.sourceUrl).hostname.replace(/^www\./, '');
@@ -199,7 +201,7 @@ export function sourceOf(row: SourceRow, viewer: Viewer, friendIds: string[]): E
 /** A Friends entry is seen by the owner's accepted friends; a private one by the owner alone. */
 export function canSeeEntry(
 	entry: Pick<LogEntry, 'userId' | 'audience'>,
-	viewer: Viewer | null,
+	viewer: Viewer,
 	friendIds: string[]
 ): boolean {
 	if (!viewer) return false;
@@ -219,7 +221,7 @@ export const sourceColumns = {
 };
 
 /** The viewer's own entries matching `where`, newest cooked first, each with its source. */
-async function ownEntries(viewer: Viewer, where?: SQL) {
+async function ownEntries(viewer: NonNullable<Viewer>, where?: SQL) {
 	const [rows, friendIds] = await Promise.all([
 		db
 			.select({ entry: logEntries, ...sourceColumns })
@@ -241,12 +243,12 @@ async function ownEntries(viewer: Viewer, where?: SQL) {
 }
 
 /** Everything in someone's own Journal, newest cooked first, each with its source. */
-export function journalOf(viewer: Viewer) {
+export function journalOf(viewer: NonNullable<Viewer>) {
 	return ownEntries(viewer);
 }
 
 /** One of the viewer's own entries with its source, or null when it is not theirs. */
-export async function ownEntry(viewer: Viewer, id: number) {
+export async function ownEntry(viewer: NonNullable<Viewer>, id: number) {
 	const [entry] = await ownEntries(viewer, eq(logEntries.id, id));
 	return entry ?? null;
 }
@@ -279,16 +281,17 @@ export async function defaultAudience(userId: string): Promise<LogAudience> {
 }
 
 /** The recipes the form offers: the viewer's own and their saved ones, by title, each with its latest version. */
-export async function recipeChoices(viewer: Viewer) {
+export async function recipeChoices(viewer: NonNullable<Viewer>) {
 	return db
 		.select({
 			slug: recipes.slug,
 			title: recipes.title,
 			visibility: recipes.visibility,
-			latestVersion:
-				sql<number>`(SELECT max(${recipeVersions.versionNumber}) FROM ${recipeVersions} WHERE ${recipeVersions.recipeId} = ${recipes.id})`.mapWith(
-					Number
-				)
+			latestVersion: sql<
+				number | null
+			>`(SELECT max(${recipeVersions.versionNumber}) FROM ${recipeVersions} WHERE ${recipeVersions.recipeId} = ${recipes.id})`.mapWith(
+				(max: string | number | null) => (max === null ? null : Number(max))
+			)
 		})
 		.from(recipes)
 		.where(inLibraryOf(viewer))

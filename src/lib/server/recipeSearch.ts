@@ -2,7 +2,7 @@ import { and, desc, eq, exists, or, sql, type SQL } from 'drizzle-orm';
 import { QueryBuilder } from 'drizzle-orm/pg-core';
 import { recipes, recipeVersions } from './db/schema.js';
 
-/** The `?q=` and `?tags=` filters shared by Search and Favorites. */
+/** The `?q=` and `?tags=` filters shared by Search, Cookbook and Discover. */
 export function parseFilters(url: URL): { searchQuery: string; tagSlugs: string[] } {
 	return {
 		searchQuery: url.searchParams.get('q')?.trim() || '',

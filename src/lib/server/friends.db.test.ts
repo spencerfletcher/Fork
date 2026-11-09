@@ -2,6 +2,7 @@ import { describe, test, expect, beforeAll } from 'vitest';
 import { and, eq, inArray, or } from 'drizzle-orm';
 
 import { inRollback, localDb } from '#lib/testing/db.js';
+import type { Visibility } from '#lib/recipes/validation.js';
 
 // Runs only against the local Supabase stack, each test inside a transaction
 // that is always rolled back, so it leaves no row behind.
@@ -37,7 +38,7 @@ describe.skipIf(!localDb)('unfriend and block, against the real database', () =>
 	async function makeRecipe(
 		tx: Tx,
 		authorId: string,
-		visibility: 'private' | 'friends' | 'public',
+		visibility: Visibility,
 		parentId: number | null = null
 	) {
 		const [row] = await tx

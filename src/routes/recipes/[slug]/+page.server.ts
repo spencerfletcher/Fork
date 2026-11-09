@@ -47,9 +47,8 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 	};
 
 	// Resolve which version's content to display. Creation and forking write a
-	// version in the same transaction as the recipe, so none is a broken row.
+	// version in the same transaction as the recipe, so every recipe has one.
 	const latestVersion = recipe.versions[0];
-	if (!latestVersion) throw error(404, 'Recipe not found');
 	const requestedVersion = versionParam ? wholeNumber(versionParam) : null;
 	if (versionParam && requestedVersion === null) throw error(404, VERSION_NOT_FOUND);
 	const currentVersion =
@@ -132,7 +131,6 @@ export const actions: Actions = {
 		if (!source) throw error(404, 'Source recipe not found');
 
 		const latestVersion = source.versions[0];
-		if (!latestVersion) throw error(400, 'Source recipe has no versions');
 
 		// Forking is one click. The first version says where the copy came from;
 		// the forker writes a message of their own when they change something.

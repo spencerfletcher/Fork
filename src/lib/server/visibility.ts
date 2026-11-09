@@ -21,8 +21,6 @@ import { VISIBILITIES, type Visibility } from '#lib/recipes/validation.js';
 export type Viewer = { id: string } | null | undefined;
 type Row = { visibility: Visibility; authorId: string | null };
 
-const ACCEPTED: FriendshipStatus = 'accepted';
-
 /**
  * A recipe is visible when it is public, the viewer wrote it, or it is shared
  * with friends and its author is one of `friendIds` (the viewer's accepted
@@ -98,7 +96,7 @@ export async function friendIdsOf(userId: string): Promise<string[]> {
 		.from(friendships)
 		.where(
 			and(
-				eq(friendships.status, ACCEPTED),
+				eq(friendships.status, 'accepted'),
 				or(eq(friendships.requesterId, userId), eq(friendships.addresseeId, userId))
 			)
 		);
@@ -129,7 +127,7 @@ export function visibleTo(user: Viewer): SQL {
 	if (!user) return eq(recipes.visibility, 'public');
 	const fr = (column: { name: string }) => onAlias('fr', column);
 	const pair: [SQL, SQL] = [fr(friendships.requesterId), fr(friendships.addresseeId)];
-	const authorIsFriend = sql`exists (select 1 from ${friendships} "fr" where ${fr(friendships.status)} = ${ACCEPTED} and ${eitherWay(pair, user.id, recipes.authorId)})`;
+	const authorIsFriend = sql`exists (select 1 from ${friendships} "fr" where ${fr(friendships.status)} = ${'accepted' satisfies FriendshipStatus} and ${eitherWay(pair, user.id, recipes.authorId)})`;
 	return or(
 		eq(recipes.visibility, 'public'),
 		eq(recipes.authorId, user.id),

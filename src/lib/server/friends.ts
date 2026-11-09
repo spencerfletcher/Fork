@@ -15,10 +15,8 @@ import {
 	type ReportTarget
 } from './db/schema.js';
 import type { Tx } from './tags.js';
-import { eitherWay, friendIdsOf, onAlias, visibleTo } from './visibility.js';
+import { eitherWay, friendIdsOf, onAlias, visibleTo, type Viewer } from './visibility.js';
 import { canSeeEntry, sourceColumns, sourceOf } from './journal.js';
-
-type Viewer = { id: string };
 
 /** Where two people stand, from the first one's side. */
 export type Relation = 'self' | 'none' | 'sent' | 'received' | 'friends' | 'blocked';
@@ -92,7 +90,7 @@ export async function sendRequest(
 	});
 }
 
-async function acceptIn(tx: Tx, me: string, them: string) {
+async function acceptIn(tx: Tx | typeof db, me: string, them: string) {
 	const rows = await tx
 		.update(friendships)
 		.set({ status: 'accepted' })
@@ -109,7 +107,7 @@ async function acceptIn(tx: Tx, me: string, them: string) {
 
 /** Accepts the request `them` sent `me`, keeping its row; false when there is none. */
 export function acceptRequest(me: string, them: string): Promise<boolean> {
-	return db.transaction((tx) => acceptIn(tx, me, them));
+	return acceptIn(db, me, them);
 }
 
 /** Declines the request `them` sent `me`; nothing is kept. */
@@ -235,7 +233,7 @@ export const OWN_LIKE = "You can't like your own entry.";
  * likes their own entry.
  */
 export async function toggleLike(
-	me: Viewer,
+	me: NonNullable<Viewer>,
 	entryId: number
 ): Promise<{ liked: boolean } | 'refused' | 'own'> {
 	const [entry] = await db
@@ -294,7 +292,7 @@ export const FEED_LIMIT = 50;
  * their recipes the viewer may see, in one chronology, minus anyone muted.
  * `friendIds` is the viewer's, from friendIdsOf, which the page counts too.
  */
-export async function feedFor(me: Viewer, friendIds: string[]) {
+export async function feedFor(me: NonNullable<Viewer>, friendIds: string[]) {
 	const mutedRows = await db
 		.select({ id: mutes.mutedId })
 		.from(mutes)

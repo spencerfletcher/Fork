@@ -33,8 +33,8 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 		recipesToTags: { with: { tag: true } },
 		versions: { orderBy: [desc(recipeVersions.versionNumber)], limit: 1 }
 	});
+	// Creation and forking write version 1 with the recipe, so there is always one.
 	const latestVersion = recipe.versions[0];
-	if (!latestVersion) throw error(404, 'Recipe not found');
 
 	// Any visibility: the forks hint is about whether forks exist, not who sees them.
 	const [allTags, forkCount] = await Promise.all([

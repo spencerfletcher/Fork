@@ -14,7 +14,6 @@ export const AUDIENCE_SENTENCE: Record<LogAudience, string> = {
 	friends: 'Your friends see it in Friends.'
 };
 
-/** Under the choices when the linked recipe is Only me and Friends is chosen. */
 /** The longest page link an entry may carry, as a URL's practical limit. */
 export const MAX_LINK = 2048;
 
@@ -24,6 +23,7 @@ export const MAX_LINK = 2048;
  */
 export const KEEP_SOURCE = ':keep';
 
+/** Under the choices when the linked recipe is Only me and Friends is chosen. */
 export const PRIVATE_RECIPE_HINT = 'Friends see the dish and your photo, not the recipe.';
 
 /** Under Block, wherever it is offered. */
