@@ -181,7 +181,7 @@
 	}
 
 	.lead-cook:hover .lead-handle {
-		color: var(--color-text);
+		color: var(--color-accent-hover);
 	}
 
 	.lead-title {
