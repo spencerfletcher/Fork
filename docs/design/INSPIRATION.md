@@ -39,6 +39,7 @@ A living list of products, sites and books worth looking at when a Fork screen g
 | What | Look at | Source |
 |---|---|---|
 | Lunch Money (lunchmoney.app) | Dense tables that stay calm, friendly copy, filter and rules UI (relevant to rule-based collections). | Spencer, Nov 2026 |
+| Zed (zed.dev) | Editor-grade density and restraint: calm toolbars, type that carries hierarchy without decoration, a marketing site that stays quiet. | Spencer, Nov 2026 |
 | Linear | Actions in consistent places, dimmed nav, warm grey, density kept; restraint as method. | product_references |
 | Things | Slim Mode as the model for a navbar-free Cook state; restrained title/body hierarchy. | product_references, 2026-11-08-mvp |
 | Bear | An editor that looks like its output; comfortable measure; secondary info in a side panel. | product_references |
