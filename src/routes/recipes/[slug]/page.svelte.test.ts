@@ -154,6 +154,19 @@ describe('recipe page signed in', () => {
 	});
 });
 
+describe('recipe page owner', () => {
+	test('the owner gets Cook and Edit recipe only: no Save, no Fork', () => {
+		page.url = new URL('http://localhost/recipes/cookies');
+		// makeData's recipe is authored by 'a'.
+		const data = { ...makeData(), user: { id: 'a' }, favoriteCount: 1234 } as PageData;
+		const { container } = render(Page, { props: { data } });
+		const row = [...container.querySelectorAll('.actions a, .actions button')].map((el) =>
+			el.textContent!.replace(/\s+/g, ' ').trim()
+		);
+		expect(row).toEqual(['Cook', 'Edit recipe']);
+	});
+});
+
 describe('recipe page logged out', () => {
 	test('Log in to save leads to login and back to this page, query included', () => {
 		load('?serves=8');

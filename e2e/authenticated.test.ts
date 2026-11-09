@@ -62,8 +62,8 @@ test.describe('Fork', () => {
 		await expect(page.getByRole('button', { name: /fork/i })).not.toBeVisible();
 	});
 
-	// The seed user owns every seeded recipe, so Fork cannot render here; the
-	// signed-in row's other pills (Edit recipe, Save with its count) are checked.
+	// The seed user owns every seeded recipe, so the owner's row is what renders:
+	// Cook and Edit recipe, no Save or Fork.
 	test('at 320 each signed-in pill is at least 44px tall and its label holds one line', async ({
 		page
 	}) => {
@@ -72,7 +72,7 @@ test.describe('Fork', () => {
 		await page.getByRole('link', { name: COOKIES_RE }).first().click();
 		await page.waitForURL(/\/recipes\//);
 		const hero = page.locator('.hero');
-		await expect(hero.getByRole('button', { name: /^Save/ })).toBeVisible();
+		await expect(hero.getByRole('link', { name: 'Edit recipe' })).toBeVisible();
 		const pills = await hero.locator('.actions a, .actions button').evaluateAll((els) =>
 			els.map((el) => ({
 				text: (el as HTMLElement).innerText.trim(),
@@ -81,7 +81,7 @@ test.describe('Fork', () => {
 				twoLines: 2 * parseFloat(getComputedStyle(el).lineHeight)
 			}))
 		);
-		expect(pills.map((p) => p.text.split(/\s/)[0])).toEqual(['Cook', 'Edit', 'Save']);
+		expect(pills.map((p) => p.text.split(/\s/)[0])).toEqual(['Cook', 'Edit']);
 		for (const pill of pills) {
 			expect(pill.height, pill.text).toBeGreaterThanOrEqual(44);
 			expect(pill.height, pill.text).toBeLessThan(pill.twoLines);
