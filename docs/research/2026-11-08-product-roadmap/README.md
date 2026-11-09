@@ -453,6 +453,7 @@ Spencer re-phased these after reviewing the full post-MVP backlog. They override
 | Desktop app for Fork (Mac first; likely a PWA or thin wrapper over the web app, decided with the native platform call) | Unlisted | **P5**, alongside the native iOS/Android decision |
 | Fork icon redesign: the stats-row fork glyph reads poorly and is the likely app logo, so it gets a proper mark, not a quick fix | Unlisted | **P1 design backlog**, with the scaler redesign |
 | Cook mode visual distinction: cooking view looks too close to the recipe page | Unlisted | **P1 design backlog** |
+| Editor photo field redesign: the photo itself with two pill overlays (Replace, Remove), or a single Add photo pill when empty; today Replace is a small-caps ink text button and Remove a serif clay one, inconsistent | Unlisted | **P1**, soon |
 
 Settled later the same evening:
 
