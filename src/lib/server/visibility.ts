@@ -41,10 +41,14 @@ export async function friendIdsOf(userId: string): Promise<string[]> {
 	return rows.map((r) => (r.requesterId === userId ? r.addresseeId : r.requesterId));
 }
 
+// A friendships column on the subquery's alias, by name. As a column object it
+// would be re-aliased to the root table by db.query's where, becoming "recipes"."status".
+const fr = (column: { name: string }) => sql`"fr".${sql.identifier(column.name)}`;
+
 /** The same rule as canView, as a query condition on `recipes`. */
 export function visibleTo(user: Viewer): SQL {
 	if (!user) return eq(recipes.visibility, 'public');
-	const authorIsFriend = sql`exists (select 1 from ${friendships} where ${friendships.status} = ${ACCEPTED} and ((${friendships.requesterId} = ${user.id} and ${friendships.addresseeId} = ${recipes.authorId}) or (${friendships.addresseeId} = ${user.id} and ${friendships.requesterId} = ${recipes.authorId})))`;
+	const authorIsFriend = sql`exists (select 1 from ${friendships} "fr" where ${fr(friendships.status)} = ${ACCEPTED} and ((${fr(friendships.requesterId)} = ${user.id} and ${fr(friendships.addresseeId)} = ${recipes.authorId}) or (${fr(friendships.addresseeId)} = ${user.id} and ${fr(friendships.requesterId)} = ${recipes.authorId})))`;
 	return or(
 		eq(recipes.visibility, 'public'),
 		eq(recipes.authorId, user.id),

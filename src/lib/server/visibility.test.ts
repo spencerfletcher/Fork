@@ -2,6 +2,9 @@ import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { eq } from 'drizzle-orm';
 import { PgDialect } from 'drizzle-orm/pg-core';
 import { chain } from '#lib/testing/drizzle.js';
+import { drizzle } from 'drizzle-orm/postgres-js';
+import postgres from 'postgres';
+import * as schema from './db/schema.js';
 import { recipes } from './db/schema.js';
 import { VISIBILITIES, type Visibility } from '#lib/recipes/validation.js';
 
@@ -95,8 +98,17 @@ describe('visibleTo', () => {
 		const { sql, params } = new PgDialect().sqlToQuery(visibleTo(OTHER));
 		expect(params).toEqual(['public', OTHER.id, 'friends', 'accepted', OTHER.id, OTHER.id]);
 		expect(sql).toBe(
-			'("recipes"."visibility" = $1 or "recipes"."author_id" = $2 or ("recipes"."visibility" = $3 and exists (select 1 from "friendships" where "friendships"."status" = $4 and (("friendships"."requester_id" = $5 and "friendships"."addressee_id" = "recipes"."author_id") or ("friendships"."addressee_id" = $6 and "friendships"."requester_id" = "recipes"."author_id")))))'
+			'("recipes"."visibility" = $1 or "recipes"."author_id" = $2 or ("recipes"."visibility" = $3 and exists (select 1 from "friendships" "fr" where "fr"."status" = $4 and (("fr"."requester_id" = $5 and "fr"."addressee_id" = "recipes"."author_id") or ("fr"."addressee_id" = $6 and "fr"."requester_id" = "recipes"."author_id")))))'
 		);
+	});
+
+	// The relational query builder re-aliases every column in `where` to the
+	// root table, so a friendships column must not reach it as a column.
+	test('keeps the friendships columns on friendships inside a relational query', () => {
+		const rqb = drizzle(postgres('postgres://unused@127.0.0.1:1/unused'), { schema });
+		const { sql } = rqb.query.recipes.findMany({ where: visibleTo(OTHER) }).toSQL();
+		expect(sql).toContain('exists (select 1 from "friendships"');
+		expect(sql).not.toMatch(/"recipes"\."(status|requester_id|addressee_id)"/);
 	});
 });
 
