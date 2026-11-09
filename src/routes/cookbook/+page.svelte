@@ -2,6 +2,8 @@
 	import { page } from '$app/state';
 	import RecipeCard from '#lib/components/recipes/RecipeCard.svelte';
 	import SearchFilters from '#lib/components/ui/SearchFilters.svelte';
+	import EmptyPanel from '#lib/components/ui/EmptyPanel.svelte';
+	import ResultStatus from '#lib/components/ui/ResultStatus.svelte';
 	import { plural } from '#lib/helpers.js';
 	import { COOKBOOK_FILTERS, type CookbookFilter } from './filters.js';
 	import type { PageData } from './$types';
@@ -46,14 +48,13 @@
 
 		{#if data.counts.all === 0}
 			<!-- No filters over an empty library (decided 29 October 2026). -->
-			<div class="cookbook-empty">
-				<h2>Your cookbook is empty</h2>
-				<p>Recipes you write and recipes you save from others live here.</p>
-				<div class="actions">
+			<EmptyPanel title="Your cookbook is empty" centered>
+				Recipes you write and recipes you save from others live here.
+				{#snippet action()}
 					<a href="/recipes/new" class="btn-primary">New recipe</a>
 					<a href="/discover" class="arrow-link">Explore Discover →</a>
-				</div>
-			</div>
+				{/snippet}
+			</EmptyPanel>
 		{:else}
 			<div class="cookbook-filters">
 				<div class="seg" role="group" aria-label="Show">
@@ -70,15 +71,8 @@
 					availableTags={data.allTags} />
 			</div>
 
-			<!-- Always in the DOM so screen readers announce the count when it changes.
-			     Seen only when nothing matches; over a grid the cards say it. The
-			     paragraph keeps its space so the grid does not jump. -->
-			<p class="status" role="status" aria-live="polite">
-				<span class:sr-only={data.recipes.length > 0}>
-					{#if filtered}{plural(data.recipes.length, 'recipe')}
-						{data.recipes.length === 1 ? 'matches' : 'match'}{/if}
-				</span>
-			</p>
+			<!-- Screen readers only (Spencer, 9 November 2026): the cards say the count. -->
+			<ResultStatus count={data.recipes.length} {filtered} />
 
 			{#if data.recipes.length > 0}
 				<div class="cookbook-grid">
@@ -116,10 +110,13 @@
 		}
 	}
 
+	/* The grid's row gap below, so the first cards sit as far from the tags as
+	   the next row does from them. */
 	.cookbook-filters {
 		display: flex;
 		flex-direction: column;
 		gap: 14px;
+		margin-bottom: 32px;
 	}
 
 	/* All · Mine · Saved: one bordered strip, the current segment marigold-tinted. */
@@ -202,13 +199,6 @@
 		}
 	}
 
-	.status {
-		min-height: 1.3em;
-		margin: 14px 0 18px;
-		font-size: 0.875rem;
-		color: var(--color-text-3);
-	}
-
 	.cookbook-none {
 		max-width: 46ch;
 		padding: 16px 0 24px;
@@ -228,26 +218,5 @@
 		margin-top: 18px;
 		padding-block: 10px;
 		font-weight: 600;
-	}
-
-	.cookbook-empty {
-		max-width: 46ch;
-		margin: 0 auto;
-		padding: 56px 0 24px;
-		text-align: center;
-	}
-
-	.cookbook-empty p {
-		margin: 8px 0 0;
-		color: var(--color-text-2);
-	}
-
-	.cookbook-empty .actions {
-		display: flex;
-		flex-wrap: wrap;
-		justify-content: center;
-		align-items: center;
-		gap: 12px 24px;
-		margin-top: 24px;
 	}
 </style>

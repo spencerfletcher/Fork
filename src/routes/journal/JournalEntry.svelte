@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { LogEntry } from '#lib/server/db/schema.js';
 	import type { EntrySource } from '#lib/server/journal.js';
-	import { PRIVATE_RECIPE_HINT, marginDay } from '#lib/journal.js';
+	import { PRIVATE_RECIPE_HINT, marginDay, sourceHref } from '#lib/journal.js';
 	import { AUDIENCE_LABEL } from '#lib/audience.js';
 	import { audienceIcon, lockIcon } from '#lib/components/Icons.svelte';
 
@@ -24,11 +24,7 @@
 		<!-- A recipe the reader may no longer see (an unfriend) shows no source at all. -->
 		{#if source.kind === 'recipe'}
 			<p class="jsource">
-				<a
-					class="hit-link"
-					href="/recipes/{source.slug}{source.versionNumber
-						? `?version=${source.versionNumber}`
-						: ''}">
+				<a class="hit-link" href={sourceHref(source)}>
 					{source.title}
 					{#if source.versionNumber}<span class="mono-id">v{source.versionNumber}</span>{/if}
 				</a>

@@ -108,11 +108,11 @@ describe('Cookbook page', () => {
 		expect(href('All')).toBe('?q=dal&tags=baking');
 	});
 
-	test('a filter that empties the grid keeps the filters and says 0 recipes match', () => {
+	test('a filter that empties the grid keeps the filters and tells a screen reader 0 recipes match', () => {
 		renderCookbook({ ...full, recipes: [], searchQuery: 'saffron' });
 		expect(screen.getByRole('searchbox')).toHaveValue('saffron');
 		expect(screen.getByRole('status')).toHaveTextContent('0 recipes match');
-		expect(screen.getByRole('status').firstElementChild).not.toHaveClass('sr-only');
+		expect(screen.getByRole('status')).toHaveClass('sr-only');
 		expect(screen.getByRole('heading', { name: 'No recipes match “saffron”.' })).toBeVisible();
 		expect(screen.getByRole('link', { name: 'Clear search' })).toHaveAttribute('href', '/cookbook');
 	});
@@ -121,7 +121,7 @@ describe('Cookbook page', () => {
 		renderCookbook({ ...full, selectedTags: ['baking'] });
 		const status = screen.getByRole('status');
 		expect(status).toHaveTextContent(`${full.recipes.length} recipe`);
-		expect(status.firstElementChild).toHaveClass('sr-only');
+		expect(status).toHaveClass('sr-only');
 		expect(status).toHaveAttribute('aria-live', 'polite');
 	});
 

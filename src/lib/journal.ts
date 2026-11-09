@@ -28,9 +28,9 @@ export const BLOCK_SENTENCE =
 // no reader's offset moves it to the day before.
 export const day = (iso: string) => new Date(`${iso}T00:00:00Z`);
 
-/** "Sun 8 Nov", with the year only when it is not this year's. */
-export function dayLabel(iso: string, now: Date = new Date()): string {
-	const date = day(iso);
+/** "Sun 8 Nov", with the year only when it is not this year's. A Date reads as its UTC day. */
+export function dayLabel(value: string | Date, now: Date = new Date()): string {
+	const date = typeof value === 'string' ? day(value) : value;
 	const sameYear = date.getUTCFullYear() === now.getUTCFullYear();
 	return formatDate(date, {
 		weekday: 'short',
@@ -39,6 +39,11 @@ export function dayLabel(iso: string, now: Date = new Date()): string {
 		...(sameYear ? {} : { year: 'numeric' }),
 		timeZone: 'UTC'
 	}).replace(',', '');
+}
+
+/** A journal entry's recipe link, pinned to the version cooked when there is one. */
+export function sourceHref(source: { slug: string; versionNumber: number | null }): string {
+	return `/recipes/${source.slug}${source.versionNumber ? `?version=${source.versionNumber}` : ''}`;
 }
 
 /** The day of the month and its weekday, for the Journal's margin: ["8", "Sun"]. */

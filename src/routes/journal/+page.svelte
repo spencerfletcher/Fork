@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { dayLabel, groupByMonth, monthLabel } from '#lib/journal.js';
+	import EmptyPanel from '#lib/components/ui/EmptyPanel.svelte';
+	import { plural } from '#lib/helpers.js';
 	import JournalEntry from './JournalEntry.svelte';
 	import type { PageData } from './$types';
 
@@ -11,7 +13,7 @@
 	const oldest = $derived(data.entries.at(-1));
 	const summary = $derived(
 		oldest
-			? `${count === 1 ? '1 entry' : `${count} entries`} since ${monthLabel(oldest.cookedOn).split(' ')[0]}`
+			? `${plural(count, 'entry', 'entries')} since ${monthLabel(oldest.cookedOn).split(' ')[0]}`
 			: ''
 	);
 
@@ -39,14 +41,13 @@
 		</div>
 
 		{#if count === 0}
-			<section class="j-empty">
-				<h2>Nothing logged yet</h2>
-				<p>
-					Log what you cook: a recipe, a link or something improvised. Only you see it unless you
-					share it.
-				</p>
-				<a class="btn-primary no-underline" href="/journal/new">Add to Journal</a>
-			</section>
+			<EmptyPanel title="Nothing logged yet">
+				Log what you cook: a recipe, a link or something improvised. Only you see it unless you
+				share it.
+				{#snippet action()}
+					<a class="btn-primary no-underline" href="/journal/new">Add to Journal</a>
+				{/snippet}
+			</EmptyPanel>
 		{:else}
 			{#each groups as group (group.month)}
 				<section class="month-group">
@@ -92,26 +93,6 @@
 
 	.month-group + .month-group {
 		margin-top: var(--space-6);
-	}
-
-	.j-empty {
-		max-width: 560px;
-		padding: var(--space-6) 0;
-		border-top: 1px solid var(--color-border);
-	}
-
-	.j-empty h2 {
-		margin: 0;
-		font-size: 1.375rem;
-	}
-
-	.j-empty p {
-		margin: 8px 0 0;
-		color: var(--color-text-2);
-	}
-
-	.j-empty .btn-primary {
-		margin-top: 20px;
 	}
 
 	@media (max-width: 699px) {

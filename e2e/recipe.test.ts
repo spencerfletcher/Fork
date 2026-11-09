@@ -1,14 +1,12 @@
 import { expect, test, type Page } from '@playwright/test';
 import { SEED } from '../src/lib/server/db/seedData';
-import { gotoHydrated } from './helpers';
+import { COOKIES, COOKIES_RE, gotoHydrated, openCookies } from './helpers';
 import { parseIngredientLine } from '../src/lib/recipes/ingredients';
 import { scaleIngredient } from '../src/lib/recipes/scale';
 
 // These tests assume the DB has been seeded with the demo data in seedData.ts:
 // cookies (3 versions, renamed in v3), a brown-butter fork of it, and a tikka
 // masala. Titles are read from the seed so a rename cannot strand a test.
-const COOKIES = SEED[0].versions.at(-1)!.title;
-const COOKIES_RE = new RegExp(COOKIES, 'i');
 const FORK_RE = new RegExp(SEED[1].versions.at(-1)!.title, 'i');
 
 /** Compare sits beside each earlier version in the history list: open it, then compare v2 to v3. */
@@ -16,13 +14,6 @@ async function openCompare(page: Page) {
 	await page.getByRole('button', { name: '3 versions' }).click();
 	await page.locator('#version-history a[href*="/diff?from=2&to=3"]').click();
 	await expect(page).toHaveURL(/\/diff/);
-}
-
-/** Slugs carry a random nanoid suffix, so reach the recipe by name, not URL. */
-async function gotoClassicCookies(page: Page) {
-	await page.goto('/discover');
-	await page.getByRole('link', { name: COOKIES_RE }).first().click();
-	await page.waitForURL(/\/recipes\//);
 }
 
 test.describe('Recipe detail page', () => {
@@ -37,13 +28,13 @@ test.describe('Recipe detail page', () => {
 	});
 
 	test('recipe detail shows Ingredients section', async ({ page }) => {
-		await gotoClassicCookies(page);
+		await openCookies(page);
 		// Use heading role to avoid matching ingredient names that contain "ingredients"
 		await expect(page.getByRole('heading', { name: /^ingredients$/i })).toBeVisible();
 	});
 
 	test('recipe detail shows Method section', async ({ page }) => {
-		await gotoClassicCookies(page);
+		await openCookies(page);
 		await expect(page.getByRole('heading', { name: /^method$/i })).toBeVisible();
 	});
 
@@ -79,7 +70,7 @@ test.describe('Recipe detail page', () => {
 	test('the stats row counts forks and versions; the fork count opens the list of forks', async ({
 		page
 	}) => {
-		await gotoClassicCookies(page);
+		await openCookies(page);
 		const stats = page.locator('.recipe-header .stats');
 		await expect(stats).toHaveText(/^\s*1 fork\s*3 versions\s*$/);
 		await expect(page.locator('.byline')).not.toContainText('fork');
@@ -133,7 +124,7 @@ test.describe('Recipe detail page', () => {
 	});
 
 	test('a recipe link previews as that recipe, with each tag emitted once', async ({ page }) => {
-		await gotoClassicCookies(page);
+		await openCookies(page);
 
 		const content = (sel: string) => page.locator(sel).first().getAttribute('content');
 
@@ -173,7 +164,7 @@ test.describe('Recipe detail page', () => {
 	});
 
 	test('changing the version range navigates and re-renders the diff', async ({ page }) => {
-		await gotoClassicCookies(page);
+		await openCookies(page);
 		await openCompare(page);
 
 		// Count modified rows rather than reading the first row's text: the first
@@ -197,13 +188,13 @@ test.describe('Recipe detail page', () => {
 	});
 
 	test('the compare tab names the range and the recipe', async ({ page }) => {
-		await gotoClassicCookies(page);
+		await openCookies(page);
 		await openCompare(page);
 		await expect(page).toHaveTitle(`v2 → v3 · ${COOKIES} — Fork`);
 	});
 
 	test('the changed picker keeps focus after the compare page navigates', async ({ page }) => {
-		await gotoClassicCookies(page);
+		await openCookies(page);
 		await openCompare(page);
 		await page.locator('#from-select').selectOption('1');
 		await expect(page).toHaveURL(/from=1/);
@@ -211,14 +202,14 @@ test.describe('Recipe detail page', () => {
 	});
 
 	test('the same version on both sides is one line, not a diff', async ({ page }) => {
-		await gotoClassicCookies(page);
+		await openCookies(page);
 		await page.goto(page.url().split('?')[0] + '/diff?from=3&to=3');
 		await expect(page.getByText('v3 is on both sides; pick another version.')).toBeVisible();
 		await expect(page.locator('.diff-panel')).toHaveCount(0);
 	});
 
 	test('a reversed pair is read older to newer, in the URL and the pickers', async ({ page }) => {
-		await gotoClassicCookies(page);
+		await openCookies(page);
 		await page.goto(page.url().split('?')[0] + '/diff?from=3&to=1');
 		await expect(page).toHaveURL(/from=1&to=3/);
 		await expect(page.locator('#from-select')).toHaveValue('1');
@@ -228,7 +219,7 @@ test.describe('Recipe detail page', () => {
 	test('after the diff a link reads the To version; the latest is the plain recipe URL', async ({
 		page
 	}) => {
-		await gotoClassicCookies(page);
+		await openCookies(page);
 		const recipePath = new URL(page.url()).pathname;
 		await page.goto(recipePath + '/diff?from=2&to=3');
 		await expect(page.getByRole('link', { name: 'Read v3' })).toHaveAttribute('href', recipePath);
@@ -242,7 +233,7 @@ test.describe('Recipe detail page', () => {
 	test('a version that does not exist is a 400 that names it and leads back to the recipe', async ({
 		page
 	}) => {
-		await gotoClassicCookies(page);
+		await openCookies(page);
 		const recipePath = new URL(page.url()).pathname;
 		const response = await page.goto(recipePath + '/diff?from=1&to=9');
 		expect(response?.status()).toBe(400);
@@ -257,7 +248,7 @@ test.describe('Recipe detail page', () => {
 	test('diff-added and diff-removed text clear 4.5:1 against the surface actually behind them', async ({
 		page
 	}) => {
-		await gotoClassicCookies(page);
+		await openCookies(page);
 		await openCompare(page);
 
 		// Relative luminance/contrast per WCAG — same formula as the tag-contrast test above.
@@ -345,7 +336,7 @@ test.describe('Recipe detail page', () => {
 
 	test('on mobile, the actions and details sit above the ingredients', async ({ page }) => {
 		await page.setViewportSize({ width: 390, height: 900 });
-		await gotoClassicCookies(page);
+		await openCookies(page);
 
 		const ingredients = page.getByRole('heading', { name: /ingredients/i }).first();
 		const details = page.locator('.details').first();
@@ -362,7 +353,7 @@ test.describe('Recipe detail page', () => {
 
 	test('the recipe page does not scroll sideways on mobile', async ({ page }) => {
 		await page.setViewportSize({ width: 390, height: 900 });
-		await gotoClassicCookies(page);
+		await openCookies(page);
 		await page
 			.getByRole('heading', { name: /ingredients/i })
 			.first()
@@ -378,7 +369,7 @@ test.describe('Recipe detail page', () => {
 
 	test('on mobile, the photo leads above the recipe', async ({ page }) => {
 		await page.setViewportSize({ width: 390, height: 900 });
-		await gotoClassicCookies(page);
+		await openCookies(page);
 
 		const photo = page.locator('.recipe-photo img').first();
 		const ingredients = page.getByRole('heading', { name: /ingredients/i }).first();
@@ -397,7 +388,7 @@ test.describe('Recipe detail page', () => {
 		page
 	}) => {
 		await page.setViewportSize({ width: 390, height: 900 });
-		await gotoClassicCookies(page);
+		await openCookies(page);
 		const band = await page.locator('.hero').boundingBox();
 		const actions = await page.locator('header.recipe-header .actions').boundingBox();
 		const photo = await page.locator('.recipe-photo img').boundingBox();
@@ -417,7 +408,7 @@ test.describe('Recipe detail page', () => {
 		page
 	}) => {
 		await page.setViewportSize({ width: 390, height: 900 });
-		await gotoClassicCookies(page);
+		await openCookies(page);
 		await page.getByRole('button', { name: '3 versions' }).click();
 		const marks = await page
 			.locator('.version-bar .version-number')
@@ -433,7 +424,7 @@ test.describe('Recipe detail page', () => {
 		page
 	}) => {
 		await page.setViewportSize({ width: 768, height: 1024 });
-		await gotoClassicCookies(page);
+		await openCookies(page);
 		const recipeUrl = page.url().split('?')[0];
 		await page.goto(`${recipeUrl}?version=2`);
 		const box = async (part: string) =>
@@ -459,7 +450,7 @@ test.describe('Recipe detail page', () => {
 
 	test('on a phone every link and button in the bar is 44px tall', async ({ page }) => {
 		await page.setViewportSize({ width: 390, height: 900 });
-		await gotoClassicCookies(page);
+		await openCookies(page);
 		await page.getByRole('button', { name: '3 versions' }).click();
 		const short = await page.locator('.version-bar a, .version-bar button').evaluateAll((els) =>
 			els
@@ -483,7 +474,7 @@ test.describe('Recipe detail page', () => {
 		page
 	}) => {
 		await page.setViewportSize({ width: 390, height: 900 });
-		await gotoClassicCookies(page);
+		await openCookies(page);
 		await page.getByRole('button', { name: '3 versions' }).click();
 		const row = page.locator('#version-history .version-link').first();
 		await expect(row).toHaveAttribute('href', /\?version=2$/);
@@ -497,7 +488,7 @@ test.describe('Recipe detail page', () => {
 
 	test('on desktop, the ingredients sit beside the method, not below it', async ({ page }) => {
 		await page.setViewportSize({ width: 1440, height: 1000 });
-		await gotoClassicCookies(page);
+		await openCookies(page);
 
 		// The column, not its eyebrow, which shares its row with the scale control.
 		const ingredients = page.locator('#ingredients');
@@ -517,7 +508,7 @@ test.describe('Recipe detail page', () => {
 
 	test('on desktop, the sidebar stays in view while the method scrolls', async ({ page }) => {
 		await page.setViewportSize({ width: 1440, height: 800 });
-		await gotoClassicCookies(page);
+		await openCookies(page);
 		const sidebar = page.locator('.sidebar-sticky');
 		await sidebar.waitFor();
 
@@ -537,7 +528,7 @@ test.describe('Recipe detail page', () => {
 	});
 
 	test('the version panel closes when one of its links navigates', async ({ page }) => {
-		await gotoClassicCookies(page);
+		await openCookies(page);
 		await page.getByRole('button', { name: '3 versions' }).click();
 		await page.locator('#version-history').waitFor();
 		// A URL inside a message must wrap inside the panel, not widen the page.
@@ -552,7 +543,7 @@ test.describe('Recipe detail page', () => {
 	});
 
 	test('the header names the recipe once and the author once', async ({ page }) => {
-		await gotoClassicCookies(page);
+		await openCookies(page);
 		const hero = page.locator('header.recipe-header');
 		await hero.waitFor();
 
@@ -567,7 +558,7 @@ test.describe('Recipe detail page', () => {
 
 	test('layout survives a recipe with no photo', async ({ page }) => {
 		await page.setViewportSize({ width: 1440, height: 1000 });
-		await gotoClassicCookies(page);
+		await openCookies(page);
 
 		const ingredients = page.getByRole('heading', { name: /ingredients/i }).first();
 		await ingredients.waitFor();
@@ -585,7 +576,7 @@ test.describe('Recipe detail page', () => {
 	});
 
 	test('tags stay readable on both the card and the hero surfaces', async ({ page }) => {
-		await gotoClassicCookies(page);
+		await openCookies(page);
 
 		// Relative luminance per WCAG, from a computed rgb() string.
 		const contrast = (fg: string, bg: string) => {
@@ -622,7 +613,7 @@ test.describe('Recipe detail page', () => {
 	});
 
 	test('logged out, the hero fills only the Cook pill, and no marigold text', async ({ page }) => {
-		await gotoClassicCookies(page);
+		await openCookies(page);
 		const hero = page.locator('.hero');
 		await hero.waitFor();
 
@@ -665,7 +656,7 @@ test.describe('Recipe detail page', () => {
 		page
 	}) => {
 		await page.setViewportSize({ width: 1280, height: 900 });
-		await gotoClassicCookies(page);
+		await openCookies(page);
 		const band = page.locator('.hero');
 		expect(await band.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(
 			'rgb(239, 232, 219)'
@@ -693,7 +684,7 @@ test.describe('Recipe detail page', () => {
 	test('the description clamps at three lines with an ellipsis, desktop and phone', async ({
 		page
 	}) => {
-		await gotoClassicCookies(page);
+		await openCookies(page);
 		const deck = page.locator('.description');
 		await deck.evaluate((el) => (el.textContent = 'A long description that runs on. '.repeat(40)));
 		for (const width of [1280, 390]) {
@@ -712,7 +703,7 @@ test.describe('Recipe detail page', () => {
 		page
 	}) => {
 		await page.setViewportSize({ width: 1280, height: 900 });
-		await gotoClassicCookies(page);
+		await openCookies(page);
 		const tops = await Promise.all(
 			[
 				'h1',
@@ -755,7 +746,7 @@ test.describe('Recipe detail page', () => {
 	}) => {
 		for (const width of [390, 768]) {
 			await page.setViewportSize({ width, height: 844 });
-			await gotoClassicCookies(page);
+			await openCookies(page);
 			const tabs = page.locator('.section-tabs');
 			await expect(tabs).toBeVisible();
 			// The band is the header; the bar lands within a screen and a quarter
@@ -805,7 +796,7 @@ test.describe('Recipe detail page', () => {
 
 	test('on a phone the note runs in full in the history, no clamp, no "more"', async ({ page }) => {
 		await page.setViewportSize({ width: 390, height: 900 });
-		await gotoClassicCookies(page);
+		await openCookies(page);
 		await page.getByRole('button', { name: '3 versions' }).click();
 		const message = page.locator('.version-bar .current .message');
 		await expect(message).toContainText(SEED[0].versions.at(-1)!.commitMessage);
@@ -819,7 +810,7 @@ test.describe('Recipe detail page', () => {
 
 	test('a keyboard cook can skip from the navbar to the ingredients', async ({ page }) => {
 		await page.setViewportSize({ width: 1280, height: 900 });
-		await gotoClassicCookies(page);
+		await openCookies(page);
 		// The very first Tab: the skip link lives in the layout, before the navbar.
 		const skip = page.getByRole('link', { name: 'Skip to ingredients' });
 		await page.keyboard.press('Tab');
@@ -869,7 +860,7 @@ test.describe('Recipe detail page', () => {
 		page
 	}) => {
 		await page.setViewportSize({ width: 390, height: 844 });
-		await gotoClassicCookies(page);
+		await openCookies(page);
 		await page.keyboard.press('Tab');
 		await expect(page.getByRole('link', { name: 'Skip to ingredients' })).toBeFocused();
 		await page.keyboard.press('Enter');
@@ -891,7 +882,7 @@ test.describe('Recipe detail page', () => {
 		];
 		for (const { width, height, tab } of runs) {
 			await page.setViewportSize({ width, height });
-			await gotoClassicCookies(page);
+			await openCookies(page);
 			if (tab) await page.locator('.section-tabs').getByRole('button', { name: tab }).click();
 			const boxes = page.locator('#recipe input[type="checkbox"]:visible');
 			const count = await boxes.count();
@@ -937,7 +928,7 @@ test.describe('Recipe detail page', () => {
 	test('while viewing an older version the history still opens, comparing with that version', async ({
 		page
 	}) => {
-		await gotoClassicCookies(page);
+		await openCookies(page);
 		const recipeUrl = page.url().split('?')[0];
 		await page.goto(`${recipeUrl}?version=2`);
 		await page.getByRole('button', { name: '3 versions' }).click();
@@ -952,7 +943,7 @@ test.describe('Recipe detail page', () => {
 
 	test('every inline link in the header has a 24px hit box', async ({ page }) => {
 		await page.setViewportSize({ width: 1280, height: 900 });
-		await gotoClassicCookies(page);
+		await openCookies(page);
 		const short = await page
 			.locator(
 				'header.recipe-header a, header.recipe-header button, .version-bar a, .version-bar button'
@@ -974,7 +965,7 @@ test.describe('Recipe detail page', () => {
 
 	test('the byline wraps without widening the page', async ({ page }) => {
 		await page.setViewportSize({ width: 390, height: 900 });
-		await gotoClassicCookies(page);
+		await openCookies(page);
 
 		const strip = page.locator('.byline');
 		await strip.waitFor();
@@ -992,7 +983,7 @@ test.describe('Recipe detail page', () => {
 
 	test('the bar’s note and toggle share one text baseline', async ({ page }) => {
 		await page.setViewportSize({ width: 1440, height: 900 });
-		await gotoClassicCookies(page);
+		await openCookies(page);
 		await page.getByRole('button', { name: '3 versions' }).click();
 
 		// Each item's first text node, measured as a range so the button box
@@ -1017,7 +1008,7 @@ test.describe('Recipe detail page', () => {
 		page
 	}) => {
 		await page.setViewportSize({ width: 1280, height: 700 });
-		await gotoClassicCookies(page);
+		await openCookies(page);
 		// Three times the seed's rows: well past a 700px screen.
 		await page.evaluate(() => {
 			const list = document.querySelector('#ingredients div:has(> h2) + div')!;
@@ -1050,7 +1041,7 @@ test.describe('Recipe detail page', () => {
 			page.locator('.sidebar-sticky').evaluate((el) => getComputedStyle(el).maskImage);
 		// The seed's list fits a 900px screen: no fade.
 		await page.setViewportSize({ width: 1280, height: 900 });
-		await gotoClassicCookies(page);
+		await openCookies(page);
 		expect(await mask()).toBe('none');
 		// Three times the rows on a 700px screen: the hidden rows are signalled.
 		await page.setViewportSize({ width: 1280, height: 700 });
@@ -1071,7 +1062,7 @@ test.describe('Recipe detail page', () => {
 		page
 	}) => {
 		await page.setViewportSize({ width: 1280, height: 700 });
-		await gotoClassicCookies(page);
+		await openCookies(page);
 		// 25 rows: well past a 700px screen, as a long real recipe would be.
 		await page.evaluate(() => {
 			const list = document.querySelector('#ingredients div:has(> h2) + div')!;
@@ -1109,7 +1100,7 @@ test.describe('Recipe detail page', () => {
 	}) => {
 		for (const width of [1024, 1280]) {
 			await page.setViewportSize({ width, height: 900 });
-			await gotoClassicCookies(page);
+			await openCookies(page);
 			await page.keyboard.press('Tab');
 			await page.keyboard.press('Enter');
 			// Past the scale control's box to the first ingredient.
@@ -1143,7 +1134,7 @@ test.describe('Recipe detail page', () => {
 		browser
 	}) => {
 		await page.setViewportSize({ width: 1280, height: 900 });
-		await gotoClassicCookies(page);
+		await openCookies(page);
 		const recipeUrl = page.url().split('?')[0];
 		const ingredient = page.locator('#ingredients input[type="checkbox"]').nth(1);
 		const step = page.locator('#method input').nth(2);
@@ -1175,7 +1166,7 @@ test.describe('Recipe detail page', () => {
 	test('a method numeral sits 10px from its text with one digit or two, and the text keeps one edge near the row start', async ({
 		page
 	}) => {
-		await gotoClassicCookies(page);
+		await openCookies(page);
 		const url = page.url();
 		for (const width of [1280, 390]) {
 			await page.setViewportSize({ width, height: 900 });
@@ -1218,7 +1209,7 @@ test.describe('Recipe detail page', () => {
 	});
 
 	test('on a narrow phone each action holds its label on one line, 44px tall', async ({ page }) => {
-		await gotoClassicCookies(page);
+		await openCookies(page);
 		// Logged out: Cook, then the login link under it. 360 is the narrowest
 		// common Android width.
 		for (const width of [320, 360, 375]) {
@@ -1240,7 +1231,7 @@ test.describe('Recipe detail page', () => {
 
 	test('on a phone every inline link in the header is 44px tall', async ({ page }) => {
 		await page.setViewportSize({ width: 390, height: 900 });
-		await gotoClassicCookies(page);
+		await openCookies(page);
 		const short = await page.locator('header.recipe-header a').evaluateAll((els) =>
 			els
 				.filter((el) => el.getClientRects().length > 0)
@@ -1253,7 +1244,7 @@ test.describe('Recipe detail page', () => {
 	test('the bar’s separators are drawn, not typed, and no line starts or ends with one', async ({
 		page
 	}) => {
-		await gotoClassicCookies(page);
+		await openCookies(page);
 		const recipeUrl = page.url().split('?')[0];
 		const controls = page.locator('.version-bar .current .controls');
 		const dots = () =>
@@ -1296,7 +1287,7 @@ test.describe('Recipe detail page', () => {
 				.locator(selector)
 				.evaluateAll((els) => els.map((el) => getComputedStyle(el, '::before').content));
 		await page.setViewportSize({ width: 1280, height: 900 });
-		await gotoClassicCookies(page);
+		await openCookies(page);
 		// None typed. Prep · cook is one group, Serves the other; on a desktop a
 		// dot is drawn between pairs and between the groups, in Ink 3.
 		expect(await details.textContent()).not.toContain('·');
@@ -1321,7 +1312,7 @@ test.describe('Recipe detail page', () => {
 		page
 	}) => {
 		await page.setViewportSize({ width: 390, height: 900 });
-		await gotoClassicCookies(page);
+		await openCookies(page);
 		const message = page.locator('.version-bar .current .message');
 		const measure = () =>
 			message.evaluate((el) => {
@@ -1341,17 +1332,17 @@ test.describe('Recipe detail page', () => {
 		// An iPad's controls sit on their own row, so the note has the width of two
 		// lines; in the body face the seed's note fits whole (it takes one).
 		await page.setViewportSize({ width: 768, height: 1024 });
-		await gotoClassicCookies(page);
+		await openCookies(page);
 		expect(await measure()).toMatchObject({ clamp: '2', clipped: false });
 		await page.setViewportSize({ width: 1280, height: 900 });
-		await gotoClassicCookies(page);
+		await openCookies(page);
 		expect((await measure()).lines).toBe(1);
 	});
 
 	test('the hero photo is fetched first, decoded off the main thread, and silent to a screen reader', async ({
 		page
 	}) => {
-		await gotoClassicCookies(page);
+		await openCookies(page);
 		const img = page.locator('.recipe-photo img');
 		await expect(img).toHaveAttribute('fetchpriority', 'high');
 		await expect(img).toHaveAttribute('decoding', 'async');
@@ -1362,7 +1353,7 @@ test.describe('Recipe detail page', () => {
 	test('asked for reduced motion, transitions finish at once: the history chevron turns without its 0.15s', async ({
 		page
 	}) => {
-		await gotoClassicCookies(page);
+		await openCookies(page);
 		const chevron = page.locator('.version-bar .chevron');
 		const duration = () =>
 			chevron.evaluate((el) => parseFloat(getComputedStyle(el).transitionDuration));
@@ -1372,7 +1363,7 @@ test.describe('Recipe detail page', () => {
 	});
 
 	test('selected text sits on marigold in ink', async ({ page }) => {
-		await gotoClassicCookies(page);
+		await openCookies(page);
 		const selection = await page
 			.locator('.description')
 			.evaluate((el) => getComputedStyle(el, '::selection').backgroundColor);
@@ -1406,7 +1397,7 @@ test.describe('Home and recipe pages (logged out)', () => {
 		page
 	}) => {
 		await page.setViewportSize({ width: 390, height: 844 });
-		await gotoClassicCookies(page);
+		await openCookies(page);
 		const row = page.locator('label:has(input[type="checkbox"])').first();
 		const grams = row.locator('span').last();
 		await grams.waitFor();
@@ -1423,7 +1414,7 @@ test.describe('Home and recipe pages (logged out)', () => {
 		page
 	}) => {
 		await page.setViewportSize({ width: 1280, height: 900 });
-		await gotoClassicCookies(page);
+		await openCookies(page);
 		const ink2 = 'rgb(74, 68, 62)';
 		const marigold = 'rgb(236, 166, 32)';
 		const ink = 'rgb(26, 23, 20)';
@@ -1471,7 +1462,7 @@ test.describe('Home and recipe pages (logged out)', () => {
 			await page.goto('/discover');
 			const browse = await page.getByRole('heading', { level: 1 }).boundingBox();
 			const grid = await page.locator('.discover-grid').first().boundingBox();
-			await gotoClassicCookies(page);
+			await openCookies(page);
 			const title = await page.getByRole('heading', { level: 1 }).boundingBox();
 			// The band's wrap: its content box, inside its gutters.
 			const hero = await page.locator('.hero-inner').evaluate((el) => {
@@ -1507,7 +1498,7 @@ test.describe('Home and recipe pages (logged out)', () => {
 		// The page used to carry its own 784px measure; every page is the 1200px
 		// column with the site gutters (decided 29 October 2026).
 		await page.setViewportSize({ width: 1440, height: 1800 });
-		await gotoClassicCookies(page);
+		await openCookies(page);
 		await page.goto(page.url().split('?')[0] + '/diff');
 		const compare = page.locator('.compare');
 		expect((await compare.boundingBox())!.width).toBe(1200);
@@ -1544,7 +1535,7 @@ test.describe('Home and recipe pages (logged out)', () => {
 		// The ~ was drawn in the same grey as the rows it should stand apart
 		// from. Ink, not clay: clay would read too close to the removal red
 		// (decided 29 October 2026).
-		await gotoClassicCookies(page);
+		await openCookies(page);
 		await openCompare(page);
 		const color = (sel: string) =>
 			page
@@ -1562,7 +1553,7 @@ test.describe('Home and recipe pages (logged out)', () => {
 	test('each card number links to its version, so the older one is reachable; no summary line', async ({
 		page
 	}) => {
-		await gotoClassicCookies(page);
+		await openCookies(page);
 		const recipePath = new URL(page.url()).pathname;
 		await page.goto(recipePath + '/diff?from=2&to=3');
 		const numbers = page.locator('article.version-card a.version-card__number');
@@ -1575,7 +1566,7 @@ test.describe('Home and recipe pages (logged out)', () => {
 	test('card usernames and the back link are 24px targets at desktop and 44px on a phone', async ({
 		page
 	}) => {
-		await gotoClassicCookies(page);
+		await openCookies(page);
 		await openCompare(page);
 		const username = page.locator('article.version-card .version-card__head .username').first();
 		const back = page.locator('.compare .back-link');
@@ -1589,7 +1580,7 @@ test.describe('Home and recipe pages (logged out)', () => {
 
 	test('the compare page does not scroll sideways on a phone', async ({ page }) => {
 		await page.setViewportSize({ width: 390, height: 1200 });
-		await gotoClassicCookies(page);
+		await openCookies(page);
 		await page.goto(page.url().split('?')[0] + '/diff');
 		await page.locator('article.version-card').first().waitFor();
 		const doc = await page.evaluate(() => ({
@@ -1608,7 +1599,7 @@ test.describe('Usernames', () => {
 		await page.goto('/tags/dessert');
 		const card = page.locator('.recipe-card a.meta-author').first();
 		expect(await card.evaluate((el) => getComputedStyle(el).color)).toBe('rgb(178, 60, 0)');
-		await gotoClassicCookies(page);
+		await openCookies(page);
 		const author = page.locator('.recipe-header a.username').first();
 		expect(await author.evaluate((el) => getComputedStyle(el).color)).toBe('rgb(178, 60, 0)');
 	});
@@ -1619,7 +1610,7 @@ test.describe('Usernames', () => {
 		// Usernames are identifiers, mono like version numbers and dates, one
 		// notch (0.9375em) under the line they sit in, since JetBrains Mono runs
 		// optically larger than the sans beside it (decided 29 October 2026).
-		await gotoClassicCookies(page);
+		await openCookies(page);
 		const byline = page.locator('.recipe-header .byline');
 		const face = (el: Element) => {
 			const s = getComputedStyle(el);
@@ -1643,7 +1634,7 @@ test.describe('Serving scaling', () => {
 
 	test('the up and down keys step the serves by one and apply at once', async ({ page }) => {
 		await page.setViewportSize({ width: 1280, height: 900 });
-		await gotoClassicCookies(page);
+		await openCookies(page);
 		const servings = page.getByRole('spinbutton', { name: 'Servings' });
 		await servings.press('ArrowUp');
 		await expect(servings).toHaveValue(String(latest.servings! + 1));
@@ -1657,7 +1648,7 @@ test.describe('Serving scaling', () => {
 		page
 	}) => {
 		await page.setViewportSize({ width: 390, height: 900 });
-		await gotoClassicCookies(page);
+		await openCookies(page);
 		const ingredients = page.locator('#ingredients');
 		const flourMeasure = ingredients.locator('label').first().locator('.font-semibold');
 		const measureLine = page.locator('header .details');
@@ -1696,7 +1687,7 @@ test.describe('Serving scaling', () => {
 		page
 	}) => {
 		await page.setViewportSize({ width: 1280, height: 900 });
-		await gotoClassicCookies(page);
+		await openCookies(page);
 		const ingredients = page.locator('#ingredients');
 		const blank = await ingredients.getByRole('spinbutton', { name: 'Servings' }).evaluate((el) => {
 			const s = getComputedStyle(el);
@@ -1767,7 +1758,7 @@ test.describe('Cooking mode', () => {
 	}) => {
 		await page.setViewportSize({ width: 1280, height: 900 });
 		await mockWakeLock(page);
-		await gotoClassicCookies(page);
+		await openCookies(page);
 		const cook = page.getByRole('button', { name: 'Cook' });
 		await expect(cook).toHaveAttribute('aria-pressed', 'false');
 		await expect(page.locator('.version-bar')).toBeVisible();
@@ -1805,7 +1796,7 @@ test.describe('Cooking mode', () => {
 
 	test('?cook=1 survives a reload and keeps a scale; a scale keeps ?cook=1', async ({ page }) => {
 		await mockWakeLock(page);
-		await gotoClassicCookies(page);
+		await openCookies(page);
 		await page.getByRole('button', { name: 'Cook' }).click();
 		await expect(page).toHaveURL(/[?&]cook=1/);
 		const servings = page.getByRole('spinbutton', { name: 'Servings' });
@@ -1832,7 +1823,7 @@ test.describe('Cooking mode', () => {
 		});
 		const errors: string[] = [];
 		page.on('pageerror', (e) => errors.push(e.message));
-		await gotoClassicCookies(page);
+		await openCookies(page);
 		await page.getByRole('button', { name: 'Cook' }).click();
 		await expect(page.getByRole('button', { name: 'Done cooking' })).toBeVisible();
 		await expect(page.getByText('Your screen may still sleep.')).toBeVisible();
@@ -1845,7 +1836,7 @@ test.describe('Cooking mode', () => {
 	}) => {
 		await page.setViewportSize({ width: 390, height: 844 });
 		await mockWakeLock(page);
-		await gotoClassicCookies(page);
+		await openCookies(page);
 		await page.getByRole('button', { name: 'Cook' }).click();
 		const done = page.getByRole('button', { name: 'Done cooking' });
 		await expect(done).toBeVisible();

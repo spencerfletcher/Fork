@@ -1,5 +1,14 @@
 import { describe, test, expect } from 'vitest';
-import { formatDate, formatTime, oneOf, plural, wholeNumber } from './helpers';
+import {
+	compactCount,
+	formatDate,
+	formatTime,
+	MILLION,
+	oneOf,
+	plural,
+	THOUSAND,
+	wholeNumber
+} from './helpers';
 
 describe('formatTime', () => {
 	test('under an hour reads in minutes', () => {
@@ -33,6 +42,12 @@ describe('plural', () => {
 		expect(plural(0, 'fork')).toBe('0 forks');
 		expect(plural(2, 'public recipe')).toBe('2 public recipes');
 	});
+
+	test('an irregular plural is passed and used for every count but one', () => {
+		expect(plural(1, 'entry', 'entries')).toBe('1 entry');
+		expect(plural(0, 'entry', 'entries')).toBe('0 entries');
+		expect(plural(3, 'entry', 'entries')).toBe('3 entries');
+	});
 });
 
 describe('oneOf', () => {
@@ -58,5 +73,28 @@ describe('wholeNumber', () => {
 	test('signs, decimals, spaces, trailing letters and empty are null', () => {
 		for (const value of ['-1', '+1', '1.5', ' 1', '2abc', '1e3', ''])
 			expect(wholeNumber(value)).toBeNull();
+	});
+});
+
+describe('compactCount', () => {
+	test('below a thousand, plain digits', () => {
+		expect(compactCount(0)).toBe('0');
+		expect(compactCount(THOUSAND - 1)).toBe(String(THOUSAND - 1));
+	});
+
+	test('from a thousand, one decimal and k, a trailing .0 dropped', () => {
+		expect(compactCount(THOUSAND)).toBe('1k');
+		expect(compactCount(1.234 * THOUSAND)).toBe('1.2k');
+		expect(compactCount(12 * THOUSAND)).toBe('12k');
+	});
+
+	test('rounds down, so a count never reads more than it is or rolls into the next unit', () => {
+		expect(compactCount(1.29 * THOUSAND)).toBe('1.2k');
+		expect(compactCount(MILLION - 1)).toBe('999.9k');
+	});
+
+	test('from a million, the same rule with M', () => {
+		expect(compactCount(MILLION)).toBe('1M');
+		expect(compactCount(2.5 * MILLION)).toBe('2.5M');
 	});
 });

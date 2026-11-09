@@ -13,6 +13,7 @@
 		forkIcon,
 		versionsIcon,
 		saveIcon,
+		journalIcon,
 		chevronIcon,
 		searchIcon,
 		headingIcon
@@ -152,6 +153,22 @@
 		stroke-width="1.5"
 		stroke-linejoin="round">
 		<path d="M4 2.5h8v11l-4-3-4 3z" />
+	</svg>
+{/snippet}
+
+<!-- Add to Journal: a book seen from the side, its cover a little open from
+     the spine, the page edges showing. -->
+{#snippet journalIcon()}
+	<svg
+		class="size-4"
+		viewBox="0 0 16 16"
+		aria-hidden="true"
+		fill="none"
+		stroke="currentColor"
+		stroke-width="1.5"
+		stroke-linecap="round"
+		stroke-linejoin="round">
+		<path d="M5 2.5h8v11H5M5 2.5v11M5 2.5 2.5 3.75v11L5 13.5M8 5.5h2.5M8 8h2.5" />
 	</svg>
 {/snippet}
 

@@ -4,8 +4,9 @@
 	import { page } from '$app/state';
 	import { setShallowParam } from './shallowParam';
 	import type { Recipe } from '#lib/server/db/schema.js';
-	import { forkIcon, saveIcon } from '#lib/components/Icons.svelte';
-	import { compactCount } from './compactCount';
+	import { forkIcon, journalIcon, saveIcon } from '#lib/components/Icons.svelte';
+	import { compactCount, wholeNumber } from '#lib/helpers.js';
+	import { optimisticToggle } from '#lib/optimisticToggle.svelte.js';
 
 	let {
 		recipe,
@@ -39,18 +40,24 @@
 	// The scaler writes ?serves= with a shallow replace, so the newest URL is page.shallow's.
 	const serves = $derived((page.shallow?.url ?? page.url).searchParams.get('serves'));
 	const logHref = $derived(
-		journalHref && serves && /^\d+$/.test(serves) ? `${journalHref}&serves=${serves}` : journalHref
+		journalHref && serves && wholeNumber(serves) !== null
+			? `${journalHref}&serves=${serves}`
+			: journalHref
 	);
 
-	// Writable derived: the click flips it optimistically, and it resets to the
-	// prop whenever the page loads another recipe or reloads this one.
-	let isFavorited = $derived(initialFavorited);
+	let error = $state('');
+	// The click flips it optimistically; it resets to the prop whenever the
+	// page loads another recipe or reloads this one.
+	const favorite = optimisticToggle(() => initialFavorited, {
+		failure: 'Could not save that. Try again.',
+		report: (message) => (error = message),
+		refresh: true
+	});
+	const isFavorited = $derived(favorite.on);
 	// The count follows the optimistic flip: one more or one fewer than loaded.
 	const saves = $derived(favoriteCount + Number(isFavorited) - Number(initialFavorited));
 	const savesText = $derived(compactCount(saves));
 	let forking = $state(false);
-	let saving = $state(false);
-	let error = $state('');
 
 	// SvelteKit keeps this component mounted across versions and recipes, so a
 	// failure message would otherwise stay over the next view.
@@ -156,24 +163,7 @@
 			</a>
 		{/if}
 		{#if canFavorite}
-			<form
-				method="POST"
-				action="?/toggleFavorite"
-				use:enhance={({ cancel }) => {
-					// One request at a time: two toggles in flight could race on the
-					// server. Cancelled rather than disabled, so keyboard focus stays.
-					if (saving) return cancel();
-					saving = true;
-					isFavorited = !isFavorited;
-					error = '';
-					return async ({ result, update }) => {
-						saving = false;
-						if (result.type === 'success') return update({ reset: false });
-						// Flip back: nothing was saved.
-						isFavorited = !isFavorited;
-						error = 'Could not save that. Try again.';
-					};
-				}}>
+			<form method="POST" action="?/toggleFavorite" use:enhance={favorite.submit}>
 				<button
 					type="submit"
 					class="btn-ghost favorite flex items-center justify-center gap-2 no-underline"
@@ -220,7 +210,10 @@
 	{/if}
 	<!-- Signed in: last in the row, and the one action beside Done cooking. -->
 	{#if logHref}
-		<a href={logHref} class="btn-ghost log no-underline">Add to Journal</a>
+		<a href={logHref} class="btn-ghost log no-underline">
+			{@render journalIcon()}
+			Add to Journal
+		</a>
 	{/if}
 
 	{#if cooking && noWakeLock}

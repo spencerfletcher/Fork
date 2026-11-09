@@ -12,7 +12,7 @@ import {
 	limitError
 } from './limits.js';
 import { normaliseTagNames } from './tags.js';
-import { text, slugify } from '#lib/helpers.js';
+import { oneOf, text, slugify } from '#lib/helpers.js';
 
 // Largest value a Postgres `integer` column holds.
 const INT4_MAX = 2_147_483_647;
@@ -224,7 +224,7 @@ export function parseDraftContent(draft: RecipeDraft): Result<ContentFields> {
 /** The visibility radio's value; missing or unknown reads as private, the default. */
 function visibilityOf(formData: FormData): Visibility {
 	const value = text(formData, 'visibility');
-	return VISIBILITIES.find((v) => v === value) ?? 'private';
+	return oneOf(VISIBILITIES, value) ?? 'private';
 }
 
 /** Tag names as submitted, before any trimming or deduplication. */

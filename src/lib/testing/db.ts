@@ -1,4 +1,4 @@
-import type { Tx } from '#lib/server/tags.js';
+import type { Tx } from '#lib/server/db/index.js';
 
 try {
 	process.loadEnvFile('.env.local');

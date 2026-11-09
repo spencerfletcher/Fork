@@ -121,14 +121,14 @@ describe('Discover', () => {
 	});
 
 	test('every grid card names its cook above the photo', () => {
-		const { container } = renderDiscover({
-			lead: makeCard(9),
-			recipes: [makeCard(1), makeCard(2)]
-		});
+		// The lead is in the grid too, so the count is the grid's.
+		const lead = makeCard(9);
+		const recipes = [lead, makeCard(1), makeCard(2)];
+		const { container } = renderDiscover({ lead, recipes });
 		const cards = container.querySelectorAll('.discover-grid .recipe-card');
-		expect(cards).toHaveLength(2);
-		expect(cards[0].querySelector('.card-cook')).toHaveTextContent('@cook1');
-		expect(screen.getByText('3 recipes')).toBeInTheDocument();
+		expect(cards).toHaveLength(recipes.length);
+		expect(cards[1].querySelector('.card-cook')).toHaveTextContent('@cook1');
+		expect(screen.getByText(`${recipes.length} recipes`)).toBeInTheDocument();
 	});
 
 	test('the friends toggle shows only when the loader offers it', () => {
@@ -141,7 +141,7 @@ describe('Discover', () => {
 
 	test('a filter with no match says so and offers to clear', () => {
 		renderDiscover({ searchQuery: 'saffron' });
-		expect(screen.getByRole('status')).toHaveTextContent('0 recipes found');
+		expect(screen.getByRole('status')).toHaveTextContent('0 recipes match');
 		expect(screen.getByRole('link', { name: 'Clear filters' })).toBeInTheDocument();
 	});
 });

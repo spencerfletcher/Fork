@@ -6,7 +6,7 @@ import type { PageData } from './$types';
 import { makeContent, makeIngredient, makeVersion } from '#lib/recipes/fixtures.js';
 import { FRACTIONS } from '#lib/recipes/scale.js';
 import { loginHref } from '#lib/auth/loginHref.js';
-import { compactCount } from './components/compactCount';
+import { compactCount } from '#lib/helpers.js';
 
 // The page owns the serves: read from ?serves= on load, scaled into the
 // ingredient list. The control's own behaviour is in ServesControl's tests.

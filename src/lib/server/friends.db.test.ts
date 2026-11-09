@@ -20,7 +20,7 @@ describe.skipIf(!localDb)('unfriend and block, against the real database', () =>
 		friends = await import('./friends.js');
 	});
 
-	type Tx = import('./tags.js').Tx;
+	type Tx = import('./db/index.js').Tx;
 
 	/** Runs `body` on a fresh pair of friends, A and B, then rolls everything back. */
 	async function withFriends(body: (tx: Tx, a: string, b: string) => Promise<void>) {

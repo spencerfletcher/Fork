@@ -83,7 +83,8 @@ export async function loadDiscover(url: URL, user: { id: string } | null) {
 			...v,
 			href: `/recipes/${v.slug}/diff?from=${v.versionNumber - 1}&to=${v.versionNumber}`
 		})),
-		recipes: counted.filter((r) => r !== lead)
+		// The lead stays in the grid, so Newest first and its count are the whole set.
+		recipes: counted
 	};
 }
 

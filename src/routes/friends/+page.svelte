@@ -4,6 +4,7 @@
 	import Username from '#lib/components/ui/Username.svelte';
 	import Avatar from '#lib/components/ui/Avatar.svelte';
 	import { dayLabel } from '#lib/journal.js';
+	import EmptyPanel from '#lib/components/ui/EmptyPanel.svelte';
 	import FeedEntry from './FeedEntry.svelte';
 	import type { PageData } from './$types';
 
@@ -23,8 +24,6 @@
 		await navigator.clipboard.writeText(inviteLink);
 		copied = true;
 	}
-
-	const day = (date: Date) => dayLabel(date.toISOString().slice(0, 10));
 </script>
 
 {#snippet requests()}
@@ -38,7 +37,7 @@
 				<Avatar username={request.username} size={32} />
 				<p class="nm">
 					<Username username={request.username} class="hit-link" />
-					<small>Sent {day(request.sentAt)}</small>
+					<small>Sent {dayLabel(request.sentAt)}</small>
 				</p>
 				<div class="btns">
 					<form method="POST" action="?/accept" use:enhance>
@@ -84,16 +83,17 @@
 			{#if data.requests.length > 0}
 				<div class="empty-req">{@render requests()}</div>
 			{/if}
-			<section class="f-empty">
-				{#if data.friendCount === 0}
-					<h2>No friends yet</h2>
-				{:else}
-					<h2>Nothing from friends yet</h2>
-				{/if}
-				<p>When friends share what they cook, it shows up here, newest first.</p>
-				<button class="btn-ghost" type="button" onclick={copyInvite}>Invite a friend</button>
-				<p class="copied" role="status">{copied ? `Link copied: ${inviteLink}` : ''}</p>
-			</section>
+			<EmptyPanel title={data.friendCount === 0 ? 'No friends yet' : 'Nothing from friends yet'}>
+				When friends share what they cook, it shows up here, newest first.
+				{#snippet action()}
+					<button class="btn-ghost empty-invite" type="button" onclick={copyInvite}>
+						Invite a friend
+					</button>
+					<p class="copied empty-copied" role="status">
+						{copied ? `Link copied: ${inviteLink}` : ''}
+					</p>
+				{/snippet}
+			</EmptyPanel>
 		{:else}
 			<div class="f-layout">
 				<div class="feed">
@@ -120,7 +120,7 @@
 											<span class="mono-id">v{item.versionNumber}</span>
 										</a>
 									{/if}
-									<small>{day(item.at)}</small>
+									<small>{dayLabel(item.at)}</small>
 								</p>
 							</article>
 						{/if}
@@ -253,25 +253,13 @@
 		display: none;
 	}
 
-	.f-empty {
-		max-width: 560px;
-		padding: var(--space-6) 0;
-		border-top: 1px solid var(--color-border);
+	.empty-invite {
+		min-height: 44px;
 	}
 
-	.f-empty h2 {
-		margin: 0;
-		font-size: 1.375rem;
-	}
-
-	.f-empty p {
+	.empty-copied {
 		margin: 8px 0 0;
 		color: var(--color-text-2);
-	}
-
-	.f-empty .btn-ghost {
-		margin-top: 20px;
-		min-height: 44px;
 	}
 
 	.empty-req {

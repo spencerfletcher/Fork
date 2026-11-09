@@ -2,7 +2,7 @@ import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import RecipeActions from './RecipeActions.svelte';
-import { compactCount } from './compactCount';
+import { compactCount } from '#lib/helpers.js';
 import source from './RecipeActions.svelte?raw';
 import { readFileSync } from 'node:fs';
 
@@ -572,6 +572,13 @@ describe('RecipeActions Add to Journal', () => {
 			`${HREF}&serves=24`
 		);
 		page.shallow = null;
+	});
+
+	test('the book icon comes first, hidden, so the name is the label alone', () => {
+		render(RecipeActions, { props: makeProps({ journalHref: HREF }) });
+		const link = screen.getByRole('link', { name: 'Add to Journal' });
+		expect(link.firstElementChild?.tagName).toBe('svg');
+		expect(link.firstElementChild).toHaveAttribute('aria-hidden', 'true');
 	});
 
 	test('signed out there is none, cooking or not', () => {

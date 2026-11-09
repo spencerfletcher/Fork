@@ -86,14 +86,14 @@ describe('loadDiscover', () => {
 		);
 	});
 
-	test('the lead is the most-saved visible recipe of the last week, out of the grid', async () => {
+	test('the lead is the most-saved visible recipe of the last week, and stays in the grid', async () => {
 		const { leadChain } = mockSelects([{ recipeId: 3, saves: 4 }], []);
 		const before = Date.now();
 
 		const result = await loadDiscover(url(), VIEWER);
 
 		expect(result.lead?.id).toBe(3);
-		expect(result.recipes.map((r) => r.id)).toEqual([1, 2]);
+		expect(result.recipes.map((r) => r.id)).toEqual(ROWS.map((r) => r.id));
 		const leadWhere = sqlOf(leadChain.where.mock.calls[0][0]);
 		expect(leadWhere.params).toContain(VIEWER.id);
 		const cutoff = leadWhere.params.find(
@@ -109,7 +109,7 @@ describe('loadDiscover', () => {
 		const result = await loadDiscover(url(), VIEWER);
 
 		expect(result.lead?.id).toBe(ROWS[0].id);
-		expect(result.recipes.map((r) => r.id)).toEqual([2, 3]);
+		expect(result.recipes.map((r) => r.id)).toEqual(ROWS.map((r) => r.id));
 	});
 
 	test('recent changes: newest later versions of visible recipes, linking to their diff', async () => {
@@ -148,7 +148,7 @@ describe('loadDiscover', () => {
 		const result = await loadDiscover(url('?q=dal'), VIEWER);
 
 		expect(result.lead?.id).toBe(2);
-		expect(result.recipes.map((r) => r.id)).toEqual([1, 3]);
+		expect(result.recipes.map((r) => r.id)).toEqual(ROWS.map((r) => r.id));
 		expect(sqlOf(findManyMock.mock.calls[0][0].where).params).toContain('dal');
 		expect(sqlOf(leadChain.where.mock.calls[0][0]).params).toContain('dal');
 		expect(sqlOf(recentChain.where.mock.calls[0][0]).params).toContain('dal');
@@ -172,7 +172,7 @@ describe('loadDiscover', () => {
 		const result = await loadDiscover(url('?q=dal'), VIEWER);
 
 		expect(result.lead?.id).toBe(1);
-		expect(result.recipes.map((r) => r.id)).toEqual([3, 2]);
+		expect(result.recipes.map((r) => r.id)).toEqual([3, 1, 2]);
 	});
 
 	test('an @handle in the query narrows to that cook and leaves the rest as text', async () => {

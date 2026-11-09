@@ -42,6 +42,26 @@ Planning and design docs: start at `docs/README.md`, which names the current pro
 - When parallel builders work at once, land or name the shared pieces first, then fan out
 - The [`code-health`](.agents/skills/code-health/SKILL.md) skill sweeps the repo for duplication (with a status row per shared component), dead code, drift and hygiene into one dated report under `docs/audits/`: monthly, after any build over ~1000 lines or more than two parallel slices, and before a production publish
 
+### Shared helpers
+
+- `viewableRecipe(slug, user, with?)` (`src/lib/server/visibility.ts`): load a recipe by slug the viewer may see, or throw the 404
+- `ownRecipe(slug, userId, with?)` (`src/lib/server/visibility.ts`): load the viewer's own recipe, or throw the one 403 (`NOT_AUTHORIZED`)
+- `inLibraryOf(user)` (`src/lib/server/visibility.ts`): SQL for own recipes plus saved ones the viewer may see
+- `eitherWay([requester, addressee], a, b)` (`src/lib/server/visibility.ts`): the friendship pair matched either way round, as the unique index orders it
+- `cardList(where, orderBy, viewer, { tagRank?, limit? })` (`src/lib/server/recipeCounts.ts`): recipe cards with their counts, more tag matches first
+- `tagSelection(allTags, slugs, withinIds?)` (`src/lib/server/tagFilter.ts`): the URL's tags resolved and matched
+- `failure(status, code, error, extra?)` and `FAILURE_CODES` (`src/lib/server/actions.ts`): every `fail()` in the `{ error, code }` shape, codes from one list
+- `requireUser(url, user)` and `SESSION_ENDED(verb)` (`src/lib/server/actions.ts`): the signed-out redirect and its one wording
+- `storePhoto(formData, supabase, userId)` (`src/lib/server/submission.ts`): a form's photo stored, or why it was refused
+- `oneOf(list, value)` (`src/lib/helpers.ts`): a value from an `as const` list, else undefined
+- `wholeNumber(s)` (`src/lib/helpers.ts`): digits only as a number, else null
+- `plural(n, word, pluralForm?)` (`src/lib/helpers.ts`): "1 fork", "2 forks", "2 entries"
+- `compactCount(n)` (`src/lib/helpers.ts`): "1.2k", "2.5M" for a pill
+- `day(iso)`, `dayLabel(string | Date)` and `sourceHref(source)` (`src/lib/journal.ts`): a calendar day read as UTC, its label, a journal entry's recipe link
+- `pendingEnhance(...)` (`src/lib/pendingEnhance.svelte.ts`): a form's pending and kept-error state
+- `optimisticToggle(initial, { failure, report, refresh? })` (`src/lib/optimisticToggle.svelte.ts`): a pressed state that flips at once, rolls back on refusal, one request at a time
+- Testing: `loadEvent`, `formEvent` and `formOf` (`src/lib/testing/actions.ts`), `mockDb` (`src/lib/testing/drizzle.ts`, hoisted at the call site), `inRollback` (`src/lib/testing/db.ts`); e2e: `gotoHydrated`, `COOKIES_RE`, `openCookies` (`e2e/helpers.ts`)
+
 ## API / Endpoints
 
 - Validate all inputs server-side — don't trust client data
