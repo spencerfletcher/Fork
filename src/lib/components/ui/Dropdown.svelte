@@ -1,10 +1,13 @@
 <script lang="ts">
 	import { tick, type Snippet } from 'svelte';
+	import { afterNavigate } from '$app/navigation';
 
 	// The behaviour behind every small overlay (the ⋯ menu, the navbar's avatar
 	// menu): a button and the panel it shows. Opening focuses the panel's first
 	// control, Escape closes and hands focus back to the button, a press outside
 	// closes. Where the panel's items are menuitems, the arrow keys walk them.
+	// A menu link closes the panel as it is pressed, so the old menu does not
+	// sit over the page while the next one loads; any navigation closes it too.
 	// The consumer draws the button and the panel; this owns none of their look.
 	let {
 		trigger,
@@ -43,6 +46,14 @@
 		button?.focus();
 	}
 
+	afterNavigate(() => (open = false));
+
+	// Links only: a menu button may submit its form (Log out), and taking the
+	// panel down under it would cancel the submission.
+	function onclick(e: MouseEvent) {
+		if (e.target instanceof Element && e.target.closest('a[role="menuitem"]')) open = false;
+	}
+
 	function onkeydown(e: KeyboardEvent) {
 		if (e.key === 'Escape') return close();
 		if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
@@ -63,7 +74,7 @@
 	}} />
 
 <!-- svelte-ignore a11y_no_static_element_interactions (keys bubble up from the controls inside) -->
-<div class="dropdown" bind:this={root} {onkeydown}>
+<div class="dropdown" bind:this={root} {onkeydown} {onclick}>
 	{@render trigger({ 'aria-expanded': open, onclick: toggle })}
 	{#if open}
 		{@render panel()}

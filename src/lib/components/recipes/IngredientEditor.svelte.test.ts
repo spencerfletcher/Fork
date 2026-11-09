@@ -27,8 +27,9 @@ describe('IngredientEditor', () => {
 
 	test('the placeholder shows what comes back: the fraction as it is stored, not "2 1/4"', () => {
 		render(IngredientEditor, { props: { value: '' } });
-		expect(box()).toHaveAttribute('data-placeholder', '2¼ cups all-purpose flour\n2 large eggs');
-		expect(field().placeholder).toBe('2¼ cups all-purpose flour\n2 large eggs');
+		const placeholder = '# Dough\n2¼ cups all-purpose flour\n2 large eggs';
+		expect(box()).toHaveAttribute('aria-placeholder', placeholder);
+		expect(field().placeholder).toBe(placeholder);
 	});
 
 	test('keeps an empty live region in the page when the box is empty, so later notes are announced', () => {
@@ -154,7 +155,9 @@ describe('IngredientEditor', () => {
 			expect(hint).toHaveTextContent(
 				'One per line: quantity, unit, ingredient — 2¼ cups flour. A line like # Dough starts a group.'
 			);
-			expect(hint.querySelector('code')).toHaveTextContent('# Dough');
+			// Sans like the prose around it (Spencer: "it should all be sans"); mono is for identifiers.
+			expect(hint.querySelector('b')).toHaveTextContent('# Dough');
+			expect(hint.querySelector('code')).toBeNull();
 		});
 
 		test('a heading line is never reported as a line that cannot be scaled', () => {

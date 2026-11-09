@@ -211,7 +211,7 @@
 
 	.byline :global(a:hover),
 	.stats a:hover {
-		color: var(--color-text);
+		color: var(--color-accent-hover);
 	}
 
 	.recipe-header :global(.details) {
@@ -224,13 +224,13 @@
 		line-height: 1.5;
 	}
 
-	/* Links like every other link on the site: clay, bold, ink on hover. */
+	/* Links like every other link on the site: clay, bold, clay deep on hover. */
 	.tags a {
 		text-decoration: none;
 	}
 
 	.tags a:hover {
-		color: var(--color-text);
+		color: var(--color-accent-hover);
 	}
 
 	/* Logged out the snippet renders nothing; an empty row must not take a gap. */
@@ -257,6 +257,6 @@
 	}
 
 	.personal a:hover {
-		color: var(--color-text);
+		color: var(--color-accent-hover);
 	}
 </style>

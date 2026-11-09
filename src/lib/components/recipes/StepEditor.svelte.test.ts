@@ -27,11 +27,12 @@ describe('StepEditor', () => {
 		expect(hint).toHaveTextContent('substitution:');
 	});
 
-	test('sets each note keyword apart as literal syntax', () => {
+	test('sets each keyword apart as literal syntax, in bold sans', () => {
 		render(StepEditor, { props: { value: '' } });
 		const hint = screen.getByText(/blank line/i);
-		for (const keyword of ['tip:', 'warning:', 'substitution:']) {
-			expect(within(hint).getByText(keyword).tagName).toBe('CODE');
+		// Bold in the hint's sans, never mono (Spencer: "it should all be sans").
+		for (const keyword of ['tip:', 'warning:', 'substitution:', '# Bake']) {
+			expect(within(hint).getByText(keyword).tagName).toBe('B');
 		}
 	});
 

@@ -20,7 +20,7 @@
 	);
 
 	const placeholder =
-		'Cream the butter and sugar.\n\nFold in the flour.\ntip: Stop when no dry streaks remain.';
+		'# Dough\nCream the butter and sugar.\n\nFold in the flour.\ntip: Stop when no dry streaks remain.';
 </script>
 
 <div class="field">
@@ -41,13 +41,13 @@
 	{/if}
 	<!-- The syntax stays in view while typing, after the placeholder has gone. -->
 	<p class="form-hint" id="steps-hint">
-		Separate steps with a blank line. Add a note under a step with <code>tip:</code>
+		Separate steps with a blank line. Add a note under a step with <b>tip:</b>
 		,
-		<code>warning:</code>
+		<b>warning:</b>
 		or
-		<code>substitution:</code>
+		<b>substitution:</b>
 		on its own line. A line like
-		<code># Bake</code>
+		<b># Bake</b>
 		starts a group.
 	</p>
 </div>

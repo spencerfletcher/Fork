@@ -51,8 +51,9 @@
 			.join(' ')
 	);
 
-	// What is typed is what comes back: the fraction as the recipe stores it.
-	const placeholder = '2¼ cups all-purpose flour\n2 large eggs';
+	// What is typed is what comes back: the fraction as the recipe stores it,
+	// under a heading so a new cook sees how a section looks.
+	const placeholder = '# Dough\n2¼ cups all-purpose flour\n2 large eggs';
 </script>
 
 <div class="field">
@@ -80,7 +81,7 @@
 	{/if}
 	<!-- The format stays in view while typing, after the placeholder has gone. -->
 	<p class="form-hint" id="ingredients-hint">
-		One per line: quantity, unit, ingredient — 2¼ cups flour. A line like <code># Dough</code>
+		One per line: quantity, unit, ingredient — 2¼ cups flour. A line like <b># Dough</b>
 		starts a group.
 	</p>
 	<!-- Always in the DOM so screen readers announce the text when it appears. -->

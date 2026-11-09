@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { headingIcon } from '#lib/components/Icons.svelte';
 	import { lineKind, headingInsert, SECTION_NAME } from '#lib/recipes/editorLines.js';
 
 	let {
@@ -350,40 +349,53 @@
 					{disabled}
 					onmousedown={(e) => e.preventDefault()}
 					onclick={insertHeading}>
-					{@render headingIcon()}
+					<span class="mark" aria-hidden="true">H</span>
 					Section heading
 				</button>
 			</div>
 		{/if}
 	</div>
 	{#if enhanced}
-		<div
-			bind:this={box}
-			{id}
-			class="ed"
-			class:empty={value === ''}
-			contenteditable={disabled ? 'false' : 'true'}
-			role="textbox"
-			tabindex="0"
-			aria-multiline="true"
-			aria-required="true"
-			aria-labelledby="{id}-label"
-			data-placeholder={placeholder}
-			aria-disabled={disabled ? 'true' : undefined}
-			aria-invalid={invalid ? 'true' : undefined}
-			aria-describedby={describedBy}
-			spellcheck="true"
-			{oninput}
-			{onfocusout}
-			{onpaste}
-			{ondrop}
-			oncompositionstart={() => (composing = true)}
-			{oncompositionend}
-			onbeforeinput={(e) => {
-				// No bold, italic or other rich formatting from shortcuts.
-				if (e.inputType.startsWith('format')) e.preventDefault();
-				else if (e.inputType.startsWith('insert') && !composing) ensureLine();
-			}}>
+		<div class="ed-wrap">
+			<div
+				bind:this={box}
+				{id}
+				class="ed"
+				class:empty={value === ''}
+				contenteditable={disabled ? 'false' : 'true'}
+				role="textbox"
+				tabindex="0"
+				aria-multiline="true"
+				aria-required="true"
+				aria-labelledby="{id}-label"
+				aria-placeholder={placeholder}
+				aria-disabled={disabled ? 'true' : undefined}
+				aria-invalid={invalid ? 'true' : undefined}
+				aria-describedby={describedBy}
+				spellcheck="true"
+				{oninput}
+				{onfocusout}
+				{onpaste}
+				{ondrop}
+				oncompositionstart={() => (composing = true)}
+				{oncompositionend}
+				onbeforeinput={(e) => {
+					// No bold, italic or other rich formatting from shortcuts.
+					if (e.inputType.startsWith('format')) e.preventDefault();
+					else if (e.inputType.startsWith('insert') && !composing) ensureLine();
+				}}>
+			</div>
+			<!-- The placeholder drawn as the box draws lines, so a "# " line shows as
+		     the heading it would become. The textbox's aria-placeholder speaks it. -->
+			{#if value === ''}
+				<div class="placeholder" aria-hidden="true">
+					{#each placeholder.split('\n') as line, i (i)}
+						<div class:heading={lineKind(line) === 'heading'}>
+							{#if line}{line}{:else}<br />{/if}
+						</div>
+					{/each}
+				</div>
+			{/if}
 		</div>
 	{/if}
 	<textarea
@@ -422,7 +434,7 @@
 	/* A text button: a 24px hit (44px on a phone) grown outward, so the text stays put. */
 	.tool {
 		display: inline-flex;
-		align-items: center;
+		align-items: baseline;
 		gap: 4px;
 		font-size: 0.875rem;
 		line-height: 1.2;
@@ -446,10 +458,12 @@
 		cursor: default;
 	}
 
-	/* :global, because the icon comes from Icons.svelte. */
-	.tool :global(svg) {
-		width: 14px;
-		height: 14px;
+	/* The H in the heading's own face, a step bigger and weightier than the word. */
+	.mark {
+		font-family: var(--font-serif);
+		font-weight: 700;
+		font-size: 1.2em;
+		line-height: 1;
 	}
 
 	/* field-sizing: content ignores rows; this keeps an empty box typeable. */
@@ -486,10 +500,20 @@
 		opacity: 0.6;
 	}
 
-	.ed.empty::before {
-		content: attr(data-placeholder);
+	.ed-wrap {
+		position: relative;
+	}
+
+	/* Over the empty box, in its face and padding, inside its 1px border. */
+	.placeholder {
 		position: absolute;
-		inset: 9px 12px auto;
+		inset: 1px;
+		padding: 9px 12px;
+		font-family: var(--font-sans);
+		font-size: 0.9375rem;
+		line-height: 1.4;
+		white-space: pre-wrap;
+		overflow-wrap: anywhere;
 		color: var(--color-text-3);
 		pointer-events: none;
 	}
@@ -497,7 +521,8 @@
 	/* A "# Name" line: Bitter 600, a step larger, the # in Ink 3. The # is a
 	   background clipped to the text (Ink 3 up to --mk, the #'s right edge,
 	   ink after it, first visual line only), so no text node is split. */
-	.ed :global(.heading) {
+	.ed :global(.heading),
+	.placeholder .heading {
 		font-family: var(--font-serif);
 		font-weight: 600;
 		font-size: 1.1875rem;
@@ -513,6 +538,12 @@
 		background-repeat: no-repeat;
 		-webkit-background-clip: text;
 		background-clip: text;
+	}
+
+	/* The placeholder's heading is all Ink 3, the # included. */
+	.placeholder .heading {
+		color: var(--color-text-3);
+		background: none;
 	}
 
 	/* "#" or "# " while the name is still to come: the mark goes soft, no jump in size. */
@@ -535,7 +566,8 @@
 	}
 
 	@media (max-width: 699px) {
-		.ed {
+		.ed,
+		.placeholder {
 			font-size: 1rem;
 			line-height: 1.5;
 		}

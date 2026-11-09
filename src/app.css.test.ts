@@ -33,6 +33,8 @@ const pairs: [string, string, number][] = [
 	['--color-text-3', '--color-surface', 4.5],
 	['--color-accent', '--color-bg', 4.5],
 	['--color-accent', '--color-tint', 4.5],
+	['--color-accent-hover', '--color-bg', 4.5],
+	['--color-accent-hover', '--color-surface', 4.5],
 	['--color-add', '--color-add-bg', 4.5],
 	['--color-remove', '--color-remove-bg', 4.5],
 	['--color-text', '--color-marigold', 4.5],
@@ -80,6 +82,13 @@ describe('app.css hovers', () => {
 	test('the ghost hover fills with the band', () => {
 		expect(body('\\.btn-ghost:hover')).toMatch(/background:\s*var\(--color-band\)/);
 	});
+
+	// One direction (decided 9 November 2026): clay text deepens, never turns ink.
+	test('a clay link deepens to clay deep on hover, a clearly darker step', () => {
+		expect(body('a:hover')).toMatch(/color:\s*var\(--color-accent-hover\)/);
+		const step = contrast(tokens['--color-accent'], tokens['--color-accent-hover']);
+		expect(step).toBeGreaterThanOrEqual(1.3);
+	});
 });
 
 // The shared utilities that replaced per-component copies (9 November 2026).
@@ -88,11 +97,11 @@ describe('app.css shared utilities', () => {
 		css.match(new RegExp(`\\n\\s*${selector}\\s*\\{([^}]*)\\}`))![1];
 	const phone = css.slice(css.indexOf('@media (max-width: 699px), (pointer: coarse)'));
 
-	test('a text button is clay at 24px, a thumb on a phone, and its hover goes ink and underlined', () => {
+	test('a text button is clay at 24px, a thumb on a phone, and its hover deepens and underlines', () => {
 		expect(body('\\.text-btn')).toMatch(/color:\s*var\(--color-accent\)/);
 		expect(body('\\.text-btn')).toMatch(/min-height:\s*24px/);
 		expect(phone).toMatch(/\.text-btn \{\s*min-height: 44px/);
-		expect(body('\\.text-btn:hover')).toMatch(/color:\s*var\(--color-text\)/);
+		expect(body('\\.text-btn:hover')).toMatch(/color:\s*var\(--color-accent-hover\)/);
 		expect(body('\\.text-btn:hover')).toMatch(/text-decoration:\s*underline/);
 		expect(body('\\.text-btn--ink:hover')).toMatch(/color:\s*var\(--color-accent\)/);
 	});
