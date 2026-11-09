@@ -65,7 +65,7 @@
 			</a>
 			{#if user}
 				{#if profile}
-					<!-- One link: the avatar's initial, and the handle beside it from 768.
+					<!-- One link: the avatar's initial, and the handle beside it from 1024.
 					     The bar caps the handle; the title carries it whole. -->
 					<a
 						href="/users/{profile.username}"
@@ -76,7 +76,7 @@
 						<span class="nav-avatar" aria-hidden="true">
 							{profile.username.charAt(0).toUpperCase()}
 						</span>
-						<span class="nav-handle hidden md:block">@{profile.username}</span>
+						<span class="nav-handle hidden lg:block">@{profile.username}</span>
 					</a>
 				{/if}
 				<form action="/logout" method="POST" use:enhance>
@@ -206,8 +206,9 @@
 
 	/* The profile link: a 32px initial avatar (tint disc, Bitter initial in ink:
 	   no clay inside the espresso bar), with
-	   the handle beside it from 768. Capped so a 30-character handle (the
-	   sign-up max) ellipsises; 22ch shows a normal one whole. */
+	   the handle beside it from 1024 (four destinations leave no room at
+	   768). Capped so a 30-character handle (the sign-up max) ellipsises;
+	   22ch shows a normal one whole. */
 	.nav-profile {
 		display: flex;
 		min-width: 0;

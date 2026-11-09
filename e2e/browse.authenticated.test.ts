@@ -33,9 +33,7 @@ test.describe('Cookbook filters', () => {
 });
 
 test.describe('Navbar at 768, signed in', () => {
-	test('the bar holds one row: links, handle and action fit, the handle loses only a few characters', async ({
-		page
-	}) => {
+	test('the bar holds one row: links, the initial and the action fit', async ({ page }) => {
 		await page.setViewportSize({ width: 768, height: 900 });
 		await page.goto('/cookbook');
 		const bar = (await page.locator('nav').first().boundingBox())!;
@@ -65,8 +63,19 @@ test.describe('Navbar at 768, signed in', () => {
 		expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
 			768
 		);
+		// Four destinations leave no room for the handle at 768: the initial
+		// stands for the account until 1024.
+		await expect(page.locator('nav .nav-avatar').first()).toBeVisible();
+		await expect(page.locator('nav .nav-handle').first()).toBeHidden();
+	});
+
+	test('from 1024 the handle shows beside the initial, losing only a few characters', async ({
+		page
+	}) => {
+		await page.setViewportSize({ width: 1024, height: 900 });
+		await page.goto('/cookbook');
 		// The handle is what gives way when the bar is full, but only by a few
-		// characters at 768: it is still the account, not a stub.
+		// characters: it is still the account, not a stub.
 		const handle = await page
 			.locator('nav .nav-handle')
 			.first()
