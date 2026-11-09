@@ -180,7 +180,7 @@
 		/* A 24px hit on a 20px line without moving the text. */
 		padding: 4px 0;
 		margin: -4px 0;
-		/* At 768 a squeezed bar wrapped "My Recipes" and "Log out". */
+		/* At 768 a squeezed bar must not wrap a destination or "Log out". */
 		white-space: nowrap;
 		transition: color 0.15s ease;
 	}
