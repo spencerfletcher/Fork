@@ -45,7 +45,7 @@ Paper `#f7f3ec`, ink, clay `#b23c00` as text only, marigold `#eca620` as the sin
 - Title band keeps the shipped two columns (words left, 4:3 photo right) and the no-photo rule (words only, one 760px column).
 - Measure order: prep · cook · Serves · Makes. Tags, then the stats line "N forks · N versions", then the version bar.
 - **Verbs (Spencer's call): "Save" replaces "Favorite"; "Fork" stays.** Counts say "saves" and "forks". Fork is the product's calling card; revisit only if users visibly struggle (fallback: "Fork (make your own)").
-- **Save pill carries its count: "Save · 1.2k".** The stats line therefore drops saves. Save is a moving favorite (follows the author's current version, disappears if access is withdrawn); the version-pinned save is a P1 item with its own control later (decided 9 Nov).
+- **Save pill carries its count: "Save · 1.2k".** The stats line therefore drops saves. Save is a moving favorite (follows the author's current version, disappears if access is withdrawn). "Keep this version" is a later option on a saved recipe, shown visibly as "Keeping v3 · Follow latest version", not only in the menu; a Cook URL picks the version for one session only (decided 9 Nov).
 - **Cook is the marigold primary for everyone.** Owner: Cook, "Edit recipe" ghost. Visitor: Cook, Save · 1.2k, Fork. Signed out: Cook, then a **"Log in to save"** text link (Spencer: encourage accounts; no "no login round trip" rule exists). Phone: Cook full width, the other two in two columns.
 - Personal line for signed-in readers: "You cooked this on Sun 8 Nov · Add to Journal", where the date is a link to that log entry.
 - Groups: h3 in Bitter title size over their rows; steps number straight through. Scaled ×2: quantities, serves and "Makes 24 buns" in clay; one quiet notice above the method "Scaled ×2. Pan sizes and oven temperatures are not scaled; adjust bake time to the pan." Step text is never rewritten.
@@ -80,6 +80,7 @@ Paper `#f7f3ec`, ink, clay `#b23c00` as text only, marigold `#eca620` as the sin
 ## Friends (planned)
 
 - One 680px column, "Newest first". The feed mixes two event kinds in one chronology: friends' **log entries** (avatar, name, handle, cooked and logged dates, dish, photo, caption, source) and friends' **recipe events** ("Dev shared Shakshuka with friends", "Maria changed Cardamom buns, v3 → v4" with a diff link).
+- Unfriend hides friends-level recipes at once and makes the ex-friend's forks of them private; block adds no requests or interactions either way and hides (not deletes) their likes; mute hides their entries for you only. Full rules in the product roadmap's 9 Nov section.
 - Actions: **Like** (not "Appreciate"), Save (only when a shareable recipe is attached), ⋯ (Mute, Unfriend, Report, Block). **Like shows its count in the feed** ("Like · 3"; Spencer: cooking and engagement both matter). No Comment in the first release.
 - Rail at ≥1024 with Requests and Invite; below 1024 it becomes a strip above the feed. Empty state leads with any pending request, then "Invite a friend".
 

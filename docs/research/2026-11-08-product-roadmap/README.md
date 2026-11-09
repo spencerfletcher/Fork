@@ -450,7 +450,18 @@ Spencer re-phased these after reviewing the full post-MVP backlog. They override
 | Easy import: text documents, Markdown files, other sites where possible | P1 paste/URL/files | **P2** (paste-first editor stays MVP) |
 | Comment moderation (report a comment, delete on your own entry) | Unlisted | **P2**, with comments |
 
-Open for Spencer's call (recommendations in the design summary's later list): what tags, collections and filters each are for; how a version-pinned save is named once it exists; unfriend and block semantics.
+Settled later the same evening:
+
+**Unfriend, block, mute.**
+- Unfriend hides the other person's friends-level recipes at once, everywhere the same access check runs: Cookbook, search, collections, thumbnails and direct links. The save row stays so re-friending restores it.
+- Forks the ex-friend made of your friends-level recipe stay theirs, but losing source access makes the fork private, and it cannot be published or shared with a new audience afterwards ("friends" of the fork owner is never a path to your recipe). Server-enforced like never-widen.
+- Their Journal keeps their own dish name, photo and notes; the recipe reference hides. No source text or source photo survives through the Journal.
+- Block = unfriend plus no requests or interactions in either direction. Existing likes and comments are hidden, not deleted. Public content stays publicly reachable; the UI explains that blocking restricts interaction, not public access.
+- Mute hides their feed entries for the muter only; private.
+
+**Tags, collections, filters.** Tags describe the recipe and follow the recipe's visibility (a tag on a friends-level recipe is not public). Collections organize your cookbook; "Italian" is as legitimate as "To cook". Filters are transient views, never saved. Want-to-cook and pins stay distinct concepts: "To cook" is intent; a pin may be intent or a frequently cooked recipe.
+
+**Save.** One Save action, the moving favorite. "Keep this version" arrives later as an option on a saved recipe, with the state shown visibly on the recipe page ("Keeping v3" with "Follow latest version" to reverse), not only inside the menu. A kept version lasts across visits; a Cook URL selects the version for that cooking session only. Neither overrides access permissions.
 
 ### Source register and limits
 
