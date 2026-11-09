@@ -20,7 +20,7 @@
 	);
 
 	const placeholder =
-		'Cream the butter and sugar.\n\nFold in the flour.\ntip: Stop when no dry streaks remain.';
+		'# Dough\nCream the butter and sugar.\n\nFold in the flour.\ntip: Stop when no dry streaks remain.';
 </script>
 
 <div class="field">

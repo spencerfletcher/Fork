@@ -51,8 +51,9 @@
 			.join(' ')
 	);
 
-	// What is typed is what comes back: the fraction as the recipe stores it.
-	const placeholder = '2¼ cups all-purpose flour\n2 large eggs';
+	// What is typed is what comes back: the fraction as the recipe stores it,
+	// under a heading so a new cook sees how a section looks.
+	const placeholder = '# Dough\n2¼ cups all-purpose flour\n2 large eggs';
 </script>
 
 <div class="field">

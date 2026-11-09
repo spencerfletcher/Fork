@@ -195,15 +195,29 @@ describe('GroupedTextEditor', () => {
 		expect(box()).toHaveAttribute('aria-disabled', 'true');
 	});
 
-	test('shows the placeholder only while empty', async () => {
+	test('shows the placeholder only while empty, a hint the textbox carries for screen readers', async () => {
 		render(GroupedTextEditor, props(''));
-		expect(box()).toHaveAttribute('data-placeholder', '2 eggs');
-		expect(box()).not.toHaveAttribute('aria-placeholder');
+		expect(box()).toHaveAttribute('aria-placeholder', '2 eggs');
 		expect(box()).toHaveClass('empty');
 		lines()[0].textContent = '2 eggs';
 		await fireEvent.input(box());
 		await nextTask();
 		expect(box()).not.toHaveClass('empty');
+	});
+
+	test('draws the placeholder as the box would: a "# " line takes the heading class, and it goes on input', async () => {
+		render(GroupedTextEditor, props('', { placeholder: '# Dough\n2 eggs' }));
+		const overlay = () => document.querySelector('.placeholder');
+		expect(overlay()).toHaveAttribute('aria-hidden', 'true');
+		const [heading, line] = [...overlay()!.children];
+		expect(heading).toHaveTextContent('# Dough');
+		expect(heading).toHaveClass('heading');
+		expect(line).toHaveTextContent('2 eggs');
+		expect(line).not.toHaveClass('heading');
+		lines()[0].textContent = '2 eggs';
+		await fireEvent.input(box());
+		await nextTask();
+		expect(overlay()).toBeNull();
 	});
 
 	describe('Toolbar', () => {
