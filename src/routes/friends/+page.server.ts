@@ -1,0 +1,114 @@
+import { error, fail, redirect } from '@sveltejs/kit';
+import { eq } from 'drizzle-orm';
+import { db } from '#lib/server/db/index.js';
+import { profiles, REPORT_TARGETS } from '#lib/server/db/schema.js';
+import {
+	MAX_REPORT,
+	acceptRequest,
+	block,
+	declineRequest,
+	feedFor,
+	mute,
+	report,
+	requestsFor,
+	sendRequest,
+	toggleLike,
+	unfriend
+} from '#lib/server/friends.js';
+import { friendIdsOf } from '#lib/server/visibility.js';
+import { ensureProfile } from '#lib/server/profiles.js';
+import { loginHref } from '#lib/auth/loginHref.js';
+import { text } from '#lib/helpers.js';
+import type { Actions, PageServerLoad } from './$types';
+
+export const load: PageServerLoad = async ({ url, locals: { user } }) => {
+	if (!user) throw redirect(303, loginHref(url.pathname + url.search));
+	const [feed, requests, friendIds] = await Promise.all([
+		feedFor(user),
+		requestsFor(user.id),
+		friendIdsOf(user.id)
+	]);
+	return { feed, requests, friendCount: friendIds.length, meta: { title: 'Friends' } };
+};
+
+const invalid = (error: string) => fail(400, { error, code: 'invalid' });
+
+/**
+ * The signed-in viewer and the other person a relationship form names, who
+ * must exist and not be the viewer; or the failure to return.
+ */
+async function pair(request: Request, user: App.Locals['user']) {
+	if (!user) throw error(401, 'Login required');
+	const formData = await request.formData();
+	const otherId = text(formData, 'userId');
+	if (!otherId || otherId === user.id)
+		return { ok: false as const, failure: invalid('Choose someone else.') };
+	const other = await db.query.profiles.findFirst({ where: eq(profiles.id, otherId) });
+	if (!other) return { ok: false as const, failure: invalid('That person is not on Fork.') };
+	// Every row these forms write names the viewer, whose profile may not exist yet.
+	await ensureProfile(user);
+	return { ok: true as const, me: user.id, them: other.id };
+}
+
+export const actions: Actions = {
+	request: async ({ request, locals: { user } }) => {
+		const p = await pair(request, user);
+		if (!p.ok) return p.failure;
+		const outcome = await sendRequest(p.me, p.them);
+		if (outcome === 'refused') return invalid("A friend request can't be sent here.");
+		return { outcome };
+	},
+
+	accept: async ({ request, locals: { user } }) => {
+		const p = await pair(request, user);
+		if (!p.ok) return p.failure;
+		if (!(await acceptRequest(p.me, p.them))) return invalid('That request is no longer waiting.');
+	},
+
+	decline: async ({ request, locals: { user } }) => {
+		const p = await pair(request, user);
+		if (!p.ok) return p.failure;
+		await declineRequest(p.me, p.them);
+	},
+
+	unfriend: async ({ request, locals: { user } }) => {
+		const p = await pair(request, user);
+		if (!p.ok) return p.failure;
+		await unfriend(p.me, p.them);
+	},
+
+	block: async ({ request, locals: { user } }) => {
+		const p = await pair(request, user);
+		if (!p.ok) return p.failure;
+		await block(p.me, p.them);
+	},
+
+	mute: async ({ request, locals: { user } }) => {
+		const p = await pair(request, user);
+		if (!p.ok) return p.failure;
+		await mute(p.me, p.them);
+	},
+
+	like: async ({ request, locals: { user } }) => {
+		if (!user) throw error(401, 'Login required');
+		const entryText = text(await request.formData(), 'entryId');
+		if (!/^\d+$/.test(entryText)) return invalid('Choose an entry.');
+		const result = await toggleLike(user, Number(entryText));
+		if (result === 'refused') return fail(404, { error: 'Entry not found', code: 'not_found' });
+		return result;
+	},
+
+	report: async ({ request, locals: { user } }) => {
+		if (!user) throw error(401, 'Login required');
+		const formData = await request.formData();
+		const targetType = REPORT_TARGETS.find((t) => t === text(formData, 'targetType'));
+		const targetId = text(formData, 'targetId').trim();
+		const reason = text(formData, 'reason').trim();
+		if (!targetType || !targetId) return invalid('Choose what to report.');
+		if (!reason) return invalid('Say what is wrong.');
+		if (reason.length > MAX_REPORT)
+			return invalid(`Keep the report under ${MAX_REPORT.toLocaleString('en-US')} characters.`);
+		await report(user.id, targetType, targetId, reason);
+		return { reported: true };
+	}
+};
