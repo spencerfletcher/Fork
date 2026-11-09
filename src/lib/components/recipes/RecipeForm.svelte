@@ -382,7 +382,7 @@
 					<TagInput {allTags} bind:selected={draft.tags} />
 				</fieldset>
 
-				<fieldset class="audience" aria-describedby={hasForks ? 'visibility-hint' : undefined}>
+				<fieldset class="audience">
 					<legend class="field-legend">Who can see this recipe</legend>
 					<div class="choices">
 						{#each AUDIENCES as audience (audience.value)}
@@ -393,7 +393,9 @@
 									value={audience.value}
 									bind:group={draft.visibility}
 									aria-labelledby="visibility-{audience.value}"
-									aria-describedby="visibility-{audience.value}-note" />
+									aria-describedby="visibility-{audience.value}-note{hasForks
+										? ' visibility-hint'
+										: ''}" />
 								<b id="visibility-{audience.value}">
 									{@render audienceIcon(audience.value)}
 									{audience.label}

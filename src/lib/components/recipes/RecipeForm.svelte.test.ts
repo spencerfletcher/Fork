@@ -367,11 +367,10 @@ describe('RecipeForm audience', () => {
 		expect(screen.getByRole('radio', { name: 'Friends' })).not.toBeChecked();
 	});
 
-	test('with forks, the group says a narrower audience leaves them', () => {
+	test('with forks, each choice is described as leaving them too', () => {
 		renderWith('public', { hasForks: true });
-		const group = screen.getByRole('group', { name: 'Who can see this recipe' });
-		expect(group).toHaveAccessibleDescription(
-			"Making this more private doesn't hide existing forks."
+		expect(screen.getByRole('radio', { name: 'Only me' })).toHaveAccessibleDescription(
+			"Only you can see it. You can share it later. Making this more private doesn't hide existing forks."
 		);
 	});
 
