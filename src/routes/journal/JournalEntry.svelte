@@ -11,7 +11,7 @@
 	const privateRecipe = $derived(source.kind === 'recipe' && source.visibility === 'private');
 </script>
 
-<article class="jentry" class:jentry--text={!entry.photoUrl}>
+<article class="jentry" id="entry-{entry.id}" class:jentry--text={!entry.photoUrl}>
 	<p class="jday">
 		<time datetime={entry.cookedOn}><b>{dayNumber}</b><span>{weekday}</span></time>
 	</p>

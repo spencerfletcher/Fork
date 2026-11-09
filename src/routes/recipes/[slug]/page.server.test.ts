@@ -17,7 +17,8 @@ const {
 	dbInsert,
 	dbDelete,
 	transactionMock,
-	ensureProfileMock
+	ensureProfileMock,
+	lastEntryMock
 } = vi.hoisted(() => ({
 	findRecipeMock: vi.fn(),
 	findFavoriteMock: vi.fn(),
@@ -26,7 +27,8 @@ const {
 	dbInsert: vi.fn(),
 	dbDelete: vi.fn(),
 	transactionMock: vi.fn(),
-	ensureProfileMock: vi.fn().mockResolvedValue(undefined)
+	ensureProfileMock: vi.fn().mockResolvedValue(undefined),
+	lastEntryMock: vi.fn().mockResolvedValue(null)
 }));
 
 vi.mock('#lib/server/db/index.js', () => ({
@@ -44,6 +46,7 @@ vi.mock('#lib/server/db/index.js', () => ({
 }));
 
 vi.mock('#lib/server/profiles.js', () => ({ ensureProfile: ensureProfileMock }));
+vi.mock('#lib/server/journal.js', () => ({ lastEntryFor: lastEntryMock }));
 
 // The slug suffix must be deterministic so we can predict slugs.
 vi.spyOn(crypto, 'randomUUID').mockReturnValue('abc12345-0000-4000-8000-000000000000');
@@ -458,6 +461,38 @@ describe('load: fork attribution', () => {
 		expect(columnNames(filter)).toEqual(
 			expect.arrayContaining(['parent_id', 'visibility', 'author_id'])
 		);
+	});
+});
+
+// ─── load: the personal line ──────────────────────────────────────────────────
+
+describe('load: the personal line', () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+		findFavoriteMock.mockResolvedValue(undefined);
+		countMock.mockResolvedValue(0);
+		findRecipeMock.mockResolvedValue(forkOf({ visibility: 'public', authorId: 'original-author' }));
+	});
+
+	test('signed out there is no line, and no Journal lookup', async () => {
+		const data = (await load(makeLoadEvent() as never)) as { journal: unknown };
+		expect(data.journal).toBeNull();
+		expect(lastEntryMock).not.toHaveBeenCalled();
+	});
+
+	test("signed in: the reader's latest entry of this recipe, and Add to Journal for the version read", async () => {
+		const reader = { id: 'reader', email: 'r@test.com' };
+		const latest = { id: 12, cookedOn: '2026-11-08' };
+		lastEntryMock.mockResolvedValue(latest);
+		const data = (await load({
+			...makeLoadEvent(reader),
+			url: new URL('http://localhost/recipes/the-fork?version=1')
+		} as never)) as { journal: unknown };
+		expect(lastEntryMock).toHaveBeenCalledWith(reader.id, 99);
+		expect(data.journal).toEqual({
+			lastEntry: latest,
+			addHref: '/journal/new?recipe=the-fork&version=1'
+		});
 	});
 });
 

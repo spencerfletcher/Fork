@@ -333,3 +333,35 @@ describe('RecipeHeader content', () => {
 		expect(container.querySelector('.tags')).toBeNull();
 	});
 });
+
+// ─── The personal line ────────────────────────────────────────────────────────
+
+describe('RecipeHeader personal line', () => {
+	const ADD = '/journal/new?recipe=my-fork&version=1';
+
+	test('a reader who logged it: the date links to that entry, then Add to Journal', () => {
+		const { container } = renderHeader({
+			journal: { lastEntry: { id: 12, cookedOn: '2026-11-08' }, addHref: ADD }
+		});
+		const line = container.querySelector('.personal')!;
+		expect(line.textContent!.replace(/\s+/g, ' ').trim()).toBe(
+			'You cooked this on Sun 8 Nov · Add to Journal'
+		);
+		expect(screen.getByRole('link', { name: 'Sun 8 Nov' })).toHaveAttribute('href', '/journal#entry-12');
+		expect(screen.getByRole('link', { name: 'Add to Journal' })).toHaveAttribute('href', ADD);
+	});
+
+	test('never logged: Add to Journal alone; signed out or cooking: no line', () => {
+		const first = renderHeader({ journal: { lastEntry: null, addHref: ADD } });
+		expect(first.container.querySelector('.personal')!.textContent!.trim()).toBe('Add to Journal');
+		first.unmount();
+
+		const signedOut = renderHeader({ journal: null });
+		expect(signedOut.container.querySelector('.personal')).toBeNull();
+		signedOut.unmount();
+
+		const cooking = renderHeader({ journal: { lastEntry: null, addHref: ADD }, cooking: true });
+		expect(cooking.container.querySelector('.personal')).toBeNull();
+	});
+});
+
