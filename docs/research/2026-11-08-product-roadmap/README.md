@@ -424,6 +424,8 @@ Spencer reviewed the offline decision pack (`docs/design/2026-11-10-decision-pac
 
 Settled the same evening when the build was authorised: forks of a Friends recipe may be Only me or Friends, never Public, enforced server-side; the 16px ticks stay with 44px phone hit areas; Cook pins to the version in the URL, survives reload, and hands version and serving scale to the Journal entry; Discover's lead card uses saves over the last 7 days; audiences are Only me / Friends / Public for recipes and Only me / Friends for Journal entries. Deferred features stay deferred.
 
+**Collections (Spencer, 9 Nov):** v1 is manual user collections ("To cook", "Good for parties", "Quick", "Healthy"), recipes added by hand, P1 as already tabled. Later versions add rule-based collections that fill themselves, for example "Max & Spencer's recipes" gaining every recipe a named friend adds. The v1 data model should leave room for a rule on a collection (a nullable rule column or a sibling table), not for stored membership only.
+
 Not changed by the pack and still owed by the builds: the pilot's interim owner-data export, report/mute/block with manual moderation, profile pages gaining a friend request control and friends-level recipes, and the P1 cookbook items (collections, pins, search highlighting, paste/URL capture, print and archive) that the Cookbook grid must leave room for.
 
 ### Source register and limits

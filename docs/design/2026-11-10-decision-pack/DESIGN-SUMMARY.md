@@ -85,7 +85,7 @@ Paper `#f7f3ec`, ink, clay `#b23c00` as text only, marigold `#eca620` as the sin
 
 ## Later list (named on 9 Nov, out of MVP)
 
-Help ▾ in the editor · inline step quantities with Cooklang markup and a settings toggle · duplicate own recipe · link sharing of private recipes · Trash and drafts · Comment · recipe ratings · public log entries · revisit: tick affordance, three-voice type stack.
+user collections, manual in v1 ("To cook", "Quick"), rule-based later ("every recipe Max adds"); the Cookbook filter row leaves room for them · Help ▾ in the editor · inline step quantities with Cooklang markup and a settings toggle · duplicate own recipe · link sharing of private recipes · Trash and drafts · Comment · recipe ratings · public log entries · revisit: tick affordance, three-voice type stack.
 
 ## Verification record
 
