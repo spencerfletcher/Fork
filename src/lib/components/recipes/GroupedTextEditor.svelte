@@ -176,10 +176,23 @@
 	// outside the box; a moment later, it keeps the run.
 	function oninput() {
 		pending = true;
+		if (composing) return;
 		setTimeout(() => {
+			if (composing) return;
 			sync();
 			if (box) style(box);
 		});
+	}
+
+	// An IME's word in progress is lost if the box is written to, so nothing
+	// is wrapped, styled or synced until it is committed, then all of it once.
+	let composing = false;
+	function oncompositionend() {
+		composing = false;
+		ensureLine();
+		pending = true;
+		sync();
+		if (box) style(box);
 	}
 
 	// The last caret in the box, so Insert works once focus has moved to it.
@@ -381,10 +394,12 @@
 			{onfocusout}
 			{onpaste}
 			{ondrop}
+			oncompositionstart={() => (composing = true)}
+			{oncompositionend}
 			onbeforeinput={(e) => {
 				// No bold, italic or other rich formatting from shortcuts.
 				if (e.inputType.startsWith('format')) e.preventDefault();
-				else if (e.inputType.startsWith('insert')) ensureLine();
+				else if (e.inputType.startsWith('insert') && !composing) ensureLine();
 			}}>
 		</div>
 	{/if}

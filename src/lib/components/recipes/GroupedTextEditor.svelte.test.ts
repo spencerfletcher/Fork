@@ -151,6 +151,23 @@ describe('GroupedTextEditor', () => {
 		expect(field().value).toBe('flour and salt');
 	});
 
+	// A write to the box mid-composition would cancel the IME's word.
+	test('while an IME composes, nothing is styled, wrapped or synced; on compositionend it all runs once', async () => {
+		render(GroupedTextEditor, props('flour'));
+		await fireEvent.compositionStart(box());
+		box().textContent = '# 生地';
+		box().dispatchEvent(
+			new InputEvent('beforeinput', { inputType: 'insertCompositionText', bubbles: true })
+		);
+		await fireEvent.input(box());
+		await nextTask();
+		expect(box().firstChild!.nodeType).toBe(Node.TEXT_NODE);
+		expect(field().value).toBe('flour');
+		await fireEvent.compositionEnd(box());
+		expect(lines().map((l) => [l.textContent, l.className])).toEqual([['# 生地', 'heading']]);
+		expect(field().value).toBe('# 生地');
+	});
+
 	test('rich-text shortcuts do nothing', async () => {
 		render(GroupedTextEditor, props('flour'));
 		const bold = new InputEvent('beforeinput', {
