@@ -66,6 +66,7 @@ test.describe('Tag tabs', () => {
 			.getByRole('button', { name: 'Dessert' })
 			.click();
 		await expect(page).toHaveURL(/\/discover\?tags=dessert/);
-		await expect(page.getByText(SEED[0].versions.at(-1)!.title)).toBeVisible();
+		// The title also appears on the lead card and in Recent changes.
+		await expect(page.getByText(SEED[0].versions.at(-1)!.title).first()).toBeVisible();
 	});
 });
