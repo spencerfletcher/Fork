@@ -8,6 +8,11 @@ try {
 }
 const local = process.env.DATABASE_URL?.includes('127.0.0.1') ?? false;
 
+// The pool is closed once the file is done, so no connection outlives the run.
+afterAll(async () => {
+	if (local) await (await import('#lib/server/db/index.js')).closeDb();
+});
+
 // Runs only against the local Supabase stack; the mock tests cover everything
 // else. This one proves the row lock and revision check hold under a real race.
 describe.skipIf(!local)('save, against the real database', () => {
