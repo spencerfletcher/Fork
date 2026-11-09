@@ -29,7 +29,7 @@
 					<span class="stat">{plural(commitCount, 'change')}</span>
 					<span class="stat profile-since">Member since {memberSince}</span>
 				</p>
-				<!-- Nothing on your own profile, signed out, or when either side has blocked. -->
+				<!-- Nothing on your own profile or signed out; a blocked person reads 'none'. -->
 				{#if data.relation === 'none'}
 					<form class="relation" method="POST" action="/friends?/request" use:enhance>
 						<input type="hidden" name="userId" value={profile.id} />
@@ -51,11 +51,16 @@
 							items={['unfriend', 'block']}
 							label="More for @{profile.username}" />
 					</div>
+				{:else if data.relation === 'blocked'}
+					<form class="relation" method="POST" action="/friends?/unblock" use:enhance>
+						<input type="hidden" name="userId" value={profile.id} />
+						<button type="submit" class="btn-ghost">Unblock</button>
+					</form>
 				{/if}
 				{#if privateCount > 0}
-					<!-- A way on for the owner: My Recipes lists the private ones too. -->
+					<!-- A way on for the owner: the Cookbook lists the private ones too. -->
 					<p class="profile-private">
-						<a href="/recipes">
+						<a href="/cookbook">
 							You also have {plural(privateCount, 'private recipe')}
 						</a>
 					</p>

@@ -13,6 +13,7 @@ import {
 	requestsFor,
 	sendRequest,
 	toggleLike,
+	unblock,
 	unfriend
 } from '#lib/server/friends.js';
 import { friendIdsOf } from '#lib/server/visibility.js';
@@ -81,6 +82,12 @@ export const actions: Actions = {
 		const p = await pair(request, user);
 		if (!p.ok) return p.failure;
 		await block(p.me, p.them);
+	},
+
+	unblock: async ({ request, locals: { user } }) => {
+		const p = await pair(request, user);
+		if (!p.ok) return p.failure;
+		await unblock(p.me, p.them);
 	},
 
 	mute: async ({ request, locals: { user } }) => {

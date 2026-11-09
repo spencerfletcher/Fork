@@ -10,6 +10,7 @@ const m = vi.hoisted(() => ({
 	declineRequest: vi.fn(),
 	unfriend: vi.fn(),
 	block: vi.fn(),
+	unblock: vi.fn(),
 	mute: vi.fn(),
 	toggleLike: vi.fn(),
 	report: vi.fn(),
@@ -28,6 +29,7 @@ vi.mock('#lib/server/friends.js', async (importOriginal) => ({
 	declineRequest: m.declineRequest,
 	unfriend: m.unfriend,
 	block: m.block,
+	unblock: m.unblock,
 	mute: m.mute,
 	toggleLike: m.toggleLike,
 	report: m.report,
@@ -72,7 +74,7 @@ describe('friends load', () => {
 });
 
 describe('relationship actions', () => {
-	test.each(['request', 'accept', 'decline', 'unfriend', 'block', 'mute'] as const)(
+	test.each(['request', 'accept', 'decline', 'unfriend', 'block', 'unblock', 'mute'] as const)(
 		'%s refuses oneself and anyone not on Fork, and calls nothing',
 		async (name) => {
 			expect(await run(name, { userId: ME.id })).toMatchObject({ status: 400 });
@@ -84,6 +86,7 @@ describe('relationship actions', () => {
 				m.declineRequest,
 				m.unfriend,
 				m.block,
+				m.unblock,
 				m.mute
 			])
 				expect(fn).not.toHaveBeenCalled();
@@ -93,6 +96,7 @@ describe('relationship actions', () => {
 	test.each([
 		['unfriend', m.unfriend],
 		['block', m.block],
+		['unblock', m.unblock],
 		['mute', m.mute],
 		['decline', m.declineRequest]
 	] as const)('%s acts for the signed-in viewer on the named person', async (name, fn) => {

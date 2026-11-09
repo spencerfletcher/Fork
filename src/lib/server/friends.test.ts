@@ -23,7 +23,7 @@ vi.mock('#lib/server/db/index.js', () => {
 	return { db };
 });
 
-import { blockIn, feedFor, relationFrom, sendRequest, toggleLike } from './friends.js';
+import { blockIn, feedFor, relationFrom, sendRequest, toggleLike, unblock } from './friends.js';
 
 const ME = 'me';
 const THEM = 'them';
@@ -50,7 +50,8 @@ describe('relationFrom', () => {
 		[makePair(ME, 'accepted'), 'friends'],
 		[makePair(THEM, 'accepted'), 'friends'],
 		[makePair(ME, 'blocked'), 'blocked'],
-		[makePair(THEM, 'blocked'), 'blocked']
+		// The blocked side is not told: to them it reads as no relation.
+		[makePair(THEM, 'blocked'), 'none']
 	] as const)('%o reads as %s', (row, relation) => {
 		expect(relationFrom(row, ME)).toBe(relation);
 	});
@@ -148,6 +149,17 @@ describe('blockIn', () => {
 		insertMock.mockReturnValue(chain([]));
 		await blockIn(tx as never, ME, THEM);
 		expect(blockWrites()).toHaveLength(0);
+	});
+});
+
+describe('unblock', () => {
+	test("deletes only the block I wrote, never theirs or a friendship", async () => {
+		await unblock(ME, THEM);
+		const where = deleteMock.mock.results[0].value.where.mock.calls[0][0] as SQL;
+		expect(new PgDialect().sqlToQuery(where)).toMatchObject({
+			sql: '("friendships"."requester_id" = $1 and "friendships"."addressee_id" = $2 and "friendships"."status" = $3)',
+			params: [ME, THEM, 'blocked']
+		});
 	});
 });
 

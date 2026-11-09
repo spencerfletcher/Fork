@@ -60,9 +60,9 @@ describe('Profile page', () => {
 
 	test('the owner sees one line under the stats for their private recipes; nobody else does', () => {
 		const { unmount } = renderProfile({ privateCount: 3 });
-		// It leads somewhere: My Recipes lists the private ones too.
+		// It leads somewhere: the Cookbook lists the private ones too.
 		const line = screen.getByRole('link', { name: 'You also have 3 private recipes' });
-		expect(line).toHaveAttribute('href', '/recipes');
+		expect(line).toHaveAttribute('href', '/cookbook');
 		expect(line.closest('p')).toHaveClass('profile-private');
 		unmount();
 		const one = renderProfile({ privateCount: 1 });
@@ -138,7 +138,17 @@ describe('Profile relationship control', () => {
 		expect(screen.getByRole('button', { name: 'More for @chefmaria' })).toBeInTheDocument();
 	});
 
-	test.each([null, 'self', 'blocked'])('%s shows no control at all', (relation) => {
+	// relationFrom tells only the blocker 'blocked'; the blocked side reads 'none'.
+	test('the blocker is offered Unblock, posting to /friends?/unblock with their id', () => {
+		renderProfile({ relation: 'blocked' });
+		const unblock = screen.getByRole('button', { name: 'Unblock' });
+		const form = unblock.closest('form')!;
+		expect(form).toHaveAttribute('action', '/friends?/unblock');
+		expect(form.querySelector('input[name="userId"]')).toHaveValue('u1');
+		expect(screen.queryByRole('button', { name: /friend|request/i })).toBeNull();
+	});
+
+	test.each([null, 'self'])('%s shows no control at all', (relation) => {
 		renderProfile({ relation });
 		expect(screen.queryByRole('button', { name: /friend|request/i })).toBeNull();
 		expect(screen.queryByText(/Request sent|Friends ✓/)).toBeNull();

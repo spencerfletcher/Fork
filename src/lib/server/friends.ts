@@ -25,10 +25,13 @@ export type Relation = 'self' | 'none' | 'sent' | 'received' | 'friends' | 'bloc
 
 type PairRow = { requesterId: string; addresseeId: string; status: FriendshipStatus };
 
-/** The relation one pair row means for `me`; no row is no relation. */
+/**
+ * The relation one pair row means for `me`; no row is no relation. Only the
+ * blocker is told of a block: the blocked side reads it as no relation.
+ */
 export function relationFrom(row: PairRow | undefined, me: string): Exclude<Relation, 'self'> {
 	if (!row) return 'none';
-	if (row.status === 'blocked') return 'blocked';
+	if (row.status === 'blocked') return row.requesterId === me ? 'blocked' : 'none';
 	if (row.status === 'accepted') return 'friends';
 	return row.requesterId === me ? 'sent' : 'received';
 }
@@ -69,7 +72,10 @@ export async function sendRequest(
 ): Promise<'sent' | 'accepted' | 'refused'> {
 	if (me === them) return 'refused';
 	return db.transaction(async (tx) => {
-		const relation = relationFrom(await pairRow(tx, me, them), me);
+		const row = await pairRow(tx, me, them);
+		// Checked on the row: the blocked side's relation reads 'none'.
+		if (row?.status === 'blocked') return 'refused';
+		const relation = relationFrom(row, me);
 		if (relation === 'received') {
 			await acceptIn(tx, me, them);
 			return 'accepted';
@@ -191,6 +197,19 @@ export async function blockIn(tx: Tx, me: string, them: string): Promise<void> {
 
 export function block(me: string, them: string): Promise<void> {
 	return db.transaction((tx) => blockIn(tx, me, them));
+}
+
+/** Lifts the block `me` put on `them`; a block they put on me stays. */
+export async function unblock(me: string, them: string): Promise<void> {
+	await db
+		.delete(friendships)
+		.where(
+			and(
+				eq(friendships.requesterId, me),
+				eq(friendships.addresseeId, them),
+				eq(friendships.status, 'blocked')
+			)
+		);
 }
 
 /** Mutes `them` for `me` alone; muting twice is muting once. */

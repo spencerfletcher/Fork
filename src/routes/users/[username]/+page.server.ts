@@ -38,7 +38,7 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 		user ? relationOf(user.id, profile.id) : null
 	]);
 
-	const withCounts = await attachRecipeCounts(shownRecipes);
+	const withCounts = await attachRecipeCounts(shownRecipes, user);
 	// The link preview names public recipes only, whoever loaded the page.
 	const publicCount = withCounts.filter((r) => r.visibility === 'public').length;
 

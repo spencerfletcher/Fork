@@ -4,6 +4,7 @@ import { load } from './+page.server';
 import { profiles, recipes } from '#lib/server/db/schema.js';
 import { and, eq } from 'drizzle-orm';
 import { visibleTo } from '#lib/server/visibility.js';
+import { attachRecipeCounts } from '#lib/server/recipeCounts.js';
 
 // ─── Hoisted mocks ────────────────────────────────────────────────────────────
 
@@ -18,6 +19,10 @@ const { findProfileMock, findRecipesMock, selectMock, countMock, relationMock } 
 );
 
 vi.mock('#lib/server/friends.js', () => ({ relationOf: relationMock }));
+vi.mock('#lib/server/recipeCounts.js', async (importOriginal) => {
+	const real = await importOriginal<typeof import('#lib/server/recipeCounts.js')>();
+	return { ...real, attachRecipeCounts: vi.fn(real.attachRecipeCounts) };
+});
 
 vi.mock('#lib/server/db/index.js', () => ({
 	db: {
@@ -123,6 +128,14 @@ describe('users/[username] load', () => {
 				and(eq(recipes.authorId, 'user-1'), visibleTo(user))
 			);
 		}
+	});
+
+	test("fork counts are the viewer's: the counts are attached for the signed-in viewer", async () => {
+		const shown = [{ id: 7, visibility: 'public' }];
+		findProfileMock.mockResolvedValue(makeProfile());
+		findRecipesMock.mockResolvedValue(shown);
+		await load(makeLoadEvent('chefmaria', 'viewer'));
+		expect(attachRecipeCounts).toHaveBeenCalledWith(shown, { id: 'viewer' });
 	});
 
 	test('the link preview counts public recipes only, even for the owner', async () => {
