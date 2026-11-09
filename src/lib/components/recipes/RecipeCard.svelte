@@ -14,6 +14,7 @@
 		| 'prepTimeMinutes'
 		| 'cookTimeMinutes'
 	> {
+		visibility?: Recipe['visibility'];
 		author?: { id: string; username: string } | null;
 		versionCount?: number;
 		forkCount?: number;
@@ -25,19 +26,28 @@
 	// author on a phone, for a list whose point is who made each one (forks).
 	// showDescription off leaves the line under the meta row to the page (the
 	// forks list puts each fork's commit note there).
+	// variant: 'list' is every browse list. 'cookbook' is your shelf: no owner
+	// line, no fork count, no description, and `saved` names whose a saved one
+	// is. 'discover' names the cook above the photo instead of in the meta row.
 	let {
 		recipe,
 		index,
 		alwaysShowAuthor = false,
-		showDescription = true
+		showDescription = true,
+		variant = 'list',
+		saved = false
 	}: {
 		recipe: CardRecipe;
 		index?: number;
 		alwaysShowAuthor?: boolean;
 		showDescription?: boolean;
+		variant?: 'list' | 'cookbook' | 'discover';
+		saved?: boolean;
 	} = $props();
 
-	const description = $derived(showDescription ? recipe.description?.trim() : '');
+	const isList = $derived(variant === 'list');
+
+	const description = $derived(showDescription && isList ? recipe.description?.trim() : '');
 
 	const eager = $derived(index !== undefined && index < 4);
 
@@ -47,12 +57,22 @@
 	 * The meta line, as data rather than nested markup. The dots between items
 	 * are drawn by CSS, so the list carries only the items.
 	 */
-	type MetaPart = { text: string; href?: string; accent?: boolean };
+	type MetaPart = { text: string; href?: string; accent?: boolean; icon?: 'lock' | 'friends' };
+
+	// Non-public recipes say who can see them; public is the default and says nothing.
+	const AUDIENCE = {
+		private: { text: 'Only me', icon: 'lock' },
+		friends: { text: 'Friends', icon: 'friends' }
+	} as const;
 
 	const metaParts: MetaPart[] = $derived.by(() => {
 		const parts: MetaPart[] = [];
 
-		if (recipe.author) {
+		if (recipe.visibility && recipe.visibility !== 'public') {
+			parts.push(AUDIENCE[recipe.visibility]);
+		}
+
+		if (recipe.author && isList) {
 			parts.push({ text: `@${recipe.author.username}`, href: `/users/${recipe.author.username}` });
 		}
 
@@ -66,7 +86,7 @@
 			parts.push({ text: `v${recipe.versionCount}`, accent: true });
 		}
 
-		if (recipe.forkCount) {
+		if (recipe.forkCount && isList) {
 			parts.push({ text: plural(recipe.forkCount, 'fork') });
 		}
 
@@ -74,8 +94,20 @@
 	});
 </script>
 
-<div class="recipe-card" class:author-always={alwaysShowAuthor}>
+<div
+	class="recipe-card"
+	class:author-always={alwaysShowAuthor}
+	class:recipe-card--roomy={!isList}>
 	<a {href} class="card-stretched-link" aria-label={recipe.title}></a>
+
+	{#if variant === 'discover' && recipe.author}
+		<p class="card-cook">
+			<span class="card-avatar" aria-hidden="true">
+				{recipe.author.username.charAt(0).toUpperCase()}
+			</span>
+			<a class="card-handle" href="/users/{recipe.author.username}">@{recipe.author.username}</a>
+		</p>
+	{/if}
 
 	{#if recipe.imageUrl}
 		<div class="card-img-wrap">
@@ -101,11 +133,43 @@
 		{#each metaParts as part (part.text)}
 			{#if part.href}
 				<a class="meta-item meta-author" href={part.href}>{part.text}</a>
+			{:else if part.icon}
+				<span class="meta-item meta-audience">
+					<svg
+						viewBox="0 0 16 16"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="1.5"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						aria-hidden="true">
+						{#if part.icon === 'lock'}
+							<rect x="3" y="7" width="10" height="7" rx="1.5" />
+							<path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" />
+						{:else}
+							<circle cx="6" cy="5.5" r="2.5" />
+							<path d="M1.5 14a4.5 4.5 0 0 1 9 0" />
+							<circle cx="11.5" cy="6.5" r="1.75" />
+							<path d="M11.5 10.25A3.5 3.5 0 0 1 14.5 13.5" />
+						{/if}
+					</svg>{part.text}
+				</span>
 			{:else}
 				<span class="meta-item" class:meta-item--accent={part.accent}>{part.text}</span>
 			{/if}
 		{/each}
 	</div>
+
+	{#if saved && variant === 'cookbook'}
+		<p class="card-source">
+			Saved from
+			{#if recipe.author}
+				<a class="card-handle" href="/users/{recipe.author.username}">@{recipe.author.username}</a>
+			{:else}
+				another cook
+			{/if}
+		</p>
+	{/if}
 
 	<!-- At most one extra line: no description, no line (Spencer, 31 October 2026). -->
 	{#if description}
@@ -257,6 +321,70 @@
 		}
 	}
 
+	.meta-audience {
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+	}
+
+	.meta-audience svg {
+		width: 12px;
+		height: 12px;
+	}
+
+	/* "Saved from @handle": the meta row's size and ink, under it. */
+	.card-source {
+		margin: -6px 0 0;
+		font-size: 0.8125rem;
+		line-height: 1.5;
+		color: var(--color-text-3);
+		overflow-wrap: anywhere;
+	}
+
+	/* Discover's cook line, above the photo: a small initial avatar and the handle. */
+	.card-cook {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		min-width: 0;
+		margin: 0;
+		font-size: 0.9375rem;
+	}
+
+	.card-avatar {
+		display: inline-flex;
+		flex-shrink: 0;
+		align-items: center;
+		justify-content: center;
+		width: 28px;
+		height: 28px;
+		border: 1px solid transparent;
+		border-radius: 50%;
+		background: var(--color-tint);
+		color: var(--color-accent);
+		font-family: var(--font-serif);
+		font-size: 0.875rem;
+		font-weight: 500;
+		line-height: 1;
+	}
+
+	/* Handles are identifiers: mono, one notch under the line, clay; above the
+	   stretched link so they stay their own link. */
+	.card-handle {
+		position: relative;
+		z-index: 2;
+		font-family: var(--font-mono);
+		font-size: 0.9375em;
+		color: var(--color-accent);
+		text-decoration: none;
+		overflow-wrap: anywhere;
+		transition: color 0.15s ease;
+	}
+
+	.card-handle:hover {
+		color: var(--color-text);
+	}
+
 	.meta-item--accent {
 		font-family: var(--font-mono);
 		font-size: 0.6875rem;
@@ -294,6 +422,20 @@
 
 		.recipe-card:not(.author-always) .meta-author {
 			display: none;
+		}
+
+		/* Cookbook and Discover are two wide from 600, so they keep the list's size. */
+		.recipe-card--roomy .card-title,
+		.recipe-card--roomy .card-panel-title {
+			font-size: 1.0625rem;
+		}
+	}
+
+	/* One column: the photo is full width, so the title steps up with it. */
+	@media (max-width: 599px) {
+		.recipe-card--roomy .card-title,
+		.recipe-card--roomy .card-panel-title {
+			font-size: 1.1875rem;
 		}
 	}
 </style>

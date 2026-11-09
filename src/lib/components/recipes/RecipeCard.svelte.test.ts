@@ -268,3 +268,73 @@ describe('RecipeCard', () => {
 		expect(metaRow?.children).toHaveLength(1);
 	});
 });
+
+describe('RecipeCard audience mark', () => {
+	test('a recipe only its owner sees says so in the meta row, with a lock', () => {
+		const { container } = render(RecipeCard, {
+			props: { recipe: makeRecipe({ visibility: 'private' }) }
+		});
+		const mark = container.querySelector('.meta-audience')!;
+		expect(mark).toHaveTextContent('Only me');
+		expect(mark.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
+	});
+
+	test('a friends recipe says Friends', () => {
+		render(RecipeCard, { props: { recipe: makeRecipe({ visibility: 'friends' }) } });
+		expect(screen.getByText('Friends')).toBeInTheDocument();
+	});
+
+	test('a public recipe carries no mark', () => {
+		const { container } = render(RecipeCard, { props: { recipe: makeRecipe() } });
+		expect(container.querySelector('.meta-audience')).toBeNull();
+	});
+});
+
+describe('RecipeCard in the Cookbook', () => {
+	const author = { id: 'u2', username: 'devcooks' };
+
+	test('an own recipe carries no owner line, no fork count and no description', () => {
+		render(RecipeCard, {
+			props: {
+				recipe: {
+					...makeRecipe({ description: 'Soft buns.', forkCount: 2, versionCount: 3 }),
+					author
+				},
+				variant: 'cookbook'
+			}
+		});
+		expect(screen.queryByText('@devcooks')).toBeNull();
+		expect(screen.queryByText('2 forks')).toBeNull();
+		expect(screen.queryByText('Soft buns.')).toBeNull();
+		expect(screen.getByText('v3')).toBeInTheDocument();
+	});
+
+	test('a saved recipe says whose it is', () => {
+		const { container } = render(RecipeCard, {
+			props: { recipe: { ...makeRecipe(), author }, variant: 'cookbook', saved: true }
+		});
+		expect(container.querySelector('.card-source')).toHaveTextContent('Saved from @devcooks');
+		expect(screen.getByRole('link', { name: '@devcooks' })).toHaveAttribute(
+			'href',
+			'/users/devcooks'
+		);
+	});
+});
+
+describe('RecipeCard on Discover', () => {
+	test('names its cook above the photo, with an initial avatar, and not again in the meta row', () => {
+		const { container } = render(RecipeCard, {
+			props: {
+				recipe: { ...makeRecipe({ imageUrl: '/p.jpg' }), author: { id: 'u3', username: 'maria' } },
+				variant: 'discover'
+			}
+		});
+		const cook = container.querySelector('.card-cook')!;
+		expect(cook).toHaveTextContent('@maria');
+		expect(cook.querySelector('.card-avatar')).toHaveTextContent('M');
+		expect(cook.compareDocumentPosition(container.querySelector('.card-img-wrap')!)).toBe(
+			Node.DOCUMENT_POSITION_FOLLOWING
+		);
+		expect(screen.getAllByText('@maria')).toHaveLength(1);
+	});
+});
