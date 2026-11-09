@@ -167,7 +167,7 @@ describe.skipIf(!local)('deleteRecipe, against the real database', () => {
 			} as never)
 		).catch((e: unknown) => e);
 
-		expect(result).toMatchObject({ status: 303, location: '/recipes' });
+		expect(result).toMatchObject({ status: 303, location: '/cookbook' });
 		expect(await db.query.recipes.findFirst({ where: eq(recipes.id, parentId) })).toBeUndefined();
 		expect(remove).toHaveBeenCalledTimes(1);
 		expect(remove).toHaveBeenCalledWith([`u/${stamp}-own.png`]);

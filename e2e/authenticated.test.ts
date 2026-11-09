@@ -454,7 +454,7 @@ test.describe('Delete recipe', () => {
 		await expect(step).toBeFocused();
 		await expect(step).toContainText('This cannot be undone.');
 		await page.getByRole('button', { name: 'Delete permanently' }).click();
-		await page.waitForURL(/\/recipes$/);
+		await page.waitForURL(/\/cookbook$/);
 
 		const response = await page.goto(url);
 		expect(response?.status()).toBe(404);

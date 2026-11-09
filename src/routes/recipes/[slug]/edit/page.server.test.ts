@@ -626,7 +626,7 @@ describe('deleteRecipe', () => {
 		expect(deleteChain.where).toHaveBeenCalledTimes(1);
 		expect(removeMock).toHaveBeenCalledTimes(1);
 		expect(removeMock).toHaveBeenCalledWith(SUPABASE, 'owner-123/a.png', 'owner-123/b.png');
-		expect(result).toMatchObject({ status: 303, location: '/recipes' });
+		expect(result).toMatchObject({ status: 303, location: '/cookbook' });
 	});
 
 	test("keeps a photo another recipe still shows, as a fork shows its parent's", async () => {
@@ -639,7 +639,7 @@ describe('deleteRecipe', () => {
 		setUp(withVersions(null, 'https://images.example.com/cake.jpg'));
 		const result = await del();
 		expect(removeMock).not.toHaveBeenCalled();
-		expect(result).toMatchObject({ status: 303, location: '/recipes' });
+		expect(result).toMatchObject({ status: 303, location: '/cookbook' });
 	});
 
 	test('refuses another user with a 403 in the { error, code } shape, deleting nothing', async () => {

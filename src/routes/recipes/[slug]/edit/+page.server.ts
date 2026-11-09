@@ -231,6 +231,6 @@ export const actions: Actions = {
 			if (paths.length > 0) await removeRecipeImage(supabase, ...paths);
 		}
 
-		throw redirect(303, '/recipes');
+		throw redirect(303, '/cookbook');
 	}
 };
