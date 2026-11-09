@@ -428,6 +428,30 @@ Settled the same evening when the build was authorised: forks of a Friends recip
 
 Not changed by the pack and still owed by the builds: the pilot's interim owner-data export, report/mute/block with manual moderation, profile pages gaining a friend request control and friends-level recipes, and the P1 cookbook items (collections, pins, search highlighting, paste/URL capture, print and archive) that the Cookbook grid must leave room for.
 
+### Backlog adjustments, 9 November 2026 (evening)
+
+Spencer re-phased these after reviewing the full post-MVP backlog. They override the disposition table above.
+
+| Item | Was | Now |
+|---|---|---|
+| Durable drafts and autosave across reload | Post-MVP, unscheduled | **P1** |
+| Trash and deleted-recipe restore | Post-MVP, unscheduled | **P1** |
+| Recipe photo access follows the recipe's audience (private and friends-level photos are not publicly addressable) | Unlisted | **P1** |
+| Settings page (account, username, default audience, later the measurement and inline-quantity preferences) | Unlisted | **P1** |
+| Measurement system preference (metric / US) per user | Unlisted | **P1** |
+| Recipe-level "last cooked" and "times cooked", derived from log entries, on cards and the recipe page | M17 concept only | **P1** |
+| Serving scaler redesign: the current control doesn't feel like Fork; needs a design round | Unlisted | **P2 design backlog** |
+| Onboarding and the new account's first ten minutes | Unlisted | **P2** |
+| Audience-change side effects (saves, forks and log entries when a recipe becomes more private) | "State before release" | **P2, revisit** |
+| Profile page redesign for the social world (friend request control, friends-level recipes, log entries) | "Owed by the builds" | **P2** |
+| Global search with scoping filters (all friends' recipes, one person's recipes, mine, saved) | "Current content by default" | **P2** |
+| Email notifications alongside in-app | Unlisted | **P2** |
+| Journal and log-entry data export | Passing mention | **P2** |
+| Easy import: text documents, Markdown files, other sites where possible | P1 paste/URL/files | **P2** (paste-first editor stays MVP) |
+| Comment moderation (report a comment, delete on your own entry) | Unlisted | **P2**, with comments |
+
+Open for Spencer's call (recommendations in the design summary's later list): what tags, collections and filters each are for; how a version-pinned save is named once it exists; unfriend and block semantics.
+
 ### Source register and limits
 
 | Evidence | Role and boundary |
