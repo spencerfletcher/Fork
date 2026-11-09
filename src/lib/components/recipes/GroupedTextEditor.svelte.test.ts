@@ -206,26 +206,23 @@ describe('GroupedTextEditor', () => {
 		expect(box()).not.toHaveClass('empty');
 	});
 
-	describe('Insert', () => {
-		const toggle = () => screen.getByRole('button', { name: 'Insert' });
+	describe('Toolbar', () => {
+		const toolbar = () => screen.getByRole('toolbar', { name: 'Ingredients tools' });
 		const item = () => screen.getByRole('button', { name: 'Section heading' });
 
-		test('sits after the label and before the box, collapsed, and opens to one item', async () => {
+		test('sits after the label and before the box, holding one direct Section heading button', () => {
 			render(GroupedTextEditor, props(''));
 			const label = document.getElementById('ingredients-label')!;
 			expect(
-				label.compareDocumentPosition(toggle()) & Node.DOCUMENT_POSITION_FOLLOWING
+				label.compareDocumentPosition(toolbar()) & Node.DOCUMENT_POSITION_FOLLOWING
 			).toBeTruthy();
 			expect(
-				toggle().compareDocumentPosition(box()) & Node.DOCUMENT_POSITION_FOLLOWING
+				toolbar().compareDocumentPosition(box()) & Node.DOCUMENT_POSITION_FOLLOWING
 			).toBeTruthy();
-			expect(toggle()).toHaveAttribute('aria-expanded', 'false');
-			expect(screen.queryByRole('button', { name: 'Section heading' })).toBeNull();
-			await fireEvent.click(toggle());
-			expect(toggle()).toHaveAttribute('aria-expanded', 'true');
-			const row = document.getElementById(toggle().getAttribute('aria-controls')!)!;
-			expect(row.querySelectorAll('button')).toHaveLength(1);
-			expect(item()).toBeVisible();
+			expect(toolbar().querySelectorAll('button')).toHaveLength(1);
+			expect(toolbar()).toContainElement(item());
+			expect(item()).not.toHaveAttribute('aria-haspopup');
+			expect(item()).not.toHaveAttribute('aria-expanded');
 		});
 
 		test('mid-line, the heading goes on a new line below and its name is selected, in the box', async () => {
@@ -241,47 +238,30 @@ describe('GroupedTextEditor', () => {
 				caretAt(line.firstChild!, text.length - 1);
 				return true;
 			});
-			await fireEvent.click(toggle());
 			await fireEvent.click(item());
-			const insertedAt = execCommand.mock.calls[0];
-			expect(insertedAt).toEqual(['insertText', false, `\n# ${SECTION_NAME}`]);
+			expect(execCommand.mock.calls).toEqual([['insertText', false, `\n# ${SECTION_NAME}`]]);
 			expect(getSelection()!.toString()).toBe(SECTION_NAME);
 			expect(box()).toHaveFocus();
-			// Closed again, so Tab still runs label, Insert, box.
-			expect(toggle()).toHaveAttribute('aria-expanded', 'false');
 		});
 
 		test('at the start of a line, the heading goes above it', async () => {
 			render(GroupedTextEditor, props('1 cup flour\n2 eggs'));
 			caretAt(lines()[1].firstChild!, 0);
 			await fireEvent.focusOut(box());
-			await fireEvent.click(toggle());
 			await fireEvent.click(item());
 			expect(execCommand).toHaveBeenCalledWith('insertText', false, `# ${SECTION_NAME}\n`);
 		});
 
-		test('while saving, Insert and its item are disabled and insert nothing', async () => {
+		test('while saving, Section heading is disabled and inserts nothing', async () => {
 			render(GroupedTextEditor, props('flour', { disabled: true }));
-			expect(toggle()).toBeDisabled();
-			const hiddenItem = screen.getByRole('button', { name: 'Section heading', hidden: true });
-			expect(hiddenItem).toBeDisabled();
-			hiddenItem.removeAttribute('disabled');
-			await fireEvent.click(hiddenItem);
+			expect(item()).toBeDisabled();
+			item().removeAttribute('disabled');
+			await fireEvent.click(item());
 			expect(execCommand).not.toHaveBeenCalled();
 		});
 
-		test('Escape in the open menu closes it and returns focus to Insert', async () => {
+		test('a mouse press on Section heading keeps the caret in the box', async () => {
 			render(GroupedTextEditor, props(''));
-			await fireEvent.click(toggle());
-			item().focus();
-			await fireEvent.keyDown(item(), { key: 'Escape' });
-			expect(toggle()).toHaveAttribute('aria-expanded', 'false');
-			expect(toggle()).toHaveFocus();
-		});
-
-		test('a mouse press on the item keeps the caret in the box', async () => {
-			render(GroupedTextEditor, props(''));
-			await fireEvent.click(toggle());
 			expect(await fireEvent.mouseDown(item())).toBe(false);
 		});
 	});

@@ -469,7 +469,7 @@ describe('Edit page form', () => {
 			}
 		});
 		await tick();
-		const box = screen.getByLabelText(/^ingredients/i);
+		const box = screen.getByRole('textbox', { name: /^ingredients/i });
 		expect(box).toHaveAccessibleDescription(/too long/);
 		expect(box).toHaveFocus();
 		expect(screen.getByRole('alert')).toHaveAttribute('id', 'ingredients-error');

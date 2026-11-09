@@ -4,7 +4,7 @@ import GroupedTextEditor from './GroupedTextEditor.svelte';
 
 // Without JavaScript the plain textarea is the box, and it submits.
 describe('GroupedTextEditor, server rendered', () => {
-	test('is a labelled, required textarea holding the text, with no live box or Insert', () => {
+	test('is a labelled, required textarea holding the text, with no live box or toolbar', () => {
 		const { body } = render(GroupedTextEditor, {
 			props: {
 				id: 'steps',
@@ -19,6 +19,6 @@ describe('GroupedTextEditor, server rendered', () => {
 		expect(body).toMatch(/<textarea[^>]*id="steps"[^>]*name="steps"[^>]*required/);
 		expect(body).toContain('# Bake\nBake.</textarea>');
 		expect(body).not.toContain('contenteditable');
-		expect(body).not.toContain('Insert');
+		expect(body).not.toContain('toolbar');
 	});
 });

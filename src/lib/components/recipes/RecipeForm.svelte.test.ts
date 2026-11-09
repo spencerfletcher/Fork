@@ -170,7 +170,7 @@ describe('RecipeForm field focused under the phone bar', () => {
 				cancelHref: '/recipes'
 			}
 		});
-		const box = screen.getByLabelText(/^ingredients/i);
+		const box = screen.getByRole('textbox', { name: /^ingredients/i });
 		const bar = screen.getByRole('button', { name: 'Create recipe' }).parentElement!;
 		box.getBoundingClientRect = () => ({ bottom: barTop - 40 }) as DOMRect;
 		fieldOf(box).getBoundingClientRect = () => ({ bottom: fieldBottom }) as DOMRect;
@@ -183,7 +183,7 @@ describe('RecipeForm field focused under the phone bar', () => {
 	test('scrolls a field whose hint is hidden by the bar to the nearest edge, box and hint together', () => {
 		setup(1000, 780).focus();
 		expect(scrollIntoView).toHaveBeenCalledTimes(1);
-		const field = fieldOf(screen.getByLabelText(/^ingredients/i));
+		const field = fieldOf(screen.getByRole('textbox', { name: /^ingredients/i }));
 		expect(field).toContainElement(screen.getByText(/^One per line/));
 		expect(scrollIntoView.mock.contexts[0]).toBe(field);
 		expect(scrollIntoView.mock.calls[0][0]).toEqual({ block: 'nearest', behavior: 'smooth' });
@@ -335,7 +335,10 @@ describe('RecipeForm Makes', () => {
 		const message = emptyGroupMessage('Filling', 'ingredients');
 		render(RecipeForm, { props: props({ ingredients: '# Filling' }, message) });
 		await tick();
-		expect(screen.getByLabelText(/^Ingredients/)).toHaveAttribute('aria-invalid', 'true');
+		expect(screen.getByRole('textbox', { name: /^Ingredients/ })).toHaveAttribute(
+			'aria-invalid',
+			'true'
+		);
 		expect(screen.getByRole('alert')).toHaveTextContent(message);
 	});
 });

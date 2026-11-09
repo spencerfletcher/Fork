@@ -38,8 +38,6 @@
 
 	let textarea: HTMLTextAreaElement | undefined = $state();
 	let box: HTMLDivElement | undefined = $state();
-	let open = $state(false);
-	let toggle: HTMLButtonElement | undefined = $state();
 
 	const BLOCK = /^(DIV|P|LI|PRE|BLOCKQUOTE|H[1-6])$/;
 
@@ -196,7 +194,7 @@
 		if (box) style(box);
 	}
 
-	// The last caret in the box, so Insert works once focus has moved to it.
+	// The last caret in the box, so Section heading works once focus has moved to it.
 	let lastRange: Range | null = null;
 
 	// Leaving the box is leaving the field: the form checks it as it would the textarea.
@@ -271,8 +269,6 @@
 		if (!box || disabled) return;
 		const sel = getSelection();
 		if (!sel) return;
-		// Closed again, so Tab still runs label, Insert, box.
-		open = false;
 		box.focus();
 		ensureLine();
 		// The caret where the box was left, else the end of its last line.
@@ -345,51 +341,30 @@
 			<span class="required" aria-hidden="true">*</span>
 		</label>
 		{#if enhanced}
-			<button
-				type="button"
-				class="insert-toggle"
-				bind:this={toggle}
-				{disabled}
-				aria-expanded={open}
-				aria-controls="{id}-insert"
-				onclick={() => (open = !open)}>
-				Insert
-				<svg
-					viewBox="0 0 16 16"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="1.5"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-					aria-hidden="true">
-					<path d="M4 6l4 4 4-4" />
-				</svg>
-			</button>
+			<div class="tools" role="toolbar" aria-label="{label} tools">
+				<!-- mousedown would take the caret out of the box. -->
+				<button
+					type="button"
+					class="tool"
+					{disabled}
+					onmousedown={(e) => e.preventDefault()}
+					onclick={insertHeading}>
+					<svg
+						viewBox="0 0 16 16"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="1.5"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						aria-hidden="true">
+						<path d="M4 3v10M12 3v10M4 8h8" />
+					</svg>
+					Section heading
+				</button>
+			</div>
 		{/if}
 	</div>
 	{#if enhanced}
-		<!-- Escape closes the menu, back to its toggle, as a disclosure does. -->
-		<div
-			class="insert-row"
-			id="{id}-insert"
-			hidden={!open}
-			role="presentation"
-			onkeydown={(e) => {
-				if (e.key !== 'Escape') return;
-				open = false;
-				toggle?.focus();
-			}}>
-			<!-- mousedown would take the caret out of the box. -->
-			<button
-				type="button"
-				class="btn-ghost insert-item"
-				{disabled}
-				onmousedown={(e) => e.preventDefault()}
-				onclick={insertHeading}>
-				<span class="mark" aria-hidden="true">#</span>
-				Section heading
-			</button>
-		</div>
 		<div
 			bind:this={box}
 			{id}
@@ -438,7 +413,7 @@
 		display: contents;
 	}
 
-	/* The label left, Insert right, on one line. */
+	/* The label left, the toolbar right, on one line. */
 	.field-head {
 		display: flex;
 		align-items: center;
@@ -447,57 +422,41 @@
 		min-height: 24px;
 	}
 
-	/* A 24px hit (44px on a phone) grown outward, so the text stays put. */
-	.insert-toggle {
+	.tools {
+		display: flex;
+		gap: 8px;
+	}
+
+	/* A text button: a 24px hit (44px on a phone) grown outward, so the text stays put. */
+	.tool {
 		display: inline-flex;
 		align-items: center;
 		gap: 4px;
 		font-size: 0.875rem;
 		line-height: 1.2;
 		font-weight: 600;
-		color: var(--color-text-2);
+		color: var(--color-text);
 		background: none;
 		border: 0;
-		padding: 10px 6px;
-		margin: -10px -6px;
+		padding: 4px 6px;
+		margin: -4px -6px;
 		border-radius: var(--radius-sm);
+		cursor: pointer;
+		transition: background 0.15s ease;
 	}
 
-	.insert-toggle:hover {
-		color: var(--color-text);
+	.tool:hover:not(:disabled) {
+		background: var(--color-band);
 	}
 
-	.insert-toggle svg {
+	.tool:disabled {
+		opacity: 0.6;
+		cursor: default;
+	}
+
+	.tool svg {
 		width: 14px;
 		height: 14px;
-		transition: transform 0.15s ease;
-	}
-
-	.insert-toggle[aria-expanded='true'] svg {
-		transform: rotate(180deg);
-	}
-
-	.insert-row {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 8px;
-	}
-
-	.insert-row[hidden] {
-		display: none;
-	}
-
-	.insert-item {
-		display: inline-flex;
-		align-items: center;
-		gap: 6px;
-		padding: 6px 12px;
-		font-size: 0.875rem;
-	}
-
-	.mark {
-		font-weight: 600;
-		color: var(--color-text-3);
 	}
 
 	/* field-sizing: content ignores rows; this keeps an empty box typeable. */
@@ -588,7 +547,7 @@
 			line-height: 1.5;
 		}
 
-		.insert-toggle {
+		.tool {
 			padding: 14px 8px;
 			margin: -14px -8px;
 		}
