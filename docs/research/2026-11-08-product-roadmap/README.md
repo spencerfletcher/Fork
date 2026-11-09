@@ -451,6 +451,8 @@ Spencer re-phased these after reviewing the full post-MVP backlog. They override
 | Comment moderation (report a comment, delete on your own entry) | Unlisted | **P2**, with comments |
 | Profile discovery: find friends and prolific cooks. A People scope in the global search (handle or name) with a friend-request control on the result, and a small "Cooks" strip on Discover ranked by public recipes and saves so prolific users surface | Unlisted (friend by URL or invite only) | **P2** (personalised suggestions stay P5 with algorithmic discovery) |
 | Desktop app for Fork (Mac first; likely a PWA or thin wrapper over the web app, decided with the native platform call) | Unlisted | **P5**, alongside the native iOS/Android decision |
+| Fork icon redesign: the stats-row fork glyph reads poorly and is the likely app logo, so it gets a proper mark, not a quick fix | Unlisted | **P1 design backlog**, with the scaler redesign |
+| Cook mode visual distinction: cooking view looks too close to the recipe page | Unlisted | **P1 design backlog** |
 
 Settled later the same evening:
 
@@ -492,6 +494,18 @@ Use the [inventory’s source map and audit](../2026-11-09-cookbook-app-deep-div
 **Discovery and delivery decision:** pause broad new-feature discovery until most of this scope has been built and used. Revisit the gaps exposed by actual cooking, the friend-group pilot and later independent users. Targeted reference checks needed to implement an accepted item correctly can continue; they are not a reason to reopen the whole competitive sweep. User-reported blockers, accessibility failures, privacy problems and data-loss risks should be addressed when found rather than waiting for the backlog to finish.
 
 For each coherent feature slice, record the user task it makes easier and verify the complete workflow, including applicable keyboard/mobile behavior, permissions, error/recovery states and realistic recipe data. Include a short real-use feedback pass after each phase, with fixes and refinements fed back into the existing workstreams. These are delivery requirements, not another feature expansion. The pilot can begin with the usable core; it does not wait for all 87 entries.
+
+### Zed-inspired design refinement
+
+**Accepted, 9 November 2026 — next design implementation pass.** Apply the [Zed design reference report](../2026-11-09-zed-design-reference/README.md) to the editor, recipe header/metadata and section grouping, carrying the same principles into later cooking, library and timer work. This is refinement within the existing design workstream; the report contains ten ranked adaptations, five non-transfers and six implementation choices.
+
+- Strengthen typography hierarchy and remove redundant labels; retain readable instructions and supporting metadata.
+- Align the accepted editor composition precisely: title and metadata rows beside the right-hand photo, ingredients and method below.
+- Use spacing and fine rules for grouping, with filled panels reserved for distinct content or interactions.
+- Keep accent roles consistent and secondary actions quiet but discoverable; preserve visible focus and generous hit areas.
+- Reflow controls and content on phones while retaining comfortable reading sizes.
+
+Keep Fork's approved warm palette, Bitter/Source Sans typography and photography-led cookbook identity as the starting point. Tune weights, spacing and proportions in the working app; any font or palette replacement remains a separate design decision. Check long titles, missing photos, keyboard focus, contrast, mobile reflow and cooking readability before considering this refinement complete. The reference is a bounded visual study, not an accessibility certification or a requirement for another mockup round.
 
 ### Source register and limits
 
