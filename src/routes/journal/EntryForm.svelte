@@ -3,6 +3,7 @@
 	import { onMount, type Snippet } from 'svelte';
 	import PhotoField from '#lib/components/recipes/PhotoField.svelte';
 	import FormActions from '#lib/components/ui/FormActions.svelte';
+	import ChoiceGroup from '#lib/components/ui/ChoiceGroup.svelte';
 	import { audienceIcon, lockIcon } from '#lib/components/Icons.svelte';
 	import { AUDIENCE_LABEL } from '#lib/audience.js';
 	import {
@@ -271,27 +272,18 @@
 		<p class="form-hint" id="note-hint">Only you ever see this.</p>
 	</div>
 
-	<fieldset class="audience">
-		<legend class="field-legend">Who sees this entry</legend>
-		<div class="choices">
-			{#each AUDIENCES as value (value)}
-				<label class="choice">
-					<input
-						type="radio"
-						name="audience"
-						{value}
-						bind:group={audience}
-						aria-labelledby="audience-{value}"
-						aria-describedby="audience-{value}-note" />
-					<b id="audience-{value}">{@render audienceIcon(value)}{AUDIENCE_LABEL[value]}</b>
-					<span id="audience-{value}-note">{AUDIENCE_SENTENCE[value]}</span>
-				</label>
-			{/each}
-		</div>
-		{#if showPrivateHint}
-			<p class="form-hint" role="status">{PRIVATE_RECIPE_HINT}</p>
-		{/if}
-	</fieldset>
+	<ChoiceGroup
+		name="audience"
+		legend="Who sees this entry"
+		options={AUDIENCES.map((value) => ({
+			value,
+			label: AUDIENCE_LABEL[value],
+			note: AUDIENCE_SENTENCE[value]
+		}))}
+		bind:value={audience}
+		icon={audienceIcon}
+		columns={2}
+		hint={showPrivateHint ? PRIVATE_RECIPE_HINT : null} />
 </form>
 
 <div class="entry-actions">
@@ -365,71 +357,8 @@
 		background: var(--color-bg);
 	}
 
-	.audience {
-		border: 0;
-		padding: 0;
-		margin: 0;
-		min-width: 0;
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-2);
-	}
-
-	.audience .field-legend {
-		padding: 0;
-		margin-bottom: 0;
-	}
-
-	.choices {
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		gap: var(--space-3);
-	}
-
-	/* The recipe editor's choice rows: icon, word and one sentence. */
-	.choice {
-		display: grid;
-		/* The radio's own width and a 10px gap: the word sits close to it. */
-		grid-template-columns: auto 1fr;
-		gap: 2px 10px;
-		align-items: start;
-		min-height: 44px;
-		padding: 10px 12px;
-		border: 1px solid var(--color-input-border);
-		border-radius: var(--radius-md);
-		background: var(--color-surface);
-		cursor: pointer;
-	}
-
-	.choice input {
-		/* Centred on the word's line, not the top of the row. */
-		align-self: center;
-		margin: 0;
-		accent-color: var(--color-accent);
-	}
-
-	.choice b {
-		display: flex;
-		align-items: center;
-		gap: 6px;
-		font-weight: 600;
-	}
-
-	.choice span {
-		grid-column: 2;
-		font-size: 0.875rem;
-		line-height: 1.45;
-		color: var(--color-text-2);
-	}
-
-	.choice:has(:checked) {
-		border-color: var(--color-text);
-		box-shadow: inset 0 0 0 1px var(--color-text);
-	}
-
 	@media (max-width: 699px) {
-		.two-up,
-		.choices {
+		.two-up {
 			grid-template-columns: minmax(0, 1fr);
 		}
 

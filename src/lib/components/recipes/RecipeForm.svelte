@@ -24,6 +24,7 @@
 	import StepEditor from './StepEditor.svelte';
 	import PhotoField from './PhotoField.svelte';
 	import FormActions from '#lib/components/ui/FormActions.svelte';
+	import ChoiceGroup from '#lib/components/ui/ChoiceGroup.svelte';
 	import { audienceIcon } from '#lib/components/Icons.svelte';
 	import { AUDIENCE_LABEL } from '#lib/audience.js';
 
@@ -361,32 +362,17 @@
 					<TagInput {allTags} bind:selected={draft.tags} />
 				</fieldset>
 
-				<fieldset class="audience">
-					<legend class="field-legend">Who can see this recipe</legend>
-					<div class="choices">
-						{#each VISIBILITIES as value (value)}
-							<label class="choice">
-								<input
-									type="radio"
-									name="visibility"
-									{value}
-									bind:group={draft.visibility}
-									aria-labelledby="visibility-{value}"
-									aria-describedby="visibility-{value}-note{hasForks ? ' visibility-hint' : ''}" />
-								<b id="visibility-{value}">
-									{@render audienceIcon(value)}
-									{AUDIENCE_LABEL[value]}
-								</b>
-								<span id="visibility-{value}-note">{AUDIENCE_NOTE[value]}</span>
-							</label>
-						{/each}
-					</div>
-					{#if hasForks}
-						<p class="form-hint" id="visibility-hint">
-							Making this more private doesn't hide existing forks.
-						</p>
-					{/if}
-				</fieldset>
+				<ChoiceGroup
+					name="visibility"
+					legend="Who can see this recipe"
+					options={VISIBILITIES.map((value) => ({
+						value,
+						label: AUDIENCE_LABEL[value],
+						note: AUDIENCE_NOTE[value]
+					}))}
+					bind:value={draft.visibility}
+					icon={audienceIcon}
+					hint={hasForks ? "Making this more private doesn't hide existing forks." : null} />
 			</div>
 
 			<div class="form-col">
@@ -459,75 +445,6 @@
 	   step editors' marks match the title's. */
 	.form :global(.required) {
 		color: var(--color-text-3);
-	}
-
-	.audience {
-		border: 0;
-		padding: 0;
-		margin: 0;
-		min-width: 0;
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-2);
-	}
-
-	.audience .field-legend {
-		margin-bottom: 0;
-		padding: 0;
-	}
-
-	/* Icon, word and one sentence per audience; the chosen row gets a 1px ink inset. */
-	.choices {
-		display: flex;
-		flex-direction: column;
-		gap: 8px;
-	}
-
-	.choice {
-		display: grid;
-		/* The radio's own width and a 10px gap: the word sits close to it. */
-		grid-template-columns: auto 1fr;
-		gap: 2px 10px;
-		align-items: start;
-		padding: 10px 12px;
-		border: 1px solid var(--color-input-border);
-		border-radius: var(--radius-md);
-		background: var(--color-surface);
-		cursor: pointer;
-	}
-
-	/* Clay, as the checkbox it replaces was, not the browser's blue. */
-	.choice input {
-		/* Centred on the word's line, not the top of the row. */
-		align-self: center;
-		margin: 0;
-		accent-color: var(--color-accent);
-	}
-
-	.choice b {
-		display: flex;
-		align-items: center;
-		gap: 6px;
-		font-weight: 600;
-	}
-
-	.choice span {
-		grid-column: 2;
-		font-size: 0.875rem;
-		line-height: 1.45;
-		color: var(--color-text-2);
-	}
-
-	.choice:has(:checked) {
-		border-color: var(--color-text);
-		box-shadow: inset 0 0 0 1px var(--color-text);
-	}
-
-	/* :global, because the icons come from Icons.svelte. */
-	.choice :global(.icon) {
-		width: 16px;
-		height: 16px;
-		flex-shrink: 0;
 	}
 
 	/* Outside the form, so the form's 16px gap is its own margin. */
