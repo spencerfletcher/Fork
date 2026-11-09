@@ -141,7 +141,7 @@ const TARGETS: Target[] = [
 	{
 		// The seed user's Cookbook is never empty, so the empty state's link is
 		// out of reach; a search with no match carries the same kind of link.
-		name: 'Clear search',
+		name: 'Clear search on Cookbook',
 		auth: true,
 		open: goto('/cookbook?q=zzzzzz'),
 		target: (p) => p.getByRole('link', { name: 'Clear search' })
