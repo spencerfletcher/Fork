@@ -91,7 +91,11 @@ describe('Cookbook page', () => {
 		renderCookbook({ ...full, filter: 'saved' });
 		const group = screen.getByRole('group', { name: 'Show' });
 		const links = [...group.querySelectorAll('a')];
-		expect(links.map((a) => a.textContent)).toEqual(['All9', 'Mine6', 'Saved3']);
+		expect(links.map((a) => a.textContent?.replace(/\s+/g, ' ').trim())).toEqual([
+			'All 9',
+			'Mine 6',
+			'Saved 3'
+		]);
 		expect(links.find((a) => a.getAttribute('aria-current') === 'page')).toHaveTextContent('Saved');
 	});
 
