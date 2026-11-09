@@ -83,23 +83,16 @@
 <div class="field">
 	<label for="image">Photo</label>
 	{#if preview}
-		<div class="photo-preview">
-			<img src={preview} alt="Preview" />
-			<button
-				type="button"
-				class="photo-remove"
-				bind:this={removeButton}
-				onclick={removePhoto}
-				aria-label="Remove photo">
-				×
-			</button>
-		</div>
+		<img class="photo" src={preview} alt="Preview" />
+	{:else}
+		<!-- The empty slot: a press on it opens the file dialog too. The action below names the input. -->
+		<label class="photo-empty" for="image" aria-hidden="true"></label>
 	{/if}
-	<!-- The native input, visually hidden, keeps the keyboard and the file
-	     dialog; the ghost button is its label and its picture. Its words
-	     alone name the input, which both labels would otherwise name twice. -->
+	<!-- Text buttons under the photo, never over it. The native input, visually
+	     hidden, keeps the keyboard and the file dialog; the action's words are
+	     its label and its picture, and alone name it. -->
 	<div class="photo-actions">
-		<label class="btn-ghost photo-choose">
+		<label class="text-btn photo-choose">
 			<input
 				id="image"
 				name="image"
@@ -111,10 +104,17 @@
 				aria-describedby={error ? 'image-error' : undefined}
 				bind:this={imageInput}
 				onchange={onImageChange} />
-			<span id="image-action">{preview || chosen ? 'Replace photo' : 'Choose photo'}</span>
+			<span id="image-action">
+				{#if preview || chosen}Replace <span class="sr-only">photo</span>{:else}Choose a photo{/if}
+			</span>
 		</label>
+		{#if preview}
+			<button type="button" class="text-btn" bind:this={removeButton} onclick={removePhoto}>
+				Remove <span class="sr-only">photo</span>
+			</button>
+		{/if}
 		{#if removeImage}
-			<button type="button" class="btn-ghost photo-keep" bind:this={keepButton} onclick={keepPhoto}>
+			<button type="button" class="text-btn photo-keep" bind:this={keepButton} onclick={keepPhoto}>
 				Keep photo
 			</button>
 		{/if}
@@ -131,63 +131,53 @@
 </div>
 
 <style>
-	.photo-preview {
-		position: relative;
-		width: 100%;
-		height: 150px;
-		border-radius: var(--radius-md);
-		overflow: hidden;
-	}
-
-	.photo-preview img {
+	/* The column's full width at the recipe photo's 4:3, with no border. */
+	.photo,
+	.photo-empty {
 		display: block;
 		width: 100%;
-		height: 100%;
+		aspect-ratio: 4 / 3;
+		border-radius: var(--radius-md);
+	}
+
+	.photo {
 		object-fit: cover;
 	}
 
-	.photo-remove {
-		position: absolute;
-		top: 8px;
-		right: 8px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 28px;
-		height: 28px;
-		border: 0;
-		border-radius: 50%;
-		background: rgb(26 23 20 / 0.7);
-		color: var(--color-text-cream);
-		font-size: 1rem;
-		line-height: 1;
+	/* Clay tint, as a card with no photo; the transparent border keeps its box in forced colours. */
+	.photo-empty {
+		box-sizing: border-box;
+		background: var(--color-tint);
+		border: 1px solid transparent;
 		cursor: pointer;
 	}
 
 	.photo-actions {
 		display: flex;
 		flex-wrap: wrap;
-		gap: var(--space-2);
+		gap: 4px 20px;
 	}
 
-	/* One height with the single-line boxes beside it. It is a label, so it
-	   takes back the button's voice from the field labels' eyebrow. */
-	.photo-choose {
-		align-self: flex-start;
+	/* Clay words in the body face. The choose action is a label, so it takes
+	   back its voice from the field labels' eyebrow. */
+	.text-btn {
 		display: inline-flex;
 		align-items: center;
-		min-height: 41px;
-		padding-block: 0;
+		min-height: 24px;
+		padding: 0;
+		border: 0;
+		background: none;
+		font-family: var(--font-sans);
 		font-size: 0.9375rem;
 		font-weight: 600;
 		letter-spacing: normal;
 		text-transform: none;
-		color: var(--color-text);
+		color: var(--color-accent);
+		cursor: pointer;
 	}
 
-	.photo-keep {
-		min-height: 41px;
-		padding-block: 0;
+	.text-btn:hover {
+		color: var(--color-text);
 	}
 
 	.photo-choose:has(:focus-visible) {
@@ -195,20 +185,9 @@
 		outline-offset: 2px;
 	}
 
-	@media (max-width: 699px) {
-		.photo-preview {
-			height: 160px;
-		}
-	}
-
 	/* A thumb's 44px, on a phone or any touch screen. */
 	@media (max-width: 699px), (pointer: coarse) {
-		.photo-remove {
-			width: 44px;
-			height: 44px;
-		}
-
-		/* The photo buttons leave the boxes' 41px for a thumb's 44px. */
+		.text-btn,
 		.photo-choose,
 		.photo-keep {
 			min-height: 44px;

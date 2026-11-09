@@ -2,15 +2,21 @@ import { describe, test, expect } from 'vitest';
 import { render, screen, fireEvent, within } from '@testing-library/svelte';
 import StepEditor from './StepEditor.svelte';
 
+// The live box a person types in, and the textarea behind it that submits.
 function box() {
-	return screen.getByLabelText(/^steps/i) as HTMLTextAreaElement;
+	return screen.getByRole('textbox', { name: 'Method' });
+}
+
+function field() {
+	return document.querySelector<HTMLTextAreaElement>('textarea[name="steps"]')!;
 }
 
 describe('StepEditor', () => {
-	test('renders the value in a labelled textarea named for the form field', () => {
+	test('renders the value in a box labelled Method, over a textarea named for the form field', () => {
 		render(StepEditor, { props: { value: 'Mix.\n\nBake.' } });
-		expect(box().value).toBe('Mix.\n\nBake.');
-		expect(box().name).toBe('steps');
+		expect(box()).toBeInTheDocument();
+		expect(field().value).toBe('Mix.\n\nBake.');
+		expect(field().name).toBe('steps');
 	});
 
 	test('explains blank-line separation and the note keywords', () => {
@@ -31,7 +37,7 @@ describe('StepEditor', () => {
 
 	test('keeps the hint while there is text in the box', async () => {
 		render(StepEditor, { props: { value: '' } });
-		await fireEvent.input(box(), { target: { value: 'Mix.' } });
+		await fireEvent.input(field(), { target: { value: 'Mix.' } });
 		expect(screen.getByText(/blank line/i)).toBeInTheDocument();
 	});
 
@@ -54,14 +60,15 @@ describe('StepEditor', () => {
 
 	test('accepts input', async () => {
 		render(StepEditor, { props: { value: '' } });
-		await fireEvent.input(box(), { target: { value: 'Chop.' } });
-		expect(box().value).toBe('Chop.');
+		await fireEvent.input(field(), { target: { value: 'Chop.' } });
+		expect(field().value).toBe('Chop.');
+		expect(box()).toHaveTextContent('Chop.');
 	});
 
 	describe('groups', () => {
 		test('a "# Name" line gets a read-back of the steps each group holds, numbered straight through', async () => {
 			render(StepEditor, { props: { value: '' } });
-			await fireEvent.input(box(), {
+			await fireEvent.input(field(), {
 				target: { value: '# Make the dough\nMix.\n\nKnead.\n\n# Bake\nBake.' }
 			});
 			const readBack = document.getElementById('steps-readback')!;

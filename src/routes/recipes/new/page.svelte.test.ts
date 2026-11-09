@@ -34,7 +34,7 @@ const EMPTY_DRAFT = {
 	steps: '',
 	commitMessage: '',
 	editRevision: '',
-	isPublic: true,
+	visibility: 'private' as 'private' | 'friends' | 'public',
 	tags: [] as string[],
 	hadPhoto: false,
 	removeImage: false
@@ -47,7 +47,7 @@ function failed(draft: Partial<typeof EMPTY_DRAFT>, error = 'Title is required')
 describe('New recipe page labels', () => {
 	test('every required field marks its label with an asterisk for the eye only: the box keeps its plain name', () => {
 		render(NewPage, { props: { data, form: null } });
-		for (const name of ['Title', 'Ingredients', 'Steps']) {
+		for (const name of ['Title', 'Ingredients', 'Method']) {
 			const box = screen.getByRole('textbox', { name });
 			const mark = document.querySelector(`label[for="${box.id}"] .required`);
 			expect(mark, name).toHaveTextContent('*');
@@ -56,11 +56,24 @@ describe('New recipe page labels', () => {
 		}
 	});
 
-	test('the public checkbox is named without the middle dot its note shows', () => {
+	test('who can see the recipe is three named radios, each described by its sentence', () => {
 		render(NewPage, { props: { data, form: null } });
-		const box = screen.getByRole('checkbox', { name: /public/i });
-		expect(box).toHaveAccessibleName('Make this recipe public applies to every version');
-		expect(box.closest('label')).toHaveTextContent('·');
+		const group = screen.getByRole('group', { name: 'Who can see this recipe' });
+		const radios = within(group).getAllByRole('radio');
+		expect(radios.map((r) => [r.getAttribute('value'), r.getAttribute('name')])).toEqual([
+			['private', 'visibility'],
+			['friends', 'visibility'],
+			['public', 'visibility']
+		]);
+		expect(within(group).getByRole('radio', { name: 'Only me' })).toHaveAccessibleDescription(
+			'Only you can see it. You can share it later.'
+		);
+		expect(within(group).getByRole('radio', { name: 'Friends' })).toHaveAccessibleDescription(
+			'Approved friends can see, save and fork it. It stays out of Discover.'
+		);
+		expect(within(group).getByRole('radio', { name: 'Public' })).toHaveAccessibleDescription(
+			'Anyone can find, save and fork it.'
+		);
 	});
 });
 
@@ -85,7 +98,7 @@ describe('New recipe page validation errors', () => {
 	test('a blocked submit gets no browser bubble: the inline message speaks, and the first invalid field takes focus', async () => {
 		render(NewPage, { props: { data, form: null } });
 		const title = screen.getByLabelText(/^title/i);
-		const ingredients = screen.getByLabelText(/^ingredients/i);
+		const ingredients = document.querySelector('textarea[name="ingredients"]')!;
 		// The browser fires invalid on each bad field in order, cancelable.
 		const events = [title, ingredients].map((el) => {
 			const event = new Event('invalid', { cancelable: true });
@@ -118,8 +131,8 @@ describe('New recipe page validation errors', () => {
 		render(NewPage, { props: { data, form: null } });
 		for (const field of [
 			screen.getByLabelText(/^title/i),
-			screen.getByLabelText(/^ingredients/i),
-			screen.getByLabelText(/^steps/i)
+			screen.getByRole('textbox', { name: 'Ingredients' }),
+			screen.getByRole('textbox', { name: 'Method' })
 		]) {
 			await fireEvent.focusIn(field);
 			await fireEvent.focusOut(field);
@@ -144,12 +157,13 @@ describe('New recipe page validation errors', () => {
 
 	test('ingredients and steps are required fields that report it under the box', async () => {
 		render(NewPage, { props: { data, form: null } });
-		const ingredients = screen.getByLabelText(/^ingredients/i);
-		const steps = screen.getByLabelText(/^steps/i);
+		const ingredients = screen.getByRole('textbox', { name: 'Ingredients' });
+		const steps = screen.getByRole('textbox', { name: 'Method' });
 		expect(ingredients).toBeRequired();
 		expect(steps).toBeRequired();
 		for (const box of [ingredients, steps]) {
-			await fireEvent.input(box, { target: { value: '' } });
+			// Typed, then emptied: the box tells the form when it is left.
+			await fireEvent.input(box);
 			await fireEvent.focusOut(box);
 		}
 		expect(ingredients).toHaveAccessibleDescription(
@@ -162,13 +176,18 @@ describe('New recipe page validation errors', () => {
 		render(NewPage, {
 			props: {
 				data,
-				form: failed({ title: 'Soup', prepTimeMinutes: '-5', tags: ['Dessert'], isPublic: false })
+				form: failed({
+					title: 'Soup',
+					prepTimeMinutes: '-5',
+					tags: ['Dessert'],
+					visibility: 'public'
+				})
 			}
 		});
 		await tick();
 		expect(screen.getByLabelText(/title/i)).toHaveValue('Soup');
 		expect(screen.getByLabelText(/^prep/i)).toHaveValue(-5);
-		expect(screen.getByLabelText(/public/i)).not.toBeChecked();
+		expect(screen.getByRole('radio', { name: 'Public' })).toBeChecked();
 		expect(document.querySelector('input[name="tags"]')).toHaveValue('Dessert');
 	});
 
@@ -190,10 +209,14 @@ describe('New recipe page editor state', () => {
 		await tick();
 		expect(screen.getByRole('button', { name: 'Saving…' })).toBeDisabled();
 		expect(screen.getByLabelText(/title/i)).toBeDisabled();
+		// The live boxes are no form controls, so the fieldset cannot disable them.
+		const method = screen.getByRole('textbox', { name: 'Method' });
+		expect(method).toHaveAttribute('contenteditable', 'false');
 		await finish({ result: { type: 'failure' }, update: async () => {} });
 		await tick();
 		expect(screen.getByRole('button', { name: 'Create recipe' })).toBeEnabled();
 		expect(screen.getByLabelText(/title/i)).toBeEnabled();
+		expect(method).toHaveAttribute('contenteditable', 'true');
 	});
 
 	test('the header line says the save makes v1, while typing too, and no helper sits beside Create', async () => {
@@ -242,10 +265,9 @@ describe('New recipe page editor state', () => {
 
 	test('starts with empty ingredient and step textareas in the form', () => {
 		render(NewPage, { props: { data, form: null } });
-		const ingredients = screen.getByLabelText(/^ingredients/i);
+		const ingredients = document.querySelector('textarea[name="ingredients"]')!;
 		expect(ingredients).toHaveValue('');
-		expect(ingredients).toHaveAttribute('name', 'ingredients');
 		expect(ingredients.closest('form')).not.toBeNull();
-		expect(screen.getByLabelText(/^steps/i)).toHaveAttribute('name', 'steps');
+		expect(document.querySelector('textarea[name="steps"]')).toHaveValue('');
 	});
 });
