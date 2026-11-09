@@ -2,8 +2,12 @@ import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/svelte';
 import SearchFilters from './SearchFilters.svelte';
 
-const { gotoMock } = vi.hoisted(() => ({ gotoMock: vi.fn() }));
+const { gotoMock, page } = vi.hoisted(() => ({
+	gotoMock: vi.fn(),
+	page: { url: new URL('http://localhost/') }
+}));
 vi.mock('$app/navigation', () => ({ goto: gotoMock }));
+vi.mock('$app/state', () => ({ page }));
 
 const availableTags = [
 	{ id: 1, name: 'Dessert', slug: 'dessert' },
@@ -19,6 +23,7 @@ Element.prototype.scrollIntoView = scrollIntoView;
 beforeEach(() => {
 	gotoMock.mockClear();
 	scrollIntoView.mockClear();
+	page.url = new URL('http://localhost/');
 });
 
 describe('SearchFilters', () => {
@@ -139,5 +144,54 @@ describe('SearchFilters search box', () => {
 		render(SearchFilters, { props: { availableTags } });
 		await fireEvent(input(), new Event('search'));
 		expect(gotoMock).not.toHaveBeenCalled();
+	});
+});
+
+// Cookbook's All · Mine · Saved is its own `filter` param; the search box and
+// the tags must carry it, and it them.
+describe('SearchFilters keeps the page’s other params', () => {
+	test('a search keeps a param it does not own', async () => {
+		page.url = new URL('http://localhost/cookbook?filter=saved&q=old');
+		render(SearchFilters, { props: { availableTags, initialQuery: 'old' } });
+		await fireEvent.input(input(), { target: { value: 'soup' } });
+		await fireEvent.submit(input().closest('form')!);
+		expect(gotoMock.mock.calls[0][0]).toBe('?filter=saved&q=soup');
+	});
+
+	test('clearing everything it owns still keeps the other param', async () => {
+		page.url = new URL('http://localhost/cookbook?filter=mine&tags=dessert');
+		render(SearchFilters, { props: { availableTags, initialTags: ['dessert'] } });
+		await fireEvent.click(screen.getByRole('button', { name: 'Dessert' }));
+		expect(gotoMock.mock.calls[0][0]).toBe('?filter=mine');
+	});
+
+	test('the native form carries the other param too', () => {
+		page.url = new URL('http://localhost/cookbook?filter=saved');
+		render(SearchFilters, { props: { availableTags } });
+		expect(new FormData(input().closest('form')!).get('filter')).toBe('saved');
+	});
+});
+
+describe('SearchFilters friends toggle', () => {
+	test('absent unless the page offers it', () => {
+		render(SearchFilters, { props: { availableTags } });
+		expect(screen.queryByRole('button', { name: 'Friends’ recipes' })).toBeNull();
+	});
+
+	test('pressing it narrows to friends, keeping the query', async () => {
+		render(SearchFilters, { props: { availableTags, initialQuery: 'dal', friendsOnly: false } });
+		const toggle = screen.getByRole('button', { name: 'Friends’ recipes' });
+		expect(toggle).toHaveAttribute('aria-pressed', 'false');
+		await fireEvent.click(toggle);
+		expect(gotoMock.mock.calls[0][0]).toBe('?q=dal&friends=1');
+	});
+
+	test('pressed, a press widens again', async () => {
+		page.url = new URL('http://localhost/discover?friends=1');
+		render(SearchFilters, { props: { availableTags, friendsOnly: true } });
+		const toggle = screen.getByRole('button', { name: 'Friends’ recipes' });
+		expect(toggle).toHaveAttribute('aria-pressed', 'true');
+		await fireEvent.click(toggle);
+		expect(gotoMock.mock.calls[0][0]).toBe('/discover');
 	});
 });
