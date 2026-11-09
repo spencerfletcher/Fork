@@ -70,10 +70,14 @@
 					availableTags={data.allTags} />
 			</div>
 
-			<!-- Always in the DOM so screen readers announce the count when it changes. -->
-			<p class="status" role="status">
-				{#if filtered}{plural(data.recipes.length, 'recipe')}
-					{data.recipes.length === 1 ? 'matches' : 'match'}{/if}
+			<!-- Always in the DOM so screen readers announce the count when it changes.
+			     Seen only when nothing matches; over a grid the cards say it. The
+			     paragraph keeps its space so the grid does not jump. -->
+			<p class="status" role="status" aria-live="polite">
+				<span class:sr-only={data.recipes.length > 0}>
+					{#if filtered}{plural(data.recipes.length, 'recipe')}
+						{data.recipes.length === 1 ? 'matches' : 'match'}{/if}
+				</span>
 			</p>
 
 			{#if data.recipes.length > 0}
