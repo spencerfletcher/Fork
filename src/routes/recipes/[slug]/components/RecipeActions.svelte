@@ -135,15 +135,10 @@
 		{/if}
 	</button>
 
-	{#if cooking}
-		<!-- Cooking: the Cook toggle stays, with Add to Journal beside it. -->
-		{#if logHref}
-			<a href={logHref} class="btn-ghost log no-underline">Add to Journal</a>
-		{/if}
-	{:else if loginHref}
+	{#if !cooking && loginHref}
 		<!-- Logged out: a text link, not a pill, so Cook stays the one action. -->
 		<a href={loginHref} class="login">Log in to save</a>
-	{:else}
+	{:else if !cooking}
 		{#if canEdit}
 			<a href="/recipes/{recipe.slug}/edit" class="btn-ghost edit no-underline">
 				<svg
@@ -223,6 +218,10 @@
 			</form>
 		{/if}
 	{/if}
+	<!-- Signed in: last in the row, and the one action beside Done cooking. -->
+	{#if logHref}
+		<a href={logHref} class="btn-ghost log no-underline">Add to Journal</a>
+	{/if}
 
 	{#if cooking && noWakeLock}
 		<p class="note text-text-2 m-0 basis-full text-sm">Your screen may still sleep.</p>
@@ -295,9 +294,9 @@
 		}
 	}
 
-	/* The page's phone width: Cook takes the whole first row, Save and Fork
-	   share the row beneath. The owner's Edit and the login link have no
-	   partner, so they span too. */
+	/* The page's phone width: Cook takes the whole first row, the rest pair
+	   up beneath it. Add to Journal comes last, so it spans when it lands
+	   alone (an even child after Cook); the login link never has a partner. */
 	@media (max-width: 699px) {
 		.actions {
 			display: grid;
@@ -310,8 +309,7 @@
 		}
 
 		.cook,
-		.edit,
-		.log,
+		.log:nth-child(even),
 		.login,
 		.note {
 			grid-column: 1 / -1;

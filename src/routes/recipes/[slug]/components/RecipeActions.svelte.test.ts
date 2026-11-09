@@ -322,13 +322,34 @@ describe('RecipeActions row', () => {
 		expect(edit).toHaveAttribute('href', '/recipes/cookies/edit');
 	});
 
-	test("on a phone Cook spans the row; the owner's Edit and the login link span too", () => {
+	test('on a phone Cook and the login link span the row; a lone last pill spans too', () => {
 		// jsdom applies no component CSS, so the rules are read from the source.
 		const style = source.slice(source.indexOf('<style>'));
 		const phone = style.slice(style.indexOf('@media (max-width: 699px)'));
 		const spans = phone.match(/([^{}]*)\{[^}]*grid-column:\s*1 \/ -1/)![1];
-		for (const selector of ['.cook', '.edit', '.login']) expect(spans).toContain(selector);
+		for (const selector of ['.cook', '.login', '.log:nth-child(even)']) {
+			expect(spans).toContain(selector);
+		}
+		// Edit now has Add to Journal beside it.
+		expect(spans).not.toContain('.edit');
 		expect(phone).toMatch(/grid-template-columns:\s*1fr 1fr/);
+	});
+
+	test('on a phone Add to Journal spans only when it would sit alone after Cook', () => {
+		const lone = (overrides: Record<string, unknown>) => {
+			const { unmount } = render(RecipeActions, {
+				props: makeProps({ journalHref: '/journal/new?recipe=cookies&version=3', ...overrides })
+			});
+			const even = screen.getByRole('link', { name: 'Add to Journal' }).matches(':nth-child(even)');
+			unmount();
+			return even;
+		};
+		// Visitor: Cook, then Save and Fork share a row, Add to Journal takes the next whole.
+		expect(lone({ canFork: true })).toBe(true);
+		// Owner: Cook, then Edit and Add to Journal share a row.
+		expect(lone({ canEdit: true, canFavorite: false })).toBe(false);
+		// Cooking: Done cooking, then Add to Journal alone beneath.
+		expect(lone({ cooking: true })).toBe(true);
 	});
 });
 
@@ -553,12 +574,54 @@ describe('RecipeActions Add to Journal', () => {
 		page.shallow = null;
 	});
 
-	test('not before Cook is pressed, and not signed out', () => {
-		const idle = render(RecipeActions, { props: makeProps({ journalHref: HREF }) });
+	test('signed out there is none, cooking or not', () => {
+		const idle = render(RecipeActions, {
+			props: makeProps({ canFavorite: false, loginHref: '/login' })
+		});
 		expect(screen.queryByRole('link', { name: 'Add to Journal' })).toBeNull();
 		idle.unmount();
 
 		render(RecipeActions, { props: makeProps({ cooking: true }) });
 		expect(screen.queryByRole('link', { name: 'Add to Journal' })).toBeNull();
+	});
+});
+
+// ─── Add to Journal in the row ────────────────────────────────────────────────
+
+describe('RecipeActions Add to Journal in the row', () => {
+	const HREF = '/journal/new?recipe=cookies&version=3';
+	const names = (container: HTMLElement) =>
+		[...container.querySelectorAll<HTMLElement>('.actions a, .actions button')].map((el) =>
+			el.textContent!.replace(/\s+/g, ' ').trim()
+		);
+
+	test('the owner gets Cook, Edit recipe, then Add to Journal outlined', () => {
+		const { container } = render(RecipeActions, {
+			props: makeProps({ canEdit: true, canFavorite: false, journalHref: HREF })
+		});
+		expect(names(container)).toEqual(['Cook', 'Edit recipe', 'Add to Journal']);
+		const add = screen.getByRole('link', { name: 'Add to Journal' });
+		expect(add).toHaveClass('btn-ghost');
+		expect(add).toHaveAttribute('href', HREF);
+	});
+
+	test('a visitor gets Cook, Save, Fork, then Add to Journal, carrying the serves', () => {
+		page.shallow = { url: new URL('http://localhost/recipes/cookies?serves=6') };
+		const { container } = render(RecipeActions, {
+			props: makeProps({ canFork: true, favoriteCount: 3, journalHref: HREF })
+		});
+		expect(names(container)).toEqual(['Cook', 'Save · 3', 'Fork', 'Add to Journal']);
+		expect(screen.getByRole('link', { name: 'Add to Journal' })).toHaveAttribute(
+			'href',
+			`${HREF}&serves=6`
+		);
+		page.shallow = null;
+	});
+
+	test('cooking, it is the only action beside Done cooking', () => {
+		const { container } = render(RecipeActions, {
+			props: makeProps({ canFork: true, cooking: true, journalHref: HREF })
+		});
+		expect(names(container)).toEqual(['Done cooking', 'Add to Journal']);
 	});
 });
