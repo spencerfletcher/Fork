@@ -11,34 +11,27 @@ import { gotoHydrated } from './helpers';
 
 const COOKIES_RE = new RegExp(SEED[0].versions.at(-1)!.title, 'i');
 
-// ─── Landing page (logged in) ──────────────────────────────────────────────────
+// ─── Home (logged in) ─────────────────────────────────────────────────────────
 
-test.describe('Landing page when logged in', () => {
-	test('logged-in users get the feed, not the landing page', async ({ page }) => {
+test.describe('Home when logged in', () => {
+	test('/ is the Cookbook, not Discover', async ({ page }) => {
 		await page.goto('/');
-		await expect(page.getByRole('link', { name: /browse recipes/i })).not.toBeVisible();
-	});
-
-	test('the feed is browse: tag tabs with All pointing home, and a Recent section', async ({
-		page
-	}) => {
-		await page.goto('/');
-		const tabs = page.getByRole('navigation', { name: 'Browse by tag' });
-		await expect(tabs.getByRole('link', { name: 'All' })).toHaveAttribute('href', '/');
-		await expect(page.getByRole('heading', { name: 'Recent' })).toBeVisible();
+		await expect(page).toHaveURL(/\/cookbook$/);
+		await expect(page.getByRole('heading', { level: 1, name: 'Cookbook' })).toBeVisible();
 	});
 });
 
 // ─── Navbar (logged in) ───────────────────────────────────────────────────────
 
 test.describe('Navbar when logged in', () => {
-	test('shows the username link and a Log out button', async ({ page }) => {
+	test('shows the profile link and a Log out button', async ({ page }) => {
 		await page.goto('/');
-		// Scope to the navbar: recipe cards also link to the author's profile, and
-		// the mobile menu duplicates the navbar link.
+		// Scope to the top bar: Discover cards also link to their cook's profile.
 		const navbar = page.getByRole('navigation').first();
-		await expect(navbar.getByRole('link', { name: '@spencerfletcher' }).first()).toBeVisible();
-		await expect(page.getByRole('button', { name: 'Log out' }).first()).toBeVisible();
+		await expect(
+			navbar.getByRole('link', { name: '@spencerfletcher, your profile' })
+		).toBeVisible();
+		await expect(page.getByRole('button', { name: 'Log out' })).toBeVisible();
 	});
 
 	test('does not show the Login link', async ({ page }) => {

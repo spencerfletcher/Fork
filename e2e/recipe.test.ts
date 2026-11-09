@@ -20,8 +20,7 @@ async function openCompare(page: Page) {
 
 /** Slugs carry a random nanoid suffix, so reach the recipe by name, not URL. */
 async function gotoClassicCookies(page: Page) {
-	// The landing page shows the three newest; browse shows everything.
-	await page.goto('/recipes');
+	await page.goto('/discover');
 	await page.getByRole('link', { name: COOKIES_RE }).first().click();
 	await page.waitForURL(/\/recipes\//);
 }
@@ -51,7 +50,7 @@ test.describe('Recipe detail page', () => {
 	test('"Thick and Chewy Chocolate Chip Cookies" shows version history with 3 versions', async ({
 		page
 	}) => {
-		await page.goto('/recipes');
+		await page.goto('/discover');
 		// Click the stretched link (aria-label) rather than the h3 text node
 		await page.getByRole('link', { name: COOKIES_RE }).first().click();
 		await expect(page).toHaveURL(/\/recipes\//);
@@ -97,7 +96,7 @@ test.describe('Recipe detail page', () => {
 	});
 
 	test('viewing a specific version says so in the bar, with the way back', async ({ page }) => {
-		await page.goto('/recipes');
+		await page.goto('/discover');
 		await page.getByRole('link', { name: COOKIES_RE }).first().click();
 		await page.waitForURL(/\/recipes\//);
 		// Append ?version=2 to the current recipe URL
@@ -126,7 +125,7 @@ test.describe('Recipe detail page', () => {
 	});
 
 	test('Compare link on v2 navigates to diff page', async ({ page }) => {
-		await page.goto('/recipes');
+		await page.goto('/discover');
 		await page.getByRole('link', { name: COOKIES_RE }).first().click();
 		await expect(page).toHaveURL(/\/recipes\//);
 		await openCompare(page);
@@ -1379,35 +1378,26 @@ test.describe('Recipe detail page', () => {
 	});
 });
 
-test.describe('Landing page (logged out)', () => {
-	test('logged-out visitors see the premise and a diff', async ({ page }) => {
+test.describe('Home and recipe pages (logged out)', () => {
+	test('logged-out visitors land on Discover, with the newest change a click away', async ({
+		page
+	}) => {
 		await page.goto('/');
-		const browseLink = page.getByRole('link', { name: /browse recipes/i });
-		await expect(browseLink).toBeVisible();
-		// The primary CTA leads to the public recipe index, not to an empty
-		// search form (decided 29 October 2026).
-		await expect(browseLink).toHaveAttribute('href', '/recipes');
-		await expect(page.locator('.diff-content').first()).toBeVisible();
-		// The page ends on the newest recipes under the browse page's section
-		// pattern, with a way to the rest.
-		await expect(page.getByRole('heading', { level: 2, name: 'Recent' })).toBeVisible();
-		await expect(page.getByRole('link', { name: 'All recipes' })).toHaveAttribute(
-			'href',
-			'/recipes'
-		);
+		await expect(page.getByRole('heading', { level: 1, name: 'Discover' })).toBeVisible();
+		await expect(page.locator('.recent-row a').first()).toHaveAttribute('href', /\/diff\?from=/);
+		await expect(page.getByRole('link', { name: /browse recipes/i })).toHaveCount(0);
 	});
 
-	test('the open phone menu dims the page but not the bar above it', async ({ page }) => {
+	test('on a phone, Tab reaches the tab bar after the page, in bar order', async ({ page }) => {
 		await page.setViewportSize({ width: 390, height: 844 });
 		await gotoHydrated(page, '/');
-		await page.getByRole('button', { name: /open main menu/i }).click();
-		await page.locator('#mobile-menu').waitFor();
-		const brand = await page.getByRole('link', { name: /^fork/i }).first().boundingBox();
-		const hit = await page.evaluate(
-			([x, y]) => document.elementFromPoint(x, y)?.closest('a')?.getAttribute('href') ?? null,
-			[brand!.x + brand!.width / 2, brand!.y + brand!.height / 2]
-		);
-		expect(hit).toBe('/');
+		await page.getByRole('navigation', { name: 'Main' }).getByRole('link').first().focus();
+		const order: string[] = [];
+		for (let i = 0; i < 4; i++) {
+			order.push(await page.evaluate(() => document.activeElement?.textContent?.trim() ?? ''));
+			await page.keyboard.press('Tab');
+		}
+		expect(order).toEqual(['Cookbook', 'Journal', 'Friends', 'Discover']);
 	});
 
 	test('a checked-off ingredient strikes through at one height, grams included', async ({
@@ -1471,29 +1461,14 @@ test.describe('Landing page (logged out)', () => {
 		expect(await stepText.evaluate(painted)).toBe(1);
 	});
 
-	test('the landing hero sits on the page paper, with only the bar in espresso', async ({
-		page
-	}) => {
-		await page.goto('/');
-		const hero = page.locator('section.hero');
-		await hero.waitFor();
-		const [heroBg, pageBg, navBg] = await page.evaluate(() => [
-			getComputedStyle(document.querySelector('section.hero')!).backgroundColor,
-			getComputedStyle(document.body).backgroundColor,
-			getComputedStyle(document.querySelector('nav')!).backgroundColor
-		]);
-		expect([pageBg, 'rgba(0, 0, 0, 0)']).toContain(heroBg);
-		expect(navBg).not.toBe(pageBg);
-	});
-
 	test('the recipe page shares its gutters and width with browse at every size', async ({
 		page
 	}) => {
 		for (const width of [1440, 390]) {
 			await page.setViewportSize({ width, height: 900 });
-			await page.goto('/recipes');
+			await page.goto('/discover');
 			const browse = await page.getByRole('heading', { level: 1 }).boundingBox();
-			const grid = await page.locator('.recipe-grid').first().boundingBox();
+			const grid = await page.locator('.discover-grid').first().boundingBox();
 			await gotoClassicCookies(page);
 			const title = await page.getByRole('heading', { level: 1 }).boundingBox();
 			// The band's wrap: its content box, inside its gutters.
@@ -1511,33 +1486,10 @@ test.describe('Landing page (logged out)', () => {
 		}
 	});
 
-	test('the landing page shares one left edge with browse: hero, diff and grid', async ({
-		page
-	}) => {
-		// At 1200 the two old paddings agreed by chance; at 1280 the hero and the
-		// diff sat at 64 while the grid and browse sat at 40.
-		for (const width of [1280, 390]) {
-			await page.setViewportSize({ width, height: 900 });
-			await page.goto('/recipes');
-			const browse = await page.getByRole('heading', { level: 1 }).boundingBox();
-			await page.goto('/');
-			const hero = await page.getByRole('heading', { level: 1 }).boundingBox();
-			const diff = await page
-				.getByRole('heading', { name: 'One real change, before and after' })
-				.boundingBox();
-			// Below 700px the Recent grid is a strip that bleeds to the screen edge
-			// and scrolls sideways, so its first card, not its box, sits on the edge.
-			const grid = await page.locator('.recipe-grid .recipe-card').first().boundingBox();
-			expect(Math.abs(hero!.x - browse!.x)).toBeLessThan(1);
-			expect(Math.abs(diff!.x - browse!.x)).toBeLessThan(1);
-			expect(Math.abs(grid!.x - browse!.x)).toBeLessThan(1);
-		}
-	});
-
 	test('the landing page does not scroll sideways on mobile', async ({ page }) => {
 		await page.setViewportSize({ width: 390, height: 900 });
 		await page.goto('/');
-		await expect(page.getByRole('link', { name: /browse recipes/i })).toBeVisible();
+		await expect(page.getByRole('heading', { level: 1, name: 'Discover' })).toBeVisible();
 
 		const { scrollWidth, clientWidth } = await page.evaluate(() => ({
 			scrollWidth: document.documentElement.scrollWidth,
@@ -1545,81 +1497,6 @@ test.describe('Landing page (logged out)', () => {
 		}));
 
 		expect(scrollWidth).toBeLessThanOrEqual(clientWidth);
-	});
-
-	test('the hero headline is readable against the hero background', async ({ page }) => {
-		await page.goto('/');
-
-		// Relative luminance per WCAG, from a computed rgb() string — same
-		// formula as the tag-contrast test above.
-		const contrast = (fg: string, bg: string) => {
-			const lum = (c: string) => {
-				const [r, g, b] = c
-					.match(/\d+(\.\d+)?/g)!
-					.slice(0, 3)
-					.map(Number);
-				const f = (v: number) => {
-					const s = v / 255;
-					return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
-				};
-				return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
-			};
-			const [a, b] = [lum(fg), lum(bg)].sort((x, y) => y - x);
-			return (a + 0.05) / (b + 0.05);
-		};
-
-		const headline = page.locator('section h1').first();
-		await headline.waitFor();
-		const style = await headline.evaluate((el) => {
-			const cs = getComputedStyle(el);
-			let node: HTMLElement | null = el as HTMLElement;
-			let bg = 'rgba(0, 0, 0, 0)';
-			while (node && (bg === 'rgba(0, 0, 0, 0)' || bg === 'transparent')) {
-				bg = getComputedStyle(node).backgroundColor;
-				node = node.parentElement;
-			}
-			return { color: cs.color, bg };
-		});
-
-		// A direct element rule (`h1 { color: ... }` in app.css) can silently
-		// beat a text-color utility class applied to the same element — assert
-		// the property that actually matters (contrast), not just presence.
-		expect(style.color).not.toBe(style.bg);
-		expect(contrast(style.color, style.bg)).toBeGreaterThanOrEqual(4.5);
-	});
-
-	test('the diff panels sit side by side on a wide screen and stack on a narrow one', async ({
-		page
-	}) => {
-		// The Ingredients and Steps panels; a Details panel may precede them.
-		const panels = () =>
-			page
-				.locator('section')
-				.filter({ hasText: 'One real change, before and after' })
-				.first()
-				.locator('section')
-				.filter({ has: page.getByRole('heading', { name: /^(Ingredients|Method)$/ }) });
-
-		await page.setViewportSize({ width: 1440, height: 1800 });
-		await page.goto('/');
-		await panels().first().waitFor();
-		const wide = [await panels().nth(0).boundingBox(), await panels().nth(1).boundingBox()];
-		// Same top edge, different left edge — two columns, measured rather than
-		// inferred from a class name.
-		expect(wide[0]!.y).toBeCloseTo(wide[1]!.y, 0);
-		expect(wide[1]!.x).toBeGreaterThan(wide[0]!.x + wide[0]!.width - 1);
-
-		await page.setViewportSize({ width: 390, height: 2400 });
-		await page.goto('/');
-		await panels().first().waitFor();
-		const narrow = [await panels().nth(0).boundingBox(), await panels().nth(1).boundingBox()];
-		expect(narrow[1]!.y).toBeGreaterThan(narrow[0]!.y + narrow[0]!.height - 40);
-
-		const doc = await page.evaluate(() => ({
-			scrollWidth: document.documentElement.scrollWidth,
-			clientWidth: document.documentElement.clientWidth
-		}));
-		expect(doc.scrollWidth).toBeLessThanOrEqual(doc.clientWidth);
 	});
 
 	test('the compare page is the site column; the diff splits from 1024 and stacks below', async ({
@@ -1722,17 +1599,11 @@ test.describe('Landing page (logged out)', () => {
 		const read = await page.getByRole('link', { name: /^Read v/ }).boundingBox();
 		expect(read!.height).toBeGreaterThanOrEqual(44);
 	});
-
-	test('the sample diff shows an actual change, not just unchanged rows', async ({ page }) => {
-		await page.goto('/');
-		const changedRow = page.locator('.diff-added, .diff-removed, .diff-modified').first();
-		await expect(changedRow).toBeVisible();
-	});
 });
 
 test.describe('Usernames', () => {
 	test('read as links: clay on paper, on the recipe page and the card', async ({ page }) => {
-		await page.goto('/recipes');
+		await page.goto('/tags/dessert');
 		const card = page.locator('.recipe-card a.meta-author').first();
 		expect(await card.evaluate((el) => getComputedStyle(el).color)).toBe('rgb(178, 60, 0)');
 		await gotoClassicCookies(page);

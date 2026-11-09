@@ -1,62 +1,76 @@
 import { expect, test, type Page } from '@playwright/test';
 
-// End-of-day decisions on the browse surfaces (Spencer, 29 October 2026).
-// Assumes the seed: four public recipes.
+// The browse surfaces signed out. Assumes the seed: public recipes, one of
+// them with a second version.
 
 const height = async (page: Page, selector: string) =>
 	(await page.locator(selector).first().boundingBox())!.height;
 
-test.describe('Landing page', () => {
-	test('"All recipes →" closes the page: 24px at desktop, 44px on a phone', async ({ page }) => {
-		await page.setViewportSize({ width: 1280, height: 900 });
+test.describe('Discover, signed out', () => {
+	test('/ is Discover: the heading, a lead card and Recent changes', async ({ page }) => {
 		await page.goto('/');
-		const all = page.getByRole('link', { name: 'All recipes →' });
-		await expect(all).toHaveAttribute('href', '/recipes');
-		expect((await all.boundingBox())!.height).toBeGreaterThanOrEqual(24);
-		await page.setViewportSize({ width: 390, height: 900 });
-		expect((await all.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+		await expect(page.getByRole('heading', { level: 1, name: 'Discover' })).toBeVisible();
+		await expect(page.locator('a.lead')).toHaveCount(1);
+		await expect(page.getByRole('heading', { name: 'Recent changes' })).toBeVisible();
 	});
 
-	test('"Open the full comparison →" is the arrow link: sans, 24px at desktop, 44px on a phone', async ({
+	test('each Recent changes card opens the diff of that version against the one before', async ({
 		page
 	}) => {
-		await page.setViewportSize({ width: 1280, height: 900 });
-		await page.goto('/');
-		const open = page.getByRole('link', { name: 'Open the full comparison →' });
-		const all = page.getByRole('link', { name: 'All recipes →' });
-		const face = (el: Element) => getComputedStyle(el).fontFamily;
-		expect(await open.evaluate(face)).toBe(await all.evaluate(face));
-		expect((await open.boundingBox())!.height).toBeGreaterThanOrEqual(24);
-		await page.setViewportSize({ width: 390, height: 900 });
-		expect((await open.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+		await page.goto('/discover');
+		const links = page.locator('.recent-row a');
+		expect(await links.count()).toBeGreaterThan(0);
+		for (const href of await links.evaluateAll((els) => els.map((a) => a.getAttribute('href')!))) {
+			const match = href.match(/^\/recipes\/[^/]+\/diff\?from=(\d+)&to=(\d+)$/)!;
+			expect(Number(match[2]) - Number(match[1])).toBe(1);
+			const response = await page.request.get(href);
+			expect(response.status()).toBe(200);
+		}
 	});
 
-	test('the landing grid is below the fold, so no card photo loads eagerly', async ({ page }) => {
-		await page.goto('/');
-		const imgs = page.locator('.recipe-grid img');
-		expect(await imgs.count()).toBeGreaterThan(0);
-		const attrs = await imgs.evaluateAll((els) =>
-			els.map((el) => [el.getAttribute('loading'), el.getAttribute('fetchpriority')])
+	test('the lead takes the first photo fetch; the grid follows it', async ({ page }) => {
+		await page.goto('/discover');
+		await expect(page.locator('a.lead img[fetchpriority="high"]')).toHaveCount(
+			(await page.locator('a.lead img').count()) > 0 ? 1 : 0
 		);
-		expect(attrs.every(([loading, priority]) => loading === 'lazy' && priority === null)).toBe(
-			true
-		);
+		await expect(page.locator('.discover-grid img[fetchpriority="high"]')).toHaveCount(0);
 	});
 
-	test('the landing example sits under Recent and shows only the changed rows, with no Details', async ({
-		page
-	}) => {
+	test('/recipes, now the Cookbook, asks a visitor to log in', async ({ page }) => {
+		await page.goto('/recipes');
+		await expect(page).toHaveURL(/\/login\?redirectTo=%2Fcookbook$/);
+	});
+});
+
+test.describe('Tab bar on a phone', () => {
+	test('paper, 44px targets, Discover current on /, and no sideways scroll', async ({ page }) => {
+		await page.setViewportSize({ width: 390, height: 844 });
 		await page.goto('/');
-		const recent = page.getByRole('heading', { level: 2, name: 'Recent' });
-		const rows = page.locator('.diff-row');
-		expect(await rows.count()).toBeGreaterThan(0);
-		expect(await page.locator('.diff-row.diff-unchanged').count()).toBe(0);
-		await expect(page.getByRole('heading', { name: 'Details' })).toHaveCount(0);
-		const [recentY, firstRowY] = await Promise.all([
-			recent.evaluate((el) => el.getBoundingClientRect().top + scrollY),
-			rows.first().evaluate((el) => el.getBoundingClientRect().top + scrollY)
+		const bar = page.getByRole('navigation', { name: 'Main' });
+		await expect(bar).toBeVisible();
+		const [barBg, pageBg] = await Promise.all([
+			bar.evaluate((el) => getComputedStyle(el).backgroundColor),
+			page.evaluate(() => getComputedStyle(document.body).backgroundColor)
 		]);
-		expect(firstRowY).toBeGreaterThan(recentY);
+		expect(barBg).toBe(pageBg);
+		for (const box of await bar
+			.getByRole('link')
+			.evaluateAll((els) => els.map((el) => el.getBoundingClientRect().height))) {
+			expect(box).toBeGreaterThanOrEqual(44);
+		}
+		await expect(bar.getByRole('link', { name: 'Discover' })).toHaveAttribute(
+			'aria-current',
+			'page'
+		);
+		expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+			390
+		);
+	});
+
+	test('hidden from 768', async ({ page }) => {
+		await page.setViewportSize({ width: 1280, height: 900 });
+		await page.goto('/');
+		await expect(page.getByRole('navigation', { name: 'Main' })).toBeHidden();
 	});
 });
 
@@ -103,7 +117,7 @@ test.describe('Search filters on a phone', () => {
 test.describe('Recipe cards', () => {
 	test('the author link is a 24px target at desktop', async ({ page }) => {
 		await page.setViewportSize({ width: 1280, height: 900 });
-		await page.goto('/recipes');
+		await page.goto('/tags/dessert');
 		expect(await height(page, '.recipe-card a.meta-author')).toBeGreaterThanOrEqual(24);
 	});
 });

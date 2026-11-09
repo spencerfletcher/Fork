@@ -1,24 +1,20 @@
 import { expect, test } from '@playwright/test';
 
 // Signed in as the seed user. The file name puts it in the chromium-auth
-// project. Every test here needs an account with no favorites, which is the
-// seed: global-setup resets fork_e2e before every run.
+// project. Every test here needs an account with no saved recipes, which is
+// the seed: global-setup resets fork_e2e before every run.
 
-test.describe('Favorites, with none', () => {
-	test('the page is just the empty state and its link', async ({ page }) => {
-		// A search box over an empty list invites a query with nothing to find
-		// (decided 29 October 2026).
-		await page.goto('/favorites');
-		await expect(page.getByRole('heading', { level: 1, name: 'Favorites' })).toBeVisible();
-		await expect(page.getByRole('searchbox')).toHaveCount(0);
-		const explore = page.getByRole('link', { name: /explore recipes/i });
-		await expect(explore).toBeVisible();
+test.describe('Favorites, now the Cookbook’s Saved filter', () => {
+	test('/favorites lands on Saved, keeping a search and tags', async ({ page }) => {
+		await page.goto('/favorites?q=cookie&tags=dessert');
+		await expect(page).toHaveURL(/\/cookbook\?q=cookie&tags=dessert&filter=saved$/);
+		const saved = page.getByRole('group', { name: 'Show' }).getByRole('link', { name: /^Saved/ });
+		await expect(saved).toHaveAttribute('aria-current', 'page');
 	});
 
-	test('a query in the URL still reads "No favorites yet", with no filters', async ({ page }) => {
-		await page.goto('/favorites?q=cookie&tags=dessert');
-		await expect(page.getByText(/No favorites yet/)).toBeVisible();
-		await expect(page.getByText(/No favorites match/)).toHaveCount(0);
-		await expect(page.getByRole('searchbox')).toHaveCount(0);
+	test('with nothing saved, Saved keeps the filters and says 0 recipes match', async ({ page }) => {
+		await page.goto('/cookbook?filter=saved');
+		await expect(page.getByRole('searchbox')).toBeVisible();
+		await expect(page.getByRole('status')).toHaveText('0 recipes match');
 	});
 });
