@@ -144,6 +144,7 @@
 
 	/* Accent */
 	--color-accent: var(--color-accent);
+	--color-accent-hover: var(--color-accent-hover);
 	--color-marigold: var(--color-marigold);
 	--color-marigold-hover: var(--color-marigold-hover);
 	--color-tint: var(--color-tint);
@@ -221,6 +222,8 @@
 	/* Accent — clay is the only text accent: links, titles, version numbers.
 	   Marigold is the only fill, always with ink on it. Nothing else is coloured. */
 	--color-accent: #b23c00;
+	--color-accent-hover: #8f3000;
+	/* clay deep — clay text's hover: 7.33:1 on paper, 7.98:1 on lifted paper */
 	--color-marigold: #eca620;
 	--color-marigold-hover: #d08f06;
 	/* marigold deep — the primary's hover, clearly darker; ink on it 6.47:1 */
@@ -348,7 +351,7 @@
 	}
 
 	a:hover {
-		color: var(--color-text);
+		color: var(--color-accent-hover);
 	}
 
 	/* One focus ring everywhere: the browser decides when :focus-visible
@@ -477,7 +480,7 @@
 
 	/* A button that reads as a word: clay 600 in the line's face, no box.
 	   A 24px hit at desktop and a thumb's 44px on a phone or touch screen.
-	   Hover goes ink and underlined, so it is seen (pass 1's hover work). */
+	   Hover deepens to clay deep and underlines, so it is seen. */
 	.text-btn {
 		display: inline-flex;
 		align-items: center;
@@ -496,7 +499,7 @@
 	}
 
 	.text-btn:hover {
-		color: var(--color-text);
+		color: var(--color-accent-hover);
 		text-decoration: underline;
 		text-underline-offset: 3px;
 	}

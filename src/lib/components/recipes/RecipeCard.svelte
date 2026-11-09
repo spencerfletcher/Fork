@@ -344,7 +344,7 @@
 	}
 
 	.card-cook:hover .card-handle {
-		color: var(--color-text);
+		color: var(--color-accent-hover);
 	}
 
 	/* A 44px hit on a phone without moving the line. */
@@ -364,7 +364,7 @@
 	}
 
 	.card-handle:hover {
-		color: var(--color-text);
+		color: var(--color-accent-hover);
 	}
 
 	.meta-item--accent {
@@ -391,7 +391,7 @@
 	}
 
 	a.meta-author:hover {
-		color: var(--color-text);
+		color: var(--color-accent-hover);
 	}
 
 	/* Phone: two columns leave no room for the author; the recipe page has it.
