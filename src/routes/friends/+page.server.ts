@@ -25,11 +25,8 @@ import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 	if (!user) throw redirect(303, loginHref(url.pathname + url.search));
-	const [feed, requests, friendIds] = await Promise.all([
-		feedFor(user),
-		requestsFor(user.id),
-		friendIdsOf(user.id)
-	]);
+	const [friendIds, requests] = await Promise.all([friendIdsOf(user.id), requestsFor(user.id)]);
+	const feed = await feedFor(user, friendIds);
 	return { feed, requests, friendCount: friendIds.length, meta: { title: 'Friends' } };
 };
 

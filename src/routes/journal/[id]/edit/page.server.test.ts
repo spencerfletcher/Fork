@@ -5,19 +5,19 @@ import { KEEP_SOURCE } from '#lib/journal.js';
 import { actions, load } from './+page.server';
 import type { PageData } from './$types';
 
-const { selectMock, updateMock, deleteMock, ownEntryMock, choicesMock, resolveMock, removeMock } =
-	vi.hoisted(() => ({
-		selectMock: vi.fn(),
+const { updateMock, deleteMock, ownEntryMock, choicesMock, resolveMock, removeMock } = vi.hoisted(
+	() => ({
 		updateMock: vi.fn(),
 		deleteMock: vi.fn(),
 		ownEntryMock: vi.fn(),
 		choicesMock: vi.fn(),
 		resolveMock: vi.fn(),
 		removeMock: vi.fn().mockResolvedValue(undefined)
-	}));
+	})
+);
 
 vi.mock('#lib/server/db/index.js', () => ({
-	db: { select: selectMock, update: updateMock, delete: deleteMock }
+	db: { update: updateMock, delete: deleteMock }
 }));
 vi.mock('#lib/server/journal.js', async (importOriginal) => ({
 	...(await importOriginal<typeof import('#lib/server/journal.js')>()),
@@ -57,7 +57,7 @@ const event = (fields: Record<string, string> = {}, id = '5') =>
 
 beforeEach(() => {
 	vi.clearAllMocks();
-	selectMock.mockReturnValue(chain([makeStored()]));
+	ownEntryMock.mockResolvedValue({ ...makeStored(), source: { kind: 'deleted' } });
 	updateMock.mockReturnValue(chain());
 	deleteMock.mockReturnValue(chain());
 	choicesMock.mockResolvedValue([]);
@@ -103,7 +103,7 @@ describe('journal/[id]/edit load', () => {
 
 describe('journal/[id]/edit save', () => {
 	test("someone else's id is a 404 and nothing is written", async () => {
-		selectMock.mockReturnValue(chain([]));
+		ownEntryMock.mockResolvedValue(null);
 		const result = await invokeAction(
 			actions.save as never,
 			event({ dish: 'x', cookedOn: '2026-11-08' })
@@ -151,7 +151,7 @@ describe('journal/[id]/edit deleteEntry', () => {
 	});
 
 	test("refuses someone else's entry", async () => {
-		selectMock.mockReturnValue(chain([]));
+		ownEntryMock.mockResolvedValue(null);
 		const result = await invokeAction(actions.deleteEntry as never, event());
 		expect(result).toMatchObject({ status: 404 });
 		expect(deleteMock).not.toHaveBeenCalled();

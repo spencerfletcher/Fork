@@ -70,6 +70,9 @@ describe('friends load', () => {
 			friendCount: 2,
 			requests: [{ username: 'priyabakes' }]
 		});
+		// One friends lookup: the feed is handed the ids the count uses.
+		expect(m.friendIdsOf).toHaveBeenCalledTimes(1);
+		expect(m.feedFor).toHaveBeenCalledWith(ME, ['a', 'b']);
 	});
 });
 

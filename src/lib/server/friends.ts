@@ -294,12 +294,13 @@ export const FEED_LIMIT = 50;
 /**
  * The Friends feed: friends' Friends-level log entries and the versions of
  * their recipes the viewer may see, in one chronology, minus anyone muted.
+ * `friendIds` is the viewer's, from friendIdsOf, which the page counts too.
  */
-export async function feedFor(me: Viewer) {
-	const [friendIds, mutedRows] = await Promise.all([
-		friendIdsOf(me.id),
-		db.select({ id: mutes.mutedId }).from(mutes).where(eq(mutes.muterId, me.id))
-	]);
+export async function feedFor(me: Viewer, friendIds: string[]) {
+	const mutedRows = await db
+		.select({ id: mutes.mutedId })
+		.from(mutes)
+		.where(eq(mutes.muterId, me.id));
 	const muted = mutedRows.map((r) => r.id);
 	const shown = friendIds.filter((id) => !muted.includes(id));
 	if (shown.length === 0) return [];

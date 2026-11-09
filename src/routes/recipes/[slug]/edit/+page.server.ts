@@ -20,6 +20,8 @@ import {
 	canSetVisibility,
 	canViewRow,
 	LOST_PARENT_ACCESS,
+	NOT_AUTHORIZED,
+	ownRecipe,
 	WIDENS_PARENT
 } from '#lib/server/visibility.js';
 
@@ -29,16 +31,10 @@ const STALE_MESSAGE =
 export const load: PageServerLoad = async ({ params, url, locals: { user } }) => {
 	if (!user) throw redirect(303, loginHref(url.pathname + url.search));
 
-	const recipe = await db.query.recipes.findFirst({
-		where: eq(recipes.slug, params.slug),
-		with: {
-			recipesToTags: { with: { tag: true } },
-			versions: { orderBy: [desc(recipeVersions.versionNumber)], limit: 1 }
-		}
+	const recipe = await ownRecipe(params.slug, user.id, {
+		recipesToTags: { with: { tag: true } },
+		versions: { orderBy: [desc(recipeVersions.versionNumber)], limit: 1 }
 	});
-
-	if (!recipe) throw error(404, 'Recipe not found');
-	if (recipe.authorId !== user.id) throw error(403, 'Not authorized');
 	const latestVersion = recipe.versions[0];
 	if (!latestVersion) throw error(404, 'Recipe not found');
 
@@ -71,15 +67,10 @@ export const actions: Actions = {
 				'Your session ended. Log in in another tab, then save again.',
 				draftOf(formData)
 			);
-		const recipe = await db.query.recipes.findFirst({
-			where: eq(recipes.slug, params.slug),
-			with: {
-				recipesToTags: { with: { tag: true } },
-				parent: { columns: { visibility: true, authorId: true } }
-			}
+		const recipe = await ownRecipe(params.slug, user.id, {
+			recipesToTags: { with: { tag: true } },
+			parent: { columns: { visibility: true, authorId: true } }
 		});
-		if (!recipe) throw error(404, 'Recipe not found');
-		if (recipe.authorId !== user.id) throw error(403, 'Not authorized');
 
 		const submission = readSubmission(formData);
 		if (!submission.ok) return submission.failure;
@@ -182,7 +173,7 @@ export const actions: Actions = {
 
 		if (outcome === 'stale' || outcome === 'forbidden') {
 			if (image) await removeRecipeImage(supabase, image.path);
-			if (outcome === 'forbidden') throw error(403, 'Not authorized');
+			if (outcome === 'forbidden') throw error(403, NOT_AUTHORIZED);
 			return saveFailure(409, 'stale', STALE_MESSAGE, draft);
 		}
 		throw redirect(303, `/recipes/${params.slug}`);
@@ -197,10 +188,7 @@ export const actions: Actions = {
 				code: 'unauthenticated'
 			});
 
-		const recipe = await db.query.recipes.findFirst({ where: eq(recipes.slug, params.slug) });
-		if (!recipe) throw error(404, 'Recipe not found');
-		if (recipe.authorId !== user.id)
-			return fail(403, { error: 'Not authorized', code: 'forbidden' });
+		const recipe = await ownRecipe(params.slug, user.id);
 
 		// The save action's row lock: a save waits, then finds no row and removes
 		// its own upload, so every version's photo is in the read below.

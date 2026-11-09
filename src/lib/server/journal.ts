@@ -1,7 +1,6 @@
-import { and, asc, desc, eq, inArray, or, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, sql, type SQL } from 'drizzle-orm';
 import { db } from './db/index.js';
 import {
-	favorites,
 	logEntries,
 	recipes,
 	recipeVersions,
@@ -10,7 +9,7 @@ import {
 	type LogEntry,
 	type Recipe
 } from './db/schema.js';
-import { canView, canViewRow, friendIdsOf, visibleTo } from './visibility.js';
+import { canView, friendIdsOf, inLibraryOf, viewableRecipe } from './visibility.js';
 import { numberMessages, type Result } from '#lib/recipes/validation.js';
 import { text } from '#lib/helpers.js';
 import { MAX_LINK } from '#lib/journal.js';
@@ -135,11 +134,10 @@ export async function resolveRecipe(
 	slug: string,
 	versionNumber: number | null
 ): Promise<LinkedRecipe | null> {
-	const recipe = await db.query.recipes.findFirst({
-		where: eq(recipes.slug, slug),
-		with: { versions: { orderBy: [desc(recipeVersions.versionNumber)] } }
+	const recipe = await viewableRecipe(slug, viewer, {
+		versions: { orderBy: [desc(recipeVersions.versionNumber)] }
 	});
-	if (!recipe || !(await canViewRow(recipe, viewer))) return null;
+	if (!recipe) return null;
 	const version =
 		versionNumber === null
 			? recipe.versions[0]
@@ -220,15 +218,15 @@ export const sourceColumns = {
 	versionNumber: recipeVersions.versionNumber
 };
 
-/** Everything in someone's own Journal, newest cooked first, each with its source. */
-export async function journalOf(viewer: Viewer) {
+/** The viewer's own entries matching `where`, newest cooked first, each with its source. */
+async function ownEntries(viewer: Viewer, where?: SQL) {
 	const [rows, friendIds] = await Promise.all([
 		db
 			.select({ entry: logEntries, ...sourceColumns })
 			.from(logEntries)
 			.leftJoin(recipes, eq(recipes.id, logEntries.recipeId))
 			.leftJoin(recipeVersions, eq(recipeVersions.id, logEntries.versionId))
-			.where(eq(logEntries.userId, viewer.id))
+			.where(and(eq(logEntries.userId, viewer.id), where))
 			.orderBy(desc(logEntries.cookedOn), desc(logEntries.createdAt)),
 		friendIdsOf(viewer.id)
 	]);
@@ -242,28 +240,15 @@ export async function journalOf(viewer: Viewer) {
 	}));
 }
 
+/** Everything in someone's own Journal, newest cooked first, each with its source. */
+export function journalOf(viewer: Viewer) {
+	return ownEntries(viewer);
+}
+
 /** One of the viewer's own entries with its source, or null when it is not theirs. */
 export async function ownEntry(viewer: Viewer, id: number) {
-	const [rows, friendIds] = await Promise.all([
-		db
-			.select({ entry: logEntries, ...sourceColumns })
-			.from(logEntries)
-			.leftJoin(recipes, eq(recipes.id, logEntries.recipeId))
-			.leftJoin(recipeVersions, eq(recipeVersions.id, logEntries.versionId))
-			.where(and(eq(logEntries.id, id), eq(logEntries.userId, viewer.id)))
-			.limit(1),
-		friendIdsOf(viewer.id)
-	]);
-	const row = rows[0];
-	if (!row) return null;
-	return {
-		...row.entry,
-		source: sourceOf(
-			{ ...row, recipeId: row.entry.recipeId, sourceUrl: row.entry.sourceUrl },
-			viewer,
-			friendIds
-		)
-	};
+	const [entry] = await ownEntries(viewer, eq(logEntries.id, id));
+	return entry ?? null;
 }
 
 /** The viewer's most recent entry for a recipe, for the recipe page's personal line. */
@@ -295,10 +280,6 @@ export async function defaultAudience(userId: string): Promise<LogAudience> {
 
 /** The recipes the form offers: the viewer's own and their saved ones, by title, each with its latest version. */
 export async function recipeChoices(viewer: Viewer) {
-	const saved = db
-		.select({ id: favorites.recipeId })
-		.from(favorites)
-		.where(eq(favorites.userId, viewer.id));
 	return db
 		.select({
 			slug: recipes.slug,
@@ -310,6 +291,6 @@ export async function recipeChoices(viewer: Viewer) {
 				)
 		})
 		.from(recipes)
-		.where(and(or(eq(recipes.authorId, viewer.id), inArray(recipes.id, saved)), visibleTo(viewer)))
+		.where(inLibraryOf(viewer))
 		.orderBy(asc(recipes.title));
 }

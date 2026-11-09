@@ -3,7 +3,7 @@ import { chain } from '#lib/testing/drizzle.js';
 import { invokeAction as invoke, formEvent } from '#lib/testing/actions.js';
 import { actions, load } from './+page.server';
 import { makeContent, makeIngredient, makeStep } from '#lib/recipes/fixtures.js';
-import { LOST_PARENT_ACCESS, WIDENS_PARENT } from '#lib/server/visibility.js';
+import { LOST_PARENT_ACCESS, NOT_AUTHORIZED, WIDENS_PARENT } from '#lib/server/visibility.js';
 import { PgDialect } from 'drizzle-orm/pg-core';
 import type { SQL } from 'drizzle-orm';
 import { recipes } from '#lib/server/db/schema.js';
@@ -642,13 +642,10 @@ describe('deleteRecipe', () => {
 		expect(result).toMatchObject({ status: 303, location: '/cookbook' });
 	});
 
-	test('refuses another user with a 403 in the { error, code } shape, deleting nothing', async () => {
+	test('refuses another user with the 403 the load and save throw, deleting nothing', async () => {
 		setUp(withVersions(photo('a')));
 		const result = await del(OTHER);
-		expect(result).toMatchObject({
-			status: 403,
-			data: { error: 'Not authorized', code: 'forbidden' }
-		});
+		expect(result).toMatchObject({ status: 403, body: { message: NOT_AUTHORIZED } });
 		expect(transactionMock).not.toHaveBeenCalled();
 		expect(removeMock).not.toHaveBeenCalled();
 	});
@@ -690,7 +687,7 @@ describe('edit load', () => {
 		};
 		await expect(Promise.resolve().then(() => load(event as never))).rejects.toMatchObject({
 			status: 403,
-			body: { message: 'Not authorized' }
+			body: { message: NOT_AUTHORIZED }
 		});
 	});
 

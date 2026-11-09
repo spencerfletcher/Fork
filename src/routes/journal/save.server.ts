@@ -34,7 +34,7 @@ export async function prepareEntry(
 
 	let source: Stored = { recipeId: null, versionId: null };
 	if (fields.recipe === KEEP_SOURCE && stored) {
-		source = stored;
+		source = { recipeId: stored.recipeId, versionId: stored.versionId };
 	} else if (fields.recipe) {
 		const link = await resolveRecipe(user, fields.recipe, fields.version);
 		if (!link)

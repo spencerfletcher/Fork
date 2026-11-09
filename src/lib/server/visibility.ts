@@ -1,9 +1,23 @@
-import { and, eq, or, sql, type SQL } from 'drizzle-orm';
+import { error } from '@sveltejs/kit';
+import {
+	and,
+	eq,
+	inArray,
+	or,
+	sql,
+	type BuildQueryResult,
+	type DBQueryConfig,
+	type ExtractTablesWithRelations,
+	type SQL
+} from 'drizzle-orm';
+import { QueryBuilder } from 'drizzle-orm/pg-core';
 import { db } from './db/index.js';
-import { friendships, recipes, type FriendshipStatus } from './db/schema.js';
+import * as schema from './db/schema.js';
+import { favorites, friendships, recipes, type FriendshipStatus } from './db/schema.js';
 import { VISIBILITIES, type Visibility } from '#lib/recipes/validation.js';
 
-type Viewer = { id: string } | null | undefined;
+/** Whoever is reading: a signed-in user, or nobody. */
+export type Viewer = { id: string } | null | undefined;
 type Row = { visibility: Visibility; authorId: string | null };
 
 const ACCEPTED: FriendshipStatus = 'accepted';
@@ -20,11 +34,60 @@ export function canView(row: Row, user: Viewer, friendIds: string[] = []): boole
 	return row.visibility === 'friends' && friendIds.includes(row.authorId);
 }
 
+/** The viewer's friend ids, fetched on the first call and never again, so one request asks once. */
+export function friendIdsOnce(user: Viewer): () => Promise<string[]> {
+	let ids: Promise<string[]> | undefined;
+	return () => (ids ??= user ? friendIdsOf(user.id) : Promise.resolve([]));
+}
+
 /** canView for one loaded row, looking the viewer's friends up only when the answer depends on them. */
-export async function canViewRow(row: Row, user: Viewer): Promise<boolean> {
+export async function canViewRow(
+	row: Row,
+	user: Viewer,
+	friends: () => Promise<string[]> = friendIdsOnce(user)
+): Promise<boolean> {
 	const needsFriends =
 		row.visibility === 'friends' && user && row.authorId !== null && row.authorId !== user.id;
-	return canView(row, user, needsFriends ? await friendIdsOf(user.id) : []);
+	return canView(row, user, needsFriends ? await friends() : []);
+}
+
+type Schema = ExtractTablesWithRelations<typeof schema>;
+type RecipeWith = NonNullable<DBQueryConfig<'one', true, Schema, Schema['recipes']>['with']>;
+type RecipeRow<W extends RecipeWith> = BuildQueryResult<Schema, Schema['recipes'], { with: W }>;
+
+async function recipeBySlug<W extends RecipeWith>(slug: string, withRelations?: W) {
+	const row = await db.query.recipes.findFirst({
+		where: eq(recipes.slug, slug),
+		with: withRelations
+	});
+	// findFirst cannot carry a generic `with` through to its result type.
+	return row as RecipeRow<W> | undefined;
+}
+
+/** The recipe at `slug` with `withRelations`, or null when there is none or the viewer may not see it. */
+export async function viewableRecipe<W extends RecipeWith>(
+	slug: string,
+	user: Viewer,
+	withRelations?: W,
+	friends: () => Promise<string[]> = friendIdsOnce(user)
+): Promise<RecipeRow<W> | null> {
+	const recipe = await recipeBySlug(slug, withRelations);
+	return recipe && (await canViewRow(recipe, user, friends)) ? recipe : null;
+}
+
+/** What anyone but a recipe's author is told when they try to change it. */
+export const NOT_AUTHORIZED = 'Not authorized';
+
+/** The recipe at `slug` when `userId` wrote it: a 404 when there is none, a 403 for anyone else. */
+export async function ownRecipe<W extends RecipeWith>(
+	slug: string,
+	userId: string,
+	withRelations?: W
+): Promise<RecipeRow<W>> {
+	const recipe = await recipeBySlug(slug, withRelations);
+	if (!recipe) throw error(404, 'Recipe not found');
+	if (recipe.authorId !== userId) throw error(403, NOT_AUTHORIZED);
+	return recipe;
 }
 
 /** The ids of everyone with an accepted friendship with `userId`, whichever of them asked. */
@@ -53,6 +116,23 @@ export function visibleTo(user: Viewer): SQL {
 		eq(recipes.visibility, 'public'),
 		eq(recipes.authorId, user.id),
 		and(eq(recipes.visibility, 'friends'), authorIsFriend)
+	) as SQL;
+}
+
+/**
+ * A viewer's library as a query condition on `recipes`: their own recipes and
+ * the ones they saved that they may still see (an author can narrow a recipe
+ * or unfriend them after the save). The saves subquery is a builder, not
+ * db.select, so it stays SQL inside any query.
+ */
+export function inLibraryOf(user: { id: string }): SQL {
+	const savedIds = new QueryBuilder()
+		.select({ id: favorites.recipeId })
+		.from(favorites)
+		.where(eq(favorites.userId, user.id));
+	return and(
+		visibleTo(user),
+		or(eq(recipes.authorId, user.id), inArray(recipes.id, savedIds))
 	) as SQL;
 }
 

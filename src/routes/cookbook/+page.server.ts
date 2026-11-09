@@ -1,11 +1,10 @@
 import { redirect } from '@sveltejs/kit';
-import { and, eq, inArray, or } from 'drizzle-orm';
-import { QueryBuilder } from 'drizzle-orm/pg-core';
+import { and, inArray } from 'drizzle-orm';
 import { db } from '#lib/server/db/index.js';
-import { favorites, recipes, recipesToTags } from '#lib/server/db/schema.js';
+import { recipes, recipesToTags } from '#lib/server/db/schema.js';
 import { attachRecipeCounts, CARD_WITH } from '#lib/server/recipeCounts.js';
 import { byTagMatches, tagMatchCounts, visibleTags } from '#lib/server/tagFilter.js';
-import { visibleTo } from '#lib/server/visibility.js';
+import { inLibraryOf } from '#lib/server/visibility.js';
 import { parseFilters, textSearch } from '#lib/server/recipeSearch.js';
 import { loginHref } from '#lib/auth/loginHref.js';
 import { COOKBOOK_FILTERS, type CookbookFilter } from './filters.js';
@@ -22,17 +21,10 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 		COOKBOOK_FILTERS.find((f) => f === url.searchParams.get('filter')) ?? 'all';
 	const { searchQuery, tagSlugs } = parseFilters(url);
 
-	// The library: your own recipes and the ones you saved that you may still
-	// see (an author can narrow a recipe or unfriend you after you saved it).
-	// The favourites subquery is a builder, not db.select, so it stays SQL.
-	const savedIds = new QueryBuilder()
-		.select({ id: favorites.recipeId })
-		.from(favorites)
-		.where(eq(favorites.userId, user.id));
 	const library = await db
 		.select({ id: recipes.id, authorId: recipes.authorId })
 		.from(recipes)
-		.where(and(visibleTo(user), or(eq(recipes.authorId, user.id), inArray(recipes.id, savedIds))));
+		.where(inLibraryOf(user));
 
 	const isMine = (r: { authorId: string | null }) => r.authorId === user.id;
 	const mine = library.filter(isMine).length;

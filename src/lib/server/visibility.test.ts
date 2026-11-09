@@ -8,10 +8,26 @@ import * as schema from './db/schema.js';
 import { recipes } from './db/schema.js';
 import { VISIBILITIES, type Visibility } from '#lib/recipes/validation.js';
 
-const { selectMock } = vi.hoisted(() => ({ selectMock: vi.fn() }));
-vi.mock('#lib/server/db/index.js', () => ({ db: { select: selectMock } }));
+const { selectMock, findRecipeMock } = vi.hoisted(() => ({
+	selectMock: vi.fn(),
+	findRecipeMock: vi.fn()
+}));
+vi.mock('#lib/server/db/index.js', () => ({
+	db: { select: selectMock, query: { recipes: { findFirst: findRecipeMock } } }
+}));
 
-import { canView, canViewRow, canSetVisibility, friendIdsOf, visibleTo } from './visibility.js';
+import {
+	canView,
+	canViewRow,
+	canSetVisibility,
+	friendIdsOf,
+	friendIdsOnce,
+	inLibraryOf,
+	NOT_AUTHORIZED,
+	ownRecipe,
+	viewableRecipe,
+	visibleTo
+} from './visibility.js';
 
 const OWNER = { id: 'owner' };
 const FRIEND = { id: 'friend' };
@@ -85,6 +101,82 @@ describe('canViewRow', () => {
 	test('a friends recipe stays hidden from a viewer who is not a friend', async () => {
 		selectMock.mockReturnValue(chain([{ requesterId: OTHER.id, addresseeId: 'someone' }]));
 		expect(await canViewRow(row('friends'), OTHER)).toBe(false);
+	});
+});
+
+describe('friendIdsOnce', () => {
+	test('asks the database once however often it is called', async () => {
+		selectMock.mockReturnValue(chain([{ requesterId: FRIEND.id, addresseeId: OWNER.id }]));
+		const friends = friendIdsOnce(FRIEND);
+		expect(await friends()).toEqual([OWNER.id]);
+		expect(await friends()).toEqual([OWNER.id]);
+		expect(selectMock).toHaveBeenCalledTimes(1);
+	});
+
+	test('signed out has no friends and asks nothing', async () => {
+		expect(await friendIdsOnce(null)()).toEqual([]);
+		expect(selectMock).not.toHaveBeenCalled();
+	});
+});
+
+describe('viewableRecipe', () => {
+	test('the recipe at the slug, with the relations asked for, when the viewer may see it', async () => {
+		const recipe = { ...row('public'), slug: 'soup' };
+		findRecipeMock.mockResolvedValue(recipe);
+		const withRelations = { author: true } as const;
+		expect(await viewableRecipe('soup', OTHER, withRelations)).toBe(recipe);
+		expect(findRecipeMock).toHaveBeenCalledWith(
+			expect.objectContaining({ where: eq(recipes.slug, 'soup'), with: withRelations })
+		);
+	});
+
+	test('null for no recipe, and for one the viewer may not see', async () => {
+		findRecipeMock.mockResolvedValue(undefined);
+		expect(await viewableRecipe('gone', OWNER)).toBeNull();
+		findRecipeMock.mockResolvedValue(row('private'));
+		expect(await viewableRecipe('soup', OTHER)).toBeNull();
+	});
+
+	test('shares one friends lookup with a later check in the same request', async () => {
+		selectMock.mockReturnValue(chain([{ requesterId: FRIEND.id, addresseeId: OWNER.id }]));
+		findRecipeMock.mockResolvedValue(row('friends'));
+		const friends = friendIdsOnce(FRIEND);
+		expect(await viewableRecipe('soup', FRIEND, undefined, friends)).not.toBeNull();
+		expect(await canViewRow(row('friends'), FRIEND, friends)).toBe(true);
+		expect(selectMock).toHaveBeenCalledTimes(1);
+	});
+});
+
+describe('ownRecipe', () => {
+	test("the author's own recipe", async () => {
+		const recipe = row('private');
+		findRecipeMock.mockResolvedValue(recipe);
+		expect(await ownRecipe('soup', OWNER.id)).toBe(recipe);
+	});
+
+	test('a 404 for no recipe', async () => {
+		findRecipeMock.mockResolvedValue(undefined);
+		await expect(ownRecipe('gone', OWNER.id)).rejects.toMatchObject({ status: 404 });
+	});
+
+	test('a 403 that says Not authorized for anyone else, even on a public recipe', async () => {
+		findRecipeMock.mockResolvedValue(row('public'));
+		await expect(ownRecipe('soup', OTHER.id)).rejects.toMatchObject({
+			status: 403,
+			body: { message: NOT_AUTHORIZED }
+		});
+	});
+});
+
+describe('inLibraryOf', () => {
+	test('visible, and either written or saved by the viewer', () => {
+		const dialect = new PgDialect();
+		const visible = dialect.sqlToQuery(visibleTo(OTHER));
+		const { sql, params } = dialect.sqlToQuery(inLibraryOf(OTHER));
+		expect(sql).toBe(
+			`(${visible.sql} and ("recipes"."author_id" = $7 or "recipes"."id" in (select "recipe_id" from "favorites" where "favorites"."user_id" = $8)))`
+		);
+		expect(params).toEqual([...visible.params, OTHER.id, OTHER.id]);
 	});
 });
 
