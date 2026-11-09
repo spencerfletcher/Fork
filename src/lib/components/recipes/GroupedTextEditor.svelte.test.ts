@@ -108,6 +108,24 @@ describe('GroupedTextEditor', () => {
 		expect(execCommand).toHaveBeenCalledWith('insertText', false, '1 egg\n# Drizzle\nhoney');
 	});
 
+	// Chrome empties the box on select-all and delete; text typed then would be
+	// a bare text node, a line no class can reach.
+	test('an emptied box gets a line back before typing or a paste lands in it', async () => {
+		render(GroupedTextEditor, props('flour'));
+		for (const land of [
+			() =>
+				box().dispatchEvent(
+					new InputEvent('beforeinput', { inputType: 'insertText', data: '#', bubbles: true })
+				),
+			() => fireEvent.paste(box(), { clipboardData: { getData: () => '# Dough' } })
+		]) {
+			box().textContent = '';
+			await land();
+			expect(lines().map((l) => l.nodeName)).toEqual(['DIV']);
+			expect(lines()[0].contains(getSelection()!.anchorNode)).toBe(true);
+		}
+	});
+
 	test('rich-text shortcuts do nothing', async () => {
 		render(GroupedTextEditor, props('flour'));
 		const bold = new InputEvent('beforeinput', {
@@ -185,6 +203,8 @@ describe('GroupedTextEditor', () => {
 			expect(insertedAt).toEqual(['insertText', false, `\n# ${SECTION_NAME}`]);
 			expect(getSelection()!.toString()).toBe(SECTION_NAME);
 			expect(box()).toHaveFocus();
+			// Closed again, so Tab still runs label, Insert, box.
+			expect(toggle()).toHaveAttribute('aria-expanded', 'false');
 		});
 
 		test('at the start of a line, the heading goes above it', async () => {

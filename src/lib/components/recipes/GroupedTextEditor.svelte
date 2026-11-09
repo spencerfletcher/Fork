@@ -200,8 +200,24 @@
 		return node instanceof HTMLElement && BLOCK.test(node.nodeName) ? node : null;
 	}
 
+	// Select-all and delete leaves Chrome's box with no line at all, and text
+	// typed then is a bare text node no class can reach. Before anything lands
+	// in an empty box it gets one empty line back, with the caret in it. Only
+	// an empty box is written to, so no run of typing is cut short.
+	function ensureLine() {
+		if (!box || [...box.children].some((c) => BLOCK.test(c.nodeName))) return;
+		fill(box, '');
+		const r = document.createRange();
+		r.setStart(box.firstChild!, 0);
+		getSelection()?.removeAllRanges();
+		getSelection()?.addRange(r);
+	}
+
 	// Plain text through the editing command, so it lands on the undo stack.
-	const insertText = (text: string) => document.execCommand('insertText', false, text);
+	const insertText = (text: string) => {
+		ensureLine();
+		document.execCommand('insertText', false, text);
+	};
 
 	// "# Section name" on its own line with the name selected, so typing
 	// replaces it. One insertText call: one step on the undo stack.
@@ -209,11 +225,14 @@
 		if (!box) return;
 		const sel = getSelection();
 		if (!sel) return;
+		// Closed again, so Tab still runs label, Insert, box.
+		open = false;
 		box.focus();
-		// The caret where the box was left, else the box's end.
+		ensureLine();
+		// The caret where the box was left, else the end of its last line.
 		const saved = lastRange && box.contains(lastRange.startContainer);
 		const r = saved ? lastRange!.cloneRange() : document.createRange();
-		if (!saved) r.selectNodeContents(box);
+		if (!saved) r.selectNodeContents(box.lastElementChild ?? box);
 		r.collapse(!!saved);
 		const line = lineOf(r.startContainer);
 		let caret = 0;
@@ -335,6 +354,7 @@
 			onbeforeinput={(e) => {
 				// No bold, italic or other rich formatting from shortcuts.
 				if (e.inputType.startsWith('format')) e.preventDefault();
+				else if (e.inputType.startsWith('insert')) ensureLine();
 			}}>
 		</div>
 	{/if}
