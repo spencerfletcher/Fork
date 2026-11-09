@@ -4,7 +4,7 @@
 	import { plural } from '#lib/helpers.js';
 	import { dayLabel } from '#lib/journal.js';
 	import Details from './Details.svelte';
-	import { forkIcon } from './Icons.svelte';
+	import { forkIcon, versionsIcon } from './Icons.svelte';
 	import type { Recipe } from '#lib/server/db/schema.js';
 	import type { RecipeContent, TagChip } from '#lib/recipes/types.js';
 
@@ -115,19 +115,7 @@
 			{/if}
 		</span>
 		<span class="stat">
-			<svg
-				class="size-4"
-				viewBox="0 0 16 16"
-				aria-hidden="true"
-				fill="none"
-				stroke="currentColor"
-				stroke-width="1.5"
-				stroke-linecap="round">
-				<path d="M8 1.5v13" />
-				<circle cx="8" cy="3" r="1.6" fill="var(--color-band)" />
-				<circle cx="8" cy="8" r="1.6" fill="var(--color-band)" />
-				<circle cx="8" cy="13" r="1.6" fill="currentColor" />
-			</svg>
+			{@render versionsIcon()}
 			{#if versionCount > 1 && !cooking}
 				<a href="#versions">{counted(versionCount, 'version')}</a>
 			{:else}

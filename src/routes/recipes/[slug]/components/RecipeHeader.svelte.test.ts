@@ -240,6 +240,25 @@ describe('RecipeHeader stats row', () => {
 		}
 	});
 
+	// Line art in one 1.5 stroke on a 16px box (decided 9 November 2026): the
+	// fork a handle and four single-stroke prongs, versions a stack of pages.
+	test('the icons are line art: one 1.5 stroke, no dots or fills, and distinct', () => {
+		const { container } = renderHeader({ forkCount: 2, versionCount: 3 });
+		const [fork, versions] = container.querySelectorAll('.stats svg');
+		for (const icon of [fork, versions]) {
+			expect(icon).toHaveAttribute('viewBox', '0 0 16 16');
+			expect(icon).toHaveAttribute('stroke-width', '1.5');
+			expect(icon).toHaveAttribute('fill', 'none');
+			expect(icon.querySelectorAll('circle, [fill]:not(svg)')).toHaveLength(0);
+		}
+		// Every stroke is a straight line: no arcs or curves.
+		const d = (icon: Element) => [...icon.querySelectorAll('path')].map((p) => p.getAttribute('d'));
+		for (const path of [...d(fork), ...d(versions)]) expect(path).toMatch(/^[MmHhVv\d.\s-]+$/);
+		// The fork: four prongs, a crossbar and a handle, each its own stroke.
+		expect(d(fork).join(' ').match(/M/g)).toHaveLength(6);
+		expect(d(versions)).not.toEqual(d(fork));
+	});
+
 	test('the row takes the byline size, so the header keeps one metadata size', () => {
 		// jsdom applies no component CSS, so the rules are read from the source.
 		const rule = (name: string) =>
