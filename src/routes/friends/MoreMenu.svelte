@@ -58,7 +58,9 @@
 
 <svelte:window
 	onclick={(e) => {
-		if (open && root && !root.contains(e.target as Node)) open = false;
+		// composedPath, not contains: Report and Block swap themselves out on
+		// press, so by now the target can be detached from root.
+		if (open && root && !e.composedPath().includes(root)) open = false;
 	}} />
 
 <!-- svelte-ignore a11y_no_static_element_interactions (Escape bubbles up from the controls inside) -->
