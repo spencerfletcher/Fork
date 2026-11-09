@@ -1,4 +1,4 @@
-import { error, fail, redirect } from '@sveltejs/kit';
+import { error, redirect } from '@sveltejs/kit';
 import { db } from '#lib/server/db/index.js';
 import { recipes, recipeVersions } from '#lib/server/db/schema.js';
 import { draftOf } from '#lib/recipes/validation.js';
@@ -13,9 +13,10 @@ import {
 import { sameTags } from '#lib/recipes/tags.js';
 import type { RecipeContent } from '#lib/recipes/types.js';
 import { imagePathOf, removeRecipeImage } from '#lib/server/images.js';
-import { readSubmission, uploadPhoto, saveFailure } from '#lib/server/submission.js';
+import { readSubmission, uploadPhoto } from '#lib/server/submission.js';
+import { failure, requireUser, SESSION_ENDED } from '#lib/server/actions.js';
+import { wholeNumber } from '#lib/helpers.js';
 import { syncTags, listTags } from '#lib/server/tags.js';
-import { loginHref } from '#lib/auth/loginHref.js';
 import {
 	canSetVisibility,
 	canViewRow,
@@ -29,7 +30,7 @@ const STALE_MESSAGE =
 	'This recipe was changed in another tab. Reload to see the latest version, then reapply your edits.';
 
 export const load: PageServerLoad = async ({ params, url, locals: { user } }) => {
-	if (!user) throw redirect(303, loginHref(url.pathname + url.search));
+	requireUser(url, user);
 
 	const recipe = await ownRecipe(params.slug, user.id, {
 		recipesToTags: { with: { tag: true } },
@@ -61,12 +62,9 @@ export const actions: Actions = {
 		const formData = await request.formData();
 		// A lapsed session hands the draft back too, so logging in again loses nothing.
 		if (!user)
-			return saveFailure(
-				401,
-				'unauthenticated',
-				'Your session ended. Log in in another tab, then save again.',
-				draftOf(formData)
-			);
+			return failure(401, 'unauthenticated', SESSION_ENDED('save again'), {
+				draft: draftOf(formData)
+			});
 		const recipe = await ownRecipe(params.slug, user.id, {
 			recipesToTags: { with: { tag: true } },
 			parent: { columns: { visibility: true, authorId: true } }
@@ -87,18 +85,18 @@ export const actions: Actions = {
 			const seen = lostAccess ? 'private' : parent.visibility;
 			if (!canSetVisibility(seen, recipe.visibility, visibility)) {
 				const message = lostAccess ? LOST_PARENT_ACCESS : WIDENS_PARENT[parent.visibility];
-				return saveFailure(400, 'invalid', message, draft);
+				return failure(400, 'invalid', message, { draft });
 			}
 		}
 
-		if (!/^\d+$/.test(draft.editRevision)) {
-			return saveFailure(400, 'invalid', 'Invalid form state, reload the page', draft);
+		const editRevision = wholeNumber(draft.editRevision);
+		if (editRevision === null) {
+			return failure(400, 'invalid', 'Invalid form state, reload the page', { draft });
 		}
-		const editRevision = Number(draft.editRevision);
 		// A tab that is already stale need not upload its photo first; the check
 		// that counts is the one under the row lock below.
 		if (recipe.editRevision !== editRevision)
-			return saveFailure(409, 'stale', STALE_MESSAGE, draft);
+			return failure(409, 'stale', STALE_MESSAGE, { draft });
 
 		const upload = await uploadPhoto(formData, supabase, user.id, draft);
 		if (!upload.ok) return upload.failure;
@@ -168,13 +166,13 @@ export const actions: Actions = {
 		} catch (e) {
 			console.error('Could not save recipe', e);
 			if (image) await removeRecipeImage(supabase, image.path);
-			return saveFailure(500, 'save_failed', 'Could not save the recipe. Try again.', draft);
+			return failure(500, 'save_failed', 'Could not save the recipe. Try again.', { draft });
 		}
 
 		if (outcome === 'stale' || outcome === 'forbidden') {
 			if (image) await removeRecipeImage(supabase, image.path);
 			if (outcome === 'forbidden') throw error(403, NOT_AUTHORIZED);
-			return saveFailure(409, 'stale', STALE_MESSAGE, draft);
+			return failure(409, 'stale', STALE_MESSAGE, { draft });
 		}
 		throw redirect(303, `/recipes/${params.slug}`);
 	},
@@ -182,11 +180,7 @@ export const actions: Actions = {
 	// Permanent: the row, every version and its tag links (by FK cascade), then
 	// the photos. Forks keep their parentId and say the original was deleted.
 	deleteRecipe: async ({ params, locals: { user, supabase } }) => {
-		if (!user)
-			return fail(401, {
-				error: 'Your session ended. Log in in another tab, then delete again.',
-				code: 'unauthenticated'
-			});
+		if (!user) return failure(401, 'unauthenticated', SESSION_ENDED('delete again'));
 
 		const recipe = await ownRecipe(params.slug, user.id);
 

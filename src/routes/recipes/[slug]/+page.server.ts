@@ -2,7 +2,7 @@ import { error, redirect } from '@sveltejs/kit';
 import { db } from '#lib/server/db/index.js';
 import { recipes, recipeVersions, recipesToTags, favorites } from '#lib/server/db/schema.js';
 import { eq, desc, and } from 'drizzle-orm';
-import { slugify, randomSuffix, plural } from '#lib/helpers.js';
+import { slugify, randomSuffix, plural, wholeNumber } from '#lib/helpers.js';
 import { ensureProfile } from '#lib/server/profiles.js';
 import type { RecipeContent } from '#lib/recipes/types.js';
 import { recipeCopies } from '#lib/recipes/content.js';
@@ -17,7 +17,6 @@ import type { PageServerLoad, Actions } from './$types';
 export const load: PageServerLoad = async ({ params, url, locals: { user } }) => {
 	const recipeSlug = params.slug;
 	const versionParam = url.searchParams.get('version');
-	const requestedVersion = versionParam ? parseInt(versionParam, 10) : null;
 
 	// One friends lookup serves both access checks below.
 	const friends = friendIdsOnce(user);
@@ -51,8 +50,8 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 	// version in the same transaction as the recipe, so none is a broken row.
 	const latestVersion = recipe.versions[0];
 	if (!latestVersion) throw error(404, 'Recipe not found');
-	// Digits only: parseInt alone reads ?version=2abc as 2.
-	if (versionParam && !/^\d+$/.test(versionParam)) throw error(404, VERSION_NOT_FOUND);
+	const requestedVersion = versionParam ? wholeNumber(versionParam) : null;
+	if (versionParam && requestedVersion === null) throw error(404, VERSION_NOT_FOUND);
 	const currentVersion =
 		requestedVersion === null
 			? latestVersion

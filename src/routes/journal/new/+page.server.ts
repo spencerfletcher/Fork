@@ -4,15 +4,16 @@ import { logEntries } from '#lib/server/db/schema.js';
 import { defaultAudience, recipeChoices, resolveRecipe } from '#lib/server/journal.js';
 import { removeRecipeImage } from '#lib/server/images.js';
 import { ensureProfile } from '#lib/server/profiles.js';
-import { loginHref } from '#lib/auth/loginHref.js';
+import { requireUser, SESSION_ENDED } from '#lib/server/actions.js';
+import { wholeNumber } from '#lib/helpers.js';
 import { entryFailure, type EntryValues, type RecipeChoice } from '../entryForm.js';
 import { prepareEntry } from '../save.server.js';
 import type { Actions, PageServerLoad } from './$types';
 
-const digits = (value: string | null) => (value && /^\d+$/.test(value) ? value : '');
+const digits = (value: string | null) => (value && wholeNumber(value) !== null ? value : '');
 
 export const load: PageServerLoad = async ({ url, locals: { user } }) => {
-	if (!user) throw redirect(303, loginHref(url.pathname + url.search));
+	requireUser(url, user);
 
 	// Cook's "Add to Journal" sends ?recipe=<slug>&version=<n>&serves=<n>.
 	const slug = url.searchParams.get('recipe');
@@ -56,13 +57,7 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 export const actions: Actions = {
 	default: async ({ request, locals: { user, supabase } }) => {
 		const formData = await request.formData();
-		if (!user)
-			return entryFailure(
-				401,
-				'unauthenticated',
-				'Your session ended. Log in in another tab, then try again.',
-				formData
-			);
+		if (!user) return entryFailure(401, 'unauthenticated', SESSION_ENDED('try again'), formData);
 
 		// Before the upload, so a profile failure cannot orphan a stored file.
 		try {

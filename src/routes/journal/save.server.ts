@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { photoError } from '#lib/recipes/validation.js';
-import { imageFileFrom, uploadRecipeImage, type UploadedImage } from '#lib/server/images.js';
+import type { UploadedImage } from '#lib/server/images.js';
+import { storePhoto } from '#lib/server/submission.js';
 import {
 	ENTRY_MESSAGES,
 	parseEntryForm,
@@ -45,19 +45,8 @@ export async function prepareEntry(
 		source = { recipeId: link.recipeId, versionId: link.versionId };
 	}
 
-	const file = imageFileFrom(formData);
-	let image: UploadedImage | null = null;
-	if (file) {
-		const refused = photoError(file);
-		if (refused) return { ok: false, failure: entryFailure(400, 'invalid', refused, formData) };
-		try {
-			image = await uploadRecipeImage(supabase, user.id, file);
-		} catch {
-			return {
-				ok: false,
-				failure: entryFailure(400, 'upload_failed', 'Photo upload failed. Try again.', formData)
-			};
-		}
-	}
-	return { ok: true, fields, source, image };
+	const photo = await storePhoto(formData, supabase, user.id);
+	if (!photo.ok)
+		return { ok: false, failure: entryFailure(400, photo.code, photo.error, formData) };
+	return { ok: true, fields, source, image: photo.image };
 }

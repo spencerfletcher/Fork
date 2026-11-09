@@ -1,4 +1,3 @@
-import { redirect } from '@sveltejs/kit';
 import { and, inArray } from 'drizzle-orm';
 import { db } from '#lib/server/db/index.js';
 import { recipes, recipesToTags } from '#lib/server/db/schema.js';
@@ -6,19 +5,17 @@ import { cardList } from '#lib/server/recipeCounts.js';
 import { tagSelection, visibleTags } from '#lib/server/tagFilter.js';
 import { inLibraryOf } from '#lib/server/visibility.js';
 import { parseFilters, textSearch } from '#lib/server/recipeSearch.js';
-import { loginHref } from '#lib/auth/loginHref.js';
+import { requireUser } from '#lib/server/actions.js';
+import { oneOf } from '#lib/helpers.js';
 import { COOKBOOK_FILTERS, type CookbookFilter } from './filters.js';
 import type { PageServerLoad } from './$types';
 
 const META = { title: 'Cookbook' };
 
 export const load: PageServerLoad = async ({ url, locals: { user } }) => {
-	if (!user) {
-		throw redirect(303, loginHref(url.pathname + url.search));
-	}
+	requireUser(url, user);
 
-	const filter: CookbookFilter =
-		COOKBOOK_FILTERS.find((f) => f === url.searchParams.get('filter')) ?? 'all';
+	const filter: CookbookFilter = oneOf(COOKBOOK_FILTERS, url.searchParams.get('filter')) ?? 'all';
 	const { searchQuery, tagSlugs } = parseFilters(url);
 
 	const library = await db

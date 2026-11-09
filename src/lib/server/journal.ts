@@ -11,7 +11,7 @@ import {
 } from './db/schema.js';
 import { canView, friendIdsOf, inLibraryOf, viewableRecipe } from './visibility.js';
 import { numberMessages, type Result } from '#lib/recipes/validation.js';
-import { text } from '#lib/helpers.js';
+import { oneOf, text, wholeNumber } from '#lib/helpers.js';
 import { MAX_LINK } from '#lib/journal.js';
 
 type Viewer = { id: string };
@@ -68,8 +68,8 @@ export function parseEntryForm(formData: FormData): Result<EntryFields> {
 	let servings: number | null = null;
 	if (servingsText) {
 		const messages = numberMessages('servings');
-		if (!/^\d+$/.test(servingsText)) return { ok: false, error: messages.whole };
-		servings = Number(servingsText);
+		servings = wholeNumber(servingsText);
+		if (servings === null) return { ok: false, error: messages.whole };
 		if (servings < 1) return { ok: false, error: messages.belowMin };
 		if (servings > 10_000) return { ok: false, error: messages.tooLarge };
 	}
@@ -80,11 +80,11 @@ export function parseEntryForm(formData: FormData): Result<EntryFields> {
 	if (note.length > MAX_ENTRY_TEXT) return { ok: false, error: ENTRY_MESSAGES.noteTooLong };
 
 	const audienceText = text(formData, 'audience');
-	const audience = LOG_AUDIENCES.find((a) => a === audienceText) ?? 'private';
+	const audience = oneOf(LOG_AUDIENCES, audienceText) ?? 'private';
 
 	const recipe = text(formData, 'recipe').trim() || null;
 	const versionText = text(formData, 'version').trim();
-	const version = recipe && /^\d+$/.test(versionText) ? Number(versionText) : null;
+	const version = recipe ? wholeNumber(versionText) : null;
 
 	const link = text(formData, 'link').trim();
 	if (link.length > MAX_LINK) return { ok: false, error: ENTRY_MESSAGES.linkTooLong };

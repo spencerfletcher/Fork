@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import { formatDate, formatTime, plural } from './helpers';
+import { formatDate, formatTime, oneOf, plural, wholeNumber } from './helpers';
 
 describe('formatTime', () => {
 	test('under an hour reads in minutes', () => {
@@ -32,5 +32,31 @@ describe('plural', () => {
 		expect(plural(1, 'fork')).toBe('1 fork');
 		expect(plural(0, 'fork')).toBe('0 forks');
 		expect(plural(2, 'public recipe')).toBe('2 public recipes');
+	});
+});
+
+describe('oneOf', () => {
+	const LIST = ['all', 'mine', 'saved'] as const;
+
+	test('a member of the list is itself', () => {
+		for (const item of LIST) expect(oneOf(LIST, item)).toBe(item);
+	});
+
+	test('anything else, missing included, is undefined', () => {
+		expect(oneOf(LIST, 'Mine')).toBeUndefined();
+		expect(oneOf(LIST, '')).toBeUndefined();
+		expect(oneOf(LIST, null)).toBeUndefined();
+	});
+});
+
+describe('wholeNumber', () => {
+	test('digits only read as their number', () => {
+		expect(wholeNumber('0')).toBe(0);
+		expect(wholeNumber('42')).toBe(42);
+	});
+
+	test('signs, decimals, spaces, trailing letters and empty are null', () => {
+		for (const value of ['-1', '+1', '1.5', ' 1', '2abc', '1e3', ''])
+			expect(wholeNumber(value)).toBeNull();
 	});
 });

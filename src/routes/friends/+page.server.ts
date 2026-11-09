@@ -1,4 +1,4 @@
-import { error, fail, redirect } from '@sveltejs/kit';
+import { error } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
 import { db } from '#lib/server/db/index.js';
 import { profiles, REPORT_TARGETS } from '#lib/server/db/schema.js';
@@ -19,18 +19,18 @@ import {
 } from '#lib/server/friends.js';
 import { friendIdsOf } from '#lib/server/visibility.js';
 import { ensureProfile } from '#lib/server/profiles.js';
-import { loginHref } from '#lib/auth/loginHref.js';
-import { text } from '#lib/helpers.js';
+import { failure, requireUser } from '#lib/server/actions.js';
+import { oneOf, text, wholeNumber } from '#lib/helpers.js';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ url, locals: { user } }) => {
-	if (!user) throw redirect(303, loginHref(url.pathname + url.search));
+	requireUser(url, user);
 	const [friendIds, requests] = await Promise.all([friendIdsOf(user.id), requestsFor(user.id)]);
 	const feed = await feedFor(user, friendIds);
 	return { feed, requests, friendCount: friendIds.length, meta: { title: 'Friends' } };
 };
 
-const invalid = (error: string) => fail(400, { error, code: 'invalid' });
+const invalid = (error: string) => failure(400, 'invalid', error);
 
 /**
  * The signed-in viewer and the other person a relationship form names, who
@@ -96,10 +96,10 @@ export const actions: Actions = {
 
 	like: async ({ request, locals: { user } }) => {
 		if (!user) throw error(401, 'Login required');
-		const entryText = text(await request.formData(), 'entryId');
-		if (!/^\d+$/.test(entryText)) return invalid('Choose an entry.');
-		const result = await toggleLike(user, Number(entryText));
-		if (result === 'refused') return fail(404, { error: 'Entry not found', code: 'not_found' });
+		const entryId = wholeNumber(text(await request.formData(), 'entryId'));
+		if (entryId === null) return invalid('Choose an entry.');
+		const result = await toggleLike(user, entryId);
+		if (result === 'refused') return failure(404, 'not_found', 'Entry not found');
 		if (result === 'own') return invalid(OWN_LIKE);
 		return result;
 	},
@@ -107,7 +107,7 @@ export const actions: Actions = {
 	report: async ({ request, locals: { user } }) => {
 		if (!user) throw error(401, 'Login required');
 		const formData = await request.formData();
-		const targetType = REPORT_TARGETS.find((t) => t === text(formData, 'targetType'));
+		const targetType = oneOf(REPORT_TARGETS, text(formData, 'targetType'));
 		const targetId = text(formData, 'targetId').trim();
 		const reason = text(formData, 'reason').trim();
 		if (!targetType || !targetId) return invalid('Choose what to report.');
