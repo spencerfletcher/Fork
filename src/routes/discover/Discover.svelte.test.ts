@@ -87,7 +87,10 @@ describe('Discover', () => {
 	});
 
 	test('every grid card names its cook above the photo', () => {
-		const { container } = renderDiscover({ lead: makeCard(9), recipes: [makeCard(1), makeCard(2)] });
+		const { container } = renderDiscover({
+			lead: makeCard(9),
+			recipes: [makeCard(1), makeCard(2)]
+		});
 		const cards = container.querySelectorAll('.discover-grid .recipe-card');
 		expect(cards).toHaveLength(2);
 		expect(cards[0].querySelector('.card-cook')).toHaveTextContent('@cook1');

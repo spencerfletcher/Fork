@@ -2,7 +2,9 @@ import { describe, test, expect } from 'vitest';
 import { load } from './+page.server';
 
 const makeEvent = (search = '') =>
-	({ url: new URL(`http://localhost/favorites${search}`) }) as unknown as Parameters<typeof load>[0];
+	({ url: new URL(`http://localhost/favorites${search}`) }) as unknown as Parameters<
+		typeof load
+	>[0];
 
 // Favorites became the Cookbook's Saved filter.
 describe('/favorites load', () => {

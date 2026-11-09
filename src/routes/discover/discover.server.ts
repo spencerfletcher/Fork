@@ -23,7 +23,10 @@ const HANDLE = /^@([\w-]+)$/;
 export async function loadDiscover(url: URL, user: { id: string } | null) {
 	const { searchQuery, tagSlugs } = parseFilters(url);
 	const words = searchQuery.split(/\s+/).filter(Boolean);
-	const handle = words.map((w) => HANDLE.exec(w)?.[1]).find(Boolean)?.toLowerCase();
+	const handle = words
+		.map((w) => HANDLE.exec(w)?.[1])
+		.find(Boolean)
+		?.toLowerCase();
 	const text = textSearch(words.filter((w) => !HANDLE.test(w)).join(' '));
 	const friendsOnly = user ? url.searchParams.get('friends') === '1' : undefined;
 

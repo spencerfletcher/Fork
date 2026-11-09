@@ -16,6 +16,7 @@
 
 	// A filter link keeps the search and tags; All is the bare page.
 	function filterHref(filter: CookbookFilter, without: string[] = []): string {
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity
 		const params = new URLSearchParams(page.url.search);
 		if (filter === 'all') params.delete('filter');
 		else params.set('filter', filter);
@@ -32,8 +33,8 @@
 				<h1>Cookbook</h1>
 				{#if data.counts.all > 0}
 					<p class="count">
-						{plural(data.counts.all, 'recipe')}: {data.counts.mine} yours, {data.counts.saved} saved
-						from other cooks.
+						{plural(data.counts.all, 'recipe')}: {data.counts.mine} yours, {data.counts.saved} saved from
+						other cooks.
 					</p>
 				{/if}
 			</div>
@@ -58,7 +59,8 @@
 				<div class="seg" role="group" aria-label="Show">
 					{#each COOKBOOK_FILTERS as f (f)}
 						<a href={filterHref(f)} aria-current={data.filter === f ? 'page' : undefined}>
-							{LABELS[f]}<span class="n">{data.counts[f]}</span>
+							{LABELS[f]}
+							<span class="n">{data.counts[f]}</span>
 						</a>
 					{/each}
 				</div>

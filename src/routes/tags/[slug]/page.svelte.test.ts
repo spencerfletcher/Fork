@@ -39,9 +39,15 @@ describe('Tag page', () => {
 
 	test('the empty state’s Explore all goes to Discover, signed in or out', () => {
 		const { unmount } = renderTag();
-		expect(screen.getByRole('link', { name: 'Explore all →' })).toHaveAttribute('href', '/discover');
+		expect(screen.getByRole('link', { name: 'Explore all →' })).toHaveAttribute(
+			'href',
+			'/discover'
+		);
 		unmount();
 		renderTag({ user: { id: 'u1' } });
-		expect(screen.getByRole('link', { name: 'Explore all →' })).toHaveAttribute('href', '/discover');
+		expect(screen.getByRole('link', { name: 'Explore all →' })).toHaveAttribute(
+			'href',
+			'/discover'
+		);
 	});
 });

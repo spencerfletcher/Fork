@@ -15,8 +15,7 @@
 </script>
 
 <nav class="bg-navbar-bg relative z-50 px-5" aria-label="Site">
-	<div
-		class="mx-auto flex h-[52px] max-w-[1200px] items-center justify-between gap-5 md:h-14">
+	<div class="mx-auto flex h-[52px] max-w-[1200px] items-center justify-between gap-5 md:h-14">
 		<!-- Logo + destinations. They never shrink; when the bar is full the handle gives way. -->
 		<div class="flex shrink-0 items-center gap-6">
 			<!-- One line, so the name is "Fork." with no space before the stop. -->
@@ -47,7 +46,11 @@
 					+ New recipe
 				</a>
 			{/if}
-			<a href="/search" aria-label="Search" class="nav-icon" aria-current={current(path === '/search')}>
+			<a
+				href="/search"
+				aria-label="Search"
+				class="nav-icon"
+				aria-current={current(path === '/search')}>
 				<svg
 					class="size-5"
 					xmlns="http://www.w3.org/2000/svg"

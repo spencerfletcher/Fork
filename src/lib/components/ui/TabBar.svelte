@@ -14,9 +14,7 @@
 {#if !hidden}
 	<nav class="tab-bar" aria-label="Main">
 		{#each DESTINATIONS as destination (destination.href)}
-			<a
-				href={destination.href}
-				aria-current={isCurrent(destination, path) ? 'page' : undefined}>
+			<a href={destination.href} aria-current={isCurrent(destination, path) ? 'page' : undefined}>
 				<svg
 					viewBox="0 0 24 24"
 					fill="none"

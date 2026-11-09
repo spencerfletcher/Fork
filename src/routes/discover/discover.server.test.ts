@@ -87,7 +87,9 @@ describe('loadDiscover', () => {
 		expect(result.recipes.map((r) => r.id)).toEqual([1, 2]);
 		const leadWhere = sqlOf(leadChain.where.mock.calls[0][0]);
 		expect(leadWhere.params).toContain(VIEWER.id);
-		const cutoff = leadWhere.params.find((p) => typeof p === 'string' && /^\d{4}-\d\d-\d\d/.test(p));
+		const cutoff = leadWhere.params.find(
+			(p) => typeof p === 'string' && /^\d{4}-\d\d-\d\d/.test(p)
+		);
 		const days = (before - Date.parse(String(cutoff))) / 86_400_000;
 		expect(days).toBeCloseTo(LEAD_WINDOW_DAYS, 2);
 	});
@@ -105,7 +107,13 @@ describe('loadDiscover', () => {
 		const { recentChain } = mockSelects(
 			[],
 			[
-				{ versionNumber: 4, commitMessage: 'Changed the glaze', slug: 'buns', title: 'Buns', username: 'maria' }
+				{
+					versionNumber: 4,
+					commitMessage: 'Changed the glaze',
+					slug: 'buns',
+					title: 'Buns',
+					username: 'maria'
+				}
 			]
 		);
 

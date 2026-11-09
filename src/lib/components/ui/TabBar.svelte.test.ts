@@ -62,7 +62,9 @@ describe('TabBar', () => {
 	test('paper with a rule above, clay edge on the current item, 44px targets, safe area', () => {
 		expect(source).toMatch(/background:\s*var\(--color-bg\)/);
 		expect(source).toMatch(/border-top:\s*1px solid var\(--color-border-2\)/);
-		expect(source).toMatch(/\[aria-current='page'\][^}]*border-top-color:\s*var\(--color-accent\)/s);
+		expect(source).toMatch(
+			/\[aria-current='page'\][^}]*border-top-color:\s*var\(--color-accent\)/s
+		);
 		expect(source).toMatch(/min-height:\s*56px/);
 		expect(source).toContain('env(safe-area-inset-bottom)');
 	});

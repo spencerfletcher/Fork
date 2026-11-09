@@ -1,7 +1,8 @@
 import { describe, test, expect } from 'vitest';
 import { DESTINATIONS, isCurrent } from './destinations';
 
-const current = (path: string) => DESTINATIONS.filter((d) => isCurrent(d, path)).map((d) => d.label);
+const current = (path: string) =>
+	DESTINATIONS.filter((d) => isCurrent(d, path)).map((d) => d.label);
 
 describe('isCurrent', () => {
 	test('each destination is current on its own path and below it', () => {

@@ -78,7 +78,8 @@
 						<li>
 							<a class="change" href={change.href}>
 								<span class="change-title">
-									<span class="vid">v{change.versionNumber}</span> of {change.title}
+									<span class="vid">v{change.versionNumber}</span>
+									of {change.title}
 								</span>
 								<span class="change-note">
 									{#if change.username}<span class="change-handle">@{change.username}</span>

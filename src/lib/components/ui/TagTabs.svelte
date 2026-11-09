@@ -33,9 +33,7 @@
 	{/if}
 {:else}
 	<nav class="tag-tabs" aria-label="Browse by tag">
-		<a href="/discover" aria-current={mode.active === null ? 'page' : undefined}>
-			All
-		</a>
+		<a href="/discover" aria-current={mode.active === null ? 'page' : undefined}>All</a>
 		{#each tags as tag (tag.id)}
 			<a href="/tags/{tag.slug}" aria-current={mode.active === tag.slug ? 'page' : undefined}>
 				{tag.name}

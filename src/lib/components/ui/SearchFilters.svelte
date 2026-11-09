@@ -21,9 +21,7 @@
 	// The params this component writes. Any other (Cookbook's `filter`) is the
 	// page's own and rides along untouched.
 	const OWN = ['q', 'tags', 'friends'];
-	const otherParams = $derived(
-		[...page.url.searchParams].filter(([key]) => !OWN.includes(key))
-	);
+	const otherParams = $derived([...page.url.searchParams].filter(([key]) => !OWN.includes(key)));
 
 	// Writable derived: typing and pressing change them, and the URL stays the
 	// source of truth: a navigation (back button, a shared link) changes the

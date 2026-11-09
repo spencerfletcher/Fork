@@ -32,9 +32,7 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 	const library = await db
 		.select({ id: recipes.id, authorId: recipes.authorId })
 		.from(recipes)
-		.where(
-			and(visibleTo(user), or(eq(recipes.authorId, user.id), inArray(recipes.id, savedIds)))
-		);
+		.where(and(visibleTo(user), or(eq(recipes.authorId, user.id), inArray(recipes.id, savedIds))));
 
 	const isMine = (r: { authorId: string | null }) => r.authorId === user.id;
 	const mine = library.filter(isMine).length;
@@ -43,7 +41,15 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 	// With nothing in the library a query or tags filter nothing: the page hears
 	// of neither, so it shows the empty cookbook rather than "0 recipes match".
 	if (library.length === 0) {
-		return { recipes: [], counts, filter, allTags: [], searchQuery: '', selectedTags: [], meta: META };
+		return {
+			recipes: [],
+			counts,
+			filter,
+			allTags: [],
+			searchQuery: '',
+			selectedTags: [],
+			meta: META
+		};
 	}
 
 	const inFilter = library.filter((r) =>

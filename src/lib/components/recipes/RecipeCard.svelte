@@ -94,10 +94,7 @@
 	});
 </script>
 
-<div
-	class="recipe-card"
-	class:author-always={alwaysShowAuthor}
-	class:recipe-card--roomy={!isList}>
+<div class="recipe-card" class:author-always={alwaysShowAuthor} class:recipe-card--roomy={!isList}>
 	<a {href} class="card-stretched-link" aria-label={recipe.title}></a>
 
 	{#if variant === 'discover' && recipe.author}
@@ -152,7 +149,8 @@
 							<circle cx="11.5" cy="6.5" r="1.75" />
 							<path d="M11.5 10.25A3.5 3.5 0 0 1 14.5 13.5" />
 						{/if}
-					</svg>{part.text}
+					</svg>
+					{part.text}
 				</span>
 			{:else}
 				<span class="meta-item" class:meta-item--accent={part.accent}>{part.text}</span>

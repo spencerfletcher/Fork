@@ -40,7 +40,13 @@ function renderCookbook(overrides: Partial<typeof base> = {}) {
 const full = {
 	recipes: [
 		makeRecipe(),
-		makeRecipe({ id: 2, slug: 'poke', title: 'Poke', saved: true, author: { id: 's', username: 'samlind' } })
+		makeRecipe({
+			id: 2,
+			slug: 'poke',
+			title: 'Poke',
+			saved: true,
+			author: { id: 's', username: 'samlind' }
+		})
 	],
 	counts: { all: 9, mine: 6, saved: 3 }
 };
@@ -56,7 +62,10 @@ describe('Cookbook page', () => {
 		expect(
 			screen.getByText('Recipes you write and recipes you save from others live here.')
 		).toBeInTheDocument();
-		expect(screen.getByRole('link', { name: 'New recipe' })).toHaveAttribute('href', '/recipes/new');
+		expect(screen.getByRole('link', { name: 'New recipe' })).toHaveAttribute(
+			'href',
+			'/recipes/new'
+		);
 		expect(screen.getByRole('link', { name: 'New recipe' })).toHaveClass('btn-primary');
 		expect(screen.getByRole('link', { name: 'Explore Discover →' })).toHaveAttribute(
 			'href',
