@@ -6,6 +6,7 @@ import type { PageData } from './$types';
 import { makeContent, makeIngredient, makeVersion } from '#lib/recipes/fixtures.js';
 import { FRACTIONS } from '#lib/recipes/scale.js';
 import { loginHref } from '#lib/auth/loginHref.js';
+import { compactCount } from './components/compactCount';
 
 // The page owns the serves: read from ?serves= on load, scaled into the
 // ingredient list. The control's own behaviour is in ServesControl's tests.
@@ -124,7 +125,7 @@ describe('recipe page title band', () => {
 		// Last in the band, so a stacked band reads words, buttons, then the photo.
 		expect(header.compareDocumentPosition(photo) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 		expect(band.querySelector('.hero-inner')!.lastElementChild).toContainElement(photo);
-		expect(header).toContainElement(screen.getByRole('link', { name: /Fork/ }));
+		expect(header).toContainElement(screen.getByRole('link', { name: 'Log in to save' }));
 	});
 
 	test('the band is the --color-band cream, its photo a 4:3 inset of 504px', () => {
@@ -142,20 +143,44 @@ describe('recipe page title band', () => {
 	});
 });
 
+describe('recipe page signed in', () => {
+	test("a visitor's Save pill carries the recipe's save count", () => {
+		page.url = new URL('http://localhost/recipes/cookies');
+		const data = { ...makeData(), user: { id: 'visitor' }, favoriteCount: 1234 } as PageData;
+		render(Page, { props: { data } });
+		const save = screen.getByRole('button', { name: /^Save/ });
+		expect(save.textContent).toContain(`· ${compactCount(1234)}`);
+		expect(screen.getByRole('button', { name: 'Fork' })).toBeInTheDocument();
+	});
+});
+
+describe('recipe page owner', () => {
+	test('the owner gets Cook and Edit recipe only: no Save, no Fork', () => {
+		page.url = new URL('http://localhost/recipes/cookies');
+		// makeData's recipe is authored by 'a'.
+		const data = { ...makeData(), user: { id: 'a' }, favoriteCount: 1234 } as PageData;
+		const { container } = render(Page, { props: { data } });
+		const row = [...container.querySelectorAll('.actions a, .actions button')].map((el) =>
+			el.textContent!.replace(/\s+/g, ' ').trim()
+		);
+		expect(row).toEqual(['Cook', 'Edit recipe']);
+	});
+});
+
 describe('recipe page logged out', () => {
-	test('Fork leads to login and back to this page, query included', () => {
+	test('Log in to save leads to login and back to this page, query included', () => {
 		load('?serves=8');
-		expect(screen.getByRole('link', { name: /Fork/ })).toHaveAttribute(
+		expect(screen.getByRole('link', { name: 'Log in to save' })).toHaveAttribute(
 			'href',
 			loginHref('/recipes/cookies?serves=8')
 		);
 	});
 
-	test('on an older version there is nothing to sign in for: no Fork or Favorite', () => {
+	test('on an older version there is nothing to sign in for: no login link', () => {
 		page.url = new URL('http://localhost/recipes/cookies?version=1');
 		const data = makeData();
 		render(Page, { props: { data: { ...data, currentVersion: data.allVersions[1] } } });
-		expect(screen.queryByRole('link', { name: /Fork|Favorite/ })).toBeNull();
+		expect(screen.queryByRole('link', { name: 'Log in to save' })).toBeNull();
 		expect(screen.getByRole('link', { name: 'Back to v2' })).toBeInTheDocument();
 	});
 });
@@ -178,7 +203,7 @@ describe('recipe page after a shallow replace', () => {
 
 	test('the login link comes back to the shallow URL', () => {
 		loadShallow('?serves=8');
-		expect(screen.getByRole('link', { name: /Fork/ })).toHaveAttribute(
+		expect(screen.getByRole('link', { name: 'Log in to save' })).toHaveAttribute(
 			'href',
 			loginHref('/recipes/cookies?serves=8')
 		);
@@ -193,7 +218,7 @@ describe('recipe page cooking mode', () => {
 		load();
 		expect(article()).not.toHaveAttribute('data-cooking');
 		expect(bar()).not.toBeNull();
-		expect(screen.getByRole('link', { name: /Fork/ })).toBeInTheDocument();
+		expect(screen.getByRole('link', { name: 'Log in to save' })).toBeInTheDocument();
 		expect(screen.getByRole('button', { name: 'Cook' })).toHaveAttribute('aria-pressed', 'false');
 	});
 
@@ -202,7 +227,7 @@ describe('recipe page cooking mode', () => {
 		await fireEvent.click(screen.getByRole('button', { name: 'Cook' }));
 		expect(article()).toHaveAttribute('data-cooking');
 		expect(bar()).toBeNull();
-		expect(screen.queryByRole('link', { name: /Fork|Favorite/ })).toBeNull();
+		expect(screen.queryByRole('link', { name: 'Log in to save' })).toBeNull();
 		expect(screen.getByRole('button', { name: 'Done cooking' })).toHaveAttribute(
 			'aria-pressed',
 			'true'
@@ -217,7 +242,7 @@ describe('recipe page cooking mode', () => {
 		await fireEvent.click(screen.getByRole('button', { name: 'Done cooking' }));
 		expect(article()).not.toHaveAttribute('data-cooking');
 		expect(bar()).not.toBeNull();
-		expect(screen.getByRole('link', { name: /Fork/ })).toBeInTheDocument();
+		expect(screen.getByRole('link', { name: 'Log in to save' })).toBeInTheDocument();
 		expect(new URL(goto.mock.lastCall![0]).searchParams.has('cook')).toBe(false);
 	});
 
@@ -227,6 +252,35 @@ describe('recipe page cooking mode', () => {
 		unmount();
 		load('?cook=1');
 		expect(screen.queryByRole('link', { name: '2 versions' })).toBeNull();
+	});
+
+	test('cooking, the article names the version being read; not cooking, it does not', () => {
+		const { unmount } = load();
+		expect(article()).not.toHaveAttribute('data-version');
+		unmount();
+		load('?cook=1');
+		expect(article()).toHaveAttribute('data-version', '2');
+	});
+
+	test('Cook keeps the version and the serves in the URL', async () => {
+		page.url = new URL('http://localhost/recipes/cookies?version=1&serves=8');
+		const data = makeData();
+		render(Page, { props: { data: { ...data, currentVersion: data.allVersions[1] } } });
+		await fireEvent.click(screen.getByRole('button', { name: 'Cook' }));
+		const url = new URL(goto.mock.lastCall![0]);
+		expect(url.searchParams.get('version')).toBe('1');
+		expect(url.searchParams.get('serves')).toBe('8');
+		expect(url.searchParams.get('cook')).toBe('1');
+		expect(article()).toHaveAttribute('data-version', '1');
+	});
+
+	test('a reload of that URL lands in Cook on the same version and scale', () => {
+		page.url = new URL('http://localhost/recipes/cookies?version=1&serves=8&cook=1');
+		const data = makeData();
+		render(Page, { props: { data: { ...data, currentVersion: data.allVersions[1] } } });
+		expect(article()).toHaveAttribute('data-cooking');
+		expect(article()).toHaveAttribute('data-version', '1');
+		expect(screen.getByRole('spinbutton', { name: 'Servings' })).toHaveValue(8);
 	});
 
 	test('only ?cook=1 cooks', () => {

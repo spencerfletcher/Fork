@@ -61,6 +61,33 @@ test.describe('Fork', () => {
 		await expect(page.getByRole('link', { name: /edit recipe/i })).toBeVisible();
 		await expect(page.getByRole('button', { name: /fork/i })).not.toBeVisible();
 	});
+
+	// The seed user owns every seeded recipe, so the owner's row is what renders:
+	// Cook and Edit recipe, no Save or Fork.
+	test('at 320 each signed-in pill is at least 44px tall and its label holds one line', async ({
+		page
+	}) => {
+		await page.setViewportSize({ width: 320, height: 900 });
+		await page.goto('/recipes');
+		await page.getByRole('link', { name: COOKIES_RE }).first().click();
+		await page.waitForURL(/\/recipes\//);
+		const hero = page.locator('.hero');
+		await expect(hero.getByRole('link', { name: 'Edit recipe' })).toBeVisible();
+		const pills = await hero.locator('.actions a, .actions button').evaluateAll((els) =>
+			els.map((el) => ({
+				text: (el as HTMLElement).innerText.trim(),
+				height: el.getBoundingClientRect().height,
+				// Two lines of label plus the padding would pass this.
+				twoLines: 2 * parseFloat(getComputedStyle(el).lineHeight)
+			}))
+		);
+		expect(pills.map((p) => p.text.split(/\s/)[0])).toEqual(['Cook', 'Edit']);
+		for (const pill of pills) {
+			expect(pill.height, pill.text).toBeGreaterThanOrEqual(44);
+			expect(pill.height, pill.text).toBeLessThan(pill.twoLines);
+			expect(pill.text, pill.text).not.toContain('\n');
+		}
+	});
 });
 
 // ─── New recipe ───────────────────────────────────────────────────────────────

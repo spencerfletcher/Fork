@@ -2,6 +2,7 @@ import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import RecipeActions from './RecipeActions.svelte';
+import { compactCount } from './compactCount';
 import source from './RecipeActions.svelte?raw';
 import { readFileSync } from 'node:fs';
 
@@ -52,6 +53,7 @@ function makeProps(overrides: Record<string, unknown> = {}) {
 		canFavorite: true,
 		canEdit: false,
 		initialFavorited: false,
+		favoriteCount: 0,
 		cooking: false,
 		oncook: () => {},
 		...overrides
@@ -61,47 +63,74 @@ function makeProps(overrides: Record<string, unknown> = {}) {
 // ─── Save button ──────────────────────────────────────────────────────────────
 
 describe('RecipeActions save button', () => {
-	test('reflects the initial favourite state in aria-pressed, the word stays Favorite', () => {
+	test('reflects the initial saved state in aria-pressed, the word stays Save', () => {
 		render(RecipeActions, { props: makeProps({ initialFavorited: true }) });
 		// The visible word is the accessible name: no aria-label saying something else.
-		const button = screen.getByRole('button', { name: 'Favorite' });
+		const button = screen.getByRole('button', { name: 'Save' });
 		expect(button).toHaveAttribute('aria-pressed', 'true');
 		expect(button).not.toHaveAttribute('aria-label');
 	});
 
 	test('is a toggle button: pressed while favourited, and flips as it submits', async () => {
 		render(RecipeActions, { props: makeProps({ initialFavorited: false }) });
-		expect(screen.getByRole('button', { name: 'Favorite' })).toHaveAttribute(
-			'aria-pressed',
-			'false'
-		);
+		expect(screen.getByRole('button', { name: 'Save' })).toHaveAttribute('aria-pressed', 'false');
 		await playBack('?/toggleFavorite', { type: 'success' });
-		expect(screen.getByRole('button', { name: 'Favorite' })).toHaveAttribute(
-			'aria-pressed',
-			'true'
-		);
+		expect(screen.getByRole('button', { name: /^Save/ })).toHaveAttribute('aria-pressed', 'true');
 	});
 
-	test('the star is decoration: the word is the name', () => {
+	test('the bookmark is decoration: the word is the name', () => {
 		render(RecipeActions, { props: makeProps() });
-		const star = screen.getByRole('button', { name: 'Favorite' }).querySelector('svg')!;
+		const star = screen.getByRole('button', { name: 'Save' }).querySelector('svg')!;
 		expect(star).toHaveAttribute('aria-hidden', 'true');
 	});
 
-	test('the favorited star is a marigold fill on an ink edge, not clay', () => {
+	test('the saved bookmark is a marigold fill on an ink edge, not clay', () => {
 		render(RecipeActions, { props: makeProps({ initialFavorited: true }) });
-		const star = screen.getByRole('button', { name: 'Favorite' }).querySelector('svg')!;
+		const star = screen.getByRole('button', { name: 'Save' }).querySelector('svg')!;
 		expect(star).toHaveClass('fill-marigold');
 		expect(star).not.toHaveClass('fill-accent');
 		expect(star).not.toHaveClass('text-accent');
 		expect(star).toHaveAttribute('stroke', 'currentColor');
 	});
 
-	test('the unpressed star stays an outline in the button ink', () => {
+	test('the unpressed bookmark stays an outline in the button ink', () => {
 		render(RecipeActions, { props: makeProps({ initialFavorited: false }) });
-		const star = screen.getByRole('button', { name: 'Favorite' }).querySelector('svg')!;
+		const star = screen.getByRole('button', { name: 'Save' }).querySelector('svg')!;
 		expect(star).toHaveClass('fill-none');
 		expect(star).not.toHaveClass('fill-marigold');
+	});
+
+	test('carries the save count after the word, compact', () => {
+		render(RecipeActions, { props: makeProps({ favoriteCount: 1234 }) });
+		const button = screen.getByRole('button', { name: /^Save/ });
+		expect(button.textContent!.replace(/\s+/g, ' ').trim()).toBe(`Save · ${compactCount(1234)}`);
+		// The dot is drawn for the eye only.
+		expect(button.querySelector('.count [aria-hidden="true"]')).toHaveTextContent('·');
+	});
+
+	test('with no saves the pill says Save alone', () => {
+		render(RecipeActions, { props: makeProps({ favoriteCount: 0 }) });
+		expect(screen.getByRole('button', { name: 'Save' }).querySelector('.count')).toBeNull();
+	});
+
+	test('the count moves with the toggle at once, and back if the save fails', async () => {
+		render(RecipeActions, { props: makeProps({ favoriteCount: 7 }) });
+		const count = () => document.querySelector('.count')!.textContent!.replace(/\D/g, '');
+		const form = document.querySelector<HTMLFormElement>('form[action="?/toggleFavorite"]')!;
+		const handler = await submits.get('?/toggleFavorite')!({ formElement: form, cancel: () => {} });
+		await tick();
+		expect(count()).toBe('8');
+		await handler({ result: { type: 'error' }, update: async () => {} });
+		await tick();
+		expect(count()).toBe('7');
+	});
+
+	test('unsaving takes one off the count', async () => {
+		render(RecipeActions, { props: makeProps({ favoriteCount: 7, initialFavorited: true }) });
+		const form = document.querySelector<HTMLFormElement>('form[action="?/toggleFavorite"]')!;
+		await submits.get('?/toggleFavorite')!({ formElement: form, cancel: () => {} });
+		await tick();
+		expect(document.querySelector('.count')!.textContent!.replace(/\D/g, '')).toBe('6');
 	});
 
 	test('follows the prop when the page moves to a recipe with a different state', async () => {
@@ -113,10 +142,7 @@ describe('RecipeActions save button', () => {
 			makeProps({ recipe: { slug: 'original', title: 'Original' }, initialFavorited: false })
 		);
 
-		expect(screen.getByRole('button', { name: 'Favorite' })).toHaveAttribute(
-			'aria-pressed',
-			'false'
-		);
+		expect(screen.getByRole('button', { name: 'Save' })).toHaveAttribute('aria-pressed', 'false');
 	});
 });
 
@@ -134,7 +160,7 @@ describe('RecipeActions favorited look', () => {
 
 	test('the favorite button carries the class the pressed rules hang on', () => {
 		render(RecipeActions, { props: makeProps() });
-		expect(screen.getByRole('button', { name: 'Favorite' })).toHaveClass('favorite');
+		expect(screen.getByRole('button', { name: 'Save' })).toHaveClass('favorite');
 	});
 
 	test('pressed, the pill is the marigold tint with a marigold border (Spencer, 31 October 2026)', () => {
@@ -170,7 +196,7 @@ describe('RecipeActions when a request fails', () => {
 	test('a favourite that fails flips back and says so', async () => {
 		render(RecipeActions, { props: makeProps({ initialFavorited: false }) });
 		await playBack('?/toggleFavorite', { type: 'error' });
-		expect(screen.getByRole('button', { name: 'Favorite' })).toBeInTheDocument();
+		expect(screen.getByRole('button', { name: 'Save' })).toHaveAttribute('aria-pressed', 'false');
 		expect(screen.getByRole('alert')).toHaveTextContent(/could not save/i);
 	});
 
@@ -178,13 +204,13 @@ describe('RecipeActions when a request fails', () => {
 		render(RecipeActions, { props: makeProps({ canFork: true }) });
 		await playBack('?/fork', { type: 'error' });
 		expect(screen.getByRole('alert')).toHaveTextContent(/could not fork/i);
-		expect(screen.getByRole('button', { name: 'Fork this recipe' })).not.toBeDisabled();
+		expect(screen.getByRole('button', { name: 'Fork' })).not.toBeDisabled();
 	});
 
 	test('a fork that succeeds stays disabled while the browser leaves, so it cannot fork twice', async () => {
 		render(RecipeActions, { props: makeProps({ canFork: true }) });
 		await playBack('?/fork', { type: 'redirect', location: '/recipes/cookies-abc/edit' });
-		expect(screen.getByRole('button', { name: 'Fork this recipe' })).toBeDisabled();
+		expect(screen.getByRole('button', { name: 'Fork' })).toBeDisabled();
 	});
 
 	test('Back from the new fork, restored from the back-forward cache, offers Fork again', async () => {
@@ -194,7 +220,7 @@ describe('RecipeActions when a request fails', () => {
 		Object.defineProperty(shown, 'persisted', { value: true });
 		window.dispatchEvent(shown);
 		await tick();
-		expect(screen.getByRole('button', { name: 'Fork this recipe' })).not.toBeDisabled();
+		expect(screen.getByRole('button', { name: 'Fork' })).not.toBeDisabled();
 	});
 
 	test('the message goes when the page moves to another version or recipe', async () => {
@@ -217,7 +243,7 @@ describe('RecipeActions when a request fails', () => {
 		await submit({ formElement: form, cancel });
 		await tick();
 		expect(cancel).toHaveBeenCalled();
-		const button = screen.getByRole('button', { name: 'Favorite' });
+		const button = screen.getByRole('button', { name: /^Save/ });
 		expect(button).toHaveAttribute('aria-pressed', 'true');
 		// Once the first answers, a press goes through again.
 		await handler({ result: { type: 'success' }, update: async () => {} });
@@ -229,31 +255,54 @@ describe('RecipeActions when a request fails', () => {
 
 // ─── Primary action ───────────────────────────────────────────────────────────
 
-describe('RecipeActions primary action', () => {
-	test('a visitor who can fork gets Fork in marigold and Favorite outlined', () => {
-		render(RecipeActions, { props: makeProps({ canFork: true }) });
-		expect(screen.getByRole('button', { name: 'Fork this recipe' })).toHaveClass('btn-primary');
-		expect(screen.getByRole('button', { name: /favorite/i })).toHaveClass('btn-ghost');
+describe('RecipeActions row', () => {
+	const names = (container: HTMLElement) =>
+		[...container.querySelectorAll<HTMLElement>('.actions a, .actions button')].map((el) =>
+			el.textContent!.replace(/\s+/g, ' ').trim()
+		);
+
+	test('a visitor gets Cook in marigold first, then Save and Fork outlined', () => {
+		const { container } = render(RecipeActions, {
+			props: makeProps({ canFork: true, favoriteCount: 3 })
+		});
+		expect(names(container)).toEqual(['Cook', 'Save · 3', 'Fork']);
+		expect(screen.getByRole('button', { name: 'Cook' })).toHaveClass('btn-primary');
+		expect(screen.getByRole('button', { name: /^Save/ })).toHaveClass('btn-ghost');
+		expect(screen.getByRole('button', { name: 'Fork' })).toHaveClass('btn-ghost');
+	});
+
+	test('Cook is the only filled control in every state', () => {
+		for (const overrides of [
+			{ canFork: true },
+			{ canEdit: true },
+			{ canFavorite: false, loginHref: '/login' }
+		]) {
+			const { container, unmount } = render(RecipeActions, { props: makeProps(overrides) });
+			expect([...container.querySelectorAll('.btn-primary')]).toEqual([
+				screen.getByRole('button', { name: 'Cook' })
+			]);
+			unmount();
+		}
 	});
 
 	test('forking is one click: the button submits the fork, there is no dialog', () => {
 		render(RecipeActions, { props: makeProps({ canFork: true }) });
-		const fork = screen.getByRole('button', { name: 'Fork this recipe' });
+		const fork = screen.getByRole('button', { name: 'Fork' });
 		expect(fork).toHaveAttribute('type', 'submit');
 		expect(fork.closest('form')).toHaveAttribute('action', '?/fork');
 		expect(document.querySelector('dialog')).toBeNull();
 	});
 
-	test('logged out, Fork and Favorite lead to login and back here', () => {
-		render(RecipeActions, {
+	test('logged out: Cook, then a Log in to save link back here, and no Fork', () => {
+		const { container } = render(RecipeActions, {
 			props: makeProps({ canFavorite: false, loginHref: '/login?redirectTo=%2Frecipes%2Fcookies' })
 		});
-		const fork = screen.getByRole('link', { name: 'Fork this recipe' });
-		expect(fork).toHaveClass('btn-primary');
-		expect(fork).toHaveAttribute('href', '/login?redirectTo=%2Frecipes%2Fcookies');
-		const favorite = screen.getByRole('link', { name: 'Favorite' });
-		expect(favorite).toHaveClass('btn-ghost');
-		expect(favorite).toHaveAttribute('href', '/login?redirectTo=%2Frecipes%2Fcookies');
+		expect(names(container)).toEqual(['Cook', 'Log in to save']);
+		const login = screen.getByRole('link', { name: 'Log in to save' });
+		expect(login).toHaveAttribute('href', '/login?redirectTo=%2Frecipes%2Fcookies');
+		expect(login).not.toHaveClass('btn-primary');
+		expect(login).not.toHaveClass('btn-ghost');
+		expect(screen.queryByRole('link', { name: /fork/i })).toBeNull();
 		expect(document.querySelector('form')).toBeNull();
 	});
 
@@ -263,12 +312,23 @@ describe('RecipeActions primary action', () => {
 		expect(screen.queryByRole('link')).toBeNull();
 	});
 
-	test('the owner gets Edit in marigold, first, since Fork is not offered', () => {
-		render(RecipeActions, { props: makeProps({ canEdit: true }) });
-		const edit = screen.getByRole('link', { name: /edit recipe/i });
-		expect(edit).toHaveClass('btn-primary');
-		const favorite = screen.getByRole('button', { name: /favorite/i });
-		expect(edit.compareDocumentPosition(favorite) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+	test('the owner gets Cook, then Edit recipe outlined', () => {
+		const { container } = render(RecipeActions, {
+			props: makeProps({ canEdit: true, canFavorite: false })
+		});
+		expect(names(container)).toEqual(['Cook', 'Edit recipe']);
+		const edit = screen.getByRole('link', { name: 'Edit recipe' });
+		expect(edit).toHaveClass('btn-ghost');
+		expect(edit).toHaveAttribute('href', '/recipes/cookies/edit');
+	});
+
+	test("on a phone Cook spans the row; the owner's Edit and the login link span too", () => {
+		// jsdom applies no component CSS, so the rules are read from the source.
+		const style = source.slice(source.indexOf('<style>'));
+		const phone = style.slice(style.indexOf('@media (max-width: 699px)'));
+		const spans = phone.match(/([^{}]*)\{[^}]*grid-column:\s*1 \/ -1/)![1];
+		for (const selector of ['.cook', '.edit', '.login']) expect(spans).toContain(selector);
+		expect(phone).toMatch(/grid-template-columns:\s*1fr 1fr/);
 	});
 });
 
@@ -292,12 +352,12 @@ describe('RecipeActions Cook toggle', () => {
 		['logged in', { canFork: true }],
 		['the owner', { canEdit: true }],
 		['on an older version', { canFavorite: false }]
-	])('%s, the row offers Cook as an unpressed ghost pill, last', (_, overrides) => {
+	])('%s, the row offers Cook as an unpressed marigold pill, first', (_, overrides) => {
 		const { container } = render(RecipeActions, { props: makeProps(overrides) });
 		const cook = screen.getByRole('button', { name: 'Cook' });
 		expect(cook).toHaveAttribute('aria-pressed', 'false');
-		expect(cook).toHaveClass('btn-ghost');
-		expect(container.querySelector('.actions')!.lastElementChild).toBe(cook);
+		expect(cook).toHaveClass('btn-primary');
+		expect(container.querySelector('.actions')!.firstElementChild).toBe(cook);
 		expect(cook.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
 	});
 
@@ -305,6 +365,9 @@ describe('RecipeActions Cook toggle', () => {
 		render(RecipeActions, { props: makeProps({ canFork: true, cooking: true }) });
 		const done = screen.getByRole('button', { name: 'Done cooking' });
 		expect(done).toHaveAttribute('aria-pressed', 'true');
+		// Pressed, it steps down to the outlined pill with the marigold tint.
+		expect(done).toHaveClass('btn-ghost');
+		expect(done).not.toHaveClass('btn-primary');
 		expect(screen.getAllByRole('button')).toEqual([done]);
 	});
 
@@ -332,14 +395,6 @@ describe('RecipeActions Cook toggle', () => {
 		const rule = style.slice(start, style.indexOf('}', start));
 		expect(rule).toMatch(/background:\s*var\(--color-marigold-tint\)/);
 		expect(rule).toMatch(/border-color:\s*var\(--color-marigold\)/);
-	});
-
-	test('below 700px Cook spans the whole row under Fork and Favorite, so the band reads as two rows', () => {
-		// Spencer, 31 October 2026: "let Cook span its own full-width row under
-		// Fork and Favorite". jsdom applies no component CSS, so read the source.
-		const style = source.slice(source.indexOf('<style>'));
-		const phone = style.slice(style.indexOf('@media (max-width: 699px)'));
-		expect(phone).toMatch(/\.cook[,\s][^{}]*\{[^}]*grid-column:\s*1 \/ -1/);
 	});
 
 	test('Cook hands back true and writes ?cook=1, keeping a shallow ?serves=', async () => {

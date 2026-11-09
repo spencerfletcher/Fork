@@ -32,7 +32,6 @@ function renderHeader(overrides: Partial<HeaderProps> = {}) {
 			recipe: makeRecipe(),
 			currentVersion: V1,
 			forkCount: 0,
-			favoriteCount: 0,
 			versionCount: 1,
 			tags: [],
 			...overrides
@@ -170,33 +169,40 @@ describe('RecipeHeader byline', () => {
 // ─── The stats row ────────────────────────────────────────────────────────────
 
 describe('RecipeHeader stats row', () => {
-	// Spencer, 31 October 2026: "I like the stats row 1b". Forks, favorites and
-	// versions under the byline, each an icon and its words; the words carry
-	// the meaning, the icons are decoration.
+	// Spencer, 31 October 2026: "I like the stats row 1b". Forks and versions,
+	// each an icon and its words; the words carry the meaning, the icons are
+	// decoration. The save count moved onto the Save pill (9 Nov 2026).
 	const stats = (container: HTMLElement) =>
 		[...container.querySelectorAll('.stats > *')].map((el) =>
 			el.textContent!.replace(/\s+/g, ' ').trim()
 		);
 
-	test('reads forks, favorites, versions, in that order, under the byline', () => {
-		const { container } = renderHeader({ forkCount: 2, favoriteCount: 14, versionCount: 3 });
-		expect(stats(container)).toEqual(['2 forks', '14 favorites', '3 versions']);
-		const row = container.querySelector('.stats')!;
-		const line = container.querySelector('.byline')!;
-		expect(line.compareDocumentPosition(row) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-		expect(row.compareDocumentPosition(container.querySelector('.description')!)).toBe(
-			Node.DOCUMENT_POSITION_FOLLOWING
+	test('reads forks then versions, under the tags: description, measure, tags, stats', () => {
+		const { container } = renderHeader({
+			currentVersion: V3,
+			forkCount: 2,
+			versionCount: 3,
+			tags: [{ id: 1, name: 'Baking', slug: 'baking' }]
+		});
+		expect(stats(container)).toEqual(['2 forks', '3 versions']);
+		const order = ['.byline', '.description', '.details', '.tags', '.stats'].map((selector) =>
+			container.querySelector(selector)!
 		);
+		for (let i = 1; i < order.length; i++) {
+			expect(
+				order[i - 1].compareDocumentPosition(order[i]) & Node.DOCUMENT_POSITION_FOLLOWING
+			).toBeTruthy();
+		}
 	});
 
 	test('one of each is singular', () => {
-		const { container } = renderHeader({ forkCount: 1, favoriteCount: 1, versionCount: 1 });
-		expect(stats(container)).toEqual(['1 fork', '1 favorite', '1 version']);
+		const { container } = renderHeader({ forkCount: 1, versionCount: 1 });
+		expect(stats(container)).toEqual(['1 fork', '1 version']);
 	});
 
 	test('none says so in words, and an empty count is not a link', () => {
-		const { container } = renderHeader({ forkCount: 0, favoriteCount: 0, versionCount: 1 });
-		expect(stats(container)).toEqual(['No forks', 'No favorites', '1 version']);
+		const { container } = renderHeader({ forkCount: 0, versionCount: 1 });
+		expect(stats(container)).toEqual(['No forks', '1 version']);
 		expect(container.querySelector('.stats a')).toBeNull();
 	});
 
@@ -219,16 +225,15 @@ describe('RecipeHeader stats row', () => {
 		expect(stats(container)).toContain('3 versions');
 	});
 
-	test('favorites are plain text, never a link', () => {
-		const { container } = renderHeader({ favoriteCount: 14 });
-		expect(screen.queryByRole('link', { name: /favorite/ })).toBeNull();
-		expect(stats(container)).toContain('14 favorites');
+	test('says nothing of saves or favorites: the count is on the Save pill', () => {
+		const { container } = renderHeader({ forkCount: 2, versionCount: 3 });
+		expect(container.querySelector('.stats')!.textContent).not.toMatch(/save|favorite/i);
 	});
 
 	test('each item carries a 16px icon hidden from assistive tech', () => {
-		const { container } = renderHeader({ forkCount: 2, favoriteCount: 3, versionCount: 3 });
+		const { container } = renderHeader({ forkCount: 2, versionCount: 3 });
 		const icons = container.querySelectorAll('.stats svg');
-		expect(icons).toHaveLength(3);
+		expect(icons).toHaveLength(2);
 		for (const icon of icons) {
 			expect(icon).toHaveAttribute('aria-hidden', 'true');
 			expect(icon).toHaveClass('size-4');
@@ -285,13 +290,13 @@ describe('RecipeHeader content', () => {
 		expect(dessert).toHaveAttribute('href', '/tags/dessert');
 		expect(dessert).not.toHaveClass('tag');
 		expect(dessert.parentElement).toHaveTextContent('Dessert, Baking');
-		// Taxonomy, not history: the body face above the measure; each tag a link
+		// Taxonomy, not history: the body face below the measure; each tag a link
 		// like every other link on the site, clay and bold, the commas quiet.
 		expect(dessert.parentElement).toHaveClass('font-sans', 'text-text-2');
 		expect(dessert).toHaveClass('text-accent', 'font-semibold');
 		const details = dessert.closest('header')!.querySelector('.details')!;
 		expect(
-			dessert.compareDocumentPosition(details) & Node.DOCUMENT_POSITION_FOLLOWING
+			dessert.compareDocumentPosition(details) & Node.DOCUMENT_POSITION_PRECEDING
 		).toBeTruthy();
 	});
 

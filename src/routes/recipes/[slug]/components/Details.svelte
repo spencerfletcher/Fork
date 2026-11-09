@@ -20,43 +20,55 @@
 	);
 	const makes = $derived(content.makes ? scaleMakes(content.makes, factor) : null);
 
-	// The times value then label, the serves label then value:
-	// "15 min prep · 13 min cook · Serves 36 · Makes 36 cookies".
-	const pairs = $derived.by(() => {
-		const all: [string, string | null][] = [
-			['prep', content.prepTimeMinutes ? formatTime(content.prepTimeMinutes) : null],
-			['cook', content.cookTimeMinutes ? formatTime(content.cookTimeMinutes) : null],
-			['Serves', content.servings ? String(content.servings) : null],
-			['Makes', makes?.text ?? null]
+	// The times value then label, the serves label then value, in two groups:
+	// "15 min prep · 13 min cook" and "Serves 36 · Makes 36 cookies".
+	const lines = $derived.by(() => {
+		const all: [string, string | null][][] = [
+			[
+				['prep', content.prepTimeMinutes ? formatTime(content.prepTimeMinutes) : null],
+				['cook', content.cookTimeMinutes ? formatTime(content.cookTimeMinutes) : null]
+			],
+			[
+				['Serves', content.servings ? String(content.servings) : null],
+				['Makes', makes?.text ?? null]
+			]
 		];
-		return all.filter((pair): pair is [string, string] => pair[1] !== null);
+		return all
+			.map((line) => line.filter((pair): pair is [string, string] => pair[1] !== null))
+			.filter((line) => line.length > 0);
 	});
 </script>
 
 <!-- The measure, one sans line at the body size: a 600 value and a plain
      label. A pair never splits. The dots between pairs are drawn by CSS, never
-     typed, and a phone drops them for a gap, so no line strands one. -->
-{#if pairs.length > 0}
+     typed. A phone gives the times and the yield a line each. -->
+{#if lines.length > 0}
 	<p class="details text-text-2 m-0 font-sans text-base leading-[1.5]">
-		{#each pairs as [label, value], i (label)}
+		{#each lines as line, l (l)}
 			<!-- eslint-disable-next-line svelte/no-useless-mustaches -- a bare space between blocks is dropped -->
-			{#if i > 0}{' '}{/if}
-			<span class="pair whitespace-nowrap">
-				{#if label === 'Serves'}
-					{label}
-					<span class={['font-semibold', scaled ? 'text-accent' : 'text-text']}>{value}</span>
-				{:else if label === 'Makes'}
-					<!-- Scaled reads clay, as the serves do; a size or temperature it left
-					     alone says so in Ink 3, only while the recipe is scaled. -->
-					{label}
-					<span class={['font-semibold', makes?.scaled ? 'text-accent' : 'text-text']}>
-						{value}
+			{#if l > 0}{' '}{/if}
+			<span class="line">
+				{#each line as [label, value], i (label)}
+					<!-- eslint-disable-next-line svelte/no-useless-mustaches -- a bare space between blocks is dropped -->
+					{#if i > 0}{' '}{/if}
+					<span class="pair whitespace-nowrap">
+						{#if label === 'Serves'}
+							{label}
+							<span class={['font-semibold', scaled ? 'text-accent' : 'text-text']}>{value}</span>
+						{:else if label === 'Makes'}
+							<!-- Scaled reads clay, as the serves do; a size or temperature it left
+							     alone says so in Ink 3, only while the recipe is scaled. -->
+							{label}
+							<span class={['font-semibold', makes?.scaled ? 'text-accent' : 'text-text']}>
+								{value}
+							</span>
+							{#if makes?.flagged}<span class="not-scaled text-text-3">not scaled</span>{/if}
+						{:else}
+							<span class="text-text font-semibold">{value}</span>
+							{label}
+						{/if}
 					</span>
-					{#if makes?.flagged}<span class="not-scaled text-text-3">not scaled</span>{/if}
-				{:else}
-					<span class="text-text font-semibold">{value}</span>
-					{label}
-				{/if}
+				{/each}
 			</span>
 		{/each}
 	</p>
@@ -66,7 +78,8 @@
 	/* Ink 3: Rule 2 vanished into the paper (29 October 2026). The right side
 	   stands in for the typed space that used to follow the dot. Empty alt
 	   text, so a screen reader does not read it out. */
-	.pair + .pair::before {
+	.pair + .pair::before,
+	.line + .line::before {
 		content: '·' / '';
 		padding: 0 12px 0 8px;
 		color: var(--color-text-3);
@@ -79,13 +92,11 @@
 	}
 
 	@media (max-width: 699px) {
-		.details {
-			display: flex;
-			flex-wrap: wrap;
-			column-gap: 10px;
+		.line {
+			display: block;
 		}
 
-		.pair + .pair::before {
+		.line + .line::before {
 			content: none;
 		}
 	}

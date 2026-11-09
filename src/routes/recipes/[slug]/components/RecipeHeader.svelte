@@ -3,7 +3,7 @@
 	import Username from '#lib/components/ui/Username.svelte';
 	import { plural } from '#lib/helpers.js';
 	import Details from './Details.svelte';
-	import { forkIcon, starIcon } from './Icons.svelte';
+	import { forkIcon } from './Icons.svelte';
 	import type { Recipe } from '#lib/server/db/schema.js';
 	import type { RecipeContent, TagChip } from '#lib/recipes/types.js';
 
@@ -33,7 +33,6 @@
 		currentVersion,
 		storedServings,
 		forkCount,
-		favoriteCount,
 		versionCount,
 		tags,
 		cooking = false,
@@ -45,13 +44,12 @@
 		storedServings?: number | null;
 		/** Forks the viewer can see: the public ones and their own. */
 		forkCount: number;
-		favoriteCount: number;
 		/** Every version of the recipe; the bar under the band lists them from two up. */
 		versionCount: number;
 		tags: TagChip[];
 		/** Cooking mode hides the version bar, so the count does not link to it. */
 		cooking?: boolean;
-		/** The action row (Fork or Edit, Favorite), the last line of the header. */
+		/** The action row (Cook, then Save and Fork or Edit), the last line of the header. */
 		actions?: Snippet;
 	} = $props();
 
@@ -59,10 +57,10 @@
 	const counted = (n: number, word: string) => (n === 0 ? `No ${word}s` : plural(n, word));
 </script>
 
-<!-- One face below the title. The byline carries who and the parent, the stats row the counts; the
-     version and its note sit in the bar under the band. Then the description,
-     the tags, the measure on one line, the actions (the order of the title
-     band, 31 October 2026). Nothing is boxed and nothing is pinned. -->
+<!-- One face below the title. The byline carries who and the parent; then the
+     description, the measure, the tags, the stats row's counts and the
+     actions (the decided title band, 9 Nov 2026). The version and its note sit
+     in the bar under the band. Nothing is boxed and nothing is pinned. -->
 <header class="recipe-header">
 	<h1 class="title m-0 font-serif font-medium [overflow-wrap:anywhere]">{currentVersion.title}</h1>
 
@@ -84,6 +82,21 @@
 		{/if}
 	</p>
 
+	{#if currentVersion.description}
+		<p class="description m-0">{currentVersion.description}</p>
+	{/if}
+
+	<Details content={currentVersion} {storedServings} />
+
+	{#if tags.length > 0}
+		<p class="tags text-text-2 m-0 font-sans">
+			{#each tags as tag, i (tag.id)}
+				{#if i > 0},&#32;{/if}
+				<a href="/tags/{tag.slug}" class="text-accent font-semibold">{tag.name}</a>
+			{/each}
+		</p>
+	{/if}
+
 	<!-- The stats row (Spencer, 31 October 2026: "I like the stats row 1b"):
 	     each count an icon and its words, no dots; the icons separate. A count
 	     links only where there is something to open: the forks list, and the
@@ -96,10 +109,6 @@
 			{:else}
 				{counted(forkCount, 'fork')}
 			{/if}
-		</span>
-		<span class="stat">
-			{@render starIcon(false)}
-			{counted(favoriteCount, 'favorite')}
 		</span>
 		<span class="stat">
 			<svg
@@ -122,21 +131,6 @@
 			{/if}
 		</span>
 	</p>
-
-	{#if currentVersion.description}
-		<p class="description m-0">{currentVersion.description}</p>
-	{/if}
-
-	{#if tags.length > 0}
-		<p class="tags text-text-2 m-0 font-sans">
-			{#each tags as tag, i (tag.id)}
-				{#if i > 0},&#32;{/if}
-				<a href="/tags/{tag.slug}" class="text-accent font-semibold">{tag.name}</a>
-			{/each}
-		</p>
-	{/if}
-
-	<Details content={currentVersion} {storedServings} />
 
 	{#if actions}
 		<div class="actions-row">{@render actions()}</div>

@@ -65,7 +65,7 @@ test.describe('Recipe detail page', () => {
 		await page.getByRole('button', { name: '3 versions' }).click();
 		await expect(page.locator('#version-history li')).toHaveCount(2);
 		await expect(page.locator('#version-history')).toContainText('Initial recipe');
-		// The forks sit in the stats row under the byline.
+		// The forks sit in the stats row under the tags.
 		await expect(page.locator('.recipe-header .stats')).toContainText('1 fork');
 	});
 
@@ -77,12 +77,12 @@ test.describe('Recipe detail page', () => {
 		await expect(page.getByText(COOKIES_RE)).toBeVisible();
 	});
 
-	test('the stats row counts forks, favorites and versions; the fork count opens the list of forks', async ({
+	test('the stats row counts forks and versions; the fork count opens the list of forks', async ({
 		page
 	}) => {
 		await gotoClassicCookies(page);
 		const stats = page.locator('.recipe-header .stats');
-		await expect(stats).toHaveText(/1 fork\s*No favorites\s*3 versions/);
+		await expect(stats).toHaveText(/^\s*1 fork\s*3 versions\s*$/);
 		await expect(page.locator('.byline')).not.toContainText('fork');
 		// The version count opens the bar's list.
 		await stats.getByRole('link', { name: '3 versions' }).click();
@@ -622,14 +622,14 @@ test.describe('Recipe detail page', () => {
 		expect(contrast(hero.color, hero.bg)).toBeGreaterThanOrEqual(4.5);
 	});
 
-	test('logged out, the hero fills only the Fork pill, and no marigold text', async ({ page }) => {
+	test('logged out, the hero fills only the Cook pill, and no marigold text', async ({ page }) => {
 		await gotoClassicCookies(page);
 		const hero = page.locator('.hero');
 		await hero.waitFor();
 
 		const accent = 'rgb(236, 166, 32)';
 
-		// One fill: the Fork pill, which leads to login and back here.
+		// One fill: Cook. Beside it a text link leads to login and back here.
 		const filled = await hero.evaluate(
 			(el, a) =>
 				[...el.querySelectorAll('*')]
@@ -637,16 +637,13 @@ test.describe('Recipe detail page', () => {
 					.map((n) => n.className),
 			accent
 		);
-		expect(filled).toEqual([expect.stringContaining('btn-primary')]);
+		expect(filled).toEqual([expect.stringMatching(/\bcook\b.*\bbtn-primary\b/)]);
 		const back = encodeURIComponent(new URL(page.url()).pathname);
-		await expect(hero.getByRole('link', { name: 'Fork this recipe' })).toHaveAttribute(
+		await expect(hero.getByRole('link', { name: 'Log in to save' })).toHaveAttribute(
 			'href',
 			`/login?redirectTo=${back}`
 		);
-		await expect(hero.getByRole('link', { name: 'Favorite' })).toHaveAttribute(
-			'href',
-			`/login?redirectTo=${back}`
-		);
+		await expect(hero.getByRole('link', { name: /fork/i })).toHaveCount(0);
 
 		// Cook time is metadata, not a pill: no background of its own.
 		const time = page.getByText(/^\d+\s*(min|h)/).first();
@@ -710,7 +707,7 @@ test.describe('Recipe detail page', () => {
 		}
 	});
 
-	test('the band reads title, byline, deck, tags, measure, then the buttons; below it ingredients beside the method', async ({
+	test('the band reads title, byline, deck, measure, tags, stats, then the buttons; below it ingredients beside the method', async ({
 		page
 	}) => {
 		await page.setViewportSize({ width: 1280, height: 900 });
@@ -719,10 +716,10 @@ test.describe('Recipe detail page', () => {
 			[
 				'h1',
 				'.byline',
-				'header .stats',
 				'.description',
-				'header .tags',
 				'header .details',
+				'header .tags',
+				'header .stats',
 				'header .actions'
 			].map(async (sel) => (await page.locator(sel).first().boundingBox())!.y)
 		);
@@ -1219,14 +1216,11 @@ test.describe('Recipe detail page', () => {
 		}
 	});
 
-	test('on a narrow phone each action pill holds its label on one line', async ({ page }) => {
+	test('on a narrow phone each action holds its label on one line, 44px tall', async ({ page }) => {
 		await gotoClassicCookies(page);
-		// 360 is the narrowest common Android width; below 375 Fork says "Fork".
-		for (const [width, fork] of [
-			[320, 'Fork'],
-			[360, 'Fork'],
-			[375, 'Fork this recipe']
-		] as const) {
+		// Logged out: Cook, then the login link under it. 360 is the narrowest
+		// common Android width.
+		for (const width of [320, 360, 375]) {
 			await page.setViewportSize({ width, height: 900 });
 			const pills = await page.locator('.actions a, .actions button').evaluateAll((els) =>
 				els.map((el) => ({
@@ -1235,7 +1229,7 @@ test.describe('Recipe detail page', () => {
 					overflow: el.scrollWidth - el.clientWidth
 				}))
 			);
-			expect(pills.map((p) => p.text)).toEqual([fork, 'Favorite', 'Cook']);
+			expect(pills.map((p) => p.text)).toEqual(['Cook', 'Log in to save']);
 			for (const pill of pills) {
 				expect(pill.height, `${width} ${pill.text}`).toBe(44);
 				expect(pill.overflow, `${width} ${pill.text}`).toBeLessThanOrEqual(0);
@@ -1292,28 +1286,34 @@ test.describe('Recipe detail page', () => {
 		}
 	});
 
-	test('the measure’s dots are drawn in Ink 3 between pairs, and a phone drops them for a 10px gap', async ({
+	test('the measure’s dots are drawn in Ink 3; a phone puts the times and the serves on a line each', async ({
 		page
 	}) => {
 		const details = page.locator('.details');
-		const dots = () =>
+		const dots = (selector: string) =>
 			details
-				.locator('.pair')
+				.locator(selector)
 				.evaluateAll((els) => els.map((el) => getComputedStyle(el, '::before').content));
 		await page.setViewportSize({ width: 1280, height: 900 });
 		await gotoClassicCookies(page);
-		// None typed; one drawn before every pair after the first, in Ink 3.
+		// None typed. Prep · cook is one group, Serves the other; on a desktop a
+		// dot is drawn between pairs and between the groups, in Ink 3.
 		expect(await details.textContent()).not.toContain('·');
-		expect(await dots()).toEqual(['none', '"·" / ""', '"·" / ""']);
+		expect(await dots('.pair')).toEqual(['none', '"·" / ""', 'none']);
+		expect(await dots('.line')).toEqual(['none', '"·" / ""']);
 		const color = await details
 			.locator('.pair')
 			.nth(1)
 			.evaluate((el) => getComputedStyle(el, '::before').color);
 		expect(color).toBe('rgb(111, 105, 96)');
-		// At 320 nothing strands: the pairs wrap 10px apart with no dots at all.
-		await page.setViewportSize({ width: 320, height: 900 });
-		expect(await dots()).toEqual(['none', 'none', 'none']);
-		expect(await details.evaluate((el) => getComputedStyle(el).columnGap)).toBe('10px');
+		// On a phone each group takes its own line, so no line starts with a dot.
+		await page.setViewportSize({ width: 390, height: 900 });
+		expect(await dots('.pair')).toEqual(['none', '"·" / ""', 'none']);
+		expect(await dots('.line')).toEqual(['none', 'none']);
+		const tops = await details
+			.locator('.line')
+			.evaluateAll((els) => els.map((el) => el.getBoundingClientRect().top));
+		expect(tops[1]).toBeGreaterThan(tops[0]);
 	});
 
 	test('on a phone and an iPad the closed note shows two lines; on a desktop one', async ({
@@ -1907,7 +1907,9 @@ test.describe('Cooking mode', () => {
 		await expect(page).toHaveURL(/[?&]cook=1/);
 		await expect(page.locator('article[data-cooking]')).toHaveCount(1);
 		await expect(page.locator('.version-bar')).toHaveCount(0);
-		await expect(page.locator('.hero').getByRole('link', { name: /Fork|Favorite/ })).toHaveCount(0);
+		await expect(page.locator('.hero').getByRole('link', { name: 'Log in to save' })).toHaveCount(
+			0
+		);
 		// The pill grows to its longer word (nothing beside it to shift); the band and the scaler stay.
 		expect((await done.boundingBox())!.width).toBeGreaterThan(width);
 		await expect(page.locator('.hero')).toBeVisible();
@@ -1923,9 +1925,7 @@ test.describe('Cooking mode', () => {
 		);
 		await expect(page).not.toHaveURL(/cook=/);
 		await expect(page.locator('.version-bar')).toBeVisible();
-		await expect(
-			page.locator('.hero').getByRole('link', { name: 'Fork this recipe' })
-		).toBeVisible();
+		await expect(page.locator('.hero').getByRole('link', { name: 'Log in to save' })).toBeVisible();
 		expect(await stepSize(page)).toEqual({ text: '17px', line: '27.2px', numeral: '18px' });
 		await expect.poll(() => wakeLockLog(page)).toEqual({ requests: 1, releases: 1 });
 	});
