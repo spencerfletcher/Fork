@@ -73,8 +73,8 @@
 	     the right. Title, byline and deck first, so a stranger reads what this
 	     version is before anything else; the photo is last, so a stacked band
 	     reads words, buttons, then the photo. -->
-	<div class="hero">
-		<div class="hero-inner">
+	<div class="hero page">
+		<div class="hero-inner page-inner">
 			<div class="hero-text">
 				<!-- The measure says the serves the list is scaled to, so it stays true. -->
 				<RecipeHeader
@@ -113,43 +113,50 @@
 
 	<!-- The version bar: the hinge between the dish and the recipe. Its bottom
 	     edge is the divider; there is no rule. -->
-	{#if !cooking}
-		<div class="bar-row">
-			<VersionBar {recipe} {currentVersion} versions={allVersions} {isViewingHistory} />
-		</div>
-	{/if}
+	<div class="body page">
+		<div class="page-inner">
+			{#if !cooking}
+				<div class="bar-row">
+					<VersionBar {recipe} {currentVersion} versions={allVersions} {isViewingHistory} />
+				</div>
+			{/if}
 
-	<!-- Toggle buttons, not links: pressed marks the section showing. -->
-	<nav class="section-tabs" aria-label="Recipe sections" data-pinned>
-		<button type="button" aria-pressed={tab === 'ingredients'} onclick={() => show('ingredients')}>
-			Ingredients
-		</button>
-		<button type="button" aria-pressed={tab === 'method'} onclick={() => show('method')}>
-			Method
-		</button>
-	</nav>
+			<!-- Toggle buttons, not links: pressed marks the section showing. -->
+			<nav class="section-tabs" aria-label="Recipe sections" data-pinned>
+				<button
+					type="button"
+					aria-pressed={tab === 'ingredients'}
+					onclick={() => show('ingredients')}>
+					Ingredients
+				</button>
+				<button type="button" aria-pressed={tab === 'method'} onclick={() => show('method')}>
+					Method
+				</button>
+			</nav>
 
-	<!-- Ingredients stay in view beside the method on a desktop; below 1024px
+			<!-- Ingredients stay in view beside the method on a desktop; below 1024px
 	     data-tab hides whichever section the bar has not chosen. -->
-	<div id="recipe" class="content-layout" tabindex="-1" data-tab={tab} bind:this={content}>
-		<aside class="min-w-0">
-			<div class="sidebar-sticky">
-				<RecipeIngredients
-					ingredients={currentVersion.ingredients}
-					grams={data.grams}
-					{factor}
-					control={stored > 0 ? scaler : undefined}
-					storageKey={ticksKey(recipe.slug, currentVersion.versionNumber, 'ingredients')} />
-				{#snippet scaler()}
-					<ServesControl {stored} {serves} onchange={(next) => (serves = next)} />
-				{/snippet}
-			</div>
-		</aside>
+			<div id="recipe" class="content-layout" tabindex="-1" data-tab={tab} bind:this={content}>
+				<aside class="min-w-0">
+					<div class="sidebar-sticky">
+						<RecipeIngredients
+							ingredients={currentVersion.ingredients}
+							grams={data.grams}
+							{factor}
+							control={stored > 0 ? scaler : undefined}
+							storageKey={ticksKey(recipe.slug, currentVersion.versionNumber, 'ingredients')} />
+						{#snippet scaler()}
+							<ServesControl {stored} {serves} onchange={(next) => (serves = next)} />
+						{/snippet}
+					</div>
+				</aside>
 
-		<div class="main min-w-0">
-			<RecipeMethod
-				steps={currentVersion.steps}
-				storageKey={ticksKey(recipe.slug, currentVersion.versionNumber, 'steps')} />
+				<div class="main min-w-0">
+					<RecipeMethod
+						steps={currentVersion.steps}
+						storageKey={ticksKey(recipe.slug, currentVersion.versionNumber, 'steps')} />
+				</div>
+			</div>
 		</div>
 	</div>
 </article>
@@ -162,13 +169,11 @@
 		scroll-padding-block: 6px;
 	}
 
-	/* The list pages' box: gutters outside a 1200px content width. */
-	.hero-inner,
-	.bar-row,
-	.content-layout {
-		max-width: calc(var(--max-width) + 2 * var(--space-5));
-		margin: 0 auto;
-		padding: 0 var(--space-5);
+	/* The list pages' box, .page's gutters around .page-inner, so the edges
+	   match Cookbook's: the band full-bleed outside it, the body below. Each
+	   sets its own spacing above and below. */
+	.body {
+		padding-block: 0;
 	}
 
 	/* The skip link lands here; focus then moves on to the first ingredient. */
@@ -181,7 +186,7 @@
 	   centred beside it. */
 	.hero {
 		background: var(--color-band);
-		padding: 24px 0;
+		padding-block: 24px;
 	}
 
 	.hero-inner {
@@ -193,7 +198,7 @@
 
 	/* No photo: words only, one 760px reading column, a roomier 40px of band. */
 	.hero:not(:has(.recipe-photo)) {
-		padding: 40px 0;
+		padding-block: 40px;
 	}
 
 	.hero-inner:not(:has(.recipe-photo)) {
@@ -290,7 +295,7 @@
 		}
 
 		.hero:not(:has(.recipe-photo)) {
-			padding: 24px 0;
+			padding-block: 24px;
 		}
 
 		.recipe-photo {
@@ -309,8 +314,7 @@
 			z-index: 2;
 			display: grid;
 			grid-template-columns: 1fr 1fr;
-			max-width: var(--max-width);
-			margin: 16px var(--space-5) 0;
+			margin: 16px 0 0;
 			background: var(--color-bg);
 			border-bottom: 1px solid var(--color-border-2);
 		}
@@ -389,13 +393,6 @@
 	}
 
 	@media (max-width: 699px) {
-		.hero-inner,
-		.bar-row,
-		.content-layout {
-			padding-left: 18px;
-			padding-right: 18px;
-		}
-
 		/* The band below the photo matches the 18px gutters beside it. */
 		.hero:has(.recipe-photo) {
 			padding-bottom: 18px;
@@ -405,8 +402,9 @@
 			margin-top: 18px;
 		}
 
+		/* Edge to edge on a phone, out over the gutters. */
 		.section-tabs {
-			margin: 16px 0 0;
+			margin: 16px -18px 0;
 		}
 
 		.content-layout {
