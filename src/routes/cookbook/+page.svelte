@@ -16,7 +16,7 @@
 
 	// A filter link keeps the search and tags; All is the bare page.
 	function filterHref(filter: CookbookFilter, without: string[] = []): string {
-		const params = new URLSearchParams(page.url.searchParams);
+		const params = new URLSearchParams(page.url.search);
 		if (filter === 'all') params.delete('filter');
 		else params.set('filter', filter);
 		for (const key of without) params.delete(key);

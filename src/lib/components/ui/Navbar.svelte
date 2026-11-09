@@ -187,7 +187,8 @@
 		color: var(--color-text-cream);
 	}
 
-	/* The profile link: a 32px initial avatar (clay tint, Bitter initial), with
+	/* The profile link: a 32px initial avatar (tint disc, Bitter initial in ink:
+	   no clay inside the espresso bar), with
 	   the handle beside it from 768. Capped so a 30-character handle (the
 	   sign-up max) ellipsises; 22ch shows a normal one whole. */
 	.nav-profile {
@@ -211,7 +212,7 @@
 		border: 1px solid transparent;
 		border-radius: 50%;
 		background: var(--color-tint);
-		color: var(--color-accent);
+		color: var(--color-text);
 		font-family: var(--font-serif);
 		font-size: 0.9375rem;
 		font-weight: 500;
