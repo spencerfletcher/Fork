@@ -3,7 +3,7 @@
 	import { afterNavigate } from '$app/navigation';
 	import { setShallowParam } from './shallowParam';
 	import type { Recipe } from '#lib/server/db/schema.js';
-	import { forkIcon, starIcon } from './Icons.svelte';
+	import { forkIcon, saveIcon } from './Icons.svelte';
 
 	let {
 		recipe,
@@ -11,6 +11,7 @@
 		canFavorite,
 		canEdit,
 		initialFavorited,
+		favoriteCount,
 		loginHref,
 		cooking,
 		oncook
@@ -21,9 +22,11 @@
 		/** The owner on the latest version: Edit, in Fork's place. */
 		canEdit: boolean;
 		initialFavorited: boolean;
-		/** Logged out on the latest version: where Fork and Favorite send the visitor to sign in and come back. */
+		/** Saves as loaded, the viewer's own included when `initialFavorited`. */
+		favoriteCount: number;
+		/** Logged out on the latest version: where "Log in to save" sends the visitor and back. */
 		loginHref?: string;
-		/** Cooking mode: Fork and Favorite step aside, the screen is kept awake. */
+		/** Cooking mode: Save, Fork and Edit step aside, the screen is kept awake. */
 		cooking: boolean;
 		oncook: (cooking: boolean) => void;
 	} = $props();
@@ -31,6 +34,10 @@
 	// Writable derived: the click flips it optimistically, and it resets to the
 	// prop whenever the page loads another recipe or reloads this one.
 	let isFavorited = $derived(initialFavorited);
+	// The count follows the optimistic flip: one more or one fewer than loaded.
+	const saves = $derived(favoriteCount + Number(isFavorited) - Number(initialFavorited));
+	// No compact count helper exists yet; digits grouped by a thin space.
+	const savesText = $derived(saves.toLocaleString('en-US').replaceAll(',', '\u2009'));
 	let forking = $state(false);
 	let saving = $state(false);
 	let error = $state('');
@@ -91,62 +98,41 @@
 	}} />
 
 <div class="actions">
+	<!-- Cook is the one marigold fill for everyone, first in the row and in the
+	     Tab order. Pressed it steps down to the outlined pill with the tint, and
+	     the other actions go, so "Done cooking" growing shifts nothing. -->
+	<button
+		type="button"
+		class={['cook', cooking ? 'btn-ghost' : 'btn-primary']}
+		aria-pressed={cooking}
+		onclick={toggleCook}>
+		<svg
+			class="size-4"
+			viewBox="0 0 16 16"
+			aria-hidden="true"
+			fill="none"
+			stroke="currentColor"
+			stroke-width="1.5"
+			stroke-linecap="round"
+			stroke-linejoin="round">
+			<path
+				d="M2 7.5h12M3.5 7.5v4a2 2 0 0 0 2 2h5a2 2 0 0 0 2-2v-4M6 5c0-1 1-1.2 1-2.5M9.5 5c0-1 1-1.2 1-2.5" />
+		</svg>
+		{#if cooking}
+			<span>Done cooking</span>
+		{:else}
+			<span>Cook</span>
+		{/if}
+	</button>
+
 	{#if cooking}
 		<!-- Cooking: only the Cook toggle stays. -->
 	{:else if loginHref}
-		<!-- Logged out, the same two pills lead to sign-in and back to this page. -->
-		<a href={loginHref} class="btn-primary no-underline">
-			{@render forkIcon()}
-			<!-- Below 375 the pill's half of the row cannot hold the whole label on
-			     one line (it needs 157px), so it says "Fork". One span, so the gap
-			     cannot split it. -->
-			<span>
-				Fork
-				<span class="max-[375px]:hidden">this recipe</span>
-			</span>
-		</a>
-		<a href={loginHref} class="btn-ghost no-underline">
-			{@render starIcon(false)}
-			Favorite
-		</a>
+		<!-- Logged out: a text link, not a pill, so Cook stays the one action. -->
+		<a href={loginHref} class="login">Log in to save</a>
 	{:else}
-		{#if canFork}
-			<!-- One click. The server writes the first commit message itself. -->
-			<form
-				method="POST"
-				action="?/fork"
-				use:enhance={() => {
-					forking = true;
-					error = '';
-					return async ({ result, update }) => {
-						// Still disabled while the browser leaves for the new fork, so a
-						// second click cannot fork twice.
-						if (result.type === 'redirect') {
-							window.location.href = result.location;
-							return;
-						}
-						forking = false;
-						if (result.type === 'success') await update();
-						else error = 'Could not fork this recipe. Try again.';
-					};
-				}}>
-				<button
-					type="submit"
-					class="btn-primary"
-					disabled={forking}
-					aria-busy={forking || undefined}>
-					{@render forkIcon()}
-					<span>
-						Fork
-						<span class="max-[375px]:hidden">this recipe</span>
-					</span>
-				</button>
-			</form>
-		{/if}
-
 		{#if canEdit}
-			<!-- The owner is not offered Fork, so Edit is their primary action. -->
-			<a href="/recipes/{recipe.slug}/edit" class="btn-primary no-underline">
+			<a href="/recipes/{recipe.slug}/edit" class="btn-ghost edit no-underline">
 				<svg
 					class="size-4"
 					viewBox="0 0 16 16"
@@ -184,38 +170,46 @@
 					type="submit"
 					class="btn-ghost favorite flex items-center justify-center gap-2 no-underline"
 					aria-pressed={isFavorited}>
-					{@render starIcon(isFavorited)}
-					Favorite
+					{@render saveIcon(isFavorited)}
+					<span>
+						Save
+						{#if saves > 0}
+							<span class="count">
+								<span aria-hidden="true">·</span>
+								{savesText}
+							</span>
+						{/if}
+					</span>
+				</button>
+			</form>
+		{/if}
+		{#if canFork}
+			<!-- One click. The server writes the first commit message itself. -->
+			<form
+				method="POST"
+				action="?/fork"
+				use:enhance={() => {
+					forking = true;
+					error = '';
+					return async ({ result, update }) => {
+						// Still disabled while the browser leaves for the new fork, so a
+						// second click cannot fork twice.
+						if (result.type === 'redirect') {
+							window.location.href = result.location;
+							return;
+						}
+						forking = false;
+						if (result.type === 'success') await update();
+						else error = 'Could not fork this recipe. Try again.';
+					};
+				}}>
+				<button type="submit" class="btn-ghost" disabled={forking} aria-busy={forking || undefined}>
+					{@render forkIcon()}
+					Fork
 				</button>
 			</form>
 		{/if}
 	{/if}
-
-	<!-- Visible to everyone. Only the shown word is rendered: Fork and Favorite
-	     step aside while cooking, so the pill growing to "Done cooking" shifts nothing. -->
-	<button type="button" class="btn-ghost cook" aria-pressed={cooking} onclick={toggleCook}>
-		<svg
-			class="size-4"
-			viewBox="0 0 16 16"
-			aria-hidden="true"
-			fill="none"
-			stroke="currentColor"
-			stroke-width="1.5"
-			stroke-linecap="round"
-			stroke-linejoin="round">
-			<path
-				d="M2 7.5h12M3.5 7.5v4a2 2 0 0 0 2 2h5a2 2 0 0 0 2-2v-4M6 5c0-1 1-1.2 1-2.5M9.5 5c0-1 1-1.2 1-2.5" />
-		</svg>
-		{#if cooking}
-			<!-- Below 375 "Done", as Fork drops "this recipe": half the row cannot
-			     hold "Done cooking" on one line. -->
-			<span>
-				Done <span class="max-[375px]:hidden">cooking</span>
-			</span>
-		{:else}
-			<span>Cook</span>
-		{/if}
-	</button>
 
 	{#if cooking && noWakeLock}
 		<p class="note text-text-2 m-0 basis-full text-sm">Your screen may still sleep.</p>
@@ -231,7 +225,21 @@
 	.actions {
 		display: flex;
 		flex-wrap: wrap;
+		align-items: center;
 		gap: 10px;
+	}
+
+	/* A plain link, clay and bold like the byline's; padded to a 24px hit. */
+	.login {
+		margin-left: 8px;
+		padding: 4px 0;
+		font-weight: 600;
+		color: var(--color-accent);
+		text-decoration: none;
+	}
+
+	.login:hover {
+		color: var(--color-text);
 	}
 
 	.actions :global(.btn-primary),
@@ -245,9 +253,9 @@
 		border-radius: var(--radius-pill);
 	}
 
-	/* Favorited: the word stays "Favorite" so the pill never changes width;
-	   the state is the pale marigold tint and border, quieter than the solid
-	   marigold Fork beside it (Spencer, 31 October 2026). */
+	/* Saved: the word stays "Save"; the state is the pale marigold tint and
+	   border, quieter than the solid marigold Cook beside it (Spencer, 31
+	   October 2026). */
 	.cook[aria-pressed='true'],
 	.favorite[aria-pressed='true'] {
 		background: var(--color-marigold-tint);
@@ -274,6 +282,9 @@
 		}
 	}
 
+	/* The page's phone width: Cook takes the whole first row, Save and Fork
+	   share the row beneath. The owner's Edit and the login link have no
+	   partner, so they span too. */
 	@media (max-width: 699px) {
 		.actions {
 			display: grid;
@@ -285,11 +296,18 @@
 			width: 100%;
 		}
 
-		/* Cook takes its own row under Fork and Favorite, alone or not, so the
-		   band reads as two clean rows (Spencer, 31 October 2026). */
 		.cook,
+		.edit,
+		.login,
 		.note {
 			grid-column: 1 / -1;
+		}
+
+		/* 24px of line and 20px of padding: a thumb's 44px. */
+		.login {
+			justify-self: center;
+			margin: 0;
+			padding: 10px 0;
 		}
 	}
 </style>

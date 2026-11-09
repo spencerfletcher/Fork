@@ -62,7 +62,12 @@
 	}
 </script>
 
-<article class="min-h-dvh" data-cooking={cooking || undefined}>
+<!-- While cooking, data-version names the version being read, for the
+     Journal's prefill; the serves are in the URL. -->
+<article
+	class="min-h-dvh"
+	data-cooking={cooking || undefined}
+	data-version={cooking ? currentVersion.versionNumber : undefined}>
 	<!-- The title band: the recipe's words on deeper cream, its photo inset at
 	     the right. Title, byline and deck first, so a stranger reads what this
 	     version is before anything else; the photo is last, so a stacked band
@@ -76,7 +81,6 @@
 					currentVersion={{ ...currentVersion, servings: stored > 0 ? serves : null }}
 					storedServings={stored}
 					forkCount={data.forkCount}
-					favoriteCount={data.favoriteCount}
 					versionCount={allVersions.length}
 					{tags}
 					{cooking}>
@@ -87,6 +91,7 @@
 							{canFavorite}
 							{canEdit}
 							initialFavorited={data.isFavorited}
+							favoriteCount={data.favoriteCount}
 							{loginHref}
 							{cooking}
 							oncook={(next) => (cooking = next)} />
