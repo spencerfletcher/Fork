@@ -326,8 +326,15 @@
 		color: var(--color-text-3);
 	}
 
+	/* Identifiers inline with their text: the version at the title's own size,
+	   a notch down for mono's taller x-height, the handle at the message's. */
+	.change-title .vid {
+		font-size: 0.9375em;
+	}
+
 	.change-handle {
 		margin-right: 0.4em;
+		font-size: 1em;
 	}
 
 	.grid-section {
