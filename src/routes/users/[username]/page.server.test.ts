@@ -7,13 +7,15 @@ import { visibleTo } from '#lib/server/visibility.js';
 
 // ─── Hoisted mocks ────────────────────────────────────────────────────────────
 
-const { findProfileMock, findRecipesMock, selectMock, countMock, relationMock } = vi.hoisted(() => ({
-	findProfileMock: vi.fn(),
-	findRecipesMock: vi.fn(),
-	selectMock: vi.fn(),
-	countMock: vi.fn(),
-	relationMock: vi.fn()
-}));
+const { findProfileMock, findRecipesMock, selectMock, countMock, relationMock } = vi.hoisted(
+	() => ({
+		findProfileMock: vi.fn(),
+		findRecipesMock: vi.fn(),
+		selectMock: vi.fn(),
+		countMock: vi.fn(),
+		relationMock: vi.fn()
+	})
+);
 
 vi.mock('#lib/server/friends.js', () => ({ relationOf: relationMock }));
 

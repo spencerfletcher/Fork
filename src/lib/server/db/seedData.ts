@@ -525,4 +525,3 @@ export const SEED_LOG: SeedLogEntry[] = [
 		createdAt: '2026-11-07T22:00:00Z'
 	}
 ];
-

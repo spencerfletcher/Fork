@@ -36,7 +36,7 @@ describe('JournalEntry', () => {
 	test('day in the margin, source with its version, servings and audience in words', () => {
 		const { container } = render(JournalEntry, { props: { entry: makeEntry() } });
 		expect(container.querySelector('time')).toHaveAttribute('datetime', '2026-11-08');
-		expect(container.querySelector('.jday')).toHaveTextContent('8Sun');
+		expect(container.querySelector('.jday')).toHaveTextContent(/^8\s*Sun$/);
 		expect(screen.getByRole('link', { name: /Brown Butter Glaze v3/ })).toHaveAttribute(
 			'href',
 			'/recipes/buns?version=3'
@@ -55,7 +55,9 @@ describe('JournalEntry', () => {
 
 		const entry = makeEntry();
 		if (entry.source.kind !== 'recipe') throw new Error('fixture');
-		render(JournalEntry, { props: { entry: { ...entry, source: { ...entry.source, own: false } } } });
+		render(JournalEntry, {
+			props: { entry: { ...entry, source: { ...entry.source, own: false } } }
+		});
 		const fork = screen.getByRole('button', { name: 'Fork →' });
 		expect(fork.closest('form')).toHaveAttribute('action', '/recipes/buns?/fork');
 	});

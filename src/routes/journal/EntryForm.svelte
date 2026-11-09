@@ -75,17 +75,23 @@
 	{/if}
 
 	<div class="field">
-		<label for="dish">Dish <span class="required" aria-hidden="true">*</span></label>
+		<label for="dish">
+			Dish <span class="required" aria-hidden="true">*</span>
+		</label>
 		<input id="dish" name="dish" type="text" required maxlength="200" value={values.dish} />
 	</div>
 
 	<div class="two-up">
 		<div class="field">
-			<label for="cookedOn">Date <span class="required" aria-hidden="true">*</span></label>
+			<label for="cookedOn">
+				Date <span class="required" aria-hidden="true">*</span>
+			</label>
 			<input id="cookedOn" name="cookedOn" type="date" required bind:value={cookedOn} />
 		</div>
 		<div class="field">
-			<label for="servings">Servings <span class="optional">optional</span></label>
+			<label for="servings">
+				Servings <span class="optional">optional</span>
+			</label>
 			<input
 				id="servings"
 				name="servings"
@@ -97,7 +103,9 @@
 	</div>
 
 	<div class="field">
-		<label for="recipe">From a recipe <span class="optional">optional</span></label>
+		<label for="recipe">
+			From a recipe <span class="optional">optional</span>
+		</label>
 		<!-- Changing the recipe drops the version, so the latest is linked. -->
 		<select id="recipe" name="recipe" bind:value={recipe} onchange={() => (version = '')}>
 			<option value="">Improvised (no recipe)</option>
@@ -109,7 +117,9 @@
 			{/each}
 		</select>
 		{#if version && selected}
-			<p class="form-hint">Version <span class="mono-id">v{version}</span></p>
+			<p class="form-hint">
+				Version <span class="mono-id">v{version}</span>
+			</p>
 		{/if}
 		<input type="hidden" name="version" value={version} />
 	</div>
@@ -117,16 +127,29 @@
 	<PhotoField imageUrl={photoUrl} bind:removeImage bind:chosen hadPhoto={false} />
 
 	<div class="field">
-		<label for="caption">Caption <span class="optional">optional</span></label>
-		<textarea id="caption" name="caption" rows="2" maxlength="2000" aria-describedby="caption-hint"
-			>{values.caption}</textarea>
+		<label for="caption">
+			Caption <span class="optional">optional</span>
+		</label>
+		<textarea
+			id="caption"
+			name="caption"
+			rows="2"
+			maxlength="2000"
+			aria-describedby="caption-hint">{values.caption}</textarea>
 		<p class="form-hint" id="caption-hint">Whoever sees this entry sees the caption.</p>
 	</div>
 
 	<div class="field lock-note">
-		<label for="note">{@render lockIcon()}Note for next time <span class="optional">optional</span></label>
-		<textarea id="note" name="note" rows="2" maxlength="2000" aria-describedby="note-hint"
-			>{values.note}</textarea>
+		<label for="note">
+			{@render lockIcon()}Note for next time
+			<span class="optional">optional</span>
+		</label>
+		<textarea
+			id="note"
+			name="note"
+			rows="2"
+			maxlength="2000"
+			aria-describedby="note-hint">{values.note}</textarea>
 		<p class="form-hint" id="note-hint">Only you ever see this.</p>
 	</div>
 

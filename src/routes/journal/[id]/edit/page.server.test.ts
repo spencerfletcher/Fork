@@ -66,7 +66,11 @@ describe('journal/[id]/edit load', () => {
 	test("someone else's entry, or no entry, is a 404", async () => {
 		ownEntryMock.mockResolvedValue(null);
 		await expect(
-			load({ params: { id: '5' }, url: new URL('http://l/journal/5/edit'), locals: { user: USER } } as never)
+			load({
+				params: { id: '5' },
+				url: new URL('http://l/journal/5/edit'),
+				locals: { user: USER }
+			} as never)
 		).rejects.toMatchObject({ status: 404 });
 	});
 
@@ -85,7 +89,10 @@ describe('journal/[id]/edit load', () => {
 describe('journal/[id]/edit save', () => {
 	test("someone else's id is a 404 and nothing is written", async () => {
 		selectMock.mockReturnValue(chain([]));
-		const result = await invokeAction(actions.save as never, event({ dish: 'x', cookedOn: '2026-11-08' }));
+		const result = await invokeAction(
+			actions.save as never,
+			event({ dish: 'x', cookedOn: '2026-11-08' })
+		);
 		expect(result).toMatchObject({ status: 404 });
 		expect(updateMock).not.toHaveBeenCalled();
 	});
@@ -98,7 +105,12 @@ describe('journal/[id]/edit save', () => {
 		expect(result).toMatchObject({ status: 303, location: '/journal?logged=5' });
 		expect(resolveMock).not.toHaveBeenCalled();
 		expect(updateMock.mock.results[0].value.set).toHaveBeenCalledWith(
-			expect.objectContaining({ recipeId: 7, versionId: 70, photoUrl: null, cookedOn: '2026-11-09' })
+			expect.objectContaining({
+				recipeId: 7,
+				versionId: 70,
+				photoUrl: null,
+				cookedOn: '2026-11-09'
+			})
 		);
 		expect(removeMock).toHaveBeenCalledWith(expect.anything(), 'user-1/old.png');
 	});

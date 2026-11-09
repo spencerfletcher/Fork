@@ -122,7 +122,10 @@ describe('journal/new action', () => {
 	test('a recipe the reader may not see is refused, not linked', async () => {
 		resolveMock.mockResolvedValue(null);
 		const result = await invoke({ dish: 'Buns', cookedOn: '2026-11-08', recipe: 'secret' });
-		expect(result).toMatchObject({ status: 400, data: { error: ENTRY_MESSAGES.recipeUnavailable } });
+		expect(result).toMatchObject({
+			status: 400,
+			data: { error: ENTRY_MESSAGES.recipeUnavailable }
+		});
 		expect(insertMock).not.toHaveBeenCalled();
 	});
 
@@ -130,7 +133,13 @@ describe('journal/new action', () => {
 		resolveMock.mockResolvedValue(LINKED);
 		uploadMock.mockResolvedValue({ url: 'https://x/p.png', path: 'user-1/p.png' });
 		await invoke(
-			{ dish: 'Buns', cookedOn: '2026-11-08', recipe: LINKED.slug, version: '3', audience: 'friends' },
+			{
+				dish: 'Buns',
+				cookedOn: '2026-11-08',
+				recipe: LINKED.slug,
+				version: '3',
+				audience: 'friends'
+			},
 			new File(['x'], 'p.png', { type: 'image/png' })
 		);
 		expect(resolveMock).toHaveBeenCalledWith(USER, LINKED.slug, 3);
@@ -153,7 +162,9 @@ describe('journal/new action', () => {
 
 	test('a failed save removes the photo it stored', async () => {
 		uploadMock.mockResolvedValue({ url: 'https://x/p.png', path: 'user-1/p.png' });
-		insertMock.mockReturnValue({ values: () => ({ returning: () => Promise.reject(new Error('db')) }) });
+		insertMock.mockReturnValue({
+			values: () => ({ returning: () => Promise.reject(new Error('db')) })
+		});
 		const result = await invoke(
 			{ dish: 'Buns', cookedOn: '2026-11-08' },
 			new File(['x'], 'p.png', { type: 'image/png' })

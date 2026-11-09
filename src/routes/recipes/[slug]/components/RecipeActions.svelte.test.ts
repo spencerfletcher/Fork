@@ -562,4 +562,3 @@ describe('RecipeActions Add to Journal', () => {
 		expect(screen.queryByRole('link', { name: 'Add to Journal' })).toBeNull();
 	});
 });
-

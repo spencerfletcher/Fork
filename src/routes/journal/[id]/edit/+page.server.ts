@@ -18,13 +18,19 @@ function idOf(param: string): number {
 
 export const load: PageServerLoad = async ({ params, url, locals: { user } }) => {
 	if (!user) throw redirect(303, loginHref(url.pathname + url.search));
-	const [entry, choices] = await Promise.all([ownEntry(user, idOf(params.id)), recipeChoices(user)]);
+	const [entry, choices] = await Promise.all([
+		ownEntry(user, idOf(params.id)),
+		recipeChoices(user)
+	]);
 	if (!entry) throw error(404, NOT_FOUND);
 
 	const { source } = entry;
 	let offered: RecipeChoice[] = choices;
 	if (source.kind === 'recipe' && !choices.some((c) => c.slug === source.slug)) {
-		offered = [{ slug: source.slug, title: source.title, visibility: source.visibility }, ...choices];
+		offered = [
+			{ slug: source.slug, title: source.title, visibility: source.visibility },
+			...choices
+		];
 	}
 	// A deleted or withheld recipe cannot be offered by name; the form keeps it as stored.
 	const keepLabel =
@@ -105,7 +111,8 @@ export const actions: Actions = {
 		}
 
 		// The old photo, once nothing points at it.
-		const oldPath = stored.photoUrl && photoUrl !== stored.photoUrl ? imagePathOf(stored.photoUrl) : null;
+		const oldPath =
+			stored.photoUrl && photoUrl !== stored.photoUrl ? imagePathOf(stored.photoUrl) : null;
 		if (oldPath) await removeRecipeImage(supabase, oldPath);
 
 		throw redirect(303, `/journal?logged=${stored.id}`);

@@ -34,7 +34,9 @@
 		{/if}
 		{#each data.requests as request (request.id)}
 			<div class="req">
-				<span class="avatar avatar--sm" aria-hidden="true">{request.username[0].toUpperCase()}</span>
+				<span class="avatar avatar--sm" aria-hidden="true">
+					{request.username[0].toUpperCase()}
+				</span>
 				<p class="nm">
 					<Username username={request.username} />
 					<small>Sent {day(request.sentAt)}</small>
@@ -108,11 +110,14 @@
 										shared <a href="/recipes/{item.slug}">{item.title}</a>
 										{item.visibility === 'friends' ? 'with friends' : 'publicly'}
 									{:else}
-										changed <a href="/recipes/{item.slug}">{item.title}</a>,
+										changed <a href="/recipes/{item.slug}">{item.title}</a>
+										,
 										<a
 											class="diff"
-											href="/recipes/{item.slug}/diff?from={item.versionNumber - 1}&to={item.versionNumber}">
-											<span class="mono-id">v{item.versionNumber - 1}</span> →
+											href="/recipes/{item.slug}/diff?from={item.versionNumber -
+												1}&to={item.versionNumber}">
+											<span class="mono-id">v{item.versionNumber - 1}</span>
+											→
 											<span class="mono-id">v{item.versionNumber}</span>
 										</a>
 									{/if}
@@ -174,6 +179,13 @@
 
 	.event a {
 		font-weight: 600;
+	}
+
+	/* Inline links reach a 24px hit without moving the text; 44px on a phone below. */
+	.event p :global(a),
+	.req .nm :global(a) {
+		padding: 4px 0;
+		margin: -4px 0;
 	}
 
 	.event small {
@@ -367,10 +379,12 @@
 			align-self: stretch;
 		}
 
-		.event a {
+		.event p :global(a),
+		.req .nm :global(a) {
 			display: inline-block;
-			padding-block: 11px;
-			margin-block: -11px;
+			min-height: 44px;
+			padding-block: 12px;
+			margin-block: -12px;
 		}
 	}
 </style>

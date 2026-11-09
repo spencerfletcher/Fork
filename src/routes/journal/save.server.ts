@@ -28,7 +28,8 @@ export async function prepareEntry(
 	| { ok: true; fields: EntryFields; source: Stored; image: UploadedImage | null }
 > {
 	const parsed = parseEntryForm(formData);
-	if (!parsed.ok) return { ok: false, failure: entryFailure(400, 'invalid', parsed.error, formData) };
+	if (!parsed.ok)
+		return { ok: false, failure: entryFailure(400, 'invalid', parsed.error, formData) };
 	const fields = parsed.value;
 
 	let source: Stored = { recipeId: null, versionId: null };

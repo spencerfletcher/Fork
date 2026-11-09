@@ -15,7 +15,11 @@ export type EntryValues = {
 };
 
 /** One recipe the form offers. */
-export type RecipeChoice = { slug: string; title: string; visibility: 'private' | 'friends' | 'public' };
+export type RecipeChoice = {
+	slug: string;
+	title: string;
+	visibility: 'private' | 'friends' | 'public';
+};
 
 export function valuesOf(formData: FormData): EntryValues {
 	return {

@@ -13,14 +13,20 @@
 
 <article class="jentry" id="entry-{entry.id}" class:jentry--text={!entry.photoUrl}>
 	<p class="jday">
-		<time datetime={entry.cookedOn}><b>{dayNumber}</b><span>{weekday}</span></time>
+		<time datetime={entry.cookedOn}>
+			<b>{dayNumber}</b>
+			<span>{weekday}</span>
+		</time>
 	</p>
 	<div class="jhead">
 		<h3 class="jdish">{entry.dish}</h3>
 		<!-- A recipe the reader may no longer see (an unfriend) shows no source at all. -->
 		{#if source.kind === 'recipe'}
 			<p class="jsource">
-				<a href="/recipes/{source.slug}{source.versionNumber ? `?version=${source.versionNumber}` : ''}">
+				<a
+					href="/recipes/{source.slug}{source.versionNumber
+						? `?version=${source.versionNumber}`
+						: ''}">
 					{source.title}
 					{#if source.versionNumber}<span class="mono-id">v{source.versionNumber}</span>{/if}
 				</a>
@@ -35,8 +41,13 @@
 		{/if}
 		<p class="jmeta">
 			{#if entry.servings}<span>Served {entry.servings}</span>{/if}
-			<span class="aud">{@render audienceIcon(entry.audience)}{AUDIENCE_LABEL[entry.audience]}</span>
-			<a class="edit" href="/journal/{entry.id}/edit">Edit<span class="sr-only"> {entry.dish}</span></a>
+			<span class="aud">
+				{@render audienceIcon(entry.audience)}{AUDIENCE_LABEL[entry.audience]}
+			</span>
+			<a class="edit" href="/journal/{entry.id}/edit">
+				Edit
+				<span class="sr-only">{entry.dish}</span>
+			</a>
 		</p>
 		{#if privateRecipe && entry.audience === 'friends'}
 			<p class="aud-hint">{PRIVATE_RECIPE_HINT}</p>
@@ -155,6 +166,8 @@
 
 	.jsource a {
 		font-weight: 600;
+		padding: 4px 0;
+		margin: -4px 0;
 	}
 
 	.jmeta {

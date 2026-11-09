@@ -64,7 +64,9 @@ describe('Friends page', () => {
 			visibility: 'friends',
 			username: 'devcooks'
 		};
-		const { container } = render(Page, { props: { data: makeData({ feed: [event], friendCount: 1 }) } });
+		const { container } = render(Page, {
+			props: { data: makeData({ feed: [event], friendCount: 1 }) }
+		});
 		expect(container.querySelector('.event p')?.textContent?.replace(/\s+/g, ' ')).toContain(
 			'@devcooks shared Shakshuka with friends'
 		);

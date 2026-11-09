@@ -270,8 +270,6 @@ export async function recipeChoices(viewer: Viewer) {
 	return db
 		.select({ slug: recipes.slug, title: recipes.title, visibility: recipes.visibility })
 		.from(recipes)
-		.where(
-			and(or(eq(recipes.authorId, viewer.id), inArray(recipes.id, saved)), visibleTo(viewer))
-		)
+		.where(and(or(eq(recipes.authorId, viewer.id), inArray(recipes.id, saved)), visibleTo(viewer)))
 		.orderBy(asc(recipes.title));
 }

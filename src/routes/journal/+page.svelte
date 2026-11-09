@@ -29,8 +29,8 @@
 				<h1>Journal</h1>
 				{#if summary}<p class="sub">{summary}</p>{/if}
 				<p class="status" role="status">
-					{#if logged}<strong>Logged</strong> · {dayLabel(logged.cookedOn)}{:else if deleted}Entry
-						deleted.{/if}
+					{#if logged}<strong>Logged</strong>
+						· {dayLabel(logged.cookedOn)}{:else if deleted}Entry deleted.{/if}
 				</p>
 			</div>
 			{#if count > 0}

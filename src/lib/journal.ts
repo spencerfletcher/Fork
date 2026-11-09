@@ -18,7 +18,8 @@ export const AUDIENCE_SENTENCE: Record<LogAudience, string> = {
 export const PRIVATE_RECIPE_HINT = 'Friends see the dish and your photo, not the recipe.';
 
 /** Under Block, wherever it is offered. */
-export const BLOCK_SENTENCE = 'Blocking stops requests and interactions. Public recipes stay public.';
+export const BLOCK_SENTENCE =
+	'Blocking stops requests and interactions. Public recipes stay public.';
 
 // cooked_on is a calendar day with no time zone; read and printed as UTC so
 // no reader's offset moves it to the day before.

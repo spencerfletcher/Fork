@@ -40,8 +40,11 @@ vi.mock('#lib/server/profiles.js', () => ({ ensureProfile: vi.fn().mockResolvedV
 const ME = { id: 'me' };
 const THEM = { id: 'them', username: 'devcooks' };
 
-const run = (name: keyof typeof actions, fields: Record<string, string>, user: typeof ME | null = ME) =>
-	invokeAction(actions[name] as never, formEvent({ fields, locals: { user } }));
+const run = (
+	name: keyof typeof actions,
+	fields: Record<string, string>,
+	user: typeof ME | null = ME
+) => invokeAction(actions[name] as never, formEvent({ fields, locals: { user } }));
 
 beforeEach(() => {
 	vi.clearAllMocks();
@@ -60,7 +63,11 @@ describe('friends load', () => {
 		m.requestsFor.mockResolvedValue([{ id: 'p', username: 'priyabakes', sentAt: new Date() }]);
 		m.friendIdsOf.mockResolvedValue(['a', 'b']);
 		const data = await load({ url: new URL('http://l/friends'), locals: { user: ME } } as never);
-		expect(data).toMatchObject({ feed: [], friendCount: 2, requests: [{ username: 'priyabakes' }] });
+		expect(data).toMatchObject({
+			feed: [],
+			friendCount: 2,
+			requests: [{ username: 'priyabakes' }]
+		});
 	});
 });
 
@@ -71,7 +78,14 @@ describe('relationship actions', () => {
 			expect(await run(name, { userId: ME.id })).toMatchObject({ status: 400 });
 			m.findProfile.mockResolvedValue(undefined);
 			expect(await run(name, { userId: 'ghost' })).toMatchObject({ status: 400 });
-			for (const fn of [m.sendRequest, m.acceptRequest, m.declineRequest, m.unfriend, m.block, m.mute])
+			for (const fn of [
+				m.sendRequest,
+				m.acceptRequest,
+				m.declineRequest,
+				m.unfriend,
+				m.block,
+				m.mute
+			])
 				expect(fn).not.toHaveBeenCalled();
 		}
 	);

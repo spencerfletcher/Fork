@@ -60,7 +60,10 @@ describe('FeedEntry', () => {
 		expect(screen.getByRole('link', { name: '@devcooks' })).toBeInTheDocument();
 		expect(screen.getByText(/cooked Mon 9 Nov/)).toBeInTheDocument();
 		expect(screen.getByRole('heading', { name: 'Beet and Feta Salad' })).toBeInTheDocument();
-		expect(screen.getByRole('img')).toHaveAttribute('alt', "@devcooks's photo of Beet and Feta Salad");
+		expect(screen.getByRole('img')).toHaveAttribute(
+			'alt',
+			"@devcooks's photo of Beet and Feta Salad"
+		);
 		expect(screen.getByRole('link', { name: /Orange · v2/ })).toHaveAttribute(
 			'href',
 			'/recipes/beet?version=2'
@@ -95,7 +98,9 @@ describe('FeedEntry', () => {
 			props: { item: makeItem({ recipeId: null, source: { kind: 'hidden' } } as Partial<Item>) }
 		});
 		expect(screen.queryByRole('button', { name: /Save/ })).toBeNull();
-		expect(screen.getByText(/cooked a private recipe. You can see the dish, not the recipe./)).toBeInTheDocument();
+		expect(
+			screen.getByText(/cooked a private recipe. You can see the dish, not the recipe./)
+		).toBeInTheDocument();
 	});
 
 	test('⋯ opens Mute, Unfriend, Report and Block; Block asks once more and says what it does', async () => {
@@ -114,7 +119,9 @@ describe('FeedEntry', () => {
 			'/friends?/block'
 		);
 
-		await fireEvent.keyDown(screen.getByRole('button', { name: 'Block @devcooks' }), { key: 'Escape' });
+		await fireEvent.keyDown(screen.getByRole('button', { name: 'Block @devcooks' }), {
+			key: 'Escape'
+		});
 		expect(more).toHaveAttribute('aria-expanded', 'false');
 		expect(more).toHaveFocus();
 	});

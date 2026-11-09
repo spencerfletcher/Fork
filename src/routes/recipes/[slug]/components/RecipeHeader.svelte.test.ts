@@ -347,7 +347,10 @@ describe('RecipeHeader personal line', () => {
 		expect(line.textContent!.replace(/\s+/g, ' ').trim()).toBe(
 			'You cooked this on Sun 8 Nov · Add to Journal'
 		);
-		expect(screen.getByRole('link', { name: 'Sun 8 Nov' })).toHaveAttribute('href', '/journal#entry-12');
+		expect(screen.getByRole('link', { name: 'Sun 8 Nov' })).toHaveAttribute(
+			'href',
+			'/journal#entry-12'
+		);
 		expect(screen.getByRole('link', { name: 'Add to Journal' })).toHaveAttribute('href', ADD);
 	});
 
@@ -364,4 +367,3 @@ describe('RecipeHeader personal line', () => {
 		expect(cooking.container.querySelector('.personal')).toBeNull();
 	});
 });
-

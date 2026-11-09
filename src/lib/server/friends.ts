@@ -63,7 +63,10 @@ export async function relationOf(me: string, them: string): Promise<Relation> {
  * any other row (sent, friends, blocked either way) refuses, so a blocked pair
  * can never request.
  */
-export async function sendRequest(me: string, them: string): Promise<'sent' | 'accepted' | 'refused'> {
+export async function sendRequest(
+	me: string,
+	them: string
+): Promise<'sent' | 'accepted' | 'refused'> {
 	if (me === them) return 'refused';
 	return db.transaction(async (tx) => {
 		const relation = relationFrom(await pairRow(tx, me, them), me);

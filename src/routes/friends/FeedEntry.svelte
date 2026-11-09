@@ -46,14 +46,20 @@
 	{#if entry.caption}<p class="caption">{entry.caption}</p>{/if}
 	{#if source.kind === 'recipe'}
 		<p class="source">
-			<a href="/recipes/{source.slug}{source.versionNumber ? `?version=${source.versionNumber}` : ''}">
+			<a
+				href="/recipes/{source.slug}{source.versionNumber
+					? `?version=${source.versionNumber}`
+					: ''}">
 				{source.title}{source.versionNumber ? ' · ' : ''}{#if source.versionNumber}<span
-						class="mono-id">v{source.versionNumber}</span
-					>{/if}
+						class="mono-id">
+						v{source.versionNumber}
+					</span>{/if}
 			</a>
 		</p>
 	{:else if source.kind === 'hidden'}
-		<p class="private-line">@{item.username} cooked a private recipe. You can see the dish, not the recipe.</p>
+		<p class="private-line">
+			@{item.username} cooked a private recipe. You can see the dish, not the recipe.
+		</p>
 	{:else if source.kind === 'deleted'}
 		<p class="source">Recipe deleted</p>
 	{/if}
@@ -189,6 +195,13 @@
 		font-weight: 600;
 	}
 
+	/* Inline links reach a 24px hit without moving the text; 44px on a phone below. */
+	.source a,
+	.who-line :global(a) {
+		padding: 4px 0;
+		margin: -4px 0;
+	}
+
 	.private-line {
 		margin: 8px 0 0;
 		font-size: 0.875rem;
@@ -240,10 +253,11 @@
 			font-size: 1.25rem;
 		}
 
-		.source a {
+		.source a,
+		.who-line :global(a) {
 			display: inline-block;
-			padding-block: 11px;
-			margin-block: -11px;
+			padding-block: 12px;
+			margin-block: -12px;
 		}
 	}
 </style>

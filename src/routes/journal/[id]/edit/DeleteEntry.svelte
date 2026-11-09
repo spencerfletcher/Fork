@@ -65,7 +65,9 @@
 			</div>
 		</form>
 	{:else}
-		<button type="button" class="btn-ghost" bind:this={trigger} onclick={open}>Delete entry…</button>
+		<button type="button" class="btn-ghost" bind:this={trigger} onclick={open}>
+			Delete entry…
+		</button>
 	{/if}
 	{#if error}
 		<p class="form-error" role="alert">{error}</p>

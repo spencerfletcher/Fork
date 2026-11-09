@@ -111,8 +111,13 @@
 					<input type="hidden" name="targetType" value={target.type} />
 					<input type="hidden" name="targetId" value={target.id} />
 					<label for="reason-{target.type}-{target.id}">What's wrong?</label>
-					<textarea id="reason-{target.type}-{target.id}" name="reason" rows="3" required maxlength="1000"
-					></textarea>
+					<textarea
+						id="reason-{target.type}-{target.id}"
+						name="reason"
+						rows="3"
+						required
+						maxlength="1000">
+					</textarea>
 					<button type="submit" class="confirm">Send report</button>
 				</form>
 			{:else if step === 'reported'}
