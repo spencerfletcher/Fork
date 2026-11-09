@@ -15,6 +15,7 @@ Paper `#f7f3ec`, ink, clay `#b23c00` as text only, marigold `#eca620` as the sin
 ## Audience model (decided 9 Nov)
 
 - **Recipe: Only me / Friends / Public.** Radio trio "Who can see this recipe", one sentence each, Only me default. Friends-level recipes are visible to approved friends (page, Save, Fork) and never appear in Discover. Making a recipe less visible never hides existing forks. Link sharing of a private recipe is later.
+- **Search covers everything the viewer may see**: own, friends' and public recipes (decided 9 Nov). "Never in Discover" applies to Discover, tags and profiles seen by strangers, not to a signed-in search.
 - **Log entry: Only me / Friends.** Radio pair "Who sees this entry", Only me default; after the first approved friend the last choice is remembered. A friends-level entry on a private recipe says "Friends see the dish and your photo, not the recipe."
 - **Forks never widen access (decided 9 Nov, evening).** A fork of a Friends recipe may be Only me or Friends, never Public; a fork of a Public recipe may be anything. The server enforces this on create and on every later visibility change, not just the radio set.
 - Schema note for the builder: `recipes.isPublic` becomes a three-valued visibility (`'private' | 'friends' | 'public'` as const), and every recipe read (page, Cookbook Saved, Fork, Discover, profile) checks it.
