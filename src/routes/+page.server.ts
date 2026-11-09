@@ -25,7 +25,7 @@ type SampleDiff = {
 
 export const load: PageServerLoad = async ({ locals: { user } }) => {
 	const allRecipes = await db.query.recipes.findMany({
-		where: eq(recipes.isPublic, true),
+		where: eq(recipes.visibility, 'public'),
 		with: CARD_WITH,
 		orderBy: (r, { desc }) => [desc(r.updatedAt)]
 	});
@@ -103,7 +103,7 @@ export const load: PageServerLoad = async ({ locals: { user } }) => {
 		...(user ? { meta: { title: 'Recipes' } } : {}),
 		recipes: withCounts,
 		// The feed is browse for a signed-in user, tabs included.
-		tags: user ? await visibleTags(eq(recipes.isPublic, true)) : [],
+		tags: user ? await visibleTags(eq(recipes.visibility, 'public')) : [],
 		sampleDiff: best?.diff ?? null
 	};
 };

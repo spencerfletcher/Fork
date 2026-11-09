@@ -10,11 +10,11 @@ import type { PageServerLoad } from './$types';
 export const load: PageServerLoad = async ({ locals: { user } }) => {
 	const [rows, tags] = await Promise.all([
 		db.query.recipes.findMany({
-			where: user ? eq(recipes.authorId, user.id) : eq(recipes.isPublic, true),
+			where: user ? eq(recipes.authorId, user.id) : eq(recipes.visibility, 'public'),
 			with: CARD_WITH,
 			orderBy: (r, { desc }) => [desc(r.updatedAt)]
 		}),
-		user ? [] : visibleTags(eq(recipes.isPublic, true))
+		user ? [] : visibleTags(eq(recipes.visibility, 'public'))
 	]);
 
 	return {

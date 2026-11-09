@@ -32,7 +32,7 @@ beforeEach(() => {
 describe('/tags/[slug] load', () => {
 	test('returns the public tags for the tabs', async () => {
 		const result = await load(event);
-		expect(visibleTagsMock.mock.calls[0][0]).toEqual(eq(recipes.isPublic, true));
+		expect(visibleTagsMock.mock.calls[0][0]).toEqual(eq(recipes.visibility, 'public'));
 		expect(result).toMatchObject({ tags: [{ id: 1, name: 'Dessert', slug: 'dessert' }] });
 	});
 

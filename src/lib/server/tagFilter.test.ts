@@ -18,7 +18,7 @@ describe('visibleTags', () => {
 	test('returns the distinct tags for the scope, ordered by name', async () => {
 		const c = chain([{ id: 1, name: 'Baking', slug: 'baking' }]);
 		selectDistinctMock.mockReturnValue(c);
-		const result = await visibleTags(eq(recipes.isPublic, true));
+		const result = await visibleTags(eq(recipes.visibility, 'public'));
 		expect(result).toEqual([{ id: 1, name: 'Baking', slug: 'baking' }]);
 		expect(c.innerJoin).toHaveBeenCalledTimes(2);
 		expect(c.where).toHaveBeenCalledTimes(1);
