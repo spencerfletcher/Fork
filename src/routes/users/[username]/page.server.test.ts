@@ -7,12 +7,15 @@ import { visibleTo } from '#lib/server/visibility.js';
 
 // ─── Hoisted mocks ────────────────────────────────────────────────────────────
 
-const { findProfileMock, findRecipesMock, selectMock, countMock } = vi.hoisted(() => ({
+const { findProfileMock, findRecipesMock, selectMock, countMock, relationMock } = vi.hoisted(() => ({
 	findProfileMock: vi.fn(),
 	findRecipesMock: vi.fn(),
 	selectMock: vi.fn(),
-	countMock: vi.fn()
+	countMock: vi.fn(),
+	relationMock: vi.fn()
 }));
+
+vi.mock('#lib/server/friends.js', () => ({ relationOf: relationMock }));
 
 vi.mock('#lib/server/db/index.js', () => ({
 	db: {
@@ -83,6 +86,20 @@ describe('users/[username] load', () => {
 		findRecipesMock.mockResolvedValue([]);
 		await load(makeLoadEvent('chefmaria'));
 		expect(findProfileMock).toHaveBeenCalledWith({ where: eq(profiles.username, 'chefmaria') });
+	});
+
+	test("the relation is the viewer's with this person; signed out there is none", async () => {
+		findProfileMock.mockResolvedValue(makeProfile());
+		findRecipesMock.mockResolvedValue([]);
+		relationMock.mockResolvedValue('received');
+		const signedIn = (await load(makeLoadEvent('chefmaria', 'viewer'))) as { relation: unknown };
+		expect(relationMock).toHaveBeenCalledWith('viewer', 'user-1');
+		expect(signedIn.relation).toBe('received');
+
+		relationMock.mockClear();
+		const signedOut = (await load(makeLoadEvent('chefmaria'))) as { relation: unknown };
+		expect(signedOut.relation).toBeNull();
+		expect(relationMock).not.toHaveBeenCalled();
 	});
 
 	test('returns profile when found', async () => {
