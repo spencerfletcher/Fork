@@ -257,9 +257,9 @@ describe('New recipe page editor state', () => {
 		);
 	});
 
-	test('has Cancel to the recipe list and no commit message field', () => {
+	test('has Cancel to the Cookbook and no commit message field', () => {
 		render(NewPage, { props: { data, form: null } });
-		expect(screen.getByRole('link', { name: 'Cancel' })).toHaveAttribute('href', '/recipes');
+		expect(screen.getByRole('link', { name: 'Cancel' })).toHaveAttribute('href', '/cookbook');
 		expect(screen.queryByLabelText(/what changed/i)).toBeNull();
 		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('New Recipe');
 	});
