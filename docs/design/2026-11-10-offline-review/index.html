@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width,initial-scale=1" />
+		<title>Fork offline work pack — 10 November 2026</title>
+		<style>
+			* {
+				box-sizing: border-box;
+			}
+			body {
+				margin: 0;
+				background: #f7f3ec;
+				color: #1a1714;
+				font:
+					17px/1.65 system-ui,
+					-apple-system,
+					sans-serif;
+			}
+			main {
+				max-width: 1100px;
+				margin: auto;
+				padding: 36px 24px 64px;
+			}
+			h1,
+			h2 {
+				font-family: Georgia, serif;
+				line-height: 1.2;
+			}
+			h1 {
+				font-size: clamp(28px, 5vw, 46px);
+				margin: 8px 0 20px;
+			}
+			h2 {
+				font-size: 28px;
+				margin: 0 0 12px;
+			}
+			h3 {
+				margin: 0 0 8px;
+			}
+			a {
+				color: #923500;
+				text-underline-offset: 3px;
+			}
+			a:focus-visible {
+				outline: 3px solid #923500;
+				outline-offset: 4px;
+			}
+			p {
+				max-width: 78ch;
+			}
+			header {
+				border-bottom: 1px solid #d9d3c8;
+				padding-bottom: 24px;
+			}
+			.meta {
+				font-size: 14px;
+				color: #4a443e;
+			}
+			nav {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 8px 22px;
+				margin: 22px 0;
+			}
+			nav a {
+				padding: 7px 0;
+			}
+			.resources {
+				padding: 20px 0;
+			}
+			.resources li {
+				margin: 7px 0;
+			}
+			.notice {
+				padding: 14px 18px;
+				background: #fffdf9;
+				border-left: 4px solid #eca620;
+			}
+			section {
+				padding: 32px 0;
+				border-bottom: 1px solid #d9d3c8;
+			}
+			.screens {
+				display: grid;
+				grid-template-columns: minmax(0, 1fr) minmax(0, 1.7fr);
+				gap: 24px;
+			}
+			figure {
+				margin: 0;
+				min-width: 0;
+			}
+			figure a {
+				display: block;
+				background: #fffdf9;
+				border: 1px solid #d9d3c8;
+				padding: 10px;
+			}
+			img {
+				display: block;
+				width: 100%;
+				height: 520px;
+				object-fit: contain;
+				object-position: top;
+			}
+			figcaption {
+				font-size: 14px;
+				color: #4a443e;
+				margin-top: 8px;
+			}
+			details {
+				padding: 20px 0;
+			}
+			summary {
+				cursor: pointer;
+				font-weight: 650;
+				padding: 8px 0;
+			}
+			code {
+				font-size: 0.92em;
+			}
+			@media (max-width: 700px) {
+				main {
+					padding: 24px 16px;
+				}
+				.screens {
+					grid-template-columns: 1fr;
+				}
+				img {
+					height: 480px;
+				}
+			}
+			@media print {
+				nav {
+					display: none;
+				}
+				img {
+					height: 340px;
+				}
+				section {
+					break-inside: avoid;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<main>
+			<header>
+				<div class="meta">OFFLINE WORK PACK · 10 NOVEMBER 2026 · ASIA/HONG KONG</div>
+				<h1>Make Fork better with your own cooking judgment</h1>
+				<p>
+					Pick one useful session: test realistic recipe text, settle the Insert interaction, or
+					build a small standalone experiment. Everything needed to read this gallery is local.
+				</p>
+				<div class="notice">
+					<strong>Static references, not a working app.</strong>
+					The screenshots predate the visible-marker live editor decision. Their invented recipes,
+					serving examples and social controls do not override the current roadmap.
+				</div>
+			</header>
+			<section class="resources">
+				<h2>Your work materials</h2>
+				<ul>
+					<li><a href="START-HERE.md">Start here: recommended sessions and deliverables</a></li>
+					<li><a href="WORKSHEET.md">Editable decision and observation worksheet</a></li>
+					<li><a href="RECIPE-CASES.md">Synthetic recipe fixtures and expected checks</a></li>
+					<li><a href="EDITOR-EXERCISE.md">Standalone Insert-toolbar coding exercise</a></li>
+					<li><a href="LOCAL-READINESS.md">Local commands, preparation checks and limits</a></li>
+				</ul>
+				<p>
+					Open the Markdown files in your code editor to fill them in. The gallery requires no
+					server or login; the full application may still require local services.
+				</p>
+			</section>
+			<nav aria-label="Screenshot sections">
+				<a href="#recipe-overview">Recipe</a>
+				<a href="#cook-view">Cook</a>
+				<a href="#editor-groups-yield">Editor</a>
+				<a href="#journal-feed">Journal / Friends</a>
+			</nav>
+			<section id="recipe-overview">
+				<h2>Recipe overview</h2>
+				<p>
+					Check whether the photograph, practical details and Cook action lead in the right order.
+				</p>
+				<div class="screens">
+					<figure>
+						<a href="images/recipe-overview-390.png">
+							<img
+								loading="lazy"
+								src="images/recipe-overview-390.png"
+								alt="Recipe overview static mockup at 390 pixels wide" />
+						</a>
+						<figcaption>Phone-width reference · 390px. Click for the full-size PNG.</figcaption>
+					</figure>
+					<figure>
+						<a href="images/recipe-overview-1280.png">
+							<img
+								loading="lazy"
+								src="images/recipe-overview-1280.png"
+								alt="Recipe overview static mockup at 1280 pixels wide" />
+						</a>
+						<figcaption>Desktop-width reference · 1280px. Click for the full-size PNG.</figcaption>
+					</figure>
+				</div>
+			</section>
+			<section id="cook-view">
+				<h2>Cook view</h2>
+				<p>
+					Check what you can read immediately and how you would return to an ingredient without
+					losing your step.
+				</p>
+				<div class="screens">
+					<figure>
+						<a href="images/cook-view-390.png">
+							<img
+								loading="lazy"
+								src="images/cook-view-390.png"
+								alt="Cook view static mockup at 390 pixels wide" />
+						</a>
+						<figcaption>Phone-width reference · 390px. Click for the full-size PNG.</figcaption>
+					</figure>
+					<figure>
+						<a href="images/cook-view-1280.png">
+							<img
+								loading="lazy"
+								src="images/cook-view-1280.png"
+								alt="Cook view static mockup at 1280 pixels wide" />
+						</a>
+						<figcaption>Desktop-width reference · 1280px. Click for the full-size PNG.</figcaption>
+					</figure>
+				</div>
+			</section>
+			<section id="editor-groups-yield">
+				<h2>Recipe editor</h2>
+				<p>
+					This board predates live heading styling and the Insert toolbar. Use it as a baseline, not
+					a frozen design.
+				</p>
+				<div class="screens">
+					<figure>
+						<a href="images/editor-groups-yield-390.png">
+							<img
+								loading="lazy"
+								src="images/editor-groups-yield-390.png"
+								alt="Recipe editor static mockup at 390 pixels wide" />
+						</a>
+						<figcaption>Phone-width reference · 390px. Click for the full-size PNG.</figcaption>
+					</figure>
+					<figure>
+						<a href="images/editor-groups-yield-1280.png">
+							<img
+								loading="lazy"
+								src="images/editor-groups-yield-1280.png"
+								alt="Recipe editor static mockup at 1280 pixels wide" />
+						</a>
+						<figcaption>Desktop-width reference · 1280px. Click for the full-size PNG.</figcaption>
+					</figure>
+				</div>
+			</section>
+			<section id="journal-feed">
+				<h2>Journal and Friends</h2>
+				<p>
+					Use your real dinner records to judge the density and required effort. Some pictured
+					social actions are later slices.
+				</p>
+				<div class="screens">
+					<figure>
+						<a href="images/journal-feed-390.png">
+							<img
+								loading="lazy"
+								src="images/journal-feed-390.png"
+								alt="Journal and Friends static mockup at 390 pixels wide" />
+						</a>
+						<figcaption>Phone-width reference · 390px. Click for the full-size PNG.</figcaption>
+					</figure>
+					<figure>
+						<a href="images/journal-feed-1280.png">
+							<img
+								loading="lazy"
+								src="images/journal-feed-1280.png"
+								alt="Journal and Friends static mockup at 1280 pixels wide" />
+						</a>
+						<figcaption>Desktop-width reference · 1280px. Click for the full-size PNG.</figcaption>
+					</figure>
+				</div>
+			</section>
+			<details>
+				<summary>Research and roadmap snapshots</summary>
+				<ul>
+					<li><a href="references/Fork%20product%20roadmap.md">Product roadmap</a></li>
+					<li>
+						<a href="references/Fork%20cookbook%20design%20research.md">Cookbook design research</a>
+					</li>
+					<li><a href="references/DESIGN-MVP.md">MVP design brief</a></li>
+				</ul>
+				<p>
+					Snapshots captured on 9 November. Online citations require a connection; the findings and
+					decisions are included locally. Nested repository links in these source documents retain
+					their original locations.
+				</p>
+			</details>
+			<footer class="meta">
+				<p>
+					Prepared against local revision 3019fa9. No production code, database, credentials or
+					remote media downloads are included. Use a trusted recipe for actual cooking; the provided
+					fixtures test interfaces.
+				</p>
+			</footer>
+		</main>
+	</body>
+</html>
