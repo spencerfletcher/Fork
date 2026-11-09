@@ -180,7 +180,8 @@
 		white-space: nowrap;
 	}
 
-	.stat svg {
+	/* :global, because both icons come from Icons.svelte. */
+	.stat :global(svg) {
 		flex-shrink: 0;
 	}
 
