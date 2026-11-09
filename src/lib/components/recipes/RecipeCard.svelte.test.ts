@@ -93,6 +93,10 @@ describe('RecipeCard', () => {
 		expect(meta.compareDocumentPosition(line) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 	});
 
+	test('titles wrap normally, never balanced', () => {
+		expect(source).not.toMatch(/text-wrap: balance/);
+	});
+
 	test('the description clamps at two lines', () => {
 		const rule = /\.card-description \{([^}]*)\}/.exec(source)![1];
 		expect(rule).toMatch(/-webkit-line-clamp: 2;/);

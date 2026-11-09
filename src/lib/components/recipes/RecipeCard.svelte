@@ -247,9 +247,9 @@
 		line-clamp: 3;
 		overflow: hidden;
 		color: var(--color-text);
-		/* No one-word last line ("Cookies"). The stretched link's label still
-		   carries the whole title. */
-		text-wrap: balance;
+		/* Plain wrapping, never balance (decided 9 November 2026); pretty only
+		   spares a one-word last line ("Cookies"). */
+		text-wrap: pretty;
 	}
 
 	/* :has() targeting ancestor — no Tailwind equivalent */
@@ -275,7 +275,7 @@
 		line-clamp: 4;
 		overflow: hidden;
 		color: var(--color-accent);
-		text-wrap: balance;
+		text-wrap: pretty;
 	}
 
 	.meta-row {

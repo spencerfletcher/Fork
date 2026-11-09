@@ -223,7 +223,7 @@
 		font-weight: 500;
 		font-size: clamp(1.5rem, 1.1rem + 1.4vw, 2.25rem);
 		line-height: 1.15;
-		text-wrap: balance;
+		text-wrap: pretty;
 	}
 
 	.lead:hover .lead-title {
