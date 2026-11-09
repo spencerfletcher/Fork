@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Avatar from '#lib/components/ui/Avatar.svelte';
 	import RecipeCard from '#lib/components/recipes/RecipeCard.svelte';
 	import SearchFilters from '#lib/components/ui/SearchFilters.svelte';
 	import { formatTime, plural } from '#lib/helpers.js';
@@ -57,10 +58,8 @@
 				<div>
 					{#if lead.author}
 						<a class="lead-cook" href="/users/{lead.author.username}">
-							<span class="lead-avatar" aria-hidden="true">
-								{lead.author.username.charAt(0).toUpperCase()}
-							</span>
-							<span class="lead-handle">@{lead.author.username}</span>
+							<Avatar username={lead.author.username} size={28} />
+							<span class="handle lead-handle">@{lead.author.username}</span>
 						</a>
 					{/if}
 					<h2 class="lead-title">
@@ -87,7 +86,7 @@
 									of {change.title}
 								</span>
 								<span class="change-note">
-									{#if change.username}<span class="change-handle">@{change.username}</span>
+									{#if change.username}<span class="handle change-handle">@{change.username}</span>
 									{/if}{change.commitMessage}
 								</span>
 							</a>
@@ -186,28 +185,6 @@
 
 	.lead-cook:hover .lead-handle {
 		color: var(--color-text);
-	}
-
-	.lead-avatar {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		width: 28px;
-		height: 28px;
-		border: 1px solid transparent;
-		border-radius: 50%;
-		background: var(--color-tint);
-		color: var(--color-accent);
-		font-family: var(--font-serif);
-		font-size: 0.875rem;
-		line-height: 1;
-	}
-
-	.lead-handle,
-	.change-handle {
-		font-family: var(--font-mono);
-		font-size: 0.9375em;
-		color: var(--color-accent);
 	}
 
 	.lead-title {

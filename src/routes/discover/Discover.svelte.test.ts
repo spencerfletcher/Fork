@@ -71,7 +71,7 @@ describe('Discover', () => {
 		const lead = screen.getByRole('link', { name: 'Cardamom Buns' }).closest<HTMLElement>('.lead')!;
 		const profile = within(lead).getByRole('link', { name: '@cook9' });
 		expect(profile).toHaveAttribute('href', '/users/cook9');
-		expect(profile.querySelector('.lead-avatar')).not.toBeNull();
+		expect(profile.querySelector('.avatar')).not.toBeNull();
 		expect([...lead.querySelectorAll('a')].map((a) => a.getAttribute('href'))).toEqual([
 			'/users/cook9',
 			'/recipes/r-9'

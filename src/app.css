@@ -541,6 +541,15 @@
 		font-weight: 400;
 	}
 
+	/* A handle inside a link that holds more than it (avatar and handle):
+	   Username's look without its own link. Mono one notch under the line, clay. */
+	.handle {
+		font-family: var(--font-mono);
+		font-size: 0.9375em;
+		color: var(--color-accent);
+		overflow-wrap: anywhere;
+	}
+
 	/* The owner-only lifted paper: a Journal note and its form field. */
 	.lock-note {
 		padding: 12px 14px;

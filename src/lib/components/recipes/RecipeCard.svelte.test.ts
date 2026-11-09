@@ -362,7 +362,7 @@ describe('RecipeCard on Discover', () => {
 		});
 		const cook = container.querySelector('.card-cook')!;
 		expect(cook).toHaveTextContent('@maria');
-		expect(cook.querySelector('.card-avatar')).toHaveTextContent('M');
+		expect(cook.querySelector('.avatar')).toHaveTextContent('M');
 		expect(cook.compareDocumentPosition(container.querySelector('.card-img-wrap')!)).toBe(
 			Node.DOCUMENT_POSITION_FOLLOWING
 		);
@@ -378,7 +378,7 @@ describe('RecipeCard on Discover', () => {
 		});
 		const profile = screen.getByRole('link', { name: '@maria' });
 		expect(profile).toHaveAttribute('href', '/users/maria');
-		expect(profile.querySelector('.card-avatar')).not.toBeNull();
+		expect(profile.querySelector('.avatar')).not.toBeNull();
 		const links = [...container.querySelectorAll('a')];
 		expect(links.map((a) => a.getAttribute('href'))).toEqual([
 			'/users/maria',

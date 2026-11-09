@@ -5,6 +5,7 @@
 	import type { Profile } from '#lib/server/db/schema.js';
 	import { DESTINATIONS, isCurrent } from './destinations.js';
 	import { searchIcon } from '#lib/components/Icons.svelte';
+	import Avatar from '#lib/components/ui/Avatar.svelte';
 	import Dropdown from './Dropdown.svelte';
 
 	let { user, profile = null }: { user: User | null; profile?: Profile | null } = $props();
@@ -12,8 +13,6 @@
 	// The four destinations sit here from 768; a phone has the tab bar instead.
 	const path = $derived(page.url.pathname);
 	const onOwnProfile = $derived(!!profile && path === `/users/${profile.username}`);
-	// A signed-in account with no profile row yet still gets an initial and Log out.
-	const initial = $derived((profile?.username ?? user?.email ?? '?').charAt(0).toUpperCase());
 
 	const current = (active: boolean) => (active ? ('page' as const) : undefined);
 </script>
@@ -70,7 +69,8 @@
 							aria-label={profile ? `Your account, @${profile.username}` : 'Your account'}
 							title={profile ? `@${profile.username}` : undefined}
 							{...props}>
-							<span class="nav-avatar" aria-hidden="true">{initial}</span>
+							<!-- A signed-in account with no profile row yet still gets an initial. -->
+							<Avatar username={profile?.username ?? user.email ?? '?'} size={32} tone="ink" />
 						</button>
 					{/snippet}
 					{#snippet panel()}
@@ -228,26 +228,9 @@
 		cursor: pointer;
 	}
 
-	.nav-avatar {
-		display: inline-flex;
-		flex-shrink: 0;
-		align-items: center;
-		justify-content: center;
-		width: 32px;
-		height: 32px;
-		border: 1px solid transparent;
-		border-radius: 50%;
-		background: var(--color-tint);
-		color: var(--color-text);
-		font-family: var(--font-serif);
-		font-size: 0.9375rem;
-		font-weight: 500;
-		line-height: 1;
-		transition: background 0.15s ease;
-	}
-
-	.nav-avatar-button:hover .nav-avatar,
-	.nav-avatar-button[aria-expanded='true'] .nav-avatar {
+	/* :global, because the disc is Avatar's. */
+	.nav-avatar-button:hover :global(.avatar),
+	.nav-avatar-button[aria-expanded='true'] :global(.avatar) {
 		background: var(--color-text-cream);
 	}
 
@@ -316,7 +299,7 @@
 			outline-offset: -2px;
 		}
 
-		.nav-avatar-button.current:not(:focus-visible) .nav-avatar {
+		.nav-avatar-button.current:not(:focus-visible) :global(.avatar) {
 			outline: 2px solid CanvasText;
 			outline-offset: 2px;
 		}

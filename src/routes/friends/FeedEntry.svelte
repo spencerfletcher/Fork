@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import Username from '#lib/components/ui/Username.svelte';
+	import Avatar from '#lib/components/ui/Avatar.svelte';
 	import { likeIcon, saveIcon } from '#lib/components/Icons.svelte';
 	import { dayLabel } from '#lib/journal.js';
 	import MoreMenu from './MoreMenu.svelte';
@@ -25,7 +26,7 @@
 
 <article class="entry">
 	<div class="who">
-		<span class="avatar" aria-hidden="true">{item.username[0].toUpperCase()}</span>
+		<Avatar username={item.username} size={36} />
 		<p class="who-line">
 			<Username username={item.username} class="hit-link" />
 			<span class="when">cooked {cooked}{loggedOn !== cooked ? ` · logged ${loggedOn}` : ''}</span>
@@ -130,21 +131,6 @@
 		display: flex;
 		align-items: center;
 		gap: 12px;
-	}
-
-	.avatar {
-		display: inline-flex;
-		flex-shrink: 0;
-		align-items: center;
-		justify-content: center;
-		width: 36px;
-		height: 36px;
-		border-radius: 50%;
-		border: 1px solid transparent;
-		background: var(--color-tint);
-		color: var(--color-accent);
-		font-family: var(--font-serif);
-		font-weight: 500;
 	}
 
 	.who-line {

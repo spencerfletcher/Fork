@@ -84,7 +84,7 @@ test.describe('Navbar at 768, signed in', () => {
 			768
 		);
 		// The initial stands for the account at every width: no handle, no Log out.
-		await expect(page.locator('nav .nav-avatar').first()).toBeVisible();
+		await expect(page.locator('nav .avatar').first()).toBeVisible();
 		await expect(page.locator('nav').first()).not.toContainText('@spencerfletcher');
 		await expect(page.getByRole('button', { name: 'Log out' })).toHaveCount(0);
 	});

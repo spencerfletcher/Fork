@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { page } from '$app/state';
 	import Username from '#lib/components/ui/Username.svelte';
+	import Avatar from '#lib/components/ui/Avatar.svelte';
 	import { dayLabel } from '#lib/journal.js';
 	import FeedEntry from './FeedEntry.svelte';
 	import type { PageData } from './$types';
@@ -34,9 +35,7 @@
 		{/if}
 		{#each data.requests as request (request.id)}
 			<div class="req">
-				<span class="avatar avatar--sm" aria-hidden="true">
-					{request.username[0].toUpperCase()}
-				</span>
+				<Avatar username={request.username} size={32} />
 				<p class="nm">
 					<Username username={request.username} class="hit-link" />
 					<small>Sent {day(request.sentAt)}</small>
@@ -103,7 +102,7 @@
 							<FeedEntry {item} />
 						{:else}
 							<article class="event">
-								<span class="avatar" aria-hidden="true">{item.username[0].toUpperCase()}</span>
+								<Avatar username={item.username} size={36} />
 								<p>
 									<Username username={item.username} class="hit-link" />
 									{#if item.versionNumber === 1}
@@ -172,26 +171,6 @@
 		display: block;
 		font-size: 0.875rem;
 		color: var(--color-text-3);
-	}
-
-	.avatar {
-		display: inline-flex;
-		flex-shrink: 0;
-		align-items: center;
-		justify-content: center;
-		width: 36px;
-		height: 36px;
-		border-radius: 50%;
-		border: 1px solid transparent;
-		background: var(--color-tint);
-		color: var(--color-accent);
-		font-family: var(--font-serif);
-		font-weight: 500;
-	}
-
-	.avatar--sm {
-		width: 32px;
-		height: 32px;
 	}
 
 	.rail {

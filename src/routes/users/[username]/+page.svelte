@@ -4,6 +4,7 @@
 	import { enhance } from '$app/forms';
 	import type { SubmitFunction } from '$app/forms';
 	import ConfirmStep from '#lib/components/ui/ConfirmStep.svelte';
+	import Avatar from '#lib/components/ui/Avatar.svelte';
 	import { BLOCK_SENTENCE } from '#lib/journal.js';
 	import type { PageData } from './$types';
 
@@ -31,7 +32,7 @@
 <div class="page">
 	<div class="page-inner">
 		<header class="profile-header">
-			<div class="profile-avatar" aria-hidden="true">{profile.username[0].toUpperCase()}</div>
+			<Avatar username={profile.username} size={72} responsive />
 			<div class="profile-text">
 				<h1>@{profile.username}</h1>
 				<!-- The body face, like the owner's line under it (mono is for
@@ -134,25 +135,6 @@
 		overflow-wrap: anywhere;
 	}
 
-	/* The no-photo panel's treatment: tint behind a clay initial. */
-	.profile-avatar {
-		display: flex;
-		flex-shrink: 0;
-		align-items: center;
-		justify-content: center;
-		width: 72px;
-		height: 72px;
-		border-radius: 50%;
-		/* Inside the fixed size; shows only under forced colours, where the tint
-		   goes and the border keeps the circle. */
-		border: 1px solid transparent;
-		background: var(--color-tint);
-		color: var(--color-accent);
-		font-family: var(--font-serif);
-		font-size: 1.75rem;
-		font-weight: 500;
-	}
-
 	.profile-stats {
 		display: flex;
 		flex-wrap: wrap;
@@ -215,12 +197,6 @@
 	@media (max-width: 699px) {
 		.profile-header {
 			gap: 14px;
-		}
-
-		.profile-avatar {
-			width: 56px;
-			height: 56px;
-			font-size: 1.375rem;
 		}
 	}
 </style>

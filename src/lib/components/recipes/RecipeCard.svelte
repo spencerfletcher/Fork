@@ -4,6 +4,7 @@
 	import type { Visibility } from '#lib/recipes/validation.js';
 	import { AUDIENCE_LABEL } from '#lib/audience.js';
 	import { audienceIcon } from '#lib/components/Icons.svelte';
+	import Avatar from '#lib/components/ui/Avatar.svelte';
 
 	// Only what the card renders, so a column added to the table does not ripple
 	// into every card fixture.
@@ -97,10 +98,8 @@
 	     link so Tab reaches the profile first; a sibling, never nested. -->
 	{#if variant === 'discover' && recipe.author}
 		<a class="card-cook" href="/users/{recipe.author.username}">
-			<span class="card-avatar" aria-hidden="true">
-				{recipe.author.username.charAt(0).toUpperCase()}
-			</span>
-			<span class="card-handle">@{recipe.author.username}</span>
+			<Avatar username={recipe.author.username} size={28} />
+			<span class="handle card-handle">@{recipe.author.username}</span>
 		</a>
 	{/if}
 
@@ -356,33 +355,11 @@
 		}
 	}
 
-	.card-avatar {
-		display: inline-flex;
-		flex-shrink: 0;
-		align-items: center;
-		justify-content: center;
-		width: 28px;
-		height: 28px;
-		border: 1px solid transparent;
-		border-radius: 50%;
-		background: var(--color-tint);
-		color: var(--color-accent);
-		font-family: var(--font-serif);
-		font-size: 0.875rem;
-		font-weight: 500;
-		line-height: 1;
-	}
-
 	/* Handles are identifiers: mono, one notch under the line, clay; above the
 	   stretched link so they stay their own link. */
 	.card-handle {
 		position: relative;
 		z-index: 2;
-		font-family: var(--font-mono);
-		font-size: 0.9375em;
-		color: var(--color-accent);
-		text-decoration: none;
-		overflow-wrap: anywhere;
 		transition: color 0.15s ease;
 	}
 
