@@ -4,18 +4,20 @@ import { eq, and, exists, sql } from 'drizzle-orm';
 import { tags, recipes, recipesToTags } from '#lib/server/db/schema.js';
 import { attachRecipeCounts, CARD_WITH } from '#lib/server/recipeCounts.js';
 import { visibleTags } from '#lib/server/tagFilter.js';
+import { visibleTo } from '#lib/server/visibility.js';
 import { clampDescription } from '#lib/seo.js';
 import { plural } from '#lib/helpers.js';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ params }) => {
+export const load: PageServerLoad = async ({ params, locals: { user } }) => {
 	const tag = await db.query.tags.findFirst({ where: eq(tags.slug, params.slug.toLowerCase()) });
 	if (!tag) throw error(404, 'Tag not found');
 
+	const visible = visibleTo(user);
 	const [tagged, allTags] = await Promise.all([
 		db.query.recipes.findMany({
 			where: and(
-				eq(recipes.visibility, 'public'),
+				visible,
 				exists(
 					db
 						.select({ one: sql`1` })
@@ -26,9 +28,9 @@ export const load: PageServerLoad = async ({ params }) => {
 			with: CARD_WITH,
 			orderBy: (r, { desc }) => [desc(r.updatedAt)]
 		}),
-		visibleTags(eq(recipes.visibility, 'public'))
+		visibleTags(visible)
 	]);
-	const withCounts = await attachRecipeCounts(tagged);
+	const withCounts = await attachRecipeCounts(tagged, user);
 
 	return {
 		tag,
