@@ -88,9 +88,11 @@
 			<span class="message text-text" class:clamped={!open}>{currentVersion.commitMessage}</span>
 			<!-- The separators are drawn between items by CSS, never typed, so no
 				     wrapped line can begin or end with one. -->
-			<span class="controls text-text-2">
+			<span class="controls dot-list text-text-2">
 				{#if isViewingHistory}
-					<span class="item"><a href="/recipes/{recipe.slug}">Back to v{latest}</a></span>
+					<span class="item">
+						<a class="hit-link" href="/recipes/{recipe.slug}">Back to v{latest}</a>
+					</span>
 				{/if}
 				<span class="item">
 					<button
@@ -125,11 +127,11 @@
 			{#each versions.filter((v) => v.versionNumber !== n) as version (version.id)}
 				{@const v = version.versionNumber}
 				<li>
-					<a href="/recipes/{recipe.slug}?version={v}" class="version-link">
+					<a href="/recipes/{recipe.slug}?version={v}" class="version-link hit-link">
 						<span class="version-number">v{v}</span>
 						<span class="message text-text-2">{version.commitMessage}</span>
 					</a>
-					<a href={diff(v, n)} class="compare whitespace-nowrap">Compare with v{n}</a>
+					<a href={diff(v, n)} class="compare hit-link whitespace-nowrap">Compare with v{n}</a>
 				</li>
 			{/each}
 		</ul>
@@ -217,8 +219,8 @@
 		white-space: nowrap;
 	}
 
-	.item + .item::before {
-		content: '· ';
+	.controls {
+		--dot-space: 0 0.25em 0 0;
 	}
 
 	.version-bar a,
@@ -302,13 +304,6 @@
 		flex-shrink: 0;
 	}
 
-	/* Inline links reach a 24px hit without moving the text. Last, so nothing
-	   above resets it. */
-	.version-bar a {
-		padding: 4px 0;
-		margin: -4px 0;
-	}
-
 	/* Stacked widths: the controls drop to a row of their own under the chip
 	   rather than crush the note. flex-shrink back on, or the basis plus the
 	   indent overflows the page. */
@@ -350,15 +345,6 @@
 			display: flex;
 			flex-wrap: wrap;
 			column-gap: 10px;
-		}
-
-		/* Outranks the 4px hit rule above; inline-block so the padding counts. */
-		.version-bar .controls a,
-		.version-bar .history .compare,
-		.version-bar .version-link {
-			display: inline-block;
-			padding: 11px 0;
-			margin-block: -11px;
 		}
 
 		.version-bar .version-link {

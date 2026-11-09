@@ -46,7 +46,7 @@
 				     identifiers only, Spencer, 31 October 2026): the changes and the member date share
 				     one line; the recipe count is the section eyebrow's. The dot
 				     between the items is drawn by CSS, never typed. -->
-				<p class="profile-stats">
+				<p class="profile-stats dot-list">
 					<span class="stat">{plural(commitCount, 'change')}</span>
 					<span class="stat profile-since">Member since {memberSince}</span>
 				</p>
@@ -91,14 +91,14 @@
 							<button type="submit" class="btn-ghost danger">
 								{confirming === 'block' ? 'Block' : 'Remove'}
 							</button>
-							<button type="button" class="text-button" onclick={cancel}>Cancel</button>
+							<button type="button" class="text-btn text-btn--ink" onclick={cancel}>Cancel</button>
 						</div>
 					</form>
 				{:else if data.relation === 'friends'}
 					<div class="relation">
 						<button
 							type="button"
-							class="text-button"
+							class="text-btn text-btn--ink"
 							bind:this={friendsButton}
 							onclick={() => ask('unfriend')}>
 							Friends ✓
@@ -190,9 +190,8 @@
 		color: var(--color-text-3);
 	}
 
-	.stat + .stat::before {
-		content: '·';
-		margin: 0 6px;
+	.profile-stats {
+		--dot-space: 0 6px;
 	}
 
 	/* The owner's one line, the stats line's size and colour. */
@@ -213,7 +212,7 @@
 		margin: 8px 0 0;
 	}
 
-	.relation button {
+	.relation button:not(.text-btn) {
 		min-height: 44px;
 	}
 
@@ -234,28 +233,15 @@
 		color: var(--color-text);
 	}
 
-	/* Friends ✓ and Cancel: the stats line's type in ink, no box. 24px at
-	   desktop, 44px on a phone. */
-	.relation .text-button {
-		min-height: 24px;
-		padding: 0;
-		border: 0;
-		background: none;
-		font: inherit;
+	/* Friends ✓ and Cancel: the stats line's type in ink, no box. */
+	.relation .text-btn {
 		font-size: 0.875rem;
-		color: var(--color-text);
-		cursor: pointer;
 	}
 
-	.text-button:hover {
-		text-decoration: underline;
-	}
-
-	/* Block is a ghost at rest and reads danger red on hover or focus; the
-	   confirm buttons are red outright. */
+	/* Block is a ghost at rest and reads danger red on hover or focus, as
+	   the app's .btn-ghost.danger. */
 	.block-button:hover,
-	.block-button:focus-visible,
-	.danger {
+	.block-button:focus-visible {
 		border-color: var(--color-remove);
 		color: var(--color-remove);
 	}
@@ -268,10 +254,6 @@
 	}
 
 	@media (max-width: 699px) {
-		.relation .text-button {
-			min-height: 44px;
-		}
-
 		.profile-header {
 			gap: 14px;
 		}

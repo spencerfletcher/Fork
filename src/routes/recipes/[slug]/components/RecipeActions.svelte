@@ -137,7 +137,7 @@
 
 	{#if !cooking && loginHref}
 		<!-- Logged out: a text link, not a pill, so Cook stays the one action. -->
-		<a href={loginHref} class="login">Log in to save</a>
+		<a href={loginHref} class="text-btn login">Log in to save</a>
 	{:else if !cooking}
 		{#if canEdit}
 			<a href="/recipes/{recipe.slug}/edit" class="btn-ghost edit no-underline">
@@ -241,17 +241,9 @@
 		gap: 10px;
 	}
 
-	/* A plain link, clay and bold like the byline's; padded to a 24px hit. */
+	/* A text button, clay and bold like the byline's. */
 	.login {
 		margin-left: 8px;
-		padding: 4px 0;
-		font-weight: 600;
-		color: var(--color-accent);
-		text-decoration: none;
-	}
-
-	.login:hover {
-		color: var(--color-text);
 	}
 
 	.actions :global(.btn-primary),
@@ -315,14 +307,9 @@
 			grid-column: 1 / -1;
 		}
 
-		/* A thumb's 44px, whatever the line height. */
 		.login {
-			display: inline-flex;
-			align-items: center;
 			justify-self: center;
-			min-height: 44px;
 			margin: 0;
-			padding: 0;
 		}
 	}
 </style>

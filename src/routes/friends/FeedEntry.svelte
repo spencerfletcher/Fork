@@ -28,7 +28,7 @@
 	<div class="who">
 		<span class="avatar" aria-hidden="true">{item.username[0].toUpperCase()}</span>
 		<p class="who-line">
-			<Username username={item.username} />
+			<Username username={item.username} class="hit-link" />
 			<span class="when">cooked {cooked}{loggedOn !== cooked ? ` · logged ${loggedOn}` : ''}</span>
 		</p>
 		<MoreMenu
@@ -47,6 +47,7 @@
 	{#if source.kind === 'recipe'}
 		<p class="source">
 			<a
+				class="hit-link"
 				href="/recipes/{source.slug}{source.versionNumber
 					? `?version=${source.versionNumber}`
 					: ''}">
@@ -62,7 +63,9 @@
 		</p>
 	{:else if source.kind === 'link'}
 		<p class="source">
-			from <a href={source.url} rel="noopener noreferrer nofollow ugc">{source.host}</a>
+			from <a class="hit-link" href={source.url} rel="noopener noreferrer nofollow ugc">
+				{source.host}
+			</a>
 		</p>
 	{:else if source.kind === 'deleted'}
 		<p class="source">Recipe deleted</p>
@@ -86,7 +89,7 @@
 				};
 			}}>
 			<input type="hidden" name="entryId" value={entry.id} />
-			<button type="submit" class="text-btn" aria-pressed={liked}>
+			<button type="submit" class="text-btn text-btn--ink" aria-pressed={liked}>
 				{@render likeIcon(liked)}
 				<span>{likes > 0 ? `Like · ${likes}` : 'Like'}</span>
 			</button>
@@ -108,7 +111,7 @@
 						error = 'Could not save that. Try again.';
 					};
 				}}>
-				<button type="submit" class="text-btn" aria-pressed={saved}>
+				<button type="submit" class="text-btn text-btn--ink" aria-pressed={saved}>
 					{@render saveIcon(saved)}
 					{saved ? 'Saved' : 'Save'}
 				</button>
@@ -199,13 +202,6 @@
 		font-weight: 600;
 	}
 
-	/* Inline links reach a 24px hit without moving the text; 44px on a phone below. */
-	.source a,
-	.who-line :global(a) {
-		padding: 4px 0;
-		margin: -4px 0;
-	}
-
 	.private-line {
 		margin: 8px 0 0;
 		font-size: 0.875rem;
@@ -224,25 +220,6 @@
 		margin: 0;
 	}
 
-	/* Text buttons, ink, a thumb's 44px tall. */
-	.text-btn {
-		display: inline-flex;
-		align-items: center;
-		gap: 6px;
-		min-height: 44px;
-		padding: 0 2px;
-		border: 0;
-		background: none;
-		font: inherit;
-		font-weight: 600;
-		color: var(--color-text);
-		cursor: pointer;
-	}
-
-	.text-btn:hover {
-		color: var(--color-accent);
-	}
-
 	.text-btn[aria-pressed='true'] :global(svg) {
 		color: var(--color-accent);
 	}
@@ -255,13 +232,6 @@
 	@media (max-width: 699px) {
 		.dish {
 			font-size: 1.25rem;
-		}
-
-		.source a,
-		.who-line :global(a) {
-			display: inline-block;
-			padding-block: 12px;
-			margin-block: -12px;
 		}
 	}
 </style>

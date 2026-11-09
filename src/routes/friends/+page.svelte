@@ -38,7 +38,7 @@
 					{request.username[0].toUpperCase()}
 				</span>
 				<p class="nm">
-					<Username username={request.username} />
+					<Username username={request.username} class="hit-link" />
 					<small>Sent {day(request.sentAt)}</small>
 				</p>
 				<div class="btns">
@@ -75,9 +75,9 @@
 
 <div class="page">
 	<div class="page-inner">
-		<div class="f-head">
+		<div class="page-head">
 			<h1>Friends</h1>
-			{#if data.feed.length > 0}<p class="sub">Newest first</p>{/if}
+			{#if data.feed.length > 0}<p class="page-sub">Newest first</p>{/if}
 		</div>
 
 		{#if data.feed.length === 0}
@@ -105,15 +105,15 @@
 							<article class="event">
 								<span class="avatar" aria-hidden="true">{item.username[0].toUpperCase()}</span>
 								<p>
-									<Username username={item.username} />
+									<Username username={item.username} class="hit-link" />
 									{#if item.versionNumber === 1}
-										shared <a href="/recipes/{item.slug}">{item.title}</a>
+										shared <a class="hit-link" href="/recipes/{item.slug}">{item.title}</a>
 										{item.visibility === 'friends' ? 'with friends' : 'publicly'}
 									{:else}
-										changed <a href="/recipes/{item.slug}">{item.title}</a>
+										changed <a class="hit-link" href="/recipes/{item.slug}">{item.title}</a>
 										,
 										<a
-											class="diff"
+											class="diff hit-link"
 											href="/recipes/{item.slug}/diff?from={item.versionNumber -
 												1}&to={item.versionNumber}">
 											<span class="mono-id">v{item.versionNumber - 1}</span>
@@ -137,19 +137,6 @@
 </div>
 
 <style>
-	.f-head {
-		margin-bottom: var(--space-5);
-	}
-
-	.f-head h1 {
-		margin: 0;
-	}
-
-	.sub {
-		margin: 4px 0 0;
-		color: var(--color-text-2);
-	}
-
 	/* The feed fills the container; the 280px rail beside it from 1024. */
 	.f-layout {
 		display: grid;
@@ -179,13 +166,6 @@
 
 	.event a {
 		font-weight: 600;
-	}
-
-	/* Inline links reach a 24px hit without moving the text; 44px on a phone below. */
-	.event p :global(a),
-	.req .nm :global(a) {
-		padding: 4px 0;
-		margin: -4px 0;
 	}
 
 	.event small {
@@ -272,21 +252,6 @@
 	.btn-sm {
 		min-height: 44px;
 		padding: 0 14px;
-	}
-
-	.text-btn {
-		min-height: 44px;
-		padding: 0 2px;
-		border: 0;
-		background: none;
-		font: inherit;
-		font-weight: 600;
-		color: var(--color-accent);
-		cursor: pointer;
-	}
-
-	.text-btn:hover {
-		color: var(--color-text);
 	}
 
 	.link-row {
@@ -377,14 +342,6 @@
 
 		.link-row .btn-ghost {
 			align-self: stretch;
-		}
-
-		.event p :global(a),
-		.req .nm :global(a) {
-			display: inline-block;
-			min-height: 44px;
-			padding-block: 12px;
-			margin-block: -12px;
 		}
 	}
 </style>

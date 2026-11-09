@@ -28,11 +28,11 @@
 
 <div class="page">
 	<div class="page-inner">
-		<div class="cookbook-head">
+		<div class="page-head cookbook-head">
 			<div>
 				<h1>Cookbook</h1>
 				{#if data.counts.all > 0}
-					<p class="count">
+					<p class="page-sub">
 						{plural(data.counts.all, 'recipe')}: {data.counts.mine} yours, {data.counts.saved} saved from
 						other cooks.
 					</p>
@@ -108,16 +108,6 @@
 		align-items: flex-start;
 		justify-content: space-between;
 		gap: var(--space-4);
-		margin-bottom: var(--space-5);
-	}
-
-	.cookbook-head h1 {
-		margin: 0;
-	}
-
-	.count {
-		margin: 4px 0 0;
-		color: var(--color-text-2);
 	}
 
 	@media (min-width: 768px) {

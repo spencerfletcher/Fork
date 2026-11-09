@@ -25,8 +25,10 @@
 
 <div class="page">
 	<div class="page-inner">
-		<h1>Discover</h1>
-		<p class="lede">Recipes from every cook on Fork.</p>
+		<div class="page-head">
+			<h1>Discover</h1>
+			<p class="page-sub">Recipes from every cook on Fork.</p>
+		</div>
 
 		<div class="discover-filters">
 			<SearchFilters
@@ -64,7 +66,7 @@
 					<h2 class="lead-title">
 						<a class="lead-link" href="/recipes/{lead.slug}">{lead.title}</a>
 					</h2>
-					<p class="lead-measure">
+					<p class="lead-measure dot-list">
 						{#if leadTime}<span>{leadTime}</span>{/if}
 						{#if lead.servings}<span>Serves {lead.servings}</span>{/if}
 						{#if lead.versionCount > 1}<span class="vid">v{lead.versionCount}</span>{/if}
@@ -122,17 +124,8 @@
 </div>
 
 <style>
-	h1 {
-		margin: 0;
-	}
-
-	.lede {
-		margin: 4px 0 0;
-		color: var(--color-text-2);
-	}
-
 	.discover-filters {
-		margin: 22px 0 28px;
+		margin: 0 0 28px;
 	}
 
 	/* The lead: photo 7, words 5, side by side from 900. */
@@ -235,12 +228,6 @@
 		flex-wrap: wrap;
 		margin: 12px 0 0;
 		color: var(--color-text-2);
-	}
-
-	.lead-measure > span + span::before {
-		content: '·' / '';
-		padding: 0 0.45em;
-		color: var(--color-text-3);
 	}
 
 	.vid {

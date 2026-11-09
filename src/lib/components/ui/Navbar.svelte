@@ -18,7 +18,7 @@
 </script>
 
 <nav class="bg-navbar-bg relative z-50 px-5" aria-label="Site">
-	<div class="mx-auto flex h-[52px] max-w-[1200px] items-center justify-between gap-5 md:h-14">
+	<div class="mx-auto flex h-[52px] max-w-(--max-width) items-center justify-between gap-5 md:h-14">
 		<!-- Logo + destinations. They never shrink. -->
 		<div class="flex shrink-0 items-center gap-6">
 			<!-- One line, so the name is "Fork." with no space before the stop. -->

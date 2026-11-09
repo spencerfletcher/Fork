@@ -133,7 +133,7 @@
 			<h3 class="card-title">{recipe.title}</h3>
 		{/if}
 
-		<div class="meta-row">
+		<div class="meta-row dot-list">
 			{#each metaParts as part (part.text)}
 				{#if part.href}
 					<a class="meta-item meta-author" href={part.href}>{part.text}</a>
@@ -283,6 +283,7 @@
 		flex-wrap: wrap;
 		align-items: center;
 		gap: 5px;
+		--dot-space: 0 5px 0 0;
 	}
 
 	.card-text {
@@ -310,18 +311,6 @@
 	.meta-item {
 		font-family: var(--font-sans);
 		font-size: 0.8125rem;
-		color: var(--color-text-3);
-	}
-
-	/* The dot is drawn as part of the item it precedes, never typed, so a
-	   wrapped row never ends with one (decided 29 October 2026). It keeps the
-	   row's face whatever the item's own. */
-	.meta-item + .meta-item::before {
-		content: '·';
-		margin-right: 5px;
-		font-family: var(--font-sans);
-		font-size: 0.8125rem;
-		font-weight: 400;
 		color: var(--color-text-3);
 	}
 

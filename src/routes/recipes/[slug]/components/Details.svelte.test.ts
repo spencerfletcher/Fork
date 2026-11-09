@@ -85,8 +85,11 @@ describe('Details', () => {
 
 	test('one line on a desktop, dotted between the groups; two lines on a phone', () => {
 		// jsdom applies no component CSS, so the rules are read from the source.
+		// The dots are app.css's .dot-list, between the lines and between the pairs.
+		const { container } = render(Details, { props: { content: makeContent() } });
+		expect(container.querySelector('.details')).toHaveClass('dot-list');
+		expect(container.querySelector('.line')).toHaveClass('dot-list');
 		const style = source.slice(source.indexOf('<style>'));
-		expect(style).toMatch(/\.line \+ \.line::before[^{]*\{[^}]*content: '·' \/ ''/);
 		const phone = style.slice(style.indexOf('@media (max-width: 699px)'));
 		expect(phone).toMatch(/\.line \{[^}]*display: block/);
 		expect(phone).toMatch(/\.line \+ \.line::before[^{]*\{[^}]*content: none/);

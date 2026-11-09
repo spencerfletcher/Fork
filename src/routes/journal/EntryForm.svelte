@@ -302,11 +302,6 @@
 </div>
 
 <style>
-	.entry-form,
-	.entry-actions {
-		max-width: 680px;
-	}
-
 	.entry-actions {
 		flex-wrap: wrap;
 		margin-top: var(--space-5);
@@ -362,14 +357,6 @@
 
 	.recipe-menu .mono-id {
 		color: var(--color-accent);
-	}
-
-	/* The note's own lifted paper: the one thing on the form only you see. */
-	.lock-note {
-		padding: 12px;
-		background: var(--color-surface);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-md);
 	}
 
 	.lock-note label {
