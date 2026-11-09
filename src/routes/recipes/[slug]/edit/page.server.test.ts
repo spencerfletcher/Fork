@@ -3,6 +3,7 @@ import { chain } from '#lib/testing/drizzle.js';
 import { invokeAction as invoke, formEvent } from '#lib/testing/actions.js';
 import { actions, load } from './+page.server';
 import { makeContent, makeIngredient, makeStep } from '#lib/recipes/fixtures.js';
+import { WIDENS_PARENT } from '#lib/server/visibility.js';
 
 // ─── Hoisted mocks (must be available inside vi.mock factory) ─────────────────
 
@@ -101,8 +102,9 @@ const RECIPE = {
 	authorId: 'owner-123',
 	slug: 'test-slug',
 	imageUrl: 'https://cdn/old.png',
-	isPublic: true,
+	visibility: 'public',
 	editRevision: 0,
+	parent: null,
 	recipesToTags: [{ tag: { name: 'Dessert' } }, { tag: { name: 'Baking' } }]
 };
 /** The row as read under FOR UPDATE. */
@@ -110,7 +112,7 @@ const LOCKED = {
 	id: 1,
 	authorId: 'owner-123',
 	imageUrl: 'https://cdn/old.png',
-	isPublic: true,
+	visibility: 'public',
 	editRevision: 0
 };
 const LATEST = {
@@ -139,7 +141,7 @@ const UNCHANGED = {
 	cookTimeMinutes: '20',
 	ingredients: '2 cups flour',
 	steps: 'Mix everything.',
-	isPublic: 'on',
+	visibility: 'public',
 	tags: ['Dessert', 'Baking'],
 	editRevision: '0'
 };
@@ -293,7 +295,7 @@ describe('save', () => {
 		expect(version.steps).toEqual(LATEST.steps);
 		expect(syncTagsMock).not.toHaveBeenCalled();
 		expect(tx.update).toHaveBeenCalledTimes(1);
-		expect(tx.updateChain.set.mock.calls[0][0]).not.toHaveProperty('isPublic');
+		expect(tx.updateChain.set.mock.calls[0][0]).not.toHaveProperty('visibility');
 	});
 
 	test('a whitespace-only message is no message: nothing is written', async () => {
@@ -313,13 +315,13 @@ describe('save', () => {
 	});
 
 	test('settings only: updates visibility and tags, bumps editRevision, inserts no version', async () => {
-		await save({ ...UNCHANGED, isPublic: '', tags: ['Dessert'] });
+		await save({ ...UNCHANGED, visibility: 'private', tags: ['Dessert'] });
 		expect(tx.insert).not.toHaveBeenCalled();
 		expect(syncTagsMock).toHaveBeenCalledWith(tx, 1, ['Dessert']);
 		expect(tx.update).toHaveBeenCalledTimes(1);
 		const set = tx.updateChain.set.mock.calls[0][0];
 		expect(set).toMatchObject({
-			isPublic: false,
+			visibility: 'private',
 			editRevision: expect.anything(),
 			updatedAt: expect.any(Date)
 		});
@@ -329,7 +331,7 @@ describe('save', () => {
 	test('a typed message on a settings-only save is kept: a version carrying it and the latest content', async () => {
 		await save({
 			...UNCHANGED,
-			isPublic: '',
+			visibility: 'private',
 			tags: ['Dessert'],
 			commitMessage: ' Private for now '
 		});
@@ -347,7 +349,7 @@ describe('save', () => {
 		expect(version.steps).toEqual(LATEST.steps);
 		expect(syncTagsMock).toHaveBeenCalledWith(tx, 1, ['Dessert']);
 		expect(tx.update).toHaveBeenCalledTimes(1);
-		expect(tx.updateChain.set.mock.calls[0][0]).toMatchObject({ isPublic: false });
+		expect(tx.updateChain.set.mock.calls[0][0]).toMatchObject({ visibility: 'private' });
 	});
 
 	test('removeImage is a content change: a version without the photo, and the copy cleared', async () => {
@@ -418,12 +420,53 @@ describe('save', () => {
 	});
 
 	test('content and settings together: one version, one update', async () => {
-		await save({ ...UNCHANGED, title: 'Biscuits', isPublic: '' });
+		await save({ ...UNCHANGED, title: 'Biscuits', visibility: 'private' });
 		expect(versionInserts()).toHaveLength(1);
 		expect(tx.update).toHaveBeenCalledTimes(1);
 		expect(tx.updateChain.set.mock.calls[0][0]).toMatchObject({
 			title: 'Biscuits',
-			isPublic: false
+			visibility: 'private'
+		});
+	});
+
+	describe('a fork never widens access', () => {
+		const forkOf = (parent: 'private' | 'friends', visibility = 'private') => ({
+			...RECIPE,
+			visibility,
+			parent: { visibility: parent }
+		});
+
+		test.each([
+			['friends', 'public'],
+			['private', 'friends'],
+			['private', 'public']
+		] as const)(
+			'a fork of a %s recipe set to %s is refused with the draft, before any upload or write',
+			async (parent, visibility) => {
+				findRecipeMock.mockResolvedValue(forkOf(parent));
+				const result = await save({ ...UNCHANGED, visibility }, { file: new File(['x'], 'a.png') });
+				expect(result.status).toBe(400);
+				expect(result.data).toMatchObject({
+					error: WIDENS_PARENT[parent],
+					code: 'invalid',
+					draft: { visibility }
+				});
+				expect(uploadMock).not.toHaveBeenCalled();
+				expect(transactionMock).not.toHaveBeenCalled();
+			}
+		);
+
+		test('a fork of a friends recipe may be shared with friends', async () => {
+			findRecipeMock.mockResolvedValue(forkOf('friends'));
+			await save({ ...UNCHANGED, visibility: 'friends' });
+			expect(tx.updateChain.set.mock.calls[0][0]).toMatchObject({ visibility: 'friends' });
+		});
+
+		test('a fork left as wide as it was still saves after its parent narrowed', async () => {
+			findRecipeMock.mockResolvedValue(forkOf('private', 'public'));
+			tx = makeTx({ locked: [{ ...LOCKED, visibility: 'public' }] });
+			await save({ ...UNCHANGED, title: 'Biscuits' });
+			expect(versionInserts()).toHaveLength(1);
 		});
 	});
 

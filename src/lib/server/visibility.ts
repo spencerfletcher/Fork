@@ -52,6 +52,12 @@ export function visibleTo(user: Viewer): SQL {
 	) as SQL;
 }
 
+/** What a save that would widen a fork past its parent is told, by the parent's visibility. */
+export const WIDENS_PARENT: Record<Exclude<Visibility, 'public'>, string> = {
+	friends: "This recipe was forked from one shared with friends, so it can't be made public.",
+	private: "This recipe was forked from a private recipe, so it can't be shared."
+};
+
 /**
  * Forks never widen access: a fork may be set no wider than its parent is now.
  * `parent` is null for a recipe that is not a fork, or whose parent was deleted.

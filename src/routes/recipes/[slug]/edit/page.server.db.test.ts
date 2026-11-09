@@ -68,7 +68,7 @@ describe.skipIf(!local)('save, against the real database', () => {
 			cookTimeMinutes: '20',
 			ingredients: '1 cup flour',
 			steps: 'Mix.',
-			isPublic: 'on',
+			visibility: 'private',
 			editRevision: '0'
 		}))
 			fd.append(k, v);
