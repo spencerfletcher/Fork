@@ -6,6 +6,7 @@ Start here. Two files hold the current direction; everything else is dated histo
 
 - **Product direction:** [Fork product roadmap](research/2026-11-08-product-roadmap/README.md) (8 Nov 2026, reconciled 9 Nov). Phases P0 to P5, feature dispositions, the pilot path. Its three research notes sit beside it.
 - **MVP design direction:** [Design summary](design/2026-11-10-decision-pack/DESIGN-SUMMARY.md) (decided 9 Nov 2026). Builder-ready; open `design/2026-11-10-decision-pack/index.html` for the screens, comparisons and the live editor prototype. `WORKSHEET.md` beside it holds Spencer's review notes.
+- **Design inspiration:** [design/INSPIRATION.md](design/INSPIRATION.md), a living list of products to look at when a screen is designed or revisited.
 - **Rules:** [DESIGN.md](../DESIGN.md) (visual and interaction rules, tokens in `src/app.css`), [PRODUCT.md](../PRODUCT.md) (audience, purpose, principles), [AGENTS.md](../AGENTS.md) (how to work in the repo).
 
 ## History
