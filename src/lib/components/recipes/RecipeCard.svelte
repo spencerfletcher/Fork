@@ -1,6 +1,9 @@
 <script lang="ts">
 	import type { Recipe } from '#lib/server/db/schema.js';
 	import { formatTime, plural } from '#lib/helpers.js';
+	import type { Visibility } from '#lib/recipes/validation.js';
+	import { AUDIENCE_LABEL } from '#lib/audience.js';
+	import { audienceIcon } from '#lib/components/Icons.svelte';
 
 	// Only what the card renders, so a column added to the table does not ripple
 	// into every card fixture.
@@ -57,19 +60,14 @@
 	 * The meta line, as data rather than nested markup. The dots between items
 	 * are drawn by CSS, so the list carries only the items.
 	 */
-	type MetaPart = { text: string; href?: string; accent?: boolean; icon?: 'lock' | 'friends' };
-
-	// Non-public recipes say who can see them; public is the default and says nothing.
-	const AUDIENCE = {
-		private: { text: 'Only me', icon: 'lock' },
-		friends: { text: 'Friends', icon: 'friends' }
-	} as const;
+	type MetaPart = { text: string; href?: string; accent?: boolean; icon?: Visibility };
 
 	const metaParts: MetaPart[] = $derived.by(() => {
 		const parts: MetaPart[] = [];
 
 		if (recipe.visibility && recipe.visibility !== 'public') {
-			parts.push(AUDIENCE[recipe.visibility]);
+			// Non-public recipes say who can see them; public is the default and says nothing.
+			parts.push({ text: AUDIENCE_LABEL[recipe.visibility], icon: recipe.visibility });
 		}
 
 		if (recipe.author && isList) {
@@ -139,24 +137,7 @@
 					<a class="meta-item meta-author" href={part.href}>{part.text}</a>
 				{:else if part.icon}
 					<span class="meta-item meta-audience">
-						<svg
-							viewBox="0 0 16 16"
-							fill="none"
-							stroke="currentColor"
-							stroke-width="1.5"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							aria-hidden="true">
-							{#if part.icon === 'lock'}
-								<rect x="3" y="7" width="10" height="7" rx="1.5" />
-								<path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" />
-							{:else}
-								<circle cx="6" cy="5.5" r="2.5" />
-								<path d="M1.5 14a4.5 4.5 0 0 1 9 0" />
-								<circle cx="11.5" cy="6.5" r="1.75" />
-								<path d="M11.5 10.25A3.5 3.5 0 0 1 14.5 13.5" />
-							{/if}
-						</svg>
+						{@render audienceIcon(part.icon)}
 						{part.text}
 					</span>
 				{:else}
@@ -333,7 +314,8 @@
 		gap: 4px;
 	}
 
-	.meta-audience svg {
+	/* :global, because the icon comes from Icons.svelte. */
+	.meta-audience :global(svg) {
 		width: 12px;
 		height: 12px;
 	}

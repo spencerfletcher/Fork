@@ -2,9 +2,9 @@
 	import { enhance } from '$app/forms';
 	import { onMount, type Snippet } from 'svelte';
 	import PhotoField from '#lib/components/recipes/PhotoField.svelte';
-	import { audienceIcon, lockIcon } from '#lib/components/journal/Icons.svelte';
+	import { audienceIcon, lockIcon } from '#lib/components/Icons.svelte';
+	import { AUDIENCE_LABEL } from '#lib/audience.js';
 	import {
-		AUDIENCE_LABEL,
 		AUDIENCE_SENTENCE,
 		KEEP_SOURCE,
 		MAX_LINK,

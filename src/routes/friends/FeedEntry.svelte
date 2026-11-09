@@ -1,8 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import Username from '#lib/components/ui/Username.svelte';
-	import { likeIcon } from '#lib/components/journal/Icons.svelte';
-	import { saveIcon } from '../recipes/[slug]/components/Icons.svelte';
+	import { likeIcon, saveIcon } from '#lib/components/Icons.svelte';
 	import { dayLabel } from '#lib/journal.js';
 	import MoreMenu from './MoreMenu.svelte';
 	import type { FeedItem } from '#lib/server/friends.js';

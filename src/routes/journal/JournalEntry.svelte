@@ -1,8 +1,9 @@
 <script lang="ts">
 	import type { LogEntry } from '#lib/server/db/schema.js';
 	import type { EntrySource } from '#lib/server/journal.js';
-	import { AUDIENCE_LABEL, PRIVATE_RECIPE_HINT, marginDay } from '#lib/journal.js';
-	import { audienceIcon, lockIcon } from '#lib/components/journal/Icons.svelte';
+	import { PRIVATE_RECIPE_HINT, marginDay } from '#lib/journal.js';
+	import { AUDIENCE_LABEL } from '#lib/audience.js';
+	import { audienceIcon, lockIcon } from '#lib/components/Icons.svelte';
 
 	let { entry }: { entry: LogEntry & { source: EntrySource } } = $props();
 

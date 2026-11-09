@@ -4,7 +4,7 @@
 	import { plural } from '#lib/helpers.js';
 	import { dayLabel } from '#lib/journal.js';
 	import Details from './Details.svelte';
-	import { forkIcon, versionsIcon } from './Icons.svelte';
+	import { forkIcon, versionsIcon } from '#lib/components/Icons.svelte';
 	import type { Recipe } from '#lib/server/db/schema.js';
 	import type { RecipeContent, TagChip } from '#lib/recipes/types.js';
 

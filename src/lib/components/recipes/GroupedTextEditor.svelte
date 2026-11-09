@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { headingIcon } from '#lib/components/Icons.svelte';
 	import { lineKind, headingInsert, SECTION_NAME } from '#lib/recipes/editorLines.js';
 
 	let {
@@ -349,16 +350,7 @@
 					{disabled}
 					onmousedown={(e) => e.preventDefault()}
 					onclick={insertHeading}>
-					<svg
-						viewBox="0 0 16 16"
-						fill="none"
-						stroke="currentColor"
-						stroke-width="1.5"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						aria-hidden="true">
-						<path d="M4 3v10M12 3v10M4 8h8" />
-					</svg>
+					{@render headingIcon()}
 					Section heading
 				</button>
 			</div>
@@ -454,7 +446,8 @@
 		cursor: default;
 	}
 
-	.tool svg {
+	/* :global, because the icon comes from Icons.svelte. */
+	.tool :global(svg) {
 		width: 14px;
 		height: 14px;
 	}

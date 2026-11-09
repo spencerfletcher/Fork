@@ -23,15 +23,14 @@
 	import IngredientEditor from './IngredientEditor.svelte';
 	import StepEditor from './StepEditor.svelte';
 	import PhotoField from './PhotoField.svelte';
+	import { audienceIcon } from '#lib/components/Icons.svelte';
+	import { AUDIENCE_LABEL } from '#lib/audience.js';
 
-	// The radio trio's copy, offered in VISIBILITIES order (Only me first).
-	const AUDIENCE_COPY: Record<Visibility, { label: string; note: string }> = {
-		private: { label: 'Only me', note: 'Only you can see it. You can share it later.' },
-		friends: {
-			label: 'Friends',
-			note: 'Approved friends can see, save and fork it. It stays out of Discover.'
-		},
-		public: { label: 'Public', note: 'Anyone can find, save and fork it.' }
+	// The radio trio's sentences, offered in VISIBILITIES order (Only me first).
+	const AUDIENCE_NOTE: Record<Visibility, string> = {
+		private: 'Only you can see it. You can share it later.',
+		friends: 'Approved friends can see, save and fork it. It stays out of Discover.',
+		public: 'Anyone can find, save and fork it.'
 	};
 
 	let {
@@ -244,32 +243,6 @@
 
 {@render header?.(outcome, errorCount > 0)}
 
-{#snippet audienceIcon(value: Visibility)}
-	<svg
-		class="icon"
-		viewBox="0 0 16 16"
-		fill="none"
-		stroke="currentColor"
-		stroke-width="1.5"
-		stroke-linecap="round"
-		stroke-linejoin="round"
-		aria-hidden="true">
-		{#if value === 'private'}
-			<rect x="3" y="7" width="10" height="7" rx="1.5" />
-			<path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" />
-		{:else if value === 'friends'}
-			<circle cx="6" cy="5.5" r="2.5" />
-			<path d="M1.5 13.5c0-2.5 2-4 4.5-4s4.5 1.5 4.5 4" />
-			<circle cx="11.5" cy="6" r="2" />
-			<path d="M11 9.5c2 0 3.5 1.3 3.5 3.5" />
-		{:else}
-			<circle cx="8" cy="8" r="6" />
-			<path
-				d="M2 8h12M8 2c1.8 1.7 2.6 3.7 2.6 6S9.8 12.3 8 14C6.2 12.3 5.4 10.3 5.4 8S6.2 3.7 8 2z" />
-		{/if}
-	</svg>
-{/snippet}
-
 {#snippet fieldError(name: string)}
 	{#if errors[name]}
 		<p class="field-error" id="{name}-error" role="alert">{errors[name]}</p>
@@ -393,9 +366,9 @@
 									aria-describedby="visibility-{value}-note{hasForks ? ' visibility-hint' : ''}" />
 								<b id="visibility-{value}">
 									{@render audienceIcon(value)}
-									{AUDIENCE_COPY[value].label}
+									{AUDIENCE_LABEL[value]}
 								</b>
-								<span id="visibility-{value}-note">{AUDIENCE_COPY[value].note}</span>
+								<span id="visibility-{value}-note">{AUDIENCE_NOTE[value]}</span>
 							</label>
 						{/each}
 					</div>
@@ -538,7 +511,8 @@
 		box-shadow: inset 0 0 0 1px var(--color-text);
 	}
 
-	.icon {
+	/* :global, because the icons come from Icons.svelte. */
+	.choice :global(.icon) {
 		width: 16px;
 		height: 16px;
 		flex-shrink: 0;

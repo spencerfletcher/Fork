@@ -3,6 +3,7 @@
 	import { page } from '$app/state';
 	import { on } from 'svelte/events';
 	import TagTabs from './TagTabs.svelte';
+	import { searchIcon } from '#lib/components/Icons.svelte';
 	import type { TagChip } from '#lib/recipes/types.js';
 
 	let {
@@ -81,19 +82,9 @@
 			applyFilters();
 		}}
 		class="relative">
-		<svg
-			class="text-text-3 pointer-events-none absolute inset-y-0 left-3 my-auto h-4 w-4"
-			xmlns="http://www.w3.org/2000/svg"
-			viewBox="0 0 24 24"
-			fill="none"
-			stroke="currentColor"
-			stroke-width="2"
-			stroke-linecap="round"
-			stroke-linejoin="round"
-			aria-hidden="true">
-			<circle cx="11" cy="11" r="8" />
-			<path d="m21 21-4.35-4.35" />
-		</svg>
+		{@render searchIcon(
+			'text-text-3 pointer-events-none absolute inset-y-0 left-3 my-auto h-4 w-4'
+		)}
 		<!-- Named fields so the form also works as a plain GET before hydration. -->
 		{#each otherParams as [name, value], i (i)}
 			<input type="hidden" {name} {value} />

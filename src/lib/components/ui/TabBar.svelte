@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { DESTINATIONS, isCurrent } from './destinations.js';
+	import { friendsIcon } from '#lib/components/Icons.svelte';
 
 	// Cook and the editor pin their own bars (Done cooking; Save and Cancel),
 	// so the tab bar leaves the screen to them.
@@ -15,31 +16,31 @@
 	<nav class="tab-bar" aria-label="Main">
 		{#each DESTINATIONS as destination (destination.href)}
 			<a href={destination.href} aria-current={isCurrent(destination, path) ? 'page' : undefined}>
-				<svg
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="1.5"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-					aria-hidden="true">
-					{#if destination.href === '/cookbook'}
-						<path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H19v14H5.5A1.5 1.5 0 0 0 4 19.5z" />
-						<path d="M4 19.5A1.5 1.5 0 0 0 5.5 21H19v-3" />
-						<path d="M9 8h6" />
-					{:else if destination.href === '/journal'}
-						<rect x="4" y="5" width="16" height="16" rx="2" />
-						<path d="M4 10h16M8 3v4M16 3v4M8 14h4" />
-					{:else if destination.href === '/friends'}
-						<circle cx="9" cy="8" r="3.5" />
-						<path d="M2.5 20a6.5 6.5 0 0 1 13 0" />
-						<circle cx="17" cy="9" r="2.5" />
-						<path d="M17.5 14.5A5 5 0 0 1 21.5 19" />
-					{:else}
-						<circle cx="12" cy="12" r="9" />
-						<path d="m15.5 8.5-2 5-5 2 2-5z" />
-					{/if}
-				</svg>
+				{#if destination.href === '/friends'}
+					<!-- Drawn on its own 24 box, so 24 keeps its stroke the others' 1.5. -->
+					{@render friendsIcon(24)}
+				{:else}
+					<svg
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="1.5"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						aria-hidden="true">
+						{#if destination.href === '/cookbook'}
+							<path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H19v14H5.5A1.5 1.5 0 0 0 4 19.5z" />
+							<path d="M4 19.5A1.5 1.5 0 0 0 5.5 21H19v-3" />
+							<path d="M9 8h6" />
+						{:else if destination.href === '/journal'}
+							<rect x="4" y="5" width="16" height="16" rx="2" />
+							<path d="M4 10h16M8 3v4M16 3v4M8 14h4" />
+						{:else}
+							<circle cx="12" cy="12" r="9" />
+							<path d="m15.5 8.5-2 5-5 2 2-5z" />
+						{/if}
+					</svg>
+				{/if}
 				{destination.label}
 			</a>
 		{/each}
@@ -101,7 +102,8 @@
 		outline-offset: -4px;
 	}
 
-	.tab-bar svg {
+	/* :global, because Friends comes from Icons.svelte. */
+	.tab-bar :global(svg) {
 		width: 22px;
 		height: 22px;
 	}

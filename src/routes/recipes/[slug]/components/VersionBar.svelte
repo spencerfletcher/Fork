@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { afterNavigate } from '$app/navigation';
 	import type { Recipe, RecipeVersion } from '#lib/server/db/schema.js';
+	import { chevronIcon } from '#lib/components/Icons.svelte';
 
 	type BarVersion = Pick<RecipeVersion, 'id' | 'versionNumber' | 'commitMessage'>;
 
@@ -103,18 +104,7 @@
 						aria-controls="version-history"
 						onclick={() => (open = !open)}>
 						{count} versions
-						<svg
-							class="chevron"
-							class:up={open}
-							viewBox="0 0 12 12"
-							aria-hidden="true"
-							fill="none"
-							stroke="currentColor"
-							stroke-width="1.6"
-							stroke-linecap="round"
-							stroke-linejoin="round">
-							<path d="M2.5 4.5 6 8l3.5-3.5" />
-						</svg>
+						{@render chevronIcon(open)}
 					</button>
 				</span>
 			</span>
@@ -255,13 +245,14 @@
 		inset: -4px 0;
 	}
 
-	.chevron {
+	/* :global, because the chevron comes from Icons.svelte. */
+	.versions-toggle :global(.chevron) {
 		width: 12px;
 		height: 12px;
 		transition: transform 0.15s ease;
 	}
 
-	.chevron.up {
+	.versions-toggle :global(.chevron.up) {
 		transform: rotate(180deg);
 	}
 

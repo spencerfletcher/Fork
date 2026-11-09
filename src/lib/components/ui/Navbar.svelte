@@ -4,6 +4,7 @@
 	import type { User } from '@supabase/supabase-js';
 	import type { Profile } from '#lib/server/db/schema.js';
 	import { DESTINATIONS, isCurrent } from './destinations.js';
+	import { searchIcon } from '#lib/components/Icons.svelte';
 	import Dropdown from './Dropdown.svelte';
 
 	let { user, profile = null }: { user: User | null; profile?: Profile | null } = $props();
@@ -54,17 +55,7 @@
 				aria-label="Search"
 				class="nav-icon"
 				aria-current={current(path === '/search')}>
-				<svg
-					class="size-5"
-					xmlns="http://www.w3.org/2000/svg"
-					fill="none"
-					viewBox="0 0 24 24"
-					stroke-width="1.8"
-					stroke="currentColor"
-					aria-hidden="true">
-					<circle cx="11" cy="11" r="7" />
-					<path stroke-linecap="round" d="M20 20l-3.5-3.5" />
-				</svg>
+				{@render searchIcon('size-5')}
 			</a>
 			{#if user}
 				<!-- The avatar alone at every width, opening Profile and Log out
