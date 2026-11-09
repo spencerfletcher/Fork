@@ -4,9 +4,9 @@ Prepared 9 November 2026 for offline work on 10 November. Baseline observed: `30
 
 ## Available without an application server
 
-- `index.html` and all eight full-page screenshots in `images/`.
+- `index.html`; its screenshots are the ones in `../2026-11-08-mvp/screenshots/`.
 - The work plan, worksheet, synthetic recipe cases and editor exercise.
-- Local copies of the roadmap, design research and MVP design brief in `references/`.
+- The roadmap, design research and MVP design brief are linked from `index.html` at their places in `docs/research/` and `docs/design/`.
 - The repository source and already-installed dependencies on this laptop.
 
 The screenshot gallery deliberately uses existing local PNGs. The original mockup HTML hotlinks Unsplash photos, which may fail offline; the screenshots preserve the images without requiring downloads. These static screens predate the live Insert-toolbar decision and show illustrative data. They are references, not current production evidence.
