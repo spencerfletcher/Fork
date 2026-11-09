@@ -32,7 +32,7 @@ export const BLOCK_SENTENCE =
 
 // cooked_on is a calendar day with no time zone; read and printed as UTC so
 // no reader's offset moves it to the day before.
-const day = (iso: string) => new Date(`${iso}T00:00:00Z`);
+export const day = (iso: string) => new Date(`${iso}T00:00:00Z`);
 
 /** "Sun 8 Nov", with the year only when it is not this year's. */
 export function dayLabel(iso: string, now: Date = new Date()): string {
