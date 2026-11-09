@@ -56,7 +56,7 @@ test.describe('Fork', () => {
 	});
 
 	// The seed user owns every seeded recipe, so the owner's row is what renders:
-	// Cook and Edit recipe, no Save or Fork.
+	// Cook, Edit recipe and Add to Journal, no Save or Fork.
 	test('at 320 each signed-in pill is at least 44px tall and its label holds one line', async ({
 		page
 	}) => {
@@ -74,7 +74,7 @@ test.describe('Fork', () => {
 				twoLines: 2 * parseFloat(getComputedStyle(el).lineHeight)
 			}))
 		);
-		expect(pills.map((p) => p.text.split(/\s/)[0])).toEqual(['Cook', 'Edit']);
+		expect(pills.map((p) => p.text.split(/\s/)[0])).toEqual(['Cook', 'Edit', 'Add']);
 		for (const pill of pills) {
 			expect(pill.height, pill.text).toBeGreaterThanOrEqual(44);
 			expect(pill.height, pill.text).toBeLessThan(pill.twoLines);
