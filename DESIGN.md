@@ -257,6 +257,21 @@ Small, consistent corners: 4px on chips and icon buttons, 6px on buttons, inputs
 - **Focus:** the global ring, 2px clay with 2px offset; marigold inside the navbar.
 - **Navbar action:** "+ New recipe", marigold, 0.875rem 600, 6px 13px inside a 1px transparent border (the primary button's forced-colours box; the size is unchanged). The only fill in the bar. It shows from 768 only; below that the Cookbook header carries it.
 
+**The closed set (decided 9 November 2026).** Every clickable control on the site is one of these, by its shared class or component, and nothing else:
+
+| Kind | Looks | Class / component |
+|---|---|---|
+| Primary | marigold fill, ink 600 | `.btn-primary` |
+| Ghost | transparent, 1px ink border, 600 | `.btn-ghost` |
+| Danger | ghost in red; red on hover for a resting Block | `.btn-ghost.danger`, `.danger-hover` |
+| Text button | sans 600, clay, no border; deeper clay on hover | `.text-btn` |
+| Text button, ink | same, ink; clay on hover | `.text-btn--ink` |
+| Action pill | 44px pill with leading icon, recipe page action row only | `RecipeActions` |
+| Inline confirm | question + confirm + keep, in place | `ConfirmStep` |
+| Form row | Save, Cancel, optional danger pinned right | `FormActions` |
+
+A control that does not fit one of these rows is a design decision, not a local style: it goes to Spencer before it is built. A review treats a button with none of these classes as blocking (the 9 November photo field shipped Replace as a small-caps ink button and Remove as a serif clay one because neither rule existed yet).
+
 One exception, decided 28 October 2026: the recipe page's action row (Cook, Edit recipe, Save, Fork, Add to Journal) is set as 44px pills with a leading icon, the header's last line. Everywhere else a button keeps the 6px corner.
 
 Fork is one click, decided 29 October 2026: the pill submits, the server makes the copy and redirects to it. No two-step confirm, no dialog. Logged out, the same pill leads to login and back to this page.
