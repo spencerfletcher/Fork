@@ -1,3 +1,7 @@
+> **Current authoritative direction — revised 8 November 2026:** See [Fork product roadmap](research/2026-11-08-product-roadmap/README.md). Three defining pillars: **Cookbook / Cooking Journal / Community. P0 trust/privacy/rights → minimum useful cookbook + early P2 Journal/Friends pilot**, alongside P1 cookbook completion and P2 cooking refinements; P3 household routines, P4 recipe development and P5 evaluated AI/wider discovery follow. MVP first: recipe deletion is owner-confirmed and permanent; Trash/Restore and durable drafts/autosave are post-MVP nice-to-haves, not launch gates; preserve existing failed-save and unsaved-change protections. The friends pilot also does not wait for full migration, timers/offline, planning or subrecipes. US/Canada rights, creator permissions, recipe supply and acquisition strategy are included.
+>
+> Everything below is preserved historical planning. Earlier estimates, priority orders and code snippets are not current implementation instructions; the linked report reconciles M1–M23 and preserves accepted decisions while superseding stale claims.
+
 # Fork — Roadmap
 
 ## Priority order — 2026-10-23
