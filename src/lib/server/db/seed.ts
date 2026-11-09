@@ -3,10 +3,19 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { createClient } from '@supabase/supabase-js';
 
-import { recipes, tags, recipesToTags, recipeVersions, profiles, friendships } from './schema';
+import {
+	recipes,
+	tags,
+	recipesToTags,
+	recipeVersions,
+	profiles,
+	friendships,
+	logEntries,
+	likes
+} from './schema';
 import { slugify, randomSuffix } from '#lib/helpers.js';
 import { recipeCopies } from '#lib/recipes/content.js';
-import { SEED, type SeedUsername } from './seedData';
+import { SEED, SEED_LOG, type SeedUsername } from './seedData';
 import { parseIngredientText } from '#lib/recipes/ingredients.js';
 import { parseStepText } from '#lib/recipes/steps.js';
 import { loadEnv, required, targetFromEnv } from './env';
@@ -25,6 +34,8 @@ const SEED_USER_PASSWORD = process.env.SEED_USER_PASSWORD ?? 'Fork-Demo-2025!';
 const SEED_USER_EMAIL = process.env.SEED_USER_EMAIL ?? 'spencer@fork.dev';
 // The second cook, an accepted friend of the first; same password.
 const SEED_USER2_EMAIL = process.env.SEED_USER2_EMAIL ?? 'dev@fork.dev';
+// The third, who has sent the first a friend request; same password.
+const SEED_USER3_EMAIL = process.env.SEED_USER3_EMAIL ?? 'priya@fork.dev';
 
 // ─── Seed function ────────────────────────────────────────────────────────────
 
@@ -78,13 +89,18 @@ async function seed() {
 	}
 	const userIds: Record<SeedUsername, string> = {
 		spencerfletcher: await createSeedUser(SEED_USER_EMAIL, 'spencerfletcher'),
-		devcooks: await createSeedUser(SEED_USER2_EMAIL, 'devcooks')
+		devcooks: await createSeedUser(SEED_USER2_EMAIL, 'devcooks'),
+		priyabakes: await createSeedUser(SEED_USER3_EMAIL, 'priyabakes')
 	};
-	await db.insert(friendships).values({
-		requesterId: userIds.devcooks,
-		addresseeId: userIds.spencerfletcher,
-		status: 'accepted'
-	});
+	await db.insert(friendships).values([
+		{ requesterId: userIds.devcooks, addresseeId: userIds.spencerfletcher, status: 'accepted' },
+		{
+			requesterId: userIds.priyabakes,
+			addresseeId: userIds.spencerfletcher,
+			status: 'pending',
+			createdAt: new Date('2026-11-07T12:00:00Z')
+		}
+	]);
 
 	// ── Seed tags ─────────────────────────────────────────────────────────────
 	console.log('Seeding tags...');
@@ -111,6 +127,8 @@ async function seed() {
 
 	// ── Recipes ──────────────────────────────────────────────────────────────
 	const idBySlug = new Map<string, number>();
+	// Each recipe's version ids, oldest first, for the Journal's links.
+	const versionIdsBySlug = new Map<string, number[]>();
 	for (const recipe of SEED) {
 		const latest = recipe.versions.at(-1)!;
 		const userId = userIds[recipe.author ?? 'spencerfletcher'];
@@ -136,18 +154,46 @@ async function seed() {
 			.insert(recipesToTags)
 			.values(recipe.tags.map((name) => ({ recipeId: row.id, tagId: tagId(name) })));
 
-		await db.insert(recipeVersions).values(
-			recipe.versions.map(({ createdAt, ingredientsText, stepsText, ...version }, i) => ({
-				...version,
-				ingredients: parseIngredientText(ingredientsText),
-				steps: parseStepText(stepsText),
-				recipeId: row.id,
-				versionNumber: i + 1,
-				createdBy: userId,
-				createdAt: new Date(createdAt)
-			}))
+		const versionRows = await db
+			.insert(recipeVersions)
+			.values(
+				recipe.versions.map(({ createdAt, ingredientsText, stepsText, ...version }, i) => ({
+					...version,
+					ingredients: parseIngredientText(ingredientsText),
+					steps: parseStepText(stepsText),
+					recipeId: row.id,
+					versionNumber: i + 1,
+					createdBy: userId,
+					createdAt: new Date(createdAt)
+				}))
+			)
+			.returning({ id: recipeVersions.id, versionNumber: recipeVersions.versionNumber });
+		versionIdsBySlug.set(
+			recipe.slug,
+			versionRows.sort((a, b) => a.versionNumber - b.versionNumber).map((v) => v.id)
 		);
 	}
+
+	// ── Journal ──────────────────────────────────────────────────────────────
+	console.log('Seeding log entries...');
+	const entryRows = await db
+		.insert(logEntries)
+		.values(
+			SEED_LOG.map(({ user, recipe, version, createdAt, ...entry }) => {
+				const versionIds = recipe ? versionIdsBySlug.get(recipe)! : [];
+				return {
+					...entry,
+					userId: userIds[user],
+					recipeId: recipe ? idBySlug.get(recipe)! : null,
+					versionId: recipe ? versionIds[(version ?? versionIds.length) - 1] : null,
+					createdAt: new Date(createdAt)
+				};
+			})
+		)
+		.returning({ id: logEntries.id, userId: logEntries.userId, dish: logEntries.dish });
+	// spencerfletcher has liked devcooks' Shakshuka, so the feed shows a count.
+	const shakshuka = entryRows.find((e) => e.userId === userIds.devcooks && e.dish === 'Shakshuka')!;
+	await db.insert(likes).values({ userId: userIds.spencerfletcher, logEntryId: shakshuka.id });
 
 	console.log('✅ Seeding complete.');
 	console.log(
