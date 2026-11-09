@@ -1,5 +1,6 @@
 import { describe, test, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/svelte';
+import { createRawSnippet } from 'svelte';
 import EntryForm from './EntryForm.svelte';
 import { AUDIENCE_SENTENCE, KEEP_SOURCE, MAX_LINK, PRIVATE_RECIPE_HINT } from '#lib/journal.js';
 import type { EntryValues } from './entryForm';
@@ -81,5 +82,25 @@ describe('EntryForm', () => {
 		expect(version().value).toBe('5');
 		await fireEvent.change(screen.getByLabelText(/From a recipe/), { target: { value: 'dal' } });
 		expect(version().value).toBe('');
+	});
+
+	test('the actions row submits the entry form from outside it, and holds a page action that is not inside it', () => {
+		const { container } = render(EntryForm, {
+			props: {
+				values: makeValues(),
+				choices: CHOICES,
+				submitLabel: 'Save changes',
+				actions: createRawSnippet(() => ({
+					render: () => '<form class="other"><button>Delete entry</button></form>'
+				}))
+			}
+		});
+		const save = screen.getByRole('button', { name: 'Save changes' });
+		const form = container.querySelector<HTMLFormElement>('form.entry-form')!;
+		expect(save).toHaveAttribute('form', form.id);
+		expect(save.closest('form')).toBeNull();
+		const row = save.closest('.form-actions')!;
+		expect(row.querySelector('.other')).not.toBeNull();
+		expect(container.querySelector('form form')).toBeNull();
 	});
 });

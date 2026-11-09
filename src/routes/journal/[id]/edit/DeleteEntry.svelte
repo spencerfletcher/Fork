@@ -65,9 +65,7 @@
 			</div>
 		</form>
 	{:else}
-		<button type="button" class="btn-ghost" bind:this={trigger} onclick={open}>
-			Delete entry…
-		</button>
+		<button type="button" class="btn-ghost" bind:this={trigger} onclick={open}>Delete entry</button>
 	{/if}
 	{#if error}
 		<p class="form-error" role="alert">{error}</p>
@@ -75,10 +73,14 @@
 </section>
 
 <style>
+	/* On the actions row, pushed to its right edge; wrapped, on its own line,
+	   still right. The open step takes the whole row. */
 	.delete-entry {
-		margin-top: var(--space-7);
-		padding-top: var(--space-5);
-		border-top: 1px solid var(--color-border);
+		margin-left: auto;
+	}
+
+	.delete-entry:has(.step) {
+		flex-basis: 100%;
 	}
 
 	.explanation {

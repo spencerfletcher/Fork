@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { onMount } from 'svelte';
+	import { onMount, type Snippet } from 'svelte';
 	import PhotoField from '#lib/components/recipes/PhotoField.svelte';
 	import { audienceIcon, lockIcon } from '#lib/components/journal/Icons.svelte';
 	import {
@@ -22,7 +22,8 @@
 		error = null,
 		action,
 		submitLabel,
-		useLocalToday = false
+		useLocalToday = false,
+		actions
 	}: {
 		values: EntryValues;
 		choices: RecipeChoice[];
@@ -35,7 +36,11 @@
 		submitLabel: string;
 		/** A new entry: the date defaults to the reader's own today, not the server's. */
 		useLocalToday?: boolean;
+		/** More on the actions row, after Cancel: the edit page's Delete entry, its own form. */
+		actions?: Snippet;
 	} = $props();
+
+	const FORM_ID = 'entry-form';
 
 	const AUDIENCES: LogAudience[] = ['private', 'friends'];
 
@@ -60,7 +65,10 @@
 	const showPrivateHint = $derived(selected?.visibility === 'private' && audience === 'friends');
 </script>
 
+<!-- The actions row sits outside the form, Save joined to it by form=, so
+     the edit page's Delete entry form shares the row without nesting. -->
 <form
+	id={FORM_ID}
 	class="form entry-form"
 	method="POST"
 	{action}
@@ -195,18 +203,25 @@
 			<p class="form-hint" role="status">{PRIVATE_RECIPE_HINT}</p>
 		{/if}
 	</fieldset>
-
-	<div class="form-actions">
-		<button class="btn-primary" type="submit" disabled={pending}>
-			{pending ? 'Saving…' : submitLabel}
-		</button>
-		<a class="cancel" href="/journal">Cancel</a>
-	</div>
 </form>
 
+<div class="form-actions entry-actions">
+	<button class="btn-primary" type="submit" form={FORM_ID} disabled={pending}>
+		{pending ? 'Saving…' : submitLabel}
+	</button>
+	<a class="cancel" href="/journal">Cancel</a>
+	{@render actions?.()}
+</div>
+
 <style>
-	.entry-form {
+	.entry-form,
+	.entry-actions {
 		max-width: 680px;
+	}
+
+	.entry-actions {
+		flex-wrap: wrap;
+		margin-top: var(--space-5);
 	}
 
 	.two-up {
