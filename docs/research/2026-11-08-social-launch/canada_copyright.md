@@ -1,0 +1,101 @@
+# Canadian copyright and recipe-platform exposure — 8 November 2026
+
+## What risk arises when somebody posts a chef's recipe as their own?
+
+### Takeaway
+
+Fork should distinguish original expression and photography from cooking ideas and ingredient facts, and attribution from permission. A source link is valuable provenance but does not make an otherwise unauthorized reproduction lawful. Canada's rules must be assessed independently of US recipe-copyright shorthand.
+
+### Cited Findings
+
+- **Currency and scope.** Research retrieved on 8 November 2026. The Justice Laws consolidated Copyright Act pages used below report current to **19 October 2026**, last amended **7 November 2024**; the consolidation site says updates are generally fortnightly. This is the official consolidation available to this research, not a representation that every development through 8 November was separately checked. Fork targets the US and Canada, but its operator/entity, location, publishing practices and contracts are unknown. — [Justice Laws currency](https://laws.justice.gc.ca/eng/), [Copyright Act s3](https://laws-lois.justice.gc.ca/eng/acts/C-42/section-3.html).
+- CIPO describes protection for original literary/artistic works fixed in material form, including text and photographs; originality requires skill and judgment. Ideas and facts are not themselves protected. Copyright arises without registration. Applied to recipes, original narrative, expressive instructions, photos and potentially original selection/arrangement require analysis; culinary concepts and ingredient facts are different. **No Canadian recipe-specific categorical exemption was established by this research.** — [CIPO guide to copyright](https://ised-isde.canada.ca/site/canadian-intellectual-property-office/en/guide-copyright).
+- ISED distinguishes an idea or fact from its expression. Its guidance supports using cooking facts independently, not copying expressive prose and merely removing the byline. It also distinguishes the physical object from copyright ownership: owning a cookbook does not itself give republication rights. — [ISED About copyright](https://ised-isde.canada.ca/site/ised/en/about-copyright).
+- Section 3 reserves reproduction of a work or substantial part, translations, public telecommunication and authorization of those acts. Section 27(1) makes acts reserved to the owner infringing when done without consent, subject to applicable exceptions. The relevant question is what protected material was used and under what permission/exception, not whether the recipe is online, free to read or described as an adaptation. — [s3](https://laws-lois.justice.gc.ca/eng/acts/C-42/section-3.html), [s27](https://laws-lois.justice.gc.ca/eng/acts/C-42/section-27.html).
+- **Moral rights:** the author has integrity rights and, where reasonable, association by name/pseudonym or anonymity in connection with protected acts. These rights cannot be assigned, but can be waived; transferring copyright alone is not a waiver. Therefore economic permission and creator-credit obligations are distinct. — [s14.1](https://laws-lois.justice.gc.ca/eng/acts/C-42/section-14.1.html).
+- Integrity infringement under s28.2 requires distortion/modification or association with a product/service/cause/institution **to the prejudice of honour or reputation**. Not every substitution, crop, edit or disliked adaptation automatically satisfies that standard. The automatic prejudice rule concerns paintings, sculptures and engravings; do not generalize it to every recipe or photograph. — [s28.2](https://laws-lois.justice.gc.ca/eng/acts/C-42/section-28.2.html).
+
+### Inferences
+
+- The chef-post scenario has at least three separable questions: was protected expression/photo copied; is its use permitted; and does authorship/association mislead or violate applicable moral rights? A change to one ingredient does not answer the first two. Conversely, similarity in common ingredients does not establish theft.
+- Product labels should distinguish **posted by**, **recipe author/source**, **adapted by** and **photograph credit**. Do not automatically label the importing user “author.” Keep attribution visible through forks, history, exports, previews and share cards. These are recommended risk controls, not legal determinations of ownership.
+- A chef's name alone is not proof the chef personally owns all rights: publisher, employer or photographer arrangements may matter. Capture the claimed rights holder separately from public credit, without pretending Fork has verified ownership.
+
+### Gaps
+
+No particular recipe, licence or claimant was assessed. No recipe-specific Canadian judgment was located within this bounded sweep. Do not promise “ingredients are always free, therefore this whole recipe can be reposted,” or “change enough words and it is safe.” Trademark, passing off, contracts, confidential recipes, privacy and personality rights need separate analysis when implicated.
+
+## When might Fork itself be exposed, and what does notice-and-notice require?
+
+### Takeaway
+
+Canada protects certain intermediary acts but does not give a recipe social platform universal immunity. The statutory notice workflow includes qualifying storage providers; it differs from US notice-and-takedown. Fork should operate a credible complaint process while having Canadian counsel map its actual service to the relevant provisions.
+
+### Cited Findings
+
+- Section 31.1(1) protects providing network means **solely by reason of that provision**; subsection (4) similarly protects providing digital memory in which another person stores material for network communication. Caching has separate conditions. Under (5), the hosting protection does not apply for material when the provider knows of a competent court's decision that the storing person infringes by that copy or its use. A private allegation is not that particular court-decision trigger. Under (6), these exceptions do not cover acts infringing s27(2.3). This is act-specific protection, not permission for Fork's own copying/publishing. — [s31.1](https://laws-lois.justice.gc.ca/eng/acts/C-42/section-31.1.html).
+- Section 27(2.3) addresses a service primarily aimed at enabling infringement where actual infringement results. Subsection (2.4) permits examination of such factors as promotion, knowledge of significant infringing use, significant non-infringing uses, ability to limit infringement and steps taken, benefits and economic viability without infringement. Separately, secondary infringement under (2) contains knowledge/constructive-knowledge requirements and specified acts. Do not reduce these distinct tests to one “we host it, users are responsible” sentence. — [s27](https://laws-lois.justice.gc.ca/eng/acts/C-42/section-27.html).
+- **Authorization is fact-dependent.** An indexed official Supreme Court report for *SOCAN v CAIP*, 2004 SCC 45, says knowledge that neutral technology might be misused is not necessarily authorization; notice plus failure to remove may in some circumstances support authorization, depending on facts. This 2004 decision predates the 2012 hosting provisions and must not replace their current text. Full judgment retrieval was blocked; this finding is limited to the official indexed excerpt, not a complete current case-law review. — [official SCC report](https://decisions.scc-csc.ca/scc-csc/scc-csc/en/2159/1/document.do).
+- ISED's **2021 consultation**, used as explanatory background rather than enacted reform, distinguishes passive technical services from more active curation/creation support. It explains that protected intermediaries may still face orders disabling access, and that notice-and-notice does not itself impose the US takedown model. Its proposed reforms are **not current law simply because the document discusses them**. — [ISED intermediary consultation, §3.2](https://ised-isde.canada.ca/site/strategic-policy-sector/en/marketplace-framework-policy/copyright-policy/consultation-modern-copyright-framework-online-intermediaries).
+- **Who receives notices:** s41.25(1)(a) addresses network connectivity providers; (b) addresses providers of digital memory for the s31.1(4) hosting purpose; (c) addresses information-location tools. Section 41.26 forwarding/retention duties explicitly apply to **(a) and (b)**, not automatically every entity listed in (c). Thus neither “only broadband ISPs” nor “every site is subject in exactly the same way” is accurate. — [s41.25](https://laws-lois.justice.gc.ca/eng/acts/C-42/section-41.25.html), [s41.26](https://laws-lois.justice.gc.ca/eng/acts/c-42/section-41.26.html).
+- A compliant written notice identifies claimant/name/address, work, claimed right/interest, electronic location, alleged infringement and its date/time, plus any prescribed details. It must not include settlement offers, demands for money or personal information, or references/hyperlinks to those demands. — [s41.25(2)–(3)](https://laws-lois.justice.gc.ca/eng/acts/C-42/section-41.25.html).
+- For a qualifying recipient of a compliant notice: **electronically forward as soon as feasible**, inform claimant of forwarding or why impossible, and retain identifying records **six months from receipt**. If claimant starts proceedings and informs the provider before those six months expire, retain them **one year from original receipt**. The statutory remedy for failing these subsection (1) duties is $5,000–$10,000 statutory damages; this is not a cap on other infringement liability. Fees cannot be charged absent a regulation fixing a maximum. — [s41.26](https://laws-lois.justice.gc.ca/eng/acts/c-42/section-41.26.html).
+- ISED confirms a notice is an allegation, not a finding or lawsuit; the notice regime does not itself require the subscriber to contact/pay the claimant. Invalid settlement-demand notices need not be forwarded or trigger that retention obligation. Identifying information may be disclosed under court order, rather than automatically sent to claimants. — [ISED consumer notice guide](https://ised-isde.canada.ca/site/office-consumer-affairs/en/connected-consumer/notices-canadian-internet-subscribers).
+- Infringement remedies can include injunctions, damages, accounts and delivery up; moral-rights remedies are separately provided. Forwarding a notice or complying with one process therefore does not dispose of all potential claims or court orders. — [s34](https://laws-lois.justice.gc.ca/eng/acts/C-42/section-34.html).
+
+### Inferences
+
+Recommended complaint workflow, subject to counsel confirming applicability:
+
+1. One clearly reachable rights-report channel; capture work, specific recipe/version/image URLs, rights basis and contact details. Distinguish a statutory notice, ordinary platform report, formal demand and court order.
+2. Log receipt and evidence; promptly screen for completeness and prohibited notice content. A procedurally invalid statutory notice can still flag a substantive problem for review; do not forward prohibited demands as valid statutory notices.
+3. Where the statute applies, forward and retain as required. Use an actual owner, queue and reminder mechanism; “as soon as feasible” is not a statutory 24/48-hour rule. Protect records and avoid automatic identity disclosure.
+4. Separately assess temporary restriction, removal or continued availability under published policy, permission evidence and legal advice. Handle user response/appeal and claimant updates; preserve necessary evidence without leaving disputed material publicly accessible.
+5. Escalate court orders immediately. Map affected photos, prior versions, forks, previews and exports rather than disabling only the latest recipe page. Append-only history is not a reason to keep unlawful material public.
+
+**Do not copy a US counter-notice/10–14-business-day restoration rule into the Canadian process.** These Canadian sections create no such rule. A cross-border service may need parallel procedures; which governs requires facts, not the user's country dropdown alone.
+
+### Gaps
+
+Hosting classification, territorial connection, actual knowledge/control and the effect of recommendations, imports or platform-authored content need advice based on architecture and operations. No incorporation/hosting location was verified. The SCC full-text endpoints returned 403; no comprehensive post-2012 authorization case survey or current regulations search was completed. These limits should remain explicit in launch planning.
+
+## Can fair dealing or non-commercial UGC justify copying, and what should the roadmap implement?
+
+### Takeaway
+
+Exceptions are meaningful but conditional; they are not an automated permission switch for copying a chef's recipe. Design the product to preserve provenance and separate private capture, original adaptation and public distribution, while escalating disputed uses individually.
+
+### Cited Findings
+
+- Section 29 covers fair dealing for research, private study, education, parody or satire. Criticism/review under s29.1 requires source and, where provided, author/performer/maker/broadcaster identification. A permitted purpose still requires fairness; “education” in a description alone is insufficient. The official indexed *Alberta (Education)* report describes purpose, character, amount, alternatives, nature and effect as fairness factors. — [s29](https://laws-lois.justice.gc.ca/eng/acts/C-42/section-29.html), [s29.1](https://laws-lois.justice.gc.ca/eng/acts/C-42/section-29.1.html), [SCC 2012 report excerpt](https://decisions.scc-csc.ca/scc-csc/scc-csc/en/9997/1/document.do).
+- Section 29.21 permits an **individual** to use publicly available existing material in creating a **new copyright-protected work**, and authorize an intermediary to disseminate it, only subject to all conditions: solely non-commercial use/authorization; reasonable source/creator credit; reasonable grounds to believe the source copy non-infringing; and no substantial adverse effect on existing/potential exploitation or market, including no substitute for the source. It expressly defines intermediary, but does not declare every upload lawful. A verbatim chef recipe presented as the uploader's own is not automatically a qualifying new work. — [s29.21](https://laws-lois.justice.gc.ca/eng/acts/C-42/section-29.21.html?txthl=works+work).
+
+### Inferences
+
+**Low-regret roadmap controls:**
+
+- Source URL, source author and photo attribution; label imported versus original versus adapted content. Keep rights/permission evidence distinct from credit, including applicable licence and date where available.
+- Separate import from publish. Private-by-default reduces accidental public distribution but is not a declaration that every private copy is lawful. Public sharing should ask the user to identify a lawful basis, with plain-language guidance and room for applicable exceptions—not a false certification that all content is personally original.
+- Do not import chef photos automatically into public posts merely because structured recipe data includes an image URL. Make permission/source review and own-photo alternatives easy. Preserve source links without presenting external chefs as Fork endorsers.
+- Build per-content restriction and an auditable complaint queue before broad public growth. Support disputes about authorship and photos, not only exact text matches. Repeated substantiated misuse deserves policy action; automated similarity is only a signal because ingredient overlap is normal.
+- Do not promise AI rewriting cures copyright. New wording may still reproduce protected expression or falsely suggest authorship; cooking accuracy and provenance introduce additional reasons for user review.
+
+**Counsel gate before public social expansion:** confirm operator/jurisdictions, licences for users/platform/forks, moral-rights treatment, importer behavior, notice classification and record retention, court-order response, US/Canada process separation and review of real complaint examples. This is a scoped launch dependency, not an instruction to postpone all product work or draft sweeping terms without advice.
+
+### Gaps
+
+Whether a paid platform's particular dissemination, a monetized creator, a sponsored adaptation or a specific importer can rely on an exception is fact-dependent. No terms were drafted and nobody was contacted. This research supports product risk planning; it does not promise Fork immunity or settle any user's infringement.
+
+### Follow-up: does a fork become new IP, and what should creator permissions mean?
+
+**Direct answer:** a Fork copy does not transfer ownership of the chef's existing protected writing or photos. A user may contribute new, independently protectable expression, but owning that contribution does not erase underlying rights. Canadian law generally starts ownership with the author, subject to exceptions such as employment and assignments; licences can grant limited permissions without transferring ownership. A chef badge cannot establish that the chef owns publisher or photographer rights. — [Copyright Act s13](https://laws-lois.justice.gc.ca/eng/acts/C-42/section-13.html).
+
+The practical test is whether the fork reproduces protected material or a substantial part and whether permission or an applicable exception covers the relevant acts. There is no “one new ingredient,” fixed percentage, or automatic ownership reset in s3. Do not describe Canadian law as containing a general freestanding derivative-work right identical to US §106(2): s3 protects reproduction/substantial parts and specifies particular transformations, including translation, alongside public telecommunication. — [s3](https://laws-lois.justice.gc.ca/eng/acts/C-42/section-3.html).
+
+Cooking the same dish or using an underlying technique is different from republishing expressive instructions and photographs. Professional status gives no general copyright monopoly over cooking ideas or facts. Conversely, “inspired by” is not a permission grant. New original notes or one's own photograph may have protection, depending on originality and ownership; ingredient overlap alone does not answer that question. — [CIPO guide](https://ised-isde.canada.ca/site/canadian-intellectual-property-office/en/guide-copyright), [ISED idea/expression guidance](https://ised-isde.canada.ca/site/ised/en/about-copyright).
+
+Fair dealing and non-commercial UGC remain conditional. Section 29.21 expressly contemplates a new protected work using existing material, but requires the conditions already listed above; it does not rename copied material as the uploader's unrestricted property. — [s29.21](https://laws-lois.justice.gc.ca/eng/acts/C-42/section-29.21.html?txthl=works+work). Author attribution/anonymity and integrity protections remain distinct; an assignment alone does not waive moral rights. — [s14.1](https://laws-lois.justice.gc.ca/eng/acts/C-42/section-14.1.html).
+
+**Product recommendation (inference, not drafted licence):** use a small number of counsel-reviewed sharing presets, with clear explanations of what each permits. Distinguish permission for Fork to store/display material from permission for other users to make editable copies, publish adaptations, reuse photographs, or export/distribute copies. The UI verb “fork” should execute an authorized workflow, not purport to supply missing rights. Keep text and photo permission separate where rights differ; retain the source and licence version recorded when the copy was made. Ordinary cooking and use of unprotected facts should not be presented as privileges that the creator can monopolize.
+
+Before shipping creator controls, resolve whether permission changes affect only future copies or existing licensed forks, what survives account deletion, and which export uses are allowed. **Revocation and survival are licence/contract-specific**: no universal “creator can revoke all forks” or “all forks are irrevocable” rule follows from these sections. Section 13 permits grants limited by scope and duration; counsel must settle the intended arrangement. Identity verification should therefore say what was verified, separately from any rights declaration. — [s13](https://laws-lois.justice.gc.ca/eng/acts/C-42/section-13.html).
