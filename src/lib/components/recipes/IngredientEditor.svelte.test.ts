@@ -155,7 +155,9 @@ describe('IngredientEditor', () => {
 			expect(hint).toHaveTextContent(
 				'One per line: quantity, unit, ingredient — 2¼ cups flour. A line like # Dough starts a group.'
 			);
-			expect(hint.querySelector('code')).toHaveTextContent('# Dough');
+			// Sans like the prose around it (Spencer: "it should all be sans"); mono is for identifiers.
+			expect(hint.querySelector('b')).toHaveTextContent('# Dough');
+			expect(hint.querySelector('code')).toBeNull();
 		});
 
 		test('a heading line is never reported as a line that cannot be scaled', () => {
