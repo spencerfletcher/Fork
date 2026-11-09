@@ -1,7 +1,9 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { chain } from '#lib/testing/drizzle.js';
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, inArray, type SQL } from 'drizzle-orm';
+import { PgDialect } from 'drizzle-orm/pg-core';
 import { recipes, recipeVersions } from '#lib/server/db/schema.js';
+import { visibleTo } from './visibility';
 
 const { selectMock } = vi.hoisted(() => ({
 	selectMock: vi.fn()
@@ -57,9 +59,22 @@ describe('attachRecipeCounts', () => {
 		expect(versionWhere).toEqual(inArray(recipeVersions.recipeId, [7, 9]));
 
 		const forkWhere = (forkChain.where as ReturnType<typeof vi.fn>).mock.calls[0][0];
-		expect(forkWhere).toEqual(
-			and(inArray(recipes.parentId, [7, 9]), eq(recipes.visibility, 'public'))
-		);
+		expect(forkWhere).toEqual(and(inArray(recipes.parentId, [7, 9]), visibleTo(null)));
+	});
+
+	// A fork counts when the viewer could open it: the same rule as every list.
+	test('counts the forks the viewer may see, by the one access rule', async () => {
+		const viewer = { id: 'viewer-42' };
+		const forkChain = chain([]);
+		selectMock.mockReturnValueOnce(chain([])).mockReturnValueOnce(forkChain);
+
+		await attachRecipeCounts([{ id: 7 }], viewer);
+
+		const dialect = new PgDialect();
+		const forkWhere = (forkChain.where as ReturnType<typeof vi.fn>).mock.calls[0][0] as SQL;
+		const expected = and(inArray(recipes.parentId, [7]), visibleTo(viewer)) as SQL;
+		expect(dialect.sqlToQuery(forkWhere)).toEqual(dialect.sqlToQuery(expected));
+		expect(dialect.sqlToQuery(forkWhere).params).toContain(viewer.id);
 	});
 
 	test('returns an empty list without querying when given no recipes', async () => {

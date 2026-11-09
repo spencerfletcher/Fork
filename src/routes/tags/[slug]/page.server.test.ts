@@ -1,7 +1,9 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { chain } from '#lib/testing/drizzle.js';
-import { desc, eq } from 'drizzle-orm';
+import { desc, type SQL } from 'drizzle-orm';
+import { PgDialect } from 'drizzle-orm/pg-core';
 import { recipes } from '#lib/server/db/schema.js';
+import { visibleTo } from '#lib/server/visibility.js';
 
 const { findFirstMock, findManyMock, selectMock, visibleTagsMock } = vi.hoisted(() => ({
 	findFirstMock: vi.fn(),
@@ -19,7 +21,10 @@ vi.mock('#lib/server/tagFilter.js', () => ({ visibleTags: visibleTagsMock }));
 
 import { load } from './+page.server';
 
-const event = { params: { slug: 'dessert' } } as unknown as Parameters<typeof load>[0];
+const makeEvent = (user: { id: string } | null = null) =>
+	({ params: { slug: 'dessert' }, locals: { user } }) as unknown as Parameters<typeof load>[0];
+const event = makeEvent();
+const sqlOf = (q: SQL) => new PgDialect().sqlToQuery(q);
 
 beforeEach(() => {
 	vi.clearAllMocks();
@@ -30,10 +35,29 @@ beforeEach(() => {
 });
 
 describe('/tags/[slug] load', () => {
-	test('returns the public tags for the tabs', async () => {
+	test('signed out, returns the public tags for the tabs', async () => {
 		const result = await load(event);
-		expect(visibleTagsMock.mock.calls[0][0]).toEqual(eq(recipes.visibility, 'public'));
+		expect(visibleTagsMock.mock.calls[0][0]).toEqual(visibleTo(null));
 		expect(result).toMatchObject({ tags: [{ id: 1, name: 'Dessert', slug: 'dessert' }] });
+	});
+
+	// One access rule: a friend sees their friends' Friends-level recipes here too.
+	test('signed in, the recipes, tabs and fork counts follow what the viewer may see', async () => {
+		const viewer = { id: 'viewer-7' };
+		findManyMock.mockResolvedValue([{ id: 3, author: null }]);
+		const forkChain = chain([]);
+		// The tag's exists() subquery, then the version and fork aggregates.
+		selectMock
+			.mockReturnValueOnce(chain([]))
+			.mockReturnValueOnce(chain([]))
+			.mockReturnValueOnce(forkChain);
+
+		await load(makeEvent(viewer));
+
+		expect(sqlOf(visibleTagsMock.mock.calls[0][0]).params).toContain(viewer.id);
+		expect(sqlOf(findManyMock.mock.calls[0][0].where).params).toContain(viewer.id);
+		expect(sqlOf(forkChain.where.mock.calls[0][0]).params).toContain(viewer.id);
+		expect(sqlOf(visibleTagsMock.mock.calls[0][0])).toEqual(sqlOf(visibleTo(viewer)));
 	});
 
 	test('lists the tagged recipes newest change first, as /recipes does', async () => {

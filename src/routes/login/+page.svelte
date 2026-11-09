@@ -19,7 +19,7 @@
 	// Sent here from a page that needs an account, the subtitle says why.
 	const subtitle = $derived.by(() => {
 		if (!data.redirectTo) return 'Log in to your cookbook';
-		if (data.redirectTo.split('?')[0] === '/favorites') return 'Log in to see your favorites';
+		if (data.redirectTo.split('?')[0] === '/cookbook') return 'Log in to see your cookbook';
 		return 'Log in to continue';
 	});
 </script>

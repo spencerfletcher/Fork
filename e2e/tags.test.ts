@@ -47,15 +47,25 @@ test.describe('Tag pages', () => {
 });
 
 test.describe('Tag tabs', () => {
-	test('the browse page offers tag tabs that lead to the tag page', async ({ page }) => {
-		await page.goto('/recipes');
-		await expect(page.getByRole('heading', { name: 'Recent' })).toBeVisible();
+	test('a tag page’s tabs lead to other tags, and All back to Discover', async ({ page }) => {
+		await page.goto('/tags/dessert');
 		const tabs = page.getByRole('navigation', { name: 'Browse by tag' });
-		await expect(tabs.getByRole('link', { name: 'All' })).toHaveAttribute('aria-current', 'page');
-		await tabs.getByRole('link', { name: 'Dessert' }).click();
-		await expect(page).toHaveURL(/\/tags\/dessert/);
-		await expect(
-			page.getByRole('navigation', { name: 'Browse by tag' }).getByRole('link', { name: 'Dessert' })
-		).toHaveAttribute('aria-current', 'page');
+		await expect(tabs.getByRole('link', { name: 'Dessert' })).toHaveAttribute(
+			'aria-current',
+			'page'
+		);
+		await expect(tabs.getByRole('link', { name: 'All' })).toHaveAttribute('href', '/discover');
+		await tabs.getByRole('link', { name: 'Indian' }).click();
+		await expect(page).toHaveURL(/\/tags\/indian/);
+	});
+
+	test('Discover’s tag filters narrow the list in place', async ({ page }) => {
+		await page.goto('/discover');
+		await page
+			.getByRole('group', { name: 'Filter by tag' })
+			.getByRole('button', { name: 'Dessert' })
+			.click();
+		await expect(page).toHaveURL(/\/discover\?tags=dessert/);
+		await expect(page.getByText(SEED[0].versions.at(-1)!.title)).toBeVisible();
 	});
 });

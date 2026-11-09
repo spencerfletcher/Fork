@@ -56,3 +56,13 @@ describe('layout tab title', () => {
 		expect(document.title).toBe(pageTitle('Recipe not found'));
 	});
 });
+
+describe('layout navigation', () => {
+	test('the phone tab bar follows the main content, after the top bar', () => {
+		renderLayout('/cookbook');
+		const tabBar = screen.getByRole('navigation', { name: 'Main' });
+		expect(document.getElementById('main')!.compareDocumentPosition(tabBar)).toBe(
+			Node.DOCUMENT_POSITION_FOLLOWING
+		);
+	});
+});

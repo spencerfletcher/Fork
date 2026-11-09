@@ -41,7 +41,7 @@ describe('Login page', () => {
 	});
 
 	test.each([
-		['/favorites', 'Log in to see your favorites'],
+		['/cookbook?filter=saved', 'Log in to see your cookbook'],
 		['/recipes/new', 'Log in to continue'],
 		['/recipes/classic-cookies?version=2', 'Log in to continue']
 	])('sent from %s, the subtitle names the reason: "%s"', (redirectTo, subtitle) => {

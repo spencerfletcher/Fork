@@ -30,7 +30,7 @@
 			{form}
 			allTags={data.allTags}
 			submitLabel="Create recipe"
-			cancelHref="/recipes">
+			cancelHref="/cookbook">
 			{#snippet header(outcome, invalid)}
 				<div class="editor-header">
 					<div class="editor-title">

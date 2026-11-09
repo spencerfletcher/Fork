@@ -1,27 +1,11 @@
 import { describe, test, expect } from 'vitest';
-import { render, screen } from '@testing-library/svelte';
-import RecipesPage from './+page.svelte';
+import { render } from '@testing-library/svelte';
+import Page from './+page.svelte';
 
-const RECIPE = {
-	id: 1,
-	slug: 'soup',
-	title: 'Soup',
-	description: null,
-	imageUrl: null,
-	parentId: null,
-	prepTimeMinutes: null,
-	cookTimeMinutes: null,
-	createdAt: new Date()
-};
-
-describe('Recipes page, the owner list', () => {
-	test('the grid sits under an h2 eyebrow, so the headings do not skip from h1 to h3', () => {
-		render(RecipesPage, {
-			props: { data: { user: { id: 'u1' }, recipes: [RECIPE], tags: [] } } as never
-		});
-		expect(screen.getByRole('heading', { level: 1, name: 'My Recipes' })).toBeInTheDocument();
-		expect(screen.getByRole('heading', { level: 2, name: '1 recipe' })).toHaveClass(
-			'eyebrow-label'
-		);
+// The route redirects (page.server.test.ts); the page itself has nothing to show.
+describe('/recipes page', () => {
+	test('renders nothing', () => {
+		const { container } = render(Page);
+		expect(container.textContent?.trim()).toBe('');
 	});
 });

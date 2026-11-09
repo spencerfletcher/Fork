@@ -7,7 +7,7 @@ import { gotoHydrated } from './helpers';
 const COOKIES_RE = new RegExp(SEED[0].versions.at(-1)!.title, 'i');
 
 async function openCookiesCompare(page: Page, query = '?from=2&to=3') {
-	await page.goto('/recipes');
+	await page.goto('/discover');
 	await page.getByRole('link', { name: COOKIES_RE }).first().click();
 	await page.waitForURL(/\/recipes\//);
 	await gotoHydrated(page, new URL(page.url()).pathname + '/diff' + query);

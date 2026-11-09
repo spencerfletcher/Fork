@@ -31,7 +31,7 @@ const goto =
 	};
 
 async function cookiesPath(page: Page) {
-	await page.goto('/recipes');
+	await page.goto('/discover');
 	return (await page.getByRole('link', { name: COOKIES_RE }).first().getAttribute('href'))!;
 }
 
@@ -139,10 +139,12 @@ const TARGETS: Target[] = [
 		desktop: []
 	},
 	{
-		name: 'Explore recipes',
+		// The seed user's Cookbook is never empty, so the empty state's link is
+		// out of reach; a search with no match carries the same kind of link.
+		name: 'Clear search',
 		auth: true,
-		open: goto('/favorites'),
-		target: (p) => p.getByRole('link', { name: 'Explore recipes →' })
+		open: goto('/cookbook?q=zzzzzz'),
+		target: (p) => p.getByRole('link', { name: 'Clear search' })
 	},
 	{
 		name: 'tag pill remove',
@@ -236,16 +238,16 @@ test.describe('Targets under a coarse pointer', () => {
 type Screen = { name: string; auth?: boolean; open: Open };
 
 const PAGES: Screen[] = [
-	{ name: 'landing', open: goto('/') },
-	{ name: 'recipes', open: goto('/recipes') },
+	{ name: 'home (Discover)', open: goto('/') },
+	{ name: 'discover', open: goto('/discover') },
 	{ name: 'tag page', open: goto('/tags/dessert') },
 	{ name: 'search', open: goto('/search?tags=dessert') },
 	{ name: 'login', open: goto('/login') },
 	{ name: 'signup', open: goto('/signup') },
 	{ name: 'compare', open: cookies('/diff?from=2&to=3') },
-	{ name: 'feed', auth: true, open: goto('/') },
-	{ name: 'my recipes', auth: true, open: goto('/recipes') },
-	{ name: 'favorites', auth: true, open: goto('/favorites') },
+	{ name: 'discover, signed in', auth: true, open: goto('/discover') },
+	{ name: 'cookbook', auth: true, open: goto('/cookbook') },
+	{ name: 'cookbook, saved', auth: true, open: goto('/cookbook?filter=saved') },
 	{ name: 'new recipe', auth: true, open: goto('/recipes/new') },
 	{ name: 'edit recipe', auth: true, open: cookies('/edit') },
 	{ name: 'profile', auth: true, open: goto('/users/spencerfletcher') },
@@ -282,9 +284,9 @@ const FOCUS: Focus[] = [
 	...PAGES.filter((p) => p.open !== longTitleCompare),
 	{
 		name: 'current tag tab',
-		open: goto('/recipes'),
+		open: goto('/tags/dessert'),
 		target: (p) =>
-			p.getByRole('navigation', { name: 'Browse by tag' }).getByRole('link', { name: 'All' })
+			p.getByRole('navigation', { name: 'Browse by tag' }).getByRole('link', { name: 'Dessert' })
 	},
 	{
 		name: 'pressed filter',
@@ -366,15 +368,15 @@ type Mark = Screen & {
 const MARKS: Mark[] = [
 	{
 		name: 'the current navbar link',
-		open: goto('/recipes'),
+		open: goto('/discover'),
 		mark: (p) => p.locator('nav a.navbar-link[aria-current="page"]'),
 		kind: 'underline'
 	},
 	{
 		name: 'the current tag tab',
-		open: goto('/recipes'),
+		open: goto('/tags/dessert'),
 		mark: (p) =>
-			p.getByRole('navigation', { name: 'Browse by tag' }).getByRole('link', { name: 'All' }),
+			p.getByRole('navigation', { name: 'Browse by tag' }).getByRole('link', { name: 'Dessert' }),
 		kind: 'border'
 	},
 	{
