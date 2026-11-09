@@ -89,6 +89,24 @@ Paper `#f7f3ec`, ink, clay `#b23c00` as text only, marigold `#eca620` as the sin
 
 user collections, manual in v1 with starter collections "To cook" and "Favorites", optional "Add to collection" beside Save (Save itself never asks), multiple membership, rule-based later ("every recipe Max adds"); the Cookbook filter row leaves room for them · Help ▾ in the editor · inline step quantities with Cooklang markup and a settings toggle · duplicate own recipe · link sharing of private recipes · Trash and drafts · Comment · recipe ratings · public log entries · revisit: tick affordance, three-voice type stack.
 
+## Build record · 9 Nov 2026
+
+Built the same day in five slices, each in its own worktree, reviewed once, merged to master and verified together.
+
+| Slice | What landed | Migration |
+|---|---|---|
+| A | `recipes.visibility` private / friends / public, `friendships`, viewer-scoped `visibleTo`, forks never widen, second seed user | `0008_recipe-visibility` |
+| B | Recipe page: Cook primary, Save with compact count, Fork, "Log in to save", stats line, two-line phone measure, version and scale kept through Cook | — |
+| C | Editor: live `# Name` headings with Insert ▾, "Method" label, audience radio trio, borderless full-width photo field, forks hint | — |
+| D | Cookbook · Journal · Friends · Discover navigation with paper tab bar; `/cookbook` (All · Mine · Saved); `/discover` with 7-day lead card and Recent changes; `/` → Cookbook signed in, Discover signed out; old routes redirect | — |
+| E | Journal with Add to Journal (prefilled from Cook), Friends feed with Like counts and recipe events, requests, profile relation control, mute / unfriend / block / unblock / report, transactional fork-privatising on unfriend | `0009_journal-and-friends`, `0010_journal-link-and-indexes` |
+
+Final state on master: 1581 unit tests, svelte-check 0 errors, eslint clean, e2e 215 passed (51 skipped by the auth project split). Local dev database migrated to 0010 and reseeded (spencerfletcher, friend devcooks, pending request priyabakes).
+
+Deviations from this summary, all deliberate: Save is hidden for owners; Discover's lead card and Recent changes hide while a filter is active; the top-bar handle shows from 1024 and the initial alone from 768; the Steps box is labelled Method; log entries may carry an external link instead of a recipe; a privatised fork can return to Friends only once its author can see the parent again.
+
+Still to do before prod: Spencer's pass on the working app (taste calls), `pnpm db:migrate:prod` and the Netlify publish back to back (0008 drops `is_public`), then remove the `cream-palette` hook ignore.
+
 ## Verification record
 
 - Every page opened in Playwright Chromium and WebKit at 390 and 1280 from `file://`: zero page errors, zero failed requests, no horizontal overflow, all six font families loaded from `assets/fonts`. No `http` string in any html/css/js file.
