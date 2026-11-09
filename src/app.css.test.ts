@@ -108,9 +108,13 @@ describe('app.css shared utilities', () => {
 		);
 	});
 
-	test('danger is a red ghost that keeps its red over the hover band', () => {
-		expect(body('\\.btn-ghost\\.danger')).toMatch(/color:\s*var\(--color-remove\)/);
-		expect(css.indexOf('.btn-ghost.danger {')).toBeGreaterThan(css.indexOf('.btn-ghost:hover {'));
+	test('danger is a red ghost that keeps its red over the hover band; danger-hover turns red on hover', () => {
+		const at = css.indexOf('.btn-ghost.danger,');
+		const rule = css.slice(at, css.indexOf('}', at));
+		expect(rule).toContain('.btn-ghost.danger-hover:is(:hover, :focus-visible)');
+		expect(rule).toMatch(/border-color:\s*var\(--color-remove\)/);
+		expect(rule).toMatch(/color:\s*var\(--color-remove\)/);
+		expect(at).toBeGreaterThan(css.indexOf('.btn-ghost:hover {'));
 	});
 });
 

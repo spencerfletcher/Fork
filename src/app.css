@@ -466,8 +466,11 @@
 
 	/* Ghost turned danger: Diff Remove red outline and text, for the one
 	   control that destroys or cuts someone off (Delete, Remove, Block).
-	   Defined after the ghost's hover, so the red holds over the band. */
-	.btn-ghost.danger {
+	   .danger-hover is a plain ghost that turns red only on hover or focus
+	   (the profile's Block). Defined after the ghost's hover, so the red
+	   holds over the band. */
+	.btn-ghost.danger,
+	.btn-ghost.danger-hover:is(:hover, :focus-visible) {
 		border-color: var(--color-remove);
 		color: var(--color-remove);
 	}
