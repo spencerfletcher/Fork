@@ -113,20 +113,31 @@ describe('visibleTo', () => {
 });
 
 describe('canSetVisibility', () => {
-	// VISIBILITIES runs narrowest first: a value is allowed up to the parent's own place.
-	const pairs = VISIBILITIES.flatMap((parent, p) =>
-		VISIBILITIES.map((requested, r) => [parent, requested, r <= p] as const)
+	// VISIBILITIES runs narrowest first. A value is refused only when it is wider
+	// than both the parent's place and the fork's own current place.
+	const triples = VISIBILITIES.flatMap((parent, p) =>
+		VISIBILITIES.flatMap((current, c) =>
+			VISIBILITIES.map((requested, r) => [parent, current, requested, r <= Math.max(p, c)] as const)
+		)
 	);
 
-	test.each(pairs)('a fork of a %s recipe set to %s: %s', (parent, requested, allowed) => {
-		expect(canSetVisibility(parent, requested)).toBe(allowed);
-	});
+	test.each(triples)(
+		'a fork of a %s recipe, now %s, set to %s: %s',
+		(parent, current, requested, allowed) => {
+			expect(canSetVisibility(parent, current, requested)).toBe(allowed);
+		}
+	);
 
 	test('a recipe with no parent may be set to anything', () => {
-		for (const v of VISIBILITIES) expect(canSetVisibility(null, v)).toBe(true);
+		for (const current of VISIBILITIES)
+			for (const v of VISIBILITIES) expect(canSetVisibility(null, current, v)).toBe(true);
 	});
 
-	test('a fork of a friends recipe can never be public', () => {
-		expect(canSetVisibility('friends', 'public')).toBe(false);
+	test('a public fork whose parent went private may narrow to friends', () => {
+		expect(canSetVisibility('private', 'public', 'friends')).toBe(true);
+	});
+
+	test('a private fork of a friends recipe can never be public', () => {
+		expect(canSetVisibility('friends', 'private', 'public')).toBe(false);
 	});
 });

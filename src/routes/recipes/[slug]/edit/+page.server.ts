@@ -80,15 +80,14 @@ export const actions: Actions = {
 		if (!submission.ok) return submission.failure;
 		const { draft, content, settings } = submission;
 
-		// Forks never widen access, checked on a change only: a fork already wider
-		// than a parent that has since narrowed keeps saving as it is.
+		// Forks never widen access past both the parent and the fork's own current
+		// audience, so a fork already wider than a narrowed parent keeps saving.
 		const { visibility } = settings;
 		const parentVisibility = recipe.parent?.visibility ?? null;
 		if (
-			visibility !== recipe.visibility &&
 			parentVisibility !== null &&
 			parentVisibility !== 'public' &&
-			!canSetVisibility(parentVisibility, visibility)
+			!canSetVisibility(parentVisibility, recipe.visibility, visibility)
 		) {
 			return saveFailure(400, 'invalid', WIDENS_PARENT[parentVisibility], draft);
 		}

@@ -63,9 +63,16 @@ export const WIDENS_PARENT: Record<Exclude<Visibility, 'public'>, string> = {
 };
 
 /**
- * Forks never widen access: a fork may be set no wider than its parent is now.
+ * Forks never widen access: a fork may not be set wider than both its parent is
+ * now and it is itself now. Staying put or narrowing is always allowed, so a
+ * public fork whose parent went private can still move to friends.
  * `parent` is null for a recipe that is not a fork, or whose parent was deleted.
  */
-export function canSetVisibility(parent: Visibility | null, requested: Visibility): boolean {
-	return parent === null || VISIBILITIES.indexOf(requested) <= VISIBILITIES.indexOf(parent);
+export function canSetVisibility(
+	parent: Visibility | null,
+	current: Visibility,
+	requested: Visibility
+): boolean {
+	const rank = (v: Visibility) => VISIBILITIES.indexOf(v);
+	return parent === null || rank(requested) <= Math.max(rank(parent), rank(current));
 }

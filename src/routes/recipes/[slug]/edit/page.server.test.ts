@@ -471,6 +471,22 @@ describe('save', () => {
 			expect(tx.updateChain.set.mock.calls[0][0]).toMatchObject({ visibility: 'friends' });
 		});
 
+		test('a public fork whose parent went private may narrow to friends', async () => {
+			findRecipeMock.mockResolvedValue(forkOf('private', 'public'));
+			tx = makeTx({ locked: [{ ...LOCKED, visibility: 'public' }] });
+			const result = await save({ ...UNCHANGED, visibility: 'friends' });
+			expect(result?.status).not.toBe(400);
+			expect(tx.updateChain.set.mock.calls[0][0]).toMatchObject({ visibility: 'friends' });
+		});
+
+		test('a friends fork of a private recipe still cannot be made public', async () => {
+			findRecipeMock.mockResolvedValue(forkOf('private', 'friends'));
+			const result = await save({ ...UNCHANGED, visibility: 'public' });
+			expect(result.status).toBe(400);
+			expect(result.data).toMatchObject({ error: WIDENS_PARENT.private, code: 'invalid' });
+			expect(transactionMock).not.toHaveBeenCalled();
+		});
+
 		test('a fork left as wide as it was still saves after its parent narrowed', async () => {
 			findRecipeMock.mockResolvedValue(forkOf('private', 'public'));
 			tx = makeTx({ locked: [{ ...LOCKED, visibility: 'public' }] });
