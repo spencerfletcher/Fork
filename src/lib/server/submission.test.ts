@@ -25,12 +25,12 @@ const storage = (error: unknown = null) =>
 
 describe('readSubmission', () => {
 	test('a valid form reads as its draft, content and settings', () => {
-		const read = readSubmission(form({ ...VALID, isPublic: 'on' }));
+		const read = readSubmission(form({ ...VALID, visibility: 'friends' }));
 		expect(read.ok).toBe(true);
 		if (!read.ok) return;
 		expect(read.draft.title).toBe('Soup');
 		expect(read.content.title).toBe('Soup');
-		expect(read.settings.isPublic).toBe(true);
+		expect(read.settings.visibility).toBe('friends');
 	});
 
 	test('invalid content is a 400 that hands the draft back', () => {
