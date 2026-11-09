@@ -127,7 +127,7 @@ describe('FeedEntry', () => {
 		expect(more).toHaveFocus();
 	});
 
-	test("a friend's linked page shows as \"from\" its host, linking out without referrer or endorsement", () => {
+	test('a friend\'s linked page shows as "from" its host, linking out without referrer or endorsement', () => {
 		const url = 'https://seriouseats.com/dal';
 		render(FeedEntry, {
 			props: { item: makeItem({ source: { kind: 'link', url, host: 'seriouseats.com' } }) }

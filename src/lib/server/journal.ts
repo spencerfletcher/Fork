@@ -33,7 +33,6 @@ export const ENTRY_MESSAGES = {
 	linkTooLong: `Link is too long (${MAX_LINK.toLocaleString('en-US')} characters max)`
 } as const;
 
-
 export type EntryFields = {
 	dish: string;
 	cookedOn: string;

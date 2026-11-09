@@ -1,13 +1,6 @@
 import { describe, test, expect } from 'vitest';
 import { slugify } from '#lib/helpers.js';
-import {
-	KEEP_SOURCE,
-	dayLabel,
-	groupByMonth,
-	localToday,
-	marginDay,
-	monthLabel
-} from './journal';
+import { KEEP_SOURCE, dayLabel, groupByMonth, localToday, marginDay, monthLabel } from './journal';
 
 const NOW = new Date('2026-11-10T12:00:00Z');
 

@@ -153,7 +153,7 @@ describe('blockIn', () => {
 });
 
 describe('unblock', () => {
-	test("deletes only the block I wrote, never theirs or a friendship", async () => {
+	test('deletes only the block I wrote, never theirs or a friendship', async () => {
 		await unblock(ME, THEM);
 		const where = deleteMock.mock.results[0].value.where.mock.calls[0][0] as SQL;
 		expect(new PgDialect().sqlToQuery(where)).toMatchObject({
