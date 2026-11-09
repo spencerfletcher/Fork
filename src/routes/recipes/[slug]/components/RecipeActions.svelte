@@ -303,11 +303,14 @@
 			grid-column: 1 / -1;
 		}
 
-		/* 24px of line and 20px of padding: a thumb's 44px. */
+		/* A thumb's 44px, whatever the line height. */
 		.login {
+			display: inline-flex;
+			align-items: center;
 			justify-self: center;
+			min-height: 44px;
 			margin: 0;
-			padding: 10px 0;
+			padding: 0;
 		}
 	}
 </style>
