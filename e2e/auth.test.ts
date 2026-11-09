@@ -36,10 +36,10 @@ test.describe('Auth pages', () => {
 		await expect(page.getByText(/sign in/i)).toHaveCount(0);
 	});
 
-	test('sent from favorites, the login subtitle says why', async ({ page }) => {
-		await page.goto('/favorites');
+	test('sent from the Cookbook, the login subtitle says why', async ({ page }) => {
+		await page.goto('/cookbook');
 		await expect(page).toHaveURL(/\/login\?redirectTo=/);
-		await expect(page.locator('.auth-subtitle')).toHaveText('Log in to see your favorites');
+		await expect(page.locator('.auth-subtitle')).toHaveText('Log in to see your cookbook');
 	});
 
 	test('sign-up states the username rules and says so in the field once the user leaves it', async ({
