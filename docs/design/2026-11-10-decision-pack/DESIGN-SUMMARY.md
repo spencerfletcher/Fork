@@ -14,8 +14,8 @@ Paper `#f7f3ec`, ink, clay `#b23c00` as text only, marigold `#eca620` as the sin
 
 ## Audience model (decided 9 Nov)
 
-- **Recipe: Only me / Friends / Public.** Radio trio "Who can see this recipe", one sentence each, Only me default. Friends-level recipes are visible to approved friends (page, Save, Fork) and never appear in Discover. Making a recipe less visible never hides existing forks. Link sharing of a private recipe is later.
-- **Search covers everything the viewer may see**: own, friends' and public recipes (decided 9 Nov). "Never in Discover" applies to Discover, tags and profiles seen by strangers, not to a signed-in search.
+- **Recipe: Only me / Friends / Public.** Radio trio "Who can see this recipe", one sentence each, Only me default. Friends-level recipes are visible to approved friends (page, Save, Fork, Discover, search, tags, profile) and to nobody else. Making a recipe less visible never hides existing forks. Link sharing of a private recipe is later.
+- **One access rule everywhere (decided 9 Nov, late):** every surface lists what the viewer may see: own, accepted friends' Friends-level recipes, and Public. That includes Discover, search, tag pages and profiles. A stranger or a signed-out visitor sees Public only. Discover gains the same filters as search (friends' recipes, one person's recipes, tags), so you can see a friend's recipe trending or what friends are cooking.
 - **Log entry: Only me / Friends.** Radio pair "Who sees this entry", Only me default; after the first approved friend the last choice is remembered. A friends-level entry on a private recipe says "Friends see the dish and your photo, not the recipe."
 - **Forks never widen access (decided 9 Nov, evening).** A fork of a Friends recipe may be Only me or Friends, never Public; a fork of a Public recipe may be anything. The server enforces this on create and on every later visibility change, not just the radio set.
 - Schema note for the builder: `recipes.isPublic` becomes a three-valued visibility (`'private' | 'friends' | 'public'` as const), and every recipe read (page, Cookbook Saved, Fork, Discover, profile) checks it.
@@ -39,7 +39,7 @@ Paper `#f7f3ec`, ink, clay `#b23c00` as text only, marigold `#eca620` as the sin
 - Same card component, looser 1 / 2 / 3 grid, every card shows the cook's avatar and handle above the photo. Lede "Public recipes from every cook on Fork."
 - **Lead card = most saved in the last 7 days**, falling back to newest when nothing was saved (Spencer, overriding "newest"). Tunable later.
 - Under the lead card, a **Recent changes** row: three small cards, each "v4 of Cardamom buns · Maria changed the glaze", linking to the diff. This keeps diffing and sharing above the fold on the signed-out landing without another page.
-- Only public recipes, newest first after the lead.
+- Lists every recipe the viewer may see (public, plus friends' Friends-level recipes when signed in), newest first after the lead; the lead card and Recent changes draw from the same set. Filters as in search: friends, a person, tags.
 
 ## Recipe overview
 

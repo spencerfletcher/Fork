@@ -413,7 +413,7 @@ Spencer reviewed the offline decision pack (`docs/design/2026-11-10-decision-pac
 | Verbs "Save to cookbook" and "Make my version" | "Save" and **"Fork"**. Fork is the product's identity; revisit only if users visibly struggle. Counts read "saves" and "forks". |
 | Cook-event comments enter the early P2 pilot | **No Comment in the first release.** Like (with a visible count), Save and the ⋯ menu only. Comments follow once the feed has real use. |
 | "Real cooking matters more than engagement counts" | Both matter. Likes show their count in the Friends feed. |
-| Private-first recipes, public on explicit publication | Three recipe audiences: **Only me / Friends / Public**, Only me default. Friends-level recipes never appear in Discover. Log entries have two: Only me / Friends. |
+| Private-first recipes, public on explicit publication | Three recipe audiences: **Only me / Friends / Public**, Only me default. Every surface, Discover included, lists what the viewer may see, so a friend sees your Friends-level recipes there; strangers see Public only. Log entries have two: Only me / Friends. |
 | Cookbook / Journal / Friends is a task model to test | Adopted as the navigation, plus **Discover** as the fourth destination. Signed out, `/` is Discover; signed in, Cookbook. |
 | "Made it" placement beside Cook is a design call | Settled: "Add to Journal" at the end of Cook, and a personal "You cooked this on … · Add to Journal" line on the recipe page. |
 | Tick affordance: side-by-side evaluation in P2 | The shipped 16px marigold circle stays for the MVP; M20 remains a P2 revisit. |
