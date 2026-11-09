@@ -10,7 +10,7 @@ test.describe('Discover, signed out', () => {
 	test('/ is Discover: the heading, a lead card and Recent changes', async ({ page }) => {
 		await page.goto('/');
 		await expect(page.getByRole('heading', { level: 1, name: 'Discover' })).toBeVisible();
-		await expect(page.locator('a.lead')).toHaveCount(1);
+		await expect(page.locator('.lead')).toHaveCount(1);
 		await expect(page.getByRole('heading', { name: 'Recent changes' })).toBeVisible();
 	});
 
@@ -30,10 +30,38 @@ test.describe('Discover, signed out', () => {
 
 	test('the lead takes the first photo fetch; the grid follows it', async ({ page }) => {
 		await page.goto('/discover');
-		await expect(page.locator('a.lead img[fetchpriority="high"]')).toHaveCount(
-			(await page.locator('a.lead img').count()) > 0 ? 1 : 0
+		await expect(page.locator('.lead img[fetchpriority="high"]')).toHaveCount(
+			(await page.locator('.lead img').count()) > 0 ? 1 : 0
 		);
 		await expect(page.locator('.discover-grid img[fetchpriority="high"]')).toHaveCount(0);
+	});
+
+	test('the lead and every grid card: the cook is one profile link, tabbed before the recipe', async ({
+		page
+	}) => {
+		await page.setViewportSize({ width: 1280, height: 900 });
+		await page.goto('/discover');
+		for (const card of [
+			page.locator('.lead'),
+			page.locator('.discover-grid .recipe-card').first()
+		]) {
+			const hrefs = await card
+				.locator('a')
+				.evaluateAll((els) => els.map((a) => a.getAttribute('href')));
+			expect(hrefs[0]).toMatch(/^\/users\//);
+			expect(hrefs[1]).toMatch(/^\/recipes\//);
+			const cook = card.locator('a[href^="/users/"]');
+			expect((await cook.boundingBox())!.height).toBeGreaterThanOrEqual(24);
+		}
+		await expect(page.getByText('Open recipe')).toHaveCount(0);
+	});
+
+	test('a tag filter keeps the lead and draws it from the filtered set', async ({ page }) => {
+		await page.goto('/discover?tags=dessert');
+		await expect(page.locator('.lead')).toHaveCount(1);
+		const href = (await page.locator('.lead a[href^="/recipes/"]').getAttribute('href'))!;
+		await page.goto(href);
+		await expect(page.getByRole('link', { name: 'Dessert' }).first()).toBeVisible();
 	});
 
 	test('/recipes, now the Cookbook, asks a visitor to log in', async ({ page }) => {

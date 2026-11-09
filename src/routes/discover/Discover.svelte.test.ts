@@ -56,12 +56,46 @@ describe('Discover', () => {
 			}),
 			recipes: [makeCard(1)]
 		});
-		const lead = screen.getByRole('link', { name: /Cardamom Buns/ });
-		expect(lead).toHaveAttribute('href', '/recipes/r-9');
+		const link = screen.getByRole('link', { name: 'Cardamom Buns' });
+		expect(link).toHaveAttribute('href', '/recipes/r-9');
+		const lead = link.closest<HTMLElement>('.lead')!;
 		expect(within(lead).getByText('@cook9')).toBeInTheDocument();
 		expect(within(lead).getByText('1h 10m')).toBeInTheDocument();
 		expect(within(lead).getByText('Serves 12')).toBeInTheDocument();
 		expect(within(lead).getByText('v3')).toBeInTheDocument();
+		expect(within(lead).queryByText(/Open recipe/)).toBeNull();
+	});
+
+	test('the lead cook is one profile link, ahead of the recipe link, neither inside the other', () => {
+		renderDiscover({ lead: makeCard(9, { title: 'Cardamom Buns' }) });
+		const lead = screen.getByRole('link', { name: 'Cardamom Buns' }).closest<HTMLElement>('.lead')!;
+		const profile = within(lead).getByRole('link', { name: '@cook9' });
+		expect(profile).toHaveAttribute('href', '/users/cook9');
+		expect(profile.querySelector('.lead-avatar')).not.toBeNull();
+		expect([...lead.querySelectorAll('a')].map((a) => a.getAttribute('href'))).toEqual([
+			'/users/cook9',
+			'/recipes/r-9'
+		]);
+		expect(lead.querySelector('a a')).toBeNull();
+	});
+
+	test('while filtering, the lead and Recent changes stay', () => {
+		renderDiscover({
+			searchQuery: 'dal',
+			lead: makeCard(9, { title: 'Dal' }),
+			recentChanges: [
+				{
+					versionNumber: 2,
+					commitMessage: 'More cumin',
+					slug: 'dal',
+					title: 'Dal',
+					username: 'maria',
+					href: '/recipes/dal/diff?from=1&to=2'
+				}
+			]
+		});
+		expect(screen.getByRole('link', { name: 'Dal' })).toHaveAttribute('href', '/recipes/r-9');
+		expect(screen.getByRole('heading', { name: 'Recent changes' })).toBeInTheDocument();
 	});
 
 	test('Recent changes: each small card names the version, recipe, cook and note, and opens its diff', () => {

@@ -27,13 +27,10 @@ describe('visibleTags', () => {
 });
 
 describe('tagMatchCounts', () => {
-	test('counts how many selected tags each recipe carries', async () => {
+	test('two tags keep only the recipes carrying both', async () => {
 		selectMock.mockReturnValue(chain([{ recipeId: 7 }, { recipeId: 7 }, { recipeId: 9 }]));
 		const counts = await tagMatchCounts([1, 2]);
-		expect([...counts.entries()]).toEqual([
-			[7, 2],
-			[9, 1]
-		]);
+		expect([...counts.keys()]).toEqual([7]);
 	});
 
 	test('leaves out recipes that match nothing', async () => {

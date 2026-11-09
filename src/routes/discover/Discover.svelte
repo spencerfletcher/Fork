@@ -42,7 +42,9 @@
 		</p>
 
 		{#if lead}
-			<a class="lead" href="/recipes/{lead.slug}">
+			<!-- The title link stretches over the card; the cook link sits above it,
+			     first in Tab order. Siblings, never nested. -->
+			<div class="lead">
 				{#if lead.imageUrl}
 					<div class="lead-media">
 						<img src={lead.imageUrl} alt="" fetchpriority="high" />
@@ -52,22 +54,23 @@
 				{/if}
 				<div>
 					{#if lead.author}
-						<p class="lead-cook">
+						<a class="lead-cook" href="/users/{lead.author.username}">
 							<span class="lead-avatar" aria-hidden="true">
 								{lead.author.username.charAt(0).toUpperCase()}
 							</span>
 							<span class="lead-handle">@{lead.author.username}</span>
-						</p>
+						</a>
 					{/if}
-					<h2 class="lead-title">{lead.title}</h2>
+					<h2 class="lead-title">
+						<a class="lead-link" href="/recipes/{lead.slug}">{lead.title}</a>
+					</h2>
 					<p class="lead-measure">
 						{#if leadTime}<span>{leadTime}</span>{/if}
 						{#if lead.servings}<span>Serves {lead.servings}</span>{/if}
 						{#if lead.versionCount > 1}<span class="vid">v{lead.versionCount}</span>{/if}
 					</p>
-					<p class="lead-open">Open recipe →</p>
 				</div>
-			</a>
+			</div>
 		{/if}
 
 		{#if data.recentChanges.length > 0}
@@ -134,6 +137,7 @@
 
 	/* The lead: photo 7, words 5, side by side from 900. */
 	.lead {
+		position: relative;
 		display: grid;
 		grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
 		gap: 40px;
@@ -164,12 +168,31 @@
 		background: var(--color-tint);
 	}
 
+	.lead-link {
+		color: inherit;
+		text-decoration: none;
+	}
+
+	.lead-link::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+	}
+
+	/* Above the stretched title link, as wide as avatar and handle. */
 	.lead-cook {
-		display: flex;
+		position: relative;
+		z-index: 1;
+		display: inline-flex;
 		align-items: center;
 		gap: 8px;
-		margin: 0;
+		min-height: 24px;
 		font-size: 0.9375rem;
+		text-decoration: none;
+	}
+
+	.lead-cook:hover .lead-handle {
+		color: var(--color-text);
 	}
 
 	.lead-avatar {
@@ -200,7 +223,7 @@
 		font-weight: 500;
 		font-size: clamp(1.5rem, 1.1rem + 1.4vw, 2.25rem);
 		line-height: 1.15;
-		text-wrap: balance;
+		text-wrap: pretty;
 	}
 
 	.lead:hover .lead-title {
@@ -231,12 +254,6 @@
 		align-self: center;
 	}
 
-	.lead-open {
-		margin: 18px 0 0;
-		font-weight: 600;
-		color: var(--color-accent);
-	}
-
 	@media (max-width: 899px) {
 		.lead {
 			grid-template-columns: minmax(0, 1fr);
@@ -245,6 +262,12 @@
 
 		.lead-title {
 			margin-top: 4px;
+		}
+
+		/* A 44px hit on a phone without moving the line. */
+		.lead-cook {
+			min-height: 44px;
+			margin-block: -8px;
 		}
 	}
 
@@ -303,8 +326,15 @@
 		color: var(--color-text-3);
 	}
 
+	/* Identifiers inline with their text: the version at the title's own size,
+	   a notch down for mono's taller x-height, the handle at the message's. */
+	.change-title .vid {
+		font-size: 0.9375em;
+	}
+
 	.change-handle {
 		margin-right: 0.4em;
+		font-size: 1em;
 	}
 
 	.grid-section {

@@ -17,8 +17,9 @@
 			photoUrl={data.photoUrl}
 			error={form?.error ?? null}
 			action="?/save"
-			submitLabel="Save changes" />
-		<DeleteEntry dish={data.values.dish} />
+			submitLabel="Save changes">
+			{#snippet actions()}<DeleteEntry dish={data.values.dish} />{/snippet}
+		</EntryForm>
 	</div>
 </div>
 

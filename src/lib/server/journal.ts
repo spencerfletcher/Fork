@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, inArray, or } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, or, sql } from 'drizzle-orm';
 import { db } from './db/index.js';
 import {
 	favorites,
@@ -293,14 +293,22 @@ export async function defaultAudience(userId: string): Promise<LogAudience> {
 	return latest?.audience ?? 'private';
 }
 
-/** The recipes the form offers: the viewer's own and their saved ones, by title. */
+/** The recipes the form offers: the viewer's own and their saved ones, by title, each with its latest version. */
 export async function recipeChoices(viewer: Viewer) {
 	const saved = db
 		.select({ id: favorites.recipeId })
 		.from(favorites)
 		.where(eq(favorites.userId, viewer.id));
 	return db
-		.select({ slug: recipes.slug, title: recipes.title, visibility: recipes.visibility })
+		.select({
+			slug: recipes.slug,
+			title: recipes.title,
+			visibility: recipes.visibility,
+			latestVersion:
+				sql<number>`(SELECT max(${recipeVersions.versionNumber}) FROM ${recipeVersions} WHERE ${recipeVersions.recipeId} = ${recipes.id})`.mapWith(
+					Number
+				)
+		})
 		.from(recipes)
 		.where(and(or(eq(recipes.authorId, viewer.id), inArray(recipes.id, saved)), visibleTo(viewer)))
 		.orderBy(asc(recipes.title));

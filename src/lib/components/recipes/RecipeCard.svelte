@@ -95,16 +95,18 @@
 </script>
 
 <div class="recipe-card" class:author-always={alwaysShowAuthor} class:recipe-card--roomy={!isList}>
-	<a {href} class="card-stretched-link" aria-label={recipe.title}></a>
-
+	<!-- The cook is one link from avatar to handle, before the stretched recipe
+	     link so Tab reaches the profile first; a sibling, never nested. -->
 	{#if variant === 'discover' && recipe.author}
-		<p class="card-cook">
+		<a class="card-cook" href="/users/{recipe.author.username}">
 			<span class="card-avatar" aria-hidden="true">
 				{recipe.author.username.charAt(0).toUpperCase()}
 			</span>
-			<a class="card-handle" href="/users/{recipe.author.username}">@{recipe.author.username}</a>
-		</p>
+			<span class="card-handle">@{recipe.author.username}</span>
+		</a>
 	{/if}
+
+	<a {href} class="card-stretched-link" aria-label={recipe.title}></a>
 
 	{#if recipe.imageUrl}
 		<div class="card-img-wrap">
@@ -117,7 +119,6 @@
 				fetchpriority={index === 0 ? 'high' : undefined}
 				class="card-img" />
 		</div>
-		<h3 class="card-title">{recipe.title}</h3>
 	{:else}
 		<!-- No photo: the title stands in for it, inside the same 4:3 block, so a
 		     mixed grid keeps its rhythm and the title is not printed twice. -->
@@ -126,53 +127,62 @@
 		</div>
 	{/if}
 
-	<div class="meta-row">
-		{#each metaParts as part (part.text)}
-			{#if part.href}
-				<a class="meta-item meta-author" href={part.href}>{part.text}</a>
-			{:else if part.icon}
-				<span class="meta-item meta-audience">
-					<svg
-						viewBox="0 0 16 16"
-						fill="none"
-						stroke="currentColor"
-						stroke-width="1.5"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						aria-hidden="true">
-						{#if part.icon === 'lock'}
-							<rect x="3" y="7" width="10" height="7" rx="1.5" />
-							<path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" />
-						{:else}
-							<circle cx="6" cy="5.5" r="2.5" />
-							<path d="M1.5 14a4.5 4.5 0 0 1 9 0" />
-							<circle cx="11.5" cy="6.5" r="1.75" />
-							<path d="M11.5 10.25A3.5 3.5 0 0 1 14.5 13.5" />
-						{/if}
-					</svg>
-					{part.text}
-				</span>
-			{:else}
-				<span class="meta-item" class:meta-item--accent={part.accent}>{part.text}</span>
-			{/if}
-		{/each}
+	<!-- Title, meta and any extra line: one block, spaced by its gap alone. -->
+	<div class="card-text">
+		{#if recipe.imageUrl}
+			<h3 class="card-title">{recipe.title}</h3>
+		{/if}
+
+		<div class="meta-row">
+			{#each metaParts as part (part.text)}
+				{#if part.href}
+					<a class="meta-item meta-author" href={part.href}>{part.text}</a>
+				{:else if part.icon}
+					<span class="meta-item meta-audience">
+						<svg
+							viewBox="0 0 16 16"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="1.5"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							aria-hidden="true">
+							{#if part.icon === 'lock'}
+								<rect x="3" y="7" width="10" height="7" rx="1.5" />
+								<path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" />
+							{:else}
+								<circle cx="6" cy="5.5" r="2.5" />
+								<path d="M1.5 14a4.5 4.5 0 0 1 9 0" />
+								<circle cx="11.5" cy="6.5" r="1.75" />
+								<path d="M11.5 10.25A3.5 3.5 0 0 1 14.5 13.5" />
+							{/if}
+						</svg>
+						{part.text}
+					</span>
+				{:else}
+					<span class="meta-item" class:meta-item--accent={part.accent}>{part.text}</span>
+				{/if}
+			{/each}
+		</div>
+
+		{#if saved && variant === 'cookbook'}
+			<p class="card-source">
+				Saved from
+				{#if recipe.author}
+					<a class="card-handle" href="/users/{recipe.author.username}">
+						@{recipe.author.username}
+					</a>
+				{:else}
+					another cook
+				{/if}
+			</p>
+		{/if}
+
+		<!-- At most one extra paragraph: no description, no line (Spencer, 31 October 2026). -->
+		{#if description}
+			<p class="card-description">{description}</p>
+		{/if}
 	</div>
-
-	{#if saved && variant === 'cookbook'}
-		<p class="card-source">
-			Saved from
-			{#if recipe.author}
-				<a class="card-handle" href="/users/{recipe.author.username}">@{recipe.author.username}</a>
-			{:else}
-				another cook
-			{/if}
-		</p>
-	{/if}
-
-	<!-- At most one extra line: no description, no line (Spencer, 31 October 2026). -->
-	{#if description}
-		<p class="card-description">{description}</p>
-	{/if}
 </div>
 
 <style>
@@ -237,9 +247,9 @@
 		line-clamp: 3;
 		overflow: hidden;
 		color: var(--color-text);
-		/* No one-word last line ("Cookies"). The stretched link's label still
-		   carries the whole title. */
-		text-wrap: balance;
+		/* Plain wrapping, never balance (decided 9 November 2026); pretty only
+		   spares a one-word last line ("Cookies"). */
+		text-wrap: pretty;
 	}
 
 	/* :has() targeting ancestor — no Tailwind equivalent */
@@ -265,7 +275,7 @@
 		line-clamp: 4;
 		overflow: hidden;
 		color: var(--color-accent);
-		text-wrap: balance;
+		text-wrap: pretty;
 	}
 
 	.meta-row {
@@ -275,13 +285,22 @@
 		gap: 5px;
 	}
 
-	/* One line, Ink 3 sans at the meta size, 4px under the meta row. */
+	.card-text {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+	}
+
+	.card-text > p {
+		margin: 0;
+	}
+
+	/* Two lines at most, Ink 3 sans at the meta size. */
 	.card-description {
-		margin: -6px 0 0;
 		display: -webkit-box;
-		-webkit-line-clamp: 1;
+		-webkit-line-clamp: 2;
 		-webkit-box-orient: vertical;
-		line-clamp: 1;
+		line-clamp: 2;
 		overflow: hidden;
 		font-size: 0.8125rem;
 		line-height: 1.5;
@@ -332,21 +351,38 @@
 
 	/* "Saved from @handle": the meta row's size and ink, under it. */
 	.card-source {
-		margin: -6px 0 0;
 		font-size: 0.8125rem;
 		line-height: 1.5;
 		color: var(--color-text-3);
 		overflow-wrap: anywhere;
 	}
 
-	/* Discover's cook line, above the photo: a small initial avatar and the handle. */
+	/* Discover's cook link, above the photo: a small initial avatar and the
+	   handle, one hit area as wide as they are, above the stretched link. */
 	.card-cook {
+		position: relative;
+		z-index: 2;
 		display: flex;
+		align-self: flex-start;
 		align-items: center;
 		gap: 8px;
 		min-width: 0;
-		margin: 0;
+		max-width: 100%;
+		min-height: 24px;
 		font-size: 0.9375rem;
+		text-decoration: none;
+	}
+
+	.card-cook:hover .card-handle {
+		color: var(--color-text);
+	}
+
+	/* A 44px hit on a phone without moving the line. */
+	@media (max-width: 699px) {
+		.card-cook {
+			min-height: 44px;
+			margin-block: -8px;
+		}
 	}
 
 	.card-avatar {

@@ -70,10 +70,14 @@
 					availableTags={data.allTags} />
 			</div>
 
-			<!-- Always in the DOM so screen readers announce the count when it changes. -->
-			<p class="status" role="status">
-				{#if filtered}{plural(data.recipes.length, 'recipe')}
-					{data.recipes.length === 1 ? 'matches' : 'match'}{/if}
+			<!-- Always in the DOM so screen readers announce the count when it changes.
+			     Seen only when nothing matches; over a grid the cards say it. The
+			     paragraph keeps its space so the grid does not jump. -->
+			<p class="status" role="status" aria-live="polite">
+				<span class:sr-only={data.recipes.length > 0}>
+					{#if filtered}{plural(data.recipes.length, 'recipe')}
+						{data.recipes.length === 1 ? 'matches' : 'match'}{/if}
+				</span>
 			</p>
 
 			{#if data.recipes.length > 0}
@@ -165,6 +169,29 @@
 		margin-left: 4px;
 		font-weight: 400;
 		color: var(--color-text-3);
+	}
+
+	/* From 768 the segments and the search box share a row, the box filling to
+	   the container's edge; the tag tabs keep the row below. */
+	@media (min-width: 768px) {
+		.cookbook-filters {
+			display: grid;
+			grid-template-columns: auto minmax(0, 1fr);
+			align-items: center;
+			gap: 14px 16px;
+		}
+
+		.cookbook-filters > :global(.search-filters) {
+			display: contents;
+		}
+
+		.cookbook-filters > :global(.search-filters > form.relative) {
+			max-width: none;
+		}
+
+		.cookbook-filters > :global(.search-filters > :not(form)) {
+			grid-column: 1 / -1;
+		}
 	}
 
 	/* A phone: the strip spans the column, three equal segments, 44px hits. */

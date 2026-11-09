@@ -2,7 +2,8 @@
 	import RecipeGrid from '#lib/components/recipes/RecipeGrid.svelte';
 	import { formatDate, plural } from '#lib/helpers.js';
 	import { enhance } from '$app/forms';
-	import MoreMenu from '../../friends/MoreMenu.svelte';
+	import { tick } from 'svelte';
+	import { BLOCK_SENTENCE } from '#lib/journal.js';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -13,6 +14,26 @@
 	const isOwner = $derived(data.user?.id === profile.id);
 
 	const memberSince = $derived(formatDate(profile.createdAt, { month: 'long', year: 'numeric' }));
+
+	// Friends ✓ and Block each open a step in place, as Delete recipe does;
+	// only the step's button posts. Cancel and Escape hand focus back.
+	let confirming = $state<'unfriend' | 'block' | null>(null);
+	let step: HTMLElement | undefined = $state();
+	let friendsButton: HTMLButtonElement | undefined = $state();
+	let blockButton: HTMLButtonElement | undefined = $state();
+
+	async function ask(action: 'unfriend' | 'block') {
+		confirming = action;
+		await tick();
+		step?.focus();
+	}
+
+	async function cancel() {
+		const was = confirming;
+		confirming = null;
+		await tick();
+		(was === 'block' ? blockButton : friendsButton)?.focus();
+	}
 </script>
 
 <div class="page">
@@ -42,14 +63,53 @@
 						<input type="hidden" name="userId" value={profile.id} />
 						<button type="submit" class="btn-primary">Accept request</button>
 					</form>
+				{:else if data.relation === 'friends' && confirming}
+					<form
+						method="POST"
+						action="/friends?/{confirming}"
+						use:enhance={() =>
+							async ({ update }) => {
+								await update();
+								confirming = null;
+							}}>
+						<!-- svelte-ignore a11y_no_noninteractive_element_interactions (Escape bubbles up from the buttons inside) -->
+						<div
+							class="relation confirm"
+							role="group"
+							tabindex="-1"
+							aria-labelledby="relation-question"
+							bind:this={step}
+							onkeydown={(e) => {
+								if (e.key === 'Escape') cancel();
+							}}>
+							<input type="hidden" name="userId" value={profile.id} />
+							<p id="relation-question">
+								{confirming === 'block'
+									? BLOCK_SENTENCE
+									: `Remove @${profile.username} as a friend?`}
+							</p>
+							<button type="submit" class="btn-ghost danger">
+								{confirming === 'block' ? 'Block' : 'Remove'}
+							</button>
+							<button type="button" class="text-button" onclick={cancel}>Cancel</button>
+						</div>
+					</form>
 				{:else if data.relation === 'friends'}
 					<div class="relation">
-						<span class="relation-state">Friends ✓</span>
-						<MoreMenu
-							userId={profile.id}
-							username={profile.username}
-							items={['unfriend', 'block']}
-							label="More for @{profile.username}" />
+						<button
+							type="button"
+							class="text-button"
+							bind:this={friendsButton}
+							onclick={() => ask('unfriend')}>
+							Friends ✓
+						</button>
+						<button
+							type="button"
+							class="btn-ghost block-button"
+							bind:this={blockButton}
+							onclick={() => ask('block')}>
+							Block
+						</button>
 					</div>
 				{:else if data.relation === 'blocked'}
 					<form class="relation" method="POST" action="/friends?/unblock" use:enhance>
@@ -162,6 +222,44 @@
 		color: var(--color-text-2);
 	}
 
+	.confirm {
+		flex-wrap: wrap;
+		gap: 8px 16px;
+	}
+
+	.confirm p {
+		flex-basis: 100%;
+		margin: 0;
+		font-size: 0.875rem;
+		color: var(--color-text);
+	}
+
+	/* Friends ✓ and Cancel: the stats line's type in ink, no box. 24px at
+	   desktop, 44px on a phone. */
+	.relation .text-button {
+		min-height: 24px;
+		padding: 0;
+		border: 0;
+		background: none;
+		font: inherit;
+		font-size: 0.875rem;
+		color: var(--color-text);
+		cursor: pointer;
+	}
+
+	.text-button:hover {
+		text-decoration: underline;
+	}
+
+	/* Block is a ghost at rest and reads danger red on hover or focus; the
+	   confirm buttons are red outright. */
+	.block-button:hover,
+	.block-button:focus-visible,
+	.danger {
+		border-color: var(--color-remove);
+		color: var(--color-remove);
+	}
+
 	/* From 768 the bar shows + New recipe, so this line would repeat it. */
 	@media (min-width: 768px) {
 		.profile-new {
@@ -170,6 +268,10 @@
 	}
 
 	@media (max-width: 699px) {
+		.relation .text-button {
+			min-height: 44px;
+		}
+
 		.profile-header {
 			gap: 14px;
 		}

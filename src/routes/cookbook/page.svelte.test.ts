@@ -112,8 +112,17 @@ describe('Cookbook page', () => {
 		renderCookbook({ ...full, recipes: [], searchQuery: 'saffron' });
 		expect(screen.getByRole('searchbox')).toHaveValue('saffron');
 		expect(screen.getByRole('status')).toHaveTextContent('0 recipes match');
+		expect(screen.getByRole('status').firstElementChild).not.toHaveClass('sr-only');
 		expect(screen.getByRole('heading', { name: 'No recipes match “saffron”.' })).toBeVisible();
 		expect(screen.getByRole('link', { name: 'Clear search' })).toHaveAttribute('href', '/cookbook');
+	});
+
+	test('a filter with matches announces the count to screen readers only', () => {
+		renderCookbook({ ...full, selectedTags: ['baking'] });
+		const status = screen.getByRole('status');
+		expect(status).toHaveTextContent(`${full.recipes.length} recipe`);
+		expect(status.firstElementChild).toHaveClass('sr-only');
+		expect(status).toHaveAttribute('aria-live', 'polite');
 	});
 
 	test('the status stays quiet over the unfiltered library', () => {

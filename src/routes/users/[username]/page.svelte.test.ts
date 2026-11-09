@@ -1,5 +1,7 @@
 import { describe, test, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/svelte';
+import { render, screen, fireEvent } from '@testing-library/svelte';
+import { tick } from 'svelte';
+import { BLOCK_SENTENCE } from '#lib/journal.js';
 import ProfilePage from './+page.svelte';
 import source from './+page.svelte?raw';
 
@@ -128,15 +130,55 @@ describe('Profile relationship control', () => {
 		expect(control.closest('form')).toHaveAttribute('action', action);
 	});
 
-	test('a sent request and a friendship say so; friends get ⋯ with Unfriend and Block', () => {
-		const sent = renderProfile({ relation: 'sent' });
+	test('a sent request says so', () => {
+		renderProfile({ relation: 'sent' });
 		expect(screen.getByText('Request sent')).toBeInTheDocument();
-		sent.unmount();
-
-		renderProfile({ relation: 'friends' });
-		expect(screen.getByText('Friends ✓')).toBeInTheDocument();
-		expect(screen.getByRole('button', { name: 'More for @chefmaria' })).toBeInTheDocument();
 	});
+
+	test('friends: a plain Friends ✓ button and a Block ghost beside it, no ⋯ menu', () => {
+		renderProfile({ relation: 'friends' });
+		expect(screen.getByRole('button', { name: 'Friends ✓' })).toHaveAttribute('type', 'button');
+		expect(screen.getByRole('button', { name: 'Block' })).toHaveClass('btn-ghost');
+		expect(screen.queryByRole('button', { name: /More for/ })).toBeNull();
+		expect(source).not.toContain('MoreMenu');
+	});
+
+	test.each([
+		['Friends ✓', 'Remove @chefmaria as a friend?', 'Remove', '/friends?/unfriend'],
+		['Block', BLOCK_SENTENCE, 'Block', '/friends?/block']
+	])('%s asks first: "%s", %s posts to %s', async (trigger, sentence, confirm, action) => {
+		renderProfile({ relation: 'friends' });
+		await fireEvent.click(screen.getByRole('button', { name: trigger }));
+		await tick();
+		expect(screen.getByText(sentence)).toBeInTheDocument();
+		const submit = screen.getByRole('button', { name: confirm });
+		expect(submit).toHaveAttribute('type', 'submit');
+		expect(submit).toHaveClass('danger');
+		const form = submit.closest('form')!;
+		expect(form).toHaveAttribute('action', action);
+		expect(form.querySelector('input[name="userId"]')).toHaveValue('u1');
+		expect(screen.getByRole('group')).toHaveFocus();
+	});
+
+	test.each(['Friends ✓', 'Block'])(
+		'from %s, Cancel and Escape close the confirm and return focus to it',
+		async (trigger) => {
+			renderProfile({ relation: 'friends' });
+			await fireEvent.click(screen.getByRole('button', { name: trigger }));
+			await tick();
+			await fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+			await tick();
+			expect(screen.queryByRole('group')).toBeNull();
+			expect(screen.getByRole('button', { name: trigger })).toHaveFocus();
+
+			await fireEvent.click(screen.getByRole('button', { name: trigger }));
+			await tick();
+			await fireEvent.keyDown(screen.getByRole('group'), { key: 'Escape' });
+			await tick();
+			expect(screen.queryByRole('group')).toBeNull();
+			expect(screen.getByRole('button', { name: trigger })).toHaveFocus();
+		}
+	);
 
 	// relationFrom tells only the blocker 'blocked'; the blocked side reads 'none'.
 	test('the blocker is offered Unblock, posting to /friends?/unblock with their id', () => {

@@ -38,7 +38,7 @@ test.describe('Journal', () => {
 		await expect(entry).toContainText('Improvised');
 
 		await entry.getByRole('link', { name: /Edit/ }).click();
-		await page.getByRole('button', { name: 'Delete entry…' }).click();
+		await page.getByRole('button', { name: 'Delete entry' }).click();
 		await page.getByRole('button', { name: 'Delete permanently' }).click();
 		await expect(page).toHaveURL(/\/journal\?deleted=1/);
 		await expect(page.getByText('E2E leftover fried rice')).toHaveCount(0);
@@ -140,8 +140,51 @@ test.describe('Friends', () => {
 
 	test('the profile says where we stand', async ({ page }) => {
 		await page.goto('/users/devcooks');
-		await expect(page.getByText('Friends ✓')).toBeVisible();
+		await expect(page.getByRole('button', { name: 'Friends ✓' })).toBeVisible();
+		await expect(page.getByRole('button', { name: /^More for/ })).toHaveCount(0);
+		const block = page.getByRole('button', { name: 'Block' });
+		await block.click();
+		await expect(
+			page.getByText('Blocking stops requests and interactions. Public recipes stay public.')
+		).toBeVisible();
+		await page.keyboard.press('Escape');
+		await expect(block).toBeFocused();
 		await page.goto('/users/priyabakes');
 		await expect(page.getByRole('button', { name: 'Accept request' })).toBeVisible();
+	});
+});
+
+test.describe('One body width', () => {
+	for (const width of [1280, 834]) {
+		test(`Discover, Cookbook, Journal and Friends share the container edges at ${width}`, async ({
+			page
+		}) => {
+			await page.setViewportSize({ width, height: 900 });
+			const edges = [];
+			for (const path of ['/discover', '/cookbook', '/journal', '/friends']) {
+				await page.goto(path);
+				const box = (await page.locator('.page-inner').first().boundingBox())!;
+				edges.push([Math.round(box.x), Math.round(box.x + box.width)]);
+				expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+					width
+				);
+			}
+			for (const e of edges) expect(e).toEqual(edges[0]);
+		});
+	}
+
+	test('at 1280 the Friends feed and rail fill the container to its right edge', async ({
+		page
+	}) => {
+		await page.setViewportSize({ width: 1280, height: 900 });
+		await page.goto('/friends');
+		const inner = (await page.locator('.page-inner').boundingBox())!;
+		const feed = (await page.locator('.feed').boundingBox())!;
+		const rail = (await page.locator('.rail').boundingBox())!;
+		// The rail keeps 280px at the container's right edge; the feed takes the rest.
+		expect(Math.round(rail.x + rail.width)).toBe(Math.round(inner.x + inner.width));
+		expect(Math.round(rail.width)).toBe(280);
+		expect(Math.round(feed.x)).toBe(Math.round(inner.x));
+		expect(feed.width).toBeGreaterThan(680);
 	});
 });

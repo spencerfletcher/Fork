@@ -19,9 +19,8 @@ export async function visibleTags(scope: SQL | undefined): Promise<TagChip[]> {
 }
 
 /**
- * Tag filtering is OR logic: a recipe qualifies on any selected tag, and the
- * count says how many it matched so callers can rank by it. Only recipes with
- * at least one match appear in the map.
+ * Tag filtering is AND logic: every added tag narrows, so a recipe qualifies
+ * only when it carries all the selected tags. Only those recipes appear in the map.
  */
 export async function tagMatchCounts(
 	tagIds: number[],
@@ -38,6 +37,7 @@ export async function tagMatchCounts(
 		);
 	const counts = new Map<number, number>();
 	for (const { recipeId } of rows) counts.set(recipeId, (counts.get(recipeId) ?? 0) + 1);
+	for (const [recipeId, n] of counts) if (n < tagIds.length) counts.delete(recipeId);
 	return counts;
 }
 

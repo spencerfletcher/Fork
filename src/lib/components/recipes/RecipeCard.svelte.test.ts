@@ -1,6 +1,7 @@
 import { describe, test, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/svelte';
 import RecipeCard from './RecipeCard.svelte';
+import source from './RecipeCard.svelte?raw';
 import { formatTime } from '#lib/helpers.js';
 
 const { mockGoto } = vi.hoisted(() => ({ mockGoto: vi.fn() }));
@@ -91,6 +92,36 @@ describe('RecipeCard', () => {
 		const meta = container.querySelector('.meta-row')!;
 		expect(meta.compareDocumentPosition(line) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 	});
+
+	test('titles wrap normally, never balanced', () => {
+		expect(source).not.toMatch(/text-wrap: balance/);
+	});
+
+	test('the description clamps at two lines', () => {
+		const rule = /\.card-description \{([^}]*)\}/.exec(source)![1];
+		expect(rule).toMatch(/-webkit-line-clamp: 2;/);
+		expect(rule).toMatch(/\bline-clamp: 2;/);
+	});
+
+	test.each([
+		['a photo', { imageUrl: '/p.jpg' }],
+		['no photo', {}]
+	])(
+		'with %s, the words under the picture stack in one block, spaced by its gap alone',
+		(_, overrides) => {
+			const { container } = render(RecipeCard, {
+				props: { recipe: makeRecipe({ ...overrides, description: 'Rich.', prepTimeMinutes: 20 }) }
+			});
+			const text = container.querySelector('.card-text')!;
+			expect(text.querySelector('.meta-row')).not.toBeNull();
+			expect(text.querySelector('.card-description')).not.toBeNull();
+			if ('imageUrl' in overrides) expect(text.querySelector('.card-title')).not.toBeNull();
+			for (const cls of ['card-title', 'meta-row', 'card-description', 'card-source']) {
+				const rule = new RegExp(`\\.${cls} \\{([^}]*)\\}`).exec(source)?.[1] ?? '';
+				expect(rule, cls).not.toMatch(/margin/);
+			}
+		}
+	);
 
 	test.each([null, '', '   '])('a recipe with no description (%j) adds no line', (description) => {
 		const { container } = render(RecipeCard, { props: { recipe: makeRecipe({ description }) } });
@@ -336,5 +367,23 @@ describe('RecipeCard on Discover', () => {
 			Node.DOCUMENT_POSITION_FOLLOWING
 		);
 		expect(screen.getAllByText('@maria')).toHaveLength(1);
+	});
+
+	test('the avatar and handle are one profile link, ahead of the recipe link in tab order, with no link inside another', () => {
+		const { container } = render(RecipeCard, {
+			props: {
+				recipe: { ...makeRecipe(), author: { id: 'u3', username: 'maria' } },
+				variant: 'discover'
+			}
+		});
+		const profile = screen.getByRole('link', { name: '@maria' });
+		expect(profile).toHaveAttribute('href', '/users/maria');
+		expect(profile.querySelector('.card-avatar')).not.toBeNull();
+		const links = [...container.querySelectorAll('a')];
+		expect(links.map((a) => a.getAttribute('href'))).toEqual([
+			'/users/maria',
+			'/recipes/chocolate-cake-abc123'
+		]);
+		expect(container.querySelector('a a')).toBeNull();
 	});
 });

@@ -81,7 +81,12 @@ describe('journal/new load', () => {
 		});
 		// Not saved, but reached by link: offered all the same.
 		expect(data.choices).toEqual([
-			{ slug: LINKED.slug, title: LINKED.title, visibility: LINKED.visibility }
+			{
+				slug: LINKED.slug,
+				title: LINKED.title,
+				visibility: LINKED.visibility,
+				latestVersion: LINKED.versionNumber
+			}
 		]);
 	});
 

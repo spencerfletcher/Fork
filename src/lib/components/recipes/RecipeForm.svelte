@@ -500,7 +500,8 @@
 
 	.choice {
 		display: grid;
-		grid-template-columns: 20px 1fr;
+		/* The radio's own width and a 10px gap: the word sits close to it. */
+		grid-template-columns: auto 1fr;
 		gap: 2px 10px;
 		align-items: start;
 		padding: 10px 12px;
@@ -512,7 +513,9 @@
 
 	/* Clay, as the checkbox it replaces was, not the browser's blue. */
 	.choice input {
-		margin: 4px 0 0;
+		/* Centred on the word's line, not the top of the row. */
+		align-self: center;
+		margin: 0;
 		accent-color: var(--color-accent);
 	}
 
