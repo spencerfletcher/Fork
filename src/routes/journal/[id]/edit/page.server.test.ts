@@ -46,6 +46,7 @@ function makeStored(overrides = {}) {
 		caption: null,
 		note: 'Proof longer',
 		audience: 'friends',
+		sourceUrl: null,
 		createdAt: new Date(),
 		...overrides
 	};
@@ -84,6 +85,20 @@ describe('journal/[id]/edit load', () => {
 		expect(data.keepLabel).toBe('Recipe deleted');
 		expect(data.values.recipe).toBe(KEEP_SOURCE);
 	});
+
+	test('a linked entry prefills its link and no recipe', async () => {
+		const url = 'https://seriouseats.com/dal';
+		ownEntryMock.mockResolvedValue({
+			...makeStored({ recipeId: null, versionId: null, sourceUrl: url }),
+			source: { kind: 'link', url, host: 'seriouseats.com' }
+		});
+		const data = await loadPage<PageData>(load as never, {
+			params: { id: '5' },
+			url: new URL('http://l/journal/5/edit'),
+			locals: { user: USER }
+		});
+		expect(data.values).toMatchObject({ link: url, recipe: '' });
+	});
 });
 
 describe('journal/[id]/edit save', () => {
@@ -113,6 +128,17 @@ describe('journal/[id]/edit save', () => {
 			})
 		);
 		expect(removeMock).toHaveBeenCalledWith(expect.anything(), 'user-1/old.png');
+	});
+
+	test('switching to a link stores it and drops the recipe', async () => {
+		const link = 'https://seriouseats.com/buns';
+		await invokeAction(
+			actions.save as never,
+			event({ dish: 'Buns', cookedOn: '2026-11-09', recipe: '', link })
+		);
+		expect(updateMock.mock.results[0].value.set).toHaveBeenCalledWith(
+			expect.objectContaining({ recipeId: null, versionId: null, sourceUrl: link })
+		);
 	});
 });
 

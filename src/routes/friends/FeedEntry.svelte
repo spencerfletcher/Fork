@@ -60,6 +60,10 @@
 		<p class="private-line">
 			@{item.username} cooked a private recipe. You can see the dish, not the recipe.
 		</p>
+	{:else if source.kind === 'link'}
+		<p class="source">
+			from <a href={source.url} rel="noopener noreferrer nofollow ugc">{source.host}</a>
+		</p>
 	{:else if source.kind === 'deleted'}
 		<p class="source">Recipe deleted</p>
 	{/if}

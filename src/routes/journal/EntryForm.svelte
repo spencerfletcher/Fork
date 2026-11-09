@@ -7,6 +7,7 @@
 		AUDIENCE_LABEL,
 		AUDIENCE_SENTENCE,
 		KEEP_SOURCE,
+		MAX_LINK,
 		PRIVATE_RECIPE_HINT,
 		localToday
 	} from '#lib/journal.js';
@@ -124,6 +125,25 @@
 		{/if}
 		<input type="hidden" name="version" value={version} />
 	</div>
+
+	<!-- Only with no recipe: an attached recipe is the source, and the server drops a link. -->
+	{#if !recipe}
+		<div class="field">
+			<label for="link">
+				Link <span class="optional">optional</span>
+			</label>
+			<input
+				id="link"
+				name="link"
+				type="url"
+				inputmode="url"
+				maxlength={MAX_LINK}
+				placeholder="https://"
+				aria-describedby="link-hint"
+				value={values.link} />
+			<p class="form-hint" id="link-hint">The page it came from, shown by its site's name.</p>
+		</div>
+	{/if}
 
 	<PhotoField imageUrl={photoUrl} bind:removeImage bind:chosen hadPhoto={false} />
 

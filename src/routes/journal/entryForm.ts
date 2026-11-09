@@ -12,6 +12,7 @@ export type EntryValues = {
 	audience: LogAudience;
 	recipe: string;
 	version: string;
+	link: string;
 };
 
 /** One recipe the form offers. */
@@ -30,7 +31,8 @@ export function valuesOf(formData: FormData): EntryValues {
 		note: text(formData, 'note'),
 		audience: text(formData, 'audience') === 'friends' ? 'friends' : 'private',
 		recipe: text(formData, 'recipe'),
-		version: text(formData, 'version')
+		version: text(formData, 'version'),
+		link: text(formData, 'link')
 	};
 }
 

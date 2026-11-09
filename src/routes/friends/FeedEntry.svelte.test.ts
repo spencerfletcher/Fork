@@ -32,6 +32,7 @@ function makeItem(overrides: Partial<Item> = {}): Item {
 			photoUrl: 'https://x/p8.jpg',
 			caption: "Last of the farmers' market beets.",
 			audience: 'friends',
+			sourceUrl: null,
 			createdAt: new Date('2026-11-09T10:00:00Z')
 		},
 		username: 'devcooks',
@@ -124,5 +125,16 @@ describe('FeedEntry', () => {
 		});
 		expect(more).toHaveAttribute('aria-expanded', 'false');
 		expect(more).toHaveFocus();
+	});
+
+	test("a friend's linked page shows as \"from\" its host, linking out without referrer or endorsement", () => {
+		const url = 'https://seriouseats.com/dal';
+		render(FeedEntry, {
+			props: { item: makeItem({ source: { kind: 'link', url, host: 'seriouseats.com' } }) }
+		});
+		const link = screen.getByRole('link', { name: 'seriouseats.com' });
+		expect(link).toHaveAttribute('href', url);
+		expect(link).toHaveAttribute('rel', 'noopener noreferrer nofollow ugc');
+		expect(link.closest('p')).toHaveTextContent(/^from seriouseats\.com$/);
 	});
 });

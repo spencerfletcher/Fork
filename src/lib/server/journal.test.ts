@@ -1,6 +1,7 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { chain } from '#lib/testing/drizzle.js';
 import { numberMessages } from '#lib/recipes/validation.js';
+import { MAX_LINK } from '#lib/journal.js';
 
 const { selectMock } = vi.hoisted(() => ({ selectMock: vi.fn() }));
 vi.mock('#lib/server/db/index.js', () => ({ db: { select: selectMock } }));
@@ -26,11 +27,18 @@ function makeForm(fields: Record<string, string>) {
 	return fd;
 }
 
+/** A valid link of exactly `length` characters. */
+function longLink(length: number, scheme = 'https') {
+	const head = `${scheme}://seriouseats.com/`;
+	return head + 'a'.repeat(length - head.length);
+}
+
 function makeSourceRow(overrides: Partial<SourceRow> = {}): SourceRow {
 	return {
 		recipeId: 7,
 		recipe: { slug: 'dal', title: 'Dal', visibility: 'public', authorId: ME.id },
 		versionNumber: 2,
+		sourceUrl: null,
 		...overrides
 	};
 }
@@ -49,7 +57,8 @@ describe('parseEntryForm', () => {
 				note: null,
 				audience: 'private',
 				recipe: null,
-				version: null
+				version: null,
+				sourceUrl: null
 			}
 		});
 	});
@@ -63,7 +72,11 @@ describe('parseEntryForm', () => {
 		[{ servings: '2.5' }, numberMessages('servings').whole],
 		[{ servings: '0' }, numberMessages('servings').belowMin],
 		[{ caption: 'x'.repeat(MAX_ENTRY_TEXT + 1) }, ENTRY_MESSAGES.captionTooLong],
-		[{ note: 'x'.repeat(MAX_ENTRY_TEXT + 1) }, ENTRY_MESSAGES.noteTooLong]
+		[{ note: 'x'.repeat(MAX_ENTRY_TEXT + 1) }, ENTRY_MESSAGES.noteTooLong],
+		[{ link: 'seriouseats.com/dal' }, ENTRY_MESSAGES.linkInvalid],
+		[{ link: 'javascript:alert(1)' }, ENTRY_MESSAGES.linkInvalid],
+		[{ link: 'ftp://example.com/dal' }, ENTRY_MESSAGES.linkInvalid],
+		[{ link: longLink(MAX_LINK + 1) }, ENTRY_MESSAGES.linkTooLong]
 	])('%o is refused: %s', (fields, error) => {
 		expect(parseEntryForm(makeForm(fields))).toEqual({ ok: false, error });
 	});
@@ -78,6 +91,19 @@ describe('parseEntryForm', () => {
 		});
 	});
 
+	test.each(['http', 'https'])('an %s link of exactly the maximum length is kept', (scheme) => {
+		const link = longLink(MAX_LINK, scheme);
+		expect(parseEntryForm(makeForm({ link: `  ${link} ` }))).toMatchObject({
+			ok: true,
+			value: { sourceUrl: link }
+		});
+	});
+
+	test('a link is dropped when a recipe is attached: the recipe is the source', () => {
+		const result = parseEntryForm(makeForm({ recipe: 'dal', link: 'https://seriouseats.com/dal' }));
+		expect(result).toMatchObject({ ok: true, value: { recipe: 'dal', sourceUrl: null } });
+	});
+
 	test('an unknown audience falls back to Only me; a version without a recipe is dropped', () => {
 		const result = parseEntryForm(makeForm({ audience: 'public', version: '3' }));
 		expect(result).toMatchObject({ ok: true, value: { audience: 'private', version: null } });
@@ -90,6 +116,15 @@ describe('sourceOf', () => {
 			kind: 'improvised'
 		});
 		expect(sourceOf(makeSourceRow({ recipe: null }), ME, [])).toEqual({ kind: 'deleted' });
+	});
+
+	test('an improvised entry with a link shows the link and its host, without www', () => {
+		const sourceUrl = 'https://www.seriouseats.com/dal?x=1';
+		expect(sourceOf(makeSourceRow({ recipeId: null, recipe: null, sourceUrl }), ME, [])).toEqual({
+			kind: 'link',
+			url: sourceUrl,
+			host: 'seriouseats.com'
+		});
 	});
 
 	test("a friend's Friends recipe hides once they are no longer friends", () => {

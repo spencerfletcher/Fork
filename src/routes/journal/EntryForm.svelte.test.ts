@@ -1,7 +1,7 @@
 import { describe, test, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/svelte';
 import EntryForm from './EntryForm.svelte';
-import { AUDIENCE_SENTENCE, KEEP_SOURCE, PRIVATE_RECIPE_HINT } from '#lib/journal.js';
+import { AUDIENCE_SENTENCE, KEEP_SOURCE, MAX_LINK, PRIVATE_RECIPE_HINT } from '#lib/journal.js';
 import type { EntryValues } from './entryForm';
 
 vi.mock('$app/forms', () => ({ enhance: () => ({ destroy: () => {} }) }));
@@ -16,6 +16,7 @@ function makeValues(overrides: Partial<EntryValues> = {}): EntryValues {
 		audience: 'private',
 		recipe: 'sauce',
 		version: '5',
+		link: '',
 		...overrides
 	};
 }
@@ -44,6 +45,20 @@ describe('EntryForm', () => {
 		expect(screen.queryByText(PRIVATE_RECIPE_HINT)).toBeNull();
 		await fireEvent.click(screen.getByRole('radio', { name: 'Friends' }));
 		expect(screen.getByText(PRIVATE_RECIPE_HINT)).toBeInTheDocument();
+	});
+
+	test('with no recipe, an optional Link field takes a URL, prefilled, capped at MAX_LINK', async () => {
+		renderForm(makeValues({ recipe: '', version: '', link: 'https://seriouseats.com/dal' }));
+		const link = screen.getByLabelText(/Link/);
+		expect(link).toHaveAttribute('type', 'url');
+		expect(link).toHaveAttribute('name', 'link');
+		expect(link).toHaveAttribute('maxlength', String(MAX_LINK));
+		expect(link).not.toBeRequired();
+		expect(link).toHaveValue('https://seriouseats.com/dal');
+
+		// Choosing a recipe makes the recipe the source, so the field goes.
+		await fireEvent.change(screen.getByLabelText(/From a recipe/), { target: { value: 'dal' } });
+		expect(screen.queryByLabelText(/Link/)).toBeNull();
 	});
 
 	test('a withheld source is kept by the KEEP_SOURCE option, selected', () => {

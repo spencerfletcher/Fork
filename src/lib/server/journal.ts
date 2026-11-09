@@ -13,6 +13,7 @@ import {
 import { canView, canViewRow, friendIdsOf, visibleTo } from './visibility.js';
 import { numberMessages, type Result } from '#lib/recipes/validation.js';
 import { text } from '#lib/helpers.js';
+import { MAX_LINK } from '#lib/journal.js';
 
 type Viewer = { id: string };
 
@@ -27,7 +28,9 @@ export const ENTRY_MESSAGES = {
 	dateInvalid: 'Date must be a real date',
 	captionTooLong: `Caption is too long (${MAX_ENTRY_TEXT.toLocaleString('en-US')} characters max)`,
 	noteTooLong: `Note is too long (${MAX_ENTRY_TEXT.toLocaleString('en-US')} characters max)`,
-	recipeUnavailable: "That recipe isn't available. Choose another, or leave it out."
+	recipeUnavailable: "That recipe isn't available. Choose another, or leave it out.",
+	linkInvalid: 'Link must be a web address starting with http:// or https://',
+	linkTooLong: `Link is too long (${MAX_LINK.toLocaleString('en-US')} characters max)`
 } as const;
 
 
@@ -41,6 +44,8 @@ export type EntryFields = {
 	/** A recipe slug, KEEP_SOURCE, or null for none. */
 	recipe: string | null;
 	version: number | null;
+	/** An http(s) page the dish came from; null when a recipe is the source. */
+	sourceUrl: string | null;
 };
 
 const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/;
@@ -83,6 +88,10 @@ export function parseEntryForm(formData: FormData): Result<EntryFields> {
 	const versionText = text(formData, 'version').trim();
 	const version = recipe && /^\d+$/.test(versionText) ? Number(versionText) : null;
 
+	const link = text(formData, 'link').trim();
+	if (link.length > MAX_LINK) return { ok: false, error: ENTRY_MESSAGES.linkTooLong };
+	if (link && !isWebUrl(link)) return { ok: false, error: ENTRY_MESSAGES.linkInvalid };
+
 	return {
 		ok: true,
 		value: {
@@ -93,9 +102,20 @@ export function parseEntryForm(formData: FormData): Result<EntryFields> {
 			note: note || null,
 			audience,
 			recipe,
-			version
+			version,
+			// A recipe is the source when one is attached; the link stands in for none.
+			sourceUrl: recipe ? null : link || null
 		}
 	};
+}
+
+function isWebUrl(value: string): boolean {
+	try {
+		const { protocol } = new URL(value);
+		return protocol === 'http:' || protocol === 'https:';
+	} catch {
+		return false;
+	}
 }
 
 export type LinkedRecipe = {
@@ -139,6 +159,8 @@ export async function resolveRecipe(
 /** What a log entry says it was cooked from, for one viewer. */
 export type EntrySource =
 	| { kind: 'improvised' }
+	/** No recipe, but a page it came from, shown by its host. */
+	| { kind: 'link'; url: string; host: string }
 	| { kind: 'deleted' }
 	/** The recipe exists but the viewer may no longer see it (an unfriend, a narrowing). */
 	| { kind: 'hidden' }
@@ -155,11 +177,16 @@ export type SourceRow = {
 	recipeId: number | null;
 	recipe: Pick<Recipe, 'slug' | 'title' | 'visibility' | 'authorId'> | null;
 	versionNumber: number | null;
+	sourceUrl: string | null;
 };
 
 /** The source an entry shows `viewer`, by the recipes' one access rule. */
 export function sourceOf(row: SourceRow, viewer: Viewer, friendIds: string[]): EntrySource {
-	if (row.recipeId === null) return { kind: 'improvised' };
+	if (row.recipeId === null) {
+		if (row.sourceUrl === null) return { kind: 'improvised' };
+		const host = new URL(row.sourceUrl).hostname.replace(/^www\./, '');
+		return { kind: 'link', url: row.sourceUrl, host };
+	}
 	if (!row.recipe) return { kind: 'deleted' };
 	if (!canView(row.recipe, viewer, friendIds)) return { kind: 'hidden' };
 	return {
@@ -208,7 +235,11 @@ export async function journalOf(viewer: Viewer) {
 	]);
 	return rows.map((row) => ({
 		...row.entry,
-		source: sourceOf({ ...row, recipeId: row.entry.recipeId }, viewer, friendIds)
+		source: sourceOf(
+			{ ...row, recipeId: row.entry.recipeId, sourceUrl: row.entry.sourceUrl },
+			viewer,
+			friendIds
+		)
 	}));
 }
 
@@ -228,7 +259,11 @@ export async function ownEntry(viewer: Viewer, id: number) {
 	if (!row) return null;
 	return {
 		...row.entry,
-		source: sourceOf({ ...row, recipeId: row.entry.recipeId }, viewer, friendIds)
+		source: sourceOf(
+			{ ...row, recipeId: row.entry.recipeId, sourceUrl: row.entry.sourceUrl },
+			viewer,
+			friendIds
+		)
 	};
 }
 

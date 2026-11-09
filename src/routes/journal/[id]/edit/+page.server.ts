@@ -49,7 +49,8 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 		note: entry.note ?? '',
 		audience: entry.audience,
 		recipe: source.kind === 'recipe' ? source.slug : keepLabel ? KEEP_SOURCE : '',
-		version: source.kind === 'recipe' && source.versionNumber ? String(source.versionNumber) : ''
+		version: source.kind === 'recipe' && source.versionNumber ? String(source.versionNumber) : '',
+		link: source.kind === 'link' ? source.url : ''
 	};
 
 	return {
@@ -102,7 +103,8 @@ export const actions: Actions = {
 					photoUrl,
 					caption: fields.caption,
 					note: fields.note,
-					audience: fields.audience
+					audience: fields.audience,
+					sourceUrl: fields.sourceUrl
 				})
 				.where(and(eq(logEntries.id, stored.id), eq(logEntries.userId, user.id)));
 		} catch (e) {

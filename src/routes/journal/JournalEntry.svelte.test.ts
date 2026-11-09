@@ -20,6 +20,7 @@ function makeEntry(overrides: Partial<Entry> = {}): Entry {
 		note: 'Proof the shaped buns 15 minutes longer.',
 		audience: 'friends',
 		createdAt: new Date(),
+		sourceUrl: null,
 		source: {
 			kind: 'recipe',
 			slug: 'buns',
@@ -94,5 +95,22 @@ describe('JournalEntry', () => {
 		});
 		expect(screen.getByText(PRIVATE_RECIPE_HINT)).toBeInTheDocument();
 		expect(screen.getByText('Only me recipe')).toBeInTheDocument();
+	});
+
+	test('a linked page shows as "from" its host, linking out', () => {
+		const url = 'https://www.seriouseats.com/dal';
+		render(JournalEntry, {
+			props: {
+				entry: makeEntry({
+					recipeId: null,
+					sourceUrl: url,
+					source: { kind: 'link', url, host: 'seriouseats.com' }
+				})
+			}
+		});
+		const link = screen.getByRole('link', { name: 'seriouseats.com' });
+		expect(link).toHaveAttribute('href', url);
+		expect(link.closest('p')).toHaveTextContent(/^from seriouseats\.com$/);
+		expect(screen.queryByText('Improvised')).toBeNull();
 	});
 });

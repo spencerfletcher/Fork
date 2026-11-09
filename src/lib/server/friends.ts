@@ -319,6 +319,7 @@ export async function feedFor(me: Viewer) {
 					photoUrl: logEntries.photoUrl,
 					caption: logEntries.caption,
 					audience: logEntries.audience,
+					sourceUrl: logEntries.sourceUrl,
 					createdAt: logEntries.createdAt
 				},
 				username: profiles.username,
@@ -374,7 +375,11 @@ export async function feedFor(me: Viewer) {
 		at: row.entry.createdAt,
 		entry: row.entry,
 		username: row.username,
-		source: sourceOf({ ...row, recipeId: row.entry.recipeId }, me, friendIds),
+		source: sourceOf(
+			{ ...row, recipeId: row.entry.recipeId, sourceUrl: row.entry.sourceUrl },
+			me,
+			friendIds
+		),
 		likes: counts.get(row.entry.id) ?? 0,
 		liked: likedIds.has(row.entry.id),
 		saved: row.entry.recipeId !== null && savedIds.has(row.entry.recipeId)

@@ -15,6 +15,9 @@ export const AUDIENCE_SENTENCE: Record<LogAudience, string> = {
 };
 
 /** Under the choices when the linked recipe is Only me and Friends is chosen. */
+/** The longest page link an entry may carry, as a URL's practical limit. */
+export const MAX_LINK = 2048;
+
 /**
  * The recipe field's value that keeps an edited entry's stored source as it is.
  * The colon is one slugify strips, so no recipe slug can equal it.

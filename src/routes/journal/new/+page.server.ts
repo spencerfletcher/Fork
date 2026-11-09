@@ -38,7 +38,8 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 		note: '',
 		audience,
 		recipe: linked?.slug ?? '',
-		version: linked ? String(linked.versionNumber) : ''
+		version: linked ? String(linked.versionNumber) : '',
+		link: ''
 	};
 
 	return { values, choices: offered, meta: { title: 'Add to Journal' } };
@@ -80,7 +81,8 @@ export const actions: Actions = {
 					photoUrl: image?.url ?? null,
 					caption: fields.caption,
 					note: fields.note,
-					audience: fields.audience
+					audience: fields.audience,
+					sourceUrl: fields.sourceUrl
 				})
 				.returning({ id: logEntries.id });
 			id = row.id;

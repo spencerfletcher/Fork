@@ -34,6 +34,10 @@
 					· <span class="aud-inline">{@render lockIcon()}Only me recipe</span>
 				{/if}
 			</p>
+		{:else if source.kind === 'link'}
+			<p class="jsource">
+				from <a href={source.url} rel="noopener noreferrer nofollow ugc">{source.host}</a>
+			</p>
 		{:else if source.kind === 'improvised'}
 			<p class="jsource">Improvised</p>
 		{:else if source.kind === 'deleted'}

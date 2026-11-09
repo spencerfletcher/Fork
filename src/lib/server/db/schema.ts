@@ -166,6 +166,8 @@ export const logEntries = pgTable(
 		cookedOn: date('cooked_on').notNull(),
 		servings: integer(),
 		photoUrl: text('photo_url'),
+		// An http(s) page the dish came from, for an entry with no recipe attached.
+		sourceUrl: text('source_url'),
 		caption: text(),
 		note: text(),
 		audience: text().$type<LogAudience>().notNull().default('private'),
@@ -232,7 +234,10 @@ export const favorites = pgTable(
 			.references(() => recipes.id, { onDelete: 'cascade' }),
 		createdAt: timestamp('created_at').notNull().defaultNow()
 	},
-	(table) => [primaryKey({ columns: [table.userId, table.recipeId] })]
+	(table) => [
+		primaryKey({ columns: [table.userId, table.recipeId] }),
+		index('favorites_created_at_idx').on(table.createdAt)
+	]
 ).enableRLS();
 
 // ─── Recipe Versions ──────────────────────────────────────────────────────────
@@ -259,7 +264,11 @@ export const recipeVersions = pgTable(
 		createdAt: timestamp('created_at').notNull().defaultNow(),
 		createdBy: text('created_by').references(() => profiles.id, { onDelete: 'set null' })
 	},
-	(table) => [unique().on(table.recipeId, table.versionNumber)]
+	(table) => [
+		unique().on(table.recipeId, table.versionNumber),
+		// The Friends feed and recent-activity reads order versions by time.
+		index('recipe_versions_created_at_idx').on(table.createdAt)
+	]
 ).enableRLS();
 
 // ─── Relations ────────────────────────────────────────────────────────────────

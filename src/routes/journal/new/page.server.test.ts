@@ -106,8 +106,26 @@ describe('journal/new action', () => {
 			photoUrl: null,
 			caption: null,
 			note: null,
-			audience: 'private'
+			audience: 'private',
+			sourceUrl: null
 		});
+	});
+
+	test('a link with no recipe is stored as the source', async () => {
+		const link = 'https://www.seriouseats.com/dal';
+		await invoke({ dish: 'Dal', cookedOn: '2026-11-06', link });
+		expect(insertMock.mock.results[0].value.values).toHaveBeenCalledWith(
+			expect.objectContaining({ recipeId: null, sourceUrl: link })
+		);
+	});
+
+	test('a link that is not http(s) is refused with what was typed handed back', async () => {
+		const result = await invoke({ dish: 'Dal', cookedOn: '2026-11-06', link: 'javascript:x' });
+		expect(result).toMatchObject({
+			status: 400,
+			data: { error: ENTRY_MESSAGES.linkInvalid, code: 'invalid', values: { link: 'javascript:x' } }
+		});
+		expect(insertMock).not.toHaveBeenCalled();
 	});
 
 	test('a missing dish is refused with everything typed handed back', async () => {
