@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { SEED } from '../src/lib/server/db/seedData';
 
-const publicSeed = SEED.filter((r) => r.isPublic);
+const publicSeed = SEED.filter((r) => r.visibility === 'public');
 const latestTitle = (r: (typeof SEED)[number]) => r.versions.at(-1)!.title;
 const seededTags = [...new Set(publicSeed.flatMap((r) => r.tags))];
 

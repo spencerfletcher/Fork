@@ -59,14 +59,14 @@ const longTitleCompare: Open = async (page) => {
 	await page.locator('textarea[name="title"]').fill('E2E' + 'x'.repeat(57));
 	await page.locator('input[name="servings"]').fill('4');
 	await page.getByLabel('Ingredients').fill('2 cups flour');
-	await page.getByLabel('Steps').fill('Mix all ingredients.');
+	await page.getByLabel('Method').fill('Mix all ingredients.');
 	// Private, so the guest project's seed counts never see it.
-	await page.getByLabel(/public/i).uncheck();
+	await page.getByRole('radio', { name: 'Only me' }).check();
 	await page.getByRole('button', { name: /create recipe/i }).click();
 	await page.waitForURL(/\/recipes\/(?!new)/);
 	const url = page.url().split('?')[0];
 	await goto(`${url}/edit`)(page);
-	await page.getByLabel('Steps').fill('Mix, then bake.');
+	await page.getByLabel('Method').fill('Mix, then bake.');
 	await page.getByRole('button', { name: 'Save', exact: true }).click();
 	await page.waitForURL(url);
 	await page.goto(`${url}/diff?from=1&to=2`);
@@ -152,10 +152,11 @@ const TARGETS: Target[] = [
 		square: true
 	},
 	{
-		name: 'public checkbox row',
+		// All three audience rows: Only me, Friends, Public.
+		name: 'audience radio rows',
 		auth: true,
 		open: goto('/recipes/new'),
-		target: (p) => p.locator('label:has(> input[name="isPublic"])'),
+		target: (p) => p.locator('label:has(> input[name="visibility"])'),
 		coarse: true
 	},
 	{
