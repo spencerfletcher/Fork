@@ -44,12 +44,12 @@ Paper `#f7f3ec`, ink, clay `#b23c00` as text only, marigold `#eca620` as the sin
 - Title band keeps the shipped two columns (words left, 4:3 photo right) and the no-photo rule (words only, one 760px column).
 - Measure order: prep · cook · Serves · Makes. Tags, then the stats line "N forks · N versions", then the version bar.
 - **Verbs (Spencer's call): "Save" replaces "Favorite"; "Fork" stays.** Counts say "saves" and "forks". Fork is the product's calling card; revisit only if users visibly struggle (fallback: "Fork (make your own)").
-- **Save pill carries its count: "Save · 1.2k".** The stats line therefore drops saves.
+- **Save pill carries its count: "Save · 1.2k".** The stats line therefore drops saves. Save is a moving favorite (follows the author's current version, disappears if access is withdrawn); the version-pinned save is a P1 item with its own control later (decided 9 Nov).
 - **Cook is the marigold primary for everyone.** Owner: Cook, "Edit recipe" ghost. Visitor: Cook, Save · 1.2k, Fork. Signed out: Cook, then a **"Log in to save"** text link (Spencer: encourage accounts; no "no login round trip" rule exists). Phone: Cook full width, the other two in two columns.
 - Personal line for signed-in readers: "You cooked this on Sun 8 Nov · Add to Journal", where the date is a link to that log entry.
 - Groups: h3 in Bitter title size over their rows; steps number straight through. Scaled ×2: quantities, serves and "Makes 24 buns" in clay; one quiet notice above the method "Scaled ×2. Pan sizes and oven temperatures are not scaled; adjust bake time to the pan." Step text is never rewritten.
 - Fork of a deleted recipe: byline "Original recipe deleted" (shipped).
-- Later, not MVP: duplicating your own recipe (likely "Start from an existing recipe" on New recipe, not a Fork button), and inline ingredient quantities inside steps ("Warm the milk (240 ml)…"), which needs the Cooklang-style ingredient markup and a settings toggle.
+- Later, not MVP: duplicating your own recipe (likely "Start from an existing recipe" on New recipe, not a Fork button), and inline ingredient quantities inside steps ("Warm the milk (240 ml)…"), P4 with the Cooklang-style ingredient markup and a settings toggle (decided 9 Nov).
 
 ## Cook (comparison 2 · A, confirmed)
 
