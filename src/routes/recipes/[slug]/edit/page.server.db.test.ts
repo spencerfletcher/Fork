@@ -6,7 +6,7 @@ import { localDb } from '#lib/testing/db.js';
 
 // The pool is closed once the file is done, so no connection outlives the run.
 afterAll(async () => {
-	if (local) await (await import('#lib/server/db/index.js')).closeDb();
+	if (localDb) await (await import('#lib/server/db/index.js')).closeDb();
 });
 
 // Runs only against the local Supabase stack; the mock tests cover everything

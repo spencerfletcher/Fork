@@ -1263,12 +1263,12 @@ test.describe('Recipe detail page', () => {
 		// Desktop: a dot before every item after the first, none typed into the text.
 		await page.setViewportSize({ width: 1280, height: 900 });
 		await page.goto(`${recipeUrl}?version=2`);
-		expect(await dots()).toEqual(['none', '"· "']);
+		expect(await dots()).toEqual(['none', '"·" / ""']);
 		expect(await controls.textContent()).not.toContain('·');
 		// Phone: the dot stays, or "Back to v3" and "3 versions" read as one phrase.
 		await page.setViewportSize({ width: 390, height: 900 });
 		await page.goto(`${recipeUrl}?version=2`);
-		expect(await dots()).toEqual(['none', '"· "']);
+		expect(await dots()).toEqual(['none', '"·" / ""']);
 		// At every width an item with a dot shares its line with the item before
 		// it, so no line starts with one; the dot is the item's ::before, so none
 		// can end a line either.
