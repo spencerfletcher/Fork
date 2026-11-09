@@ -197,7 +197,8 @@ describe('GroupedTextEditor', () => {
 
 	test('shows the placeholder only while empty', async () => {
 		render(GroupedTextEditor, props(''));
-		expect(box()).toHaveAttribute('aria-placeholder', '2 eggs');
+		expect(box()).toHaveAttribute('data-placeholder', '2 eggs');
+		expect(box()).not.toHaveAttribute('aria-placeholder');
 		expect(box()).toHaveClass('empty');
 		lines()[0].textContent = '2 eggs';
 		await fireEvent.input(box());

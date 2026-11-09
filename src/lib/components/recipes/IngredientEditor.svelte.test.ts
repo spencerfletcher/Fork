@@ -27,7 +27,7 @@ describe('IngredientEditor', () => {
 
 	test('the placeholder shows what comes back: the fraction as it is stored, not "2 1/4"', () => {
 		render(IngredientEditor, { props: { value: '' } });
-		expect(box()).toHaveAttribute('aria-placeholder', '2¼ cups all-purpose flour\n2 large eggs');
+		expect(box()).toHaveAttribute('data-placeholder', '2¼ cups all-purpose flour\n2 large eggs');
 		expect(field().placeholder).toBe('2¼ cups all-purpose flour\n2 large eggs');
 	});
 

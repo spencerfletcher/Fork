@@ -233,6 +233,8 @@
 			}
 			const line = document.createElement('div');
 			line.append(...box.childNodes);
+			// The box's lines are never Svelte's: it renders the box empty and leaves them alone.
+			// eslint-disable-next-line svelte/no-dom-manipulating
 			box.append(line);
 			if (!caret || caret[0] === box) caret = [line, line.childNodes.length];
 		}
@@ -399,7 +401,7 @@
 			aria-multiline="true"
 			aria-required="true"
 			aria-labelledby="{id}-label"
-			aria-placeholder={placeholder}
+			data-placeholder={placeholder}
 			aria-disabled={disabled ? 'true' : undefined}
 			aria-invalid={invalid ? 'true' : undefined}
 			aria-describedby={describedBy}
@@ -533,7 +535,7 @@
 	}
 
 	.ed.empty::before {
-		content: attr(aria-placeholder);
+		content: attr(data-placeholder);
 		position: absolute;
 		inset: 9px 12px auto;
 		color: var(--color-text-3);
