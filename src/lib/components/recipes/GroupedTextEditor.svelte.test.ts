@@ -60,14 +60,7 @@ describe('GroupedTextEditor', () => {
 
 	test('a "# Name" line draws as a heading; a bare # only goes soft; "#2 can" stays a line', () => {
 		render(GroupedTextEditor, props('# Dough\n1 cup flour\n#\n#2 can tomatoes\n\n# Glaze'));
-		expect(lines().map((l) => l.className)).toEqual([
-			'heading',
-			'',
-			'unnamed',
-			'',
-			'',
-			'heading'
-		]);
+		expect(lines().map((l) => l.className)).toEqual(['heading', '', 'unnamed', '', '', 'heading']);
 	});
 
 	test('a typed heading is styled a task later, and the textarea gets the text with \\n between lines', async () => {
@@ -89,7 +82,8 @@ describe('GroupedTextEditor', () => {
 
 	test('reads <br> lines and no-break spaces as the plain text the server parses', async () => {
 		render(GroupedTextEditor, props(''));
-		box().innerHTML = '<div># Dough</div><div>flour<br>eggs</div><div><br></div><div>salt</div>';
+		box().innerHTML =
+			'<div>#\u00a0Dough</div><div>flour<br>eggs</div><div><br></div><div>salt</div>';
 		await fireEvent.input(box());
 		await nextTask();
 		expect(field().value).toBe('# Dough\nflour\neggs\n\nsalt');
@@ -158,8 +152,12 @@ describe('GroupedTextEditor', () => {
 		test('sits after the label and before the box, collapsed, and opens to one item', async () => {
 			render(GroupedTextEditor, props(''));
 			const label = document.getElementById('ingredients-label')!;
-			expect(label.compareDocumentPosition(toggle()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-			expect(toggle().compareDocumentPosition(box()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+			expect(
+				label.compareDocumentPosition(toggle()) & Node.DOCUMENT_POSITION_FOLLOWING
+			).toBeTruthy();
+			expect(
+				toggle().compareDocumentPosition(box()) & Node.DOCUMENT_POSITION_FOLLOWING
+			).toBeTruthy();
 			expect(toggle()).toHaveAttribute('aria-expanded', 'false');
 			expect(screen.queryByRole('button', { name: 'Section heading' })).toBeNull();
 			await fireEvent.click(toggle());

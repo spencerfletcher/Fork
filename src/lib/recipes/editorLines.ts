@@ -10,7 +10,7 @@ import { splitGroups } from './groups.js';
 export type LineKind = 'heading' | 'unnamed' | 'text';
 
 export function lineKind(line: string): LineKind {
-	const heading = splitGroups(line.replace(/ /g, ' ')).find((s) => s.group !== undefined);
+	const heading = splitGroups(line).find((s) => s.group !== undefined);
 	if (!heading) return 'text';
 	return heading.group === '' ? 'unnamed' : 'heading';
 }

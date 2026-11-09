@@ -75,7 +75,10 @@
 	}
 
 	// contenteditable types a trailing space as a no-break space; the server gets a space.
-	const textOf = (root: HTMLElement) => linesOf(root).join('\n').replace(/ /g, ' ');
+	const textOf = (root: HTMLElement) =>
+		linesOf(root)
+			.join('\n')
+			.replace(/\u00a0/g, ' ');
 
 	function fill(root: HTMLElement, text: string) {
 		root.textContent = '';
@@ -268,9 +271,13 @@
 
 <div class="grouped" style:--rows={rows}>
 	<div class="field-head">
-		<!-- Names the textarea without JavaScript, the live box (by aria-labelledby) with it. -->
+		<!-- Names the textarea without JavaScript, the live box (by aria-labelledby) with it.
+		     A div is no labelable control, so a press on the label focuses it by hand;
+		     the keyboard reaches the box by Tab. -->
+		<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
 		<label for={id} id="{id}-label" onclick={() => box?.focus()}>
-			{label} <span class="required" aria-hidden="true">*</span>
+			{label}
+			<span class="required" aria-hidden="true">*</span>
 		</label>
 		{#if enhanced}
 			<button
@@ -301,7 +308,8 @@
 				class="btn-ghost insert-item"
 				onmousedown={(e) => e.preventDefault()}
 				onclick={insertHeading}>
-				<span class="mark" aria-hidden="true">#</span>Section heading
+				<span class="mark" aria-hidden="true">#</span>
+				Section heading
 			</button>
 		</div>
 		<div
@@ -464,11 +472,7 @@
 		margin-top: 0.2em;
 		color: transparent;
 		background-image:
-			linear-gradient(
-				90deg,
-				var(--color-text-3) var(--mk, 0px),
-				var(--color-text) var(--mk, 0px)
-			),
+			linear-gradient(90deg, var(--color-text-3) var(--mk, 0px), var(--color-text) var(--mk, 0px)),
 			linear-gradient(var(--color-text), var(--color-text));
 		background-size:
 			100% 1.35em,

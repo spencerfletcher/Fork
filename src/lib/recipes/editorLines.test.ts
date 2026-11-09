@@ -14,8 +14,8 @@ describe('lineKind', () => {
 
 	// contenteditable types a trailing space as a no-break space.
 	test('reads a no-break space as a space', () => {
-		expect(lineKind('# ')).toBe('unnamed');
-		expect(lineKind('# Spice')).toBe('heading');
+		expect(lineKind('#\u00a0')).toBe('unnamed');
+		expect(lineKind('#\u00a0Spice')).toBe('heading');
 	});
 
 	test('"#2 can" and ordinary lines are text', () => {
@@ -34,7 +34,11 @@ describe('headingInsert', () => {
 	});
 
 	test('at the start of a line, it goes above the line', () => {
-		expect(headingInsert('2 cups flour', 0)).toEqual({ text: `${TEXT}\n`, at: 'caret', above: true });
+		expect(headingInsert('2 cups flour', 0)).toEqual({
+			text: `${TEXT}\n`,
+			at: 'caret',
+			above: true
+		});
 	});
 
 	test('mid-line or at the end, it goes on a new line below, so no line is split', () => {
