@@ -1,5 +1,7 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { chain } from '#lib/testing/drizzle.js';
+import { PgDialect } from 'drizzle-orm/pg-core';
+import type { SQL } from 'drizzle-orm';
 
 const { selectMock, insertMock, updateMock, deleteMock, transactionMock } = vi.hoisted(() => ({
 	selectMock: vi.fn(),
@@ -128,6 +130,21 @@ describe('toggleLike', () => {
 });
 
 describe('feedFor', () => {
+	test("reads only friends' Friends-level entries, never their private ones", async () => {
+		const entries = chain([]);
+		selectMock
+			.mockReturnValueOnce(chain([makePair(THEM, 'accepted')]))
+			.mockReturnValueOnce(chain([]))
+			.mockReturnValueOnce(entries)
+			.mockReturnValueOnce(chain([]));
+		expect(await feedFor({ id: ME })).toEqual([]);
+		const where = entries.where.mock.calls[0][0] as SQL;
+		expect(new PgDialect().sqlToQuery(where)).toMatchObject({
+			sql: '("log_entries"."user_id" in ($1) and "log_entries"."audience" = $2)',
+			params: [THEM, 'friends']
+		});
+	});
+
 	test('with every friend muted, the feed is empty and reads nothing more', async () => {
 		selectMock
 			.mockReturnValueOnce(chain([makePair(THEM, 'accepted')]))

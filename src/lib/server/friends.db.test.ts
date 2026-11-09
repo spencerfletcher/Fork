@@ -118,6 +118,28 @@ describe.skipIf(!local)('unfriend and block, against the real database', () => {
 		});
 	});
 
+	test('a second unfriend or a block leaves an already-private fork as it is, revision included', async () => {
+		await withFriends(async (tx, a, b) => {
+			const aFriends = await makeRecipe(tx, a, 'friends');
+			const bForkOfA = await makeRecipe(tx, b, 'friends', aFriends.id);
+			const revisionOf = async () => {
+				const [row] = await tx
+					.select({ editRevision: schema.recipes.editRevision })
+					.from(schema.recipes)
+					.where(eq(schema.recipes.id, bForkOfA.id));
+				return row.editRevision;
+			};
+
+			await friends.unfriendIn(tx, a, b);
+			const afterFirst = await revisionOf();
+			await friends.unfriendIn(tx, a, b);
+			expect(await revisionOf()).toBe(afterFirst);
+			await friends.blockIn(tx, a, b);
+			expect(await revisionOf()).toBe(afterFirst);
+			expect(await visibilityOf(tx, [bForkOfA.id])).toEqual({ [bForkOfA.id]: 'private' });
+		});
+	});
+
 	test('block unfriends, privatises the forks and leaves one blocked row with the blocker as requester', async () => {
 		await withFriends(async (tx, a, b) => {
 			const aFriends = await makeRecipe(tx, a, 'friends');

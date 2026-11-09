@@ -523,5 +523,17 @@ export const SEED_LOG: SeedLogEntry[] = [
 		note: null,
 		audience: 'friends',
 		createdAt: '2026-11-07T22:00:00Z'
+	},
+	{
+		// devcooks' own private entry: it never reaches a friend's feed.
+		user: 'devcooks',
+		dish: 'Midnight cheese toastie',
+		cookedOn: '2026-11-06',
+		servings: 1,
+		photoUrl: null,
+		caption: 'Nobody needs to know.',
+		note: null,
+		audience: 'private',
+		createdAt: '2026-11-06T23:30:00Z'
 	}
 ];

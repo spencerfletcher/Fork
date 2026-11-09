@@ -8,6 +8,7 @@ import { SEED_LOG } from '../src/lib/server/db/seedData';
 const mine = SEED_LOG.filter((e) => e.user === 'spencerfletcher');
 const friendsFirst = SEED_LOG.find((e) => e.user === 'devcooks' && e.recipe === 'shakshuka')!;
 const onPrivateRecipe = SEED_LOG.find((e) => e.recipe === 'miso-butter-noodles')!;
+const friendsPrivate = SEED_LOG.find((e) => e.user === 'devcooks' && e.audience === 'private')!;
 
 test.describe('Journal', () => {
 	test('lists my entries newest first under month headings, audience in words', async ({
@@ -95,6 +96,8 @@ test.describe('Friends', () => {
 		).toBeVisible();
 		await expect(page.getByText(/shared Shakshuka with friends/)).toBeVisible();
 		await expect(page.getByRole('button', { name: /Comment/ })).toHaveCount(0);
+		// A friend's Only me entry never reaches the feed.
+		await expect(page.getByRole('heading', { name: friendsPrivate.dish })).toHaveCount(0);
 	});
 
 	test('Like toggles with its count and aria-pressed, and survives a reload', async ({ page }) => {
