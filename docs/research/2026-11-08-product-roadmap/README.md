@@ -455,6 +455,7 @@ Spencer re-phased these after reviewing the full post-MVP backlog. They override
 | Cook mode visual distinction: cooking view looks too close to the recipe page | Unlisted | **P1 design backlog** |
 | Editor photo field redesign: the photo itself with two pill overlays (Replace, Remove), or a single Add photo pill when empty. Separately, today Replace is a small-caps ink text button and Remove a serif clay one: two text-button styles where DESIGN.md allows one | Unlisted | **P1**, soon |
 | Editor preview: a Preview option showing the recipe as it will appear on its page before saving | Unlisted | **P2** |
+| Friends feed entry card: drop the "Shakshuka · v1" source line under the title; the entry title itself links to the recipe at the version that was cooked | Unlisted | **P1** polish |
 
 Settled later the same evening:
 
