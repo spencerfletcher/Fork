@@ -52,7 +52,7 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 	// Rank by how many selected tags matched, unless searching: FTS rank wins then.
 	if (!searchQuery && matchCounts.size > 0) rows.sort(byTagMatches(matchCounts));
 
-	const withCounts = await attachRecipeCounts(rows);
+	const withCounts = await attachRecipeCounts(rows, user);
 
 	return {
 		recipes: withCounts,
