@@ -25,7 +25,7 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 
 	const allTags = await visibleTags(visibilityCondition);
 
-	// Tag filter: OR over the selected tags, ranked by how many matched below. A
+	// Tag filter: AND over the selected tags (tagMatchCounts). A
 	// slug no chip carries filters nothing, and the page hears only of the known ones.
 	const selected = allTags.filter((t) => tagSlugs.includes(t.slug));
 	const selectedTags = tagSlugs.filter((slug) => selected.some((t) => t.slug === slug));
