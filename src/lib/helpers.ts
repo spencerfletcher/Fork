@@ -33,7 +33,6 @@ export function plural(n: number, word: string): string {
 	return `${n} ${word}${n === 1 ? '' : 's'}`;
 }
 
-
 /** A form field as a string: missing or non-string (a File) reads as empty. */
 export function text(formData: FormData, key: string): string {
 	const value = formData.get(key);
