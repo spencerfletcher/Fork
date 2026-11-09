@@ -119,7 +119,6 @@
 				fetchpriority={index === 0 ? 'high' : undefined}
 				class="card-img" />
 		</div>
-		<h3 class="card-title">{recipe.title}</h3>
 	{:else}
 		<!-- No photo: the title stands in for it, inside the same 4:3 block, so a
 		     mixed grid keeps its rhythm and the title is not printed twice. -->
@@ -128,53 +127,62 @@
 		</div>
 	{/if}
 
-	<div class="meta-row">
-		{#each metaParts as part (part.text)}
-			{#if part.href}
-				<a class="meta-item meta-author" href={part.href}>{part.text}</a>
-			{:else if part.icon}
-				<span class="meta-item meta-audience">
-					<svg
-						viewBox="0 0 16 16"
-						fill="none"
-						stroke="currentColor"
-						stroke-width="1.5"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						aria-hidden="true">
-						{#if part.icon === 'lock'}
-							<rect x="3" y="7" width="10" height="7" rx="1.5" />
-							<path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" />
-						{:else}
-							<circle cx="6" cy="5.5" r="2.5" />
-							<path d="M1.5 14a4.5 4.5 0 0 1 9 0" />
-							<circle cx="11.5" cy="6.5" r="1.75" />
-							<path d="M11.5 10.25A3.5 3.5 0 0 1 14.5 13.5" />
-						{/if}
-					</svg>
-					{part.text}
-				</span>
-			{:else}
-				<span class="meta-item" class:meta-item--accent={part.accent}>{part.text}</span>
-			{/if}
-		{/each}
+	<!-- Title, meta and any extra line: one block, spaced by its gap alone. -->
+	<div class="card-text">
+		{#if recipe.imageUrl}
+			<h3 class="card-title">{recipe.title}</h3>
+		{/if}
+
+		<div class="meta-row">
+			{#each metaParts as part (part.text)}
+				{#if part.href}
+					<a class="meta-item meta-author" href={part.href}>{part.text}</a>
+				{:else if part.icon}
+					<span class="meta-item meta-audience">
+						<svg
+							viewBox="0 0 16 16"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="1.5"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							aria-hidden="true">
+							{#if part.icon === 'lock'}
+								<rect x="3" y="7" width="10" height="7" rx="1.5" />
+								<path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" />
+							{:else}
+								<circle cx="6" cy="5.5" r="2.5" />
+								<path d="M1.5 14a4.5 4.5 0 0 1 9 0" />
+								<circle cx="11.5" cy="6.5" r="1.75" />
+								<path d="M11.5 10.25A3.5 3.5 0 0 1 14.5 13.5" />
+							{/if}
+						</svg>
+						{part.text}
+					</span>
+				{:else}
+					<span class="meta-item" class:meta-item--accent={part.accent}>{part.text}</span>
+				{/if}
+			{/each}
+		</div>
+
+		{#if saved && variant === 'cookbook'}
+			<p class="card-source">
+				Saved from
+				{#if recipe.author}
+					<a class="card-handle" href="/users/{recipe.author.username}">
+						@{recipe.author.username}
+					</a>
+				{:else}
+					another cook
+				{/if}
+			</p>
+		{/if}
+
+		<!-- At most one extra paragraph: no description, no line (Spencer, 31 October 2026). -->
+		{#if description}
+			<p class="card-description">{description}</p>
+		{/if}
 	</div>
-
-	{#if saved && variant === 'cookbook'}
-		<p class="card-source">
-			Saved from
-			{#if recipe.author}
-				<a class="card-handle" href="/users/{recipe.author.username}">@{recipe.author.username}</a>
-			{:else}
-				another cook
-			{/if}
-		</p>
-	{/if}
-
-	<!-- At most one extra line: no description, no line (Spencer, 31 October 2026). -->
-	{#if description}
-		<p class="card-description">{description}</p>
-	{/if}
 </div>
 
 <style>
@@ -277,13 +285,22 @@
 		gap: 5px;
 	}
 
-	/* One line, Ink 3 sans at the meta size, 4px under the meta row. */
+	.card-text {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+	}
+
+	.card-text > p {
+		margin: 0;
+	}
+
+	/* Two lines at most, Ink 3 sans at the meta size. */
 	.card-description {
-		margin: -6px 0 0;
 		display: -webkit-box;
-		-webkit-line-clamp: 1;
+		-webkit-line-clamp: 2;
 		-webkit-box-orient: vertical;
-		line-clamp: 1;
+		line-clamp: 2;
 		overflow: hidden;
 		font-size: 0.8125rem;
 		line-height: 1.5;
@@ -334,7 +351,6 @@
 
 	/* "Saved from @handle": the meta row's size and ink, under it. */
 	.card-source {
-		margin: -6px 0 0;
 		font-size: 0.8125rem;
 		line-height: 1.5;
 		color: var(--color-text-3);
