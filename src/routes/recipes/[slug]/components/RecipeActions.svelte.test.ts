@@ -574,6 +574,13 @@ describe('RecipeActions Add to Journal', () => {
 		page.shallow = null;
 	});
 
+	test('the book icon comes first, hidden, so the name is the label alone', () => {
+		render(RecipeActions, { props: makeProps({ journalHref: HREF }) });
+		const link = screen.getByRole('link', { name: 'Add to Journal' });
+		expect(link.firstElementChild?.tagName).toBe('svg');
+		expect(link.firstElementChild).toHaveAttribute('aria-hidden', 'true');
+	});
+
 	test('signed out there is none, cooking or not', () => {
 		const idle = render(RecipeActions, {
 			props: makeProps({ canFavorite: false, loginHref: '/login' })

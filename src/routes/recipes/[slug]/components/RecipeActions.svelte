@@ -4,7 +4,7 @@
 	import { page } from '$app/state';
 	import { setShallowParam } from './shallowParam';
 	import type { Recipe } from '#lib/server/db/schema.js';
-	import { forkIcon, saveIcon } from '#lib/components/Icons.svelte';
+	import { forkIcon, journalIcon, saveIcon } from '#lib/components/Icons.svelte';
 	import { compactCount, wholeNumber } from '#lib/helpers.js';
 	import { optimisticToggle } from '#lib/optimisticToggle.svelte.js';
 
@@ -210,7 +210,10 @@
 	{/if}
 	<!-- Signed in: last in the row, and the one action beside Done cooking. -->
 	{#if logHref}
-		<a href={logHref} class="btn-ghost log no-underline">Add to Journal</a>
+		<a href={logHref} class="btn-ghost log no-underline">
+			{@render journalIcon()}
+			Add to Journal
+		</a>
 	{/if}
 
 	{#if cooking && noWakeLock}
