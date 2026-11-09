@@ -214,11 +214,11 @@ describe('favorites load', () => {
 		const row = { recipeId: 1, visibility: 'friends', authorId: 'friend' } as const;
 		mockFavouriteRows([row], chain([{ requesterId: 'friend', addresseeId: 'u1' }]));
 		findManyMock.mockResolvedValue([{ id: 1, author: null, recipesToTags: [] }]);
-		expect((await loadResult(makeEvent())).favoriteRecipes).toHaveLength(1);
+		expect((await loadResult(makeEvent())).recipes).toHaveLength(1);
 
 		vi.clearAllMocks();
 		mockFavouriteRows([row], chain([]));
-		expect((await loadResult(makeEvent())).favoriteRecipes).toEqual([]);
+		expect((await loadResult(makeEvent())).recipes).toEqual([]);
 		expect(findManyMock).not.toHaveBeenCalled();
 	});
 
