@@ -21,6 +21,16 @@ export async function invokeAction(
 	}
 }
 
+/** FormData from `fields` (an array appends the key once per value), with `file` as the `image` input. */
+export function formOf(fields: Record<string, string | string[]> = {}, file?: File): FormData {
+	const fd = new FormData();
+	for (const [k, v] of Object.entries(fields)) {
+		for (const val of Array.isArray(v) ? v : [v]) fd.append(k, val);
+	}
+	if (file) fd.append('image', file);
+	return fd;
+}
+
 /**
  * A form-action event. `fields` become FormData (an array appends the key once
  * per value), `file` goes in as the `image` input, and `locals` is whatever the
@@ -34,16 +44,25 @@ export function formEvent(
 		locals?: Record<string, unknown>;
 	} = {}
 ) {
-	const fd = new FormData();
-	for (const [k, v] of Object.entries(opts.fields ?? {})) {
-		for (const val of Array.isArray(v) ? v : [v]) fd.append(k, val);
-	}
-	if (opts.file) fd.append('image', opts.file);
 	return {
 		params: opts.params ?? {},
-		request: { formData: vi.fn().mockResolvedValue(fd) },
+		request: { formData: vi.fn().mockResolvedValue(formOf(opts.fields, opts.file)) },
 		locals: opts.locals ?? {}
 	};
+}
+
+/**
+ * A load event: `path` (with any query) on localhost, the route `params`, and
+ * `user` as the only local. Typed `never`, so it passes as any route's event.
+ */
+export function loadEvent(
+	opts: { path?: string; user?: { id: string } | null; params?: Record<string, string> } = {}
+): never {
+	return {
+		url: new URL(opts.path ?? '/', 'http://localhost'),
+		params: opts.params ?? {},
+		locals: { user: opts.user ?? null }
+	} as never;
 }
 
 /**

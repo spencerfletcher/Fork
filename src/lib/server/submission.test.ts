@@ -1,14 +1,10 @@
 import { describe, test, expect, vi } from 'vitest';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { formOf } from '#lib/testing/actions.js';
 import { PHOTO_MAX_BYTES, PHOTO_SIZE_MESSAGE } from '#lib/recipes/validation.js';
 import { PHOTO_UPLOAD_FAILED, readSubmission, storePhoto, uploadPhoto } from './submission';
 
-function form(fields: Record<string, string>, file?: File) {
-	const formData = new FormData();
-	for (const [key, value] of Object.entries(fields)) formData.set(key, value);
-	if (file) formData.set('image', file);
-	return formData;
-}
+const form = (fields: Record<string, string>, file?: File) => formOf(fields, file);
 
 const VALID = { title: 'Soup', ingredients: '1 cup stock', steps: 'Heat.', servings: '4' };
 const PHOTO = new File(['x'], 'soup.png', { type: 'image/png' });

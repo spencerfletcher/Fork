@@ -13,7 +13,7 @@ import {
 import { sameTags } from '#lib/recipes/tags.js';
 import type { RecipeContent } from '#lib/recipes/types.js';
 import { imagePathOf, removeRecipeImage } from '#lib/server/images.js';
-import { readSubmission, uploadPhoto } from '#lib/server/submission.js';
+import { readSubmission, STALE_MESSAGE, uploadPhoto } from '#lib/server/submission.js';
 import { failure, requireUser, SESSION_ENDED } from '#lib/server/actions.js';
 import { wholeNumber } from '#lib/helpers.js';
 import { syncTags, listTags } from '#lib/server/tags.js';
@@ -25,9 +25,6 @@ import {
 	ownRecipe,
 	WIDENS_PARENT
 } from '#lib/server/visibility.js';
-
-const STALE_MESSAGE =
-	'This recipe was changed in another tab. Reload to see the latest version, then reapply your edits.';
 
 export const load: PageServerLoad = async ({ params, url, locals: { user } }) => {
 	requireUser(url, user);

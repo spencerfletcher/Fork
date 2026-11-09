@@ -1,6 +1,6 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { chain } from '#lib/testing/drizzle.js';
-import { invokeAction, formEvent, loadPage } from '#lib/testing/actions.js';
+import { invokeAction, formEvent, loadEvent, loadPage } from '#lib/testing/actions.js';
 import { KEEP_SOURCE } from '#lib/journal.js';
 import { actions, load } from './+page.server';
 import type { PageData } from './$types';
@@ -52,6 +52,8 @@ function makeStored(overrides = {}) {
 	};
 }
 
+const LOAD_EVENT = loadEvent({ params: { id: '5' }, path: '/journal/5/edit', user: USER });
+
 const event = (fields: Record<string, string> = {}, id = '5') =>
 	formEvent({ fields, params: { id }, locals: { user: USER, supabase: { storage: {} } } });
 
@@ -66,22 +68,12 @@ beforeEach(() => {
 describe('journal/[id]/edit load', () => {
 	test("someone else's entry, or no entry, is a 404", async () => {
 		ownEntryMock.mockResolvedValue(null);
-		await expect(
-			load({
-				params: { id: '5' },
-				url: new URL('http://l/journal/5/edit'),
-				locals: { user: USER }
-			} as never)
-		).rejects.toMatchObject({ status: 404 });
+		await expect(load(LOAD_EVENT)).rejects.toMatchObject({ status: 404 });
 	});
 
 	test('a deleted recipe is kept as stored and named as such', async () => {
 		ownEntryMock.mockResolvedValue({ ...makeStored(), source: { kind: 'deleted' } });
-		const data = await loadPage<PageData>(load as never, {
-			params: { id: '5' },
-			url: new URL('http://l/journal/5/edit'),
-			locals: { user: USER }
-		});
+		const data = await loadPage<PageData>(load as never, LOAD_EVENT);
 		expect(data.keepLabel).toBe('Recipe deleted');
 		expect(data.values.recipe).toBe(KEEP_SOURCE);
 	});
@@ -92,11 +84,7 @@ describe('journal/[id]/edit load', () => {
 			...makeStored({ recipeId: null, versionId: null, sourceUrl: url }),
 			source: { kind: 'link', url, host: 'seriouseats.com' }
 		});
-		const data = await loadPage<PageData>(load as never, {
-			params: { id: '5' },
-			url: new URL('http://l/journal/5/edit'),
-			locals: { user: USER }
-		});
+		const data = await loadPage<PageData>(load as never, LOAD_EVENT);
 		expect(data.values).toMatchObject({ link: url, recipe: '' });
 	});
 });

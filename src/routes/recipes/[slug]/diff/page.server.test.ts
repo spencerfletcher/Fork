@@ -3,6 +3,7 @@ import { isHttpError, isRedirect } from '@sveltejs/kit';
 import { load } from './+page.server';
 import { makeContent } from '#lib/recipes/fixtures.js';
 import { chain } from '#lib/testing/drizzle.js';
+import { loadEvent } from '#lib/testing/actions.js';
 
 // ─── Hoisted mocks ────────────────────────────────────────────────────────────
 
@@ -37,11 +38,13 @@ const RECIPE = {
 
 function loadWith(query: string, user: { id: string } | null = null): Promise<unknown> {
 	return Promise.resolve(
-		load({
-			params: { slug: 'classic-cookies' },
-			url: new URL(`http://localhost/recipes/classic-cookies/diff${query}`),
-			locals: { user }
-		} as never)
+		load(
+			loadEvent({
+				params: { slug: 'classic-cookies' },
+				path: `/recipes/classic-cookies/diff${query}`,
+				user
+			})
+		)
 	);
 }
 

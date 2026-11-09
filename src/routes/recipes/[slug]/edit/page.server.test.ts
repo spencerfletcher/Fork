@@ -1,6 +1,9 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { chain } from '#lib/testing/drizzle.js';
-import { invokeAction as invoke, formEvent } from '#lib/testing/actions.js';
+import { invokeAction as invoke, formEvent, loadEvent } from '#lib/testing/actions.js';
+import { loginHref } from '#lib/auth/loginHref.js';
+import { SESSION_ENDED } from '#lib/server/actions.js';
+import { PHOTO_UPLOAD_FAILED, STALE_MESSAGE } from '#lib/server/submission.js';
 import { actions, load } from './+page.server';
 import { makeContent, makeIngredient, makeStep } from '#lib/recipes/fixtures.js';
 import { LOST_PARENT_ACCESS, NOT_AUTHORIZED, WIDENS_PARENT } from '#lib/server/visibility.js';
@@ -161,9 +164,6 @@ const UNCHANGED = {
 	editRevision: '0'
 };
 
-const STALE =
-	'This recipe was changed in another tab. Reload to see the latest version, then reapply your edits.';
-
 // ─── save ─────────────────────────────────────────────────────────────────────
 
 describe('save', () => {
@@ -197,7 +197,7 @@ describe('save', () => {
 		const result = await save({ ...UNCHANGED, servings: '8' }, { user: null });
 		expect(result.status).toBe(401);
 		expect(result.data).toMatchObject({
-			error: 'Your session ended. Log in in another tab, then save again.',
+			error: SESSION_ENDED('save again'),
 			code: 'unauthenticated',
 			draft: { servings: '8' }
 		});
@@ -250,7 +250,7 @@ describe('save', () => {
 		const result = await save({ ...UNCHANGED, servings: '8' });
 		expect(result.status).toBe(409);
 		expect(result.data).toMatchObject({
-			error: STALE,
+			error: STALE_MESSAGE,
 			code: 'stale',
 			draft: { servings: '8', editRevision: '0' }
 		});
@@ -551,7 +551,7 @@ describe('save', () => {
 		const result = await save(UNCHANGED, { file: new File(['x'], 'a.png', { type: 'image/png' }) });
 		expect(result.status).toBe(400);
 		expect(result.data).toMatchObject({
-			error: 'Photo upload failed. Try again.',
+			error: PHOTO_UPLOAD_FAILED,
 			code: 'upload_failed',
 			draft: { hadPhoto: true }
 		});
@@ -662,12 +662,8 @@ describe('edit load', () => {
 	test("forkCount counts this recipe's forks of any visibility, for the forks hint", async () => {
 		findRecipeMock.mockResolvedValue({ ...RECIPE, id: 42, versions: [LATEST] });
 		countMock.mockResolvedValue(3);
-		const event = {
-			params: { slug: 'soup' },
-			url: new URL('http://x/recipes/soup/edit'),
-			locals: { user: OWNER }
-		};
-		const data = (await load(event as never)) as { forkCount: number };
+		const event = loadEvent({ params: { slug: 'soup' }, path: '/recipes/soup/edit', user: OWNER });
+		const data = (await load(event)) as { forkCount: number };
 		expect(data.forkCount).toBe(3);
 		const [table, filter] = countMock.mock.calls[0] as [unknown, SQL];
 		expect(table).toBe(recipes);
@@ -680,26 +676,19 @@ describe('edit load', () => {
 
 	test("another user's recipe is a 403 that says Not authorized, as the actions do", async () => {
 		findRecipeMock.mockResolvedValue(RECIPE);
-		const event = {
-			params: { slug: 'soup' },
-			url: new URL('http://x/recipes/soup/edit'),
-			locals: { user: OTHER }
-		};
-		await expect(Promise.resolve().then(() => load(event as never))).rejects.toMatchObject({
+		const event = loadEvent({ params: { slug: 'soup' }, path: '/recipes/soup/edit', user: OTHER });
+		await expect(Promise.resolve().then(() => load(event))).rejects.toMatchObject({
 			status: 403,
 			body: { message: NOT_AUTHORIZED }
 		});
 	});
 
 	test('a logged-out visitor is sent to log in and brought back to this editor', async () => {
-		const event = {
-			params: { slug: 'soup' },
-			url: new URL('http://x/recipes/soup/edit?from=nav'),
-			locals: { user: null }
-		};
-		await expect(Promise.resolve().then(() => load(event as never))).rejects.toMatchObject({
+		const path = '/recipes/soup/edit?from=nav';
+		const event = loadEvent({ params: { slug: 'soup' }, path });
+		await expect(Promise.resolve().then(() => load(event))).rejects.toMatchObject({
 			status: 303,
-			location: '/login?redirectTo=%2Frecipes%2Fsoup%2Fedit%3Ffrom%3Dnav'
+			location: loginHref(path)
 		});
 	});
 });

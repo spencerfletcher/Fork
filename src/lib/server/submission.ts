@@ -10,6 +10,10 @@ import type { RecipeDraft } from '#lib/recipes/validation.js';
 // stored. Every failure hands the draft back, so nothing typed is lost.
 // storePhoto is the journal forms' photo step too.
 
+/** What a save from a tab behind the recipe's latest edit is told. */
+export const STALE_MESSAGE =
+	'This recipe was changed in another tab. Reload to see the latest version, then reapply your edits.';
+
 /** The draft exactly as typed, its parsed content and its settings; or the 400 to return. */
 export function readSubmission(formData: FormData) {
 	const draft = draftOf(formData);

@@ -1,7 +1,10 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { chain } from '#lib/testing/drizzle.js';
 import { actions, load } from './+page.server';
-import { invokeAction, formEvent } from '#lib/testing/actions.js';
+import { invokeAction, formEvent, loadEvent } from '#lib/testing/actions.js';
+import { loginHref } from '#lib/auth/loginHref.js';
+import { SESSION_ENDED } from '#lib/server/actions.js';
+import { PHOTO_UPLOAD_FAILED } from '#lib/server/submission.js';
 import {
 	PHOTO_TYPES,
 	PHOTO_MAX_BYTES,
@@ -78,7 +81,7 @@ describe('new recipe action', () => {
 		const result = await invoke(makeEvent({ fields: FULL, user: null }));
 		expect(result.status).toBe(401);
 		expect(result.data).toMatchObject({
-			error: 'Your session ended. Log in in another tab, then save again.',
+			error: SESSION_ENDED('save again'),
 			code: 'unauthenticated',
 			draft: { title: 'Soup', tags: ['Dessert', 'Baking'] }
 		});
@@ -211,7 +214,7 @@ describe('new recipe action', () => {
 		const result = await invoke(makeEvent({ fields: FULL, file: PNG() }));
 		expect(result.status).toBe(400);
 		expect(result.data).toMatchObject({
-			error: 'Photo upload failed. Try again.',
+			error: PHOTO_UPLOAD_FAILED,
 			code: 'upload_failed',
 			draft: { title: 'Soup', hadPhoto: true }
 		});
@@ -265,10 +268,10 @@ describe('new recipe action', () => {
 
 describe('new recipe load', () => {
 	test('a logged-out visitor is sent to log in and brought back here', async () => {
-		const event = { url: new URL('http://x/recipes/new?from=nav'), locals: { user: null } };
-		await expect(Promise.resolve().then(() => load(event as never))).rejects.toMatchObject({
+		const path = '/recipes/new?from=nav';
+		await expect(Promise.resolve().then(() => load(loadEvent({ path })))).rejects.toMatchObject({
 			status: 303,
-			location: '/login?redirectTo=%2Frecipes%2Fnew%3Ffrom%3Dnav'
+			location: loginHref(path)
 		});
 	});
 });

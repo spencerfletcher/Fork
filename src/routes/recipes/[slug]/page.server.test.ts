@@ -1,6 +1,6 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { chain } from '#lib/testing/drizzle.js';
-import { invokeAction as invoke, formEvent } from '#lib/testing/actions.js';
+import { invokeAction as invoke, formEvent, loadEvent } from '#lib/testing/actions.js';
 import { actions, load } from './+page.server';
 import { VERSION_NOT_FOUND } from './versionError.js';
 import { inGroup, makeIngredient, makeStep, makeContent } from '#lib/recipes/fixtures.js';
@@ -297,14 +297,11 @@ describe('fork', () => {
 
 // ─── load: fork attribution ───────────────────────────────────────────────────
 
-/** A RequestEvent-like object for `load`, which reads params, url, and locals. */
-function makeLoadEvent(user: { id: string; email: string } | null = null) {
-	return {
-		params: { slug: 'the-fork' },
-		url: new URL('http://localhost/recipes/the-fork'),
-		locals: { user }
-	};
-}
+/** A load event for the fork's page, at `path` (its query included). */
+const makeLoadEvent = (
+	user: { id: string; email: string } | null = null,
+	path = '/recipes/the-fork'
+) => loadEvent({ params: { slug: 'the-fork' }, path, user });
 
 /** A public fork whose parent has the given visibility and owner. */
 function forkOf(parent: { visibility: Visibility; authorId: string }) {
@@ -502,10 +499,9 @@ describe('load: the personal line', () => {
 		const reader = { id: 'reader', email: 'r@test.com' };
 		const latest = { id: 12, cookedOn: '2026-11-08' };
 		lastEntryMock.mockResolvedValue(latest);
-		const data = (await load({
-			...makeLoadEvent(reader),
-			url: new URL('http://localhost/recipes/the-fork?version=1')
-		} as never)) as { journal: unknown };
+		const data = (await load(makeLoadEvent(reader, '/recipes/the-fork?version=1'))) as {
+			journal: unknown;
+		};
 		expect(lastEntryMock).toHaveBeenCalledWith(reader.id, 99);
 		expect(data.journal).toEqual({
 			lastEntry: latest,
@@ -526,10 +522,7 @@ describe('load: ?version=', () => {
 	});
 
 	const loadVersion = (version: string) =>
-		invoke(load as never, {
-			...makeLoadEvent(),
-			url: new URL(`http://localhost/recipes/the-fork?version=${version}`)
-		});
+		invoke(load as never, makeLoadEvent(null, `/recipes/the-fork?version=${version}`));
 
 	test.each(['1abc', '1.5', ' 1', '-1'])('%j is not a version number: 404', async (version) => {
 		expect(await loadVersion(version)).toMatchObject({

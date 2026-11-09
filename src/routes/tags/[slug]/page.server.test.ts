@@ -1,5 +1,6 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { chain } from '#lib/testing/drizzle.js';
+import { loadEvent } from '#lib/testing/actions.js';
 import { desc, type SQL } from 'drizzle-orm';
 import { PgDialect } from 'drizzle-orm/pg-core';
 import { recipes } from '#lib/server/db/schema.js';
@@ -22,7 +23,7 @@ vi.mock('#lib/server/tagFilter.js', () => ({ visibleTags: visibleTagsMock }));
 import { load } from './+page.server';
 
 const makeEvent = (user: { id: string } | null = null) =>
-	({ params: { slug: 'dessert' }, locals: { user } }) as unknown as Parameters<typeof load>[0];
+	loadEvent({ params: { slug: 'dessert' }, user });
 const event = makeEvent();
 const sqlOf = (q: SQL) => new PgDialect().sqlToQuery(q);
 

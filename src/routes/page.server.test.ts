@@ -4,12 +4,10 @@ const { loadDiscoverMock } = vi.hoisted(() => ({ loadDiscoverMock: vi.fn() }));
 vi.mock('./discover/discover.server.js', () => ({ loadDiscover: loadDiscoverMock }));
 
 import { load } from './+page.server';
+import { loadEvent } from '#lib/testing/actions.js';
 
-const makeEvent = (user: { id: string } | null, search = '') =>
-	({
-		url: new URL(`http://localhost/${search}`),
-		locals: { user }
-	}) as unknown as Parameters<typeof load>[0];
+const makeEvent = (user: { id: string } | null, search = ''): Parameters<typeof load>[0] =>
+	loadEvent({ path: `/${search}`, user });
 
 beforeEach(() => {
 	vi.clearAllMocks();

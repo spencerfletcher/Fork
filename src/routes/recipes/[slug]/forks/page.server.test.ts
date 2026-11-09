@@ -1,5 +1,6 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { chain } from '#lib/testing/drizzle.js';
+import { loadEvent } from '#lib/testing/actions.js';
 import { and, desc, eq, inArray } from 'drizzle-orm';
 import { recipes, recipeVersions } from '#lib/server/db/schema.js';
 
@@ -29,7 +30,7 @@ const RECIPE = {
 };
 
 const makeEvent = (user: { id: string; email: string } | null = null) =>
-	({ params: { slug: RECIPE.slug }, locals: { user } }) as unknown as Parameters<typeof load>[0];
+	loadEvent({ params: { slug: RECIPE.slug }, user });
 
 const run = (user: { id: string; email: string } | null = null) =>
 	Promise.resolve()

@@ -1,6 +1,7 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { chain } from '#lib/testing/drizzle.js';
-import { invokeAction, formEvent, loadPage } from '#lib/testing/actions.js';
+import { invokeAction, formEvent, loadEvent, loadPage } from '#lib/testing/actions.js';
+import { loginHref } from '#lib/auth/loginHref.js';
 import { PHOTO_SIZE_MESSAGE, PHOTO_MAX_BYTES } from '#lib/recipes/validation.js';
 import { ENTRY_MESSAGES } from '#lib/server/journal.js';
 import { actions, load } from './+page.server';
@@ -48,10 +49,7 @@ const invoke = (fields: Record<string, string>, file?: File, user: typeof USER |
 	);
 
 const loadAt = (search: string, user: typeof USER | null = USER) =>
-	loadPage<PageData>(load as never, {
-		url: new URL(`http://localhost/journal/new${search}`),
-		locals: { user }
-	});
+	loadPage<PageData>(load as never, loadEvent({ path: `/journal/new${search}`, user }));
 
 beforeEach(() => {
 	vi.clearAllMocks();
@@ -64,7 +62,7 @@ describe('journal/new load', () => {
 	test('signed out goes to log in and back', async () => {
 		await expect(loadAt('?recipe=x', null)).rejects.toMatchObject({
 			status: 303,
-			location: '/login?redirectTo=%2Fjournal%2Fnew%3Frecipe%3Dx'
+			location: loginHref('/journal/new?recipe=x')
 		});
 	});
 
