@@ -34,6 +34,13 @@ Planning and design docs: start at `docs/README.md`, which names the current pro
 - Keep components small and single-purpose
 - Accessibility matters: interactive elements need keyboard support and ARIA where appropriate
 
+## Reuse before building
+
+- Before writing a control, helper, query or test fixture, look for one that exists: `src/lib/components/` (shared UI; the list in DESIGN.md under "Shared components"), `src/lib/server/` and `src/lib/*.ts` (helpers; the list below under "Shared helpers"), `src/app.css` (shared classes), `src/lib/testing/` (test helpers)
+- Same shape, reuse it. Different item, don't force it. A shape needed in two places becomes one shared piece in `src/lib/`, not two local copies
+- A build brief names the component or helper each item reuses, or says "extract a shared one". A review treats a hand-rolled duplicate of an existing piece as blocking
+- When parallel builders work at once, land or name the shared pieces first, then fan out
+
 ## API / Endpoints
 
 - Validate all inputs server-side — don't trust client data
