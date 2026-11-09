@@ -1,6 +1,7 @@
 import { describe, test, expect } from 'vitest';
 import { render } from '@testing-library/svelte';
 import Details from './Details.svelte';
+import source from './Details.svelte?raw';
 import { makeContent } from '#lib/recipes/fixtures.js';
 
 function line(container: HTMLElement) {
@@ -53,6 +54,42 @@ describe('Details', () => {
 		});
 		expect(stored.getByText('4')).toHaveClass('text-text');
 		expect(stored.getByText('4')).not.toHaveClass('text-accent');
+	});
+
+	test('the times are one line and the yield another: prep · cook, then Serves · Makes', () => {
+		const { container } = render(Details, {
+			props: {
+				content: makeContent({
+					servings: 6,
+					makes: '12 buns',
+					prepTimeMinutes: 15,
+					cookTimeMinutes: 45
+				})
+			}
+		});
+		const lines = [...container.querySelectorAll('.details > .line')].map((el) =>
+			[...el.querySelectorAll('.pair')].map((pair) => pair.textContent!.replace(/\s+/g, ' ').trim())
+		);
+		expect(lines).toEqual([
+			['15 min prep', '45 min cook'],
+			['Serves 6', 'Makes 12 buns']
+		]);
+	});
+
+	test('with no times there is one line, the yield', () => {
+		const { container } = render(Details, {
+			props: { content: makeContent({ servings: 6, prepTimeMinutes: null, cookTimeMinutes: null }) }
+		});
+		expect(container.querySelectorAll('.line')).toHaveLength(1);
+	});
+
+	test('one line on a desktop, dotted between the groups; two lines on a phone', () => {
+		// jsdom applies no component CSS, so the rules are read from the source.
+		const style = source.slice(source.indexOf('<style>'));
+		expect(style).toMatch(/\.line \+ \.line::before[^{]*\{[^}]*content: '·' \/ ''/);
+		const phone = style.slice(style.indexOf('@media (max-width: 699px)'));
+		expect(phone).toMatch(/\.line \{[^}]*display: block/);
+		expect(phone).toMatch(/\.line \+ \.line::before[^{]*\{[^}]*content: none/);
 	});
 
 	test('renders nothing when there is nothing to show', () => {
