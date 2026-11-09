@@ -961,11 +961,6 @@
 		gap: 14px;
 	}
 
-	/* The primary outweighs Cancel; on a phone it fills the row instead. */
-	.form-actions .btn-primary {
-		min-width: 112px;
-	}
-
 	@media (max-width: 859px) {
 		.form-grid {
 			grid-template-columns: minmax(0, 1fr);
