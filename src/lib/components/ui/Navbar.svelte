@@ -190,6 +190,19 @@
 		color: var(--color-text-cream);
 	}
 
+	/* A phone has no menu: Log in, Log out and the brand are thumb targets,
+	   44px tall inside the 52px bar, text where it was. */
+	@media (max-width: 767px) {
+		.nav-brand,
+		.navbar-link {
+			display: inline-flex;
+			align-items: center;
+			min-height: 44px;
+			padding-block: 0;
+			margin-block: 0;
+		}
+	}
+
 	/* The profile link: a 32px initial avatar (tint disc, Bitter initial in ink:
 	   no clay inside the espresso bar), with
 	   the handle beside it from 768. Capped so a 30-character handle (the
