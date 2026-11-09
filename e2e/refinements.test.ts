@@ -36,7 +36,8 @@ test.describe('Tag links', () => {
 
 	test('every tag link on every seeded recipe page resolves', async ({ page }) => {
 		for (const recipe of publicSeed) {
-			await page.goto('/');
+			// Search, not Discover: Discover draws its lead recipe as the lead, not a card.
+			await page.goto(`/search?q=${encodeURIComponent(latestTitle(recipe))}`);
 			await page
 				.locator('div.recipe-card', { hasText: latestTitle(recipe) })
 				.first()
