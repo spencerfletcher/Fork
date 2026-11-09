@@ -461,7 +461,9 @@ Settled later the same evening:
 
 **Tags, collections, filters.** Tags describe the recipe and follow the recipe's visibility (a tag on a friends-level recipe is not public). Collections organize your cookbook; "Italian" is as legitimate as "To cook". Filters are transient views, never saved. Want-to-cook and pins stay distinct concepts: "To cook" is intent; a pin may be intent or a frequently cooked recipe.
 
-**Save.** One Save action, the moving favorite. "Keep this version" arrives later as an option on a saved recipe, with the state shown visibly on the recipe page ("Keeping v3" with "Follow latest version" to reverse), not only inside the menu. A kept version lasts across visits; a Cook URL selects the version for that cooking session only. Neither overrides access permissions.
+**Save and collections (settled 9 Nov, late).** Save is one tap, "keep this", into the Cookbook's Saved shelf, never a question. When collections ship (P1): optional "Add to collection" adjacent to Save or in the menu, never replacing the Saved confirmation; a recipe may sit in several collections; owned and saved recipes organize identically; removing from a collection leaves the recipe in the Cookbook (membership, not copies). Starter collections "To cook" and "Favorites" cover the two established intents (want to try; a keeper) without a separate Favorite system or another recipe-page button; a star shortcut can follow if wanted. Competitor evidence (Paprika, Recipe Keeper, AnyList, Samsung Food) is documentation, not usability testing.
+
+**Save version.** One Save action, the moving favorite. "Keep this version" arrives later as an option on a saved recipe, with the state shown visibly on the recipe page ("Keeping v3" with "Follow latest version" to reverse), not only inside the menu. A kept version lasts across visits; a Cook URL selects the version for that cooking session only. Neither overrides access permissions.
 
 ### Source register and limits
 
