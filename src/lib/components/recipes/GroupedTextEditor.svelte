@@ -229,9 +229,24 @@
 	}
 
 	// Plain text through the editing command, so it lands on the undo stack.
+	// Where the command is refused, the text goes in by hand (off the undo
+	// stack) and is synced at once, as no input event follows.
 	const insertText = (text: string) => {
 		ensureLine();
-		document.execCommand('insertText', false, text);
+		if (document.execCommand('insertText', false, text)) return;
+		const sel = getSelection();
+		if (!box || !sel?.rangeCount) return;
+		const r = sel.getRangeAt(0);
+		r.deleteContents();
+		const node = document.createTextNode(text);
+		r.insertNode(node);
+		r.setStartAfter(node);
+		r.collapse(true);
+		sel.removeAllRanges();
+		sel.addRange(r);
+		pending = true;
+		sync();
+		style(box);
 	};
 
 	// "# Section name" on its own line with the name selected, so typing

@@ -140,6 +140,17 @@ describe('GroupedTextEditor', () => {
 		expect([sel.anchorNode, sel.anchorOffset]).toEqual([lines()[0].firstChild, 3]);
 	});
 
+	test('where insertText is refused, the paste goes in by hand and reaches the field', async () => {
+		execCommand.mockReturnValue(false);
+		render(GroupedTextEditor, props('flour'));
+		caretAt(lines()[0].firstChild!, 5);
+		await fireEvent.paste(box(), { clipboardData: { getData: () => ' and salt' } });
+		expect(lines()[0].textContent).toBe('flour and salt');
+		const sel = getSelection()!;
+		expect(sel.isCollapsed && lines()[0].contains(sel.anchorNode)).toBe(true);
+		expect(field().value).toBe('flour and salt');
+	});
+
 	test('rich-text shortcuts do nothing', async () => {
 		render(GroupedTextEditor, props('flour'));
 		const bold = new InputEvent('beforeinput', {
