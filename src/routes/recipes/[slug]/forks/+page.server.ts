@@ -28,7 +28,8 @@ export const load: PageServerLoad = async ({ params, locals: { user } }) => {
 			forks.map(({ versions, ...fork }) => ({
 				...fork,
 				forkNote: versions[0]?.commitMessage ?? null
-			}))
+			})),
+			user
 		),
 		meta: { title: `Forks of ${recipe.title}` }
 	};
