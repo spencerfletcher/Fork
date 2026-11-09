@@ -82,6 +82,42 @@ describe('app.css hovers', () => {
 	});
 });
 
+// The shared utilities that replaced per-component copies (9 November 2026).
+describe('app.css shared utilities', () => {
+	const body = (selector: string) =>
+		css.match(new RegExp(`\\n\\s*${selector}\\s*\\{([^}]*)\\}`))![1];
+	const phone = css.slice(css.indexOf('@media (max-width: 699px), (pointer: coarse)'));
+
+	test('a text button is clay at 24px, a thumb on a phone, and its hover goes ink and underlined', () => {
+		expect(body('\\.text-btn')).toMatch(/color:\s*var\(--color-accent\)/);
+		expect(body('\\.text-btn')).toMatch(/min-height:\s*24px/);
+		expect(phone).toMatch(/\.text-btn \{\s*min-height: 44px/);
+		expect(body('\\.text-btn:hover')).toMatch(/color:\s*var\(--color-text\)/);
+		expect(body('\\.text-btn:hover')).toMatch(/text-decoration:\s*underline/);
+		expect(body('\\.text-btn--ink:hover')).toMatch(/color:\s*var\(--color-accent\)/);
+	});
+
+	test('the dot is drawn, silent to a screen reader', () => {
+		expect(body('\\.dot-list > \\* \\+ \\*::before')).toContain("content: '·' / ''");
+	});
+
+	test('an inline link is a 24px hit at desktop and 44px on a phone, without moving', () => {
+		expect(body('\\.hit-link')).toMatch(/padding-block:\s*4px;\s*margin-block:\s*-4px/);
+		expect(css).toMatch(
+			/\.hit-link \{\s*display: inline-block;\s*padding-block: 11px;\s*margin-block: -11px/
+		);
+	});
+
+	test('danger is a red ghost that keeps its red over the hover band; danger-hover turns red on hover', () => {
+		const at = css.indexOf('.btn-ghost.danger,');
+		const rule = css.slice(at, css.indexOf('}', at));
+		expect(rule).toContain('.btn-ghost.danger-hover:is(:hover, :focus-visible)');
+		expect(rule).toMatch(/border-color:\s*var\(--color-remove\)/);
+		expect(rule).toMatch(/color:\s*var\(--color-remove\)/);
+		expect(at).toBeGreaterThan(css.indexOf('.btn-ghost:hover {'));
+	});
+});
+
 describe('app.css forced colours', () => {
 	// Every tag tab carries a transparent 2px underline, which forced colours
 	// would paint, marking every tab current. Canvas hides it again, so only

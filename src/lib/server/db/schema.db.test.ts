@@ -1,6 +1,11 @@
-import { describe, test, expect, beforeAll } from 'vitest';
+import { describe, test, expect, beforeAll, afterAll } from 'vitest';
 
 import { inRollback, localDb } from '#lib/testing/db.js';
+
+// The pool is closed once the file is done, so no connection outlives the run.
+afterAll(async () => {
+	if (local) await (await import('#lib/server/db/index.js')).closeDb();
+});
 
 // Runs only against the local Supabase stack, inside a transaction that is
 // always rolled back, so it leaves no row behind.

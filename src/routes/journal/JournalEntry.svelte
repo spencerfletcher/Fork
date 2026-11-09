@@ -1,8 +1,9 @@
 <script lang="ts">
 	import type { LogEntry } from '#lib/server/db/schema.js';
 	import type { EntrySource } from '#lib/server/journal.js';
-	import { AUDIENCE_LABEL, PRIVATE_RECIPE_HINT, marginDay } from '#lib/journal.js';
-	import { audienceIcon, lockIcon } from '#lib/components/journal/Icons.svelte';
+	import { PRIVATE_RECIPE_HINT, marginDay } from '#lib/journal.js';
+	import { AUDIENCE_LABEL } from '#lib/audience.js';
+	import { audienceIcon, lockIcon } from '#lib/components/Icons.svelte';
 
 	let { entry }: { entry: LogEntry & { source: EntrySource } } = $props();
 
@@ -24,6 +25,7 @@
 		{#if source.kind === 'recipe'}
 			<p class="jsource">
 				<a
+					class="hit-link"
 					href="/recipes/{source.slug}{source.versionNumber
 						? `?version=${source.versionNumber}`
 						: ''}">
@@ -36,7 +38,9 @@
 			</p>
 		{:else if source.kind === 'link'}
 			<p class="jsource">
-				from <a href={source.url} rel="noopener noreferrer nofollow ugc">{source.host}</a>
+				from <a class="hit-link" href={source.url} rel="noopener noreferrer nofollow ugc">
+					{source.host}
+				</a>
 			</p>
 		{:else if source.kind === 'improvised'}
 			<p class="jsource">Improvised</p>
@@ -48,7 +52,7 @@
 			<span class="aud">
 				{@render audienceIcon(entry.audience)}{AUDIENCE_LABEL[entry.audience]}
 			</span>
-			<a class="edit" href="/journal/{entry.id}/edit">
+			<a class="edit hit-link" href="/journal/{entry.id}/edit">
 				Edit
 				<span class="sr-only">{entry.dish}</span>
 			</a>
@@ -75,7 +79,7 @@
 						{:else if source.kind === 'recipe'}
 							<!-- Fork is a POST on the recipe; it lands in the new fork's editor. -->
 							<form class="fork" method="POST" action="/recipes/{source.slug}?/fork">
-								<button type="submit" class="arrow-link">Fork →</button>
+								<button type="submit" class="text-btn">Fork →</button>
 							</form>
 						{/if}
 					</div>
@@ -170,8 +174,6 @@
 
 	.jsource a {
 		font-weight: 600;
-		padding: 4px 0;
-		margin: -4px 0;
 	}
 
 	.jmeta {
@@ -198,8 +200,6 @@
 	}
 
 	.edit {
-		padding: 4px 0;
-		margin-block: -4px;
 		font-weight: 600;
 	}
 
@@ -220,10 +220,6 @@
 	.lock-note {
 		margin-top: 12px;
 		max-width: 60ch;
-		padding: 12px 14px;
-		background: var(--color-surface);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-md);
 	}
 
 	.lock-note__label {
@@ -236,26 +232,16 @@
 		color: var(--color-text-2);
 	}
 
-	.lock-note .arrow-link {
+	.lock-note :is(.arrow-link, .text-btn) {
 		margin-left: 4px;
 		white-space: nowrap;
 		font-weight: 600;
-		color: var(--color-accent);
 	}
 
 	.fork {
 		display: inline;
 	}
 
-	.fork button {
-		padding: 0;
-		border: 0;
-		background: none;
-		font: inherit;
-		cursor: pointer;
-	}
-
-	.fork button:hover,
 	.lock-note a.arrow-link:hover {
 		color: var(--color-text);
 	}
@@ -303,14 +289,6 @@
 
 		.jdish {
 			font-size: 1.125rem;
-		}
-
-		/* A thumb's 44px on the links, without moving the text. */
-		.jsource a,
-		.edit {
-			display: inline-block;
-			padding-block: 11px;
-			margin-block: -11px;
 		}
 	}
 </style>

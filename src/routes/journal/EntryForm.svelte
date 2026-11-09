@@ -2,9 +2,11 @@
 	import { enhance } from '$app/forms';
 	import { onMount, type Snippet } from 'svelte';
 	import PhotoField from '#lib/components/recipes/PhotoField.svelte';
-	import { audienceIcon, lockIcon } from '#lib/components/journal/Icons.svelte';
+	import FormActions from '#lib/components/ui/FormActions.svelte';
+	import ChoiceGroup from '#lib/components/ui/ChoiceGroup.svelte';
+	import { audienceIcon, lockIcon } from '#lib/components/Icons.svelte';
+	import { AUDIENCE_LABEL } from '#lib/audience.js';
 	import {
-		AUDIENCE_LABEL,
 		AUDIENCE_SENTENCE,
 		KEEP_SOURCE,
 		MAX_LINK,
@@ -36,7 +38,7 @@
 		submitLabel: string;
 		/** A new entry: the date defaults to the reader's own today, not the server's. */
 		useLocalToday?: boolean;
-		/** More on the actions row, after Cancel: the edit page's Delete entry, its own form. */
+		/** The edit page's Delete entry, its own form, pinned right on the actions row. */
 		actions?: Snippet;
 	} = $props();
 
@@ -270,45 +272,26 @@
 		<p class="form-hint" id="note-hint">Only you ever see this.</p>
 	</div>
 
-	<fieldset class="audience">
-		<legend class="field-legend">Who sees this entry</legend>
-		<div class="choices">
-			{#each AUDIENCES as value (value)}
-				<label class="choice">
-					<input
-						type="radio"
-						name="audience"
-						{value}
-						bind:group={audience}
-						aria-labelledby="audience-{value}"
-						aria-describedby="audience-{value}-note" />
-					<b id="audience-{value}">{@render audienceIcon(value)}{AUDIENCE_LABEL[value]}</b>
-					<span id="audience-{value}-note">{AUDIENCE_SENTENCE[value]}</span>
-				</label>
-			{/each}
-		</div>
-		{#if showPrivateHint}
-			<p class="form-hint" role="status">{PRIVATE_RECIPE_HINT}</p>
-		{/if}
-	</fieldset>
+	<ChoiceGroup
+		name="audience"
+		legend="Who sees this entry"
+		options={AUDIENCES.map((value) => ({
+			value,
+			label: AUDIENCE_LABEL[value],
+			note: AUDIENCE_SENTENCE[value]
+		}))}
+		bind:value={audience}
+		icon={audienceIcon}
+		columns={2}
+		hint={showPrivateHint ? PRIVATE_RECIPE_HINT : null} />
 </form>
 
-<div class="form-actions entry-actions">
-	<button class="btn-primary" type="submit" form={FORM_ID} disabled={pending}>
-		{pending ? 'Saving…' : submitLabel}
-	</button>
-	<a class="cancel" href="/journal">Cancel</a>
-	{@render actions?.()}
+<div class="entry-actions">
+	<FormActions {submitLabel} {pending} cancelHref="/journal" form={FORM_ID} danger={actions} />
 </div>
 
 <style>
-	.entry-form,
 	.entry-actions {
-		max-width: 680px;
-	}
-
-	.entry-actions {
-		flex-wrap: wrap;
 		margin-top: var(--space-5);
 	}
 
@@ -364,14 +347,6 @@
 		color: var(--color-accent);
 	}
 
-	/* The note's own lifted paper: the one thing on the form only you see. */
-	.lock-note {
-		padding: 12px;
-		background: var(--color-surface);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-md);
-	}
-
 	.lock-note label {
 		display: flex;
 		align-items: center;
@@ -382,78 +357,8 @@
 		background: var(--color-bg);
 	}
 
-	.audience {
-		border: 0;
-		padding: 0;
-		margin: 0;
-		min-width: 0;
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-2);
-	}
-
-	.audience .field-legend {
-		padding: 0;
-		margin-bottom: 0;
-	}
-
-	.choices {
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		gap: var(--space-3);
-	}
-
-	/* The recipe editor's choice rows: icon, word and one sentence. */
-	.choice {
-		display: grid;
-		/* The radio's own width and a 10px gap: the word sits close to it. */
-		grid-template-columns: auto 1fr;
-		gap: 2px 10px;
-		align-items: start;
-		min-height: 44px;
-		padding: 10px 12px;
-		border: 1px solid var(--color-input-border);
-		border-radius: var(--radius-md);
-		background: var(--color-surface);
-		cursor: pointer;
-	}
-
-	.choice input {
-		/* Centred on the word's line, not the top of the row. */
-		align-self: center;
-		margin: 0;
-		accent-color: var(--color-accent);
-	}
-
-	.choice b {
-		display: flex;
-		align-items: center;
-		gap: 6px;
-		font-weight: 600;
-	}
-
-	.choice span {
-		grid-column: 2;
-		font-size: 0.875rem;
-		line-height: 1.45;
-		color: var(--color-text-2);
-	}
-
-	.choice:has(:checked) {
-		border-color: var(--color-text);
-		box-shadow: inset 0 0 0 1px var(--color-text);
-	}
-
-	.cancel {
-		display: inline-flex;
-		align-items: center;
-		min-height: 44px;
-		font-weight: 600;
-	}
-
 	@media (max-width: 699px) {
-		.two-up,
-		.choices {
+		.two-up {
 			grid-template-columns: minmax(0, 1fr);
 		}
 

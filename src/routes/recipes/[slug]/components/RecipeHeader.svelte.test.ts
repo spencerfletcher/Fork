@@ -40,10 +40,15 @@ function renderHeader(overrides: Partial<HeaderProps> = {}) {
 }
 
 /** The byline as a reader sees it: sr-only prefixes dropped, whitespace collapsed. */
+// The byline's dots are drawn by app.css's .dot-list between its parts, not
+// typed; jsdom draws no CSS, so the helper puts them where the rule does.
 function byline(container: HTMLElement) {
 	const copy = container.querySelector('.byline')!.cloneNode(true) as HTMLElement;
+	expect(copy).toHaveClass('dot-list');
 	copy.querySelectorAll('.sr-only').forEach((el) => el.remove());
-	return copy.textContent!.replace(/\s+/g, ' ').trim();
+	return [...copy.children]
+		.map((part) => part.textContent!.replace(/\s+/g, ' ').trim())
+		.join(' · ');
 }
 
 // ─── Fork attribution ─────────────────────────────────────────────────────────

@@ -464,6 +464,100 @@
 		color: var(--color-text);
 	}
 
+	/* Ghost turned danger: Diff Remove red outline and text, for the one
+	   control that destroys or cuts someone off (Delete, Remove, Block).
+	   .danger-hover is a plain ghost that turns red only on hover or focus
+	   (the profile's Block). Defined after the ghost's hover, so the red
+	   holds over the band. */
+	.btn-ghost.danger,
+	.btn-ghost.danger-hover:is(:hover, :focus-visible) {
+		border-color: var(--color-remove);
+		color: var(--color-remove);
+	}
+
+	/* A button that reads as a word: clay 600 in the line's face, no box.
+	   A 24px hit at desktop and a thumb's 44px on a phone or touch screen.
+	   Hover goes ink and underlined, so it is seen (pass 1's hover work). */
+	.text-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		min-height: 24px;
+		padding: 0;
+		border: 0;
+		background: none;
+		font: inherit;
+		font-weight: 600;
+		letter-spacing: normal;
+		text-transform: none;
+		color: var(--color-accent);
+		text-decoration: none;
+		cursor: pointer;
+	}
+
+	.text-btn:hover {
+		color: var(--color-text);
+		text-decoration: underline;
+		text-underline-offset: 3px;
+	}
+
+	/* Ink at rest, clay on hover: a text button among clay links. */
+	.text-btn--ink {
+		color: var(--color-text);
+	}
+
+	.text-btn--ink:hover {
+		color: var(--color-accent);
+	}
+
+	@media (max-width: 699px), (pointer: coarse) {
+		.text-btn {
+			min-height: 44px;
+		}
+	}
+
+	/* An inline link's hit: 24px at desktop, 44px on a phone, by padding
+	   pulled back by margin so the text does not move (as .back-link). */
+	.hit-link {
+		padding-block: 4px;
+		margin-block: -4px;
+	}
+
+	@media (max-width: 699px) {
+		.hit-link {
+			display: inline-block;
+			padding-block: 11px;
+			margin-block: -11px;
+		}
+	}
+
+	/* A row of items with a drawn dot between them, never typed, so a
+	   wrapped row never ends with one. Empty alt text: not read out. */
+	.dot-list > * + *::before {
+		content: '·' / '';
+		padding: var(--dot-space, 0 0.45em);
+		font-family: var(--font-sans);
+		color: var(--color-text-3);
+		font-weight: 400;
+	}
+
+	/* A handle inside a link that holds more than it (avatar and handle):
+	   Username's look without its own link. Mono one notch under the line, clay. */
+	.handle {
+		font-family: var(--font-mono);
+		font-size: 0.9375em;
+		color: var(--color-accent);
+		overflow-wrap: anywhere;
+	}
+
+	/* The owner-only lifted paper: a Journal note and its form field. */
+	.lock-note {
+		padding: 12px 14px;
+		background: var(--color-surface);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+	}
+
 	/* ── Page layout ── */
 
 	.page {
@@ -480,6 +574,26 @@
 	.page-inner {
 		max-width: var(--max-width);
 		margin: 0 auto;
+	}
+
+	/* A form's own measure inside the column: the Journal's entry pages. */
+	.page-inner--narrow {
+		max-width: 680px;
+	}
+
+	/* A list page's title and its one line under it (Cookbook, Journal,
+	   Friends, Discover). The row's layout beside any action stays local. */
+	.page-head {
+		margin-bottom: var(--space-5);
+	}
+
+	.page-head h1 {
+		margin: 0;
+	}
+
+	.page-sub {
+		margin: 4px 0 0;
+		color: var(--color-text-2);
 	}
 
 	/* Every list page's title row. On browse and tag pages the title and the

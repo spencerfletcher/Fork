@@ -8,18 +8,21 @@
 		username,
 		tone = 'paper',
 		current = false,
-		onclick
+		onclick,
+		class: className = ''
 	}: {
 		username: string;
 		tone?: 'paper' | 'dark';
 		current?: boolean;
 		onclick?: () => void;
+		/** Extra classes from the line it sits in, such as `hit-link`. */
+		class?: string;
 	} = $props();
 </script>
 
 <a
 	href="/users/{username}"
-	class="username"
+	class={['username', className]}
 	class:on-dark={tone === 'dark'}
 	aria-current={current ? 'page' : undefined}
 	{onclick}>

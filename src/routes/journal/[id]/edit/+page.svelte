@@ -7,7 +7,7 @@
 </script>
 
 <div class="page">
-	<div class="page-inner log">
+	<div class="page-inner page-inner--narrow">
 		<a class="back-link" href="/journal">← Journal</a>
 		<h1>Edit entry</h1>
 		<EntryForm
@@ -24,10 +24,6 @@
 </div>
 
 <style>
-	.log {
-		max-width: 680px;
-	}
-
 	h1 {
 		margin: 0 0 var(--space-5);
 	}

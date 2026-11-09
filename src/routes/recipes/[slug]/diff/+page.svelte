@@ -74,7 +74,7 @@
 		<div class="version-card__head">
 			<a href={versionHref(v)} class="version-card__number">v{v.versionNumber}</a>
 			<span>
-				{#if v.creator}<Username username={v.creator.username} />{/if}
+				{#if v.creator}<Username username={v.creator.username} class="hit-link" />{/if}
 				{#if v.creator}·{/if}
 				{formatDate(v.createdAt)}
 			</span>
@@ -206,13 +206,6 @@
 		font-weight: 600;
 	}
 
-	/* A 24px hit that does not move the username; its size is Username's own.
-	   :global so the Username component's element takes it. */
-	.version-card__head :global(.username) {
-		padding: 4px 0;
-		margin: -4px 0;
-	}
-
 	/* The system's chip, at the card number's size. */
 	.version-card--to .version-card__number {
 		padding: 0 6px;
@@ -238,13 +231,9 @@
 	}
 
 	@media (max-width: 699px) {
-		/* The same links reach a thumb's 44px, as the recipe page's do. */
+		/* .hit-link's padding alone falls short at Username's smaller size. */
 		.version-card__head :global(.username) {
-			display: inline-block;
-			/* The padding alone falls short at Username's smaller size. */
 			min-height: 44px;
-			padding: 11px 0;
-			margin-block: -11px;
 		}
 
 		/* The card numbers too, by a box above and below rather than padding,

@@ -2,12 +2,6 @@
 import type { LogAudience } from '#lib/server/db/schema.js';
 import { formatDate } from '#lib/helpers.js';
 
-/** Audience in words, always shown beside its icon. */
-export const AUDIENCE_LABEL: Record<LogAudience, string> = {
-	private: 'Only me',
-	friends: 'Friends'
-};
-
 /** One sentence under each choice of "Who sees this entry". */
 export const AUDIENCE_SENTENCE: Record<LogAudience, string> = {
 	private: 'It stays in your Journal. You can share it later.',

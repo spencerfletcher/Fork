@@ -161,23 +161,8 @@
 	/* Clay words in the body face. The choose action is a label, so it takes
 	   back its voice from the field labels' eyebrow. */
 	.text-btn {
-		display: inline-flex;
-		align-items: center;
-		min-height: 24px;
-		padding: 0;
-		border: 0;
-		background: none;
 		font-family: var(--font-sans);
 		font-size: 0.9375rem;
-		font-weight: 600;
-		letter-spacing: normal;
-		text-transform: none;
-		color: var(--color-accent);
-		cursor: pointer;
-	}
-
-	.text-btn:hover {
-		color: var(--color-text);
 	}
 
 	.photo-choose:has(:focus-visible) {
@@ -187,7 +172,6 @@
 
 	/* A thumb's 44px, on a phone or any touch screen. */
 	@media (max-width: 699px), (pointer: coarse) {
-		.text-btn,
 		.photo-choose,
 		.photo-keep {
 			min-height: 44px;

@@ -1,0 +1,202 @@
+<script lang="ts" module>
+	// Every line icon the app draws more than once, so none is copied. Line art
+	// in one 1.5 stroke on a 16px box, legible at 14px (decided 9 November
+	// 2026). Decoration only: the words beside them carry the meaning, so each
+	// is aria-hidden. Styling one from another component needs :global, since
+	// the svg belongs to this file's scope.
+	export {
+		audienceIcon,
+		lockIcon,
+		friendsIcon,
+		likeIcon,
+		moreIcon,
+		forkIcon,
+		versionsIcon,
+		saveIcon,
+		chevronIcon,
+		searchIcon,
+		headingIcon
+	};
+</script>
+
+<script lang="ts">
+	import type { Visibility } from '#lib/recipes/validation.js';
+</script>
+
+{#snippet lockIcon()}
+	<svg
+		class="icon"
+		width="16"
+		height="16"
+		viewBox="0 0 16 16"
+		aria-hidden="true"
+		fill="none"
+		stroke="currentColor"
+		stroke-width="1.5"
+		stroke-linecap="round"
+		stroke-linejoin="round">
+		<rect x="3" y="7" width="10" height="7" rx="1.5" />
+		<path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" />
+	</svg>
+{/snippet}
+
+<!-- Two people, the tab bar's drawing, the one Friends everywhere. Drawn on
+     24 and set at 16 unless asked bigger; the stroke scales to stay 1.5 on screen. -->
+{#snippet friendsIcon(size: number = 16)}
+	<svg
+		class="icon"
+		width={size}
+		height={size}
+		viewBox="0 0 24 24"
+		aria-hidden="true"
+		fill="none"
+		stroke="currentColor"
+		stroke-width={(1.5 * 24) / size}
+		stroke-linecap="round"
+		stroke-linejoin="round">
+		<circle cx="9" cy="8" r="3.5" />
+		<path d="M2.5 20a6.5 6.5 0 0 1 13 0" />
+		<circle cx="17" cy="9" r="2.5" />
+		<path d="M17.5 14.5A5 5 0 0 1 21.5 19" />
+	</svg>
+{/snippet}
+
+<!-- Who can see it: a lock, the two people, or a globe for Public. A Journal
+     entry's audience is a subset (Only me, Friends). -->
+{#snippet audienceIcon(audience: Visibility)}
+	{#if audience === 'private'}
+		{@render lockIcon()}
+	{:else if audience === 'friends'}
+		{@render friendsIcon()}
+	{:else}
+		<svg
+			class="icon"
+			width="16"
+			height="16"
+			viewBox="0 0 16 16"
+			aria-hidden="true"
+			fill="none"
+			stroke="currentColor"
+			stroke-width="1.5"
+			stroke-linecap="round"
+			stroke-linejoin="round">
+			<circle cx="8" cy="8" r="6" />
+			<path
+				d="M2 8h12M8 2c1.8 1.7 2.6 3.7 2.6 6S9.8 12.3 8 14C6.2 12.3 5.4 10.3 5.4 8S6.2 3.7 8 2z" />
+		</svg>
+	{/if}
+{/snippet}
+
+<!-- Like's heart: an outline, filled while pressed. -->
+{#snippet likeIcon(filled: boolean)}
+	<svg
+		class="icon"
+		width="16"
+		height="16"
+		viewBox="0 0 16 16"
+		aria-hidden="true"
+		fill={filled ? 'currentColor' : 'none'}
+		stroke="currentColor"
+		stroke-width="1.5"
+		stroke-linejoin="round">
+		<path d="M8 13.5S2 10 2 6a3 3 0 0 1 6-1 3 3 0 0 1 6 1c0 4-6 7.5-6 7.5z" />
+	</svg>
+{/snippet}
+
+{#snippet moreIcon()}
+	<svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true" fill="currentColor">
+		<circle cx="4.5" cy="10" r="1.6" />
+		<circle cx="10" cy="10" r="1.6" />
+		<circle cx="15.5" cy="10" r="1.6" />
+	</svg>
+{/snippet}
+
+{#snippet forkIcon()}
+	<svg
+		class="size-4"
+		viewBox="0 0 16 16"
+		aria-hidden="true"
+		fill="none"
+		stroke="currentColor"
+		stroke-width="1.5"
+		stroke-linecap="round">
+		<!-- Four prongs rising from a short crossbar, a handle below: each one stroke. -->
+		<path d="M4.25 1.5V7M6.75 1.5V7M9.25 1.5V7M11.75 1.5V7M4.25 7h7.5M8 7v7.5" />
+	</svg>
+{/snippet}
+
+<!-- Versions: a stack of pages, three offset strokes. Horizontal where the
+     fork is vertical, so the two never read as one another. -->
+{#snippet versionsIcon()}
+	<svg
+		class="size-4"
+		viewBox="0 0 16 16"
+		aria-hidden="true"
+		fill="none"
+		stroke="currentColor"
+		stroke-width="1.5"
+		stroke-linecap="round">
+		<path d="M2 4h8M4 8h8M6 12h8" />
+	</svg>
+{/snippet}
+
+<!-- Save's bookmark: an outline, filled marigold while saved. -->
+{#snippet saveIcon(filled: boolean)}
+	<svg
+		class="size-4 transition-[fill] duration-150"
+		class:fill-marigold={filled}
+		class:fill-none={!filled}
+		viewBox="0 0 16 16"
+		aria-hidden="true"
+		stroke="currentColor"
+		stroke-width="1.5"
+		stroke-linejoin="round">
+		<path d="M4 2.5h8v11l-4-3-4 3z" />
+	</svg>
+{/snippet}
+
+<!-- A disclosure's chevron, pointing down; `up` turns it while open. -->
+{#snippet chevronIcon(up: boolean)}
+	<svg
+		class="chevron"
+		class:up
+		viewBox="0 0 12 12"
+		aria-hidden="true"
+		fill="none"
+		stroke="currentColor"
+		stroke-width="1.6"
+		stroke-linecap="round"
+		stroke-linejoin="round">
+		<path d="M2.5 4.5 6 8l3.5-3.5" />
+	</svg>
+{/snippet}
+
+<!-- The magnifier, sized by the caller's classes. -->
+{#snippet searchIcon(className: string)}
+	<svg
+		class={className}
+		viewBox="0 0 24 24"
+		aria-hidden="true"
+		fill="none"
+		stroke="currentColor"
+		stroke-width="1.8"
+		stroke-linecap="round"
+		stroke-linejoin="round">
+		<circle cx="11" cy="11" r="7" />
+		<path d="M20 20l-3.5-3.5" />
+	</svg>
+{/snippet}
+
+<!-- The editor toolbar's Section heading: an H. -->
+{#snippet headingIcon()}
+	<svg
+		viewBox="0 0 16 16"
+		aria-hidden="true"
+		fill="none"
+		stroke="currentColor"
+		stroke-width="1.5"
+		stroke-linecap="round"
+		stroke-linejoin="round">
+		<path d="M4 3v10M12 3v10M4 8h8" />
+	</svg>
+{/snippet}

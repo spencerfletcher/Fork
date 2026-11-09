@@ -23,15 +23,16 @@
 	import IngredientEditor from './IngredientEditor.svelte';
 	import StepEditor from './StepEditor.svelte';
 	import PhotoField from './PhotoField.svelte';
+	import FormActions from '#lib/components/ui/FormActions.svelte';
+	import ChoiceGroup from '#lib/components/ui/ChoiceGroup.svelte';
+	import { audienceIcon } from '#lib/components/Icons.svelte';
+	import { AUDIENCE_LABEL } from '#lib/audience.js';
 
-	// The radio trio's copy, offered in VISIBILITIES order (Only me first).
-	const AUDIENCE_COPY: Record<Visibility, { label: string; note: string }> = {
-		private: { label: 'Only me', note: 'Only you can see it. You can share it later.' },
-		friends: {
-			label: 'Friends',
-			note: 'Approved friends can see, save and fork it. It stays out of Discover.'
-		},
-		public: { label: 'Public', note: 'Anyone can find, save and fork it.' }
+	// The radio trio's sentences, offered in VISIBILITIES order (Only me first).
+	const AUDIENCE_NOTE: Record<Visibility, string> = {
+		private: 'Only you can see it. You can share it later.',
+		friends: 'Approved friends can see, save and fork it. It stays out of Discover.',
+		public: 'Anyone can find, save and fork it.'
 	};
 
 	let {
@@ -45,7 +46,8 @@
 		nextVersion,
 		header,
 		leaving = false,
-		hasForks = false
+		hasForks = false,
+		danger
 	}: {
 		/** What was loaded, as the form's strings. Dirty-checking compares against it. */
 		baseline: RecipeDraft;
@@ -70,7 +72,13 @@
 		leaving?: boolean;
 		/** The recipe has forks, which a narrower audience leaves where they are. */
 		hasForks?: boolean;
+		/** The edit page's Delete recipe, its own form, pinned right on the actions row. */
+		danger?: Snippet;
 	} = $props();
+
+	// The actions row sits outside the form, Save joined to it by form=, so
+	// Delete recipe's own form shares the row without nesting.
+	const formId = $props.id();
 
 	// The whole form as one object. A failed save hands back what was
 	// submitted, invalid values included, and the fields refill from it. It is
@@ -244,32 +252,6 @@
 
 {@render header?.(outcome, errorCount > 0)}
 
-{#snippet audienceIcon(value: Visibility)}
-	<svg
-		class="icon"
-		viewBox="0 0 16 16"
-		fill="none"
-		stroke="currentColor"
-		stroke-width="1.5"
-		stroke-linecap="round"
-		stroke-linejoin="round"
-		aria-hidden="true">
-		{#if value === 'private'}
-			<rect x="3" y="7" width="10" height="7" rx="1.5" />
-			<path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" />
-		{:else if value === 'friends'}
-			<circle cx="6" cy="5.5" r="2.5" />
-			<path d="M1.5 13.5c0-2.5 2-4 4.5-4s4.5 1.5 4.5 4" />
-			<circle cx="11.5" cy="6" r="2" />
-			<path d="M11 9.5c2 0 3.5 1.3 3.5 3.5" />
-		{:else}
-			<circle cx="8" cy="8" r="6" />
-			<path
-				d="M2 8h12M8 2c1.8 1.7 2.6 3.7 2.6 6S9.8 12.3 8 14C6.2 12.3 5.4 10.3 5.4 8S6.2 3.7 8 2z" />
-		{/if}
-	</svg>
-{/snippet}
-
 {#snippet fieldError(name: string)}
 	{#if errors[name]}
 		<p class="field-error" id="{name}-error" role="alert">{errors[name]}</p>
@@ -277,6 +259,7 @@
 {/snippet}
 
 <form
+	id={formId}
 	method="POST"
 	{action}
 	enctype="multipart/form-data"
@@ -379,32 +362,17 @@
 					<TagInput {allTags} bind:selected={draft.tags} />
 				</fieldset>
 
-				<fieldset class="audience">
-					<legend class="field-legend">Who can see this recipe</legend>
-					<div class="choices">
-						{#each VISIBILITIES as value (value)}
-							<label class="choice">
-								<input
-									type="radio"
-									name="visibility"
-									{value}
-									bind:group={draft.visibility}
-									aria-labelledby="visibility-{value}"
-									aria-describedby="visibility-{value}-note{hasForks ? ' visibility-hint' : ''}" />
-								<b id="visibility-{value}">
-									{@render audienceIcon(value)}
-									{AUDIENCE_COPY[value].label}
-								</b>
-								<span id="visibility-{value}-note">{AUDIENCE_COPY[value].note}</span>
-							</label>
-						{/each}
-					</div>
-					{#if hasForks}
-						<p class="form-hint" id="visibility-hint">
-							Making this more private doesn't hide existing forks.
-						</p>
-					{/if}
-				</fieldset>
+				<ChoiceGroup
+					name="visibility"
+					legend="Who can see this recipe"
+					options={VISIBILITIES.map((value) => ({
+						value,
+						label: AUDIENCE_LABEL[value],
+						note: AUDIENCE_NOTE[value]
+					}))}
+					bind:value={draft.visibility}
+					icon={audienceIcon}
+					hint={hasForks ? "Making this more private doesn't hide existing forks." : null} />
 			</div>
 
 			<div class="form-col">
@@ -437,15 +405,18 @@
 		{#if globalError}
 			<p class="form-error" role="alert">{globalError}</p>
 		{/if}
-
-		<div class="form-actions" bind:this={actions}>
-			<button type="submit" class="btn-primary" disabled={save.pending} bind:this={submitButton}>
-				{save.pending ? 'Saving…' : submitLabel}
-			</button>
-			<a href={cancelHref} class="btn-ghost">Cancel</a>
-		</div>
 	</fieldset>
 </form>
+
+<div class="actions-bar" bind:this={actions}>
+	<FormActions
+		{submitLabel}
+		pending={save.pending}
+		{cancelHref}
+		form={formId}
+		bind:submitButton
+		{danger} />
+</div>
 
 <style>
 	/* The row's errors run its full width, a field's 8px under the boxes. */
@@ -476,72 +447,9 @@
 		color: var(--color-text-3);
 	}
 
-	.audience {
-		border: 0;
-		padding: 0;
-		margin: 0;
-		min-width: 0;
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-2);
-	}
-
-	.audience .field-legend {
-		margin-bottom: 0;
-		padding: 0;
-	}
-
-	/* Icon, word and one sentence per audience; the chosen row gets a 1px ink inset. */
-	.choices {
-		display: flex;
-		flex-direction: column;
-		gap: 8px;
-	}
-
-	.choice {
-		display: grid;
-		/* The radio's own width and a 10px gap: the word sits close to it. */
-		grid-template-columns: auto 1fr;
-		gap: 2px 10px;
-		align-items: start;
-		padding: 10px 12px;
-		border: 1px solid var(--color-input-border);
-		border-radius: var(--radius-md);
-		background: var(--color-surface);
-		cursor: pointer;
-	}
-
-	/* Clay, as the checkbox it replaces was, not the browser's blue. */
-	.choice input {
-		/* Centred on the word's line, not the top of the row. */
-		align-self: center;
-		margin: 0;
-		accent-color: var(--color-accent);
-	}
-
-	.choice b {
-		display: flex;
-		align-items: center;
-		gap: 6px;
-		font-weight: 600;
-	}
-
-	.choice span {
-		grid-column: 2;
-		font-size: 0.875rem;
-		line-height: 1.45;
-		color: var(--color-text-2);
-	}
-
-	.choice:has(:checked) {
-		border-color: var(--color-text);
-		box-shadow: inset 0 0 0 1px var(--color-text);
-	}
-
-	.icon {
-		width: 16px;
-		height: 16px;
-		flex-shrink: 0;
+	/* Outside the form, so the form's 16px gap is its own margin. */
+	.actions-bar {
+		margin-top: var(--space-4);
 	}
 
 	/* A plain 1px Rule, like every other rule in the editor. */
@@ -553,7 +461,7 @@
 		/* Save and Cancel ride the screen's bottom edge, so a long form saves
 		   without a scroll to its end. Edge to edge across the 18px gutters,
 		   and above the home indicator. */
-		.form-actions {
+		.actions-bar {
 			position: sticky;
 			bottom: 0;
 			z-index: 1;
@@ -566,8 +474,13 @@
 		/* A field focused by Tab stops above the bar: its height, the 4px ring
 		   and a pixel to spare. On html, which scrolls; keyed to the bar so the
 		   rule leaves with the editor. */
-		:global(html:has(.form-actions)) {
+		:global(html:has(.actions-bar)) {
 			scroll-padding-bottom: calc(70px + env(safe-area-inset-bottom));
+		}
+
+		/* Delete recipe's own line makes the bar two rows tall. */
+		:global(html:has(.actions-bar .danger)) {
+			scroll-padding-bottom: calc(126px + env(safe-area-inset-bottom));
 		}
 	}
 </style>

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { tick } from 'svelte';
-	import { moreIcon } from '#lib/components/journal/Icons.svelte';
+	import { moreIcon } from '#lib/components/Icons.svelte';
 	import Dropdown from '#lib/components/ui/Dropdown.svelte';
 	import { BLOCK_SENTENCE } from '#lib/journal.js';
 	import type { ReportTarget } from '#lib/server/db/schema.js';

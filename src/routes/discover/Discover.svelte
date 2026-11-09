@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Avatar from '#lib/components/ui/Avatar.svelte';
 	import RecipeCard from '#lib/components/recipes/RecipeCard.svelte';
 	import SearchFilters from '#lib/components/ui/SearchFilters.svelte';
 	import { formatTime, plural } from '#lib/helpers.js';
@@ -25,8 +26,10 @@
 
 <div class="page">
 	<div class="page-inner">
-		<h1>Discover</h1>
-		<p class="lede">Recipes from every cook on Fork.</p>
+		<div class="page-head">
+			<h1>Discover</h1>
+			<p class="page-sub">Recipes from every cook on Fork.</p>
+		</div>
 
 		<div class="discover-filters">
 			<SearchFilters
@@ -55,16 +58,14 @@
 				<div>
 					{#if lead.author}
 						<a class="lead-cook" href="/users/{lead.author.username}">
-							<span class="lead-avatar" aria-hidden="true">
-								{lead.author.username.charAt(0).toUpperCase()}
-							</span>
-							<span class="lead-handle">@{lead.author.username}</span>
+							<Avatar username={lead.author.username} size={28} />
+							<span class="handle lead-handle">@{lead.author.username}</span>
 						</a>
 					{/if}
 					<h2 class="lead-title">
 						<a class="lead-link" href="/recipes/{lead.slug}">{lead.title}</a>
 					</h2>
-					<p class="lead-measure">
+					<p class="lead-measure dot-list">
 						{#if leadTime}<span>{leadTime}</span>{/if}
 						{#if lead.servings}<span>Serves {lead.servings}</span>{/if}
 						{#if lead.versionCount > 1}<span class="vid">v{lead.versionCount}</span>{/if}
@@ -85,7 +86,7 @@
 									of {change.title}
 								</span>
 								<span class="change-note">
-									{#if change.username}<span class="change-handle">@{change.username}</span>
+									{#if change.username}<span class="handle change-handle">@{change.username}</span>
 									{/if}{change.commitMessage}
 								</span>
 							</a>
@@ -122,17 +123,8 @@
 </div>
 
 <style>
-	h1 {
-		margin: 0;
-	}
-
-	.lede {
-		margin: 4px 0 0;
-		color: var(--color-text-2);
-	}
-
 	.discover-filters {
-		margin: 22px 0 28px;
+		margin: 0 0 28px;
 	}
 
 	/* The lead: photo 7, words 5, side by side from 900. */
@@ -195,28 +187,6 @@
 		color: var(--color-text);
 	}
 
-	.lead-avatar {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		width: 28px;
-		height: 28px;
-		border: 1px solid transparent;
-		border-radius: 50%;
-		background: var(--color-tint);
-		color: var(--color-accent);
-		font-family: var(--font-serif);
-		font-size: 0.875rem;
-		line-height: 1;
-	}
-
-	.lead-handle,
-	.change-handle {
-		font-family: var(--font-mono);
-		font-size: 0.9375em;
-		color: var(--color-accent);
-	}
-
 	.lead-title {
 		margin: 12px 0 0;
 		font-family: var(--font-serif);
@@ -235,12 +205,6 @@
 		flex-wrap: wrap;
 		margin: 12px 0 0;
 		color: var(--color-text-2);
-	}
-
-	.lead-measure > span + span::before {
-		content: '·' / '';
-		padding: 0 0.45em;
-		color: var(--color-text-3);
 	}
 
 	.vid {

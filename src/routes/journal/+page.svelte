@@ -24,10 +24,10 @@
 
 <div class="page">
 	<div class="page-inner">
-		<div class="j-head">
+		<div class="page-head j-head">
 			<div>
 				<h1>Journal</h1>
-				{#if summary}<p class="sub">{summary}</p>{/if}
+				{#if summary}<p class="page-sub">{summary}</p>{/if}
 				<p class="status" role="status">
 					{#if logged}<strong>Logged</strong>
 						· {dayLabel(logged.cookedOn)}{:else if deleted}Entry deleted.{/if}
@@ -67,16 +67,6 @@
 		align-items: flex-end;
 		justify-content: space-between;
 		gap: 16px;
-		margin-bottom: var(--space-5);
-	}
-
-	.j-head h1 {
-		margin: 0;
-	}
-
-	.sub {
-		margin: 4px 0 0;
-		color: var(--color-text-2);
 	}
 
 	.status {
@@ -86,12 +76,6 @@
 
 	.status:empty {
 		display: none;
-	}
-
-	.btn-primary {
-		display: inline-flex;
-		align-items: center;
-		min-height: 44px;
 	}
 
 	.month {
@@ -133,7 +117,6 @@
 	@media (max-width: 699px) {
 		.j-head .btn-primary {
 			width: 100%;
-			justify-content: center;
 		}
 	}
 </style>

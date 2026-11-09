@@ -4,7 +4,7 @@
 	import { plural } from '#lib/helpers.js';
 	import { dayLabel } from '#lib/journal.js';
 	import Details from './Details.svelte';
-	import { forkIcon, versionsIcon } from './Icons.svelte';
+	import { forkIcon, versionsIcon } from '#lib/components/Icons.svelte';
 	import type { Recipe } from '#lib/server/db/schema.js';
 	import type { RecipeContent, TagChip } from '#lib/recipes/types.js';
 
@@ -71,18 +71,20 @@
 	<!-- Who, and what it was forked from (the parent's title, not its author,
 	     who is one click away). One line; there is no separate attribution
 	     line. Decided 29 October 2026. -->
-	<p class="byline m-0 font-sans [overflow-wrap:anywhere]">
-		{#if recipe.author}By <Username username={recipe.author.username} />{/if}
+	<p class="byline dot-list m-0 font-sans [overflow-wrap:anywhere]">
+		{#if recipe.author}<span>
+				By <Username username={recipe.author.username} class="hit-link" />
+			</span>{/if}
 		{#if recipe.parent}
-			{#if recipe.author}·{/if}
-			forked from
-			<a href="/recipes/{recipe.parent.slug}">{recipe.parent.title}</a>
+			<span>
+				forked from <a class="hit-link" href="/recipes/{recipe.parent.slug}">
+					{recipe.parent.title}
+				</a>
+			</span>
 		{:else if recipe.parentDeleted}
-			{#if recipe.author}·{/if}
-			Original recipe deleted
+			<span>Original recipe deleted</span>
 		{:else if recipe.parentId}
-			{#if recipe.author}·{/if}
-			forked from a private recipe
+			<span>forked from a private recipe</span>
 		{/if}
 	</p>
 
@@ -96,7 +98,7 @@
 		<p class="tags text-text-2 m-0 font-sans">
 			{#each tags as tag, i (tag.id)}
 				{#if i > 0},&#32;{/if}
-				<a href="/tags/{tag.slug}" class="text-accent font-semibold">{tag.name}</a>
+				<a href="/tags/{tag.slug}" class="hit-link text-accent font-semibold">{tag.name}</a>
 			{/each}
 		</p>
 	{/if}
@@ -109,7 +111,7 @@
 		<span class="stat">
 			{@render forkIcon()}
 			{#if forkCount > 0}
-				<a href="/recipes/{recipe.slug}/forks">{counted(forkCount, 'fork')}</a>
+				<a class="hit-link" href="/recipes/{recipe.slug}/forks">{counted(forkCount, 'fork')}</a>
 			{:else}
 				{counted(forkCount, 'fork')}
 			{/if}
@@ -117,7 +119,7 @@
 		<span class="stat">
 			{@render versionsIcon()}
 			{#if versionCount > 1 && !cooking}
-				<a href="#versions">{counted(versionCount, 'version')}</a>
+				<a class="hit-link" href="#versions">{counted(versionCount, 'version')}</a>
 			{:else}
 				{counted(versionCount, 'version')}
 			{/if}
@@ -133,7 +135,9 @@
 	{#if journal?.lastEntry && !cooking}
 		<p class="personal m-0 font-sans">
 			You cooked this on
-			<a href="/journal#entry-{journal.lastEntry.id}">{dayLabel(journal.lastEntry.cookedOn)}</a>
+			<a class="hit-link" href="/journal#entry-{journal.lastEntry.id}">
+				{dayLabel(journal.lastEntry.cookedOn)}
+			</a>
 		</p>
 	{/if}
 </header>
@@ -150,6 +154,7 @@
 	   sans; the handle keeps the Username face, mono at this line's size
 	   (decided 29 October 2026). */
 	.byline {
+		--dot-space: 0 0.25em 0 0;
 		margin-top: 8px;
 		font-size: 1rem;
 		font-weight: 600;
@@ -253,27 +258,5 @@
 
 	.personal a:hover {
 		color: var(--color-text);
-	}
-
-	/* Inline links reach a 24px hit without moving the text. Last, so nothing
-	   above resets it, and :global so the Username component's element takes it. */
-	.byline :global(a),
-	.stats a,
-	.tags a,
-	.personal a {
-		padding: 4px 0;
-		margin: -4px 0;
-	}
-
-	/* On a phone the same links reach a thumb's 44px, as the bar's do. */
-	@media (max-width: 699px) {
-		.byline :global(a),
-		.stats a,
-		.tags a,
-		.personal a {
-			display: inline-block;
-			padding: 11px 0;
-			margin-block: -11px;
-		}
 	}
 </style>
