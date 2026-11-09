@@ -33,10 +33,6 @@ export function plural(n: number, word: string): string {
 	return `${n} ${word}${n === 1 ? '' : 's'}`;
 }
 
-/** Every public recipe: the home feed when signed in, where /recipes is your own. */
-export function allRecipesHref(signedIn: boolean): string {
-	return signedIn ? '/' : '/recipes';
-}
 
 /** A form field as a string: missing or non-string (a File) reads as empty. */
 export function text(formData: FormData, key: string): string {

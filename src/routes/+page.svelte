@@ -3,7 +3,7 @@
 	import type { PageData } from './$types';
 
 	// Signed out, home is Discover (signed in, the loader sends you to your
-	// Cookbook). LandingHero.svelte is no longer rendered here.
+	// Cookbook).
 	let { data }: { data: PageData } = $props();
 </script>
 
