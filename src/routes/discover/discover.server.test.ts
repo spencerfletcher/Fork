@@ -22,7 +22,7 @@ vi.mock('#lib/server/visibility.js', async (importOriginal) => ({
 	friendIdsOf: friendIdsOfMock
 }));
 
-import { loadDiscover, LEAD_WINDOW_DAYS, RECENT_CHANGES } from './discover.server';
+import { loadDiscover, DISCOVER_LIMIT, LEAD_WINDOW_DAYS, RECENT_CHANGES } from './discover.server';
 import { CARD_WITH } from '#lib/server/recipeCounts.js';
 import { visibleTo } from '#lib/server/visibility.js';
 
@@ -56,6 +56,14 @@ beforeEach(() => {
 });
 
 describe('loadDiscover', () => {
+	test('caps the grid query', async () => {
+		mockSelects([], []);
+
+		await loadDiscover(url(), VIEWER);
+
+		expect(findManyMock.mock.calls[0][0].limit).toBe(DISCOVER_LIMIT);
+	});
+
 	test('lists what the viewer may see, newest first, as cards', async () => {
 		mockSelects([], []);
 
@@ -66,10 +74,17 @@ describe('loadDiscover', () => {
 		expect(sqlOf(where)).toEqual(sqlOf(visibleTo(VIEWER)));
 	});
 
-	test('signed out, public only', async () => {
-		mockSelects([], []);
+	test('signed out, public only: the grid, the tags, the lead and Recent changes', async () => {
+		const { leadChain, recentChain } = mockSelects([], []);
 
 		await loadDiscover(url(), null);
+
+		const publicOnly = sqlOf(visibleTo(null));
+		for (const c of [leadChain, recentChain]) {
+			const where = sqlOf(c.where.mock.calls[0][0]);
+			expect(where.sql).toContain(publicOnly.sql);
+			expect(where.params).toContain('public');
+		}
 
 		expect(sqlOf(findManyMock.mock.calls[0][0].where)).toEqual(sqlOf(visibleTo(null)));
 		expect(sqlOf(selectDistinctMock.mock.results[0].value.where.mock.calls[0][0])).toEqual(

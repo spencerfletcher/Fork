@@ -9,6 +9,8 @@ import { parseFilters, textSearch } from '#lib/server/recipeSearch.js';
 
 /** The lead card is the most-saved recipe over this many days, else the newest. */
 export const LEAD_WINDOW_DAYS = 7;
+/** The most recipes one Discover page lists, lead included. */
+export const DISCOVER_LIMIT = 60;
 /** How many small cards the Recent changes row holds. */
 export const RECENT_CHANGES = 3;
 
@@ -67,7 +69,9 @@ export async function loadDiscover(url: URL, user: { id: string } | null) {
 				text.where
 			),
 			with: CARD_WITH,
-			orderBy: text.orderBy
+			orderBy: text.orderBy,
+			// ponytail: no pagination yet, P1 adds it
+			limit: DISCOVER_LIMIT
 		}),
 		filtered ? [] : mostSaved(user),
 		filtered ? [] : recentChanges(user)
