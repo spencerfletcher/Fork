@@ -304,9 +304,10 @@
 		margin: 0;
 	}
 
-	/* On paper the ring is clay again, not the bar's marigold. */
+	/* On paper the ring is the site's clay again, not the bar's marigold:
+	   revert-layer hands it back to the global ring in app.css's base layer. */
 	.account-menu :global(:focus-visible) {
-		outline-color: var(--color-accent);
+		outline-color: revert-layer;
 	}
 
 	/* Current is cream against tan, which forced colours flatten to one colour;
