@@ -643,7 +643,9 @@ test.describe('Recipe detail page', () => {
 			'href',
 			`/login?redirectTo=${back}`
 		);
-		await expect(hero.getByRole('link', { name: /fork/i })).toHaveCount(0);
+		// No Fork action signed out; the "1 fork" stat link is a count, not an action.
+		await expect(hero.getByRole('link', { name: /^fork$/i })).toHaveCount(0);
+		await expect(hero.getByRole('button', { name: /^fork$/i })).toHaveCount(0);
 
 		// Cook time is metadata, not a pill: no background of its own.
 		const time = page.getByText(/^\d+\s*(min|h)/).first();
