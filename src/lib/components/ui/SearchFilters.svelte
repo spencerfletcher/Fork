@@ -95,7 +95,7 @@
 			<path d="m21 21-4.35-4.35" />
 		</svg>
 		<!-- Named fields so the form also works as a plain GET before hydration. -->
-		{#each otherParams as [name, value] (name)}
+		{#each otherParams as [name, value], i (i)}
 			<input type="hidden" {name} {value} />
 		{/each}
 		{#if friends}

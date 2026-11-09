@@ -165,6 +165,12 @@ describe('SearchFilters keeps the page’s other params', () => {
 		expect(gotoMock.mock.calls[0][0]).toBe('?filter=mine');
 	});
 
+	test('a repeated param keeps every value', () => {
+		page.url = new URL('http://localhost/cookbook?x=1&x=2');
+		render(SearchFilters, { props: { availableTags } });
+		expect(new FormData(input().closest('form')!).getAll('x')).toEqual(['1', '2']);
+	});
+
 	test('the native form carries the other param too', () => {
 		page.url = new URL('http://localhost/cookbook?filter=saved');
 		render(SearchFilters, { props: { availableTags } });
