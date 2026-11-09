@@ -4,7 +4,7 @@ import { recipes, favorites, recipesToTags } from '#lib/server/db/schema.js';
 import { eq, and, inArray } from 'drizzle-orm';
 import { attachRecipeCounts, CARD_WITH } from '#lib/server/recipeCounts.js';
 import { byTagMatches, tagMatchCounts, visibleTags } from '#lib/server/tagFilter.js';
-import { canView } from '#lib/server/visibility.js';
+import { canView, friendIdsOf } from '#lib/server/visibility.js';
 import { parseFilters, textSearch } from '#lib/server/recipeSearch.js';
 import { loginHref } from '#lib/auth/loginHref.js';
 import type { PageServerLoad } from './$types';
@@ -21,16 +21,23 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 	const favoriteMappings = await db
 		.select({
 			recipeId: favorites.recipeId,
-			isPublic: recipes.isPublic,
+			visibility: recipes.visibility,
 			authorId: recipes.authorId
 		})
 		.from(favorites)
 		.innerJoin(recipes, eq(recipes.id, favorites.recipeId))
 		.where(eq(favorites.userId, user.id));
 
-	// A favourited recipe can be made private by its owner later. Drop it here,
-	// before the filter chips and the recipe query, so neither reveals it.
-	const favoriteIds = favoriteMappings.filter((f) => canView(f, user)).map((f) => f.recipeId);
+	// A favourited recipe can be made private by its owner later, or its author
+	// unfriended. Drop it here, before the filter chips and the recipe query, so
+	// neither reveals it. Friends are looked up only when a friends recipe is saved.
+	const needsFriends = favoriteMappings.some(
+		(f) => f.visibility === 'friends' && f.authorId !== user.id
+	);
+	const friendIds = needsFriends ? await friendIdsOf(user.id) : [];
+	const favoriteIds = favoriteMappings
+		.filter((f) => canView(f, user, friendIds))
+		.map((f) => f.recipeId);
 
 	// With nothing favorited a query or tags filter nothing: the page hears of
 	// neither, so it says "No favorites yet" rather than "No favorites match".
