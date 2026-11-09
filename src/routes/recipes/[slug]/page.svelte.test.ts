@@ -6,6 +6,7 @@ import type { PageData } from './$types';
 import { makeContent, makeIngredient, makeVersion } from '#lib/recipes/fixtures.js';
 import { FRACTIONS } from '#lib/recipes/scale.js';
 import { loginHref } from '#lib/auth/loginHref.js';
+import { compactCount } from './components/compactCount';
 
 // The page owns the serves: read from ?serves= on load, scaled into the
 // ingredient list. The control's own behaviour is in ServesControl's tests.
@@ -148,7 +149,7 @@ describe('recipe page signed in', () => {
 		const data = { ...makeData(), user: { id: 'visitor' }, favoriteCount: 1234 } as PageData;
 		render(Page, { props: { data } });
 		const save = screen.getByRole('button', { name: /^Save/ });
-		expect(save.textContent).toContain('1\u2009234');
+		expect(save.textContent).toContain(`· ${compactCount(1234)}`);
 		expect(screen.getByRole('button', { name: 'Fork' })).toBeInTheDocument();
 	});
 });

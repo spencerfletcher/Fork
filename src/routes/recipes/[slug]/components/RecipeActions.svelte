@@ -4,6 +4,7 @@
 	import { setShallowParam } from './shallowParam';
 	import type { Recipe } from '#lib/server/db/schema.js';
 	import { forkIcon, saveIcon } from './Icons.svelte';
+	import { compactCount } from './compactCount';
 
 	let {
 		recipe,
@@ -36,8 +37,7 @@
 	let isFavorited = $derived(initialFavorited);
 	// The count follows the optimistic flip: one more or one fewer than loaded.
 	const saves = $derived(favoriteCount + Number(isFavorited) - Number(initialFavorited));
-	// No compact count helper exists yet; digits grouped by a thin space.
-	const savesText = $derived(saves.toLocaleString('en-US').replaceAll(',', '\u2009'));
+	const savesText = $derived(compactCount(saves));
 	let forking = $state(false);
 	let saving = $state(false);
 	let error = $state('');

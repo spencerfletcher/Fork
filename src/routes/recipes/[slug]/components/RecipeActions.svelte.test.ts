@@ -2,6 +2,7 @@ import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import RecipeActions from './RecipeActions.svelte';
+import { compactCount } from './compactCount';
 import source from './RecipeActions.svelte?raw';
 import { readFileSync } from 'node:fs';
 
@@ -99,11 +100,10 @@ describe('RecipeActions save button', () => {
 		expect(star).not.toHaveClass('fill-marigold');
 	});
 
-	test('carries the save count after the word, digits grouped by a thin space', () => {
+	test('carries the save count after the word, compact', () => {
 		render(RecipeActions, { props: makeProps({ favoriteCount: 1234 }) });
 		const button = screen.getByRole('button', { name: /^Save/ });
-		// [ \n\t], not \s, which would swallow the thin space.
-		expect(button.textContent!.replace(/[ \n\t]+/g, ' ').trim()).toBe('Save · 1\u2009234');
+		expect(button.textContent!.replace(/\s+/g, ' ').trim()).toBe(`Save · ${compactCount(1234)}`);
 		// The dot is drawn for the eye only.
 		expect(button.querySelector('.count [aria-hidden="true"]')).toHaveTextContent('·');
 	});
