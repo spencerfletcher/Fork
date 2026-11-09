@@ -230,19 +230,23 @@ export async function report(
 	await db.insert(reports).values({ reporterId: me, targetType, targetId, reason });
 }
 
+export const OWN_LIKE = "You can't like your own entry.";
+
 /**
  * Likes or unlikes an entry the viewer can see. Seeing it needs an accepted
- * friendship, which a block removes, so a blocked pair cannot like.
+ * friendship, which a block removes, so a blocked pair cannot like. Nobody
+ * likes their own entry.
  */
 export async function toggleLike(
 	me: Viewer,
 	entryId: number
-): Promise<{ liked: boolean } | 'refused'> {
+): Promise<{ liked: boolean } | 'refused' | 'own'> {
 	const [entry] = await db
 		.select({ userId: logEntries.userId, audience: logEntries.audience })
 		.from(logEntries)
 		.where(eq(logEntries.id, entryId))
 		.limit(1);
+	if (entry?.userId === me.id) return 'own';
 	if (!entry || !canSeeEntry(entry, me, await friendIdsOf(me.id))) return 'refused';
 	const removed = await db
 		.delete(likes)

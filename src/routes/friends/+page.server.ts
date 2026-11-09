@@ -4,6 +4,7 @@ import { db } from '#lib/server/db/index.js';
 import { profiles, REPORT_TARGETS } from '#lib/server/db/schema.js';
 import {
 	MAX_REPORT,
+	OWN_LIKE,
 	acceptRequest,
 	block,
 	declineRequest,
@@ -102,6 +103,7 @@ export const actions: Actions = {
 		if (!/^\d+$/.test(entryText)) return invalid('Choose an entry.');
 		const result = await toggleLike(user, Number(entryText));
 		if (result === 'refused') return fail(404, { error: 'Entry not found', code: 'not_found' });
+		if (result === 'own') return invalid(OWN_LIKE);
 		return result;
 	},
 

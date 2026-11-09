@@ -1,6 +1,6 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { invokeAction, formEvent } from '#lib/testing/actions.js';
-import { MAX_REPORT } from '#lib/server/friends.js';
+import { MAX_REPORT, OWN_LIKE } from '#lib/server/friends.js';
 import { actions, load } from './+page.server';
 
 const m = vi.hoisted(() => ({
@@ -119,6 +119,14 @@ describe('like', () => {
 		m.toggleLike.mockResolvedValue('refused');
 		expect(await run('like', { entryId: '5' })).toMatchObject({ status: 404 });
 		expect(m.toggleLike).toHaveBeenCalledWith(ME, 5);
+	});
+
+	test('liking your own entry is a 400 in the error shape', async () => {
+		m.toggleLike.mockResolvedValue('own');
+		expect(await run('like', { entryId: '5' })).toMatchObject({
+			status: 400,
+			data: { error: OWN_LIKE, code: 'invalid' }
+		});
 	});
 
 	test('a malformed id never reaches the database', async () => {

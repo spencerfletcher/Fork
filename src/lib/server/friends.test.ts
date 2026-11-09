@@ -186,6 +186,14 @@ describe('toggleLike', () => {
 		expect(insertMock).not.toHaveBeenCalled();
 	});
 
+	test('my own entry is refused as own, and nothing is read or written past it', async () => {
+		selectMock.mockReturnValueOnce(chain([{ userId: ME, audience: 'friends' }]));
+		expect(await toggleLike({ id: ME }, ENTRY)).toBe('own');
+		expect(selectMock).toHaveBeenCalledTimes(1);
+		expect(insertMock).not.toHaveBeenCalled();
+		expect(deleteMock).not.toHaveBeenCalled();
+	});
+
 	// A block deletes the friendship, so the blocked side has no friend to see it through.
 	test('refused without an accepted friendship, as after a block, and refused on a private entry', async () => {
 		selectMock
