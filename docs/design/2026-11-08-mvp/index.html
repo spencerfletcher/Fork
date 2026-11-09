@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fork MVP mockups</title>
+<style>/* Fork MVP mockups: shared base. Tokens and component classes copied from
+   src/app.css (names kept so markup can be lifted). Classes prefixed mk- are
+   mockup chrome (board labels, notes) and do not ship. */
+@font-face{font-family:'Bitter';font-weight:500;font-display:swap;src:url('../../../static/fonts/bitter-latin-500-normal.woff2') format('woff2')}
+@font-face{font-family:'Bitter';font-weight:600;font-display:swap;src:url('../../../static/fonts/bitter-latin-600-normal.woff2') format('woff2')}
+@font-face{font-family:'Source Sans 3';font-weight:400;font-display:swap;src:url('../../../static/fonts/source-sans-3-latin-400-normal.woff2') format('woff2')}
+@font-face{font-family:'Source Sans 3';font-weight:400;font-style:italic;font-display:swap;src:url('../../../static/fonts/source-sans-3-latin-400-italic.woff2') format('woff2')}
+@font-face{font-family:'Source Sans 3';font-weight:500;font-display:swap;src:url('../../../static/fonts/source-sans-3-latin-500-normal.woff2') format('woff2')}
+@font-face{font-family:'Source Sans 3';font-weight:600;font-display:swap;src:url('../../../static/fonts/source-sans-3-latin-600-normal.woff2') format('woff2')}
+@font-face{font-family:'JetBrains Mono';font-weight:400;font-display:swap;src:url('../../../static/fonts/jetbrains-mono-latin-400-normal.woff2') format('woff2')}
+@font-face{font-family:'JetBrains Mono';font-weight:600;font-display:swap;src:url('../../../static/fonts/jetbrains-mono-latin-600-normal.woff2') format('woff2')}
+
+:root{
+  --color-bg:#f7f3ec; --color-surface:#fffdf9; --color-surface-2:#f7f3ec;
+  --color-navbar-bg:#1a1408; --color-tint:#f5e9e0; --color-band:#efe8db;
+  --color-text:#1a1714; --color-text-2:#4a443e; --color-text-3:#6f6960;
+  --color-text-cream:#f7f3ec; --color-text-tan:#b8a880;
+  --color-accent:#b23c00; --color-marigold:#eca620; --color-marigold-hover:#dc980a;
+  --color-marigold-tint:#fbefd0; --color-marigold-tint-hover:#f7e4b6;
+  --color-tag:#4a443e; --color-tag-border:#d9d3c8;
+  --color-border:#e4ded4; --color-border-2:#d9d3c8; --color-input-border:#d9d3c8;
+  --color-remove:#a3362b;
+  --shadow-raised:0 4px 16px rgba(26,23,20,.12);
+  --font-serif:'Bitter',Georgia,serif;
+  --font-sans:'Source Sans 3',-apple-system,BlinkMacSystemFont,sans-serif;
+  --font-mono:'JetBrains Mono','Fira Code',monospace;
+  --space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:24px;--space-6:32px;--space-7:48px;
+  --radius-sm:4px;--radius-md:6px;--radius-lg:8px;--radius-pill:100px;
+  --max-width:1200px;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--color-bg);color:var(--color-text);font-family:var(--font-sans);font-size:16px;line-height:1.65;font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4,p,ul,ol,figure{margin:0}
+ul,ol{padding:0;list-style:none}
+h1{font-family:var(--font-serif);font-size:clamp(1.75rem,1.2rem + 1.8vw,2.5rem);font-weight:500;line-height:1.15;color:var(--color-accent);overflow-wrap:anywhere;text-wrap:balance}
+h2{font-family:var(--font-serif);font-size:1.75rem;font-weight:500;line-height:1.25}
+h3{font-family:var(--font-sans);font-size:1.0625rem;font-weight:600;letter-spacing:.01em}
+a{color:var(--color-accent);text-decoration:none}
+a:hover{color:var(--color-text)}
+:focus-visible{outline:2px solid var(--color-accent);outline-offset:2px}
+::selection{background:var(--color-marigold);color:var(--color-text)}
+::placeholder{color:var(--color-text-3);opacity:1}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+img{display:block;max-width:100%}
+input:not([type=checkbox]):not([type=radio]),textarea,select{background:var(--color-surface);border:1px solid var(--color-input-border);border-radius:var(--radius-md);color:var(--color-text);font-family:var(--font-sans);font-size:.9375rem;line-height:1.4;padding:9px 12px;width:100%}
+textarea{field-sizing:content;resize:vertical}
+textarea[rows="1"]{resize:none}
+code,.mono-id{font-family:var(--font-mono);font-size:.9375em}
+.sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;border:0!important;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+@media (max-width:699px){input:not([type=checkbox]):not([type=radio]),textarea,select{font-size:1rem;line-height:1.5}}
+
+/* Buttons (app.css) */
+.btn-primary,.btn-ghost{font-family:var(--font-sans);font-weight:600;font-size:.9375rem;line-height:1.65;border-radius:var(--radius-md);padding:11px 16px;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:background .15s ease;text-align:center;white-space:nowrap}
+.btn-primary{background:var(--color-marigold);color:var(--color-text);border:1px solid transparent}
+.btn-primary:hover{background:var(--color-marigold-hover);color:var(--color-text)}
+.btn-ghost{background:transparent;color:var(--color-text);border:1px solid var(--color-text)}
+.btn-ghost:hover{background:var(--color-tint);color:var(--color-text)}
+.btn-ghost[aria-pressed=true]{background:var(--color-marigold-tint);border-color:var(--color-marigold)}
+.btn-primary svg,.btn-ghost svg{width:16px;height:16px;flex-shrink:0}
+.pill{border-radius:var(--radius-pill);min-height:44px;padding:8px 18px 8px 16px}
+/* Quiet text control: Ink 2, ink on hover. For tertiary actions. */
+.text-btn{display:inline-flex;align-items:center;gap:6px;font-size:.9375rem;font-weight:600;color:var(--color-text-2);padding:10px 0;margin-block:-10px}
+.text-btn:hover{color:var(--color-text)}
+.text-btn svg{width:16px;height:16px}
+
+.page-inner{max-width:calc(var(--max-width) + 48px);margin:0 auto;padding:0 var(--space-5)}
+@media (max-width:699px){.page-inner{padding:0 18px}}
+.eyebrow-label{font-family:var(--font-sans);font-size:.75rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-3);margin:0;line-height:1.2}
+.form-hint{font-size:.875rem;color:var(--color-text-3);line-height:1.5}
+.field-error{font-size:.875rem;color:var(--color-remove);line-height:1.5}
+.empty-state{padding:2rem 0;text-align:center;color:var(--color-text-3)}
+.arrow-link{display:inline-block;font-weight:600}
+.back-link{font-size:.875rem;color:var(--color-text-3);display:block;width:fit-content;padding:4px 0;margin:-4px 0 8px}
+.tick{position:relative;flex-shrink:0;width:16px;height:16px;border:1px solid var(--color-text-3);border-radius:50%;transform:translateY(2px)}
+label:hover .tick{border-color:var(--color-text-2)}
+label:has(:checked) .tick{background:var(--color-marigold);border-color:var(--color-marigold)}
+label:has(:checked) .tick::after{content:'';position:absolute;left:4.5px;top:1.5px;width:5px;height:9px;border-style:solid;border-width:0 1.5px 1.5px 0;border-color:var(--color-text);transform:rotate(45deg)}
+.clear-ticks{white-space:nowrap;margin-inline-start:auto;font-size:.875rem;color:var(--color-text-3)}
+.clear-ticks:hover{color:var(--color-text)}
+
+/* Navbar (Navbar.svelte): espresso, 56px, small-caps links. MVP nav proposal:
+   Cookbook, Journal, Friends, Discover. */
+.navbar{background:var(--color-navbar-bg);padding:0 var(--space-5)}
+.navbar-row{max-width:var(--max-width);margin:0 auto;height:56px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.nav-left,.nav-right{display:flex;align-items:center;gap:24px;min-width:0}
+.nav-brand{font-family:var(--font-serif);font-size:1.375rem;font-weight:600;color:var(--color-text-cream)}
+.nav-brand span{color:var(--color-marigold)}
+.navbar-link{font-size:1rem;font-weight:600;letter-spacing:.05em;font-variant-caps:all-small-caps;color:var(--color-text-tan);white-space:nowrap}
+.navbar-link:hover,.navbar-link[aria-current=page]{color:var(--color-text-cream)}
+.nav-handle{font-family:var(--font-mono);font-size:.8125rem;color:var(--color-text-tan)}
+.nav-cta{background:var(--color-marigold);color:var(--color-text);font-size:.875rem;font-weight:600;padding:6px 13px;border-radius:var(--radius-md);border:1px solid transparent;white-space:nowrap}
+.nav-cta:hover{background:var(--color-marigold-hover);color:var(--color-text)}
+.nav-icon{color:var(--color-text-tan);display:inline-flex;width:44px;height:44px;align-items:center;justify-content:center;margin:-10px}
+.nav-icon svg{width:20px;height:20px}
+.nav-icon:hover{color:var(--color-text-cream)}
+.nav-links{display:flex;gap:24px}
+@media (max-width:767px){.navbar{padding:0 18px}.navbar-row{height:52px}.nav-links,.nav-handle,.nav-cta{display:none}}
+
+/* Phone tab bar: the four destinations, lifted paper, a rule above. */
+.tabbar{display:none}
+@media (max-width:767px){
+  .tabbar{display:grid;grid-template-columns:repeat(4,1fr);position:sticky;bottom:0;z-index:5;background:var(--color-surface);border-top:1px solid var(--color-border-2);padding-bottom:env(safe-area-inset-bottom)}
+  .tabbar a{display:flex;flex-direction:column;align-items:center;gap:2px;min-height:56px;padding:8px 0 6px;font-size:.75rem;font-weight:600;color:var(--color-text-2);border-top:2px solid transparent;margin-top:-1px}
+  .tabbar a svg{width:22px;height:22px}
+  .tabbar a[aria-current=page]{color:var(--color-text);border-top-color:var(--color-accent)}
+}
+.icon{width:16px;height:16px;flex-shrink:0}
+
+/* Avatar: clay tint circle, Bitter initial in clay (DESIGN.md, profile). */
+.avatar{width:40px;height:40px;border-radius:50%;background:var(--color-tint);color:var(--color-accent);font-family:var(--font-serif);font-weight:500;font-size:1.125rem;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid transparent}
+.avatar--sm{width:28px;height:28px;font-size:.875rem}
+.handle{font-family:var(--font-mono);font-size:.9375em;color:var(--color-accent)}
+.chip{font-family:var(--font-mono);font-size:.75rem;font-weight:600;background:var(--color-marigold);color:var(--color-text);border-radius:var(--radius-sm);padding:0 6px;outline:1px solid transparent;outline-offset:-1px}
+.vid{font-family:var(--font-mono);font-size:.9375em;color:var(--color-accent)}
+
+/* Mockup chrome: the state label between boards. Not product UI. */
+.mk-board{position:relative}
+.mk-label{background:#fff;border-block:1px dashed #b9b1a4;padding:10px var(--space-5);font:500 .8125rem/1.45 var(--font-sans);color:#5b554e}
+.mk-label strong{color:var(--color-text);font-weight:600}
+.mk-label .mk-why{display:block;color:#6f6960}
+.mk-head{max-width:calc(var(--max-width) + 48px);margin:0 auto;padding:28px var(--space-5) 20px}
+.mk-head h1{color:var(--color-text);font-size:1.75rem}
+.mk-head p{color:var(--color-text-2);max-width:72ch;margin-top:6px}
+.mk-head nav{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:10px;font-size:.9375rem}
+@media (max-width:699px){.mk-label{padding:10px 18px}.mk-head{padding:20px 18px 16px}}
+
+.gal{max-width:calc(var(--max-width) + 48px);margin:0 auto;padding:32px 24px 64px}
+.gal>p{color:var(--color-text-2);max-width:68ch;margin-top:8px}
+.gal ol{margin-top:32px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:40px 32px}
+.gal li a{display:block;color:var(--color-text)}
+.gal li img{width:100%;aspect-ratio:16/10;object-fit:cover;object-position:top;border-radius:var(--radius-md);border:1px solid var(--color-border)}
+.gal li h2{font-size:1.375rem;margin-top:12px;color:var(--color-accent)}
+.gal li a:hover h2{color:var(--color-text)}
+.gal li p{color:var(--color-text-2);margin-top:4px;max-width:60ch}
+.gal .doc{margin-top:40px;font-weight:600}
+@media (max-width:699px){.gal{padding:24px 18px 48px}.gal ol{grid-template-columns:1fr}}
+</style></head>
+<body>
+<nav class="navbar" aria-label="Main"><div class="navbar-row">
+<div class="nav-left"><a href="index.html" class="nav-brand">Fork<span>.</span></a>
+<ul class="nav-links"><li><a href="#" class="navbar-link">Cookbook</a></li><li><a href="#" class="navbar-link">Journal</a></li><li><a href="#" class="navbar-link">Friends</a></li><li><a href="#" class="navbar-link">Discover</a></li></ul></div>
+<div class="nav-right"><a href="#" class="nav-icon" aria-label="Search"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path stroke-linecap="round" d="M20 20l-3.5-3.5"/></svg></a><span class="nav-handle">@spencerfletcher</span><a href="#" class="nav-cta">+ New recipe</a></div>
+</div></nav>
+<main class="gal">
+<h1>Fork MVP design, 8 November</h1>
+<p>Mockups for the next build: the recipe page and Cook first, then the editor, then a lightweight Journal and Friends feed. Built on the shipped tokens and class names; open each at phone and desktop width. Notes and the decisions that need Spencer are in DESIGN-MVP.md.</p>
+<ol>
+<li><a href="recipe-overview.html"><img src="screenshots/recipe-overview-1280.png" alt=""><h2>Recipe overview</h2><p>Cook leads the actions, practical facts sit above counts, named ingredient and method groups, yield beside servings, no-photo and minimal states.</p></a></li>
+<li><a href="cook-view.html"><img src="screenshots/cook-view-1280.png" alt=""><h2>Cook view</h2><p>The band collapses to one strip so the working recipe starts at the top; the method ends with a prefilled “Log this cook”.</p></a></li>
+<li><a href="editor-groups-yield.html"><img src="screenshots/editor-groups-yield-1280.png" alt=""><h2>Editor: groups, yield, audience</h2><p>Groups typed as <code>#</code> lines with a read-back of how Fork split them, an optional Makes field, Only me or Public. New, editing and blocked-save states.</p></a></li>
+<li><a href="journal-feed.html"><img src="screenshots/journal-feed-1280.png" alt=""><h2>Journal and Friends</h2><p>Your dated cooking record with private notes, a chronological friends feed with mute, report and block, the log form, and both empty states.</p></a></li>
+</ol>
+<p class="doc"><a href="DESIGN-MVP.md">DESIGN-MVP.md: what changes and why →</a></p>
+</main>
+<nav class="tabbar" aria-label="Main"><a href="#"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M5 4.5h11a2 2 0 0 1 2 2v13H7a2 2 0 0 1-2-2z"/><path d="M5 17.5a2 2 0 0 1 2-2h11M9 8.5h5"/></svg>Cookbook</a><a href="#"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="5" width="15" height="15" rx="2"/><path d="M4.5 9.5h15M8.5 3v4M15.5 3v4M8.5 13.5h3"/></svg>Journal</a><a href="#"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="9" cy="8.5" r="3.2"/><path d="M3 19.5c.6-3.4 3-5.2 6-5.2s5.4 1.8 6 5.2"/><circle cx="17" cy="9" r="2.6"/><path d="M16.6 14.3c2.4.2 4 1.8 4.4 4.4"/></svg>Friends</a><a href="#"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></svg>Discover</a></nav>
+</body></html>

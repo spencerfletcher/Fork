@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recipe editor</title>
+<style>/* Fork MVP mockups: shared base. Tokens and component classes copied from
+   src/app.css (names kept so markup can be lifted). Classes prefixed mk- are
+   mockup chrome (board labels, notes) and do not ship. */
+@font-face{font-family:'Bitter';font-weight:500;font-display:swap;src:url('../../../static/fonts/bitter-latin-500-normal.woff2') format('woff2')}
+@font-face{font-family:'Bitter';font-weight:600;font-display:swap;src:url('../../../static/fonts/bitter-latin-600-normal.woff2') format('woff2')}
+@font-face{font-family:'Source Sans 3';font-weight:400;font-display:swap;src:url('../../../static/fonts/source-sans-3-latin-400-normal.woff2') format('woff2')}
+@font-face{font-family:'Source Sans 3';font-weight:400;font-style:italic;font-display:swap;src:url('../../../static/fonts/source-sans-3-latin-400-italic.woff2') format('woff2')}
+@font-face{font-family:'Source Sans 3';font-weight:500;font-display:swap;src:url('../../../static/fonts/source-sans-3-latin-500-normal.woff2') format('woff2')}
+@font-face{font-family:'Source Sans 3';font-weight:600;font-display:swap;src:url('../../../static/fonts/source-sans-3-latin-600-normal.woff2') format('woff2')}
+@font-face{font-family:'JetBrains Mono';font-weight:400;font-display:swap;src:url('../../../static/fonts/jetbrains-mono-latin-400-normal.woff2') format('woff2')}
+@font-face{font-family:'JetBrains Mono';font-weight:600;font-display:swap;src:url('../../../static/fonts/jetbrains-mono-latin-600-normal.woff2') format('woff2')}
+
+:root{
+  --color-bg:#f7f3ec; --color-surface:#fffdf9; --color-surface-2:#f7f3ec;
+  --color-navbar-bg:#1a1408; --color-tint:#f5e9e0; --color-band:#efe8db;
+  --color-text:#1a1714; --color-text-2:#4a443e; --color-text-3:#6f6960;
+  --color-text-cream:#f7f3ec; --color-text-tan:#b8a880;
+  --color-accent:#b23c00; --color-marigold:#eca620; --color-marigold-hover:#dc980a;
+  --color-marigold-tint:#fbefd0; --color-marigold-tint-hover:#f7e4b6;
+  --color-tag:#4a443e; --color-tag-border:#d9d3c8;
+  --color-border:#e4ded4; --color-border-2:#d9d3c8; --color-input-border:#d9d3c8;
+  --color-remove:#a3362b;
+  --shadow-raised:0 4px 16px rgba(26,23,20,.12);
+  --font-serif:'Bitter',Georgia,serif;
+  --font-sans:'Source Sans 3',-apple-system,BlinkMacSystemFont,sans-serif;
+  --font-mono:'JetBrains Mono','Fira Code',monospace;
+  --space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:24px;--space-6:32px;--space-7:48px;
+  --radius-sm:4px;--radius-md:6px;--radius-lg:8px;--radius-pill:100px;
+  --max-width:1200px;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--color-bg);color:var(--color-text);font-family:var(--font-sans);font-size:16px;line-height:1.65;font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4,p,ul,ol,figure{margin:0}
+ul,ol{padding:0;list-style:none}
+h1{font-family:var(--font-serif);font-size:clamp(1.75rem,1.2rem + 1.8vw,2.5rem);font-weight:500;line-height:1.15;color:var(--color-accent);overflow-wrap:anywhere;text-wrap:balance}
+h2{font-family:var(--font-serif);font-size:1.75rem;font-weight:500;line-height:1.25}
+h3{font-family:var(--font-sans);font-size:1.0625rem;font-weight:600;letter-spacing:.01em}
+a{color:var(--color-accent);text-decoration:none}
+a:hover{color:var(--color-text)}
+:focus-visible{outline:2px solid var(--color-accent);outline-offset:2px}
+::selection{background:var(--color-marigold);color:var(--color-text)}
+::placeholder{color:var(--color-text-3);opacity:1}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+img{display:block;max-width:100%}
+input:not([type=checkbox]):not([type=radio]),textarea,select{background:var(--color-surface);border:1px solid var(--color-input-border);border-radius:var(--radius-md);color:var(--color-text);font-family:var(--font-sans);font-size:.9375rem;line-height:1.4;padding:9px 12px;width:100%}
+textarea{field-sizing:content;resize:vertical}
+textarea[rows="1"]{resize:none}
+code,.mono-id{font-family:var(--font-mono);font-size:.9375em}
+.sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;border:0!important;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+@media (max-width:699px){input:not([type=checkbox]):not([type=radio]),textarea,select{font-size:1rem;line-height:1.5}}
+
+/* Buttons (app.css) */
+.btn-primary,.btn-ghost{font-family:var(--font-sans);font-weight:600;font-size:.9375rem;line-height:1.65;border-radius:var(--radius-md);padding:11px 16px;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:background .15s ease;text-align:center;white-space:nowrap}
+.btn-primary{background:var(--color-marigold);color:var(--color-text);border:1px solid transparent}
+.btn-primary:hover{background:var(--color-marigold-hover);color:var(--color-text)}
+.btn-ghost{background:transparent;color:var(--color-text);border:1px solid var(--color-text)}
+.btn-ghost:hover{background:var(--color-tint);color:var(--color-text)}
+.btn-ghost[aria-pressed=true]{background:var(--color-marigold-tint);border-color:var(--color-marigold)}
+.btn-primary svg,.btn-ghost svg{width:16px;height:16px;flex-shrink:0}
+.pill{border-radius:var(--radius-pill);min-height:44px;padding:8px 18px 8px 16px}
+/* Quiet text control: Ink 2, ink on hover. For tertiary actions. */
+.text-btn{display:inline-flex;align-items:center;gap:6px;font-size:.9375rem;font-weight:600;color:var(--color-text-2);padding:10px 0;margin-block:-10px}
+.text-btn:hover{color:var(--color-text)}
+.text-btn svg{width:16px;height:16px}
+
+.page-inner{max-width:calc(var(--max-width) + 48px);margin:0 auto;padding:0 var(--space-5)}
+@media (max-width:699px){.page-inner{padding:0 18px}}
+.eyebrow-label{font-family:var(--font-sans);font-size:.75rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-3);margin:0;line-height:1.2}
+.form-hint{font-size:.875rem;color:var(--color-text-3);line-height:1.5}
+.field-error{font-size:.875rem;color:var(--color-remove);line-height:1.5}
+.empty-state{padding:2rem 0;text-align:center;color:var(--color-text-3)}
+.arrow-link{display:inline-block;font-weight:600}
+.back-link{font-size:.875rem;color:var(--color-text-3);display:block;width:fit-content;padding:4px 0;margin:-4px 0 8px}
+.tick{position:relative;flex-shrink:0;width:16px;height:16px;border:1px solid var(--color-text-3);border-radius:50%;transform:translateY(2px)}
+label:hover .tick{border-color:var(--color-text-2)}
+label:has(:checked) .tick{background:var(--color-marigold);border-color:var(--color-marigold)}
+label:has(:checked) .tick::after{content:'';position:absolute;left:4.5px;top:1.5px;width:5px;height:9px;border-style:solid;border-width:0 1.5px 1.5px 0;border-color:var(--color-text);transform:rotate(45deg)}
+.clear-ticks{white-space:nowrap;margin-inline-start:auto;font-size:.875rem;color:var(--color-text-3)}
+.clear-ticks:hover{color:var(--color-text)}
+
+/* Navbar (Navbar.svelte): espresso, 56px, small-caps links. MVP nav proposal:
+   Cookbook, Journal, Friends, Discover. */
+.navbar{background:var(--color-navbar-bg);padding:0 var(--space-5)}
+.navbar-row{max-width:var(--max-width);margin:0 auto;height:56px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.nav-left,.nav-right{display:flex;align-items:center;gap:24px;min-width:0}
+.nav-brand{font-family:var(--font-serif);font-size:1.375rem;font-weight:600;color:var(--color-text-cream)}
+.nav-brand span{color:var(--color-marigold)}
+.navbar-link{font-size:1rem;font-weight:600;letter-spacing:.05em;font-variant-caps:all-small-caps;color:var(--color-text-tan);white-space:nowrap}
+.navbar-link:hover,.navbar-link[aria-current=page]{color:var(--color-text-cream)}
+.nav-handle{font-family:var(--font-mono);font-size:.8125rem;color:var(--color-text-tan)}
+.nav-cta{background:var(--color-marigold);color:var(--color-text);font-size:.875rem;font-weight:600;padding:6px 13px;border-radius:var(--radius-md);border:1px solid transparent;white-space:nowrap}
+.nav-cta:hover{background:var(--color-marigold-hover);color:var(--color-text)}
+.nav-icon{color:var(--color-text-tan);display:inline-flex;width:44px;height:44px;align-items:center;justify-content:center;margin:-10px}
+.nav-icon svg{width:20px;height:20px}
+.nav-icon:hover{color:var(--color-text-cream)}
+.nav-links{display:flex;gap:24px}
+@media (max-width:767px){.navbar{padding:0 18px}.navbar-row{height:52px}.nav-links,.nav-handle,.nav-cta{display:none}}
+
+/* Phone tab bar: the four destinations, lifted paper, a rule above. */
+.tabbar{display:none}
+@media (max-width:767px){
+  .tabbar{display:grid;grid-template-columns:repeat(4,1fr);position:sticky;bottom:0;z-index:5;background:var(--color-surface);border-top:1px solid var(--color-border-2);padding-bottom:env(safe-area-inset-bottom)}
+  .tabbar a{display:flex;flex-direction:column;align-items:center;gap:2px;min-height:56px;padding:8px 0 6px;font-size:.75rem;font-weight:600;color:var(--color-text-2);border-top:2px solid transparent;margin-top:-1px}
+  .tabbar a svg{width:22px;height:22px}
+  .tabbar a[aria-current=page]{color:var(--color-text);border-top-color:var(--color-accent)}
+}
+.icon{width:16px;height:16px;flex-shrink:0}
+
+/* Avatar: clay tint circle, Bitter initial in clay (DESIGN.md, profile). */
+.avatar{width:40px;height:40px;border-radius:50%;background:var(--color-tint);color:var(--color-accent);font-family:var(--font-serif);font-weight:500;font-size:1.125rem;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid transparent}
+.avatar--sm{width:28px;height:28px;font-size:.875rem}
+.handle{font-family:var(--font-mono);font-size:.9375em;color:var(--color-accent)}
+.chip{font-family:var(--font-mono);font-size:.75rem;font-weight:600;background:var(--color-marigold);color:var(--color-text);border-radius:var(--radius-sm);padding:0 6px;outline:1px solid transparent;outline-offset:-1px}
+.vid{font-family:var(--font-mono);font-size:.9375em;color:var(--color-accent)}
+
+/* Mockup chrome: the state label between boards. Not product UI. */
+.mk-board{position:relative}
+.mk-label{background:#fff;border-block:1px dashed #b9b1a4;padding:10px var(--space-5);font:500 .8125rem/1.45 var(--font-sans);color:#5b554e}
+.mk-label strong{color:var(--color-text);font-weight:600}
+.mk-label .mk-why{display:block;color:#6f6960}
+.mk-head{max-width:calc(var(--max-width) + 48px);margin:0 auto;padding:28px var(--space-5) 20px}
+.mk-head h1{color:var(--color-text);font-size:1.75rem}
+.mk-head p{color:var(--color-text-2);max-width:72ch;margin-top:6px}
+.mk-head nav{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:10px;font-size:.9375rem}
+@media (max-width:699px){.mk-label{padding:10px 18px}.mk-head{padding:20px 18px 16px}}
+
+/* Editor (app.css .editor, .form-grid, .field...; PhotoField; TagInput) */
+.editor{max-width:var(--max-width);margin:0 auto;padding:24px 0 48px}
+.editor-header{display:flex;flex-direction:column;gap:6px;margin-bottom:18px}
+.editing{font-size:.875rem;color:var(--color-text-3)}
+.editing .dirty{color:var(--color-text);font-weight:600}
+.editing .bad{color:var(--color-remove);font-weight:600}
+.form{display:flex;flex-direction:column;gap:24px}
+.form-grid{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:40px}
+.form-col{display:flex;flex-direction:column;gap:16px}
+.field{display:flex;flex-direction:column;gap:8px}
+.field>label,.field-legend{font-size:.75rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-3);line-height:1.2;padding:0}
+.field .optional{font-weight:400;letter-spacing:0;text-transform:none}
+.required{color:var(--color-remove)}
+.field-row{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.field-row .field-error{grid-column:1/-1}
+fieldset{border:0;padding:0;margin:0;min-width:0}
+.invalid{border-color:var(--color-remove)!important}
+.photo-row{display:flex;gap:16px;align-items:flex-end}
+.photo-row img{width:168px;aspect-ratio:4/3;object-fit:cover;border-radius:var(--radius-md)}
+.photo-actions{display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+.photo-actions .btn-ghost{padding:8px 14px}
+.tag-box{display:flex;flex-wrap:wrap;gap:6px;align-items:center;background:var(--color-surface);border:1px solid var(--color-input-border);border-radius:var(--radius-md);padding:6px 8px}
+.tag-box input{border:0!important;padding:3px 4px!important;flex:1;min-width:140px;background:transparent!important}
+.tag-pill{display:inline-flex;align-items:center;gap:4px;font-size:.875rem;color:var(--color-tag);border:1px solid var(--color-tag-border);border-radius:var(--radius-pill);padding:1px 4px 1px 10px}
+.tag-pill button{width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;color:var(--color-text-3)}
+.tag-pill svg{width:12px;height:12px}
+/* Visibility: two choices as labelled rows; the selected one is outlined in ink. */
+.vis{display:flex;flex-direction:column;gap:8px}
+.vis-opt{position:relative;display:grid;grid-template-columns:20px 1fr;gap:2px 10px;align-items:start;padding:10px 12px;border:1px solid var(--color-input-border);border-radius:var(--radius-md);background:var(--color-surface);cursor:pointer}
+.vis-opt input{margin:4px 0 0;width:16px;height:16px;accent-color:var(--color-accent)}
+.vis-opt b{font-weight:600;display:flex;align-items:center;gap:6px}
+.vis-opt span{grid-column:2;font-size:.875rem;color:var(--color-text-2);line-height:1.45}
+.vis-opt:has(:checked){border-color:var(--color-text);box-shadow:inset 0 0 0 1px var(--color-text)}
+.textarea-tall{min-height:calc(11lh + 20px)}
+/* Read-back: how the box will be read, in the hint voice. Group names ink. */
+.readback{display:flex;flex-wrap:wrap;gap:2px 0;font-size:.875rem;color:var(--color-text-3);line-height:1.5}
+.readback b{color:var(--color-text);font-weight:600}
+.readback .grp+.grp::before{content:'·';padding:0 .5em;color:var(--color-text-3)}
+.readback .lead{margin-right:.4em}
+.field-message{padding-top:18px;border-top:1px dotted var(--color-input-border)}
+.form-actions{display:flex;align-items:center;gap:14px}
+.form-actions .btn-primary{min-width:112px}
+.form-error{font-size:.9375rem;color:var(--color-remove)}
+@media (max-width:859px){.form-grid{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:699px){
+  .editor{padding:18px 0 0}
+  .form-actions{position:sticky;bottom:0;z-index:4;margin:0 -18px;padding:12px 18px calc(12px + env(safe-area-inset-bottom));background:var(--color-bg);border-top:1px solid var(--color-border)}
+  .form-actions .btn-primary{flex:1}
+  .photo-row img{width:132px}
+}
+
+</style></head>
+<body>
+<nav class="navbar" aria-label="Main"><div class="navbar-row">
+<div class="nav-left"><a href="index.html" class="nav-brand">Fork<span>.</span></a>
+<ul class="nav-links"><li><a href="#" class="navbar-link" aria-current="page">Cookbook</a></li><li><a href="#" class="navbar-link">Journal</a></li><li><a href="#" class="navbar-link">Friends</a></li><li><a href="#" class="navbar-link">Discover</a></li></ul></div>
+<div class="nav-right"><a href="#" class="nav-icon" aria-label="Search"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path stroke-linecap="round" d="M20 20l-3.5-3.5"/></svg></a><span class="nav-handle">@spencerfletcher</span><a href="#" class="nav-cta">+ New recipe</a></div>
+</div></nav>
+<header class="mk-head">
+  <h1>Recipe editor: groups, yield, audience</h1>
+  <p>The paste-first editor stays: one box for ingredients, one for steps. A line starting with <code>#</code> names a group, and a read-back line under each box shows how Fork split it, so the cook can see and correct the interpretation before saving. Yield gets its own optional field beside servings. The public checkbox becomes an explicit two-way audience choice. Nothing else moves.</p>
+  <nav aria-label="States"><a href="#a">A · Editing v3, grouped</a><a href="#b">B · New recipe, empty, no photo</a><a href="#c">C · Blocked save</a></nav>
+</header>
+
+<section class="mk-board" id="a" aria-label="State A">
+<p class="mk-label"><strong>A · Editing an existing recipe: two ingredient groups, two method groups, yield 36 cookies at 18 servings, public.</strong> <span class="mk-why">The header line names the save promise: “Unsaved changes · saves as v4”. Group syntax is one rule, shown in the hint and the placeholder; a recipe with no # lines saves exactly as today.</span></p>
+<div class="page-inner"><div class="editor">
+  <div class="editor-header">
+    <a class="back-link" href="recipe-overview.html">← Thick and Chewy Chocolate Chip Cookies</a>
+    <h1>Edit recipe</h1>
+    <p class="editing">Editing <span class="mono-id">v3</span> · <span class="dirty">Unsaved changes</span> · saves as <span class="mono-id">v4</span></p>
+  </div>
+  <form class="form" onsubmit="return false">
+    <div class="form-grid">
+      <div class="form-col">
+        <div class="field"><label for="t">Title <span class="required" aria-hidden="true">*</span></label><textarea id="t" rows="1">Thick and Chewy Chocolate Chip Cookies</textarea></div>
+        <div class="field"><label for="d">Description</label><textarea id="d" rows="3">The definitive chocolate chip cookie — crisp edges, chewy centers, and pockets of melted chocolate in every bite.</textarea></div>
+        <div class="field"><span class="field-legend">Photo</span>
+          <div class="photo-row"><img src="https://images.unsplash.com/photo-1499636136210-6f4ee915583e?w=500&q=75" alt="Current photo">
+          <div class="photo-actions"><label class="btn-ghost">Replace photo<input type="file" class="sr-only"></label><button type="button" class="text-btn">Remove photo</button></div></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label for="s">Serves</label><input id="s" type="number" value="18"></div>
+          <div class="field"><label for="p">Prep min</label><input id="p" type="number" value="15"></div>
+          <div class="field"><label for="c">Cook min</label><input id="c" type="number" value="13"></div>
+        </div>
+        <div class="field"><label for="y">Makes <span class="optional">optional</span></label><input id="y" type="text" value="36 cookies" aria-describedby="y-h"><p class="form-hint" id="y-h">What one batch produces, when that isn't portions. It scales with servings: 36 servings makes 72 cookies.</p></div>
+        <fieldset class="field"><legend class="field-legend">Tags</legend>
+          <div class="tag-box"><span class="tag-pill">Dessert<button type="button" aria-label="Remove Dessert"><svg class="icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></span><span class="tag-pill">Baking<button type="button" aria-label="Remove Baking"><svg class="icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></span><span class="tag-pill">American<button type="button" aria-label="Remove American"><svg class="icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></span><input type="text" placeholder="Search or create a tag…" aria-label="Add a tag"></div>
+        </fieldset>
+        <fieldset class="field"><legend class="field-legend">Who can see this recipe</legend>
+          <div class="vis">
+            <label class="vis-opt"><input type="radio" name="va"><b><svg class="icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg>Only me</b><span>Nobody else can open it, find it or adapt it.</span></label>
+            <label class="vis-opt"><input type="radio" name="va" checked><b><svg class="icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"/><path d="M2 8h12M8 2c1.8 2 1.8 10 0 12M8 2c-1.8 2-1.8 10 0 12"/></svg>Public</b><span>Anyone can open it, find it in Discover and make their own version. Applies to every version.</span></label>
+          </div>
+        </fieldset>
+      </div>
+      <div class="form-col">
+        <div class="field"><label for="ing">Ingredients <span class="required" aria-hidden="true">*</span></label>
+<textarea id="ing" class="textarea-tall" aria-describedby="ing-rb ing-h"># Dough
+2¼ cups all-purpose flour
+1 tsp baking soda
+1 tsp salt
+1 cup unsalted butter, softened
+½ cup granulated sugar
+1 cup packed brown sugar
+2 tsp vanilla extract
+¼ tsp espresso powder
+2 large eggs
+2 cups chocolate chips
+
+# To finish
+1 tsp flaky sea salt</textarea>
+          <p class="readback" id="ing-rb"><span class="lead">Reads as 2 groups:</span><span class="grp"><b>Dough</b> 10 lines</span><span class="grp"><b>To finish</b> 1 line</span></p>
+          <p class="form-hint" id="ing-h">One per line: quantity, unit, ingredient — 2¼ cups flour. Start a group with a line like <code># Dough</code>.</p>
+        </div>
+        <div class="field"><label for="st">Steps <span class="required" aria-hidden="true">*</span></label>
+<textarea id="st" class="textarea-tall" aria-describedby="st-rb st-h"># Make the dough
+Whisk flour, baking soda, and salt in a medium bowl. Set aside.
+
+Beat butter and both sugars with an electric mixer on medium speed until light and fluffy, about 3 minutes.
+
+Add eggs one at a time, beating well after each addition. Beat in vanilla extract and espresso powder.
+
+Gradually stir in the flour mixture until just combined. Fold in chocolate chips, reserving a handful. Cover and chill the dough at least 2 hours.
+tip: Cold dough spreads less, so the extra brown sugar reads as chew rather than sprawl.
+
+# Bake
+Preheat oven to 375°F (190°C). Line two baking sheets with parchment paper.
+
+Drop rounded tablespoons of chilled dough onto the sheets, pressing the reserved chips into the tops. Bake 11–13 minutes until edges are golden. Sprinkle with flaky sea salt while still hot.</textarea>
+          <p class="readback" id="st-rb"><span class="lead">Reads as 6 steps in 2 groups:</span><span class="grp"><b>Make the dough</b> 1–4</span><span class="grp"><b>Bake</b> 5–6</span></p>
+          <p class="form-hint" id="st-h">Separate steps with a blank line. Add a note under a step with <code>tip:</code>, <code>warning:</code> or <code>substitution:</code> on its own line. Start a group with <code># Bake</code>.</p>
+        </div>
+      </div>
+    </div>
+    <div class="field field-message"><label for="m">What changed? <span class="optional">optional</span></label><input id="m" type="text" value="Split into dough and finishing groups, and say it makes 36 cookies"></div>
+    <div class="form-actions"><button class="btn-primary" type="submit">Save</button><a class="btn-ghost" href="#">Cancel</a></div>
+  </form>
+</div></div>
+</section>
+
+<section class="mk-board" id="b" aria-label="State B">
+<p class="mk-label"><strong>B · New recipe: every field empty, no photo, audience defaults to Only me.</strong> <span class="mk-why">The roadmap defaults new recipes to private, so publishing is a deliberate choice. Placeholders show the group syntax in use, so it is learnt by example, not by reading.</span></p>
+<div class="page-inner"><div class="editor">
+  <div class="editor-header">
+    <h1>New recipe</h1>
+    <p class="editing">Saves as <span class="mono-id">v1</span></p>
+  </div>
+  <form class="form" onsubmit="return false">
+    <div class="form-grid">
+      <div class="form-col">
+        <div class="field"><label for="t2">Title <span class="required" aria-hidden="true">*</span></label><textarea id="t2" rows="1"></textarea></div>
+        <div class="field"><label for="d2">Description</label><textarea id="d2" rows="3"></textarea></div>
+        <div class="field"><span class="field-legend">Photo</span>
+          <div class="photo-actions" style="flex-direction:row;align-items:center;gap:14px"><label class="btn-ghost"><svg class="icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5h3l1.2-1.8h3.6L11 5h3v8H2z"/><circle cx="8" cy="9" r="2.3"/></svg>Choose photo<input type="file" class="sr-only"></label><p class="form-hint">Optional. JPEG, PNG or WebP, up to 4 MB.</p></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label for="s2">Serves</label><input id="s2" type="number"></div>
+          <div class="field"><label for="p2">Prep min</label><input id="p2" type="number"></div>
+          <div class="field"><label for="c2">Cook min</label><input id="c2" type="number"></div>
+        </div>
+        <div class="field"><label for="y2">Makes <span class="optional">optional</span></label><input id="y2" type="text" placeholder="12 buns, 1 L stock" aria-describedby="y2-h"><p class="form-hint" id="y2-h">What one batch produces, when that isn't portions.</p></div>
+        <fieldset class="field"><legend class="field-legend">Tags</legend><div class="tag-box"><input type="text" placeholder="Search or create a tag…" aria-label="Add a tag"></div></fieldset>
+        <fieldset class="field"><legend class="field-legend">Who can see this recipe</legend>
+          <div class="vis">
+            <label class="vis-opt"><input type="radio" name="vb" checked><b><svg class="icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg>Only me</b><span>Nobody else can open it, find it or adapt it.</span></label>
+            <label class="vis-opt"><input type="radio" name="vb"><b><svg class="icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"/><path d="M2 8h12M8 2c1.8 2 1.8 10 0 12M8 2c-1.8 2-1.8 10 0 12"/></svg>Public</b><span>Anyone can open it, find it in Discover and make their own version. Applies to every version.</span></label>
+          </div>
+        </fieldset>
+      </div>
+      <div class="form-col">
+        <div class="field"><label for="ing2">Ingredients <span class="required" aria-hidden="true">*</span></label>
+          <textarea id="ing2" class="textarea-tall" placeholder="# Dough&#10;2¼ cups all-purpose flour&#10;2 large eggs&#10;&#10;# Filling&#10;½ cup brown sugar"></textarea>
+          <p class="form-hint">One per line: quantity, unit, ingredient — 2¼ cups flour. Start a group with a line like <code># Dough</code>.</p></div>
+        <div class="field"><label for="st2">Steps <span class="required" aria-hidden="true">*</span></label>
+          <textarea id="st2" class="textarea-tall" placeholder="Cream the butter and sugar.&#10;&#10;Fold in the flour.&#10;tip: Stop when no dry streaks remain."></textarea>
+          <p class="form-hint">Separate steps with a blank line. Add a note under a step with <code>tip:</code>, <code>warning:</code> or <code>substitution:</code> on its own line. Start a group with <code># Bake</code>.</p></div>
+      </div>
+    </div>
+    <div class="form-actions"><button class="btn-primary" type="submit">Create recipe</button><a class="btn-ghost" href="#">Cancel</a></div>
+  </form>
+</div></div>
+</section>
+
+<section class="mk-board" id="c" aria-label="State C">
+<p class="mk-label"><strong>C · Blocked save: a heading with nothing under it, a line that can't be scaled, an invalid serves.</strong> <span class="mk-why">Same rules as today: errors appear once a field is left or a save is blocked, the header counts them down, focus goes to the first. An empty group is an error because it would print a heading over nothing.</span></p>
+<div class="page-inner"><div class="editor">
+  <div class="editor-header">
+    <a class="back-link" href="#">← Brown Butter Cinnamon Buns</a>
+    <h1>Edit recipe</h1>
+    <p class="editing">Editing <span class="mono-id">v2</span> · <span class="bad">2 fields need attention</span></p>
+  </div>
+  <form class="form" onsubmit="return false">
+    <div class="form-grid">
+      <div class="form-col">
+        <div class="field-row">
+          <div class="field"><label for="s3">Serves</label><input id="s3" class="invalid" type="number" value="0" aria-invalid="true" aria-describedby="s3-e"></div>
+          <div class="field"><label for="p3">Prep min</label><input id="p3" type="number" value="40"></div>
+          <div class="field"><label for="c3">Cook min</label><input id="c3" type="number" value="25"></div>
+          <p class="field-error" id="s3-e">Serves must be at least 1.</p>
+        </div>
+        <div class="field"><label for="y3">Makes <span class="optional">optional</span></label><input id="y3" type="text" value="12 buns"></div>
+      </div>
+      <div class="form-col">
+        <div class="field"><label for="ing3">Ingredients <span class="required" aria-hidden="true">*</span></label>
+<textarea id="ing3" class="invalid" aria-invalid="true" rows="12"># Dough
+3½ cups bread flour
+zest of 1 orange
+1 cup warm milk
+¼ cup sugar
+2 large eggs
+6 tbsp butter, browned
+
+# Filling
+
+# Icing
+4 oz cream cheese
+1 cup powdered sugar</textarea>
+          <p class="field-error">“Filling” has no ingredients. Add some under it or delete the heading.</p>
+          <p class="readback"><span class="lead">Reads as 3 groups:</span><span class="grp"><b>Dough</b> 6 lines</span><span class="grp"><b>Filling</b> empty</span><span class="grp"><b>Icing</b> 2 lines</span></p>
+          <p class="form-hint">These lines will be saved as written but can't be scaled: zest of 1 orange</p>
+        </div>
+      </div>
+    </div>
+    <div class="form-actions"><button class="btn-primary" type="submit">Save</button><a class="btn-ghost" href="#">Cancel</a></div>
+  </form>
+</div></div>
+</section>
+
+</body></html>

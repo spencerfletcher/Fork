@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Journal and Friends</title>
+<style>/* Fork MVP mockups: shared base. Tokens and component classes copied from
+   src/app.css (names kept so markup can be lifted). Classes prefixed mk- are
+   mockup chrome (board labels, notes) and do not ship. */
+@font-face{font-family:'Bitter';font-weight:500;font-display:swap;src:url('../../../static/fonts/bitter-latin-500-normal.woff2') format('woff2')}
+@font-face{font-family:'Bitter';font-weight:600;font-display:swap;src:url('../../../static/fonts/bitter-latin-600-normal.woff2') format('woff2')}
+@font-face{font-family:'Source Sans 3';font-weight:400;font-display:swap;src:url('../../../static/fonts/source-sans-3-latin-400-normal.woff2') format('woff2')}
+@font-face{font-family:'Source Sans 3';font-weight:400;font-style:italic;font-display:swap;src:url('../../../static/fonts/source-sans-3-latin-400-italic.woff2') format('woff2')}
+@font-face{font-family:'Source Sans 3';font-weight:500;font-display:swap;src:url('../../../static/fonts/source-sans-3-latin-500-normal.woff2') format('woff2')}
+@font-face{font-family:'Source Sans 3';font-weight:600;font-display:swap;src:url('../../../static/fonts/source-sans-3-latin-600-normal.woff2') format('woff2')}
+@font-face{font-family:'JetBrains Mono';font-weight:400;font-display:swap;src:url('../../../static/fonts/jetbrains-mono-latin-400-normal.woff2') format('woff2')}
+@font-face{font-family:'JetBrains Mono';font-weight:600;font-display:swap;src:url('../../../static/fonts/jetbrains-mono-latin-600-normal.woff2') format('woff2')}
+
+:root{
+  --color-bg:#f7f3ec; --color-surface:#fffdf9; --color-surface-2:#f7f3ec;
+  --color-navbar-bg:#1a1408; --color-tint:#f5e9e0; --color-band:#efe8db;
+  --color-text:#1a1714; --color-text-2:#4a443e; --color-text-3:#6f6960;
+  --color-text-cream:#f7f3ec; --color-text-tan:#b8a880;
+  --color-accent:#b23c00; --color-marigold:#eca620; --color-marigold-hover:#dc980a;
+  --color-marigold-tint:#fbefd0; --color-marigold-tint-hover:#f7e4b6;
+  --color-tag:#4a443e; --color-tag-border:#d9d3c8;
+  --color-border:#e4ded4; --color-border-2:#d9d3c8; --color-input-border:#d9d3c8;
+  --color-remove:#a3362b;
+  --shadow-raised:0 4px 16px rgba(26,23,20,.12);
+  --font-serif:'Bitter',Georgia,serif;
+  --font-sans:'Source Sans 3',-apple-system,BlinkMacSystemFont,sans-serif;
+  --font-mono:'JetBrains Mono','Fira Code',monospace;
+  --space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:24px;--space-6:32px;--space-7:48px;
+  --radius-sm:4px;--radius-md:6px;--radius-lg:8px;--radius-pill:100px;
+  --max-width:1200px;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--color-bg);color:var(--color-text);font-family:var(--font-sans);font-size:16px;line-height:1.65;font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4,p,ul,ol,figure{margin:0}
+ul,ol{padding:0;list-style:none}
+h1{font-family:var(--font-serif);font-size:clamp(1.75rem,1.2rem + 1.8vw,2.5rem);font-weight:500;line-height:1.15;color:var(--color-accent);overflow-wrap:anywhere;text-wrap:balance}
+h2{font-family:var(--font-serif);font-size:1.75rem;font-weight:500;line-height:1.25}
+h3{font-family:var(--font-sans);font-size:1.0625rem;font-weight:600;letter-spacing:.01em}
+a{color:var(--color-accent);text-decoration:none}
+a:hover{color:var(--color-text)}
+:focus-visible{outline:2px solid var(--color-accent);outline-offset:2px}
+::selection{background:var(--color-marigold);color:var(--color-text)}
+::placeholder{color:var(--color-text-3);opacity:1}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+img{display:block;max-width:100%}
+input:not([type=checkbox]):not([type=radio]),textarea,select{background:var(--color-surface);border:1px solid var(--color-input-border);border-radius:var(--radius-md);color:var(--color-text);font-family:var(--font-sans);font-size:.9375rem;line-height:1.4;padding:9px 12px;width:100%}
+textarea{field-sizing:content;resize:vertical}
+textarea[rows="1"]{resize:none}
+code,.mono-id{font-family:var(--font-mono);font-size:.9375em}
+.sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;border:0!important;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+@media (max-width:699px){input:not([type=checkbox]):not([type=radio]),textarea,select{font-size:1rem;line-height:1.5}}
+
+/* Buttons (app.css) */
+.btn-primary,.btn-ghost{font-family:var(--font-sans);font-weight:600;font-size:.9375rem;line-height:1.65;border-radius:var(--radius-md);padding:11px 16px;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:background .15s ease;text-align:center;white-space:nowrap}
+.btn-primary{background:var(--color-marigold);color:var(--color-text);border:1px solid transparent}
+.btn-primary:hover{background:var(--color-marigold-hover);color:var(--color-text)}
+.btn-ghost{background:transparent;color:var(--color-text);border:1px solid var(--color-text)}
+.btn-ghost:hover{background:var(--color-tint);color:var(--color-text)}
+.btn-ghost[aria-pressed=true]{background:var(--color-marigold-tint);border-color:var(--color-marigold)}
+.btn-primary svg,.btn-ghost svg{width:16px;height:16px;flex-shrink:0}
+.pill{border-radius:var(--radius-pill);min-height:44px;padding:8px 18px 8px 16px}
+/* Quiet text control: Ink 2, ink on hover. For tertiary actions. */
+.text-btn{display:inline-flex;align-items:center;gap:6px;font-size:.9375rem;font-weight:600;color:var(--color-text-2);padding:10px 0;margin-block:-10px}
+.text-btn:hover{color:var(--color-text)}
+.text-btn svg{width:16px;height:16px}
+
+.page-inner{max-width:calc(var(--max-width) + 48px);margin:0 auto;padding:0 var(--space-5)}
+@media (max-width:699px){.page-inner{padding:0 18px}}
+.eyebrow-label{font-family:var(--font-sans);font-size:.75rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-3);margin:0;line-height:1.2}
+.form-hint{font-size:.875rem;color:var(--color-text-3);line-height:1.5}
+.field-error{font-size:.875rem;color:var(--color-remove);line-height:1.5}
+.empty-state{padding:2rem 0;text-align:center;color:var(--color-text-3)}
+.arrow-link{display:inline-block;font-weight:600}
+.back-link{font-size:.875rem;color:var(--color-text-3);display:block;width:fit-content;padding:4px 0;margin:-4px 0 8px}
+.tick{position:relative;flex-shrink:0;width:16px;height:16px;border:1px solid var(--color-text-3);border-radius:50%;transform:translateY(2px)}
+label:hover .tick{border-color:var(--color-text-2)}
+label:has(:checked) .tick{background:var(--color-marigold);border-color:var(--color-marigold)}
+label:has(:checked) .tick::after{content:'';position:absolute;left:4.5px;top:1.5px;width:5px;height:9px;border-style:solid;border-width:0 1.5px 1.5px 0;border-color:var(--color-text);transform:rotate(45deg)}
+.clear-ticks{white-space:nowrap;margin-inline-start:auto;font-size:.875rem;color:var(--color-text-3)}
+.clear-ticks:hover{color:var(--color-text)}
+
+/* Navbar (Navbar.svelte): espresso, 56px, small-caps links. MVP nav proposal:
+   Cookbook, Journal, Friends, Discover. */
+.navbar{background:var(--color-navbar-bg);padding:0 var(--space-5)}
+.navbar-row{max-width:var(--max-width);margin:0 auto;height:56px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.nav-left,.nav-right{display:flex;align-items:center;gap:24px;min-width:0}
+.nav-brand{font-family:var(--font-serif);font-size:1.375rem;font-weight:600;color:var(--color-text-cream)}
+.nav-brand span{color:var(--color-marigold)}
+.navbar-link{font-size:1rem;font-weight:600;letter-spacing:.05em;font-variant-caps:all-small-caps;color:var(--color-text-tan);white-space:nowrap}
+.navbar-link:hover,.navbar-link[aria-current=page]{color:var(--color-text-cream)}
+.nav-handle{font-family:var(--font-mono);font-size:.8125rem;color:var(--color-text-tan)}
+.nav-cta{background:var(--color-marigold);color:var(--color-text);font-size:.875rem;font-weight:600;padding:6px 13px;border-radius:var(--radius-md);border:1px solid transparent;white-space:nowrap}
+.nav-cta:hover{background:var(--color-marigold-hover);color:var(--color-text)}
+.nav-icon{color:var(--color-text-tan);display:inline-flex;width:44px;height:44px;align-items:center;justify-content:center;margin:-10px}
+.nav-icon svg{width:20px;height:20px}
+.nav-icon:hover{color:var(--color-text-cream)}
+.nav-links{display:flex;gap:24px}
+@media (max-width:767px){.navbar{padding:0 18px}.navbar-row{height:52px}.nav-links,.nav-handle,.nav-cta{display:none}}
+
+/* Phone tab bar: the four destinations, lifted paper, a rule above. */
+.tabbar{display:none}
+@media (max-width:767px){
+  .tabbar{display:grid;grid-template-columns:repeat(4,1fr);position:sticky;bottom:0;z-index:5;background:var(--color-surface);border-top:1px solid var(--color-border-2);padding-bottom:env(safe-area-inset-bottom)}
+  .tabbar a{display:flex;flex-direction:column;align-items:center;gap:2px;min-height:56px;padding:8px 0 6px;font-size:.75rem;font-weight:600;color:var(--color-text-2);border-top:2px solid transparent;margin-top:-1px}
+  .tabbar a svg{width:22px;height:22px}
+  .tabbar a[aria-current=page]{color:var(--color-text);border-top-color:var(--color-accent)}
+}
+.icon{width:16px;height:16px;flex-shrink:0}
+
+/* Avatar: clay tint circle, Bitter initial in clay (DESIGN.md, profile). */
+.avatar{width:40px;height:40px;border-radius:50%;background:var(--color-tint);color:var(--color-accent);font-family:var(--font-serif);font-weight:500;font-size:1.125rem;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid transparent}
+.avatar--sm{width:28px;height:28px;font-size:.875rem}
+.handle{font-family:var(--font-mono);font-size:.9375em;color:var(--color-accent)}
+.chip{font-family:var(--font-mono);font-size:.75rem;font-weight:600;background:var(--color-marigold);color:var(--color-text);border-radius:var(--radius-sm);padding:0 6px;outline:1px solid transparent;outline-offset:-1px}
+.vid{font-family:var(--font-mono);font-size:.9375em;color:var(--color-accent)}
+
+/* Mockup chrome: the state label between boards. Not product UI. */
+.mk-board{position:relative}
+.mk-label{background:#fff;border-block:1px dashed #b9b1a4;padding:10px var(--space-5);font:500 .8125rem/1.45 var(--font-sans);color:#5b554e}
+.mk-label strong{color:var(--color-text);font-weight:600}
+.mk-label .mk-why{display:block;color:#6f6960}
+.mk-head{max-width:calc(var(--max-width) + 48px);margin:0 auto;padding:28px var(--space-5) 20px}
+.mk-head h1{color:var(--color-text);font-size:1.75rem}
+.mk-head p{color:var(--color-text-2);max-width:72ch;margin-top:6px}
+.mk-head nav{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:10px;font-size:.9375rem}
+@media (max-width:699px){.mk-label{padding:10px 18px}.mk-head{padding:20px 18px 16px}}
+
+/* Editor (app.css .editor, .form-grid, .field...; PhotoField; TagInput) */
+.editor{max-width:var(--max-width);margin:0 auto;padding:24px 0 48px}
+.editor-header{display:flex;flex-direction:column;gap:6px;margin-bottom:18px}
+.editing{font-size:.875rem;color:var(--color-text-3)}
+.editing .dirty{color:var(--color-text);font-weight:600}
+.editing .bad{color:var(--color-remove);font-weight:600}
+.form{display:flex;flex-direction:column;gap:24px}
+.form-grid{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:40px}
+.form-col{display:flex;flex-direction:column;gap:16px}
+.field{display:flex;flex-direction:column;gap:8px}
+.field>label,.field-legend{font-size:.75rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-3);line-height:1.2;padding:0}
+.field .optional{font-weight:400;letter-spacing:0;text-transform:none}
+.required{color:var(--color-remove)}
+.field-row{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.field-row .field-error{grid-column:1/-1}
+fieldset{border:0;padding:0;margin:0;min-width:0}
+.invalid{border-color:var(--color-remove)!important}
+.photo-row{display:flex;gap:16px;align-items:flex-end}
+.photo-row img{width:168px;aspect-ratio:4/3;object-fit:cover;border-radius:var(--radius-md)}
+.photo-actions{display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+.photo-actions .btn-ghost{padding:8px 14px}
+.tag-box{display:flex;flex-wrap:wrap;gap:6px;align-items:center;background:var(--color-surface);border:1px solid var(--color-input-border);border-radius:var(--radius-md);padding:6px 8px}
+.tag-box input{border:0!important;padding:3px 4px!important;flex:1;min-width:140px;background:transparent!important}
+.tag-pill{display:inline-flex;align-items:center;gap:4px;font-size:.875rem;color:var(--color-tag);border:1px solid var(--color-tag-border);border-radius:var(--radius-pill);padding:1px 4px 1px 10px}
+.tag-pill button{width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;color:var(--color-text-3)}
+.tag-pill svg{width:12px;height:12px}
+/* Visibility: two choices as labelled rows; the selected one is outlined in ink. */
+.vis{display:flex;flex-direction:column;gap:8px}
+.vis-opt{position:relative;display:grid;grid-template-columns:20px 1fr;gap:2px 10px;align-items:start;padding:10px 12px;border:1px solid var(--color-input-border);border-radius:var(--radius-md);background:var(--color-surface);cursor:pointer}
+.vis-opt input{margin:4px 0 0;width:16px;height:16px;accent-color:var(--color-accent)}
+.vis-opt b{font-weight:600;display:flex;align-items:center;gap:6px}
+.vis-opt span{grid-column:2;font-size:.875rem;color:var(--color-text-2);line-height:1.45}
+.vis-opt:has(:checked){border-color:var(--color-text);box-shadow:inset 0 0 0 1px var(--color-text)}
+.textarea-tall{min-height:calc(11lh + 20px)}
+/* Read-back: how the box will be read, in the hint voice. Group names ink. */
+.readback{display:flex;flex-wrap:wrap;gap:2px 0;font-size:.875rem;color:var(--color-text-3);line-height:1.5}
+.readback b{color:var(--color-text);font-weight:600}
+.readback .grp+.grp::before{content:'·';padding:0 .5em;color:var(--color-text-3)}
+.readback .lead{margin-right:.4em}
+.field-message{padding-top:18px;border-top:1px dotted var(--color-input-border)}
+.form-actions{display:flex;align-items:center;gap:14px}
+.form-actions .btn-primary{min-width:112px}
+.form-error{font-size:.9375rem;color:var(--color-remove)}
+@media (max-width:859px){.form-grid{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:699px){
+  .editor{padding:18px 0 0}
+  .form-actions{position:sticky;bottom:0;z-index:4;margin:0 -18px;padding:12px 18px calc(12px + env(safe-area-inset-bottom));background:var(--color-bg);border-top:1px solid var(--color-border)}
+  .form-actions .btn-primary{flex:1}
+  .photo-row img{width:132px}
+}
+
+.list-top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px;padding:24px 0 20px}
+.list-top .sub{color:var(--color-text-2);margin-top:4px}
+.two{display:grid;grid-template-columns:minmax(0,680px) minmax(0,1fr);gap:56px;align-items:start;padding-bottom:48px}
+/* Feed: entries on the paper, divided by a rule; the photo is the largest thing. */
+.cook-entry{padding:20px 0 24px;border-top:1px solid var(--color-border)}
+.cook-entry:first-child{border-top:0;padding-top:4px}
+.who{display:flex;align-items:center;gap:12px}
+.who-line{flex:1;min-width:0;line-height:1.4}
+.who-line .what{font-weight:600}
+.who-line .what a{font-weight:600}
+.who-line .when{display:block;font-size:.875rem;color:var(--color-text-3)}
+.more{position:relative}
+.more>button{width:44px;height:44px;margin:-10px -12px -10px 0;display:inline-flex;align-items:center;justify-content:center;color:var(--color-text-2);border-radius:var(--radius-sm)}
+.more>button:hover{color:var(--color-text);background:var(--color-tint)}
+.menu{position:absolute;right:-8px;top:36px;z-index:6;min-width:220px;background:var(--color-surface);border:1px solid var(--color-border-2);border-radius:var(--radius-lg);box-shadow:var(--shadow-raised);padding:6px}
+.menu a{display:block;padding:10px 12px;border-radius:var(--radius-sm);color:var(--color-text);font-size:.9375rem}
+.menu a:hover{background:var(--color-tint)}
+.menu .danger{color:var(--color-remove)}
+.menu hr{border:0;border-top:1px solid var(--color-border);margin:6px 0}
+.cook-photo{margin-top:14px}
+.cook-photo img{width:100%;aspect-ratio:3/2;object-fit:cover;border-radius:var(--radius-md)}
+.caption{margin-top:12px;font-size:1.0625rem;line-height:1.55}
+.source{margin-top:8px;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px;font-size:.9375rem;color:var(--color-text-2)}
+.source svg{transform:translateY(2px)}
+.entry-actions{margin-top:14px;display:flex;flex-wrap:wrap;align-items:center;gap:8px 22px}
+.entry-actions .count{font-size:.875rem;color:var(--color-text-3);margin-left:-14px}
+.text-btn[aria-pressed=true]{color:var(--color-text)}
+.comments{margin-top:14px;padding-left:16px;border-left:1px solid var(--color-border-2);display:flex;flex-direction:column;gap:8px;font-size:.9375rem;line-height:1.5}
+.comments .handle{font-size:.875rem}
+.comments input{max-width:420px}
+/* Side rail: requests and the invite. */
+.rail{display:flex;flex-direction:column;gap:32px;position:sticky;top:20px}
+.rail-sec{display:flex;flex-direction:column;gap:12px}
+.rail-sec .eyebrow-label{border-bottom:1px solid var(--color-border);padding-bottom:8px}
+.req{display:flex;align-items:center;gap:12px}
+.req .nm{flex:1;min-width:0;line-height:1.35}
+.req .nm small{display:block;color:var(--color-text-3);font-size:.8125rem}
+.req .btns{display:flex;gap:8px}
+.btn-sm{padding:5px 12px;font-size:.875rem}
+.rail p{font-size:.9375rem;color:var(--color-text-2)}
+/* Journal: a dated list, date in the margin. */
+.month{font-size:1.375rem;margin:8px 0 4px}
+.jentry{display:grid;grid-template-columns:56px minmax(0,1fr) 168px;gap:20px;padding:20px 0;border-top:1px solid var(--color-border)}
+.jentry.nophoto{grid-template-columns:56px minmax(0,1fr)}
+.jdate{font-family:var(--font-serif);font-size:1.75rem;line-height:1;color:var(--color-text);text-align:center}
+.jdate small{display:block;font-family:var(--font-sans);font-size:.8125rem;color:var(--color-text-3);margin-top:4px}
+.jdish{font-family:var(--font-serif);font-weight:500;font-size:1.25rem;line-height:1.25}
+.jmeta{margin-top:4px;display:flex;flex-wrap:wrap;gap:2px 16px;font-size:.9375rem;color:var(--color-text-2)}
+.jmeta span{display:inline-flex;align-items:center;gap:6px}
+.jentry .caption{font-size:1rem;margin-top:8px}
+.private{margin-top:10px;background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:10px 12px;font-size:.9375rem;line-height:1.5}
+.private .lab{display:flex;align-items:center;gap:6px;font-size:.8125rem;font-weight:600;color:var(--color-text-2);margin-bottom:2px}
+.private a{font-weight:600}
+.jthumb img{width:168px;aspect-ratio:4/3;object-fit:cover;border-radius:var(--radius-md)}
+.jtools{margin-top:12px;display:flex;gap:20px}
+/* Log a meal */
+.logpage{max-width:680px;padding:8px 0 48px}
+.lf-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px 20px;margin-top:8px}
+.span2{grid-column:1/-1}
+.audience{display:flex;flex-wrap:wrap;gap:8px}
+.aud{position:relative;display:flex;align-items:center;gap:8px;min-height:44px;padding:8px 14px;border:1px solid var(--color-input-border);border-radius:var(--radius-md);background:var(--color-surface);font-weight:600;font-size:.9375rem;cursor:pointer}
+.aud input{position:absolute;opacity:0}
+.aud:has(:checked){border-color:var(--color-text);box-shadow:inset 0 0 0 1px var(--color-text)}
+.aud small{font-weight:400;color:var(--color-text-2);font-size:.8125rem}
+.or{display:flex;gap:10px;align-items:center}
+.or span{font-size:.875rem;color:var(--color-text-3)}
+/* Empty states, side by side at desktop. */
+.empties{display:grid;grid-template-columns:1fr 1fr;gap:48px;padding:32px 0 56px}
+.empty{padding:28px 0;border-top:1px solid var(--color-border)}
+.empty h2{font-size:1.375rem}
+.empty p{margin-top:8px;color:var(--color-text-2);max-width:46ch}
+.empty .row{margin-top:18px;display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+@media (max-width:1023px){.two{grid-template-columns:minmax(0,1fr);gap:24px}.rail{position:static;order:-1}.rail-sec.invite{display:none}}
+@media (max-width:699px){
+  .list-top .btn-primary{width:100%}
+  .jentry,.jentry.nophoto{grid-template-columns:44px minmax(0,1fr);gap:14px}
+  .jthumb{grid-column:2;grid-row:2}
+  .jthumb img{width:100%}
+  .jdate{font-size:1.375rem}
+  .lf-grid{grid-template-columns:1fr}
+  .empties{grid-template-columns:1fr;gap:0}
+  .entry-actions{gap:8px 18px}
+  .btn-sm{min-height:44px}
+}
+</style></head>
+<body>
+<nav class="navbar" aria-label="Main"><div class="navbar-row">
+<div class="nav-left"><a href="index.html" class="nav-brand">Fork<span>.</span></a>
+<ul class="nav-links"><li><a href="#" class="navbar-link">Cookbook</a></li><li><a href="#" class="navbar-link">Journal</a></li><li><a href="#" class="navbar-link" aria-current="page">Friends</a></li><li><a href="#" class="navbar-link">Discover</a></li></ul></div>
+<div class="nav-right"><a href="#" class="nav-icon" aria-label="Search"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path stroke-linecap="round" d="M20 20l-3.5-3.5"/></svg></a><span class="nav-handle">@spencerfletcher</span><a href="#" class="nav-cta">+ New recipe</a></div>
+</div></nav>
+<header class="mk-head">
+  <h1>Journal and Friends</h1>
+  <p>The Journal is your own record: what you cooked, when, from which exact version, and a note for next time that only you see. Friends is the same cooks from people you approved, newest first. Each cook has its own audience, Only me or Friends, chosen before it is posted. Every person in the feed can be muted, reported or blocked from the entry itself.</p>
+  <nav aria-label="States"><a href="#a">A · Friends feed</a><a href="#b">B · Journal</a><a href="#c">C · Log a meal, no recipe</a><a href="#d">D · Empty Journal, no friends</a></nav>
+</header>
+
+<section class="mk-board" id="a" aria-label="State A">
+<p class="mk-label"><strong>A · Friends feed: a linked recipe, an improvised dinner, a cook from a private recipe, an external source with no photo.</strong> <span class="mk-why">Photography leads; counts stay small. A private recipe's cook shows the dish, never a link or preview. A source cook links out and never copies the publisher's text. The ⋯ menu is open on one entry.</span></p>
+<div class="page-inner">
+  <div class="list-top"><div><h1>Friends</h1><p class="sub">Cooks from 12 friends, newest first by when they were logged.</p></div></div>
+  <div class="two">
+    <div class="feed">
+      <article class="cook-entry">
+        <div class="who"><span class="avatar">M</span><p class="who-line"><span class="what"><a href="#" class="handle">@maya.cooks</a> cooked <a href="recipe-overview.html">Chicken Tikka Masala</a></span><span class="when">Cooked Sat 7 Nov</span></p><div class="more"><button type="button" aria-label="More for this cook"><svg class="icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="3.5" cy="8" r=".9" fill="currentColor"/><circle cx="8" cy="8" r=".9" fill="currentColor"/><circle cx="12.5" cy="8" r=".9" fill="currentColor"/></svg></button></div></div>
+        <figure class="cook-photo"><img src="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1100&q=75" alt="Maya's tikka masala in two copper bowls with rice"></figure>
+        <p class="caption">Made it for Dad's birthday. The cold butter at the end is not optional.</p>
+        <p class="source"><svg class="icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 1.5v13"/><circle cx="8" cy="3" r="1.6" fill="var(--color-band)"/><circle cx="8" cy="8" r="1.6" fill="var(--color-band)"/><circle cx="8" cy="13" r="1.6" fill="currentColor"/></svg><span><span class="vid">v3</span> by <a href="#" class="handle">@spencerfletcher</a> · scaled to 6 servings</span></p>
+        <div class="entry-actions">
+          <button class="text-btn" type="button" aria-pressed="true"><svg class="icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 13.5S2.5 10.2 2.5 6.2A2.9 2.9 0 0 1 8 4.8a2.9 2.9 0 0 1 5.5 1.4c0 4-5.5 7.3-5.5 7.3z" fill="var(--color-marigold)"/></svg>Appreciate</button><span class="count">You and 2 others</span>
+          <button class="text-btn" type="button"><svg class="icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 3.5h11v7.5H7l-3 2.5V11H2.5z"/></svg>2 comments</button>
+          <button class="text-btn" type="button"><svg class="icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2.5h8v11l-4-3-4 3z"/></svg>Save recipe</button>
+        </div>
+        <div class="comments">
+          <p><a href="#" class="handle">@jonah.b</a> Did you marinate overnight?</p>
+          <p><a href="#" class="handle">@maya.cooks</a> Four hours. Still great.</p>
+          <input type="text" placeholder="Add a comment…" aria-label="Add a comment">
+        </div>
+      </article>
+      <article class="cook-entry">
+        <div class="who"><span class="avatar">J</span><p class="who-line"><span class="what"><a href="#" class="handle">@jonah.b</a> cooked Leftover rice skillet</span><span class="when">Cooked Fri 6 Nov · improvised, no recipe</span></p><div class="more"><button type="button" aria-label="More for this cook"><svg class="icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="3.5" cy="8" r=".9" fill="currentColor"/><circle cx="8" cy="8" r=".9" fill="currentColor"/><circle cx="12.5" cy="8" r=".9" fill="currentColor"/></svg></button></div></div>
+        <figure class="cook-photo"><img src="https://images.unsplash.com/photo-1512058564366-18510be2db19?w=1100&q=75" alt="Rice skillet with lemon wedges"></figure>
+        <p class="caption">Two-day-old rice, the end of the peas, a lemon. Crisped it hard in the cast iron before anything else went in.</p>
+        <div class="entry-actions"><button class="text-btn" type="button"><svg class="icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 13.5S2.5 10.2 2.5 6.2A2.9 2.9 0 0 1 8 4.8a2.9 2.9 0 0 1 5.5 1.4c0 4-5.5 7.3-5.5 7.3z"/></svg>Appreciate</button><button class="text-btn" type="button"><svg class="icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 3.5h11v7.5H7l-3 2.5V11H2.5z"/></svg>Comment</button></div>
+      </article>
+      <article class="cook-entry">
+        <div class="who"><span class="avatar">P</span><p class="who-line"><span class="what"><a href="#" class="handle">@priya.k</a> cooked Seeded rye sourdough</span><span class="when">Cooked Thu 5 Nov · from her own cookbook</span></p>
+          <div class="more"><button type="button" aria-label="More for this cook" aria-expanded="true"><svg class="icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="3.5" cy="8" r=".9" fill="currentColor"/><circle cx="8" cy="8" r=".9" fill="currentColor"/><circle cx="12.5" cy="8" r=".9" fill="currentColor"/></svg></button>
+            <div class="menu" role="menu"><a href="#" role="menuitem">Mute <span class="mono-id">@priya.k</span></a><a href="#" role="menuitem">Unfriend</a><hr><a href="#" role="menuitem">Report this cook</a><a href="#" role="menuitem" class="danger">Block <span class="mono-id">@priya.k</span></a></div></div></div>
+        <figure class="cook-photo"><img src="https://images.unsplash.com/photo-1509440159596-0249088772ff?w=1100&q=75" alt="Two seeded rye loaves on a floured board"></figure>
+        <p class="caption">Third try at the 100% rye. Finally a crumb that isn't paste.</p>
+        <div class="entry-actions"><button class="text-btn" type="button"><svg class="icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 13.5S2.5 10.2 2.5 6.2A2.9 2.9 0 0 1 8 4.8a2.9 2.9 0 0 1 5.5 1.4c0 4-5.5 7.3-5.5 7.3z"/></svg>Appreciate</button><span class="count">3 people</span><button class="text-btn" type="button"><svg class="icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 3.5h11v7.5H7l-3 2.5V11H2.5z"/></svg>Comment</button></div>
+      </article>
+      <article class="cook-entry">
+        <div class="who"><span class="avatar">D</span><p class="who-line"><span class="what"><a href="#" class="handle">@dan.w</a> cooked Buttermilk pancakes</span><span class="when">Cooked Sun 1 Nov · logged Tue 3 Nov</span></p><div class="more"><button type="button" aria-label="More for this cook"><svg class="icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="3.5" cy="8" r=".9" fill="currentColor"/><circle cx="8" cy="8" r=".9" fill="currentColor"/><circle cx="12.5" cy="8" r=".9" fill="currentColor"/></svg></button></div></div>
+        <p class="caption">Rested the batter 20 minutes like it says. Worth it, they actually rose.</p>
+        <p class="source"><svg class="icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 9a3 3 0 0 0 4.2 0l2-2a3 3 0 0 0-4.2-4.2l-.8.8M9 7a3 3 0 0 0-4.2 0l-2 2a3 3 0 0 0 4.2 4.2l.8-.8"/></svg><span>From <a href="#">seriouseats.com</a></span></p>
+        <div class="entry-actions"><button class="text-btn" type="button"><svg class="icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 13.5S2.5 10.2 2.5 6.2A2.9 2.9 0 0 1 8 4.8a2.9 2.9 0 0 1 5.5 1.4c0 4-5.5 7.3-5.5 7.3z"/></svg>Appreciate</button><button class="text-btn" type="button"><svg class="icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 3.5h11v7.5H7l-3 2.5V11H2.5z"/></svg>Comment</button><button class="text-btn" type="button"><svg class="icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2.5h8v11l-4-3-4 3z"/></svg>Save link</button></div>
+      </article>
+    </div>
+    <aside class="rail">
+      <section class="rail-sec"><h2 class="eyebrow-label">Friend requests</h2>
+        <div class="req"><span class="avatar avatar--sm">S</span><p class="nm"><span class="handle">@sam.ortiz</span><small>Asked Fri 6 Nov</small></p><div class="btns"><button class="btn-primary btn-sm" type="button">Approve</button><button class="btn-ghost btn-sm" type="button">Decline</button></div></div>
+      </section>
+      <section class="rail-sec invite"><h2 class="eyebrow-label">Invite a friend</h2><p>Anyone with your link can ask to be your friend. You approve each one.</p><div><button class="btn-ghost" type="button"><svg class="icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 9a3 3 0 0 0 4.2 0l2-2a3 3 0 0 0-4.2-4.2l-.8.8M9 7a3 3 0 0 0-4.2 0l-2 2a3 3 0 0 0 4.2 4.2l.8-.8"/></svg>Copy invite link</button></div></section>
+    </aside>
+  </div>
+</div>
+</section>
+
+<section class="mk-board" id="b" aria-label="State B">
+<p class="mk-label"><strong>B · Journal: your own cooks by date, with audience on every entry.</strong> <span class="mk-why">Dated like a cook's notebook. The note for next time sits on lifted paper, marked “Only you”, and offers the editor when the note should become a new version: a note and a version are different things, and this is where one turns into the other.</span></p>
+<div class="page-inner">
+  <div class="list-top"><div><h1>Journal</h1><p class="sub">14 cooks since September.</p></div><a href="#c" class="btn-primary"><svg class="icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v10M3 8h10"/></svg>Log a meal</a></div>
+  <div style="max-width:880px;padding-bottom:48px">
+    <h2 class="month">November</h2>
+    <article class="jentry nophoto">
+      <p class="jdate">7<small>Sat</small></p>
+      <div><h3 class="jdish"><a href="recipe-overview.html#b">Weeknight Red Lentil Dal</a></h3>
+        <p class="jmeta"><span><span class="vid">v1</span> · 4 servings</span><span><svg class="icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="5.5" r="2.2"/><path d="M2 13c.4-2.3 2-3.5 4-3.5s3.6 1.2 4 3.5"/><circle cx="11.3" cy="6" r="1.8"/><path d="M11 9.6c1.6.1 2.7 1.2 3 3"/></svg>Friends</span></p>
+        <p class="caption">Doubled the chilli. Tarka was the whole point.</p>
+        <div class="private"><p class="lab"><svg class="icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg>Note for next time · only you</p><p>Garlic went too dark again, pull at 45 seconds. Try a squeeze more lemon. <a href="editor-groups-yield.html">Change the recipe →</a></p></div>
+        <p class="jtools"><button class="text-btn" type="button">Edit</button><button class="text-btn" type="button">Delete</button></p></div>
+    </article>
+    <article class="jentry">
+      <p class="jdate">5<small>Thu</small></p>
+      <div><h3 class="jdish"><a href="#">Thick and Chewy Chocolate Chip Cookies</a></h3>
+        <p class="jmeta"><span><span class="vid">v3</span> · 36 servings</span><span><svg class="icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="5.5" r="2.2"/><path d="M2 13c.4-2.3 2-3.5 4-3.5s3.6 1.2 4 3.5"/><circle cx="11.3" cy="6" r="1.8"/><path d="M11 9.6c1.6.1 2.7 1.2 3 3"/></svg>Friends</span></p>
+        <p class="caption">Chilled overnight instead of 2 hours. Even thicker.</p>
+        <p class="jtools"><button class="text-btn" type="button">Edit</button><button class="text-btn" type="button">Delete</button></p></div>
+      <figure class="jthumb"><img src="https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=500&q=75" alt="Your photo of the cookies"></figure>
+    </article>
+    <article class="jentry nophoto">
+      <p class="jdate">3<small>Tue</small></p>
+      <div><h3 class="jdish">Leftover rice skillet</h3>
+        <p class="jmeta"><span>Improvised</span><span><svg class="icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg>Only me</span></p>
+        <p class="jtools"><button class="text-btn" type="button">Edit</button><button class="text-btn" type="button">Delete</button></p></div>
+    </article>
+    <h2 class="month" style="margin-top:20px">October</h2>
+    <article class="jentry">
+      <p class="jdate">24<small>Sat</small></p>
+      <div><h3 class="jdish"><a href="recipe-overview.html">Chicken Tikka Masala</a></h3>
+        <p class="jmeta"><span><span class="vid">v3</span> · 4 servings</span><span><svg class="icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="5.5" r="2.2"/><path d="M2 13c.4-2.3 2-3.5 4-3.5s3.6 1.2 4 3.5"/><circle cx="11.3" cy="6" r="1.8"/><path d="M11 9.6c1.6.1 2.7 1.2 3 3"/></svg>Friends</span></p>
+        <p class="caption">First time with the paprika in the marinade.</p>
+        <div class="private"><p class="lab"><svg class="icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg>Note for next time · only you</p><p>Sauce needed 5 more minutes to thicken at this pan size.</p></div>
+        <p class="jtools"><button class="text-btn" type="button">Edit</button><button class="text-btn" type="button">Delete</button></p></div>
+      <figure class="jthumb"><img src="https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=500&q=75" alt="Your photo of the tikka masala"></figure>
+    </article>
+  </div>
+</div>
+</section>
+
+<section class="mk-board" id="c" aria-label="State C">
+<p class="mk-label"><strong>C · Log a meal from the Journal: nothing linked yet.</strong> <span class="mk-why">Dish and date are the only required fields. A recipe from your cookbook or a link to a source is optional; an improvised dinner is a complete entry. Opened from Cook, the same form arrives with the recipe, version and servings filled (see cook-view.html).</span></p>
+<div class="page-inner"><div class="logpage">
+  <a class="back-link" href="#b">← Journal</a>
+  <h1>Log a meal</h1>
+  <form class="form" style="margin-top:20px" onsubmit="return false">
+    <div class="lf-grid">
+      <div class="field span2"><label for="dish">Dish <span class="required" aria-hidden="true">*</span></label><input id="dish" type="text" value="Leftover rice skillet"></div>
+      <div class="field"><label for="on">Cooked on <span class="required" aria-hidden="true">*</span></label><input id="on" type="date" value="2026-11-03"></div>
+      <div class="field"><span class="field-legend">Photo <span class="optional">optional</span></span><div><label class="btn-ghost" style="padding:8px 14px"><svg class="icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5h3l1.2-1.8h3.6L11 5h3v8H2z"/><circle cx="8" cy="9" r="2.3"/></svg>Add your photo<input type="file" class="sr-only"></label></div></div>
+      <div class="field span2"><label for="rec">From <span class="optional">optional</span></label>
+        <div class="or"><input id="rec" type="text" placeholder="Search your cookbook, or paste a link"></div>
+        <p class="form-hint">Leave it empty for something you made up.</p></div>
+      <div class="field span2"><label for="cap">Caption <span class="optional">your audience sees this</span></label><input id="cap" type="text"></div>
+      <div class="field span2"><label for="note">Note for next time <span class="optional">only you see this</span></label><textarea id="note" rows="2"></textarea></div>
+      <fieldset class="field span2"><legend class="field-legend" style="margin-bottom:8px">Who sees this cook</legend>
+        <div class="audience"><label class="aud"><input type="radio" name="ac" checked><svg class="icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg>Only me</label><label class="aud"><input type="radio" name="ac"><svg class="icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="5.5" r="2.2"/><path d="M2 13c.4-2.3 2-3.5 4-3.5s3.6 1.2 4 3.5"/><circle cx="11.3" cy="6" r="1.8"/><path d="M11 9.6c1.6.1 2.7 1.2 3 3"/></svg>Friends <small>12 approved</small></label></div></fieldset>
+    </div>
+    <div class="form-actions"><button class="btn-primary" type="submit">Log it</button><a class="btn-ghost" href="#b">Cancel</a></div>
+  </form>
+</div></div>
+</section>
+
+<section class="mk-board" id="d" aria-label="State D">
+<p class="mk-label"><strong>D · Empty states: a Journal with nothing logged, a Friends page with no friends.</strong> <span class="mk-why">Each says what the page will hold and offers the one action that fills it. No illustration, no sample cooks.</span></p>
+<div class="page-inner"><div class="empties">
+  <section class="empty"><h2>Your Journal is empty</h2><p>Log what you cook, when you cooked it and what to change next time. Finish a recipe in Cook and log it from the last step, or log any meal now.</p><div class="row"><a href="#c" class="btn-primary"><svg class="icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v10M3 8h10"/></svg>Log a meal</a></div></section>
+  <section class="empty"><h2>No friends yet</h2><p>Friends see the cooks you share with them and you see theirs, newest first. Anyone with your link can ask; you approve each one.</p><div class="row"><button class="btn-ghost" type="button"><svg class="icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 9a3 3 0 0 0 4.2 0l2-2a3 3 0 0 0-4.2-4.2l-.8.8M9 7a3 3 0 0 0-4.2 0l-2 2a3 3 0 0 0 4.2 4.2l.8-.8"/></svg>Copy invite link</button></div></section>
+</div></div>
+</section>
+<nav class="tabbar" aria-label="Main"><a href="#"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M5 4.5h11a2 2 0 0 1 2 2v13H7a2 2 0 0 1-2-2z"/><path d="M5 17.5a2 2 0 0 1 2-2h11M9 8.5h5"/></svg>Cookbook</a><a href="#"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="5" width="15" height="15" rx="2"/><path d="M4.5 9.5h15M8.5 3v4M15.5 3v4M8.5 13.5h3"/></svg>Journal</a><a href="#" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="9" cy="8.5" r="3.2"/><path d="M3 19.5c.6-3.4 3-5.2 6-5.2s5.4 1.8 6 5.2"/><circle cx="17" cy="9" r="2.6"/><path d="M16.6 14.3c2.4.2 4 1.8 4.4 4.4"/></svg>Friends</a><a href="#"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></svg>Discover</a></nav>
+</body></html>

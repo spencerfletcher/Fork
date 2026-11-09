@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recipe overview</title>
+<style>/* Fork MVP mockups: shared base. Tokens and component classes copied from
+   src/app.css (names kept so markup can be lifted). Classes prefixed mk- are
+   mockup chrome (board labels, notes) and do not ship. */
+@font-face{font-family:'Bitter';font-weight:500;font-display:swap;src:url('../../../static/fonts/bitter-latin-500-normal.woff2') format('woff2')}
+@font-face{font-family:'Bitter';font-weight:600;font-display:swap;src:url('../../../static/fonts/bitter-latin-600-normal.woff2') format('woff2')}
+@font-face{font-family:'Source Sans 3';font-weight:400;font-display:swap;src:url('../../../static/fonts/source-sans-3-latin-400-normal.woff2') format('woff2')}
+@font-face{font-family:'Source Sans 3';font-weight:400;font-style:italic;font-display:swap;src:url('../../../static/fonts/source-sans-3-latin-400-italic.woff2') format('woff2')}
+@font-face{font-family:'Source Sans 3';font-weight:500;font-display:swap;src:url('../../../static/fonts/source-sans-3-latin-500-normal.woff2') format('woff2')}
+@font-face{font-family:'Source Sans 3';font-weight:600;font-display:swap;src:url('../../../static/fonts/source-sans-3-latin-600-normal.woff2') format('woff2')}
+@font-face{font-family:'JetBrains Mono';font-weight:400;font-display:swap;src:url('../../../static/fonts/jetbrains-mono-latin-400-normal.woff2') format('woff2')}
+@font-face{font-family:'JetBrains Mono';font-weight:600;font-display:swap;src:url('../../../static/fonts/jetbrains-mono-latin-600-normal.woff2') format('woff2')}
+
+:root{
+  --color-bg:#f7f3ec; --color-surface:#fffdf9; --color-surface-2:#f7f3ec;
+  --color-navbar-bg:#1a1408; --color-tint:#f5e9e0; --color-band:#efe8db;
+  --color-text:#1a1714; --color-text-2:#4a443e; --color-text-3:#6f6960;
+  --color-text-cream:#f7f3ec; --color-text-tan:#b8a880;
+  --color-accent:#b23c00; --color-marigold:#eca620; --color-marigold-hover:#dc980a;
+  --color-marigold-tint:#fbefd0; --color-marigold-tint-hover:#f7e4b6;
+  --color-tag:#4a443e; --color-tag-border:#d9d3c8;
+  --color-border:#e4ded4; --color-border-2:#d9d3c8; --color-input-border:#d9d3c8;
+  --color-remove:#a3362b;
+  --shadow-raised:0 4px 16px rgba(26,23,20,.12);
+  --font-serif:'Bitter',Georgia,serif;
+  --font-sans:'Source Sans 3',-apple-system,BlinkMacSystemFont,sans-serif;
+  --font-mono:'JetBrains Mono','Fira Code',monospace;
+  --space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:24px;--space-6:32px;--space-7:48px;
+  --radius-sm:4px;--radius-md:6px;--radius-lg:8px;--radius-pill:100px;
+  --max-width:1200px;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--color-bg);color:var(--color-text);font-family:var(--font-sans);font-size:16px;line-height:1.65;font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4,p,ul,ol,figure{margin:0}
+ul,ol{padding:0;list-style:none}
+h1{font-family:var(--font-serif);font-size:clamp(1.75rem,1.2rem + 1.8vw,2.5rem);font-weight:500;line-height:1.15;color:var(--color-accent);overflow-wrap:anywhere;text-wrap:balance}
+h2{font-family:var(--font-serif);font-size:1.75rem;font-weight:500;line-height:1.25}
+h3{font-family:var(--font-sans);font-size:1.0625rem;font-weight:600;letter-spacing:.01em}
+a{color:var(--color-accent);text-decoration:none}
+a:hover{color:var(--color-text)}
+:focus-visible{outline:2px solid var(--color-accent);outline-offset:2px}
+::selection{background:var(--color-marigold);color:var(--color-text)}
+::placeholder{color:var(--color-text-3);opacity:1}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+img{display:block;max-width:100%}
+input:not([type=checkbox]):not([type=radio]),textarea,select{background:var(--color-surface);border:1px solid var(--color-input-border);border-radius:var(--radius-md);color:var(--color-text);font-family:var(--font-sans);font-size:.9375rem;line-height:1.4;padding:9px 12px;width:100%}
+textarea{field-sizing:content;resize:vertical}
+textarea[rows="1"]{resize:none}
+code,.mono-id{font-family:var(--font-mono);font-size:.9375em}
+.sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;border:0!important;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+@media (max-width:699px){input:not([type=checkbox]):not([type=radio]),textarea,select{font-size:1rem;line-height:1.5}}
+
+/* Buttons (app.css) */
+.btn-primary,.btn-ghost{font-family:var(--font-sans);font-weight:600;font-size:.9375rem;line-height:1.65;border-radius:var(--radius-md);padding:11px 16px;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:background .15s ease;text-align:center;white-space:nowrap}
+.btn-primary{background:var(--color-marigold);color:var(--color-text);border:1px solid transparent}
+.btn-primary:hover{background:var(--color-marigold-hover);color:var(--color-text)}
+.btn-ghost{background:transparent;color:var(--color-text);border:1px solid var(--color-text)}
+.btn-ghost:hover{background:var(--color-tint);color:var(--color-text)}
+.btn-ghost[aria-pressed=true]{background:var(--color-marigold-tint);border-color:var(--color-marigold)}
+.btn-primary svg,.btn-ghost svg{width:16px;height:16px;flex-shrink:0}
+.pill{border-radius:var(--radius-pill);min-height:44px;padding:8px 18px 8px 16px}
+/* Quiet text control: Ink 2, ink on hover. For tertiary actions. */
+.text-btn{display:inline-flex;align-items:center;gap:6px;font-size:.9375rem;font-weight:600;color:var(--color-text-2);padding:10px 0;margin-block:-10px}
+.text-btn:hover{color:var(--color-text)}
+.text-btn svg{width:16px;height:16px}
+
+.page-inner{max-width:calc(var(--max-width) + 48px);margin:0 auto;padding:0 var(--space-5)}
+@media (max-width:699px){.page-inner{padding:0 18px}}
+.eyebrow-label{font-family:var(--font-sans);font-size:.75rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-3);margin:0;line-height:1.2}
+.form-hint{font-size:.875rem;color:var(--color-text-3);line-height:1.5}
+.field-error{font-size:.875rem;color:var(--color-remove);line-height:1.5}
+.empty-state{padding:2rem 0;text-align:center;color:var(--color-text-3)}
+.arrow-link{display:inline-block;font-weight:600}
+.back-link{font-size:.875rem;color:var(--color-text-3);display:block;width:fit-content;padding:4px 0;margin:-4px 0 8px}
+.tick{position:relative;flex-shrink:0;width:16px;height:16px;border:1px solid var(--color-text-3);border-radius:50%;transform:translateY(2px)}
+label:hover .tick{border-color:var(--color-text-2)}
+label:has(:checked) .tick{background:var(--color-marigold);border-color:var(--color-marigold)}
+label:has(:checked) .tick::after{content:'';position:absolute;left:4.5px;top:1.5px;width:5px;height:9px;border-style:solid;border-width:0 1.5px 1.5px 0;border-color:var(--color-text);transform:rotate(45deg)}
+.clear-ticks{white-space:nowrap;margin-inline-start:auto;font-size:.875rem;color:var(--color-text-3)}
+.clear-ticks:hover{color:var(--color-text)}
+
+/* Navbar (Navbar.svelte): espresso, 56px, small-caps links. MVP nav proposal:
+   Cookbook, Journal, Friends, Discover. */
+.navbar{background:var(--color-navbar-bg);padding:0 var(--space-5)}
+.navbar-row{max-width:var(--max-width);margin:0 auto;height:56px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.nav-left,.nav-right{display:flex;align-items:center;gap:24px;min-width:0}
+.nav-brand{font-family:var(--font-serif);font-size:1.375rem;font-weight:600;color:var(--color-text-cream)}
+.nav-brand span{color:var(--color-marigold)}
+.navbar-link{font-size:1rem;font-weight:600;letter-spacing:.05em;font-variant-caps:all-small-caps;color:var(--color-text-tan);white-space:nowrap}
+.navbar-link:hover,.navbar-link[aria-current=page]{color:var(--color-text-cream)}
+.nav-handle{font-family:var(--font-mono);font-size:.8125rem;color:var(--color-text-tan)}
+.nav-cta{background:var(--color-marigold);color:var(--color-text);font-size:.875rem;font-weight:600;padding:6px 13px;border-radius:var(--radius-md);border:1px solid transparent;white-space:nowrap}
+.nav-cta:hover{background:var(--color-marigold-hover);color:var(--color-text)}
+.nav-icon{color:var(--color-text-tan);display:inline-flex;width:44px;height:44px;align-items:center;justify-content:center;margin:-10px}
+.nav-icon svg{width:20px;height:20px}
+.nav-icon:hover{color:var(--color-text-cream)}
+.nav-links{display:flex;gap:24px}
+@media (max-width:767px){.navbar{padding:0 18px}.navbar-row{height:52px}.nav-links,.nav-handle,.nav-cta{display:none}}
+
+/* Phone tab bar: the four destinations, lifted paper, a rule above. */
+.tabbar{display:none}
+@media (max-width:767px){
+  .tabbar{display:grid;grid-template-columns:repeat(4,1fr);position:sticky;bottom:0;z-index:5;background:var(--color-surface);border-top:1px solid var(--color-border-2);padding-bottom:env(safe-area-inset-bottom)}
+  .tabbar a{display:flex;flex-direction:column;align-items:center;gap:2px;min-height:56px;padding:8px 0 6px;font-size:.75rem;font-weight:600;color:var(--color-text-2);border-top:2px solid transparent;margin-top:-1px}
+  .tabbar a svg{width:22px;height:22px}
+  .tabbar a[aria-current=page]{color:var(--color-text);border-top-color:var(--color-accent)}
+}
+.icon{width:16px;height:16px;flex-shrink:0}
+
+/* Avatar: clay tint circle, Bitter initial in clay (DESIGN.md, profile). */
+.avatar{width:40px;height:40px;border-radius:50%;background:var(--color-tint);color:var(--color-accent);font-family:var(--font-serif);font-weight:500;font-size:1.125rem;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid transparent}
+.avatar--sm{width:28px;height:28px;font-size:.875rem}
+.handle{font-family:var(--font-mono);font-size:.9375em;color:var(--color-accent)}
+.chip{font-family:var(--font-mono);font-size:.75rem;font-weight:600;background:var(--color-marigold);color:var(--color-text);border-radius:var(--radius-sm);padding:0 6px;outline:1px solid transparent;outline-offset:-1px}
+.vid{font-family:var(--font-mono);font-size:.9375em;color:var(--color-accent)}
+
+/* Mockup chrome: the state label between boards. Not product UI. */
+.mk-board{position:relative}
+.mk-label{background:#fff;border-block:1px dashed #b9b1a4;padding:10px var(--space-5);font:500 .8125rem/1.45 var(--font-sans);color:#5b554e}
+.mk-label strong{color:var(--color-text);font-weight:600}
+.mk-label .mk-why{display:block;color:#6f6960}
+.mk-head{max-width:calc(var(--max-width) + 48px);margin:0 auto;padding:28px var(--space-5) 20px}
+.mk-head h1{color:var(--color-text);font-size:1.75rem}
+.mk-head p{color:var(--color-text-2);max-width:72ch;margin-top:6px}
+.mk-head nav{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:10px;font-size:.9375rem}
+@media (max-width:699px){.mk-label{padding:10px 18px}.mk-head{padding:20px 18px 16px}}
+
+/* Recipe page (+page.svelte, RecipeHeader, RecipeIngredients, RecipeMethod, VersionBar) */
+.hero{background:var(--color-band);padding:24px 0}
+.hero-inner{display:grid;grid-template-columns:minmax(0,1fr) 504px;column-gap:48px;align-items:center}
+.hero--nophoto{padding:40px 0}
+.hero--nophoto .hero-inner{grid-template-columns:minmax(0,760px)}
+.recipe-photo img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:var(--radius-md)}
+.recipe-header{display:flex;flex-direction:column}
+.recipe-header .title{color:var(--color-accent)}
+.byline{margin-top:8px;font-weight:600;line-height:1.5}
+.description{margin-top:8px;font-size:1.0625rem;line-height:1.5;max-width:65ch;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}
+.measure{margin-top:8px;display:flex;flex-wrap:wrap;line-height:1.5;color:var(--color-text-2)}
+.measure b{font-weight:600;color:var(--color-text)}
+.measure .pair{white-space:nowrap}
+.measure .pair+.pair::before{content:'·';color:var(--color-text-3);padding:0 .45em}
+.measure .dyn{color:var(--color-accent)}
+.tags{margin-top:8px;line-height:1.5;color:var(--color-text-2)}
+.tags a{font-weight:600}
+.stats{margin-top:8px;display:flex;flex-wrap:wrap;column-gap:20px;row-gap:4px;line-height:1.5;color:var(--color-text-2)}
+.stat{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.stats a{font-weight:600}
+.actions{margin-top:16px;display:flex;flex-wrap:wrap;gap:10px}
+.personal{margin-top:12px;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px;font-size:.9375rem;color:var(--color-text-2)}
+.personal a{font-weight:600}
+.bar-row{margin-top:24px}
+.vbar{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:12px 16px;display:flex;align-items:baseline;gap:12px;font-size:.9375rem;line-height:22.4px}
+.vbar .note{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vbar .ctrl{white-space:nowrap;color:var(--color-accent);font-weight:600}
+.content-layout{padding-top:26px;padding-bottom:40px;display:grid;grid-template-columns:380px minmax(0,1fr);column-gap:48px;align-items:start}
+.section-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 16px;border-bottom:1px solid var(--color-border);padding-bottom:8px;margin-bottom:4px}
+.serves-ctl{margin-left:auto;display:flex;align-items:baseline;gap:10px;font-size:.9375rem;color:var(--color-text-2)}
+.serves-ctl .num{width:5ch;text-align:center;font-weight:600;color:var(--color-text);border-bottom:1px solid var(--color-text-3);padding:0 2px}
+.serves-ctl .mult{font-size:.75rem;color:var(--color-text-2)}
+.serves-ctl .reset{color:var(--color-accent);font-weight:600}
+/* Groups: a Bitter title-size name over its rows; 20px of air above. */
+.group-name{font-family:var(--font-serif);font-weight:500;font-size:1.0625rem;line-height:1.25;color:var(--color-text);margin:20px 0 2px}
+.group-name:first-child{margin-top:14px}
+.ing{display:flex;align-items:baseline;gap:10px;border-bottom:1px solid var(--color-border);padding:10px 0;line-height:1.5;cursor:pointer;position:relative}
+.ing input,.step input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.ing b{font-weight:600}
+.ing .g{color:var(--color-text-3)}
+.ing.dyn b,.ing.dyn .g{color:var(--color-accent)}
+.ing:has(:checked){text-decoration:line-through;color:var(--color-text-3)}
+.ing:has(:checked) b,.ing:has(:checked) .g{color:var(--color-text-3)}
+.list-foot{display:flex;align-items:baseline;gap:16px;margin-top:8px}
+.method-steps{display:flex;flex-direction:column;gap:18px}
+.step{position:relative;display:grid;grid-template-columns:2ch minmax(0,1fr);gap:16px;align-items:baseline;font-family:var(--font-serif);font-size:1.125rem;cursor:pointer}
+.step .n{color:var(--color-accent);font-weight:500;justify-self:end}
+.step p{font-family:var(--font-sans);font-size:1.0625rem;line-height:1.6;color:var(--color-text)}
+.step .tip{font-size:.9375rem;line-height:1.5;font-style:italic;color:var(--color-text-2);margin-top:6px}
+.step:has(:checked){text-decoration:line-through}
+.step:has(:checked) .n,.step:has(:checked) p{color:var(--color-text-3)}
+.method .group-name{margin:26px 0 12px}
+.method .group-name:first-child{margin-top:0}
+.section-tabs{display:none}
+@media (max-width:1023px){
+  .hero-inner{grid-template-columns:minmax(0,1fr)}
+  .hero--nophoto{padding:24px 0}
+  .recipe-photo{margin-top:24px}
+  .recipe-photo img{max-height:300px}
+  .section-tabs{display:grid;grid-template-columns:1fr 1fr;position:sticky;top:0;z-index:2;margin:16px 24px 0;background:var(--color-bg);border-bottom:1px solid var(--color-border-2)}
+  .section-tabs button{min-height:44px;padding:14px 0 12px;margin-bottom:-1px;border-bottom:2px solid transparent;font-size:.8125rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-3)}
+  .section-tabs button[aria-pressed=true]{color:var(--color-text);border-bottom-color:var(--color-accent)}
+  .content-layout{grid-template-columns:minmax(0,1fr)}
+  .content-layout[data-tab=ingredients] .method,.content-layout[data-tab=method] .ingredients{display:none}
+  .content-layout .section-head .eyebrow-label{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+  .content-layout .method>.eyebrow-label{display:none}
+}
+@media (max-width:699px){
+  .hero:not(.hero--nophoto){padding-bottom:18px}
+  .bar-row{margin-top:18px}
+  .vbar{flex-wrap:wrap}
+  .vbar .note{flex-basis:calc(100% - 40px);white-space:normal;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}
+  .vbar .ctrls{flex-basis:100%}
+  .section-tabs{margin:16px 0 0}
+  .content-layout{padding-top:18px;padding-bottom:32px}
+  .actions{display:grid;grid-template-columns:1fr 1fr}
+  .actions .pill{width:100%}
+  .actions .span{grid-column:1/-1}
+  .measure .pair+.pair::before{content:none}
+  .measure{column-gap:10px}
+}
+@media (min-width:1024px){.method>.section-head{padding-top:12px}}
+
+</style></head>
+<body>
+<nav class="navbar" aria-label="Main"><div class="navbar-row">
+<div class="nav-left"><a href="index.html" class="nav-brand">Fork<span>.</span></a>
+<ul class="nav-links"><li><a href="#" class="navbar-link">Cookbook</a></li><li><a href="#" class="navbar-link">Journal</a></li><li><a href="#" class="navbar-link">Friends</a></li><li><a href="#" class="navbar-link" aria-current="page">Discover</a></li></ul></div>
+<div class="nav-right"><a href="#" class="nav-icon" aria-label="Search"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path stroke-linecap="round" d="M20 20l-3.5-3.5"/></svg></a><span class="nav-handle">@spencerfletcher</span><a href="#" class="nav-cta">+ New recipe</a></div>
+</div></nav>
+<header class="mk-head">
+  <h1>Recipe overview</h1>
+  <p>Three states of one page. What changes: Cook leads the actions, practical facts (time, servings, yield) sit above the counts, ingredient and method groups get named headings, and the reader's own cooking record appears as one quiet line.</p>
+  <nav aria-label="States"><a href="#a">A · Visitor, photo, grouped</a><a href="#b">B · Owner, no photo, scaled, yield</a><a href="#c">C · Logged out, minimal recipe</a></nav>
+</header>
+
+<section class="mk-board" id="a" aria-label="State A">
+<p class="mk-label"><strong>A · Visitor, latest of three versions, with photo.</strong> <span class="mk-why">Cook is the marigold primary (critique 8 Nov: Fork outweighed Cook). Save and Make my version replace Favorite and Fork in the roadmap's verbs. Measure moved above the counts. Groups: Marinade, Sauce, To serve.</span></p>
+<article>
+  <div class="hero"><div class="hero-inner page-inner">
+    <div class="recipe-header">
+      <h1 class="title">Chicken Tikka Masala</h1>
+      <p class="byline">By <a href="#" class="handle">@spencerfletcher</a></p>
+      <p class="description">Rich, aromatic, and deeply satisfying — a restaurant-quality tikka masala built from a yogurt-marinated chicken and a slow-simmered tomato cream sauce.</p>
+      <p class="measure"><span class="pair"><b>20 min</b> prep</span><span class="pair"><b>40 min</b> cook</span><span class="pair">Serves <b>4</b></span></p>
+      <p class="tags"><a href="#">Dinner</a>, <a href="#">Indian</a>, <a href="#">Spicy</a></p>
+      <p class="stats"><span class="stat"><svg class="icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 3.5v2a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-2M8 7.5v5"/><circle cx="4" cy="2.5" r="1.3" fill="currentColor"/><circle cx="12" cy="2.5" r="1.3" fill="currentColor"/><circle cx="8" cy="13.5" r="1.3" fill="currentColor"/></svg><a href="#">2 adaptations</a></span><span class="stat"><svg class="icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2.5h8v11l-4-3-4 3z"/></svg>9 saves</span><span class="stat"><svg class="icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 1.5v13"/><circle cx="8" cy="3" r="1.6" fill="var(--color-band)"/><circle cx="8" cy="8" r="1.6" fill="var(--color-band)"/><circle cx="8" cy="13" r="1.6" fill="currentColor"/></svg><a href="#versions">3 versions</a></span></p>
+      <div class="actions">
+        <button class="btn-primary pill span" type="button"><svg class="icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7.5h12M3.5 7.5v4a2 2 0 0 0 2 2h5a2 2 0 0 0 2-2v-4M6 5c0-1 1-1.2 1-2.5M9.5 5c0-1 1-1.2 1-2.5"/></svg>Cook</button>
+        <button class="btn-ghost pill" type="button" aria-pressed="true"><svg class="icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2.5h8v11l-4-3-4 3z" fill="var(--color-marigold)"/></svg>Saved</button>
+        <button class="btn-ghost pill" type="button"><svg class="icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 3.5v2a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-2M8 7.5v5"/><circle cx="4" cy="2.5" r="1.3" fill="currentColor"/><circle cx="12" cy="2.5" r="1.3" fill="currentColor"/><circle cx="8" cy="13.5" r="1.3" fill="currentColor"/></svg>Make my version</button>
+      </div>
+      <p class="personal"><span>You cooked this on Sat 24 Oct</span><a href="#">Log a cook</a></p>
+    </div>
+    <figure class="recipe-photo"><img src="https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=1000&q=80" alt=""></figure>
+  </div></div>
+
+  <div class="bar-row page-inner" id="versions"><div class="vbar"><span class="chip">v3</span><span class="note">Worked the smoked paprika into the marinade, finished the sauce with cold butter</span><span class="ctrls"><a class="ctrl" href="#">3 versions ▾</a></span></div></div>
+
+  <nav class="section-tabs" aria-label="Recipe sections"><button type="button" aria-pressed="true" data-t="ingredients">Ingredients</button><button type="button" aria-pressed="false" data-t="method">Method</button></nav>
+  <div class="content-layout page-inner" data-tab="ingredients">
+    <aside class="ingredients">
+      <div class="section-head"><h2 class="eyebrow-label">Ingredients</h2><span class="serves-ctl"><span class="num">4</span>servings</span></div>
+      <h3 class="group-name">Marinade</h3>
+      <label class="ing"><input type="checkbox"><span class="tick"></span><span><b>2 lbs</b> <span class="g">(907g)</span> boneless chicken thighs, cut into chunks</span></label>
+      <label class="ing"><input type="checkbox" checked><span class="tick"></span><span><b>1 cup</b> <span class="g">(245g)</span> plain yogurt</span></label>
+      <label class="ing"><input type="checkbox"><span class="tick"></span><span><b>2 tbsp</b> <span class="g">(30g)</span> lemon juice</span></label>
+      <label class="ing"><input type="checkbox"><span class="tick"></span><span><b>3 tsp</b> <span class="g">(6g)</span> garam masala</span></label>
+      <label class="ing"><input type="checkbox"><span class="tick"></span><span><b>1 tsp</b> <span class="g">(2g)</span> smoked paprika</span></label>
+      <label class="ing"><input type="checkbox"><span class="tick"></span><span><b>½ tsp</b> <span class="g">(1g)</span> ground cumin</span></label>
+      <h3 class="group-name">Sauce</h3>
+      <label class="ing"><input type="checkbox"><span class="tick"></span><span><b>3 tbsp</b> <span class="g">(43g)</span> butter, plus 1 tbsp cold</span></label>
+      <label class="ing"><input type="checkbox"><span class="tick"></span><span><b>1 large onion</b> <span class="g">(≈150g)</span>, diced</span></label>
+      <label class="ing"><input type="checkbox"><span class="tick"></span><span><b>4 cloves garlic</b> <span class="g">(≈12g)</span>, minced</span></label>
+      <label class="ing"><input type="checkbox"><span class="tick"></span><span><b>1 tbsp</b> <span class="g">(6g)</span> fresh ginger, grated</span></label>
+      <label class="ing"><input type="checkbox"><span class="tick"></span><span><b>28 oz</b> <span class="g">(794g)</span> canned crushed tomatoes</span></label>
+      <label class="ing"><input type="checkbox"><span class="tick"></span><span><b>1 cup</b> <span class="g">(238g)</span> heavy cream</span></label>
+      <h3 class="group-name">To serve</h3>
+      <label class="ing"><input type="checkbox"><span class="tick"></span><span>Basmati rice and warm naan</span></label>
+      <label class="ing"><input type="checkbox"><span class="tick"></span><span>Fresh cilantro</span></label>
+      <div class="list-foot"><p class="form-hint">≈ whole-item weights are estimates.</p><button class="clear-ticks" type="button">Clear ticks</button></div>
+    </aside>
+    <div class="method">
+      <h2 class="eyebrow-label section-head">Method</h2>
+      <h3 class="group-name">Marinate</h3>
+      <ol class="method-steps">
+        <li><label class="step"><input type="checkbox"><span class="n">1</span><div><p>Combine chicken with yogurt, lemon juice, garam masala, cumin and smoked paprika. Marinate at least 1 hour or overnight in the fridge.</p></div></label></li>
+        <li><label class="step"><input type="checkbox"><span class="n">2</span><div><p>Grill or broil the marinated chicken until cooked through and lightly charred, about 8–10 minutes. Set aside.</p></div></label></li>
+      </ol>
+      <h3 class="group-name">Sauce</h3>
+      <ol class="method-steps" start="3">
+        <li><label class="step"><input type="checkbox"><span class="n">3</span><div><p>Melt butter in a large skillet over medium heat. Sauté onion until softened, about 5 minutes. Add garlic and ginger, cook 1 minute more.</p></div></label></li>
+        <li><label class="step"><input type="checkbox"><span class="n">4</span><div><p>Add crushed tomatoes and remaining spices. Simmer 15 minutes, stirring occasionally, until the sauce thickens.</p></div></label></li>
+        <li><label class="step"><input type="checkbox"><span class="n">5</span><div><p>Add the chicken to the sauce. Pour in cream and stir to combine. Simmer 10 minutes, then stir in the tablespoon of cold butter for richness and gloss.</p><p class="tip">Take it off the heat before the cold butter goes in, or it splits.</p></div></label></li>
+      </ol>
+      <h3 class="group-name">To serve</h3>
+      <ol class="method-steps" start="6">
+        <li><label class="step"><input type="checkbox"><span class="n">6</span><div><p>Serve over basmati rice with warm naan. Garnish with fresh cilantro.</p></div></label></li>
+      </ol>
+    </div>
+  </div>
+</article>
+</section>
+
+<section class="mk-board" id="b" aria-label="State B">
+<p class="mk-label"><strong>B · Owner, no photo, one version, scaled from 4 to 6 servings.</strong> <span class="mk-why">No photo: words only in a 760px column, no tint panel (DESIGN.md). Yield sits in the measure as “Makes”, and scales with servings, clay by the Dynamic Is Clay rule. One version: no bar. Owner's primary stays Cook; Edit is the ghost.</span></p>
+<article>
+  <div class="hero hero--nophoto"><div class="hero-inner page-inner">
+    <div class="recipe-header">
+      <h1 class="title">Weeknight Red Lentil Dal</h1>
+      <p class="byline">By <a href="#" class="handle">@spencerfletcher</a> · <span style="font-weight:400;color:var(--color-text-2)"><svg class="icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg> Only you can see this</span></p>
+      <p class="description">Soft, spoonable dal in half an hour, finished with a sizzle of cumin, garlic and chilli in butter.</p>
+      <p class="measure"><span class="pair"><b>10 min</b> prep</span><span class="pair"><b>25 min</b> cook</span><span class="pair">Serves <b class="dyn">6</b></span><span class="pair">Makes <b class="dyn">about 1.8 L</b></span></p>
+      <p class="tags"><a href="#">Dinner</a>, <a href="#">Indian</a></p>
+      <p class="stats"><span class="stat"><svg class="icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 3.5v2a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-2M8 7.5v5"/><circle cx="4" cy="2.5" r="1.3" fill="currentColor"/><circle cx="12" cy="2.5" r="1.3" fill="currentColor"/><circle cx="8" cy="13.5" r="1.3" fill="currentColor"/></svg>No adaptations</span><span class="stat"><svg class="icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 1.5v13"/><circle cx="8" cy="3" r="1.6" fill="var(--color-band)"/><circle cx="8" cy="8" r="1.6" fill="var(--color-band)"/><circle cx="8" cy="13" r="1.6" fill="currentColor"/></svg>1 version</span></p>
+      <div class="actions">
+        <button class="btn-primary pill span" type="button"><svg class="icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7.5h12M3.5 7.5v4a2 2 0 0 0 2 2h5a2 2 0 0 0 2-2v-4M6 5c0-1 1-1.2 1-2.5M9.5 5c0-1 1-1.2 1-2.5"/></svg>Cook</button>
+        <a class="btn-ghost pill span" href="editor-groups-yield.html"><svg class="icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 2.5l2 2L5 13H3v-2z"/></svg>Edit recipe</a>
+      </div>
+      <p class="personal"><span>Cooked 3 times · last Tue 3 Nov</span><a href="#">Log a cook</a></p>
+    </div>
+  </div></div>
+  <nav class="section-tabs" aria-label="Recipe sections"><button type="button" aria-pressed="true" data-t="ingredients">Ingredients</button><button type="button" aria-pressed="false" data-t="method">Method</button></nav>
+  <div class="content-layout page-inner" data-tab="ingredients">
+    <aside class="ingredients">
+      <div class="section-head"><h2 class="eyebrow-label">Ingredients</h2><span class="serves-ctl"><span class="mult">1.5x</span><a class="reset" href="#">Reset</a><span class="num">6</span>servings</span></div>
+      <h3 class="group-name">Dal</h3>
+      <label class="ing dyn"><input type="checkbox"><span class="tick"></span><span><b>1½ cups</b> <span class="g">(288g)</span> red lentils</span></label>
+      <label class="ing dyn"><input type="checkbox"><span class="tick"></span><span><b>4½ cups</b> <span class="g">(1065g)</span> water</span></label>
+      <label class="ing dyn"><input type="checkbox"><span class="tick"></span><span><b>1½ tsp</b> <span class="g">(5g)</span> ground turmeric</span></label>
+      <label class="ing dyn"><input type="checkbox"><span class="tick"></span><span><b>1½ tsp</b> <span class="g">(9g)</span> salt</span></label>
+      <h3 class="group-name">Tarka</h3>
+      <label class="ing dyn"><input type="checkbox"><span class="tick"></span><span><b>3 tbsp</b> <span class="g">(43g)</span> butter</span></label>
+      <label class="ing dyn"><input type="checkbox"><span class="tick"></span><span><b>1½ tsp</b> <span class="g">(3g)</span> cumin seeds</span></label>
+      <label class="ing dyn"><input type="checkbox"><span class="tick"></span><span><b>4.5 cloves garlic</b> <span class="g">(≈14g)</span></span></label>
+      <label class="ing dyn"><input type="checkbox"><span class="tick"></span><span><b>1.5 green chilli</b> <span class="g">(≈7g)</span></span></label>
+      <label class="ing dyn"><input type="checkbox"><span class="tick"></span><span><b>1.5 tomato</b> <span class="g">(≈185g)</span></span></label>
+      <label class="ing"><input type="checkbox"><span class="tick"></span><span>a handful of coriander leaves, to finish</span></label>
+      <div class="list-foot"><p class="form-hint">Scaled quantities and whole-item weights are estimates.</p></div>
+    </aside>
+    <div class="method">
+      <h2 class="eyebrow-label section-head">Method</h2>
+      <h3 class="group-name">Dal</h3>
+      <ol class="method-steps"><li><label class="step"><input type="checkbox"><span class="n">1</span><div><p>Rinse the lentils, then put them in a pot with the water, turmeric and salt. Bring to a boil, then simmer uncovered for 20 minutes, skimming any foam, until the lentils collapse. Whisk to smooth it out.</p></div></label></li></ol>
+      <h3 class="group-name">Tarka</h3>
+      <ol class="method-steps" start="2">
+        <li><label class="step"><input type="checkbox"><span class="n">2</span><div><p>Melt the butter in a small pan over medium heat. Add the cumin seeds and let them crackle, then the garlic and chilli, both thinly sliced. Cook until the garlic turns golden, about a minute.</p><p class="tip">Pull the pan the moment the garlic colours; it keeps cooking in the butter.</p></div></label></li>
+        <li><label class="step"><input type="checkbox"><span class="n">3</span><div><p>Dice the tomato, add it to the pan and cook for two minutes until it softens.</p></div></label></li>
+        <li><label class="step"><input type="checkbox"><span class="n">4</span><div><p>Pour the sizzling butter over the dal and stir it through. Squeeze in the lemon juice, taste for salt, and finish with the coriander.</p></div></label></li>
+      </ol>
+    </div>
+  </div>
+</article>
+</section>
+
+<section class="mk-board" id="c" aria-label="State C">
+<p class="mk-label"><strong>C · Logged out, a minimal recipe: no photo, description, tags, times or groups.</strong> <span class="mk-why">Every missing line is omitted, never blank. Logged out, Cook is the only action; nothing invites a login round trip (decided 28 Oct). An ungrouped list draws no group headings.</span></p>
+<article>
+  <div class="hero hero--nophoto"><div class="hero-inner page-inner">
+    <div class="recipe-header">
+      <h1 class="title">Mum's Cucumber Raita</h1>
+      <p class="byline">By <a href="#" class="handle">@maya.cooks</a></p>
+      <p class="measure"><span class="pair">Serves <b>4</b></span></p>
+      <div class="actions"><button class="btn-primary pill span" type="button"><svg class="icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7.5h12M3.5 7.5v4a2 2 0 0 0 2 2h5a2 2 0 0 0 2-2v-4M6 5c0-1 1-1.2 1-2.5M9.5 5c0-1 1-1.2 1-2.5"/></svg>Cook</button></div>
+    </div>
+  </div></div>
+  <nav class="section-tabs" aria-label="Recipe sections"><button type="button" aria-pressed="true" data-t="ingredients">Ingredients</button><button type="button" aria-pressed="false" data-t="method">Method</button></nav>
+  <div class="content-layout page-inner" data-tab="ingredients">
+    <aside class="ingredients">
+      <div class="section-head"><h2 class="eyebrow-label">Ingredients</h2><span class="serves-ctl"><span class="num">4</span>servings</span></div>
+      <label class="ing"><input type="checkbox"><span class="tick"></span><span><b>1 cup</b> <span class="g">(245g)</span> plain yogurt</span></label>
+      <label class="ing"><input type="checkbox"><span class="tick"></span><span><b>½ cucumber</b> <span class="g">(≈150g)</span>, grated and squeezed</span></label>
+      <label class="ing"><input type="checkbox"><span class="tick"></span><span>salt, to taste</span></label>
+    </aside>
+    <div class="method">
+      <h2 class="eyebrow-label section-head">Method</h2>
+      <ol class="method-steps" style="margin-top:14px"><li><label class="step"><input type="checkbox"><span class="n">1</span><div><p>Stir everything together and chill for 10 minutes before serving.</p></div></label></li></ol>
+    </div>
+  </div>
+</article>
+</section>
+<nav class="tabbar" aria-label="Main"><a href="#"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M5 4.5h11a2 2 0 0 1 2 2v13H7a2 2 0 0 1-2-2z"/><path d="M5 17.5a2 2 0 0 1 2-2h11M9 8.5h5"/></svg>Cookbook</a><a href="#"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="5" width="15" height="15" rx="2"/><path d="M4.5 9.5h15M8.5 3v4M15.5 3v4M8.5 13.5h3"/></svg>Journal</a><a href="#"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="9" cy="8.5" r="3.2"/><path d="M3 19.5c.6-3.4 3-5.2 6-5.2s5.4 1.8 6 5.2"/><circle cx="17" cy="9" r="2.6"/><path d="M16.6 14.3c2.4.2 4 1.8 4.4 4.4"/></svg>Friends</a><a href="#" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></svg>Discover</a></nav>
+<script>
+document.querySelectorAll('.section-tabs').forEach(nav=>{const layout=nav.nextElementSibling;nav.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;nav.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));layout.dataset.tab=b.dataset.t;});});
+</script>
+</body></html>
