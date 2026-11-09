@@ -63,6 +63,6 @@ describe('/tags/[slug] load', () => {
 	test('lists the tagged recipes newest change first, as /recipes does', async () => {
 		await load(event);
 		const { orderBy } = findManyMock.mock.calls[0][0];
-		expect(orderBy(recipes, { desc })).toEqual([desc(recipes.updatedAt)]);
+		expect(orderBy).toEqual([desc(recipes.updatedAt)]);
 	});
 });

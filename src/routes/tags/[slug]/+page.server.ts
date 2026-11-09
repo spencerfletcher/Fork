@@ -1,8 +1,8 @@
 import { error } from '@sveltejs/kit';
 import { db } from '#lib/server/db/index.js';
-import { eq, and, exists, sql } from 'drizzle-orm';
+import { eq, and, desc, exists, sql } from 'drizzle-orm';
 import { tags, recipes, recipesToTags } from '#lib/server/db/schema.js';
-import { attachRecipeCounts, CARD_WITH } from '#lib/server/recipeCounts.js';
+import { cardList } from '#lib/server/recipeCounts.js';
 import { visibleTags } from '#lib/server/tagFilter.js';
 import { visibleTo } from '#lib/server/visibility.js';
 import { clampDescription } from '#lib/seo.js';
@@ -14,9 +14,9 @@ export const load: PageServerLoad = async ({ params, locals: { user } }) => {
 	if (!tag) throw error(404, 'Tag not found');
 
 	const visible = visibleTo(user);
-	const [tagged, allTags] = await Promise.all([
-		db.query.recipes.findMany({
-			where: and(
+	const [withCounts, allTags] = await Promise.all([
+		cardList(
+			and(
 				visible,
 				exists(
 					db
@@ -25,12 +25,11 @@ export const load: PageServerLoad = async ({ params, locals: { user } }) => {
 						.where(and(eq(recipesToTags.recipeId, recipes.id), eq(recipesToTags.tagId, tag.id)))
 				)
 			),
-			with: CARD_WITH,
-			orderBy: (r, { desc }) => [desc(r.updatedAt)]
-		}),
+			[desc(recipes.updatedAt)],
+			user
+		),
 		visibleTags(visible)
 	]);
-	const withCounts = await attachRecipeCounts(tagged, user);
 
 	return {
 		tag,

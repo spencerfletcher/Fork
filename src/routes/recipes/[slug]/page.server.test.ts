@@ -336,6 +336,22 @@ function columnNames(node: unknown, out: string[] = []): string[] {
 	return out;
 }
 
+/**
+ * Answers the fork aggregate attachRecipeCounts reads with `n` forks of the
+ * loaded recipe (id 99, as forkOf makes it); returns the chain whose `where`
+ * holds the count's filter.
+ */
+function forkAggregate(n: number) {
+	const forks = chain([{ parentId: 99, count: n }]);
+	selectMock.mockImplementation(() => {
+		const q = chain();
+		q.from.mockImplementation((table: unknown) => (table === recipes ? forks : chain([])));
+		return q;
+	});
+	return forks;
+}
+const forkFilter = (forks: ReturnType<typeof forkAggregate>) => forks.where.mock.calls[0][0];
+
 async function loadData(user: { id: string; email: string } | null = null) {
 	return (await load(makeLoadEvent(user) as never)) as {
 		recipe: { parent: unknown; parentId: number | null; parentDeleted: boolean };
@@ -352,11 +368,12 @@ describe('load: fork attribution', () => {
 		vi.clearAllMocks();
 		findFavoriteMock.mockResolvedValue(undefined);
 		countMock.mockResolvedValue(0);
+		selectMock.mockReturnValue(chain([]));
 	});
 
 	test('counts public forks of the recipe', async () => {
 		findRecipeMock.mockResolvedValue(forkOf({ visibility: 'public', authorId: 'original-author' }));
-		countMock.mockImplementation(async (table: unknown) => (table === recipes ? 2 : 0));
+		forkAggregate(2);
 		const data = await loadData();
 		expect(data.forkCount).toBe(2);
 	});
@@ -365,7 +382,8 @@ describe('load: fork attribution', () => {
 		findRecipeMock.mockResolvedValue(forkOf({ visibility: 'public', authorId: 'original-author' }));
 		// Each count answers by the table it is read from, so the test does not
 		// lean on the order the loader asks in.
-		countMock.mockImplementation(async (table: unknown) => (table === favorites ? 7 : 2));
+		countMock.mockImplementation(async (table: unknown) => (table === favorites ? 7 : 0));
+		forkAggregate(2);
 		const data = await loadData();
 		expect(data.favoriteCount).toBe(7);
 		expect(data.forkCount).toBe(2);
@@ -446,19 +464,18 @@ describe('load: fork attribution', () => {
 
 	test('counts only public forks, so private forks stay invisible', async () => {
 		findRecipeMock.mockResolvedValue(forkOf({ visibility: 'public', authorId: 'original-author' }));
+		const forks = forkAggregate(0);
 		await loadData();
 		// The filter must name visibility: a count of every fork would reveal
 		// private forks by number.
-		const [, filter] = countMock.mock.calls.find(([table]) => table === recipes)!;
-		expect(columnNames(filter)).toContain('visibility');
+		expect(columnNames(forkFilter(forks))).toContain('visibility');
 	});
 
 	test("counts the viewer's own private forks too, as the forks page lists them", async () => {
 		findRecipeMock.mockResolvedValue(forkOf({ visibility: 'public', authorId: 'original-author' }));
-		countMock.mockResolvedValue(1);
+		const forks = forkAggregate(1);
 		await loadData(FORKER);
-		const [, filter] = countMock.mock.calls.find(([table]) => table === recipes)!;
-		expect(columnNames(filter)).toEqual(
+		expect(columnNames(forkFilter(forks))).toEqual(
 			expect.arrayContaining(['parent_id', 'visibility', 'author_id'])
 		);
 	});
@@ -471,6 +488,7 @@ describe('load: the personal line', () => {
 		vi.clearAllMocks();
 		findFavoriteMock.mockResolvedValue(undefined);
 		countMock.mockResolvedValue(0);
+		selectMock.mockReturnValue(chain([]));
 		findRecipeMock.mockResolvedValue(forkOf({ visibility: 'public', authorId: 'original-author' }));
 	});
 
@@ -503,6 +521,7 @@ describe('load: ?version=', () => {
 		vi.clearAllMocks();
 		findFavoriteMock.mockResolvedValue(undefined);
 		countMock.mockResolvedValue(0);
+		selectMock.mockReturnValue(chain([]));
 		findRecipeMock.mockResolvedValue(forkOf({ visibility: 'public', authorId: 'original-author' }));
 	});
 
@@ -600,6 +619,7 @@ describe('visibility: a friends recipe', () => {
 		vi.clearAllMocks();
 		findFavoriteMock.mockResolvedValue(undefined);
 		countMock.mockResolvedValue(0);
+		selectMock.mockReturnValue(chain([]));
 		findRecipeMock.mockResolvedValue(FRIENDS);
 	});
 

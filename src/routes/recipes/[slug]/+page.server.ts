@@ -8,7 +8,8 @@ import type { RecipeContent } from '#lib/recipes/types.js';
 import { recipeCopies } from '#lib/recipes/content.js';
 import { absoluteImage, clampDescription } from '#lib/seo.js';
 import { gramsFor } from '#lib/server/ingredientDensities.js';
-import { canViewRow, friendIdsOnce, viewableRecipe, visibleTo } from '#lib/server/visibility.js';
+import { canViewRow, friendIdsOnce, viewableRecipe } from '#lib/server/visibility.js';
+import { attachRecipeCounts } from '#lib/server/recipeCounts.js';
 import { lastEntryFor } from '#lib/server/journal.js';
 import { VERSION_NOT_FOUND } from './versionError.js';
 import type { PageServerLoad, Actions } from './$types';
@@ -59,15 +60,15 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 	if (!currentVersion) throw error(404, VERSION_NOT_FOUND);
 
 	// Independent lookups, one round trip. The fork count is the forks the
-	// viewer can see, the forks page's own rule: public ones and the viewer's
-	// own private ones, so nobody else's private fork shows in the number.
-	const [favorite, forkCount, favoriteCount, lastEntry] = await Promise.all([
+	// viewer can see, the cards' and the forks page's rule (visibleTo), so no
+	// fork they cannot open shows in the number.
+	const [favorite, [{ forkCount }], favoriteCount, lastEntry] = await Promise.all([
 		user
 			? db.query.favorites.findFirst({
 					where: and(eq(favorites.userId, user.id), eq(favorites.recipeId, recipe.id))
 				})
 			: undefined,
-		db.$count(recipes, and(eq(recipes.parentId, recipe.id), visibleTo(user))),
+		attachRecipeCounts([recipe], user),
 		db.$count(favorites, eq(favorites.recipeId, recipe.id)),
 		// The personal line: the reader's latest log entry of this recipe.
 		user ? lastEntryFor(user.id, recipe.id) : null

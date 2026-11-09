@@ -1,7 +1,8 @@
 import { db } from '#lib/server/db/index.js';
 import { recipes, recipeVersions } from '#lib/server/db/schema.js';
-import { and, count, inArray } from 'drizzle-orm';
-import { visibleTo } from './visibility.js';
+import { and, count, inArray, type SQL } from 'drizzle-orm';
+import { byTagMatches } from './tagFilter.js';
+import { visibleTo, type Viewer } from './visibility.js';
 
 /** The relations a recipe card renders: its author's id and handle, nothing more. */
 export const CARD_WITH = { author: { columns: { id: true, username: true } } } as const;
@@ -15,7 +16,7 @@ export const CARD_WITH = { author: { columns: { id: true, username: true } } } a
  */
 export async function attachRecipeCounts<T extends { id: number }>(
 	recipeList: T[],
-	viewer: { id: string } | null = null
+	viewer: Viewer = null
 ): Promise<(T & { versionCount: number; forkCount: number })[]> {
 	const ids = recipeList.map((r) => r.id);
 
@@ -45,4 +46,20 @@ export async function attachRecipeCounts<T extends { id: number }>(
 		versionCount: versionsById.get(r.id) ?? 0,
 		forkCount: forksById.get(r.id) ?? 0
 	}));
+}
+
+/**
+ * The recipe cards matching `where`, in `orderBy`, each with its counts for
+ * `viewer`. With `tagRank` (a selection's match counts, passed only when no
+ * text query ranks the list) recipes matching more selected tags come first.
+ */
+export async function cardList(
+	where: SQL | undefined,
+	orderBy: SQL[],
+	viewer: Viewer,
+	{ tagRank, limit }: { tagRank?: Map<number, number> | null; limit?: number } = {}
+) {
+	const rows = await db.query.recipes.findMany({ where, with: CARD_WITH, orderBy, limit });
+	if (tagRank && tagRank.size > 0) rows.sort(byTagMatches(tagRank));
+	return attachRecipeCounts(rows, viewer);
 }

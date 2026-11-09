@@ -2,8 +2,8 @@ import { redirect } from '@sveltejs/kit';
 import { and, inArray } from 'drizzle-orm';
 import { db } from '#lib/server/db/index.js';
 import { recipes, recipesToTags } from '#lib/server/db/schema.js';
-import { attachRecipeCounts, CARD_WITH } from '#lib/server/recipeCounts.js';
-import { byTagMatches, tagMatchCounts, visibleTags } from '#lib/server/tagFilter.js';
+import { cardList } from '#lib/server/recipeCounts.js';
+import { tagSelection, visibleTags } from '#lib/server/tagFilter.js';
 import { inLibraryOf } from '#lib/server/visibility.js';
 import { parseFilters, textSearch } from '#lib/server/recipeSearch.js';
 import { loginHref } from '#lib/auth/loginHref.js';
@@ -56,31 +56,20 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 			library.map((r) => r.id)
 		)
 	);
-	const selected = allTags.filter((t) => tagSlugs.includes(t.slug));
-	const selectedTags = tagSlugs.filter((slug) => selected.some((t) => t.slug === slug));
-	const empty = { recipes: [], counts, filter, allTags, searchQuery, selectedTags, meta: META };
-
-	let candidateIds = inFilter.map((r) => r.id);
-	let matchCounts = new Map<number, number>();
-	if (selected.length > 0 && candidateIds.length > 0) {
-		matchCounts = await tagMatchCounts(
-			selected.map((t) => t.id),
-			candidateIds
-		);
-		candidateIds = [...matchCounts.keys()];
-	}
-	if (candidateIds.length === 0) return empty;
+	const inFilterIds = inFilter.map((r) => r.id);
+	const { selectedTags, matches } = await tagSelection(allTags, tagSlugs, inFilterIds);
+	const candidateIds = matches ? [...matches.keys()] : inFilterIds;
+	if (candidateIds.length === 0)
+		return { recipes: [], counts, filter, allTags, searchQuery, selectedTags, meta: META };
 
 	// Search's matcher and order, so a recipe is found by an ingredient too.
 	const text = textSearch(searchQuery);
-	const rows = await db.query.recipes.findMany({
-		where: and(inArray(recipes.id, candidateIds), text.where),
-		with: CARD_WITH,
-		orderBy: text.orderBy
-	});
-	if (!searchQuery && matchCounts.size > 0) rows.sort(byTagMatches(matchCounts));
-
-	const withCounts = await attachRecipeCounts(rows, user);
+	const withCounts = await cardList(
+		and(inArray(recipes.id, candidateIds), text.where),
+		text.orderBy,
+		user,
+		{ tagRank: searchQuery ? null : matches }
+	);
 
 	return {
 		recipes: withCounts.map((r) => ({ ...r, saved: !isMine(r) })),
