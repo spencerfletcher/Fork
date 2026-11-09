@@ -636,6 +636,14 @@
 		}
 	}
 
+	/* The phone tab bar is fixed over the page's foot, so the page ends clear
+	   of it (57px: the 56px targets and the rule above). */
+	@media (max-width: 767px) {
+		body:has(.tab-bar) {
+			padding-bottom: calc(57px + env(safe-area-inset-bottom));
+		}
+	}
+
 	/* Cookbook: your shelf, dense and uniform. One column on a phone, so the
 	   photos lead at full width; two from 600, four from 1100. */
 	.cookbook-grid {

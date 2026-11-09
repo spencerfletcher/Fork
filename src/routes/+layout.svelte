@@ -3,6 +3,7 @@
 	import type { LayoutData } from './$types';
 	import '../app.css';
 	import Navbar from '#lib/components/ui/Navbar.svelte';
+	import TabBar from '#lib/components/ui/TabBar.svelte';
 	import { page } from '$app/state';
 	import { DEFAULT_META, SITE_NAME, pageTitle, type PageMeta } from '#lib/seo.js';
 
@@ -70,6 +71,8 @@
 	<main id="main" class="flex-grow outline-none" tabindex="-1">
 		{@render children()}
 	</main>
+	<!-- Phone only; it hides itself in Cook and the editor. -->
+	<TabBar />
 </div>
 
 <style>
