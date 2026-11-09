@@ -19,28 +19,14 @@
 	};
 </script>
 
-<section class="delete-entry">
-	<ConfirmStep
-		trigger="Delete entry"
-		label="Delete {dish}?"
-		explanation="Deletes this entry, its photo and its note. This cannot be undone."
-		confirmLabel="Delete permanently"
-		pendingLabel="Deleting…"
-		keepLabel="Keep entry"
-		action="?/deleteEntry"
-		enhance={submit}
-		{pending}
-		{error} />
-</section>
-
-<style>
-	/* On the actions row, pushed to its right edge; wrapped, on its own line,
-	   still right. The open step takes the whole row. */
-	.delete-entry {
-		margin-left: auto;
-	}
-
-	.delete-entry:has(:global(.confirm-step)) {
-		flex-basis: 100%;
-	}
-</style>
+<ConfirmStep
+	trigger="Delete entry"
+	label="Delete {dish}?"
+	explanation="Deletes this entry, its photo and its note. This cannot be undone."
+	confirmLabel="Delete permanently"
+	pendingLabel="Deleting…"
+	keepLabel="Keep entry"
+	action="?/deleteEntry"
+	enhance={submit}
+	{pending}
+	{error} />

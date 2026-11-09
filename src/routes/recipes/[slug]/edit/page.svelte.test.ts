@@ -349,7 +349,8 @@ describe('Edit page form', () => {
 		await tick();
 		const alert = screen.getByRole('alert');
 		expect(alert).toHaveTextContent('Not authorized');
-		expect(alert.closest('.delete-recipe')).not.toBeNull();
+		// Under Delete recipe, on the actions row's right.
+		expect(alert.closest('.form-actions .danger')).not.toBeNull();
 		expect(title()).toHaveValue('Cookies');
 	});
 

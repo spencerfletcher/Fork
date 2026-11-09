@@ -23,6 +23,7 @@
 	import IngredientEditor from './IngredientEditor.svelte';
 	import StepEditor from './StepEditor.svelte';
 	import PhotoField from './PhotoField.svelte';
+	import FormActions from '#lib/components/ui/FormActions.svelte';
 	import { audienceIcon } from '#lib/components/Icons.svelte';
 	import { AUDIENCE_LABEL } from '#lib/audience.js';
 
@@ -44,7 +45,8 @@
 		nextVersion,
 		header,
 		leaving = false,
-		hasForks = false
+		hasForks = false,
+		danger
 	}: {
 		/** What was loaded, as the form's strings. Dirty-checking compares against it. */
 		baseline: RecipeDraft;
@@ -69,7 +71,13 @@
 		leaving?: boolean;
 		/** The recipe has forks, which a narrower audience leaves where they are. */
 		hasForks?: boolean;
+		/** The edit page's Delete recipe, its own form, pinned right on the actions row. */
+		danger?: Snippet;
 	} = $props();
+
+	// The actions row sits outside the form, Save joined to it by form=, so
+	// Delete recipe's own form shares the row without nesting.
+	const formId = $props.id();
 
 	// The whole form as one object. A failed save hands back what was
 	// submitted, invalid values included, and the fields refill from it. It is
@@ -250,6 +258,7 @@
 {/snippet}
 
 <form
+	id={formId}
 	method="POST"
 	{action}
 	enctype="multipart/form-data"
@@ -410,15 +419,18 @@
 		{#if globalError}
 			<p class="form-error" role="alert">{globalError}</p>
 		{/if}
-
-		<div class="form-actions" bind:this={actions}>
-			<button type="submit" class="btn-primary" disabled={save.pending} bind:this={submitButton}>
-				{save.pending ? 'Saving…' : submitLabel}
-			</button>
-			<a href={cancelHref} class="btn-ghost">Cancel</a>
-		</div>
 	</fieldset>
 </form>
+
+<div class="actions-bar" bind:this={actions}>
+	<FormActions
+		{submitLabel}
+		pending={save.pending}
+		{cancelHref}
+		form={formId}
+		bind:submitButton
+		{danger} />
+</div>
 
 <style>
 	/* The row's errors run its full width, a field's 8px under the boxes. */
@@ -518,6 +530,11 @@
 		flex-shrink: 0;
 	}
 
+	/* Outside the form, so the form's 16px gap is its own margin. */
+	.actions-bar {
+		margin-top: var(--space-4);
+	}
+
 	/* A plain 1px Rule, like every other rule in the editor. */
 	.field-message {
 		border-top: 1px solid var(--color-border);
@@ -527,7 +544,7 @@
 		/* Save and Cancel ride the screen's bottom edge, so a long form saves
 		   without a scroll to its end. Edge to edge across the 18px gutters,
 		   and above the home indicator. */
-		.form-actions {
+		.actions-bar {
 			position: sticky;
 			bottom: 0;
 			z-index: 1;
@@ -540,8 +557,13 @@
 		/* A field focused by Tab stops above the bar: its height, the 4px ring
 		   and a pixel to spare. On html, which scrolls; keyed to the bar so the
 		   rule leaves with the editor. */
-		:global(html:has(.form-actions)) {
+		:global(html:has(.actions-bar)) {
 			scroll-padding-bottom: calc(70px + env(safe-area-inset-bottom));
+		}
+
+		/* Delete recipe's own line makes the bar two rows tall. */
+		:global(html:has(.actions-bar .danger)) {
+			scroll-padding-bottom: calc(126px + env(safe-area-inset-bottom));
 		}
 	}
 </style>

@@ -142,7 +142,7 @@ describe('RecipeForm actions on a phone', () => {
 	};
 
 	test('a field focused near the bottom scrolls clear of the bar', () => {
-		expect(rule(':global(html:has(.form-actions))')).toMatch(
+		expect(rule(':global(html:has(.actions-bar))')).toMatch(
 			/scroll-padding-bottom:[^;]*env\(safe-area-inset-bottom\)/
 		);
 	});
@@ -171,7 +171,7 @@ describe('RecipeForm field focused under the phone bar', () => {
 			}
 		});
 		const box = screen.getByRole('textbox', { name: /^ingredients/i });
-		const bar = screen.getByRole('button', { name: 'Create recipe' }).parentElement!;
+		const bar = screen.getByRole('button', { name: 'Create recipe' }).closest('.actions-bar')!;
 		box.getBoundingClientRect = () => ({ bottom: barTop - 40 }) as DOMRect;
 		fieldOf(box).getBoundingClientRect = () => ({ bottom: fieldBottom }) as DOMRect;
 		bar.getBoundingClientRect = () => ({ top: barTop }) as DOMRect;

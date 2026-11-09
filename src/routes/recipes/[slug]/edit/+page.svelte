@@ -67,7 +67,9 @@
 					</div>
 				</div>
 			{/snippet}
+			{#snippet danger()}
+				<DeleteRecipe title={latestVersion.title} {deletion} error={deleteError} />
+			{/snippet}
 		</RecipeForm>
-		<DeleteRecipe title={latestVersion.title} {deletion} error={deleteError} />
 	</div>
 </div>

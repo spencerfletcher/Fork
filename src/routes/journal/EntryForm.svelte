@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { onMount, type Snippet } from 'svelte';
 	import PhotoField from '#lib/components/recipes/PhotoField.svelte';
+	import FormActions from '#lib/components/ui/FormActions.svelte';
 	import { audienceIcon, lockIcon } from '#lib/components/Icons.svelte';
 	import { AUDIENCE_LABEL } from '#lib/audience.js';
 	import {
@@ -36,7 +37,7 @@
 		submitLabel: string;
 		/** A new entry: the date defaults to the reader's own today, not the server's. */
 		useLocalToday?: boolean;
-		/** More on the actions row, after Cancel: the edit page's Delete entry, its own form. */
+		/** The edit page's Delete entry, its own form, pinned right on the actions row. */
 		actions?: Snippet;
 	} = $props();
 
@@ -293,17 +294,12 @@
 	</fieldset>
 </form>
 
-<div class="form-actions entry-actions">
-	<button class="btn-primary" type="submit" form={FORM_ID} disabled={pending}>
-		{pending ? 'Saving…' : submitLabel}
-	</button>
-	<a class="cancel" href="/journal">Cancel</a>
-	{@render actions?.()}
+<div class="entry-actions">
+	<FormActions {submitLabel} {pending} cancelHref="/journal" form={FORM_ID} danger={actions} />
 </div>
 
 <style>
 	.entry-actions {
-		flex-wrap: wrap;
 		margin-top: var(--space-5);
 	}
 
@@ -429,13 +425,6 @@
 	.choice:has(:checked) {
 		border-color: var(--color-text);
 		box-shadow: inset 0 0 0 1px var(--color-text);
-	}
-
-	.cancel {
-		display: inline-flex;
-		align-items: center;
-		min-height: 44px;
-		font-weight: 600;
 	}
 
 	@media (max-width: 699px) {

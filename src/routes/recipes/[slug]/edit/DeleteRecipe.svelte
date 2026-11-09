@@ -17,26 +17,14 @@
 	} = $props();
 </script>
 
-<section class="delete-recipe">
-	<ConfirmStep
-		trigger="Delete recipe"
-		label="Delete {title}?"
-		explanation="Deletes every version of {title} and its photos. This cannot be undone."
-		confirmLabel="Delete permanently"
-		pendingLabel="Deleting…"
-		keepLabel="Keep recipe"
-		action="?/deleteRecipe"
-		enhance={deletion.submit}
-		pending={deletion.pending}
-		{error} />
-</section>
-
-<style>
-	/* Set well apart from Save and Cancel, under a rule, so it never reads as
-	   one of the form's own actions. */
-	.delete-recipe {
-		margin-top: var(--space-7);
-		padding-top: var(--space-5);
-		border-top: 1px solid var(--color-border);
-	}
-</style>
+<ConfirmStep
+	trigger="Delete recipe"
+	label="Delete {title}?"
+	explanation="Deletes every version of {title} and its photos. This cannot be undone."
+	confirmLabel="Delete permanently"
+	pendingLabel="Deleting…"
+	keepLabel="Keep recipe"
+	action="?/deleteRecipe"
+	enhance={deletion.submit}
+	pending={deletion.pending}
+	{error} />
