@@ -44,7 +44,7 @@ function makeData(overrides: { imageUrl?: string | null; content?: Partial<Recip
 			title: 'Cookies',
 			description: null,
 			imageUrl: null,
-			isPublic: false,
+			visibility: 'private',
 			editRevision: 3,
 			recipesToTags: [{ tag: TAGS[0] }, { tag: TAGS[1] }]
 		},
@@ -79,7 +79,7 @@ function failed(draft: Partial<RecipeDraft>, error = 'Title is required') {
 		steps: 'Mix.\n\nBake.\ntip: gently',
 		commitMessage: '',
 		editRevision: '3',
-		isPublic: false,
+		visibility: 'private',
 		tags: ['Dessert', 'Baking'],
 		hadPhoto: false,
 		removeImage: false
@@ -349,7 +349,12 @@ describe('Edit page form', () => {
 		render(EditPage, {
 			props: {
 				data: makeData(),
-				form: failed({ title: 'Biscuits', prepTimeMinutes: '-5', tags: ['Spicy'], isPublic: true })
+				form: failed({
+					title: 'Biscuits',
+					prepTimeMinutes: '-5',
+					tags: ['Spicy'],
+					visibility: 'public'
+				})
 			}
 		});
 		await tick();
@@ -359,7 +364,6 @@ describe('Edit page form', () => {
 			(i) => (i as HTMLInputElement).value
 		);
 		expect(tags).toEqual(['Spicy']);
-		expect(screen.getByLabelText(/public/i)).toBeChecked();
 		expect(document.querySelector('.form-error')).toBeNull();
 		expect(title()).toHaveAttribute('aria-invalid', 'true');
 		expect(title()).toHaveAccessibleDescription('Title is required');
