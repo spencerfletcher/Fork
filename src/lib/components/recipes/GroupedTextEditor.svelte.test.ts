@@ -239,6 +239,15 @@ describe('GroupedTextEditor', () => {
 			expect(item()).not.toHaveAttribute('aria-expanded');
 		});
 
+		test('marks the button with a typographic H, hidden from screen readers, not a drawn icon', () => {
+			render(GroupedTextEditor, props(''));
+			const mark = item().querySelector('.mark');
+			expect(mark).toHaveTextContent(/^H$/);
+			expect(mark).toHaveAttribute('aria-hidden', 'true');
+			expect(item().querySelector('svg')).toBeNull();
+			expect(item()).toHaveAccessibleName('Section heading');
+		});
+
 		test('mid-line, the heading goes on a new line below and its name is selected, in the box', async () => {
 			render(GroupedTextEditor, props('1 cup flour\n2 eggs'));
 			const first = lines()[0];

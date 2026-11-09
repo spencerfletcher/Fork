@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { headingIcon } from '#lib/components/Icons.svelte';
 	import { lineKind, headingInsert, SECTION_NAME } from '#lib/recipes/editorLines.js';
 
 	let {
@@ -350,7 +349,7 @@
 					{disabled}
 					onmousedown={(e) => e.preventDefault()}
 					onclick={insertHeading}>
-					{@render headingIcon()}
+					<span class="mark" aria-hidden="true">H</span>
 					Section heading
 				</button>
 			</div>
@@ -435,7 +434,7 @@
 	/* A text button: a 24px hit (44px on a phone) grown outward, so the text stays put. */
 	.tool {
 		display: inline-flex;
-		align-items: center;
+		align-items: baseline;
 		gap: 4px;
 		font-size: 0.875rem;
 		line-height: 1.2;
@@ -459,10 +458,12 @@
 		cursor: default;
 	}
 
-	/* :global, because the icon comes from Icons.svelte. */
-	.tool :global(svg) {
-		width: 14px;
-		height: 14px;
+	/* The H in the heading's own face, a step bigger and weightier than the word. */
+	.mark {
+		font-family: var(--font-serif);
+		font-weight: 700;
+		font-size: 1.2em;
+		line-height: 1;
 	}
 
 	/* field-sizing: content ignores rows; this keeps an empty box typeable. */
