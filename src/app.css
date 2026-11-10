@@ -748,7 +748,7 @@
 	}
 
 	/* Cookbook: your shelf, dense and uniform. One column on a phone, so the
-	   photos lead at full width; two from 600, four from 1100. */
+	   photos lead at full width; two from 700, four from 1100. */
 	.cookbook-grid {
 		display: grid;
 		grid-template-columns: minmax(0, 1fr);
