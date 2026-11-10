@@ -1,11 +1,19 @@
 import { describe, test, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/svelte';
 import { tick } from 'svelte';
+import type { SubmitFunction } from '$app/forms';
 import { BLOCK_SENTENCE } from '#lib/journal.js';
 import ProfilePage from './+page.svelte';
 import source from './+page.svelte?raw';
 
-vi.mock('$app/forms', () => ({ enhance: () => ({ destroy: () => {} }) }));
+// Each form's enhance callback is kept by its action, so a test can play back a result.
+const { submits } = vi.hoisted(() => ({ submits: new Map<string, SubmitFunction>() }));
+vi.mock('$app/forms', () => ({
+	enhance: (form: HTMLFormElement, submit?: SubmitFunction) => {
+		if (submit) submits.set(form.getAttribute('action')!, submit);
+		return { destroy: () => {} };
+	}
+}));
 
 const data = {
 	profile: { id: 'u1', username: 'chefmaria', avatarUrl: null, createdAt: new Date(2026, 9, 1) },
@@ -113,6 +121,22 @@ describe('Profile relationship control', () => {
 		renderProfile({ relation });
 		const control = screen.getByRole(role as 'button', { name });
 		expect(control.closest('form')).toHaveAttribute('action', action);
+	});
+
+	test('a signed-out Add friend says the session ended, under the button', async () => {
+		renderProfile({ relation: 'none' });
+		const words = 'Your session ended. Log in in another tab, then try again.';
+		const after = await (
+			submits.get('/friends?/request') as unknown as () => Promise<
+				(opts: { result: unknown; update: () => Promise<void> }) => Promise<void>
+			>
+		)();
+		await after({
+			result: { type: 'failure', status: 401, data: { error: words } },
+			update: async () => {}
+		});
+		await tick();
+		expect(screen.getByRole('alert')).toHaveTextContent(words);
 	});
 
 	test('a sent request says so', () => {

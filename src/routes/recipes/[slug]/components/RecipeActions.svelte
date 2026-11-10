@@ -201,6 +201,9 @@
 						}
 						forking = false;
 						if (result.type === 'success') await update();
+						// A refusal says why (a lapsed session); anything else, that it failed.
+						else if (result.type === 'failure' && typeof result.data?.error === 'string')
+							error = result.data.error;
 						else error = 'Could not fork this recipe. Try again.';
 					};
 				}}>

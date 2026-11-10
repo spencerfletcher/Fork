@@ -5,24 +5,19 @@ import { readFileSync, readdirSync } from 'node:fs';
 // hand-styled button fails here until it takes a shared class or is added to
 // STRUCTURAL below on purpose, with its reason.
 
-const CLOSED_SET = ['btn-primary', 'btn-ghost', 'text-btn'] as const;
+const CLOSED_SET = ['btn-primary', 'btn-ghost', 'text-btn', 'menu-row', 'clear-ticks'] as const;
 
 /** Buttons that are structure, not a button look: file (under src/), its class attribute, why. */
 const STRUCTURAL = [
 	['lib/components/recipes/GroupedTextEditor.svelte', 'tool', 'editor toolbar item'],
 	['lib/components/ui/ConfirmStep.svelte', 'triggerClass', "caller's class, checked at the call"],
 	['lib/components/ui/Navbar.svelte', 'nav-avatar-button', 'icon-only avatar trigger'],
-	['lib/components/ui/Navbar.svelte', '', 'account menu row'],
 	['routes/friends/MoreMenu.svelte', 'more-button', 'icon-only menu trigger'],
-	['routes/friends/MoreMenu.svelte', '', 'menu row'],
-	['routes/friends/MoreMenu.svelte', 'danger', 'menu row, red'],
 	['lib/components/ui/TagInput.svelte', 'tag-remove', "a tag pill's remove glyph"],
 	['lib/components/ui/TagTabs.svelte', '', 'tag filter tab'],
 	['lib/components/ui/TagTabs.svelte', 'tag-tabs__clear', 'the tag tabs row’s Clear all tab'],
 	['lib/components/ui/SearchFilters.svelte', 'friends-toggle', 'filter chip'],
 	['routes/recipes/[slug]/+page.svelte', '', 'section tab bar item'],
-	['routes/recipes/[slug]/components/RecipeIngredients.svelte', 'clear-ticks', 'tick-row reset'],
-	['routes/recipes/[slug]/components/RecipeMethod.svelte', 'clear-ticks', 'tick-row reset'],
 	[
 		'routes/recipes/[slug]/components/VersionBar.svelte',
 		'versions-toggle',

@@ -2,7 +2,7 @@
 	import RecipeGrid from '#lib/components/recipes/RecipeGrid.svelte';
 	import { formatDate, plural } from '#lib/helpers.js';
 	import { enhance } from '$app/forms';
-	import type { SubmitFunction } from '$app/forms';
+	import { pendingEnhance } from '#lib/pendingEnhance.svelte.js';
 	import ConfirmStep from '#lib/components/ui/ConfirmStep.svelte';
 	import Avatar from '#lib/components/ui/Avatar.svelte';
 	import { BLOCK_SENTENCE } from '#lib/journal.js';
@@ -21,12 +21,12 @@
 	// only the step's button posts. While one is open the other steps aside.
 	let unfriending = $state(false);
 	let blocking = $state(false);
-	const closeAfter: SubmitFunction =
-		() =>
-		async ({ update }) => {
-			await update();
-			unfriending = blocking = false;
-		};
+	// These forms post to /friends, so a refusal (a lapsed session) is shown
+	// here, under them; a refused step stays open.
+	const relating = pendingEnhance({
+		keepFailure: true,
+		done: () => (unfriending = blocking = false)
+	});
 </script>
 
 <div class="page">
@@ -45,14 +45,22 @@
 				</p>
 				<!-- Nothing on your own profile or signed out; a blocked person reads 'none'. -->
 				{#if data.relation === 'none'}
-					<form class="relation" method="POST" action="/friends?/request" use:enhance>
+					<form
+						class="relation"
+						method="POST"
+						action="/friends?/request"
+						use:enhance={relating.submit}>
 						<input type="hidden" name="userId" value={profile.id} />
 						<button type="submit" class="btn-ghost">Add friend</button>
 					</form>
 				{:else if data.relation === 'sent'}
 					<p class="relation relation-state">Request sent</p>
 				{:else if data.relation === 'received'}
-					<form class="relation" method="POST" action="/friends?/accept" use:enhance>
+					<form
+						class="relation"
+						method="POST"
+						action="/friends?/accept"
+						use:enhance={relating.submit}>
 						<input type="hidden" name="userId" value={profile.id} />
 						<button type="submit" class="btn-primary">Accept request</button>
 					</form>
@@ -68,7 +76,7 @@
 								confirmLabel="Remove"
 								keepLabel="Cancel"
 								action="/friends?/unfriend"
-								enhance={closeAfter}
+								enhance={relating.submit}
 								fields={userId} />
 						{/if}
 						{#if !unfriending}
@@ -80,15 +88,22 @@
 								confirmLabel="Block"
 								keepLabel="Cancel"
 								action="/friends?/block"
-								enhance={closeAfter}
+								enhance={relating.submit}
 								fields={userId} />
 						{/if}
 					</div>
 				{:else if data.relation === 'blocked'}
-					<form class="relation" method="POST" action="/friends?/unblock" use:enhance>
+					<form
+						class="relation"
+						method="POST"
+						action="/friends?/unblock"
+						use:enhance={relating.submit}>
 						<input type="hidden" name="userId" value={profile.id} />
 						<button type="submit" class="btn-ghost">Unblock</button>
 					</form>
+				{/if}
+				{#if relating.error}
+					<p class="form-error relation-error" role="alert">{relating.error}</p>
 				{/if}
 			</div>
 		</header>
@@ -154,6 +169,10 @@
 
 	.relation button:not(.text-btn) {
 		min-height: 44px;
+	}
+
+	.relation-error {
+		margin: 8px 0 0;
 	}
 
 	.relation-state {

@@ -37,7 +37,10 @@ vi.mock('$app/navigation', () => ({
 vi.mock('$app/state', () => ({ page }));
 
 /** Runs the enhance flow for one form as SvelteKit would, ending in `result`. */
-async function playBack(action: string, result: { type: string; location?: string }) {
+async function playBack(
+	action: string,
+	result: { type: string; location?: string; status?: number; data?: Record<string, unknown> }
+) {
 	const form = document.querySelector<HTMLFormElement>(`form[action="${action}"]`)!;
 	const handler = await submits.get(action)!({ formElement: form, cancel: () => {} });
 	await handler({ result, update: async () => {} });
@@ -205,6 +208,13 @@ describe('RecipeActions when a request fails', () => {
 		await playBack('?/fork', { type: 'error' });
 		expect(screen.getByRole('alert')).toHaveTextContent(/could not fork/i);
 		expect(screen.getByRole('button', { name: 'Fork' })).not.toBeDisabled();
+	});
+
+	test('a signed-out fork says the session ended, in the alert', async () => {
+		render(RecipeActions, { props: makeProps({ canFork: true }) });
+		const words = 'Your session ended. Log in in another tab, then try again.';
+		await playBack('?/fork', { type: 'failure', status: 401, data: { error: words } });
+		expect(screen.getByRole('alert')).toHaveTextContent(words);
 	});
 
 	test('a fork that succeeds stays disabled while the browser leaves, so it cannot fork twice', async () => {

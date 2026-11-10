@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { pendingEnhance } from '#lib/pendingEnhance.svelte.js';
 	import { onMount, type Snippet } from 'svelte';
 	import PhotoField from '#lib/components/recipes/PhotoField.svelte';
 	import FormActions from '#lib/components/ui/FormActions.svelte';
@@ -57,7 +58,7 @@
 	let audience = $state(values.audience);
 	let removeImage = $state(false);
 	let chosen = $state(false);
-	let pending = $state(false);
+	const saving = pendingEnhance({ reset: false });
 
 	onMount(() => {
 		if (useLocalToday) cookedOn = localToday();
@@ -127,13 +128,7 @@
 	method="POST"
 	{action}
 	enctype="multipart/form-data"
-	use:enhance={() => {
-		pending = true;
-		return async ({ update }) => {
-			await update({ reset: false });
-			pending = false;
-		};
-	}}>
+	use:enhance={saving.submit}>
 	{#if error}
 		<p class="form-error" role="alert">{error}</p>
 	{/if}
@@ -278,7 +273,12 @@
 </form>
 
 <div class="entry-actions">
-	<FormActions {submitLabel} {pending} cancelHref="/journal" form={FORM_ID} danger={actions} />
+	<FormActions
+		{submitLabel}
+		pending={saving.pending}
+		cancelHref="/journal"
+		form={FORM_ID}
+		danger={actions} />
 </div>
 
 <style>

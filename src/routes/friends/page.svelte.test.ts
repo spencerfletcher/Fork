@@ -20,6 +20,17 @@ function makeData(overrides: Record<string, unknown> = {}) {
 }
 
 describe('Friends page', () => {
+	test("a refused Accept or Decline says why, under the page's title", () => {
+		const words = 'Your session ended. Log in in another tab, then try again.';
+		render(Page, {
+			props: {
+				data: makeData({ requests: [REQUEST] }),
+				form: { error: words, code: 'unauthenticated' } as never
+			}
+		});
+		expect(screen.getByRole('alert')).toHaveTextContent(words);
+	});
+
 	test('empty: a waiting request comes first, then No friends yet and Invite a friend', () => {
 		const { container } = render(Page, { props: { data: makeData({ requests: [REQUEST] }) } });
 		const request = screen.getByRole('button', { name: 'Accept @priyabakes' });

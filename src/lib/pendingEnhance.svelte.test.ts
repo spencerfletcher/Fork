@@ -6,6 +6,7 @@ type Result = {
 	type: 'success' | 'failure' | 'redirect' | 'error';
 	status?: number;
 	error?: { message: string };
+	data?: Record<string, unknown>;
 };
 type After = (opts: {
 	result: Result;
@@ -22,6 +23,23 @@ async function submitWith(submit: Submit, result: Result = { type: 'failure' }) 
 }
 
 describe('pendingEnhance', () => {
+	// A form posting to another route's action: SvelteKit does not hand that
+	// failure to this page's form, so the form holds its words itself.
+	test('keepFailure: a failure is held as error, not applied; a later success clears it', async () => {
+		const form = pendingEnhance({ keepFailure: true });
+		const after = (await (form.submit as unknown as () => After)()) as After;
+		const update = vi.fn(async () => {});
+		const words = 'Your session ended. Log in in another tab, then try again.';
+		await after({ result: { type: 'failure', status: 401, data: { error: words } }, update });
+		expect(update).not.toHaveBeenCalled();
+		expect(form.pending).toBe(false);
+		expect(form.error).toBe(words);
+		const again = (await (form.submit as unknown as () => After)()) as After;
+		expect(form.error).toBeNull();
+		await again({ result: { type: 'success' }, update });
+		expect(update).toHaveBeenCalledOnce();
+	});
+
 	test('pending from submit until the result is applied, then done runs', async () => {
 		const done = vi.fn();
 		const form = pendingEnhance({ done });

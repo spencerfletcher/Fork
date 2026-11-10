@@ -4,12 +4,13 @@
 	import { moreIcon } from '#lib/components/Icons.svelte';
 	import Dropdown from '#lib/components/ui/Dropdown.svelte';
 	import { BLOCK_SENTENCE } from '#lib/journal.js';
+	import { pendingEnhance } from '#lib/pendingEnhance.svelte.js';
 	import type { ReportTarget } from '#lib/server/db/schema.js';
 
 	// The ⋯ overlay: Mute, Unfriend, Report, Block for a friend's feed item.
-	// A disclosure (Dropdown: a button and the list it shows), so Tab walks it;
+	// A menu on Dropdown, like the avatar menu: the arrow keys walk its items;
 	// Escape and a press outside close it. Report and Block open a second step
-	// in place, so neither happens on one stray press.
+	// in place (a form, no longer a menu), so neither happens on one stray press.
 	let {
 		userId,
 		username,
@@ -37,45 +38,52 @@
 	}
 
 	const target = $derived(report ?? { type: 'user' as const, id: userId });
+
+	// A refusal (a lapsed session) is shown in the panel, where the press was.
+	const acting = pendingEnhance({ keepFailure: true });
+	const reporting = pendingEnhance({ keepFailure: true, done: () => (step = 'reported') });
+	const refusal = $derived(acting.error ?? reporting.error);
 </script>
 
 <Dropdown onopen={() => (step = 'menu')}>
 	{#snippet trigger(props)}
-		<button type="button" class="more-button" aria-label={label} {...props}>
+		<button type="button" class="more-button" aria-haspopup="menu" aria-label={label} {...props}>
 			{@render moreIcon()}
 		</button>
 	{/snippet}
 	{#snippet panel()}
-		<div class="panel" bind:this={panelEl}>
+		<div
+			class="menu-panel panel"
+			role={step === 'menu' && !refusal ? 'menu' : undefined}
+			bind:this={panelEl}>
+			{#if refusal}
+				<p class="form-error" role="alert">{refusal}</p>
+			{/if}
 			{#if step === 'menu'}
 				{#if items.includes('mute')}
-					<form method="POST" action="/friends?/mute" use:enhance>
+					<form method="POST" action="/friends?/mute" role="none" use:enhance={acting.submit}>
 						<input type="hidden" name="userId" value={userId} />
-						<button type="submit">Mute @{username}</button>
+						<button type="submit" class="menu-row" role="menuitem">Mute @{username}</button>
 					</form>
 				{/if}
 				{#if items.includes('unfriend')}
-					<form method="POST" action="/friends?/unfriend" use:enhance>
+					<form method="POST" action="/friends?/unfriend" role="none" use:enhance={acting.submit}>
 						<input type="hidden" name="userId" value={userId} />
-						<button type="submit">Unfriend</button>
+						<button type="submit" class="menu-row" role="menuitem">Unfriend</button>
 					</form>
 				{/if}
 				{#if items.includes('report')}
-					<button type="button" onclick={() => go('report')}>Report</button>
+					<button type="button" class="menu-row" role="menuitem" onclick={() => go('report')}>
+						Report
+					</button>
 				{/if}
 				{#if items.includes('block')}
-					<button type="button" class="danger" onclick={() => go('block')}>Block</button>
+					<button type="button" class="menu-row danger" role="menuitem" onclick={() => go('block')}>
+						Block
+					</button>
 				{/if}
 			{:else if step === 'report'}
-				<form
-					method="POST"
-					action="/friends?/report"
-					class="step"
-					use:enhance={() =>
-						async ({ result, update }) => {
-							if (result.type === 'success') step = 'reported';
-							else await update();
-						}}>
+				<form method="POST" action="/friends?/report" class="step" use:enhance={reporting.submit}>
 					<input type="hidden" name="targetType" value={target.type} />
 					<input type="hidden" name="targetId" value={target.id} />
 					<label for="reason-{target.type}-{target.id}">What's wrong?</label>
@@ -91,7 +99,7 @@
 			{:else if step === 'reported'}
 				<p class="step" role="status">Reported. Thanks; someone will read it.</p>
 			{:else}
-				<form method="POST" action="/friends?/block" class="step" use:enhance>
+				<form method="POST" action="/friends?/block" class="step" use:enhance={acting.submit}>
 					<input type="hidden" name="userId" value={userId} />
 					<p>{BLOCK_SENTENCE}</p>
 					<button type="submit" class="btn-ghost danger">Block @{username}</button>
@@ -122,48 +130,11 @@
 		background: var(--color-tint);
 	}
 
-	/* The one overlay on the page, and so the one shadow. Its top meets the
-	   button's bottom edge: the button's -10px top margin plus its 44px. */
+	/* Dropdown draws the overlay. Its top meets the button's bottom edge: the
+	   button's -10px top margin plus its 44px; its right edge, the button's. */
 	.panel {
-		position: absolute;
-		right: -12px;
-		top: 34px;
-		z-index: 6;
-		display: flex;
-		flex-direction: column;
-		width: max-content;
-		min-width: 200px;
-		max-width: min(300px, calc(100vw - 36px));
-		padding: 6px;
-		background: var(--color-surface);
-		border: 1px solid var(--color-border-2);
-		border-radius: var(--radius-md);
-		box-shadow: var(--shadow-raised);
-	}
-
-	/* Menu rows; a step's confirm is a ghost button from the closed set. */
-	.panel button:not(.btn-ghost) {
-		display: flex;
-		align-items: center;
-		width: 100%;
-		min-height: 44px;
-		padding: 0 12px;
-		border: 0;
-		border-radius: var(--radius-sm);
-		background: none;
-		font: inherit;
-		font-weight: 600;
-		color: var(--color-text);
-		text-align: left;
-		cursor: pointer;
-	}
-
-	.panel button:not(.btn-ghost):hover {
-		background: var(--color-tint);
-	}
-
-	.panel .danger {
-		color: var(--color-remove);
+		--menu-top: 34px;
+		--menu-right: -12px;
 	}
 
 	.step {
@@ -187,7 +158,7 @@
 
 	@media (max-width: 699px) {
 		.panel {
-			right: -6px;
+			--menu-right: -6px;
 		}
 	}
 </style>

@@ -114,9 +114,15 @@ describe('relationship actions', () => {
 		expect(await run('request', { userId: THEM.id })).toMatchObject({ status: 400 });
 	});
 
-	test('signed out is a 401', async () => {
-		expect(await run('block', { userId: THEM.id }, null)).toMatchObject({ status: 401 });
-	});
+	test.each(['request', 'accept', 'decline', 'unfriend', 'block', 'unblock', 'mute'])(
+		'%s signed out is a 401 form failure saying the session ended',
+		async (name) => {
+			expect(await run(name, { userId: THEM.id }, null)).toMatchObject({
+				status: 401,
+				data: { error: SESSION_ENDED('try again'), code: 'unauthenticated' }
+			});
+		}
+	);
 });
 
 describe('like', () => {
@@ -149,6 +155,15 @@ describe('like', () => {
 });
 
 describe('report', () => {
+	test('signed out is a 401 form failure saying the session ended, and files nothing', async () => {
+		const fields = { targetType: 'log_entry', targetId: '5', reason: 'Spam' };
+		expect(await run('report', fields, null)).toMatchObject({
+			status: 401,
+			data: { error: SESSION_ENDED('try again'), code: 'unauthenticated' }
+		});
+		expect(m.report).not.toHaveBeenCalled();
+	});
+
 	test('files the target and the reason', async () => {
 		await run('report', { targetType: 'log_entry', targetId: '5', reason: ' Spam ' });
 		expect(m.report).toHaveBeenCalledWith(ME.id, 'log_entry', '5', 'Spam');

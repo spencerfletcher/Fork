@@ -2,6 +2,7 @@ import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { chain } from '#lib/testing/drizzle.js';
 import { invokeAction, formEvent, loadEvent, loadPage } from '#lib/testing/actions.js';
 import { KEEP_SOURCE } from '#lib/journal.js';
+import { SESSION_ENDED } from '#lib/server/actions.js';
 import { actions, load } from './+page.server';
 import type { PageData } from './$types';
 
@@ -131,6 +132,19 @@ describe('journal/[id]/edit save', () => {
 });
 
 describe('journal/[id]/edit deleteEntry', () => {
+	test('signed out is a 401 form failure saying the session ended, and deletes nothing', async () => {
+		const signedOut = formEvent({
+			params: { id: '5' },
+			locals: { user: null, supabase: { storage: {} } }
+		});
+		const result = await invokeAction(actions.deleteEntry as never, signedOut);
+		expect(result).toMatchObject({
+			status: 401,
+			data: { error: SESSION_ENDED('delete again'), code: 'unauthenticated' }
+		});
+		expect(deleteMock).not.toHaveBeenCalled();
+	});
+
 	test('deletes the own entry and its photo, then lands on the Journal', async () => {
 		const result = await invokeAction(actions.deleteEntry as never, event());
 		expect(result).toMatchObject({ status: 303, location: '/journal?deleted=1' });

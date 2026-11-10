@@ -4,11 +4,15 @@
 	import { PRIVATE_RECIPE_HINT, marginDay, sourceHref } from '#lib/journal.js';
 	import { AUDIENCE_LABEL } from '#lib/audience.js';
 	import { audienceIcon, lockIcon } from '#lib/components/Icons.svelte';
+	import { enhance } from '$app/forms';
+	import { pendingEnhance } from '#lib/pendingEnhance.svelte.js';
 
 	let { entry }: { entry: LogEntry & { source: EntrySource } } = $props();
 
 	const [dayNumber, weekday] = $derived(marginDay(entry.cookedOn));
 	const source = $derived(entry.source);
+	// The action is the recipe page's, so its refusal is shown here.
+	const fork = pendingEnhance({ keepFailure: true });
 	const privateRecipe = $derived(source.kind === 'recipe' && source.visibility === 'private');
 </script>
 
@@ -74,9 +78,16 @@
 							<a class="arrow-link" href="/recipes/{source.slug}/edit">Change the recipe →</a>
 						{:else if source.kind === 'recipe'}
 							<!-- Fork is a POST on the recipe; it lands in the new fork's editor. -->
-							<form class="fork" method="POST" action="/recipes/{source.slug}?/fork">
-								<button type="submit" class="text-btn">Fork →</button>
+							<form
+								class="fork"
+								method="POST"
+								action="/recipes/{source.slug}?/fork"
+								use:enhance={fork.submit}>
+								<button type="submit" class="text-btn" disabled={fork.pending}>Fork →</button>
 							</form>
+							{#if fork.error}
+								<p class="form-error" role="alert">{fork.error}</p>
+							{/if}
 						{/if}
 					</div>
 				</div>

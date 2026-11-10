@@ -1,8 +1,18 @@
-import { describe, test, expect } from 'vitest';
+import { describe, test, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/svelte';
-import type { ComponentProps } from 'svelte';
+import { tick, type ComponentProps } from 'svelte';
+import type { SubmitFunction } from '$app/forms';
 import JournalEntry from './JournalEntry.svelte';
 import { PRIVATE_RECIPE_HINT } from '#lib/journal.js';
+
+// Fork's enhance callback is captured so a test can play back a result.
+const { submits } = vi.hoisted(() => ({ submits: [] as SubmitFunction[] }));
+vi.mock('$app/forms', () => ({
+	enhance: (_form: HTMLFormElement, submit: SubmitFunction) => {
+		submits.push(submit);
+		return { destroy: () => {} };
+	}
+}));
 
 type Entry = ComponentProps<typeof JournalEntry>['entry'];
 
@@ -61,6 +71,26 @@ describe('JournalEntry', () => {
 		});
 		const fork = screen.getByRole('button', { name: 'Fork →' });
 		expect(fork.closest('form')).toHaveAttribute('action', '/recipes/buns?/fork');
+	});
+
+	test('a signed-out Fork says the session ended under the note', async () => {
+		const entry = makeEntry();
+		if (entry.source.kind !== 'recipe') throw new Error('fixture');
+		render(JournalEntry, {
+			props: { entry: { ...entry, source: { ...entry.source, own: false } } }
+		});
+		const words = 'Your session ended. Log in in another tab, then try again.';
+		const after = await (
+			submits.at(-1) as unknown as () => Promise<
+				(opts: { result: unknown; update: () => Promise<void> }) => Promise<void>
+			>
+		)();
+		await after({
+			result: { type: 'failure', status: 401, data: { error: words } },
+			update: async () => {}
+		});
+		await tick();
+		expect(screen.getByRole('alert')).toHaveTextContent(words);
 	});
 
 	test('a deleted recipe says so in place of the link, and keeps dish, photo and note', () => {
