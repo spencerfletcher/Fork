@@ -4,7 +4,7 @@
 	import type { Visibility } from '#lib/recipes/validation.js';
 	import { AUDIENCE_LABEL } from '#lib/audience.js';
 	import { audienceIcon } from '#lib/components/Icons.svelte';
-	import Avatar from '#lib/components/ui/Avatar.svelte';
+	import CookLink from '#lib/components/ui/CookLink.svelte';
 	import Username from '#lib/components/ui/Username.svelte';
 
 	// Only what the card renders, so a column added to the table does not ripple
@@ -98,10 +98,7 @@
 	<!-- The cook is one link from avatar to handle, before the stretched recipe
 	     link so Tab reaches the profile first; a sibling, never nested. -->
 	{#if variant === 'discover' && recipe.author}
-		<a class="card-cook" href="/users/{recipe.author.username}">
-			<Avatar username={recipe.author.username} size={28} />
-			<span class="handle card-handle">@{recipe.author.username}</span>
-		</a>
+		<CookLink username={recipe.author.username} class="card-cook" />
 	{/if}
 
 	<a {href} class="card-stretched-link" aria-label={recipe.title}></a>
@@ -325,45 +322,6 @@
 		line-height: 1.5;
 		color: var(--color-text-3);
 		overflow-wrap: anywhere;
-	}
-
-	/* Discover's cook link, above the photo: a small initial avatar and the
-	   handle, one hit area as wide as they are, above the stretched link. */
-	.card-cook {
-		position: relative;
-		z-index: 2;
-		display: flex;
-		align-self: flex-start;
-		align-items: center;
-		gap: 8px;
-		min-width: 0;
-		max-width: 100%;
-		min-height: 24px;
-		font-size: 0.9375rem;
-		text-decoration: none;
-	}
-
-	.card-cook:hover .card-handle {
-		color: var(--color-accent-hover);
-	}
-
-	/* A 44px hit on a phone without moving the line. */
-	@media (max-width: 699px) {
-		.card-cook {
-			min-height: 44px;
-			margin-block: -8px;
-		}
-	}
-
-	/* Discover's handle: `.handle` (app.css) inside the cook link. */
-	.card-handle {
-		position: relative;
-		z-index: 2;
-		transition: color 0.15s ease;
-	}
-
-	.card-handle:hover {
-		color: var(--color-accent-hover);
 	}
 
 	/* The author is Username at the meta size; above the card's stretched
