@@ -82,7 +82,7 @@ How to read it:
 | I03 | Manual website-capture fallback after extraction fails; keep captured material and URL | Paprika D | Adopt import recovery; no unsupported-site dead end | P2 | later |
 | I04 | Multi-image or multi-page photo and PDF capture, crop, rotate, correct before saving; append versus replace explicit | Paprika D; Crouton V/D; Recipe Keeper V/D | Later OCR capture; evaluate fractions and multi-column accuracy | P5 | later |
 | I05 | Social-post capture with source and review; captions and text distinct from video understanding | Paprika D; Recipe Keeper D | Later capture; availability does not grant publication rights | P5 | later |
-| I06 | Migration from cookbook exports with previewed counts, field-loss warnings, per-record failures | All three V/D | Adopt switching work; choose the first format from real pilot libraries | P1 | next |
+| I06 | Migration from cookbook exports with previewed counts, field-loss warnings, per-record failures | All three V/D | Adopt switching work; choose the first format from real pilot libraries | P2 | later |
 | I07 | Duplicate warnings compare source and content, show candidates, allow keep, update or fork | Paprika D | Adopt import quality; same title is not duplication; no automatic bulk removal | P2 | later |
 | I08 | Private partial capture of an idea, link or photo, visibly not cook-ready | Crouton D | Later capture and drafts; do not reopen MVP scope | Later | later |
 | X01 | Readable single-recipe print with photo and notes options and clear version, scale and source; an ink-saving form first | Paprika V/D; Recipe Keeper V | Adopt P1 print; print matches the selected content | P1 | next |
@@ -143,8 +143,8 @@ How to read it:
 |---|---:|---|
 | Shipped in the MVP | 2 | E03, E05 |
 | P0 | 1 | E06 |
-| P1 | 15 | E01, E02, E07, E08, L01, L02, L04, L05, L06, L07, L11, I06, X01, X02, X03 |
-| P2 | 27 | E04, E09, S01 to S08, C01 to C06, C08, C10, C11, L03, I01, I02, I03, I07, A06, Q01, Q07 |
+| P1 | 14 | E01, E02, E07, E08, L01, L02, L04, L05, L06, L07, L11, X01, X02, X03 |
+| P2 | 28 | E04, E09, S01 to S08, C01 to C06, C08, C10, C11, L03, I01, I02, I03, I06, I07, A06, Q01, Q07 |
 | P3 | 16 | C07, G01 to G08, M01 to M05, A02, Q03 |
 | P4 | 6 | E10, C09, A01, A05, Q02, Q05 |
 | P5 | 7 | C12, C13, I04, I05, A03, A04, A07 |
@@ -162,3 +162,4 @@ E04's read-back part and C10's baseline ticks shipped; both are counted where th
 ## Changelog
 
 - 2026-11-11: created from the deep dive's inventory and the product roadmap's retained-scope decision; phases derived from each entry's disposition.
+- 2026-11-11: I06 moved from P1 to P2 with the other importers (RM §14, 11 Nov).

@@ -14,12 +14,12 @@ Sources: R [roadmap report](../research/2026-11-08-product-roadmap/README.md); C
 | R4 | Implementation substantial; evidence labels Built locally / Observed live / Unverified; deployment recheck | RM §16.27 | removed with approval (RM §16.27) |
 | R5 | State: Editor and history | RM §2, P1 drafts | placed |
 | R6 | State: Cooking and scaling | RM §2, P2 cookbook lane | placed |
-| R7 | State: Organization; ingredient search over history | RM §2, P1 search, §15 Q3 | placed |
+| R7 | State: Organization; ingredient search over history | RM §2, P1 search, P2 global search, §14 (11 Nov) | placed |
 | R8 | State: Visibility and lineage (public default, inherit, no source-version ref, media) | RM §2, P0 exact origins, media check | superseded in part (RM §16.18) |
 | R9 | State: Missing cookbook breadth | RM §2 known gaps | placed |
 | R10 | State: Quality unverified | RM §2 | placed |
 | R11 | Public Storage URL is a policy check, public default not a bypass | RM P0 media access check | placed |
-| R12 | Loop: Capture | RM §1.1, P1 migration, P2 easy import | placed |
+| R12 | Loop: Capture | RM §1.1, P2 migration and easy import | placed |
 | R13 | Loop: Organize and find | RM §1.2, P1 | placed |
 | R14 | Loop: Prepare | RM §1.2, P3 | placed |
 | R15 | Loop: Cook | RM §1.3, P2 cookbook lane | placed |
@@ -71,7 +71,7 @@ Sources: R [roadmap report](../research/2026-11-08-product-roadmap/README.md); C
 | R61 | Disposition: version-pinned saves and private notes | RM P1 Keep this version | superseded wording (RM §16.14) |
 | R62 | Disposition: whole-recipe paste, URL, files P1 | RM P2 easy import | superseded (RM §16.10) |
 | R63 | Disposition: readable export, archive, print | RM P1 print, export | placed |
-| R64 | Disposition: first competitor migration importer | RM P1, §15 Q2 | placed |
+| R64 | Disposition: first competitor migration importer | RM P2, §14 (11 Nov) | superseded (RM §16.28) |
 | R65 | Disposition: mobile cooking, tick affordance, zoom | RM P2 mobile cooking refinement | placed |
 | R66 | Disposition: scaling, units, temperature | RM P2 units | placed |
 | R67 | Disposition: named timers, offline reading | RM P2 timers, offline | placed |
@@ -213,7 +213,7 @@ Sources: R [roadmap report](../research/2026-11-08-product-roadmap/README.md); C
 | R203 | Ledger: preserve commitments; social deferral superseded | RM §3, §13, §14 | placed |
 | R204 to R226 | M1 to M23 (23 rows, one each) | RM §13 (same milestone) | placed (M4 wording RM §16.16; M17 placement RM §16.6; M20 RM §16.22) |
 | R227 | Other preserved preferences | RM §13 | placed |
-| R228 | Nonblocking product calls | RM §15 Q2, Q7, Q8, Q11; navigation and Made it settled | placed |
+| R228 | Nonblocking product calls | RM §14 (11 Nov), §15 deferred decisions; navigation and Made it settled | placed |
 | R229 | Reconciliation 9 Nov: summary wins | RM §14 | placed |
 | R230 | Recon: verbs | RM §14 | superseded (RM §16.1) |
 | R231 | Recon: no Comment | RM §14, P2 comments | placed |
@@ -256,7 +256,7 @@ Sources: R [roadmap report](../research/2026-11-08-product-roadmap/README.md); C
 | R268 | Backlog: dropdown background | RM §6 | placed |
 | R269 | Backlog: hover colours, Clay Deep | RM §6 | placed |
 | R270 | Backlog: ingredient search scaling | RM P2 global search | placed |
-| R271 | Backlog: search in place | RM P2 global search, §15 Q4 | placed |
+| R271 | Backlog: search in place | RM P2 global search, §14 (11 Nov) | placed |
 | R272 | Unfriend bullet | RM §7 | placed |
 | R273 | Ex-friend forks bullet | RM §7 | placed |
 | R274 | Journal after unfriend bullet | RM §7 | placed |
@@ -323,7 +323,7 @@ Sources: R [roadmap report](../research/2026-11-08-product-roadmap/README.md); C
 | CM44 | Disposition: multiple named timers | RM P2 | placed |
 | CM45 | Disposition: offline saved recipes | RM P2 | placed |
 | CM46 | Disposition: export | RM P1 | placed |
-| CM47 | Disposition: first migration importer | RM P1 | placed |
+| CM47 | Disposition: first migration importer | RM P2 | superseded (RM §16.28) |
 | CM48 | Disposition: grocery list | RM P3 | placed |
 | CM49 | Disposition: meal queue | RM P3 | placed |
 | CM50 | Disposition: private cook log bound to version | RM P2 Journal (shipped) | placed |
@@ -464,7 +464,7 @@ Sources: R [roadmap report](../research/2026-11-08-product-roadmap/README.md); C
 | PA2 | Product scope from PRODUCT.md | RM §1 | placed |
 | PA3 to PA21 | Capability rows: create/edit, parser, failed-save recovery, durable draft, concurrency, history/diff, restore, forking, favorites, scaling, cooking, search, organization, visibility, auth, sharing, import/export/print, structured richness, advanced (19) | RM §2 shipped and known gaps; open items in P0, P1 | placed (visibility row superseded, RM §16.18) |
 | PA22 | Inference: portfolio assets | RM §10 demonstration | placed |
-| PA23 | Inference: ingredient search contract | RM §15 Q3 | placed |
+| PA23 | Inference: ingredient search contract | RM §14 (11 Nov), P2 global search | placed |
 | PA24 | Inference: pinned saves fit the model | RM P1 Keep this version | placed |
 | PA25 | Gap: unverified runtime | RM §2 | placed |
 | PA26 | Gap: no accessibility claim | RM §8 | placed |
@@ -479,11 +479,11 @@ Sources: R [roadmap report](../research/2026-11-08-product-roadmap/README.md); C
 | PA35 | Order 1: writing and privacy trust | RM P0 | placed |
 | PA36 | Order 2: personal cookbook, 4 of 5 gate | RM P1, §8 | placed |
 | PA37 | Order 3: editor completeness | RM P1 | placed |
-| PA38 | Order 4: capture and ownership | RM P1 print, export, migration; P2 import | placed |
+| PA38 | Order 4: capture and ownership | RM P1 print, export; P2 migration, import | placed |
 | PA39 | Order 5: cooking reliability | RM P2 cookbook lane | placed |
 | PA40 | Order 6: cooking memory | RM P2 Journal, §7 | placed |
 | PA41 | Shared UX gate | RM §8 | placed |
-| PA42 | Gap: open product proposals | RM §15 Q5, Q6 | placed |
+| PA42 | Gap: open product proposals | RM §14 (11 Nov), P1 drafts, Trash, Keep this version | placed |
 | PA43 | Gap: unit correctness | RM §7 scaling | placed |
 | PA44 | Takeaway 3: decision ledger | RM §13 | placed |
 | PA45 | Preserve cook-first principles | RM §13 preferences | placed |
@@ -574,7 +574,7 @@ Sources: R [roadmap report](../research/2026-11-08-product-roadmap/README.md); C
 | S1-24 | Competitive: Paprika 4 already covered | CO §2 | placed |
 | S1-25 | Competitive: fidelity fixtures, not defect rates | CO §4 | placed |
 | S1-26 | Competitive: 87 entries not 87 features | IN, RM §5 | placed |
-| S1-27 | Model is a scenario; prices not approved; purchased core open | BU §2 | placed |
+| S1-27 | Model is a scenario; prices not approved; purchased core open | BU §2 | placed (purchased core superseded, RM §16.29) |
 | S1-28 to S1-31 | Month-24 rows: registrations, entitlements, ARR, contribution | BU §4 | placed |
 | S1-32 | Model: 5.6%, $0.70, $19.92, 73, 3,223, $96,690 | BU §3 | placed |
 | S1-33 | Exclusions; cash is not earned revenue | BU §4 | placed |
@@ -607,7 +607,7 @@ Sources: R [roadmap report](../research/2026-11-08-product-roadmap/README.md); C
 | S2-22 | Broadens audience; no uplift; test early | RM §9, BU §5 | placed |
 | S2-23 | Recall at the next cook | RM §9 | placed |
 | S2-24 | First week | RM §9 | placed |
-| S2-25 | Coherent paid offer; $36; $48; purchased core | BU §2 | placed |
+| S2-25 | Coherent paid offer; $36; $48; purchased core | BU §2 | placed (purchased core superseded, RM §16.29) |
 | S2-26 | Repeatable route to customers | BU §6 | placed |
 | S2-27 | Manageable operation | BU §7, RM §9 | placed |
 | S2-28 | USD; billing units; no timeline | BU §3 | placed |
@@ -706,9 +706,9 @@ Sources: R [roadmap report](../research/2026-11-08-product-roadmap/README.md); C
 Each table row above counts as one item, except rows that name a range (for example "R204 to R226", "DD15 to DD25"), which count as the number of items in the range; source-register rows count as one.
 
 - Items in the sources: 939 (R 308, CM 90, AQ 132, PA 56, DD 160, S1 52, S2 43, SL 47, US 13, CA 13, Z 25), counted from the row numbers above.
-- Items placed in the current set: 934. This includes 24 rows marked superseded in whole or part (R8, R17, R37, R52, R56, R58, R61, R62, R68, R80, R81, R97, R100, R103, R230, R238, CM38, CM40, CM61, AQ15, AQ44, PA29, SL1, SL7), plus superseded notes inside R204 to R226 (M4, M17, M20) and PA3 to PA21 (visibility); each is placed through its replacement.
+- Items placed in the current set: 934. This includes 26 rows marked superseded in whole or part (R8, R17, R37, R52, R56, R58, R61, R62, R64, R68, R80, R81, R97, R100, R103, R230, R238, CM38, CM40, CM47, CM61, AQ15, AQ44, PA29, SL1, SL7), plus superseded notes inside R204 to R226 (M4, M17, M20), PA3 to PA21 (visibility), S1-27 and S2-25 (purchased core); each is placed through its replacement.
 - Items removed with approval: 5 rows (R4, R201, PA1, S1-5, S2-12), RM §16 lines 23 to 27; line 24 comes from the design summary, which stays current and is not a reconciled source. Placed 934 plus removed 5 is 939.
-- Lines in RM §16: 27, of which 22 are dropped as superseded (several rows above share one line; lines 12, 15 and 17 replace wording in R254, R253 and the design summary) and 5 are removals with approval (lines 23 to 27).
+- Lines in RM §16: 29, of which 24 are dropped as superseded (several rows above share one line; lines 12, 15 and 17 replace wording in R254, R253 and the design summary) and 5 are removals with approval (lines 23 to 27).
 - Items kept with removal proposed: 0.
 - Unplaced: 0.
 
@@ -716,3 +716,4 @@ Each table row above counts as one item, except rows that name a range (for exam
 
 - 2026-11-11: created with the product set.
 - 2026-11-11: five kept-with-removal-proposed rows now removed with approval (RM §16.23, 25 to 27); counts updated.
+- 2026-11-11: rows moved by Spencer's 11 Nov answers (RM §14): migration importer to P2 (R64, CM47 superseded, RM §16.28), purchased core superseded (RM §16.29), search and drafts rows point at §14; §15 references updated; counts updated.

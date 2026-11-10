@@ -15,7 +15,7 @@ Fork is a recipe cookbook for serious home cooks, live at recipes.spencerfletche
 1. Finish P0 trust work: exact source versions on forks, account access and lifecycle, backup and restore, moderator suppression that reaches history.
 2. Clear the pilot prerequisites: interim data export, rights and moderation operations, abuse basics, in-app notifications.
 3. Run the friends pilot and watch whether Fork stays useful without founder reminders.
-4. Build the P1 cookbook: drafts, Trash, photo access by audience, collections, Keep this version, search quality, print, export, first migration importer.
+4. Build the P1 cookbook: drafts, Trash, photo access by audience, collections, Keep this version, search quality, print, export.
 5. Settle the P1 design backlog and the open questions in the roadmap, one at a time.
 
 ## The set
@@ -42,3 +42,4 @@ Rules stay where they are: [DESIGN.md](../../DESIGN.md) (visual and interaction 
 ## Changelog
 
 - 2026-11-11: created; replaces the 8 November roadmap report and the two 10 November syntheses as the current plan.
+- 2026-11-11: first migration importer dropped from the P1 list (moved to P2, RM §14).

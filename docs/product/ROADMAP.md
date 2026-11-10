@@ -102,21 +102,20 @@ The differentiating experience is continuity: a recipe travels from capture thro
 | Section heading tool | Direct Section heading button inserting `# Section name` with the name selected; typed and pasted markers give the same groups; the `#` stays visible in a softer colour; ordinary recipes need no markers; no general Markdown | shipped | DS, R, E03 |
 | Source, notes, times | Source name and URL separate (E07); notes; time entry with rest and make-ahead (E08); equipment, storage and reheating as author notes; carried through edit, read, history, preview, print and archive | next | R, CM, DD |
 | Restore as new version | Restore an old version by appending a new one; past content never changes | next | R, PA |
-| Durable drafts | Draft recovery across reload, tab close and crash; local versus synced recovery to decide; drafts never flood version history | next | R (9 Nov evening), AQ |
-| Trash | Deleted-recipe restore | next | R (9 Nov evening) |
+| Durable drafts | Draft recovery across reload, tab close and crash, saved on the device; drafts never flood version history; synced drafts are a P2 item | next | R (9 Nov evening), AQ, OD |
+| Trash | Deleted recipes recoverable for 30 days | next | R (9 Nov evening), OD |
 | Photo access follows audience | Private and Friends-level photos are not publicly addressable | next | R (9 Nov evening) |
 | Settings page | Account, username, default audience; later the measurement and inline-quantity preferences | next | R (9 Nov evening) |
 | Measurement preference | Metric or US per user | next | R (9 Nov evening) |
 | Last and times cooked | Derived from log entries, on cards and the recipe page (the personal "You cooked this on" line is shipped) | next | R (9 Nov evening), M17 |
 | Cookbook and Discover | Separate destinations; a route never changes meaning on sign-in | shipped | DS |
 | Collections | v1 manual collections ("To cook", "Good for parties", "Quick", "Healthy", "Italian"); starter collections "To cook" and "Favorites"; optional "Add to collection" beside Save or in the menu, never replacing Save's confirmation; multiple membership; membership not copies; owned and saved organize the same way; the data model leaves room for a rule. Personal library works without a feed | next | R, OD, L06, M6 |
-| Keep this version | An option on a saved recipe, shown on the page ("Keeping v3 · Follow latest version"); lasts across visits; never overrides access. Private notes on saved recipes | next | R, DS, L11 |
+| Keep this version | An option on a saved recipe, shown on the page ("Keeping v3 · Follow latest version"); lasts across visits; never overrides access. If the author unpublishes or deletes the recipe, the saver keeps a read-only copy of the version they saved, marked as no longer shared by the author, and cannot re-share it (section 7). Private notes on saved recipes | next | R, DS, L11, OD |
 | Pins | Distinct from "To cook": a pin may be intent or a frequently cooked recipe | next | R |
-| Search quality | Current-content relevance, explained matches with highlighting (M19, L02), exact useful matches before popularity, history search labelled, filters kept, recoverable empty states, non-Latin slugs fixed | next | R, PA, M8 |
+| Search quality | Relevance across every version, explained matches with highlighting (M19, L02), exact useful matches before popularity, filters kept, recoverable empty states, non-Latin slugs fixed; opening a result at its matched version comes with P2 global search | next | R, PA, M8, OD |
 | Library growth | Pagination; bulk collection and tag actions as libraries grow; compact list view (L01); Journal-derived views (L04); kept queries and scroll (L05); overflow actions (L07) | next | R, DD |
 | Print | Readable single-recipe print with version, scale and source (X01); print neither clips nor loses notes or groups | next | R, CM |
 | Export and archive | Human-readable export and a structured archive with supported versions, provenance, photos, groups, organization; selected or whole library (X02, X03); round-trip fixture proves fidelity; export stays available whatever the payment status | next | R, CM, M16 |
-| First migration importer | One competitor format chosen from pilot libraries (Paprika is a sensible candidate, not a proven market-share leader); preview counts, duplicates and per-record failures; never overwrite silently; original archive untouched (I06) | next | R, CM, M15 |
 | Public recipe metadata | Verify public previews; add Recipe structured data for public recipes | next | M2 |
 | Photo field redesign | The photo itself with two pill overlays (Replace, Remove), or one Add photo pill when empty; ends today's two text-button styles | next (P1, soon) | R (9 Nov evening), OD |
 | Feed card title | Drop the "Shakshuka · v1" source line; the entry title links to the recipe at the cooked version | next (P1 polish) | R (9 Nov evening), OD |
@@ -145,12 +144,14 @@ Pilot lane:
 | Email notifications | Opt-in, alongside in-app; digests only by choice | later | R (9 Nov evening), SL |
 | Comments | Simple cook comments once the feed has real use, with comment moderation (report a comment, delete on your own entry) | later | R, DS, M3 |
 | Onboarding | A new account's first ten minutes (see section 9) | later | R (9 Nov evening), S2 |
-| Audience-change side effects | What happens to saves, forks and log entries when a recipe becomes more private; revisit | later | R (9 Nov evening) |
+| Audience-change side effects | What happens to saves, forks and log entries when a recipe becomes more private; revisit (saves on unpublish or delete are settled in section 7) | later | R (9 Nov evening), OD |
 | Profile redesign | Friend request control (shipped), friends-level recipes, log entries; identity and settings without empty-metric dashboards | later | R (9 Nov evening), S1 |
-| Global search | One search covering own, friends' and Public recipes, with scopes (all friends' recipes, one person's, mine, saved) and a People scope (handle or name) with a friend-request control; opens in place on the current page (phone only or both, to decide); ingredient text moves to an indexed column as recipe count grows, since today each search reads the whole versions table | later | R (9 to 10 Nov), OD |
+| Synced drafts | Drafts recovered across devices, after P1's on-device recovery | later | R, OD |
+| Global search | One search covering own, friends' and Public recipes, with scopes (all friends' recipes, one person's, mine, saved) and a People scope (handle or name) with a friend-request control; matches every version, and a result that matched on an earlier version says which version matched and opens the recipe at that version; opens in place on the current page, phone and desktop, one behaviour built once; ingredient text moves to an indexed column covering every version, not only current content, as recipe count grows, since today each search reads the whole versions table | later | R (9 to 10 Nov), OD |
 | Profile discovery | A small "Cooks" strip on Discover ranked by public recipes and saves; personalised suggestions stay P5 | later | R (9 Nov evening), OD |
 | Journal export | Journal and log-entry data export | later | R (9 Nov evening), X02 |
 | Easy import | Text documents, Markdown files, other sites where possible, through one review path (I01 to I03, I07, E04 repair, E09, Q01, Q07); bounded safe URL fetching is part of the feature; paste-first editing stays as it is | later | R (9 Nov evening), DD |
+| First migration importer | One competitor format chosen from pilot libraries (Paprika is a sensible candidate, not a proven market-share leader); preview counts, duplicates and per-record failures; never overwrite silently; original archive untouched (I06) | later | R, CM, M15, OD |
 | Editor preview | See the recipe as its page will show it before saving; the preview matches saved rendering and is not a second place to edit | later | R (9 Nov evening), OD |
 | Private ratings | Personal ratings may follow; no public scores in the pilot | later | R, Q04 |
 
@@ -235,7 +236,7 @@ Cookbook lane:
 
 ## 5. The 87-entry cookbook-app inventory
 
-All 87 entries from the deep dive are retained scope (Spencer, 9 Nov 2026), refined, combined and sequenced as each workstream is built; trimming needs a recorded reason. [INVENTORY.md](INVENTORY.md) lists every ID with its phase and status. Counts: shipped 2, P0 1, P1 15, P2 27, P3 16, P4 6, P5 7, not yet phased 13. Retaining the scope moves nothing into an earlier phase, and the pilot does not wait for all 87.
+All 87 entries from the deep dive are retained scope (Spencer, 9 Nov 2026), refined, combined and sequenced as each workstream is built; trimming needs a recorded reason. [INVENTORY.md](INVENTORY.md) lists every ID with its phase and status. Counts: shipped 2, P0 1, P1 14, P2 28, P3 16, P4 6, P5 7, not yet phased 13. Retaining the scope moves nothing into an earlier phase, and the pilot does not wait for all 87.
 
 Named commitments, selected rather than candidate:
 
@@ -272,7 +273,7 @@ Items waiting on Spencer's eye. Rules live in [DESIGN.md](../../DESIGN.md); the 
 
 **Scaling and units.** Scale parsed quantities without changing saved content; keep ranges, fractions, "to taste", packages and qualifiers; show lines that could not scale; never multiply temperatures, times or pans. Conversion keeps the author's original, shows assumptions, separates mass from fluid ounces and unit systems, and declines uncertain densities. A user's location is not evidence of which "cup" a recipe meant. Switching °C and °F never creates a version (AQ, CM).
 
-**Saves and access.** Save is one tap, "keep this", into the Cookbook's Saved shelf, never a question. A moving favourite follows the author's current recipe and may disappear if access changes; Keep this version records the chosen version but grants no permanent access or copying right. Source recipe, source version and imported attribution are distinct records; a note saying "copied v3" is not enough. Tags describe the recipe and follow its visibility. Collections organize your cookbook; filters are transient views, never saved; "To cook" is intent (R, decided 9 Nov).
+**Saves and access.** Save is one tap, "keep this", into the Cookbook's Saved shelf, never a question. A moving favourite follows the author's current recipe and may disappear if access changes; Keep this version records the chosen version but grants no copying right. When an author unpublishes or deletes a recipe someone saved, the saver keeps a read-only copy of the version they saved, marked as no longer shared by the author, and cannot re-share it (OD, 11 Nov). Source recipe, source version and imported attribution are distinct records; a note saying "copied v3" is not enough. Tags describe the recipe and follow its visibility. Collections organize your cookbook; filters are transient views, never saved; "To cook" is intent (R, decided 9 Nov).
 
 **Unfriend, block, mute** (decided 9 Nov): unfriend hides the other person's Friends-level recipes at once everywhere the access check runs; the save row stays so re-friending restores it. Forks the ex-friend made of your Friends-level recipe stay theirs but become private and cannot be widened; "friends of the fork owner" is never a path to your recipe. Their Journal keeps their dish name, photo and notes, but the recipe reference hides; no source text or photo survives through it. Block is unfriend plus no requests or interactions either way; existing likes and comments are hidden, not deleted; public content stays publicly reachable, and the interface says blocking restricts interaction, not public access. Mute hides their feed entries for the muter only. A privatised fork can return to Friends only once its author can see the parent again (DS build record).
 
@@ -337,7 +338,7 @@ Prioritize trust, capture, reading and cooking, and retrieval refinements before
 
 **Admission gate before inviting anyone** (SL, R): no known cross-user privacy leak; server-side permission checks on feed, comments, saves, photos and direct URLs; edits survive a failed save; no known critical quantity corruption; logging works on the cohort's phones; reporting and moderator removal work; no copied publisher content defaults to public; an interim way to take personal data out works. Test these as end-to-end paths. Comprehensive archives, migration, timers and planning need not be finished.
 
-**The pilot** (an adjustable example, not a sample size): roughly four weeks with 8 to 15 willing friends, including relationships beyond Spencer. Friends bring two or three real recipes or links if convenient; one saved link or dinner log is enough. No compulsory weekly cooking, public photos or streaks. No invitations, creator outreach or campaigns have been sent; Spencer decides when (R, SL).
+**The pilot** (an adjustable example, not a sample size): roughly four weeks with 8 to 15 willing friends, including relationships beyond Spencer. Friends bring two or three real recipes or links if convenient; one saved link or dinner log is enough. No compulsory weekly cooking, public photos or streaks. No invitations, creator outreach or campaigns have been sent; Spencer talks to friends first, then invites, with no date set (R, SL, OD).
 
 | Period | Activity | Learn from actual behaviour |
 |---|---|---|
@@ -358,7 +359,7 @@ Prioritize trust, capture, reading and cooking, and retrieval refinements before
 - [Code-health sweep, 10 Nov 2026](../audits/code_health_2026-11-10.md): last clean run 1689 unit tests, svelte-check 0 errors, lint clean, e2e 221 passed; top items include the menu CSS twin, about 19 hand-written CSS-rule extractors in tests, dead `BrowseSections`, raw `fail()` in auth routes, docs drift, and missing indexes behind list queries (several since fixed in git).
 - [CSS complexity sweep, 10 Nov 2026](../audits/css_complexity_2026-11-10.md): about 250 removable lines, mostly declarations restating Tailwind preflight; the CSS simplification pass in flight follows it.
 - Standing sweeps: the [`code-health`](../../.agents/skills/code-health/SKILL.md) skill runs monthly, after any build over about 1000 lines or more than two parallel slices, and before a production publish; one dated report goes under `docs/audits/`.
-- Still owed after the MVP: remove the temporary `cream-palette` hook ignore once the MVP design settles (DS); the ingredient search index (P2 global search).
+- Still owed after the MVP: remove the temporary `cream-palette` hook ignore once the MVP design settles (DS); the ingredient search index, covering every version and not only current content, since a result opens at its matched version (P2 global search).
 
 ## 12. Outside the target and rejected
 
@@ -383,14 +384,14 @@ Prioritize trust, capture, reading and cooking, and retrieval refinements before
 | M5 Lineage visualization | P4 prototype, P5 decision; the fork list is built |
 | M6 Collections | P1 personal, P3 household |
 | M7 Fuzzy diff matching | P4 bounded quality work |
-| M8 Search ranking | P1 known-item and current-content relevance; popularity is a public-discovery signal |
+| M8 Search ranking | P1 known-item relevance across every version; popularity is a public-discovery signal |
 | M9 Optimistic concurrency | Built; preserved in P0; extends to suggestions later |
 | M10 Drizzle migrations | Shipped infrastructure; current rules govern every slice |
 | M11 Timers | P2 named persistent-deadline timers, replacing the component-local sketch |
 | M12 Gram tables | P2 carefully sourced conversion coverage; broader data P4 with ingredient and preparation matching |
 | M13 User weights | P4 explicit overrides |
 | M14 iOS | P2 web and offline improvements; P5 native decision on measured limits |
-| M15 Import | P1 first migration; P2 easy import; P4 Cooklang subset; P5 OCR and social capture |
+| M15 Import | P2 first migration and easy import; P4 Cooklang subset; P5 OCR and social capture |
 | M16 Export | P1, before import dependency; history, provenance and later logs |
 | M17 Attempts | Shipped as the Journal; last and times cooked P1 |
 | M18 Cook mode | Built; P2 validation and refinement |
@@ -431,18 +432,30 @@ Other preserved preferences: warm cookbook styling, desktop two-column reading, 
 - 10 to 11 Nov: search covers own, friends' and Public recipes; search opening in place is P2 with global search; ingredient search needs an indexed column when recipe count grows, P2 (OD, R).
 - 10 Nov: the intended business is a sustainable solo operation, not venture scale (OD, S1, S2).
 - 11 Nov: the MVP is published to production.
+- 11 Nov: search matches every version; a result that matched on an earlier version says which version matched and opens the recipe at that version, P2 with global search (OD: "search all history; we want users to be able to find previous versions of that recipe but we also need to make sure that when they click on that recipe the version they clicked on is what opens").
+- 11 Nov: search in place works on phone and desktop with one behaviour, P2 with global search (OD: "everywhere built once").
+- 11 Nov: durable drafts are saved on the device in P1; synced drafts are P2, beside the profile and settings work (OD: "saved on device for P1 and synced later").
+- 11 Nov: deleted recipes are recoverable from Trash for 30 days, P1 (OD: "30 days in trash is fine").
+- 11 Nov: when an author unpublishes or deletes a saved recipe, the saver keeps a read-only copy of the version they saved, marked as no longer shared by the author, and cannot re-share it (OD: "yes keep what you saved").
+- 11 Nov: all importers are P2; the first competitor migration importer moves from P1 to join paste, URL and file import (OD: "Move all importers to P2").
+- 11 Nov: the first paid offer is one annual plan, no tiers at first; price and entitlements are decided later (OD: "Shape is one annual plan sure. Details decide later.").
+- 11 Nov: household or power packaging and the first native platform are deferred, listed under section 15 (OD: "decide later").
+- 11 Nov: Spencer talks to friends first, then sends the first invitations; no date; the admission gate stands as written (OD: "will talk to friends then yes").
+- 11 Nov: Fork is run by Spencer personally while it is free; an entity is formed before the first payment is taken (OD: "fine on running it while it's free and incorporate before taking payment").
+- 11 Nov: the working assumption is a US corporation (not an LLC), formed before the first payment; confirmed with a cross-border accountant before forming, since Spencer is tax resident in both the US and Canada (OD: "will assume that and can come back to accountant later").
 
 ## 15. Open questions for Spencer
 
-1. **First paid offer and price.** Options: US$24 personal and US$36 household or power (R, AQ); test US$36 rather than treating US$24 as a ceiling, with US$48 as a sensitivity case (S2); a purchased core plus recurring services (DD). Nothing is approved. Recommendation from the sources: one package first, after recurring value is seen.
-2. **First migration importer in P1 while easy import moved to P2.** R keeps "first competitor migration importer" in P1, but the 9 Nov re-phasing moved paste, URL and file import to P2. Options: keep migration in P1, or move it with easy import to P2.
-3. **Search contract for history.** R and PA ask whether ingredient search means current ingredients, a saved version's or history; today it matches every version. The 10 to 11 Nov decision sets scope (own, friends, Public) but not this. Options: current only with a labelled history search, or history by default.
-4. **Search in place.** Phone only, or phone and desktop (R).
-5. **Durable drafts: local or synced recovery** (R, PA).
-6. **Trash and retention policy, and pinned-save access after unpublishing** (R).
-7. **Operator entity and location**, which decide the payment account country, fee schedule, and which US and Canadian copyright processes apply; not confirmed (R, SL, legal notes).
-8. **Pilot timing**: when to send the first invitations once the admission gate passes (R, SL).
-9. **Household versus power packaging** and the first native platform, if warranted (R).
+1. **Price of the annual plan.** US$24 and US$36 (R, AQ); test US$36 rather than treating US$24 as a ceiling, with US$48 as a sensitivity case (S2). Nothing is approved.
+
+**To confirm with a professional**
+
+- Entity country and form (assumed US corporation), which also decide the payment account country, fee schedule and which US and Canadian copyright processes apply (R, SL, legal notes; [BUSINESS.md](BUSINESS.md) section 8). Questions for a cross-border accountant: which country the treaty tie-breaker assigns; which entity avoids double taxation and whether a US LLC is safe; the annual filing cost of each option; whether where the work is physically done changes the answer; whether the choice can wait until just before the first payment.
+
+**Deferred decisions** (OD, 11 Nov: "decide later"):
+
+- Household versus power packaging (R).
+- The first native platform, if warranted (R).
 
 ## 16. Dropped as superseded
 
@@ -459,7 +472,7 @@ Each line: the old text, what replaced it, and the source of the replacement.
 9. "Ingredient quantities beside steps: Build P2" (R) → P4 with Cooklang-style markup and a settings toggle (DS, R reconciliation, 9 Nov).
 10. "Whole-recipe paste, URL, text/Markdown files: Build P1" (R) → easy import P2; paste-first editor stays (R, 9 Nov evening).
 11. "Optional Insert toolbar" and "a collapsible Insert toolbar" (R) → a direct Section heading button beside each box's label (DS, 9 Nov; git 2692114).
-12. "Search current owned/pinned content by default" as the search scope (R) → global search over own, friends' and Public recipes with scopes, P2 (R 9 Nov evening, OD 10 to 11 Nov). The history-search question stays open (question 3).
+12. "Search current owned/pinned content by default" as the search scope (R) → global search over own, friends' and Public recipes with scopes, P2 (R 9 Nov evening, OD 10 to 11 Nov). History search settled 11 Nov (section 14).
 13. "Profile page ... 'Owed by the builds'" (R) → profile redesign P2 (R, 9 Nov evening); the relation control shipped (DS build record).
 14. "Version-pinned save stays a P1 item with its own control" (R reconciliation) → "Keep this version" as an option on a saved recipe, shown on the page (R "Save version", 9 Nov late).
 15. "Lead card = newest" (pack recommendation in DS) → most saved in the last 7 days (DS, Spencer's override).
@@ -475,6 +488,8 @@ Each line: the old text, what replaced it, and the source of the replacement.
 25. The numeric quality ambition from S1 and S2 → quality stated as observed behaviour in DESIGN-DIRECTION.md (removed with Spencer's approval, 11 Nov 2026).
 26. The October launch deadline and weekly-logger threshold (R, AQ) → removed; the sources called them speculative historical numbers (removed with Spencer's approval, 11 Nov 2026).
 27. The 8 Nov evidence labels for the pre-MVP product state (R, PA) → section 2 states the shipped state; the audit stays as the research record (removed with Spencer's approval, 11 Nov 2026).
+28. "First competitor migration importer" in P1 (R, CM) → all importers P2, the first migration importer with paste, URL and file import (OD, 11 Nov).
+29. "A purchased core plus recurring services" as an option for the first paid offer (DD) → one annual plan, no tiers at first (OD, 11 Nov).
 
 ## 17. Proposed removals, awaiting Spencer's approval
 
@@ -484,3 +499,4 @@ None pending.
 
 - 2026-11-11: created as the single current roadmap, folding in the 8 Nov roadmap report and its amendments, the deep dive, the Zed note, both 10 Nov syntheses and Spencer's 9 to 11 Nov decisions.
 - 2026-11-11: applied the five approved removals (now §16 lines 23 to 27); §17 has none pending; open question 10 (quality ambition wording) deleted.
+- 2026-11-11: recorded Spencer's answers to the open questions (§14, 11 Nov lines); importers to P2, synced drafts P2, Trash 30 days, saved copies kept, search opens the matched version; entity assumed a US corporation; §15 is now price, plus one item to confirm with a professional and deferred decisions; §16 lines 28 and 29.
