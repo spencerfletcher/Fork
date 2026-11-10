@@ -498,6 +498,16 @@ Use the [inventory’s source map and audit](../2026-11-09-cookbook-app-deep-div
 
 For each coherent feature slice, record the user task it makes easier and verify the complete workflow, including applicable keyboard/mobile behavior, permissions, error/recovery states and realistic recipe data. Include a short real-use feedback pass after each phase, with fixes and refinements fed back into the existing workstreams. These are delivery requirements, not another feature expansion. The pilot can begin with the usable core; it does not wait for all 87 entries.
 
+### Paprika feature follow-up: substitutions, search and companion surfaces
+
+**Spencer, 9 November 2026:** explicitly retain the features highlighted on [Paprika's homepage](https://www.paprikaapp.com/), with details and evidence in the [inventory follow-up](../2026-11-09-cookbook-app-deep-dive/README.md#paprika-homepage-follow-up):
+
+- **C12/A04 — Recipe-aware substitutions:** accessible from the ingredient, with reviewable quantity adjustments and expected effects. Keep the original recipe intact; a cook-specific substitution can later be recorded in Journal or deliberately saved as a version.
+- **L03/L10 — Advanced search:** combine useful fields such as ingredients and preparation time, with saved rules expressed through later rule-based collections. Preserve the existing search sequencing.
+- **A07 — Future companion surfaces:** name interactive meal/grocery widgets, an Apple Watch companion for cooking steps, groceries and timers, and Alexa/Echo Show meal, shopping and cooking access explicitly. Sequence these with platform work after the underlying workflows are dependable, sharing the same permissions and session state.
+
+These are explicit refinements of retained IDs, not additional numbered features or new MVP requirements. Paprika's implementation and platform availability are references, not proof of compatibility with Fork; provider, device and background-execution support need validation when each integration is built.
+
 ### Zed-inspired design refinement
 
 **Accepted, 9 November 2026 — next design implementation pass.** Apply the [Zed design reference report](../2026-11-09-zed-design-reference/README.md) to the editor, recipe header/metadata and section grouping, carrying the same principles into later cooking, library and timer work. This is refinement within the existing design workstream; the report contains ten ranked adaptations, five non-transfers and six implementation choices.
