@@ -1047,7 +1047,7 @@
 		}
 	}
 
-	@media (width < 699px), (pointer: coarse) {
+	@media (max-width: 699px), (pointer: coarse) {
 		.clear-ticks {
 			margin-block: -12px;
 			padding-block: 12px;
