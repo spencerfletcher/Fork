@@ -146,6 +146,6 @@ test.describe('Recipe cards', () => {
 	test('the author link is a 24px target at desktop', async ({ page }) => {
 		await page.setViewportSize({ width: 1280, height: 900 });
 		await page.goto('/tags/dessert');
-		expect(await height(page, '.recipe-card a.meta-author')).toBeGreaterThanOrEqual(24);
+		expect(await height(page, '.recipe-card .meta-author a')).toBeGreaterThanOrEqual(24);
 	});
 });

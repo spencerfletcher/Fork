@@ -1597,7 +1597,7 @@ test.describe('Home and recipe pages (logged out)', () => {
 test.describe('Usernames', () => {
 	test('read as links: clay on paper, on the recipe page and the card', async ({ page }) => {
 		await page.goto('/tags/dessert');
-		const card = page.locator('.recipe-card a.meta-author').first();
+		const card = page.locator('.recipe-card .meta-author a').first();
 		expect(await card.evaluate((el) => getComputedStyle(el).color)).toBe('rgb(178, 60, 0)');
 		await openCookies(page);
 		const author = page.locator('.recipe-header a.username').first();
