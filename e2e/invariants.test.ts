@@ -268,6 +268,44 @@ test.describe('No horizontal scroll', () => {
 	}
 });
 
+// ─── The page's end clears the phone tab bar ──────────────────────────────────
+
+const BOTTOMS: Screen[] = [
+	...PAGES.filter((p) => p.open !== longTitleCompare),
+	{ name: 'recipe page', open: cookies('') },
+	{ name: 'journal', auth: true, open: goto('/journal') },
+	{ name: 'new journal entry', auth: true, open: goto('/journal/new') },
+	{ name: 'friends', auth: true, open: goto('/friends') },
+	{ name: 'recipe page, signed in', auth: true, open: cookies('') }
+];
+
+test.describe('Tab bar clearance', () => {
+	for (const row of BOTTOMS) {
+		test(`${row.name} scrolls its last line above the tab bar`, async ({ page }) => {
+			test.skip(!!row.auth !== signedIn());
+			await page.setViewportSize({ width: PHONE, height: 844 });
+			await opened(page, row.open, async () => {
+				const ends = await page.evaluate(async () => {
+					window.scrollTo(0, document.documentElement.scrollHeight);
+					await new Promise(requestAnimationFrame);
+					const bar = document.querySelector('.tab-bar');
+					// The lowest box that draws something: text, a control or an image.
+					let last = 0;
+					for (const el of document.querySelectorAll('main *')) {
+						const r = el.getBoundingClientRect();
+						const draws =
+							el.matches('img, svg, input, textarea, select, button') ||
+							[...el.childNodes].some((n) => n.nodeType === 3 && n.textContent!.trim());
+						if (draws && r.width && r.height) last = Math.max(last, r.bottom);
+					}
+					return { last, barTop: bar ? bar.getBoundingClientRect().top : Infinity };
+				});
+				expect(ends.last).toBeLessThanOrEqual(ends.barTop);
+			});
+		});
+	}
+});
+
 // ─── Focus ring visible and unobscured ────────────────────────────────────────
 
 type Focus = Screen & {
