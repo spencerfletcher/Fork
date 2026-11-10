@@ -130,7 +130,7 @@ test.describe('Friends', () => {
 		await expect(page.getByRole('button', { name: 'Accept @priyabakes' })).toBeVisible();
 		const more = page.getByRole('button', { name: /^More for @devcooks/ }).first();
 		await more.click();
-		await page.getByRole('button', { name: 'Block' }).click();
+		await page.getByRole('menuitem', { name: 'Block' }).click();
 		await expect(
 			page.getByText('Blocking stops requests and interactions. Public recipes stay public.')
 		).toBeVisible();

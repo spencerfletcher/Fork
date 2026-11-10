@@ -7,9 +7,9 @@
 	import type { ReportTarget } from '#lib/server/db/schema.js';
 
 	// The ⋯ overlay: Mute, Unfriend, Report, Block for a friend's feed item.
-	// A disclosure (Dropdown: a button and the list it shows), so Tab walks it;
+	// A menu on Dropdown, like the avatar menu: the arrow keys walk its items;
 	// Escape and a press outside close it. Report and Block open a second step
-	// in place, so neither happens on one stray press.
+	// in place (a form, no longer a menu), so neither happens on one stray press.
 	let {
 		userId,
 		username,
@@ -41,30 +41,34 @@
 
 <Dropdown onopen={() => (step = 'menu')}>
 	{#snippet trigger(props)}
-		<button type="button" class="more-button" aria-label={label} {...props}>
+		<button type="button" class="more-button" aria-haspopup="menu" aria-label={label} {...props}>
 			{@render moreIcon()}
 		</button>
 	{/snippet}
 	{#snippet panel()}
-		<div class="menu-panel panel" bind:this={panelEl}>
+		<div class="menu-panel panel" role={step === 'menu' ? 'menu' : undefined} bind:this={panelEl}>
 			{#if step === 'menu'}
 				{#if items.includes('mute')}
-					<form method="POST" action="/friends?/mute" use:enhance>
+					<form method="POST" action="/friends?/mute" role="none" use:enhance>
 						<input type="hidden" name="userId" value={userId} />
-						<button type="submit" class="menu-row">Mute @{username}</button>
+						<button type="submit" class="menu-row" role="menuitem">Mute @{username}</button>
 					</form>
 				{/if}
 				{#if items.includes('unfriend')}
-					<form method="POST" action="/friends?/unfriend" use:enhance>
+					<form method="POST" action="/friends?/unfriend" role="none" use:enhance>
 						<input type="hidden" name="userId" value={userId} />
-						<button type="submit" class="menu-row">Unfriend</button>
+						<button type="submit" class="menu-row" role="menuitem">Unfriend</button>
 					</form>
 				{/if}
 				{#if items.includes('report')}
-					<button type="button" class="menu-row" onclick={() => go('report')}>Report</button>
+					<button type="button" class="menu-row" role="menuitem" onclick={() => go('report')}>
+						Report
+					</button>
 				{/if}
 				{#if items.includes('block')}
-					<button type="button" class="menu-row danger" onclick={() => go('block')}>Block</button>
+					<button type="button" class="menu-row danger" role="menuitem" onclick={() => go('block')}>
+						Block
+					</button>
 				{/if}
 			{:else if step === 'report'}
 				<form

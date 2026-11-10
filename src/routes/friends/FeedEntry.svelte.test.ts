@@ -110,10 +110,10 @@ describe('FeedEntry', () => {
 		await fireEvent.click(more);
 		expect(more).toHaveAttribute('aria-expanded', 'true');
 		for (const name of ['Mute @devcooks', 'Unfriend', 'Report', 'Block'])
-			expect(screen.getByRole('button', { name })).toBeInTheDocument();
+			expect(screen.getByRole('menuitem', { name })).toBeInTheDocument();
 		expect(screen.queryByRole('button', { name: /Comment/ })).toBeNull();
 
-		await fireEvent.click(screen.getByRole('button', { name: 'Block' }));
+		await fireEvent.click(screen.getByRole('menuitem', { name: 'Block' }));
 		expect(screen.getByText(BLOCK_SENTENCE)).toBeInTheDocument();
 		expect(screen.getByRole('button', { name: 'Block @devcooks' }).closest('form')).toHaveAttribute(
 			'action',
