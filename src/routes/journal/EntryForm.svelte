@@ -350,9 +350,5 @@
 		.two-up {
 			grid-template-columns: minmax(0, 1fr);
 		}
-
-		#recipe {
-			font-size: 16px;
-		}
 	}
 </style>

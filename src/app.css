@@ -606,7 +606,6 @@
 		justify-content: space-between;
 		gap: var(--space-5) 20px;
 		margin-bottom: var(--space-5);
-		min-width: 0;
 	}
 
 	/* Beside the title, the tabs' underline (4px padding, 2px line) hangs up to
@@ -800,7 +799,7 @@
 		color: var(--color-tag);
 		border: 1px solid var(--color-tag-border);
 		border-radius: var(--radius-pill);
-		padding: 2px 9px; /* 1px less than before to absorb the new border */
+		padding: 2px 9px; /* With the 1px border, 24px tall. */
 		display: inline-block;
 		transition:
 			background 0.15s,
@@ -869,9 +868,6 @@
 	   nothing (Spencer, 10 November 2026). Visible text inside the label, so a
 	   screen reader hears it as part of the name. */
 	.field-required {
-		font-family: var(--font-sans);
-		font-size: 0.75rem;
-		color: var(--color-text-3);
 		font-weight: 400;
 		letter-spacing: 0;
 		text-transform: none;
@@ -1069,7 +1065,7 @@
 
 	/* ── Auth pages ── */
 
-	/* Under the 56px navbar; 100dvh here scrolled every auth page for nothing. */
+	/* Under the 56px navbar, so the page does not scroll. */
 	.auth-page {
 		min-height: calc(100dvh - 56px);
 		display: flex;
@@ -1150,7 +1146,6 @@
 	}
 
 	.auth-submit {
-		width: 100%;
 		padding: 12px;
 		font-size: 1rem;
 	}

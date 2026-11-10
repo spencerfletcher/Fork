@@ -137,10 +137,6 @@
 		min-width: 0;
 	}
 
-	.profile-text h1 {
-		overflow-wrap: anywhere;
-	}
-
 	.profile-stats {
 		display: flex;
 		flex-wrap: wrap;

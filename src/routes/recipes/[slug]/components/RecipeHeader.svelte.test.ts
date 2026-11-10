@@ -280,8 +280,8 @@ describe('RecipeHeader stats row', () => {
 
 describe('RecipeHeader content', () => {
 	test('the title and byline break a long unbroken word, so a phone never scrolls sideways', () => {
+		// The title breaks by the base h1 rule, pinned in app.css.test.ts.
 		const { container } = renderHeader();
-		expect(screen.getByRole('heading', { level: 1 })).toHaveClass('[overflow-wrap:anywhere]');
 		expect(container.querySelector('.byline')).toHaveClass('[overflow-wrap:anywhere]');
 	});
 

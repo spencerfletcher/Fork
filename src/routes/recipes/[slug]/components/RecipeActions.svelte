@@ -296,11 +296,6 @@
 			}
 		}
 
-		.actions :global(.btn-primary),
-		.actions :global(.btn-ghost) {
-			width: 100%;
-		}
-
 		.cook,
 		.log:nth-child(even),
 		.login,

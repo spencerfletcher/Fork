@@ -66,7 +66,7 @@
      actions (the decided title band, 9 Nov 2026). The version and its note sit
      in the bar under the band. Nothing is boxed and nothing is pinned. -->
 <header class="recipe-header">
-	<h1 class="title font-serif font-medium [overflow-wrap:anywhere]">{currentVersion.title}</h1>
+	<h1 class="title font-serif font-medium">{currentVersion.title}</h1>
 
 	<!-- Who, and what it was forked from (the parent's title, not its author,
 	     who is one click away). One line; there is no separate attribution

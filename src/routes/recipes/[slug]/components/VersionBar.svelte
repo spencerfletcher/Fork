@@ -136,7 +136,7 @@
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-md);
 		/* The body face: mono is for the version ids only (Spencer, 31 October
-		   2026). The line stays 22.4px, as it was in mono, so the bar holds its height. */
+		   2026). */
 		font-size: 0.9375rem;
 		line-height: 1.4rem;
 	}
