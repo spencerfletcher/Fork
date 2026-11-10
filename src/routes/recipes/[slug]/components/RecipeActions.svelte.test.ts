@@ -293,15 +293,16 @@ describe('RecipeActions row', () => {
 		expect(document.querySelector('dialog')).toBeNull();
 	});
 
-	test('logged out: Cook, then a Log in to save link back here, and no Fork', () => {
+	test('logged out: Cook, then a ghost Log in to save pill back here, and no Fork', () => {
 		const { container } = render(RecipeActions, {
 			props: makeProps({ canFavorite: false, loginHref: '/login?redirectTo=%2Frecipes%2Fcookies' })
 		});
 		expect(names(container)).toEqual(['Cook', 'Log in to save']);
 		const login = screen.getByRole('link', { name: 'Log in to save' });
 		expect(login).toHaveAttribute('href', '/login?redirectTo=%2Frecipes%2Fcookies');
-		expect(login).not.toHaveClass('btn-primary');
-		expect(login).not.toHaveClass('btn-ghost');
+		expect(login).toHaveClass('btn-ghost');
+		// The Save pill's own bookmark, unfilled.
+		expect(login.querySelector('svg')).not.toBeNull();
 		expect(screen.queryByRole('link', { name: /fork/i })).toBeNull();
 		expect(document.querySelector('form')).toBeNull();
 	});

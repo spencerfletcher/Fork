@@ -143,8 +143,11 @@
 	</button>
 
 	{#if !cooking && loginHref}
-		<!-- Logged out: a text link, not a pill, so Cook stays the one action. -->
-		<a href={loginHref} class="text-btn login">Log in to save</a>
+		<!-- Logged out: Save's ghost pill and bookmark, leading to login and back. -->
+		<a href={loginHref} class="btn-ghost login no-underline">
+			{@render saveIcon(false)}
+			Log in to save
+		</a>
 	{:else if !cooking}
 		{#if canEdit}
 			<a href="/recipes/{recipe.slug}/edit" class="btn-ghost edit no-underline">
@@ -234,11 +237,6 @@
 		gap: 10px;
 	}
 
-	/* A text button, clay and bold like the byline's. */
-	.login {
-		margin-left: 8px;
-	}
-
 	.actions :global(.btn-primary),
 	.actions :global(.btn-ghost) {
 		display: inline-flex;
@@ -305,11 +303,6 @@
 		.login,
 		.note {
 			grid-column: 1 / -1;
-		}
-
-		.login {
-			justify-self: center;
-			margin: 0;
 		}
 	}
 </style>
