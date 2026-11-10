@@ -107,8 +107,10 @@ test.describe('New recipe page', () => {
 
 	test('shows ingredient and step editors', async ({ page }) => {
 		await page.goto('/recipes/new');
-		await expect(page.getByRole('textbox', { name: 'Ingredients', exact: true })).toBeVisible();
-		await expect(page.getByRole('textbox', { name: 'Method', exact: true })).toBeVisible();
+		await expect(
+			page.getByRole('textbox', { name: 'Ingredients Required', exact: true })
+		).toBeVisible();
+		await expect(page.getByRole('textbox', { name: 'Method Required', exact: true })).toBeVisible();
 	});
 
 	test('a field edited and left empty turns on the error tokens and says why in its own words, with no save; passing through says nothing', async ({
@@ -148,7 +150,7 @@ test.describe('New recipe page', () => {
 				el.addEventListener('invalid', (e) => w.invalids.push(e.defaultPrevented));
 			}
 		});
-		await page.getByRole('textbox', { name: 'Method', exact: true }).fill('Mix.');
+		await page.getByRole('textbox', { name: 'Method Required', exact: true }).fill('Mix.');
 		await page.getByRole('button', { name: /create recipe/i }).click();
 		const title = page.locator('textarea[name="title"]');
 		await expect(title).toBeFocused();
@@ -203,8 +205,12 @@ test.describe('New recipe page', () => {
 
 			await page.locator('textarea[name="title"]').fill('E2E Test Recipe');
 
-			await page.getByRole('textbox', { name: 'Ingredients', exact: true }).fill('2 cups flour');
-			await page.getByRole('textbox', { name: 'Method', exact: true }).fill('Mix all ingredients.');
+			await page
+				.getByRole('textbox', { name: 'Ingredients Required', exact: true })
+				.fill('2 cups flour');
+			await page
+				.getByRole('textbox', { name: 'Method Required', exact: true })
+				.fill('Mix all ingredients.');
 			// Private, so the guest project's seed counts never see it.
 			await page.getByRole('radio', { name: 'Only me' }).check();
 
@@ -340,7 +346,9 @@ test.describe('Edit recipe page', () => {
 		try {
 			await gotoHydrated(page, `${url}/edit`);
 			await expect(page.locator('.editing')).toHaveText('Editing v1');
-			await page.getByRole('textbox', { name: 'Method', exact: true }).fill('Mix, then bake.');
+			await page
+				.getByRole('textbox', { name: 'Method Required', exact: true })
+				.fill('Mix, then bake.');
 			await expect(page.locator('.editing')).toHaveText('Editing v1 · saves as v2');
 			await expect(page.locator('input[name="commitMessage"]')).toHaveAttribute(
 				'placeholder',
@@ -358,7 +366,7 @@ test.describe('Edit recipe page', () => {
 		const url = await createRecipe(page, 'E2E Grow', '4');
 		try {
 			await gotoHydrated(page, `${url}/edit`);
-			const box = page.getByRole('textbox', { name: 'Ingredients', exact: true });
+			const box = page.getByRole('textbox', { name: 'Ingredients Required', exact: true });
 			await box.fill(Array.from({ length: 40 }, (_, i) => `${i + 1} cup item ${i + 1}`).join('\n'));
 			const textarea = await box.boundingBox();
 			const saveButton = page.getByRole('button', { name: 'Save', exact: true });
@@ -381,7 +389,7 @@ test.describe('Edit recipe page', () => {
 		try {
 			await gotoHydrated(page, `${url}/edit`);
 			await page
-				.getByRole('textbox', { name: 'Method', exact: true })
+				.getByRole('textbox', { name: 'Method Required', exact: true })
 				.fill('Updated step text from e2e test.');
 			await page.locator('input[name="commitMessage"]').fill('e2e test commit');
 			await page.getByRole('button', { name: 'Save', exact: true }).click();
@@ -438,8 +446,12 @@ async function createRecipe(page: Page, title: string, servings: string) {
 	await page.locator('textarea[name="title"]').fill(title);
 	await page.locator('input[name="servings"]').fill(servings);
 	await page.locator('input[name="cookTimeMinutes"]').fill('20');
-	await page.getByRole('textbox', { name: 'Ingredients', exact: true }).fill('2 cups flour');
-	await page.getByRole('textbox', { name: 'Method', exact: true }).fill('Mix all ingredients.');
+	await page
+		.getByRole('textbox', { name: 'Ingredients Required', exact: true })
+		.fill('2 cups flour');
+	await page
+		.getByRole('textbox', { name: 'Method Required', exact: true })
+		.fill('Mix all ingredients.');
 	// Private, so the guest project's seed counts never see it.
 	await page.getByRole('radio', { name: 'Only me' }).check();
 	await page.getByRole('button', { name: /create recipe/i }).click();
@@ -482,7 +494,9 @@ test.describe('One save', () => {
 			await gotoHydrated(page, `${url}/edit`);
 			await page.locator('input[name="servings"]').fill('8');
 			await page.locator('input[name="cookTimeMinutes"]').fill('30');
-			await page.getByRole('textbox', { name: 'Ingredients', exact: true }).fill('4 cups flour');
+			await page
+				.getByRole('textbox', { name: 'Ingredients Required', exact: true })
+				.fill('4 cups flour');
 			await page.getByRole('button', { name: 'Save', exact: true }).click();
 			await page.waitForURL(url);
 
@@ -568,9 +582,9 @@ test.describe('One save', () => {
 		try {
 			await gotoHydrated(page, `${url}/edit`);
 			const long = '1 cup ' + 'x'.repeat(300);
-			await page.getByRole('textbox', { name: 'Ingredients', exact: true }).fill(long);
+			await page.getByRole('textbox', { name: 'Ingredients Required', exact: true }).fill(long);
 			await page.getByRole('button', { name: 'Save', exact: true }).click();
-			const box = page.getByRole('textbox', { name: 'Ingredients', exact: true });
+			const box = page.getByRole('textbox', { name: 'Ingredients Required', exact: true });
 			await expect(box).toHaveAccessibleDescription(/An ingredient line is too long/);
 			await expect(box).toHaveAttribute('aria-invalid', 'true');
 			await expect(box).toBeFocused();
@@ -631,9 +645,11 @@ test.describe('Groups and yield', () => {
 			await page.locator('textarea[name="title"]').fill('E2E Cinnamon Buns');
 			await page.locator('input[name="servings"]').fill('4');
 			await page.getByLabel(/^Makes/).fill('12 buns');
-			await page.getByRole('textbox', { name: 'Ingredients', exact: true }).fill(INGREDIENTS);
 			await page
-				.getByRole('textbox', { name: 'Method', exact: true })
+				.getByRole('textbox', { name: 'Ingredients Required', exact: true })
+				.fill(INGREDIENTS);
+			await page
+				.getByRole('textbox', { name: 'Method Required', exact: true })
 				.fill('# Make the dough\nMix.\n\nKnead.\n\n# Bake\nBake 25 minutes.');
 			// The split is read back before the save.
 			await expect(page.locator('#ingredients-readback')).toHaveText(
@@ -671,7 +687,7 @@ test.describe('Groups and yield', () => {
 
 			// A second version renames a group; the editor round-trips the headings.
 			await gotoHydrated(page, `${url}/edit`);
-			const box = page.getByRole('textbox', { name: 'Ingredients', exact: true });
+			const box = page.getByRole('textbox', { name: 'Ingredients Required', exact: true });
 			await expect(page.locator('textarea[name="ingredients"]')).toHaveValue(INGREDIENTS);
 			await expect(page.getByLabel(/^Makes/)).toHaveValue('12 buns');
 			await box.fill(INGREDIENTS.replace('# Filling', '# Swirl'));

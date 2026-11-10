@@ -52,6 +52,16 @@ describe('EntryForm', () => {
 		expect(screen.getByLabelText(/Date/)).toBeRequired();
 	});
 
+	// The server refuses only a missing dish or date (src/lib/server/journal.ts).
+	test('Dish and Date say Required in their labels; nothing says optional', () => {
+		const { container } = renderForm(makeValues({ recipe: '', version: '' }));
+		expect(screen.getByRole('textbox', { name: 'Dish Required' })).toBeRequired();
+		expect(screen.getByLabelText('Date Required')).toBeRequired();
+		const marked = [...container.querySelectorAll('.field-required')];
+		expect(marked.map((m) => m.closest('label')?.htmlFor)).toEqual(['dish', 'cookedOn']);
+		expect(container).not.toHaveTextContent(/optional|\*/i);
+	});
+
 	test('Friends on an Only me recipe says friends see the dish, not the recipe', async () => {
 		renderForm();
 		expect(screen.queryByText(PRIVATE_RECIPE_HINT)).toBeNull();

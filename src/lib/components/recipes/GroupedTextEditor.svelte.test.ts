@@ -29,7 +29,7 @@ const props = (value: string, extra: Record<string, unknown> = {}) => ({
 	}
 });
 
-const box = () => screen.getByRole('textbox', { name: 'Ingredients' });
+const box = () => screen.getByRole('textbox', { name: 'Ingredients Required' });
 const field = () => document.querySelector<HTMLTextAreaElement>('textarea[name="ingredients"]')!;
 const lines = () => [...box().children] as HTMLElement[];
 // Redraws wait a task, as they do in the browser.

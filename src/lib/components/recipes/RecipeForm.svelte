@@ -284,7 +284,7 @@
 			<div class="form-col">
 				<div class="field">
 					<label for="title">
-						Title <span class="required" aria-hidden="true">*</span>
+						Title <span class="field-required">Required</span>
 					</label>
 					<!-- A textarea so a long title wraps on a phone; still one line of text:
 					     Enter types nothing and a pasted newline becomes a space. -->
@@ -339,9 +339,7 @@
 				<!-- Yield, beside the portions rather than in place of them: it never sets
 				     servings, and scaling stays by servings. -->
 				<div class="field">
-					<label for="makes">
-						Makes <span class="optional">optional</span>
-					</label>
+					<label for="makes">Makes</label>
 					<input
 						id="makes"
 						name="makes"
@@ -386,9 +384,7 @@
 
 		{#if nextVersion}
 			<div class="field field-message">
-				<label for="commitMessage">
-					What changed? <span class="optional">optional</span>
-				</label>
+				<label for="commitMessage">What changed?</label>
 				<input
 					id="commitMessage"
 					name="commitMessage"
@@ -438,13 +434,6 @@
 	textarea[name='title'] {
 		min-height: calc(1lh + 20px);
 		resize: none;
-	}
-
-	/* A mark, not an alarm: Ink 3 at rest. The input's required attribute is
-	   what a screen reader hears. Global within the form, so the ingredient and
-	   step editors' marks match the title's. */
-	.form :global(.required) {
-		color: var(--color-text-3);
 	}
 
 	/* Outside the form, so the form's 16px gap is its own margin. */

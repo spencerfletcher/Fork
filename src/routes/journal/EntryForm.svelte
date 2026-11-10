@@ -140,7 +140,7 @@
 
 	<div class="field">
 		<label for="dish">
-			Dish <span class="required" aria-hidden="true">*</span>
+			Dish <span class="field-required">Required</span>
 		</label>
 		<input id="dish" name="dish" type="text" required maxlength="200" value={values.dish} />
 	</div>
@@ -148,14 +148,12 @@
 	<div class="two-up">
 		<div class="field">
 			<label for="cookedOn">
-				Date <span class="required" aria-hidden="true">*</span>
+				Date <span class="field-required">Required</span>
 			</label>
 			<input id="cookedOn" name="cookedOn" type="date" required bind:value={cookedOn} />
 		</div>
 		<div class="field">
-			<label for="servings">
-				Servings <span class="optional">optional</span>
-			</label>
+			<label for="servings">Servings</label>
 			<input
 				id="servings"
 				name="servings"
@@ -167,9 +165,7 @@
 	</div>
 
 	<div class="field">
-		<label for="recipe">
-			From a recipe <span class="optional">optional</span>
-		</label>
+		<label for="recipe">From a recipe</label>
 		<div class="recipe-combo">
 			<input
 				id="recipe"
@@ -227,9 +223,7 @@
 	<!-- Only with no recipe: an attached recipe is the source, and the server drops a link. -->
 	{#if !recipe}
 		<div class="field">
-			<label for="link">
-				Link <span class="optional">optional</span>
-			</label>
+			<label for="link">Link</label>
 			<input
 				id="link"
 				name="link"
@@ -246,9 +240,7 @@
 	<PhotoField imageUrl={photoUrl} bind:removeImage bind:chosen hadPhoto={false} />
 
 	<div class="field">
-		<label for="caption">
-			Caption <span class="optional">optional</span>
-		</label>
+		<label for="caption">Caption</label>
 		<textarea
 			id="caption"
 			name="caption"
@@ -261,7 +253,6 @@
 	<div class="field lock-note">
 		<label for="note">
 			{@render lockIcon()}Note for next time
-			<span class="optional">optional</span>
 		</label>
 		<textarea
 			id="note"

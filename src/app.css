@@ -871,7 +871,13 @@
 		color: var(--color-text-3);
 	}
 
-	.field label .optional {
+	/* Required fields say so in words after the label; optional ones carry
+	   nothing (Spencer, 10 November 2026). Visible text inside the label, so a
+	   screen reader hears it as part of the name. */
+	.field-required {
+		font-family: var(--font-sans);
+		font-size: 0.8125rem;
+		color: var(--color-text-3);
 		font-weight: 400;
 		letter-spacing: 0;
 		text-transform: none;
@@ -1076,10 +1082,6 @@
 			margin-block: -12px;
 			padding-block: 12px;
 		}
-	}
-
-	.required {
-		color: var(--color-remove);
 	}
 
 	/* Invalid fields wear the error red: the browser's own judgement after the
