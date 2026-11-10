@@ -36,7 +36,9 @@ export default defineConfig({
 	maxFailures: 10,
 	// Default is half the cores locally and one in CI. Each authenticated test
 	// creates and deletes its own recipe, so they do not collide when parallel.
-	workers: process.env.CI ? 2 : '80%',
+	// Four locally: one preview server saturates beyond that and page loads
+	// hit the 10s timeout.
+	workers: process.env.CI ? 2 : 4,
 
 	projects: [
 		// ── 1. Auth setup — runs first, logs in and saves storage state ──────────
