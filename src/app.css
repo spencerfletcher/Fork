@@ -222,8 +222,8 @@
 	/* Accent — clay is the only text accent: links, titles, version numbers.
 	   Marigold is the only fill, always with ink on it. Nothing else is coloured. */
 	--color-accent: #b23c00;
-	--color-accent-hover: #8f3000;
-	/* clay deep — clay text's hover: 7.33:1 on paper, 7.98:1 on lifted paper */
+	--color-accent-hover: #6e2500;
+	/* clay deep — clay text's hover: 9.85:1 on paper, 10.72:1 on lifted paper, 1.84:1 below clay */
 	--color-marigold: #eca620;
 	--color-marigold-hover: #d08f06;
 	/* marigold deep — the primary's hover, clearly darker; ink on it 6.47:1 */
@@ -586,8 +586,9 @@
 		margin: 0 auto;
 	}
 
-	/* A form's own measure inside the column: the Journal's entry pages. */
-	.page-inner--narrow {
+	/* A form's own measure inside the column, on the column's left edge as the
+	   editor's is: the Journal's entry pages. */
+	.page-inner--narrow > * {
 		max-width: 680px;
 	}
 
@@ -764,10 +765,17 @@
 	}
 
 	/* The phone tab bar is fixed over the page's foot, so the page ends clear
-	   of it (57px: the 56px targets and the rule above). */
+	   of it (57px: the 56px targets and the rule above). On main, not body:
+	   body is held at the viewport's height, so its padding never moves the
+	   page's end. */
 	@media (max-width: 767px) {
-		body:has(.tab-bar) {
+		body:has(.tab-bar) main {
 			padding-bottom: calc(57px + env(safe-area-inset-bottom));
+		}
+
+		/* A screen-tall auth or error page leaves that room too, or it scrolls for nothing. */
+		body:has(.tab-bar) .auth-page {
+			min-height: calc(100dvh - 56px - 57px - env(safe-area-inset-bottom));
 		}
 	}
 
@@ -883,7 +891,7 @@
 	   screen reader hears it as part of the name. */
 	.field-required {
 		font-family: var(--font-sans);
-		font-size: 0.8125rem;
+		font-size: 0.75rem;
 		color: var(--color-text-3);
 		font-weight: 400;
 		letter-spacing: 0;

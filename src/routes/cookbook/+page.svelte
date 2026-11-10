@@ -110,13 +110,13 @@
 		}
 	}
 
-	/* The grid's row gap below, so the first cards sit as far from the tags as
-	   the next row does from them. */
+	/* A step under the grid's 32px row gap: the first cards belong to the tags
+	   above them (Spencer, 10 November 2026: "maybe a bit tighter"). */
 	.cookbook-filters {
 		display: flex;
 		flex-direction: column;
 		gap: 14px;
-		margin-bottom: 32px;
+		margin-bottom: var(--space-5);
 	}
 
 	/* All · Mine · Saved: one bordered strip, the current segment marigold-tinted. */
