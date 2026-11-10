@@ -78,6 +78,13 @@
       "when": 1794209430185,
       "tag": "0010_journal-link-and-indexes",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1794285486435,
+      "tag": "0011_list-indexes",
+      "breakpoints": true
     }
   ]
 }

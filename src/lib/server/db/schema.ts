@@ -72,7 +72,13 @@ export const recipes = pgTable(
 			sql`setweight(to_tsvector('english', coalesce(title, '')), 'A') || setweight(to_tsvector('english', coalesce(description, '')), 'B')`
 		)
 	},
-	(table) => [index('recipes_fts_idx').using('gin', table.fts)]
+	(table) => [
+		index('recipes_fts_idx').using('gin', table.fts),
+		// A profile's recipes, the library and the feed read by author.
+		index('recipes_author_idx').on(table.authorId),
+		// Fork counts on every card list read by parent.
+		index('recipes_parent_idx').on(table.parentId)
+	]
 ).enableRLS();
 
 // ─── Friendships ─────────────────────────────────────────────────────────────
@@ -236,7 +242,9 @@ export const favorites = pgTable(
 	},
 	(table) => [
 		primaryKey({ columns: [table.userId, table.recipeId] }),
-		index('favorites_created_at_idx').on(table.createdAt)
+		index('favorites_created_at_idx').on(table.createdAt),
+		// The save count on every recipe view; the primary key leads with the user.
+		index('favorites_recipe_idx').on(table.recipeId)
 	]
 ).enableRLS();
 
@@ -267,7 +275,9 @@ export const recipeVersions = pgTable(
 	(table) => [
 		unique().on(table.recipeId, table.versionNumber),
 		// The Friends feed and recent-activity reads order versions by time.
-		index('recipe_versions_created_at_idx').on(table.createdAt)
+		index('recipe_versions_created_at_idx').on(table.createdAt),
+		// A profile's change count reads by who made the version.
+		index('recipe_versions_created_by_idx').on(table.createdBy)
 	]
 ).enableRLS();
 
