@@ -645,8 +645,8 @@
 
 	/* Both classes: .eyebrow-label is declared later in this layer and would
 	   otherwise reset the margin. */
-	/* Tag tabs: browse and tag pages link through them; search and favorites
-	   toggle them. One look for both. The row scrolls on a phone; the page
+	/* Tag tabs: the tag pages link through them; Search, Discover and Cookbook
+	   toggle them through SearchFilters. One look for both. The row scrolls on a phone; the page
 	   never does. The padding/margin pair leaves room for the focus ring. */
 	.tag-tabs {
 		display: flex;
@@ -965,11 +965,6 @@
 		border-top: 1px dotted var(--color-input-border);
 	}
 
-	.inline-checkbox__note {
-		font-size: 0.75rem;
-		color: var(--color-text-3);
-	}
-
 	.field-tags {
 		border: none;
 		padding: 0;
@@ -1017,14 +1012,6 @@
 	.form-hint {
 		font-size: 0.875rem;
 		color: var(--color-text-3);
-	}
-
-	.inline-checkbox {
-		display: flex;
-		align-items: center;
-		gap: var(--space-2);
-		font-size: 0.875rem;
-		cursor: pointer;
 	}
 
 	/* The recipe page's strike rows: the picture of a visually hidden native
@@ -1255,38 +1242,11 @@
 	}
 
 	/* The "nothing here" paragraph shown when a list query returns no rows.
-	   Shared by the feed, search, favourites and tag pages. */
+	   Shared by the search, tag, forks and profile pages. */
 	.empty-state {
 		padding: 2rem 0;
 		text-align: center;
 		color: var(--color-text-3);
-	}
-
-	/* Commit context: which two versions a diff spans and why the change was made.
-	   Used above the landing page's sample diff. */
-	.commit-bar {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: baseline;
-		gap: 0.75rem;
-		margin-bottom: 1.5rem;
-		padding: 0.75rem 1rem;
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-md);
-		background: var(--color-surface-2);
-	}
-
-	.commit-bar__versions {
-		flex-shrink: 0;
-		font-family: var(--font-mono);
-		font-size: 0.875rem;
-		font-weight: 600;
-		color: var(--color-accent);
-	}
-
-	.commit-bar__message {
-		color: var(--color-text-2);
-		font-size: 0.9375rem;
 	}
 
 	.eyebrow-label {
