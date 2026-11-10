@@ -141,12 +141,10 @@
 		display: flex;
 		flex-direction: column;
 		gap: 8px;
-		margin: 0;
 		padding: 6px;
 	}
 
 	.step p {
-		margin: 0;
 		font-size: 0.875rem;
 		color: var(--color-text-2);
 	}

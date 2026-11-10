@@ -52,9 +52,3 @@
 		{/if}
 	</div>
 </div>
-
-<style>
-	.form-hint {
-		margin: 0;
-	}
-</style>

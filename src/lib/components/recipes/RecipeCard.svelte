@@ -209,7 +209,6 @@
 
 	.card-title,
 	.card-panel-title {
-		margin: 0;
 		font-family: var(--font-serif);
 		font-weight: 500;
 		font-size: 1.0625rem;
@@ -266,10 +265,6 @@
 		display: flex;
 		flex-direction: column;
 		gap: 6px;
-	}
-
-	.card-text > p {
-		margin: 0;
 	}
 
 	/* Two lines at most, Ink 3 sans at the meta size. */

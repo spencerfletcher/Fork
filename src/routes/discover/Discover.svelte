@@ -216,7 +216,6 @@
 		display: grid;
 		grid-template-columns: minmax(0, 1fr);
 		gap: 12px;
-		margin: 0;
 		padding: 0;
 		list-style: none;
 	}

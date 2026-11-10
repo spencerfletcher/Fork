@@ -173,10 +173,6 @@
 </div>
 
 <style>
-	.form-hint {
-		margin: 0;
-	}
-
 	.confirm-note {
 		text-align: center;
 	}

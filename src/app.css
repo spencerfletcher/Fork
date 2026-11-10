@@ -605,10 +605,6 @@
 		margin-bottom: var(--space-5);
 	}
 
-	.page-head h1 {
-		margin: 0;
-	}
-
 	.page-sub {
 		margin: 4px 0 0;
 		color: var(--color-text-2);
@@ -625,10 +621,6 @@
 		gap: var(--space-5) 20px;
 		margin-bottom: var(--space-5);
 		min-width: 0;
-	}
-
-	.browse-header h1 {
-		margin: 0;
 	}
 
 	/* Beside the title, the tabs' underline (4px padding, 2px line) hangs up to
@@ -938,10 +930,6 @@
 		gap: 12px;
 	}
 
-	.editor-title h1 {
-		margin: 0;
-	}
-
 	/* Body face; only its version ids are mono, in .mono-id spans. */
 	.editing {
 		font-size: 0.875rem;
@@ -968,7 +956,6 @@
 	.field-tags {
 		border: none;
 		padding: 0;
-		margin: 0;
 	}
 
 	.field-legend {
@@ -1102,7 +1089,6 @@
 	}
 
 	.field-error {
-		margin: 0;
 		font-size: 0.875rem;
 		color: var(--color-remove);
 	}
@@ -1166,12 +1152,7 @@
 		gap: var(--space-1);
 	}
 
-	.auth-header h1 {
-		margin: 0;
-	}
-
 	.auth-subtitle {
-		margin: 0;
 		color: var(--color-text-2);
 		font-size: 0.9375rem;
 	}
@@ -1201,7 +1182,6 @@
 	}
 
 	.auth-switch {
-		margin: 0;
 		text-align: center;
 		font-size: 0.875rem;
 		color: var(--color-text-2);

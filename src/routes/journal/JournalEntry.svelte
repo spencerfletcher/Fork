@@ -115,7 +115,6 @@
 
 	.jday {
 		grid-area: day;
-		margin: 0;
 		font-family: var(--font-serif);
 		text-align: center;
 	}
@@ -151,7 +150,6 @@
 
 	.jphoto {
 		grid-area: photo;
-		margin: 0;
 	}
 
 	.jphoto img {
@@ -163,7 +161,6 @@
 	}
 
 	.jdish {
-		margin: 0;
 		font-family: var(--font-serif);
 		font-weight: 500;
 		font-size: 1.25rem;

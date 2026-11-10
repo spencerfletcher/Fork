@@ -107,10 +107,6 @@
 		box-shadow: var(--shadow-raised);
 	}
 
-	.dropdown :global(.menu-panel form) {
-		margin: 0;
-	}
-
 	.dropdown :global(.menu-row) {
 		display: flex;
 		align-items: center;

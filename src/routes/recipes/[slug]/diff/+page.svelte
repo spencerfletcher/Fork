@@ -223,7 +223,6 @@
 	}
 
 	.version-card__message {
-		margin: 0;
 		font-family: var(--font-mono);
 		font-size: 0.875rem;
 		line-height: 1.5;

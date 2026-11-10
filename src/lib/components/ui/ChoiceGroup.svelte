@@ -52,7 +52,6 @@
 	.choice-group {
 		border: 0;
 		padding: 0;
-		margin: 0;
 		min-width: 0;
 		display: flex;
 		flex-direction: column;
@@ -91,7 +90,6 @@
 	/* Clay, not the browser's blue; centred on the word's line, not the row. */
 	.choice input {
 		align-self: center;
-		margin: 0;
 		accent-color: var(--color-accent);
 	}
 

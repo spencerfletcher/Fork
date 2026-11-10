@@ -274,7 +274,6 @@
 		right: 0;
 		left: 0;
 		z-index: 50;
-		margin: 0;
 		padding: 0 0 0.25rem;
 		max-height: 240px;
 		overflow-y: auto;
