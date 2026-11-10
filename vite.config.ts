@@ -13,6 +13,11 @@ import { defineConfig } from 'vitest/config';
 const netlifyPreviewFrames =
 	process.env.CONTEXT === 'deploy-preview' ? (['https://app.netlify.com'] as const) : [];
 
+// West of UTC, so a date printed in local time differs from its UTC day and
+// the compare page's UTC-date test means the same everywhere. Set on the
+// process because worker threads take its time zone, not a per-project env.
+if (process.env.VITEST) process.env.TZ = 'America/Los_Angeles';
+
 export default defineConfig({
 	build: {
 		rollupOptions: {
@@ -69,10 +74,10 @@ export default defineConfig({
 				test: {
 					name: 'client',
 					environment: 'jsdom',
+					// One jsdom per worker rather than per file (each file still gets its
+					// own context): the client run takes about a third of the time.
+					pool: 'vmThreads',
 					clearMocks: true,
-					// West of UTC, so a date printed in local time differs from its UTC
-					// day and the compare page's UTC-date test means the same everywhere.
-					env: { TZ: 'America/Los_Angeles' },
 					include: ['src/**/*.svelte.{test,spec}.{js,ts}'],
 					exclude: ['src/lib/server/**', 'e2e/**'],
 					setupFiles: ['./src/vitest-setup-client.ts']
