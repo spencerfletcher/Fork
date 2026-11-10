@@ -457,6 +457,8 @@ Spencer re-phased these after reviewing the full post-MVP backlog. They override
 | Editor preview: a Preview option showing the recipe as it will appear on its page before saving | Unlisted | **P2** |
 | Friends feed entry card: drop the "Shakshuka · v1" source line under the title; the entry title itself links to the recipe at the version that was cooked | Unlisted | **P1** polish |
 | Text-button hover: whether word-buttons underline on hover (off for now; colour change only) | Unlisted | **P1 design backlog** |
+| Journal icon: the side-view book is a placeholder; refine with the fork icon work | Unlisted | **P1 design backlog** |
+| Dropdown panel background: the lifted white reads out of place against paper; revisit the colour | Unlisted | **P1 design backlog** |
 
 Settled later the same evening:
 
