@@ -5,6 +5,7 @@ import RecipeActions from './RecipeActions.svelte';
 import { compactCount } from '#lib/helpers.js';
 import source from './RecipeActions.svelte?raw';
 import { readFileSync } from 'node:fs';
+import { cssRule } from '#lib/testing/css.js';
 
 // Each form's enhance callback is captured so a test can play back a result.
 type Submit = (input: {
@@ -154,11 +155,7 @@ describe('RecipeActions save button', () => {
 describe('RecipeActions favorited look', () => {
 	// jsdom applies no component CSS, so the rules are read from the source.
 	const style = source.slice(source.indexOf('<style>'));
-	const rule = (selector: string, from = style) => {
-		const start = from.indexOf(`${selector} {`);
-		expect(start, selector).toBeGreaterThan(-1);
-		return from.slice(start, from.indexOf('}', start));
-	};
+	const rule = (selector: string, from = style) => cssRule(from, selector);
 	const pressed = ".favorite[aria-pressed='true']";
 
 	test('the favorite button carries the class the pressed rules hang on', () => {

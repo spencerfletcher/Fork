@@ -129,7 +129,6 @@
 		gap: 40px;
 		align-items: center;
 		color: var(--color-text);
-		text-decoration: none;
 	}
 
 	.lead-media {
@@ -156,7 +155,6 @@
 
 	.lead-link {
 		color: inherit;
-		text-decoration: none;
 	}
 
 	.lead-link::after {
@@ -216,9 +214,6 @@
 		display: grid;
 		grid-template-columns: minmax(0, 1fr);
 		gap: 12px;
-		margin: 0;
-		padding: 0;
-		list-style: none;
 	}
 
 	@media (min-width: 600px) {
@@ -239,7 +234,6 @@
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-md);
 		color: var(--color-text);
-		text-decoration: none;
 	}
 
 	.change:hover .change-title {

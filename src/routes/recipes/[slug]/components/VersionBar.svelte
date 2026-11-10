@@ -113,7 +113,7 @@
 		<!-- The other versions, newest first. The whole row, number and message,
 		     is the link to that version; the second link compares it with the
 		     one being read. -->
-		<ul id="version-history" class="history m-0 list-none p-0" hidden={!open}>
+		<ul id="version-history" class="history" hidden={!open}>
 			{#each versions.filter((v) => v.versionNumber !== n) as version (version.id)}
 				{@const v = version.versionNumber}
 				<li>
@@ -136,7 +136,7 @@
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-md);
 		/* The body face: mono is for the version ids only (Spencer, 31 October
-		   2026). The line stays 22.4px, as it was in mono, so the bar holds its height. */
+		   2026). */
 		font-size: 0.9375rem;
 		line-height: 1.4rem;
 	}
@@ -158,7 +158,6 @@
 		flex: 1 1 0;
 		min-width: 0;
 		color: inherit;
-		text-decoration: none;
 	}
 
 	.version-link:hover .message {
@@ -199,20 +198,16 @@
 
 	.controls {
 		flex-shrink: 0;
+		--dot-space: 0 0.25em 0 0;
 	}
 
 	.item {
 		white-space: nowrap;
 	}
 
-	.controls {
-		--dot-space: 0 0.25em 0 0;
-	}
-
 	.version-bar a,
 	.versions-toggle {
 		color: var(--color-accent);
-		text-decoration: none;
 	}
 
 	/* Open, the toggle reads ink; a hover, open or shut, deepens to clay. */
@@ -230,11 +225,6 @@
 		display: inline-flex;
 		align-items: center;
 		gap: 4px;
-		padding: 0;
-		border: none;
-		background: none;
-		font: inherit;
-		cursor: pointer;
 		position: relative;
 	}
 
@@ -257,12 +247,10 @@
 	}
 
 	/* No gap: each row's own padding spaces the rows, so two boxes never meet.
-	   The top padding is the old 10px less a row's 6px, so the first row's text
-	   stays where it was. */
+	   With a row's 6px, the top padding puts the first row's text 10px under the rule. */
 	.history {
 		display: flex;
 		flex-direction: column;
-		gap: 0;
 		margin-top: 10px;
 		padding-top: 4px;
 		border-top: 1px solid var(--color-border);
@@ -338,18 +326,10 @@
 			column-gap: 10px;
 		}
 
-		.version-bar .version-link {
-			display: inline-flex;
-		}
-
 		/* The toggle's 44px, on its pseudo: a ring this tall would cut through
 		   the note above. */
 		.versions-toggle::before {
 			inset: -11px 0;
-		}
-
-		.history {
-			gap: 0;
 		}
 
 		.history li {

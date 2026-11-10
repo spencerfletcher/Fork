@@ -7,6 +7,7 @@ import source from './RecipeIngredients.svelte?raw';
 import { readFileSync } from 'node:fs';
 import { ticksKey, loadTicks, saveTicks } from './ticks';
 import { FRACTIONS } from '#lib/recipes/scale.js';
+import { cssRules } from '#lib/testing/css.js';
 
 type GramResult = { grams: number; grams2: number | null; approximate: boolean } | null;
 
@@ -152,11 +153,7 @@ describe('RecipeIngredients', () => {
 
 	// Both lists share these rules; they are pinned here once.
 	describe('the shared .tick rules in app.css', () => {
-		const rule = (selector: string) => {
-			const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-			return new RegExp(`(?:^|\\n)\\s*${escaped}\\s*\\{([^}]*)\\}`, 'g');
-		};
-		const bodies = (selector: string) => [...appCss.matchAll(rule(selector))].map((m) => m[1]);
+		const bodies = (selector: string) => cssRules(appCss, selector);
 
 		test('at rest a 16px circle with a 1px Ink 3 edge', () => {
 			const [rest] = bodies('.tick');

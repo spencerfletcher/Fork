@@ -137,15 +137,9 @@
 		min-width: 0;
 	}
 
-	.profile-text h1 {
-		margin: 0;
-		overflow-wrap: anywhere;
-	}
-
 	.profile-stats {
 		display: flex;
 		flex-wrap: wrap;
-		margin: 0;
 		font-size: 0.875rem;
 		font-variant-numeric: tabular-nums;
 		color: var(--color-text-3);

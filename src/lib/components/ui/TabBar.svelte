@@ -85,7 +85,6 @@
 		font-weight: 600;
 		line-height: 1.2;
 		color: var(--color-text-2);
-		text-decoration: none;
 	}
 
 	.tab-bar a:hover {

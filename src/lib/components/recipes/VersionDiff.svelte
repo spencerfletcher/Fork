@@ -232,7 +232,6 @@
 	}
 
 	.diff-empty {
-		margin: 0;
 		padding: 1rem;
 		text-align: center;
 		color: var(--color-text-3);
@@ -263,7 +262,6 @@
 	/* A group name in the recipe page's voice: words, not an identifier, so
 	   not the diff's mono. */
 	.diff-group {
-		margin: 0;
 		padding: 0.75rem 1rem 0;
 		font-family: var(--font-serif);
 		font-weight: 500;

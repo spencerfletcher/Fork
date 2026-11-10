@@ -80,7 +80,6 @@
 	}
 
 	.month {
-		margin: 0;
 		padding-bottom: 8px;
 		font-size: 1.375rem;
 		border-bottom: 1px solid var(--color-border-2);

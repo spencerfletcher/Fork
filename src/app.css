@@ -391,7 +391,6 @@
 		font-size: 0.9375rem;
 		padding: 9px 12px;
 		width: 100%;
-		box-sizing: border-box;
 	}
 
 	/* Grows with its content; `rows` is the floor where field-sizing is unsupported. */
@@ -431,18 +430,15 @@
 @layer components {
 	/* ── Buttons ── */
 
-	.btn-primary {
-		font-family: var(--font-sans);
+	/* What the two buttons share: one box, one label. */
+	.btn-primary,
+	.btn-ghost {
 		font-weight: 600;
 		font-size: 0.9375rem;
-		background: var(--color-marigold);
 		color: var(--color-text);
-		/* Transparent, so it shows only under forced colours, where the fill
-		   goes and the border is all that keeps the button a box. */
-		border: 1px solid transparent;
+		border: 1px solid;
 		border-radius: var(--radius-md);
 		padding: 11px 16px;
-		cursor: pointer;
 		/* Darken on hover rather than fade. An opacity transition washes the button
 		   toward whatever is behind it, which reads as the control going inactive. */
 		transition: background 0.15s ease;
@@ -450,30 +446,24 @@
 		text-align: center;
 	}
 
+	.btn-primary {
+		background: var(--color-marigold);
+		/* Transparent, so it shows only under forced colours, where the fill
+		   goes and the border is all that keeps the button a box. */
+		border-color: transparent;
+	}
+
 	.btn-primary:hover {
 		background: var(--color-marigold-hover);
-		color: var(--color-text);
 	}
 
 	.btn-ghost {
-		font-family: var(--font-sans);
-		font-weight: 600;
-		font-size: 0.9375rem;
-		background: transparent;
-		color: var(--color-text);
-		border: 1px solid var(--color-text);
-		border-radius: var(--radius-md);
-		padding: 11px 16px;
-		cursor: pointer;
-		transition: background 0.15s ease;
-		display: inline-block;
-		text-align: center;
+		border-color: var(--color-text);
 	}
 
 	/* The band, paper one step deeper, so the hover is seen (decided 9 November 2026). */
 	.btn-ghost:hover {
 		background: var(--color-band);
-		color: var(--color-text);
 	}
 
 	/* Ghost turned danger: Diff Remove red outline and text, for the one
@@ -502,15 +492,11 @@
 		align-items: center;
 		gap: 6px;
 		min-height: 24px;
-		padding: 0;
-		border: 0;
-		background: none;
-		font: inherit;
 		font-weight: 600;
 		letter-spacing: normal;
 		text-transform: none;
 		color: var(--color-accent);
-		text-decoration: none;
+		/* For a label wearing it (a photo field's Choose); a button has it already. */
 		cursor: pointer;
 	}
 
@@ -605,10 +591,6 @@
 		margin-bottom: var(--space-5);
 	}
 
-	.page-head h1 {
-		margin: 0;
-	}
-
 	.page-sub {
 		margin: 4px 0 0;
 		color: var(--color-text-2);
@@ -624,11 +606,6 @@
 		justify-content: space-between;
 		gap: var(--space-5) 20px;
 		margin-bottom: var(--space-5);
-		min-width: 0;
-	}
-
-	.browse-header h1 {
-		margin: 0;
 	}
 
 	/* Beside the title, the tabs' underline (4px padding, 2px line) hangs up to
@@ -643,8 +620,6 @@
 		}
 	}
 
-	/* Both classes: .eyebrow-label is declared later in this layer and would
-	   otherwise reset the margin. */
 	/* Tag tabs: the tag pages link through them; Search, Discover and Cookbook
 	   toggle them through SearchFilters. One look for both. The row scrolls on a phone; the page
 	   never does. The padding/margin pair leaves room for the focus ring. */
@@ -680,14 +655,10 @@
 	.tag-tabs button {
 		flex-shrink: 0;
 		padding: 0 0 4px;
-		border: 0;
 		border-bottom: 2px solid transparent;
-		background: none;
 		font-family: var(--font-sans);
 		font-size: 0.875rem;
 		color: var(--color-text-2);
-		text-decoration: none;
-		cursor: pointer;
 	}
 
 	.tag-tabs a:hover,
@@ -742,7 +713,7 @@
 		}
 	}
 
-	.eyebrow-label.section-heading {
+	.section-heading {
 		padding-bottom: 8px;
 		margin-bottom: 14px;
 		border-bottom: 1px solid var(--color-border);
@@ -826,10 +797,9 @@
 		font-size: 0.75rem;
 		font-weight: 500;
 		color: var(--color-tag);
-		background: transparent;
 		border: 1px solid var(--color-tag-border);
 		border-radius: var(--radius-pill);
-		padding: 2px 9px; /* 1px less than before to absorb the new border */
+		padding: 2px 9px; /* With the 1px border, 24px tall. */
 		display: inline-block;
 		transition:
 			background 0.15s,
@@ -882,9 +852,10 @@
 		gap: var(--space-2);
 	}
 
-	/* Labels are eyebrows, the same voice as section headings. */
+	/* The eyebrow: labels and section headings in one voice (h4 is it too). */
 	.field label,
-	.field-legend {
+	.field-legend,
+	.eyebrow-label {
 		font-family: var(--font-sans);
 		font-size: 0.75rem;
 		font-weight: 600;
@@ -897,9 +868,6 @@
 	   nothing (Spencer, 10 November 2026). Visible text inside the label, so a
 	   screen reader hears it as part of the name. */
 	.field-required {
-		font-family: var(--font-sans);
-		font-size: 0.75rem;
-		color: var(--color-text-3);
 		font-weight: 400;
 		letter-spacing: 0;
 		text-transform: none;
@@ -938,10 +906,6 @@
 		gap: 12px;
 	}
 
-	.editor-title h1 {
-		margin: 0;
-	}
-
 	/* Body face; only its version ids are mono, in .mono-id spans. */
 	.editing {
 		font-size: 0.875rem;
@@ -963,12 +927,6 @@
 	.field-message {
 		padding-top: 18px;
 		border-top: 1px dotted var(--color-input-border);
-	}
-
-	.field-tags {
-		border: none;
-		padding: 0;
-		margin: 0;
 	}
 
 	.field-legend {
@@ -1077,7 +1035,6 @@
 		font-size: 0.875rem;
 		line-height: calc(1.25 / 0.875);
 		color: var(--color-text-3);
-		cursor: pointer;
 	}
 
 	@media (hover: hover) {
@@ -1086,7 +1043,7 @@
 		}
 	}
 
-	@media (width < 699px), (pointer: coarse) {
+	@media (max-width: 699px), (pointer: coarse) {
 		.clear-ticks {
 			margin-block: -12px;
 			padding-block: 12px;
@@ -1102,14 +1059,13 @@
 	}
 
 	.field-error {
-		margin: 0;
 		font-size: 0.875rem;
 		color: var(--color-remove);
 	}
 
 	/* ── Auth pages ── */
 
-	/* Under the 56px navbar; 100dvh here scrolled every auth page for nothing. */
+	/* Under the 56px navbar, so the page does not scroll. */
 	.auth-page {
 		min-height: calc(100dvh - 56px);
 		display: flex;
@@ -1166,12 +1122,7 @@
 		gap: var(--space-1);
 	}
 
-	.auth-header h1 {
-		margin: 0;
-	}
-
 	.auth-subtitle {
-		margin: 0;
 		color: var(--color-text-2);
 		font-size: 0.9375rem;
 	}
@@ -1195,13 +1146,11 @@
 	}
 
 	.auth-submit {
-		width: 100%;
 		padding: 12px;
 		font-size: 1rem;
 	}
 
 	.auth-switch {
-		margin: 0;
 		text-align: center;
 		font-size: 0.875rem;
 		color: var(--color-text-2);
@@ -1221,8 +1170,6 @@
 			margin-block: -12px;
 		}
 	}
-
-	/* ── Eyebrow label ── */
 
 	/* A closing link in the arrow form ("All recipes →"): 24px tall at desktop
 	   from its own line, 44px on a phone by padding pulled back by margin, so
@@ -1247,16 +1194,6 @@
 		padding: 2rem 0;
 		text-align: center;
 		color: var(--color-text-3);
-	}
-
-	.eyebrow-label {
-		font-family: var(--font-sans);
-		font-size: 0.75rem;
-		font-weight: 600;
-		letter-spacing: 0.05em;
-		text-transform: uppercase;
-		color: var(--color-text-3);
-		margin: 0;
 	}
 }
 

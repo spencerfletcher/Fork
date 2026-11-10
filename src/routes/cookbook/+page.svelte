@@ -139,7 +139,6 @@
 		font-size: 0.9375rem;
 		font-weight: 600;
 		color: var(--color-text-2);
-		text-decoration: none;
 	}
 
 	.seg a:hover {

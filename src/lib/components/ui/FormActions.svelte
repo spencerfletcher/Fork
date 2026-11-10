@@ -37,10 +37,6 @@
 </div>
 
 <style>
-	.form-actions {
-		flex-wrap: wrap;
-	}
-
 	/* Save and Cancel keep their words on one line; only the danger slot gives. */
 	.form-actions > :not(.danger) {
 		flex-shrink: 0;
@@ -66,10 +62,6 @@
 	   an open step's sentence wraps inside it. The sentence takes its own
 	   width, not the row's spare space, so nothing stretches inside the step. */
 	@media (min-width: 700px) {
-		.form-actions {
-			flex-wrap: nowrap;
-		}
-
 		.danger :global(.step .explanation) {
 			flex: 0 1 auto;
 		}

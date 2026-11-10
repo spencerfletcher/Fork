@@ -25,7 +25,7 @@
 					<div class="flex flex-col gap-1">
 						<RecipeCard {recipe} index={i} alwaysShowAuthor showDescription={false} />
 						{#if recipe.forkNote}
-							<p class="text-text-3 m-0 line-clamp-3 font-sans text-[0.8125rem] leading-[1.5]">
+							<p class="text-text-3 line-clamp-3 font-sans text-[0.8125rem] leading-[1.5]">
 								{recipe.forkNote}
 							</p>
 						{/if}

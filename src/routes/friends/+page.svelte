@@ -162,7 +162,6 @@
 	}
 
 	.event p {
-		margin: 0;
 		line-height: 1.5;
 		overflow-wrap: anywhere;
 	}
@@ -197,7 +196,6 @@
 	}
 
 	.rail-sec p {
-		margin: 0;
 		font-size: 0.9375rem;
 		color: var(--color-text-2);
 	}
@@ -226,10 +224,6 @@
 		display: flex;
 		align-items: center;
 		gap: 20px;
-	}
-
-	.btns form {
-		margin: 0;
 	}
 
 	.link-row {

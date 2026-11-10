@@ -111,7 +111,6 @@
 	.who-line {
 		flex: 1;
 		min-width: 0;
-		margin: 0;
 		line-height: 1.35;
 		font-weight: 600;
 		overflow-wrap: anywhere;
@@ -176,17 +175,12 @@
 		gap: 4px 24px;
 	}
 
-	.actions form {
-		margin: 0;
-	}
-
 	.text-btn[aria-pressed='true'] :global(svg) {
 		color: var(--color-accent);
 	}
 
 	.form-error {
 		flex-basis: 100%;
-		margin: 0;
 	}
 
 	@media (max-width: 699px) {

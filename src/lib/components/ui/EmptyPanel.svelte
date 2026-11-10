@@ -26,7 +26,6 @@
 	}
 
 	.empty-panel:not(.centered) h2 {
-		margin: 0;
 		font-size: 1.375rem;
 	}
 

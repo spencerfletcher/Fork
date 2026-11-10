@@ -4,6 +4,7 @@ import VersionBar from './VersionBar.svelte';
 import source from './VersionBar.svelte?raw';
 import type { ComponentProps } from 'svelte';
 import { makeVersion } from '#lib/recipes/fixtures.js';
+import { cssRule } from '#lib/testing/css.js';
 
 vi.mock('$app/navigation', () => ({ afterNavigate: () => {} }));
 
@@ -214,10 +215,9 @@ describe('VersionBar', () => {
 		// jsdom applies no component CSS, so the rule is read from the source. The
 		// list holds only the other versions; the current line lives in .current.
 		const style = source.slice(source.indexOf('<style>'));
-		const rule = /\.history li:hover,\s*\.history li:focus-within \{([^}]*)\}/.exec(style);
-		expect(rule).not.toBeNull();
-		expect(rule![1]).toMatch(/outline: 1px solid var\(--color-border-2\);/);
-		expect(rule![1]).toMatch(/outline-offset: -1px;/);
+		const rule = cssRule(style, '.history li:hover, .history li:focus-within');
+		expect(rule).toMatch(/outline: 1px solid var\(--color-border-2\);/);
+		expect(rule).toMatch(/outline-offset: -1px;/);
 		expect(style).not.toMatch(/\.current[^{]*:hover[^{]*\{[^}]*outline/);
 		expect(style).toMatch(
 			/@media \(forced-colors: active\) \{\s*\.history li:hover,\s*\.history li:focus-within \{\s*outline-color: CanvasText;/
@@ -226,7 +226,7 @@ describe('VersionBar', () => {
 
 	test('the chip keeps its box in forced colours: a transparent outline, inset so nothing moves', () => {
 		// Forced colours drop the marigold fill but draw the outline in the text colour.
-		const chip = /\.current \.version-number \{([^}]*)\}/.exec(source)![1];
+		const chip = cssRule(source, '.current .version-number');
 		expect(chip).toMatch(/outline: 1px solid transparent;/);
 		expect(chip).toMatch(/outline-offset: -1px;/);
 		expect(chip).not.toMatch(/border:|margin/);

@@ -306,8 +306,6 @@
 		max-height: 18rem;
 		overflow-y: auto;
 		margin: -1px 0 0;
-		padding: 0;
-		list-style: none;
 		background: var(--color-surface);
 		border: 1px solid var(--color-input-border);
 		border-radius: 0 0 var(--radius-md) var(--radius-md);
@@ -351,10 +349,6 @@
 	@media (max-width: 699px) {
 		.two-up {
 			grid-template-columns: minmax(0, 1fr);
-		}
-
-		#recipe {
-			font-size: 16px;
 		}
 	}
 </style>

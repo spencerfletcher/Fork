@@ -115,7 +115,6 @@
 
 	.jday {
 		grid-area: day;
-		margin: 0;
 		font-family: var(--font-serif);
 		text-align: center;
 	}
@@ -126,17 +125,19 @@
 		align-items: center;
 	}
 
-	.jday b {
-		font-weight: 500;
-		font-size: 2rem;
-		line-height: 1;
-	}
+	@media (min-width: 700px) {
+		.jday b {
+			font-weight: 500;
+			font-size: 2rem;
+			line-height: 1;
+		}
 
-	.jday span {
-		margin-top: 4px;
-		font-family: var(--font-sans);
-		font-size: 0.8125rem;
-		color: var(--color-text-3);
+		.jday span {
+			margin-top: 4px;
+			font-family: var(--font-sans);
+			font-size: 0.8125rem;
+			color: var(--color-text-3);
+		}
 	}
 
 	.jhead {
@@ -151,7 +152,6 @@
 
 	.jphoto {
 		grid-area: photo;
-		margin: 0;
 	}
 
 	.jphoto img {
@@ -163,7 +163,6 @@
 	}
 
 	.jdish {
-		margin: 0;
 		font-family: var(--font-serif);
 		font-weight: 500;
 		font-size: 1.25rem;
@@ -282,12 +281,10 @@
 			color: var(--color-text-2);
 		}
 
-		.jday b,
-		.jday span {
-			margin: 0;
-			font-size: inherit;
+		/* The line's own 600, not preflight's bolder. */
+		.jday b {
 			font-weight: inherit;
-			color: inherit;
+			line-height: 1;
 		}
 
 		.jdish {

@@ -14,7 +14,7 @@
 	     the site size, centred on the screen, nothing boxed. -->
 	<div class="auth-page">
 		<div class="error-page text-center">
-			<h1 class="m-0">Error {page.status} – {page.error?.message}</h1>
+			<h1>Error {page.status} – {page.error?.message}</h1>
 			<div class="actions">
 				<a href="/recipes/{page.params.slug}" class="btn-primary">Back to the recipe</a>
 			</div>

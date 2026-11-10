@@ -27,7 +27,7 @@
      October 2026). -->
 <div class="auth-page">
 	<div class="error-page text-center">
-		<h1 class="m-0">Error {page.status} – {message}</h1>
+		<h1>Error {page.status} – {message}</h1>
 		{#if lede}
 			<p class="lede text-text-2">{lede}</p>
 		{/if}

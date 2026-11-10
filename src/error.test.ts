@@ -1,6 +1,7 @@
 import { describe, test, expect } from 'vitest';
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
+import { cssRules } from '#lib/testing/css.js';
 
 // SvelteKit renders src/error.html when an error happens outside the app's own
 // error page (a crashed root layout, a failed render), with no app CSS or
@@ -44,10 +45,8 @@ describe('fallback error page', () => {
 	});
 
 	// Heights from the source: font size x line height + vertical padding + borders.
-	function rule(selector: string): string {
-		const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-		return new RegExp(`(?<!,)\\n\\t\\t\\t${escaped}\\s*{([^}]*)}`).exec(html)![1];
-	}
+	// Every rule naming the selector, a list (`.btn-primary, .btn-ghost`) included.
+	const rule = (selector: string) => cssRules(html, selector).join('\n');
 	function px(block: string, prop: string): string | undefined {
 		return new RegExp(`(?:^|[^-])${prop}:\\s*([^;]+);`).exec(block)?.[1].trim();
 	}

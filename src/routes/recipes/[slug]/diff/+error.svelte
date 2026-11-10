@@ -16,7 +16,7 @@
      site size, centred on the screen, nothing boxed. -->
 <div class="auth-page">
 	<div class="error-page text-center">
-		<h1 class="m-0">Error {page.status} – {page.error?.message || 'An error occurred'}</h1>
+		<h1>Error {page.status} – {page.error?.message || 'An error occurred'}</h1>
 		<p class="lede text-text-2">
 			{#if oneVersion}
 				Once the recipe has a second version you can compare them here.

@@ -148,7 +148,6 @@
 	.explanation {
 		flex: 1 1 24ch;
 		max-width: 72ch;
-		margin: 0;
 		line-height: 1.4;
 		color: var(--color-text-2);
 	}

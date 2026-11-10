@@ -5,6 +5,7 @@ import RecipeHeader from './RecipeHeader.svelte';
 import source from './RecipeHeader.svelte?raw';
 import type { ComponentProps } from 'svelte';
 import { makeContent, makeVersion } from '#lib/recipes/fixtures.js';
+import { cssRule } from '#lib/testing/css.js';
 
 vi.mock('$app/navigation', () => ({ afterNavigate: () => {} }));
 
@@ -266,8 +267,7 @@ describe('RecipeHeader stats row', () => {
 
 	test('the row takes the byline size, so the header keeps one metadata size', () => {
 		// jsdom applies no component CSS, so the rules are read from the source.
-		const rule = (name: string) =>
-			source.match(new RegExp(`\\n\\t\\.${name} \\{[^}]*\\}`))?.[0] ?? '';
+		const rule = (name: string) => cssRule(source, `.${name}`);
 		const size = (css: string) => css.match(/font-size: ([^;]+);/)?.[1];
 		expect(size(rule('stats'))).toBeDefined();
 		expect(size(rule('stats'))).toBe(size(rule('byline')));
@@ -280,8 +280,8 @@ describe('RecipeHeader stats row', () => {
 
 describe('RecipeHeader content', () => {
 	test('the title and byline break a long unbroken word, so a phone never scrolls sideways', () => {
+		// The title breaks by the base h1 rule, pinned in app.css.test.ts.
 		const { container } = renderHeader();
-		expect(screen.getByRole('heading', { level: 1 })).toHaveClass('[overflow-wrap:anywhere]');
 		expect(container.querySelector('.byline')).toHaveClass('[overflow-wrap:anywhere]');
 	});
 
@@ -315,9 +315,10 @@ describe('RecipeHeader content', () => {
 		expect(dessert).not.toHaveClass('tag');
 		expect(dessert.parentElement).toHaveTextContent('Dessert, Baking');
 		// Taxonomy, not history: the body face below the measure; each tag a link
-		// like every other link on the site, clay and bold, the commas quiet.
+		// like every other link on the site, bold, its clay the global link rule's
+		// (app.css), the commas quiet.
 		expect(dessert.parentElement).toHaveClass('font-sans', 'text-text-2');
-		expect(dessert).toHaveClass('text-accent', 'font-semibold');
+		expect(dessert).toHaveClass('font-semibold');
 		const details = dessert.closest('header')!.querySelector('.details')!;
 		expect(
 			dessert.compareDocumentPosition(details) & Node.DOCUMENT_POSITION_PRECEDING
@@ -327,7 +328,7 @@ describe('RecipeHeader content', () => {
 	test('the description clamps at three lines with an ellipsis at every width', () => {
 		// jsdom applies no component CSS, so the clamp is read from the source:
 		// on the .description rule itself, not inside a media query.
-		const rule = source.match(/\n\t\.description \{[^}]*\}/)?.[0] ?? '';
+		const rule = cssRule(source, '.description');
 		expect(rule).toMatch(/line-clamp: 3;/);
 		expect(rule).toMatch(/-webkit-line-clamp: 3;/);
 		expect(rule).toMatch(/overflow: hidden;/);

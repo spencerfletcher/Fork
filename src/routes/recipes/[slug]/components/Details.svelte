@@ -43,7 +43,7 @@
      label. A pair never splits. The dots between pairs are drawn by CSS, never
      typed. A phone gives the times and the yield a line each. -->
 {#if lines.length > 0}
-	<p class="details dot-list text-text-2 m-0 font-sans text-base leading-[1.5]">
+	<p class="details dot-list text-text-2 font-sans text-base leading-[1.5]">
 		{#each lines as line, l (l)}
 			<!-- eslint-disable-next-line svelte/no-useless-mustaches -- a bare space between blocks is dropped -->
 			{#if l > 0}{' '}{/if}

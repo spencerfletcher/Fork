@@ -3,6 +3,7 @@ import { render, screen, within } from '@testing-library/svelte';
 import TabBar from './TabBar.svelte';
 import source from './TabBar.svelte?raw';
 import { DESTINATIONS } from './destinations';
+import { cssRule } from '#lib/testing/css.js';
 
 const { page } = vi.hoisted(() => ({
 	page: { url: new URL('http://localhost/cookbook'), route: { id: '/cookbook' as string | null } }
@@ -70,7 +71,7 @@ describe('TabBar', () => {
 	});
 
 	test('hover: ink on the band', () => {
-		const hover = source.match(/\.tab-bar a:hover\s*\{([^}]*)\}/)![1];
+		const hover = cssRule(source, '.tab-bar a:hover');
 		expect(hover).toMatch(/color:\s*var\(--color-text\)/);
 		expect(hover).toMatch(/background:\s*var\(--color-band\)/);
 	});
