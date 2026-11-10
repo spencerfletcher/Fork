@@ -487,6 +487,13 @@
 		color: var(--color-remove);
 	}
 
+	/* The small size of either: 44px tall, 14px sides, for a button beside
+	   text in a narrow rail (Friends' Accept and Copy invite link). */
+	.btn-sm {
+		min-height: 44px;
+		padding: 0 14px;
+	}
+
 	/* A button that reads as a word: clay 600 in the line's face, no box.
 	   A 24px hit at desktop and a thumb's 44px on a phone or touch screen.
 	   Hover deepens to clay deep; the colour change alone. */

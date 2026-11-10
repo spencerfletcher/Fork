@@ -228,11 +228,6 @@
 		margin: 0;
 	}
 
-	.btn-sm {
-		min-height: 44px;
-		padding: 0 14px;
-	}
-
 	.link-row {
 		display: flex;
 		flex-direction: column;
