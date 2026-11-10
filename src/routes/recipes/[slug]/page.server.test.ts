@@ -6,6 +6,7 @@ import { VERSION_NOT_FOUND } from './versionError.js';
 import { inGroup, makeIngredient, makeStep, makeContent } from '#lib/recipes/fixtures.js';
 import { favorites, friendships, recipes } from '#lib/server/db/schema.js';
 import type { Visibility } from '#lib/recipes/validation.js';
+import { SESSION_ENDED } from '#lib/server/actions.js';
 
 // ─── Hoisted mocks ────────────────────────────────────────────────────────────
 
@@ -570,6 +571,15 @@ describe('toggleFavorite', () => {
 		await invoke(actions.toggleFavorite as never, makeEvent({ user: FORKER }));
 		expect(dbInsert).toHaveBeenCalledWith(favorites);
 		expect(insert.values).toHaveBeenCalledWith({ userId: FORKER.id, recipeId: SOURCE_RECIPE.id });
+	});
+
+	test('signed out is a 401 form failure saying the session ended, and touches nothing', async () => {
+		const result = await invoke(actions.toggleFavorite as never, makeEvent({ user: null }));
+		expect(result).toMatchObject({
+			status: 401,
+			data: { error: SESSION_ENDED('try again'), code: 'unauthenticated' }
+		});
+		expect(dbDelete).not.toHaveBeenCalled();
 	});
 });
 

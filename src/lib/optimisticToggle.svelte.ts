@@ -5,7 +5,8 @@ import type { SubmitFunction } from '$app/forms';
  * One request at a time: a second press while one is in flight is cancelled,
  * not disabled, so keyboard focus stays. `on` follows `initial` whenever it
  * changes (a reload, another recipe). `report` gets '' on each press and
- * `failure` on a refusal; `refresh` applies a success to the page's data.
+ * `failure` on a refusal
+ * (the server's own sentence when the session ended); `refresh` applies a success to the page's data.
  */
 export function optimisticToggle(
 	initial: () => boolean,
@@ -29,9 +30,14 @@ export function optimisticToggle(
 				if (refresh) await update({ reset: false });
 				return;
 			}
-			// Flip back: nothing was saved.
+			// Flip back: nothing was saved. A lapsed session says so in the server's
+			// words, which tell the reader to log in; anything else gets ours.
 			on = !on;
-			report(failure);
+			const lapsed =
+				result.type === 'failure' && result.data?.code === 'unauthenticated'
+					? result.data.error
+					: undefined;
+			report(typeof lapsed === 'string' ? lapsed : failure);
 		};
 	};
 
