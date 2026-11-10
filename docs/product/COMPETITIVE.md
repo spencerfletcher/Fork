@@ -7,7 +7,7 @@ Research record: [cookbook market](../research/2026-11-08-product-roadmap/cookbo
 ## 1. Evidence labels
 
 | Label | Meaning |
-|---|---|
+| --- | --- |
 | **Tested** (T) | Directly exercised in the app, on a small synthetic library |
 | **Visible** (V) | A control or menu was seen; its operation was not tested |
 | **Documented** (D) | A vendor or project primary source describes it |
@@ -30,7 +30,7 @@ Capabilities can be paid or platform-specific; a free download does not mean a l
 Prices are public observations on 8 November 2026 in USD unless stated; they vary by region, tax, promotion and platform, and features may sit in paid tiers.
 
 | Product | Model and price | Documented strengths | Gaps or unknowns in this research | What Fork takes from it |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | **Paprika 4** | Subscription: premium introductory US$14.99/year, US$9.99/year for previous owners; previous owners keep Standard free; new free tier limited to 50 recipes | Web capture, editing, cookbooks, advanced search with saved rules, duplicate finder, scaling and US/metric conversion, current step, ticks, timers, screen-on, offline, groceries, pantry, meal plans, menus, HTML and Paprika export, print; premium scanning, social capture, family sharing; Apple Intelligence substitutions; widgets, Watch, Alexa | Brand-new release, no independent quality check; introductory price | The value anchor. Faithful migration and a repeat-cooking benefit are essential, not "we also have grocery lists". Recipe-shaped editor, forgiving number entry, global timers, named companion surfaces (tested and documented) |
 | **Recipe Keeper** | US iOS Pro US$19.99; other platforms purchased separately; the Mac app offered a one-time purchase | Web, social, photo and PDF capture with OCR, migration, collections and categories, name, ingredient and direction search, filters, scaling and conversion, ticks, offline, shopping by aisle, weekly and monthly planning, printable cookbooks | Reviews are anecdotes; old complaints not asserted as current | Existing libraries and family archives create switching costs: preserve organization and photos. Polished cookbook PDF as a later paid-value candidate. A negative design reference for parallel labels |
 | **Crouton** | Crouton Plus US$24.99 one-time; Discover US$14.99/year or US$1.99/month; exact entitlement split and older purchases not resolved | Web, book and photo capture with OCR and AI import, step view with tappable ingredient quantities, scaling slider, ingredient-ratio scaling, multiple timers, meal plan, Reminders groceries, iCloud household sharing; Apple Design Award cooking view | Export, print and full offline behaviour not verified | The native cooking and OS-integration quality bar; browser reach helps mixed-device households but does not excuse a weaker Cook. Scale to an ingredient on hand |
@@ -41,11 +41,11 @@ Prices are public observations on 8 November 2026 in USD unless stated; they var
 | **Tandoor** | Self-hosting documented; hosted price not reliably verified | Structured editor, JSON-LD and microdata import, many migration formats, full-text and trigram search, bulk tagging, scaling, shopping and planning, collaboration, native archive export | Some pages stale; cook, offline and timer detail unverified | Match useful library jobs without every power-user setting; document export fidelity explicitly |
 | **Cooklang ecosystem** | Free tooling plus optional cloud; Cook Pro €12.99/month with CookBot; lower tiers not checked | Portable text files, sections, ingredients in steps, named timers, optional ingredients, subrecipes, shopping and menu files, Git workflows | The specification is not universal client support | Portability and version control already exist; Fork makes their cooking benefit accessible. Cooklang-style markup is Fork's later path for inline quantities and the graphical view |
 | **meez** | Professional plans | Recipe books, scaling, subrecipes, costing, team prep, inventory, locations, integrations | Vendor claims, not Fork-user demand | Shows how much larger professional kitchen operations are; Fork does not inherit that surface |
-| **NYT Cooking** | Not researched as a competitor | | No price or feature check in this research | A design-quality reference (type roles, serving stepper, tap-to-cross ingredients); see [INSPIRATION.md](../design/INSPIRATION.md) |
+| **NYT Cooking** | Not researched as a competitor |  | No price or feature check in this research | A design-quality reference (type roles, serving stepper, tap-to-cross ingredients); see [INSPIRATION.md](../design/INSPIRATION.md) |
 
 **Pricing model observations.** The category is not subscription-only: Crouton separates one-time Plus from recurring Discover, Recipe Keeper's Mac app offered a one-time purchase, and Paprika 4 sells a subscription while existing owners keep Standard. A purchased core plus recurring services is a live option for Fork, not a settled choice; [BUSINESS.md](BUSINESS.md) holds the hypotheses.
 
-**Commercial reading** (inferred, CM): *activation* comes from paste and URL capture, mobile capture, a representative demo recipe, a clear first cookbook and a migration preview, measured by the first trustworthy saved recipe and first successful cook; *retention* from predictable search and collections, dependable cooking, offline and print, attempt notes and version recall, and the grocery and plan routine; *acquisition* from shareable readable recipe pages and collections, attractive print and export, credited variants and "what changed, what worked" examples; *revenue* from convenience and advanced capability, never from gating recovery or export. Where Fork defers a familiar feature, the reason is stated: data dependencies (nutrition, subrecipes), reliability and permissions (offline, households), recurring cost (AI, social) or a different customer (restaurant procurement).
+**Commercial reading** (inferred, CM): _activation_ comes from paste and URL capture, mobile capture, a representative demo recipe, a clear first cookbook and a migration preview, measured by the first trustworthy saved recipe and first successful cook; _retention_ from predictable search and collections, dependable cooking, offline and print, attempt notes and version recall, and the grocery and plan routine; _acquisition_ from shareable readable recipe pages and collections, attractive print and export, credited variants and "what changed, what worked" examples; _revenue_ from convenience and advanced capability, never from gating recovery or export. Where Fork defers a familiar feature, the reason is stated: data dependencies (nutrition, subrecipes), reliability and permissions (offline, households), recurring cost (AI, social) or a different customer (restaurant procurement).
 
 ## 4. Table stakes and Fork's difference
 
@@ -54,7 +54,7 @@ Prices are public observations on 8 November 2026 in USD unless stated; they var
 **Where Fork differs** (inferred, a hypothesis to test):
 
 | Difference | What it is | Shipped today |
-|---|---|---|
+| --- | --- | --- |
 | Version-aware memory | Every edit is a version with a note; any two compare; a cook remembers the exact version and scale; "Keep this version" and restore as a new version | Versions, compare, Cook pinned to a version, Journal prefilled with version and scale |
 | Journal | A log entry needs only a dish and a date; private next-time notes come back at the next cook | Journal shipped; recall at the next cook is P1 and P2 work |
 | Friends | A chronological feed of real cooks and recipe changes with clear audiences; save the source, cook, adapt | Shipped |
@@ -62,7 +62,7 @@ Prices are public observations on 8 November 2026 in USD unless stated; they var
 **Hands-on fidelity findings as acceptance fixtures** (tested, 9 Nov, a small synthetic library; particular behaviours, not comparative defect rates or proof Fork does better):
 
 | Test | Observed | Fixture for Fork |
-|---|---|---|
+| --- | --- | --- |
 | Paprika multiplier syntax | `50%`, `0.5` and `1/2` gave the same half batch; reopening normalized to `1/2` | One field accepts all three; keep the user's text while editing, normalize after (S01) |
 | Crouton ingredient-based scale | 375 g flour against 250 g gave 1.5× | Scale to the amount on hand (S03) |
 | Range at 2× | Crouton and Paprika gave `2-4 tbsp`; Recipe Keeper gave `2-2 tbsp` for `1-2 tbsp` | Test ranges explicitly; a plausible wrong quantity is worse than an honest unparsed line (S05) |
@@ -80,7 +80,7 @@ The commercial opportunity is faithful handling across the whole workflow plus a
 Self-selected accounts from developer and self-hoster communities: evidence a job is real and support for inclusion, not population prevalence (documented).
 
 | Job or friction | Evidence | Fork decision |
-|---|---|---|
+| --- | --- | --- |
 | Repetitive US and metric conversion; separate temperature preference; cup ambiguity | Mealie discussion 3881 (2024, comments July to August 2026) | Reversible unit and temperature display in P2; dimensional conversion separate from density estimates |
 | Ranges, not one exact quantity | Mealie 2989 (January 2024) | Preserve ranges, scale both bounds; "to taste" and unparsed text unchanged |
 | Alternatives should not buy both | Mealie 3717 (June 2024, support into 2026) | Faithful author notes and optional lines now; structured alternatives when shopping needs them |

@@ -13,7 +13,7 @@ How to read it:
 ## Editor and recipe representation (E01 to E11)
 
 | ID | Entry | Evidence | Disposition | Phase | Status |
-|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- |
 | E01 | Recipe-shaped editor: title and metadata left, photo right spanning those rows, ingredients and method below; photo height bounded. **Selected choice.** | Paprika T; Spencer's screenshot and preference | Refine current design; mirror Paprika's composition, not its left photo | P1 (design pass) | next |
 | E02 | Collapse optional description, notes, advanced metadata; show when a collapsed section has content; ingredients and method open | Paprika T/V | Refine; progressive disclosure, not a mandatory form | P1 | next |
 | E03 | Contextual insert tools plus normal typing: insert a section, select its name, return focus, keep undo; typed or pasted `#` line gives the same result | Paprika T; Crouton V | Refine accepted editor; no compulsory Markdown or Cooklang | MVP | shipped (Section heading button) |
@@ -29,7 +29,7 @@ How to read it:
 ## Scaling and conversion (S01 to S08)
 
 | ID | Entry | Evidence | Disposition | Phase | Status |
-|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- |
 | S01 | One multiplier field accepts `50%`, `1/2`, `0.5`; useful errors for zero, negative, malformed, non-finite, zero denominators. **Selected choice (with S02).** | Paprika T; Spencer's preference | Refine P2 scaler; all forms give the same factor | P2 | later |
 | S02 | Slider and exact entry drive the same scale; show multiplier, servings and Makes together; keyboard entry stays. **Selected choice (with S01).** | Crouton V/T; Spencer's preference | Refine P2 scaler; slider bounds do not limit typed values | P2 | later |
 | S03 | Scale to servings or to an amount of one ingredient on hand; pick the ingredient first; explain incompatible units | Crouton T | Adopt in scaler backlog; unknown base quantity cannot set a ratio | P2 | later |
@@ -42,7 +42,7 @@ How to read it:
 ## Cooking, timers and session state (C01 to C13)
 
 | ID | Entry | Evidence | Disposition | Phase | Status |
-|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- |
 | C01 | Inline duration opens a named timer; manual timers for unmarked tasks; show the chosen duration first, especially for `20-25 minutes`. **Selected choice (with C02, C03).** | Paprika T; Crouton D | Adopt P2 timers; no auto-start on advancing a step | P2 | later |
 | C02 | Multi-timer overview across recipes from a compact persistent indicator: recipe, step, remaining or overdue, jump back | Paprika T/D; Crouton D; Spencer's preference | Adopt requested direction; complements inline controls | P2 | later |
 | C03 | Timer state belongs to the active cook, version and task; reopening finds the existing timer; a second timer is explicit | Paprika T showed the need; Fork proposal | Adopt; two simultaneous cooks of one recipe never collide | P2 | later |
@@ -60,7 +60,7 @@ How to read it:
 ## Library and retrieval (L01 to L11)
 
 | ID | Entry | Evidence | Disposition | Phase | Status |
-|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- |
 | L01 | Compact list beside the photo grid for photo-free or large libraries; remember the chosen view | Paprika V | Adopt library refinement; two modes are enough | P1 | next |
 | L02 | Search title, ingredients, method, notes and source; show the matched field and text; keep person, ownership and collection scope visible | Recipe Keeper method T; Paprika D; Crouton D | Adopt search work; P1 relevance, P2 global scoping | P1 (P2 scoping) | next |
 | L03 | Ingredient include and exclude, time ranges, sensible sorting, partial and accent-insensitive search; exact phrase and any/all rules on demand. **Named in the Paprika follow-up (multi-field search, saved rules via L10).** | Recipe Keeper V; Paprika D; Crouton D | Adopt progressively; exclusion filters are not allergy guarantees | P2 | later |
@@ -76,7 +76,7 @@ How to read it:
 ## Capture, migration and portability (I01 to I08, X01 to X05)
 
 | ID | Entry | Evidence | Disposition | Phase | Status |
-|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- |
 | I01 | Website, pasted text and text or Markdown file capture through one review path; keep source; show missing fields | All three V/D; Recipe Keeper text T | Adopt P2 easy import; paste-first editing stays MVP | P2 | later |
 | I02 | Source beside editable parsed fields; select source text to assign it to a field | Recipe Keeper T/V; Paprika D | Adopt import correction; keep title qualifications, sections, yields, unusual text | P2 | later |
 | I03 | Manual website-capture fallback after extraction fails; keep captured material and URL | Paprika D | Adopt import recovery; no unsupported-site dead end | P2 | later |
@@ -94,7 +94,7 @@ How to read it:
 ## Shopping and planning (G01 to G08, M01 to M06)
 
 | ID | Entry | Evidence | Disposition | Phase | Status |
-|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- |
 | G01 | Shopping preview: ingredient selection, current scale, editable lines, destination list, explicit "Add N items" | All three T/V | Adopt P3 shopping; section headings never become items | P3 | later |
 | G02 | Conservative consolidation showing contributing recipes and quantities; incompatible units or prepared forms stay apart | Paprika D | Adopt shopping correctness; users can see why a total exists | P3 | later |
 | G03 | Aisle grouping plus a by-recipe view; several lists or stores only when needed | Paprika D; Recipe Keeper V/D | Adopt progressively; one useful list first | P3 | later |
@@ -113,7 +113,7 @@ How to read it:
 ## Advanced, household, creator, assistance and platform (A01 to A08)
 
 | ID | Entry | Evidence | Disposition | Phase | Status |
-|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- |
 | A01 | Linked subrecipes for stocks, sauces, doughs: stable references, pinned versions, intentional shopping expansion | Crouton V; Paprika D; Recipe Keeper V | Later P4; reuse is not forking; respect source access and real yield | P4 | later |
 | A02 | Household collections and lists, optional shared cooking state, explicit roles and revocation | All three V/D | Later P3 household; separate from friends and public publishing | P3 | later |
 | A03 | Creator feeds and read-only links keep attribution and access rules | Crouton D; Paprika sharing V/D | Later discovery and creator work; supplements the friends loop; no automatic publication | P5 | later |
@@ -126,7 +126,7 @@ How to read it:
 ## Additional leads from the coverage audit (Q01 to Q09)
 
 | ID | Entry | Evidence | Treatment | Phase | Status |
-|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- |
 | Q01 | Quantity-after-name parsing ("flour 250g") when unambiguous | Crouton release history D | Explore with E05, I02, S05; ambiguous lines stay editable, never rearranged silently | P2 | later |
 | Q02 | Contextual ingredient lookup; whether it is quantity lookup or a reference glossary is not established | Crouton walkthrough D | Verify first; quantity lookup belongs to C09; a glossary would be a separate candidate | P4 (with C09) | later |
 | Q03 | Repeating meal schedules; rules untested | Recipe Keeper help topic V | Explore with M05; a template and a repeating schedule are different jobs; easy one-off override | P3 | later |
@@ -140,7 +140,7 @@ How to read it:
 ## Counts by phase
 
 | Phase | Count | IDs |
-|---|---:|---|
+| --- | --: | --- |
 | Shipped in the MVP | 2 | E03, E05 |
 | P0 | 1 | E06 |
 | P1 | 14 | E01, E02, E07, E08, L01, L02, L04, L05, L06, L07, L11, X01, X02, X03 |
@@ -149,7 +149,7 @@ How to read it:
 | P4 | 6 | E10, C09, A01, A05, Q02, Q05 |
 | P5 | 7 | C12, C13, I04, I05, A03, A04, A07 |
 | Later, no phase named | 13 | E11, L08, L09, L10, I08, X04, X05, M06, A08, Q04, Q06, Q08, Q09 |
-| **Total** | **87** | |
+| **Total** | **87** |  |
 
 E04's read-back part and C10's baseline ticks shipped; both are counted where their remaining work sits.
 

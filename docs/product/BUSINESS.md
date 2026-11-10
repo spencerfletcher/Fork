@@ -25,7 +25,7 @@ A sustainable solo operation; venture-scale growth is not required (Spencer, 10 
 **Assumptions, stated once.** These are illustrative budget assumptions, not quotes, measured costs or staffing guarantees.
 
 | Assumption | Value | Basis and caveat |
-|---|---|---|
+| --- | --- | --- |
 | Payment and billing allowance | 5.6% of billings | Built from Stripe Hong Kong's published pricing: 3.4% card + 0.5% international + 0.7% Billing + US$0.30 per US$30 charge (1%). Kept only to preserve the arithmetic; not a selected merchant country, ceiling or US or Canadian quote |
 | Variable reserve | US$0.70 per paid account-month (US$8.40/year) | US$0.20 AI, US$0.10 incremental media and storage, US$0.40 cash support and moderation. Not measured token costs; support is cash capacity, not founder labour |
 | Fixed infrastructure and operations | US$120/month (US$1,440/year) | The base budget. The scenarios use US$60, US$120 and US$350 per month. Free-user serving, email, monitoring and any trial AI must fit inside or be added |
@@ -34,7 +34,7 @@ A sustainable solo operation; venture-scale growth is not required (Spencer, 10 
 **Formulas.** Annual contribution per payer before fixed costs is `price × (1 − 0.056) − 8.40`. Payers needed is `ceil(annual target ÷ contribution)`.
 
 | Average annual price | Contribution per payer | Payers to cover US$1,440 fixed | Payers for US$60,000 founder pay + US$4,200 fixed | Same target with US$1,440 fixed |
-|---:|---:|---:|---:|---:|
+| --: | --: | --: | --: | --: |
 | $24 | $14.26 | 102 | 4,504 | 4,310 |
 | $30 | $19.92 | 73 | 3,223 | 3,085 |
 | $36 | $25.58 | 57 | 2,510 | 2,402 |
@@ -44,13 +44,13 @@ The US$60,000 founder-compensation figure is a chosen target in the sources, not
 
 **Payer count to gross ARR** (`payers × price`):
 
-| Active paying accounts | At $30 | At $36 |
-|---:|---:|---:|
-| 100 | $3,000 | $3,600 |
-| 500 | $15,000 | $18,000 |
-| 1,000 | $30,000 | $36,000 |
-| 3,000 | $90,000 | $108,000 |
-| 5,000 | $150,000 | $180,000 |
+| Active paying accounts |   At $30 |   At $36 |
+| ---------------------: | -------: | -------: |
+|                    100 |   $3,000 |   $3,600 |
+|                    500 |  $15,000 |  $18,000 |
+|                  1,000 |  $30,000 |  $36,000 |
+|                  3,000 |  $90,000 | $108,000 |
+|                  5,000 | $150,000 | $180,000 |
 
 A few hundred payers would be meaningful validation and some side revenue; several thousand could support a solo business if acquisition, renewal and costs cooperate; five thousand would be a substantial achievement, not an expected result of building the roadmap. Paying accounts are billing units; household plans blur them with users.
 
@@ -59,7 +59,7 @@ A few hundred payers would be meaningful validation and some side revenue; sever
 They start at a hypothetical paid launch with zero users: constant monthly registrations, conversion in the signup month, annual billing at the start of the month, no refunds, entitlement for the paid year, annual nonrenewal as churn, no paid acquisition. Real funnels have delays, seasonality and cancellations; replace these with cohort data. Fractional accounts are expected-value arithmetic.
 
 | Assumption | Conservative | Base: working niche | Upside: strong niche |
-|---|---:|---:|---:|
+| --- | --: | --: | --: |
 | New registrations per month | 100 | 500 | 2,000 |
 | Activation among registrations | 35% | 45% | 55% |
 | Paid conversion among activated | 3% | 6% | 8% |
@@ -74,7 +74,7 @@ Activation means real value (saving several useful recipes and returning to retr
 Formulas: entitlements at month 12 `12n`, at month 24 `12n(1+r)`; ARR is entitlements × `p`; recognized revenue year 1 `78np/12`, year 2 `(144+78r)np/12`; billings `12np` then `12np(1+r)`; paid account-months over 24 months `(222+78r)n`.
 
 | Output, rounded | Conservative | Base | Upside |
-|---|---:|---:|---:|
+| --- | --: | --: | --: |
 | Cumulative registrations, month 24 | 2,400 | 12,000 | 48,000 |
 | New paying accounts, 24 months | 25 | 324 | 2,112 |
 | Active paid entitlements, month 12 / month 24 | 13 / 20 | 162 / 275 | 1,056 / 1,901 |
@@ -107,7 +107,7 @@ ARR here annualizes current entitlements; a real report subtracts known nonrenew
 Hypotheses to measure. More features also raise operating and maintenance cost, so completion is not profitability; no percentage uplift is established (R, AQ, S1, S2).
 
 | Investment | Mechanism | Evidence to collect | Main cost or risk |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Trustworthy saves, drafts, recovery, privacy, export | Investing a library feels safe; less abandonment and support | Successful recoveries, fewer lost-work incidents, continued use after substantial entry | Essential trust work may convert little directly |
 | Faithful import, migration, first-cook onboarding, bounded AI import help | Acquisition and activation: lower switching effort | Correction work and time to first useful cook, retained imported libraries versus manual setup, cost per accurate saved recipe, opt-in rate; disable AI help with no net benefit | Import maintenance and silent fidelity errors |
 | Groups, yields, collections, search, units, print, dependable mobile cooking and offline | Removes reasons to go back to an incumbent | Repeat purposeful sessions and cooks, fewer workarounds, device failures, actual offline use | A checklist without coherent execution adds complexity |
@@ -142,11 +142,12 @@ Marketing shows specific outcomes: remembering the changes that worked, keeping 
 - **Payments:** Stripe's published pricing (8 Nov 2026, no account access):
 
 | Merchant page | Domestic cards | International addition | Currency conversion | Billing |
-|---|---|---|---|---|
-| United States | 2.9% + US$0.30 | +1.5% | +1% | 0.7% |
-| Canada | 2.9% + CA$0.30 | +0.8% | +2% | 0.7% |
+| ------------- | -------------- | ---------------------- | ------------------- | ------- |
+| United States | 2.9% + US$0.30 | +1.5%                  | +1%                 | 0.7%    |
+| Canada        | 2.9% + CA$0.30 | +0.8%                  | +2%                 | 0.7%    |
 
-  Targeting US and Canadian customers does not decide Fork's entity, account country, card mix, charge currency or processor; confirm them before budgeting. Fixed per-charge fees make monthly and annual payment mixes differ.
+Targeting US and Canadian customers does not decide Fork's entity, account country, card mix, charge currency or processor; confirm them before budgeting. Fixed per-charge fees make monthly and annual payment mixes differ.
+
 - **Track separately from the start:** pilot hosting, photo storage, support, moderation and legal-review costs (the support reserve is not validated against them), correction effort, import failures, processing cost per useful result, cancellations, integration maintenance.
 - **Keep it maintainable by one person:** self-service recovery and useful errors, bounded AI cost with an off switch, no dependence on daily founder-written content, shared models that keep recipe meaning across views.
 - Never collect private recipe text for analytics.
@@ -157,8 +158,8 @@ Not legal advice. Detail and sources: [US note](../research/2026-11-08-social-la
 
 **What a complaint means.** Fork can receive a complaint or face a claim when a user posts a chef's recipe as their own; liability is not automatic. What was copied, permissions and exceptions, Fork's own acts and knowledge, and intermediary rules matter. Cooking facts and basic procedures differ from expressive directions, headnotes and photographs. Plagiarism (a credit problem) and infringement overlap but differ: credited copying can still infringe. Buying a cookbook, a free web page, changing an ingredient or "inspired by" does not clear copied prose or photos; private import is not universally exempt; there is no safe word count or percentage. AI paraphrasing does not clear copyright. **Forking is not an ownership reset:** new original writing or a photo can have its own rights without transferring the source's (US §103 and §106; in Canada, substantial reproduction under s3, ownership and licences under s13, and moral rights).
 
-| | United States | Canada |
-|---|---|---|
+|  | United States | Canada |
+| --- | --- | --- |
 | Protection | §512 safe harbor for qualifying user-directed hosting: a designated agent registered with the Copyright Office and shown publicly (renewed every three years; US$6 fee), a communicated and executed repeat-infringer policy, compliant notice handling, knowledge, control and financial-benefit conditions. No universal proactive scanning required | s31.1 protects specified intermediary acts, including qualifying hosting, with exceptions; it does not cover Fork's own infringing acts, and services primarily enabling infringement face separate rules (s27(2.3)) |
 | Process | Act expeditiously on qualifying notices, notify the uploader, handle counter-notices; restoration 10 to 14 business days after a qualifying counter-notice unless a court action is notified | Notice and notice (ss41.25, 41.26): forward compliant notices electronically as soon as feasible, tell the claimant, keep records six months, one year from receipt if proceedings are notified in time; demands for money or personal data do not qualify; no identity disclosure without a court order |
 | Do not assume | Section 230 shields copyright (it does not); an email address is agent registration; losing safe harbor proves infringement | The US restoration clock applies; fair dealing or the non-commercial user-generated content exception (s29.21) is a blanket licence for a paid platform; every disliked edit breaches moral rights (s14.1, s28.2) |

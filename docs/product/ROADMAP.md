@@ -5,7 +5,7 @@ The single current plan for Fork, a recipe cookbook with version history, a cook
 **Source key** used in the tables below:
 
 | Key | Source |
-|---|---|
+| --- | --- |
 | R | [Product roadmap report, 8 to 10 Nov 2026](../research/2026-11-08-product-roadmap/README.md), with its research notes [cookbook market](../research/2026-11-08-product-roadmap/cookbook_market.md) (CM), [advanced features, quality and economics](../research/2026-11-08-product-roadmap/advanced_and_quality.md) (AQ) and [product audit](../research/2026-11-08-product-roadmap/current_product_audit.md) (PA) |
 | DD | [Cookbook-app deep dive, 9 Nov 2026](../research/2026-11-09-cookbook-app-deep-dive/README.md); entries by ID in [INVENTORY.md](INVENTORY.md) |
 | SL | [Social launch research, 8 Nov 2026](../research/2026-11-08-social-launch/social_launch.md) |
@@ -74,7 +74,7 @@ The differentiating experience is continuity: a recipe travels from capture thro
 **Gate:** failed saves and conflicts keep input while the editor is open; saved versions stay intact; nothing is published silently; private surfaces pass owner, other-user and signed-out checks, including feed, photos and direct URLs; moderator disabling and restoration safeguards work; the existing behaviour tests pass (R).
 
 | Item | What it is | Status | Source |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Save state and recovery | Clear saved and failed states; input kept on validation, upload, server and session failures while the editor is open; unsaved-change warning; stale-write protection (edit revision, row lock, second check in the transaction). Test by interrupting a save, expiring the session, triggering validation and a conflict | shipped; keep verifying | R slice 1, PA, M9 |
 | State in words | Editor header names the state: "Editing v3 · Unsaved changes · saves as v4", "Couldn't save: N fields need attention", "Couldn't reach the server. Your changes are still here.", "Saved as v4" | shipped | DS |
 | Cleanup verification | Nonzero quantity formatting; upload limits compatible with the deployment | next | R slice 1, PA |
@@ -97,7 +97,7 @@ The differentiating experience is continuity: a recipe travels from capture thro
 **Gate:** a cook brings a realistic recipe or library into Fork, corrects it, organizes and retrieves it, prints and exports it, and restores an older iteration without losing declared content (R). Fixture: a dough and filling recipe making 12 buns saves, reopens, scales, compares, prints and exports without flattened groups or lost wording; "12 buns" is never read as 12 people (R slice 3).
 
 | Item | What it is | Status | Source |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Groups and Makes | Ingredient and method groups by `# Name` lines, Makes separate from Serves, the scaling notice ("Pan sizes and oven temperatures are not scaled") | shipped | DS, R |
 | Section heading tool | Direct Section heading button inserting `# Section name` with the name selected; typed and pasted markers give the same groups; the `#` stays visible in a softer colour; ordinary recipes need no markers; no general Markdown | shipped | DS, R, E03 |
 | Source, notes, times | Source name and URL separate (E07); notes; time entry with rest and make-ahead (E08); equipment, storage and reheating as author notes; carried through edit, read, history, preview, print and archive | next | R, CM, DD |
@@ -125,12 +125,12 @@ The differentiating experience is continuity: a recipe travels from capture thro
 
 **Goal:** dependable cooking, a Journal people use after an ordinary dinner, and a friends loop that leads to another real cook. M to L slices.
 
-**Gates (distinct):** *Pilot gate:* a real cook, then a friend's source visit or save, then a later cook works with correct audiences, report, block and removal, and no critical data or quantity failures. *Full phase gate:* real-device cooking, offline reopening, timer recovery and version and scale recall pass (R).
+**Gates (distinct):** _Pilot gate:_ a real cook, then a friend's source visit or save, then a later cook works with correct audiences, report, block and removal, and no critical data or quantity failures. _Full phase gate:_ real-device cooking, offline reopening, timer recovery and version and scale recall pass (R).
 
 Pilot lane:
 
 | Item | What it is | Status | Source |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Journal | Dish and date required; recipe and version, servings, external link or improvised, photo, caption, private note for next time and audience optional; cooked date distinct from posting date; "Friends see the dish and your photo, not the recipe"; never requires writing a recipe | shipped | DS, R, M17 |
 | Add to Journal | From the end of Cook and from the recipe page, prefilled with recipe, version, servings and today | shipped | DS |
 | Friends | Requests, invite, profile relation control, feed newest first with log entries and recipe events; the empty state leads with a pending request, then Invite | shipped | DS, M4 |
@@ -158,7 +158,7 @@ Pilot lane:
 Cookbook lane:
 
 | Item | What it is | Status | Source |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Mobile cooking refinement | Obvious blockers earlier; keep overview and place; zoom; tick affordance compared side by side on real cooking tasks (16px marigold circle with 44px phone hit stays until then) | later | R, DS, M18, M20, C10 |
 | Scaler workstream | S01 to S08: one field for `50%`, `1/2`, `0.5` plus a slider, scale to an ingredient on hand, persistent scaled state, faithful ranges | later | DD |
 | Units and temperature | Reversible display conversion; exact same-dimension math first; density estimates need ingredient and preparation context; carefully sourced gram coverage | later | R, CM, M12 |
@@ -173,7 +173,7 @@ Cookbook lane:
 **Gate:** plan several meals, change a serving count, shop, cook and reschedule leftovers without duplicated or stale unexplained quantities; a second household member can contribute; revocation works (R).
 
 | Item | What it is | Status | Source |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Grocery list | Selected recipes and scales, manual items, safe combining, source links, aisle grouping, share and export; ambiguous items stay separate; optional and alternative lines never add both (G01 to G06, G08) | later | R, CM, DD |
 | Meal queue and calendar | Flexible dates, manual meals and leftovers, feeding groceries, calendar export; no optimizer first (M01 to M05, Q03) | later | R, DD |
 | Party mode | Several recipes in one cooking session, each keeping version, scale, progress and position; quick switching first; a shared timer overview once timers exist; works with ordinary recipes; one cook, not multi-user (C07, M05) | later | R (9 Nov), DD |
@@ -189,7 +189,7 @@ Cookbook lane:
 **Gate:** reproduce an earlier compound recipe, intentionally update a child version and see the diff; shared suggestions cannot overwrite newer edits; advanced calculations disclose their assumptions (R).
 
 | Item | What it is | Status | Source |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Subrecipes | Version-pinned components with explicit batch use, update prompts and intentional shopping expansion (A01, M22); constraints in section 7 | later | R, CM, AQ |
 | Grouped variations | Group adaptations so variants stay usable, named and findable, without history jargon | later | R, CM |
 | Suggested changes | Richer comparison and reviewed "Suggest a change" with permission and stale-write checks; comments on version review; no real-time co-editing or automatic merge (M1 from P4 to P5, M3) | later | R, AQ |
@@ -209,7 +209,7 @@ Cookbook lane:
 **Gate:** each capability beats its baseline; broad discovery follows independent social use and scalable moderation; native work answers measured platform limits (R).
 
 | Item | What it is | Status | Source |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | OCR and capture assistance | Evaluated OCR (optical character recognition), photo, PDF and social capture after deterministic extraction; formats pilot cooks actually bring (I04, I05); eligible after P1 | later | R, CM |
 | AI in your cookbook | Ranked list and release evidence in section 7 | later | R, AQ |
 | Substitutions | Recipe-aware substitutions from an ingredient, with reviewable quantity changes and expected effects (C12, A04) | later | R (Paprika follow-up), DD |
@@ -223,7 +223,7 @@ Cookbook lane:
 ### Not yet phased
 
 | Item | What it is | Status | Source |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Dark mode and reading preferences | After core readability; contrast-tested tokens and stable reflow; cooking comfort over themes | later | R, DD |
 | Link sharing of private recipes | Later | later | DS |
 | Duplicate your own recipe | Likely "Start from an existing recipe" on New recipe, not a Fork button (E11) | later | DS |
@@ -250,7 +250,7 @@ Named commitments, selected rather than candidate:
 Items waiting on Spencer's eye. Rules live in [DESIGN.md](../../DESIGN.md); the direction is in [DESIGN-DIRECTION.md](DESIGN-DIRECTION.md).
 
 | Item | What is open | Phase | Source |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Hover palette | Revisit the hover colours as a whole, Clay Deep (#6e2500, kept for now) included. Decided so far: grey text may turn ink, clay darkens to Clay Deep, ink turns clay | P1 | R, OD |
 | Text-button hover underline | Whether word-buttons underline on hover; off for now, colour change only | P1 | R, OD |
 | Dropdown panel background | The lifted white reads out of place against paper | P1 | R, OD |
@@ -284,10 +284,10 @@ Items waiting on Spencer's eye. Rules live in [DESIGN.md](../../DESIGN.md); the 
 **AI reduces clerical work without taking authorship.** Priorities and release evidence (R, AQ):
 
 | Priority | Assistance | Release evidence | Block or narrow when |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | 1 | OCR and import repair after deterministic extraction | Source and draft compared; quantities, temperatures, times, groups, steps preserved; ambiguity highlighted; total correction time beats manual or paste capture | Values change silently, omissions are hidden, or correction is no better than paste |
 | 2 | Search within the user's cookbook and notes | Better than ordinary search on real failed queries; links to supporting recipes, versions, logs; no unsupported answer; permissions filtered before retrieval and rendering | Private content leaks, citations do not support the answer, or it is worse than lexical search |
-| 3 | Formatting and inconsistency suggestions | Reviewable proposals; deterministic checks preferred; no invented missing ingredient | |
+| 3 | Formatting and inconsistency suggestions | Reviewable proposals; deterministic checks preferred; no invented missing ingredient |  |
 | 4 | Adapt a chosen version to an explicit goal | Proposed diff, rationale and uncertainty; accept or reject before a new version; no autonomous rewrite, publication or purchase | It changes food-safety instructions, claims allergy safety, fabricates results or alters stored content |
 | 5 | Summarize the cook's own attempts | Every observation links to a real log; preference distinct from proof of cause | It invents preferences or causal conclusions |
 
@@ -302,7 +302,7 @@ Build a consented or rights-cleared evaluation corpus (difficult quantities, mul
 ## 8. Quality gates and acceptance fixtures
 
 | Gate | Required validation |
-|---|---|
+| --- | --- |
 | Trust | No known reproducible loss of saved work or failed-save input, accidental publication or cross-account exposure. Covers feed, comment, photo and direct-URL permissions, audience changes, blocks, upload failure, conflicts and account changes. Backup restore reapplies restrictions. Until P1 drafts land, losing unsaved text on reload, tab close or crash is an accepted limitation |
 | Accessibility | Target WCAG (Web Content Accessibility Guidelines) 2.2 AA: keyboard and screen-reader journeys, meaningful headings, visible unobscured focus, non-drag alternatives, reduced motion, 200% zoom, narrow reflow. Automated checks supplement manual use; not a conformance claim |
 | Kitchen ergonomics | A real meal on iOS Safari, Android Chrome and a tablet: counter-distance text, long recipes, accidental ticks, switching recipes, phone locking, denied permissions. 44px main cooking targets (a product choice; AA starts at 24px with exceptions); an obvious undo for accidental ticks; no unsafe phone use near heat or water |
@@ -323,7 +323,7 @@ Also measured, never by collecting private recipe text: save reliability (durabl
 The syntheses name five kinds of work beyond the feature list (S1, S2). They are recommendations; none is an approved decision.
 
 | Work | What it means | Where it sits |
-|---|---|---|
+| --- | --- | --- |
 | First week | Help someone bring in one existing recipe, cook it, record an adjustment and meet that adjustment later. Explain capabilities in context, not with a tour. Offer bounded personal migration help to early testers, then turn the learning into self-service rather than an ongoing manual dependency | P2 onboarding; migration help is an experiment, not scheduled |
 | Recall at the next cook | Before a repeat cook, show prior changes, scale and next-time notes; after cooking, recording one observation is optional and quick; repeating the successful version is straightforward. Keep reliable facts automatically; never infer that someone cooked or succeeded because Cook was opened | P1 last and times cooked; P2 Journal recall; "Use these changes next time" in section 7 |
 | Paid offer | One clear package tested with people who have experienced recurring value | [BUSINESS.md](BUSINESS.md); experiment, not scheduled |
@@ -341,7 +341,7 @@ Prioritize trust, capture, reading and cooking, and retrieval refinements before
 **The pilot** (an adjustable example, not a sample size): roughly four weeks with 8 to 15 willing friends, including relationships beyond Spencer. Friends bring two or three real recipes or links if convenient; one saved link or dinner log is enough. No compulsory weekly cooking, public photos or streaks. No invitations, creator outreach or campaigns have been sent; Spencer talks to friends first, then invites, with no date set (R, SL, OD).
 
 | Period | Activity | Learn from actual behaviour |
-|---|---|---|
+| --- | --- | --- |
 | Preparation | Spencer cooks several ordinary meals, demonstrates one real log entry, asks about phones, current tools and cooking frequency, rehearses privacy and report handling | Critical blockers and help needed; demo activity kept separate |
 | Week 1 | Help each person save something useful and log a real meal; show audience controls; connect existing friends | Invited, accepted and first-use counts; visibility comprehension; help burden |
 | Week 2 | Optional recipe exchange or shared theme; watch source, save and comment paths | Whether one person's cook leads to another's later cook; non-founder conversation; why people do not post |
@@ -364,7 +364,7 @@ Prioritize trust, capture, reading and cooking, and retrieval refinements before
 ## 12. Outside the target and rejected
 
 | Item | Disposition | Reason |
-|---|---|---|
+| --- | --- | --- |
 | Restaurant operations | Outside the current target | Procurement, invoices, staff, stock valuation, HACCP compliance and kitchen inventory need a separate professional discovery decision (R, AQ, CM) |
 | Ads, automatic prep-time estimates, a stored "grams made" field | Rejected | Earlier explicit decisions; per-attempt outcomes and derived yield are different concepts (R) |
 | Equal-weight Recipe, History and Forks tabs | Rejected | Reading dominates the recipe page (R, PA) |
@@ -376,7 +376,7 @@ Prioritize trust, capture, reading and cooking, and retrieval refinements before
 ## 13. Earlier milestones M1 to M23
 
 | Milestone | Disposition |
-|---|---|
+| --- | --- |
 | M1 Pull requests | P4 to P5 reviewed "Suggest a change"; keep concurrency, permission and attribution; rewrite the old sketch under current schema rules |
 | M2 Per-page metadata | Built; verify public previews, add Recipe structured data in P1 |
 | M3 Version comments | Simple cook comments in P2 once the feed has use; version-review comments P4 |

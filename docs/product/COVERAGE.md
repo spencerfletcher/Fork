@@ -7,7 +7,7 @@ Sources: R [roadmap report](../research/2026-11-08-product-roadmap/README.md); C
 ## R: product roadmap report
 
 | # | Source item | Destination | Status |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | R1 | Lead: three pillars, loop, pilot before full parity, US/Canada, validate before growth | RM §1, §3 | placed |
 | R2 | §1 Audience decision (serious home cook, chefs adjacent, meez, restaurant ops out) | RM §1, §12 | placed |
 | R3 | Pushback against breadth; convergence is positive evidence | RM §1 | placed |
@@ -290,7 +290,7 @@ Sources: R [roadmap report](../research/2026-11-08-product-roadmap/README.md); C
 ## CM: cookbook market
 
 | # | Source item | Destination | Status |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | CM1 | Takeaway: complete loop; convergence | RM §1, CO §2 | placed |
 | CM2 to CM10 | Capability matrix rows: Paprika, Recipe Keeper, Crouton, Mela, AnyList, Samsung Food, Mealie, Tandoor, Cooklang | CO §3 (same product) | placed |
 | CM11 | Correction: Paprika 4 shipped | CO §2 | placed |
@@ -363,7 +363,7 @@ Sources: R [roadmap report](../research/2026-11-08-product-roadmap/README.md); C
 ## AQ: advanced opportunities and quality
 
 | # | Source item | Destination | Status |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | AQ1 | Scope: recommendations, no interviews | RM §3, §8 | placed |
 | AQ2 | Takeaway 1: explicit gates | RM §8 | placed |
 | AQ3 | Finding: earlier private-by-default decision | RM P0 | placed |
@@ -459,7 +459,7 @@ Sources: R [roadmap report](../research/2026-11-08-product-roadmap/README.md); C
 ## PA: product audit
 
 | # | Source item | Destination | Status |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | PA1 | Takeaway and live recheck; homepage copy differs | RM §16.23 | removed with approval (RM §16.23) |
 | PA2 | Product scope from PRODUCT.md | RM §1 | placed |
 | PA3 to PA21 | Capability rows: create/edit, parser, failed-save recovery, durable draft, concurrency, history/diff, restore, forking, favorites, scaling, cooking, search, organization, visibility, auth, sharing, import/export/print, structured richness, advanced (19) | RM §2 shipped and known gaps; open items in P0, P1 | placed (visibility row superseded, RM §16.18) |
@@ -502,7 +502,7 @@ Sources: R [roadmap report](../research/2026-11-08-product-roadmap/README.md); C
 ## DD: cookbook-app deep dive
 
 | # | Source item | Destination | Status |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | DD1 | Lead: useful mechanics, failure cases, not MVP authorization | CO §2, IN | placed |
 | DD2 | Evidence labels T, V, D, Proposal | CO §1, IN | placed |
 | DD3 | Authority: roadmap and design summary win; phase placements | IN, RM phases | placed |
@@ -547,7 +547,7 @@ Sources: R [roadmap report](../research/2026-11-08-product-roadmap/README.md); C
 ## S1: design refinement and solo business
 
 | # | Source item | Destination | Status |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | S1-1 | Solo goal; credible; unproven | BU §1 | placed |
 | S1-2 | Authority statement | RM source key, RD | placed |
 | S1-3 | Sources; review coverage; reproduce before fixing | DE system intro, DE page | placed |
@@ -594,7 +594,7 @@ Sources: R [roadmap report](../research/2026-11-08-product-roadmap/README.md); C
 ## S2: finished product and revenue
 
 | # | Source item | Destination | Status |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | S2-1 | Standalone synthesis, solo goal | BU §1 | placed |
 | S2-2 | Read alongside; reconcile later | RM source key; this set is the reconciliation | placed |
 | S2-3 to S2-8 | Six experiences 1 to 6 | RM §1 (same number) | placed |
@@ -623,7 +623,7 @@ Sources: R [roadmap report](../research/2026-11-08-product-roadmap/README.md); C
 ## SL: social launch
 
 | # | Source item | Destination | Status |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | SL1 | Scope and Cookbook / Journal / Community naming | RM §1 | superseded naming (RM §16.17) |
 | SL2 | Takeaway 1 | RM §1 | placed |
 | SL3 | Finding: Strava audiences | RM §10 (pattern), INSPIRATION | placed |
@@ -661,7 +661,7 @@ Sources: R [roadmap report](../research/2026-11-08-product-roadmap/README.md); C
 ## US and CA: copyright notes
 
 | # | Source item | Destination | Status |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | US1 | Scope, entity unconfirmed | BU §8 | placed |
 | US2 | Risk takeaway and Circular 33 | BU §8 | placed |
 | US3 | §106 rights; credit is not permission; fair use | BU §8 | placed |
@@ -692,7 +692,7 @@ Sources: R [roadmap report](../research/2026-11-08-product-roadmap/README.md); C
 ## Z: Zed design reference
 
 | # | Source item | Destination | Status |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Z1 | Recommendation: borrow hierarchy, keep identity | DE identity, From the Zed reference | placed |
 | Z2 | Evidence, coverage, measured CSS values | DE From the Zed reference (limits); full values in the note | placed |
 | Z3 to Z12 | Ranked adaptations 1 to 10 | DE system (Typography, Grid, Accent roles, Grouping, Density, Controls, Continuity, Metadata, Phones, Feedback) | placed |

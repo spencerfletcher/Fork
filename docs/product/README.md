@@ -21,7 +21,7 @@ Fork is a recipe cookbook for serious home cooks, live at recipes.spencerfletche
 ## The set
 
 | File | What it holds |
-|---|---|
+| --- | --- |
 | [ROADMAP.md](ROADMAP.md) | The finished-product picture, phases P0 to P5 with gates and item status, design backlog, pilot path, decisions and open questions |
 | [COMPETITIVE.md](COMPETITIVE.md) | Market shape, competitors, table stakes versus Fork's difference, fidelity fixtures, what is not known |
 | [BUSINESS.md](BUSINESS.md) | Paid-offer hypotheses, one recomputed unit-economics model, scenarios, acquisition, operations, rights and copyright |

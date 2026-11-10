@@ -17,7 +17,7 @@ Fork aims for the care of excellent independent apps and leading consumer produc
 Status against the app published on 11 Nov 2026 and the git log. Items from the earlier live review (S1) are marked "reproduce" where the redesign may already have fixed them: reproduce before fixing.
 
 | System | Refinement | Status |
-|---|---|---|
+| --- | --- | --- |
 | Accent roles | Each accent has one job: marigold the primary action, clay text and reader-changed values, semantic colours for feedback and diffs; colour is never the only signal (S1, Z 3) | done (closed control set, hover rules); keep checking per screen |
 | Palette | Explore a slightly brassier, less saturated yellow by full-screen comparison; no hex chosen; contrast verified on real pairs in default, hover, focus and disabled states (S1, S2) | backlog |
 | Hovers | Grey may turn ink, clay darkens to Clay Deep, ink turns clay; text buttons change colour only (decided 10 Nov); the hover palette as a whole is a P1 revisit | done; revisit in backlog |
@@ -37,7 +37,7 @@ Status against the app published on 11 Nov 2026 and the git log. Items from the 
 ## Page-level refinements
 
 | Page | Refinement | Status |
-|---|---|---|
+| --- | --- | --- |
 | Cookbook | Clear owned, saved and filtered states; consistent cards; an evident next action; a specific first-use Saved message instead of "No recipes match these filters"; test zero, few, many and photo-free; an empty library is not zero results (S1) | All, Mine, Saved and empty-library copy done; Saved first use: reproduce |
 | Discover | Recipes in focus sooner; deliberate lead versus ordinary card hierarchy; no implied populated community or curated authority (S1) | redesigned with lead card and Recent changes; oversized hero: reproduce |
 | Search | Same card, filter and empty-state language; scope and active filters legible; query and return position kept; tag suggestions by a small deterministic scorer first, taxonomy only if a flat list impedes retrieval (S1, R) | shared filters done; kept position (L05) and scopes: backlog (P1, P2) |
@@ -54,7 +54,7 @@ Status against the app published on 11 Nov 2026 and the git log. Items from the 
 From the deep dive; recommendations to tune in the working app, not another mockup round (DD).
 
 | Choice | Direction |
-|---|---|
+| --- | --- |
 | Editor proportions | A bounded photo column spanning the metadata rows; ingredients and method below; stack in reading order on phones |
 | Empty photo | A compact add-photo affordance, expanding once an image exists |
 | Optional metadata | Collapse rare fields, show when filled, keep source and audience discoverable; no rating or difficulty just to fill a grid |
