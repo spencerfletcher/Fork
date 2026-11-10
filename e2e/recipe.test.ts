@@ -16,6 +16,16 @@ async function openCompare(page: Page) {
 	await expect(page).toHaveURL(/\/diff/);
 }
 
+/** mouse.wheel does not wait for the scroll: wait until the page has gone dy, or to its end. */
+async function wheel(page: Page, dy: number) {
+	const target = await page.evaluate(
+		(dy) => Math.min(scrollY + dy, document.documentElement.scrollHeight - innerHeight),
+		dy
+	);
+	await page.mouse.wheel(0, dy);
+	await expect.poll(() => page.evaluate(() => scrollY)).toBeGreaterThanOrEqual(target - 1);
+}
+
 test.describe('Recipe detail page', () => {
 	test('recipe cards on the home page link to detail pages', async ({ page }) => {
 		await page.goto('/');
@@ -513,8 +523,7 @@ test.describe('Recipe detail page', () => {
 			const list = document.querySelector('#method ol')!;
 			for (let i = 0; i < 4; i++) list.append(...[...list.children].map((c) => c.cloneNode(true)));
 		});
-		await page.mouse.wheel(0, 1000);
-		await page.waitForTimeout(200);
+		await wheel(page, 1000);
 		const box = await sidebar.boundingBox();
 		expect(box).not.toBeNull();
 		// Sticky at 24px: still at the top after a long scroll, not scrolled away.
@@ -771,10 +780,9 @@ test.describe('Recipe detail page', () => {
 			await expect(page.locator('#ingredients')).toBeHidden();
 			// Scrolled to the end of the method, Ingredients swaps in with the bar
 			// still on screen and its first row under the bar, never above it.
-			await page.mouse.wheel(0, 1500);
-			await page.waitForTimeout(200);
+			await wheel(page, 1500);
 			await tabs.getByRole('button', { name: 'Ingredients' }).click();
-			await page.waitForTimeout(200);
+			// The swap and its scrollIntoView land in the same flush that shows the list.
 			await expect(page.locator('#ingredients')).toBeVisible();
 			await expect(page.locator('#method')).toBeHidden();
 			const bar = await tabs.boundingBox();
@@ -822,14 +830,18 @@ test.describe('Recipe detail page', () => {
 		);
 		expect(headerFocusedBefore).toBe(false);
 		await page.keyboard.press('Enter');
-		await page.waitForTimeout(200);
 		// The recipe is as high as the page allows: at the top of the screen, or the
 		// page is scrolled to its end because a short recipe cannot go further.
-		const { y, atEnd } = await page.evaluate(() => ({
-			y: document.getElementById('ingredients')!.getBoundingClientRect().y,
-			atEnd: window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 1
-		}));
-		expect(y < 120 || atEnd).toBe(true);
+		await expect
+			.poll(() =>
+				page.evaluate(() => {
+					const y = document.getElementById('ingredients')!.getBoundingClientRect().y;
+					const atEnd =
+						window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 1;
+					return y < 120 || atEnd;
+				})
+			)
+			.toBe(true);
 		// The next Tab lands on the scale control at the list's head, not back in
 		// the header; past its box, the first ingredient.
 		await page.keyboard.press('Tab');
@@ -859,10 +871,13 @@ test.describe('Recipe detail page', () => {
 		await page.keyboard.press('Tab');
 		await expect(page.getByRole('link', { name: 'Skip to ingredients' })).toBeFocused();
 		await page.keyboard.press('Enter');
-		await page.waitForTimeout(200);
-		const bar = await page.locator('.section-tabs').boundingBox();
-		const row = await page.locator('#ingredients label').first().boundingBox();
-		expect(row!.y).toBeGreaterThanOrEqual(bar!.y + bar!.height);
+		await expect
+			.poll(async () => {
+				const bar = await page.locator('.section-tabs').boundingBox();
+				const row = await page.locator('#ingredients label').first().boundingBox();
+				return row!.y - (bar!.y + bar!.height);
+			})
+			.toBeGreaterThanOrEqual(0);
 	});
 
 	test('a row focused by Tab or Shift+Tab shows whole, ring and all, clear of the screen edge and the tab bar', async ({
@@ -1021,8 +1036,7 @@ test.describe('Recipe detail page', () => {
 		expect(box.scrollHeight).toBeGreaterThan(box.height);
 		expect(box.overflowY).toBe('auto');
 		// Pinned, the last row is reached by scrolling the aside, not the page.
-		await page.mouse.wheel(0, 3000);
-		await page.waitForTimeout(200);
+		await wheel(page, 3000);
 		await sticky.evaluate((el) => (el.scrollTop = el.scrollHeight));
 		const last = await page.locator('#ingredients label').last().boundingBox();
 		expect(last!.y).toBeGreaterThanOrEqual(0);
@@ -1044,13 +1058,12 @@ test.describe('Recipe detail page', () => {
 			const list = document.querySelector('#ingredients div:has(> h2) + div')!;
 			for (let i = 0; i < 2; i++) list.append(...[...list.children].map((c) => c.cloneNode(true)));
 		});
-		await page.waitForTimeout(100);
-		expect(await mask()).toMatch(/linear-gradient\(.*rgba\(0, 0, 0, 0\)\)$/);
+		// The fade follows a scroll timeline, which updates on the next frame.
+		await expect.poll(mask).toMatch(/linear-gradient\(.*rgba\(0, 0, 0, 0\)\)$/);
 		expect(await mask()).toContain('24px');
 		// Scrolled to its end, the last row shows whole.
 		await page.locator('.sidebar-sticky').evaluate((el) => (el.scrollTop = el.scrollHeight));
-		await page.waitForTimeout(100);
-		expect(await mask()).toBe('none');
+		await expect.poll(mask).toBe('none');
 	});
 
 	test('Tabbing down a long list keeps each focused row and its ring above the aside’s fade', async ({
