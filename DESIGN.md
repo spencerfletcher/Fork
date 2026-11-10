@@ -13,7 +13,7 @@ colors:
   cream: '#f7f3ec'
   tan: '#b8a880'
   clay: '#b23c00'
-  clay-deep: '#8f3000'
+  clay-deep: '#6e2500'
   marigold: '#eca620'
   marigold-deep: '#d08f06'
   rule: '#e4ded4'
@@ -145,7 +145,7 @@ A paper-and-ink palette with two warm accents and a semantic pair for diffs.
 
 ### Primary
 
-- **Clay** (#b23c00): the only text accent. Page titles (h1), links, recipe names on hover, version numbers in card meta, step numbers. Hover state for a clay link is **Clay Deep** (#8f3000, `--color-accent-hover`; 7.33:1 on paper, 7.98:1 on lifted paper), never a lighter clay.
+- **Clay** (#b23c00): the only text accent. Page titles (h1), links, recipe names on hover, version numbers in card meta, step numbers. Hover state for a clay link is **Clay Deep** (#6e2500, `--color-accent-hover`; 9.85:1 on paper, 10.72:1 on lifted paper, 1.84:1 below clay, so the hover reads as a change; clay's hue at 22% lightness, deepened from #8f3000 on 10 November 2026, Spencer: "it's not a very different color right now"), never a lighter clay.
 - **Marigold** (#eca620): the only fill. Primary buttons, the "+ New recipe" navbar action, and the current-version chip. Always carries ink text. Hover darkens to **Marigold Deep** (#d08f06, ink on it 6.47:1; decided 9 November 2026, Spencer: hovers must be seen, the old #dc980a was too close); nothing fades.
 
 ### Neutral

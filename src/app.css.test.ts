@@ -87,7 +87,7 @@ describe('app.css hovers', () => {
 	test('a clay link deepens to clay deep on hover, a clearly darker step', () => {
 		expect(body('a:hover')).toMatch(/color:\s*var\(--color-accent-hover\)/);
 		const step = contrast(tokens['--color-accent'], tokens['--color-accent-hover']);
-		expect(step).toBeGreaterThanOrEqual(1.3);
+		expect(step).toBeGreaterThanOrEqual(1.75);
 	});
 
 	// The same rule in every stylesheet: no hover turns clay-resting text ink.
