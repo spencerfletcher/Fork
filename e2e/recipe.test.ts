@@ -1671,11 +1671,21 @@ test.describe('Serving scaling', () => {
 		expect(reset.height).toBeGreaterThanOrEqual(44);
 		const input = (await page.getByRole('spinbutton', { name: 'Servings' }).boundingBox())!;
 		expect(input.height).toBeGreaterThanOrEqual(44);
-		// Its own row at the end of the column, above the list's first line.
+		// Its own row at the start of the column, level with the list's edge,
+		// above the list's first line; its line as far from the tabs' rule above
+		// as from the list's rule below.
 		const control = (await ingredients.locator('.serves').boundingBox())!;
 		const firstRow = (await ingredients.locator('label').first().boundingBox())!;
-		expect(control.x + control.width).toBeCloseTo(firstRow.x + firstRow.width, 0);
+		expect(control.x).toBeCloseTo(firstRow.x, 0);
 		expect(control.y + control.height).toBeLessThanOrEqual(firstRow.y);
+		const tabs = (await page.locator('.section-tabs').boundingBox())!;
+		const line = (await ingredients.locator('.serves .label').boundingBox())!;
+		const rule = (await ingredients
+			.locator('.serves')
+			.evaluate((el) => el.parentElement!.getBoundingClientRect().bottom))!;
+		expect(
+			Math.abs(line.y - (tabs.y + tabs.height) - (rule - (line.y + line.height)))
+		).toBeLessThanOrEqual(2);
 
 		await page.getByRole('button', { name: 'Reset' }).click();
 		await expect(flourMeasure).toHaveText(measure(flour));
@@ -1683,7 +1693,7 @@ test.describe('Serving scaling', () => {
 		expect(new URL(page.url()).searchParams.has('serves')).toBe(false);
 	});
 
-	test('on a desktop the control is borderless text right of the eyebrow, and the two rules line up', async ({
+	test('on a desktop the control is borderless text just after the eyebrow, and the two rules line up', async ({
 		page
 	}) => {
 		await page.setViewportSize({ width: 1280, height: 900 });
@@ -1691,9 +1701,17 @@ test.describe('Serving scaling', () => {
 		const ingredients = page.locator('#ingredients');
 		const blank = await ingredients.getByRole('spinbutton', { name: 'Servings' }).evaluate((el) => {
 			const s = getComputedStyle(el);
-			return [s.borderTopWidth, s.borderLeftWidth, s.borderBottomWidth, s.backgroundColor];
+			return [
+				s.borderTopWidth,
+				s.borderLeftWidth,
+				s.borderBottomWidth,
+				s.backgroundColor,
+				s.backgroundImage
+			];
 		});
-		expect(blank).toEqual(['0px', '0px', '1px', 'rgba(0, 0, 0, 0)']);
+		// No box: the underline is drawn, not a border.
+		expect(blank.slice(0, 4)).toEqual(['0px', '0px', '0px', 'rgba(0, 0, 0, 0)']);
+		expect(blank[4]).toContain('linear-gradient');
 
 		const eyebrow = (await ingredients
 			.getByRole('heading', { name: 'Ingredients' })
@@ -1703,9 +1721,11 @@ test.describe('Serving scaling', () => {
 			.locator('.serves')
 			.evaluate((el) => el.parentElement!.getBoundingClientRect()))!;
 		const method = (await page.getByRole('heading', { name: 'Method' }).boundingBox())!;
-		// One line: the control beside the eyebrow, at the column's end.
+		// One line: the control beside the eyebrow, straight after it.
 		expect(control.y).toBeLessThan(eyebrow.y + eyebrow.height);
-		expect(control.x + control.width).toBeCloseTo(row.x + row.width, 0);
+		expect(control.x).toBeGreaterThan(eyebrow.x + eyebrow.width);
+		expect(control.x).toBeLessThan(eyebrow.x + eyebrow.width + 24);
+		expect(control.x + control.width).toBeLessThan(row.x + row.width);
 		// The rule under both sits level with the Method rule.
 		expect(row.y + row.height).toBeCloseTo(method.y + method.height, 0);
 	});
