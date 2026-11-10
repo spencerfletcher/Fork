@@ -41,7 +41,7 @@ describe('signup action', () => {
 		expect(isActionFailure(result)).toBe(true);
 		expect(result).toMatchObject({
 			status: 400,
-			data: { error: 'Email and password are required.' }
+			data: { error: 'Email and password are required.', code: 'invalid' }
 		});
 		expect(signUp).not.toHaveBeenCalled();
 	});
@@ -53,7 +53,7 @@ describe('signup action', () => {
 
 			expect(result).toMatchObject({
 				status: 400,
-				data: { error: USERNAME_RULE, field: 'username' }
+				data: { error: USERNAME_RULE, field: 'username', code: 'invalid' }
 			});
 			expect(signUp).not.toHaveBeenCalled();
 		}
@@ -67,7 +67,7 @@ describe('signup action', () => {
 		expect(usernameTaken).toHaveBeenCalledWith('cook');
 		expect(result).toMatchObject({
 			status: 400,
-			data: { error: 'That username is taken', field: 'username' }
+			data: { error: 'That username is taken', field: 'username', code: 'invalid' }
 		});
 		expect(signUp).not.toHaveBeenCalled();
 	});
@@ -92,9 +92,9 @@ describe('signup action', () => {
 		expect(isActionFailure(result)).toBe(true);
 		expect(result).toMatchObject({
 			status: 429,
-			data: { error: 'Could not create the account. Try again.' }
+			data: { error: 'Could not create the account. Try again.', code: 'auth_failed' }
 		});
-		expect(result).not.toMatchObject({ data: { registered: true } });
+		expect(result).not.toMatchObject({ data: { registered: true, code: 'auth_failed' } });
 	});
 
 	test('falls back to 500 when Supabase gives no status', async () => {

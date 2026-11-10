@@ -1,6 +1,7 @@
-import { fail, redirect } from '@sveltejs/kit';
+import { redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { text } from '#lib/helpers.js';
+import { failure } from '#lib/server/actions.js';
 import { PASSWORD_MIN } from '#lib/auth/rules.js';
 
 // The tab reads as the card heads itself: the form, or the expired link.
@@ -47,21 +48,22 @@ export const actions: Actions = {
 		const password = text(formData, 'password');
 
 		if (password.length < PASSWORD_MIN) {
-			return fail(400, { error: `Use at least ${PASSWORD_MIN} characters.` });
+			return failure(400, 'invalid', `Use at least ${PASSWORD_MIN} characters.`);
 		}
 		if (!user || cookies.get(_RECOVERY_COOKIE) !== '1') {
-			return fail(401, { error: 'This link has expired. Ask for a new one.' });
+			return failure(401, 'unauthenticated', 'This link has expired. Ask for a new one.');
 		}
 
 		const { error: err } = await supabase.auth.updateUser({ password });
 
 		if (err) {
-			return fail(err.status || 500, {
-				error:
-					err.code === 'same_password'
-						? "That's your current password. Choose a new one."
-						: 'Could not set the password. Try again.'
-			});
+			return failure(
+				err.status || 500,
+				'auth_failed',
+				err.code === 'same_password'
+					? "That's your current password. Choose a new one."
+					: 'Could not set the password. Try again.'
+			);
 		}
 
 		// The link is spent; the recovery session is a full session, so the cook

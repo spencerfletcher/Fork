@@ -1,6 +1,7 @@
-import { fail, redirect } from '@sveltejs/kit';
+import { redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { text } from '#lib/helpers.js';
+import { failure } from '#lib/server/actions.js';
 import { ensureProfile, usernameTaken } from '#lib/server/profiles.js';
 import { localPath } from '#lib/server/localPath.js';
 import { USERNAME_MESSAGE, normalizeUsername, validUsername } from '#lib/auth/rules.js';
@@ -24,27 +25,29 @@ export const actions: Actions = {
 		const password = text(formData, 'password');
 
 		if (!email || !password) {
-			return fail(400, { error: 'Email and password are required.' });
+			return failure(400, 'invalid', 'Email and password are required.');
 		}
 		if (!validUsername(username)) {
-			return fail(400, { error: USERNAME_MESSAGE, field: 'username' });
+			return failure(400, 'invalid', USERNAME_MESSAGE, { field: 'username' });
 		}
 		// Checked before the auth user exists, so a taken handle costs nothing;
 		// ensureProfile still suffixes on the rare race between here and the insert.
 		if (await usernameTaken(username)) {
-			return fail(400, { error: 'That username is taken', field: 'username' });
+			return failure(400, 'invalid', 'That username is taken', { field: 'username' });
 		}
 
 		const { data, error: err } = await supabase.auth.signUp({ email, password });
 
 		if (err) {
 			const registered = /already registered/i.test(err.message);
-			return fail(err.status || 500, {
-				error: registered
+			return failure(
+				err.status || 500,
+				'auth_failed',
+				registered
 					? 'That email already has an account.'
 					: 'Could not create the account. Try again.',
-				registered
-			});
+				{ registered }
+			);
 		}
 
 		// Best effort: the email may not be confirmed yet, but the profile row can exist.
