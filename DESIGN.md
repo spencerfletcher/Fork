@@ -263,7 +263,7 @@ Small, consistent corners: 4px on chips and icon buttons, 6px on buttons, inputs
 **The closed set (decided 9 November 2026).** Every clickable control on the site is one of these, by its shared class or component, and nothing else:
 
 | Kind | Looks | Class / component |
-|---|---|---|
+| --- | --- | --- |
 | Primary | marigold fill, ink 600 | `.btn-primary` |
 | Ghost | transparent, 1px ink border, 600 | `.btn-ghost` |
 | Danger | ghost in red; red on hover for a resting Block | `.btn-ghost.danger`, `.danger-hover` |
