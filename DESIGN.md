@@ -293,6 +293,7 @@ A control that does not fit one of these rows is a design decision, not a local 
 | Version id in copy | mono, 0.9375em | the line's | `.mono-id` | sans sentences: the editor header, Journal hints |
 | Version chip | mono 600, 0.75rem | clay | `.vid` (app.css); inline in a Discover change title it scales to 0.9375em of the title (`.change-title .vid`) | card and Discover meta rows, the version bar (the one being read is the marigold chip) |
 | Diff text | mono, 0.875rem | the diff's own | `.diff-panel` (VersionDiff) | compare and history diffs |
+| Commit message, compare page | mono, 0.875rem | ink | `.version-card__message` (diff page) | the compare page's version cards; mono on purpose (Spencer, 10 November 2026: "it should be mono on the diff page"), sans everywhere else |
 
 One exception, decided 28 October 2026: the recipe page's action row (Cook, Edit recipe, Save, Fork, Add to Journal) is set as 44px pills with a leading icon, the header's last line. Everywhere else a button keeps the 6px corner.
 
