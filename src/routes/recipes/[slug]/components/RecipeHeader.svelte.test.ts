@@ -5,6 +5,7 @@ import RecipeHeader from './RecipeHeader.svelte';
 import source from './RecipeHeader.svelte?raw';
 import type { ComponentProps } from 'svelte';
 import { makeContent, makeVersion } from '#lib/recipes/fixtures.js';
+import { cssRule } from '#lib/testing/css.js';
 
 vi.mock('$app/navigation', () => ({ afterNavigate: () => {} }));
 
@@ -266,8 +267,7 @@ describe('RecipeHeader stats row', () => {
 
 	test('the row takes the byline size, so the header keeps one metadata size', () => {
 		// jsdom applies no component CSS, so the rules are read from the source.
-		const rule = (name: string) =>
-			source.match(new RegExp(`\\n\\t\\.${name} \\{[^}]*\\}`))?.[0] ?? '';
+		const rule = (name: string) => cssRule(source, `.${name}`);
 		const size = (css: string) => css.match(/font-size: ([^;]+);/)?.[1];
 		expect(size(rule('stats'))).toBeDefined();
 		expect(size(rule('stats'))).toBe(size(rule('byline')));
@@ -327,7 +327,7 @@ describe('RecipeHeader content', () => {
 	test('the description clamps at three lines with an ellipsis at every width', () => {
 		// jsdom applies no component CSS, so the clamp is read from the source:
 		// on the .description rule itself, not inside a media query.
-		const rule = source.match(/\n\t\.description \{[^}]*\}/)?.[0] ?? '';
+		const rule = cssRule(source, '.description');
 		expect(rule).toMatch(/line-clamp: 3;/);
 		expect(rule).toMatch(/-webkit-line-clamp: 3;/);
 		expect(rule).toMatch(/overflow: hidden;/);

@@ -4,6 +4,7 @@ import RecipeMethod from './RecipeMethod.svelte';
 import source from './RecipeMethod.svelte?raw';
 import { ticksKey, loadTicks, saveTicks } from './ticks';
 import { inGroup, makeStep } from '#lib/recipes/fixtures.js';
+import { cssRule } from '#lib/testing/css.js';
 
 const KEY = ticksKey('my-fork', 3, 'steps');
 
@@ -144,11 +145,7 @@ describe('RecipeMethod', () => {
 // so the rules are read from source; the e2e spec pins the computed sizes.
 describe('RecipeMethod while cooking', () => {
 	const style = source.slice(source.indexOf('<style>'));
-	const rule = (selector: string, from = style) => {
-		const start = from.indexOf(`${selector} {`);
-		expect(start, selector).toBeGreaterThan(-1);
-		return from.slice(start, from.indexOf('}', start));
-	};
+	const rule = (selector: string, from = style) => cssRule(from, selector);
 
 	test('the step row and its text carry the classes the cooking rules hang on', () => {
 		render(RecipeMethod, { props: { storageKey: KEY, steps: [makeStep('Mix.')] } });

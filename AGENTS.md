@@ -60,7 +60,7 @@ Planning and design docs: start at `docs/README.md`, which names the current pro
 - `day(iso)`, `dayLabel(string | Date)` and `sourceHref(source)` (`src/lib/journal.ts`): a calendar day read as UTC, its label, a journal entry's recipe link
 - `pendingEnhance(...)` (`src/lib/pendingEnhance.svelte.ts`): a form's pending and kept-error state; `keepFailure` holds a refusal from another route's action, which SvelteKit does not hand to the page's `form`
 - `optimisticToggle(initial, { failure, report, refresh? })` (`src/lib/optimisticToggle.svelte.ts`): a pressed state that flips at once, rolls back on refusal, one request at a time
-- Testing: `loadEvent`, `formEvent` and `formOf` (`src/lib/testing/actions.ts`), `mockDb` (`src/lib/testing/drizzle.ts`, hoisted at the call site), `inRollback` (`src/lib/testing/db.ts`); e2e: `gotoHydrated`, `COOKIES_RE`, `openCookies` (`e2e/helpers.ts`)
+- Testing: `loadEvent`, `formEvent` and `formOf` (`src/lib/testing/actions.ts`), `mockDb` (`src/lib/testing/drizzle.ts`, hoisted at the call site), `inRollback` (`src/lib/testing/db.ts`), `cssRule(source, selector)` and `cssRules` (`src/lib/testing/css.ts`: a rule's body read from app.css or a `<style>`, for the tests jsdom cannot style); e2e: `gotoHydrated`, `COOKIES_RE`, `openCookies` (`e2e/helpers.ts`)
 
 ## API / Endpoints
 

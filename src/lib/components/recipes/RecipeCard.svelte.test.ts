@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/svelte';
 import RecipeCard from './RecipeCard.svelte';
 import source from './RecipeCard.svelte?raw';
 import { formatTime } from '#lib/helpers.js';
+import { cssRule } from '#lib/testing/css.js';
 
 const { mockGoto } = vi.hoisted(() => ({ mockGoto: vi.fn() }));
 vi.mock('$app/navigation', () => ({ goto: mockGoto }));
@@ -98,7 +99,7 @@ describe('RecipeCard', () => {
 	});
 
 	test('the description clamps at two lines', () => {
-		const rule = /\.card-description \{([^}]*)\}/.exec(source)![1];
+		const rule = cssRule(source, '.card-description');
 		expect(rule).toMatch(/-webkit-line-clamp: 2;/);
 		expect(rule).toMatch(/\bline-clamp: 2;/);
 	});
@@ -117,7 +118,7 @@ describe('RecipeCard', () => {
 			expect(text.querySelector('.card-description')).not.toBeNull();
 			if ('imageUrl' in overrides) expect(text.querySelector('.card-title')).not.toBeNull();
 			for (const cls of ['card-title', 'meta-row', 'card-description', 'card-source']) {
-				const rule = new RegExp(`\\.${cls} \\{([^}]*)\\}`).exec(source)?.[1] ?? '';
+				const rule = cssRule(source, `.${cls}`);
 				expect(rule, cls).not.toMatch(/margin/);
 			}
 		}

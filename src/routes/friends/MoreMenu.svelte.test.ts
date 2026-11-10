@@ -4,6 +4,7 @@ import { tick } from 'svelte';
 import type { SubmitFunction } from '$app/forms';
 import source from './MoreMenu.svelte?raw';
 import MoreMenu from './MoreMenu.svelte';
+import { cssRule } from '#lib/testing/css.js';
 
 // Each form's enhance callback is kept by its action, so a test can play back a result.
 const { submits } = vi.hoisted(() => ({ submits: new Map<string, SubmitFunction>() }));
@@ -17,15 +18,15 @@ vi.mock('$app/navigation', () => ({ afterNavigate: () => {} }));
 
 // jsdom lays nothing out, so the offset is read from the source: the panel's
 // top edge meets the ⋯ button's bottom edge, with no gap between them.
-const rule = (selector: string) => source.match(new RegExp(`\\n\\t${selector} \\{([^}]*)\\}`))![1];
+const rule = (selector: string) => cssRule(source, selector);
 const px = (block: string, property: string) =>
 	Number(block.match(new RegExp(`${property}: (-?\\d+)px`))![1]);
 
 describe('MoreMenu', () => {
 	test('the panel opens flush under the ⋯ button', () => {
-		const button = rule('\\.more-button');
+		const button = rule('.more-button');
 		const buttonTop = Number(button.match(/margin: (-?\d+)px/)![1]);
-		expect(px(rule('\\.panel'), '--menu-top')).toBe(buttonTop + px(button, 'height'));
+		expect(px(rule('.panel'), '--menu-top')).toBe(buttonTop + px(button, 'height'));
 	});
 
 	test('is a menu: the arrow keys walk its items, Escape hands focus back to ⋯', async () => {

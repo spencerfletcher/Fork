@@ -5,6 +5,7 @@ import source from './Navbar.svelte?raw';
 import type { User } from '@supabase/supabase-js';
 import { page } from '$app/state';
 import { DESTINATIONS } from './destinations';
+import { cssRule } from '#lib/testing/css.js';
 
 vi.mock('$app/state', () => ({
 	page: { url: new URL('http://localhost/'), params: {}, route: { id: null } }
@@ -195,11 +196,11 @@ describe('Navbar signed in', () => {
 });
 
 describe('Navbar layout', () => {
-	const rule = (selector: string) => style.match(new RegExp(`${selector}\\s*{([^}]*)}`))![1];
+	const rule = (selector: string) => cssRule(style, selector);
 
 	test('links and the action never wrap', () => {
-		expect(rule('\\.navbar-link')).toMatch(/white-space:\s*nowrap/);
-		expect(rule('\\.nav-cta')).toMatch(/white-space:\s*nowrap/);
+		expect(rule('.navbar-link')).toMatch(/white-space:\s*nowrap/);
+		expect(rule('.nav-cta')).toMatch(/white-space:\s*nowrap/);
 	});
 
 	test('the links never shrink', () => {
@@ -208,14 +209,14 @@ describe('Navbar layout', () => {
 	});
 
 	test('the avatar is a 44px target', () => {
-		expect(rule('\\.nav-avatar-button')).toMatch(/width:\s*44px/);
-		expect(rule('\\.nav-avatar-button')).toMatch(/height:\s*44px/);
+		expect(rule('.nav-avatar-button')).toMatch(/width:\s*44px/);
+		expect(rule('.nav-avatar-button')).toMatch(/height:\s*44px/);
 	});
 
 	// Log in and the brand are thumb targets on a phone.
 	test('below 768 the brand and the text links are 44px tall', () => {
 		const phone = style.match(/@media \(max-width: 767px\)\s*{([\s\S]*?)\n\t}/)![1];
-		const block = phone.match(/\.nav-brand,\s*\.navbar-link:not\(\.hidden\)\s*{([^}]*)}/)![1];
+		const block = cssRule(phone, '.nav-brand, .navbar-link:not(.hidden)');
 		expect(block).toMatch(/min-height:\s*44px/);
 	});
 
@@ -227,11 +228,14 @@ describe('Navbar layout', () => {
 	// (an outline on the icon) keeps "you are here".
 	test('the current link and icon keep a mark under forced colours', () => {
 		const block = style.slice(style.lastIndexOf('@media (forced-colors: active)'));
-		const link = block.match(/\.navbar-link\[aria-current='page'\][^{]*{([^}]*)}/)![1];
+		const link = cssRule(block, ".navbar-link[aria-current='page']");
 		expect(link).toMatch(/text-decoration:\s*underline/);
-		const icon = block.match(/\.nav-icon\[aria-current='page'\][^{]*{([^}]*)}/)![1];
+		const icon = cssRule(block, ".nav-icon[aria-current='page']:not(:focus-visible)");
 		expect(icon).toMatch(/outline:\s*2px solid CanvasText/);
-		const avatar = block.match(/\.nav-avatar-button\.current[^{]*{([^}]*)}/)![1];
+		const avatar = cssRule(
+			block,
+			'.nav-avatar-button.current:not(:focus-visible) :global(.avatar)'
+		);
 		expect(avatar).toMatch(/outline:\s*2px solid CanvasText/);
 	});
 });

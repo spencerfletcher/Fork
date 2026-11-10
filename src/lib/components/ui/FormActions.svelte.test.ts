@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/svelte';
 import { createRawSnippet } from 'svelte';
 import FormActions from './FormActions.svelte';
 import source from './FormActions.svelte?raw';
+import { cssRule } from '#lib/testing/css.js';
 
 const props = { submitLabel: 'Save changes', cancelHref: '/journal', form: 'entry-form' };
 
@@ -34,7 +35,7 @@ describe('FormActions', () => {
 		// jsdom applies no component CSS, so the rules are read from the source.
 		// The right group packs flush right at every width; the row's gap alone
 		// separates it from Cancel.
-		const base = source.match(/\n\t\.danger \{([^}]*)\}/)![1];
+		const base = cssRule(source, '.danger');
 		expect(base).toMatch(/margin-left: auto/);
 		expect(base).toMatch(/align-items: flex-end/);
 		expect(source).not.toMatch(/padding-left/);

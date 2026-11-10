@@ -1,5 +1,6 @@
 import { describe, test, expect } from 'vitest';
 import { readFileSync, readdirSync } from 'node:fs';
+import { cssRule } from '#lib/testing/css.js';
 
 // The design system's tokens live in app.css as plain CSS variables. This
 // test proves every text/background pair the app draws clears WCAG AA, so a
@@ -70,17 +71,16 @@ describe('app.css tokens', () => {
 // Hovers must be seen (decided 9 November 2026): the primary darkens clearly,
 // the ghost takes the band.
 describe('app.css hovers', () => {
-	const body = (selector: string) =>
-		css.match(new RegExp(`\\n\\s*${selector}\\s*\\{([^}]*)\\}`))![1];
+	const body = (selector: string) => cssRule(css, selector);
 
 	test('the primary hover is a clearly darker marigold', () => {
-		expect(body('\\.btn-primary:hover')).toMatch(/background:\s*var\(--color-marigold-hover\)/);
+		expect(body('.btn-primary:hover')).toMatch(/background:\s*var\(--color-marigold-hover\)/);
 		const step = contrast(tokens['--color-marigold'], tokens['--color-marigold-hover']);
 		expect(step).toBeGreaterThanOrEqual(1.3);
 	});
 
 	test('the ghost hover fills with the band', () => {
-		expect(body('\\.btn-ghost:hover')).toMatch(/background:\s*var\(--color-band\)/);
+		expect(body('.btn-ghost:hover')).toMatch(/background:\s*var\(--color-band\)/);
 	});
 
 	// One direction (decided 9 November 2026): clay text deepens, never turns ink.
@@ -128,25 +128,24 @@ describe('app.css hovers', () => {
 
 // The shared utilities that replaced per-component copies (9 November 2026).
 describe('app.css shared utilities', () => {
-	const body = (selector: string) =>
-		css.match(new RegExp(`\\n\\s*${selector}\\s*\\{([^}]*)\\}`))![1];
+	const body = (selector: string) => cssRule(css, selector);
 	const phone = css.slice(css.indexOf('@media (max-width: 699px), (pointer: coarse)'));
 
 	test('a text button is clay at 24px, a thumb on a phone, and its hover deepens, no underline', () => {
-		expect(body('\\.text-btn')).toMatch(/color:\s*var\(--color-accent\)/);
-		expect(body('\\.text-btn')).toMatch(/min-height:\s*24px/);
+		expect(body('.text-btn')).toMatch(/color:\s*var\(--color-accent\)/);
+		expect(body('.text-btn')).toMatch(/min-height:\s*24px/);
 		expect(phone).toMatch(/\.text-btn \{\s*min-height: 44px/);
-		expect(body('\\.text-btn:hover')).toMatch(/color:\s*var\(--color-accent-hover\)/);
-		expect(body('\\.text-btn:hover')).not.toMatch(/text-decoration/);
-		expect(body('\\.text-btn--ink:hover')).toMatch(/color:\s*var\(--color-accent\)/);
+		expect(body('.text-btn:hover')).toMatch(/color:\s*var\(--color-accent-hover\)/);
+		expect(body('.text-btn:hover')).not.toMatch(/text-decoration/);
+		expect(body('.text-btn--ink:hover')).toMatch(/color:\s*var\(--color-accent\)/);
 	});
 
 	test('the dot is drawn, silent to a screen reader', () => {
-		expect(body('\\.dot-list > \\* \\+ \\*::before')).toContain("content: '·' / ''");
+		expect(body('.dot-list > * + *::before')).toContain("content: '·' / ''");
 	});
 
 	test('an inline link is a 24px hit at desktop and 44px on a phone, without moving', () => {
-		expect(body('\\.hit-link')).toMatch(/padding-block:\s*4px;\s*margin-block:\s*-4px/);
+		expect(body('.hit-link')).toMatch(/padding-block:\s*4px;\s*margin-block:\s*-4px/);
 		expect(css).toMatch(
 			/\.hit-link \{\s*display: inline-block;\s*padding-block: 11px;\s*margin-block: -11px/
 		);
@@ -162,9 +161,9 @@ describe('app.css shared utilities', () => {
 	});
 
 	test('the version chip is one class: no component redraws its face', () => {
-		expect(body('\\.vid')).toMatch(/font-family:\s*var\(--font-mono\)/);
-		expect(body('\\.vid')).toMatch(/font-weight:\s*600/);
-		expect(body('\\.vid')).toMatch(/color:\s*var\(--color-accent\)/);
+		expect(body('.vid')).toMatch(/font-family:\s*var\(--font-mono\)/);
+		expect(body('.vid')).toMatch(/font-weight:\s*600/);
+		expect(body('.vid')).toMatch(/color:\s*var\(--color-accent\)/);
 		const offenders = readdirSync(new URL('.', import.meta.url), { recursive: true })
 			.map(String)
 			.filter((f) => f.endsWith('.svelte'))
