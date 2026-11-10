@@ -204,13 +204,7 @@
 		color: var(--color-text-2);
 	}
 
-	.vid {
-		font-family: var(--font-mono);
-		font-size: 0.6875rem;
-		font-weight: 600;
-		color: var(--color-accent);
-	}
-
+	/* .vid is the shared chip (app.css). */
 	.lead-measure .vid {
 		align-self: center;
 	}
@@ -287,8 +281,9 @@
 		color: var(--color-text-3);
 	}
 
-	/* Identifiers inline with their text: the version at the title's own size,
-	   a notch down for mono's taller x-height, the handle at the message's. */
+	/* Identifiers inline with their text: the version chip's modifier, at the
+	   title's own size a notch down for mono's taller x-height instead of the
+	   chip's 0.75rem; the handle at the message's. */
 	.change-title .vid {
 		font-size: 0.9375em;
 	}

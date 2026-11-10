@@ -338,7 +338,7 @@
 		<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
 		<label for={id} id="{id}-label" onclick={() => box?.focus()}>
 			{label}
-			<span class="field-required">Required</span>
+			<span class="field-required" aria-hidden="true">Required</span>
 		</label>
 		{#if enhanced}
 			<div class="tools" role="toolbar" aria-label="{label} tools">

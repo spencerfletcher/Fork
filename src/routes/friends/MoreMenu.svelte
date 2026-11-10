@@ -86,7 +86,7 @@
 						required
 						maxlength="1000">
 					</textarea>
-					<button type="submit" class="confirm">Send report</button>
+					<button type="submit" class="btn-ghost">Send report</button>
 				</form>
 			{:else if step === 'reported'}
 				<p class="step" role="status">Reported. Thanks; someone will read it.</p>
@@ -94,7 +94,7 @@
 				<form method="POST" action="/friends?/block" class="step" use:enhance>
 					<input type="hidden" name="userId" value={userId} />
 					<p>{BLOCK_SENTENCE}</p>
-					<button type="submit" class="confirm danger">Block @{username}</button>
+					<button type="submit" class="btn-ghost danger">Block @{username}</button>
 				</form>
 			{/if}
 		</div>
@@ -140,7 +140,8 @@
 		box-shadow: var(--shadow-raised);
 	}
 
-	.panel button {
+	/* Menu rows; a step's confirm is a ghost button from the closed set. */
+	.panel button:not(.btn-ghost) {
 		display: flex;
 		align-items: center;
 		width: 100%;
@@ -156,7 +157,7 @@
 		cursor: pointer;
 	}
 
-	.panel button:hover {
+	.panel button:not(.btn-ghost):hover {
 		background: var(--color-tint);
 	}
 
@@ -181,11 +182,6 @@
 	.step label {
 		font-size: 0.875rem;
 		font-weight: 600;
-	}
-
-	.panel .confirm {
-		justify-content: center;
-		border: 1px solid var(--color-input-border);
 	}
 
 	@media (max-width: 699px) {

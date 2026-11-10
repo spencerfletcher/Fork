@@ -5,6 +5,7 @@
 	import { AUDIENCE_LABEL } from '#lib/audience.js';
 	import { audienceIcon } from '#lib/components/Icons.svelte';
 	import Avatar from '#lib/components/ui/Avatar.svelte';
+	import Username from '#lib/components/ui/Username.svelte';
 
 	// Only what the card renders, so a column added to the table does not ripple
 	// into every card fixture.
@@ -61,7 +62,7 @@
 	 * The meta line, as data rather than nested markup. The dots between items
 	 * are drawn by CSS, so the list carries only the items.
 	 */
-	type MetaPart = { text: string; href?: string; accent?: boolean; icon?: Visibility };
+	type MetaPart = { text: string; username?: string; accent?: boolean; icon?: Visibility };
 
 	const metaParts: MetaPart[] = $derived.by(() => {
 		const parts: MetaPart[] = [];
@@ -72,7 +73,7 @@
 		}
 
 		if (recipe.author && isList) {
-			parts.push({ text: `@${recipe.author.username}`, href: `/users/${recipe.author.username}` });
+			parts.push({ text: `@${recipe.author.username}`, username: recipe.author.username });
 		}
 
 		const { prepTimeMinutes: prep, cookTimeMinutes: cook } = recipe;
@@ -132,15 +133,15 @@
 
 		<div class="meta-row dot-list">
 			{#each metaParts as part (part.text)}
-				{#if part.href}
-					<a class="meta-item meta-author" href={part.href}>{part.text}</a>
+				{#if part.username}
+					<span class="meta-item meta-author"><Username username={part.username} /></span>
 				{:else if part.icon}
 					<span class="meta-item meta-audience">
 						{@render audienceIcon(part.icon)}
 						{part.text}
 					</span>
 				{:else}
-					<span class="meta-item" class:meta-item--accent={part.accent}>{part.text}</span>
+					<span class="meta-item" class:vid={part.accent}>{part.text}</span>
 				{/if}
 			{/each}
 		</div>
@@ -149,9 +150,7 @@
 			<p class="card-source">
 				Saved from
 				{#if recipe.author}
-					<a class="card-handle" href="/users/{recipe.author.username}">
-						@{recipe.author.username}
-					</a>
+					<Username username={recipe.author.username} />
 				{:else}
 					another cook
 				{/if}
@@ -288,7 +287,8 @@
 		color: var(--color-text-3);
 	}
 
-	.meta-item {
+	/* Not the version chip: an unlayered component rule would beat app.css's .vid. */
+	.meta-item:not(.vid) {
 		font-family: var(--font-sans);
 		font-size: 0.8125rem;
 		color: var(--color-text-3);
@@ -355,8 +355,7 @@
 		}
 	}
 
-	/* Handles are identifiers: mono, one notch under the line, clay; above the
-	   stretched link so they stay their own link. */
+	/* Discover's handle: `.handle` (app.css) inside the cook link. */
 	.card-handle {
 		position: relative;
 		z-index: 2;
@@ -367,31 +366,20 @@
 		color: var(--color-accent-hover);
 	}
 
-	.meta-item--accent {
-		font-family: var(--font-mono);
-		font-size: 0.6875rem;
-		font-weight: 600;
-		color: var(--color-accent);
-	}
-
-	a.meta-author {
-		/* Above the card's stretched link, so the author stays clickable. */
+	/* The author is Username at the meta size; above the card's stretched
+	   link, so it stays clickable. */
+	.meta-author,
+	.card-source :global(.username) {
 		position: relative;
 		z-index: 2;
-		font-family: var(--font-mono);
-		/* Username's one step under the line (0.9375), taken off the meta size:
-		   an em would resolve against the row, not this item's 13px. */
-		font-size: calc(0.8125rem * 0.9375);
-		color: var(--color-accent);
-		text-decoration: none;
-		transition: color 0.15s ease;
-		/* A 24px hit at desktop without moving the text (decided 29 October 2026). */
-		padding-block: 3px;
-		margin-block: -3px;
 	}
 
-	a.meta-author:hover {
-		color: var(--color-accent-hover);
+	/* A 24px hit at desktop without moving the text (decided 29 October 2026);
+	   a block, as the flex item it was, so the padding counts. */
+	.meta-author :global(.username) {
+		display: block;
+		padding-block: 3px;
+		margin-block: -3px;
 	}
 
 	/* Phone: two columns leave no room for the author; the recipe page has it.

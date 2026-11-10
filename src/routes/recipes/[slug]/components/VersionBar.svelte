@@ -76,7 +76,7 @@
 		bind:this={bar}
 		onclick={onBarClick}>
 		<div class="current">
-			<span class="version-number">
+			<span class="version-number vid">
 				<span class="sr-only">
 					{isViewingHistory
 						? `Version ${n} of ${count}, an older version.`
@@ -118,7 +118,7 @@
 				{@const v = version.versionNumber}
 				<li>
 					<a href="/recipes/{recipe.slug}?version={v}" class="version-link hit-link">
-						<span class="version-number">v{v}</span>
+						<span class="version-number vid">v{v}</span>
 						<span class="message text-text-2">{version.commitMessage}</span>
 					</a>
 					<a href={diff(v, n)} class="compare hit-link whitespace-nowrap">Compare with v{n}</a>
@@ -171,10 +171,6 @@
 		flex-shrink: 0;
 		min-width: 26px;
 		text-align: center;
-		font-family: var(--font-mono);
-		font-size: 0.75rem;
-		font-weight: 600;
-		color: var(--color-accent);
 	}
 
 	.current .version-number {

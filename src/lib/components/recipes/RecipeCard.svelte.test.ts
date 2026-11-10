@@ -192,11 +192,13 @@ describe('RecipeCard', () => {
 		expect(screen.getAllByText('Chocolate Cake')).toHaveLength(1);
 	});
 
-	test('the author link is marked so the phone layout can hide it', () => {
+	test('the author is Username, in an item marked so the phone layout can hide it', () => {
 		render(RecipeCard, {
 			props: { recipe: { ...makeRecipe(), author: { id: 'u1', username: 'chefmaria' } } }
 		});
-		expect(screen.getByRole('link', { name: '@chefmaria' })).toHaveClass('meta-author');
+		const link = screen.getByRole('link', { name: '@chefmaria' });
+		expect(link).toHaveClass('username');
+		expect(link.closest('.meta-author')).not.toBeNull();
 	});
 
 	test('the separators are drawn by CSS between items, never typed, so none can strand at a line end', () => {
@@ -258,14 +260,14 @@ describe('RecipeCard', () => {
 			props: { recipe: makeRecipe({ versionCount: 1, cookTimeMinutes: 28, forkCount: 1 }) }
 		});
 		expect(screen.queryByText(/^v\d+$/)).toBeNull();
-		expect(container.querySelector('.meta-item--accent')).toBeNull();
+		expect(container.querySelector('.vid')).toBeNull();
 		const row = container.querySelector('.meta-row')!;
 		expect([...row.children].map((el) => el.textContent)).toEqual(['28 min cook', '1 fork']);
 	});
 
 	test('the mark starts at v2', () => {
 		render(RecipeCard, { props: { recipe: makeRecipe({ versionCount: 2 }) } });
-		expect(screen.getByText(/^v2$/)).toHaveClass('meta-item--accent');
+		expect(screen.getByText(/^v2$/)).toHaveClass('vid');
 	});
 
 	test('shows the fork count when the recipe has forks', () => {
@@ -345,10 +347,9 @@ describe('RecipeCard in the Cookbook', () => {
 			props: { recipe: { ...makeRecipe(), author }, variant: 'cookbook', saved: true }
 		});
 		expect(container.querySelector('.card-source')).toHaveTextContent('Saved from @devcooks');
-		expect(screen.getByRole('link', { name: '@devcooks' })).toHaveAttribute(
-			'href',
-			'/users/devcooks'
-		);
+		const link = screen.getByRole('link', { name: '@devcooks' });
+		expect(link).toHaveAttribute('href', '/users/devcooks');
+		expect(link).toHaveClass('username');
 	});
 });
 

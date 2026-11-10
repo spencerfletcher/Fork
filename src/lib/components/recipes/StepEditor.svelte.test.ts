@@ -4,7 +4,7 @@ import StepEditor from './StepEditor.svelte';
 
 // The live box a person types in, and the textarea behind it that submits.
 function box() {
-	return screen.getByRole('textbox', { name: 'Method Required' });
+	return screen.getByRole('textbox', { name: 'Method' });
 }
 
 function field() {

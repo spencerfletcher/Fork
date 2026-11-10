@@ -146,6 +146,19 @@ test.describe('Recipe cards', () => {
 	test('the author link is a 24px target at desktop', async ({ page }) => {
 		await page.setViewportSize({ width: 1280, height: 900 });
 		await page.goto('/tags/dessert');
-		expect(await height(page, '.recipe-card a.meta-author')).toBeGreaterThanOrEqual(24);
+		expect(await height(page, '.recipe-card .meta-author a')).toBeGreaterThanOrEqual(24);
+	});
+
+	test('the version chip wears the shared .vid look, not the meta row sans', async ({ page }) => {
+		// Component styles are unlayered and beat app.css, so the card's own
+		// .meta-item rule must not reach the chip.
+		await page.goto('/tags/dessert');
+		const chip = page.locator('.recipe-card .vid').first();
+		const look = await chip.evaluate((el) => {
+			const c = getComputedStyle(el);
+			return [c.fontFamily, c.fontWeight, c.color];
+		});
+		expect(look[0]).toMatch(/JetBrains Mono/);
+		expect(look.slice(1)).toEqual(['600', 'rgb(178, 60, 0)']);
 	});
 });

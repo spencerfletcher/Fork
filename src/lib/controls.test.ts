@@ -16,8 +16,6 @@ const STRUCTURAL = [
 	['routes/friends/MoreMenu.svelte', 'more-button', 'icon-only menu trigger'],
 	['routes/friends/MoreMenu.svelte', '', 'menu row'],
 	['routes/friends/MoreMenu.svelte', 'danger', 'menu row, red'],
-	['routes/friends/MoreMenu.svelte', 'confirm', "a menu step's confirm row"],
-	['routes/friends/MoreMenu.svelte', 'confirm danger', "a menu step's confirm row, red"],
 	['lib/components/ui/TagInput.svelte', 'tag-remove', "a tag pill's remove glyph"],
 	['lib/components/ui/TagTabs.svelte', '', 'tag filter tab'],
 	['lib/components/ui/TagTabs.svelte', 'tag-tabs__clear', 'the tag tabs row’s Clear all tab'],

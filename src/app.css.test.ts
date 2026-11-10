@@ -132,12 +132,12 @@ describe('app.css shared utilities', () => {
 		css.match(new RegExp(`\\n\\s*${selector}\\s*\\{([^}]*)\\}`))![1];
 	const phone = css.slice(css.indexOf('@media (max-width: 699px), (pointer: coarse)'));
 
-	test('a text button is clay at 24px, a thumb on a phone, and its hover deepens and underlines', () => {
+	test('a text button is clay at 24px, a thumb on a phone, and its hover deepens, no underline', () => {
 		expect(body('\\.text-btn')).toMatch(/color:\s*var\(--color-accent\)/);
 		expect(body('\\.text-btn')).toMatch(/min-height:\s*24px/);
 		expect(phone).toMatch(/\.text-btn \{\s*min-height: 44px/);
 		expect(body('\\.text-btn:hover')).toMatch(/color:\s*var\(--color-accent-hover\)/);
-		expect(body('\\.text-btn:hover')).toMatch(/text-decoration:\s*underline/);
+		expect(body('\\.text-btn:hover')).not.toMatch(/text-decoration/);
 		expect(body('\\.text-btn--ink:hover')).toMatch(/color:\s*var\(--color-accent\)/);
 	});
 
@@ -159,6 +159,20 @@ describe('app.css shared utilities', () => {
 		expect(rule).toMatch(/border-color:\s*var\(--color-remove\)/);
 		expect(rule).toMatch(/color:\s*var\(--color-remove\)/);
 		expect(at).toBeGreaterThan(css.indexOf('.btn-ghost:hover {'));
+	});
+
+	test('the version chip is one class: no component redraws its face', () => {
+		expect(body('\\.vid')).toMatch(/font-family:\s*var\(--font-mono\)/);
+		expect(body('\\.vid')).toMatch(/font-weight:\s*600/);
+		expect(body('\\.vid')).toMatch(/color:\s*var\(--color-accent\)/);
+		const offenders = readdirSync(new URL('.', import.meta.url), { recursive: true })
+			.map(String)
+			.filter((f) => f.endsWith('.svelte'))
+			.filter((f) => {
+				const style = readFileSync(new URL(f, import.meta.url), 'utf8').split('<style>')[1] ?? '';
+				return /(^|\n)\s*\.vid\s*\{/.test(style);
+			});
+		expect(offenders).toEqual([]);
 	});
 });
 

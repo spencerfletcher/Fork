@@ -224,7 +224,7 @@ describe('RecipeForm title box', () => {
 	// A long title wraps on a phone instead of scrolling out of a 352px box.
 	test('is a one-row textarea named title, required', () => {
 		renderForm();
-		const title = screen.getByRole('textbox', { name: 'Title Required' });
+		const title = screen.getByRole('textbox', { name: 'Title' });
 		expect(title.tagName).toBe('TEXTAREA');
 		expect(title).toHaveAttribute('name', 'title');
 		expect(title).toHaveAttribute('rows', '1');
@@ -234,13 +234,13 @@ describe('RecipeForm title box', () => {
 	test('Enter cannot type a newline', () => {
 		renderForm();
 		const enter = new KeyboardEvent('keydown', { key: 'Enter', cancelable: true, bubbles: true });
-		screen.getByRole('textbox', { name: 'Title Required' }).dispatchEvent(enter);
+		screen.getByRole('textbox', { name: 'Title' }).dispatchEvent(enter);
 		expect(enter.defaultPrevented).toBe(true);
 	});
 
 	test('a pasted newline is flattened to a space', async () => {
 		renderForm();
-		const title = screen.getByRole('textbox', { name: 'Title Required' });
+		const title = screen.getByRole('textbox', { name: 'Title' });
 		await fireEvent.input(title, { target: { value: 'Brown butter\ncookies\r\n' } });
 		expect(title).toHaveValue('Brown butter cookies ');
 	});
@@ -412,7 +412,7 @@ describe('RecipeForm blocked on a text box', () => {
 		const field = document.querySelector('textarea[name="ingredients"]')!;
 		field.dispatchEvent(new Event('invalid', { cancelable: true }));
 		await tick();
-		const box = screen.getByRole('textbox', { name: 'Ingredients Required' });
+		const box = screen.getByRole('textbox', { name: 'Ingredients' });
 		expect(box).toHaveFocus();
 		expect(box).toHaveAccessibleDescription(/^At least one ingredient is required/);
 	});
