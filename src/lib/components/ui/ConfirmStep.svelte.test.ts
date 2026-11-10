@@ -52,6 +52,32 @@ describe('ConfirmStep', () => {
 		expect(screen.getByRole('group')).toBeInTheDocument();
 	});
 
+	test("the step takes the trigger's place: confirm, keep, then the sentence, in that order", async () => {
+		render(ConfirmStep, { props });
+		await open();
+		expect(screen.queryByRole('button', { name: props.trigger })).toBeNull();
+		const step = screen.getByRole('group', { name: props.explanation });
+		const order = [...step.querySelectorAll('button, p')].map((el) => el.textContent?.trim());
+		expect(order).toEqual([props.confirmLabel, props.keepLabel, props.explanation]);
+	});
+
+	test('keep and Escape each close the step and hand focus back to the trigger', async () => {
+		render(ConfirmStep, { props });
+		await open();
+		await fireEvent.click(screen.getByRole('button', { name: props.keepLabel }));
+		await tick();
+		expect(screen.queryByRole('group')).toBeNull();
+		expect(screen.getByRole('button', { name: props.trigger })).toHaveFocus();
+		await open();
+		expect(screen.getByRole('group')).toHaveFocus();
+		await fireEvent.keyDown(screen.getByRole('button', { name: props.confirmLabel }), {
+			key: 'Escape'
+		});
+		await tick();
+		expect(screen.queryByRole('group')).toBeNull();
+		expect(screen.getByRole('button', { name: props.trigger })).toHaveFocus();
+	});
+
 	test('a refusal is an alert under it', () => {
 		render(ConfirmStep, { props: { ...props, error: 'Could not block. Try again.' } });
 		expect(screen.getByRole('alert')).toHaveTextContent('Could not block. Try again.');

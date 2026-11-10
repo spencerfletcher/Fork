@@ -152,11 +152,6 @@
 		margin: 8px 0 0;
 	}
 
-	/* An open step takes the row. */
-	.relation :global(.confirm-step) {
-		flex-basis: 100%;
-	}
-
 	.relation button:not(.text-btn) {
 		min-height: 44px;
 	}
