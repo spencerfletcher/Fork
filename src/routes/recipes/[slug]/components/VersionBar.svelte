@@ -198,14 +198,11 @@
 
 	.controls {
 		flex-shrink: 0;
+		--dot-space: 0 0.25em 0 0;
 	}
 
 	.item {
 		white-space: nowrap;
-	}
-
-	.controls {
-		--dot-space: 0 0.25em 0 0;
 	}
 
 	.version-bar a,
@@ -250,12 +247,10 @@
 	}
 
 	/* No gap: each row's own padding spaces the rows, so two boxes never meet.
-	   The top padding is the old 10px less a row's 6px, so the first row's text
-	   stays where it was. */
+	   With a row's 6px, the top padding puts the first row's text 10px under the rule. */
 	.history {
 		display: flex;
 		flex-direction: column;
-		gap: 0;
 		margin-top: 10px;
 		padding-top: 4px;
 		border-top: 1px solid var(--color-border);
@@ -331,18 +326,10 @@
 			column-gap: 10px;
 		}
 
-		.version-bar .version-link {
-			display: inline-flex;
-		}
-
 		/* The toggle's 44px, on its pseudo: a ring this tall would cut through
 		   the note above. */
 		.versions-toggle::before {
 			inset: -11px 0;
-		}
-
-		.history {
-			gap: 0;
 		}
 
 		.history li {
