@@ -89,6 +89,41 @@ describe('app.css hovers', () => {
 		const step = contrast(tokens['--color-accent'], tokens['--color-accent-hover']);
 		expect(step).toBeGreaterThanOrEqual(1.3);
 	});
+
+	// The same rule in every stylesheet: no hover turns clay-resting text ink.
+	// Clay at rest is a selector given `color: var(--color-accent)` in the same
+	// file or app.css, or a bare link (`a`, `a.x`) no rule recolours. A heuristic
+	// over selectors, not a cascade: it catches the direct case.
+	test('no hover turns clay text ink', () => {
+		const rulesOf = (source: string) =>
+			[...source.replace(/\/\*[\s\S]*?\*\//g, '').matchAll(/([^{}]+)\{([^{}]*)\}/g)].map((m) => ({
+				selectors: m[1].split(',').map((s) => s.trim().replace(/:global\((.+?)\)/g, '$1')),
+				body: m[2]
+			}));
+		const coloured = (rules: ReturnType<typeof rulesOf>, value: RegExp) =>
+			new Set(rules.filter((r) => value.test(r.body)).flatMap((r) => r.selectors));
+		const global = rulesOf(css);
+		const files = readdirSync(new URL('.', import.meta.url), { recursive: true })
+			.map(String)
+			.filter((f) => f.endsWith('.svelte') || f === 'app.css');
+		const offenders = files.flatMap((f) => {
+			const source = readFileSync(new URL(f, import.meta.url), 'utf8');
+			const style = f === 'app.css' ? source : (source.split('<style>')[1] ?? '');
+			const rules = [...rulesOf(style), ...global];
+			const clay = coloured(rules, /(^|[\s;])color:\s*var\(--color-accent\)/);
+			const recoloured = coloured(rules, /(^|[\s;])color:/);
+			return rulesOf(style)
+				.filter((r) => /(^|[\s;])color:\s*var\(--color-text(-[23])?\)/.test(r.body))
+				.flatMap((r) => r.selectors.filter((s) => s.endsWith(':hover')))
+				.filter((s) => {
+					const base = s.slice(0, -':hover'.length);
+					const bareLink = /(^|\s)a([.[][^\s]*)?$/.test(base) && !recoloured.has(base);
+					return clay.has(base) || bareLink;
+				})
+				.map((s) => `${f}: ${s}`);
+		});
+		expect(offenders).toEqual([]);
+	});
 });
 
 // The shared utilities that replaced per-component copies (9 November 2026).

@@ -219,10 +219,14 @@
 		text-decoration: none;
 	}
 
-	.version-bar a:hover,
-	.versions-toggle:hover,
+	/* Open, the toggle reads ink; a hover, open or shut, deepens to clay. */
 	.versions-toggle[aria-expanded='true'] {
 		color: var(--color-text);
+	}
+
+	.version-bar a:hover,
+	.versions-toggle:hover {
+		color: var(--color-accent-hover);
 	}
 
 	/* The toggle is a word in the line, not a button. */

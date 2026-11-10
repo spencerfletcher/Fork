@@ -40,7 +40,7 @@
 	}
 
 	.username:hover {
-		color: var(--color-text);
+		color: var(--color-accent-hover);
 	}
 
 	.username.on-dark {

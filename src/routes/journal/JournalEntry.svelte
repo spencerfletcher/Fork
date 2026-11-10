@@ -238,10 +238,6 @@
 		display: inline;
 	}
 
-	.lock-note a.arrow-link:hover {
-		color: var(--color-text);
-	}
-
 	/* Phone: the day goes inline above the dish and the photo becomes a
 	   thumbnail beside the heading, so it never outgrows the words. */
 	@media (max-width: 699px) {

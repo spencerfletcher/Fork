@@ -176,7 +176,7 @@ Clay and marigold were raised in chroma from #a4512b and #e8a83a: same hues, sam
 
 **The Clay Is Text Rule.** Clay never fills a shape, with one named exception: the editor's audience radios take clay as their accent-color (decided 29 October 2026 for the checkbox they replaced). It colours titles, links and version marks. Its hover is Clay Deep.
 
-**The One Direction Rule** (decided 9 November 2026, Spencer: "inconsistency on mouseover, profile turns black and title turns red; already brick links could turn a deeper red"). A hover moves text one way, toward clay: text already clay darkens to Clay Deep, ink or grey text turns clay. Clay text never turns ink on hover.
+**The One Direction Rule** (decided 9 November 2026, Spencer: "inconsistency on mouseover, profile turns black and title turns red; already brick links could turn a deeper red"). A hover moves text one way, toward clay: text already clay darkens to Clay Deep, ink or grey text turns clay. Clay text never turns ink on hover; `app.css.test.ts` sweeps every stylesheet for a hover that does.
 
 ## Typography
 

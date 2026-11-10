@@ -122,7 +122,7 @@
 	}
 
 	.reset:hover {
-		color: var(--color-text);
+		color: var(--color-accent-hover);
 	}
 
 	/* A thumb's 44px on a phone. Reset is a real 44px box, which reads as
