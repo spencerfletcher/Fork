@@ -459,6 +459,7 @@ Spencer re-phased these after reviewing the full post-MVP backlog. They override
 | Text-button hover: whether word-buttons underline on hover (off for now; colour change only) | Unlisted | **P1 design backlog** |
 | Journal icon: the side-view book is a placeholder; refine with the fork icon work | Unlisted | **P1 design backlog** |
 | Dropdown panel background: the lifted white reads out of place against paper; revisit the colour | Unlisted | **P1 design backlog** |
+| Hover colours: revisit Clay Deep (#6e2500, kept for now) and the hover palette as a whole | Unlisted | **P1 design backlog** |
 | Ingredient search scaling: the title index is ORed with a scan over every version's ingredients, so each search reads the whole table (schema review, 10 Nov 2026). Move ingredient text into an indexed column when recipe count grows | Unlisted | **P2**, with global search |
 
 Settled later the same evening:
