@@ -891,7 +891,7 @@
 	   screen reader hears it as part of the name. */
 	.field-required {
 		font-family: var(--font-sans);
-		font-size: 0.8125rem;
+		font-size: 0.75rem;
 		color: var(--color-text-3);
 		font-weight: 400;
 		letter-spacing: 0;

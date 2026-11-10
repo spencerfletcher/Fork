@@ -462,7 +462,7 @@
 	.mark {
 		font-family: var(--font-serif);
 		font-weight: 700;
-		font-size: 1.2em;
+		font-size: 1.05em;
 		line-height: 1;
 	}
 
