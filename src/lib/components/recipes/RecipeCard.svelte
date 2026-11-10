@@ -374,8 +374,10 @@
 		z-index: 2;
 	}
 
-	/* A 24px hit at desktop without moving the text (decided 29 October 2026). */
+	/* A 24px hit at desktop without moving the text (decided 29 October 2026);
+	   a block, as the flex item it was, so the padding counts. */
 	.meta-author :global(.username) {
+		display: block;
 		padding-block: 3px;
 		margin-block: -3px;
 	}
