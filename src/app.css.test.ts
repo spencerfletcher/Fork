@@ -132,12 +132,12 @@ describe('app.css shared utilities', () => {
 		css.match(new RegExp(`\\n\\s*${selector}\\s*\\{([^}]*)\\}`))![1];
 	const phone = css.slice(css.indexOf('@media (max-width: 699px), (pointer: coarse)'));
 
-	test('a text button is clay at 24px, a thumb on a phone, and its hover deepens and underlines', () => {
+	test('a text button is clay at 24px, a thumb on a phone, and its hover deepens, no underline', () => {
 		expect(body('\\.text-btn')).toMatch(/color:\s*var\(--color-accent\)/);
 		expect(body('\\.text-btn')).toMatch(/min-height:\s*24px/);
 		expect(phone).toMatch(/\.text-btn \{\s*min-height: 44px/);
 		expect(body('\\.text-btn:hover')).toMatch(/color:\s*var\(--color-accent-hover\)/);
-		expect(body('\\.text-btn:hover')).toMatch(/text-decoration:\s*underline/);
+		expect(body('\\.text-btn:hover')).not.toMatch(/text-decoration/);
 		expect(body('\\.text-btn--ink:hover')).toMatch(/color:\s*var\(--color-accent\)/);
 	});
 

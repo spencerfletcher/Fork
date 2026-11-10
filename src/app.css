@@ -480,7 +480,7 @@
 
 	/* A button that reads as a word: clay 600 in the line's face, no box.
 	   A 24px hit at desktop and a thumb's 44px on a phone or touch screen.
-	   Hover deepens to clay deep and underlines, so it is seen. */
+	   Hover deepens to clay deep; the colour change alone. */
 	.text-btn {
 		display: inline-flex;
 		align-items: center;
@@ -500,8 +500,6 @@
 
 	.text-btn:hover {
 		color: var(--color-accent-hover);
-		text-decoration: underline;
-		text-underline-offset: 3px;
 	}
 
 	/* Ink at rest, clay on hover: a text button among clay links. */
