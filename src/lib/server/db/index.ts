@@ -16,7 +16,7 @@ const cache = globalThis as typeof globalThis & { forkDbClient?: Client };
 function connect(): Client {
 	// Idle connections close after 20s, so a quiet dev server holds none.
 	const created = postgres(DATABASE_URL, {
-		max: DB_POOL_MAX ?? (dev ? 5 : 10),
+		max: DB_POOL_MAX ?? 10,
 		idle_timeout: 20
 	});
 	// On shutdown, let running queries finish (up to 5s), then hand the
