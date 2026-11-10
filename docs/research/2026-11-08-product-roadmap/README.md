@@ -461,6 +461,7 @@ Spencer re-phased these after reviewing the full post-MVP backlog. They override
 | Dropdown panel background: the lifted white reads out of place against paper; revisit the colour | Unlisted | **P1 design backlog** |
 | Hover colours: revisit Clay Deep (#6e2500, kept for now) and the hover palette as a whole | Unlisted | **P1 design backlog** |
 | Ingredient search scaling: the title index is ORed with a scan over every version's ingredients, so each search reads the whole table (schema review, 10 Nov 2026). Move ingredient text into an indexed column when recipe count grows | Unlisted | **P2**, with global search |
+| Search in place: tapping search opens a search field on the current page instead of navigating to /search; decide phone-only or phone and desktop | Unlisted | **P2**, with global search |
 
 Settled later the same evening:
 
