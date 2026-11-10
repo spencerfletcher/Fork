@@ -122,7 +122,7 @@ export const actions: Actions = {
 	},
 
 	fork: async ({ params, locals: { user } }) => {
-		if (!user) throw error(401, 'Login required to fork a recipe');
+		if (!user) return failure(401, 'unauthenticated', SESSION_ENDED('try again'));
 
 		const source = await viewableRecipe(params.slug, user, {
 			versions: { orderBy: [desc(recipeVersions.versionNumber)], limit: 1 },

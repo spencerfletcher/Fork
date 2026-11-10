@@ -4,6 +4,7 @@
 	import { moreIcon } from '#lib/components/Icons.svelte';
 	import Dropdown from '#lib/components/ui/Dropdown.svelte';
 	import { BLOCK_SENTENCE } from '#lib/journal.js';
+	import { pendingEnhance } from '#lib/pendingEnhance.svelte.js';
 	import type { ReportTarget } from '#lib/server/db/schema.js';
 
 	// The ⋯ overlay: Mute, Unfriend, Report, Block for a friend's feed item.
@@ -37,6 +38,11 @@
 	}
 
 	const target = $derived(report ?? { type: 'user' as const, id: userId });
+
+	// A refusal (a lapsed session) is shown in the panel, where the press was.
+	const acting = pendingEnhance({ keepFailure: true });
+	const reporting = pendingEnhance({ keepFailure: true, done: () => (step = 'reported') });
+	const refusal = $derived(acting.error ?? reporting.error);
 </script>
 
 <Dropdown onopen={() => (step = 'menu')}>
@@ -46,16 +52,22 @@
 		</button>
 	{/snippet}
 	{#snippet panel()}
-		<div class="menu-panel panel" role={step === 'menu' ? 'menu' : undefined} bind:this={panelEl}>
+		<div
+			class="menu-panel panel"
+			role={step === 'menu' && !refusal ? 'menu' : undefined}
+			bind:this={panelEl}>
+			{#if refusal}
+				<p class="form-error" role="alert">{refusal}</p>
+			{/if}
 			{#if step === 'menu'}
 				{#if items.includes('mute')}
-					<form method="POST" action="/friends?/mute" role="none" use:enhance>
+					<form method="POST" action="/friends?/mute" role="none" use:enhance={acting.submit}>
 						<input type="hidden" name="userId" value={userId} />
 						<button type="submit" class="menu-row" role="menuitem">Mute @{username}</button>
 					</form>
 				{/if}
 				{#if items.includes('unfriend')}
-					<form method="POST" action="/friends?/unfriend" role="none" use:enhance>
+					<form method="POST" action="/friends?/unfriend" role="none" use:enhance={acting.submit}>
 						<input type="hidden" name="userId" value={userId} />
 						<button type="submit" class="menu-row" role="menuitem">Unfriend</button>
 					</form>
@@ -71,15 +83,7 @@
 					</button>
 				{/if}
 			{:else if step === 'report'}
-				<form
-					method="POST"
-					action="/friends?/report"
-					class="step"
-					use:enhance={() =>
-						async ({ result, update }) => {
-							if (result.type === 'success') step = 'reported';
-							else await update();
-						}}>
+				<form method="POST" action="/friends?/report" class="step" use:enhance={reporting.submit}>
 					<input type="hidden" name="targetType" value={target.type} />
 					<input type="hidden" name="targetId" value={target.id} />
 					<label for="reason-{target.type}-{target.id}">What's wrong?</label>
@@ -95,7 +99,7 @@
 			{:else if step === 'reported'}
 				<p class="step" role="status">Reported. Thanks; someone will read it.</p>
 			{:else}
-				<form method="POST" action="/friends?/block" class="step" use:enhance>
+				<form method="POST" action="/friends?/block" class="step" use:enhance={acting.submit}>
 					<input type="hidden" name="userId" value={userId} />
 					<p>{BLOCK_SENTENCE}</p>
 					<button type="submit" class="btn-ghost danger">Block @{username}</button>

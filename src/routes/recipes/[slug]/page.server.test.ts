@@ -125,9 +125,13 @@ const SOURCE_RECIPE = {
 describe('fork', () => {
 	beforeEach(() => vi.clearAllMocks());
 
-	test('throws 401 when not logged in', async () => {
+	test('signed out is a 401 form failure saying the session ended', async () => {
 		const result = await invoke(actions.fork as never, makeEvent({ user: null }));
-		expect(result.status).toBe(401);
+		expect(result).toMatchObject({
+			status: 401,
+			data: { error: SESSION_ENDED('try again'), code: 'unauthenticated' }
+		});
+		expect(findRecipeMock).not.toHaveBeenCalled();
 	});
 
 	test('throws 404 when source recipe does not exist', async () => {

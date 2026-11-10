@@ -1,4 +1,3 @@
-import { error } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
 import { db } from '#lib/server/db/index.js';
 import { profiles, REPORT_TARGETS } from '#lib/server/db/schema.js';
@@ -37,7 +36,11 @@ const invalid = (error: string) => failure(400, 'invalid', error);
  * must exist and not be the viewer; or the failure to return.
  */
 async function pair(request: Request, user: App.Locals['user']) {
-	if (!user) throw error(401, 'Login required');
+	if (!user)
+		return {
+			ok: false as const,
+			failure: failure(401, 'unauthenticated', SESSION_ENDED('try again'))
+		};
 	const formData = await request.formData();
 	const otherId = text(formData, 'userId');
 	if (!otherId || otherId === user.id)
@@ -105,7 +108,7 @@ export const actions: Actions = {
 	},
 
 	report: async ({ request, locals: { user } }) => {
-		if (!user) throw error(401, 'Login required');
+		if (!user) return failure(401, 'unauthenticated', SESSION_ENDED('try again'));
 		const formData = await request.formData();
 		const targetType = oneOf(REPORT_TARGETS, text(formData, 'targetType'));
 		const targetId = text(formData, 'targetId').trim();

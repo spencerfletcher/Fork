@@ -5,7 +5,7 @@
 	// Deleting an entry, asked twice in place, as Delete recipe is.
 	let { dish }: { dish: string } = $props();
 
-	const deletion = pendingEnhance({ keepOnError: true });
+	const deletion = pendingEnhance({ keepOnError: true, keepFailure: true });
 </script>
 
 <ConfirmStep

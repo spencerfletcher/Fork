@@ -6,9 +6,9 @@
 	import { dayLabel } from '#lib/journal.js';
 	import EmptyPanel from '#lib/components/ui/EmptyPanel.svelte';
 	import FeedEntry from './FeedEntry.svelte';
-	import type { PageData } from './$types';
+	import type { ActionData, PageData } from './$types';
 
-	let { data }: { data: PageData } = $props();
+	let { data, form }: { data: PageData; form?: ActionData } = $props();
 
 	const inviteLink = $derived(
 		data.profile ? `${page.url.origin}/users/${data.profile.username}` : page.url.origin
@@ -77,6 +77,10 @@
 			<h1>Friends</h1>
 			{#if data.feed.length > 0}<p class="page-sub">Newest first</p>{/if}
 		</div>
+		<!-- Accept and Decline post here; the ⋯ menu shows its own refusals. -->
+		{#if form && 'error' in form}
+			<p class="form-error" role="alert">{form.error}</p>
+		{/if}
 
 		{#if data.feed.length === 0}
 			<!-- A waiting request is the fastest way out of empty, so it comes first. -->

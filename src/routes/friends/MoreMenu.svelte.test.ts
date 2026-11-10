@@ -1,9 +1,18 @@
 import { describe, test, expect, vi } from 'vitest';
 import { render, screen, fireEvent, within } from '@testing-library/svelte';
+import { tick } from 'svelte';
+import type { SubmitFunction } from '$app/forms';
 import source from './MoreMenu.svelte?raw';
 import MoreMenu from './MoreMenu.svelte';
 
-vi.mock('$app/forms', () => ({ enhance: () => ({ destroy: () => {} }) }));
+// Each form's enhance callback is kept by its action, so a test can play back a result.
+const { submits } = vi.hoisted(() => ({ submits: new Map<string, SubmitFunction>() }));
+vi.mock('$app/forms', () => ({
+	enhance: (form: HTMLFormElement, submit: SubmitFunction) => {
+		submits.set(form.getAttribute('action')!, submit);
+		return { destroy: () => {} };
+	}
+}));
 vi.mock('$app/navigation', () => ({ afterNavigate: () => {} }));
 
 // jsdom lays nothing out, so the offset is read from the source: the panel's
@@ -54,5 +63,24 @@ describe('MoreMenu', () => {
 		await fireEvent.click(screen.getByRole('menuitem', { name: 'Block' }));
 		expect(screen.queryByRole('menu')).toBeNull();
 		expect(screen.getByRole('button', { name: 'Block @devcooks' })).toHaveFocus();
+	});
+
+	test('a signed-out Mute says the session ended, in the panel', async () => {
+		render(MoreMenu, {
+			props: { userId: 'u1', username: 'devcooks', label: 'More for @devcooks' }
+		});
+		await fireEvent.click(screen.getByRole('button', { name: 'More for @devcooks' }));
+		const words = 'Your session ended. Log in in another tab, then try again.';
+		const after = await (
+			submits.get('/friends?/mute') as unknown as () => Promise<
+				(opts: { result: unknown; update: () => Promise<void> }) => Promise<void>
+			>
+		)();
+		await after({
+			result: { type: 'failure', status: 401, data: { error: words } },
+			update: async () => {}
+		});
+		await tick();
+		expect(screen.getByRole('alert')).toHaveTextContent(words);
 	});
 });
