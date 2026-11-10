@@ -113,16 +113,12 @@
 		width: 100%;
 		min-height: 44px;
 		padding: 0 12px;
-		border: 0;
 		border-radius: var(--radius-sm);
-		background: none;
 		font-family: var(--font-sans);
 		font-size: 0.9375rem;
 		font-weight: 600;
 		color: var(--color-text);
 		text-align: left;
-		text-decoration: none;
-		cursor: pointer;
 	}
 
 	.dropdown :global(.menu-row:hover) {

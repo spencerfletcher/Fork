@@ -117,11 +117,8 @@
 		width: 44px;
 		height: 44px;
 		margin: -10px -12px -10px 0;
-		border: 0;
 		border-radius: var(--radius-sm);
-		background: none;
 		color: var(--color-text-2);
-		cursor: pointer;
 	}
 
 	.more-button:hover,

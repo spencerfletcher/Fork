@@ -158,7 +158,6 @@
 		flex: 1 1 0;
 		min-width: 0;
 		color: inherit;
-		text-decoration: none;
 	}
 
 	.version-link:hover .message {
@@ -212,7 +211,6 @@
 	.version-bar a,
 	.versions-toggle {
 		color: var(--color-accent);
-		text-decoration: none;
 	}
 
 	/* Open, the toggle reads ink; a hover, open or shut, deepens to clay. */
@@ -230,11 +228,6 @@
 		display: inline-flex;
 		align-items: center;
 		gap: 4px;
-		padding: 0;
-		border: none;
-		background: none;
-		font: inherit;
-		cursor: pointer;
 		position: relative;
 	}
 

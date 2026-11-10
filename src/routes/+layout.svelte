@@ -90,7 +90,6 @@
 		font-family: var(--font-sans);
 		font-size: 0.9375rem;
 		font-weight: 600;
-		text-decoration: none;
 		transform: translateY(-200%);
 	}
 

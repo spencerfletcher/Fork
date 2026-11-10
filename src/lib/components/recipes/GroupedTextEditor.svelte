@@ -440,12 +440,9 @@
 		line-height: 1.2;
 		font-weight: 600;
 		color: var(--color-text);
-		background: none;
-		border: 0;
 		padding: 4px 6px;
 		margin: -4px -6px;
 		border-radius: var(--radius-sm);
-		cursor: pointer;
 		transition: background 0.15s ease;
 	}
 
@@ -477,7 +474,6 @@
 		position: relative;
 		display: block;
 		width: 100%;
-		box-sizing: border-box;
 		background: var(--color-surface);
 		border: 1px solid var(--color-input-border);
 		border-radius: var(--radius-md);

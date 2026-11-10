@@ -35,7 +35,6 @@
 		max-width: 100%;
 		min-height: 24px;
 		font-size: 0.9375rem;
-		text-decoration: none;
 	}
 
 	/* `.handle` is app.css's; the hover is the link's, avatar included. */

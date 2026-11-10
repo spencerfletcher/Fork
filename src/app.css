@@ -391,7 +391,6 @@
 		font-size: 0.9375rem;
 		padding: 9px 12px;
 		width: 100%;
-		box-sizing: border-box;
 	}
 
 	/* Grows with its content; `rows` is the floor where field-sizing is unsupported. */
@@ -502,15 +501,11 @@
 		align-items: center;
 		gap: 6px;
 		min-height: 24px;
-		padding: 0;
-		border: 0;
-		background: none;
-		font: inherit;
 		font-weight: 600;
 		letter-spacing: normal;
 		text-transform: none;
 		color: var(--color-accent);
-		text-decoration: none;
+		/* For a label wearing it (a photo field's Choose); a button has it already. */
 		cursor: pointer;
 	}
 
@@ -672,14 +667,10 @@
 	.tag-tabs button {
 		flex-shrink: 0;
 		padding: 0 0 4px;
-		border: 0;
 		border-bottom: 2px solid transparent;
-		background: none;
 		font-family: var(--font-sans);
 		font-size: 0.875rem;
 		color: var(--color-text-2);
-		text-decoration: none;
-		cursor: pointer;
 	}
 
 	.tag-tabs a:hover,
@@ -818,7 +809,6 @@
 		font-size: 0.75rem;
 		font-weight: 500;
 		color: var(--color-tag);
-		background: transparent;
 		border: 1px solid var(--color-tag-border);
 		border-radius: var(--radius-pill);
 		padding: 2px 9px; /* 1px less than before to absorb the new border */
@@ -953,11 +943,6 @@
 		border-top: 1px dotted var(--color-input-border);
 	}
 
-	.field-tags {
-		border: none;
-		padding: 0;
-	}
-
 	.field-legend {
 		margin-bottom: var(--space-2);
 	}
@@ -1064,7 +1049,6 @@
 		font-size: 0.875rem;
 		line-height: calc(1.25 / 0.875);
 		color: var(--color-text-3);
-		cursor: pointer;
 	}
 
 	@media (hover: hover) {

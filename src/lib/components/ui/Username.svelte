@@ -35,7 +35,6 @@
 		font-family: var(--font-mono);
 		font-size: 0.9375em;
 		color: var(--color-accent);
-		text-decoration: none;
 		transition: color 0.15s ease;
 	}
 

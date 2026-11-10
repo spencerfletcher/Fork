@@ -230,12 +230,8 @@
 		/* The 16px glyph box, so the focus ring stays pill-sized. */
 		width: 16px;
 		height: 16px;
-		padding: 0;
-		border: none;
-		background: transparent;
 		font-size: 1rem;
 		line-height: 1;
-		cursor: pointer;
 		color: var(--color-text-3);
 		transition: color 0.15s ease;
 	}
@@ -277,7 +273,6 @@
 		padding: 0 0 0.25rem;
 		max-height: 240px;
 		overflow-y: auto;
-		list-style: none;
 		border: 1px solid var(--color-input-border);
 		border-top: 0;
 		border-radius: 0 0 var(--radius-lg) var(--radius-lg);

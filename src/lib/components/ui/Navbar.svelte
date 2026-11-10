@@ -113,7 +113,6 @@
 		font-size: 1.375rem;
 		font-weight: 600;
 		letter-spacing: -0.01em;
-		text-decoration: none;
 		color: var(--color-text-cream);
 	}
 
@@ -135,7 +134,6 @@
 		font-size: 0.875rem;
 		font-weight: 600;
 		white-space: nowrap;
-		text-decoration: none;
 		transition: background 0.15s ease;
 	}
 
@@ -156,10 +154,7 @@
 		justify-content: center;
 		width: 44px;
 		height: 44px;
-		padding: 0;
-		border: none;
 		border-radius: var(--radius-sm);
-		background: transparent;
 		color: var(--color-text-tan);
 		transition: color 0.15s ease;
 	}
@@ -181,10 +176,6 @@
 		font-weight: 600;
 		letter-spacing: 0.05em;
 		color: var(--color-text-tan);
-		text-decoration: none;
-		background: none;
-		border: none;
-		cursor: pointer;
 		/* A 24px hit on a 20px line without moving the text. */
 		padding: 4px 0;
 		margin: -4px 0;
@@ -222,11 +213,7 @@
 		height: 44px;
 		/* The disc, not the 44px box, sits at the bar's edge. */
 		margin-right: -6px;
-		padding: 0;
-		border: 0;
 		border-radius: 50%;
-		background: none;
-		cursor: pointer;
 	}
 
 	/* :global, because the disc is Avatar's. */
@@ -248,7 +235,6 @@
 
 	/* Current is cream against tan, which forced colours flatten to one colour;
 	   an underline (an outline on the icon and the avatar) keeps "you are here".
-	   Last, so it beats the base rules' text-decoration: none on source order.
 	   The outlines give way to the focus ring while focused. */
 	@media (forced-colors: active) {
 		.navbar-link[aria-current='page'] {

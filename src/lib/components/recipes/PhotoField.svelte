@@ -146,7 +146,6 @@
 
 	/* Clay tint, as a card with no photo; the transparent border keeps its box in forced colours. */
 	.photo-empty {
-		box-sizing: border-box;
 		background: var(--color-tint);
 		border: 1px solid transparent;
 		cursor: pointer;

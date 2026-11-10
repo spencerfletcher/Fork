@@ -50,8 +50,6 @@
 
 <style>
 	.choice-group {
-		border: 0;
-		padding: 0;
 		min-width: 0;
 		display: flex;
 		flex-direction: column;
@@ -60,7 +58,6 @@
 
 	.field-legend {
 		margin-bottom: 0;
-		padding: 0;
 	}
 
 	.choices {
