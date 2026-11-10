@@ -208,6 +208,14 @@ describe('Navbar layout', () => {
 		expect(container.querySelector('.navbar-links')!.parentElement).toHaveClass('shrink-0');
 	});
 
+	// iOS tints the status bar from fixed boxes at the top, so the bar reaches
+	// the screen's edge itself, and the pull-down strip is not fixed.
+	test('the bar runs up behind the status bar, and its overscroll strip is not fixed', () => {
+		expect(rule('nav')).toMatch(/padding-top:\s*env\(safe-area-inset-top\)/);
+		expect(rule('nav::before')).toMatch(/position:\s*absolute/);
+		expect(rule('nav::before')).toMatch(/bottom:\s*100%/);
+	});
+
 	test('the avatar is a 44px target', () => {
 		expect(rule('.nav-avatar-button')).toMatch(/width:\s*44px/);
 		expect(rule('.nav-avatar-button')).toMatch(/height:\s*44px/);
