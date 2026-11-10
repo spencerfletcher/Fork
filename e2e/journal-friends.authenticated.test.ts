@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './helpers';
 import { SEED_LOG } from '../src/lib/server/db/seedData';
 
 // Signed in as the seed user (spencerfletcher's place in fork_e2e), whose
@@ -26,7 +27,7 @@ test.describe('Journal', () => {
 	});
 
 	test('Add to Journal logs an improvised dish, and the entry can be deleted', async ({ page }) => {
-		await page.goto('/journal/new');
+		await gotoHydrated(page, '/journal/new');
 		await page.getByLabel(/Dish/).fill('E2E leftover fried rice');
 		await expect(page.getByLabel(/Date/)).not.toHaveValue('');
 		await expect(page.getByRole('radio', { name: 'Friends' })).toBeChecked(); // the remembered choice
@@ -45,7 +46,7 @@ test.describe('Journal', () => {
 	});
 
 	test('a missing dish is refused in words, and what was typed stays', async ({ page }) => {
-		await page.goto('/journal/new');
+		await gotoHydrated(page, '/journal/new');
 		await page.getByLabel(/Caption/).fill('Kept after the refusal');
 		// The browser's own required check is bypassed, so the server's message shows.
 		await page.locator('form.entry-form').evaluate((form) => form.setAttribute('novalidate', ''));
@@ -101,7 +102,7 @@ test.describe('Friends', () => {
 	});
 
 	test('Like toggles with its count and aria-pressed, and survives a reload', async ({ page }) => {
-		await page.goto('/friends');
+		await gotoHydrated(page, '/friends');
 		const entry = page.locator('article', {
 			has: page.getByRole('heading', { name: friendsFirst.dish })
 		});
@@ -126,7 +127,7 @@ test.describe('Friends', () => {
 	test('the waiting request from priyabakes is in Requests; ⋯ offers Block with its sentence', async ({
 		page
 	}) => {
-		await page.goto('/friends');
+		await gotoHydrated(page, '/friends');
 		await expect(page.getByRole('button', { name: 'Accept @priyabakes' })).toBeVisible();
 		const more = page.getByRole('button', { name: /^More for @devcooks/ }).first();
 		await more.click();
@@ -139,7 +140,7 @@ test.describe('Friends', () => {
 	});
 
 	test('the profile says where we stand', async ({ page }) => {
-		await page.goto('/users/devcooks');
+		await gotoHydrated(page, '/users/devcooks');
 		await expect(page.getByRole('button', { name: 'Friends ✓' })).toBeVisible();
 		await expect(page.getByRole('button', { name: /^More for/ })).toHaveCount(0);
 		const block = page.getByRole('button', { name: 'Block' });

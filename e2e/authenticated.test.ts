@@ -6,7 +6,7 @@
  */
 
 import { expect, test, type Page } from '@playwright/test';
-import { COOKIES_RE, gotoHydrated } from './helpers';
+import { cookiesLink, gotoHydrated } from './helpers';
 
 // ─── Home (logged in) ─────────────────────────────────────────────────────────
 
@@ -54,7 +54,7 @@ test.describe('Fork', () => {
 		// is hidden for owned recipes and visible for others.
 		// Since the seed user owns all seeded recipes, we verify the button is absent.
 		await page.goto('/');
-		await page.getByRole('link', { name: COOKIES_RE }).first().click();
+		await cookiesLink(page).click();
 		await page.waitForURL(/\/recipes\//);
 		// Owner should see Edit, not Fork
 		await expect(page.getByRole('link', { name: /edit recipe/i })).toBeVisible();
@@ -68,7 +68,7 @@ test.describe('Fork', () => {
 	}) => {
 		await page.setViewportSize({ width: 320, height: 900 });
 		await page.goto('/recipes');
-		await page.getByRole('link', { name: COOKIES_RE }).first().click();
+		await cookiesLink(page).click();
 		await page.waitForURL(/\/recipes\//);
 		const hero = page.locator('.hero');
 		await expect(hero.getByRole('link', { name: 'Edit recipe' })).toBeVisible();
@@ -236,7 +236,7 @@ test.describe('New recipe page', () => {
 test.describe('Edit recipe page', () => {
 	test('is accessible for a recipe the user owns', async ({ page }) => {
 		await page.goto('/');
-		await page.getByRole('link', { name: COOKIES_RE }).first().click();
+		await cookiesLink(page).click();
 		await page.waitForURL(/\/recipes\//);
 		await page.getByRole('link', { name: /edit recipe/i }).click();
 		await page.waitForURL(/\/edit/);

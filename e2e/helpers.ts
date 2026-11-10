@@ -14,12 +14,32 @@ export const COOKIES_RE = new RegExp(COOKIES, 'i');
  */
 export async function gotoHydrated(page: Page, url: string) {
 	await page.goto(url);
-	await page.waitForLoadState('networkidle');
+	// Set by the root layout's onMount (src/routes/+layout.svelte).
+	await page.locator('html[data-hydrated]').waitFor({ state: 'attached' });
 }
 
-/** Slugs carry a random suffix, so reach the cookies by name from Discover, not by URL. */
+/**
+ * The cookies' own link on Discover or the home page. Recent changes also names
+ * the recipe but links its diff, and which comes first depends on what the
+ * parallel tests have just saved.
+ */
+export const cookiesLink = (page: Page) =>
+	page.getByRole('link', { name: COOKIES_RE }).and(page.locator(':not([href*="/diff"])')).first();
+
+// Per worker: each worker process loads this module once.
+let cookiesHref: string | undefined;
+
+/** Slugs carry a random suffix per seed, so the cookies' path is read from Discover, once per worker. */
+export async function cookiesPath(page: Page) {
+	if (!cookiesHref) {
+		await page.goto('/discover');
+		const href = await cookiesLink(page).getAttribute('href');
+		if (!href || !/^\/recipes\/[^/?#]+$/.test(href)) throw new Error(`Cookies link is ${href}`);
+		cookiesHref = href;
+	}
+	return cookiesHref;
+}
+
 export async function openCookies(page: Page) {
-	await page.goto('/discover');
-	await page.getByRole('link', { name: COOKIES_RE }).first().click();
-	await page.waitForURL(/\/recipes\//);
+	await gotoHydrated(page, await cookiesPath(page));
 }
