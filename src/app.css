@@ -801,7 +801,7 @@
 		gap: 40px 32px;
 	}
 
-	@media (min-width: 600px) {
+	@media (min-width: 700px) {
 		.cookbook-grid,
 		.discover-grid {
 			grid-template-columns: repeat(2, minmax(0, 1fr));

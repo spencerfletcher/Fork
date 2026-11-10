@@ -352,15 +352,8 @@
 			display: none;
 		}
 
-		/* Cookbook and Discover are two wide from 600, so they keep the list's size. */
-		.recipe-card--roomy .card-title,
-		.recipe-card--roomy .card-panel-title {
-			font-size: 1.0625rem;
-		}
-	}
-
-	/* One column: the photo is full width, so the title steps up with it. */
-	@media (max-width: 599px) {
+		/* Cookbook and Discover are one column here: the photo is full width,
+		   so the title steps up with it. */
 		.recipe-card--roomy .card-title,
 		.recipe-card--roomy .card-panel-title {
 			font-size: 1.1875rem;

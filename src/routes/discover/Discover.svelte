@@ -221,7 +221,7 @@
 		list-style: none;
 	}
 
-	@media (min-width: 600px) {
+	@media (min-width: 700px) {
 		.recent-row {
 			grid-template-columns: repeat(3, minmax(0, 1fr));
 			gap: 16px;
