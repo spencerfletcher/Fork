@@ -87,13 +87,10 @@ test.describe('Recipe detail page', () => {
 	});
 
 	test('viewing a specific version says so in the bar, with the way back', async ({ page }) => {
-		await page.goto('/discover');
-		await page.getByRole('link', { name: COOKIES_RE }).first().click();
-		await page.waitForURL(/\/recipes\//);
+		await openCookies(page);
 		// Append ?version=2 to the current recipe URL
 		const recipeUrl = page.url().split('?')[0];
-		await page.goto(`${recipeUrl}?version=2`);
-		await page.waitForLoadState('networkidle');
+		await gotoHydrated(page, `${recipeUrl}?version=2`);
 		// The bar reads "v2 <message>", then "Back to v3 · 3 versions" at the
 		// right; there is no "Older version" label (the chip's spoken text and
 		// "Back to v3" say it; Spencer, 29 October 2026).
@@ -116,9 +113,7 @@ test.describe('Recipe detail page', () => {
 	});
 
 	test('Compare link on v2 navigates to diff page', async ({ page }) => {
-		await page.goto('/discover');
-		await page.getByRole('link', { name: COOKIES_RE }).first().click();
-		await expect(page).toHaveURL(/\/recipes\//);
+		await openCookies(page);
 		await openCompare(page);
 		await expect(page.locator('h1')).toContainText(/compare/i);
 	});
