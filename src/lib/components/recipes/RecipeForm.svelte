@@ -284,7 +284,7 @@
 			<div class="form-col">
 				<div class="field">
 					<label for="title">
-						Title <span class="field-required">Required</span>
+						Title <span class="field-required" aria-hidden="true">Required</span>
 					</label>
 					<!-- A textarea so a long title wraps on a phone; still one line of text:
 					     Enter types nothing and a pasted newline becomes a space. -->

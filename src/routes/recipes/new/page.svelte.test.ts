@@ -49,10 +49,10 @@ describe('New recipe page labels', () => {
 	test('every required field says Required in its label, heard once; optional fields carry no mark', () => {
 		render(NewPage, { props: { data, form: null } });
 		for (const name of ['Title', 'Ingredients', 'Method']) {
-			const box = screen.getByRole('textbox', { name: `${name} Required` });
+			const box = screen.getByRole('textbox', { name });
 			const mark = document.querySelector(`label[for="${box.id}"] .field-required`);
 			expect(mark, name).toHaveTextContent('Required');
-			expect(mark, name).not.toHaveAttribute('aria-hidden');
+			expect(mark, name).toHaveAttribute('aria-hidden', 'true');
 			expect(box).toBeRequired();
 		}
 		expect(screen.getByRole('textbox', { name: 'Makes' })).not.toBeRequired();
@@ -134,8 +134,8 @@ describe('New recipe page validation errors', () => {
 		render(NewPage, { props: { data, form: null } });
 		for (const field of [
 			screen.getByLabelText(/^title/i),
-			screen.getByRole('textbox', { name: 'Ingredients Required' }),
-			screen.getByRole('textbox', { name: 'Method Required' })
+			screen.getByRole('textbox', { name: 'Ingredients' }),
+			screen.getByRole('textbox', { name: 'Method' })
 		]) {
 			await fireEvent.focusIn(field);
 			await fireEvent.focusOut(field);
@@ -160,8 +160,8 @@ describe('New recipe page validation errors', () => {
 
 	test('ingredients and steps are required fields that report it under the box', async () => {
 		render(NewPage, { props: { data, form: null } });
-		const ingredients = screen.getByRole('textbox', { name: 'Ingredients Required' });
-		const steps = screen.getByRole('textbox', { name: 'Method Required' });
+		const ingredients = screen.getByRole('textbox', { name: 'Ingredients' });
+		const steps = screen.getByRole('textbox', { name: 'Method' });
 		expect(ingredients).toBeRequired();
 		expect(steps).toBeRequired();
 		for (const box of [ingredients, steps]) {
@@ -213,7 +213,7 @@ describe('New recipe page editor state', () => {
 		expect(screen.getByRole('button', { name: 'Saving…' })).toBeDisabled();
 		expect(screen.getByLabelText(/title/i)).toBeDisabled();
 		// The live boxes are no form controls, so the fieldset cannot disable them.
-		const method = screen.getByRole('textbox', { name: 'Method Required' });
+		const method = screen.getByRole('textbox', { name: 'Method' });
 		expect(method).toHaveAttribute('contenteditable', 'false');
 		await finish({ result: { type: 'failure' }, update: async () => {} });
 		await tick();

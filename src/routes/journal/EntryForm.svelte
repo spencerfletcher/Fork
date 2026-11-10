@@ -140,7 +140,7 @@
 
 	<div class="field">
 		<label for="dish">
-			Dish <span class="field-required">Required</span>
+			Dish <span class="field-required" aria-hidden="true">Required</span>
 		</label>
 		<input id="dish" name="dish" type="text" required maxlength="200" value={values.dish} />
 	</div>
@@ -148,7 +148,7 @@
 	<div class="two-up">
 		<div class="field">
 			<label for="cookedOn">
-				Date <span class="field-required">Required</span>
+				Date <span class="field-required" aria-hidden="true">Required</span>
 			</label>
 			<input id="cookedOn" name="cookedOn" type="date" required bind:value={cookedOn} />
 		</div>

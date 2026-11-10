@@ -5,7 +5,7 @@ import { MAX_FIELD, MAX_LINE } from '#lib/recipes/limits.js';
 
 // The live box a person types in, and the textarea behind it that submits.
 function box() {
-	return screen.getByRole('textbox', { name: 'Ingredients Required' });
+	return screen.getByRole('textbox', { name: 'Ingredients' });
 }
 
 function field() {
