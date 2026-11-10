@@ -18,19 +18,28 @@ export async function gotoHydrated(page: Page, url: string) {
 	await page.locator('html[data-hydrated]').waitFor({ state: 'attached' });
 }
 
-// Per worker: each worker process loads this module once.
-let cookiesPath: string | undefined;
-
 /**
- * Slugs carry a random suffix per seed, so the cookies' URL is read from
- * Discover's link, once per worker, and each later call loads it directly.
+ * The cookies' own link on Discover or the home page. Recent changes also names
+ * the recipe but links its diff, and which comes first depends on what the
+ * parallel tests have just saved.
  */
-export async function openCookies(page: Page) {
-	if (!cookiesPath) {
+export const cookiesLink = (page: Page) =>
+	page.getByRole('link', { name: COOKIES_RE }).and(page.locator(':not([href*="/diff"])')).first();
+
+// Per worker: each worker process loads this module once.
+let cookiesHref: string | undefined;
+
+/** Slugs carry a random suffix per seed, so the cookies' path is read from Discover, once per worker. */
+export async function cookiesPath(page: Page) {
+	if (!cookiesHref) {
 		await page.goto('/discover');
-		const href = await page.getByRole('link', { name: COOKIES_RE }).first().getAttribute('href');
-		if (!href?.startsWith('/recipes/')) throw new Error(`Cookies link is ${href}`);
-		cookiesPath = href;
+		const href = await cookiesLink(page).getAttribute('href');
+		if (!href || !/^\/recipes\/[^/?#]+$/.test(href)) throw new Error(`Cookies link is ${href}`);
+		cookiesHref = href;
 	}
-	await gotoHydrated(page, cookiesPath);
+	return cookiesHref;
+}
+
+export async function openCookies(page: Page) {
+	await gotoHydrated(page, await cookiesPath(page));
 }

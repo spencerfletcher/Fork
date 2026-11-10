@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
-import { COOKIES_RE, gotoHydrated } from './helpers';
+import { cookiesPath, gotoHydrated } from './helpers';
 
 // Site-wide invariants, one sweep per rule. The file runs in both projects:
 // `chromium` (signed out) sweeps the public rows and `chromium-auth` (the seed
@@ -26,11 +26,6 @@ const goto =
 	(url: string): Open =>
 	(page) =>
 		gotoHydrated(page, url);
-
-async function cookiesPath(page: Page) {
-	await page.goto('/discover');
-	return (await page.getByRole('link', { name: COOKIES_RE }).first().getAttribute('href'))!;
-}
 
 const cookies =
 	(suffix: string): Open =>

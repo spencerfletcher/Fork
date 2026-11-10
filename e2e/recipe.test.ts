@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { SEED } from '../src/lib/server/db/seedData';
-import { COOKIES, COOKIES_RE, gotoHydrated, openCookies } from './helpers';
+import { COOKIES, COOKIES_RE, cookiesLink, gotoHydrated, openCookies } from './helpers';
 import { parseIngredientLine } from '../src/lib/recipes/ingredients';
 import { scaleIngredient } from '../src/lib/recipes/scale';
 
@@ -53,7 +53,7 @@ test.describe('Recipe detail page', () => {
 	}) => {
 		await page.goto('/discover');
 		// Click the stretched link (aria-label) rather than the h3 text node
-		await page.getByRole('link', { name: COOKIES_RE }).first().click();
+		await cookiesLink(page).click();
 		await expect(page).toHaveURL(/\/recipes\//);
 		// The bar under the hero names the version and its note; the other
 		// versions open from the "3 versions" toggle. Assert on rendered content,
