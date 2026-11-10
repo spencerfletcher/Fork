@@ -125,11 +125,16 @@
 			<nav class="section-tabs" aria-label="Recipe sections" data-pinned>
 				<button
 					type="button"
+					class="eyebrow-label"
 					aria-pressed={tab === 'ingredients'}
 					onclick={() => show('ingredients')}>
 					Ingredients
 				</button>
-				<button type="button" aria-pressed={tab === 'method'} onclick={() => show('method')}>
+				<button
+					type="button"
+					class="eyebrow-label"
+					aria-pressed={tab === 'method'}
+					onclick={() => show('method')}>
 					Method
 				</button>
 			</nav>
@@ -242,8 +247,6 @@
 	/* The aside must span the row's full height, or the sticky child has no
 	   room to move inside it and scrolls away with the page. */
 	aside {
-		grid-column: 1;
-		grid-row: 1;
 		align-self: stretch;
 	}
 
@@ -282,11 +285,6 @@
 		}
 	}
 
-	.main {
-		grid-column: 2;
-		grid-row: 1;
-	}
-
 	/* iPad and phone: one column, the band stacked (words, buttons, then the
 	   photo inset on the gutters), the tab bar pinned. */
 	@media (max-width: 1023px) {
@@ -319,23 +317,13 @@
 			border-bottom: 1px solid var(--color-border-2);
 		}
 
+		/* The eyebrow, a size up. */
 		.section-tabs button {
-			display: block;
 			min-height: 44px;
 			padding: 14px 0 12px;
 			margin-bottom: -1px;
-			border: 0;
 			border-bottom: 2px solid transparent;
-			background: none;
-			cursor: pointer;
-			font-family: var(--font-sans);
 			font-size: 0.8125rem;
-			font-weight: 600;
-			letter-spacing: 0.05em;
-			text-transform: uppercase;
-			text-align: center;
-			color: var(--color-text-3);
-			text-decoration: none;
 		}
 
 		.section-tabs button[aria-pressed='true'] {
@@ -376,12 +364,6 @@
 			overflow: hidden;
 			clip-path: inset(50%);
 			white-space: nowrap;
-		}
-
-		.main,
-		aside {
-			grid-column: 1;
-			grid-row: auto;
 		}
 
 		.sidebar-sticky {
