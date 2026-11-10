@@ -122,11 +122,12 @@
 		background: var(--color-tint);
 	}
 
-	/* The one overlay on the page, and so the one shadow. */
+	/* The one overlay on the page, and so the one shadow. Its top meets the
+	   button's bottom edge: the button's -10px top margin plus its 44px. */
 	.panel {
 		position: absolute;
 		right: -12px;
-		top: 40px;
+		top: 34px;
 		z-index: 6;
 		display: flex;
 		flex-direction: column;

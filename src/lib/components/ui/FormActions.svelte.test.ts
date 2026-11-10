@@ -35,6 +35,8 @@ describe('FormActions', () => {
 		expect(source).toMatch(/\.danger \{[^}]*margin-left: auto/);
 		const phone = source.slice(source.indexOf('@media (max-width: 699px)'));
 		expect(phone).toMatch(/\.danger \{[^}]*flex-basis: 100%[^}]*align-items: flex-end/);
+		// An open confirm step stays in the danger control's spot; no rule hands it the row.
+		expect(source).not.toMatch(/confirm-step/);
 	});
 
 	test('no danger, no slot', () => {
