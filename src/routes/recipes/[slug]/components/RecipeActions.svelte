@@ -223,10 +223,10 @@
 	{/if}
 
 	{#if cooking && noWakeLock}
-		<p class="note text-text-2 m-0 basis-full text-sm">Your screen may still sleep.</p>
+		<p class="note text-text-2 basis-full text-sm">Your screen may still sleep.</p>
 	{/if}
 	{#if error}
-		<p class="form-error m-0 basis-full" role="alert">{error}</p>
+		<p class="form-error basis-full" role="alert">{error}</p>
 	{/if}
 </div>
 

@@ -113,7 +113,7 @@
 		<!-- The other versions, newest first. The whole row, number and message,
 		     is the link to that version; the second link compares it with the
 		     one being read. -->
-		<ul id="version-history" class="history m-0 list-none p-0" hidden={!open}>
+		<ul id="version-history" class="history" hidden={!open}>
 			{#each versions.filter((v) => v.versionNumber !== n) as version (version.id)}
 				{@const v = version.versionNumber}
 				<li>

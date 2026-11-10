@@ -16,7 +16,7 @@
 
 <section id="method" class="mb-3 scroll-mt-14">
 	<h2 class="eyebrow-label border-border mb-3.5 border-b pb-2">Method</h2>
-	<ol class="m-0 flex list-none flex-col gap-[18px] p-0">
+	<ol class="flex flex-col gap-[18px]">
 		{#each steps as step, i (i)}
 			<!-- A native checkbox, visually hidden, carries the state and the keyboard
 			     behaviour; the label is the row and takes the struck-through look. No
@@ -53,12 +53,12 @@
 
 					<div class="flex flex-col gap-1.5">
 						<p
-							class="step-text text-text group-has-[:checked]:text-text-3 m-0 font-sans text-[1.0625rem] leading-[1.6] [overflow-wrap:anywhere] whitespace-pre-line">
+							class="step-text text-text group-has-[:checked]:text-text-3 font-sans text-[1.0625rem] leading-[1.6] [overflow-wrap:anywhere] whitespace-pre-line">
 							{step.text}
 						</p>
 						{#if step.annotation}
 							<p
-								class="group-has-[:checked]:text-text-3 m-0 font-sans text-[0.9375rem] leading-[1.5] italic {annotationColor[
+								class="group-has-[:checked]:text-text-3 font-sans text-[0.9375rem] leading-[1.5] italic {annotationColor[
 									step.annotation.type
 								]}">
 								{step.annotation.text}

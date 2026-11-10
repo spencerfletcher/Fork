@@ -102,7 +102,7 @@
 				</RecipeHeader>
 			</div>
 			{#if currentVersion.imageUrl}
-				<figure class="recipe-photo m-0">
+				<figure class="recipe-photo">
 					<!-- The one image above the fold: fetched first, decoded off the main
 				     thread. Decorative: the h1 beside it already names the recipe. -->
 					<img src={currentVersion.imageUrl} alt="" fetchpriority="high" decoding="async" />

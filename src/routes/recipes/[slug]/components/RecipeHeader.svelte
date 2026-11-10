@@ -66,12 +66,12 @@
      actions (the decided title band, 9 Nov 2026). The version and its note sit
      in the bar under the band. Nothing is boxed and nothing is pinned. -->
 <header class="recipe-header">
-	<h1 class="title m-0 font-serif font-medium [overflow-wrap:anywhere]">{currentVersion.title}</h1>
+	<h1 class="title font-serif font-medium [overflow-wrap:anywhere]">{currentVersion.title}</h1>
 
 	<!-- Who, and what it was forked from (the parent's title, not its author,
 	     who is one click away). One line; there is no separate attribution
 	     line. Decided 29 October 2026. -->
-	<p class="byline dot-list m-0 font-sans [overflow-wrap:anywhere]">
+	<p class="byline dot-list font-sans [overflow-wrap:anywhere]">
 		{#if recipe.author}<span>
 				By <Username username={recipe.author.username} class="hit-link" />
 			</span>{/if}
@@ -89,13 +89,13 @@
 	</p>
 
 	{#if currentVersion.description}
-		<p class="description m-0">{currentVersion.description}</p>
+		<p class="description">{currentVersion.description}</p>
 	{/if}
 
 	<Details content={currentVersion} {storedServings} />
 
 	{#if tags.length > 0}
-		<p class="tags text-text-2 m-0 font-sans">
+		<p class="tags text-text-2 font-sans">
 			{#each tags as tag, i (tag.id)}
 				{#if i > 0},&#32;{/if}
 				<a href="/tags/{tag.slug}" class="hit-link text-accent font-semibold">{tag.name}</a>
@@ -107,7 +107,7 @@
 	     each count an icon and its words, no dots; the icons separate. A count
 	     links only where there is something to open: the forks list, and the
 	     version bar, which exists from two versions up. -->
-	<p class="stats m-0 font-sans">
+	<p class="stats font-sans">
 		<span class="stat">
 			{@render forkIcon()}
 			{#if forkCount > 0}
@@ -133,7 +133,7 @@
 	<!-- The personal line: when the reader last logged this recipe. Logging it
 	     again is the Add to Journal pill in the action row. -->
 	{#if journal?.lastEntry && !cooking}
-		<p class="personal m-0 font-sans">
+		<p class="personal font-sans">
 			You cooked this on
 			<a class="hit-link" href="/journal#entry-{journal.lastEntry.id}">
 				{dayLabel(journal.lastEntry.cookedOn)}

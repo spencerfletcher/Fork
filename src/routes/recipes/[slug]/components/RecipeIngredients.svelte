@@ -73,7 +73,7 @@
 		<h2 class="eyebrow-label">Ingredients</h2>
 		{@render control?.()}
 	</div>
-	<div class="m-0 p-0">
+	<div>
 		{#each ingredients as typed, i (i)}
 			{@const { ingredient, grams: result } = scaleIngredient(typed, grams[i], factor)}
 			{@const { bold, after } = parts(ingredient)}
@@ -85,7 +85,7 @@
 			     above (14 at the top of the list). Ungrouped rows draw nothing. -->
 			{#if group !== undefined}
 				<h3
-					class="text-text m-0 mt-5 mb-0.5 font-serif text-[1.0625rem] leading-[1.25] font-medium first:mt-3.5">
+					class="text-text mt-5 mb-0.5 font-serif text-[1.0625rem] leading-[1.25] font-medium first:mt-3.5">
 					{group}
 				</h3>
 			{/if}

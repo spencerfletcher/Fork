@@ -24,7 +24,7 @@
 			<!-- One line, so the name is "Fork." with no space before the stop. -->
 			<!-- prettier-ignore -->
 			<a href="/" class="nav-brand">Fork<span class="text-marigold">.</span></a>
-			<ul class="navbar-links m-0 hidden list-none gap-6 p-0 md:flex">
+			<ul class="navbar-links hidden gap-6 md:flex">
 				{#each DESTINATIONS as destination (destination.href)}
 					<li>
 						<a
