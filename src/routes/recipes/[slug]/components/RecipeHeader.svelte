@@ -98,7 +98,7 @@
 		<p class="tags text-text-2 font-sans">
 			{#each tags as tag, i (tag.id)}
 				{#if i > 0},&#32;{/if}
-				<a href="/tags/{tag.slug}" class="hit-link text-accent font-semibold">{tag.name}</a>
+				<a href="/tags/{tag.slug}" class="hit-link font-semibold">{tag.name}</a>
 			{/each}
 		</p>
 	{/if}
@@ -147,7 +147,6 @@
 	.recipe-header {
 		display: flex;
 		flex-direction: column;
-		gap: 0;
 	}
 
 	/* Who and the forks: one line, 600, links clay. "By" and the forks are
@@ -199,19 +198,8 @@
 		overflow: hidden;
 	}
 
-	.byline :global(a),
-	.stats a {
-		color: var(--color-accent);
-		text-decoration: none;
-	}
-
 	.stats a {
 		font-weight: 600;
-	}
-
-	.byline :global(a:hover),
-	.stats a:hover {
-		color: var(--color-accent-hover);
 	}
 
 	.recipe-header :global(.details) {
@@ -222,15 +210,6 @@
 		margin-top: 8px;
 		font-size: 1rem;
 		line-height: 1.5;
-	}
-
-	/* Links like every other link on the site: clay, bold, clay deep on hover. */
-	.tags a {
-		text-decoration: none;
-	}
-
-	.tags a:hover {
-		color: var(--color-accent-hover);
 	}
 
 	/* Logged out the snippet renders nothing; an empty row must not take a gap. */
@@ -251,12 +230,6 @@
 	}
 
 	.personal a {
-		color: var(--color-accent);
 		font-weight: 600;
-		text-decoration: none;
-	}
-
-	.personal a:hover {
-		color: var(--color-accent-hover);
 	}
 </style>

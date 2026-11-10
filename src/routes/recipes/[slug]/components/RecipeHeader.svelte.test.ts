@@ -315,9 +315,10 @@ describe('RecipeHeader content', () => {
 		expect(dessert).not.toHaveClass('tag');
 		expect(dessert.parentElement).toHaveTextContent('Dessert, Baking');
 		// Taxonomy, not history: the body face below the measure; each tag a link
-		// like every other link on the site, clay and bold, the commas quiet.
+		// like every other link on the site, bold, its clay the global link rule's
+		// (app.css), the commas quiet.
 		expect(dessert.parentElement).toHaveClass('font-sans', 'text-text-2');
-		expect(dessert).toHaveClass('text-accent', 'font-semibold');
+		expect(dessert).toHaveClass('font-semibold');
 		const details = dessert.closest('header')!.querySelector('.details')!;
 		expect(
 			dessert.compareDocumentPosition(details) & Node.DOCUMENT_POSITION_PRECEDING
