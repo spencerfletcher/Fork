@@ -430,18 +430,15 @@
 @layer components {
 	/* ── Buttons ── */
 
-	.btn-primary {
-		font-family: var(--font-sans);
+	/* What the two buttons share: one box, one label. */
+	.btn-primary,
+	.btn-ghost {
 		font-weight: 600;
 		font-size: 0.9375rem;
-		background: var(--color-marigold);
 		color: var(--color-text);
-		/* Transparent, so it shows only under forced colours, where the fill
-		   goes and the border is all that keeps the button a box. */
-		border: 1px solid transparent;
+		border: 1px solid;
 		border-radius: var(--radius-md);
 		padding: 11px 16px;
-		cursor: pointer;
 		/* Darken on hover rather than fade. An opacity transition washes the button
 		   toward whatever is behind it, which reads as the control going inactive. */
 		transition: background 0.15s ease;
@@ -449,30 +446,24 @@
 		text-align: center;
 	}
 
+	.btn-primary {
+		background: var(--color-marigold);
+		/* Transparent, so it shows only under forced colours, where the fill
+		   goes and the border is all that keeps the button a box. */
+		border-color: transparent;
+	}
+
 	.btn-primary:hover {
 		background: var(--color-marigold-hover);
-		color: var(--color-text);
 	}
 
 	.btn-ghost {
-		font-family: var(--font-sans);
-		font-weight: 600;
-		font-size: 0.9375rem;
-		background: transparent;
-		color: var(--color-text);
-		border: 1px solid var(--color-text);
-		border-radius: var(--radius-md);
-		padding: 11px 16px;
-		cursor: pointer;
-		transition: background 0.15s ease;
-		display: inline-block;
-		text-align: center;
+		border-color: var(--color-text);
 	}
 
 	/* The band, paper one step deeper, so the hover is seen (decided 9 November 2026). */
 	.btn-ghost:hover {
 		background: var(--color-band);
-		color: var(--color-text);
 	}
 
 	/* Ghost turned danger: Diff Remove red outline and text, for the one
@@ -630,8 +621,6 @@
 		}
 	}
 
-	/* Both classes: .eyebrow-label is declared later in this layer and would
-	   otherwise reset the margin. */
 	/* Tag tabs: the tag pages link through them; Search, Discover and Cookbook
 	   toggle them through SearchFilters. One look for both. The row scrolls on a phone; the page
 	   never does. The padding/margin pair leaves room for the focus ring. */
@@ -725,7 +714,7 @@
 		}
 	}
 
-	.eyebrow-label.section-heading {
+	.section-heading {
 		padding-bottom: 8px;
 		margin-bottom: 14px;
 		border-bottom: 1px solid var(--color-border);
@@ -864,9 +853,10 @@
 		gap: var(--space-2);
 	}
 
-	/* Labels are eyebrows, the same voice as section headings. */
+	/* The eyebrow: labels and section headings in one voice (h4 is it too). */
 	.field label,
-	.field-legend {
+	.field-legend,
+	.eyebrow-label {
 		font-family: var(--font-sans);
 		font-size: 0.75rem;
 		font-weight: 600;
@@ -1186,8 +1176,6 @@
 		}
 	}
 
-	/* ── Eyebrow label ── */
-
 	/* A closing link in the arrow form ("All recipes →"): 24px tall at desktop
 	   from its own line, 44px on a phone by padding pulled back by margin, so
 	   the text does not move (decided 29 October 2026). An empty state's
@@ -1211,16 +1199,6 @@
 		padding: 2rem 0;
 		text-align: center;
 		color: var(--color-text-3);
-	}
-
-	.eyebrow-label {
-		font-family: var(--font-sans);
-		font-size: 0.75rem;
-		font-weight: 600;
-		letter-spacing: 0.05em;
-		text-transform: uppercase;
-		color: var(--color-text-3);
-		margin: 0;
 	}
 }
 
