@@ -80,7 +80,8 @@
 	.skip-link {
 		position: absolute;
 		left: var(--space-5);
-		top: 8px;
+		/* Below the status bar, inside the navbar, which starts under it. */
+		top: calc(8px + env(safe-area-inset-top));
 		z-index: 60;
 		min-height: 44px;
 		padding: 8px 16px;

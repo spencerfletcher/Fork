@@ -104,6 +104,28 @@
 </nav>
 
 <style>
+	/* The bar scrolls away with the page; it is never pinned. With
+	   viewport-fit=cover it starts at the screen's edge, so it runs up behind
+	   the status bar. The page itself stays paper: iOS Safari tints the status
+	   bar from html and body, and from fixed boxes at the top. */
+	nav {
+		padding-top: env(safe-area-inset-top);
+	}
+
+	/* A pull past the top shows what sits above the page. This strip, parked
+	   there and scrolling with the bar, makes the bar read as running upward.
+	   Absolute, not fixed, so it never tints the status bar. */
+	nav::before {
+		content: '';
+		position: absolute;
+		bottom: 100%;
+		left: 0;
+		right: 0;
+		height: 100vh;
+		background: var(--color-navbar-bg);
+		pointer-events: none;
+	}
+
 	.nav-brand {
 		display: inline-block;
 		/* 44px tall on a phone, where it is the only way home. */

@@ -3,7 +3,7 @@
 	import { page } from '$app/state';
 	import { on } from 'svelte/events';
 	import TagTabs from './TagTabs.svelte';
-	import { searchIcon } from '#lib/components/Icons.svelte';
+	import { friendsIcon, searchIcon } from '#lib/components/Icons.svelte';
 	import type { TagChip } from '#lib/recipes/types.js';
 
 	let {
@@ -67,11 +67,12 @@
 
 	let filters: HTMLDivElement;
 
-	// Clear all leaves the row with the press, so focus moves to the first tag.
+	// Clear all leaves the row with the press, so focus moves to the first tag
+	// (a tag's button carries its label; the friends filter's does not).
 	async function handleClear() {
 		selectedTags = [];
 		await applyFilters();
-		filters.querySelector<HTMLButtonElement>('.tag-tabs button')?.focus();
+		filters.querySelector<HTMLButtonElement>('.tag-tabs button[data-label]')?.focus();
 	}
 </script>
 
@@ -114,25 +115,33 @@
 			class="pl-10" />
 	</form>
 
-	{#if friendsOnly !== undefined}
-		<button
-			type="button"
-			class="friends-toggle"
-			aria-pressed={friends}
-			onclick={() => {
-				friends = !friends;
-				applyFilters();
-			}}>
-			Friends’ recipes
-		</button>
-	{/if}
-
+	<!-- The friends filter leads the tag row, so one row is the filter bar
+	     (Spencer, 11 November 2026). It is a tab in look, marked as the other
+	     kind, an audience, by its icon and the divider before the tags. -->
 	<TagTabs
 		tags={availableTags}
 		selected={selectedTags}
 		onToggle={handleTagToggle}
-		onClear={handleClear} />
+		onClear={handleClear}
+		leading={friendsOnly === undefined ? undefined : friendsFilter} />
 </div>
+
+{#snippet friendsFilter()}
+	<button
+		type="button"
+		class="friends-filter"
+		aria-pressed={friends}
+		onclick={() => {
+			friends = !friends;
+			applyFilters();
+		}}>
+		{@render friendsIcon(16)}
+		<span data-label="Friends’ recipes">Friends’ recipes</span>
+	</button>
+	{#if availableTags.length > 0}
+		<span class="filter-divider" aria-hidden="true"></span>
+	{/if}
+{/snippet}
 
 <style>
 	.search-filters {
@@ -154,28 +163,27 @@
 		cursor: pointer;
 	}
 
-	/* A toggle, so it reads as one: pressed takes the segmented filter's
-	   marigold tint and ring. Sized to its words, a 44px hit. */
-	.friends-toggle {
-		align-self: flex-start;
-		min-height: 44px;
-		padding: 0 14px;
-		border: 1px solid var(--color-border-2);
-		border-radius: var(--radius-md);
-		background: var(--color-surface);
-		font-size: 0.9375rem;
-		font-weight: 600;
-		color: var(--color-text-2);
+	/* A tag tab (app.css) with its icon before the words, on their line. */
+	.friends-filter {
+		display: inline-flex;
+		align-items: flex-end;
+		gap: 6px;
 	}
 
-	.friends-toggle:hover {
-		color: var(--color-text);
+	.friends-filter :global(.icon) {
+		flex-shrink: 0;
+		margin-bottom: 7px;
 	}
 
-	.friends-toggle[aria-pressed='true'] {
-		border-color: var(--color-marigold);
-		background: var(--color-marigold-tint);
-		color: var(--color-text);
+	/* A hairline between the audience filter and the tags, the height of the
+	   words, on their line. */
+	.filter-divider {
+		flex-shrink: 0;
+		align-self: flex-end;
+		width: 1px;
+		height: 16px;
+		margin-bottom: 8px;
+		background: var(--color-border-2);
 	}
 
 	@media (min-width: 1024px) {

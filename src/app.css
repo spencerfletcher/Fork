@@ -293,21 +293,6 @@
 		-webkit-font-smoothing: antialiased;
 	}
 
-	/* A phone pulled past the top shows the canvas above the page. Fixed boxes
-	   ride along with that rubber band, so this strip, parked one screen above
-	   the viewport, slides in and the bar reads as continuing upward. */
-	body::before {
-		content: '';
-		position: fixed;
-		top: -100vh;
-		left: 0;
-		right: 0;
-		height: 100vh;
-		background: var(--color-navbar-bg);
-		z-index: -1;
-		pointer-events: none;
-	}
-
 	/* Page titles take the clay accent, the one place running text carries it.
 	   One size everywhere: about 28px on a phone, 40px on a desktop. */
 	h1 {
@@ -478,10 +463,15 @@
 	}
 
 	/* The small size of either: 44px tall, 14px sides, for a button beside
-	   text in a narrow rail (Friends' Accept and Copy invite link). */
+	   text in a narrow rail (Friends' Accept and Copy invite link, the
+	   Cookbook header's New recipe on a phone). */
 	.btn-sm {
 		min-height: 44px;
 		padding: 0 14px;
+		/* A link's label centred in the box, as a button's already is. */
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
 	}
 
 	/* A button that reads as a word: clay 600 in the line's face, no box.
@@ -678,13 +668,13 @@
 	/* A press sets the name in 600, which is wider. Each toggle holds its 600
 	   width from the start (a hidden, zero-height copy of the name), so a press
 	   moves no neighbour; the name is centred in it. */
-	.tag-tabs button[data-label] {
+	.tag-tabs [data-label] {
 		display: inline-flex;
 		flex-direction: column;
 		align-items: center;
 	}
 
-	.tag-tabs button[data-label]::after {
+	.tag-tabs [data-label]::after {
 		content: attr(data-label);
 		height: 0;
 		overflow: hidden;

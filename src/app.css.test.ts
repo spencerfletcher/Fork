@@ -140,6 +140,11 @@ describe('app.css shared utilities', () => {
 		expect(body('.text-btn--ink:hover')).toMatch(/color:\s*var\(--color-accent\)/);
 	});
 
+	// A fixed box near the top edge tints iOS Safari's status bar at every scroll.
+	test('no fixed box is parked above the page', () => {
+		expect(css).not.toMatch(/body::before/);
+	});
+
 	test('the dot is drawn, silent to a screen reader', () => {
 		expect(body('.dot-list > * + *::before')).toContain("content: '·' / ''");
 	});

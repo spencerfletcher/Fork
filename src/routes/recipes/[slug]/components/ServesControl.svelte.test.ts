@@ -2,6 +2,10 @@ import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/svelte';
 import ServesControl from './ServesControl.svelte';
 import { MIN_SERVES } from '#lib/recipes/scale.js';
+import source from './ServesControl.svelte?raw';
+import { cssRule } from '#lib/testing/css.js';
+
+const style = source.slice(source.indexOf('<style>'));
 
 const { goto, page } = vi.hoisted(() => ({
 	goto: vi.fn(),
@@ -82,15 +86,35 @@ describe('ServesControl', () => {
 	});
 
 	// The box is what the reader edits, not an output: it stays ink while scaled.
-	test('the multiplier and Reset come before the box, so the box holds still as they change', () => {
+	// Left-aligned, so what appears grows rightward after the label.
+	test('the multiplier and Reset come after the box and its label, so the box holds still as they change', () => {
 		renderControl(STORED * 1.5);
 		const note = screen.getByText(`${1.5}x`);
 		const reset = screen.getByRole('button', { name: 'Reset' });
 		const follows = (a: Node, b: Node) =>
 			!!(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
-		expect(follows(note, reset)).toBe(true);
-		expect(follows(reset, box())).toBe(true);
 		expect(follows(box(), screen.getByText('servings'))).toBe(true);
+		expect(follows(screen.getByText('servings'), note)).toBe(true);
+		expect(follows(note, reset)).toBe(true);
+	});
+
+	test('it sits at the start of its row, never pushed to the end', () => {
+		expect(cssRule(style, '.serves')).not.toMatch(/auto/);
+	});
+
+	// On a phone the 44px box is centred on its line, 10px above and below, so
+	// the control sits an even gap between the tabs' rule and the list's.
+	test('on a phone the box holds its number centred, the underline under the digits', () => {
+		const phone = style.slice(style.indexOf('@media (max-width: 699px)'));
+		const input = cssRule(phone, 'input');
+		expect(input).toMatch(/height:\s*44px/);
+		expect(input).toMatch(/padding:\s*10px 0/);
+		expect(cssRule(style, 'input')).toMatch(/background:[^;]*linear-gradient/);
+	});
+
+	test('forced colours, which drop the drawn underline, get a border', () => {
+		const forced = style.slice(style.indexOf('@media (forced-colors: active)'));
+		expect(cssRule(forced, 'input')).toMatch(/border-bottom:\s*1px solid CanvasText/);
 	});
 
 	test('the number does not read clay while scaled', () => {

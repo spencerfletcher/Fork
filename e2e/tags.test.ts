@@ -62,7 +62,7 @@ test.describe('Tag tabs', () => {
 	test('Discover’s tag filters narrow the list in place', async ({ page }) => {
 		await page.goto('/discover');
 		await page
-			.getByRole('group', { name: 'Filter by tag' })
+			.getByRole('group', { name: 'Filters' })
 			.getByRole('button', { name: 'Dessert' })
 			.click();
 		await expect(page).toHaveURL(/\/discover\?tags=dessert/);

@@ -68,7 +68,7 @@
 
 <section id="ingredients" class="mb-3 scroll-mt-14">
 	<!-- The eyebrow and the control it scales share one baseline and one rule.
-	     It wraps under the eyebrow when the column is narrow, still at the end. -->
+	     It follows the eyebrow, and wraps under it at the start when the column is narrow. -->
 	<div class="border-border mb-1 flex flex-wrap items-baseline gap-x-4 border-b pb-2">
 		<h2 class="eyebrow-label">Ingredients</h2>
 		{@render control?.()}

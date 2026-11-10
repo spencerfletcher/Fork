@@ -42,7 +42,7 @@
 			</div>
 			<!-- The top bar carries New recipe from 768; a phone's tab bar has no room. -->
 			{#if data.counts.all > 0}
-				<a href="/recipes/new" class="btn-primary cookbook-new">New recipe</a>
+				<a href="/recipes/new" class="btn-primary btn-sm cookbook-new">New recipe</a>
 			{/if}
 		</div>
 
@@ -102,6 +102,11 @@
 		align-items: flex-start;
 		justify-content: space-between;
 		gap: var(--space-4);
+	}
+
+	/* One line beside the title; the subtitle wraps under the title instead. */
+	.cookbook-new {
+		white-space: nowrap;
 	}
 
 	@media (min-width: 768px) {

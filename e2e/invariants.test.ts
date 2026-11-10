@@ -327,7 +327,7 @@ const FOCUS: Focus[] = [
 		name: 'pressed filter',
 		open: goto('/search?tags=dessert'),
 		target: (p) =>
-			p.getByRole('group', { name: 'Filter by tag' }).getByRole('button', { name: 'Dessert' }),
+			p.getByRole('group', { name: 'Filters' }).getByRole('button', { name: 'Dessert' }),
 		widths: [1280, PHONE]
 	}
 ];
@@ -417,8 +417,7 @@ const MARKS: Mark[] = [
 	{
 		name: 'a pressed filter',
 		open: goto('/search?tags=dessert'),
-		mark: (p) =>
-			p.getByRole('group', { name: 'Filter by tag' }).getByRole('button', { name: 'Dessert' }),
+		mark: (p) => p.getByRole('group', { name: 'Filters' }).getByRole('button', { name: 'Dessert' }),
 		kind: 'border'
 	},
 	{

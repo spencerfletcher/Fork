@@ -39,7 +39,7 @@ describe('TagTabs as toggles', () => {
 		render(TagTabs, { props: makeToggleProps([]) });
 		expect(screen.queryByRole('navigation')).toBeNull();
 		expect(screen.queryByRole('link')).toBeNull();
-		const row = screen.getByRole('group', { name: 'Filter by tag' });
+		const row = screen.getByRole('group', { name: 'Filters' });
 		expect(row).toHaveClass('tag-tabs');
 		expect(screen.getAllByRole('button').map((b) => b.textContent?.trim())).toEqual(
 			tags.map((tag) => tag.name)
