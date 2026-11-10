@@ -409,6 +409,15 @@
 		font-size: 0.9375em;
 	}
 
+	/* A version chip in a meta row or the version bar: one look everywhere.
+	   Inline in a title, a component may scale it with em (Discover). */
+	.vid {
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+		font-weight: 600;
+		color: var(--color-accent);
+	}
+
 	/* 16px on a phone, so iOS does not zoom a focused field. */
 	@media (max-width: 699px) {
 		input:not([type='checkbox']),

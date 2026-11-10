@@ -140,7 +140,7 @@
 						{part.text}
 					</span>
 				{:else}
-					<span class="meta-item" class:meta-item--accent={part.accent}>{part.text}</span>
+					<span class="meta-item" class:vid={part.accent}>{part.text}</span>
 				{/if}
 			{/each}
 		</div>
@@ -365,13 +365,6 @@
 
 	.card-handle:hover {
 		color: var(--color-accent-hover);
-	}
-
-	.meta-item--accent {
-		font-family: var(--font-mono);
-		font-size: 0.6875rem;
-		font-weight: 600;
-		color: var(--color-accent);
 	}
 
 	a.meta-author {

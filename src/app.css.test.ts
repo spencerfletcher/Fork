@@ -160,6 +160,20 @@ describe('app.css shared utilities', () => {
 		expect(rule).toMatch(/color:\s*var\(--color-remove\)/);
 		expect(at).toBeGreaterThan(css.indexOf('.btn-ghost:hover {'));
 	});
+
+	test('the version chip is one class: no component redraws its face', () => {
+		expect(body('\\.vid')).toMatch(/font-family:\s*var\(--font-mono\)/);
+		expect(body('\\.vid')).toMatch(/font-weight:\s*600/);
+		expect(body('\\.vid')).toMatch(/color:\s*var\(--color-accent\)/);
+		const offenders = readdirSync(new URL('.', import.meta.url), { recursive: true })
+			.map(String)
+			.filter((f) => f.endsWith('.svelte'))
+			.filter((f) => {
+				const style = readFileSync(new URL(f, import.meta.url), 'utf8').split('<style>')[1] ?? '';
+				return /(^|\n)\s*\.vid\s*\{/.test(style);
+			});
+		expect(offenders).toEqual([]);
+	});
 });
 
 describe('app.css forced colours', () => {
