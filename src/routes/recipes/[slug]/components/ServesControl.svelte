@@ -47,7 +47,7 @@
 <span class="serves">
 	{#if serves !== stored}
 		<span class="factor">{formatServes(serves / stored)}x</span>
-		<button type="button" class="reset" onclick={reset}>Reset</button>
+		<button type="button" class="text-btn reset" onclick={reset}>Reset</button>
 	{/if}
 	<input
 		bind:this={box}
@@ -107,22 +107,10 @@
 		color: var(--color-text-2);
 	}
 
-	/* A clay text action like the header's links, ink on hover; 24px tall on
-	   the control's line. */
+	/* The shared text button; Reset belongs to the note, not the box: a step
+	   more room before it. */
 	.reset {
-		padding: 0;
-		border: 0;
-		background: none;
-		font: inherit;
-		font-weight: 600;
-		color: var(--color-accent);
-		cursor: pointer;
-		/* Reset belongs to the note, not the box: a step more room before it. */
 		margin-right: 4px;
-	}
-
-	.reset:hover {
-		color: var(--color-accent-hover);
 	}
 
 	/* A thumb's 44px on a phone. Reset is a real 44px box, which reads as

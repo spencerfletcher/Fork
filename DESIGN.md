@@ -273,7 +273,27 @@ Small, consistent corners: 4px on chips and icon buttons, 6px on buttons, inputs
 | Inline confirm | question + confirm + keep, in place | `ConfirmStep` |
 | Form row | Save, Cancel, optional danger pinned right | `FormActions` |
 
-A control that does not fit one of these rows is a design decision, not a local style: it goes to Spencer before it is built. A review treats a button with none of these classes as blocking (the 9 November photo field shipped Replace as a small-caps ink button and Remove as a serif clay one because neither rule existed yet).
+A control that does not fit one of these rows is a design decision, not a local style: it goes to Spencer before it is built. A review treats a button with none of these classes as blocking (the 9 November photo field shipped Replace as a small-caps ink button and Remove as a serif clay one because neither rule existed yet). `src/lib/controls.test.ts` enforces it: every `<button>`, and every link with a `btn-` class, takes `btn-primary`, `btn-ghost` or `text-btn`, or is a named structural exception in that test's one list (menu rows, tabs, chips, icon-only triggers, the editor tool, a pill's remove glyph), each with its reason.
+
+**Links, the closed set** (as the code draws them on 10 November 2026):
+
+| Kind | Rest | Hover | Class |
+| --- | --- | --- | --- |
+| Inline link | clay | Clay Deep | bare `a` (app.css) |
+| Title link | ink, Bitter | clay | per component: `.card-title` (RecipeCard), `.lead-title`, `.change-title` (Discover) |
+| Arrow link | clay, typed "→" | Clay Deep | `.arrow-link`: 24px hit, 44px on a phone |
+| Inline hit | the link's own | the link's own | `.hit-link`: a 24px / 44px hit for any inline link, text unmoved |
+| Back link | Ink 3, 0.875rem | ink | `.back-link` |
+
+**Identifiers, the closed set.** Mono is for these only (the Typography rule); prose never takes it.
+
+| Kind | Face and size | Colour | Class / component | Where |
+| --- | --- | --- | --- | --- |
+| Handle | mono, 0.9375em of the line | clay; Clay Deep on hover | `Username` (its own link), `.handle` (inside a bigger link) | wherever a person is named |
+| Version id in copy | mono, 0.9375em | the line's | `.mono-id` | sans sentences: the editor header, Journal hints |
+| Version chip | mono 600, 0.6875rem | clay | `.meta-item--accent` (RecipeCard), `.vid` (Discover) | card and feed meta rows |
+| Version number, version bar | mono 600, 0.75rem | clay | `.version-number` (VersionBar) | the recipe page's version line |
+| Diff text | mono, 0.875rem | the diff's own | `.diff-panel` (VersionDiff) | compare and history diffs |
 
 One exception, decided 28 October 2026: the recipe page's action row (Cook, Edit recipe, Save, Fork, Add to Journal) is set as 44px pills with a leading icon, the header's last line. Everywhere else a button keeps the 6px corner.
 
