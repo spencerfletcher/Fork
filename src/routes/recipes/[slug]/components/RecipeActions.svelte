@@ -288,6 +288,13 @@
 			grid-template-columns: 1fr 1fr;
 		}
 
+		/* At 320 two pills with icons and labels do not share a row without wrapping. */
+		@media (max-width: 359px) {
+			.actions {
+				grid-template-columns: 1fr;
+			}
+		}
+
 		.actions :global(.btn-primary),
 		.actions :global(.btn-ghost) {
 			width: 100%;

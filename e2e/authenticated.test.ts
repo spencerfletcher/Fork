@@ -285,7 +285,13 @@ test.describe('Edit recipe page', () => {
 			for (let i = 0; i < expected.length; i++) {
 				const name = await page.evaluate(() => {
 					const el = document.activeElement as HTMLElement;
-					return el.getAttribute('name') || el.id || el.textContent?.trim() || '';
+					// The visible words only: a decorative aria-hidden glyph is not part of the name.
+					const words = [...el.childNodes]
+						.filter((n) => !(n instanceof Element && n.getAttribute('aria-hidden') === 'true'))
+						.map((n) => n.textContent ?? '')
+						.join('')
+						.trim();
+					return el.getAttribute('name') || el.id || words || '';
 				});
 				seen.push(name);
 				// The tag combobox's options are not Tab stops, so Tab walks straight
