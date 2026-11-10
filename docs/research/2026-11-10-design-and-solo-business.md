@@ -1,3 +1,5 @@
+> Superseded as the current plan by [docs/product](../product/README.md) on 11 November 2026. Kept as the research record.
+
 # Fork: design refinement and a sustainable solo business
 
 **Review synthesis · 10 November 2026 · recommendations, not a new implementation specification**

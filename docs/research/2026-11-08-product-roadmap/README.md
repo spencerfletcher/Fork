@@ -1,3 +1,5 @@
+> Superseded as the current plan by [docs/product](../../product/README.md) on 11 November 2026. Kept as the research record.
+
 # Make Fork the Cookbook That Improves
 
 **Authoritative product direction · revised 8 November 2026 · serious home cooks · US and Canada**

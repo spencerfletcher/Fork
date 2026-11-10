@@ -1,3 +1,5 @@
+> Superseded as the current plan by [docs/product](../product/README.md) on 11 November 2026. Kept as the research record.
+
 # Fork: finished product, quality ambition and revenue path
 
 **10 November 2026 · standalone synthesis for later reconciliation**
