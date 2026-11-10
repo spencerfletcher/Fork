@@ -17,9 +17,19 @@ export async function gotoHydrated(page: Page, url: string) {
 	await page.waitForLoadState('networkidle');
 }
 
-/** Slugs carry a random suffix, so reach the cookies by name from Discover, not by URL. */
+// Per worker: each worker process loads this module once.
+let cookiesPath: string | undefined;
+
+/**
+ * Slugs carry a random suffix per seed, so the cookies' URL is read from
+ * Discover's link, once per worker, and each later call loads it directly.
+ */
 export async function openCookies(page: Page) {
-	await page.goto('/discover');
-	await page.getByRole('link', { name: COOKIES_RE }).first().click();
-	await page.waitForURL(/\/recipes\//);
+	if (!cookiesPath) {
+		await page.goto('/discover');
+		const href = await page.getByRole('link', { name: COOKIES_RE }).first().getAttribute('href');
+		if (!href?.startsWith('/recipes/')) throw new Error(`Cookies link is ${href}`);
+		cookiesPath = href;
+	}
+	await gotoHydrated(page, cookiesPath);
 }
