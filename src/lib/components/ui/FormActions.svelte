@@ -46,32 +46,38 @@
 		flex-shrink: 0;
 	}
 
+	/* The right group: the row's free space, its contents (the trigger, or the
+	   open step as a whole) packed flush to the row's right edge. The row's own
+	   gap is all that separates it from Cancel. */
 	.danger {
+		flex: 1 1 auto;
 		min-width: 0;
 		margin-left: auto;
-		padding-left: var(--space-5);
+		display: flex;
+		flex-direction: column;
+		align-items: flex-end;
+	}
+
+	.danger :global(.step) {
+		justify-content: flex-end;
 	}
 
 	/* One row from 700: the danger control shrinks rather than wrapping, so
-	   an open step's sentence wraps inside it. */
+	   an open step's sentence wraps inside it. The sentence takes its own
+	   width, not the row's spare space, so nothing stretches inside the step. */
 	@media (min-width: 700px) {
 		.form-actions {
 			flex-wrap: nowrap;
+		}
+
+		.danger :global(.step .explanation) {
+			flex: 0 1 auto;
 		}
 	}
 
 	@media (max-width: 699px) {
 		.danger {
 			flex-basis: 100%;
-			display: flex;
-			flex-direction: column;
-			align-items: flex-end;
-			padding-left: 0;
-		}
-
-		/* The step's buttons stay on the trigger's line, at its right. */
-		.danger :global(.step) {
-			justify-content: flex-end;
 		}
 	}
 </style>

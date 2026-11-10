@@ -22,10 +22,10 @@
 <ConfirmStep
 	trigger="Delete entry"
 	label="Delete {dish}?"
-	explanation="Deletes this entry, its photo and its note. This cannot be undone."
+	explanation="This cannot be undone."
 	confirmLabel="Delete permanently"
 	pendingLabel="Deleting…"
-	keepLabel="Keep entry"
+	keepLabel="Keep"
 	action="?/deleteEntry"
 	enhance={submit}
 	{pending}

@@ -32,9 +32,15 @@ describe('FormActions', () => {
 		const slot = screen.getByRole('button', { name: 'Delete entry' }).parentElement!;
 		expect(row.lastElementChild).toBe(slot);
 		// jsdom applies no component CSS, so the rules are read from the source.
-		expect(source).toMatch(/\.danger \{[^}]*margin-left: auto/);
+		// The right group packs flush right at every width; the row's gap alone
+		// separates it from Cancel.
+		const base = source.match(/\n\t\.danger \{([^}]*)\}/)![1];
+		expect(base).toMatch(/margin-left: auto/);
+		expect(base).toMatch(/align-items: flex-end/);
+		expect(source).not.toMatch(/padding-left/);
+		expect(source).toMatch(/\.danger :global\(\.step\) \{[^}]*justify-content: flex-end/);
 		const phone = source.slice(source.indexOf('@media (max-width: 699px)'));
-		expect(phone).toMatch(/\.danger \{[^}]*flex-basis: 100%[^}]*align-items: flex-end/);
+		expect(phone).toMatch(/\.danger \{[^}]*flex-basis: 100%/);
 		// An open confirm step stays in the danger control's spot; no rule hands it the row.
 		expect(source).not.toMatch(/confirm-step/);
 	});
