@@ -2,6 +2,10 @@ import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/svelte';
 import CookbookPage from './+page.svelte';
 import { COOKBOOK_FILTERS } from './filters.js';
+import source from './+page.svelte?raw';
+import { cssRule } from '#lib/testing/css.js';
+
+const style = source.slice(source.indexOf('<style>'));
 
 const { page } = vi.hoisted(() => ({ page: { url: new URL('http://localhost/cookbook') } }));
 vi.mock('$app/navigation', () => ({ goto: vi.fn() }));
@@ -133,5 +137,13 @@ describe('Cookbook page', () => {
 	test('New recipe sits in the header over a full library', () => {
 		renderCookbook(full);
 		expect(screen.getByRole('link', { name: 'New recipe' })).toHaveClass('btn-primary');
+	});
+
+	// Beside the title on a phone it is one line at the small size, 44px tall;
+	// the subtitle wraps under the title instead.
+	test('the header New recipe is the small button on one line', () => {
+		renderCookbook(full);
+		expect(screen.getByRole('link', { name: 'New recipe' })).toHaveClass('btn-sm');
+		expect(cssRule(style, '.cookbook-new')).toMatch(/white-space:\s*nowrap/);
 	});
 });

@@ -267,7 +267,7 @@ Small, consistent corners: 4px on chips and icon buttons, 6px on buttons, inputs
 | Primary | marigold fill, ink 600 | `.btn-primary` |
 | Ghost | transparent, 1px ink border, 600 | `.btn-ghost` |
 | Danger | ghost in red; red on hover for a resting Block | `.btn-ghost.danger`, `.danger-hover` |
-| Small | either button at 44px tall with 14px sides, beside text in a narrow rail | `.btn-sm` on `.btn-primary` or `.btn-ghost` |
+| Small | either button at 44px tall with 14px sides, beside text in a narrow rail; the Cookbook header's one-line New recipe on a phone | `.btn-sm` on `.btn-primary` or `.btn-ghost` |
 | Text button | sans 600, clay, no border; deeper clay on hover | `.text-btn` |
 | Text button, ink | same, ink; clay on hover | `.text-btn--ink` |
 | Quiet text button | sans 0.875rem, Ink 3, ink on hover; a list's Clear ticks | `.clear-ticks` |

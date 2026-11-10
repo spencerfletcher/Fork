@@ -463,10 +463,15 @@
 	}
 
 	/* The small size of either: 44px tall, 14px sides, for a button beside
-	   text in a narrow rail (Friends' Accept and Copy invite link). */
+	   text in a narrow rail (Friends' Accept and Copy invite link, the
+	   Cookbook header's New recipe on a phone). */
 	.btn-sm {
 		min-height: 44px;
 		padding: 0 14px;
+		/* A link's label centred in the box, as a button's already is. */
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
 	}
 
 	/* A button that reads as a word: clay 600 in the line's face, no box.
