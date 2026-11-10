@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Snippet } from 'svelte';
+	import { onMount, type Snippet } from 'svelte';
 	import type { LayoutData } from './$types';
 	import '../app.css';
 	import Navbar from '#lib/components/ui/Navbar.svelte';
@@ -8,6 +8,13 @@
 	import { DEFAULT_META, SITE_NAME, pageTitle, type PageMeta } from '#lib/seo.js';
 
 	let { data, children }: { data: LayoutData; children: Snippet } = $props();
+
+	// The root layout mounts last, so by now every handler on the page is
+	// attached. The e2e suite waits on this before acting (e2e/helpers.ts
+	// gotoHydrated); SvelteKit exposes no hydration signal of its own.
+	onMount(() => {
+		document.documentElement.dataset.hydrated = '';
+	});
 
 	// The single source of head tags. Pages contribute by returning `meta` from
 	// their loader; anything they omit falls back to the site defaults.

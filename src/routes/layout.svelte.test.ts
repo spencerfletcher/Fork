@@ -66,3 +66,11 @@ describe('layout navigation', () => {
 		);
 	});
 });
+
+describe('layout hydration mark', () => {
+	test('once mounted, the document is marked hydrated for the e2e suite to wait on', () => {
+		delete document.documentElement.dataset.hydrated;
+		renderLayout('/cookbook');
+		expect(document.documentElement).toHaveAttribute('data-hydrated');
+	});
+});

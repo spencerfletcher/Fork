@@ -14,7 +14,8 @@ export const COOKIES_RE = new RegExp(COOKIES, 'i');
  */
 export async function gotoHydrated(page: Page, url: string) {
 	await page.goto(url);
-	await page.waitForLoadState('networkidle');
+	// Set by the root layout's onMount (src/routes/+layout.svelte).
+	await page.locator('html[data-hydrated]').waitFor({ state: 'attached' });
 }
 
 // Per worker: each worker process loads this module once.
