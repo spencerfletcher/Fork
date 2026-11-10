@@ -46,25 +46,25 @@
 		</button>
 	{/snippet}
 	{#snippet panel()}
-		<div class="panel" bind:this={panelEl}>
+		<div class="menu-panel panel" bind:this={panelEl}>
 			{#if step === 'menu'}
 				{#if items.includes('mute')}
 					<form method="POST" action="/friends?/mute" use:enhance>
 						<input type="hidden" name="userId" value={userId} />
-						<button type="submit">Mute @{username}</button>
+						<button type="submit" class="menu-row">Mute @{username}</button>
 					</form>
 				{/if}
 				{#if items.includes('unfriend')}
 					<form method="POST" action="/friends?/unfriend" use:enhance>
 						<input type="hidden" name="userId" value={userId} />
-						<button type="submit">Unfriend</button>
+						<button type="submit" class="menu-row">Unfriend</button>
 					</form>
 				{/if}
 				{#if items.includes('report')}
-					<button type="button" onclick={() => go('report')}>Report</button>
+					<button type="button" class="menu-row" onclick={() => go('report')}>Report</button>
 				{/if}
 				{#if items.includes('block')}
-					<button type="button" class="danger" onclick={() => go('block')}>Block</button>
+					<button type="button" class="menu-row danger" onclick={() => go('block')}>Block</button>
 				{/if}
 			{:else if step === 'report'}
 				<form
@@ -122,48 +122,11 @@
 		background: var(--color-tint);
 	}
 
-	/* The one overlay on the page, and so the one shadow. Its top meets the
-	   button's bottom edge: the button's -10px top margin plus its 44px. */
+	/* Dropdown draws the overlay. Its top meets the button's bottom edge: the
+	   button's -10px top margin plus its 44px; its right edge, the button's. */
 	.panel {
-		position: absolute;
-		right: -12px;
-		top: 34px;
-		z-index: 6;
-		display: flex;
-		flex-direction: column;
-		width: max-content;
-		min-width: 200px;
-		max-width: min(300px, calc(100vw - 36px));
-		padding: 6px;
-		background: var(--color-surface);
-		border: 1px solid var(--color-border-2);
-		border-radius: var(--radius-md);
-		box-shadow: var(--shadow-raised);
-	}
-
-	/* Menu rows; a step's confirm is a ghost button from the closed set. */
-	.panel button:not(.btn-ghost) {
-		display: flex;
-		align-items: center;
-		width: 100%;
-		min-height: 44px;
-		padding: 0 12px;
-		border: 0;
-		border-radius: var(--radius-sm);
-		background: none;
-		font: inherit;
-		font-weight: 600;
-		color: var(--color-text);
-		text-align: left;
-		cursor: pointer;
-	}
-
-	.panel button:not(.btn-ghost):hover {
-		background: var(--color-tint);
-	}
-
-	.panel .danger {
-		color: var(--color-remove);
+		--menu-top: 34px;
+		--menu-right: -12px;
 	}
 
 	.step {
@@ -187,7 +150,7 @@
 
 	@media (max-width: 699px) {
 		.panel {
-			right: -6px;
+			--menu-right: -6px;
 		}
 	}
 </style>

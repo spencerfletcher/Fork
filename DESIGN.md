@@ -269,11 +269,12 @@ Small, consistent corners: 4px on chips and icon buttons, 6px on buttons, inputs
 | Danger | ghost in red; red on hover for a resting Block | `.btn-ghost.danger`, `.danger-hover` |
 | Text button | sans 600, clay, no border; deeper clay on hover | `.text-btn` |
 | Text button, ink | same, ink; clay on hover | `.text-btn--ink` |
+| Menu row | a 44px row in a `Dropdown` panel, sans 0.9375rem 600 ink, clay tint on hover; `.danger` is red | `.menu-row` (`Dropdown`) |
 | Action pill | 44px pill with leading icon, recipe page action row only | `RecipeActions` |
 | Inline confirm | question + confirm + keep, in place | `ConfirmStep` |
 | Form row | Save, Cancel, optional danger pinned right | `FormActions` |
 
-A control that does not fit one of these rows is a design decision, not a local style: it goes to Spencer before it is built. A review treats a button with none of these classes as blocking (the 9 November photo field shipped Replace as a small-caps ink button and Remove as a serif clay one because neither rule existed yet). `src/lib/controls.test.ts` enforces it: every `<button>`, and every link with a `btn-` class, takes `btn-primary`, `btn-ghost` or `text-btn`, or is a named structural exception in that test's one list (menu rows, tabs, chips, icon-only triggers, the editor tool, a pill's remove glyph), each with its reason.
+A control that does not fit one of these rows is a design decision, not a local style: it goes to Spencer before it is built. A review treats a button with none of these classes as blocking (the 9 November photo field shipped Replace as a small-caps ink button and Remove as a serif clay one because neither rule existed yet). `src/lib/controls.test.ts` enforces it: every `<button>`, and every link with a `btn-` class, takes `btn-primary`, `btn-ghost`, `text-btn` or `menu-row`, or is a named structural exception in that test's one list (tabs, chips, icon-only triggers, the editor tool, a pill's remove glyph), each with its reason.
 
 **Links, the closed set** (as the code draws them on 10 November 2026):
 

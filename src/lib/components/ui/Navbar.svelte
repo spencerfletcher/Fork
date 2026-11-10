@@ -74,17 +74,18 @@
 						</button>
 					{/snippet}
 					{#snippet panel()}
-						<div class="account-menu" role="menu">
+						<div class="menu-panel account-menu" role="menu">
 							{#if profile}
 								<a
 									href="/users/{profile.username}"
+									class="menu-row"
 									role="menuitem"
 									aria-current={current(onOwnProfile)}>
 									Profile
 								</a>
 							{/if}
 							<form action="/logout" method="POST" role="none" use:enhance>
-								<button type="submit" role="menuitem">Log out</button>
+								<button type="submit" class="menu-row" role="menuitem">Log out</button>
 							</form>
 						</div>
 					{/snippet}
@@ -234,48 +235,9 @@
 		background: var(--color-text-cream);
 	}
 
-	/* The ⋯ menu's overlay, on lifted paper under the bar: the one shadow. */
+	/* Dropdown draws the overlay; it opens 6px under the avatar. */
 	.account-menu {
-		position: absolute;
-		top: calc(100% + 6px);
-		right: 0;
-		display: flex;
-		flex-direction: column;
-		min-width: 180px;
-		padding: 6px;
-		background: var(--color-surface);
-		border: 1px solid var(--color-border-2);
-		border-radius: var(--radius-md);
-		box-shadow: var(--shadow-raised);
-	}
-
-	.account-menu a,
-	.account-menu button {
-		display: flex;
-		align-items: center;
-		width: 100%;
-		min-height: 44px;
-		padding: 0 12px;
-		border: 0;
-		border-radius: var(--radius-sm);
-		background: none;
-		font-family: var(--font-sans);
-		font-size: 0.9375rem;
-		font-weight: 600;
-		color: var(--color-text);
-		text-align: left;
-		text-decoration: none;
-		cursor: pointer;
-	}
-
-	.account-menu a:hover,
-	.account-menu button:hover {
-		background: var(--color-tint);
-		color: var(--color-text);
-	}
-
-	.account-menu form {
-		margin: 0;
+		--menu-top: calc(100% + 6px);
 	}
 
 	/* On paper the ring is the site's clay again, not the bar's marigold:

@@ -8,7 +8,7 @@
 	// closes. Where the panel's items are menuitems, the arrow keys walk them.
 	// A menu link closes the panel as it is pressed, so the old menu does not
 	// sit over the page while the next one loads; any navigation closes it too.
-	// The consumer draws the button and the panel; this owns none of their look.
+	// The consumer draws the button; the panel and row look is here (below).
 	let {
 		trigger,
 		panel,
@@ -84,5 +84,58 @@
 <style>
 	.dropdown {
 		position: relative;
+	}
+
+	/* The panel and its rows are the one overlay look, so they live here: the
+	   consumer puts .menu-panel on its panel and .menu-row on each row. Where
+	   it opens depends on the consumer's trigger, so the consumer sets
+	   --menu-top and --menu-right; on lifted paper, the one shadow. */
+	.dropdown :global(.menu-panel) {
+		position: absolute;
+		top: var(--menu-top, 100%);
+		right: var(--menu-right, 0);
+		z-index: 6;
+		display: flex;
+		flex-direction: column;
+		width: max-content;
+		min-width: 180px;
+		max-width: min(300px, calc(100vw - 36px));
+		padding: 6px;
+		background: var(--color-surface);
+		border: 1px solid var(--color-border-2);
+		border-radius: var(--radius-md);
+		box-shadow: var(--shadow-raised);
+	}
+
+	.dropdown :global(.menu-panel form) {
+		margin: 0;
+	}
+
+	.dropdown :global(.menu-row) {
+		display: flex;
+		align-items: center;
+		width: 100%;
+		min-height: 44px;
+		padding: 0 12px;
+		border: 0;
+		border-radius: var(--radius-sm);
+		background: none;
+		font-family: var(--font-sans);
+		font-size: 0.9375rem;
+		font-weight: 600;
+		color: var(--color-text);
+		text-align: left;
+		text-decoration: none;
+		cursor: pointer;
+	}
+
+	.dropdown :global(.menu-row:hover) {
+		background: var(--color-tint);
+		color: var(--color-text);
+	}
+
+	/* After :hover, so a red row stays red under the pointer. */
+	.dropdown :global(.menu-row.danger) {
+		color: var(--color-remove);
 	}
 </style>
