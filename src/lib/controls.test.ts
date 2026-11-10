@@ -16,7 +16,7 @@ const STRUCTURAL = [
 	['lib/components/ui/TagInput.svelte', 'tag-remove', "a tag pill's remove glyph"],
 	['lib/components/ui/TagTabs.svelte', '', 'tag filter tab'],
 	['lib/components/ui/TagTabs.svelte', 'tag-tabs__clear', 'the tag tabs row’s Clear all tab'],
-	['lib/components/ui/SearchFilters.svelte', 'friends-toggle', 'filter chip'],
+	['lib/components/ui/SearchFilters.svelte', 'friends-filter', 'the filter row’s friends tab'],
 	['routes/recipes/[slug]/+page.svelte', 'eyebrow-label', 'section tab bar item'],
 	[
 		'routes/recipes/[slug]/components/VersionBar.svelte',

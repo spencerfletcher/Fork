@@ -1,5 +1,5 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/svelte';
+import { render, screen, fireEvent, within } from '@testing-library/svelte';
 import SearchFilters from './SearchFilters.svelte';
 
 const { gotoMock, page } = vi.hoisted(() => ({
@@ -79,7 +79,7 @@ describe('SearchFilters', () => {
 		});
 		// Toggles are not navigation: a group, not a nav landmark.
 		expect(screen.queryByRole('navigation')).toBeNull();
-		const row = screen.getByRole('group', { name: 'Filter by tag' });
+		const row = screen.getByRole('group', { name: 'Filters' });
 		expect(row).toHaveClass('tag-tabs');
 		expect(screen.getByRole('button', { name: 'Dessert' })).toHaveAttribute('aria-pressed', 'true');
 		expect(screen.getByRole('button', { name: 'Baking' })).toHaveAttribute('aria-pressed', 'false');
@@ -88,7 +88,7 @@ describe('SearchFilters', () => {
 
 	test('no tag row at all when there is nothing to filter by', () => {
 		render(SearchFilters, { props: { availableTags: [] } });
-		expect(screen.queryByRole('group', { name: 'Filter by tag' })).toBeNull();
+		expect(screen.queryByRole('group', { name: 'Filters' })).toBeNull();
 		expect(screen.queryByText(/no tags available/i)).toBeNull();
 	});
 });
@@ -190,6 +190,36 @@ describe('SearchFilters friends toggle', () => {
 		expect(toggle).toHaveAttribute('aria-pressed', 'false');
 		await fireEvent.click(toggle);
 		expect(gotoMock.mock.calls[0][0]).toBe('?q=dal&friends=1');
+	});
+
+	// One row reads as a filter bar: the audience filter first, a tag tab in
+	// look, marked as a different kind by the friends icon and a divider.
+	test('it leads the filter row, before the tags, with its icon and a divider', () => {
+		render(SearchFilters, { props: { availableTags, friendsOnly: false } });
+		const row = screen.getByRole('group', { name: 'Filters' });
+		const buttons = within(row).getAllByRole('button');
+		const toggle = screen.getByRole('button', { name: 'Friends’ recipes' });
+		expect(buttons[0]).toBe(toggle);
+		expect(buttons[1]).toHaveTextContent('Dessert');
+		expect(toggle.querySelector('svg[aria-hidden="true"]')).not.toBeNull();
+		expect(toggle.nextElementSibling).toHaveClass('filter-divider');
+		expect(toggle.nextElementSibling).toHaveAttribute('aria-hidden', 'true');
+	});
+
+	test('with no tags to filter by, the row still offers it', () => {
+		render(SearchFilters, { props: { availableTags: [], friendsOnly: false } });
+		const row = screen.getByRole('group', { name: 'Filters' });
+		expect(within(row).getByRole('button', { name: 'Friends’ recipes' })).toBeInTheDocument();
+		expect(row.querySelector('.filter-divider')).toBeNull();
+	});
+
+	test('Clear all hands focus to the first tag, not the friends filter', async () => {
+		page.url = new URL('http://localhost/discover?tags=dessert');
+		render(SearchFilters, {
+			props: { availableTags, initialTags: ['dessert'], friendsOnly: false }
+		});
+		await fireEvent.click(screen.getByRole('button', { name: 'Clear all' }));
+		await vi.waitFor(() => expect(screen.getByRole('button', { name: 'Dessert' })).toHaveFocus());
 	});
 
 	test('pressed, a press widens again', async () => {

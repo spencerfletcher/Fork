@@ -107,7 +107,7 @@ test.describe('Search filters', () => {
 		page
 	}) => {
 		await page.goto('/search');
-		const dessert = page.getByRole('group', { name: 'Filter by tag' }).getByRole('button', {
+		const dessert = page.getByRole('group', { name: 'Filters' }).getByRole('button', {
 			name: 'Dessert'
 		});
 		await dessert.focus();
@@ -122,7 +122,7 @@ test.describe('Search filters on a phone', () => {
 	test('pressing the last filter scrolls it, ring and all, into view', async ({ page }) => {
 		await page.setViewportSize({ width: 390, height: 844 });
 		await page.goto('/search');
-		const row = page.getByRole('group', { name: 'Filter by tag' });
+		const row = page.getByRole('group', { name: 'Filters' });
 		// Clear all appears after the last tag once it is pressed, so skip it.
 		const last = row.locator('button:not(.tag-tabs__clear)').last();
 		await last.focus();
