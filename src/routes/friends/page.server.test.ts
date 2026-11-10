@@ -2,6 +2,7 @@ import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { invokeAction, formEvent, loadEvent } from '#lib/testing/actions.js';
 import { MAX_REPORT, OWN_LIKE } from '#lib/server/friends.js';
 import { actions, load } from './+page.server';
+import { SESSION_ENDED } from '#lib/server/actions.js';
 
 const m = vi.hoisted(() => ({
 	findProfile: vi.fn(),
@@ -135,6 +136,14 @@ describe('like', () => {
 
 	test('a malformed id never reaches the database', async () => {
 		expect(await run('like', { entryId: '5; drop' })).toMatchObject({ status: 400 });
+		expect(m.toggleLike).not.toHaveBeenCalled();
+	});
+
+	test('signed out is a 401 form failure saying the session ended', async () => {
+		expect(await run('like', { entryId: '5' }, null)).toMatchObject({
+			status: 401,
+			data: { error: SESSION_ENDED('try again'), code: 'unauthenticated' }
+		});
 		expect(m.toggleLike).not.toHaveBeenCalled();
 	});
 });

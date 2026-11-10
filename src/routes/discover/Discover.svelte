@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Avatar from '#lib/components/ui/Avatar.svelte';
+	import CookLink from '#lib/components/ui/CookLink.svelte';
 	import RecipeCard from '#lib/components/recipes/RecipeCard.svelte';
 	import SearchFilters from '#lib/components/ui/SearchFilters.svelte';
 	import ResultStatus from '#lib/components/ui/ResultStatus.svelte';
@@ -54,10 +54,7 @@
 				{/if}
 				<div>
 					{#if lead.author}
-						<a class="lead-cook" href="/users/{lead.author.username}">
-							<Avatar username={lead.author.username} size={28} />
-							<span class="handle lead-handle">@{lead.author.username}</span>
-						</a>
+						<CookLink username={lead.author.username} class="lead-cook" />
 					{/if}
 					<h2 class="lead-title">
 						<a class="lead-link" href="/recipes/{lead.slug}">{lead.title}</a>
@@ -168,22 +165,6 @@
 		inset: 0;
 	}
 
-	/* Above the stretched title link, as wide as avatar and handle. */
-	.lead-cook {
-		position: relative;
-		z-index: 1;
-		display: inline-flex;
-		align-items: center;
-		gap: 8px;
-		min-height: 24px;
-		font-size: 0.9375rem;
-		text-decoration: none;
-	}
-
-	.lead-cook:hover .lead-handle {
-		color: var(--color-accent-hover);
-	}
-
 	.lead-title {
 		margin: 12px 0 0;
 		font-family: var(--font-serif);
@@ -219,8 +200,9 @@
 			margin-top: 4px;
 		}
 
-		/* A 44px hit on a phone without moving the line. */
-		.lead-cook {
+		/* The lead is one column from here, so its cook link takes the phone's
+		   44px hit early; CookLink owns it below 700. */
+		.lead :global(.lead-cook) {
 			min-height: 44px;
 			margin-block: -8px;
 		}

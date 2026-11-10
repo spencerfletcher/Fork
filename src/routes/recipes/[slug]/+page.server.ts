@@ -12,6 +12,7 @@ import { canViewRow, friendIdsOnce, viewableRecipe } from '#lib/server/visibilit
 import { attachRecipeCounts } from '#lib/server/recipeCounts.js';
 import { lastEntryFor } from '#lib/server/journal.js';
 import { VERSION_NOT_FOUND } from './versionError.js';
+import { failure, SESSION_ENDED } from '#lib/server/actions.js';
 import type { PageServerLoad, Actions } from './$types';
 
 export const load: PageServerLoad = async ({ params, url, locals: { user } }) => {
@@ -105,7 +106,7 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 
 export const actions: Actions = {
 	toggleFavorite: async ({ params, locals: { user } }) => {
-		if (!user) throw error(401, 'Login required');
+		if (!user) return failure(401, 'unauthenticated', SESSION_ENDED('try again'));
 
 		const recipe = await viewableRecipe(params.slug, user);
 		if (!recipe) throw error(404, 'Recipe not found');

@@ -22,7 +22,7 @@ describe('login action', () => {
 		expect(isActionFailure(result)).toBe(true);
 		expect(result).toMatchObject({
 			status: 400,
-			data: { error: 'Email and password are required.' }
+			data: { error: 'Email and password are required.', code: 'invalid' }
 		});
 		expect(signInWithPassword).not.toHaveBeenCalled();
 	});
@@ -38,7 +38,7 @@ describe('login action', () => {
 		expect(isActionFailure(result)).toBe(true);
 		expect(result).toMatchObject({
 			status: 401,
-			data: { error: "That email and password don't match." }
+			data: { error: "That email and password don't match.", code: 'auth_failed' }
 		});
 	});
 
@@ -52,7 +52,7 @@ describe('login action', () => {
 
 		expect(result).toMatchObject({
 			status: 401,
-			data: { error: 'Could not log in. Try again.' }
+			data: { error: 'Could not log in. Try again.', code: 'auth_failed' }
 		});
 	});
 

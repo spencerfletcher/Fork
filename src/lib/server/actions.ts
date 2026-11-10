@@ -8,7 +8,8 @@ export const FAILURE_CODES = [
 	'upload_failed',
 	'save_failed',
 	'unauthenticated',
-	'not_found'
+	'not_found',
+	'auth_failed'
 ] as const;
 export type FailureCode = (typeof FAILURE_CODES)[number];
 

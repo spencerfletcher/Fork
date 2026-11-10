@@ -25,7 +25,10 @@ describe('forgot-password action', () => {
 		const result = await invoke(actions.default as never, makeEvent({ email: '  ' }));
 
 		expect(isActionFailure(result)).toBe(true);
-		expect(result).toMatchObject({ status: 400, data: { error: 'Enter your email.' } });
+		expect(result).toMatchObject({
+			status: 400,
+			data: { error: 'Enter your email.', code: 'invalid' }
+		});
 		expect(resetPasswordForEmail).not.toHaveBeenCalled();
 	});
 
@@ -52,7 +55,7 @@ describe('forgot-password action', () => {
 		expect(isActionFailure(result)).toBe(true);
 		expect(result).toMatchObject({
 			status: 429,
-			data: { error: 'Could not send the link. Try again in a minute.' }
+			data: { error: 'Could not send the link. Try again in a minute.', code: 'auth_failed' }
 		});
 	});
 

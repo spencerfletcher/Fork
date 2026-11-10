@@ -1,7 +1,8 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { chain } from '#lib/testing/drizzle.js';
-import { loadEvent } from '#lib/testing/actions.js';
+import { loadEvent, loadPage } from '#lib/testing/actions.js';
 import { load } from './+page.server';
+import type { PageData } from './$types';
 import { profiles, recipes } from '#lib/server/db/schema.js';
 import { and, eq } from 'drizzle-orm';
 import { visibleTo } from '#lib/server/visibility.js';
@@ -109,8 +110,7 @@ describe('users/[username] load', () => {
 	test('returns profile when found', async () => {
 		findProfileMock.mockResolvedValue(makeProfile());
 		findRecipesMock.mockResolvedValue([]);
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		const result = (await load(makeLoadEvent('chefmaria'))) as any;
+		const result = await loadPage<PageData>(load as never, makeLoadEvent('chefmaria'));
 		expect(result.profile.username).toBe('chefmaria');
 	});
 
@@ -142,8 +142,7 @@ describe('users/[username] load', () => {
 			{ id: 2, visibility: 'friends' },
 			{ id: 3, visibility: 'private' }
 		]);
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		const result = (await load(makeLoadEvent('chefmaria', 'user-1'))) as any;
+		const result = await loadPage<PageData>(load as never, makeLoadEvent('chefmaria', 'user-1'));
 		expect(result.recipes).toHaveLength(3);
 		expect(result.meta.description).toBe('1 public recipe and 0 changes on Fork.');
 	});
@@ -155,8 +154,7 @@ describe('users/[username] load', () => {
 			{ id: 2, title: 'Soup', slug: 'soup-xyz' }
 		];
 		findRecipesMock.mockResolvedValue(recipes);
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		const result = (await load(makeLoadEvent('chefmaria'))) as any;
+		const result = await loadPage<PageData>(load as never, makeLoadEvent('chefmaria'));
 		expect(result.recipes).toHaveLength(2);
 	});
 
@@ -164,8 +162,7 @@ describe('users/[username] load', () => {
 		findProfileMock.mockResolvedValue(makeProfile());
 		findRecipesMock.mockResolvedValue([]);
 		selectMock.mockReturnValue(chain([{ commitCount: 7 }]));
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		const result = (await load(makeLoadEvent('chefmaria'))) as any;
+		const result = await loadPage<PageData>(load as never, makeLoadEvent('chefmaria'));
 		expect(result.commitCount).toBe(7);
 		// The profile says "changes", not git's "commits", in its link preview too.
 		expect(result.meta.description).toBe('0 public recipes and 7 changes on Fork.');

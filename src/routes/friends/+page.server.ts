@@ -19,7 +19,7 @@ import {
 } from '#lib/server/friends.js';
 import { friendIdsOf } from '#lib/server/visibility.js';
 import { ensureProfile } from '#lib/server/profiles.js';
-import { failure, requireUser } from '#lib/server/actions.js';
+import { failure, requireUser, SESSION_ENDED } from '#lib/server/actions.js';
 import { oneOf, text, wholeNumber } from '#lib/helpers.js';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -95,7 +95,7 @@ export const actions: Actions = {
 	},
 
 	like: async ({ request, locals: { user } }) => {
-		if (!user) throw error(401, 'Login required');
+		if (!user) return failure(401, 'unauthenticated', SESSION_ENDED('try again'));
 		const entryId = wholeNumber(text(await request.formData(), 'entryId'));
 		if (entryId === null) return invalid('Choose an entry.');
 		const result = await toggleLike(user, entryId);
