@@ -586,8 +586,9 @@
 		margin: 0 auto;
 	}
 
-	/* A form's own measure inside the column: the Journal's entry pages. */
-	.page-inner--narrow {
+	/* A form's own measure inside the column, on the column's left edge as the
+	   editor's is: the Journal's entry pages. */
+	.page-inner--narrow > * {
 		max-width: 680px;
 	}
 

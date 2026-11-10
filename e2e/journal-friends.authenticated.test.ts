@@ -173,6 +173,16 @@ test.describe('One body width', () => {
 		});
 	}
 
+	test('at 1280 the Journal entry form starts on the Cookbook heading edge', async ({ page }) => {
+		await page.setViewportSize({ width: 1280, height: 900 });
+		const lefts = [];
+		for (const path of ['/cookbook', '/journal', '/journal/new']) {
+			await page.goto(path);
+			lefts.push(Math.round((await page.locator('main h1').boundingBox())!.x));
+		}
+		for (const left of lefts) expect(left).toBe(lefts[0]);
+	});
+
 	test('at 1280 the Friends feed and rail fill the container to its right edge', async ({
 		page
 	}) => {
