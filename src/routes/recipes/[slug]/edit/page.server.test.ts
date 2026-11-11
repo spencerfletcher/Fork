@@ -668,9 +668,10 @@ describe('edit load', () => {
 		expect(data.forkCount).toBe(3);
 		const [table, filter] = countMock.mock.calls[0] as [unknown, SQL];
 		expect(table).toBe(recipes);
-		// Only the parent link: a private fork still means forks exist.
+		// Only the parent link and live forks: a private fork still means forks
+		// exist, one in the Trash does not.
 		expect(new PgDialect().sqlToQuery(filter)).toMatchObject({
-			sql: '"recipes"."parent_id" = $1',
+			sql: '("recipes"."parent_id" = $1 and "recipes"."deleted_at" is null)',
 			params: [42]
 		});
 	});

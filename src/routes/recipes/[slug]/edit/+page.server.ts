@@ -2,7 +2,7 @@ import { error, redirect } from '@sveltejs/kit';
 import { db } from '#lib/server/db/index.js';
 import { recipes, recipeVersions } from '#lib/server/db/schema.js';
 import { draftOf } from '#lib/recipes/validation.js';
-import { eq, desc, inArray, sql } from 'drizzle-orm';
+import { and, eq, desc, inArray, isNull, sql } from 'drizzle-orm';
 import type { PageServerLoad, Actions } from './$types';
 import {
 	changedGroups,
@@ -36,10 +36,11 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 	// Creation and forking write version 1 with the recipe, so there is always one.
 	const latestVersion = recipe.versions[0];
 
-	// Any visibility: the forks hint is about whether forks exist, not who sees them.
+	// Any visibility: the forks hint is about whether forks exist, not who sees
+	// them. A fork in the Trash does not count.
 	const [allTags, forkCount] = await Promise.all([
 		listTags(),
-		db.$count(recipes, eq(recipes.parentId, recipe.id))
+		db.$count(recipes, and(eq(recipes.parentId, recipe.id), isNull(recipes.deletedAt)))
 	]);
 
 	return {
@@ -64,7 +65,7 @@ export const actions: Actions = {
 			});
 		const recipe = await ownRecipe(params.slug, user.id, {
 			recipesToTags: { with: { tag: true } },
-			parent: { columns: { visibility: true, authorId: true } }
+			parent: { columns: { visibility: true, authorId: true, deletedAt: true } }
 		});
 
 		const submission = readSubmission(formData);

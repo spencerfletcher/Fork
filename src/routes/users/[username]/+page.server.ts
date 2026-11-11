@@ -27,13 +27,13 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 			where: and(eq(recipes.authorId, profile.id), visibleTo(user)),
 			orderBy: (r, { desc }) => [desc(r.createdAt)]
 		}),
-		// Commits on public recipes only: the count appears in link previews,
-		// and must not hint at private work.
+		// Commits on public recipes only, as a signed-out visitor sees them: the
+		// count appears in link previews, and must not hint at private or trashed work.
 		db
 			.select({ commitCount: count() })
 			.from(recipeVersions)
 			.innerJoin(recipes, eq(recipes.id, recipeVersions.recipeId))
-			.where(and(eq(recipeVersions.createdBy, profile.id), eq(recipes.visibility, 'public'))),
+			.where(and(eq(recipeVersions.createdBy, profile.id), visibleTo(null))),
 		// Where the viewer stands with this person, for the relationship control.
 		user ? relationOf(user.id, profile.id) : null
 	]);

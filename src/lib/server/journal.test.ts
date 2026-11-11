@@ -33,7 +33,7 @@ function longLink(length: number, scheme = 'https') {
 function makeSourceRow(overrides: Partial<SourceRow> = {}): SourceRow {
 	return {
 		recipeId: 7,
-		recipe: { slug: 'dal', title: 'Dal', visibility: 'public', authorId: ME.id },
+		recipe: { slug: 'dal', title: 'Dal', visibility: 'public', authorId: ME.id, deletedAt: null },
 		versionNumber: 2,
 		sourceUrl: null,
 		...overrides
@@ -115,6 +115,13 @@ describe('sourceOf', () => {
 		expect(sourceOf(makeSourceRow({ recipe: null }), ME, [])).toEqual({ kind: 'deleted' });
 	});
 
+	test('a recipe in the Trash reads as deleted, to its owner too, and links again once restored', () => {
+		const trashed = makeSourceRow();
+		trashed.recipe = { ...trashed.recipe!, deletedAt: new Date() };
+		expect(sourceOf(trashed, ME, [])).toEqual({ kind: 'deleted' });
+		expect(sourceOf(makeSourceRow(), ME, [])).toMatchObject({ kind: 'recipe' });
+	});
+
 	test('an improvised entry with a link shows the link and its host, without www', () => {
 		const sourceUrl = 'https://www.seriouseats.com/dal?x=1';
 		expect(sourceOf(makeSourceRow({ recipeId: null, recipe: null, sourceUrl }), ME, [])).toEqual({
@@ -126,7 +133,13 @@ describe('sourceOf', () => {
 
 	test("a friend's Friends recipe hides once they are no longer friends", () => {
 		const row = makeSourceRow({
-			recipe: { slug: 's', title: 'Shakshuka', visibility: 'friends', authorId: FRIEND }
+			recipe: {
+				slug: 's',
+				title: 'Shakshuka',
+				visibility: 'friends',
+				authorId: FRIEND,
+				deletedAt: null
+			}
 		});
 		expect(sourceOf(row, ME, [FRIEND])).toMatchObject({ kind: 'recipe', own: false });
 		expect(sourceOf(row, ME, [])).toEqual({ kind: 'hidden' });

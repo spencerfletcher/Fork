@@ -170,7 +170,7 @@ export type EntrySource =
 
 export type SourceRow = {
 	recipeId: number | null;
-	recipe: Pick<Recipe, 'slug' | 'title' | 'visibility' | 'authorId'> | null;
+	recipe: Pick<Recipe, 'slug' | 'title' | 'visibility' | 'authorId' | 'deletedAt'> | null;
 	versionNumber: number | null;
 	sourceUrl: string | null;
 };
@@ -186,7 +186,8 @@ export function sourceOf(
 		const host = new URL(row.sourceUrl).hostname.replace(/^www\./, '');
 		return { kind: 'link', url: row.sourceUrl, host };
 	}
-	if (!row.recipe) return { kind: 'deleted' };
+	// A recipe in the Trash reads as deleted, its owner's entries included.
+	if (!row.recipe || row.recipe.deletedAt) return { kind: 'deleted' };
 	if (!canView(row.recipe, viewer, friendIds)) return { kind: 'hidden' };
 	return {
 		kind: 'recipe',
@@ -215,7 +216,8 @@ export const sourceColumns = {
 		slug: recipes.slug,
 		title: recipes.title,
 		visibility: recipes.visibility,
-		authorId: recipes.authorId
+		authorId: recipes.authorId,
+		deletedAt: recipes.deletedAt
 	},
 	versionNumber: recipeVersions.versionNumber
 };

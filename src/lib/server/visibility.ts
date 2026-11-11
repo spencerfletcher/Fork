@@ -3,6 +3,7 @@ import {
 	and,
 	eq,
 	inArray,
+	isNull,
 	or,
 	sql,
 	type BuildQueryResult,
@@ -19,14 +20,16 @@ import { VISIBILITIES, type Visibility } from '#lib/recipes/validation.js';
 
 /** Whoever is reading: a signed-in user, or nobody. */
 export type Viewer = { id: string } | null | undefined;
-type Row = { visibility: Visibility; authorId: string | null };
+type Row = { visibility: Visibility; authorId: string | null; deletedAt: Date | null };
 
 /**
- * A recipe is visible when it is public, the viewer wrote it, or it is shared
- * with friends and its author is one of `friendIds` (the viewer's accepted
- * friends, from friendIdsOf).
+ * A recipe is visible when it is not in the Trash and it is public, the viewer
+ * wrote it, or it is shared with friends and its author is one of `friendIds`
+ * (the viewer's accepted friends, from friendIdsOf). A trashed recipe is seen
+ * by nobody, its owner included: only the Trash (trash.ts) reads it.
  */
 export function canView(row: Row, user: Viewer, friendIds: string[] = []): boolean {
+	if (row.deletedAt) return false;
 	if (row.visibility === 'public') return true;
 	if (!user || row.authorId === null) return false;
 	if (row.authorId === user.id) return true;
@@ -54,9 +57,10 @@ type Schema = ExtractTablesWithRelations<typeof schema>;
 type RecipeWith = NonNullable<DBQueryConfig<'one', true, Schema, Schema['recipes']>['with']>;
 type RecipeRow<W extends RecipeWith> = BuildQueryResult<Schema, Schema['recipes'], { with: W }>;
 
+/** The live recipe at `slug`: one in the Trash is not found, for its owner too. */
 async function recipeBySlug<W extends RecipeWith>(slug: string, withRelations?: W) {
 	const row = await db.query.recipes.findFirst({
-		where: eq(recipes.slug, slug),
+		where: and(eq(recipes.slug, slug), isNull(recipes.deletedAt)),
 		with: withRelations
 	});
 	// findFirst cannot carry a generic `with` through to its result type.
@@ -134,13 +138,17 @@ export function authorIsFriendOf(userId: string): SQL {
 	return sql`exists (select 1 from ${friendships} "fr" where ${fr(friendships.status)} = ${'accepted' satisfies FriendshipStatus} and ${eitherWay(pair, userId, recipes.authorId)})`;
 }
 
-/** The same rule as canView, as a query condition on `recipes`. */
+/** The same rule as canView, as a query condition on `recipes`: never a recipe in the Trash. */
 export function visibleTo(user: Viewer): SQL {
-	if (!user) return eq(recipes.visibility, 'public');
-	return or(
-		eq(recipes.visibility, 'public'),
-		eq(recipes.authorId, user.id),
-		and(eq(recipes.visibility, 'friends'), authorIsFriendOf(user.id))
+	const live = isNull(recipes.deletedAt);
+	if (!user) return and(live, eq(recipes.visibility, 'public')) as SQL;
+	return and(
+		live,
+		or(
+			eq(recipes.visibility, 'public'),
+			eq(recipes.authorId, user.id),
+			and(eq(recipes.visibility, 'friends'), authorIsFriendOf(user.id))
+		)
 	) as SQL;
 }
 
