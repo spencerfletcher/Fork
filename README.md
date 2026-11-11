@@ -117,7 +117,7 @@ The app runs at `http://localhost:5173`. The seeded account is `spencer@fork.dev
 
 To point at a hosted Supabase project instead, skip `supabase start` and fill `.env` from your project's dashboard — `DATABASE_URL` should be the **session pooler** connection string (`aws-0-<region>.pooler.supabase.com:5432`, user `postgres.<ref>`): the direct `db.<ref>` host is IPv6-only and unreachable from most home networks and from serverless runtimes. Set `SUPABASE_PROJECT_ID` to the project ref; `pnpm db:seed:prod` refuses to run unless both URLs name it.
 
-Moderators are the auth user ids in `MODERATOR_IDS`, comma-separated, a server-only variable (set it in Netlify's environment for the live site; a change takes effect on the next deploy or restart). Unset or empty, nobody is a moderator. A moderator sees Hide from others and Restore on a recipe page.
+Moderators are the auth user ids in `MODERATOR_IDS`, comma-separated, a server-only variable (set it in Netlify's environment for the live site; a change takes effect on the next deploy or restart). Unset or empty, nobody is a moderator. A moderator sees Hide from others and Restore on a recipe page, and reviews reported and hidden recipes at `/moderation` (linked from nowhere; anyone else gets the 404 of an address with no page).
 
 ## Database changes
 

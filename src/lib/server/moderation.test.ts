@@ -2,6 +2,7 @@ import { describe, expect, test, vi } from 'vitest';
 
 const env = vi.hoisted(() => ({ MODERATOR_IDS: ' mod-1, mod-2 ,,' }));
 vi.mock('$app/env/private', () => env);
+vi.mock('#lib/server/db/index.js', () => ({ db: {} }));
 
 import { isModerator } from './moderation.js';
 
