@@ -356,6 +356,7 @@ Prioritize trust, capture, reading and cooking, and retrieval refinements before
 - [CSS complexity sweep, 10 Nov 2026](../audits/css_complexity_2026-11-10.md): about 250 removable lines, mostly declarations restating Tailwind preflight; the CSS simplification pass in flight follows it.
 - Standing sweeps: the [`code-health`](../../.agents/skills/code-health/SKILL.md) skill runs monthly, after any build over about 1000 lines or more than two parallel slices, and before a production publish; one dated report goes under `docs/audits/`.
 - Still owed after the MVP: remove the temporary `cream-palette` hook ignore once the MVP design settles (DS); the ingredient search index, covering every version and not only current content, since a result opens at its matched version (P2 global search).
+- Candidate, not decided (OD, 11 Nov 2026): fold a page's view state (`?version=`, `?serves=`, `?cook=`, `?collection=`, `?q=`, `?tags=`, `?filter=`, `?page=`) into one encoded `?meta=` parameter "rather than having so many ? tags". Weigh against it: readable, hand-editable and shareable URLs, canonical and link-preview rules that strip individual keys, and progressive enhancement of the filter forms, which submit named fields.
 
 ## 12. Outside the target and rejected
 
