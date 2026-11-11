@@ -145,6 +145,31 @@ describe('sourceOf', () => {
 		expect(sourceOf(row, ME, [])).toEqual({ kind: 'hidden' });
 	});
 
+	test("the viewer's own entry of their kept copy links the copy, by the kept version's title, never the row's", () => {
+		const row = makeSourceRow({
+			recipe: {
+				slug: 'gone',
+				title: 'Renamed in private',
+				visibility: 'private',
+				authorId: FRIEND,
+				deletedAt: null
+			}
+		});
+		expect(sourceOf(row, ME, [])).toEqual({ kind: 'hidden' });
+		const kept = new Map([[row.recipeId!, { title: 'Dal as saved' }]]);
+		expect(sourceOf(row, ME, [], kept)).toEqual({
+			kind: 'recipe',
+			slug: 'gone',
+			title: 'Dal as saved',
+			versionNumber: 2,
+			visibility: 'private',
+			own: false
+		});
+		// In the Trash, the copy still links.
+		row.recipe = { ...row.recipe!, deletedAt: new Date() };
+		expect(sourceOf(row, ME, [], kept)).toMatchObject({ kind: 'recipe', title: 'Dal as saved' });
+	});
+
 	test('the viewer’s own recipe is marked own, with its version number', () => {
 		expect(sourceOf(makeSourceRow(), ME, [])).toEqual({
 			kind: 'recipe',

@@ -105,3 +105,70 @@ describe.skipIf(!localDb)('times and last cooked, against the real database', ()
 		});
 	});
 });
+
+// The saver's kept copy of a withdrawn recipe in the Journal form: committed
+// rows (resolveRecipe reads through the pool), removed after.
+describe.skipIf(!localDb)('kept copies in the Journal, against the real database', () => {
+	let db: typeof import('#lib/server/db/index.js').db;
+	let schema: typeof import('#lib/server/db/schema.js');
+	let journal: typeof import('./journal.js');
+	const stamp = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+	const author = `test-ja-${stamp}`;
+	const saver = `test-js-${stamp}`;
+	const slug = `journal-kept-${stamp}`;
+
+	beforeAll(async () => {
+		({ db } = await import('#lib/server/db/index.js'));
+		schema = await import('#lib/server/db/schema.js');
+		journal = await import('./journal.js');
+		const { makeContent } = await import('#lib/recipes/fixtures.js');
+		await db.insert(schema.profiles).values([
+			{ id: author, username: `ja-${stamp}` },
+			{ id: saver, username: `js-${stamp}` }
+		]);
+		const [{ id }] = await db
+			.insert(schema.recipes)
+			.values({ authorId: author, slug, title: 'Renamed in private', visibility: 'private' })
+			.returning({ id: schema.recipes.id });
+		await db.insert(schema.recipeVersions).values(
+			[1, 2].map((n) => ({
+				recipeId: id,
+				versionNumber: n,
+				commitMessage: 'v',
+				...makeContent({ title: `Soup v${n}` }),
+				createdBy: author
+			}))
+		);
+		await db.insert(schema.favorites).values({ userId: saver, recipeId: id, copyVersion: 1 });
+	});
+
+	afterAll(async () => {
+		// Recipes, versions and saves go with the profiles (cascades and the recipe delete).
+		await db.delete(schema.recipes).where(eq(schema.recipes.slug, slug));
+		await db.delete(schema.profiles).where(eq(schema.profiles.id, author));
+		await db.delete(schema.profiles).where(eq(schema.profiles.id, saver));
+	});
+
+	test('resolveRecipe gives the saver their kept version only, by its own title', async () => {
+		const me = { id: saver };
+		expect(await journal.resolveRecipe(me, slug, null)).toMatchObject({
+			slug,
+			title: 'Soup v1',
+			versionNumber: 1,
+			visibility: 'private'
+		});
+		expect(await journal.resolveRecipe(me, slug, 1)).toMatchObject({ versionNumber: 1 });
+		expect(await journal.resolveRecipe(me, slug, 2)).toBeNull();
+		expect(await journal.resolveRecipe({ id: `${author}-nobody` }, slug, null)).toBeNull();
+	});
+
+	test("recipeChoices offers the copy by its kept version's title and number, never the row's", async () => {
+		const choices = await journal.recipeChoices({ id: saver });
+		expect(choices.find((c) => c.slug === slug)).toEqual({
+			slug,
+			title: 'Soup v1',
+			visibility: 'private',
+			latestVersion: 1
+		});
+	});
+});
