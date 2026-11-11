@@ -14,7 +14,7 @@ import { tick } from 'svelte';
  * after the fresh first page when the load came back shorter. A reload loads
  * `?page=N` whole and keeps its own fresh items.
  */
-export function pagedList<D, T extends { id: number }>(
+export function pagedList<D, T extends { id: number | string }>(
 	current: () => D,
 	pick: (data: D) => { items: T[]; next: string | null }
 ) {

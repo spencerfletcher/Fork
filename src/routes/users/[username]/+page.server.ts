@@ -3,10 +3,11 @@ import { recipes, recipeVersions } from '#lib/server/db/schema.js';
 import { namedBy } from '#lib/server/profiles.js';
 import { and, count, eq } from 'drizzle-orm';
 import { error, redirect } from '@sveltejs/kit';
-import { attachRecipeCounts } from '#lib/server/recipeCounts.js';
+import { cardList } from '#lib/server/recipeCounts.js';
 import { clampDescription } from '#lib/seo.js';
-import { NO_FTS, visibleTo } from '#lib/server/visibility.js';
+import { visibleTo } from '#lib/server/visibility.js';
 import { plural } from '#lib/helpers.js';
+import { listPage } from '#lib/listPage.js';
 import { relationOf } from '#lib/server/friends.js';
 import type { PageServerLoad } from './$types';
 
@@ -26,13 +27,15 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 		throw redirect(302, `/users/${encodeURIComponent(profile.username)}${url.search}`);
 	}
 
-	const [shownRecipes, commitResult, relation] = await Promise.all([
-		db.query.recipes.findMany({
-			// Strangers see public recipes, friends also friends ones, the owner all.
-			where: and(eq(recipes.authorId, profile.id), visibleTo(user)),
-			columns: NO_FTS,
-			orderBy: (r, { desc }) => [desc(r.createdAt)]
-		}),
+	const byAuthor = eq(recipes.authorId, profile.id);
+	// Strangers see public recipes, friends also friends ones, the owner all.
+	const shown = and(byAuthor, visibleTo(user));
+	const [{ cards, next }, total, publicCount, commitResult, relation] = await Promise.all([
+		// The shared card list's order (newest change first), so its keyset cursor pages it.
+		cardList(shown, [], user, listPage(url)),
+		db.$count(recipes, shown),
+		// The link preview names public recipes only, whoever loaded the page.
+		db.$count(recipes, and(byAuthor, visibleTo(null))),
 		// Commits on public recipes only, as a signed-out visitor sees them: the
 		// count appears in link previews, and must not hint at private or trashed work.
 		db
@@ -44,15 +47,13 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 		user ? relationOf(user.id, profile.id) : null
 	]);
 
-	const withCounts = await attachRecipeCounts(shownRecipes, user);
-	// The link preview names public recipes only, whoever loaded the page.
-	const publicCount = withCounts.filter((r) => r.visibility === 'public').length;
-
 	const commitCount = commitResult[0]?.commitCount ?? 0;
 
 	return {
 		profile,
-		recipes: withCounts,
+		recipes: cards,
+		next,
+		total,
 		commitCount,
 		relation,
 		meta: {

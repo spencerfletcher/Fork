@@ -23,6 +23,7 @@ type Item = ComponentProps<typeof FeedEntry>['item'];
 function makeItem(overrides: Partial<Item> = {}): Item {
 	return {
 		kind: 'entry',
+		id: 'entry-5',
 		at: new Date('2026-11-09T10:00:00Z'),
 		entry: {
 			id: 5,

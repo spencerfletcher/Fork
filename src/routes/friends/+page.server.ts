@@ -17,6 +17,8 @@ import {
 	unfriend
 } from '#lib/server/friends.js';
 import { friendIdsOf } from '#lib/server/visibility.js';
+import { ENTRIES_PER_PAGE } from '#lib/server/journal.js';
+import { listPage } from '#lib/listPage.js';
 import { ensureProfile } from '#lib/server/profiles.js';
 import { failure, requireUser, signedOut } from '#lib/server/actions.js';
 import { oneOf, text, wholeNumber } from '#lib/helpers.js';
@@ -25,9 +27,11 @@ import type { Actions, PageServerLoad } from './$types';
 export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 	requireUser(url, user);
 	const [friendIds, requests] = await Promise.all([friendIdsOf(user.id), requestsFor(user.id)]);
-	const feed = await feedFor(user, friendIds);
+	// A page as long as the Journal's: the feed is mostly friends' entries.
+	const { items, next } = await feedFor(user, friendIds, listPage(url, ENTRIES_PER_PAGE));
 	return {
-		feed,
+		feed: items,
+		next,
 		requests,
 		friendCount: friendIds.length,
 		meta: { title: 'Friends', noindex: true }

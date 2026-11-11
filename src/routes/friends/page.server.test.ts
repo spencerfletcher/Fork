@@ -3,6 +3,7 @@ import { invokeAction, formEvent, loadEvent } from '#lib/testing/actions.js';
 import { MAX_REPORT, OWN_LIKE } from '#lib/server/friends.js';
 import { actions, load } from './+page.server';
 import { SESSION_ENDED } from '#lib/server/actions.js';
+import { ENTRIES_PER_PAGE } from '#lib/server/journal.js';
 
 const m = vi.hoisted(() => ({
 	findProfile: vi.fn(),
@@ -63,19 +64,38 @@ describe('friends load', () => {
 	});
 
 	test('the feed, the waiting requests and how many friends', async () => {
-		m.feedFor.mockResolvedValue([]);
+		m.feedFor.mockResolvedValue({ items: [], next: null });
 		m.requestsFor.mockResolvedValue([{ id: 'p', username: 'priyabakes', sentAt: new Date() }]);
 		m.friendIdsOf.mockResolvedValue(['a', 'b']);
 		const data = await load(loadEvent({ path: '/friends', user: ME }));
 		expect(data).toMatchObject({
 			feed: [],
+			next: null,
 			friendCount: 2,
 			requests: [{ username: 'priyabakes' }],
 			meta: { noindex: true }
 		});
 		// One friends lookup: the feed is handed the ids the count uses.
 		expect(m.friendIdsOf).toHaveBeenCalledTimes(1);
-		expect(m.feedFor).toHaveBeenCalledWith(ME, ['a', 'b']);
+		expect(m.feedFor).toHaveBeenCalledWith(ME, ['a', 'b'], {
+			after: null,
+			limit: ENTRIES_PER_PAGE,
+			per: ENTRIES_PER_PAGE
+		});
+	});
+
+	// A page as long as the Journal's; Show more's fetch reads one page after its cursor.
+	test('reads one page of the feed, or the page after a cursor, and hands on its cursor', async () => {
+		m.feedFor.mockResolvedValue({ items: [], next: 'cursor-2' });
+		m.requestsFor.mockResolvedValue([]);
+		m.friendIdsOf.mockResolvedValue(['a']);
+		const data = await load(loadEvent({ path: '/friends?after=cursor-1', user: ME }));
+		expect(m.feedFor).toHaveBeenCalledWith(ME, ['a'], {
+			after: 'cursor-1',
+			limit: ENTRIES_PER_PAGE,
+			per: ENTRIES_PER_PAGE
+		});
+		expect(data).toMatchObject({ next: 'cursor-2' });
 	});
 });
 
