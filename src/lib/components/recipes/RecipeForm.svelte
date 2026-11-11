@@ -6,28 +6,25 @@
 	import { beforeNavigate } from '$app/navigation';
 	import {
 		parseDraftContent,
-		numberMessages,
 		fieldOfMessage,
-		readSourceUrl,
-		timeMessages,
 		NUMBER_FIELDS,
-		REQUIRED_MESSAGES,
-		TIME_FIELDS,
 		VISIBILITIES,
-		type NumberField,
-		type RecipeDraft,
-		type TimeField
+		type RecipeDraft
 	} from '#lib/recipes/validation.js';
-	import { formatDuration, OVERNIGHT_MINUTES, readDuration } from '#lib/recipes/times.js';
+	import { fieldErrors } from '#lib/recipes/fieldErrors.svelte.js';
 	import { normaliseTagNames, tagKey } from '#lib/recipes/tags.js';
 	import type { TagChip } from '#lib/recipes/types.js';
 	import { generatedCommitMessage } from '#lib/recipes/content.js';
-	import { MAX_MAKES, MAX_SOURCE_URL, TEXT_LIMITS } from '#lib/recipes/limits.js';
+	import { MAX_MAKES, TEXT_LIMITS } from '#lib/recipes/limits.js';
 	import { draftChangedGroups } from '#lib/recipes/draftChanges.js';
 	import TagInput from '#lib/components/ui/TagInput.svelte';
 	import IngredientEditor from './IngredientEditor.svelte';
 	import StepEditor from './StepEditor.svelte';
 	import PhotoField from './PhotoField.svelte';
+	import FieldError from './FieldError.svelte';
+	import MoreDetails from './MoreDetails.svelte';
+	import TimesRow from './TimesRow.svelte';
+	import SourceFields from './SourceFields.svelte';
 	import FormActions from '#lib/components/ui/FormActions.svelte';
 	import ChoiceGroup from '#lib/components/ui/ChoiceGroup.svelte';
 	import { audienceIcon } from '#lib/components/Icons.svelte';
@@ -131,8 +128,10 @@
 	const settingsChanged = $derived(settings(draft) !== settings(baseline));
 
 	const outcome = $derived.by(() => {
-		if (blocked && errorCount > 0) {
-			return errorCount === 1 ? '1 field needs attention' : `${errorCount} fields need attention`;
+		if (fields.blocked && fields.count > 0) {
+			return fields.count === 1
+				? '1 field needs attention'
+				: `${fields.count} fields need attention`;
 		}
 		if (!dirty || save.pending || !nextVersion || groups === null) return '';
 		// A typed message is never dropped: the save writes a version carrying it.
@@ -146,71 +145,11 @@
 	// A blank message saves the generated one, as the server trims; say so.
 	const savesGenerated = $derived(generated !== null && !draft.commitMessage.trim());
 
-	const timeFields = Object.keys(TIME_FIELDS) as TimeField[];
-	const TIME_PLACEHOLDER: Record<TimeField, string> = {
-		prepTimeMinutes: '15 min',
-		cookTimeMinutes: '1 h',
-		restTimeMinutes: 'Overnight'
-	};
-
-	// The labelled short notes in "More details", in the order the page shows them.
-	const MORE_FIELDS = [
-		{ name: 'makeAhead', placeholder: 'Dough keeps 3 days chilled' },
-		{ name: 'equipment', placeholder: 'A 23 cm springform tin' },
-		{ name: 'storage', placeholder: 'Airtight, up to 5 days' },
-		{ name: 'reheating', placeholder: 'Covered, 15 min at 160°C' }
-	] as const;
-
-	// What a typed field the browser cannot judge says, in the server's own
-	// wording; '' when it is fine. Set as the box's custom validity, so a save
-	// with one wrong is blocked like any other invalid field.
-	function typedMessage(name: string, value: string): string {
-		if (name in TIME_FIELDS) {
-			const read = readDuration(value);
-			return read.ok ? '' : timeMessages(name as TimeField)[read.reason];
-		}
-		if (name === 'sourceUrl') {
-			const read = readSourceUrl(value);
-			return read.ok ? '' : read.error;
-		}
-		return '';
-	}
-
-	// Inline errors, one per field name, in the server's own wording. A field is
-	// checked when it is left after an edit, when it blocks a submit, and on
-	// every keystroke once it carries an error, so the message and the browser's
-	// :user-invalid state come from the same validity and clear together.
-	// Passing through an untouched field says nothing, as the auth pages do.
-	// A server-rendered reply shows a field's message too, as the draft is
-	// shown: the initial state, since the effect below never runs there.
+	// Inline errors in the server's own wording (#lib/recipes/fieldErrors).
 	// svelte-ignore state_referenced_locally
-	const serverField = form ? fieldOfMessage(form.error) : undefined;
-	// svelte-ignore state_referenced_locally
-	let errors = $state<Record<string, string>>(
-		form && serverField ? { [serverField]: form.error } : {}
-	);
-	// Read only by handlers, so not state.
-	const edited: Record<string, boolean> = {};
-	// A blocked submit makes the outcome line count what still needs fixing.
-	let blocked = $state(false);
-	const errorCount = $derived(Object.values(errors).filter(Boolean).length);
-
-	function validate(target: EventTarget | null) {
-		const el = target as HTMLInputElement | HTMLTextAreaElement;
-		const name = el?.name;
-		if (!name) return;
-		if (name in TIME_FIELDS || name === 'sourceUrl') errors[name] = typedMessage(name, el.value);
-		else if (name in REQUIRED_MESSAGES || name in NUMBER_FIELDS)
-			errors[name] = validityMessage(name, el.validity);
-	}
-
-	function validityMessage(name: string, v: ValidityState): string {
-		if (v.valid) return '';
-		if (v.valueMissing) return REQUIRED_MESSAGES[name as keyof typeof REQUIRED_MESSAGES];
-		// Not whole before below the floor, in the server's order, so -1.5 says the same in both.
-		const messages = numberMessages(name as NumberField);
-		return v.rangeUnderflow && !v.stepMismatch ? messages.belowMin : messages.whole;
-	}
+	const fields = fieldErrors(form);
+	const errors = fields.errors;
+	const aria = fields.aria;
 
 	// Fields are disabled while saving, so nothing typed mid-request is lost by
 	// the redirect. FormData is built before this runs, so the submission is whole.
@@ -239,24 +178,6 @@
 	$effect(() => {
 		if (globalError && !save.pending) submitButton?.focus();
 	});
-
-	// A blocked submit fires invalid on each bad field in order. The inline
-	// message says it, so the browser's bubble, which would say it again, is
-	// cancelled; cancelling also stops the browser focusing the field, so the
-	// first invalid one is focused here.
-	function onInvalid(event: Event & { currentTarget: HTMLFormElement }) {
-		event.preventDefault();
-		blocked = true;
-		validate(event.target);
-		const bad = event.currentTarget.querySelector<HTMLInputElement | HTMLTextAreaElement>(
-			':is(input, textarea):invalid'
-		);
-		// A text box's textarea is hidden behind its live box, which has taken its id.
-		(bad?.hidden ? document.getElementById(bad.name) : bad)?.focus();
-	}
-
-	const aria = (name: string) =>
-		errors[name] ? { 'aria-invalid': 'true' as const, 'aria-describedby': `${name}-error` } : {};
 
 	// On a phone the bar covers the screen's bottom edge. A tall box tabbed into
 	// with only its top showing counts as in view, so the browser neither
@@ -406,12 +327,10 @@
 	{/if}
 {/snippet}
 
-{@render header?.(outcome, restored ? draftNote : undefined, errorCount > 0)}
+{@render header?.(outcome, restored ? draftNote : undefined, fields.count > 0)}
 
 {#snippet fieldError(name: string)}
-	{#if errors[name]}
-		<p class="field-error" id="{name}-error" role="alert">{errors[name]}</p>
-	{/if}
+	<FieldError {name} error={errors[name]} />
 {/snippet}
 
 <form
@@ -421,16 +340,10 @@
 	enctype="multipart/form-data"
 	use:enhance={submit}
 	class="form"
-	onfocusout={(e) => {
-		if (edited[(e.target as HTMLInputElement).name]) validate(e.target);
-	}}
-	oninvalidcapture={onInvalid}
+	onfocusout={fields.onfocusout}
+	oninvalidcapture={fields.onInvalid}
 	onfocusin={clearBar}
-	oninput={(e) => {
-		const name = (e.target as HTMLInputElement).name;
-		edited[name] = true;
-		if (errors[name]) validate(e.target);
-	}}>
+	oninput={fields.oninput}>
 	<fieldset disabled={save.pending} class="contents">
 		{#if draft.editRevision}
 			<input type="hidden" name="editRevision" value={draft.editRevision} />
@@ -505,64 +418,9 @@
 					{@render fieldError('servings')}
 				</div>
 
-				<!-- Times are typed as words and stored as minutes; each is its own
-				     span on the page, never added up. No picker: a hint and the same
-				     message the server gives are enough. -->
-				<div class="field-row">
-					{#each timeFields as name (name)}
-						<div class="field">
-							<label for={name}>{TIME_FIELDS[name].formLabel}</label>
-							<input
-								id={name}
-								{name}
-								type="text"
-								autocomplete="off"
-								placeholder={TIME_PLACEHOLDER[name]}
-								bind:value={draft[name]}
-								{@attach (el) => el.setCustomValidity(typedMessage(name, draft[name]))}
-								aria-invalid={errors[name] ? 'true' : undefined}
-								aria-describedby={errors[name] ? `${name}-error times-hint` : 'times-hint'} />
-						</div>
-					{/each}
-					<!-- Under the whole row, in field order: a narrow column would wrap them. -->
-					{#each timeFields as name (name)}
-						{@render fieldError(name)}
-					{/each}
-					<p class="form-hint" id="times-hint">
-						Like 45 min, 1 h 30 or 2 days; overnight is {formatDuration(OVERNIGHT_MINUTES)}. Rest is
-						rising, chilling or marinating.
-					</p>
-				</div>
+				<TimesRow bind:draft {errors} />
 
-				<!-- Where it came from outside Fork, apart from who wrote it here. -->
-				<div class="field">
-					<label for="sourceName">Source</label>
-					<input
-						id="sourceName"
-						name="sourceName"
-						type="text"
-						maxlength={TEXT_LIMITS.sourceName.max}
-						placeholder="A cookbook, a person, a website"
-						bind:value={draft.sourceName}
-						aria-invalid={errors.sourceName ? 'true' : undefined}
-						aria-describedby={errors.sourceName ? 'sourceName-error' : undefined} />
-					{@render fieldError('sourceName')}
-				</div>
-				<div class="field">
-					<label for="sourceUrl">Source link</label>
-					<input
-						id="sourceUrl"
-						name="sourceUrl"
-						type="text"
-						inputmode="url"
-						autocomplete="off"
-						maxlength={MAX_SOURCE_URL}
-						placeholder="https://"
-						bind:value={draft.sourceUrl}
-						{@attach (el) => el.setCustomValidity(typedMessage('sourceUrl', draft.sourceUrl))}
-						{...aria('sourceUrl')} />
-					{@render fieldError('sourceUrl')}
-				</div>
+				<SourceFields bind:draft {errors} />
 
 				<fieldset class="field field-tags">
 					<legend class="field-legend">Tags</legend>
@@ -606,30 +464,7 @@
 					</p>
 				</div>
 
-				<!-- Optional short notes, out of the way until one is wanted: open
-				     whenever one is filled or refused, so nothing typed is hidden. -->
-				<details
-					class="more-details"
-					open={MORE_FIELDS.some(({ name }) => draft[name].trim() || errors[name])}>
-					<summary>More details</summary>
-					<div class="more-fields">
-						{#each MORE_FIELDS as { name, placeholder } (name)}
-							<div class="field">
-								<label for={name}>{TEXT_LIMITS[name].label}</label>
-								<input
-									id={name}
-									{name}
-									type="text"
-									maxlength={TEXT_LIMITS[name].max}
-									{placeholder}
-									bind:value={draft[name]}
-									aria-invalid={errors[name] ? 'true' : undefined}
-									aria-describedby={errors[name] ? `${name}-error` : undefined} />
-								{@render fieldError(name)}
-							</div>
-						{/each}
-					</div>
-				</details>
+				<MoreDetails bind:draft {errors} />
 			</div>
 		</div>
 
@@ -666,36 +501,9 @@
 </div>
 
 <style>
-	/* The row's errors and hint run its full width, 8px under the boxes. */
-	.field-row {
-		row-gap: var(--space-2);
-	}
-
-	.field-row > .field-error,
-	.field-row > .form-hint {
-		grid-column: 1 / -1;
-	}
-
 	/* Serves is a number of a few digits; the yield is a phrase. */
 	.serves-row {
 		grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
-	}
-
-	/* A label's voice, with a 44px row to press. */
-	.more-details summary {
-		display: list-item;
-		padding-block: 11px;
-		cursor: pointer;
-		font-size: 0.9375rem;
-		font-weight: 600;
-		line-height: 22px;
-	}
-
-	.more-fields {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-4);
-		padding-top: var(--space-2);
 	}
 
 	textarea[name='notes'] {

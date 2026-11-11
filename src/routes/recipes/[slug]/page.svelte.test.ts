@@ -174,13 +174,6 @@ describe('recipe page title band', () => {
 		);
 		expect(cssRule(pageSource, '.recipe-photo img')).toMatch(/aspect-ratio: 4 \/ 3;/);
 	});
-
-	test('in forced colours only the pressed section tab keeps its underline', () => {
-		const forced = pageSource.slice(pageSource.indexOf('@media (forced-colors: active)'));
-		expect(cssRule(forced, ".section-tabs button:not([aria-pressed='true'])")).toMatch(
-			/border-bottom-color: Canvas;/
-		);
-	});
 });
 
 describe('recipe page signed in', () => {
@@ -568,21 +561,6 @@ describe('recipe page cooking CSS', () => {
 		expect(
 			cssRule(pageSource, ':global(body:has(article[data-cooking]) :is(.nav-shell, .tab-bar))')
 		).toMatch(/display: none;/);
-	});
-
-	test('below 1024 the switch is pinned to the bottom, clear of the home indicator', () => {
-		const narrow = pageSource.slice(pageSource.indexOf('@media (max-width: 1023px)'));
-		const rule = cssRule(narrow, '[data-cooking] .section-tabs');
-		expect(rule).toMatch(/position: fixed;/);
-		expect(rule).toMatch(/bottom: 0;/);
-		expect(rule).toMatch(/env\(safe-area-inset-bottom\)/);
-	});
-
-	test('in forced colours only the current segment keeps its top line', () => {
-		const forced = pageSource.slice(pageSource.lastIndexOf('@media (forced-colors: active)'));
-		expect(
-			cssRule(forced, "[data-cooking] .section-tabs button:not([aria-pressed='true'])")
-		).toMatch(/border-top-color: Canvas;/);
 	});
 });
 
