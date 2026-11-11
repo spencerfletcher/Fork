@@ -416,6 +416,18 @@ describe('RecipeForm phone details', () => {
 		expect(summary()).toHaveTextContent(/Edit details$/);
 	});
 
+	// The house dots, drawn and unread; each sits in the gap before its fact,
+	// so the one before a fact that wraps is clipped with the box's overflow.
+	test('the facts are separated by drawn dots, and no wrapped line starts with one', () => {
+		renderWith({ makes: '36 cookies', visibility: 'public' });
+		expect(summary().querySelector('.fold-facts')).toHaveClass('dot-list');
+		expect(cssRule(style, '.fold-facts')).toMatch(/overflow:\s*hidden/);
+		expect(cssRule(style, '.fold-facts > span + span::before')).toMatch(
+			/position:\s*absolute;\s*right:\s*100%;\s*width:\s*14px/
+		);
+		expect(cssRule(style, '.fold-facts')).toMatch(/gap:\s*0 14px/);
+	});
+
 	test('on a phone the folded summary sits one section gap, the form’s own, above Ingredients', () => {
 		const phone = style.slice(style.lastIndexOf('@media (max-width: 699px)'));
 		expect(cssRule(phone, '.editor-top')).toMatch(/margin-bottom:\s*0/);
