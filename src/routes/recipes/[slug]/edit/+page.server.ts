@@ -2,7 +2,7 @@ import { error, redirect } from '@sveltejs/kit';
 import { db } from '#lib/server/db/index.js';
 import { recipes, recipeVersions } from '#lib/server/db/schema.js';
 import { draftOf } from '#lib/recipes/validation.js';
-import { and, eq, desc, isNull, sql } from 'drizzle-orm';
+import { and, eq, desc, isNull } from 'drizzle-orm';
 import { appendVersion, commitSave, lockForSave } from '#lib/server/versions.js';
 import type { PageServerLoad, Actions } from './$types';
 import {
@@ -19,6 +19,7 @@ import { BAD_FORM, failure, requireUser, signedOut } from '#lib/server/actions.j
 import { wholeNumber } from '#lib/helpers.js';
 import { syncTags, listTags } from '#lib/server/tags.js';
 import { grantKeptCopies } from '#lib/server/keptCopies.js';
+import { moveToTrash } from '#lib/server/trash.js';
 import {
 	canSetVisibility,
 	canViewRow,
@@ -170,26 +171,7 @@ export const actions: Actions = {
 		if (!user) return signedOut('delete again');
 
 		const recipe = await ownRecipe(params.slug, user.id);
-		// Each saver who could see it keeps a read-only copy, granted under the
-		// save's row lock from the audience the move ends, so a save changing it
-		// meanwhile either lands first (and is read here) or waits.
-		await db.transaction(async (tx) => {
-			const [locked] = await tx
-				.select({ visibility: recipes.visibility })
-				.from(recipes)
-				.where(eq(recipes.id, recipe.id))
-				.for('update');
-			if (locked && locked.visibility !== 'private')
-				await grantKeptCopies(tx, {
-					id: recipe.id,
-					authorId: recipe.authorId,
-					visibility: locked.visibility
-				});
-			await tx
-				.update(recipes)
-				.set({ deletedAt: new Date(), editRevision: sql`${recipes.editRevision} + 1` })
-				.where(eq(recipes.id, recipe.id));
-		});
+		await moveToTrash(recipe);
 
 		throw redirect(303, '/cookbook/trash');
 	}

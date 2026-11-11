@@ -1,10 +1,11 @@
 import { describe, test, expect, vi } from 'vitest';
-import { render, screen, within } from '@testing-library/svelte';
+import { fireEvent, render, screen, within } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import SettingsPage from './+page.svelte';
 import { AUDIENCE_LABEL, AUDIENCE_NOTE } from '#lib/audience.js';
 import { FORMER_USERNAME_DAYS, USERNAME_TAKEN } from '#lib/auth/rules.js';
 import { SESSION_ENDED } from '#lib/server/actions.js';
+import { TYPE_USERNAME } from '#lib/account.js';
 import { EXPORT_FORMATS, FORMAT_LABEL, exportHref } from '#lib/export/archive.js';
 import { VISIBILITIES, type Visibility } from '#lib/recipes/validation.js';
 import {
@@ -32,7 +33,14 @@ describe('Settings page', () => {
 	test('one h1 and a titled section per setting', () => {
 		renderPage();
 		expect(screen.getByRole('heading', { level: 1, name: 'Settings' })).toBeInTheDocument();
-		for (const name of ['Account', 'Username', 'Default audience', 'Measurement', 'Your data']) {
+		for (const name of [
+			'Account',
+			'Username',
+			'Default audience',
+			'Measurement',
+			'Your data',
+			'Delete account'
+		]) {
 			expect(section(name)).toBeInTheDocument();
 		}
 	});
@@ -185,5 +193,50 @@ describe('Default audience section', () => {
 		expect(alert).toHaveFocus();
 		expect(within(section('Username')).queryByRole('alert')).toBeNull();
 		expect(screen.getByRole('textbox', { name: 'Username' })).not.toHaveAttribute('aria-invalid');
+	});
+});
+
+describe('Delete account section', () => {
+	const del = () => section('Delete account');
+
+	test('last, it says what goes for everyone and what others keep, and links the download first', () => {
+		renderPage();
+		const regions = screen.getAllByRole('region');
+		expect(regions.at(-1)).toBe(del());
+		for (const line of [
+			'Your recipes and their history are deleted for everyone.',
+			'People who saved one of your recipes keep their read-only copy, without your name.',
+			'Forks of your recipes stay with the cooks who made them.',
+			'Your Journal, collections, saves and friends are removed.',
+			'This cannot be undone.'
+		])
+			expect(within(del()).getByText(line)).toBeInTheDocument();
+		expect(within(del()).getByRole('link', { name: 'Download your data first' })).toHaveAttribute(
+			'href',
+			exportHref('json')
+		);
+	});
+
+	test('the red trigger opens a step that asks for the username typed, posting to deleteAccount', async () => {
+		renderPage();
+		const trigger = within(del()).getByRole('button', { name: 'Delete account' });
+		expect(trigger).toHaveClass('btn-ghost', 'danger');
+		await fireEvent.click(trigger);
+		const step = within(del()).getByRole('group', { name: 'Delete your account?' });
+		const field = within(step).getByRole('textbox', {
+			name: 'Type cook to confirm'
+		});
+		expect(field).toHaveAttribute('name', 'confirmUsername');
+		expect(field).toBeRequired();
+		const confirm = within(step).getByRole('button', { name: 'Delete my account' });
+		expect(confirm).toHaveClass('danger');
+		expect(confirm.closest('form')).toHaveAttribute('action', '?/deleteAccount');
+		within(step).getByRole('button', { name: 'Keep account' });
+	});
+
+	test('a refusal shows in this section only', () => {
+		renderPage({ section: 'delete', code: 'invalid', error: TYPE_USERNAME });
+		expect(within(del()).getByRole('alert')).toHaveTextContent(TYPE_USERNAME);
+		expect(within(section('Username')).queryByRole('alert')).toBeNull();
 	});
 });

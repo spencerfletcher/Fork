@@ -8,8 +8,9 @@
 	// confirm, the keep button, then the sentence that says what goes. Only the
 	// step's button posts. Focus moves to the step; Escape or the keep button
 	// closes it and hands focus back to the trigger. Used by Delete recipe,
-	// Delete entry, the profile's Remove friend and Block, and the version
-	// bar's Restore, the one that loses nothing and so is not red.
+	// Delete entry, the profile's Remove friend and Block, Settings' Delete
+	// account, and the version bar's Restore, the one that loses nothing and
+	// so is not red.
 	let {
 		trigger,
 		triggerClass = 'btn-ghost danger',
@@ -46,7 +47,7 @@
 		/** A refusal, shown under the step in the form error style. */
 		error?: string | null;
 		open?: boolean;
-		/** Hidden inputs the action reads. */
+		/** Inputs the action reads: hidden ones, or a field the step asks for, on its own line before the buttons. */
 		fields?: Snippet;
 	} = $props();
 
@@ -104,7 +105,6 @@
 
 {#if open}
 	<form class="confirm-step" method="POST" {action} use:enhanceForm={enhance} bind:this={form}>
-		{@render fields?.()}
 		<!-- svelte-ignore a11y_no_noninteractive_element_interactions (Escape bubbles up from the buttons inside) -->
 		<div
 			class="step"
@@ -117,6 +117,9 @@
 			onkeydown={(e) => {
 				if (e.key === 'Escape') close();
 			}}>
+			<!-- Inside the step, so a visible field (Delete account's typed name)
+			     comes first in Tab order and Escape closes from it. -->
+			{@render fields?.()}
 			<button type="submit" class="btn-ghost" class:danger={destructive} disabled={pending}>
 				{pending ? pendingLabel : confirmLabel}
 			</button>
