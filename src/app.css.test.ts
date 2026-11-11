@@ -102,6 +102,12 @@ describe('app.css hovers', () => {
 		expect(body('.btn-ghost:hover')).toMatch(/background:\s*var\(--color-band\)/);
 	});
 
+	// The ⋯ is a box like the ghost and the menu rows (Spencer, 11 November 2026: "… to band").
+	test('the ⋯ trigger fills with the band while hovered or open', () => {
+		const rule = body(".more-button:hover, .more-button[aria-expanded='true']");
+		expect(rule).toMatch(/background:\s*var\(--color-band\)/);
+	});
+
 	// The Hover Rule (DESIGN.md): clay text deepens, never turns ink.
 	test('a clay link deepens to clay deep on hover, a clearly darker step', () => {
 		expect(body('a:hover')).toMatch(/color:\s*var\(--color-accent-hover\)/);
