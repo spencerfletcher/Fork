@@ -1323,3 +1323,114 @@
 		transition-duration: 0.01ms !important;
 	}
 }
+
+/* Print (DESIGN.md, Print): the recipe page on paper, from reading or
+   cooking, at any version and scale. The print header (PrintHeader.svelte)
+   stands in for the band and the cooking header; everything a cook taps is
+   hidden. Last in the file and !important, so no screen rule (a component's
+   scoped one included) outranks it. */
+@page {
+	margin: 16mm 15mm;
+}
+
+@media print {
+	html {
+		font-size: 11pt;
+		background: #fff !important;
+	}
+
+	*,
+	*::before,
+	*::after {
+		color: #000 !important;
+		background: transparent !important;
+		box-shadow: none !important;
+		text-shadow: none !important;
+	}
+
+	/* The site's chrome, the band and cooking's header (the print header says
+	   what they did), the version bar's controls, the phone tabs and the
+	   bottom switch, Finish cooking, the scaler (the print header says the
+	   serves), and the ticks' circles: a numbered step
+	   and a ruled row are enough on paper. */
+	.nav-shell,
+	.tab-bar,
+	.skip-link,
+	.hero,
+	.cook-header,
+	.bar-row,
+	.section-tabs,
+	.finish,
+	.clear-ticks,
+	#recipe .serves,
+	#recipe .tick,
+	#recipe .form-hint a {
+		display: none !important;
+	}
+
+	.print-header {
+		display: block !important;
+	}
+
+	a {
+		text-decoration: none !important;
+	}
+
+	main,
+	.page,
+	.page-inner {
+		padding: 0 !important;
+		max-width: none !important;
+	}
+
+	/* One column, ingredients then method, whichever the phone tabs showed. */
+	#recipe {
+		display: block !important;
+		padding: 0 !important;
+		overflow-wrap: anywhere;
+	}
+
+	#recipe aside,
+	#recipe .main {
+		display: block !important;
+	}
+
+	#recipe .main {
+		margin-top: 18pt;
+	}
+
+	#recipe .sidebar-sticky {
+		position: static !important;
+		max-height: none !important;
+		overflow: visible !important;
+		margin: 0 !important;
+		padding: 0 !important;
+		mask-image: none !important;
+		animation: none !important;
+	}
+
+	/* The section headings, visually hidden below 1024px on screen. */
+	#recipe h2 {
+		position: static !important;
+		width: auto !important;
+		height: auto !important;
+		overflow: visible !important;
+		clip-path: none !important;
+		white-space: normal !important;
+		break-after: avoid;
+	}
+
+	#recipe h3 {
+		break-after: avoid;
+	}
+
+	/* A ticked row at full ink and un-struck: paper starts a fresh cook. */
+	#recipe label {
+		text-decoration-line: none !important;
+		break-inside: avoid;
+	}
+
+	#recipe li {
+		break-inside: avoid;
+	}
+}

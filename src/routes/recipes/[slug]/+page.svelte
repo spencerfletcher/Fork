@@ -10,6 +10,7 @@
 	import RecipeMethod from './components/RecipeMethod.svelte';
 	import RecipeActions from './components/RecipeActions.svelte';
 	import ServesControl from './components/ServesControl.svelte';
+	import PrintHeader from './components/PrintHeader.svelte';
 	import { ticksKey } from './components/ticks';
 	import { setShallowParam } from './components/shallowParam';
 	import { parseServes } from '#lib/recipes/scale.js';
@@ -66,6 +67,13 @@
 	// Finish cooking with the scaler's shallow replace. The article's
 	// data-cooking is what the lists' CSS keys off.
 	let cooking = $derived(url.searchParams.get('cook') === '1');
+
+	// The address a printout gives: this version at these serves, not cooking.
+	const printHref = $derived.by(() => {
+		const printed = new URL(url);
+		printed.searchParams.delete('cook');
+		return printed.href;
+	});
 
 	// Below 1024px the Ingredients | Method bar shows one section at a time in
 	// place of the other, so the reader never scrolls past one to reach the
@@ -140,6 +148,15 @@
 	class="min-h-dvh"
 	data-cooking={cooking || undefined}
 	data-version={cooking ? currentVersion.versionNumber : undefined}>
+	<!-- On paper only: the band's and the version bar's facts as plain lines,
+	     from reading and cooking alike. -->
+	<PrintHeader
+		{recipe}
+		content={currentVersion}
+		versionNumber={currentVersion.versionNumber}
+		{stored}
+		{serves}
+		href={printHref} />
 	<!-- Cooking, the band, its actions, the stats and the tags give way to the
 	     cooking header: the title and the serves being cooked, and Exit. -->
 	{#if cooking}
