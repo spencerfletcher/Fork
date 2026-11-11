@@ -110,7 +110,19 @@ export const recipes = pgTable(
 		// A profile's recipes, the library and the feed read by author.
 		index('recipes_author_idx').on(table.authorId),
 		// Fork counts on every card list read by parent.
-		index('recipes_parent_idx').on(table.parentId)
+		index('recipes_parent_idx').on(table.parentId),
+		// Newest first among live recipes: visibleTo always filters deleted_at
+		// is null, and Discover takes the first 60. Ascending on purpose: read
+		// backward it is `updated_at desc` (nulls first), which a desc index
+		// (nulls last) is not.
+		index('recipes_live_updated_idx')
+			.on(table.updatedAt)
+			.where(sql`${table.deletedAt} is null`),
+		// A cook's Trash, newest deletion first (inTrashOf, the Trash page), over
+		// trashed rows only.
+		index('recipes_trash_idx')
+			.on(table.authorId, table.deletedAt)
+			.where(sql`${table.deletedAt} is not null and ${table.erasedAt} is null`)
 	]
 ).enableRLS();
 

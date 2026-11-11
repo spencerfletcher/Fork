@@ -1,0 +1,2 @@
+CREATE INDEX "recipes_live_updated_idx" ON "recipes" USING btree ("updated_at") WHERE "recipes"."deleted_at" is null;--> statement-breakpoint
+CREATE INDEX "recipes_trash_idx" ON "recipes" USING btree ("author_id","deleted_at") WHERE "recipes"."deleted_at" is not null and "recipes"."erased_at" is null;
