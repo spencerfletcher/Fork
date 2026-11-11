@@ -19,9 +19,11 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 	const profile = await db.query.profiles.findFirst({ where: namedBy(username) });
 
 	if (!profile) throw error(404, 'User not found');
-	// A former name: old links follow the cook to their current one.
+	// A former name: old links follow the cook to their current one. Not a
+	// permanent redirect: a browser keeps those, and a cook who takes the old
+	// name back would loop between the two.
 	if (profile.username !== username) {
-		throw redirect(301, `/users/${encodeURIComponent(profile.username)}${url.search}`);
+		throw redirect(302, `/users/${encodeURIComponent(profile.username)}${url.search}`);
 	}
 
 	const [shownRecipes, commitResult, relation] = await Promise.all([

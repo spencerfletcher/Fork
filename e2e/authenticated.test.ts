@@ -21,7 +21,7 @@ test.describe('Home when logged in', () => {
 // ─── Navbar (logged in) ───────────────────────────────────────────────────────
 
 test.describe('Navbar when logged in', () => {
-	test('the avatar opens Profile and Log out; Escape closes it', async ({ page }) => {
+	test('the avatar opens Profile, Settings and Log out; Escape closes it', async ({ page }) => {
 		await page.goto('/');
 		const avatar = page.getByRole('button', { name: 'Your account, @spencerfletcher' });
 		await expect(page.getByRole('button', { name: 'Log out' })).toHaveCount(0);
@@ -33,6 +33,8 @@ test.describe('Navbar when logged in', () => {
 			'/users/spencerfletcher'
 		);
 		await expect(menu.getByRole('menuitem', { name: 'Profile' })).toBeFocused();
+		await page.keyboard.press('ArrowDown');
+		await expect(menu.getByRole('menuitem', { name: 'Settings' })).toBeFocused();
 		await page.keyboard.press('ArrowDown');
 		await expect(menu.getByRole('menuitem', { name: 'Log out' })).toBeFocused();
 		await page.keyboard.press('Escape');

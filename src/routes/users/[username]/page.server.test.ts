@@ -94,11 +94,12 @@ describe('users/[username] load', () => {
 		expect(sqlOf(findProfileMock.mock.calls[0][0].where)).toEqual(sqlOf(namedBy('chefmaria')));
 	});
 
-	// A renamed cook's old links keep working: one permanent hop to the new name.
-	test('a former username redirects permanently to the current one, query kept', async () => {
+	// A renamed cook's old links keep working: one hop to the new name. Not
+	// permanent, since a browser would keep it after the cook takes the name back.
+	test('a former username redirects to the current one, not permanently, query kept', async () => {
 		findProfileMock.mockResolvedValue(makeProfile({ username: 'mariacooks' }));
 		await expect(load(makeLoadEvent('chefmaria', null, '?tab=forks'))).rejects.toMatchObject({
-			status: 301,
+			status: 302,
 			location: '/users/mariacooks?tab=forks'
 		});
 		expect(findRecipesMock).not.toHaveBeenCalled();
