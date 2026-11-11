@@ -6,6 +6,7 @@ import source from './MoreActions.svelte?raw';
 import { cssRule } from '#lib/testing/css.js';
 import { COLLECTION_NAME_MAX } from '#lib/collections.js';
 import { SESSION_ENDED } from '#lib/server/actions.js';
+import { EXPORT_FORMATS, FORMAT_LABEL, exportHref } from '#lib/export/archive.js';
 
 // Each form's enhance callback, by form, so a test can play back a result.
 type Result = { type: string; data?: Record<string, unknown> };
@@ -93,6 +94,29 @@ describe('More actions', () => {
 		expect(rows.at(-1)).toHaveFocus();
 		await fireEvent.keyDown(rows.at(-1)!, { key: 'ArrowDown' });
 		expect(rows[0]).toHaveFocus();
+	});
+});
+
+describe('More actions: Export', () => {
+	test('the owner gets an Export row per format after Print, each a download of this recipe', async () => {
+		render(MoreActions, { props: { collections: null, exportSlug: 'buns' } });
+		await fireEvent.click(screen.getByRole('button', { name: 'More actions' }));
+		await tick();
+		const menu = screen.getByRole('menu', { name: 'More actions' });
+		const rows = rowsOf(menu);
+		const names = EXPORT_FORMATS.map((f) => `Export ${FORMAT_LABEL[f]}`);
+		expect(rows.map((r) => r.textContent?.trim())).toEqual(['Print', ...names]);
+		for (const [i, format] of EXPORT_FORMATS.entries()) {
+			const row = within(menu).getByRole('menuitem', { name: names[i] });
+			expect(row).toHaveAttribute('href', exportHref(format, 'buns'));
+			expect(row).toHaveAttribute('download');
+			expect(row).toHaveClass('menu-row');
+		}
+	});
+
+	test('anyone else gets no Export row', async () => {
+		const menu = await openMenu();
+		expect(within(menu).queryByRole('menuitem', { name: /Export/ })).toBeNull();
 	});
 });
 

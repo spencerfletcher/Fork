@@ -167,7 +167,7 @@
 		</a>
 	{/if}
 	<!-- Everyone, last: the reader's collections (in their library) and Print. -->
-	<MoreActions {collections} />
+	<MoreActions {collections} exportSlug={canEdit ? recipe.slug : null} />
 
 	{#if error}
 		<p class="form-error basis-full" role="alert">{error}</p>

@@ -5,6 +5,7 @@
 	import { moreIcon, plusIcon } from '#lib/components/Icons.svelte';
 	import { pendingEnhance } from '#lib/pendingEnhance.svelte.js';
 	import { COLLECTION_NAME_MAX } from '#lib/collections.js';
+	import { EXPORT_FORMATS, FORMAT_LABEL, exportHref } from '#lib/export/archive.js';
 	import CollectionToggle from './CollectionToggle.svelte';
 
 	// The ⋯ at the action row's end. For a recipe in the reader's library it
@@ -13,10 +14,13 @@
 	// in it; then Print, for everyone. One flat menu, so the arrow keys walk
 	// every row and a toggle leaves it open.
 	let {
-		collections
+		collections,
+		exportSlug = null
 	}: {
 		/** Null outside the reader's library: the menu holds Print alone. */
 		collections: { id: number; name: string; has?: boolean }[] | null;
+		/** The owner's recipe: an Export row per format after Print; null for anyone else. */
+		exportSlug?: string | null;
 	} = $props();
 
 	let naming = $state(false);
@@ -133,6 +137,29 @@
 				</svg>
 				Print
 			</button>
+			<!-- A download, not a navigation: Dropdown closes on a menu link's click. -->
+			{#if exportSlug}
+				{#each EXPORT_FORMATS as format (format)}
+					<a
+						class="menu-row export-row"
+						role="menuitem"
+						href={exportHref(format, exportSlug)}
+						download>
+						<svg
+							class="size-4"
+							viewBox="0 0 16 16"
+							aria-hidden="true"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="1.5"
+							stroke-linecap="round"
+							stroke-linejoin="round">
+							<path d="M8 2.5v8M4.5 7 8 10.5 11.5 7M3 13.5h10" />
+						</svg>
+						Export {FORMAT_LABEL[format]}
+					</a>
+				{/each}
+			{/if}
 		</div>
 	{/snippet}
 </Dropdown>
@@ -156,7 +183,8 @@
 	}
 
 	.new-row,
-	.print-row {
+	.print-row,
+	.export-row {
 		gap: 10px;
 	}
 

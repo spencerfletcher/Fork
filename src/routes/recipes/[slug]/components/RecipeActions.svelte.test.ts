@@ -5,6 +5,7 @@ import { render, screen, fireEvent } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import RecipeActions from './RecipeActions.svelte';
 import { compactCount } from '#lib/helpers.js';
+import { EXPORT_FORMATS, exportHref } from '#lib/export/archive.js';
 import source from './RecipeActions.svelte?raw';
 import { readFileSync } from 'node:fs';
 import { cssRule, cssRules } from '#lib/testing/css.js';
@@ -96,6 +97,23 @@ describe('RecipeActions More actions', () => {
 		await tick();
 		expect(screen.queryByRole('menuitemcheckbox')).toBeNull();
 		expect(screen.getByRole('menuitem', { name: 'Print' })).toBeInTheDocument();
+	});
+
+	test.each([
+		['the owner', true],
+		['anyone else', false]
+	])('%s: Export rows for this recipe in the menu, or none', async (_, canEdit) => {
+		render(RecipeActions, {
+			props: makeProps({ canEdit, recipe: { slug: 'brown-butter-buns', title: 'Buns' } })
+		});
+		await fireEvent.click(screen.getByRole('button', { name: 'More actions' }));
+		await tick();
+		const hrefs = screen
+			.queryAllByRole('menuitem', { name: /^Export/ })
+			.map((a) => a.getAttribute('href'));
+		expect(hrefs).toEqual(
+			canEdit ? EXPORT_FORMATS.map((f) => exportHref(f, 'brown-butter-buns')) : []
+		);
 	});
 });
 
