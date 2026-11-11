@@ -54,7 +54,10 @@
 		/** The action row (Cook, then Save and Fork or Edit), the last line of the header. */
 		actions?: Snippet;
 		/** Signed in: the personal line under the actions; null signed out. */
-		journal?: { lastEntry: { id: number; cookedOn: string } | null; addHref: string } | null;
+		journal?: {
+			lastEntry: { id: number; cookedOn: string; timesCooked: number } | null;
+			addHref: string;
+		} | null;
 	} = $props();
 
 	// "No forks", "1 fork", "2 forks".
@@ -130,11 +133,13 @@
 		<div class="actions-row">{@render actions()}</div>
 	{/if}
 
-	<!-- The personal line: when the reader last logged this recipe. Logging it
-	     again is the Add to Journal pill in the action row. -->
+	<!-- The personal line: how often and when last the reader logged this
+	     recipe. Logging it again is the Add to Journal pill in the action row. -->
 	{#if journal?.lastEntry && !cooking}
 		<p class="personal font-sans">
-			You cooked this on
+			You cooked this {journal.lastEntry.timesCooked > 1
+				? `${plural(journal.lastEntry.timesCooked, 'time')}, last on`
+				: 'on'}
 			<a class="hit-link" href="/journal#entry-{journal.lastEntry.id}">
 				{dayLabel(journal.lastEntry.cookedOn)}
 			</a>

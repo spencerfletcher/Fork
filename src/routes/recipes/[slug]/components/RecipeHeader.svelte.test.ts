@@ -366,7 +366,7 @@ describe('RecipeHeader personal line', () => {
 
 	test('a reader who logged it: the date links to that entry, and nothing else', () => {
 		const { container } = renderHeader({
-			journal: { lastEntry: { id: 12, cookedOn: '2026-11-08' }, addHref: ADD }
+			journal: { lastEntry: { id: 12, cookedOn: '2026-11-08', timesCooked: 1 }, addHref: ADD }
 		});
 		const line = container.querySelector('.personal')!;
 		expect(line.textContent!.replace(/\s+/g, ' ').trim()).toBe('You cooked this on Sun 8 Nov');
@@ -376,6 +376,20 @@ describe('RecipeHeader personal line', () => {
 		);
 		// Add to Journal is a pill in the action row, never a line below it.
 		expect(screen.queryByRole('link', { name: 'Add to Journal' })).toBeNull();
+	});
+
+	test('cooked more than once: the count, then the last day linking to that entry', () => {
+		const { container } = renderHeader({
+			journal: { lastEntry: { id: 12, cookedOn: '2026-11-03', timesCooked: 4 }, addHref: ADD }
+		});
+		const line = container.querySelector('.personal')!;
+		expect(line.textContent!.replace(/\s+/g, ' ').trim()).toBe(
+			'You cooked this 4 times, last on Tue 3 Nov'
+		);
+		expect(screen.getByRole('link', { name: 'Tue 3 Nov' })).toHaveAttribute(
+			'href',
+			'/journal#entry-12'
+		);
 	});
 
 	test('never logged, signed out or cooking: no line', () => {
@@ -388,7 +402,7 @@ describe('RecipeHeader personal line', () => {
 		signedOut.unmount();
 
 		const cooking = renderHeader({
-			journal: { lastEntry: { id: 12, cookedOn: '2026-11-08' }, addHref: ADD },
+			journal: { lastEntry: { id: 12, cookedOn: '2026-11-08', timesCooked: 1 }, addHref: ADD },
 			cooking: true
 		});
 		expect(cooking.container.querySelector('.personal')).toBeNull();
