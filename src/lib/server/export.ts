@@ -74,7 +74,11 @@ export async function exportFor(
 		if (r.parentId !== null) {
 			if (!parent || parent.erasedAt || parent.deletedAt) forkedFrom = 'deleted';
 			else if (!canView(parent, user, friendIds)) forkedFrom = 'hidden';
-			else forkedFrom = ref(parent.slug, parent.title, parent.author?.username);
+			else
+				forkedFrom = {
+					...ref(parent.slug, parent.title, parent.author?.username),
+					version: r.parentVersion
+				};
 		}
 		return {
 			slug: r.slug,

@@ -11,6 +11,11 @@ const ANNOTATION_LABEL = { tip: 'Tip', warning: 'Warning', substitution: 'Substi
 const day = (iso: string) => iso.slice(0, 10);
 const link = (r: { title: string; url: string }) => `[${r.title}](${r.url})`;
 const byline = (r: RecipeRef) => (r.author ? ` by @${r.author}` : '');
+// The parent linked at the version copied, when it is known.
+const forkedFrom = (r: RecipeRef & { version: number | null }) =>
+	r.version === null
+		? link(r)
+		: `${link({ title: r.title, url: `${r.url}?version=${r.version}` })}, v${r.version}`;
 const hashes = (level: number) => '#'.repeat(level);
 
 /** One version's content, its sections at `level` and its groups one under. */
@@ -74,7 +79,7 @@ function recipe(r: ExportRecipe): string[] {
 			: r.forkedFrom === 'hidden'
 				? 'Forked from a recipe you can no longer see'
 				: r.forkedFrom
-					? `Forked from ${link(r.forkedFrom)}${byline(r.forkedFrom)}`
+					? `Forked from ${forkedFrom(r.forkedFrom)}${byline(r.forkedFrom)}`
 					: null,
 		r.inTrashSince ? `In the Trash since ${day(r.inTrashSince)}` : null
 	].filter(Boolean);

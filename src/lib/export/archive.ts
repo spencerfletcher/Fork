@@ -35,8 +35,12 @@ export type ExportRecipe = {
 	updatedAt: string;
 	/** When it went to the Trash; null for a live recipe. */
 	inTrashSince: string | null;
-	/** The recipe it was forked from; 'deleted' when that is gone, 'hidden' when the cook may no longer see it. */
-	forkedFrom: RecipeRef | 'deleted' | 'hidden' | null;
+	/**
+	 * The recipe it was forked from, and the version copied (null for a fork from
+	 * before that was recorded); 'deleted' when that is gone, 'hidden' when the
+	 * cook may no longer see it.
+	 */
+	forkedFrom: (RecipeRef & { version: number | null }) | 'deleted' | 'hidden' | null;
 	/** Oldest first; photos are each version's `content.imageUrl`. */
 	versions: ExportVersion[];
 };

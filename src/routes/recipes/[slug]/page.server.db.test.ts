@@ -1,8 +1,8 @@
 import { describe, test, expect, beforeAll, afterAll } from 'vitest';
-import { inArray } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 
 import { closeDbAfter, localDb, stamp } from '#lib/testing/db.js';
-import { loadEvent, loadPage } from '#lib/testing/actions.js';
+import { formEvent, invokeAction, loadEvent, loadPage } from '#lib/testing/actions.js';
 import type { PageData } from './$types';
 
 closeDbAfter();
@@ -89,6 +89,7 @@ describe.skipIf(!localDb)('a kept copy in the page data, against the real databa
 				'parent',
 				'parentDeleted',
 				'parentId',
+				'parentVersion',
 				'prepTimeMinutes',
 				'recipesToTags',
 				'servings',
@@ -122,5 +123,185 @@ describe.skipIf(!localDb)("a fork's page data, against the real database", () =>
 		);
 		expect(data.recipe.parent).not.toBeNull();
 		expect(JSON.stringify(data)).not.toContain('"fts"');
+	});
+});
+
+// Exact origins: a fork records the parent version it copied, and every
+// reader of it names that version. Committed rows between three fresh
+// profiles (the action and the load read through the pool), removed after.
+describe.skipIf(!localDb)('forking a version, against the real database', () => {
+	let db: typeof import('#lib/server/db/index.js').db;
+	let schema: typeof import('#lib/server/db/schema.js');
+	let page: typeof import('./+page.server.js');
+	const run = stamp();
+	const [author, forker, other] = ['author', 'forker', 'other'].map((p) => `test-ex-${p}-${run}`);
+	const people = [author, forker, other];
+	const parentSlug = `exact-parent-${run}`;
+	const photo = (n: number) =>
+		`http://127.0.0.1:54321/storage/v1/object/public/recipe-images/${author}/${run}-v${n}.png`;
+	// Each version's words its own, so a copy shows which one it read.
+	const WORDS = ['quokka', 'wombat', 'platypus'];
+	let parentId: number;
+
+	beforeAll(async () => {
+		({ db } = await import('#lib/server/db/index.js'));
+		schema = await import('#lib/server/db/schema.js');
+		page = await import('./+page.server.js');
+		const { makeContent } = await import('#lib/recipes/fixtures.js');
+		await db
+			.insert(schema.profiles)
+			.values(people.map((id) => ({ id, username: id.replace('test-ex-', 'ex-') })));
+		[{ id: parentId }] = await db
+			.insert(schema.recipes)
+			.values({ authorId: author, slug: parentSlug, title: 'platypus stew', visibility: 'public' })
+			.returning({ id: schema.recipes.id });
+		await db.insert(schema.recipeVersions).values(
+			WORDS.map((word, i) => ({
+				recipeId: parentId,
+				versionNumber: i + 1,
+				commitMessage: `v${i + 1}`,
+				...makeContent({ title: `${word} stew`, imageUrl: photo(i + 1) }),
+				createdBy: author
+			}))
+		);
+	});
+
+	afterAll(async () => {
+		if (!db) return;
+		await db.delete(schema.recipes).where(inArray(schema.recipes.authorId, people));
+		await db.delete(schema.recipes).where(eq(schema.recipes.id, parentId));
+		await db.delete(schema.profiles).where(inArray(schema.profiles.id, people));
+	});
+
+	/** The forker forks the parent with `fields`; the refusal, or the new fork's row. */
+	async function fork(fields: Record<string, string> = {}) {
+		const result = await invokeAction(
+			page.actions.fork as never,
+			formEvent({ fields, params: { slug: parentSlug }, locals: { user: { id: forker } } })
+		);
+		const slug = /^\/recipes\/([^/]+)\/edit$/.exec(String(result.location))?.[1];
+		if (!slug) return { result, row: undefined };
+		const row = await db.query.recipes.findFirst({
+			where: eq(schema.recipes.slug, slug),
+			with: { versions: true }
+		});
+		return { result, row };
+	}
+
+	const pageOf = (slug: string, user: { id: string } | null, query = '') =>
+		loadPage<PageData>(
+			page.load,
+			loadEvent({ path: `/recipes/${slug}${query}`, user, params: { slug } })
+		);
+
+	test('forking v2 copies v2, photo included, and records it; with no version it is the latest', async () => {
+		const { row } = await fork({ version: '2' });
+		expect(row).toMatchObject({ parentId, parentVersion: 2, title: 'wombat stew' });
+		expect(row!.versions).toMatchObject([
+			{
+				versionNumber: 1,
+				title: 'wombat stew',
+				imageUrl: photo(2),
+				commitMessage: `Forked from @ex-author-${run}, v2`
+			}
+		]);
+		const latest = await fork();
+		expect(latest.row).toMatchObject({ parentVersion: 3, title: 'platypus stew' });
+	});
+
+	test('a version the parent does not have, or not a number, is refused and makes nothing', async () => {
+		const before = await db.$count(schema.recipes, eq(schema.recipes.authorId, forker));
+		expect((await fork({ version: '9' })).result).toMatchObject({ status: 404 });
+		expect((await fork({ version: 'two' })).result).toMatchObject({ status: 400 });
+		expect(await db.$count(schema.recipes, eq(schema.recipes.authorId, forker))).toBe(before);
+	});
+
+	test('across accounts: every reader of the public fork is pointed at v2, whose page shows v2; a hidden parent names nothing', async () => {
+		const { row } = await fork({ version: '2' });
+		await db
+			.update(schema.recipes)
+			.set({ visibility: 'public' })
+			.where(eq(schema.recipes.id, row!.id));
+		for (const viewer of [{ id: forker }, { id: other }, null]) {
+			const data = await pageOf(row!.slug, viewer);
+			expect(data.recipe).toMatchObject({ parentVersion: 2, parent: { slug: parentSlug } });
+			const parentAt = await pageOf(parentSlug, viewer, '?version=2');
+			expect(parentAt.currentVersion).toMatchObject({ versionNumber: 2, title: 'wombat stew' });
+		}
+		const signedOut = await pageOf(row!.slug, null);
+		expect(signedOut.meta.jsonLd?.isBasedOn).toContain(
+			`http://localhost/recipes/${parentSlug}?version=2`
+		);
+		// The parent's history is its own: forking appended nothing to it.
+		expect(
+			await db.$count(schema.recipeVersions, eq(schema.recipeVersions.recipeId, parentId))
+		).toBe(3);
+
+		await db
+			.update(schema.recipes)
+			.set({ visibility: 'private' })
+			.where(eq(schema.recipes.id, parentId));
+		try {
+			for (const viewer of [{ id: other }, null]) {
+				const data = await pageOf(row!.slug, viewer);
+				expect(data.recipe).toMatchObject({ parent: null, parentDeleted: false });
+				expect(data.meta.jsonLd?.isBasedOn).toBeUndefined();
+			}
+		} finally {
+			await db
+				.update(schema.recipes)
+				.set({ visibility: 'public' })
+				.where(eq(schema.recipes.id, parentId));
+		}
+	});
+
+	test('search finds the fork by its own words; the forker exports it with its origin, a saver by reference', async () => {
+		const { row } = await fork({ version: '1' });
+		const { textSearch } = await import('#lib/server/recipeSearch.js');
+		const { visibleTo } = await import('#lib/server/visibility.js');
+		const found = await db
+			.select({ id: schema.recipes.id })
+			.from(schema.recipes)
+			.where(and(textSearch('quokka').where, visibleTo({ id: forker })));
+		expect(found.map((r) => r.id)).toContain(row!.id);
+
+		const { exportFor } = await import('#lib/server/export.js');
+		const { toMarkdown } = await import('#lib/export/markdown.js');
+		const mine = await exportFor(forker, 'https://x', row!.id);
+		expect(mine.recipes[0].forkedFrom).toMatchObject({ slug: parentSlug, version: 1 });
+		expect(toMarkdown(mine)).toContain(
+			`Forked from [platypus stew](https://x/recipes/${parentSlug}?version=1), v1 by @ex-author-${run}`
+		);
+
+		await db
+			.update(schema.recipes)
+			.set({ visibility: 'public' })
+			.where(eq(schema.recipes.id, row!.id));
+		await db.insert(schema.favorites).values({ userId: other, recipeId: row!.id });
+		const saved = (await exportFor(other, 'https://x')).saves.find((s) => s.slug === row!.slug);
+		expect(saved).toMatchObject({ title: 'quokka stew', author: `ex-forker-${run}` });
+	});
+
+	test("the parent deleted for good keeps the fork's copied photo and its v2 record; the fork reads as from a deleted recipe", async () => {
+		const { row } = await fork({ version: '2' });
+		const removed: string[] = [];
+		const supabase = {
+			storage: {
+				from: () => ({
+					remove: async (paths: string[]) => {
+						removed.push(...paths);
+						return { error: null };
+					}
+				})
+			}
+		} as never;
+		const { deleteForever, moveToTrash } = await import('#lib/server/trash.js');
+		await moveToTrash({ id: parentId, authorId: author });
+		await deleteForever(parentId, supabase);
+		expect(await db.$count(schema.recipes, eq(schema.recipes.id, parentId))).toBe(0);
+		expect(removed.join(' ')).not.toContain(`${run}-v2.png`);
+		const data = await pageOf(row!.slug, { id: forker });
+		expect(data.recipe).toMatchObject({ parentVersion: 2, parent: null, parentDeleted: true });
+		expect(data.currentVersion.imageUrl).toBe(photo(2));
 	});
 });

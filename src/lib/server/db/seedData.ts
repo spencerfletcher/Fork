@@ -265,7 +265,8 @@ export type SeedRecipe = {
 	author?: SeedUsername; // spencerfletcher when absent
 	tags: string[];
 	visibility: Visibility;
-	forkOf?: { slug: string }; // parent's slug prefix; the fork's createdAt is when it was forked
+	// The parent's slug prefix and the version it copied; the fork's createdAt is when it was forked.
+	forkOf?: { slug: string; version: number };
 	versions: SeedVersion[];
 };
 
@@ -355,7 +356,8 @@ export const SEED: SeedRecipe[] = [
 		slug: 'brown-butter-chocolate-chip-cookies',
 		tags: ['Dessert', 'Baking', 'American'],
 		visibility: 'public',
-		forkOf: { slug: 'classic-chocolate-chip-cookies' },
+		// Forked on 1 March, from v2 (28 February), before v3.
+		forkOf: { slug: 'classic-chocolate-chip-cookies', version: 2 },
 		versions: [
 			{
 				// A fork carries its parent's source forward as content.

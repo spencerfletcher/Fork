@@ -284,7 +284,9 @@ describe.skipIf(!localDb)('the export, against the real database', () => {
 				slug: seen.slug,
 				url: `${ORIGIN}/recipes/${seen.slug}`,
 				title: 'Seen parent',
-				author: `b-${stamp}`
+				author: `b-${stamp}`,
+				// A fork from before the copied version was recorded.
+				version: null
 			});
 			expect(from.get(b.slug)).toBe('hidden');
 			expect(from.get(c.slug)).toBe('deleted');

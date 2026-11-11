@@ -106,15 +106,29 @@ describe('the readable export', () => {
 							slug: 'p',
 							url: 'https://fork.test/recipes/p',
 							title: 'Parent buns',
-							author: 'ana'
+							author: 'ana',
+							version: null
 						}
 					})
 				]
 			})
 		);
 		expect(out).toMatch(/In the Trash since 2026-11-05/);
-		expect(out).toContain('[Parent buns](https://fork.test/recipes/p)');
-		expect(out).toContain('@ana');
+		expect(out).toContain('Forked from [Parent buns](https://fork.test/recipes/p) by @ana');
+	});
+
+	test('a fork that recorded the version it copied links and names that version', () => {
+		const forkedFrom = {
+			slug: 'p',
+			url: 'https://fork.test/recipes/p',
+			title: 'Parent buns',
+			author: 'ana',
+			version: 2
+		};
+		const out = toMarkdown(makeExport({ recipes: [makeRecipe({ forkedFrom })] }));
+		expect(out).toContain(
+			'Forked from [Parent buns](https://fork.test/recipes/p?version=2), v2 by @ana'
+		);
 	});
 
 	test('saves, collections and the Journal are listed by reference', () => {
