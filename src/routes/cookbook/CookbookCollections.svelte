@@ -72,6 +72,7 @@
 			required
 			autocomplete="off"
 			value={which === 'rename' ? collection?.name : ''}
+			placeholder={which === 'create' ? 'Like Quick or Good for parties' : undefined}
 			aria-invalid={state.error ? true : undefined}
 			aria-describedby={state.error ? `collection-${which}-error` : undefined}
 			bind:this={box}

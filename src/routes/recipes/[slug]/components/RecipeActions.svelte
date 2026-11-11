@@ -247,5 +247,14 @@
 		.login {
 			grid-column: 1 / -1;
 		}
+
+		/* After Cook's full row, an odd child sits in the right column, so
+		   Add to collection's menu opens from its right edge. */
+		@media (min-width: 360px) {
+			.actions > :global(.dropdown:nth-child(odd)) {
+				--collect-left: auto;
+				--collect-right: 0;
+			}
+		}
 	}
 </style>

@@ -101,11 +101,13 @@
 
 <style>
 	/* Under the pill, from its left edge: the row of pills starts at the
-	   column's left, so a right-aligned panel would leave the screen. */
+	   column's left, so a right-aligned panel would leave the screen. A pill
+	   in the phone grid's right column opens from its right edge instead
+	   (RecipeActions sets the two properties). */
 	.collect-panel {
 		--menu-top: calc(100% + 4px);
-		--menu-right: auto;
-		left: 0;
+		--menu-right: var(--collect-right, auto);
+		left: var(--collect-left, 0);
 		min-width: 220px;
 	}
 
@@ -121,6 +123,11 @@
 		gap: 8px;
 		padding: 8px 6px 6px;
 		border-top: 1px solid var(--color-border);
+	}
+
+	/* A form's button, not one of the row's pills, whose corner it would inherit. */
+	.collect-panel .name-step .btn-primary {
+		border-radius: var(--radius-md);
 	}
 
 	.name-step label {
