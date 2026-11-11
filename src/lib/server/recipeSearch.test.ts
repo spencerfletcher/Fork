@@ -29,8 +29,8 @@ describe('textSearch', () => {
 		if (!where) throw new Error('expected a condition');
 		const { sql, params } = new PgDialect().sqlToQuery(where);
 		expect(sql).toContain('websearch_to_tsquery');
-		expect(sql).toContain("i->>'name'");
-		expect(sql).toContain("s->>'text'");
+		expect(sql).toContain('recipe_version_doc(');
+		expect(sql).toContain('recipe_ingredient_names(');
 		expect(params).toContain('cookie');
 		expect(rank).toHaveLength(2);
 		expect(new PgDialect().sqlToQuery(rank[0]).sql).toContain('CASE');

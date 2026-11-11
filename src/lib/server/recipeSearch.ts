@@ -16,19 +16,22 @@ export function parseFilters(url: URL): { searchQuery: string; tagSlugs: string[
 // alias ("recipes"), which would turn recipe_versions.recipe_id into
 // "recipes"."recipe_id". Only recipes' own columns are interpolated.
 
-/** A version row's ingredient names as one text, for the version aliased `v`. */
-const names = (v: string) =>
-	`coalesce((SELECT string_agg(i->>'name', ' ') FROM jsonb_array_elements(${v}.ingredients) i), '')`;
-
 /** A version row's notes, the labelled ones too, as one text, for the version aliased `v`. */
 const notesOf = (v: string) =>
 	`concat_ws(' ', ${v}.notes, ${v}.make_ahead, ${v}.equipment, ${v}.storage, ${v}.reheating)`;
 
+// Both read through functions (drizzle/0019_search-functions.sql) so the GIN
+// indexes on recipe_versions serve them: the call must stay the indexed one.
+
+/** A version's ingredient names as a tsvector, for the version aliased `v`. */
+const names = (v: string) =>
+	sql.raw(`to_tsvector('english', recipe_ingredient_names(${v}.ingredients))`);
+
 /** Everything a version says: title, description, source, ingredient names, steps and notes. */
 const doc = (v: string) =>
 	sql.raw(
-		`to_tsvector('english', concat_ws(' ', ${v}.title, ${v}.description, ${v}.source_name, ${names(v)}, ` +
-			`(SELECT string_agg(s->>'text', ' ') FROM jsonb_array_elements(${v}.steps) s), ${notesOf(v)}))`
+		`recipe_version_doc(${v}.title, ${v}.description, ${v}.source_name, ${v}.ingredients, ${v}.steps, ` +
+			`${v}.notes, ${v}.make_ahead, ${v}.equipment, ${v}.storage, ${v}.reheating)`
 	);
 
 // The outer recipe's id, qualified by hand: a single-table select renders
@@ -38,6 +41,14 @@ const recipeId = sql.raw('"recipes"."id"');
 
 /** The recipe's latest version, as a one-row subquery aliased `cur`. */
 const latest = sql`(SELECT * FROM recipe_versions cv WHERE cv.recipe_id = ${recipeId} ORDER BY cv.version_number DESC LIMIT 1) cur`;
+
+/**
+ * Whether the recipe's latest version's `text` matches: its id looked up among
+ * the versions the index finds (one hashed set per query, not a parse per row).
+ */
+const currentMatches = (text: (v: string) => SQL, tsQuery: SQL) =>
+	sql`(SELECT cv.id FROM recipe_versions cv WHERE cv.recipe_id = ${recipeId} ORDER BY cv.version_number DESC LIMIT 1)
+		IN (SELECT v.id FROM recipe_versions v WHERE ${text('v')} @@ ${tsQuery})`;
 
 /**
  * Where a recipe matched, best first: 0 the exact title, 1 a title word or the
@@ -50,8 +61,8 @@ function tier(query: string, tsQuery: SQL): SQL {
 		WHEN lower(${recipes.title}) = lower(${query}) THEN 0
 		WHEN starts_with(lower(${recipes.title}), lower(${query}))
 			OR to_tsvector('english', ${recipes.title}) @@ ${tsQuery} THEN 1
-		WHEN EXISTS (SELECT 1 FROM ${latest} WHERE to_tsvector('english', ${sql.raw(names('cur'))}) @@ ${tsQuery}) THEN 2
-		WHEN EXISTS (SELECT 1 FROM ${latest} WHERE ${doc('cur')} @@ ${tsQuery}) THEN 3
+		WHEN ${currentMatches(names, tsQuery)} THEN 2
+		WHEN ${currentMatches(doc, tsQuery)} THEN 3
 		WHEN EXISTS (SELECT 1 FROM recipe_versions v WHERE v.recipe_id = ${recipeId} AND ${doc('v')} @@ ${tsQuery}) THEN 4
 	END)`;
 }
@@ -64,11 +75,21 @@ function tier(query: string, tsQuery: SQL): SQL {
  */
 export function textSearch(query: string): { where: SQL | undefined; rank: SQL[] } {
 	if (!query) return { where: undefined, rank: [] };
-	// ponytail: every version's text is parsed per search (no index can serve
-	// it); an indexed tsvector per version is the upgrade once recipes grow.
-	const rank = tier(query, sql`websearch_to_tsquery('english', ${query})`);
+	const tsQuery = sql`websearch_to_tsquery('english', ${query})`;
+	const rank = tier(query, tsQuery);
+	// The rows `rank` places, each arm one an index serves: the exact title is a
+	// prefix of itself, and the current version's text is a version's text. Its
+	// ingredient names stay an arm of their own: a negated word ("-milk")
+	// elsewhere in the version would hide them.
+	// ponytail: a quoted phrase makes the index recheck every candidate version,
+	// recomputing recipe_version_doc; a stored tsvector column is the upgrade
+	// if phrase searches get slow.
+	const where = sql`(${recipeId} IN (SELECT t.id FROM recipes t
+			WHERE starts_with(lower(t.title), lower(${query})) OR to_tsvector('english', t.title) @@ ${tsQuery})
+		OR EXISTS (SELECT 1 FROM recipe_versions v WHERE v.recipe_id = ${recipeId} AND ${doc('v')} @@ ${tsQuery})
+		OR ${currentMatches(names, tsQuery)})`;
 	return {
-		where: sql`${rank} IS NOT NULL`,
+		where,
 		rank: [
 			sql`${rank}`,
 			sql`(SELECT count(*) FROM favorites f WHERE f.recipe_id = ${recipeId}) DESC`
