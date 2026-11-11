@@ -28,6 +28,9 @@ describe.skipIf(!localDb)('deleting an account, against the real database', () =
 	const forker = id('forker');
 	const other = id('other');
 	const people = [owner, friend, stranger, blocked, forker, other];
+	const usernameOf = (p: string) => p.replace('test-acct-', 'ac-');
+	// The owner's name and the one they gave up before deleting.
+	const names = [usernameOf(owner), `ac-old-${s}`];
 	const photo = (name: string) =>
 		`http://127.0.0.1:54321/storage/v1/object/public/recipe-images/${owner}/${s}-${name}.png`;
 	const recipeIds: number[] = [];
@@ -73,7 +76,7 @@ describe.skipIf(!localDb)('deleting an account, against the real database', () =
 		await db.insert(schema.profiles).values(
 			people.map((p) => ({
 				id: p,
-				username: p.replace('test-acct-', 'ac-'),
+				username: usernameOf(p),
 				avatarUrl: p === owner ? photo('avatar') : null
 			}))
 		);
@@ -136,7 +139,16 @@ describe.skipIf(!localDb)('deleting an account, against the real database', () =
 			targetId: stranger,
 			reason: 'r'
 		});
-		await db.insert(schema.formerUsernames).values({ username: `ac-old-${s}`, profileId: owner });
+		const { FORMER_USERNAME_DAYS } = await import('#lib/auth/rules.js');
+		await db.insert(schema.formerUsernames).values([
+			{ username: names[1], profileId: owner },
+			// The owner's name was another cook's once, long enough ago to be free.
+			{
+				username: names[0],
+				profileId: other,
+				createdAt: new Date(Date.now() - (FORMER_USERNAME_DAYS + 1) * 24 * 60 * 60 * 1000)
+			}
+		]);
 		return { pub, fri, priv, trashed, unsaved, fork, erased, friendsOwn, friendEntry };
 	}
 
@@ -168,6 +180,9 @@ describe.skipIf(!localDb)('deleting an account, against the real database', () =
 	});
 
 	afterAll(async () => {
+		// The names stay reserved after the profile, owned by no one.
+		await db.delete(schema.formerUsernames).where(inArray(schema.formerUsernames.username, names));
+		await db.delete(schema.reports).where(eq(schema.reports.targetId, stranger));
 		await db.delete(schema.profiles).where(inArray(schema.profiles.id, people));
 		await db.delete(schema.recipes).where(inArray(schema.recipes.id, recipeIds));
 	});
@@ -269,6 +284,40 @@ describe.skipIf(!localDb)('deleting an account, against the real database', () =
 		expect(removed).toEqual(
 			expect.arrayContaining([`${owner}/${s}-entry.png`, `${owner}/${s}-avatar.png`])
 		);
+	});
+
+	test('their name and the one they gave up stay reserved to no one: taken at sign-up, and an old link finds nobody', async () => {
+		const { namedBy, usernameTaken } = await import('./profiles.js');
+		for (const name of names) {
+			expect(await usernameTaken(name)).toBe(true);
+			expect(await db.$count(schema.profiles, namedBy(name))).toBe(0);
+			const held = await db.query.formerUsernames.findFirst({
+				where: eq(schema.formerUsernames.username, name)
+			});
+			expect(held).toMatchObject({ profileId: null });
+		}
+	});
+
+	test('the reservation ends FORMER_USERNAME_DAYS after deletion', async () => {
+		const { FORMER_USERNAME_DAYS } = await import('#lib/auth/rules.js');
+		const { usernameTaken } = await import('./profiles.js');
+		const day = 24 * 60 * 60 * 1000;
+		const at = (days: number, minutes: number) =>
+			db
+				.update(schema.formerUsernames)
+				.set({ createdAt: new Date(Date.now() - days * day + minutes * 60_000) })
+				.where(eq(schema.formerUsernames.username, names[0]));
+		await at(FORMER_USERNAME_DAYS, 1);
+		expect(await usernameTaken(names[0])).toBe(true);
+		await at(FORMER_USERNAME_DAYS, -1);
+		expect(await usernameTaken(names[0])).toBe(false);
+	});
+
+	test('a report they filed stays, from no one', async () => {
+		const kept = await db.query.reports.findMany({
+			where: eq(schema.reports.targetId, stranger)
+		});
+		expect(kept).toMatchObject([{ reporterId: null, reason: 'r' }]);
 	});
 
 	test('running it again changes nothing and does not throw', async () => {
