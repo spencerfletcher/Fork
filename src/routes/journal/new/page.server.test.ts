@@ -1,6 +1,6 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { chain } from '#lib/testing/drizzle.js';
-import { invokeAction, formEvent, loadEvent, loadPage } from '#lib/testing/actions.js';
+import { invokeAction, formEvent, loadEvent, loadPage, photoFile } from '#lib/testing/actions.js';
 import { loginHref } from '#lib/auth/loginHref.js';
 import { PHOTO_SIZE_MESSAGE, PHOTO_MAX_BYTES } from '#lib/recipes/validation.js';
 import { ENTRY_MESSAGES } from '#lib/server/journal.js';
@@ -161,7 +161,7 @@ describe('journal/new action', () => {
 				version: '3',
 				audience: 'friends'
 			},
-			new File(['x'], 'p.png', { type: 'image/png' })
+			photoFile('p.png')
 		);
 		expect(resolveMock).toHaveBeenCalledWith(USER, LINKED.slug, 3);
 		expect(insertMock.mock.results[0].value.values).toHaveBeenCalledWith(
@@ -188,7 +188,7 @@ describe('journal/new action', () => {
 		});
 		const result = await invoke(
 			{ dish: 'Buns', cookedOn: '2026-11-08' },
-			new File(['x'], 'p.png', { type: 'image/png' })
+			photoFile('p.png')
 		);
 		expect(result).toMatchObject({ status: 500, data: { code: 'save_failed' } });
 		expect(removeMock).toHaveBeenCalledWith(expect.anything(), 'user-1/p.png');

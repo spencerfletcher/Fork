@@ -21,6 +21,25 @@ export async function invokeAction(
 	}
 }
 
+/** The first bytes of each photo type, as the server's content check reads them. */
+export const PHOTO_MAGIC = {
+	'image/jpeg': [0xff, 0xd8, 0xff],
+	'image/png': [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a],
+	'image/gif': [...'GIF89a'].map((c) => c.charCodeAt(0)),
+	'image/webp': [...'RIFF\0\0\0\0WEBP'].map((c) => c.charCodeAt(0))
+} as const;
+
+/** A photo whose bytes start as `type` really does, padded to `size` bytes. */
+export function photoFile(
+	name = 'a.png',
+	type: keyof typeof PHOTO_MAGIC = 'image/png',
+	size = 16
+): File {
+	const bytes = new Uint8Array(size);
+	bytes.set(PHOTO_MAGIC[type]);
+	return new File([bytes], name, { type });
+}
+
 /** FormData from `fields` (an array appends the key once per value), with `file` as the `image` input. */
 export function formOf(fields: Record<string, string | string[]> = {}, file?: File): FormData {
 	const fd = new FormData();

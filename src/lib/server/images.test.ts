@@ -1,6 +1,14 @@
 import { describe, test, expect, vi } from 'vitest';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import { uploadRecipeImage, removeRecipeImage, imageFileFrom, imagePathOf } from './images';
+import { PHOTO_TYPES } from '#lib/recipes/validation.js';
+import { PHOTO_MAGIC, photoFile } from '#lib/testing/actions.js';
+import {
+	uploadRecipeImage,
+	removeRecipeImage,
+	imageFileFrom,
+	imagePathOf,
+	photoTypeOf
+} from './images';
 
 /** A Supabase client whose storage bucket records calls and answers as told. */
 function storageMock(
@@ -16,12 +24,28 @@ function storageMock(
 	return { supabase, from, upload, remove, getPublicUrl };
 }
 
-const png = new File(['x'], 'Dinner Photo.PNG', { type: 'image/png' });
+const png = photoFile('Dinner Photo.PNG');
+
+describe('photoTypeOf', () => {
+	test.each(PHOTO_TYPES)('%s is read from its bytes, whatever the browser called it', async (type) => {
+		const bytes = new Uint8Array(16);
+		bytes.set(PHOTO_MAGIC[type]);
+		expect(await photoTypeOf(new File([bytes], 'x.bin', { type: 'image/png' }))).toBe(type);
+	});
+
+	test('anything else is no photo: text, an SVG, a short file, a RIFF that is not WebP', async () => {
+		const riff = new Uint8Array(16);
+		riff.set([...'RIFF\0\0\0\0WAVE'].map((c) => c.charCodeAt(0)));
+		for (const body of ['x', '<svg xmlns="http://www.w3.org/2000/svg"/>', '<html>', riff])
+			expect(await photoTypeOf(new File([body], 'a.png', { type: 'image/png' }))).toBeNull();
+		expect(await photoTypeOf(new File([new Uint8Array([0xff, 0xd8])], 'a.jpg'))).toBeNull();
+	});
+});
 
 describe('uploadRecipeImage', () => {
-	test("uploads under the user's folder with the file's extension and returns the public url", async () => {
+	test("uploads under the user's folder with its type's extension and returns the public url", async () => {
 		const m = storageMock();
-		const result = await uploadRecipeImage(m.supabase, 'user-1', png);
+		const result = await uploadRecipeImage(m.supabase, 'user-1', png, 'image/png');
 		expect(m.from).toHaveBeenCalledWith('recipe-images');
 		const [path, file, options] = m.upload.mock.calls[0];
 		expect(path).toMatch(/^user-1\/[A-Za-z0-9_-]+\.png$/);
@@ -30,9 +54,17 @@ describe('uploadRecipeImage', () => {
 		expect(result).toEqual({ path, url: `https://cdn.test/recipe-images/${path}` });
 	});
 
+	test('the extension and content type are the checked type, never the name the browser sent', async () => {
+		const m = storageMock();
+		await uploadRecipeImage(m.supabase, 'user-1', photoFile('page.html', 'image/webp'), 'image/webp');
+		const [path, , options] = m.upload.mock.calls[0];
+		expect(path).toMatch(/^user-1\/[A-Za-z0-9_-]+\.webp$/);
+		expect(options).toEqual({ contentType: 'image/webp', upsert: false });
+	});
+
 	test('throws when storage reports an error', async () => {
 		const m = storageMock({ uploadError: { message: 'bucket full' } });
-		await expect(uploadRecipeImage(m.supabase, 'user-1', png)).rejects.toThrow(
+		await expect(uploadRecipeImage(m.supabase, 'user-1', png, 'image/png')).rejects.toThrow(
 			'Photo upload failed'
 		);
 	});

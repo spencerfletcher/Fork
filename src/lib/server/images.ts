@@ -1,24 +1,48 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import type { PHOTO_TYPES } from '#lib/recipes/validation.js';
 
 const BUCKET = 'recipe-images';
 
 export type UploadedImage = { url: string; path: string };
 
+type PhotoType = (typeof PHOTO_TYPES)[number];
+
+const ascii = (s: string) => [...s].map((c) => c.charCodeAt(0));
+
+// How each photo type's file starts (null: any byte), and what it is stored as.
+const PHOTO_FORMATS: Record<PhotoType, { magic: (number | null)[]; ext: string }> = {
+	'image/jpeg': { magic: [0xff, 0xd8, 0xff], ext: 'jpg' },
+	'image/png': { magic: [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a], ext: 'png' },
+	'image/gif': { magic: ascii('GIF8'), ext: 'gif' },
+	'image/webp': { magic: [...ascii('RIFF'), null, null, null, null, ...ascii('WEBP')], ext: 'webp' }
+};
+
+/** The photo type a file's first bytes say it is, or null: the browser's type is only a claim. */
+export async function photoTypeOf(file: File): Promise<PhotoType | null> {
+	const head = new Uint8Array(await file.slice(0, 12).arrayBuffer());
+	const types = Object.keys(PHOTO_FORMATS) as PhotoType[];
+	return (
+		types.find((type) =>
+			PHOTO_FORMATS[type].magic.every((byte, i) => i < head.length && (byte ?? head[i]) === head[i])
+		) ?? null
+	);
+}
+
 /**
- * Stores a recipe photo under the user's folder at a fresh random path and
- * returns its public URL. Throws when Storage refuses; callers decide what a
- * failed upload means for the save.
+ * Stores a recipe photo under the user's folder at a fresh random path, as
+ * `type` (checked from its bytes), and returns its public URL. Throws when
+ * Storage refuses; callers decide what a failed upload means for the save.
  */
 export async function uploadRecipeImage(
 	supabase: SupabaseClient,
 	userId: string,
-	file: File
+	file: File,
+	type: PhotoType
 ): Promise<UploadedImage> {
-	const ext = file.name.split('.').pop()?.toLowerCase() ?? 'jpg';
-	const path = `${userId}/${crypto.randomUUID()}.${ext}`;
+	const path = `${userId}/${crypto.randomUUID()}.${PHOTO_FORMATS[type].ext}`;
 	const { error } = await supabase.storage
 		.from(BUCKET)
-		.upload(path, file, { contentType: file.type, upsert: false });
+		.upload(path, file, { contentType: type, upsert: false });
 	if (error) throw new Error('Photo upload failed');
 	const {
 		data: { publicUrl }

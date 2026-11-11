@@ -1,6 +1,17 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { draftOf, parseDraftContent, parseSettings, photoError } from '#lib/recipes/validation.js';
-import { imageFileFrom, uploadRecipeImage, type UploadedImage } from '#lib/server/images.js';
+import {
+	draftOf,
+	parseDraftContent,
+	parseSettings,
+	photoError,
+	PHOTO_TYPE_MESSAGE
+} from '#lib/recipes/validation.js';
+import {
+	imageFileFrom,
+	photoTypeOf,
+	uploadRecipeImage,
+	type UploadedImage
+} from '#lib/server/images.js';
 import { failure, type FailureCode } from '#lib/server/actions.js';
 import type { RecipeDraft } from '#lib/recipes/validation.js';
 
@@ -44,8 +55,10 @@ export async function storePhoto(
 	if (!file) return { ok: true, image: null };
 	const refused = photoError(file);
 	if (refused) return { ok: false, code: 'invalid', error: refused };
+	const type = await photoTypeOf(file);
+	if (type === null) return { ok: false, code: 'invalid', error: PHOTO_TYPE_MESSAGE };
 	try {
-		return { ok: true, image: await uploadRecipeImage(supabase, userId, file) };
+		return { ok: true, image: await uploadRecipeImage(supabase, userId, file, type) };
 	} catch {
 		return { ok: false, code: 'upload_failed', error: PHOTO_UPLOAD_FAILED };
 	}
