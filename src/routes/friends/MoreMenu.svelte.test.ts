@@ -57,6 +57,21 @@ describe('MoreMenu', () => {
 		expect(more).toHaveFocus();
 	});
 
+	test('the handle is mono through .handle, in the row’s own colour, and the names are unchanged', async () => {
+		render(MoreMenu, {
+			props: { userId: 'u1', username: 'devcooks', label: 'More for @devcooks' }
+		});
+		await fireEvent.click(screen.getByRole('button', { name: 'More for @devcooks' }));
+		const mute = screen.getByRole('menuitem', { name: 'Mute @devcooks' });
+		expect(mute.querySelector('.handle')).toHaveTextContent(/^@devcooks$/);
+
+		await fireEvent.click(screen.getByRole('menuitem', { name: 'Block' }));
+		const block = screen.getByRole('button', { name: 'Block @devcooks' });
+		expect(block.querySelector('.handle')).toHaveTextContent(/^@devcooks$/);
+		// Clay is .handle's own colour; here the row's (ink, or danger) carries it.
+		expect(rule('.handle')).toContain('color: inherit');
+	});
+
 	test('a confirm step is a form in the panel, not a menu', async () => {
 		render(MoreMenu, {
 			props: { userId: 'u1', username: 'devcooks', label: 'More for @devcooks' }

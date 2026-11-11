@@ -63,7 +63,9 @@
 				{#if items.includes('mute')}
 					<form method="POST" action="/friends?/mute" role="none" use:enhance={acting.submit}>
 						<input type="hidden" name="userId" value={userId} />
-						<button type="submit" class="menu-row" role="menuitem">Mute @{username}</button>
+						<button type="submit" class="menu-row" role="menuitem">
+							Mute <span class="handle">@{username}</span>
+						</button>
 					</form>
 				{/if}
 				{#if items.includes('unfriend')}
@@ -102,7 +104,9 @@
 				<form method="POST" action="/friends?/block" class="step" use:enhance={acting.submit}>
 					<input type="hidden" name="userId" value={userId} />
 					<p>{BLOCK_SENTENCE}</p>
-					<button type="submit" class="btn-ghost danger">Block @{username}</button>
+					<button type="submit" class="btn-ghost danger">
+						Block <span class="handle">@{username}</span>
+					</button>
 				</form>
 			{/if}
 		</div>
@@ -132,6 +136,11 @@
 	.panel {
 		--menu-top: 34px;
 		--menu-right: -12px;
+	}
+
+	/* Mono like every handle, in the row's colour: a danger row stays danger. */
+	.handle {
+		color: inherit;
 	}
 
 	.step {
