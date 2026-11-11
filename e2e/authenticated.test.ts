@@ -952,11 +952,18 @@ test.describe('Restore', () => {
 				await page.setViewportSize({ width, height: 800 });
 				await gotoHydrated(page, `${url}?version=1`);
 				const bar = page.locator('.version-bar');
-				const top = async (name: string) =>
-					(await bar.getByRole(name === 'Back to v2' ? 'link' : 'button', { name }).boundingBox())!
-						.y;
-				expect(await top('Back to v2')).toBe(await top('2 versions'));
-				expect(await top('Restore this version')).toBeGreaterThan(await top('2 versions'));
+				// Middles, not tops: Back's box is its 44px hit, the toggle's its words.
+				const middle = async (name: string) => {
+					const role = name === 'Back to v2' ? 'link' : 'button';
+					const box = (await bar.getByRole(role, { name }).boundingBox())!;
+					return box.y + box.height / 2;
+				};
+				expect(Math.abs((await middle('Back to v2')) - (await middle('2 versions')))).toBeLessThan(
+					1
+				);
+				expect(await middle('Restore this version')).toBeGreaterThan(
+					(await middle('2 versions')) + 20
+				);
 				expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBe(
 					0
 				);
