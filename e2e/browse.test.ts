@@ -79,7 +79,9 @@ test.describe('Status strip on a phone', () => {
 	}) => {
 		await page.setViewportSize({ width: 390, height: 844 });
 		await gotoHydrated(page, '/discover');
-		const navBg = await page.locator('nav').evaluate((el) => getComputedStyle(el).backgroundColor);
+		const navBg = await page
+			.getByRole('navigation', { name: 'Site' })
+			.evaluate((el) => getComputedStyle(el).backgroundColor);
 		const strip = await page.locator('.status-strip').evaluate((el) => {
 			const r = el.getBoundingClientRect();
 			const cs = getComputedStyle(el);
