@@ -1,6 +1,6 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { isActionFailure, isRedirect } from '@sveltejs/kit';
-import { invokeAction as invoke, formEvent } from '#lib/testing/actions.js';
+import { invokeAction as invoke, formEvent, cookieJar } from '#lib/testing/actions.js';
 import { actions, load, _RECOVERY_COOKIE } from './+page.server';
 import { PASSWORD_MIN } from '#lib/auth/rules.js';
 
@@ -13,17 +13,6 @@ const updateUser = vi.fn();
 const supabase = { auth: { exchangeCodeForSession, verifyOtp, updateUser } };
 
 const USER = { id: 'user-1' };
-
-// The recovery cookie is what separates "arrived through the emailed link"
-// from "happens to be signed in on this device".
-const cookieJar = () => {
-	const jar = new Map<string, string>();
-	return {
-		get: (k: string) => jar.get(k),
-		set: vi.fn((k: string, v: string) => void jar.set(k, v)),
-		delete: vi.fn((k: string) => void jar.delete(k))
-	};
-};
 
 const makeEvent = (
 	fields: Record<string, string>,

@@ -51,6 +51,16 @@ export function formEvent(
 	};
 }
 
+/** An event's `cookies`, holding `initial`, with `set` and `delete` as spies. */
+export function cookieJar(initial: Record<string, string> = {}) {
+	const jar = new Map(Object.entries(initial));
+	return {
+		get: (k: string) => jar.get(k),
+		set: vi.fn((k: string, v: string) => void jar.set(k, v)),
+		delete: vi.fn((k: string) => void jar.delete(k))
+	};
+}
+
 /**
  * A load event: `path` (with any query) on localhost, the route `params`, and
  * `user` as the only local. Typed `never`, so it passes as any route's event.

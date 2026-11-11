@@ -1,6 +1,7 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { isActionFailure, isRedirect } from '@sveltejs/kit';
-import { invokeAction as invoke, formEvent } from '#lib/testing/actions.js';
+import { invokeAction as invoke, formEvent, cookieJar } from '#lib/testing/actions.js';
+import { CONFIRM_COOKIE } from '#lib/server/confirmEmail.js';
 import { actions, load } from './+page.server';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -8,8 +9,10 @@ import { actions, load } from './+page.server';
 const signInWithPassword = vi.fn();
 
 /** Builds a minimal RequestEvent-like object for the login action. */
-const makeEvent = (fields: Record<string, string>) =>
-	formEvent({ fields, locals: { supabase: { auth: { signInWithPassword } } } });
+const makeEvent = (fields: Record<string, string>, cookies = cookieJar()) => ({
+	...formEvent({ fields, locals: { supabase: { auth: { signInWithPassword } } } }),
+	cookies
+});
 
 // ─── default action ───────────────────────────────────────────────────────────
 
@@ -54,6 +57,41 @@ describe('login action', () => {
 			status: 401,
 			data: { error: 'Could not log in. Try again.', code: 'auth_failed' }
 		});
+	});
+
+	// Supabase says so only once the password matched, so it tells a stranger nothing.
+	test('an unconfirmed account is told so, and the confirm page will name its address', async () => {
+		signInWithPassword.mockResolvedValue({
+			error: { status: 400, code: 'email_not_confirmed', message: 'Email not confirmed' }
+		});
+		const cookies = cookieJar();
+
+		const result = await invoke(
+			actions.default as never,
+			makeEvent({ email: 'a@b.com', password: 'right' }, cookies)
+		);
+
+		expect(result).toMatchObject({
+			status: 401,
+			data: {
+				error: 'Confirm your email first: open the link we sent you.',
+				code: 'auth_failed',
+				unconfirmed: true
+			}
+		});
+		expect(cookies.set).toHaveBeenCalledWith(CONFIRM_COOKIE, 'a@b.com', expect.anything());
+	});
+
+	test('logging in forgets the address the confirm page held', async () => {
+		signInWithPassword.mockResolvedValue({ error: null });
+		const cookies = cookieJar({ [CONFIRM_COOKIE]: 'a@b.com' });
+
+		await invoke(
+			actions.default as never,
+			makeEvent({ email: 'a@b.com', password: 'right' }, cookies)
+		);
+
+		expect(cookies.delete).toHaveBeenCalledWith(CONFIRM_COOKIE, { path: '/' });
 	});
 
 	test('redirects to a local redirectTo on success, and home when it is off-site', async () => {

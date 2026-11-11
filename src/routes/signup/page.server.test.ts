@@ -1,6 +1,7 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { isActionFailure, isRedirect } from '@sveltejs/kit';
-import { invokeAction as invoke, formEvent } from '#lib/testing/actions.js';
+import { invokeAction as invoke, formEvent, cookieJar } from '#lib/testing/actions.js';
+import { CONFIRM_COOKIE } from '#lib/server/confirmEmail.js';
 import { actions, load } from './+page.server';
 import { USERNAME_MESSAGE } from '#lib/auth/rules.js';
 
@@ -18,9 +19,10 @@ vi.mock('#lib/server/profiles.js', () => ({ ensureProfile, usernameTaken }));
 const signUp = vi.fn();
 
 /** Builds a minimal RequestEvent-like object for the signup action. */
-const makeEvent = (fields: Record<string, string>, query = '') => ({
+const makeEvent = (fields: Record<string, string>, query = '', cookies = cookieJar()) => ({
 	...formEvent({ fields, locals: { supabase: { auth: { signUp } } } }),
-	url: new URL(`http://x/signup${query}`)
+	url: new URL(`http://x/signup${query}`),
+	cookies
 });
 
 const valid = { email: 'cook@b.com', username: 'cook', password: 'pw' };
@@ -122,10 +124,43 @@ describe('signup action', () => {
 
 		const result = await invoke(actions.default as never, makeEvent(valid));
 
-		expect(signUp).toHaveBeenCalledWith({ email: 'cook@b.com', password: 'pw' });
+		// The link lands on the confirm page, which trades it for a session.
+		expect(signUp).toHaveBeenCalledWith({
+			email: 'cook@b.com',
+			password: 'pw',
+			options: { emailRedirectTo: 'http://x/confirm-email' }
+		});
 		expect(ensureProfile).toHaveBeenCalledWith({ id: 'user-1' }, 'cook');
 		expect(isRedirect(result)).toBe(true);
 		expect(result).toMatchObject({ status: 303, location: '/confirm-email' });
+	});
+
+	// No personal data in a URL: the confirm page reads the address from an httpOnly cookie.
+	test('remembers the address for the confirm page in a cookie, never in the redirect', async () => {
+		signUp.mockResolvedValue({ data: { user: { id: 'user-1' } }, error: null });
+		const cookies = cookieJar();
+
+		const result = await invoke(
+			actions.default as never,
+			makeEvent(valid, '?redirectTo=%2Ffavorites', cookies)
+		);
+
+		expect(cookies.set).toHaveBeenCalledWith(CONFIRM_COOKIE, 'cook@b.com', {
+			path: '/',
+			httpOnly: true,
+			sameSite: 'lax',
+			maxAge: 3600
+		});
+		expect(String(result.location)).not.toContain('cook');
+	});
+
+	test('a refused sign-up remembers nothing', async () => {
+		signUp.mockResolvedValue({ data: null, error: { status: 500, message: 'x' } });
+		const cookies = cookieJar();
+
+		await invoke(actions.default as never, makeEvent(valid, '', cookies));
+
+		expect(cookies.set).not.toHaveBeenCalled();
 	});
 
 	// The form posts to its own URL, so the login page's redirectTo is still there.
@@ -150,8 +185,8 @@ describe('signup action', () => {
 });
 
 describe('signup load', () => {
-	const run = (query = '') =>
-		load({ locals: { user: null }, url: new URL(`http://x/signup${query}`) } as never);
+	const run = (query = '', cookies = cookieJar()) =>
+		load({ locals: { user: null }, url: new URL(`http://x/signup${query}`), cookies } as never);
 
 	test('a signed-in visitor goes to a local redirectTo, else home', async () => {
 		const signedIn = (query: string) =>
@@ -175,5 +210,13 @@ describe('signup load', () => {
 	test('carries a local redirectTo from the login page, so Log in can hand it back', async () => {
 		expect(await run('?redirectTo=%2Ffavorites')).toMatchObject({ redirectTo: '/favorites' });
 		expect(await run('?redirectTo=%2F%2Fevil.example')).toMatchObject({ redirectTo: null });
+	});
+
+	// "Wrong address? Sign up again" from the confirm page.
+	test('hands the remembered address back, so a mistyped one can be fixed', async () => {
+		expect(await run('', cookieJar({ [CONFIRM_COOKIE]: 'cook@b.con' }))).toMatchObject({
+			email: 'cook@b.con'
+		});
+		expect(await run()).toMatchObject({ email: null });
 	});
 });

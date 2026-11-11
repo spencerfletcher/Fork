@@ -4,6 +4,7 @@ import { text } from '#lib/helpers.js';
 import { failure } from '#lib/server/actions.js';
 import { ensureProfile, usernameTaken } from '#lib/server/profiles.js';
 import { localPath } from '#lib/server/localPath.js';
+import { CONFIRM_COOKIE, confirmLink, rememberAddress } from '#lib/server/confirmEmail.js';
 import {
 	USERNAME_MESSAGE,
 	USERNAME_TAKEN,
@@ -13,17 +14,22 @@ import {
 
 // Redirect users who are already logged in away from the signup page, to where
 // they were headed or home. A redirectTo from the login page is kept so "Log in"
-// can hand it back.
-export const load: PageServerLoad = async ({ locals: { user }, url }) => {
+// can hand it back. Sent back from confirm-email's "Sign up again", the address
+// the link went to fills the form, so a mistyped one can be fixed.
+export const load: PageServerLoad = async ({ locals: { user }, url, cookies }) => {
 	const redirectTo = localPath(url.searchParams.get('redirectTo'));
 	if (user) {
 		throw redirect(303, redirectTo ?? '/');
 	}
-	return { redirectTo, meta: { title: 'Create an account' } };
+	return {
+		redirectTo,
+		email: cookies.get(CONFIRM_COOKIE) ?? null,
+		meta: { title: 'Create an account' }
+	};
 };
 
 export const actions: Actions = {
-	default: async ({ request, url, locals: { supabase } }) => {
+	default: async ({ request, url, cookies, locals: { supabase } }) => {
 		const formData = await request.formData();
 		const email = text(formData, 'email');
 		const username = normalizeUsername(text(formData, 'username'));
@@ -41,7 +47,11 @@ export const actions: Actions = {
 			return failure(400, 'invalid', USERNAME_TAKEN, { field: 'username' });
 		}
 
-		const { data, error: err } = await supabase.auth.signUp({ email, password });
+		const { data, error: err } = await supabase.auth.signUp({
+			email,
+			password,
+			options: { emailRedirectTo: confirmLink(url.origin) }
+		});
 
 		if (err) {
 			const registered = /already registered/i.test(err.message);
@@ -57,6 +67,9 @@ export const actions: Actions = {
 
 		// Best effort: the email may not be confirmed yet, but the profile row can exist.
 		if (data.user) await ensureProfile(data.user, username);
+
+		// The confirm page names the address; a cookie keeps it out of the URL.
+		rememberAddress(cookies, email);
 
 		// The form posts to its own URL, so the login page's redirectTo rides on to
 		// confirm-email's Log in.
