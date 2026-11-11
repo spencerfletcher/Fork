@@ -39,7 +39,10 @@ export function withoutPlace(params: Pick<URLSearchParams, 'toString'>): URLSear
  * when new; null drops the param) and the loaded place dropped: a link that
  * changes what the list shows starts it at its first page.
  */
-export function hrefWith(url: URL, changes: Record<string, string | null>): string {
+export function hrefWith(
+	url: { pathname: string; searchParams: Pick<URLSearchParams, 'toString'> },
+	changes: Record<string, string | null>
+): string {
 	const params = withoutPlace(url.searchParams);
 	for (const [key, value] of Object.entries(changes)) {
 		if (value === null) params.delete(key);
