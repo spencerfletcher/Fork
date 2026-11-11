@@ -2,6 +2,7 @@ import { describe, test, expect, beforeAll, afterAll } from 'vitest';
 import { eq } from 'drizzle-orm';
 
 import { closeDbAfter, localDb, stamp, withProfiles } from '#lib/testing/db.js';
+import { MOST_COOKED } from '#lib/journal.js';
 
 closeDbAfter();
 
@@ -266,7 +267,7 @@ describe.skipIf(!localDb)("the Journal's year, against the real database", () =>
 
 	test('the most cooked recipes this year, most first, at most MOST_COOKED; improvised and other years never', async () => {
 		await withProfiles(1, async (tx, [me], s) => {
-			const n = journal.MOST_COOKED + 1;
+			const n = MOST_COOKED + 1;
 			const rows = await tx
 				.insert(schema.recipes)
 				.values(
@@ -297,7 +298,7 @@ describe.skipIf(!localDb)("the Journal's year, against the real database", () =>
 					href: `/recipes/${r.slug}`
 				}))
 				.reverse()
-				.slice(0, journal.MOST_COOKED);
+				.slice(0, MOST_COOKED);
 			expect(year?.top).toEqual(expected);
 		});
 	});

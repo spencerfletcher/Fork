@@ -7,7 +7,9 @@ import {
 	localToday,
 	marginDay,
 	monthLabel,
-	sourceHref
+	monthTone,
+	sourceHref,
+	TONE_STEPS
 } from './journal';
 
 const NOW = new Date('2026-11-10T12:00:00Z');
@@ -67,5 +69,22 @@ describe('KEEP_SOURCE', () => {
 	test('can never be a recipe slug', () => {
 		expect(slugify(KEEP_SOURCE)).not.toBe(KEEP_SOURCE);
 		expect(KEEP_SOURCE).toMatch(/[^\w-]/);
+	});
+});
+
+describe('monthTone', () => {
+	test('none cooked is the bare step; the busiest month is the top one', () => {
+		expect(monthTone(0, 9)).toBe(0);
+		expect(monthTone(null, 9)).toBe(0);
+		expect(monthTone(9, 9)).toBe(TONE_STEPS);
+		expect(monthTone(1, 1)).toBe(TONE_STEPS);
+	});
+
+	test('the steps split the busiest month evenly, any month cooked in at least the first', () => {
+		const most = TONE_STEPS * 4;
+		const tones = Array.from({ length: most }, (_, i) => monthTone(i + 1, most));
+		for (let step = 1; step <= TONE_STEPS; step++)
+			expect(tones.filter((t) => t === step)).toHaveLength(most / TONE_STEPS);
+		expect(monthTone(1, 1000)).toBe(1);
 	});
 });

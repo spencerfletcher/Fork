@@ -32,7 +32,7 @@ import {
 import { keptVersionsOf } from './keptCopies.js';
 import { numberMessages, type Result } from '#lib/recipes/validation.js';
 import { oneOf, text, wholeNumber } from '#lib/helpers.js';
-import { day, MAX_LINK, sourceHref } from '#lib/journal.js';
+import { day, MAX_LINK, MOST_COOKED, sourceHref } from '#lib/journal.js';
 
 export const MAX_DISH = 200;
 export const MAX_ENTRY_TEXT = 2000;
@@ -353,9 +353,6 @@ export async function journalSummary(userId: string) {
 		.where(eq(logEntries.userId, userId));
 	return row;
 }
-
-/** How many recipes the Journal's year summary lists. */
-export const MOST_COOKED = 5;
 
 /**
  * The year on top of the Journal, by `today`'s UTC year: each month's count of

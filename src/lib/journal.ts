@@ -71,6 +71,21 @@ export function groupByMonth<T extends { cookedOn: string }>(
 	return groups;
 }
 
+/** How many recipes the Journal's year summary lists. */
+export const MOST_COOKED = 5;
+
+/** The marigold steps a cooked month's cell can take, above the bare one for none. */
+export const TONE_STEPS = 3;
+
+/**
+ * A month's step on the year summary's count scale, relative to the year's
+ * busiest month: 0 for none cooked, else 1 to TONE_STEPS by even shares of `most`.
+ */
+export function monthTone(cooks: number | null, most: number): number {
+	if (!cooks) return 0;
+	return Math.ceil((cooks / most) * TONE_STEPS);
+}
+
 /** Today as the reader's own calendar has it, for the date field's default. */
 export function localToday(now: Date = new Date()): string {
 	const pad = (n: number) => String(n).padStart(2, '0');
