@@ -13,8 +13,8 @@ loadEnv('e2e');
 
 export const AUTH_FILE = path.join('e2e', '.auth', 'user.json');
 
-/** Specs that change the seed user's account settings; see the chromium-account project. */
-const ACCOUNT_SPECS = /(settings|measurement)\.authenticated\.test\.ts/;
+/** Specs that change the seed user's settings or saves; see the chromium-account project. */
+const ACCOUNT_SPECS = /(settings|measurement|keep-version)\.authenticated\.test\.ts/;
 
 export default defineConfig({
 	globalSetup: './e2e/global-setup.ts',

@@ -41,8 +41,14 @@
 			<span>
 				<form method="POST" action="?/keep" use:enhance={keep.submit}>
 					<input type="hidden" name="version" value={viewing} />
-					<!-- prettier-ignore -->
-					<button type="submit" class="text-btn" disabled={keep.pending}>Keep this version<span class="sr-only">, v{viewing}</span></button>
+					<!-- A label, not a hidden span: a positioned span reads as "version , v1". -->
+					<button
+						type="submit"
+						class="text-btn"
+						aria-label="Keep this version, v{viewing}"
+						disabled={keep.pending}>
+						Keep this version
+					</button>
 				</form>
 			</span>
 		{/if}
