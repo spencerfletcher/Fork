@@ -3,7 +3,7 @@ import { render, screen, within } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import SettingsPage from './+page.svelte';
 import { AUDIENCE_LABEL, AUDIENCE_NOTE } from '#lib/audience.js';
-import { USERNAME_TAKEN } from '#lib/auth/rules.js';
+import { FORMER_USERNAME_DAYS, USERNAME_TAKEN } from '#lib/auth/rules.js';
 import { SESSION_ENDED } from '#lib/server/actions.js';
 import { VISIBILITIES, type Visibility } from '#lib/recipes/validation.js';
 
@@ -57,7 +57,20 @@ describe('Username section', () => {
 		const mark = document.querySelector(`label[for="${field().id}"] .field-required`);
 		expect(mark).toHaveTextContent('Required');
 		expect(mark).toHaveAttribute('aria-hidden', 'true');
-		expect(field()).toHaveAccessibleDescription(/Old links to your profile keep working/);
+		expect(field()).toHaveAccessibleDescription(
+			new RegExp(
+				`Old links to your profile work for ${FORMER_USERNAME_DAYS} days\\. You can change it \\w+ in ${FORMER_USERNAME_DAYS} days\\.`
+			)
+		);
+	});
+
+	test('a change past the limit is refused on the field, with the day it is allowed again', async () => {
+		const error = 'You can change your username again on Mon 14 Dec.';
+		renderPage({ section: 'username', code: 'rate_limited', error, username: 'maria' });
+		await tick();
+		expect(field()).toHaveAttribute('aria-invalid', 'true');
+		expect(field()).toHaveAccessibleDescription(new RegExp(error));
+		expect(within(section('Username')).queryByRole('alert')).toBeNull();
 	});
 
 	test('a refusal sits under the field, described, invalid and focused', async () => {

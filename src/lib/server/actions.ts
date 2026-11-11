@@ -9,7 +9,8 @@ export const FAILURE_CODES = [
 	'save_failed',
 	'unauthenticated',
 	'not_found',
-	'auth_failed'
+	'auth_failed',
+	'rate_limited'
 ] as const;
 export type FailureCode = (typeof FAILURE_CODES)[number];
 

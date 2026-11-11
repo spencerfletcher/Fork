@@ -7,6 +7,7 @@ import { SESSION_ENDED } from '#lib/server/actions.js';
 import { USERNAME_MESSAGE, USERNAME_TAKEN } from '#lib/auth/rules.js';
 import { profiles } from '#lib/server/db/schema.js';
 import { AS_WRITTEN } from '#lib/measurement.js';
+import { dayLabel } from '#lib/journal.js';
 import { actions, load } from './+page.server';
 
 const { findProfileMock, updateMock, changeUsernameMock, ensureProfileMock } = vi.hoisted(() => ({
@@ -41,7 +42,7 @@ function nextUpdate() {
 
 beforeEach(() => {
 	vi.clearAllMocks();
-	changeUsernameMock.mockResolvedValue(true);
+	changeUsernameMock.mockResolvedValue({ result: 'changed' });
 });
 
 describe('settings load', () => {
@@ -84,11 +85,26 @@ describe('username action', () => {
 	});
 
 	test('a name someone else holds, now or formerly, is refused as taken', async () => {
-		changeUsernameMock.mockResolvedValue(false);
+		changeUsernameMock.mockResolvedValue({ result: 'taken' });
 		const result = await post('username', { username: 'taken' });
 		expect(result).toMatchObject({
 			status: 400,
 			data: { section: 'username', code: 'invalid', error: USERNAME_TAKEN, username: 'taken' }
+		});
+	});
+
+	test('a change past the limit is refused with the day the next one is allowed', async () => {
+		const nextChange = new Date('2026-12-14T09:30:00Z');
+		changeUsernameMock.mockResolvedValue({ result: 'too_soon', nextChange });
+		const result = await post('username', { username: 'another' });
+		expect(result).toMatchObject({
+			status: 429,
+			data: {
+				section: 'username',
+				code: 'rate_limited',
+				error: `You can change your username again on ${dayLabel(nextChange)}.`,
+				username: 'another'
+			}
 		});
 	});
 
