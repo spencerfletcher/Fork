@@ -25,7 +25,7 @@
 <!-- Keep this version (roadmap, 11 November 2026): a saver's choice of which
      version the recipe opens on, the saver's alone. The separators are drawn
      by CSS, never typed. -->
-<div class="keep">
+<div class="personal-line">
 	<div class="keep-line dot-list">
 		{#if kept !== null}
 			<span>
@@ -72,14 +72,6 @@
 </div>
 
 <style>
-	/* The personal line's size and Ink 2: the saver's own facts. */
-	.keep {
-		margin-top: 12px;
-		font-size: 1rem;
-		line-height: 1.5;
-		color: var(--color-text-2);
-	}
-
 	.keep-line {
 		--dot-space: 0 0.4em 0 0.15em;
 		display: flex;

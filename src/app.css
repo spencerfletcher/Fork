@@ -647,6 +647,15 @@
 		color: var(--color-text-2);
 	}
 
+	/* The recipe header's personal lines, the reader's own facts under the
+	   actions: "You cooked this…" and a saver's Keep this version. */
+	.personal-line {
+		margin-top: 12px;
+		font-size: 1rem;
+		line-height: 1.5;
+		color: var(--color-text-2);
+	}
+
 	/* ── Page layout ── */
 
 	.page {

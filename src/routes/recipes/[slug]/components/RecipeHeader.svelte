@@ -161,7 +161,7 @@
 	<!-- The personal line: how often and when last the reader logged this
 	     recipe. Logging it again is the Add to Journal pill in the action row. -->
 	{#if journal?.lastEntry}
-		<p class="personal font-sans">
+		<p class="personal personal-line font-sans">
 			You cooked this {journal.lastEntry.timesCooked > 1
 				? `${plural(journal.lastEntry.timesCooked, 'time')}, last on`
 				: 'on'}
@@ -265,14 +265,8 @@
 		display: none;
 	}
 
-	/* The byline's size and Ink 2, links clay and 600 like the stats row's. */
-	.personal {
-		margin-top: 12px;
-		font-size: 1rem;
-		line-height: 1.5;
-		color: var(--color-text-2);
-	}
-
+	/* The personal line (app.css) at the byline's size, its link clay and 600
+	   like the stats row's. */
 	.personal a {
 		font-weight: 600;
 	}
