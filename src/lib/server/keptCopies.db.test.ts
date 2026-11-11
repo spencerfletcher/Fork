@@ -204,6 +204,47 @@ describe.skipIf(!localDb)('kept copies, against the real database', () => {
 		});
 	});
 
+	test('removing a copy finishes an erase only when, under the row lock, the recipe is erased and no copy is left', async () => {
+		await withPeople(async (tx, { author, friend }) => {
+			const trashed = await makeRecipe(tx, author, 'public');
+			const erased = await makeRecipe(tx, author, 'public');
+			await tx.insert(schema.favorites).values([
+				{ userId: friend, recipeId: trashed.id, copyVersion: 3 },
+				{ userId: friend, recipeId: erased.id, copyVersion: 3, note: 'Mine' }
+			]);
+			await tx
+				.update(schema.recipes)
+				.set({ deletedAt: new Date() })
+				.where(inArray(schema.recipes.id, [trashed.id, erased.id]));
+			// In the Trash, not erased: the author's restorable recipe is never finished.
+			expect(await kept.removeCopy(friend, trashed.id, tx)).toBe(false);
+			expect(await copyVersionOf(tx, friend, trashed.id)).toBeUndefined();
+			// Erased after the saver's page was read: the erase is read under the lock.
+			await tx
+				.update(schema.recipes)
+				.set({ erasedAt: new Date() })
+				.where(eq(schema.recipes.id, erased.id));
+			expect(await kept.removeCopy(friend, erased.id, tx)).toBe(true);
+			expect(await copyVersionOf(tx, friend, erased.id)).toBeUndefined();
+		});
+	});
+
+	test('removing one copy of an erased recipe leaves it while another saver keeps one', async () => {
+		await withPeople(async (tx, { author, friend, stranger }) => {
+			const recipe = await makeRecipe(tx, author, 'public');
+			await tx
+				.update(schema.recipes)
+				.set({ deletedAt: new Date(), erasedAt: new Date() })
+				.where(eq(schema.recipes.id, recipe.id));
+			await tx.insert(schema.favorites).values([
+				{ userId: friend, recipeId: recipe.id, copyVersion: 3 },
+				{ userId: stranger, recipeId: recipe.id, copyVersion: 2 }
+			]);
+			expect(await kept.removeCopy(friend, recipe.id, tx)).toBe(false);
+			expect(await copyVersionOf(tx, stranger, recipe.id)).toBe(2);
+		});
+	});
+
 	test('the database refuses a note over NOTE_MAX characters', async () => {
 		await withPeople(async (tx, { author, friend }) => {
 			const recipe = await makeRecipe(tx, author, 'public');

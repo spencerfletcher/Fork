@@ -22,7 +22,7 @@ import { VERSION_NOT_FOUND } from './versionError.js';
 import { failure, requireUser, SESSION_ENDED } from '#lib/server/actions.js';
 import { STALE_MESSAGE } from '#lib/server/submission.js';
 import { restoreVersion } from '#lib/server/versions.js';
-import { keepVersion, setNote } from '#lib/server/keptCopies.js';
+import { keepVersion, removeCopy, setNote } from '#lib/server/keptCopies.js';
 import { deleteForever } from '#lib/server/trash.js';
 import {
 	collectionsOf,
@@ -256,11 +256,7 @@ export const actions: Actions = {
 		if (!user) return failure(401, 'unauthenticated', SESSION_ENDED('try again'));
 		const copy = await keptCopy(params.slug, user);
 		if (!copy) throw error(404, 'Recipe not found');
-		await db
-			.delete(favorites)
-			.where(and(eq(favorites.userId, user.id), eq(favorites.recipeId, copy.recipe.id)));
-		await leaveCollections(user.id, copy.recipe.id);
-		if (copy.recipe.erasedAt) await deleteForever(copy.recipe.id, supabase);
+		if (await removeCopy(user.id, copy.recipe.id)) await deleteForever(copy.recipe.id, supabase);
 		throw redirect(303, '/cookbook?filter=saved');
 	},
 

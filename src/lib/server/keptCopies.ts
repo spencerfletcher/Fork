@@ -1,4 +1,4 @@
-import { and, eq, inArray, max, notInArray, sql } from 'drizzle-orm';
+import { and, eq, inArray, isNotNull, max, notInArray, sql } from 'drizzle-orm';
 import { db, type Tx } from './db/index.js';
 import {
 	favorites,
@@ -8,6 +8,7 @@ import {
 	type RecipeVersion
 } from './db/schema.js';
 import { canView, friendIdsOf, keptCopyOf } from './visibility.js';
+import { leaveCollections } from './collections.js';
 
 // Keep this version and the copies it leads to (roadmap section 7, "Saves and
 // access"). The save row holds the saver's choice (keptVersion), the copy the
@@ -86,6 +87,35 @@ export async function keepVersion(
 		.where(saveOf(userId, recipeId))
 		.returning({ recipeId: favorites.recipeId });
 	return rows.length > 0;
+}
+
+/**
+ * The saver removes their copy: the save, its note and its collection places,
+ * in one transaction under the recipe's row lock (deleteForever's), so an erase
+ * landing meanwhile is read here. True when the recipe is erased and no copy is
+ * left: the caller then finishes the erase with deleteForever. A recipe only in
+ * the Trash is never finished: it is still its author's to restore.
+ */
+export async function removeCopy(
+	userId: string,
+	recipeId: number,
+	conn: Tx | typeof db = db
+): Promise<boolean> {
+	return conn.transaction(async (tx) => {
+		const [locked] = await tx
+			.select({ erasedAt: recipes.erasedAt })
+			.from(recipes)
+			.where(eq(recipes.id, recipeId))
+			.for('update');
+		await tx.delete(favorites).where(saveOf(userId, recipeId));
+		await leaveCollections(userId, recipeId, tx);
+		if (!locked?.erasedAt) return false;
+		const left = await tx.$count(
+			favorites,
+			and(eq(favorites.recipeId, recipeId), isNotNull(favorites.copyVersion))
+		);
+		return left === 0;
+	});
 }
 
 /** The cook's note on a recipe they saved, trimmed; empty clears it. False when they have not saved it. */
