@@ -573,6 +573,58 @@ test.describe('Trash', () => {
 		await expect(trashRow(page, title)).toHaveCount(0);
 		expect((await page.goto(url))?.status()).toBe(404);
 	});
+
+	test('a row spans the page column on one line at desktop, its step too, and stacks on a phone without overflow', async ({
+		page
+	}) => {
+		const { title } = uniqueTitle();
+		const url = await createRecipe(page, title, '2');
+		await deleteRecipe(page, url);
+		try {
+			await page.setViewportSize({ width: 1280, height: 800 });
+			await gotoHydrated(page, '/cookbook/trash');
+			const row = trashRow(page, title);
+			const heading = row.getByRole('heading', { name: title });
+			const sameLine = async (other: ReturnType<Page['locator']>) => {
+				const [a, b] = [await heading.boundingBox(), await other.boundingBox()];
+				// Vertically overlapping boxes share the line.
+				expect(a!.y < b!.y + b!.height && b!.y < a!.y + a!.height).toBe(true);
+			};
+			const rowBox = (await row.boundingBox())!;
+			const columnBox = (await page.locator('.page-inner').first().boundingBox())!;
+			expect(rowBox.width).toBeGreaterThan(columnBox.width - 2);
+			await sameLine(row.getByRole('button', { name: `Restore ${title}` }));
+			await row.getByRole('button', { name: 'Delete forever' }).click();
+			const step = page.getByRole('group', { name: `Delete ${title} forever?` });
+			await sameLine(step.getByRole('button', { name: 'Delete forever' }));
+			await sameLine(step.getByText('The recipe and its history cannot be restored.'));
+
+			for (const width of [390, 320]) {
+				await page.setViewportSize({ width, height: 800 });
+				await expect(step).toBeVisible();
+				expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+					width
+				);
+				const restore = (await row
+					.getByRole('button', { name: `Restore ${title}` })
+					.boundingBox())!;
+				expect(restore.height).toBeGreaterThanOrEqual(44);
+				expect(restore.y).toBeGreaterThan((await heading.boundingBox())!.y);
+			}
+		} finally {
+			await page.goto('/cookbook/trash');
+			await page.locator('html[data-hydrated]').waitFor({ state: 'attached' });
+			const row = trashRow(page, title);
+			if (await row.count()) {
+				await row.getByRole('button', { name: 'Delete forever' }).click();
+				await page
+					.getByRole('group', { name: `Delete ${title} forever?` })
+					.getByRole('button', { name: 'Delete forever' })
+					.click();
+				await expect(row).toHaveCount(0);
+			}
+		}
+	});
 });
 
 test.describe('One save', () => {

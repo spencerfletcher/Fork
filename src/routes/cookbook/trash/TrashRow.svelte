@@ -53,6 +53,8 @@
 </li>
 
 <style>
+	/* Across the page column: what it is on the left, the two actions on the
+	   right, one line from 700px; stacked on a phone. */
 	.trash-row {
 		display: flex;
 		flex-wrap: wrap;
@@ -63,8 +65,25 @@
 		border-top: 1px solid var(--color-border);
 	}
 
+	.what {
+		flex: 1 1 16rem;
+		min-width: 0;
+	}
+
+	@media (max-width: 699px) {
+		.trash-row {
+			flex-direction: column;
+			align-items: flex-start;
+		}
+
+		.what {
+			flex-basis: auto;
+		}
+	}
+
 	h2 {
 		font-size: 1.125rem;
+		overflow-wrap: anywhere;
 	}
 
 	.meta {
