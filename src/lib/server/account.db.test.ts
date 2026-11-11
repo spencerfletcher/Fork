@@ -399,11 +399,11 @@ describe.skipIf(!localDb)('deleting an account removes its login', () => {
 			Object.assign(new Error('Failed query'), { cause: Object.assign(new Error(code), { code }) });
 		const execute = vi.spyOn(db, 'execute');
 		const logged = vi.spyOn(console, 'error').mockImplementation(() => {});
-		for (const code of ['42501', '42P01']) {
+		for (const code of ['42501', '42P01', '23503']) {
 			execute.mockRejectedValueOnce(refusal(code));
 			await expect(account.deleteAccount(userId, storage)).resolves.toBe('login_kept');
 		}
-		expect(logged).toHaveBeenCalledTimes(2);
+		expect(logged).toHaveBeenCalledTimes(3);
 		execute.mockRejectedValueOnce(refusal('57P01'));
 		await expect(account.deleteAccount(userId, storage)).rejects.toThrow('Failed query');
 		execute.mockRestore();

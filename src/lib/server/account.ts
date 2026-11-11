@@ -31,7 +31,7 @@ import { deleteForever, moveToTrash } from './trash.js';
  * Every step reads what is left, so a failure part way leaves an account the
  * next call finishes, and a second call does nothing. Each recipe's row is
  * locked first, as every other writer of it locks it. 'login_kept' when the
- * database refused the login's delete: the caller marks it instead (the
+ * database refused the login's delete (loginDeleteRefused): the caller marks it instead (the
  * Settings action, signed out again by hooks.server.ts).
  */
 export async function deleteAccount(
@@ -125,11 +125,12 @@ export async function deleteAccount(
 
 /**
  * The database role may not delete from auth.users (42501, permission
- * denied), or the database has no auth schema (42P01: fork_e2e, whose auth
- * lives in the stack's postgres database).
+ * denied), the database has no auth schema (42P01: fork_e2e, whose auth
+ * lives in the stack's postgres database), or a row in another schema still
+ * points at the user with no cascade (23503, foreign key violation).
  */
 function loginDeleteRefused(e: unknown): boolean {
 	const pgError = e instanceof Error && e.cause ? e.cause : e;
 	const code = (pgError as { code?: string } | null)?.code;
-	return code === '42501' || code === '42P01';
+	return code === '42501' || code === '42P01' || code === '23503';
 }
