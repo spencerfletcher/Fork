@@ -5,7 +5,14 @@ import { readFileSync, readdirSync } from 'node:fs';
 // hand-styled button fails here until it takes a shared class or is added to
 // STRUCTURAL below on purpose, with its reason.
 
-const CLOSED_SET = ['btn-primary', 'btn-ghost', 'text-btn', 'menu-row', 'clear-ticks'] as const;
+const CLOSED_SET = [
+	'btn-primary',
+	'btn-ghost',
+	'text-btn',
+	'pill-btn',
+	'menu-row',
+	'clear-ticks'
+] as const;
 
 /** Buttons that are structure, not a button look: file (under src/), its class attribute, why. */
 const STRUCTURAL = [
