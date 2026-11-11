@@ -38,16 +38,18 @@ test.describe('Settings', () => {
 		).toHaveAttribute('href', '/forgot-password');
 	});
 
+	const audience = (page: Page) => page.getByRole('combobox', { name: 'Who can see this recipe' });
+
 	test('a new recipe starts at the default audience chosen in Settings', async ({ page }) => {
 		try {
 			await saveDefault(page, 'Friends');
 			await gotoHydrated(page, '/recipes/new');
-			await expect(page.getByRole('radio', { name: 'Friends' })).toBeChecked();
+			await expect(audience(page)).toContainText('Friends');
 		} finally {
 			await saveDefault(page, 'Only me');
 		}
 		await gotoHydrated(page, '/recipes/new');
-		await expect(page.getByRole('radio', { name: 'Only me' })).toBeChecked();
+		await expect(audience(page)).toContainText('Only me');
 	});
 
 	test('full width: each section’s head beside its controls at desktop, stacked on a phone', async ({

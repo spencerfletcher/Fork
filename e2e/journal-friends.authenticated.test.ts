@@ -1,7 +1,24 @@
 import { expect, test } from '@playwright/test';
 import { gotoHydrated } from './helpers';
 import { SEED_LOG } from '../src/lib/server/db/seedData';
-import { monthLabel, SUMMARY_MONTHS, summaryMonths } from '../src/lib/journal';
+
+// Mirrors SUMMARY_MONTHS, summaryMonths and monthLabel in src/lib/journal.ts,
+// which Playwright cannot import (its #lib imports do not resolve here).
+const SUMMARY_MONTHS = 12;
+const summaryMonths = (today: string) => {
+	const d = new Date(`${today}T00:00:00Z`);
+	return Array.from({ length: SUMMARY_MONTHS }, (_, i) =>
+		new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() - SUMMARY_MONTHS + 1 + i, 1))
+			.toISOString()
+			.slice(0, 10)
+	);
+};
+const monthLabel = (iso: string) =>
+	new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-US', {
+		month: 'long',
+		year: 'numeric',
+		timeZone: 'UTC'
+	});
 
 // Signed in as the seed user (spencerfletcher's place in fork_e2e), whose
 // friend devcooks and pending requester priyabakes the seed writes. The file
@@ -61,7 +78,7 @@ test.describe('Journal', () => {
 		});
 		const window = summaryMonths(today);
 		const months = page
-			.getByRole('list', { name: `Last ${SUMMARY_MONTHS} months` })
+			.getByRole('list', { name: new RegExp(`^Last ${SUMMARY_MONTHS} months$`, 'i') })
 			.getByRole('listitem');
 		await expect(months).toHaveCount(SUMMARY_MONTHS);
 		// Other tests log entries today, so the current month's count is theirs to change.
@@ -141,7 +158,7 @@ test.describe('Recipe page entry points', () => {
 			/\/journal#entry-\d+/
 		);
 
-		await page.getByRole('link', { name: 'Cook' }).click();
+		await page.getByRole('link', { name: 'Cook', exact: true }).click();
 		await expect(page).toHaveURL(/[?&]cook=1/);
 		const url = new URL(page.url());
 		url.searchParams.set('serves', '8');
@@ -157,7 +174,7 @@ test.describe('Recipe page entry points', () => {
 		await page.goBack();
 		await expect(page).toHaveURL(/serves=8/);
 		await expect(page).not.toHaveURL(/cook=/);
-		await expect(page.getByRole('link', { name: 'Cook' })).toBeVisible();
+		await expect(page.getByRole('link', { name: 'Cook', exact: true })).toBeVisible();
 	});
 });
 

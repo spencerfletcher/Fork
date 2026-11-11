@@ -84,7 +84,7 @@ test.describe('Fork', () => {
 		await expect(hero.getByRole('link', { name: 'Edit recipe' })).toBeVisible();
 		// The ⋯ is a 44px square, not a pill: it ends Cook's row.
 		const more = await hero.getByRole('button', { name: 'More actions' }).boundingBox();
-		const cook = await hero.getByRole('link', { name: 'Cook' }).boundingBox();
+		const cook = await hero.getByRole('link', { name: 'Cook', exact: true }).boundingBox();
 		expect(more!.height).toBeGreaterThanOrEqual(44);
 		expect(more!.y).toBe(cook!.y);
 		expect(more!.x).toBeGreaterThan(cook!.x + cook!.width);
