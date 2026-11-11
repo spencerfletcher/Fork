@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { and, asc, eq, isNotNull, isNull } from 'drizzle-orm';
+import { and, asc, eq, isNotNull, isNull, sql } from 'drizzle-orm';
 import { db } from './db/index.js';
-import { favorites, logEntries, profiles, recipes } from './db/schema.js';
+import { favorites, formerUsernames, logEntries, profiles, recipes } from './db/schema.js';
 import { imagePathOf, removeRecipeImage } from './images.js';
 import { removeCopy } from './keptCopies.js';
 import { deleteForever, moveToTrash } from './trash.js';
@@ -18,7 +18,8 @@ import { deleteForever, moveToTrash } from './trash.js';
  *    whose last copy was theirs.
  * 3. The profile row, under its lock; its FKs take the rest: collections,
  *    Journal entries and their likes, their likes, friendships, requests and
- *    blocks, mutes, reports they filed and former usernames cascade, and
+ *    blocks and mutes cascade; their username joins their former ones, which
+ *    stay reserved to no one for FORMER_USERNAME_DAYS; and reports they filed,
  *    recipes.author_id (the erased rows savers keep) and
  *    recipe_versions.created_by are set null.
  * 4. Their Journal photos and avatar are removed from Storage.
@@ -58,7 +59,7 @@ export async function deleteAccount(userId: string, supabase: SupabaseClient): P
 
 	const photos = await db.transaction(async (tx) => {
 		const [profile] = await tx
-			.select({ avatarUrl: profiles.avatarUrl })
+			.select({ username: profiles.username, avatarUrl: profiles.avatarUrl })
 			.from(profiles)
 			.where(eq(profiles.id, userId))
 			.for('update');
@@ -75,6 +76,16 @@ export async function deleteAccount(userId: string, supabase: SupabaseClient): P
 			.select({ photoUrl: logEntries.photoUrl })
 			.from(logEntries)
 			.where(and(eq(logEntries.userId, userId), isNotNull(logEntries.photoUrl)));
+		// The name stays reserved FORMER_USERNAME_DAYS, as a rename's does: the
+		// delete below leaves it, and their former names, owned by no one. A key
+		// left by an expired former name is taken over.
+		await tx
+			.insert(formerUsernames)
+			.values({ username: profile.username, profileId: userId })
+			.onConflictDoUpdate({
+				target: formerUsernames.username,
+				set: { profileId: userId, createdAt: sql`now()` }
+			});
 		await tx.delete(profiles).where(eq(profiles.id, userId));
 		return [profile.avatarUrl, ...entries.map((e) => e.photoUrl)];
 	});

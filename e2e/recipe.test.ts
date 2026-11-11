@@ -76,6 +76,19 @@ test.describe('Recipe detail page', () => {
 		// In the band: the print header, hidden on screen, says it too.
 		await expect(page.locator('.hero').getByText(/forked from/i)).toBeVisible();
 		await expect(page.locator('.hero').getByText(COOKIES_RE)).toBeVisible();
+
+		// Exact origins: the byline names the parent's version the fork copied
+		// and links that version, whose page shows its own title.
+		const copied = SEED[1].forkOf!.version;
+		const from = page
+			.locator('.hero .byline')
+			.getByRole('link', { name: `${COOKIES}, v${copied}` });
+		await expect(from).toHaveAttribute('href', new RegExp(`\\?version=${copied}$`));
+		await from.click();
+		await expect(page).toHaveURL(new RegExp(`\\?version=${copied}$`));
+		await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+			SEED[0].versions[copied - 1].title
+		);
 	});
 
 	test('the stats row counts forks and versions; the fork count opens the list of forks', async ({

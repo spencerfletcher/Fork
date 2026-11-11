@@ -104,6 +104,8 @@ export interface RecipeMetaInput {
 	tags: string[];
 	/** The parent's slug when it is public and not in the Trash. */
 	parentSlug: string | null;
+	/** The parent's version the fork copied; null for a fork from before it was recorded. */
+	parentVersion?: number | null;
 	/** When the first version was written. */
 	published: Date;
 	version: RecipeContent & { createdAt: Date };
@@ -189,9 +191,12 @@ function recipeData(input: RecipeMetaInput, image: string | null): Record<string
 		// isBasedOn over citation: schema.org's "derived from or adapted from",
 		// which a fork and an outside source both are.
 		isBasedOn: nonEmpty(
-			[input.parentSlug ? `${origin}/recipes/${input.parentSlug}` : null, source].filter(
-				(b) => b !== null
-			)
+			[
+				input.parentSlug
+					? `${origin}/recipes/${input.parentSlug}${input.parentVersion ? `?version=${input.parentVersion}` : ''}`
+					: null,
+				source
+			].filter((b) => b !== null)
 		)
 	};
 }

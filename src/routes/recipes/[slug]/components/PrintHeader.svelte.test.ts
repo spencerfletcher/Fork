@@ -73,6 +73,18 @@ describe('PrintHeader', () => {
 		expect(lines[1]).toBe('By @maya · forked from Gran’s cookies');
 	});
 
+	test('a fork that recorded the version it copied names it', () => {
+		const { lines } = renderHeader({
+			recipe: {
+				author: { username: 'maya' },
+				parent: { title: 'Gran’s cookies' },
+				parentId: 9,
+				parentVersion: 2
+			}
+		});
+		expect(lines[1]).toBe('By @maya · forked from Gran’s cookies, v2');
+	});
+
 	test('a recipe with no servings prints its version alone', () => {
 		const { lines } = renderHeader({ stored: 0, serves: 0 });
 		expect(lines[2]).toBe('v3 · Makes 12 cookies');

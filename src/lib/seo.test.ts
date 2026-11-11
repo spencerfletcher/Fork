@@ -260,6 +260,12 @@ describe('recipeMeta: Recipe data', () => {
 			{ '@type': 'CreativeWork', name: 'A card in a drawer' }
 		]);
 	});
+
+	test('is based on the exact parent version a fork copied, when it is recorded', () => {
+		expect(
+			ld({ ...withVersion({}), parentSlug: 'original-cd34', parentVersion: 2 }).isBasedOn
+		).toEqual([`${ORIGIN}/recipes/original-cd34?version=2`]);
+	});
 });
 
 describe('isoDuration', () => {

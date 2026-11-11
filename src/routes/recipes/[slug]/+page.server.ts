@@ -79,6 +79,7 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 		authorId: copy!.recipe.authorId,
 		author: copy!.recipe.author,
 		parentId: copy!.recipe.parentId,
+		parentVersion: copy!.recipe.parentVersion,
 		parent: copy!.recipe.parent,
 		editRevision: 0,
 		...recipeCopies(versionContent(copy!.version)),
@@ -165,6 +166,7 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 				visibleRecipe.parent?.visibility === 'public' && !visibleRecipe.parentDeleted
 					? visibleRecipe.parent.slug
 					: null,
+			parentVersion: recipe.parentVersion,
 			published: recipe.versions.at(-1)!.createdAt,
 			version: currentVersion
 		})
@@ -279,28 +281,38 @@ export const actions: Actions = {
 		throw redirect(303, '/cookbook?filter=saved');
 	},
 
-	fork: async ({ params, locals: { user } }) => {
+	// Copies the version being read (the form's `version`; the latest when the
+	// form has none, as the Journal's Fork sends) and records which one it was.
+	fork: async ({ params, request, locals: { user } }) => {
 		if (!user) return signedOut();
+		const versionField = text(await request.formData(), 'version');
+		const version = versionField ? wholeNumber(versionField) : null;
+		if (versionField && version === null) return failure(400, 'invalid', BAD_FORM);
 
 		const source = await viewableRecipe(params.slug, user, {
-			versions: { orderBy: [desc(recipeVersions.versionNumber)], limit: 1 },
+			versions: {
+				where: version === null ? undefined : eq(recipeVersions.versionNumber, version),
+				orderBy: [desc(recipeVersions.versionNumber)],
+				limit: 1
+			},
 			recipesToTags: true,
 			author: true
 		});
 		if (!source) throw error(404, 'Source recipe not found');
 
-		const latestVersion = source.versions[0];
+		const copied = source.versions[0];
+		if (!copied) return failure(404, 'not_found', `This recipe has no v${version}.`);
 
 		// Forking is one click. The first version says where the copy came from;
 		// the forker writes a message of their own when they change something.
 		const from = source.author ? `@${source.author.username}, ` : '';
-		const commitMessage = `Forked from ${from}v${latestVersion.versionNumber}`;
+		const commitMessage = `Forked from ${from}v${copied.versionNumber}`;
 
 		await ensureProfile(user);
 
-		// One snapshot of the latest version is the whole content of the fork;
+		// One snapshot of the copied version is the whole content of the fork;
 		// the source row contributes only its settings and lineage.
-		const snapshot = versionContent(latestVersion);
+		const snapshot = versionContent(copied);
 		const copies = recipeCopies(snapshot);
 		const slug = recipeSlug(snapshot.title);
 
@@ -316,7 +328,8 @@ export const actions: Actions = {
 					...copies,
 					// Every fork starts private; the editor may widen it up to the source's audience.
 					visibility: 'private',
-					parentId: source.id
+					parentId: source.id,
+					parentVersion: copied.versionNumber
 				})
 				.returning();
 

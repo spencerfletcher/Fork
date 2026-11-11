@@ -363,6 +363,12 @@ describe('RecipeActions row', () => {
 		expect(document.querySelector('dialog')).toBeNull();
 	});
 
+	test('Fork sends the version being read, which the server copies', () => {
+		render(RecipeActions, { props: makeProps({ canFork: true, forkVersion: 2 }) });
+		const form = screen.getByRole('button', { name: 'Fork' }).closest('form')!;
+		expect(new FormData(form).get('version')).toBe('2');
+	});
+
 	test('logged out: Cook, then a ghost Log in to save pill back here, and no Fork', () => {
 		const { container } = render(RecipeActions, {
 			props: makeProps({ canFavorite: false, loginHref: '/login?redirectTo=%2Frecipes%2Fcookies' })

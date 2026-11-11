@@ -18,6 +18,7 @@
 			author?: { username: string } | null;
 			parent?: { title: string } | null;
 			parentId: number | null;
+			parentVersion?: number | null;
 			parentDeleted?: boolean;
 		};
 		content: Pick<
@@ -66,7 +67,7 @@
 	<p>
 		{#if recipe.author}By <span class="mono-id">@{recipe.author.username}</span>{/if}
 		{#if recipe.parent}
-			· forked from {recipe.parent.title}
+			· forked from {recipe.parent.title}{#if recipe.parentVersion}, v{recipe.parentVersion}{/if}
 		{:else if recipe.parentDeleted}
 			· original recipe deleted
 		{:else if recipe.parentId}

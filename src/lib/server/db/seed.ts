@@ -146,6 +146,7 @@ async function seed() {
 				...recipeCopies(latest),
 				visibility: recipe.visibility,
 				parentId: recipe.forkOf ? idBySlug.get(recipe.forkOf.slug) : null,
+				parentVersion: recipe.forkOf?.version ?? null,
 				// Dated like its versions, so Recent and the feed order the seed the
 				// way real data would, not by insert order.
 				createdAt: new Date(recipe.versions[0].createdAt),

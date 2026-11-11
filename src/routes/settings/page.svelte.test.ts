@@ -208,6 +208,7 @@ describe('Delete account section', () => {
 			'People who saved one of your recipes keep their read-only copy, without your name.',
 			'Forks of your recipes stay with the cooks who made them.',
 			'Your Journal, collections, saves and friends are removed.',
+			`Your username stays reserved for ${FORMER_USERNAME_DAYS} days, then anyone may take it.`,
 			'This cannot be undone.'
 		])
 			expect(within(del()).getByText(line)).toBeInTheDocument();

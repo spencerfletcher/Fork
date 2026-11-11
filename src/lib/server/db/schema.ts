@@ -52,13 +52,13 @@ export const profiles = pgTable('profiles', {
 // owner's current name, and the name stays reserved to that owner: nobody else
 // may take it (so old links cannot be used to impersonate them), but the owner
 // may take it back, which deletes the row. The key keeps one owner per name.
+// A deleted account's names stay with no owner: reserved to nobody, and an
+// old link finds no one.
 export const formerUsernames = pgTable(
 	'former_usernames',
 	{
 		username: text().primaryKey(),
-		profileId: text('profile_id')
-			.notNull()
-			.references(() => profiles.id, { onDelete: 'cascade' }),
+		profileId: text('profile_id').references(() => profiles.id, { onDelete: 'set null' }),
 		createdAt: timestamp('created_at').notNull().defaultNow()
 	},
 	(table) => [index('former_usernames_profile_idx').on(table.profileId)]
@@ -84,6 +84,11 @@ export const recipes = pgTable(
 		cookTimeMinutes: integer('cook_time_minutes'),
 		// Fork lineage
 		parentId: integer('parent_id'), // the recipe it was forked from; a relation below, no FK in the database
+		// The parent's version_number the fork copied. A number, not a version
+		// row's FK: versions are append-only, so the number names that content
+		// for good, and it outlives the parent's deletion as parent_id does.
+		// Null for a fork from before it was recorded.
+		parentVersion: integer('parent_version'),
 		// Who can see it: see VISIBILITIES and #lib/server/visibility.ts.
 		visibility: text().$type<Visibility>().notNull().default('private'),
 		createdAt: timestamp('created_at').notNull().defaultNow(),
@@ -188,12 +193,11 @@ export const REPORT_TARGETS = ['log_entry', 'recipe', 'user'] as const;
 export type ReportTarget = (typeof REPORT_TARGETS)[number];
 
 // Read by hand; moderation is manual. target_id is text so one column holds a
-// log entry or recipe id and a profile id alike.
+// log entry or recipe id and a profile id alike. A deleted reporter's reports
+// stay, from no one.
 export const reports = pgTable('reports', {
 	id: serial().primaryKey(),
-	reporterId: text('reporter_id')
-		.notNull()
-		.references(() => profiles.id, { onDelete: 'cascade' }),
+	reporterId: text('reporter_id').references(() => profiles.id, { onDelete: 'set null' }),
 	targetType: text('target_type').$type<ReportTarget>().notNull(),
 	targetId: text('target_id').notNull(),
 	reason: text().notNull(),

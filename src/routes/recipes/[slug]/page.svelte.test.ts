@@ -615,8 +615,9 @@ describe('a saved recipe: Keep this version and the note', () => {
 		expect(screen.getByText(/^Keeping/)).toBeInTheDocument();
 		expect(screen.getByRole('button', { name: /^Save/ })).toBeInTheDocument();
 		expect(screen.getByText(/^Converted to metric/)).toBeInTheDocument();
-		// Fork copies the latest, so it is offered on the latest only.
-		expect(screen.queryByRole('button', { name: 'Fork' })).toBeNull();
+		// Fork copies the version being read, so it is offered here too.
+		const fork = screen.getByRole('button', { name: 'Fork' }).closest('form')!;
+		expect(new FormData(fork).get('version')).toBe('1');
 	});
 });
 

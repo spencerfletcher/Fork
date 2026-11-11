@@ -278,6 +278,9 @@
 					</li>
 					<li>Forks of your recipes stay with the cooks who made them.</li>
 					<li>Your Journal, collections, saves and friends are removed.</li>
+					<li>
+						Your username stays reserved for {FORMER_USERNAME_DAYS} days, then anyone may take it.
+					</li>
 					<li>This cannot be undone.</li>
 				</ul>
 				<p>
