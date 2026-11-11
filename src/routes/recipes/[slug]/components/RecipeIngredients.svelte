@@ -155,10 +155,8 @@
 				</span>
 			</label>
 		{/each}
-		<!-- After it, only when a line was converted: the reader's Settings changed
-		     what they read. Butted against the list's close, so with nothing
-		     converted the page is the same, whitespace included. -->
 	</div>
+	<!-- Only when a line was converted: the reader's Settings changed what they read. -->
 	{#if measurement && anyConverted}
 		<p class="form-hint">
 			Converted to {SYSTEM_NAME[measurement]}; as written in parentheses.
