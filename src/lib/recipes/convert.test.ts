@@ -6,11 +6,11 @@ import type { Measurement } from '#lib/measurement.js';
 import { gramsFor } from '#lib/server/ingredientDensities.js';
 import { DENSITIES, ML_PER_UNIT } from '#lib/server/gramTables.js';
 
-const grams = (g: number, liquid = false) => ({
+const grams = (g: number, likeWater = false) => ({
 	grams: g,
 	grams2: null,
 	approximate: false,
-	liquid
+	likeWater
 });
 
 /** The line as the cook's units show it, or null when it stays as written. */
@@ -219,10 +219,23 @@ describe('convertIngredient: grams first for what is weighed', () => {
 		});
 	});
 
-	test('a liquid stays in millilitres and keeps its gram hint', () => {
+	test('a liquid whose millilitres are its grams stays in millilitres with its gram hint', () => {
 		const milk = weighed('1 cup milk');
 		expect(milk).toMatchObject({ text: '235 ml milk', written: '1 cup', estimate: false });
 		expect(milk.grams?.grams).toBeCloseTo(cupsOf(1, 'milk'));
+		for (const line of ['1 cup water', '2 cups stock', '1/2 cup vinegar', '1 cup red wine'])
+			expect(weighed(line)).toMatchObject({
+				estimate: false,
+				written: line.split(' ').slice(0, 2).join(' ')
+			});
+	});
+
+	test('oil is weighed: its millilitres are not its grams', () => {
+		expect(weighed('1/4 cup olive oil')).toMatchObject({
+			text: `${metricGrams(cupsOf(0.25, 'olive oil'))} g olive oil`,
+			written: '1/4 cup',
+			estimate: true
+		});
 	});
 
 	test('honey is weighed, not poured', () => {
@@ -257,9 +270,8 @@ describe('convertIngredient: grams first for what is weighed', () => {
 		expect(weighed('1/4 tsp espresso powder').written).toBeNull();
 	});
 
-	test('a spoonful of liquid stays a spoonful, however heavy', () => {
-		expect(tspOf(2, 'vanilla extract')).toBeGreaterThanOrEqual(MIN_SPOON_GRAMS);
-		expect(weighed('2 tsp vanilla extract').written).toBeNull();
+	test('a spoonful of a liquid like water stays a spoonful, however heavy', () => {
+		expect(2 * ML_PER_UNIT.tbsp * DENSITIES['lemon juice']).toBeGreaterThanOrEqual(MIN_SPOON_GRAMS);
 		expect(weighed('2 tbsp lemon juice').written).toBeNull();
 	});
 

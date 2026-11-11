@@ -15,7 +15,7 @@ const grams = (g: number, g2: number | null = null, approximate = false) => ({
 	grams: g,
 	grams2: g2,
 	approximate,
-	liquid: false
+	likeWater: false
 });
 
 describe('scaleQuantity', () => {

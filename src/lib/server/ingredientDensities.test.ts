@@ -1,7 +1,7 @@
 import { describe, test, expect } from 'vitest';
-import { gramsFor, lookupGrams, lookupPieceGrams } from './ingredientDensities';
+import { gramsFor, lookupGrams, lookupPieceGrams, mlIsGrams } from './ingredientDensities';
 import { makeIngredient } from '#lib/recipes/fixtures.js';
-import { DENSITIES, LIQUIDS, ML_PER_UNIT } from './gramTables';
+import { DENSITIES, ML_IS_GRAMS_TOLERANCE, ML_PER_UNIT, WEIGHED_NEAR_WATER } from './gramTables';
 
 describe('lookupPieceGrams', () => {
 	test('multiplies the quantity by the per-item weight', () => {
@@ -117,7 +117,7 @@ describe('gramsFor', () => {
 			grams: 100,
 			grams2: null,
 			approximate: true,
-			liquid: false
+			likeWater: false
 		});
 	});
 
@@ -127,7 +127,7 @@ describe('gramsFor', () => {
 			grams: cup,
 			grams2: 2 * cup,
 			approximate: false,
-			liquid: true
+			likeWater: true
 		});
 	});
 
@@ -136,7 +136,7 @@ describe('gramsFor', () => {
 			grams: 100,
 			grams2: 150,
 			approximate: true,
-			liquid: false
+			likeWater: false
 		});
 	});
 
@@ -145,7 +145,7 @@ describe('gramsFor', () => {
 			grams: 20,
 			grams2: null,
 			approximate: true,
-			liquid: false
+			likeWater: false
 		});
 	});
 
@@ -153,20 +153,43 @@ describe('gramsFor', () => {
 		expect(gramsFor(makeIngredient('salt to taste'))).toBeNull();
 	});
 
-	test('marks a liquid by the density key its name matched, handling words and all', () => {
-		const liquid = (line: string) => gramsFor(makeIngredient(line))?.liquid;
-		expect(liquid('1 cup whole milk')).toBe(true);
-		expect(liquid('1 cup heavy cream, cold')).toBe(true);
-		expect(liquid('2 tbsp lemon juice')).toBe(true);
-		expect(liquid('1 cup all-purpose flour')).toBe(false);
-		// Syrups, honey and yogurt are weighed in metric kitchens.
-		expect(liquid('1/2 cup honey')).toBe(false);
-		expect(liquid('1/4 cup maple syrup')).toBe(false);
-		expect(liquid('1 cup plain yogurt')).toBe(false);
+	test('millilitres read as grams within the tolerance of water, either side', () => {
+		const t = ML_IS_GRAMS_TOLERANCE;
+		expect(mlIsGrams(1 + t * 0.999)).toBe(true);
+		expect(mlIsGrams(1 - t * 0.999)).toBe(true);
+		expect(mlIsGrams(1 + t * 1.001)).toBe(false);
+		expect(mlIsGrams(1 - t * 1.001)).toBe(false);
 	});
 
-	test('every liquid is a density key, so the two lists cannot drift', () => {
-		for (const key of LIQUIDS) expect(DENSITIES).toHaveProperty([key]);
+	test('marks a liquid like water by the density key its name matched, handling words and all', () => {
+		const likeWater = (line: string) => gramsFor(makeIngredient(line))?.likeWater;
+		for (const line of [
+			'1 cup water',
+			'1 cup whole milk',
+			'1 cup heavy cream, cold',
+			'2 cups chicken broth',
+			'1/2 cup orange juice',
+			'2 tbsp vinegar',
+			'1 cup white wine'
+		])
+			expect(likeWater(line), line).toBe(true);
+		// Oil, syrups and sauces heavier than 6% off water are weighed; so are
+		// the solids the density alone cannot tell.
+		for (const line of [
+			'1/4 cup olive oil',
+			'1/2 cup honey',
+			'1/4 cup maple syrup',
+			'2 tbsp soy sauce',
+			'2 tbsp balsamic vinegar',
+			'1 cup all-purpose flour',
+			'1 cup plain yogurt',
+			'1/2 cup sour cream'
+		])
+			expect(likeWater(line), line).toBe(false);
+	});
+
+	test('every weighed-near-water key is a density the tolerance would otherwise pour', () => {
+		for (const key of WEIGHED_NEAR_WATER) expect(mlIsGrams(DENSITIES[key]), key).toBe(true);
 	});
 
 	test('returns null for a line the tables do not know', () => {

@@ -1,19 +1,20 @@
 import {
 	DENSITIES,
-	LIQUIDS,
+	ML_IS_GRAMS_TOLERANCE,
 	ML_PER_UNIT,
 	GRAMS_PER_WEIGHT_UNIT,
-	PIECE_GRAMS
+	PIECE_GRAMS,
+	WEIGHED_NEAR_WATER
 } from './gramTables.js';
 import type { Ingredient } from '#lib/recipes/types.js';
 
 /** grams2 is the upper end when the line gave a range such as "1-2 cups".
- * liquid: the name is one of LIQUIDS, poured rather than weighed. */
+ * likeWater: a liquid whose millilitres are its grams (likeWater below). */
 export type GramResult = {
 	grams: number;
 	grams2: number | null;
 	approximate: boolean;
-	liquid: boolean;
+	likeWater: boolean;
 };
 
 // Words that describe handling, not what the thing is. Size words survive
@@ -95,8 +96,15 @@ function lookup(table: Record<string, number>, name: string): number | null {
 	return key === undefined ? null : table[key];
 }
 
-const isLiquid = (name: string) =>
-	(LIQUIDS as readonly (string | undefined)[]).includes(matchedKey(DENSITIES, name));
+/** A density close enough to water's that millilitres read as grams. */
+export const mlIsGrams = (density: number) => Math.abs(density - 1) <= ML_IS_GRAMS_TOLERANCE;
+
+/** The name is poured and its millilitres are its grams: Metric keeps it in ml. */
+function likeWater(name: string): boolean {
+	const key = matchedKey(DENSITIES, name);
+	if (key === undefined) return false;
+	return mlIsGrams(DENSITIES[key]) && !(WEIGHED_NEAR_WATER as readonly string[]).includes(key);
+}
 
 /**
  * Grams for a measured line. Weight units convert directly; volume units go
@@ -125,10 +133,11 @@ export function lookupPieceGrams(quantity: number, name: string): number | null 
 function convert(quantity: number, unit: string, name: string): GramResult | null {
 	if (unit) {
 		const grams = lookupGrams(quantity, unit, name);
-		if (grams !== null) return { grams, grams2: null, approximate: false, liquid: isLiquid(name) };
+		if (grams !== null)
+			return { grams, grams2: null, approximate: false, likeWater: likeWater(name) };
 	}
 	const grams = lookupPieceGrams(quantity, unit ? `${unit} ${name}` : name);
-	return grams === null ? null : { grams, grams2: null, approximate: true, liquid: false };
+	return grams === null ? null : { grams, grams2: null, approximate: true, likeWater: false };
 }
 
 /**

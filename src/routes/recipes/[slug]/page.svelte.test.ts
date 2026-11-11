@@ -42,7 +42,7 @@ function makeData(imageUrl: string | null = null): PageData {
 		// Two versions, so the version bar renders.
 		allVersions: [version, { ...makeVersion(1, 'Initial recipe'), ...content }],
 		forkCount: 0,
-		grams: [{ grams: 125, grams2: null, approximate: false, liquid: false }, null],
+		grams: [{ grams: 125, grams2: null, approximate: false, likeWater: false }, null],
 		isFavorited: false,
 		user: null
 	} as unknown as PageData;

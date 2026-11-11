@@ -20,7 +20,7 @@ export const MEASUREMENT_LABEL: Record<MeasurementChoice, string> = {
 /** One sentence each, under the label in Settings. */
 export const MEASUREMENT_NOTE: Record<MeasurementChoice, string> = {
 	written: "Exactly as the recipe's author wrote them.",
-	metric: 'Grams for what is weighed, millilitres for liquids, where a conversion is certain.',
+	metric: 'Grams where a conversion is certain; water, milk and stock in millilitres.',
 	us: 'Ounces, pounds and cups where a conversion is certain.'
 };
 

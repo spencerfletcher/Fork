@@ -2,7 +2,7 @@
 // US) applied at render time, after serving scaling. Nothing here is saved;
 // the stored line stays the source of truth. A weight converts to a weight
 // and a volume to a volume, except that Metric leads with the gram estimate
-// for a volume of something weighed (flour, sugar, honey: not a liquid), and
+// for a volume of something weighed (flour, sugar, honey: not a likeWater), and
 // only when the rounded result is within TOLERANCE of the true one.
 import { unitsOfMeasure } from 'parse-ingredient';
 import type { Ingredient } from './types.js';
@@ -165,7 +165,7 @@ export function convertIngredient(
 		from.dimension === 'volume' &&
 		// A whole-item estimate never reaches here: a count has no volume unit.
 		grams !== null &&
-		!grams.liquid &&
+		!grams.likeWater &&
 		(from.system !== 'spoon' || grams.grams >= MIN_SPOON_GRAMS);
 	// A weight that does not round within tolerance falls back to the volume rules.
 	const weight = weighed
