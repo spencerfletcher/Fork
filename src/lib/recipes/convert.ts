@@ -105,7 +105,7 @@ function kitchenRound(value: number, dimension: Dimension): number {
 
 // The stored unit as typed ("cups", "Tbsp", "T", "mL") to its id: exact
 // first, so "T" (tablespoon) and "t" (teaspoon) stay apart, then ignoring case.
-function unitId(unit: string): UnitId | undefined {
+export function unitId(unit: string): UnitId | undefined {
 	const find = (u: string) =>
 		Object.entries(unitsOfMeasure).find(
 			([id, d]) => id === u || d.short === u || d.plural === u || !!d.alternates?.includes(u)

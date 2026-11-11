@@ -1,6 +1,7 @@
 // Reference tables for gram conversion. Pure data; the lookups live in
 // ingredientDensities.ts. Keys are lowercase and matched against ingredient
 // names case-insensitively, so keep new keys lowercase.
+import { UNITS } from '#lib/recipes/convert.js';
 
 /**
  * Ingredient densities (grams per ml) for common ingredients.
@@ -202,50 +203,54 @@ export const WEIGHED_NEAR_WATER = [
 	'tahini'
 ] as const;
 
+/** Each unit word at its unit's size in `UNITS` (convert.ts), so estimates and conversions read one cup. */
+const sizes = (words: Record<string, keyof typeof UNITS>): Record<string, number> =>
+	Object.fromEntries(Object.entries(words).map(([word, id]) => [word, UNITS[id].size]));
+
 /** Volume of 1 unit in ml */
-export const ML_PER_UNIT: Record<string, number> = {
-	tsp: 4.929,
-	teaspoon: 4.929,
-	teaspoons: 4.929,
-	tbsp: 14.787,
-	tablespoon: 14.787,
-	tablespoons: 14.787,
-	cup: 236.588,
-	cups: 236.588,
-	'fluid oz': 29.574,
-	'fluid ounce': 29.574,
-	'fluid ounces': 29.574,
-	'fl oz': 29.574,
-	pint: 473.176,
-	pints: 473.176,
-	quart: 946.353,
-	quarts: 946.353,
-	gallon: 3785.41,
-	gallons: 3785.41,
-	ml: 1,
-	milliliter: 1,
-	milliliters: 1,
-	l: 1000,
-	liter: 1000,
-	liters: 1000
-};
+export const ML_PER_UNIT = sizes({
+	tsp: 'teaspoon',
+	teaspoon: 'teaspoon',
+	teaspoons: 'teaspoon',
+	tbsp: 'tablespoon',
+	tablespoon: 'tablespoon',
+	tablespoons: 'tablespoon',
+	cup: 'cup',
+	cups: 'cup',
+	'fluid oz': 'fluid ounce',
+	'fluid ounce': 'fluid ounce',
+	'fluid ounces': 'fluid ounce',
+	'fl oz': 'fluid ounce',
+	pint: 'pint',
+	pints: 'pint',
+	quart: 'quart',
+	quarts: 'quart',
+	gallon: 'gallon',
+	gallons: 'gallon',
+	ml: 'milliliter',
+	milliliter: 'milliliter',
+	milliliters: 'milliliter',
+	l: 'liter',
+	liter: 'liter',
+	liters: 'liter'
+});
 
 /** Weight units that convert directly to grams — no density needed */
-export const GRAMS_PER_WEIGHT_UNIT: Record<string, number> = {
-	g: 1,
-	gram: 1,
-	grams: 1,
-	kg: 1000,
-	kilogram: 1000,
-	kilograms: 1000,
-	lb: 453.592,
-	lbs: 453.592,
-	pound: 453.592,
-	pounds: 453.592,
-	oz: 28.3495,
-	ounce: 28.3495,
-	ounces: 28.3495
-};
+export const GRAMS_PER_WEIGHT_UNIT = sizes({
+	g: 'gram',
+	gram: 'gram',
+	grams: 'gram',
+	kg: 'kilogram',
+	kilogram: 'kilogram',
+	kilograms: 'kilogram',
+	lb: 'pound',
+	lbs: 'pound',
+	pound: 'pound',
+	pounds: 'pound',
+	oz: 'ounce',
+	ounce: 'ounce',
+	ounces: 'ounce'
+});
 
 /**
  * Grams per whole item, for lines counted rather than measured ("2 eggs").
