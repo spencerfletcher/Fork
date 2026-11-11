@@ -510,17 +510,27 @@
 	}
 
 	/* An inline link's hit: 24px at desktop, 44px on a phone, by padding
-	   pulled back by margin so the text does not move (as .back-link). */
-	.hit-link {
-		padding-block: 4px;
-		margin-block: -4px;
+	   pulled back by margin so the text does not move. The auth pages'
+	   switch, closing and empty-state links and the back link take it too.
+	   --hit is the padding, for a link with a margin of its own to subtract. */
+	.hit-link,
+	.auth-switch a,
+	.arrow-link,
+	.empty-state a,
+	.back-link {
+		--hit: 4px;
+		padding-block: var(--hit);
+		margin-block: calc(-1 * var(--hit));
 	}
 
 	@media (max-width: 699px) {
-		.hit-link {
+		.hit-link,
+		.auth-switch a,
+		.arrow-link,
+		.empty-state a,
+		.back-link {
+			--hit: 11px;
 			display: inline-block;
-			padding-block: 11px;
-			margin-block: -11px;
 		}
 	}
 
@@ -803,25 +813,17 @@
 
 	/* ── Back link ── */
 
-	/* As wide as its text, not the column, with a 24px hit at desktop and 44px
-	   on a phone that does not move it: the bottom margin less the padding now
-	   inside it (decided 29 October 2026). */
+	/* As wide as its text, not the column, with .hit-link's 24px and 44px hit
+	   that does not move it: the bottom margin less the padding now inside it
+	   (decided 29 October 2026). */
 	.back-link {
 		font-size: 0.875rem;
 		color: var(--color-text-3);
 		display: block;
 		width: fit-content;
-		padding: 4px 0;
-		margin: -4px 0 calc(var(--space-3) - 4px);
+		margin-bottom: calc(var(--space-3) - var(--hit));
 		/* It carries the recipe title, which may be one long word. */
 		overflow-wrap: anywhere;
-	}
-
-	@media (max-width: 699px) {
-		.back-link {
-			padding: 11px 0;
-			margin: -11px 0 calc(var(--space-3) - 11px);
-		}
 	}
 
 	.back-link:hover {
@@ -1144,38 +1146,6 @@
 		text-align: center;
 		font-size: 0.875rem;
 		color: var(--color-text-2);
-	}
-
-	/* The switch link reaches 24px at desktop and 44px on a phone by padding
-	   pulled back by margin, so the sentence does not move. */
-	.auth-switch a {
-		display: inline-block;
-		padding-block: 2px;
-		margin-block: -2px;
-	}
-
-	@media (max-width: 699px) {
-		.auth-switch a {
-			padding-block: 12px;
-			margin-block: -12px;
-		}
-	}
-
-	/* A closing link in the arrow form ("All recipes →"): 24px tall at desktop
-	   from its own line, 44px on a phone by padding pulled back by margin, so
-	   the text does not move (decided 29 October 2026). An empty state's
-	   links ("Clear search") take the same hits. */
-	.arrow-link,
-	.empty-state a {
-		display: inline-block;
-	}
-
-	@media (max-width: 699px) {
-		.arrow-link,
-		.empty-state a {
-			padding: 9px 0;
-			margin-block: -9px;
-		}
 	}
 
 	/* The "nothing here" paragraph shown when a list query returns no rows.

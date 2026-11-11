@@ -1,6 +1,6 @@
 import { describe, test, expect } from 'vitest';
 import { readFileSync, readdirSync } from 'node:fs';
-import { cssRule } from '#lib/testing/css.js';
+import { cssRule, cssRules } from '#lib/testing/css.js';
 
 // The design system's tokens live in app.css as plain CSS variables. This
 // test proves every text/background pair the app draws clears WCAG AA, so a
@@ -150,9 +150,22 @@ describe('app.css shared utilities', () => {
 	});
 
 	test('an inline link is a 24px hit at desktop and 44px on a phone, without moving', () => {
-		expect(body('.hit-link')).toMatch(/padding-block:\s*4px;\s*margin-block:\s*-4px/);
-		expect(css).toMatch(
-			/\.hit-link \{\s*display: inline-block;\s*padding-block: 11px;\s*margin-block: -11px/
+		const [desktop, phone] = cssRules(css, '.hit-link');
+		expect(desktop).toMatch(/--hit:\s*4px;/);
+		expect(desktop).toMatch(
+			/padding-block:\s*var\(--hit\);\s*margin-block:\s*calc\(-1 \* var\(--hit\)\)/
+		);
+		expect(phone).toMatch(/--hit:\s*11px;/);
+		expect(phone).toMatch(/display:\s*inline-block/);
+	});
+
+	test('the switch, closing, empty-state and back links take the same hit', () => {
+		for (const link of ['.auth-switch a', '.arrow-link', '.empty-state a', '.back-link']) {
+			expect(cssRules(css, link).slice(0, 2)).toEqual(cssRules(css, '.hit-link'));
+		}
+		// The back link's own bottom margin is net of the padding, so it does not move.
+		expect(cssRules(css, '.back-link')[2]).toMatch(
+			/margin-bottom:\s*calc\(var\(--space-3\) - var\(--hit\)\)/
 		);
 	});
 
