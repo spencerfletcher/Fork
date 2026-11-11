@@ -1,5 +1,5 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
-import { chain } from '#lib/testing/drizzle.js';
+import { chain, sqlOf } from '#lib/testing/drizzle.js';
 import { loadEvent, loadPage } from '#lib/testing/actions.js';
 
 const db = await vi.hoisted(async () => (await import('#lib/testing/drizzle.js')).mockDb());
@@ -34,6 +34,17 @@ describe('search load', () => {
 		expect(result.meta.title).toBe('“cookie” — Search');
 	});
 
+	test('the total and the link preview count every match, not the page', async () => {
+		selectDistinctMock.mockReturnValue(chain([]));
+		selectMock.mockReturnValue(chain([]));
+		findManyMock.mockResolvedValue([{ id: 1, author: null }]);
+		db.$count.mockResolvedValueOnce(130);
+		const result = await loadResult(makeEvent('cookie'));
+		expect(result.total).toBe(130);
+		expect(result.meta.description).toContain('130 recipes');
+		expect(sqlOf(db.$count.mock.calls[0][1])).toEqual(sqlOf(findManyMock.mock.calls[0][0].where));
+	});
+
 	test('returns recipes carrying the author relation', async () => {
 		selectDistinctMock.mockReturnValue(chain([])); // tags for the filter UI
 		selectMock
@@ -65,8 +76,8 @@ describe('search load', () => {
 		await loadResult(makeEvent('cookie'));
 
 		expect(findManyMock).toHaveBeenCalledTimes(1);
-		// Where it matched, then saves, then recency; without a query only recency applies.
-		expect(findManyMock.mock.calls[0][0].orderBy).toHaveLength(3);
+		// Where it matched, then saves, then recency and id; without a query only the last two.
+		expect(findManyMock.mock.calls[0][0].orderBy).toHaveLength(4);
 	});
 
 	test('a result says why it matched when its title does not', async () => {
@@ -114,7 +125,10 @@ describe('search load', () => {
 
 		expect(result.recipes.map((r) => r.id)).toEqual([2, 1]);
 		// Newest change first, the same order as browse.
-		expect(findManyMock.mock.calls[0][0].orderBy).toEqual([desc(recipes.updatedAt)]);
+		expect(findManyMock.mock.calls[0][0].orderBy).toEqual([
+			desc(recipes.updatedAt),
+			desc(recipes.id)
+		]);
 	});
 
 	test('a ranked search breaks its last ties by the newest change', async () => {
@@ -122,7 +136,10 @@ describe('search load', () => {
 		selectMock.mockReturnValue(chain([]));
 		findManyMock.mockResolvedValue([]);
 		await loadResult(makeEvent('cookies'));
-		expect(findManyMock.mock.calls[0][0].orderBy.at(-1)).toEqual(desc(recipes.updatedAt));
+		expect(findManyMock.mock.calls[0][0].orderBy.slice(-2)).toEqual([
+			desc(recipes.updatedAt),
+			desc(recipes.id)
+		]);
 	});
 
 	// A slug no chip carries (renamed, mistyped) filters nothing: the page is
@@ -141,7 +158,6 @@ describe('search load', () => {
 		expect(unknown.selectedTags).toEqual([]);
 		expect(unknown.recipes.map((r) => r.id)).toEqual([5]);
 
-		selectMock.mockReturnValueOnce(chain([{ recipeId: 5 }]));
 		const mixed = await loadResult(event('bogus,dessert'));
 		expect(mixed.selectedTags).toEqual(['dessert']);
 	});
@@ -191,14 +207,14 @@ describe('search visibility', () => {
 	test("finds public recipes and the viewer's own, never another user's private ones", async () => {
 		const own = visibleTo({ id: 'viewer' });
 		await loadResult(makeEvent('', { id: 'viewer' }));
-		expect(findManyMock.mock.calls[0][0].where).toEqual(and(own, undefined, undefined));
+		expect(sqlOf(findManyMock.mock.calls[0][0].where)).toEqual(sqlOf(and(own)!));
 		expect(selectDistinctMock.mock.results[0].value.where).toHaveBeenCalledWith(own);
 	});
 
 	test('a logged-out visitor finds public recipes only, none in the Trash', async () => {
 		const pub = and(isNull(recipes.deletedAt), eq(recipes.visibility, 'public'));
 		await loadResult(makeEvent(''));
-		expect(findManyMock.mock.calls[0][0].where).toEqual(and(pub, undefined, undefined));
+		expect(sqlOf(findManyMock.mock.calls[0][0].where)).toEqual(sqlOf(and(pub)!));
 		expect(selectDistinctMock.mock.results[0].value.where).toHaveBeenCalledWith(pub);
 	});
 });
@@ -223,7 +239,6 @@ describe('search load, the Friends filter', () => {
 
 	test('friends=1 keeps what the viewer may see, by friends, with the query and tags', async () => {
 		selectDistinctMock.mockReturnValue(chain([{ id: 3, name: 'Quick', slug: 'quick' }]));
-		selectMock.mockReturnValueOnce(chain([{ recipeId: 9 }]));
 
 		const result = await loadResult(event('?friends=1&q=dal&tags=quick', VIEWER));
 
@@ -232,7 +247,8 @@ describe('search load, the Friends filter', () => {
 		// Once inside visibleTo's friends rule, once more as the filter.
 		expect(friendRules(where.sql)).toBe(2);
 		expect(where.params).toContain('dal');
-		expect(where.params).toContain(9);
+		// The tag's id, in the carrying-every-tag subquery.
+		expect(where.params).toContain(3);
 		expect(result.friendsOnly).toBe(true);
 	});
 
@@ -249,8 +265,8 @@ describe('search load, the Friends filter', () => {
 		const result = await loadResult(event('?friends=1', null));
 
 		expect(result.friendsOnly).toBeUndefined();
-		expect(findManyMock.mock.calls[0][0].where).toEqual(
-			and(and(isNull(recipes.deletedAt), eq(recipes.visibility, 'public')), undefined, undefined)
+		expect(sqlOf(findManyMock.mock.calls[0][0].where)).toEqual(
+			sqlOf(and(and(isNull(recipes.deletedAt), eq(recipes.visibility, 'public')))!)
 		);
 	});
 });

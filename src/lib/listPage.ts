@@ -29,8 +29,6 @@ export function listPage(
 
 /** `params` without the loaded place, for a link that changes what the list shows. */
 export function withoutPlace(params: URLSearchParams): URLSearchParams {
-	// A throwaway built into a URL, not state.
-	// eslint-disable-next-line svelte/prefer-svelte-reactivity
 	const kept = new URLSearchParams(params);
 	for (const key of PLACE) kept.delete(key);
 	return kept;

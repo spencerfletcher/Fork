@@ -1,9 +1,10 @@
 import { recipes } from '#lib/server/db/schema.js';
-import { and, inArray } from 'drizzle-orm';
+import { and } from 'drizzle-orm';
 import { cardList } from '#lib/server/recipeCounts.js';
 import { tagSelection, visibleTags } from '#lib/server/tagFilter.js';
 import { clampDescription } from '#lib/seo.js';
 import { plural } from '#lib/helpers.js';
+import { listPage } from '#lib/listPage.js';
 import { authorIsFriendOf, visibleTo } from '#lib/server/visibility.js';
 import { parseFilters, searchMatches, textSearch } from '#lib/server/recipeSearch.js';
 import { db } from '#lib/server/db/index.js';
@@ -28,24 +29,19 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 	const allTags = await visibleTags(visibilityCondition);
 
 	// Tag filter: AND over the selected tags; the page hears only of the known ones.
-	const { selectedTags, matches } = await tagSelection(allTags, tagSlugs);
-	if (matches?.size === 0) {
-		return { recipes: [], allTags, searchQuery, selectedTags, friendsOnly, meta: searchMeta(0) };
-	}
-
+	const tags = tagSelection(allTags, tagSlugs);
 	const text = textSearch(searchQuery);
-	// Rank by how many selected tags matched, unless searching: where the query matched wins then.
-	const withCounts = await cardList(
-		and(
-			visibilityCondition,
-			friendsOnly && user ? authorIsFriendOf(user.id) : undefined,
-			matches ? inArray(recipes.id, [...matches.keys()]) : undefined,
-			text.where
-		),
-		text.orderBy,
-		user,
-		{ tagRank: searchQuery ? null : matches }
+	const where = and(
+		visibilityCondition,
+		friendsOnly && user ? authorIsFriendOf(user.id) : undefined,
+		tags.where,
+		text.where
 	);
+	const { after, limit } = listPage(url);
+	const [{ cards: withCounts, next }, total] = await Promise.all([
+		cardList(where, text.rank, user, { after, limit }),
+		db.$count(recipes, where)
+	]);
 
 	// Each result says why it matched, read for the results alone.
 	const why = searchQuery
@@ -58,10 +54,12 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 
 	return {
 		recipes: withCounts.map((r) => ({ ...r, match: why.get(r.id) })),
+		next,
+		total,
 		allTags,
 		searchQuery,
-		selectedTags,
+		selectedTags: tags.selectedTags,
 		friendsOnly,
-		meta: searchMeta(withCounts.length)
+		meta: searchMeta(total)
 	};
 };

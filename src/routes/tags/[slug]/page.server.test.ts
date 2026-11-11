@@ -5,7 +5,8 @@ import { desc } from 'drizzle-orm';
 import { recipes } from '#lib/server/db/schema.js';
 import { visibleTo } from '#lib/server/visibility.js';
 
-const { findFirstMock, findManyMock, selectMock, visibleTagsMock } = vi.hoisted(() => ({
+const { countMock, findFirstMock, findManyMock, selectMock, visibleTagsMock } = vi.hoisted(() => ({
+	countMock: vi.fn(),
 	findFirstMock: vi.fn(),
 	findManyMock: vi.fn(),
 	selectMock: vi.fn(),
@@ -14,7 +15,8 @@ const { findFirstMock, findManyMock, selectMock, visibleTagsMock } = vi.hoisted(
 vi.mock('#lib/server/db/index.js', () => ({
 	db: {
 		query: { tags: { findFirst: findFirstMock }, recipes: { findMany: findManyMock } },
-		select: selectMock
+		select: selectMock,
+		$count: countMock
 	}
 }));
 vi.mock('#lib/server/tagFilter.js', () => ({ visibleTags: visibleTagsMock }));
@@ -29,6 +31,7 @@ beforeEach(() => {
 	vi.clearAllMocks();
 	findFirstMock.mockResolvedValue({ id: 1, name: 'Dessert', slug: 'dessert' });
 	findManyMock.mockResolvedValue([]);
+	countMock.mockResolvedValue(0);
 	selectMock.mockReturnValue(chain([]));
 	visibleTagsMock.mockResolvedValue([{ id: 1, name: 'Dessert', slug: 'dessert' }]);
 });
@@ -62,6 +65,14 @@ describe('/tags/[slug] load', () => {
 	test('lists the tagged recipes newest change first, as /recipes does', async () => {
 		await load(event);
 		const { orderBy } = findManyMock.mock.calls[0][0];
-		expect(orderBy).toEqual([desc(recipes.updatedAt)]);
+		expect(orderBy).toEqual([desc(recipes.updatedAt), desc(recipes.id)]);
+	});
+
+	test('the total and the link preview count every tagged recipe, not the page', async () => {
+		countMock.mockResolvedValue(40);
+		const result = await load(event);
+		expect(result).toMatchObject({ total: 40 });
+		expect(result && 'meta' in result && result.meta.description).toContain('40 Dessert recipes');
+		expect(sqlOf(countMock.mock.calls[0][1])).toEqual(sqlOf(findManyMock.mock.calls[0][0].where));
 	});
 });

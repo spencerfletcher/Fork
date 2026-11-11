@@ -1,7 +1,7 @@
 import { redirect } from '@sveltejs/kit';
-import { and, inArray, sql } from 'drizzle-orm';
+import { and, count, eq, inArray, not, sql, type SQL } from 'drizzle-orm';
 import { db } from '#lib/server/db/index.js';
-import { recipes, recipesToTags } from '#lib/server/db/schema.js';
+import { recipes } from '#lib/server/db/schema.js';
 import { cardList } from '#lib/server/recipeCounts.js';
 import { tagSelection, visibleTags } from '#lib/server/tagFilter.js';
 import { inLibraryOf, keptCopyOf } from '#lib/server/visibility.js';
@@ -17,10 +17,32 @@ import {
 	renameCollection
 } from '#lib/server/collections.js';
 import { oneOf, text, wholeNumber } from '#lib/helpers.js';
+import { listPage } from '#lib/listPage.js';
 import { COOKBOOK_FILTERS, type CookbookFilter } from './filters.js';
 import type { Actions, PageServerLoad } from './$types';
 
 const META = { title: 'Cookbook' };
+
+/**
+ * The library's counts by segment, whole and inside `inCollection`: one pass
+ * over the library that returns counts, never the rows.
+ */
+async function shelfCounts(user: { id: string }, inCollection: SQL | undefined) {
+	const mine = eq(recipes.authorId, user.id);
+	const counting = (condition: SQL | undefined) =>
+		sql<number>`count(*) filter (where ${condition ?? sql`true`})`.mapWith(Number);
+	const [row] = await db
+		.select({
+			all: count(),
+			mine: counting(mine),
+			inAll: counting(inCollection),
+			inMine: counting(and(inCollection, mine))
+		})
+		.from(recipes)
+		.where(inLibraryOf(user));
+	const split = (all: number, own: number) => ({ all, mine: own, saved: all - own });
+	return { library: split(row.all, row.mine), inView: split(row.inAll, row.inMine) };
+}
 
 export const load: PageServerLoad = async ({ url, locals: { user, supabase } }) => {
 	requireUser(url, user);
@@ -32,16 +54,7 @@ export const load: PageServerLoad = async ({ url, locals: { user, supabase } }) 
 
 	const collectionId = wholeNumber(url.searchParams.get('collection') ?? '');
 
-	const [library, trash, collections, memberIds] = await Promise.all([
-		db
-			.select({
-				id: recipes.id,
-				authorId: recipes.authorId,
-				// A saved recipe its author withdrew, kept as the saver's copy.
-				kept: sql<boolean>`${keptCopyOf(user)}`
-			})
-			.from(recipes)
-			.where(inLibraryOf(user)),
+	const [trash, collections, memberIds] = await Promise.all([
 		// For the Trash link, shown only when the Trash holds something.
 		db.$count(recipes, inTrashOf(user.id)),
 		collectionsOf(user),
@@ -49,18 +62,18 @@ export const load: PageServerLoad = async ({ url, locals: { user, supabase } }) 
 		collectionId === null ? null : recipeIdsIn(user, collectionId)
 	]);
 
-	const isMine = (r: { authorId: string | null }) => r.authorId === user.id;
-	const countOf = (rows: { authorId: string | null }[]) => {
-		const mine = rows.filter(isMine).length;
-		return { all: rows.length, mine, saved: rows.length - mine };
-	};
-	const counts = { ...countOf(library), trash };
-
 	// A collection narrows what the segments, search and tags work within.
-	const members = memberIds && new Set(memberIds);
-	const inCollection = members ? library.filter((r) => members.has(r.id)) : library;
-	const inView = countOf(inCollection);
-	const collection = members ? (collections.find((c) => c.id === collectionId) ?? null) : null;
+	const inCollection = memberIds ? inArray(recipes.id, memberIds) : undefined;
+	const notKept = not(keptCopyOf(user));
+	// Chips come from the whole library, not the filtered subset, or narrowing
+	// would remove the chips needed to widen again (as Favorites did). A kept
+	// copy lends none: tags follow the recipe's visibility.
+	const [{ library, inView }, allTags] = await Promise.all([
+		shelfCounts(user, inCollection),
+		visibleTags(and(inLibraryOf(user), notKept))
+	]);
+	const counts = { ...library, trash };
+	const collection = memberIds ? (collections.find((c) => c.id === collectionId) ?? null) : null;
 	const shelf = {
 		collections,
 		collection: collection && { id: collection.id, name: collection.name },
@@ -69,9 +82,11 @@ export const load: PageServerLoad = async ({ url, locals: { user, supabase } }) 
 
 	// With nothing in the library a query or tags filter nothing: the page hears
 	// of neither, so it shows the empty cookbook rather than "0 recipes match".
-	if (library.length === 0) {
+	if (library.all === 0) {
 		return {
 			recipes: [],
+			next: null,
+			total: 0,
 			counts,
 			...shelf,
 			filter,
@@ -82,46 +97,30 @@ export const load: PageServerLoad = async ({ url, locals: { user, supabase } }) 
 		};
 	}
 
-	const inFilter = inCollection.filter((r) =>
-		filter === 'all' ? true : filter === 'mine' ? isMine(r) : !isMine(r)
-	);
-
-	// Chips come from the whole library, not the filtered subset, or narrowing
-	// would remove the chips needed to widen again (as Favorites did). A kept
-	// copy lends none: tags follow the recipe's visibility.
-	const allTags = await visibleTags(
-		inArray(
-			recipesToTags.recipeId,
-			library.filter((r) => !r.kept).map((r) => r.id)
-		)
-	);
-	// A text search leaves kept copies out: its matcher reads every version
-	// and the recipe row, which may hold what the author wrote after withdrawing it.
-	// ponytail: a copy is found by no word; match its kept version alone if missed.
-	const keptIds = new Set(library.filter((r) => r.kept).map((r) => r.id));
-	const inFilterIds = inFilter.filter((r) => !(searchQuery && r.kept)).map((r) => r.id);
-	const { selectedTags, matches } = await tagSelection(allTags, tagSlugs, inFilterIds);
-	const candidateIds = matches ? [...matches.keys()] : inFilterIds;
-	if (candidateIds.length === 0)
-		return {
-			recipes: [],
-			counts,
-			...shelf,
-			filter,
-			allTags,
-			searchQuery,
-			selectedTags,
-			meta: META
-		};
-
+	const tags = tagSelection(allTags, tagSlugs);
 	// Search's matcher and order, so a recipe is found by an ingredient too.
 	const text = textSearch(searchQuery);
-	const withCounts = await cardList(
-		and(inArray(recipes.id, candidateIds), text.where),
-		text.orderBy,
-		user,
-		{ tagRank: searchQuery ? null : matches, cooked: true }
+	const segment = {
+		all: undefined,
+		mine: eq(recipes.authorId, user.id),
+		saved: sql`${recipes.authorId} IS DISTINCT FROM ${user.id}`
+	}[filter];
+	const where = and(
+		inLibraryOf(user),
+		inCollection,
+		segment,
+		// A text search leaves kept copies out: its matcher reads every version
+		// and the recipe row, which may hold what the author wrote after withdrawing it.
+		// ponytail: a copy is found by no word; match its kept version alone if missed.
+		searchQuery ? notKept : undefined,
+		tags.where,
+		text.where
 	);
+	const [{ cards, next }, total] = await Promise.all([
+		cardList(where, text.rank, user, { ...listPage(url), cooked: true }),
+		// Unfiltered, the segment's count is the total.
+		searchQuery || tags.where ? db.$count(recipes, where) : inView[filter]
+	]);
 
 	// A copy's card takes only its identity and lineage from the row, which may
 	// hold what the author wrote after withdrawing it, never a spread of it; its
@@ -129,10 +128,11 @@ export const load: PageServerLoad = async ({ url, locals: { user, supabase } }) 
 	// the author's. The saver's own cooked line stays: it is theirs.
 	const copies = await keptVersionsOf(
 		user,
-		withCounts.filter((r) => keptIds.has(r.id)).map((r) => r.id)
+		cards.map((r) => r.id)
 	);
+	const isMine = (r: { authorId: string | null }) => r.authorId === user.id;
 	return {
-		recipes: withCounts.map((r) => {
+		recipes: cards.map((r) => {
 			const copy = copies.get(r.id);
 			if (!copy) return { ...r, saved: !isMine(r), kept: false };
 			return {
@@ -155,12 +155,14 @@ export const load: PageServerLoad = async ({ url, locals: { user, supabase } }) 
 				kept: true
 			};
 		}),
+		next,
+		total,
 		counts,
 		...shelf,
 		filter,
 		allTags,
 		searchQuery,
-		selectedTags,
+		selectedTags: tags.selectedTags,
 		meta: META
 	};
 };

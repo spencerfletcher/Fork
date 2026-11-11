@@ -1,6 +1,6 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { chain, sqlOf } from '#lib/testing/drizzle.js';
-import { and, desc, eq, inArray, type SQL } from 'drizzle-orm';
+import { and, desc, eq, inArray, sql, type SQL } from 'drizzle-orm';
 import { PgDialect } from 'drizzle-orm/pg-core';
 import { recipes, recipeVersions } from '#lib/server/db/schema.js';
 import { visibleTo } from './visibility';
@@ -89,7 +89,7 @@ describe('attachRecipeCounts', () => {
 describe('cardList', () => {
 	const viewer = { id: 'viewer-42' };
 	const WHERE = eq(recipes.visibility, 'public');
-	const ORDER = [desc(recipes.updatedAt)];
+	const FIRST = { after: null, limit: 5 };
 
 	beforeEach(() => {
 		vi.clearAllMocks();
@@ -97,39 +97,40 @@ describe('cardList', () => {
 		selectMock.mockReturnValue(chain([]));
 	});
 
-	test('reads the cards for the condition in its order, the card relations and the limit', async () => {
-		await cardList(WHERE, ORDER, viewer, { limit: 5 });
-		expect(findManyMock).toHaveBeenCalledWith({
-			where: WHERE,
+	test('reads the cards for the condition, rank first, then newest change and id, one past the page', async () => {
+		const rank = [sql`1`];
+		await cardList(WHERE, rank, viewer, FIRST);
+		const query = findManyMock.mock.calls[0][0];
+		expect(sqlOf(query.where)).toEqual(sqlOf(WHERE));
+		expect(query).toMatchObject({
 			columns: { fts: false },
 			with: CARD_WITH,
-			orderBy: ORDER,
-			limit: 5
+			limit: 6,
+			offset: 0
 		});
+		expect(query.orderBy).toEqual([...rank, desc(recipes.updatedAt), desc(recipes.id)]);
 	});
 
-	test("keeps the query's order without a tag rank", async () => {
-		const rows = await cardList(WHERE, ORDER, viewer);
-		expect(rows.map((r) => r.id)).toEqual([1, 2, 3]);
-	});
-
-	test('puts recipes matching more selected tags first', async () => {
-		const rows = await cardList(WHERE, ORDER, viewer, {
-			tagRank: new Map([
-				[3, 2],
-				[2, 1]
-			])
-		});
-		expect(rows.map((r) => r.id)).toEqual([3, 2, 1]);
+	test("keeps the query's order", async () => {
+		const { cards } = await cardList(WHERE, [], viewer, FIRST);
+		expect(cards.map((r) => r.id)).toEqual([1, 2, 3]);
 	});
 
 	test("counts each card's forks for the viewer", async () => {
 		const forkChain = chain([]);
 		selectMock.mockReturnValueOnce(chain([])).mockReturnValueOnce(forkChain);
-		await cardList(WHERE, ORDER, viewer);
+		await cardList(WHERE, [], viewer, FIRST);
 		expect(forkChain.where.mock.calls[0][0]).toEqual(
 			and(inArray(recipes.parentId, [1, 2, 3]), visibleTo(viewer))
 		);
+	});
+
+	test('a ranked cursor is the offset of the next page', async () => {
+		findManyMock.mockResolvedValue([{ id: 1 }, { id: 2 }, { id: 3 }]);
+		const { cards, next } = await cardList(WHERE, [sql`1`], viewer, { after: '4', limit: 2 });
+		expect(findManyMock.mock.calls[0][0]).toMatchObject({ offset: 4, limit: 3 });
+		expect(cards).toHaveLength(2);
+		expect(next).toBe('6');
 	});
 });
 
@@ -150,7 +151,11 @@ describe('cardList: times and last cooked', () => {
 			.mockReturnValueOnce(chain([]))
 			.mockReturnValueOnce(cookedChain);
 
-		const rows = await cardList(WHERE, [], viewer, { cooked: true });
+		const { cards: rows } = await cardList(WHERE, [], viewer, {
+			after: null,
+			limit: 30,
+			cooked: true
+		});
 
 		expect(selectMock).toHaveBeenCalledTimes(3);
 		const where = sqlOf(cookedChain.where.mock.calls[0][0]);
@@ -161,13 +166,17 @@ describe('cardList: times and last cooked', () => {
 	});
 
 	test('not asked for, no lookup and no values', async () => {
-		const rows = await cardList(WHERE, [], viewer);
+		const { cards: rows } = await cardList(WHERE, [], viewer, { after: null, limit: 30 });
 		expect(selectMock).toHaveBeenCalledTimes(2);
 		expect(rows[0]).not.toHaveProperty('timesCooked');
 	});
 
 	test('signed out, nothing is anyone’s: no lookup', async () => {
-		const rows = await cardList(WHERE, [], null, { cooked: true });
+		const { cards: rows } = await cardList(WHERE, [], null, {
+			after: null,
+			limit: 30,
+			cooked: true
+		});
 		expect(selectMock).toHaveBeenCalledTimes(2);
 		expect(rows[0]).not.toHaveProperty('timesCooked');
 	});

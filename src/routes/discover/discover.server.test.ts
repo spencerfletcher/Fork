@@ -7,7 +7,8 @@ vi.mock('#lib/server/db/index.js', () => ({ db }));
 const { select: selectMock, selectDistinct: selectDistinctMock } = db;
 const findManyMock = db.query.recipes.findMany;
 
-import { loadDiscover, DISCOVER_LIMIT, LEAD_WINDOW_DAYS, RECENT_CHANGES } from './discover.server';
+import { loadDiscover, LEAD_WINDOW_DAYS, RECENT_CHANGES } from './discover.server';
+import { CARDS_PER_PAGE } from '#lib/listPage.js';
 import { CARD_WITH } from '#lib/server/recipeCounts.js';
 import { authorIsFriendOf, visibleTo } from '#lib/server/visibility.js';
 
@@ -41,12 +42,26 @@ beforeEach(() => {
 });
 
 describe('loadDiscover', () => {
-	test('caps the grid query', async () => {
+	test('reads one page of the grid, one card past it, and counts the whole set', async () => {
 		mockSelects([], []);
+		db.$count.mockResolvedValueOnce(130);
 
-		await loadDiscover(url(), VIEWER);
+		const result = await loadDiscover(url(), VIEWER);
 
-		expect(findManyMock.mock.calls[0][0].limit).toBe(DISCOVER_LIMIT);
+		expect(findManyMock.mock.calls[0][0].limit).toBe(CARDS_PER_PAGE + 1);
+		expect(result.total).toBe(130);
+		expect(sqlOf(db.$count.mock.calls[0][1])).toEqual(sqlOf(findManyMock.mock.calls[0][0].where));
+	});
+
+	test("Show more's fetch (after a cursor) reads the next cards alone: no lead, no Recent changes", async () => {
+		selectMock.mockReturnValue(chain([]));
+
+		const result = await loadDiscover(url('?after=24'), VIEWER);
+
+		expect(result.lead).toBeNull();
+		expect(result.recentChanges).toEqual([]);
+		// The two card aggregates only: neither the lead's nor Recent changes' query ran.
+		expect(selectMock).toHaveBeenCalledTimes(2);
 	});
 
 	test('lists what the viewer may see, newest first, as cards', async () => {
@@ -92,6 +107,17 @@ describe('loadDiscover', () => {
 		);
 		const days = (before - Date.parse(String(cutoff))) / 86_400_000;
 		expect(days).toBeCloseTo(LEAD_WINDOW_DAYS, 2);
+	});
+
+	test('a most-saved recipe past the first page is read on its own to lead', async () => {
+		findManyMock.mockResolvedValueOnce(ROWS).mockResolvedValueOnce([row(80)]);
+		mockSelects([{ recipeId: 80, saves: 9 }], []);
+
+		const result = await loadDiscover(url(), VIEWER);
+
+		expect(result.lead?.id).toBe(80);
+		expect(result.recipes.map((r) => r.id)).toEqual(ROWS.map((r) => r.id));
+		expect(sqlOf(findManyMock.mock.calls[1][0].where).params).toContain(80);
 	});
 
 	test('with no saves this week the newest recipe leads', async () => {
@@ -147,23 +173,27 @@ describe('loadDiscover', () => {
 
 	test('a tag filter narrows the lead query to the recipes carrying the tags', async () => {
 		selectDistinctMock.mockReturnValue(chain([{ id: 5, name: 'Baking', slug: 'baking' }]));
-		selectMock.mockReturnValueOnce(chain([{ recipeId: 42 }]));
 		const { leadChain } = mockSelects([], []);
 
 		await loadDiscover(url('?tags=baking'), VIEWER);
 
-		expect(sqlOf(leadChain.where.mock.calls[0][0]).params).toContain(42);
+		// The tag's id, in the carrying-every-tag subquery.
+		expect(sqlOf(leadChain.where.mock.calls[0][0]).params).toContain(5);
 	});
 
 	test('filtered with no saves this week, the newest recipe in the set leads', async () => {
-		// Text search orders by relevance, so the newest is not necessarily first.
-		findManyMock.mockResolvedValue([row(3), row(1), row(2)]);
+		// Text search orders by relevance, so the newest is read on its own.
+		findManyMock.mockResolvedValueOnce([row(3), row(1), row(2)]).mockResolvedValueOnce([row(1)]);
 		mockSelects([], []);
 
 		const result = await loadDiscover(url('?q=dal'), VIEWER);
 
 		expect(result.lead?.id).toBe(1);
 		expect(result.recipes.map((r) => r.id)).toEqual([3, 1, 2]);
+		const newest = findManyMock.mock.calls[1][0];
+		expect(newest.limit).toBe(2);
+		expect(newest.orderBy).toHaveLength(2);
+		expect(sqlOf(newest.where).params).toContain('dal');
 	});
 
 	test('an @handle in the query narrows to that cook and leaves the rest as text', async () => {
