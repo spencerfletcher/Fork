@@ -4,10 +4,10 @@
 	import { page } from '$app/state';
 	import { setShallowParam } from './shallowParam';
 	import type { Recipe } from '#lib/server/db/schema.js';
-	import { forkIcon, journalIcon, saveIcon } from '#lib/components/Icons.svelte';
+	import { editIcon, forkIcon, journalIcon, saveIcon } from '#lib/components/Icons.svelte';
 	import { compactCount } from '#lib/helpers.js';
 	import { optimisticToggle } from '#lib/optimisticToggle.svelte.js';
-	import MoreActions from './MoreActions.svelte';
+	import MoreActions from '#lib/components/recipes/MoreActions.svelte';
 
 	let {
 		recipe,
@@ -106,17 +106,7 @@
 	{:else}
 		{#if canEdit}
 			<a href="/recipes/{recipe.slug}/edit" class="btn-ghost edit">
-				<svg
-					class="size-4"
-					viewBox="0 0 16 16"
-					aria-hidden="true"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="1.5"
-					stroke-linecap="round"
-					stroke-linejoin="round">
-					<path d="M11.5 2.5l2 2L5 13H3v-2z" />
-				</svg>
+				{@render editIcon()}
 				Edit recipe
 			</a>
 		{/if}
@@ -178,7 +168,7 @@
 		</a>
 	{/if}
 	<!-- Everyone, last: the reader's collections (in their library) and Print. -->
-	<MoreActions {collections} exportSlug={isOwner ? recipe.slug : null} />
+	<MoreActions slug={recipe.slug} title={recipe.title} {collections} print exports={isOwner} />
 
 	{#if error}
 		<p class="form-error basis-full" role="alert">{error}</p>

@@ -17,7 +17,8 @@
 		chevronIcon,
 		searchIcon,
 		imageIcon,
-		plusIcon
+		plusIcon,
+		editIcon
 	};
 </script>
 
@@ -246,5 +247,20 @@
 		stroke-linecap="round"
 		stroke-linejoin="round">
 		<path d="M8 3.5v9M3.5 8h9" />
+	</svg>
+{/snippet}
+
+<!-- A pencil: Edit recipe, the action row's pill and the ⋯'s row. -->
+{#snippet editIcon()}
+	<svg
+		class="size-4"
+		viewBox="0 0 16 16"
+		aria-hidden="true"
+		fill="none"
+		stroke="currentColor"
+		stroke-width="1.5"
+		stroke-linecap="round"
+		stroke-linejoin="round">
+		<path d="M11.5 2.5l2 2L5 13H3v-2z" />
 	</svg>
 {/snippet}
