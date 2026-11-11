@@ -1,5 +1,5 @@
-import { describe, test, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/svelte';
+import { describe, test, expect, vi, beforeEach } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/svelte';
 import RecipeCard from './RecipeCard.svelte';
 import source from './RecipeCard.svelte?raw';
 import { formatDuration } from '#lib/recipes/times.js';
@@ -8,7 +8,7 @@ import { cssRule } from '#lib/testing/css.js';
 import { MARK_END, MARK_START } from '#lib/highlight.js';
 
 const { mockGoto } = vi.hoisted(() => ({ mockGoto: vi.fn() }));
-vi.mock('$app/navigation', () => ({ goto: mockGoto }));
+vi.mock('$app/navigation', () => ({ goto: mockGoto, afterNavigate: () => {} }));
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -486,5 +486,78 @@ describe('RecipeCard: times and last cooked', () => {
 			expect(container.querySelector('h3')?.textContent).toContain('<img src=x onerror=alert(1)>');
 			expect(container.querySelector('.card-match')?.textContent).toContain('<b>cake</b> flour');
 		});
+	});
+});
+
+describe('RecipeCard in the Cookbook: the ⋯', () => {
+	// The collections are asked for as the menu opens; left unanswered here,
+	// the rest of the menu is what each kind of card offers.
+	beforeEach(() => {
+		vi.stubGlobal(
+			'fetch',
+			vi.fn(() => new Promise(() => {}))
+		);
+	});
+
+	const card = (overrides: Record<string, unknown> = {}, recipe = {}) =>
+		render(RecipeCard, {
+			props: { recipe: makeRecipe(recipe), variant: 'cookbook', ...overrides } as never
+		});
+
+	async function rowsAfterOpening() {
+		await fireEvent.click(screen.getByRole('button', { name: 'More actions for Chocolate Cake' }));
+		const menu = screen.getByRole('menu', { name: 'More actions' });
+		return [...menu.querySelectorAll('[role^="menuitem"]')].map((r) => r.textContent?.trim());
+	}
+
+	test('ends the title’s line, after the stretched link in Tab order, never inside it', () => {
+		const { container } = card({}, { imageUrl: 'https://img/cake.jpg' });
+		const more = screen.getByRole('button', { name: 'More actions for Chocolate Cake' });
+		expect(more).toHaveClass('more-button');
+		expect(more.closest('a')).toBeNull();
+		expect(more.closest('.card-line')!.querySelector('.card-title')).not.toBeNull();
+		const link = container.querySelector('.card-stretched-link')!;
+		expect(link.compareDocumentPosition(more) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+	});
+
+	test('without a photo it ends the meta row’s line, the title being the panel', () => {
+		card({}, { prepTimeMinutes: 10 });
+		const more = screen.getByRole('button', { name: 'More actions for Chocolate Cake' });
+		expect(more.closest('.card-line')!.querySelector('.meta-row')).not.toBeNull();
+	});
+
+	test('sits above the stretched link, so pointing at it is not pointing at the recipe', () => {
+		const rule = cssRule(source, '.card-more');
+		expect(rule).toMatch(/position:\s*relative/);
+		expect(rule).toMatch(/z-index:\s*2/);
+	});
+
+	test('the cook’s own recipe: Edit, the Exports and Move to Trash, no Fork', async () => {
+		card();
+		const rows = await rowsAfterOpening();
+		expect(rows).toEqual(
+			expect.arrayContaining(['Add to Journal', 'Edit recipe', 'Move to Trash'])
+		);
+		expect(rows).not.toContain('Fork');
+	});
+
+	test('a saved recipe: Fork, and nothing of the owner’s', async () => {
+		card({ saved: true });
+		const rows = await rowsAfterOpening();
+		expect(rows).toContain('Fork');
+		expect(rows).not.toContain('Edit recipe');
+		expect(rows).not.toContain('Move to Trash');
+		expect(rows.some((r) => r?.startsWith('Export'))).toBe(false);
+	});
+
+	test('a kept copy: Add to Journal and Remove from Cookbook, no Fork', async () => {
+		card({ saved: true, kept: true });
+		expect(await rowsAfterOpening()).toEqual(['Add to Journal', 'Remove from Cookbook']);
+	});
+
+	test('other lists have no ⋯', () => {
+		render(RecipeCard, { props: { recipe: makeRecipe() } });
+		render(RecipeCard, { props: { recipe: makeRecipe(), variant: 'discover' } });
+		expect(screen.queryByRole('button', { name: /More actions/ })).toBeNull();
 	});
 });
