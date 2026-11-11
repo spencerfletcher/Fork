@@ -12,6 +12,7 @@ import {
 	canViewRow,
 	friendIdsOnce,
 	keptCopy,
+	NO_FTS,
 	NOT_AUTHORIZED,
 	ownRecipe,
 	viewableRecipe
@@ -50,7 +51,7 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 		{
 			recipesToTags: { with: { tag: true } },
 			author: true,
-			parent: { with: { author: true } },
+			parent: { columns: NO_FTS, with: { author: true } },
 			versions: {
 				orderBy: [desc(recipeVersions.versionNumber)],
 				with: { creator: true }
@@ -62,7 +63,10 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 	// version they kept, with no tags (tags follow the recipe's visibility).
 	const copy = shown
 		? null
-		: await keptCopy(recipeSlug, user, { author: true, parent: { with: { author: true } } });
+		: await keptCopy(recipeSlug, user, {
+				author: true,
+				parent: { columns: NO_FTS, with: { author: true } }
+			});
 	if (!shown && !copy) throw error(404, 'Recipe not found');
 	// The row may hold what the author wrote after withdrawing it, so a copy
 	// takes only its identity and lineage from the row, never a spread of it,

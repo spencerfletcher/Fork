@@ -5,7 +5,7 @@ import { and, count, eq } from 'drizzle-orm';
 import { error, redirect } from '@sveltejs/kit';
 import { attachRecipeCounts } from '#lib/server/recipeCounts.js';
 import { clampDescription } from '#lib/seo.js';
-import { visibleTo } from '#lib/server/visibility.js';
+import { NO_FTS, visibleTo } from '#lib/server/visibility.js';
 import { plural } from '#lib/helpers.js';
 import { relationOf } from '#lib/server/friends.js';
 import type { PageServerLoad } from './$types';
@@ -30,6 +30,7 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 		db.query.recipes.findMany({
 			// Strangers see public recipes, friends also friends ones, the owner all.
 			where: and(eq(recipes.authorId, profile.id), visibleTo(user)),
+			columns: NO_FTS,
 			orderBy: (r, { desc }) => [desc(r.createdAt)]
 		}),
 		// Commits on public recipes only, as a signed-out visitor sees them: the

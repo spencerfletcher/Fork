@@ -63,7 +63,7 @@ export async function canViewRow(
 type Schema = ExtractTablesWithRelations<typeof schema>;
 type RecipeWith = NonNullable<DBQueryConfig<'one', true, Schema, Schema['recipes']>['with']>;
 /** The search vector is the database's own: never loaded, so never sent to a page. */
-const NO_FTS = { fts: false } as const;
+export const NO_FTS = { fts: false } as const;
 type RecipeRow<W extends RecipeWith> = BuildQueryResult<
 	Schema,
 	Schema['recipes'],

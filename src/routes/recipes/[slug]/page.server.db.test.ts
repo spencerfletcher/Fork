@@ -106,3 +106,23 @@ describe.skipIf(!localDb)('a kept copy in the page data, against the real databa
 		expect(data.recipe).not.toHaveProperty('fts');
 	});
 });
+
+describe.skipIf(!localDb)("a fork's page data, against the real database", () => {
+	let rows: Awaited<ReturnType<typeof import('#lib/testing/ftsLeak.js').parentAndFork>>;
+	beforeAll(async () => {
+		rows = await (await import('#lib/testing/ftsLeak.js')).parentAndFork();
+	});
+	afterAll(async () => {
+		await rows?.remove();
+	});
+
+	test('the serialised parent carries no search vector', async () => {
+		const { load } = await import('./+page.server.js');
+		const data = await loadPage<PageData>(
+			load,
+			loadEvent({ path: `/recipes/${rows.forkSlug}`, params: { slug: rows.forkSlug } })
+		);
+		expect(data.recipe.parent).not.toBeNull();
+		expect(JSON.stringify(data)).not.toContain('"fts"');
+	});
+});

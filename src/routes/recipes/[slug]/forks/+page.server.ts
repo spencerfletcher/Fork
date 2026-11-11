@@ -3,7 +3,7 @@ import { db } from '#lib/server/db/index.js';
 import { recipes, recipeVersions } from '#lib/server/db/schema.js';
 import { and, desc, eq } from 'drizzle-orm';
 import { attachRecipeCounts, CARD_WITH } from '#lib/server/recipeCounts.js';
-import { viewableRecipe, visibleTo } from '#lib/server/visibility.js';
+import { NO_FTS, viewableRecipe, visibleTo } from '#lib/server/visibility.js';
 import type { PageServerLoad } from './$types';
 
 // The recipe's forks, newest first: the ones visibleTo lets the visitor see, their own
@@ -15,6 +15,7 @@ export const load: PageServerLoad = async ({ params, locals: { user } }) => {
 
 	const forks = await db.query.recipes.findMany({
 		where: and(eq(recipes.parentId, recipe.id), visibleTo(user)),
+		columns: NO_FTS,
 		with: {
 			...CARD_WITH,
 			versions: { where: eq(recipeVersions.versionNumber, 1), columns: { commitMessage: true } }
