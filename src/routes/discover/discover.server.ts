@@ -46,10 +46,7 @@ export async function loadDiscover(url: URL, user: { id: string } | null) {
 	const byHandle = handle
 		? inArray(
 				recipes.authorId,
-				new QueryBuilder()
-					.select({ id: profiles.id })
-					.from(profiles)
-					.where(namedBy(handle))
+				new QueryBuilder().select({ id: profiles.id }).from(profiles).where(namedBy(handle))
 			)
 		: undefined;
 
