@@ -44,6 +44,22 @@ export const profiles = pgTable('profiles', {
 	createdAt: timestamp('created_at').notNull().defaultNow()
 }).enableRLS();
 
+// A username a profile gave up. Old /users/<name> links redirect to the
+// owner's current name, and the name stays reserved to that owner: nobody else
+// may take it (so old links cannot be used to impersonate them), but the owner
+// may take it back, which deletes the row. The key keeps one owner per name.
+export const formerUsernames = pgTable(
+	'former_usernames',
+	{
+		username: text().primaryKey(),
+		profileId: text('profile_id')
+			.notNull()
+			.references(() => profiles.id, { onDelete: 'cascade' }),
+		createdAt: timestamp('created_at').notNull().defaultNow()
+	},
+	(table) => [index('former_usernames_profile_idx').on(table.profileId)]
+).enableRLS();
+
 // ─── Recipes ─────────────────────────────────────────────────────────────────
 
 export const recipes = pgTable(
