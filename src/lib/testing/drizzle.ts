@@ -27,7 +27,8 @@ export function chain(rows: unknown = undefined) {
 		'leftJoin',
 		'groupBy',
 		'limit',
-		'onConflictDoNothing'
+		'onConflictDoNothing',
+		'for'
 	];
 	for (const m of methods) c[m] = vi.fn().mockReturnValue(c);
 	return c as Record<string, ReturnType<typeof vi.fn>> & PromiseLike<unknown>;

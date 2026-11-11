@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNotNull, max, notInArray, sql } from 'drizzle-orm';
+import { and, eq, inArray, isNotNull, max, notInArray, or, sql } from 'drizzle-orm';
 import { db, type Tx } from './db/index.js';
 import {
 	favorites,
@@ -7,7 +7,7 @@ import {
 	type Recipe,
 	type RecipeVersion
 } from './db/schema.js';
-import { canView, friendIdsOf, keptCopyOf } from './visibility.js';
+import { blockedIdsOf, canView, friendIdsOf, keptCopyOf } from './visibility.js';
 import { leaveCollections } from './collections.js';
 
 // Keep this version and the copies it leads to (roadmap section 7, "Saves and
@@ -20,8 +20,9 @@ import { leaveCollections } from './collections.js';
  * the Trash, before the change, while it still has its audience. Every saver
  * who can see it now keeps a copy of their kept version, or else the latest;
  * every other saver (one unfriended from a Friends recipe, say) is left with
- * none, whatever an earlier withdrawal gave them. The author's own save is
- * never a copy.
+ * none, whatever an earlier withdrawal gave them. A saver in a block with the
+ * author, whichever blocked, keeps none, even of a public recipe (canView reads
+ * no blocks). The author's own save is never a copy.
  */
 export async function grantKeptCopies(
 	tx: Tx | typeof db,
@@ -38,9 +39,11 @@ export async function grantKeptCopies(
 		recipe.visibility === 'friends' && recipe.authorId
 			? await friendIdsOf(recipe.authorId, tx)
 			: [];
+	const blocked = recipe.authorId ? await blockedIdsOf(recipe.authorId, tx) : [];
 	const live = { ...recipe, deletedAt: null };
 	const sees = (userId: string) =>
 		userId !== recipe.authorId &&
+		!blocked.includes(userId) &&
 		canView(live, { id: userId }, authorFriends.includes(userId) ? [recipe.authorId!] : []);
 	const viewers = savers.map((s) => s.userId).filter(sees);
 
@@ -62,6 +65,31 @@ export async function grantKeptCopies(
 
 const saveOf = (userId: string, recipeId: number) =>
 	and(eq(favorites.userId, userId), eq(favorites.recipeId, recipeId));
+
+/**
+ * A block ends every copy either of `a` and `b` keeps of the other's recipes,
+ * in the block's transaction, after its row is written (so a later withdrawal
+ * grants none: grantKeptCopies reads it). The saves stay; with no copy and no
+ * access they leave the library. Each recipe's row is locked first, as
+ * removeCopy and deleteForever lock it, so an erase never reads a copy this
+ * clears. An erased recipe left with no copy is finished by purgeExpiredTrash.
+ * Unblocking gives nothing back.
+ */
+export async function revokeKeptCopies(tx: Tx, a: string, b: string): Promise<void> {
+	const heldByOther = or(
+		and(eq(recipes.authorId, a), eq(favorites.userId, b)),
+		and(eq(recipes.authorId, b), eq(favorites.userId, a))
+	);
+	const held = await tx
+		.select({ recipeId: recipes.id, userId: favorites.userId })
+		.from(recipes)
+		.innerJoin(favorites, eq(favorites.recipeId, recipes.id))
+		.where(and(heldByOther, isNotNull(favorites.copyVersion)))
+		.orderBy(recipes.id)
+		.for('update', { of: recipes });
+	for (const { recipeId, userId } of held)
+		await tx.update(favorites).set({ copyVersion: null }).where(saveOf(userId, recipeId));
+}
 
 /**
  * Keep `versionNumber` of a recipe the cook saved, or follow the latest again

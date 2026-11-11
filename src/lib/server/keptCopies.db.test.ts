@@ -97,6 +97,26 @@ describe.skipIf(!localDb)('kept copies, against the real database', () => {
 		});
 	});
 
+	test('a saver in a block with the author, either way round, is granted no copy, even of a public recipe', async () => {
+		await withProfiles(4, async (tx, [author, blockedByAuthor, blockedAuthor, other]) => {
+			const recipe = await makeRecipe(tx, author, 'public');
+			await tx.insert(schema.friendships).values([
+				{ requesterId: author, addresseeId: blockedByAuthor, status: 'blocked' },
+				{ requesterId: blockedAuthor, addresseeId: author, status: 'blocked' }
+			]);
+			await tx.insert(schema.favorites).values([
+				// An old copy from a withdrawal before the block goes too.
+				{ userId: blockedByAuthor, recipeId: recipe.id, copyVersion: 1 },
+				{ userId: blockedAuthor, recipeId: recipe.id },
+				{ userId: other, recipeId: recipe.id }
+			]);
+			await kept.grantKeptCopies(tx, recipe);
+			expect(await copyVersionOf(tx, blockedByAuthor, recipe.id)).toBeNull();
+			expect(await copyVersionOf(tx, blockedAuthor, recipe.id)).toBeNull();
+			expect(await copyVersionOf(tx, other, recipe.id)).toBe(3);
+		});
+	});
+
 	test("the author's own save of their recipe is never a copy", async () => {
 		await withPeople(async (tx, { author }) => {
 			const recipe = await makeRecipe(tx, author, 'public');
