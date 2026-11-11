@@ -164,6 +164,7 @@
 		naming = false;
 		confirming = false;
 		error = '';
+		ownRefusal = null;
 		leaveError = null;
 		if (onOpen) {
 			fetched = undefined;

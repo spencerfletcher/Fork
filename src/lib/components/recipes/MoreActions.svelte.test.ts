@@ -371,6 +371,25 @@ describe('More actions on a Cookbook card', () => {
 		expect(screen.queryByRole('textbox')).toBeNull();
 	});
 
+	test('a refused name says why in the menu, and is gone when the menu opens again', async () => {
+		const menu = await openCard(OWN);
+		await fireEvent.click(within(menu).getByRole('menuitem', { name: 'New collection' }));
+		await tick();
+		const box = screen.getByRole('textbox', { name: 'New collection' });
+		await settle(box.closest('form')!, {
+			type: 'failure',
+			data: { code: 'invalid', error: 'Taken.' }
+		});
+		expect(screen.getByRole('alert')).toHaveTextContent('Taken.');
+		expect(box).toHaveAttribute('aria-invalid', 'true');
+
+		const trigger = screen.getByRole('button', { name: CARD.label });
+		await fireEvent.click(trigger);
+		await fireEvent.click(trigger);
+		await vi.waitFor(() => expect(screen.queryByText('Loading…')).toBeNull());
+		expect(screen.queryByRole('alert')).toBeNull();
+	});
+
 	test('Move to Trash asks in the menu with the recipe page’s sentence, then posts Delete recipe', async () => {
 		const onremoved = vi.fn();
 		const menu = await openCard({ ...OWN, onremoved });
