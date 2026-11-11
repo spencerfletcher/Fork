@@ -78,7 +78,9 @@
 		</form>
 
 		<p class="auth-switch">
-			Don't have an account? <a href={authHref('/signup', data.redirectTo)}>Create one</a>
+			Don't have an account? <a class="inline-action" href={authHref('/signup', data.redirectTo)}>
+				Create one
+			</a>
 		</p>
 	</div>
 </div>

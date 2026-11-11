@@ -47,7 +47,7 @@
 			<a href="/forgot-password" class="btn-primary auth-submit">Send a new link</a>
 
 			<p class="auth-switch">
-				Remembered it? <a href="/login">Log in</a>
+				Remembered it? <a class="inline-action" href="/login">Log in</a>
 			</p>
 		{/if}
 	</div>

@@ -74,7 +74,7 @@
 			<div class="auth-error" role="alert">
 				{form.error}
 				{#if form.registered}
-					<a href={loginHref(data.redirectTo)}>Log in</a>
+					<a class="inline-action" href={loginHref(data.redirectTo)}>Log in</a>
 				{/if}
 			</div>
 		{/if}
@@ -167,7 +167,7 @@
 		</form>
 
 		<p class="auth-switch">
-			Already have an account? <a href={loginHref(data.redirectTo)}>Log in</a>
+			Already have an account? <a class="inline-action" href={loginHref(data.redirectTo)}>Log in</a>
 		</p>
 	</div>
 </div>

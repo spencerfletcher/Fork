@@ -476,7 +476,7 @@
 
 	/* A button that reads as a word: clay 600 in the line's face, no box.
 	   A 24px hit at desktop and a thumb's 44px on a phone or touch screen.
-	   Hover deepens to clay deep; the colour change alone. */
+	   Hover deepens to clay deep and underlines (the hover rule, below). */
 	.text-btn {
 		display: inline-flex;
 		align-items: center;
@@ -490,17 +490,9 @@
 		cursor: pointer;
 	}
 
-	.text-btn:hover {
-		color: var(--color-accent-hover);
-	}
-
 	/* Ink at rest, clay on hover: a text button among clay links. */
 	.text-btn--ink {
 		color: var(--color-text);
-	}
-
-	.text-btn--ink:hover {
-		color: var(--color-accent);
 	}
 
 	@media (max-width: 699px), (pointer: coarse) {
@@ -826,8 +818,51 @@
 		overflow-wrap: anywhere;
 	}
 
-	.back-link:hover {
-		color: var(--color-text);
+	/* ── The hover rule (Spencer, 11 November 2026; DESIGN.md) ── */
+
+	/* The one underline: 1px, 3px below the words. Every word that
+	   underlines, at rest or on hover, takes its weight and offset from here,
+	   so a change is one line. On a flex control (a text button with an icon)
+	   the line reaches the words, never the icon. */
+	.text-btn,
+	.arrow-link,
+	.back-link,
+	.clear-ticks,
+	.inline-action,
+	.username,
+	.handle {
+		text-decoration-thickness: 1px;
+		text-underline-offset: 3px;
+	}
+
+	/* An action inside a sentence ("Clear search" after "No recipes match"):
+	   underlined at rest, so it reads as an action where nothing hovers. */
+	.inline-action {
+		text-decoration-line: underline;
+	}
+
+	/* Only for a pointer that hovers: a tap on iOS would leave :hover set.
+	   Clay words deepen and underline; a word whose colour is its kind (the
+	   back link's grey, a handle's clay) keeps it and underlines. */
+	@media (hover: hover) {
+		.text-btn:hover,
+		.arrow-link:hover {
+			color: var(--color-accent-hover);
+			text-decoration-line: underline;
+		}
+
+		.text-btn--ink:hover {
+			color: var(--color-accent);
+			text-decoration-line: underline;
+		}
+
+		.back-link:hover {
+			text-decoration-line: underline;
+		}
+
+		.inline-action:hover {
+			color: var(--color-accent-hover);
+		}
 	}
 
 	/* ── Form / editor shared styles ── */
@@ -1032,6 +1067,7 @@
 	@media (hover: hover) {
 		.clear-ticks:hover {
 			color: var(--color-text);
+			text-decoration-line: underline;
 		}
 	}
 
@@ -1129,11 +1165,10 @@
 		font-size: 0.875rem;
 	}
 
-	/* A link inside the alert ("Log in") is underlined, since clay is too close
-	   to the alert's red to tell apart, and kept on one line (decided 29
-	   October 2026). */
+	/* A link inside the alert ("Log in") is an .inline-action, underlined,
+	   which also parts its clay from the alert's red; kept on one line
+	   (decided 29 October 2026). */
 	.auth-error a {
-		text-decoration: underline;
 		white-space: nowrap;
 	}
 

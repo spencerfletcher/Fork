@@ -45,7 +45,7 @@
 				<!-- Without JavaScript the link still reaches the form, only empty.
 				     Unformatted so no space opens before the full stop. -->
 				<!-- prettier-ignore -->
-				<p class="auth-subtitle">Didn't get it? <a href="/forgot-password" onclick={sendAgain}>Send again</a>.</p>
+				<p class="auth-subtitle">Didn't get it? <a class="inline-action" href="/forgot-password" onclick={sendAgain}>Send again</a>.</p>
 			</div>
 		{:else}
 			<div class="auth-header">
@@ -88,7 +88,7 @@
 		{/if}
 
 		<p class="auth-switch">
-			Remembered it? <a href="/login">Log in</a>
+			Remembered it? <a class="inline-action" href="/login">Log in</a>
 		</p>
 	</div>
 </div>

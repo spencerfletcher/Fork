@@ -36,6 +36,7 @@
 					No recipes found. Try adjusting your search or clearing some filters.
 					<!-- Clears the tags and the Friends filter; the query stays. -->
 					<a
+						class="inline-action"
 						href={data.searchQuery
 							? `/search?q=${encodeURIComponent(data.searchQuery)}`
 							: '/search'}>
@@ -43,10 +44,10 @@
 					</a>
 				{:else if filtered}
 					No recipes found. Try another search.
-					<a href="/search">Clear search</a>
+					<a class="inline-action" href="/search">Clear search</a>
 				{:else}
 					Enter a recipe name or select tags to find recipes.
-					<a href="/discover">All recipes</a>
+					<a class="inline-action" href="/discover">All recipes</a>
 				{/if}
 			</p>
 		{/if}
