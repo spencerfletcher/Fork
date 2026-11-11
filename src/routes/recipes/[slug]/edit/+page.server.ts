@@ -2,7 +2,7 @@ import { error, redirect } from '@sveltejs/kit';
 import { db } from '#lib/server/db/index.js';
 import { recipes, recipeVersions } from '#lib/server/db/schema.js';
 import { draftOf } from '#lib/recipes/validation.js';
-import { and, eq, desc, inArray, isNull, sql } from 'drizzle-orm';
+import { and, eq, desc, isNull, sql } from 'drizzle-orm';
 import type { PageServerLoad, Actions } from './$types';
 import {
 	changedGroups,
@@ -12,7 +12,7 @@ import {
 } from '#lib/recipes/content.js';
 import { sameTags } from '#lib/recipes/tags.js';
 import type { RecipeContent } from '#lib/recipes/types.js';
-import { imagePathOf, removeRecipeImage } from '#lib/server/images.js';
+import { removeRecipeImage } from '#lib/server/images.js';
 import { readSubmission, STALE_MESSAGE, uploadPhoto } from '#lib/server/submission.js';
 import { failure, requireUser, SESSION_ENDED } from '#lib/server/actions.js';
 import { wholeNumber } from '#lib/helpers.js';
@@ -175,42 +175,18 @@ export const actions: Actions = {
 		throw redirect(303, `/recipes/${params.slug}`);
 	},
 
-	// Permanent: the row, every version and its tag links (by FK cascade), then
-	// the photos. Forks keep their parentId and say the original was deleted.
-	deleteRecipe: async ({ params, locals: { user, supabase } }) => {
+	// To the Trash: hidden everywhere, restorable by the owner for TRASH_DAYS,
+	// then deleted for good (#lib/server/trash.ts). The revision moves on, so a
+	// save already past its ownRecipe check is refused as stale under its lock.
+	deleteRecipe: async ({ params, locals: { user } }) => {
 		if (!user) return failure(401, 'unauthenticated', SESSION_ENDED('delete again'));
 
 		const recipe = await ownRecipe(params.slug, user.id);
+		await db
+			.update(recipes)
+			.set({ deletedAt: new Date(), editRevision: sql`${recipes.editRevision} + 1` })
+			.where(eq(recipes.id, recipe.id));
 
-		// The save action's row lock: a save waits, then finds no row and removes
-		// its own upload, so every version's photo is in the read below.
-		const urls = await db.transaction(async (tx) => {
-			await tx.select().from(recipes).where(eq(recipes.id, recipe.id)).for('update');
-			const versions = await tx.query.recipeVersions.findMany({
-				where: eq(recipeVersions.recipeId, recipe.id),
-				columns: { imageUrl: true }
-			});
-			await tx.delete(recipes).where(eq(recipes.id, recipe.id));
-			return [...new Set(versions.flatMap((v) => v.imageUrl ?? []))];
-		});
-
-		// A fork's first version copies its parent's photo url, so a photo can be
-		// shown by other recipes; only the ones no remaining version shows go.
-		// Asked after the delete, so this recipe's own versions are not counted.
-		// ponytail: a fork committed between the delete and this read can still
-		// lose its photo; a lock shared with the fork action closes that if needed.
-		if (urls.length > 0) {
-			const shown = await db
-				.selectDistinct({ imageUrl: recipeVersions.imageUrl })
-				.from(recipeVersions)
-				.where(inArray(recipeVersions.imageUrl, urls));
-			const stillShown = new Set(shown.map((r) => r.imageUrl));
-			const paths = urls
-				.filter((url) => !stillShown.has(url))
-				.flatMap((url) => imagePathOf(url) ?? []);
-			if (paths.length > 0) await removeRecipeImage(supabase, ...paths);
-		}
-
-		throw redirect(303, '/cookbook');
+		throw redirect(303, '/cookbook/trash');
 	}
 };

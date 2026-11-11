@@ -1,5 +1,5 @@
-import { describe, test, expect, beforeAll, afterAll, vi } from 'vitest';
-import { eq, inArray } from 'drizzle-orm';
+import { describe, test, expect, beforeAll, afterAll } from 'vitest';
+import { eq } from 'drizzle-orm';
 import { formEvent } from '#lib/testing/actions.js';
 
 import { localDb } from '#lib/testing/db.js';
@@ -98,76 +98,5 @@ describe.skipIf(!localDb)('save, against the real database', () => {
 		expect(recipe?.editRevision).toBe(1);
 		const winner = versions.find((v) => v.versionNumber === 2)!;
 		expect(recipe?.title).toBe(winner.title);
-	});
-});
-
-// Proves the "still shown elsewhere" query against real rows: a fork's first
-// version copies its parent's photo url.
-describe.skipIf(!localDb)('deleteRecipe, against the real database', () => {
-	let db: typeof import('#lib/server/db/index.js').db;
-	let recipes: typeof import('#lib/server/db/schema.js').recipes;
-	let recipeVersions: typeof import('#lib/server/db/schema.js').recipeVersions;
-	let actions: typeof import('./+page.server').actions;
-	let makeContent: typeof import('#lib/recipes/fixtures.js').makeContent;
-	let userId: string;
-	const stamp = Date.now();
-	const photo = (name: string) =>
-		`http://127.0.0.1:54321/storage/v1/object/public/recipe-images/u/${stamp}-${name}.png`;
-	const ids: number[] = [];
-
-	/** A recipe with one version per photo. */
-	async function insertRecipe(slug: string, photos: string[], parentId: number | null = null) {
-		const content = makeContent({ title: slug });
-		const [{ id }] = await db
-			.insert(recipes)
-			.values({ slug, authorId: userId, title: content.title, parentId })
-			.returning({ id: recipes.id });
-		ids.push(id);
-		await db.insert(recipeVersions).values(
-			photos.map((imageUrl, i) => ({
-				recipeId: id,
-				versionNumber: i + 1,
-				commitMessage: 'v',
-				...content,
-				imageUrl,
-				createdBy: userId
-			}))
-		);
-		return id;
-	}
-
-	beforeAll(async () => {
-		({ db } = await import('#lib/server/db/index.js'));
-		({ recipes, recipeVersions } = await import('#lib/server/db/schema.js'));
-		({ actions } = await import('./+page.server'));
-		({ makeContent } = await import('#lib/recipes/fixtures.js'));
-		const profile = await db.query.profiles.findFirst();
-		if (!profile) throw new Error('Seed the local database first (pnpm db:seed)');
-		userId = profile.id;
-	});
-
-	afterAll(async () => {
-		if (ids.length) await db.delete(recipes).where(inArray(recipes.id, ids));
-	});
-
-	test("removes the parent's own photos and keeps the one its fork still shows", async () => {
-		const slug = `delete-test-${stamp}`;
-		const parentId = await insertRecipe(slug, [photo('shared'), photo('own'), photo('own')]);
-		await insertRecipe(`delete-test-fork-${stamp}`, [photo('shared')], parentId);
-		const remove = vi.fn().mockResolvedValue({ error: null });
-		const result = await Promise.resolve(
-			actions.deleteRecipe({
-				params: { slug },
-				locals: {
-					user: { id: userId, email: 'delete@test.dev' },
-					supabase: { storage: { from: () => ({ remove }) } }
-				}
-			} as never)
-		).catch((e: unknown) => e);
-
-		expect(result).toMatchObject({ status: 303, location: '/cookbook' });
-		expect(await db.query.recipes.findFirst({ where: eq(recipes.id, parentId) })).toBeUndefined();
-		expect(remove).toHaveBeenCalledTimes(1);
-		expect(remove).toHaveBeenCalledWith([`u/${stamp}-own.png`]);
 	});
 });
