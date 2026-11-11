@@ -415,8 +415,10 @@
 		height: 12px;
 	}
 
+	/* Not growable here: the step sizes to its content, and a growable box
+	   left that too narrow for Add and Cancel on the box's line. */
 	.tag-box {
-		flex: 1 1 18rem;
+		flex: 0 0 18rem;
 		min-width: 0;
 	}
 
@@ -485,6 +487,10 @@
 			width: 100%;
 			gap: 8px;
 			margin-left: 0;
+		}
+
+		.tag-box {
+			flex: 1 1 18rem;
 		}
 	}
 </style>

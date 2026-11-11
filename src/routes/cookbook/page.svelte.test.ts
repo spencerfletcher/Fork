@@ -679,6 +679,14 @@ describe('Cookbook select mode', () => {
 		expect(rule).toMatch(/height:\s*12px/);
 	});
 
+	// A growable box made the step's fit-to-content width too narrow for its
+	// own row, so Add and Cancel wrapped under it with the bar half empty.
+	test('the tag step keeps its box a fixed 18rem beside Add and Cancel; a phone lets it fill', () => {
+		expect(cssRule(barSource, '.tag-box')).toMatch(/flex:\s*0 0 18rem/);
+		const phone = barSource.slice(barSource.indexOf('@media (max-width: 699px)'));
+		expect(cssRule(phone, '.tag-box')).toMatch(/flex:\s*1 1 18rem/);
+	});
+
 	test('with only saved recipes chosen, Add tag and Move to Trash are not offered', async () => {
 		await selecting();
 		await fireEvent.click(screen.getByRole('checkbox', { name: poke.title }));
