@@ -127,7 +127,11 @@ export const recipes = pgTable(
 		// trashed rows only.
 		index('recipes_trash_idx')
 			.on(table.authorId, table.deletedAt)
-			.where(sql`${table.deletedAt} is not null and ${table.erasedAt} is null`)
+			.where(sql`${table.deletedAt} is not null and ${table.erasedAt} is null`),
+		// Search's title matches (textSearch, recipeSearch.ts): its words, and its
+		// start (starts_with on lower(title) reads a text_pattern_ops btree).
+		index('recipes_title_search_idx').using('gin', sql`to_tsvector('english', ${table.title})`),
+		index('recipes_title_prefix_idx').on(sql`lower(${table.title}) text_pattern_ops`)
 	]
 ).enableRLS();
 
@@ -398,7 +402,18 @@ export const recipeVersions = pgTable(
 		// The Friends feed and recent-activity reads order versions by time.
 		index('recipe_versions_created_at_idx').on(table.createdAt),
 		// A profile's change count reads by who made the version.
-		index('recipe_versions_created_by_idx').on(table.createdBy)
+		index('recipe_versions_created_by_idx').on(table.createdBy),
+		// Search reads every version's text (textSearch, recipeSearch.ts) through
+		// these, the functions of drizzle/0019_search-functions.sql. An index, not
+		// a stored column, so no version row a page loads carries a tsvector.
+		index('recipe_versions_search_idx').using(
+			'gin',
+			sql`recipe_version_doc(${table.title}, ${table.description}, ${table.sourceName}, ${table.ingredients}, ${table.steps}, ${table.notes}, ${table.makeAhead}, ${table.equipment}, ${table.storage}, ${table.reheating})`
+		),
+		index('recipe_versions_names_search_idx').using(
+			'gin',
+			sql`to_tsvector('english', recipe_ingredient_names(${table.ingredients}))`
+		)
 	]
 ).enableRLS();
 
