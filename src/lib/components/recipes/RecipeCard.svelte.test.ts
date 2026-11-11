@@ -363,7 +363,7 @@ describe('RecipeCard in the Cookbook', () => {
 	test('a kept copy whose author deleted their account names no one and links nowhere', () => {
 		const { container } = render(RecipeCard, {
 			props: {
-				recipe: { ...makeRecipe(), authorId: null, author: null },
+				recipe: { ...makeRecipe(), author: null },
 				variant: 'cookbook',
 				saved: true,
 				kept: true
