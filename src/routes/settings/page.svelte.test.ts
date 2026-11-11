@@ -224,7 +224,7 @@ describe('Delete account section', () => {
 		await fireEvent.click(trigger);
 		const step = within(del()).getByRole('group', { name: 'Delete your account?' });
 		const field = within(step).getByRole('textbox', {
-			name: 'Type your username, cook, to confirm'
+			name: 'Type cook to confirm'
 		});
 		expect(field).toHaveAttribute('name', 'confirmUsername');
 		expect(field).toBeRequired();

@@ -298,8 +298,8 @@
 						{#snippet fields()}
 							<div class="field confirm-name">
 								<label for="confirm-username">
-									Type your username, <span class="handle">{data.settings.username}</span>
-									, to confirm
+									Type <span class="handle">{data.settings.username}</span>
+									 to confirm
 								</label>
 								<input
 									id="confirm-username"

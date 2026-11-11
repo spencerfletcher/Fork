@@ -25,7 +25,7 @@ test('Delete account asks for the username typed, then signs out to the goodbye,
 	const section = page.getByRole('region', { name: 'Delete account' });
 	await section.getByRole('button', { name: 'Delete account' }).click();
 	const step = section.getByRole('group', { name: 'Delete your account?' });
-	const field = step.getByRole('textbox', { name: `Type your username, ${username}, to confirm` });
+	const field = step.getByRole('textbox', { name: `Type ${username} to confirm` });
 
 	await field.fill(`${username}x`);
 	await step.getByRole('button', { name: 'Delete my account' }).click();
