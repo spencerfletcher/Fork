@@ -2,7 +2,8 @@ import { error, redirect } from '@sveltejs/kit';
 import { db } from '#lib/server/db/index.js';
 import { recipes, recipeVersions } from '#lib/server/db/schema.js';
 import { draftOf } from '#lib/recipes/validation.js';
-import { eq, desc, inArray, sql } from 'drizzle-orm';
+import { eq, desc, inArray } from 'drizzle-orm';
+import { appendVersion, commitSave, lockForSave } from '#lib/server/versions.js';
 import type { PageServerLoad, Actions } from './$types';
 import {
 	changedGroups,
@@ -105,18 +106,9 @@ export const actions: Actions = {
 				// Serialise saves on this recipe. The recipe row and its tags were read
 				// before this lock only for auth and the tag comparison; any concurrent
 				// change to either bumps editRevision, which is rechecked right here.
-				const [locked] = await tx
-					.select()
-					.from(recipes)
-					.where(eq(recipes.id, recipe.id))
-					.for('update');
-				if (!locked || locked.authorId !== user.id) return 'forbidden';
-				if (locked.editRevision !== editRevision) return 'stale';
-
-				const latest = await tx.query.recipeVersions.findFirst({
-					where: eq(recipeVersions.recipeId, recipe.id),
-					orderBy: [desc(recipeVersions.versionNumber)]
-				});
+				const lock = await lockForSave(tx, recipe.id, user.id, editRevision);
+				if (typeof lock === 'string') return lock;
+				const { locked, latest } = lock;
 
 				// The photo is content: a new upload or a removal changes the version.
 				// Otherwise the latest version's photo carries forward unchanged.
@@ -138,26 +130,14 @@ export const actions: Actions = {
 				if (tagsChanged) await syncTags(tx, recipe.id, settings.tagNames);
 
 				if (changed || message) {
-					await tx.insert(recipeVersions).values({
-						recipeId: recipe.id,
-						versionNumber: (latest?.versionNumber ?? 0) + 1,
-						commitMessage: message || generatedCommitMessage(groups),
-						...submitted,
-						createdBy: user.id
-					});
+					const commitMessage = message || generatedCommitMessage(groups);
+					await appendVersion(tx, recipe.id, user.id, latest, submitted, commitMessage);
 				}
 
-				// One update: the copies when the content changed, the settings that
-				// moved, and always the revision bump.
-				await tx
-					.update(recipes)
-					.set({
-						...(changed ? copies : {}),
-						...(visibilityChanged ? { visibility } : {}),
-						editRevision: sql`${recipes.editRevision} + 1`,
-						updatedAt: new Date()
-					})
-					.where(eq(recipes.id, recipe.id));
+				await commitSave(tx, recipe.id, {
+					...(changed ? copies : {}),
+					...(visibilityChanged ? { visibility } : {})
+				});
 				return 'saved';
 			});
 		} catch (e) {

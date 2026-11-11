@@ -52,6 +52,17 @@ export function generatedCommitMessage(groups: ContentGroup[]): string {
 	return 'Updated ' + groups.join(', ');
 }
 
+/** The commit message of a version that brings back an older one's content, e.g. "Restore v2". */
+export function restoredCommitMessage(versionNumber: number): string {
+	return `Restore v${versionNumber}`;
+}
+
+/** A version's content alone, without its number, message or authorship. */
+export function versionContent(version: RecipeContent): RecipeContent {
+	const { makes, ingredients, steps } = version;
+	return { ...recipeCopies(version), makes, ingredients, steps };
+}
+
 /**
  * The content the recipe row keeps a copy of (schema.ts), for create, edit and
  * fork alike. Ingredients, steps and makes live on versions only.
