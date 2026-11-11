@@ -18,6 +18,7 @@ import { readSubmission, STALE_MESSAGE, uploadPhoto } from '#lib/server/submissi
 import { failure, requireUser, SESSION_ENDED } from '#lib/server/actions.js';
 import { wholeNumber } from '#lib/helpers.js';
 import { syncTags, listTags } from '#lib/server/tags.js';
+import { grantKeptCopies } from '#lib/server/keptCopies.js';
 import {
 	canSetVisibility,
 	canViewRow,
@@ -129,6 +130,13 @@ export const actions: Actions = {
 				if (!changed && !visibilityChanged && !tagsChanged && !message) return 'unchanged';
 
 				if (tagsChanged) await syncTags(tx, recipe.id, settings.tagNames);
+				// Unpublishing leaves each saver who could see it a read-only copy.
+				if (visibilityChanged && visibility === 'private')
+					await grantKeptCopies(tx, {
+						id: recipe.id,
+						authorId: user.id,
+						visibility: locked.visibility
+					});
 
 				if (changed || message) {
 					const commitMessage = message || generatedCommitMessage(groups);
@@ -162,6 +170,10 @@ export const actions: Actions = {
 		if (!user) return failure(401, 'unauthenticated', SESSION_ENDED('delete again'));
 
 		const recipe = await ownRecipe(params.slug, user.id);
+		// Each saver who could see it keeps a read-only copy. Outside a
+		// transaction: a copy counts only while the recipe is withdrawn
+		// (keptCopyOf), so one granted before a failed move is never shown.
+		if (recipe.visibility !== 'private') await grantKeptCopies(db, recipe);
 		await db
 			.update(recipes)
 			.set({ deletedAt: new Date(), editRevision: sql`${recipes.editRevision} + 1` })

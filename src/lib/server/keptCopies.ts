@@ -17,7 +17,7 @@ import { canView, friendIdsOf, keptCopyOf } from './visibility.js';
  * never a copy.
  */
 export async function grantKeptCopies(
-	tx: Tx,
+	tx: Tx | typeof db,
 	recipe: Pick<Recipe, 'id' | 'authorId' | 'visibility'>
 ): Promise<void> {
 	const savers = await tx
