@@ -84,7 +84,7 @@ The differentiating experience is continuity: a recipe travels from capture thro
 | Exact origins | Store the exact copied source version on a fork; forking an older version records that version; test direct URLs, history and diff, images, search, saves and exports across accounts | next | R slice 2, PA |
 | Save versus Fork | "Save" keeps a moving favourite; "Fork" makes an editable copy; counts read "saves" and "forks" | shipped | DS, OD |
 | Recipe deletion | Owner-only permanent deletion with a confirmation saying the recipe and its history cannot be restored; related records and media references handled; independent forks survive with "Original recipe deleted" | shipped | R, DS |
-| Account access | Account settings, username change with stable identity and old-link behaviour, confirmation page naming the address with resend, verified production mail (P0 to P1) | next | R, PA |
+| Account access | Account settings, username change with stable identity and old-link behaviour, confirmation page naming the address with resend, verified production mail (P0 to P1) | settings and username change built (awaiting publish); confirmation page and production mail next | R, PA |
 | Account lifecycle | Account deletion and retention defined independently of recipe deletion, before broad onboarding | next | R |
 | Media access check | Inspect the storage bucket policy and test intended private-media behaviour before promising private cookbooks; a public URL is a policy question, not a demonstrated leak | next | R, PA |
 | Backup and restore | Exercise a restore; restored data reapplies current restrictions and takedowns | next | R, US note |
@@ -101,11 +101,11 @@ The differentiating experience is continuity: a recipe travels from capture thro
 | Groups and Makes | Ingredient and method groups by `# Name` lines, Makes separate from Serves, the scaling notice ("Pan sizes and oven temperatures are not scaled") | shipped | DS, R |
 | Section heading tool | Direct Section heading button inserting `# Section name` with the name selected; typed and pasted markers give the same groups; the `#` stays visible in a softer colour; ordinary recipes need no markers; no general Markdown | shipped | DS, R, E03 |
 | Source, notes, times | Source name and URL separate (E07); notes; time entry with rest and make-ahead (E08); equipment, storage and reheating as author notes; carried through edit, read, history, preview, print and archive | next | R, CM, DD |
-| Restore as new version | Restore an old version by appending a new one; past content never changes | next | R, PA |
-| Durable drafts | Draft recovery across reload, tab close and crash, saved on the device; drafts never flood version history; synced drafts are a P2 item | next | R (9 Nov evening), AQ, OD |
-| Trash | Deleted recipes recoverable for 30 days | next | R (9 Nov evening), OD |
+| Restore as new version | Restore an old version by appending a new one; past content never changes | in flight (built, awaiting publish) | R, PA |
+| Durable drafts | Draft recovery across reload, tab close and crash, saved on the device; drafts never flood version history; synced drafts are a P2 item | in flight (built, awaiting publish) | R (9 Nov evening), AQ, OD |
+| Trash | Deleted recipes recoverable for 30 days | in flight (built, awaiting publish) | R (9 Nov evening), OD |
 | Photo access follows audience | Private and Friends-level photos are not publicly addressable | next | R (9 Nov evening) |
-| Settings page | Account, username, default audience; later the measurement and inline-quantity preferences | next | R (9 Nov evening) |
+| Settings page | Account, username, default audience; later the measurement and inline-quantity preferences | in flight (built, awaiting publish) | R (9 Nov evening) |
 | Measurement preference | Metric or US per user | next | R (9 Nov evening) |
 | Last and times cooked | Derived from log entries, on Cookbook cards and the recipe page's personal line; never on cards about the recipe (Discover, Search, tags, profiles) | shipped | R (9 Nov evening), M17 |
 | Cookbook and Discover | Separate destinations; a route never changes meaning on sign-in | shipped | DS |
