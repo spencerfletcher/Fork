@@ -1,7 +1,8 @@
 // Reference tables for gram conversion. Pure data; the lookups live in
 // ingredientDensities.ts. Keys are lowercase and matched against ingredient
 // names case-insensitively, so keep new keys lowercase.
-import { UNITS } from '#lib/recipes/convert.js';
+// Relative: Playwright's loader, which reaches this through an e2e spec, does not map #lib to a .ts file.
+import { UNITS } from '../recipes/convert.js';
 
 /**
  * Ingredient densities (grams per ml) for common ingredients.

@@ -20,7 +20,8 @@ describe.skipIf(!localDb)('a kept copy in the page data, against the real databa
 	let author: string;
 	let saver: string;
 	// Words the author wrote after withdrawing it, which the saver was never given.
-	const LATER = /quokka|zanzibar|pellucid|marmalad/i;
+	// Words of its own: the Cookbook db test runs beside this one on the same seed profiles.
+	const LATER = /numbat|xylograph|gossamer|quince/i;
 
 	beforeAll(async () => {
 		({ db } = await import('#lib/server/db/index.js'));
@@ -36,8 +37,8 @@ describe.skipIf(!localDb)('a kept copy in the page data, against the real databa
 				{
 					authorId: author,
 					slug: copySlug,
-					title: 'Zanzibar quokka',
-					description: 'Pellucid marmalade',
+					title: 'Xylograph numbat',
+					description: 'Gossamer quince',
 					servings: 9,
 					editRevision: 7,
 					visibility: 'private'
