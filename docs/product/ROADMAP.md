@@ -253,7 +253,6 @@ Items waiting on Spencer's eye. Rules live in [DESIGN.md](../../DESIGN.md); the 
 | --- | --- | --- | --- |
 | Hover palette | Revisit the hover colours as a whole, Clay Deep (#6e2500, kept for now) included. Decided so far: grey text may turn ink, clay darkens to Clay Deep, ink turns clay | P1 | R, OD |
 | Text-button hover underline | Whether word-buttons underline on hover; off for now, colour change only | P1 | R, OD |
-| Dropdown panel background | The lifted white reads out of place against paper | P1 | R, OD |
 | Fork icon and logo | 1A (three tines on a round shoulder) ships for now (OD, 11 Nov: "1a for now for logo but redesign candidate"); open: a deeper head and a handle widening toward its end, upright or on the diagonal | P1 | R, OD |
 | Cook-mode distinction | The cooking view looks too close to the recipe page | P1 | R, OD |
 | Serving scaler redesign | The control does not feel like Fork; a design round, with the S01 to S08 behaviour | P2 | R |

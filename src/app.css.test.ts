@@ -41,6 +41,9 @@ const pairs: [string, string, number][] = [
 	['--color-text', '--color-marigold', 4.5],
 	['--color-text', '--color-marigold-hover', 4.5],
 	['--color-text', '--color-band', 4.5],
+	// The menu panel's edge (a UI boundary, 3:1), on paper and over the band.
+	['--color-text-2', '--color-bg', 3],
+	['--color-text-2', '--color-band', 3],
 	['--color-text-tan', '--color-navbar-bg', 4.5],
 	['--color-text-cream', '--color-navbar-bg', 4.5],
 	['--color-marigold', '--color-navbar-bg', 3]

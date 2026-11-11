@@ -2,6 +2,8 @@ import { describe, test, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/svelte';
 import { createRawSnippet, flushSync } from 'svelte';
 import Dropdown from './Dropdown.svelte';
+import source from './Dropdown.svelte?raw';
+import { cssRule } from '#lib/testing/css.js';
 
 // afterNavigate's callbacks are kept so a test can play a navigation back.
 const { navigated } = vi.hoisted(() => ({ navigated: [] as (() => void)[] }));
@@ -40,6 +42,19 @@ describe('Dropdown', () => {
 		await renderOpen();
 		await fireEvent.click(screen.getByRole('menuitem', { name: 'Log out' }));
 		expect(screen.getByRole('menu')).toBeInTheDocument();
+	});
+
+	// 4A softened (Spencer, 11 November 2026): the page's paper, a 1px Ink 2
+	// edge one step lighter than the text, the band under a hovered row, and
+	// no shadow. The edge is a real border, so forced colours keep it.
+	test('the panel is paper with an Ink 2 edge and no shadow; a row hovers to the band', () => {
+		const panel = cssRule(source, '.dropdown :global(.menu-panel)');
+		expect(panel).toMatch(/background:\s*var\(--color-bg\)/);
+		expect(panel).toMatch(/border:\s*1px solid var\(--color-text-2\)/);
+		expect(source).not.toMatch(/box-shadow/);
+		expect(cssRule(source, '.dropdown :global(.menu-row:hover)')).toMatch(
+			/background:\s*var\(--color-band\)/
+		);
 	});
 
 	test('a navigation closes the menu', async () => {
