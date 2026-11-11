@@ -1,7 +1,7 @@
 // The writes every save that appends a version shares: the edit form's save
 // and Restore. Version history is append-only: these insert a version and
 // update the recipe row's copies of it, and never touch an earlier version.
-import { and, desc, eq, sql } from 'drizzle-orm';
+import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 import type { Tx } from './db/index.js';
 import { recipes, recipeVersions, type Recipe, type RecipeVersion } from './db/schema.js';
 import {
@@ -54,16 +54,17 @@ export async function appendVersion(
 /**
  * Ends a save in one update: the copies when the content changed, any setting
  * that moved, and always the revision bump, so an open form goes stale.
+ * Several recipes at once for a setting alone (the Cookbook's bulk tag).
  */
 export async function commitSave(
 	tx: Tx,
-	recipeId: number,
+	recipeId: number | number[],
 	set: Partial<ReturnType<typeof recipeCopies> & Pick<Recipe, 'visibility'>>
 ): Promise<void> {
 	await tx
 		.update(recipes)
 		.set({ ...set, editRevision: sql`${recipes.editRevision} + 1`, updatedAt: new Date() })
-		.where(eq(recipes.id, recipeId));
+		.where(Array.isArray(recipeId) ? inArray(recipes.id, recipeId) : eq(recipes.id, recipeId));
 }
 
 /**

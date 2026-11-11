@@ -9,15 +9,14 @@ export function listTags() {
 }
 
 /**
- * Makes `tagNames` the recipe's tags. Names are matched to existing tags
- * case-insensitively, or by the slug they make, and the stored spelling wins,
- * so "dessert", "Dessert" and "dessert!" are one tag; only names that match
- * nothing are created, one per slug, since a slug is unique.
+ * The ids of `tagNames`, made where missing. Names are matched to existing
+ * tags case-insensitively, or by the slug they make, and the stored spelling
+ * wins, so "dessert", "Dessert" and "dessert!" are one tag; only names that
+ * match nothing are created, one per slug, since a slug is unique. Two names
+ * can resolve to one tag, so the ids come back without repeats.
  */
-export async function syncTags(tx: Tx, recipeId: number, tagNames: string[]): Promise<void> {
-	await tx.delete(recipesToTags).where(eq(recipesToTags.recipeId, recipeId));
-	if (tagNames.length === 0) return;
-
+export async function tagIdsFor(tx: Tx, tagNames: string[]): Promise<number[]> {
+	if (tagNames.length === 0) return [];
 	const lower = tagNames.map((name) => name.toLowerCase());
 	const slugs = tagNames.map(slugify);
 	const existing = await tx
@@ -40,7 +39,13 @@ export async function syncTags(tx: Tx, recipeId: number, tagNames: string[]): Pr
 		for (const t of created) idBySlug.set(t.slug, t.id);
 	}
 
-	// Two names can resolve to one tag; the join holds it once.
-	const tagIds = [...new Set(tagNames.map((name) => idOf(name)!))];
+	return [...new Set(tagNames.map((name) => idOf(name)!))];
+}
+
+/** Makes `tagNames` the recipe's tags (matched or made by tagIdsFor). */
+export async function syncTags(tx: Tx, recipeId: number, tagNames: string[]): Promise<void> {
+	await tx.delete(recipesToTags).where(eq(recipesToTags.recipeId, recipeId));
+	const tagIds = await tagIdsFor(tx, tagNames);
+	if (tagIds.length === 0) return;
 	await tx.insert(recipesToTags).values(tagIds.map((tagId) => ({ recipeId, tagId })));
 }
