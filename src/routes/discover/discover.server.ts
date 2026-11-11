@@ -6,6 +6,7 @@ import { cardList } from '#lib/server/recipeCounts.js';
 import { tagSelection, visibleTags } from '#lib/server/tagFilter.js';
 import { authorIsFriendOf, visibleTo } from '#lib/server/visibility.js';
 import { parseFilters, textSearch } from '#lib/server/recipeSearch.js';
+import { namedBy } from '#lib/server/profiles.js';
 
 /** The lead card is the most-saved recipe in the set over this many days, else the set's newest. */
 export const LEAD_WINDOW_DAYS = 7;
@@ -48,7 +49,7 @@ export async function loadDiscover(url: URL, user: { id: string } | null) {
 				new QueryBuilder()
 					.select({ id: profiles.id })
 					.from(profiles)
-					.where(eq(profiles.username, handle))
+					.where(namedBy(handle))
 			)
 		: undefined;
 

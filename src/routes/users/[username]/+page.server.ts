@@ -1,5 +1,6 @@
 import { db } from '#lib/server/db/index.js';
-import { profiles, recipes, recipeVersions } from '#lib/server/db/schema.js';
+import { recipes, recipeVersions } from '#lib/server/db/schema.js';
+import { namedBy } from '#lib/server/profiles.js';
 import { and, count, eq } from 'drizzle-orm';
 import { error, redirect } from '@sveltejs/kit';
 import { attachRecipeCounts } from '#lib/server/recipeCounts.js';
@@ -15,11 +16,13 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 	if (username !== params.username) {
 		throw redirect(301, `/users/${encodeURIComponent(username)}${url.search}`);
 	}
-	const profile = await db.query.profiles.findFirst({
-		where: eq(profiles.username, username)
-	});
+	const profile = await db.query.profiles.findFirst({ where: namedBy(username) });
 
 	if (!profile) throw error(404, 'User not found');
+	// A former name: old links follow the cook to their current one.
+	if (profile.username !== username) {
+		throw redirect(301, `/users/${encodeURIComponent(profile.username)}${url.search}`);
+	}
 
 	const [shownRecipes, commitResult, relation] = await Promise.all([
 		db.query.recipes.findMany({
