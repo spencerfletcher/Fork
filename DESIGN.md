@@ -24,33 +24,33 @@ colors:
   diff-remove-bg: '#f6e3e0'
 typography:
   display:
-    fontFamily: 'Bitter, Georgia, serif'
+    fontFamily: 'Bitter, Bitter Fallback, Georgia, serif'
     fontSize: '2.5rem'
     fontWeight: 500
     lineHeight: 1.15
   headline:
-    fontFamily: 'Bitter, Georgia, serif'
+    fontFamily: 'Bitter, Bitter Fallback, Georgia, serif'
     fontSize: '1.75rem'
     fontWeight: 500
     lineHeight: 1.25
   title:
-    fontFamily: 'Bitter, Georgia, serif'
+    fontFamily: 'Bitter, Bitter Fallback, Georgia, serif'
     fontSize: '1.0625rem'
     fontWeight: 500
     lineHeight: 1.25
   body:
-    fontFamily: 'Source Sans 3, -apple-system, BlinkMacSystemFont, sans-serif'
+    fontFamily: 'Source Sans 3, Source Sans 3 Fallback, -apple-system, BlinkMacSystemFont, sans-serif'
     fontSize: '1rem'
     fontWeight: 400
     lineHeight: 1.65
   label:
-    fontFamily: 'Source Sans 3, -apple-system, BlinkMacSystemFont, sans-serif'
+    fontFamily: 'Source Sans 3, Source Sans 3 Fallback, -apple-system, BlinkMacSystemFont, sans-serif'
     fontSize: '0.75rem'
     fontWeight: 600
     lineHeight: 1.2
     letterSpacing: '0.05em'
   mono:
-    fontFamily: 'JetBrains Mono, Fira Code, monospace'
+    fontFamily: 'JetBrains Mono, JetBrains Mono Fallback, Fira Code, monospace'
     fontSize: '0.75rem'
     fontWeight: 400
     lineHeight: 1.5
@@ -194,6 +194,8 @@ Spencer, 11 November 2026: "Use the same 1px underline with roughly 3px offset t
 **Display Font:** Bitter (with Georgia, serif), weights 500 and 600 **Body Font:** Source Sans 3 (with -apple-system, BlinkMacSystemFont, sans-serif), weights 400, 500, 600 and 400 italic **Label/Mono Font:** JetBrains Mono (with Fira Code, monospace), weights 400 and 600
 
 **Character:** A sturdy slab serif for the names, a plain humanist sans for the reading, and a monospace for the marks a cook makes on the page. Figures are tabular everywhere so quantities and grams line up.
+
+**Fallback faces:** each family is followed in its stack by a metric-matched local fallback, declared in `src/app.css` with `@font-face`: **Bitter Fallback** (Georgia), **Source Sans 3 Fallback** (Arial) and **JetBrains Mono Fallback** (Menlo Regular), each with `size-adjust` and ascent, descent and line-gap overrides tuned to the webfont's metrics. They are not new typefaces: they are the system font resized to take the webfont's space, so text does not jump or rewrap when the webfont swaps in (`font-display: swap`).
 
 ### Hierarchy
 
