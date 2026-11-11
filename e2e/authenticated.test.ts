@@ -9,6 +9,7 @@ import { expect, test, type Page } from '@playwright/test';
 import {
 	chooseAudience,
 	cookiesLink,
+	cookiesPath,
 	createRecipe,
 	deleteRecipe,
 	gotoHydrated,
@@ -398,6 +399,23 @@ test.describe('Edit recipe page', () => {
 		} finally {
 			await deleteRecipe(page, url);
 		}
+	});
+
+	test('at a desktop width the pinned bar fits the scroll padding that keeps a focused field above it', async ({
+		page
+	}) => {
+		await page.setViewportSize({ width: 1280, height: 800 });
+		await gotoHydrated(page, `${await cookiesPath(page)}/edit`);
+		const bar = page.locator('.save-bar');
+		const height = (await bar.boundingBox())!.height;
+		const padding = await page.evaluate(() =>
+			parseFloat(getComputedStyle(document.documentElement).scrollPaddingBottom)
+		);
+		// The bar's height and the 4px focus ring, so a focused field's ring clears it.
+		expect(height + 4).toBeLessThanOrEqual(padding);
+		// One rule above the bar: What changed? in it draws none of its own.
+		const message = page.locator('.save-bar .field-message');
+		expect(await message.evaluate((el) => getComputedStyle(el).borderTopWidth)).toBe('0px');
 	});
 
 	test('a long ingredient list grows the editor on a phone and Save stays below it', async ({

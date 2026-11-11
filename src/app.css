@@ -1113,11 +1113,6 @@
 		gap: var(--space-4);
 	}
 
-	.field-message {
-		padding-top: 18px;
-		border-top: 1px dotted var(--color-input-border);
-	}
-
 	.field-legend {
 		margin-bottom: var(--space-2);
 	}

@@ -169,6 +169,7 @@
 			flex-direction: column;
 			align-items: stretch;
 			gap: var(--space-2);
+			padding-top: 18px;
 			border-top: 1px solid var(--color-border);
 		}
 
