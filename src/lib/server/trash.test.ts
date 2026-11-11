@@ -1,6 +1,6 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { and, eq, gt, isNull, lte } from 'drizzle-orm';
-import { chain } from '#lib/testing/drizzle.js';
+import { chain, sqlOf } from '#lib/testing/drizzle.js';
 import { recipes } from './db/schema.js';
 import { TRASH_DAYS } from '#lib/trash.js';
 
@@ -154,9 +154,11 @@ describe('purgeExpiredTrash', () => {
 		setUpDelete({ deletedAt: NOW }, []);
 		const now = later();
 		await purgeExpiredTrash(SUPABASE, now);
-		expect(expired.where).toHaveBeenCalledWith(
-			and(lte(recipes.deletedAt, trashCutoff(now)), isNull(recipes.erasedAt))
-		);
+		// The expired ones, or else erased ones with no copy left (trash.db.test.ts).
+		const where = sqlOf(expired.where.mock.calls[0][0]);
+		const past = sqlOf(and(lte(recipes.deletedAt, trashCutoff(now)), isNull(recipes.erasedAt))!);
+		expect(where.sql).toContain(past.sql);
+		expect(where.params[0]).toEqual(past.params[0]);
 		expect(transactionMock).toHaveBeenCalledTimes(2);
 	});
 
