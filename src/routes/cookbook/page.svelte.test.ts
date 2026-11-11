@@ -1,5 +1,8 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/svelte';
+import { fireEvent, render, screen, within } from '@testing-library/svelte';
+import { tick } from 'svelte';
+import { draftKey, saveDraft, type DraftRecipe } from '#lib/drafts.js';
+import { draftOf } from '#lib/recipes/validation.js';
 import CookbookPage from './+page.svelte';
 import { COOKBOOK_FILTERS } from './filters.js';
 import source from './+page.svelte?raw';
@@ -174,5 +177,96 @@ describe('Cookbook page', () => {
 		expect(cssRule(phone, '.cookbook-head')).toMatch(/flex-direction:\s*column/);
 		expect(cssRule(phone, '.cookbook-head')).toMatch(/align-items:\s*stretch/);
 		expect(cssRule(phone, '.cookbook-new')).toMatch(/width:\s*100%/);
+	});
+});
+
+describe('Cookbook drafts on this device', () => {
+	const USER = 'me';
+	const signedIn = (overrides: Partial<typeof base> = {}) =>
+		render(CookbookPage, {
+			props: { data: { ...base, ...full, ...overrides, user: { id: USER } } } as never
+		});
+	const MINUTE = 60 * 1000;
+	const seed = (recipe: string, title: string, ago: number, linked?: DraftRecipe) => {
+		const form = new FormData();
+		form.set('title', title);
+		saveDraft(draftKey(USER, recipe), {
+			draft: draftOf(form),
+			savedAt: Date.now() - ago,
+			photoLost: false,
+			...(linked ? { recipe: linked } : {})
+		});
+	};
+	const drafts = () => screen.getByRole('region', { name: 'Drafts' });
+
+	beforeEach(() => localStorage.clear());
+
+	test('nothing on the device, no Drafts section', () => {
+		signedIn();
+		expect(screen.queryByRole('region', { name: 'Drafts' })).toBeNull();
+	});
+
+	test('one row per draft, newest first: its title, what it is, its age, Continue to its editor', async () => {
+		seed('new', '', 5 * MINUTE);
+		seed('7', 'Chewy cookies', MINUTE, { slug: 'cookies', title: 'Cookies' });
+		signedIn();
+		await tick();
+		expect(within(drafts()).getByRole('heading', { level: 2, name: 'Drafts' })).toBeVisible();
+		expect(within(drafts()).getByText('Kept on this device only.')).toBeInTheDocument();
+		const rows = within(drafts()).getAllByRole('listitem');
+		expect(rows.map((r) => r.textContent?.replace(/\s+/g, ' ').trim())).toEqual([
+			'Chewy cookies Changes to Cookies edited 1 minute ago Continue Discard',
+			'Untitled recipe New recipe edited 5 minutes ago Continue Discard'
+		]);
+		expect(within(rows[0]).getByRole('link', { name: 'Continue Chewy cookies' })).toHaveAttribute(
+			'href',
+			'/recipes/cookies/edit'
+		);
+		expect(within(rows[1]).getByRole('link', { name: 'Continue Untitled recipe' })).toHaveAttribute(
+			'href',
+			'/recipes/new'
+		);
+	});
+
+	test('another cook’s drafts on the device are not listed', async () => {
+		saveDraft(draftKey('someone-else', 'new'), {
+			draft: draftOf(new FormData()),
+			savedAt: Date.now(),
+			photoLost: false
+		});
+		signedIn();
+		await tick();
+		expect(screen.queryByRole('region', { name: 'Drafts' })).toBeNull();
+	});
+
+	test('Discard removes the draft from the device in place; the last one takes the section with it', async () => {
+		seed('new', 'Soup', MINUTE);
+		seed('7', 'Chewy cookies', 2 * MINUTE, { slug: 'cookies', title: 'Cookies' });
+		signedIn();
+		await tick();
+		await fireEvent.click(within(drafts()).getByRole('button', { name: 'Discard Soup' }));
+		expect(localStorage.getItem(draftKey(USER, 'new'))).toBeNull();
+		expect(within(drafts()).getAllByRole('listitem')).toHaveLength(1);
+		expect(within(drafts()).getByRole('link', { name: 'Continue Chewy cookies' })).toHaveFocus();
+		await fireEvent.click(within(drafts()).getByRole('button', { name: 'Discard Chewy cookies' }));
+		expect(screen.queryByRole('region', { name: 'Drafts' })).toBeNull();
+		expect(screen.getByRole('heading', { level: 1, name: 'Cookbook' })).toHaveFocus();
+	});
+
+	test('shows on an empty Cookbook too', async () => {
+		seed('new', 'Soup', MINUTE);
+		signedIn({ recipes: [], counts: { all: 0, mine: 0, saved: 0, trash: 0 } });
+		await tick();
+		expect(within(drafts()).getByText('Soup')).toBeInTheDocument();
+		expect(screen.getByText('Your cookbook is empty')).toBeInTheDocument();
+	});
+
+	test('the rows are the shared list rows, Continue and Discard text buttons', async () => {
+		seed('new', 'Soup', MINUTE);
+		signedIn();
+		await tick();
+		expect(within(drafts()).getByRole('listitem')).toHaveClass('list-row');
+		expect(within(drafts()).getByRole('link', { name: 'Continue Soup' })).toHaveClass('text-btn');
+		expect(within(drafts()).getByRole('button', { name: 'Discard Soup' })).toHaveClass('text-btn');
 	});
 });

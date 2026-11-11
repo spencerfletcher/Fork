@@ -5,6 +5,7 @@ import { profiles } from '#lib/server/db/schema.js';
 import { failure, requireUser, SESSION_ENDED } from '#lib/server/actions.js';
 import { changeUsername, ensureProfile } from '#lib/server/profiles.js';
 import { oneOf, text } from '#lib/helpers.js';
+import { dayLabel } from '#lib/journal.js';
 import {
 	USERNAME_MESSAGE,
 	USERNAME_TAKEN,
@@ -40,8 +41,13 @@ export const actions: Actions = {
 		if (!validUsername(username)) {
 			return failure(400, 'invalid', USERNAME_MESSAGE, { section: 'username', username });
 		}
-		if (!(await changeUsername(user.id, username))) {
+		const change = await changeUsername(user.id, username);
+		if (change.result === 'taken') {
 			return failure(400, 'invalid', USERNAME_TAKEN, { section: 'username', username });
+		}
+		if (change.result === 'too_soon') {
+			const error = `You can change your username again on ${dayLabel(change.nextChange)}.`;
+			return failure(429, 'rate_limited', error, { section: 'username', username });
 		}
 		return saved('username');
 	},

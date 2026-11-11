@@ -54,7 +54,8 @@
 			imageUrl={latestVersion.imageUrl}
 			nextVersion={current + 1}
 			hasForks={data.forkCount > 0}
-			draftKey={data.user ? draftKey(data.user.id, String(recipe.id)) : undefined}>
+			draftKey={data.user ? draftKey(data.user.id, String(recipe.id)) : undefined}
+			draftRecipe={{ slug: recipe.slug, title: recipe.title }}>
 			{#snippet header(outcome, draftNote)}
 				<div class="editor-header">
 					<a href="/recipes/{recipe.slug}" class="back-link">← {recipe.title}</a>

@@ -34,7 +34,7 @@
 				Recipes you delete stay here for {TRASH_DAYS} days, then go for good.
 			</EmptyPanel>
 		{:else}
-			<ul class="trash-list">
+			<ul class="row-list">
 				{#each data.recipes as recipe (recipe.slug)}
 					<TrashRow {recipe} />
 				{/each}
@@ -42,10 +42,3 @@
 		{/if}
 	</div>
 </div>
-
-<style>
-	.trash-list {
-		max-width: 760px;
-		border-bottom: 1px solid var(--color-border);
-	}
-</style>

@@ -4,7 +4,12 @@
 	import ChoiceGroup from '#lib/components/ui/ChoiceGroup.svelte';
 	import { audienceIcon } from '#lib/components/Icons.svelte';
 	import { AUDIENCE_LABEL, AUDIENCE_NOTE } from '#lib/audience.js';
-	import { USERNAME_MAX, USERNAME_MIN } from '#lib/auth/rules.js';
+	import {
+		FORMER_USERNAME_DAYS,
+		USERNAME_CHANGES_PER_WINDOW,
+		USERNAME_MAX,
+		USERNAME_MIN
+	} from '#lib/auth/rules.js';
 	import { VISIBILITIES, type Visibility } from '#lib/recipes/validation.js';
 	import type { PageData } from './$types';
 	import type { Section } from './+page.server';
@@ -35,11 +40,18 @@
 
 	const resultFor = (section: Section) => (form?.section === section ? form : null);
 
-	// The field owns a refusal of the name itself; anything else (a lapsed
-	// session, an unreachable server) is the section's line.
+	// The field owns a refusal of the name itself, or of changing it this
+	// soon; anything else (a lapsed session, an unreachable server) is the
+	// section's line.
+	const FIELD_CODES = ['invalid', 'rate_limited'];
 	const usernameError = $derived(
-		resultFor('username')?.code === 'invalid' ? resultFor('username')?.error : undefined
+		FIELD_CODES.includes(resultFor('username')?.code ?? '')
+			? resultFor('username')?.error
+			: undefined
 	);
+	const TIMES = ['never', 'once', 'twice'];
+	const changesAllowed =
+		TIMES[USERNAME_CHANGES_PER_WINDOW] ?? `${USERNAME_CHANGES_PER_WINDOW} times`;
 	const usernameProblem = $derived(
 		usernameSave.error ?? (usernameError ? undefined : resultFor('username')?.error)
 	);
@@ -85,24 +97,38 @@
 {/snippet}
 
 <div class="page">
-	<div class="page-inner page-inner--narrow settings">
+	<div class="page-inner settings">
 		<h1>Settings</h1>
 
-		<section aria-labelledby="account-heading">
-			<h2 id="account-heading">Account</h2>
-			<dl class="field">
-				<dt class="eyebrow-label">Email</dt>
-				<dd>{data.email}</dd>
-			</dl>
-			<p>
-				<a href="/forgot-password" class="hit-link">Change password</a>
-				<span class="form-hint">We'll email you a link to set a new one.</span>
-			</p>
+		<!-- Every section is the same: a head (h2 and one line) and a body (the
+		     controls), side by side from 900px. -->
+		<section class="setting" aria-labelledby="account-heading">
+			<div class="setting-head">
+				<h2 id="account-heading">Account</h2>
+				<p class="setting-note">How you sign in.</p>
+			</div>
+			<div class="setting-body">
+				<dl class="field">
+					<dt class="eyebrow-label">Email</dt>
+					<dd>{data.email}</dd>
+				</dl>
+				<p>
+					<a href="/forgot-password" class="hit-link">Change password</a>
+					<span class="form-hint">We'll email you a link to set a new one.</span>
+				</p>
+			</div>
 		</section>
 
-		<section aria-labelledby="username-heading">
-			<h2 id="username-heading">Username</h2>
-			<form method="POST" action="?/username" class="form" use:enhance={usernameSave.submit}>
+		<section class="setting" aria-labelledby="username-heading">
+			<div class="setting-head">
+				<h2 id="username-heading">Username</h2>
+				<p class="setting-note">Your handle on your recipes and your profile link.</p>
+			</div>
+			<form
+				method="POST"
+				action="?/username"
+				class="form setting-body"
+				use:enhance={usernameSave.submit}>
 				<div class="field">
 					<label for="username">
 						Username <span class="field-required" aria-hidden="true">Required</span>
@@ -123,17 +149,25 @@
 						<p class="field-error" id="username-error">{usernameError}</p>
 					{/if}
 					<p class="form-hint" id="username-hint">
-						{USERNAME_MIN} to {USERNAME_MAX} letters, digits, - or _. Old links to your profile keep working,
-						and nobody else can take your old name.
+						{USERNAME_MIN} to {USERNAME_MAX} letters, digits, - or _. Old links to your profile work for
+						{FORMER_USERNAME_DAYS} days. You can change it {changesAllowed} in {FORMER_USERNAME_DAYS}
+						days.
 					</p>
 				</div>
 				{@render saveRow(usernameSave.pending, usernameSaved, usernameProblem, 'username-problem')}
 			</form>
 		</section>
 
-		<section aria-labelledby="audience-heading">
-			<h2 id="audience-heading">Default audience</h2>
-			<form method="POST" action="?/audience" class="form" use:enhance={audienceSave.submit}>
+		<section class="setting" aria-labelledby="audience-heading">
+			<div class="setting-head">
+				<h2 id="audience-heading">Default audience</h2>
+				<p class="setting-note">Who sees a new recipe until you choose otherwise.</p>
+			</div>
+			<form
+				method="POST"
+				action="?/audience"
+				class="form setting-body"
+				use:enhance={audienceSave.submit}>
 				<ChoiceGroup
 					name="defaultVisibility"
 					legend="New recipes start as"
@@ -152,21 +186,55 @@
 </div>
 
 <style>
-	h1 {
-		margin: 0 0 var(--space-5);
+	/* Whitespace alone separates the title and the sections: no rules. */
+	.settings {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-6);
 	}
 
-	section {
+	h1 {
+		margin: 0;
+	}
+
+	.setting,
+	.setting-head,
+	.setting-body {
 		display: flex;
 		flex-direction: column;
 		gap: var(--space-4);
-		padding-block: var(--space-5);
-		border-top: 1px solid var(--color-border);
+	}
+
+	.setting-head {
+		gap: var(--space-1);
+	}
+
+	/* The controls keep a reading measure; a text field never spans the page. */
+	.setting-body {
+		max-width: 560px;
+	}
+
+	@media (min-width: 900px) {
+		.settings {
+			gap: var(--space-7);
+		}
+
+		.setting {
+			display: grid;
+			grid-template-columns: 280px minmax(0, 560px);
+			column-gap: var(--space-7);
+			align-items: start;
+		}
 	}
 
 	h2 {
 		margin: 0;
 		font-size: 1.375rem;
+	}
+
+	.setting-note {
+		margin: 0;
+		color: var(--color-text-2);
 	}
 
 	dl,

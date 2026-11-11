@@ -57,6 +57,8 @@ Planning and design docs: start at `docs/README.md`, which names the current pro
 - `requireUser(url, user)` and `SESSION_ENDED(verb)` (`src/lib/server/actions.ts`): the signed-out redirect and its one wording
 - `trashedRecipe(slug, userId)`, `inTrashOf(userId)`, `deleteForever(recipeId, supabase)` and `purgeExpiredTrash(supabase)` (`src/lib/server/trash.ts`): the owner's restorable trashed recipe or null, the Trash as SQL (`TRASH_DAYS` from `src/lib/trash.ts`), the one permanent-deletion path, and the hourly purge. `viewableRecipe`, `ownRecipe`, `visibleTo` and `canView` never return a trashed recipe
 - `storePhoto(formData, supabase, userId)` (`src/lib/server/submission.ts`): a form's photo stored, or why it was refused
+- `listDrafts(userId)` (`src/lib/drafts.ts`): this device's editor drafts for one cook, newest first, for the Cookbook's Drafts list; `saveDraft`, `loadDraft`, `clearDraft` beside it
+- `changeUsername(id, name)` (`src/lib/server/profiles.ts`): `changed`, `taken` or `too_soon` with the next allowed day; former names last `FORMER_USERNAME_DAYS`, at most `USERNAME_CHANGES_PER_WINDOW` new names in that window (`src/lib/auth/rules.ts`)
 - `oneOf(list, value)` (`src/lib/helpers.ts`): a value from an `as const` list, else undefined
 - `wholeNumber(s)` (`src/lib/helpers.ts`): digits only as a number, else null
 - `plural(n, word, pluralForm?)` (`src/lib/helpers.ts`): "1 fork", "2 forks", "2 entries"
