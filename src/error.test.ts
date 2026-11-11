@@ -21,6 +21,25 @@ describe('fallback error page', () => {
 		expect(brand).not.toMatch(/<text|Fork/);
 	});
 
+	// error.html cannot import Navbar, so it draws the mark again: a redraw in one
+	// file must show here.
+	test("draws the navbar's F. mark, its dot app.css's marigold", () => {
+		const navbar = readFileSync(join(__dirname, 'lib/components/ui/Navbar.svelte'), 'utf8');
+		const appCss = readFileSync(join(__dirname, 'app.css'), 'utf8');
+		const paths = (source: string) =>
+			[...source.matchAll(/<path\s+fill="([^"]+)"\s+d="([^"]+)"/g)].map((m) => ({
+				fill: m[1],
+				d: m[2]
+			}));
+		const ours = paths(html);
+		const bar = paths(navbar);
+		expect(ours).toHaveLength(2);
+		expect(ours.map((p) => p.d)).toEqual(bar.map((p) => p.d));
+		expect(bar[1].fill).toBe('var(--color-marigold)');
+		const marigold = /--color-marigold:\s*(#[0-9a-f]{3,8});/i.exec(appCss)![1];
+		expect(ours[1].fill.toLowerCase()).toBe(marigold.toLowerCase());
+	});
+
 	test('tries again first, by reloading, and goes home as the ghost', () => {
 		// The lede says "Try again in a moment", so that is the main action. The
 		// link is to this same URL, so without JavaScript it still loads again.
