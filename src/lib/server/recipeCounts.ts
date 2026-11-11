@@ -3,6 +3,7 @@ import { recipes, recipeVersions } from '#lib/server/db/schema.js';
 import { and, count, inArray, type SQL } from 'drizzle-orm';
 import { byTagMatches } from './tagFilter.js';
 import { visibleTo, type Viewer } from './visibility.js';
+import { cookedCounts, type Cooked } from './journal.js';
 
 /** The relations a recipe card renders: its author's id and handle, nothing more. */
 export const CARD_WITH = { author: { columns: { id: true, username: true } } } as const;
@@ -52,14 +53,28 @@ export async function attachRecipeCounts<T extends { id: number }>(
  * The recipe cards matching `where`, in `orderBy`, each with its counts for
  * `viewer`. With `tagRank` (a selection's match counts, passed only when no
  * text query ranks the list) recipes matching more selected tags come first.
+ * With `cooked` (the viewer's own shelf only, never a list about the recipe)
+ * a card the viewer has logged also carries their times and last cooked.
  */
 export async function cardList(
 	where: SQL | undefined,
 	orderBy: SQL[],
 	viewer: Viewer,
-	{ tagRank, limit }: { tagRank?: Map<number, number> | null; limit?: number } = {}
+	{
+		tagRank,
+		limit,
+		cooked
+	}: { tagRank?: Map<number, number> | null; limit?: number; cooked?: boolean } = {}
 ) {
 	const rows = await db.query.recipes.findMany({ where, with: CARD_WITH, orderBy, limit });
 	if (tagRank && tagRank.size > 0) rows.sort(byTagMatches(tagRank));
-	return attachRecipeCounts(rows, viewer);
+	const withCounts = await attachRecipeCounts(rows, viewer);
+	const cookedById =
+		cooked && viewer
+			? await cookedCounts(
+					viewer.id,
+					rows.map((r) => r.id)
+				)
+			: new Map<number, Cooked>();
+	return withCounts.map((r) => ({ ...r, ...cookedById.get(r.id) }));
 }

@@ -72,7 +72,7 @@ export const load: PageServerLoad = async ({ url, locals: { user, supabase } }) 
 		and(inArray(recipes.id, candidateIds), text.where),
 		text.orderBy,
 		user,
-		{ tagRank: searchQuery ? null : matches }
+		{ tagRank: searchQuery ? null : matches, cooked: true }
 	);
 
 	return {

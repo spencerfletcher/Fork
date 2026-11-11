@@ -1,5 +1,5 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
-import { chain } from '#lib/testing/drizzle.js';
+import { chain, sqlOf } from '#lib/testing/drizzle.js';
 import { and, desc, eq, inArray, type SQL } from 'drizzle-orm';
 import { PgDialect } from 'drizzle-orm/pg-core';
 import { recipes, recipeVersions } from '#lib/server/db/schema.js';
@@ -129,5 +129,45 @@ describe('cardList', () => {
 		expect(forkChain.where.mock.calls[0][0]).toEqual(
 			and(inArray(recipes.parentId, [1, 2, 3]), visibleTo(viewer))
 		);
+	});
+});
+
+describe('cardList: times and last cooked', () => {
+	const viewer = { id: 'viewer-42' };
+	const WHERE = eq(recipes.visibility, 'public');
+
+	beforeEach(() => {
+		vi.clearAllMocks();
+		findManyMock.mockResolvedValue(Array.from({ length: 30 }, (_, i) => ({ id: i + 1 })));
+		selectMock.mockReturnValue(chain([]));
+	});
+
+	test('asked for, one grouped query more for the whole list, scoped to its ids and the viewer', async () => {
+		const cookedChain = chain([{ recipeId: 2, timesCooked: 4, lastCookedOn: '2026-11-03' }]);
+		selectMock
+			.mockReturnValueOnce(chain([]))
+			.mockReturnValueOnce(chain([]))
+			.mockReturnValueOnce(cookedChain);
+
+		const rows = await cardList(WHERE, [], viewer, { cooked: true });
+
+		expect(selectMock).toHaveBeenCalledTimes(3);
+		const where = sqlOf(cookedChain.where.mock.calls[0][0]);
+		expect(where.params).toContain(viewer.id);
+		expect(where.params).toEqual(expect.arrayContaining(rows.map((r) => r.id)));
+		expect(rows[1]).toMatchObject({ timesCooked: 4, lastCookedOn: '2026-11-03' });
+		expect(rows[0]).not.toHaveProperty('timesCooked');
+	});
+
+	test('not asked for, no lookup and no values', async () => {
+		const rows = await cardList(WHERE, [], viewer);
+		expect(selectMock).toHaveBeenCalledTimes(2);
+		expect(rows[0]).not.toHaveProperty('timesCooked');
+	});
+
+	test('signed out, nothing is anyone’s: no lookup', async () => {
+		const rows = await cardList(WHERE, [], null, { cooked: true });
+		expect(selectMock).toHaveBeenCalledTimes(2);
+		expect(rows[0]).not.toHaveProperty('timesCooked');
 	});
 });

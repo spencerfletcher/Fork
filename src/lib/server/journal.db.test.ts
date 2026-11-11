@@ -1,0 +1,107 @@
+import { describe, test, expect, beforeAll, afterAll } from 'vitest';
+import { eq } from 'drizzle-orm';
+
+import { inRollback, localDb } from '#lib/testing/db.js';
+
+afterAll(async () => {
+	if (localDb) await (await import('#lib/server/db/index.js')).closeDb();
+});
+
+// Times cooked and last cooked, derived from the viewer's own entries: against
+// the local Supabase stack, inside a transaction that is always rolled back.
+describe.skipIf(!localDb)('times and last cooked, against the real database', () => {
+	let schema: typeof import('#lib/server/db/schema.js');
+	let journal: typeof import('./journal.js');
+
+	beforeAll(async () => {
+		schema = await import('#lib/server/db/schema.js');
+		journal = await import('./journal.js');
+	});
+
+	type Tx = import('./db/index.js').Tx;
+
+	/** A cook, another cook, and two recipes by the cook; rolled back after. */
+	async function withKitchen(
+		body: (tx: Tx, me: string, other: string, ids: [number, number]) => Promise<void>
+	) {
+		const stamp = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+		const me = `test-me-${stamp}`;
+		const other = `test-other-${stamp}`;
+		await inRollback(async (tx) => {
+			await tx.insert(schema.profiles).values([
+				{ id: me, username: `me-${stamp}` },
+				{ id: other, username: `ot-${stamp}` }
+			]);
+			const rows = await tx
+				.insert(schema.recipes)
+				.values([
+					{ authorId: me, slug: `c1-${stamp}`, title: 'One', visibility: 'public' },
+					{ authorId: me, slug: `c2-${stamp}`, title: 'Two', visibility: 'public' }
+				])
+				.returning({ id: schema.recipes.id });
+			await body(tx, me, other, [rows[0].id, rows[1].id]);
+		});
+	}
+
+	const entry = (userId: string, recipeId: number, cookedOn: string) => ({
+		userId,
+		recipeId,
+		dish: 'Dish',
+		cookedOn
+	});
+
+	test('counts the cook’s own entries per recipe, with the latest day; others’ and deleted ones never', async () => {
+		await withKitchen(async (tx, me, other, [one, two]) => {
+			await tx
+				.insert(schema.logEntries)
+				.values([
+					entry(me, one, '2026-11-01'),
+					entry(me, one, '2026-11-03'),
+					entry(me, one, '2026-10-20'),
+					entry(other, one, '2026-11-09'),
+					entry(other, two, '2026-11-09')
+				]);
+			const [gone] = await tx
+				.insert(schema.logEntries)
+				.values(entry(me, one, '2026-11-10'))
+				.returning({ id: schema.logEntries.id });
+			await tx.delete(schema.logEntries).where(eq(schema.logEntries.id, gone.id));
+
+			const counts = await journal.cookedCounts(me, [one, two], tx);
+			expect(counts.get(one)).toEqual({ timesCooked: 3, lastCookedOn: '2026-11-03' });
+			// Cooked only by someone else: nothing for me.
+			expect(counts.has(two)).toBe(false);
+		});
+	});
+
+	test('one entry is once, on its day; no ids is no query result', async () => {
+		await withKitchen(async (tx, me, _other, [one]) => {
+			await tx.insert(schema.logEntries).values(entry(me, one, '2026-11-08'));
+			expect((await journal.cookedCounts(me, [one], tx)).get(one)).toEqual({
+				timesCooked: 1,
+				lastCookedOn: '2026-11-08'
+			});
+			expect((await journal.cookedCounts(me, [], tx)).size).toBe(0);
+		});
+	});
+
+	test('the recipe page’s latest entry carries the count of all the cook’s entries', async () => {
+		await withKitchen(async (tx, me, other, [one]) => {
+			const [, latest] = await tx
+				.insert(schema.logEntries)
+				.values([
+					entry(me, one, '2026-11-01'),
+					entry(me, one, '2026-11-03'),
+					entry(other, one, '2026-11-09')
+				])
+				.returning({ id: schema.logEntries.id });
+			expect(await journal.lastEntryFor(me, one, tx)).toEqual({
+				id: latest.id,
+				cookedOn: '2026-11-03',
+				timesCooked: 2
+			});
+			expect(await journal.lastEntryFor(other, one, tx)).toMatchObject({ timesCooked: 1 });
+			expect(await journal.lastEntryFor(`nobody-${me}`, one, tx)).toBeNull();
+		});
+	});
+});

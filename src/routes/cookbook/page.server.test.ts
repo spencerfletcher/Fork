@@ -154,6 +154,19 @@ describe('/cookbook load', () => {
 		expect(sqlOf(forkChain.where.mock.calls[0][0]).params).toContain(USER.id);
 	});
 
+	test('cards carry the viewer’s own times and last cooked, from their entries only', async () => {
+		const cookedChain = chain([{ recipeId: 3, timesCooked: 2, lastCookedOn: '2026-11-03' }]);
+		mockLibrary(LIBRARY, chain([]), chain([]), cookedChain);
+		findManyByIds();
+
+		const result = await loadResult();
+
+		expect(sqlOf(cookedChain.where.mock.calls[0][0]).params).toContain(USER.id);
+		const three = result.recipes.find((r) => r.id === 3);
+		expect(three).toMatchObject({ timesCooked: 2, lastCookedOn: '2026-11-03' });
+		expect(result.recipes.find((r) => r.id === 1)).not.toHaveProperty('timesCooked');
+	});
+
 	test('the query searches by text, as Search does', async () => {
 		mockLibrary(LIBRARY);
 		findManyByIds();

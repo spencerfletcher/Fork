@@ -1,5 +1,5 @@
-import { and, asc, desc, eq, sql, type SQL } from 'drizzle-orm';
-import { db } from './db/index.js';
+import { and, asc, count, desc, eq, inArray, max, sql, type SQL } from 'drizzle-orm';
+import { db, type Tx } from './db/index.js';
 import {
 	logEntries,
 	recipes,
@@ -255,15 +255,53 @@ export async function ownEntry(viewer: NonNullable<Viewer>, id: number) {
 	return entry ?? null;
 }
 
-/** The viewer's most recent entry for a recipe, for the recipe page's personal line. */
-export async function lastEntryFor(userId: string, recipeId: number) {
-	const [row] = await db
-		.select({ id: logEntries.id, cookedOn: logEntries.cookedOn })
+/**
+ * The viewer's most recent entry for a recipe, for the recipe page's personal
+ * line, with how many entries of it they have: the window count runs before
+ * the limit, so one row carries the total.
+ */
+export async function lastEntryFor(userId: string, recipeId: number, tx: Tx | typeof db = db) {
+	const [row] = await tx
+		.select({
+			id: logEntries.id,
+			cookedOn: logEntries.cookedOn,
+			timesCooked: sql<number>`count(*) over ()`.mapWith(Number)
+		})
 		.from(logEntries)
 		.where(and(eq(logEntries.userId, userId), eq(logEntries.recipeId, recipeId)))
 		.orderBy(desc(logEntries.cookedOn), desc(logEntries.createdAt))
 		.limit(1);
 	return row ?? null;
+}
+
+export type Cooked = { timesCooked: number; lastCookedOn: string };
+
+/**
+ * How often and when last the viewer cooked each of `recipeIds`, from their
+ * own entries only: one grouped query for the whole list. A recipe they never
+ * logged has no key. Derived on every read, never stored.
+ */
+export async function cookedCounts(
+	userId: string,
+	recipeIds: number[],
+	tx: Tx | typeof db = db
+): Promise<Map<number, Cooked>> {
+	if (recipeIds.length === 0) return new Map();
+	const rows = await tx
+		.select({
+			recipeId: logEntries.recipeId,
+			timesCooked: count(),
+			lastCookedOn: max(logEntries.cookedOn)
+		})
+		.from(logEntries)
+		.where(and(eq(logEntries.userId, userId), inArray(logEntries.recipeId, recipeIds)))
+		.groupBy(logEntries.recipeId);
+	return new Map(
+		rows.map((r) => [
+			r.recipeId!,
+			{ timesCooked: Number(r.timesCooked), lastCookedOn: r.lastCookedOn! }
+		])
+	);
 }
 
 /**
