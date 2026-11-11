@@ -8,7 +8,7 @@ import { inLibraryOf, keptCopyOf } from '#lib/server/visibility.js';
 import { keptVersionsOf } from '#lib/server/keptCopies.js';
 import { inTrashOf, purgeExpiredTrash } from '#lib/server/trash.js';
 import { parseFilters, textSearch } from '#lib/server/recipeSearch.js';
-import { failure, requireUser, signedOut } from '#lib/server/actions.js';
+import { BAD_FORM, failure, requireUser, signedOut } from '#lib/server/actions.js';
 import {
 	collectionsOf,
 	createCollection,
@@ -167,7 +167,6 @@ export const load: PageServerLoad = async ({ url, locals: { user, supabase } }) 
 
 /** What a collection that has gone (deleted in another tab) is told. */
 const NO_SUCH_COLLECTION = 'That collection is no longer in your Cookbook.';
-const BAD_FORM = 'Invalid form state, reload the page';
 
 export const actions: Actions = {
 	// Opens the new collection, whose empty state says how to fill it.

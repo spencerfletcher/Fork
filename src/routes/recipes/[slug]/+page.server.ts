@@ -20,7 +20,7 @@ import {
 import { attachRecipeCounts } from '#lib/server/recipeCounts.js';
 import { lastEntryFor } from '#lib/server/journal.js';
 import { VERSION_NOT_FOUND } from './versionError.js';
-import { failure, requireUser, signedOut } from '#lib/server/actions.js';
+import { BAD_FORM, failure, requireUser, signedOut } from '#lib/server/actions.js';
 import { STALE_MESSAGE } from '#lib/server/submission.js';
 import { restoreVersion } from '#lib/server/versions.js';
 import { keepVersion, removeCopy, setNote } from '#lib/server/keptCopies.js';
@@ -208,7 +208,7 @@ export const actions: Actions = {
 		const collectionId = wholeNumber(text(form, 'collectionId'));
 		const member = text(form, 'member');
 		if (collectionId === null || (member !== '1' && member !== '0'))
-			return failure(400, 'invalid', 'Invalid form state, reload the page');
+			return failure(400, 'invalid', BAD_FORM);
 
 		const recipe = await libraryRecipe(params.slug, user);
 		if (!(await setMembership(user, collectionId, recipe.id, member === '1')))
@@ -233,7 +233,7 @@ export const actions: Actions = {
 	keep: async ({ params, request, locals: { user } }) => {
 		if (!user) return signedOut();
 		const version = wholeNumber(text(await request.formData(), 'version'));
-		if (version === null) return failure(400, 'invalid', 'Invalid form state, reload the page');
+		if (version === null) return failure(400, 'invalid', BAD_FORM);
 		const recipe = await viewableRecipe(params.slug, user);
 		if (!recipe) throw error(404, 'Recipe not found');
 		if (recipe.authorId === user.id || !(await keepVersion(user.id, recipe.id, version)))
@@ -347,8 +347,7 @@ export const actions: Actions = {
 		const formData = await request.formData();
 		const versionNumber = wholeNumber(String(formData.get('version') ?? ''));
 		const editRevision = wholeNumber(String(formData.get('editRevision') ?? ''));
-		if (versionNumber === null || editRevision === null)
-			return failure(400, 'invalid', 'Invalid form state, reload the page');
+		if (versionNumber === null || editRevision === null) return failure(400, 'invalid', BAD_FORM);
 		if (recipe.editRevision !== editRevision) return failure(409, 'stale', STALE_MESSAGE);
 
 		const outcome = await db.transaction((tx) =>

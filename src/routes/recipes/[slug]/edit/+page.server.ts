@@ -15,7 +15,7 @@ import { sameTags } from '#lib/recipes/tags.js';
 import type { RecipeContent } from '#lib/recipes/types.js';
 import { removeRecipeImage } from '#lib/server/images.js';
 import { readSubmission, STALE_MESSAGE, uploadPhoto } from '#lib/server/submission.js';
-import { failure, requireUser, signedOut } from '#lib/server/actions.js';
+import { BAD_FORM, failure, requireUser, signedOut } from '#lib/server/actions.js';
 import { wholeNumber } from '#lib/helpers.js';
 import { syncTags, listTags } from '#lib/server/tags.js';
 import { grantKeptCopies } from '#lib/server/keptCopies.js';
@@ -91,7 +91,7 @@ export const actions: Actions = {
 
 		const editRevision = wholeNumber(draft.editRevision);
 		if (editRevision === null) {
-			return failure(400, 'invalid', 'Invalid form state, reload the page', { draft });
+			return failure(400, 'invalid', BAD_FORM, { draft });
 		}
 		// A tab that is already stale need not upload its photo first; the check
 		// that counts is the one under the row lock below.

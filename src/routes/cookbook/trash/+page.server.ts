@@ -9,7 +9,7 @@ import {
 	trashAge,
 	trashedRecipe
 } from '#lib/server/trash.js';
-import { failure, requireUser, signedOut } from '#lib/server/actions.js';
+import { BAD_FORM, failure, requireUser, signedOut } from '#lib/server/actions.js';
 import { text } from '#lib/helpers.js';
 import { NOT_IN_TRASH } from '#lib/trash.js';
 import type { Actions, PageServerLoad } from './$types';
@@ -38,7 +38,7 @@ export const load: PageServerLoad = async ({ url, locals: { user, supabase } }) 
 /** The signed-in owner's trashed recipe the form names, or the failure to return. */
 async function trashedFromForm(request: Request, userId: string) {
 	const slug = text(await request.formData(), 'slug');
-	if (!slug) return { failure: failure(400, 'invalid', 'Invalid form state, reload the page') };
+	if (!slug) return { failure: failure(400, 'invalid', BAD_FORM) };
 	const recipe = await trashedRecipe(slug, userId);
 	if (!recipe) return { failure: failure(404, 'not_found', NOT_IN_TRASH) };
 	return { recipe };

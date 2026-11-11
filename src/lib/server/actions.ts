@@ -24,6 +24,9 @@ export function failure<T extends object = Record<never, never>>(
 	return fail(status, { ...(extra as T), error, code });
 }
 
+/** What a form says when its hidden fields are missing or malformed. */
+export const BAD_FORM = 'Invalid form state, reload the page';
+
 /** What a form whose session lapsed says, ending with what to do once logged in again. */
 export const SESSION_ENDED = (retry: 'save again' | 'delete again' | 'try again') =>
 	`Your session ended. Log in in another tab, then ${retry}.`;
