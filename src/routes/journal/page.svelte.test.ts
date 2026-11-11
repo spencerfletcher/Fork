@@ -32,7 +32,17 @@ const data = {
 	next: 'c2' as string | null,
 	total: 40,
 	oldest: '2024-05-01',
-	logged: null as { cookedOn: string } | null
+	logged: null as { cookedOn: string } | null,
+	year: null as null | {
+		year: number;
+		months: (number | null)[];
+		top: { recipeId: number; times: number; title: string; href: string | null }[];
+	}
+};
+const YEAR = {
+	year: 2026,
+	months: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, null],
+	top: [{ recipeId: 1, times: 4, title: 'Miso Salmon', href: '/recipes/miso-salmon' }]
 };
 
 const renderJournal = (overrides: Partial<typeof data> = {}) =>
@@ -65,5 +75,33 @@ describe('Journal page', () => {
 		expect(screen.getAllByRole('heading', { level: 2 })).toHaveLength(2);
 		expect(document.activeElement).toBe(document.getElementById('entry-1'));
 		expect(screen.queryByRole('link', { name: 'Show more' })).toBeNull();
+	});
+
+	test('the year summary sits above the month groups, its headings before theirs', () => {
+		renderJournal({ year: YEAR });
+		expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent?.trim())).toEqual([
+			'2026 so far',
+			'Most cooked this year',
+			'November 2026',
+			'October 2026'
+		]);
+	});
+
+	test('no year summary without entries this year', () => {
+		renderJournal();
+		expect(screen.queryByRole('heading', { name: /so far/ })).toBeNull();
+	});
+
+	test('Show more leaves the year summary as the page loaded it', async () => {
+		preloadMock.mockResolvedValue({
+			type: 'loaded',
+			status: 200,
+			data: { ...data, entries: [entry(1, '2026-10-02')], next: null, year: null }
+		});
+		renderJournal({ year: YEAR });
+		await fireEvent.click(screen.getByRole('link', { name: 'Show more' }));
+		await waitFor(() => expect(screen.getByText('1 more entry')).toBeInTheDocument());
+		expect(screen.getByRole('link', { name: 'Miso Salmon' })).toBeInTheDocument();
+		expect(screen.getAllByRole('heading', { name: '2026 so far' })).toHaveLength(1);
 	});
 });
