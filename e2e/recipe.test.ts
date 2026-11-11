@@ -1301,10 +1301,10 @@ test.describe('Recipe detail page', () => {
 				.evaluateAll((els) => els.map((el) => getComputedStyle(el, '::before').content));
 		await page.setViewportSize({ width: 1280, height: 900 });
 		await openCookies(page);
-		// None typed. Prep · cook is one group, Serves the other; on a desktop a
-		// dot is drawn between pairs and between the groups, in Ink 3.
+		// None typed. Prep · cook · rest is one group, Serves the other; on a
+		// desktop a dot is drawn between pairs and between the groups, in Ink 3.
 		expect(await details.textContent()).not.toContain('·');
-		expect(await dots('.pair')).toEqual(['none', '"·" / ""', 'none']);
+		expect(await dots('.pair')).toEqual(['none', '"·" / ""', '"·" / ""', 'none']);
 		expect(await dots('.line')).toEqual(['none', '"·" / ""']);
 		const color = await details
 			.locator('.pair')
@@ -1313,7 +1313,7 @@ test.describe('Recipe detail page', () => {
 		expect(color).toBe('rgb(111, 105, 96)');
 		// On a phone each group takes its own line, so no line starts with a dot.
 		await page.setViewportSize({ width: 390, height: 900 });
-		expect(await dots('.pair')).toEqual(['none', '"·" / ""', 'none']);
+		expect(await dots('.pair')).toEqual(['none', '"·" / ""', '"·" / ""', 'none']);
 		expect(await dots('.line')).toEqual(['none', 'none']);
 		const tops = await details
 			.locator('.line')

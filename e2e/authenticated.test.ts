@@ -6,7 +6,7 @@
  */
 
 import { expect, test, type Page } from '@playwright/test';
-import { cookiesLink, gotoHydrated } from './helpers';
+import { cookiesLink, deleteRecipe, gotoHydrated } from './helpers';
 
 // ─── Home (logged in) ─────────────────────────────────────────────────────────
 
@@ -275,9 +275,12 @@ test.describe('Edit recipe page', () => {
 			'description',
 			'image',
 			'servings',
+			'makes',
 			'prepTimeMinutes',
 			'cookTimeMinutes',
-			'makes',
+			'restTimeMinutes',
+			'sourceName',
+			'sourceUrl',
 			'tag-combobox',
 			// One stop for the radio group, then each text box's Section heading before it.
 			'visibility',
@@ -285,6 +288,9 @@ test.describe('Edit recipe page', () => {
 			'ingredients',
 			'Section heading',
 			'steps',
+			'notes',
+			// "More details", closed while its notes are empty: one stop.
+			'More details',
 			'commitMessage',
 			'Save',
 			'Cancel'
@@ -475,16 +481,6 @@ async function createRecipe(page: Page, title: string, servings: string) {
 	await page.getByRole('button', { name: /create recipe/i }).click();
 	await page.waitForURL(/\/recipes\/(?!new)/);
 	return page.url().split('?')[0];
-}
-
-async function deleteRecipe(page: Page, url: string) {
-	await page.evaluate(async (u) => {
-		await fetch(`${u}/edit?/deleteRecipe`, {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-			body: ''
-		});
-	}, url);
 }
 
 test.describe('Delete recipe', () => {

@@ -6,7 +6,7 @@
  */
 
 import { expect, test, type Page } from '@playwright/test';
-import { gotoHydrated } from './helpers';
+import { deleteRecipe, gotoHydrated } from './helpers';
 
 /** Waits until the debounced write has landed, so a reload has something to restore. */
 async function draftStored(page: Page, title: string) {
@@ -46,16 +46,6 @@ async function createRecipe(page: Page, title: string) {
 	await page.getByRole('button', { name: /create recipe/i }).click();
 	await page.waitForURL(/\/recipes\/(?!new)/);
 	return page.url().split('?')[0];
-}
-
-async function deleteRecipe(page: Page, url: string) {
-	await page.evaluate(async (u) => {
-		await fetch(`${u}/edit?/deleteRecipe`, {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-			body: ''
-		});
-	}, url);
 }
 
 test.describe('Editor drafts on this device', () => {

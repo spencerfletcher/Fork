@@ -43,3 +43,14 @@ export async function cookiesPath(page: Page) {
 export async function openCookies(page: Page) {
 	await gotoHydrated(page, await cookiesPath(page));
 }
+
+/** Moves the signed-in owner's recipe at `url` to the Trash, as a test's cleanup. */
+export async function deleteRecipe(page: Page, url: string) {
+	await page.evaluate(async (u) => {
+		await fetch(`${u}/edit?/deleteRecipe`, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+			body: ''
+		});
+	}, url);
+}
