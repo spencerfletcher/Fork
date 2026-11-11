@@ -35,6 +35,8 @@ test.describe('Cookbook Sort', () => {
 		page
 	}) => {
 		await gotoHydrated(page, '/cookbook?view=grid');
+		// selectOption only sets the value; a cook's press on the box focuses it first.
+		await sortBox(page).focus();
 		await sortBox(page).selectOption({ label: 'Recently cooked' });
 		await expect(page).toHaveURL(/[?&]sort=cooked(&|$)/);
 		await expect(sortBox(page)).toBeFocused();
