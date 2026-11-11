@@ -5,7 +5,7 @@
 	import TagTabs from './TagTabs.svelte';
 	import { friendsIcon, searchIcon } from '#lib/components/Icons.svelte';
 	import type { TagChip } from '#lib/recipes/types.js';
-	import { withoutPlace } from '#lib/listPage.js';
+	import { hrefWith, withoutPlace } from '#lib/listPage.js';
 
 	let {
 		initialQuery = '',
@@ -39,24 +39,11 @@
 	// noScroll): a pressed filter keeps keyboard focus rather than dropping it to
 	// the body, and the page stays where it was (decided 29 October 2026).
 	function applyFilters() {
-		// A throwaway built into a URL and dropped, not state: nothing reads it reactively.
-		// eslint-disable-next-line svelte/prefer-svelte-reactivity
-		const params = new URLSearchParams(otherParams);
-
-		if (searchQuery) {
-			params.set('q', searchQuery);
-		}
-
-		if (selectedTags.length > 0) {
-			params.set('tags', selectedTags.join(','));
-		}
-
-		if (friends) {
-			params.set('friends', '1');
-		}
-
-		const queryString = params.toString();
-		const newURL = queryString ? `?${queryString}` : page.url.pathname;
+		const newURL = hrefWith(page.url, {
+			q: searchQuery || null,
+			tags: selectedTags.length > 0 ? selectedTags.join(',') : null,
+			friends: friends ? '1' : null
+		});
 
 		return goto(newURL, { reset: false });
 	}

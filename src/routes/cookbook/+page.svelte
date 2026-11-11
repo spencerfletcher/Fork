@@ -8,7 +8,7 @@
 	import CookbookDrafts from './CookbookDrafts.svelte';
 	import CookbookCollections from './CookbookCollections.svelte';
 	import { plural } from '#lib/helpers.js';
-	import { withoutPlace } from '#lib/listPage.js';
+	import { hrefWith } from '#lib/listPage.js';
 	import { pagedList } from '#lib/pagedList.svelte.js';
 	import { COOKBOOK_FILTERS, type CookbookFilter } from './filters.js';
 	import type { PageData } from './$types';
@@ -30,12 +30,10 @@
 	// A filter link keeps the search and tags; All is the bare page. Either
 	// starts the list over at its first page.
 	function filterHref(filter: CookbookFilter, without: string[] = []): string {
-		const params = withoutPlace(page.url.searchParams);
-		if (filter === 'all') params.delete('filter');
-		else params.set('filter', filter);
-		for (const key of without) params.delete(key);
-		const query = params.toString();
-		return query ? `?${query}` : page.url.pathname;
+		return hrefWith(page.url, {
+			filter: filter === 'all' ? null : filter,
+			...Object.fromEntries(without.map((key) => [key, null]))
+		});
 	}
 </script>
 
