@@ -16,7 +16,7 @@
 
 <section id="method" class="mb-3 scroll-mt-14">
 	<h2 class="eyebrow-label border-border mb-3.5 border-b pb-2">Method</h2>
-	<ol class="flex flex-col gap-[18px]">
+	<ol class="steps flex flex-col gap-[18px]">
 		{#each steps as step, i (i)}
 			<!-- A native checkbox, visually hidden, carries the state and the keyboard
 			     behaviour; the label is the row and takes the struck-through look. No
@@ -46,9 +46,13 @@
 						class="sr-only top-0 h-full"
 						checked={ticks.ticked.includes(i)}
 						onchange={(e) => ticks.toggle(i, e.currentTarget.checked)} />
-					<span
-						class="text-accent group-has-[:checked]:text-text-3 justify-self-end font-medium tabular-nums">
-						{i + 1}
+					<!-- The numeral's column; while cooking a done step's check sits under
+					     the numeral, so the text keeps its edge. -->
+					<span class="flex flex-col items-end gap-1.5 justify-self-end">
+						<span class="text-accent group-has-[:checked]:text-text-3 font-medium tabular-nums">
+							{i + 1}
+						</span>
+						<span class="tick step-check" aria-hidden="true"></span>
 					</span>
 
 					<div class="flex flex-col gap-1.5">
@@ -79,25 +83,42 @@
 </section>
 
 <style>
-	/* Cooking mode (the page root's data-cooking): the step text goes up one
-	   size for a phone propped on the counter, and the numeral, the row's
-	   face, keeps its proportion to it (18:17, so 21:20). */
+	/* Cooking mode (the page root's data-cooking; Spencer, 11 November 2026):
+	   type to read from across the counter, between 3B's 1.25rem and 3C's
+	   1.375rem on a phone and a step up from 700px. The numeral, the row's
+	   face, hangs in clay Bitter, 3C's reading order. */
+	:global([data-cooking]) .steps {
+		gap: 24px;
+	}
+
 	:global([data-cooking]) .step {
-		font-size: 1.3125rem;
+		font-size: 1.75rem;
 	}
 
 	:global([data-cooking]) .step-text {
-		font-size: 1.25rem;
-		line-height: 1.55;
+		font-size: 1.375rem;
+		line-height: 1.5;
+	}
+
+	/* Done, while cooking: the check under the numeral and Ink 3 text; the
+	   page lifts the strike from both lists, so the step can be reread. */
+	.step-check {
+		display: none;
+	}
+
+	:global([data-cooking]) .step:has(:checked) .step-check {
+		display: block;
 	}
 
 	@media (max-width: 699px) {
 		:global([data-cooking]) .step {
-			font-size: 1.1875rem;
+			column-gap: 14px;
+			font-size: 1.625rem;
 		}
 
 		:global([data-cooking]) .step-text {
-			font-size: 1.125rem;
+			font-size: 1.3125rem;
+			line-height: 1.45;
 		}
 	}
 </style>
