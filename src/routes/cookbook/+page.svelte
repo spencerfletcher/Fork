@@ -1,5 +1,7 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
+	import { tick } from 'svelte';
 	import RecipeCard from '#lib/components/recipes/RecipeCard.svelte';
 	import SearchFilters from '#lib/components/ui/SearchFilters.svelte';
 	import EmptyPanel from '#lib/components/ui/EmptyPanel.svelte';
@@ -35,6 +37,27 @@
 			...Object.fromEntries(without.map((key) => [key, null]))
 		});
 	}
+
+	// A card's ⋯ moved its recipe to the Trash or removed a kept copy. The page
+	// loads again at the URL the address bar shows, `?page=N` from Show more
+	// included, which loads every page shown: the card goes, the counts follow,
+	// and the cook keeps their place. Focus goes to the card now in its place,
+	// else the one before, else the page title, as the Drafts list's does.
+	let removed = $state<{ title: string; how: 'trash' | 'copy' } | null>(null);
+
+	async function takeAway(recipe: { id: number; title: string }, how: 'trash' | 'copy') {
+		const at = list.items.findIndex((r) => r.id === recipe.id);
+		removed = { title: recipe.title, how };
+		await goto((page.shallow?.url ?? page.url).href, {
+			replace: true,
+			reset: false,
+			refreshAll: true
+		});
+		await tick();
+		const links = grid?.querySelectorAll<HTMLElement>('.card-stretched-link') ?? [];
+		const next = links[Math.min(at, links.length - 1)];
+		(next ?? document.querySelector<HTMLElement>('h1'))?.focus();
+	}
 </script>
 
 <div class="page">
@@ -49,6 +72,15 @@
 						other cooks.
 					</p>
 				{/if}
+				<!-- What a card's ⋯ just took away; empty until then, so it is heard when it fills. -->
+				<p class="page-sub" role="status">
+					{#if removed?.how === 'trash'}
+						Moved {removed.title} to your Trash.
+						<a href="/cookbook/trash" class="inline-action">Open Trash</a>
+					{:else if removed}
+						Removed your copy of {removed.title}.
+					{/if}
+				</p>
 			</div>
 			<!-- The top bar carries New recipe from 768; a phone's tab bar has no room. -->
 			{#if data.counts.all > 0}
@@ -101,7 +133,8 @@
 								index={i}
 								variant="cookbook"
 								saved={recipe.saved}
-								kept={recipe.kept} />
+								kept={recipe.kept}
+								onremoved={(how) => takeAway(recipe, how)} />
 						{/each}
 					</div>
 					<ShowMore {list} container={grid} noun="recipe" />
