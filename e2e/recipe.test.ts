@@ -1453,10 +1453,11 @@ test.describe('Home and recipe pages (logged out)', () => {
 		const text = row.locator('.tick + span').first();
 		expect(await text.evaluate((el) => getComputedStyle(el).color)).toBe(ink3);
 		expect(await text.evaluate(painted)).toBe(1);
-		// A step ticks the same way with no circle drawn.
+		// A step ticks the same way with no circle drawn: its check shows only while cooking.
 		const step = page.locator('#method label').first();
-		await expect(step.locator('.tick')).toHaveCount(0);
+		await expect(step.locator('.tick')).toBeHidden();
 		await step.click();
+		await expect(step.locator('.tick')).toBeHidden();
 		const stepText = step.locator('p').first();
 		expect(await stepText.evaluate((el) => getComputedStyle(el).color)).toBe(ink3);
 		expect(await stepText.evaluate(painted)).toBe(1);
