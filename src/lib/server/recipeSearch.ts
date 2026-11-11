@@ -20,11 +20,15 @@ export function parseFilters(url: URL): { searchQuery: string; tagSlugs: string[
 const names = (v: string) =>
 	`coalesce((SELECT string_agg(i->>'name', ' ') FROM jsonb_array_elements(${v}.ingredients) i), '')`;
 
-/** Everything a version says: title, description, ingredient names and steps. */
+/** A version row's notes, the labelled ones too, as one text, for the version aliased `v`. */
+const notesOf = (v: string) =>
+	`concat_ws(' ', ${v}.notes, ${v}.make_ahead, ${v}.equipment, ${v}.storage, ${v}.reheating)`;
+
+/** Everything a version says: title, description, source, ingredient names, steps and notes. */
 const doc = (v: string) =>
 	sql.raw(
-		`to_tsvector('english', concat_ws(' ', ${v}.title, ${v}.description, ${names(v)}, ` +
-			`(SELECT string_agg(s->>'text', ' ') FROM jsonb_array_elements(${v}.steps) s)))`
+		`to_tsvector('english', concat_ws(' ', ${v}.title, ${v}.description, ${v}.source_name, ${names(v)}, ` +
+			`(SELECT string_agg(s->>'text', ' ') FROM jsonb_array_elements(${v}.steps) s), ${notesOf(v)}))`
 	);
 
 // The outer recipe's id, qualified by hand: a single-table select renders
@@ -38,7 +42,7 @@ const latest = sql`(SELECT * FROM recipe_versions cv WHERE cv.recipe_id = ${reci
 /**
  * Where a recipe matched, best first: 0 the exact title, 1 a title word or the
  * title's start, 2 an ingredient of the current version, 3 anything else the
- * current version says (description, method), 4 only an older version. Null
+ * current version says (description, method, notes, source), 4 only an older version. Null
  * when it matched nowhere.
  */
 function tier(query: string, tsQuery: SQL): SQL {
@@ -92,6 +96,8 @@ type Found = {
 	ingredients: string[] | null;
 	description: { text: string; cut: boolean } | null;
 	step: { n: number; text: string; cut: boolean } | null;
+	notes: { text: string; cut: boolean } | null;
+	source: string | null;
 };
 
 /**
@@ -126,7 +132,11 @@ export async function searchMatches(
 			'step', (SELECT jsonb_build_object('n', n) || (${fragment(sql.raw(`s->>'text'`))})::jsonb
 				FROM jsonb_array_elements(${t('steps')}) WITH ORDINALITY AS steps(s, n)
 				WHERE to_tsvector('english', s->>'text') @@ ${any}
-				ORDER BY n LIMIT 1)
+				ORDER BY n LIMIT 1),
+			'notes', CASE WHEN to_tsvector('english', ${sql.raw(notesOf(v))}) @@ ${any}
+				THEN ${fragment(sql.raw(notesOf(v)))} END,
+			'source', CASE WHEN to_tsvector('english', coalesce(${t('source_name')}, '')) @@ ${any}
+				THEN ${marked(t('source_name'))} END
 		)`;
 	};
 	const rows = await conn
@@ -146,7 +156,7 @@ export async function searchMatches(
 
 const ellipsis = ({ text, cut }: { text: string; cut: boolean }) => (cut ? `…${text}` : text);
 
-/** Where a match is shown: the ingredient names, else the description, else the step. */
+/** Where a match is shown: the ingredient names, else the description, the step, the notes, the source. */
 function where(found: Found): { label: string; text: string } | null {
 	if (found.ingredients?.length) {
 		return {
@@ -156,6 +166,8 @@ function where(found: Found): { label: string; text: string } | null {
 	}
 	if (found.description) return { label: 'Description', text: ellipsis(found.description) };
 	if (found.step) return { label: `Method, step ${found.step.n}`, text: ellipsis(found.step) };
+	if (found.notes) return { label: 'Notes', text: ellipsis(found.notes) };
+	if (found.source) return { label: 'Source', text: found.source };
 	return null;
 }
 

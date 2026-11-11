@@ -133,6 +133,24 @@ describe.skipIf(!localDb)('search ranking and explanations, against the real dat
 		});
 	});
 
+	test('the notes and the source match with the other text, and say so', async () => {
+		await inRollback(async (tx) => {
+			const notes = await insert(tx, 'Pork pie', [{ storage: 'Wrap in greaseproof, not ginger.' }]);
+			const source = await insert(tx, 'Sausage roll', [{ sourceName: 'The Ginger Pig' }]);
+			const text = search.textSearch('ginger');
+			const rows = await tx.query.recipes.findMany({
+				where: and(inArray(schema.recipes.id, [notes, source]), text.where),
+				columns: { id: true }
+			});
+			expect(rows.map((r) => r.id).sort()).toEqual([notes, source].sort());
+			const why = await search.searchMatches('ginger', [notes, source], tx);
+			expect(why.get(notes)).toMatchObject({ label: 'Notes' });
+			expect(plain(why.get(notes)?.text)).toContain('[ginger]');
+			expect(why.get(source)).toMatchObject({ label: 'Source' });
+			expect(plain(why.get(source)?.text)).toBe('The [Ginger] Pig');
+		});
+	});
+
 	test('a prefix of the title ranks with the title and is marked', async () => {
 		await inRollback(async (tx) => {
 			const [, , , snaps, exact] = await ginger(tx);
