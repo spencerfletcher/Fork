@@ -15,110 +15,97 @@
 	const onOwnProfile = $derived(!!profile && path === `/users/${profile.username}`);
 
 	const current = (active: boolean) => (active ? ('page' as const) : undefined);
-
-	// The status strip shows while the bar still covers the screen's top 4px
-	// (the root loses them), and is gone once the bar has scrolled away. On
-	// until the observer first reports, so the server render has it at rest.
-	let nav: HTMLElement;
-	let barAtTop = $state(true);
-	$effect(() => {
-		const observer = new IntersectionObserver(([entry]) => (barAtTop = entry.isIntersecting), {
-			rootMargin: '-4px 0px 0px 0px'
-		});
-		observer.observe(nav);
-		return () => observer.disconnect();
-	});
 </script>
 
-{#if barAtTop}
-	<div class="status-strip" aria-hidden="true"></div>
-{/if}
+<!-- The shell is the bar's own height, so the sticky bar never sticks: see the style note. -->
+<div class="nav-shell">
+	<nav class="bg-navbar-bg sticky top-0 z-50 px-5" aria-label="Site">
+		<div
+			class="mx-auto flex h-[52px] max-w-(--max-width) items-center justify-between gap-5 md:h-14">
+			<!-- Logo + destinations. They never shrink. -->
+			<div class="flex shrink-0 items-center gap-6">
+				<!-- One line, so the name is "Fork." with no space before the stop. -->
+				<!-- prettier-ignore -->
+				<a href="/" class="nav-brand">Fork<span class="text-marigold">.</span></a>
+				<ul class="navbar-links hidden gap-6 md:flex">
+					{#each DESTINATIONS as destination (destination.href)}
+						<li>
+							<a
+								href={destination.href}
+								class="navbar-link"
+								aria-current={current(isCurrent(destination, path))}>
+								{destination.label}
+							</a>
+						</li>
+					{/each}
+				</ul>
+			</div>
 
-<nav class="bg-navbar-bg relative z-50 px-5" aria-label="Site" bind:this={nav}>
-	<div class="mx-auto flex h-[52px] max-w-(--max-width) items-center justify-between gap-5 md:h-14">
-		<!-- Logo + destinations. They never shrink. -->
-		<div class="flex shrink-0 items-center gap-6">
-			<!-- One line, so the name is "Fork." with no space before the stop. -->
-			<!-- prettier-ignore -->
-			<a href="/" class="nav-brand">Fork<span class="text-marigold">.</span></a>
-			<ul class="navbar-links hidden gap-6 md:flex">
-				{#each DESTINATIONS as destination (destination.href)}
-					<li>
-						<a
-							href={destination.href}
-							class="navbar-link"
-							aria-current={current(isCurrent(destination, path))}>
-							{destination.label}
-						</a>
-					</li>
-				{/each}
-			</ul>
-		</div>
-
-		<div class="navbar-account flex min-w-0 shrink items-center gap-4 text-[0.875rem]">
-			<!-- Signed-in only, and from 768: the Cookbook header carries it on a
+			<div class="navbar-account flex min-w-0 shrink items-center gap-4 text-[0.875rem]">
+				<!-- Signed-in only, and from 768: the Cookbook header carries it on a
 			     phone. /recipes/new is behind the login wall. -->
-			{#if user}
+				{#if user}
+					<a
+						href="/recipes/new"
+						class="nav-cta hidden md:inline-block"
+						aria-current={current(path === '/recipes/new')}>
+						+ New recipe
+					</a>
+				{/if}
 				<a
-					href="/recipes/new"
-					class="nav-cta hidden md:inline-block"
-					aria-current={current(path === '/recipes/new')}>
-					+ New recipe
+					href="/search"
+					aria-label="Search"
+					class="nav-icon"
+					aria-current={current(path === '/search')}>
+					{@render searchIcon('size-5')}
 				</a>
-			{/if}
-			<a
-				href="/search"
-				aria-label="Search"
-				class="nav-icon"
-				aria-current={current(path === '/search')}>
-				{@render searchIcon('size-5')}
-			</a>
-			{#if user}
-				<!-- The avatar alone at every width, opening Profile and Log out
+				{#if user}
+					<!-- The avatar alone at every width, opening Profile and Log out
 				     (decided 9 November 2026). -->
-				<Dropdown>
-					{#snippet trigger(props)}
-						<button
-							type="button"
-							class="nav-avatar-button"
-							class:current={onOwnProfile}
-							aria-haspopup="menu"
-							aria-label={profile ? `Your account, @${profile.username}` : 'Your account'}
-							title={profile ? `@${profile.username}` : undefined}
-							{...props}>
-							<!-- A signed-in account with no profile row yet still gets an initial. -->
-							<Avatar username={profile?.username ?? user.email ?? '?'} size={32} tone="ink" />
-						</button>
-					{/snippet}
-					{#snippet panel()}
-						<div class="menu-panel account-menu" role="menu">
-							{#if profile}
-								<a
-									href="/users/{profile.username}"
-									class="menu-row"
-									role="menuitem"
-									aria-current={current(onOwnProfile)}>
-									Profile
-								</a>
-							{/if}
-							<form action="/logout" method="POST" role="none" use:enhance>
-								<button type="submit" class="menu-row" role="menuitem">Log out</button>
-							</form>
-						</div>
-					{/snippet}
-				</Dropdown>
-			{:else}
-				<a href="/login" class="navbar-link" aria-current={current(path === '/login')}>Log in</a>
-				<a
-					href="/signup"
-					class="navbar-link hidden md:inline"
-					aria-current={current(path === '/signup')}>
-					Sign up
-				</a>
-			{/if}
+					<Dropdown>
+						{#snippet trigger(props)}
+							<button
+								type="button"
+								class="nav-avatar-button"
+								class:current={onOwnProfile}
+								aria-haspopup="menu"
+								aria-label={profile ? `Your account, @${profile.username}` : 'Your account'}
+								title={profile ? `@${profile.username}` : undefined}
+								{...props}>
+								<!-- A signed-in account with no profile row yet still gets an initial. -->
+								<Avatar username={profile?.username ?? user.email ?? '?'} size={32} tone="ink" />
+							</button>
+						{/snippet}
+						{#snippet panel()}
+							<div class="menu-panel account-menu" role="menu">
+								{#if profile}
+									<a
+										href="/users/{profile.username}"
+										class="menu-row"
+										role="menuitem"
+										aria-current={current(onOwnProfile)}>
+										Profile
+									</a>
+								{/if}
+								<form action="/logout" method="POST" role="none" use:enhance>
+									<button type="submit" class="menu-row" role="menuitem">Log out</button>
+								</form>
+							</div>
+						{/snippet}
+					</Dropdown>
+				{:else}
+					<a href="/login" class="navbar-link" aria-current={current(path === '/login')}>Log in</a>
+					<a
+						href="/signup"
+						class="navbar-link hidden md:inline"
+						aria-current={current(path === '/signup')}>
+						Sign up
+					</a>
+				{/if}
+			</div>
 		</div>
-	</div>
-</nav>
+	</nav>
+</div>
 
 <style>
 	/* The bar scrolls away with the page; it is never pinned. With
@@ -128,23 +115,15 @@
 		padding-top: env(safe-area-inset-top);
 	}
 
-	/* In the browser the inset is 0 and Safari 26 tints the status bar from a
-	   full-width fixed box at the viewport's top edge, else from body's paper.
-	   This is that box, in the bar's colour, under the bar and invisible at
-	   rest; it reaches a screen upward so a pull past the top shows espresso.
-	   Unmounted once the bar has scrolled away, so the tint goes back to paper
-	   and nothing dark stays pinned. No theme-color: older iOS would keep the
-	   status bar espresso while scrolled. */
-	.status-strip {
-		position: fixed;
-		top: -100vh;
-		left: 0;
-		right: 0;
-		height: calc(100vh + 4px);
-		z-index: 49;
-		background: var(--color-navbar-bg);
-		pointer-events: none;
-	}
+	/* In the browser the inset is 0, and Safari 26 colours the status bar from
+	   the pinned (fixed or sticky) box it finds 4px below the screen's top
+	   edge, else lets the page's paper show. The bar is `sticky` inside a shell
+	   of its own height, so it can never stick and scrolls away as before, yet
+	   at rest it is the pinned box Safari finds: espresso behind the clock, and
+	   paper once it has gone. Safari skips a box with pointer-events: none, one
+	   10px thick or less, or one under another box, which is why a thin strip
+	   beneath the bar did nothing. No theme-color: Safari 26 ignores it and
+	   older iOS would keep the status bar espresso while scrolled. */
 
 	.nav-brand {
 		display: inline-block;

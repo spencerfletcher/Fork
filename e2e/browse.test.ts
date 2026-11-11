@@ -71,37 +71,34 @@ test.describe('Discover, signed out', () => {
 	});
 });
 
-// Safari 26 tints the status bar from a fixed box at the top edge. Chromium
-// can only check the geometry; the tint itself is checked on an iPhone.
-test.describe('Status strip on a phone', () => {
-	test('at rest a full-width fixed strip in the bar colour; a screen down nothing pinned at the top', async ({
+// Safari 26 colours the status bar from the pinned box at the top edge.
+// Chromium can only check the geometry; the colour is checked on an iPhone.
+test.describe('Top bar and the status bar on a phone', () => {
+	test('at rest the bar is the pinned box at the top edge; a screen down nothing is pinned there', async ({
 		page
 	}) => {
 		await page.setViewportSize({ width: 390, height: 844 });
 		await gotoHydrated(page, '/discover');
-		const navBg = await page
-			.getByRole('navigation', { name: 'Site' })
-			.evaluate((el) => getComputedStyle(el).backgroundColor);
-		const strip = await page.locator('.status-strip').evaluate((el) => {
+		const nav = page.getByRole('navigation', { name: 'Site' });
+		const atRest = await nav.evaluate((el) => {
 			const r = el.getBoundingClientRect();
-			const cs = getComputedStyle(el);
 			return {
+				position: getComputedStyle(el).position,
 				top: r.top,
-				bottom: r.bottom,
 				width: r.width,
-				position: cs.position,
-				bg: cs.backgroundColor
+				height: r.height,
+				// What Safari finds 4px below the top edge, mid-screen.
+				owns: el.contains(document.elementFromPoint(innerWidth / 2, 4))
 			};
 		});
-		expect(strip.position).toBe('fixed');
-		expect(strip.top).toBeLessThanOrEqual(0);
-		expect(strip.bottom).toBeGreaterThan(0);
-		expect(strip.width).toBe(390);
-		expect(strip.bg).toBe(navBg);
+		expect(atRest.position).toBe('sticky');
+		expect(atRest.top).toBe(0);
+		expect(atRest.width).toBe(390);
+		expect(atRest.height).toBeGreaterThan(10);
+		expect(atRest.owns).toBe(true);
 
 		await page.evaluate(() => window.scrollTo(0, window.innerHeight));
 		expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(100);
-		await expect(page.locator('.status-strip')).toHaveCount(0);
 		const pinnedAtTop = await page.evaluate(() =>
 			[...document.querySelectorAll('body *')]
 				.filter((el) => {

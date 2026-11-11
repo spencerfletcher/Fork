@@ -1,5 +1,4 @@
-import { describe, test, expect, vi, afterEach, beforeEach } from 'vitest';
-import { tick } from 'svelte';
+import { describe, test, expect, vi, afterEach } from 'vitest';
 import { render, screen, within, fireEvent } from '@testing-library/svelte';
 import Navbar from './Navbar.svelte';
 import source from './Navbar.svelte?raw';
@@ -214,22 +213,16 @@ describe('Navbar layout', () => {
 		expect(rule('nav')).toMatch(/padding-top:\s*env\(safe-area-inset-top\)/);
 	});
 
-	// Safari 26 tints the status bar from a fixed box at the viewport's top
-	// edge, else from body. The strip is that box, in the bar's colour, and
-	// reaches a screen up for the pull-down; it never takes a press.
-	test('the status strip is fixed at the top edge in the bar colour, under the bar', () => {
-		const strip = rule('.status-strip');
-		expect(strip).toMatch(/position:\s*fixed/);
-		expect(strip).toMatch(/top:\s*-100vh/);
-		expect(strip).toMatch(/height:\s*calc\(100vh \+ 4px\)/);
-		expect(strip).toMatch(/left:\s*0/);
-		expect(strip).toMatch(/right:\s*0/);
-		expect(strip).toMatch(/background:\s*var\(--color-navbar-bg\)/);
-		expect(strip).toMatch(/pointer-events:\s*none/);
-		expect(strip).toMatch(/z-index:\s*49/);
+	// Safari 26 colours the status bar from the pinned box at the top edge. The
+	// bar is sticky so it is that box, in a shell of its own height so it never
+	// sticks.
+	test('the bar is sticky inside a shell that holds nothing else', () => {
 		const { container } = render(Navbar, { props: { user: null } });
-		expect(container.querySelector('nav')).toHaveClass('z-50');
-		expect(container.querySelector('.status-strip')).toHaveAttribute('aria-hidden', 'true');
+		const nav = container.querySelector('nav')!;
+		expect(nav).toHaveClass('sticky', 'top-0', 'z-50', 'bg-navbar-bg');
+		expect(nav.parentElement).toHaveClass('nav-shell');
+		expect(nav.parentElement!.children).toHaveLength(1);
+		expect(container.querySelector('.status-strip')).toBeNull();
 	});
 
 	test('the avatar is a 44px target', () => {
@@ -261,50 +254,5 @@ describe('Navbar layout', () => {
 			'.nav-avatar-button.current:not(:focus-visible) :global(.avatar)'
 		);
 		expect(avatar).toMatch(/outline:\s*2px solid CanvasText/);
-	});
-});
-
-describe('Navbar status strip', () => {
-	type Callback = (entries: Pick<IntersectionObserverEntry, 'isIntersecting'>[]) => void;
-	let observed: { callback: Callback; target?: Element; options?: IntersectionObserverInit }[];
-
-	beforeEach(() => {
-		observed = [];
-		vi.stubGlobal(
-			'IntersectionObserver',
-			class {
-				constructor(callback: Callback, options?: IntersectionObserverInit) {
-					observed.push({ callback, options });
-				}
-				observe(target: Element) {
-					observed.at(-1)!.target = target;
-				}
-				disconnect() {}
-			}
-		);
-	});
-
-	afterEach(() => {
-		vi.unstubAllGlobals();
-	});
-
-	test('present while the bar covers the top edge, removed once it has scrolled away', async () => {
-		const { container } = render(Navbar, { props: { user: null } });
-		const strip = () => container.querySelector('.status-strip');
-
-		// At rest, before the observer reports, it is there.
-		expect(strip()).not.toBeNull();
-		const [{ callback, target, options }] = observed;
-		expect(target).toBe(container.querySelector('nav'));
-		// The root loses the top 4px, so the bar must still cover the strip's 4px.
-		expect(options?.rootMargin).toBe('-4px 0px 0px 0px');
-
-		callback([{ isIntersecting: false }]);
-		await tick();
-		expect(strip()).toBeNull();
-
-		callback([{ isIntersecting: true }]);
-		await tick();
-		expect(strip()).not.toBeNull();
 	});
 });
