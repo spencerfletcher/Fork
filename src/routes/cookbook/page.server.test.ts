@@ -1,5 +1,5 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
-import { chain } from '#lib/testing/drizzle.js';
+import { chain, sqlOf } from '#lib/testing/drizzle.js';
 import { loadEvent, loadPage } from '#lib/testing/actions.js';
 
 const db = await vi.hoisted(async () => (await import('#lib/testing/drizzle.js')).mockDb());
@@ -9,7 +9,6 @@ const findManyMock = db.query.recipes.findMany;
 
 import { load } from './+page.server';
 import { CARD_WITH } from '#lib/server/recipeCounts.js';
-import { PgDialect } from 'drizzle-orm/pg-core';
 import type { SQL } from 'drizzle-orm';
 import type { PageData } from './$types';
 
@@ -20,7 +19,6 @@ const makeEvent = (search = '', user: { id: string } | null = USER) =>
 	loadEvent({ path: `/cookbook${search}`, user });
 
 const loadResult = (search = '') => loadPage<PageData>(load, makeEvent(search));
-const sqlOf = (q: SQL) => new PgDialect().sqlToQuery(q);
 
 type LibraryRow = { id: number; authorId: string | null };
 

@@ -1,4 +1,9 @@
 import { vi } from 'vitest';
+import type { SQL } from 'drizzle-orm';
+import { PgDialect } from 'drizzle-orm/pg-core';
+
+/** A query fragment as the SQL text and params Postgres would get, to compare or search. */
+export const sqlOf = (q: SQL) => new PgDialect().sqlToQuery(q);
 
 /**
  * A Drizzle-shaped query builder for tests. Every builder method returns the
