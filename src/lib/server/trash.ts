@@ -94,17 +94,15 @@ export async function deleteForever(recipeId: number, supabase: SupabaseClient):
 				.select({ id: collections.id })
 				.from(collections)
 				.where(notInArray(collections.ownerId, keepers));
-			await tx
-				.delete(recipeVersions)
-				.where(
-					and(
-						eq(recipeVersions.recipeId, recipeId),
-						notInArray(
-							recipeVersions.versionNumber,
-							copies.map((c) => c.version!)
-						)
+			await tx.delete(recipeVersions).where(
+				and(
+					eq(recipeVersions.recipeId, recipeId),
+					notInArray(
+						recipeVersions.versionNumber,
+						copies.map((c) => c.version!)
 					)
-				);
+				)
+			);
 			await tx.delete(recipesToTags).where(eq(recipesToTags.recipeId, recipeId));
 			await tx
 				.delete(favorites)

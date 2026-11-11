@@ -1,6 +1,12 @@
 import { and, eq, inArray, max, notInArray, sql } from 'drizzle-orm';
 import { db, type Tx } from './db/index.js';
-import { favorites, recipeVersions, recipes, type Recipe, type RecipeVersion } from './db/schema.js';
+import {
+	favorites,
+	recipeVersions,
+	recipes,
+	type Recipe,
+	type RecipeVersion
+} from './db/schema.js';
 import { canView, friendIdsOf, keptCopyOf } from './visibility.js';
 
 // Keep this version and the copies it leads to (roadmap section 7, "Saves and
