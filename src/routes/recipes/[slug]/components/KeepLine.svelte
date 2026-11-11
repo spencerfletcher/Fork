@@ -93,4 +93,16 @@
 	.keep-notice {
 		margin-top: 4px;
 	}
+
+	/* On a phone the buttons are 44px and the line wraps: the items sit 16px
+	   apart with no dots, so no wrapped row starts with one. */
+	@media (max-width: 699px) {
+		.keep-line {
+			column-gap: 16px;
+		}
+
+		.keep-line > span + span::before {
+			content: none;
+		}
+	}
 </style>
