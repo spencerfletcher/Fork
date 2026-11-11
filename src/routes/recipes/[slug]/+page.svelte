@@ -70,7 +70,7 @@
 
 	// The address a printout gives: this version at these serves, not cooking.
 	const printHref = $derived.by(() => {
-		const printed = new URL(url);
+		const printed = new URL(url.href);
 		printed.searchParams.delete('cook');
 		return printed.href;
 	});
