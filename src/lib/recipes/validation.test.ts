@@ -16,6 +16,12 @@ import {
 	emptyGroupMessage,
 	unnamedGroupMessage,
 	VISIBILITIES,
+	PHOTO_HINT,
+	PHOTO_MAX_BYTES,
+	PHOTO_SIZE_MESSAGE,
+	PHOTO_TYPE_MESSAGE,
+	PHOTO_TYPES,
+	photoError,
 	type Result
 } from './validation';
 import {
@@ -546,5 +552,42 @@ describe('draftOf', () => {
 		const fd = form({});
 		fd.append('image', new File(['x'], 'pic.png', { type: 'image/png' }));
 		expect(draftOf(fd).hadPhoto).toBe(true);
+	});
+});
+
+describe('photoError', () => {
+	const sized = (bytes: number, type: string = PHOTO_TYPES[0]) =>
+		new File([new Uint8Array(bytes)], 'a.jpg', { type });
+
+	test('every offered type at the cap is accepted; one byte over is refused', () => {
+		for (const type of PHOTO_TYPES) expect(photoError(sized(PHOTO_MAX_BYTES, type))).toBeNull();
+		expect(photoError(sized(PHOTO_MAX_BYTES + 1))).toBe(PHOTO_SIZE_MESSAGE);
+	});
+
+	test('a type not offered is refused, whatever its size', () => {
+		expect(photoError(sized(1, 'image/svg+xml'))).toBe(PHOTO_TYPE_MESSAGE);
+		expect(photoError(sized(1, ''))).toBe(PHOTO_TYPE_MESSAGE);
+	});
+
+	test('the hint and the message state the cap the check enforces', () => {
+		const mb = `${PHOTO_MAX_BYTES / 1024 / 1024} MB`;
+		expect(PHOTO_HINT).toContain(mb);
+		expect(PHOTO_SIZE_MESSAGE).toContain(mb);
+	});
+
+	// Netlify buffers a function request up to 6 MB and Base64-encodes a binary
+	// body, so about 4.5 MB of it arrives; past that the platform answers before
+	// the action runs and no `{ error, code }` can be returned
+	// (https://docs.netlify.com/build/functions/configuration/#default-values).
+	// The whole multipart body must fit: the photo at its cap, every capped text
+	// field full at 3 bytes a character, and room for headers and boundaries.
+	test('a photo at the cap with a full recipe fits the host body limit', () => {
+		const HOST_BINARY_BODY = 4_500_000;
+		const capped =
+			2 * MAX_FIELD +
+			MAX_SOURCE_URL +
+			Object.values(TEXT_LIMITS).reduce((sum, { max }) => sum + max, 0);
+		const overhead = 16 * 1024;
+		expect(PHOTO_MAX_BYTES + 3 * capped + overhead).toBeLessThan(HOST_BINARY_BODY);
 	});
 });

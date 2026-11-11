@@ -17,6 +17,7 @@ import {
 } from './schema';
 import { slugify, randomSuffix } from '#lib/helpers.js';
 import { recipeCopies } from '#lib/recipes/content.js';
+import { PHOTO_MAX_BYTES, PHOTO_TYPES } from '#lib/recipes/validation.js';
 import { SEED, SEED_LOG, type SeedUsername } from './seedData';
 import { parseIngredientText } from '#lib/recipes/ingredients.js';
 import { parseStepText } from '#lib/recipes/steps.js';
@@ -58,8 +59,9 @@ async function seed() {
 	if (!bucketExists) {
 		await supabaseAdmin.storage.createBucket('recipe-images', {
 			public: true,
-			allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
-			fileSizeLimit: 5 * 1024 * 1024 // 5 MB
+			// The save's own types and cap: the bucket is a backstop, never a different rule.
+			allowedMimeTypes: [...PHOTO_TYPES],
+			fileSizeLimit: PHOTO_MAX_BYTES
 		});
 		console.log('Created recipe-images bucket');
 	}

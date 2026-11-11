@@ -82,7 +82,10 @@ export const REQUIRED_MESSAGES = {
 /** The photo types the editor offers and a save stores. */
 export const PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'] as const;
 /** The largest photo a save stores. Netlify buffers a function request at
- *  6 MB, about 4.5 MB of binary, so this leaves room for the rest of the form. */
+ *  6 MB, about 4.5 MB of binary once Base64-encoded
+ *  (https://docs.netlify.com/build/functions/configuration/#default-values),
+ *  so this leaves room for the rest of the form; validation.test.ts pins the sum.
+ *  The server checks the type from the file's bytes too (`photoTypeOf`). */
 export const PHOTO_MAX_BYTES = 4 * 1024 * 1024;
 const PHOTO_TYPE_NAMES = 'JPEG, PNG, WebP or GIF';
 const PHOTO_MAX_MB = PHOTO_MAX_BYTES / 1024 / 1024;

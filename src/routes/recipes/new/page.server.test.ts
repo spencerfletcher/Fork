@@ -1,7 +1,7 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { chain } from '#lib/testing/drizzle.js';
 import { actions, load } from './+page.server';
-import { invokeAction, formEvent, loadEvent } from '#lib/testing/actions.js';
+import { invokeAction, formEvent, loadEvent, photoFile } from '#lib/testing/actions.js';
 import { loginHref } from '#lib/auth/loginHref.js';
 import { SESSION_ENDED } from '#lib/server/actions.js';
 import { PHOTO_UPLOAD_FAILED } from '#lib/server/submission.js';
@@ -45,7 +45,7 @@ function makeTx() {
 }
 
 const USER = { id: 'user-1', email: 'u@test.com' };
-const PNG = () => new File(['x'], 'a.png', { type: 'image/png' });
+const PNG = () => photoFile('a.png');
 const SUPABASE = { storage: {} };
 
 const FULL = {
@@ -246,7 +246,7 @@ describe('new recipe action', () => {
 		});
 		await invoke(makeEvent({ fields: FULL, file: PNG() }));
 		expect(order).toEqual(['upload', 'transaction']);
-		expect(uploadMock).toHaveBeenCalledWith(SUPABASE, 'user-1', expect.any(File));
+		expect(uploadMock).toHaveBeenCalledWith(SUPABASE, 'user-1', expect.any(File), 'image/png');
 		expect(tx.recipeInsert.values.mock.calls[0][0].imageUrl).toBe('https://cdn/img.png');
 		expect(tx.versionInsert.values.mock.calls[0][0].imageUrl).toBe('https://cdn/img.png');
 	});
@@ -278,8 +278,7 @@ describe('new recipe action', () => {
 	});
 
 	test('a photo over the size cap is refused with the draft; one at the cap is stored', async () => {
-		const sized = (bytes: number) =>
-			new File([new Uint8Array(bytes)], 'big.jpg', { type: PHOTO_TYPES[0] });
+		const sized = (bytes: number) => photoFile('big.jpg', PHOTO_TYPES[0], bytes);
 		const over = await invoke(makeEvent({ fields: FULL, file: sized(PHOTO_MAX_BYTES + 1) }));
 		expect(over.status).toBe(400);
 		expect(over.data).toMatchObject({

@@ -22,7 +22,9 @@ function unparsed(text: string): Ingredient {
 export function parseIngredientLine(line: string): Ingredient {
 	const text = line.trim();
 	const [parsed] = parseIngredient(text, OPTIONS);
-	if (!parsed) {
+	// The parser reads "-1 egg" as 1 with no name, dropping the sign and the
+	// egg; no quantity is negative, so such a line is kept as written.
+	if (!parsed || /^[-−]\s*[\d.]/.test(text)) {
 		return unparsed(text);
 	}
 	return {

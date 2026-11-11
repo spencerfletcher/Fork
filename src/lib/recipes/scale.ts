@@ -48,6 +48,15 @@ export function formatScaled(n: number): string {
 	return n.toFixed(-Math.floor(Math.log10(n)));
 }
 
+/** A gram estimate as the list shows it: whole grams, a tenth below ten, and
+ *  under a twentieth one significant digit (0.02g), never 0g. */
+export function formatGrams({ grams, grams2, approximate }: GramResult): string {
+	const round = (g: number) =>
+		g < 10 ? Math.round(g * 10) / 10 || formatScaled(g) : Math.round(g);
+	const range = grams2 === null ? '' : `–${round(grams2)}`;
+	return `${approximate ? '≈' : ''}${round(grams)}${range}g`;
+}
+
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
 /** Servings to at most two decimals, trailing zeros trimmed. */
