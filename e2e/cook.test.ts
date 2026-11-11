@@ -96,7 +96,8 @@ test.describe('Cooking', () => {
 		await expect.poll(() => wakeLockLog(page)).toEqual({ requests: 1, releases: 0 });
 
 		const step = page.locator('#method input[type="checkbox"]').first();
-		await step.check();
+		await page.locator('#method label').first().click();
+		await expect(step).toBeChecked();
 		await header.getByRole('button', { name: 'Exit' }).click();
 		await expect(page).not.toHaveURL(/cook=/);
 		await expect(page.locator('.hero')).toBeVisible();
@@ -105,7 +106,6 @@ test.describe('Cooking', () => {
 		await expect(step).toBeChecked();
 		expect(await stepSize(page)).toEqual({ text: '17px', line: '27.2px', numeral: '18px' });
 		await expect.poll(() => wakeLockLog(page)).toEqual({ requests: 1, releases: 1 });
-		await step.uncheck();
 	});
 
 	test('a done step keeps a check and quieter text, never a strike; reading keeps the strike', async ({
@@ -116,8 +116,8 @@ test.describe('Cooking', () => {
 		await openCookies(page);
 		const row = page.locator('#method label').first();
 		const ingredient = page.locator('#ingredients label').first();
-		await row.locator('input').check();
-		await ingredient.locator('input').check();
+		await row.click();
+		await ingredient.click();
 		const strike = (l: typeof row) => l.evaluate((el) => getComputedStyle(el).textDecorationLine);
 		expect(await strike(row)).toBe('line-through');
 		await expect(row.locator('.step-check')).toBeHidden();
@@ -130,8 +130,6 @@ test.describe('Cooking', () => {
 		expect(await row.locator('.step-text').evaluate((el) => getComputedStyle(el).color)).toBe(
 			'rgb(111, 105, 96)'
 		);
-		await row.locator('input').uncheck();
-		await ingredient.locator('input').uncheck();
 	});
 
 	test('?cook=1 survives a reload on Method and keeps a scale; a scale keeps ?cook=1', async ({
@@ -266,15 +264,12 @@ test.describe('Cooking', () => {
 		await mockWakeLock(page);
 		await openTikka(page);
 		await segment(page, 'Method').click();
-		const boxes = page.locator('#method input[type="checkbox"]');
-		await boxes.nth(0).check();
-		await boxes.nth(1).check();
+		await page.locator('#method label').nth(0).click();
+		await page.locator('#method label').nth(1).click();
 		await page.evaluate(() => window.scrollTo(0, 0));
 		await page.getByRole('button', { name: 'Cook' }).click();
 		await expect(page.locator('#method li').nth(2)).toBeInViewport();
 		expect(await scrollY(page)).toBeGreaterThan(0);
-		await boxes.nth(0).uncheck();
-		await boxes.nth(1).uncheck();
 	});
 
 	test('signed out, Finish cooking after the last step returns to reading', async ({ page }) => {
