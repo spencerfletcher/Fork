@@ -1,8 +1,8 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest';
+import { readFileSync } from 'node:fs';
 import { render, screen, fireEvent } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import source from './RecipeForm.svelte?raw';
-import photoSource from './PhotoField.svelte?raw';
 import { cssRule } from '#lib/testing/css.js';
 import RecipeForm from './RecipeForm.svelte';
 import {
@@ -26,11 +26,24 @@ const reduced = { matches: false };
 const style = source.slice(source.indexOf('<style>'));
 
 describe('RecipeForm photo buttons', () => {
-	test('reach 44px on a phone or under a coarse pointer', () => {
-		const media = photoSource.slice(
-			photoSource.indexOf('@media (max-width: 699px), (pointer: coarse)')
-		);
-		expect(cssRule(media, '.photo-choose, .photo-keep')).toMatch(/min-height:\s*44px/);
+	// The 44px is .text-btn's own, in app.css; the buttons only carry the class.
+	test('reach 44px on a phone or under a coarse pointer', async () => {
+		const { container } = render(RecipeForm, {
+			props: {
+				baseline: draftOf(new FormData()),
+				form: null,
+				allTags: [],
+				submitLabel: 'Save',
+				cancelHref: '/recipes',
+				imageUrl: 'https://img/photo.jpg'
+			}
+		});
+		await fireEvent.click(screen.getByRole('button', { name: 'Remove photo' }));
+		expect(container.querySelector('.photo-choose')).toHaveClass('text-btn');
+		expect(screen.getByRole('button', { name: 'Keep photo' })).toHaveClass('text-btn');
+		const appCss = readFileSync('src/app.css', 'utf8');
+		const coarse = appCss.slice(appCss.indexOf('@media (max-width: 699px), (pointer: coarse)'));
+		expect(cssRule(coarse, '.text-btn')).toMatch(/min-height:\s*44px/);
 	});
 });
 
