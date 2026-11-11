@@ -16,9 +16,10 @@ const unique = (label: string) =>
 const collectionsNav = (page: Page) => page.getByRole('navigation', { name: 'Collections' });
 
 /** A private recipe of the seed user's own, returning its path. */
-async function createRecipe(page: Page, title: string) {
+async function createRecipe(page: Page, title: string, servings?: string) {
 	await gotoHydrated(page, '/recipes/new');
 	await page.locator('textarea[name="title"]').fill(title);
+	if (servings) await page.locator('input[name="servings"]').fill(servings);
 	await page.getByRole('textbox', { name: 'Ingredients', exact: true }).fill('2 cups flour');
 	await page.getByRole('textbox', { name: 'Method', exact: true }).fill('Mix all ingredients.');
 	await page.getByRole('radio', { name: 'Only me' }).check();
@@ -60,12 +61,14 @@ test.describe('Collections', () => {
 			'page'
 		);
 
+		// A search inside the collection, so the rename has a whole query to keep.
+		await gotoHydrated(page, `${page.url()}&q=e2e`);
 		await page.getByRole('button', { name: `Rename ${name}` }).click();
 		await page.getByRole('textbox', { name: 'Collection name' }).fill(renamed);
 		await page.getByRole('button', { name: 'Save', exact: true }).click();
-		// Still inside the collection after the rename.
+		// Still inside the collection, with its search, after the rename.
 		await expect(page.getByRole('heading', { level: 2, name: renamed, exact: true })).toBeVisible();
-		await expect(page).toHaveURL(/\/cookbook\?collection=\d+$/);
+		await expect(page).toHaveURL(/\/cookbook\?collection=\d+&q=e2e$/);
 
 		await page.getByRole('button', { name: 'Delete collection' }).click();
 		const step = page.getByRole('group', { name: `Delete ${renamed}?` });
@@ -124,6 +127,71 @@ test.describe('Collections', () => {
 		await post(page, '/cookbook?/deleteCollection', { id });
 		await post(page, `${path}/edit?/deleteRecipe`, {});
 		await post(page, '/cookbook/trash?/deleteForever', { slug: path.split('/').pop()! });
+	});
+
+	test('a collection toggle keeps the page’s query: the scale on the latest, the version on a past one, and the menu open', async ({
+		page
+	}) => {
+		test.slow();
+		const title = unique('E2E Scaled');
+		const name = unique('E2E scaled shelf');
+		const path = await createRecipe(page, title, '4');
+		let id: string | null = null;
+		try {
+			await page.getByRole('button', { name: 'Add to collection' }).click();
+			await page.getByRole('menuitem', { name: 'New collection' }).click();
+			await page.getByRole('textbox', { name: 'New collection' }).fill(name);
+			await page.getByRole('button', { name: 'Create' }).click();
+			await expect(page.getByRole('menuitemcheckbox', { name })).toHaveAttribute(
+				'aria-checked',
+				'true'
+			);
+			await gotoHydrated(page, '/cookbook');
+			const href = await collectionsNav(page).getByRole('link', { name }).getAttribute('href');
+			id = new URLSearchParams(href!.split('?')[1]).get('collection');
+
+			/**
+			 * Flips the row and returns the query the page's data was reloaded with:
+			 * an in-place refresh asks for this URL's data, a navigation to the
+			 * action's URL would ask without the query.
+			 */
+			async function toggle(checked: 'true' | 'false') {
+				const reloaded = page.waitForResponse((r) => r.url().includes('/__data.json'));
+				await page.getByRole('menuitemcheckbox', { name }).click();
+				const query = new URL((await reloaded).url()).searchParams;
+				await expect(page.getByRole('menuitemcheckbox', { name })).toHaveAttribute(
+					'aria-checked',
+					checked
+				);
+				return query;
+			}
+
+			// Scaled to 8 from 4: 2 cups reads 4 cups, and stays so after each toggle.
+			await gotoHydrated(page, `${path}?serves=8`);
+			const ingredients = page.locator('#ingredients');
+			await expect(ingredients.getByText(/4 cups/)).toBeVisible();
+			await page.getByRole('button', { name: 'Add to collection' }).click();
+			expect((await toggle('false')).get('serves')).toBe('8');
+			expect((await toggle('true')).get('serves')).toBe('8');
+			await expect(page).toHaveURL(new RegExp(`${path}\\?serves=8$`));
+			await expect(page.getByRole('menuitemcheckbox', { name })).toBeVisible();
+			await expect(ingredients.getByText(/4 cups/)).toBeVisible();
+
+			// A second version, so v1 is history; a toggle there stays on v1.
+			await gotoHydrated(page, `${path}/edit`);
+			await page.getByRole('textbox', { name: 'Ingredients', exact: true }).fill('3 cups flour');
+			await page.getByRole('button', { name: 'Save', exact: true }).click();
+			await page.waitForURL(new RegExp(`${path}$`));
+			await gotoHydrated(page, `${path}?version=1`);
+			await page.getByRole('button', { name: 'Add to collection' }).click();
+			expect((await toggle('false')).get('version')).toBe('1');
+			await expect(page).toHaveURL(new RegExp(`${path}\\?version=1$`));
+			await expect(ingredients.getByText(/2 cups/)).toBeVisible();
+		} finally {
+			if (id) await post(page, '/cookbook?/deleteCollection', { id });
+			await post(page, `${path}/edit?/deleteRecipe`, {});
+			await post(page, '/cookbook/trash?/deleteForever', { slug: path.split('/').pop()! });
+		}
 	});
 
 	test('the seed’s To cook lists its recipes; a recipe outside the library offers no collections', async ({
