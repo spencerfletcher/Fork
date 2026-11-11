@@ -7,7 +7,7 @@
 	// control, Escape closes and hands focus back to the button, a press outside
 	// closes. Where the panel's items are menuitems, the arrow keys walk them.
 	// A menu link closes the panel as it is pressed, so the old menu does not
-	// sit over the page while the next one loads; any navigation closes it too.
+	// sit over the page while the next one loads; a navigation closes it too.
 	// The consumer draws the button; the panel and row look is here (below).
 	let {
 		trigger,
@@ -46,7 +46,11 @@
 		button?.focus();
 	}
 
-	afterNavigate(() => (open = false));
+	// A host reloading its own page in place (the Cookbook after a card's
+	// collection change) keeps the menu open; every other navigation closes it.
+	afterNavigate(({ type, from, to }) => {
+		if (type !== 'goto' || from?.url.pathname !== to?.url.pathname) open = false;
+	});
 
 	// Links only: a menu button may submit its form (Log out), and taking the
 	// panel down under it would cancel the submission.

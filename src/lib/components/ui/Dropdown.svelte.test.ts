@@ -6,10 +6,16 @@ import source from './Dropdown.svelte?raw';
 import { cssRule } from '#lib/testing/css.js';
 
 // afterNavigate's callbacks are kept so a test can play a navigation back.
-const { navigated } = vi.hoisted(() => ({ navigated: [] as (() => void)[] }));
+type Nav = { type: string; from: { url: URL }; to: { url: URL } };
+const { navigated } = vi.hoisted(() => ({ navigated: [] as ((nav: Nav) => void)[] }));
 vi.mock('$app/navigation', () => ({
-	afterNavigate: (callback: () => void) => navigated.push(callback)
+	afterNavigate: (callback: (nav: Nav) => void) => navigated.push(callback)
 }));
+const nav = (type: string, from: string, to: string): Nav => ({
+	type,
+	from: { url: new URL(from, 'http://localhost') },
+	to: { url: new URL(to, 'http://localhost') }
+});
 
 type TriggerProps = { 'aria-expanded': boolean; onclick: (e: MouseEvent) => void };
 
@@ -75,8 +81,25 @@ describe('Dropdown', () => {
 	test('a navigation closes the menu', async () => {
 		await renderOpen();
 		expect(screen.getByRole('menu')).toBeInTheDocument();
-		navigated.forEach((callback) => callback());
+		navigated.forEach((callback) => callback(nav('link', '/cookbook', '/recipes/dal')));
 		flushSync();
 		expect(screen.queryByRole('menu')).toBeNull();
+	});
+
+	test('Back within the same page closes it too', async () => {
+		await renderOpen();
+		navigated.forEach((callback) =>
+			callback(nav('popstate', '/cookbook?filter=mine', '/cookbook'))
+		);
+		flushSync();
+		expect(screen.queryByRole('menu')).toBeNull();
+	});
+
+	// The Cookbook reloads itself in place after a card's collection change.
+	test("a host's reload of its own page (a goto to the same path) leaves it open", async () => {
+		await renderOpen();
+		navigated.forEach((callback) => callback(nav('goto', '/cookbook', '/cookbook?page=2')));
+		flushSync();
+		expect(screen.getByRole('menu')).toBeInTheDocument();
 	});
 });

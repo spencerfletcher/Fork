@@ -33,11 +33,11 @@ const { goto, page, navigated } = vi.hoisted(() => ({
 		shallow: null as { url: URL } | null,
 		data: { user: null as { id: string } | null }
 	},
-	navigated: [] as (() => void)[]
+	navigated: [] as ((nav: unknown) => void)[]
 }));
 vi.mock('$app/navigation', () => ({
 	goto,
-	afterNavigate: (callback: () => void) => navigated.push(callback)
+	afterNavigate: (callback: (nav: unknown) => void) => navigated.push(callback)
 }));
 vi.mock('$app/state', () => ({ page }));
 
@@ -298,7 +298,8 @@ describe('RecipeActions when a request fails', () => {
 		render(RecipeActions, { props: makeProps() });
 		await playBack('?/toggleFavorite', { type: 'error' });
 		expect(screen.getByRole('alert')).toBeInTheDocument();
-		for (const callback of navigated) callback();
+		const to = { url: new URL('http://localhost/recipes/cookies?version=1') };
+		for (const callback of navigated) callback({ type: 'link', from: { url: page.url }, to });
 		await tick();
 		expect(screen.queryByRole('alert')).toBeNull();
 	});
