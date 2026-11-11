@@ -5,7 +5,14 @@
 	import Navbar from '#lib/components/ui/Navbar.svelte';
 	import TabBar from '#lib/components/ui/TabBar.svelte';
 	import { page } from '$app/state';
-	import { DEFAULT_META, SITE_NAME, pageTitle, type PageMeta } from '#lib/seo.js';
+	import {
+		DEFAULT_IMAGE,
+		DEFAULT_META,
+		SITE_NAME,
+		ldScript,
+		pageTitle,
+		type PageMeta
+	} from '#lib/seo.js';
 
 	let { data, children }: { data: LayoutData; children: Snippet } = $props();
 
@@ -21,14 +28,22 @@
 	// A thrown load error carries no meta, so the error's own message titles the
 	// tab; SvelteKit's title-case "Not Found" reads "Page not found", as the
 	// error page heads it.
-	const meta: PageMeta = $derived({
-		...DEFAULT_META,
-		...(page.data.meta ?? {}),
-		...(page.error
-			? { title: page.error.message === 'Not Found' ? 'Page not found' : page.error.message }
-			: {})
-	});
+	// An error page is noindex and previews nothing: a recipe the viewer may not
+	// see is the same 404 as one that does not exist.
+	const meta: PageMeta = $derived(
+		page.error
+			? {
+					title: page.error.message === 'Not Found' ? 'Page not found' : page.error.message,
+					noindex: true
+				}
+			: { ...DEFAULT_META, ...(page.data.meta ?? {}) }
+	);
+	// The query is never canonical: ?serves=, ?cook=, filters, and ?version=,
+	// whose pages all name the latest version as the one to index.
 	const canonical = $derived(page.url.origin + page.url.pathname);
+	// A page with no picture of its own (null) shows the site card, as a small card.
+	const image = $derived(new URL(meta.image ?? DEFAULT_IMAGE, page.url.origin).href);
+	const card = $derived(meta.image ? 'summary_large_image' : 'summary');
 
 	// The skip link is the page's first tab stop. On a recipe it lands on the
 	// recipe itself, past the header; elsewhere on the main content, as on a
@@ -55,20 +70,27 @@
 
 <svelte:head>
 	<title>{pageTitle(meta.title)}</title>
-	<meta name="description" content={meta.description} />
-	<link rel="canonical" href={canonical} />
+	{#if meta.noindex}
+		<meta name="robots" content="noindex" />
+	{:else}
+		<meta name="description" content={meta.description} />
+		<link rel="canonical" href={canonical} />
 
-	<meta property="og:type" content={meta.type ?? 'website'} />
-	<meta property="og:site_name" content={SITE_NAME} />
-	<meta property="og:url" content={canonical} />
-	<meta property="og:title" content={meta.title} />
-	<meta property="og:description" content={meta.description} />
-	<meta property="og:image" content={meta.image} />
+		<meta property="og:type" content={meta.type ?? 'website'} />
+		<meta property="og:site_name" content={SITE_NAME} />
+		<meta property="og:url" content={canonical} />
+		<meta property="og:title" content={meta.title} />
+		<meta property="og:description" content={meta.description} />
+		<meta property="og:image" content={image} />
 
-	<meta name="twitter:card" content="summary_large_image" />
-	<meta name="twitter:title" content={meta.title} />
-	<meta name="twitter:description" content={meta.description} />
-	<meta name="twitter:image" content={meta.image} />
+		<meta name="twitter:card" content={card} />
+		<meta name="twitter:title" content={meta.title} />
+		<meta name="twitter:description" content={meta.description} />
+		<meta name="twitter:image" content={image} />
+
+		<!-- The one {@html} on user text: ldScript escapes <, > and & in the JSON. -->
+		{#if meta.jsonLd}{@html ldScript(meta.jsonLd)}{/if}
+	{/if}
 </svelte:head>
 
 <div class="flex min-h-dvh flex-col">
