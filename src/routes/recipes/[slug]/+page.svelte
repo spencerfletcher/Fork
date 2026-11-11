@@ -38,6 +38,9 @@
 	const stored = $derived(currentVersion.servings ?? 0);
 	let serves = $derived(parseServes(url.searchParams.get('serves'), stored));
 	const factor = $derived(stored > 0 ? serves / stored : 1);
+	// The cook's Settings units, on the latest version only: a past version is
+	// a record and reads as written. Signed out or unset, null.
+	const measurement = $derived(isViewingHistory ? null : (data.profile?.measurement ?? null));
 
 	// Cooking mode: ?cook=1 on load, written back by the Cook toggle with the
 	// same shallow replace. The article's data-cooking is what the method's
@@ -148,6 +151,7 @@
 							ingredients={currentVersion.ingredients}
 							grams={data.grams}
 							{factor}
+							{measurement}
 							control={stored > 0 ? scaler : undefined}
 							storageKey={ticksKey(recipe.slug, currentVersion.versionNumber, 'ingredients')} />
 						{#snippet scaler()}
