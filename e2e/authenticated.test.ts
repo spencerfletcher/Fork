@@ -475,6 +475,95 @@ test.describe('Delete recipe', () => {
 	});
 });
 
+// ─── Restore ──────────────────────────────────────────────────────────────────
+
+test.describe('Restore', () => {
+	test('restoring v1 appends its content as v3, and v2 still opens with its own', async ({
+		page
+	}) => {
+		const url = await createRecipe(page, 'E2E Restore', '4');
+		try {
+			await gotoHydrated(page, `${url}/edit`);
+			await page.getByRole('textbox', { name: 'Ingredients', exact: true }).fill('3 cups flour');
+			await page.getByRole('button', { name: 'Save', exact: true }).click();
+			await page.waitForURL(url);
+			await expectVersions(page, 2);
+			// The latest has nothing to restore.
+			await expect(page.getByRole('button', { name: 'Restore this version' })).toHaveCount(0);
+
+			await gotoHydrated(page, `${url}?version=1`);
+			await page.getByRole('button', { name: 'Restore this version' }).click();
+			const step = page.getByRole('group', {
+				name: 'Restore v1? It is saved as v3; nothing is lost.'
+			});
+			await expect(step).toBeFocused();
+			await step.getByRole('button', { name: 'Restore', exact: true }).click();
+			await page.waitForURL(url);
+
+			await expectVersions(page, 3);
+			await expect(page.locator('.version-bar .current .message')).toHaveText('Restore v1');
+			await expect(page.getByText(/2 cups/).first()).toBeVisible();
+			await expect(page.getByText(/3 cups/)).toHaveCount(0);
+
+			await page.goto(`${url}?version=2`);
+			await expect(page.getByText(/3 cups/).first()).toBeVisible();
+		} finally {
+			await deleteRecipe(page, url);
+		}
+	});
+
+	test('Keep current closes the step and hands focus back; nothing is written', async ({
+		page
+	}) => {
+		const url = await createRecipe(page, 'E2E Keep Current', '4');
+		try {
+			await gotoHydrated(page, `${url}/edit`);
+			await page.locator('input[name="servings"]').fill('6');
+			await page.getByRole('button', { name: 'Save', exact: true }).click();
+			await page.waitForURL(url);
+
+			await gotoHydrated(page, `${url}?version=1`);
+			const trigger = page.getByRole('button', { name: 'Restore this version' });
+			await trigger.click();
+			await page.getByRole('button', { name: 'Keep current' }).click();
+			await expect(trigger).toBeFocused();
+
+			await page.goto(url);
+			await expectVersions(page, 2);
+		} finally {
+			await deleteRecipe(page, url);
+		}
+	});
+
+	test('at 320 and 390 the bar keeps Back and the toggle on one row and Restore on its own, with no overflow', async ({
+		page
+	}) => {
+		const url = await createRecipe(page, 'E2E Restore Phone', '4');
+		try {
+			await gotoHydrated(page, `${url}/edit`);
+			await page.locator('input[name="servings"]').fill('6');
+			await page.getByRole('button', { name: 'Save', exact: true }).click();
+			await page.waitForURL(url);
+
+			for (const width of [320, 390]) {
+				await page.setViewportSize({ width, height: 800 });
+				await gotoHydrated(page, `${url}?version=1`);
+				const bar = page.locator('.version-bar');
+				const top = async (name: string) =>
+					(await bar.getByRole(name === 'Back to v2' ? 'link' : 'button', { name }).boundingBox())!
+						.y;
+				expect(await top('Back to v2')).toBe(await top('2 versions'));
+				expect(await top('Restore this version')).toBeGreaterThan(await top('2 versions'));
+				expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBe(
+					0
+				);
+			}
+		} finally {
+			await deleteRecipe(page, url);
+		}
+	});
+});
+
 test.describe('One save', () => {
 	test('one save records servings, times and ingredients as a new version', async ({ page }) => {
 		const url = await createRecipe(page, 'E2E Four Servings', '4');
