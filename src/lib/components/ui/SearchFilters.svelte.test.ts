@@ -165,6 +165,13 @@ describe('SearchFilters keeps the page’s other params', () => {
 		expect(gotoMock.mock.calls[0][0]).toBe('?filter=mine');
 	});
 
+	test('a new filter starts the list at its first page: the loaded place is dropped', async () => {
+		page.url = new URL('http://localhost/cookbook?filter=saved&page=3&after=x&q=old');
+		render(SearchFilters, { props: { availableTags, initialQuery: 'old' } });
+		await fireEvent.click(screen.getByRole('button', { name: 'Dessert' }));
+		expect(gotoMock.mock.calls[0][0]).toBe('?filter=saved&q=old&tags=dessert');
+	});
+
 	test('a repeated param keeps every value', () => {
 		page.url = new URL('http://localhost/cookbook?x=1&x=2');
 		render(SearchFilters, { props: { availableTags } });

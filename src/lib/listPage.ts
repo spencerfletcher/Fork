@@ -28,8 +28,8 @@ export function listPage(
 }
 
 /** `params` without the loaded place, for a link that changes what the list shows. */
-export function withoutPlace(params: URLSearchParams): URLSearchParams {
-	const kept = new URLSearchParams(params);
+export function withoutPlace(params: Pick<URLSearchParams, 'toString'>): URLSearchParams {
+	const kept = new URLSearchParams(params.toString());
 	for (const key of PLACE) kept.delete(key);
 	return kept;
 }

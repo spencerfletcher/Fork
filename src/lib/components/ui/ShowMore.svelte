@@ -78,7 +78,9 @@
 	</p>
 {/if}
 {#if error}<p class="form-error show-more-error" role="alert">{error}</p>{/if}
-<p class="sr-only" role="status" aria-live="polite">{status}</p>
+<!-- In the page before its first word, so that word is announced; a list
+     with one page has nothing to announce. -->
+{#if list.next || status}<p class="sr-only" role="status" aria-live="polite">{status}</p>{/if}
 
 <style>
 	/* Under the grid, a row gap below its last cards, centred on the column. */

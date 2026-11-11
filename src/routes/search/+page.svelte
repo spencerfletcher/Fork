@@ -2,11 +2,16 @@
 	import RecipeGrid from '#lib/components/recipes/RecipeGrid.svelte';
 	import SearchFilters from '#lib/components/ui/SearchFilters.svelte';
 	import ResultStatus from '#lib/components/ui/ResultStatus.svelte';
+	import { pagedList } from '#lib/pagedList.svelte.js';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
 
-	const recipes = $derived(data.recipes);
+	const list = pagedList(
+		() => data,
+		(d) => ({ items: d.recipes, next: d.next })
+	);
+	const recipes = $derived(list.items);
 	const hasFilters = $derived(data.selectedTags.length > 0 || !!data.friendsOnly);
 	const filtered = $derived(!!data.searchQuery || hasFilters);
 
@@ -38,10 +43,10 @@
 			availableTags={data.allTags}
 			friendsOnly={data.friendsOnly} />
 
-		<ResultStatus count={recipes.length} {filtered} />
+		<ResultStatus count={data.total} {filtered} />
 
 		{#if recipes.length > 0}
-			<RecipeGrid {recipes} class="results" />
+			<RecipeGrid {recipes} total={data.total} more={list} class="results" />
 		{:else}
 			<p class="empty-state mt-6">
 				<!-- Each way out says what it does and keeps the rest: Clear filters

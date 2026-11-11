@@ -1,7 +1,12 @@
-import { describe, test, expect } from 'vitest';
+import { describe, test, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/svelte';
 import { createRawSnippet } from 'svelte';
 import RecipeGrid from './RecipeGrid.svelte';
+
+vi.mock('$app/navigation', () => ({ goto: vi.fn(), preloadData: vi.fn() }));
+vi.mock('$app/state', () => ({
+	page: { url: new URL('http://localhost/search?q=pie'), state: {} }
+}));
 
 const card = (id: number) => ({
 	id,
@@ -54,5 +59,23 @@ describe('RecipeGrid', () => {
 			[...container.querySelectorAll('.recipe-grid .custom')].map((p) => p.textContent)
 		).toEqual(recipes.map((r, i) => `${r.title} at ${i}`));
 		expect(container.querySelector('.recipe-card')).toBeNull();
+	});
+
+	test('a total counts the whole list in the eyebrow, not the cards shown', () => {
+		render(RecipeGrid, { props: { recipes: [card(1), card(2)], total: 130 } });
+		expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('130 recipes');
+	});
+
+	test('a paged list ends in Show more while a page follows, and not after', () => {
+		const { unmount } = render(RecipeGrid, {
+			props: { recipes: [card(1)], more: { next: 'c1', append: () => 0 } }
+		});
+		expect(screen.getByRole('link', { name: 'Show more' })).toHaveAttribute(
+			'href',
+			'/search?q=pie&page=2'
+		);
+		unmount();
+		render(RecipeGrid, { props: { recipes: [card(1)], more: { next: null, append: () => 0 } } });
+		expect(screen.queryByRole('link', { name: 'Show more' })).toBeNull();
 	});
 });

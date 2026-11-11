@@ -44,8 +44,15 @@ const base = {
 	selectedTags: [] as string[]
 };
 
+/** One page, the whole list: the total is the cards given, and no page follows. */
+const onePage = <D extends { recipes: unknown[] }>(data: D) => ({
+	...data,
+	total: data.recipes.length,
+	next: null
+});
+
 function renderCookbook(overrides: Partial<typeof base> = {}) {
-	return render(CookbookPage, { props: { data: { ...base, ...overrides } } as never });
+	return render(CookbookPage, { props: { data: onePage({ ...base, ...overrides }) } as never });
 }
 
 const full = {
@@ -181,6 +188,15 @@ describe('Cookbook page', () => {
 		expect(href('All')).toBe('?q=dal&tags=baking');
 	});
 
+	test('a filter link starts the list at its first page', () => {
+		page.url = new URL('http://localhost/cookbook?q=dal&filter=mine&page=3');
+		renderCookbook({ ...full, filter: 'mine', searchQuery: 'dal' });
+		const saved = within(screen.getByRole('group', { name: 'Show' })).getByRole('link', {
+			name: /^Saved/
+		});
+		expect(saved).toHaveAttribute('href', '?q=dal&filter=saved');
+	});
+
 	test('a filter that empties the grid keeps the filters and tells a screen reader 0 recipes match', () => {
 		renderCookbook({ ...full, recipes: [], searchQuery: 'saffron' });
 		expect(screen.getByRole('searchbox')).toHaveValue('saffron');
@@ -231,7 +247,7 @@ describe('Cookbook drafts on this device', () => {
 	const USER = 'me';
 	const signedIn = (overrides: Partial<typeof base> = {}) =>
 		render(CookbookPage, {
-			props: { data: { ...base, ...full, ...overrides, user: { id: USER } } } as never
+			props: { data: onePage({ ...base, ...full, ...overrides, user: { id: USER } }) } as never
 		});
 	const MINUTE = 60 * 1000;
 	const seed = (recipe: string, title: string, ago: number, linked?: DraftRecipe) => {
