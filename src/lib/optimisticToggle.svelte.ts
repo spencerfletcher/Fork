@@ -7,7 +7,7 @@ import type { SubmitFunction } from '$app/forms';
  * changes (a reload, another recipe). `report` gets '' on each press and
  * `failure` on a refusal
  * (the server's own sentence when the session ended); `refresh` applies a success to the page's data;
- * `done` runs after a success.
+ * `done` runs after a success, given the action's answer.
  */
 export function optimisticToggle(
 	initial: () => boolean,
@@ -16,7 +16,12 @@ export function optimisticToggle(
 		report,
 		refresh = false,
 		done
-	}: { failure: string; report: (error: string) => void; refresh?: boolean; done?: () => void }
+	}: {
+		failure: string;
+		report: (error: string) => void;
+		refresh?: boolean;
+		done?: (data?: Record<string, unknown>) => void;
+	}
 ) {
 	let on = $derived(initial());
 	let busy = false;
@@ -31,7 +36,7 @@ export function optimisticToggle(
 			if (result.type === 'success') {
 				// In place, so the page's query (?serves=) and an open menu stay.
 				if (refresh) await update({ reset: false, navigate: false });
-				return done?.();
+				return done?.(result.data);
 			}
 			// Flip back: nothing was saved. A lapsed session says so in the server's
 			// words, which tell the reader to log in; anything else gets ours.

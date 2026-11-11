@@ -916,6 +916,23 @@
 		}
 	}
 
+	/* The Cookbook's select bar (SelectBar) is fixed over the page's foot at
+	   every width, and on a phone the tab bar gives way to it, as it does to
+	   the editor's save bar. The page ends clear of it and focus stops above
+	   it, by the height it measures (it wraps on a phone). After the tab bar's
+	   rules, which these replace while it shows. */
+	body:has(.select-bar) .tab-bar {
+		display: none;
+	}
+
+	body:has(.select-bar) main {
+		padding-bottom: var(--select-bar-height, 0px);
+	}
+
+	html:has(.select-bar) {
+		scroll-padding-bottom: var(--select-bar-height, 0px);
+	}
+
 	/* Cookbook: your shelf, dense and uniform. Two across on a phone, tighter,
 	   so a long shelf scans (Spencer, 12 November 2026: A2's 2x2 on the phone);
 	   two from 700 at the desktop gaps, four from 1100. */

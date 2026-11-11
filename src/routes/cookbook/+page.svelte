@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import { tick } from 'svelte';
+	import { onMount, tick } from 'svelte';
 	import RecipeCard from '#lib/components/recipes/RecipeCard.svelte';
 	import RecipeRow from '#lib/components/recipes/RecipeRow.svelte';
 	import SearchFilters from '#lib/components/ui/SearchFilters.svelte';
@@ -11,8 +11,10 @@
 	import CookbookDrafts from './CookbookDrafts.svelte';
 	import CookbookCollections from './CookbookCollections.svelte';
 	import CookbookSort from './CookbookSort.svelte';
+	import SelectBar from './SelectBar.svelte';
+	import { selection } from './selection.svelte.js';
 	import { plural } from '#lib/helpers.js';
-	import { hrefWith } from '#lib/listPage.js';
+	import { hrefWith, withoutPlace } from '#lib/listPage.js';
 	import { pagedList } from '#lib/pagedList.svelte.js';
 	import {
 		COOKBOOK_FILTERS,
@@ -51,19 +53,24 @@
 	// URL wins over it (the server keeps the choice for this device).
 	const viewHref = (view: CookbookView) => hrefWith(page.url, { view });
 
-	// A card's ⋯ changed the library. The page loads again at the URL the
-	// address bar shows, `?page=N` from Show more included, which loads every
-	// page shown: the cards and the counts follow, and the cook keeps their
-	// place (scroll and focus left alone; an open menu stays open). A card that
-	// went hands focus to the card now in its place, else the one before, else
-	// the page title, as the Drafts list's does.
-	async function reload(recipe: { id: number }): Promise<'kept' | 'gone'> {
-		const at = list.items.findIndex((r) => r.id === recipe.id);
+	// The library changed (a card's ⋯, select mode's bar). The page loads
+	// again at the URL the address bar shows, `?page=N` from Show more
+	// included, which loads every page shown: the cards and the counts follow,
+	// and the cook keeps their place (scroll and focus left alone; an open
+	// menu stays open).
+	async function refresh() {
 		await goto((page.shallow?.url ?? page.url).href, {
 			replace: true,
 			reset: false,
 			refreshAll: true
 		});
+	}
+
+	// A card that went hands focus to the card now in its place, else the one
+	// before, else the page title, as the Drafts list's does.
+	async function reload(recipe: { id: number }): Promise<'kept' | 'gone'> {
+		const at = list.items.findIndex((r) => r.id === recipe.id);
+		await refresh();
 		await tick();
 		if (list.items.some((r) => r.id === recipe.id)) return 'kept';
 		const links = grid?.querySelectorAll<HTMLElement>('.card-stretched-link, .row-link') ?? [];
@@ -88,6 +95,27 @@
 		if ((await reload(recipe)) === 'gone' && from)
 			removed = { title: recipe.title, how: 'collection', from };
 	}
+
+	// Select mode: the page's state alone. A new list (its filters, sort or
+	// view; not Show more) clears the choice.
+	const sel = selection(() => withoutPlace(page.url.searchParams).toString());
+	const chosen = $derived(list.items.filter((r) => sel.has(r.id)));
+	let selectButton = $state<HTMLButtonElement>();
+
+	// Select needs script, so it is drawn only once the page has it.
+	let hydrated = $state(false);
+	onMount(() => (hydrated = true));
+
+	async function leaveSelect() {
+		sel.stop();
+		await tick();
+		selectButton?.focus();
+	}
+
+	const choosing = (recipe: { id: number }) =>
+		sel.on
+			? { checked: sel.has(recipe.id), onchange: (on: boolean) => sel.set(recipe.id, on) }
+			: undefined;
 </script>
 
 <div class="page">
@@ -162,6 +190,16 @@
 								</a>
 							{/each}
 						</div>
+						{#if hydrated}
+							<button
+								type="button"
+								class="text-btn text-btn--ink cookbook-select"
+								aria-pressed={sel.on}
+								bind:this={selectButton}
+								onclick={() => (sel.on ? leaveSelect() : sel.start())}>
+								Select
+							</button>
+						{/if}
 					</div>
 				</div>
 
@@ -176,6 +214,7 @@
 									{recipe}
 									saved={recipe.saved}
 									kept={recipe.kept}
+									select={choosing(recipe)}
 									onremoved={(how) => takeAway(recipe, how)}
 									oncollected={() => collected(recipe)} />
 							{/each}
@@ -189,6 +228,7 @@
 									variant="cookbook"
 									saved={recipe.saved}
 									kept={recipe.kept}
+									select={choosing(recipe)}
 									onremoved={(how) => takeAway(recipe, how)}
 									oncollected={() => collected(recipe)} />
 							{/each}
@@ -219,6 +259,17 @@
 		{/if}
 	</div>
 </div>
+
+{#if sel.on}
+	<SelectBar
+		{sel}
+		{chosen}
+		shownIds={list.items.map((r) => r.id)}
+		allTags={data.allTags}
+		trashCount={data.counts.trash}
+		onchanged={refresh}
+		onleave={leaveSelect} />
+{/if}
 
 <!-- Drawn here alone, so not in Icons.svelte; its line art and 16px box. -->
 {#snippet viewIcon(view: CookbookView)}
@@ -385,6 +436,18 @@
 		.seg a :global(.icon) {
 			display: none;
 		}
+	}
+
+	/* At the tools' end, wherever they wrap. */
+	.cookbook-select {
+		margin-left: auto;
+	}
+
+	/* Pressed, it reads as the mode it is in: underlined, as on hover. */
+	.cookbook-select[aria-pressed='true'] {
+		text-decoration: underline;
+		text-decoration-thickness: 1px;
+		text-underline-offset: 3px;
 	}
 
 	@media (forced-colors: active) {

@@ -9,7 +9,8 @@
 		allTags,
 		selected = $bindable([]),
 		before = [],
-		error = $bindable()
+		error = $bindable(),
+		above = false
 	}: {
 		allTags: TagChip[];
 		selected?: string[];
@@ -17,6 +18,8 @@
 		before?: string[];
 		/** Why the last tag was not added, or the server's refusal of the tags. */
 		error?: string;
+		/** The list opens above the box: a box at the screen's foot (the Cookbook's select bar). */
+		above?: boolean;
 	} = $props();
 
 	// What adding `name` would break, in the server's words; '' when it fits.
@@ -153,7 +156,10 @@
 	{/if}
 
 	<!-- Combobox input; open, the list flows out of it as one object. -->
-	<div class="tag-combo relative" class:tag-combo--open={showDropdown}>
+	<div
+		class="tag-combo relative"
+		class:tag-combo--open={showDropdown}
+		class:tag-combo--above={above}>
 		<!-- Opens on a click, typing or an arrow, not on focus, so Tab passing
 		     through announces no list. -->
 		<input
@@ -303,6 +309,22 @@
 		/* Nothing drawn above its top edge: no shadow over the box, and no ring
 		   segment across the join. */
 		clip-path: inset(0 -100vmax -100vmax);
+	}
+
+	/* Above the box, the same object turned over: the join is the box's top. */
+	.tag-combo--above.tag-combo--open input {
+		border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+		clip-path: inset(0 -100vmax -100vmax);
+	}
+
+	.tag-combo--above .tag-menu {
+		top: auto;
+		bottom: 100%;
+		padding: 0.25rem 0 0;
+		border-top: 1px solid var(--color-input-border);
+		border-bottom: 0;
+		border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+		clip-path: inset(-100vmax -100vmax 0);
 	}
 
 	/* The box's ring carries on around the list; each is clipped at the join,

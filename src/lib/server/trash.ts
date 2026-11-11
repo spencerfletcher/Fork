@@ -13,7 +13,7 @@ import {
 	type SQL
 } from 'drizzle-orm';
 import { QueryBuilder } from 'drizzle-orm/pg-core';
-import { db } from './db/index.js';
+import { db, type Tx } from './db/index.js';
 import {
 	collectionRecipes,
 	collections,
@@ -78,9 +78,13 @@ export function trashAge(deletedAt: Date, now = new Date()) {
  * either lands first (and is read here) or waits. The revision moves on, so a
  * save already past its ownRecipe check is refused as stale under its lock.
  * One already in the Trash is left as it is. The caller checks it is theirs.
+ * Inside `conn`'s transaction when given one (the Cookbook's bulk move).
  */
-export async function moveToTrash(recipe: Pick<Recipe, 'id' | 'authorId'>): Promise<void> {
-	await db.transaction(async (tx) => {
+export async function moveToTrash(
+	recipe: Pick<Recipe, 'id' | 'authorId'>,
+	conn: Tx | typeof db = db
+): Promise<void> {
+	await conn.transaction(async (tx) => {
 		const [locked] = await tx
 			.select({ visibility: recipes.visibility, deletedAt: recipes.deletedAt })
 			.from(recipes)

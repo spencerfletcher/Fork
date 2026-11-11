@@ -16,6 +16,16 @@ import {
 	recipeIdsIn,
 	renameCollection
 } from '#lib/server/collections.js';
+import {
+	collectAll,
+	collectionsFor,
+	newCollectionWith,
+	selectedIds,
+	tagAll,
+	trashAll
+} from '#lib/server/bulk.js';
+import { tagsCapError } from '#lib/recipes/validation.js';
+import { normaliseTagNames } from '#lib/recipes/tags.js';
 import { oneOf, text, wholeNumber } from '#lib/helpers.js';
 import { CARD_SORTS, listPage, type CardSort } from '#lib/listPage.js';
 import {
@@ -201,6 +211,12 @@ export const load: PageServerLoad = async ({ url, cookies, locals: { user, supab
 /** What a collection that has gone (deleted in another tab) is told. */
 const NO_SUCH_COLLECTION = 'That collection is no longer in your Cookbook.';
 
+/** A select-mode request's form and its recipe ids (`ids`, "3,5,8"), null when malformed or over BULK_MAX. */
+async function selection(request: Request) {
+	const form = await request.formData();
+	return { form, ids: selectedIds(text(form, 'ids')) };
+}
+
 export const actions: Actions = {
 	// Opens the new collection, whose empty state says how to fill it.
 	createCollection: async ({ request, locals: { user } }) => {
@@ -231,5 +247,60 @@ export const actions: Actions = {
 		if (!(await deleteCollection(user.id, id)))
 			return failure(404, 'not_found', NO_SUCH_COLLECTION);
 		throw redirect(303, '/cookbook');
+	},
+
+	// Select mode's bar (src/lib/server/bulk.ts checks every id): each act
+	// answers with how many it changed and how many it left alone.
+
+	// The collections for Add to collection, each marked all, some or none.
+	bulkCollections: async ({ request, locals: { user } }) => {
+		if (!user) return signedOut();
+		const { ids } = await selection(request);
+		if (!ids) return failure(400, 'invalid', BAD_FORM);
+		return { collections: await collectionsFor(user, ids) };
+	},
+
+	// Checked (member=1) puts the whole selection in; unchecked takes it all out.
+	bulkCollect: async ({ request, locals: { user } }) => {
+		if (!user) return signedOut();
+		const { form, ids } = await selection(request);
+		const collectionId = wholeNumber(text(form, 'collectionId'));
+		const member = text(form, 'member');
+		if (!ids || collectionId === null || (member !== '1' && member !== '0'))
+			return failure(400, 'invalid', BAD_FORM);
+		const counts = await collectAll(user, collectionId, ids, member === '1');
+		if (!counts) return failure(404, 'not_found', NO_SUCH_COLLECTION);
+		return { collected: collectionId, ...counts };
+	},
+
+	bulkNewCollection: async ({ request, locals: { user } }) => {
+		if (!user) return signedOut();
+		const { form, ids } = await selection(request);
+		const name = text(form, 'name');
+		if (!ids) return failure(400, 'invalid', BAD_FORM);
+		const made = await newCollectionWith(user, name, ids);
+		if ('error' in made) return failure(400, 'invalid', made.error, { name });
+		const { id, ...counts } = made;
+		return { collected: id, ...counts };
+	},
+
+	// The cook's own recipes only, under the editor's tag caps; the tags as
+	// TagInput sends them.
+	bulkTag: async ({ request, locals: { user } }) => {
+		if (!user) return signedOut();
+		const { form, ids } = await selection(request);
+		const names = normaliseTagNames(form.getAll('tags').map(String));
+		if (!ids || names.length === 0) return failure(400, 'invalid', BAD_FORM);
+		const capped = tagsCapError(names);
+		if (capped) return failure(400, 'invalid', capped);
+		return { tagged: names, ...(await tagAll(user, names, ids)) };
+	},
+
+	// The cook's own recipes only, each as Delete recipe moves one.
+	bulkTrash: async ({ request, locals: { user } }) => {
+		if (!user) return signedOut();
+		const { ids } = await selection(request);
+		if (!ids) return failure(400, 'invalid', BAD_FORM);
+		return await trashAll(user, ids);
 	}
 };

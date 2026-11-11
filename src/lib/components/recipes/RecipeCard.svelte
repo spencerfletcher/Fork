@@ -97,6 +97,9 @@
 	/** The words in place of a handle whose account is gone (author_id set null). */
 	export const nobody = (kept: boolean) => (kept ? 'its author' : 'another cook');
 
+	/** The Cookbook's select mode, on a card or a list row: whether it is chosen, and the press. */
+	export type CardSelect = { checked: boolean; onchange: (checked: boolean) => void };
+
 	/** The Cookbook's ⋯ for one recipe: the rows a card or a list row offers. */
 	export function cardMenu(recipe: CardRecipe, saved: boolean, kept: boolean) {
 		return {
@@ -137,7 +140,8 @@
 		saved = false,
 		kept = false,
 		onremoved,
-		oncollected
+		oncollected,
+		select
 	}: {
 		recipe: CardRecipe;
 		index?: number;
@@ -151,9 +155,11 @@
 		onremoved?: (how: 'trash' | 'copy') => void;
 		/** Cookbook: the ⋯ changed one of its collections; the page reloads. */
 		oncollected?: () => void;
+		/** Cookbook select mode: the card is a checkbox, not a link, and has no ⋯. */
+		select?: CardSelect;
 	} = $props();
 
-	const hasMenu = $derived(variant === 'cookbook');
+	const hasMenu = $derived(variant === 'cookbook' && !select);
 
 	const isList = $derived(variant === 'list');
 
@@ -176,7 +182,21 @@
 		<CookLink username={recipe.author.username} class="card-cook" />
 	{/if}
 
-	<a {href} class="card-stretched-link" aria-label={recipe.title}></a>
+	{#if select}
+		<!-- The whole card is the label; its tick sits on a paper disc at the
+		     photo's corner, the strike rows' tick (.tick). -->
+		<label class="card-stretched-link card-select">
+			<input
+				type="checkbox"
+				class="sr-only"
+				aria-label={recipe.title}
+				checked={select.checked}
+				onchange={(e) => select.onchange(e.currentTarget.checked)} />
+			<span class="select-disc" aria-hidden="true"><span class="tick"></span></span>
+		</label>
+	{:else}
+		<a {href} class="card-stretched-link" aria-label={recipe.title}></a>
+	{/if}
 
 	{#if recipe.imageUrl}
 		<div class="card-img-wrap">
@@ -197,8 +217,9 @@
 		</div>
 	{/if}
 
-	<!-- Title, meta and any extra line: one block, spaced by its gap alone. -->
-	<div class="card-text">
+	<!-- Title, meta and any extra line: one block, spaced by its gap alone.
+	     Inert in select mode, so its handle is no link and a press is the card's. -->
+	<div class="card-text" inert={!!select}>
 		<!-- The ⋯ ends the first line under the photo: the title's, or on a
 		     panel the meta row's. -->
 		{#if recipe.imageUrl}
@@ -300,6 +321,50 @@
 		aspect-ratio: 4 / 3;
 		border-radius: var(--radius-md);
 		overflow: hidden;
+	}
+
+	/* Select mode: the disc at the photo's (or panel's) top left corner, and a
+	   ring inside a chosen one's edge; the label is the card, so a press
+	   anywhere on it ticks. */
+	.card-select:has(:focus-visible) {
+		outline: 2px solid var(--color-accent);
+		outline-offset: 2px;
+		border-radius: var(--radius-md);
+	}
+
+	.select-disc {
+		position: absolute;
+		top: 8px;
+		left: 8px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 28px;
+		height: 28px;
+		border: 1px solid var(--color-text-2);
+		border-radius: 50%;
+		background: var(--color-bg);
+	}
+
+	.card-img-wrap,
+	.card-panel {
+		position: relative;
+	}
+
+	.recipe-card:has(.card-select :checked) :is(.card-img-wrap, .card-panel)::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		border-radius: inherit;
+		box-shadow: inset 0 0 0 3px var(--color-marigold);
+	}
+
+	/* Forced colours drop shadows: the ring is an outline there. */
+	@media (forced-colors: active) {
+		.recipe-card:has(.card-select :checked) :is(.card-img-wrap, .card-panel)::after {
+			outline: 3px solid Highlight;
+			outline-offset: -3px;
+		}
 	}
 
 	.card-img {

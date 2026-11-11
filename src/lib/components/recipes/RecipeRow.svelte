@@ -7,6 +7,7 @@
 		nobody,
 		sourceWords,
 		type CardRecipe,
+		type CardSelect,
 		type MetaPart
 	} from './RecipeCard.svelte';
 	import MoreActions from './MoreActions.svelte';
@@ -22,7 +23,8 @@
 		saved = false,
 		kept = false,
 		onremoved,
-		oncollected
+		oncollected,
+		select
 	}: {
 		recipe: CardRecipe;
 		saved?: boolean;
@@ -30,6 +32,8 @@
 		kept?: boolean;
 		onremoved?: (how: 'trash' | 'copy') => void;
 		oncollected?: () => void;
+		/** Cookbook select mode: the row is a checkbox (its tick first), not a link, and has no ⋯. */
+		select?: CardSelect;
 	} = $props();
 
 	const cooked = $derived(cookedFact(recipe));
@@ -54,7 +58,19 @@
 	});
 </script>
 
-<li class="list-row recipe-row">
+<li class="list-row recipe-row" class:selecting={!!select}>
+	{#if select}
+		<!-- The label stretches over the row, so a press anywhere on it ticks. -->
+		<label class="row-select">
+			<input
+				type="checkbox"
+				class="sr-only"
+				aria-label={recipe.title}
+				checked={select.checked}
+				onchange={(e) => select.onchange(e.currentTarget.checked)} />
+			<span class="tick" aria-hidden="true"></span>
+		</label>
+	{/if}
 	<div class="row-thumb">
 		{#if recipe.imageUrl}
 			<!-- Empty alt: the title beside it names the recipe. -->
@@ -62,8 +78,13 @@
 		{/if}
 	</div>
 	<div class="row-what">
-		<h3 class="row-title"><a href="/recipes/{recipe.slug}" class="row-link">{recipe.title}</a></h3>
-		<p class="row-meta dot-list">
+		<h3 class="row-title">
+			{#if select}{recipe.title}{:else}<a href="/recipes/{recipe.slug}" class="row-link">
+					{recipe.title}
+				</a>{/if}
+		</h3>
+		<!-- Inert in select mode, so its handle is no link and a press is the row's. -->
+		<p class="row-meta dot-list" inert={!!select}>
 			{#each parts as part (part.text)}{@render metaItem(part)}{/each}
 			{#if tagLine}{@render metaItem({ text: tagLine }, 'fold-tags')}{/if}
 			{#if cooked}{@render metaItem({ text: cooked }, 'fold-cooked')}{/if}
@@ -72,9 +93,11 @@
 	<p class="row-tags">{tagLine}</p>
 	<p class="row-cooked">{cooked ?? 'Not cooked yet'}</p>
 	<!-- Above the title's stretched link and after it in Tab order, as on the card. -->
-	<div class="row-more">
-		<MoreActions {...cardMenu(recipe, saved, kept)} {onremoved} {oncollected} />
-	</div>
+	{#if !select}
+		<div class="row-more">
+			<MoreActions {...cardMenu(recipe, saved, kept)} {onremoved} {oncollected} />
+		</div>
+	{/if}
 </li>
 
 <style>
@@ -86,6 +109,43 @@
 		align-items: center;
 		column-gap: 20px;
 		padding: 12px 0;
+	}
+
+	/* Select mode: the tick's column leads, in the ⋯ column's place. */
+	.recipe-row.selecting {
+		grid-template-columns: 28px 64px minmax(0, 1fr) 190px 250px;
+	}
+
+	.row-select {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		height: 44px;
+	}
+
+	.row-select::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		z-index: 1;
+	}
+
+	.row-select:has(:focus-visible)::after {
+		outline: 2px solid var(--color-accent);
+		outline-offset: -2px;
+	}
+
+	.recipe-row:has(.row-select :checked) {
+		background: var(--color-marigold-tint);
+		box-shadow: inset 3px 0 0 var(--color-marigold);
+	}
+
+	/* Forced colours drop the tint and the shadow: a chosen row is outlined. */
+	@media (forced-colors: active) {
+		.recipe-row:has(.row-select :checked) {
+			outline: 2px solid Highlight;
+			outline-offset: -2px;
+		}
 	}
 
 	.row-thumb {
@@ -173,6 +233,10 @@
 			grid-template-columns: 64px minmax(0, 1fr) 200px 44px;
 		}
 
+		.recipe-row.selecting {
+			grid-template-columns: 28px 64px minmax(0, 1fr) 200px;
+		}
+
 		.row-tags {
 			display: none;
 		}
@@ -188,6 +252,10 @@
 			grid-template-columns: 56px minmax(0, 1fr) 44px;
 			align-items: start;
 			column-gap: 12px;
+		}
+
+		.recipe-row.selecting {
+			grid-template-columns: 28px 56px minmax(0, 1fr);
 		}
 
 		.row-thumb {

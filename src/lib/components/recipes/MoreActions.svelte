@@ -1,22 +1,15 @@
 <script lang="ts">
-	import { deserialize, enhance } from '$app/forms';
+	import { enhance } from '$app/forms';
 	import type { SubmitFunction } from '$app/forms';
 	import { tick } from 'svelte';
 	import Dropdown from '#lib/components/ui/Dropdown.svelte';
 	import FieldError from '#lib/components/ui/FieldError.svelte';
 	import ConfirmStep from '#lib/components/ui/ConfirmStep.svelte';
-	import {
-		editIcon,
-		forkIcon,
-		journalIcon,
-		moreIcon,
-		plusIcon
-	} from '#lib/components/Icons.svelte';
+	import { editIcon, forkIcon, journalIcon, moreIcon } from '#lib/components/Icons.svelte';
 	import { pendingEnhance } from '#lib/pendingEnhance.svelte.js';
-	import { COLLECTION_NAME_MAX } from '#lib/collections.js';
 	import { EXPORT_FORMATS, FORMAT_LABEL, exportHref } from '#lib/export/archive.js';
 	import { TRASH_DAYS } from '#lib/trash.js';
-	import CollectionToggle from './CollectionToggle.svelte';
+	import CollectionChecks, { type Collection } from './CollectionChecks.svelte';
 
 	// The one ⋯ menu for a recipe: the recipe page's action row ends in it, and
 	// so does a Cookbook card. For a recipe in the reader's library it lists
@@ -26,8 +19,8 @@
 	// the Exports, Fork, and last the one that takes the recipe out of the
 	// Cookbook, asked twice in place. One flat menu, so the arrow keys walk
 	// every row and a toggle leaves it open. Every form posts to the recipe's
-	// own route by its full path, so a host page keeps its query.
-	type Collection = { id: number; name: string; has?: boolean };
+	// own route by its full path, so a host page keeps its query. The
+	// Collections group is CollectionChecks, shared with select mode's bar.
 	let {
 		slug,
 		title,
@@ -71,69 +64,10 @@
 	} = $props();
 
 	const base = $derived(`/recipes/${slug}`);
-	const onOpen = $derived(collections === 'on-open');
 
-	let naming = $state(false);
 	let confirming = $state(false);
-	let error = $state('');
-	let panelEl: HTMLElement | undefined = $state();
-
-	// Asked for on open: undefined while the answer is out, null when refused.
-	let fetched = $state<Collection[] | null | undefined>(undefined);
-	let loadError = $state('');
-	const rows = $derived(collections === 'on-open' ? fetched : collections);
-
-	// Only the latest request's answer is used: a menu opened twice quickly
-	// must not let the first, older answer land last. Focus held on the
-	// Loading row moves to the first row once the list is in; a reader who has
-	// moved on is left where they are.
-	let requests = 0;
-	async function load() {
-		const request = ++requests;
-		loadError = '';
-		let list: Collection[] | null = null;
-		try {
-			const response = await fetch(`${base}?/collections`, {
-				method: 'POST',
-				body: new FormData(),
-				headers: { 'x-sveltekit-action': 'true' }
-			});
-			const result = deserialize(await response.text());
-			const answer = result.type === 'success' ? result.data?.collections : undefined;
-			if (Array.isArray(answer)) list = answer;
-		} catch {
-			// Unreachable reads as refused, below.
-		}
-		if (request !== requests) return;
-		const held = !!loadingRow && document.activeElement === loadingRow;
-		fetched = list;
-		if (!list) loadError = 'Could not load your collections. Try again.';
-		if (!held) return;
-		await tick();
-		panelEl?.querySelector<HTMLElement>('[role^="menuitem"]')?.focus();
-	}
-	let loadingRow: HTMLElement | undefined = $state();
-
-	const creating = pendingEnhance({ keepFailure: true, done: () => back() });
-
-	// The menu's own list: made, then asked for again, the page left alone.
-	let creatingOwn = $state(false);
-	let ownRefusal = $state<string | null>(null);
-	const createOwn: SubmitFunction = () => {
-		creatingOwn = true;
-		ownRefusal = null;
-		return async ({ result }) => {
-			if (result.type === 'success') await load();
-			creatingOwn = false;
-			if (result.type === 'success') {
-				oncollected?.();
-				return back();
-			}
-			const message: unknown = result.type === 'failure' ? result.data?.error : undefined;
-			ownRefusal =
-				typeof message === 'string' ? message : 'Could not make that collection. Try again.';
-		};
-	};
+	// The group's New collection box is open: the panel is a form, not a menu.
+	let naming = $state(false);
 
 	const forking = pendingEnhance({
 		keepFailure: true,
@@ -158,41 +92,19 @@
 			};
 		};
 
-	async function name() {
-		naming = true;
-		error = '';
-		await tick();
-		panelEl?.querySelector<HTMLInputElement>('input[name="name"]')?.focus();
-	}
-
-	async function back() {
-		naming = false;
-		await tick();
-		panelEl?.querySelector<HTMLElement>('.new-row')?.focus();
-	}
-
 	// The menu goes first, so the print dialog opens over the page alone.
 	async function printPage(close: () => void) {
 		close();
 		await tick();
 		window.print();
 	}
-
-	const namingError = $derived(onOpen ? ownRefusal : creating.error);
-	const refusal = $derived(namingError ?? error);
 </script>
 
 <Dropdown
 	onopen={() => {
 		naming = false;
 		confirming = false;
-		error = '';
-		ownRefusal = null;
 		leaveError = null;
-		if (onOpen) {
-			fetched = undefined;
-			load();
-		}
 	}}>
 	{#snippet trigger(props)}
 		<button type="button" class="more-button" aria-haspopup="menu" aria-label={label} {...props}>
@@ -203,77 +115,15 @@
 		<div
 			class="menu-panel more-panel"
 			role={naming || confirming ? undefined : 'menu'}
-			aria-label="More actions"
-			bind:this={panelEl}>
-			{#if rows !== null || loadError}
-				<div role="group" aria-labelledby="more-collections" aria-busy={rows === undefined}>
-					<p id="more-collections" class="eyebrow-label group-label" role="presentation">
-						Collections
-					</p>
-					{#if rows === undefined}
-						<!-- A row, so opening has somewhere to put focus while the list is out. -->
-						<button
-							type="button"
-							class="menu-row loading-row"
-							role="menuitem"
-							aria-disabled="true"
-							aria-busy="true"
-							bind:this={loadingRow}>
-							Loading collections…
-						</button>
-					{:else if loadError}
-						<p class="field-error group-note" role="alert">{loadError}</p>
-					{:else if rows}
-						<!-- Many collections scroll here, half a row showing that there are more. -->
-						<div class="collection-rows">
-							{#each rows as collection (collection.id)}
-								<CollectionToggle
-									{collection}
-									action="{base}?/collect"
-									refresh={!onOpen}
-									report={(message) => (error = message)}
-									ondone={oncollected} />
-							{/each}
-						</div>
-						{#if naming}
-							<form
-								method="POST"
-								action="{base}?/newCollection"
-								class="name-step"
-								use:enhance={onOpen ? createOwn : creating.submit}>
-								<label for="new-collection-name">New collection</label>
-								<input
-									id="new-collection-name"
-									name="name"
-									type="text"
-									maxlength={COLLECTION_NAME_MAX}
-									required
-									autocomplete="off"
-									aria-invalid={namingError ? true : undefined}
-									aria-describedby={namingError ? 'new-collection-error' : undefined}
-									onkeydown={(e) => {
-										// Back to the list; a second Escape closes the menu.
-										if (e.key === 'Escape') {
-											e.stopPropagation();
-											back();
-										}
-									}} />
-								<button
-									type="submit"
-									class="btn-primary btn-sm"
-									disabled={onOpen ? creatingOwn : creating.pending}>
-									Create
-								</button>
-							</form>
-						{:else}
-							<button type="button" class="menu-row new-row" role="menuitem" onclick={name}>
-								{@render plusIcon()}
-								New collection
-							</button>
-						{/if}
-					{/if}
-					<FieldError name="new-collection" error={refusal} />
-				</div>
+			aria-label="More actions">
+			{#if collections !== null}
+				<CollectionChecks
+					{collections}
+					bind:naming
+					listAction="{base}?/collections"
+					collectAction="{base}?/collect"
+					newAction="{base}?/newCollection"
+					oncollected={() => oncollected?.()} />
 				<hr class="rule" />
 			{/if}
 			{#if print}
@@ -406,60 +256,14 @@
 		--menu-top: calc(100% + 4px);
 	}
 
-	.group-label {
-		padding: 6px 12px 4px;
-	}
-
-	.group-note {
-		padding: 6px 12px;
-		font-size: 0.875rem;
-		color: var(--color-text-2);
-	}
-
-	.loading-row {
-		font-weight: 400;
-		color: var(--color-text-2);
-	}
-
-	.collection-rows {
-		display: flex;
-		flex-direction: column;
-		max-height: calc(44px * 6.5);
-		overflow-y: auto;
-	}
-
-	.new-row,
 	.icon-row {
 		gap: 10px;
-	}
-
-	/* New collection sits under a rule, below the list. */
-	.new-row,
-	.name-step {
-		border-top: 1px solid var(--color-border);
 	}
 
 	.rule {
 		margin: 6px 0;
 		border: 0;
 		border-top: 1px solid var(--color-border);
-	}
-
-	.name-step {
-		display: flex;
-		flex-direction: column;
-		gap: 8px;
-		padding: 8px 6px 6px;
-	}
-
-	/* A form's button, not one of the row's pills, whose corner it would inherit. */
-	.more-panel .name-step .btn-primary {
-		border-radius: var(--radius-md);
-	}
-
-	.name-step label {
-		font-size: 0.875rem;
-		font-weight: 600;
 	}
 
 	.more-panel :global(.field-error) {
