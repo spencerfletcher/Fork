@@ -25,9 +25,18 @@
 			class="mx-auto flex h-[52px] max-w-(--max-width) items-center justify-between gap-5 md:h-14">
 			<!-- Logo + destinations. They never shrink. -->
 			<div class="flex shrink-0 items-center gap-6">
-				<!-- One line, so the name is "Fork." with no space before the stop. -->
-				<!-- prettier-ignore -->
-				<a href="/" class="nav-brand">Fork<span class="text-marigold">.</span></a>
+				<!-- The F. mark (DESIGN.md, Logo), paths only so it renders the same
+				     everywhere; the viewBox is cropped to the ink. -->
+				<a href="/" class="nav-brand" aria-label="Fork">
+					<svg viewBox="32.59 26.88 37.5 46.01" aria-hidden="true">
+						<path
+							fill="currentColor"
+							d="M32.59 72.12V66.62L37.96 64.76L36.88 66.3V32.44L38.41 34.62L32.59 32.7V27.2L47.76 26.88H65.48L65.55 39.23H59.02L57.68 33.72L59.6 34.81H46.35L48.01 33.15V46.97L46.35 45.44H60.49V53.37H46.35L48.01 51.71V66.3L46.73 64.76L53.32 66.62V72.12Z" />
+						<path
+							fill="var(--color-marigold)"
+							d="M58.12 67.13Q58.12 64.44 59.92 62.88Q61.71 61.31 64.14 61.31Q66.89 61.31 68.49 62.88Q70.09 64.44 70.09 67.13Q70.09 69.76 68.3 71.32Q66.51 72.89 64.14 72.89Q61.39 72.89 59.76 71.32Q58.12 69.76 58.12 67.13Z" />
+					</svg>
+				</a>
 				<ul class="navbar-links hidden gap-6 md:flex">
 					{#each DESTINATIONS as destination (destination.href)}
 						<li>
@@ -139,19 +148,22 @@
 	   older iOS would keep the status bar espresso while scrolled. */
 
 	.nav-brand {
-		display: inline-block;
-		/* 44px tall on a phone, where it is the only way home. */
-		padding: 4px 0;
-		margin: -4px 0;
-		font-family: var(--font-serif);
-		font-size: 1.375rem;
-		font-weight: 600;
-		letter-spacing: -0.01em;
+		display: flex;
+		align-items: center;
+		/* A 44px target, the only way home on a phone; the side padding widens
+		   it without moving the mark off the column's edge. */
+		min-height: 44px;
+		padding: 0 8px;
+		margin: 0 -8px;
 		color: var(--color-text-cream);
 	}
 
-	.nav-brand:hover {
-		color: var(--color-text-cream);
+	/* The F as tall as the retired wordmark's capitals: Bitter 600 at 1.375rem
+	   has a 15.4px cap height, and the F is 45.24 of the cropped 46.01 units. */
+	.nav-brand svg {
+		height: 15.7px;
+		width: auto;
+		aspect-ratio: 37.5 / 46.01;
 	}
 
 	/* The one marigold fill in the navbar. Marigold means a primary action or
@@ -223,11 +235,10 @@
 		color: var(--color-text-cream);
 	}
 
-	/* A phone has no menu: Log in and the brand are thumb targets,
-	   44px tall inside the 52px bar, text where it was. */
+	/* A phone has no menu: Log in is a thumb target, 44px tall inside the
+	   52px bar, text where it was. */
 	@media (max-width: 767px) {
 		/* :not(.hidden): Sign up stays a desktop link. */
-		.nav-brand,
 		.navbar-link:not(.hidden) {
 			display: inline-flex;
 			align-items: center;

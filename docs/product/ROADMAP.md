@@ -251,7 +251,7 @@ Items waiting on Spencer's eye. Rules live in [DESIGN.md](../../DESIGN.md); the 
 
 | Item | What is open | Phase | Source |
 | --- | --- | --- | --- |
-| Fork icon and logo | 1A (three tines on a round shoulder) ships for now (OD, 11 Nov: "1a for now for logo but redesign candidate"); open: a deeper head and a handle widening toward its end, upright or on the diagonal | P1 | R, OD |
+| Fork icon and logo | Logo decided 11 November 2026: the F. mark (G4, C3) is the logo, favicon and app icon, and the "Fork." wordmark is retired from the bar; see DESIGN.md, Logo. 1A (three tines on a round shoulder) remains the stats row's fork icon; open there: a deeper head and a handle widening toward its end, upright or on the diagonal | P1 | R, OD |
 | Cook-mode distinction | Closed 11 November 2026: Spencer's direction from the Call 3 options is built (paper cooking header, bottom Ingredients \| Method switch, Finish cooking); see DESIGN.md, Cooking | done | R, OD |
 | Serving scaler redesign | The control does not feel like Fork; a design round, with the S01 to S08 behaviour | P2 | R |
 | Tick affordance | Revisit candidate (M20) | P2 | DS |
