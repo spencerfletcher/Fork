@@ -32,6 +32,8 @@ describe('search load', () => {
 		findManyMock.mockResolvedValue([]);
 		const result = await loadResult(makeEvent('cookie'));
 		expect(result.meta.title).toBe('“cookie” — Search');
+		// Results pages are not for search engines.
+		expect(result.meta.noindex).toBe(true);
 	});
 
 	test('the total and the link preview count every match, not the page', async () => {

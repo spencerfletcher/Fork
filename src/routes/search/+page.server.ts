@@ -19,7 +19,9 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 			searchQuery
 				? `${plural(count, 'recipe')} matching “${searchQuery}” on Fork.`
 				: 'Search recipes by name, description or ingredient.'
-		)
+		),
+		// A results page is a view of other pages, not one to index.
+		noindex: true
 	});
 
 	const visibilityCondition = visibleTo(user);
