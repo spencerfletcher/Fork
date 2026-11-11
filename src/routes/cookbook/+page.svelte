@@ -115,6 +115,19 @@
 		}
 	}
 
+	/* Three rows on a phone: the title, the count at full width, then New
+	   recipe across the page, so the count no longer squeezes beside it. */
+	@media (max-width: 699px) {
+		.cookbook-head {
+			flex-direction: column;
+			align-items: stretch;
+		}
+
+		.cookbook-new {
+			width: 100%;
+		}
+	}
+
 	/* A step under the grid's 32px row gap: the first cards belong to the tags
 	   above them (Spencer, 10 November 2026: "maybe a bit tighter"). */
 	.cookbook-filters {

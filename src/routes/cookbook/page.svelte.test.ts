@@ -146,4 +146,14 @@ describe('Cookbook page', () => {
 		expect(screen.getByRole('link', { name: 'New recipe' })).toHaveClass('btn-sm');
 		expect(cssRule(style, '.cookbook-new')).toMatch(/white-space:\s*nowrap/);
 	});
+
+	// Under 700 three rows: the title, the count at full width, then New recipe
+	// across the page (Spencer, 11 November 2026).
+	test('under 700 the header stacks and New recipe runs full width', () => {
+		const phone = style.slice(style.indexOf('@media (max-width: 699px)'));
+		expect(style).toContain('@media (max-width: 699px)');
+		expect(cssRule(phone, '.cookbook-head')).toMatch(/flex-direction:\s*column/);
+		expect(cssRule(phone, '.cookbook-head')).toMatch(/align-items:\s*stretch/);
+		expect(cssRule(phone, '.cookbook-new')).toMatch(/width:\s*100%/);
+	});
 });

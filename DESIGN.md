@@ -258,7 +258,7 @@ Small, consistent corners: 4px on chips and icon buttons, 6px on buttons, inputs
 - **Primary:** marigold fill, ink text, 600 weight, 11px 16px padding inside a 1px transparent border (the border is there so forced colours keep the button a box when the fill is stripped; the height stays 48.8). Hover darkens to marigold deep over 0.15s; no opacity fade.
 - **Ghost:** transparent with a 1px ink border, 600 weight like the primary, 11px 16px. Hover fills the band, ink text (decided 9 November 2026: the clay tint read as no hover at all).
 - **Focus:** the global ring, 2px clay with 2px offset; marigold inside the navbar.
-- **Navbar action:** "+ New recipe", marigold, 0.875rem 600, 6px 13px inside a 1px transparent border (the primary button's forced-colours box; the size is unchanged). The only fill in the bar. It shows from 768 only; below that the Cookbook header carries it.
+- **Navbar action:** "+ New recipe", marigold, 0.875rem 600, 6px 13px inside a 1px transparent border (the primary button's forced-colours box; the size is unchanged). The only fill in the bar. It shows from 768 only; below that the Cookbook header carries it: beside the title from 700 to 767, and below 700 as a third row under the title and the count sentence, full page width (Spencer, 11 November 2026: "a 3 row setup").
 
 **The closed set (decided 9 November 2026).** Every clickable control on the site is one of these, by its shared class or component, and nothing else:
 
@@ -267,7 +267,7 @@ Small, consistent corners: 4px on chips and icon buttons, 6px on buttons, inputs
 | Primary | marigold fill, ink 600 | `.btn-primary` |
 | Ghost | transparent, 1px ink border, 600 | `.btn-ghost` |
 | Danger | ghost in red; red on hover for a resting Block | `.btn-ghost.danger`, `.danger-hover` |
-| Small | either button at 44px tall with 14px sides, beside text in a narrow rail; the Cookbook header's one-line New recipe on a phone | `.btn-sm` on `.btn-primary` or `.btn-ghost` |
+| Small | either button at 44px tall with 14px sides, beside text in a narrow rail; the Cookbook header's one-line New recipe from 700 to 767, and the same button across the page width below 700 | `.btn-sm` on `.btn-primary` or `.btn-ghost` |
 | Text button | sans 600, clay, no border; deeper clay on hover | `.text-btn` |
 | Text button, ink | same, ink; clay on hover | `.text-btn--ink` |
 | Quiet text button | sans 0.875rem, Ink 3, ink on hover; a list's Clear ticks | `.clear-ticks` |
