@@ -640,6 +640,7 @@ describe('Cookbook select mode', () => {
 		expect(select()).toHaveClass('text-btn', 'text-btn--ink');
 		expect(select().parentElement).toHaveClass('cookbook-view');
 		expect(select().parentElement!.lastElementChild).toBe(select());
+		expect(cssRule(style, '.cookbook-select')).toMatch(/margin-left:\s*auto/);
 	});
 
 	test('pressed, every card is a checkbox named for its recipe, no link; the bar takes focus', async () => {

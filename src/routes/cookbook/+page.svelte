@@ -438,6 +438,11 @@
 		}
 	}
 
+	/* At the tools' end, wherever they wrap. */
+	.cookbook-select {
+		margin-left: auto;
+	}
+
 	/* Pressed, it reads as the mode it is in: underlined, as on hover. */
 	.cookbook-select[aria-pressed='true'] {
 		text-decoration: underline;

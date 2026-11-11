@@ -110,7 +110,8 @@ test.describe('Cookbook select mode', () => {
 			await gotoHydrated(page, `/cookbook?q=${encodeURIComponent(word)}`);
 			await page.getByRole('button', { name: 'Select', exact: true }).click();
 			const bar = page.getByRole('region', { name: 'Selection' });
-			await page.getByRole('checkbox', { name: title, exact: true }).check();
+			await page.getByRole('checkbox', { name: title, exact: true }).focus();
+			await page.keyboard.press('Space');
 			await expect(bar).toContainText('1 selected');
 
 			await page.getByRole('link', { name: /^List/ }).click();
