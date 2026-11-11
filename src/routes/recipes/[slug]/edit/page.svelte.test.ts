@@ -5,7 +5,7 @@ import type { SubmitFunction } from '$app/forms';
 import EditPage from './+page.svelte';
 import { inGroup, makeContent, makeIngredient, makeStep } from '#lib/recipes/fixtures.js';
 import type { RecipeContent } from '#lib/recipes/types.js';
-import { numberMessages, type RecipeDraft } from '#lib/recipes/validation.js';
+import { numberMessages, type RecipeDraft, REQUIRED_MESSAGES } from '#lib/recipes/validation.js';
 import { UNREACHABLE_MESSAGE } from '#lib/pendingEnhance.svelte.js';
 
 // Capture the form's submit callback so a test can drive the pending state by hand.
@@ -70,7 +70,7 @@ function makeData(
 }
 
 /** The draft the server would echo back for makeData, with overrides. */
-function failed(draft: Partial<RecipeDraft>, error = 'Title is required') {
+function failed(draft: Partial<RecipeDraft>, error: string = REQUIRED_MESSAGES.title) {
 	const base: RecipeDraft = {
 		title: 'Cookies',
 		description: '',
@@ -390,7 +390,7 @@ describe('Edit page form', () => {
 		expect(screen.getByRole('radio', { name: 'Friends' })).toBeChecked();
 		expect(document.querySelector('.form-error')).toBeNull();
 		expect(title()).toHaveAttribute('aria-invalid', 'true');
-		expect(title()).toHaveAccessibleDescription('Title is required');
+		expect(title()).toHaveAccessibleDescription(REQUIRED_MESSAGES.title);
 		expect(title()).toHaveFocus();
 		// The draft is invalid, so there is nothing to promise, settings included.
 		expect(editingLine('Editing v2')).toBeInTheDocument();

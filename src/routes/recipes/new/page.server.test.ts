@@ -9,7 +9,8 @@ import {
 	PHOTO_TYPES,
 	PHOTO_MAX_BYTES,
 	PHOTO_TYPE_MESSAGE,
-	PHOTO_SIZE_MESSAGE
+	PHOTO_SIZE_MESSAGE,
+	REQUIRED_MESSAGES
 } from '#lib/recipes/validation.js';
 
 const invoke = (event: unknown) => invokeAction(actions.default as never, event);
@@ -97,7 +98,7 @@ describe('new recipe action', () => {
 		);
 		expect(result.status).toBe(400);
 		expect(result.data).toMatchObject({
-			error: 'Title is required',
+			error: REQUIRED_MESSAGES.title,
 			code: 'invalid',
 			draft: { title: '', prepTimeMinutes: '-5', tags: ['Dessert', 'Baking'], hadPhoto: true }
 		});

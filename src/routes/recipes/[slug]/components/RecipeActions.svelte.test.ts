@@ -1,4 +1,5 @@
 import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
+import { SESSION_ENDED } from '#lib/server/actions.js';
 import { render, screen, fireEvent } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import RecipeActions from './RecipeActions.svelte';
@@ -209,7 +210,7 @@ describe('RecipeActions when a request fails', () => {
 
 	test('a signed-out fork says the session ended, in the alert', async () => {
 		render(RecipeActions, { props: makeProps({ canFork: true }) });
-		const words = 'Your session ended. Log in in another tab, then try again.';
+		const words = SESSION_ENDED('try again');
 		await playBack('?/fork', { type: 'failure', status: 401, data: { error: words } });
 		expect(screen.getByRole('alert')).toHaveTextContent(words);
 	});

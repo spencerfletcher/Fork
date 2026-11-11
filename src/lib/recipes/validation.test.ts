@@ -72,7 +72,7 @@ describe('parseDraftContent(draftOf(form))', () => {
 	test('rejects a blank title', () => {
 		expect(parseContent(form({ ...FULL, title: '  ' }))).toEqual({
 			ok: false,
-			error: 'Title is required'
+			error: REQUIRED_MESSAGES.title
 		});
 	});
 
