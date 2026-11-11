@@ -105,7 +105,7 @@ The differentiating experience is continuity: a recipe travels from capture thro
 | Durable drafts | Draft recovery across reload, tab close and crash, saved on the device; drafts never flood version history; synced drafts are a P2 item | in flight (built, awaiting publish) | R (9 Nov evening), AQ, OD |
 | Trash | Deleted recipes recoverable for 30 days | in flight (built, awaiting publish) | R (9 Nov evening), OD |
 | Photo access follows audience | Private and Friends-level photos are not publicly addressable | next | R (9 Nov evening) |
-| Settings page | Account, username, default audience; later the measurement and inline-quantity preferences | in flight (built, awaiting publish) | R (9 Nov evening) |
+| Settings page | Account, username, default audience; later the measurement and inline-quantity preferences, and a volume-or-weight choice for how quantities are shown (OD, 11 Nov 2026: "another settings candidate later on") | in flight (built, awaiting publish) | R (9 Nov evening) |
 | Measurement preference | Metric or US per user | next | R (9 Nov evening) |
 | Last and times cooked | Derived from log entries, on Cookbook cards and the recipe page's personal line; never on cards about the recipe (Discover, Search, tags, profiles) | shipped | R (9 Nov evening), M17 |
 | Cookbook and Discover | Separate destinations; a route never changes meaning on sign-in | shipped | DS |
