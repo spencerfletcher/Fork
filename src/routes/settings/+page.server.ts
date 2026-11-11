@@ -48,7 +48,10 @@ export const actions: Actions = {
 
 	audience: async ({ request, locals: { user } }) => {
 		if (!user) return sessionEnded('audience');
-		const defaultVisibility = oneOf(VISIBILITIES, text(await request.formData(), 'defaultVisibility'));
+		const defaultVisibility = oneOf(
+			VISIBILITIES,
+			text(await request.formData(), 'defaultVisibility')
+		);
 		if (!defaultVisibility) {
 			return failure(400, 'invalid', 'Choose who new recipes start as.', { section: 'audience' });
 		}
