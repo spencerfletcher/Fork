@@ -1,0 +1,4 @@
+CREATE INDEX "recipe_versions_search_idx" ON "recipe_versions" USING gin (recipe_version_doc("title", "description", "source_name", "ingredients", "steps", "notes", "make_ahead", "equipment", "storage", "reheating"));--> statement-breakpoint
+CREATE INDEX "recipe_versions_names_search_idx" ON "recipe_versions" USING gin (to_tsvector('english', recipe_ingredient_names("ingredients")));--> statement-breakpoint
+CREATE INDEX "recipes_title_search_idx" ON "recipes" USING gin (to_tsvector('english', "title"));--> statement-breakpoint
+CREATE INDEX "recipes_title_prefix_idx" ON "recipes" USING btree (lower("title") text_pattern_ops);
