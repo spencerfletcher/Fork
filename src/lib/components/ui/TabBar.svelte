@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { DESTINATIONS, isCurrent } from './destinations.js';
-	import { friendsIcon } from '#lib/components/Icons.svelte';
+	import { friendsIcon, journalIcon } from '#lib/components/Icons.svelte';
 
 	// Cook and the editor pin their own bars (Done cooking; Save and Cancel),
 	// so the tab bar leaves the screen to them.
@@ -16,9 +16,12 @@
 	<nav class="tab-bar" aria-label="Main">
 		{#each DESTINATIONS as destination (destination.href)}
 			<a href={destination.href} aria-current={isCurrent(destination, path) ? 'page' : undefined}>
+				<!-- Friends and Journal are drawn on their own 24 box, so 24 keeps
+				     their stroke the others' 1.5. -->
 				{#if destination.href === '/friends'}
-					<!-- Drawn on its own 24 box, so 24 keeps its stroke the others' 1.5. -->
 					{@render friendsIcon(24)}
+				{:else if destination.href === '/journal'}
+					{@render journalIcon(24)}
 				{:else}
 					<svg
 						viewBox="0 0 24 24"
@@ -32,9 +35,6 @@
 							<path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H19v14H5.5A1.5 1.5 0 0 0 4 19.5z" />
 							<path d="M4 19.5A1.5 1.5 0 0 0 5.5 21H19v-3" />
 							<path d="M9 8h6" />
-						{:else if destination.href === '/journal'}
-							<rect x="4" y="5" width="16" height="16" rx="2" />
-							<path d="M4 10h16M8 3v4M16 3v4M8 14h4" />
 						{:else}
 							<circle cx="12" cy="12" r="9" />
 							<path d="m15.5 8.5-2 5-5 2 2-5z" />
@@ -101,7 +101,7 @@
 		outline-offset: -4px;
 	}
 
-	/* :global, because Friends comes from Icons.svelte. */
+	/* :global, because Friends and Journal come from Icons.svelte. */
 	.tab-bar :global(svg) {
 		width: 22px;
 		height: 22px;

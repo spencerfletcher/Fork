@@ -89,7 +89,9 @@
 	/* The panel and its rows are the one overlay look, so they live here: the
 	   consumer puts .menu-panel on its panel and .menu-row on each row. Where
 	   it opens depends on the consumer's trigger, so the consumer sets
-	   --menu-top and --menu-right; on lifted paper, the one shadow. */
+	   --menu-top and --menu-right. The page's paper inside a 1px Ink 2 edge,
+	   one step lighter than the text, and no shadow (4A softened, Spencer,
+	   11 November 2026): the edge alone lifts it, over paper and the band. */
 	.dropdown :global(.menu-panel) {
 		position: absolute;
 		top: var(--menu-top, 100%);
@@ -101,10 +103,9 @@
 		min-width: 180px;
 		max-width: min(300px, calc(100vw - 36px));
 		padding: 6px;
-		background: var(--color-surface);
-		border: 1px solid var(--color-border-2);
+		background: var(--color-bg);
+		border: 1px solid var(--color-text-2);
 		border-radius: var(--radius-md);
-		box-shadow: var(--shadow-raised);
 	}
 
 	.dropdown :global(.menu-row) {
@@ -121,8 +122,9 @@
 		text-align: left;
 	}
 
+	/* The band, as a ghost button's hover. */
 	.dropdown :global(.menu-row:hover) {
-		background: var(--color-tint);
+		background: var(--color-band);
 		color: var(--color-text);
 	}
 

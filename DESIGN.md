@@ -2,121 +2,121 @@
 name: Fork
 description: Recipes under version control, set like an annotated cookbook on cream paper.
 colors:
-  paper: '#f7f3ec'
-  lifted-paper: '#fffdf9'
-  clay-tint: '#f5e9e0'
-  band: '#efe8db'
-  espresso: '#1a1408'
-  ink: '#1a1714'
-  ink-2: '#4a443e'
-  ink-3: '#6f6960'
-  cream: '#f7f3ec'
-  tan: '#b8a880'
-  clay: '#b23c00'
-  clay-deep: '#6e2500'
-  marigold: '#eca620'
-  marigold-deep: '#d08f06'
-  rule: '#e4ded4'
-  rule-2: '#d9d3c8'
-  diff-add: '#2f6b37'
-  diff-add-bg: '#e6f0e3'
-  diff-remove: '#a3362b'
-  diff-remove-bg: '#f6e3e0'
+paper: '#f7f3ec'
+lifted-paper: '#fffdf9'
+clay-tint: '#f5e9e0'
+band: '#efe8db'
+espresso: '#1a1408'
+ink: '#1a1714'
+ink-2: '#4a443e'
+ink-3: '#6f6960'
+cream: '#f7f3ec'
+tan: '#b8a880'
+clay: '#b23c00'
+clay-deep: '#6e2500'
+marigold: '#eca620'
+marigold-deep: '#d08f06'
+rule: '#e4ded4'
+rule-2: '#d9d3c8'
+diff-add: '#2f6b37'
+diff-add-bg: '#e6f0e3'
+diff-remove: '#a3362b'
+diff-remove-bg: '#f6e3e0'
 typography:
-  display:
-    fontFamily: 'Bitter, Georgia, serif'
-    fontSize: '2.5rem'
-    fontWeight: 500
-    lineHeight: 1.15
-  headline:
-    fontFamily: 'Bitter, Georgia, serif'
-    fontSize: '1.75rem'
-    fontWeight: 500
-    lineHeight: 1.25
-  title:
-    fontFamily: 'Bitter, Georgia, serif'
-    fontSize: '1.0625rem'
-    fontWeight: 500
-    lineHeight: 1.25
-  body:
-    fontFamily: 'Source Sans 3, -apple-system, BlinkMacSystemFont, sans-serif'
-    fontSize: '1rem'
-    fontWeight: 400
-    lineHeight: 1.65
-  label:
-    fontFamily: 'Source Sans 3, -apple-system, BlinkMacSystemFont, sans-serif'
-    fontSize: '0.75rem'
-    fontWeight: 600
-    lineHeight: 1.2
-    letterSpacing: '0.05em'
-  mono:
-    fontFamily: 'JetBrains Mono, Fira Code, monospace'
-    fontSize: '0.75rem'
-    fontWeight: 400
-    lineHeight: 1.5
+display:
+fontFamily: 'Bitter, Georgia, serif'
+fontSize: '2.5rem'
+fontWeight: 500
+lineHeight: 1.15
+headline:
+fontFamily: 'Bitter, Georgia, serif'
+fontSize: '1.75rem'
+fontWeight: 500
+lineHeight: 1.25
+title:
+fontFamily: 'Bitter, Georgia, serif'
+fontSize: '1.0625rem'
+fontWeight: 500
+lineHeight: 1.25
+body:
+fontFamily: 'Source Sans 3, -apple-system, BlinkMacSystemFont, sans-serif'
+fontSize: '1rem'
+fontWeight: 400
+lineHeight: 1.65
+label:
+fontFamily: 'Source Sans 3, -apple-system, BlinkMacSystemFont, sans-serif'
+fontSize: '0.75rem'
+fontWeight: 600
+lineHeight: 1.2
+letterSpacing: '0.05em'
+mono:
+fontFamily: 'JetBrains Mono, Fira Code, monospace'
+fontSize: '0.75rem'
+fontWeight: 400
+lineHeight: 1.5
 rounded:
-  sm: '4px'
-  md: '6px'
-  lg: '8px'
-  pill: '100px'
+sm: '4px'
+md: '6px'
+lg: '8px'
+pill: '100px'
 spacing:
-  '1': '4px'
-  '2': '8px'
-  '3': '12px'
-  '4': '16px'
-  '5': '24px'
-  '6': '32px'
-  '7': '48px'
-  '8': '64px'
+'1': '4px'
+'2': '8px'
+'3': '12px'
+'4': '16px'
+'5': '24px'
+'6': '32px'
+'7': '48px'
+'8': '64px'
 components:
-  button-primary:
-    backgroundColor: '{colors.marigold}'
-    textColor: '{colors.ink}'
-    typography: '{typography.body}'
-    rounded: '{rounded.md}'
-    padding: '11px 16px'
-    border: '1px solid transparent'
-  button-primary-hover:
-    backgroundColor: '{colors.marigold-deep}'
-    textColor: '{colors.ink}'
-  button-ghost:
-    backgroundColor: 'transparent'
-    textColor: '{colors.ink}'
-    typography: '{typography.body}'
-    rounded: '{rounded.md}'
-    padding: '11px 16px'
-  button-ghost-hover:
-    backgroundColor: '{colors.band}'
-    textColor: '{colors.ink}'
-  input:
-    backgroundColor: '{colors.lifted-paper}'
-    textColor: '{colors.ink}'
-    typography: '{typography.body}'
-    rounded: '{rounded.md}'
-    padding: '9px 12px'
-  tag:
-    backgroundColor: 'transparent'
-    textColor: '{colors.ink-2}'
-    rounded: '{rounded.pill}'
-    padding: '2px 9px'
-  tag-hover:
-    backgroundColor: '{colors.clay-tint}'
-    textColor: '{colors.ink-2}'
-  version-chip:
-    backgroundColor: '{colors.marigold}'
-    textColor: '{colors.ink}'
-    typography: '{typography.mono}'
-    rounded: '{rounded.sm}'
-    padding: '0 6px'
-  card:
-    backgroundColor: '{colors.lifted-paper}'
-    textColor: '{colors.ink}'
-    rounded: '{rounded.lg}'
-    padding: '16px'
-  navbar:
-    backgroundColor: '{colors.espresso}'
-    textColor: '{colors.tan}'
-    height: '56px'
+button-primary:
+backgroundColor: '{colors.marigold}'
+textColor: '{colors.ink}'
+typography: '{typography.body}'
+rounded: '{rounded.md}'
+padding: '11px 16px'
+border: '1px solid transparent'
+button-primary-hover:
+backgroundColor: '{colors.marigold-deep}'
+textColor: '{colors.ink}'
+button-ghost:
+backgroundColor: 'transparent'
+textColor: '{colors.ink}'
+typography: '{typography.body}'
+rounded: '{rounded.md}'
+padding: '11px 16px'
+button-ghost-hover:
+backgroundColor: '{colors.band}'
+textColor: '{colors.ink}'
+input:
+backgroundColor: '{colors.lifted-paper}'
+textColor: '{colors.ink}'
+typography: '{typography.body}'
+rounded: '{rounded.md}'
+padding: '9px 12px'
+tag:
+backgroundColor: 'transparent'
+textColor: '{colors.ink-2}'
+rounded: '{rounded.pill}'
+padding: '2px 9px'
+tag-hover:
+backgroundColor: '{colors.clay-tint}'
+textColor: '{colors.ink-2}'
+version-chip:
+backgroundColor: '{colors.marigold}'
+textColor: '{colors.ink}'
+typography: '{typography.mono}'
+rounded: '{rounded.sm}'
+padding: '0 6px'
+card:
+backgroundColor: '{colors.lifted-paper}'
+textColor: '{colors.ink}'
+rounded: '{rounded.lg}'
+padding: '16px'
+navbar:
+backgroundColor: '{colors.espresso}'
+textColor: '{colors.tan}'
+height: '56px'
 ---
 
 # Design System: Fork
@@ -152,8 +152,8 @@ A paper-and-ink palette with two warm accents and a semantic pair for diffs.
 
 - **Paper** (#f7f3ec): page background and stat tiles inside cards.
 - **Lifted Paper** (#fffdf9): cards, inputs, dialogs, the version strip. One step above paper.
-- **Clay Tint** (#f5e9e0): no-photo panels on recipe cards, tag and menu-item hover fills.
-- **Band** (#efe8db, `--color-band`): the recipe page's title band, paper one step deeper in the same hue (decided 31 October 2026, Spencer: "deeper cream", "definitely don't bring back the heavy brown color"). Also the hover fill of ghost buttons and tab-bar items, with ink text (decided 9 November 2026).
+- **Clay Tint** (#f5e9e0): no-photo panels on recipe cards, tag hover fills.
+- **Band** (#efe8db, `--color-band`): the recipe page's title band, paper one step deeper in the same hue (decided 31 October 2026, Spencer: "deeper cream", "definitely don't bring back the heavy brown color"). Also the hover fill of ghost buttons and tab-bar items, with ink text (decided 9 November 2026), and of menu rows (11 November 2026).
 - **Espresso** (#1a1408): the navbar, and the strip above the page on overscroll. The one dark surface.
 - **Ink** (#1a1714): running text, headings other than h1, button text on marigold.
 - **Ink 2** (#4a443e): secondary copy, descriptions, tag text.
@@ -176,7 +176,18 @@ Clay and marigold were raised in chroma from #a4512b and #e8a83a: same hues, sam
 
 **The Clay Is Text Rule.** Clay never fills a shape, with one named exception: the editor's audience radios take clay as their accent-color (decided 29 October 2026 for the checkbox they replaced). It colours titles, links and version marks. Its hover is Clay Deep.
 
-**The One Direction Rule** (decided 9 November 2026, Spencer: "inconsistency on mouseover, profile turns black and title turns red; already brick links could turn a deeper red"). A hover moves text one step: clay text darkens to Clay Deep; ink text turns clay; grey text (Ink 2 or Ink 3) may turn ink, as the back link and the Cookbook segments do (Spencer, 10 November 2026: "Grey to ink is fine"). Clay text never turns ink on hover; `app.css.test.ts` sweeps every stylesheet for a hover that does.
+**The Hover Rule** (decided 11 November 2026, Spencer, options 5A overall with 6B for text controls; it replaces the One Direction Rule of 9 and 10 November). A hover is one step of colour, plus an underline on words that act:
+
+| Element | At rest | On hover |
+| --- | --- | --- |
+| Recipe title (cards, Discover's lead and changes) | ink | clay, no underline |
+| Handle (`Username`, `.handle`), back link (`.back-link`) | its own colour (clay; Ink 3) | the same colour, underlined |
+| Text button and arrow link: Replace, Remove, Reset, "Explore Discover →" (`.text-btn`, `.arrow-link`) | clay, plain | Clay Deep, underlined (`.text-btn--ink`: ink to clay, underlined; Clear ticks: Ink 3 to ink, underlined) |
+| An action inside a sentence: "Clear search" beside "No recipes match 'tikka'" (`.inline-action`) | clay, underlined | Clay Deep, still underlined |
+| Ghost button, menu row, tab-bar item | its surface | the band |
+| Tag tab | Ink 2; the selected tab ink with a clay underline | the inactive label turns ink |
+
+Spencer, 11 November 2026: "Use the same 1px underline with roughly 3px offset throughout. Give keyboard focus a distinct visible outline." The underline is one definition in app.css (1px thick, 3px below the words); every underlined word takes it, so changing it is one line. It underlines words only, never an icon inside the control (a text button is a flex row, so the line stops at the words), and it moves nothing. Focus stays the 2px clay outline at a 2px offset, distinct from the line. "Call 6 settles Reset. It gets the same hover treatment as Replace and Remove. At rest, the underline beneath the editable serving count keeps its meaning. Clear search gets the exception because it sits alongside sentence text and needs to be recognizable as an action on touch." The word hovers sit inside `@media (hover: hover)`, so a tap on a phone leaves nothing underlined. An inline link in a line of names (a byline's parent, a recipe named in the Friends feed or a Journal entry, the tags line, the version bar) is not a sentence action: it stays clay, Clay Deep on hover. Clay text never turns ink on hover. `app.css.test.ts` enforces it: one underline definition, a text control whose hover changes colour alone fails, an underlined title fails, and no hover turns clay text ink.
 
 ## Typography
 
@@ -214,7 +225,7 @@ Profile relation (decided 9 November 2026): no ⋯ menu on a profile (the Friend
 
 Home (decided 9 November 2026): there is no separate landing page. Signed out, `/` renders Discover in that same column; signed in, it redirects to `/cookbook`. Search's "All recipes" link goes to `/discover`, where the tag tabs' All goes.
 
-Closing links, 29 October 2026: a link that ends a page or an empty state takes the arrow form ("All recipes →", "Explore recipes →") and the shared `.arrow-link`, which takes `.hit-link`'s hit: 24px at desktop and 44px on a phone by padding pulled back by margin. A profile's owner gets the page's one action, "New recipe →" to `/recipes/new`, after the recipe list (or the empty line); nobody else sees it. It shows only below 768; from 768 the navbar's + New recipe is the one action. Empty-state links ("Clear search", "Clear filters") take the same 24px and 44px hits through `.empty-state a`; "Clear filters" keeps the query and clears the tags only. The back link above a page title (`.back-link`) is as wide as its text, not the column, with the same 24px and 44px hits.
+Closing links, 29 October 2026: a link that ends a page or an empty state takes the arrow form ("All recipes →", "Explore recipes →") and the shared `.arrow-link`, which takes `.hit-link`'s hit: 24px at desktop and 44px on a phone by padding pulled back by margin. A profile's owner gets the page's one action, "New recipe →" to `/recipes/new`, after the recipe list (or the empty line); nobody else sees it. It shows only below 768; from 768 the navbar's + New recipe is the one action. Empty-state links ("Clear search", "Clear filters") take the same 24px and 44px hits through `.empty-state a`, and are sentence actions (`.inline-action`, underlined at rest; see the Hover Rule); "Clear filters" keeps the query and clears the tags only. The back link above a page title (`.back-link`) is as wide as its text, not the column, with the same 24px and 44px hits.
 
 Page width, 29 October 2026: every page is the 1200px column with the site gutters (`.page-inner`); the auth card is a card, not a page width. Decided 9 November 2026: Journal and Friends fill it too, so Discover, Cookbook, Journal and Friends share one left and right edge. The Journal keeps the day in the margin and lets the entry column stretch; only the running text (caption, note) is capped, at 60ch, and the photo keeps its 200px column. Friends' feed runs to the rail, the 280px rail sits at the container's right edge from 1024, and below 1024 the strip above the feed is full width. Forms (the Journal's entry form, the recipe editor) keep their own measure inside the column, starting on its left edge, never centred in it (10 November 2026, Spencer: "Journal page width needs to be revisited, inconsistent"; the entry pages had centred a 680px box, so their heading started 260px right of every other page's at 1280).
 
@@ -242,11 +253,13 @@ Flat, by tonal step. Paper, lifted paper, clay tint and espresso are the four su
 
 ### Shadow Vocabulary
 
-- **Raised** (`box-shadow: 0 4px 16px rgba(26, 23, 20, 0.12)`): the open tag list, the one true overlay.
+- **Raised** (`box-shadow: 0 4px 16px rgba(26, 23, 20, 0.12)`): the editor's open tag list.
+
+Two shadows remain in the app after 11 November 2026: Raised on the editor's open tag list, and a softer one of its own (`0 8px 24px rgb(0 0 0 / 0.08)`) on the Journal form's recipe list. The menus (`Dropdown`: the avatar menu and the Friends feed's ⋯) carry none.
 
 ### Named Rules
 
-**The Flat-At-Rest Rule.** Surfaces are flat. A shadow appears only on something that truly floats above the page: a dialog, a menu. The open tag list is the one menu that also joins its box: flush under the search box with one shared edge, square where they meet (6px corners stay at the top of the box, 8px at the foot of the list), the list's Rule 2 sides matching the box's, the shadow clipped at the join, and the focus ring running around box and list together (decided 29 October 2026).
+**The Flat-At-Rest Rule.** Surfaces are flat. A shadow appears only on a list that drops from a field and covers the page under it: the open tag list, the Journal form's recipe list. Menus are flat too: the page's paper inside a 1px Ink 2 edge (Spencer, 11 November 2026, option 4A softened: "keep 4A's paper fill, 1px border, warm band hover, and no shadow. Try a dark warm brown one step lighter than the text ink for the border"); the edge is 8.68:1 on paper and 7.88:1 on the band, and being a border it stays in forced colours. The open tag list is the one menu that also joins its box: flush under the search box with one shared edge, square where they meet (6px corners stay at the top of the box, 8px at the foot of the list), the list's Rule 2 sides matching the box's, the shadow clipped at the join, and the focus ring running around box and list together (decided 29 October 2026).
 
 ## Shapes
 
@@ -270,10 +283,10 @@ Small, consistent corners: 4px on chips and icon buttons, 6px on buttons, inputs
 | Ghost | transparent, 1px ink border, 600 | `.btn-ghost` |
 | Danger | ghost in red; red on hover for a resting Block | `.btn-ghost.danger`, `.danger-hover` |
 | Small | either button at 44px tall with 14px sides, beside text in a narrow rail; the Cookbook header's one-line New recipe from 700 to 767, and the same button across the page width below 700 | `.btn-sm` on `.btn-primary` or `.btn-ghost` |
-| Text button | sans 600, clay, no border; deeper clay on hover | `.text-btn` |
-| Text button, ink | same, ink; clay on hover | `.text-btn--ink` |
-| Quiet text button | sans 0.875rem, Ink 3, ink on hover; a list's Clear ticks | `.clear-ticks` |
-| Menu row | a 44px row in a `Dropdown` panel, sans 0.9375rem 600 ink, clay tint on hover; `.danger` is red | `.menu-row` (`Dropdown`) |
+| Text button | sans 600, clay, no border; Clay Deep and underlined on hover | `.text-btn` |
+| Text button, ink | same, ink; clay and underlined on hover | `.text-btn--ink` |
+| Quiet text button | sans 0.875rem, Ink 3, ink and underlined on hover; a list's Clear ticks | `.clear-ticks` |
+| Menu row | a 44px row in a `Dropdown` panel (paper, 1px Ink 2 edge, no shadow), sans 0.9375rem 600 ink, the band on hover; `.danger` is red | `.menu-row` (`Dropdown`) |
 | Action pill | 44px pill with leading icon, recipe page action row only | `RecipeActions` |
 | Inline confirm | question + confirm + keep, in place | `ConfirmStep` |
 | Form row | Save, Cancel, optional danger pinned right | `FormActions` |
@@ -281,21 +294,22 @@ Small, consistent corners: 4px on chips and icon buttons, 6px on buttons, inputs
 
 A control that does not fit one of these rows is a design decision, not a local style: it goes to Spencer before it is built. A review treats a button with none of these classes as blocking (the 9 November photo field shipped Replace as a small-caps ink button and Remove as a serif clay one because neither rule existed yet). `src/lib/controls.test.ts` enforces it: every `<button>`, and every link with a `btn-` class, takes `btn-primary`, `btn-ghost`, `text-btn`, `menu-row` or `clear-ticks`, or is a named structural exception in that test's one list (tabs, chips, icon-only triggers, the editor tool, a pill's remove glyph), each with its reason.
 
-**Links, the closed set** (as the code draws them on 10 November 2026):
+**Links, the closed set** (as the code draws them on 11 November 2026, by the Hover Rule):
 
 | Kind | Rest | Hover | Class |
 | --- | --- | --- | --- |
 | Inline link | clay | Clay Deep | bare `a` (app.css) |
-| Title link | ink, Bitter | clay | per component: `.card-title` (RecipeCard), `.lead-title`, `.change-title` (Discover) |
-| Arrow link | clay, typed "→" | Clay Deep | `.arrow-link`: 24px hit, 44px on a phone |
+| Title link | ink, Bitter | clay, never underlined | per component: `.card-title` (RecipeCard), `.lead-title`, `.change-title` (Discover) |
+| Arrow link | clay, typed "→" | Clay Deep, underlined | `.arrow-link`: 24px hit, 44px on a phone |
+| Sentence action | clay, underlined | Clay Deep, underlined | `.inline-action`: Search's and Discover's "Clear filters", Search's and the Cookbook's "Clear search", Search's "All recipes", the Cookbook's "Show all recipes", a tag page's "Explore all →", the auth pages' switch links ("Create one", "Log in"), "Send again", the sign-up alert's "Log in" |
 | Inline hit | the link's own | the link's own | `.hit-link`: a 24px / 44px hit for any inline link, text unmoved |
-| Back link | Ink 3, 0.875rem | ink | `.back-link` |
+| Back link | Ink 3, 0.875rem | Ink 3, underlined | `.back-link` |
 
 **Identifiers, the closed set.** Mono is for these only (the Typography rule); prose never takes it.
 
 | Kind | Face and size | Colour | Class / component | Where |
 | --- | --- | --- | --- | --- |
-| Handle | mono, 0.9375em of the line | clay; Clay Deep on hover | `Username` (its own link), `.handle` (inside a bigger link) | wherever a person is named |
+| Handle | mono, 0.9375em of the line | clay; underlined on hover | `Username` (its own link), `.handle` (inside a bigger link) | wherever a person is named |
 | Version id in copy | mono, 0.9375em | the line's | `.mono-id` | sans sentences: the editor header, Journal hints |
 | Version chip | mono 600, 0.75rem | clay | `.vid` (app.css); inline in a Discover change title it scales to 0.9375em of the title (`.change-title .vid`) | card and Discover meta rows, the version bar (the one being read is the marigold chip) |
 | Diff text | mono, 0.875rem | the diff's own | `.diff-panel` (VersionDiff) | compare and history diffs |
@@ -327,7 +341,7 @@ Fork is one click, decided 29 October 2026: the pill submits, the server makes t
 - **Error:** diff-remove text and border, no fill, so an empty invalid box still looks empty.
 - **Textarea:** grows with content (`field-sizing: content`).
 - **Required, not optional** (Spencer, 10 November 2026): a field the server refuses empty carries the word "Required" after its label, `.field-required` in app.css: sans 0.75rem, weight 400, Ink 3, no capitals or tracking. No asterisk, and an optional field carries no mark at all. The word is for the eye: the span is `aria-hidden="true"`, so the control's name stays plain ("Title") and its `required` attribute announces it once. Today: Title, Ingredients and Method in the recipe editor; Dish and Date in the Journal form; Username in Settings.
-- **Strike rows** (recipe page ingredients and steps, decided 29 October 2026): the input is a native checkbox, visually hidden, and the whole row is its label with a 44px hit. A ticked ingredient or step turns its text Ink 3 (4.9:1 on paper), grams, numeral and annotation included, and keeps its strike-through; no opacity dim, so the circle keeps its full marigold. Its visible control, the `.tick` class in app.css, is a 16px circle with a 1px Ink 3 edge at rest (Rule 2 was too faint to see, Spencer, 31 October 2026), an Ink 2 edge while the row is hovered, and marigold with an ink check when ticked (Spencer, 31 October 2026, confirmed 9 November 2026 in the MVP decision pack and still a revisit candidate: see the roadmap). In forced colours the circle keeps its own paint: a CanvasText edge, a Highlight fill and a HighlightText check when ticked. The focus ring stays on the row, the site's 2px clay ring at a 2px offset. The circle sits 10px before the text, at the row start, and only on ingredients. A method row ticks the same way but draws no circle (Spencer, 31 October 2026: cooks find ticking on the ingredients and try it on the steps; without the box the numeral closes up instead of leaving a hole); its clay numeral right-aligns in a 2ch column of the numeral's own tabular digits, so it is always 16px from its step with one digit or two (Spencer widened it from 10px, 6214208) and the text starts near the row's edge. Ticks are kept in localStorage per recipe, version and list for 12 hours, so a reload or a new tab keeps them (decided 29 October 2026). While a list has a tick, a "Clear ticks" text button ends it, right-aligned: Ink 3, ink on hover, 0.875rem like the weights note, which it shares a line with on Ingredients. It clears that list's ticks and their saved copy. Clear ticks hands focus to its list's first checkbox as it disappears. When an action moves focus to stand in for a control that disappears, a mouse click moves focus with `preventScroll`; keyboard activation lets the page scroll to where focus went. It has a 24px hit, 44px on a phone or under a coarse pointer. A row focused by the keyboard scrolls whole into view, ring and all: the page keeps 6px of scroll padding top and bottom, and 52px at the top below 1024 to clear the pinned tab bar. Each step's hidden checkbox, like each ingredient's, spans its row.
+- **Strike rows** (recipe page ingredients and steps, decided 29 October 2026): the input is a native checkbox, visually hidden, and the whole row is its label with a 44px hit. A ticked ingredient or step turns its text Ink 3 (4.9:1 on paper), grams, numeral and annotation included, and keeps its strike-through; no opacity dim, so the circle keeps its full marigold. Its visible control, the `.tick` class in app.css, is a 16px circle with a 1px Ink 3 edge at rest (Rule 2 was too faint to see, Spencer, 31 October 2026), an Ink 2 edge while the row is hovered, and marigold with an ink check when ticked (Spencer, 31 October 2026, confirmed 9 November 2026 in the MVP decision pack and still a revisit candidate: see the roadmap). In forced colours the circle keeps its own paint: a CanvasText edge, a Highlight fill and a HighlightText check when ticked. The focus ring stays on the row, the site's 2px clay ring at a 2px offset. The circle sits 10px before the text, at the row start, and only on ingredients. A method row ticks the same way but draws no circle (Spencer, 31 October 2026: cooks find ticking on the ingredients and try it on the steps; without the box the numeral closes up instead of leaving a hole); its clay numeral right-aligns in a 2ch column of the numeral's own tabular digits, so it is always 16px from its step with one digit or two (Spencer widened it from 10px, 6214208) and the text starts near the row's edge. Ticks are kept in localStorage per recipe, version and list for 12 hours, so a reload or a new tab keeps them (decided 29 October 2026). While a list has a tick, a "Clear ticks" text button ends it, right-aligned: Ink 3, ink and underlined on hover, 0.875rem like the weights note, which it shares a line with on Ingredients. It clears that list's ticks and their saved copy. Clear ticks hands focus to its list's first checkbox as it disappears. When an action moves focus to stand in for a control that disappears, a mouse click moves focus with `preventScroll`; keyboard activation lets the page scroll to where focus went. It has a 24px hit, 44px on a phone or under a coarse pointer. A row focused by the keyboard scrolls whole into view, ring and all: the page keeps 6px of scroll padding top and bottom, and 52px at the top below 1024 to clear the pinned tab bar. Each step's hidden checkbox, like each ingredient's, spans its row.
 - **The editor** (Spencer, 31 October 2026: mono only for identifiers, which ended the 29 October mono editor): on the new and edit pages the title, description, servings, both times, the tag search, ingredients, steps and the commit message are the body face at the input size, 0.9375rem on a 1.4 line (1rem on a 1.5 line on a phone, the no-zoom floor), so every single-line box is one height, 41px at desktop and 44px on a phone, and the commit message matches its siblings. The ingredients placeholder shows what comes back ("2¼ cups", not "2 1/4"). Both long boxes open with a `# Dough` line in their placeholder (decided 9 November 2026), drawn as an `aria-hidden` overlay that sets each line as the box would, the heading in Bitter 600 a step larger, all of it Ink 3, so a new cook sees what a section looks like before typing one; the textbox carries the same text as `aria-placeholder`. Method reads `# Dough`, "Cream the butter and sugar.", a blank line, "Fold in the flour.", "tip: Stop when no dry streaks remain." Invalid fields wear the error red above through `:user-invalid` and `aria-invalid`, with the message under the field in the server's wording and `aria-describedby`, only once the field has been edited and left or a save was blocked; passing through an untouched field says nothing, as the auth pages do; a failed save focuses the field it names, and the global error box is for conflicts and failures no field owns. The save's outcome is the header's line, sans 0.875rem Ink 3 with only its version ids in mono spans ("Editing v3 · saves as v4", on New "saves as v1", "saves settings only", and after a blocked save "2 fields need attention", counting down as fields are fixed), not a helper beside Save; a blocked save focuses the first invalid field. **Drafts** (Spencer, 11 November 2026: "Durable drafts saved on device for p1 and synced later"): the editor keeps its fields on the device (localStorage) half a second after typing stops and as the page hides, keyed by the signed-in user and the recipe (one key for New), never sent to the server and never a version; a draft goes on Save, on Discard draft, once the form matches the saved recipe again, and after 30 days. Opening an editor whose draft differs from the saved recipe restores it, and the state line says so after its outcome: "Editing v3 · saves as v4 · Draft from 5 minutes ago restored.", then "The recipe has changed since, so saving this draft will be refused." when the recipe was saved elsewhere since (the draft keeps the revision it was based on, so the stale check refuses a blind overwrite), then "The photo you chose wasn't kept." when a photo had been picked (its bytes are not stored), then a Discard draft text button (`.text-btn`) that puts the saved recipe back. A failed save's reply is newer than any draft and wins. An edit draft also stores its recipe's slug and title, for the Cookbook's Drafts list. Leaving a dirty editor asks nothing (Spencer, 11 November 2026: "i don't know if the confirmation is necessary anymore with drafts on"): the draft is written at once, so the last keystrokes are in it. It asks only when something would really go: when the draft could not be written (storage refused or missing), "Leave without saving? Your changes will be lost."; when a chosen photo would go (no draft holds one), "Leave without saving? The photo you chose won't be kept; the rest is saved as a draft on this device." A tab close or reload in those cases gets the browser's own question. Save sizes to its words, like Cancel beside it. Below 700px Save and Cancel sit in a bar pinned to the screen's bottom (sticky, surface fill, a 1px Rule above, edge to edge across the gutters, padded clear of the home indicator), so a long form saves without scrolling to its end; the page's scroll padding keeps a focused field clear of it. A tag pill's remove button is a 16px glyph box with a 24px hit, and 44px on a phone or under a coarse pointer, grown outward on a ::before so the pill and its focus ring keep the glyph box's size; removing a pill moves focus to the next pill's remove, else the previous, else the tag search; in forced colours the active tag option is outlined; in the open tag list, Create is separated from what sits above it by one 1px rule; the tag options are not Tab stops (arrows and Enter on the input); the tag list closes the instant focus leaves the component or a press lands outside it, with no delay, while a press on an option keeps it open for the pick. The editor is the site's 1200px column, settings 5 beside the long text's 7 with a 40px gap, one column below 900 (29 October 2026). Field messages (29 October 2026): the Serves, Prep and Cook errors run the full row under the three boxes, in field order, each still describing its own box; the steps hint and the ingredients note are in their box's aria-describedby, error first; each audience radio row is a 24px target everywhere and 44px on a phone or under a coarse pointer, as is the photo remover; the photo buttons (Choose a photo or Replace, Remove, Keep photo) are text buttons (`.text-btn`), clay words in the body face at 0.9375rem 600, a 24px target at desktop and 44px on a phone or under a coarse pointer; after Remove a "Keep photo" text button brings the photo back and focus moves between the two. Choose a photo is a label wearing `.text-btn`. Ingredients and Steps each keep a format hint under the box, Ink 3 at 0.875rem; Ingredients reads "One per line: quantity, unit, ingredient — 2¼ cups flour"; the Steps hint sets `tip:`, `warning:`, `substitution:` and `# Bake` (the Ingredients hint its `# Dough`) in bold sans, `<b>`, never mono (Spencer, 9 November 2026: "it should all be sans"). A screen reader hears the error, then the can't-scale note, then the hint. On a phone, a field focused under the sticky Save bar scrolls until the whole field, its error and hint included, clears the bar: the browser counts a partly visible box as in view and would leave it there. Smooth, or instant under reduced motion. The title is a one-row textarea that wraps a long title instead of scrolling it out of view; Enter types nothing and a pasted newline becomes a space, and it is one height with the single-line boxes while short. On New the header says "saves as v1" only while no field shows an error, as Edit makes no promise for an invalid draft. When the commit message would be generated, a hint under the box reads "Left blank, saves as: `<the generated message>`" until the cook types one. Ingredients and Method each carry a toolbar ("Ingredients tools", "Method tools") on the label row's right, with one direct button, **Section heading** (a typographic H in Bitter 700 at 1.05em on the word's baseline, then the word; Spencer, 9 November 2026: "use Bitter for H and make it a bit bigger and weightier than the section heading part"), Paprika-style (Spencer, 9 November 2026: it replaced the Insert ▾ disclosure): a text button in ink at 0.875rem 600 with the hover band, a 24px target at desktop and 44px on a phone, disabled while saving; a press types `# Section name` on its own line, above the caret's line when the caret is at its start and below it otherwise, selects "Section name" and leaves focus in the box, one step on the undo stack.
 - **Audience** (decided 9 November 2026): the editor's settings column ends in a fieldset whose legend is "Who can see this recipe", three radios in a column, narrowest first: Only me ("Only you can see it. You can share it later."), Friends ("Approved friends can see, save and fork it. It stays out of Discover.") and Public ("Anyone can find, save and fork it."). Only me is the default for a new recipe; Edit opens on the recipe's own. Each row is a bordered surface label holding a 16px icon, the word at weight 600 and its one sentence in Ink 2 at 0.875rem; the chosen row gains a 1px ink inset, and the radio itself is clay. When the recipe has forks, a hint under the rows reads "Making this more private doesn't hide existing forks." and joins every radio's description, so it is heard whichever is focused.
 - **Deleting a recipe** (the edit page only, so the owner only; moved 9 November 2026, Spencer: "Delete recipe should get the same treatment on the edit page"; to the Trash since 11 November 2026, Spencer: "30 days in trash is fine"): a red-outline ghost "Delete recipe" on the Save and Cancel row, pinned to its right edge (`FormActions`), on its own right-aligned line on a phone, as Delete entry sits in the Journal form. It opens a step in place (`ConfirmStep`), no browser confirm and no dialog: a red-outline "Move to Trash", a ghost "Keep recipe", then "Moves <title> to your Trash. You can restore it for 30 days." in Ink 2 beside them, on the trigger's line. The step widens leftwards from Delete's right edge (10 November 2026, Spencer: "should appear out of the same spot as delete with a nice animation"); where the row is too narrow for the sentence beside the buttons, it wraps beneath them. Focus moves to the step, which a screen reader hears as "Move <title> to Trash?" and its sentence; Keep recipe or Escape closes it and focus returns to the trigger. While it posts, both buttons are disabled and the first reads "Moving…"; it lands on the Trash, where the recipe's row and its Restore are the confirmation and the undo. A refusal shows under it in the form error style.
@@ -339,7 +353,7 @@ A "Skip to content" link is the first tab stop on every page, hidden until focus
 
 - Four destinations, in this order everywhere: Cookbook (`/cookbook`), Journal (`/journal`), Friends (`/friends`) and Discover (`/discover`, current on `/` too, which renders it signed out, and on `/tags/*`) (decided 9 November 2026). Each is current on its own path and everything under it. There is no hamburger and no phone menu.
 - **Top bar** (768 and up): espresso, 56px (52px on a phone), 1200px inner column. Bitter wordmark "Fork." in cream with a marigold full stop. The four destinations in small caps (`font-variant-caps: all-small-caps`, synthesised from the capitals since the shipped Source Sans subset has no small-cap glyphs), 1rem 600 with 0.05em tracking (31 October 2026; it was 0.9375rem with 0.08em), tan (7.80:1 on espresso), cream (16.55:1) on hover or when current. Then the account cluster: signed in, "+ New recipe" (the one marigold action), the Search icon and the avatar; signed out, "Log in" and "Sign up". The destinations run Discover, Cookbook, Journal, Friends, the tab bar the same (decided 9 November 2026). The current destination carries `aria-current="page"`, as do Log in and Sign up on their own pages, the Search icon on `/search` and + New recipe on `/recipes/new`. Nothing in the bar wraps (links and the action are `nowrap`), the links and the account cluster keep 24px between them, and the links never shrink. The bar is never pinned; it scrolls away with the page. It starts at the screen's top edge (`viewport-fit=cover`) with `env(safe-area-inset-top)` of padding, which runs it up behind the clock on the home screen; in the browser that inset is 0, and Safari 26 colours the status bar from the pinned (fixed or sticky) box it finds 4px below the screen's top edge, else lets the page's paper show. So the bar is `position: sticky` inside a shell of its own height (`.nav-shell`): it can never stick and scrolls away as before, yet at rest it is the pinned box Safari finds, so the clock sits on espresso, and once it has scrolled away the status bar is paper and nothing dark stays pinned (Spencer, 11 November 2026: the bar should own the clock at rest). Safari skips a box with `pointer-events: none`, one 10px thick or less, or one beneath another box. There is no espresso `theme-color`: older iOS would keep the status bar espresso while scrolled.
-- **Avatar menu** (decided 9 November 2026, Spencer: a calmer signed-in bar): the avatar alone at every width, no handle and no Log out beside it. It is a 32px tint disc with the handle's initial in Bitter ink, centred in a 44px button (cream disc on hover and while open) named "Your account, @handle", with the handle in a `title`. It opens the ⋯ menu's overlay (`Dropdown.svelte`, the behaviour the ⋯ menu shares): lifted paper, 1px Rule 2, 6px corners, the one shadow, three 44px items in sans 0.9375rem 600 ink, clay tint on hover: **Profile** (to `/users/<handle>`, `aria-current="page"` on the owner's profile), **Settings** (to `/settings`, `aria-current="page"` there; the one link to it) and **Log out** (the same POST form). The button carries `aria-haspopup="menu"` and `aria-expanded`; the panel is `role="menu"` with `menuitem`s. Opening focuses Profile, the arrow keys walk the items, Escape closes and hands focus back to the avatar, and a press outside closes. The ring inside the menu is the site's clay, not the bar's marigold.
+- **Avatar menu** (decided 9 November 2026, Spencer: a calmer signed-in bar): the avatar alone at every width, no handle and no Log out beside it. It is a 32px tint disc with the handle's initial in Bitter ink, centred in a 44px button (cream disc on hover and while open) named "Your account, @handle", with the handle in a `title`. It opens the ⋯ menu's overlay (`Dropdown.svelte`, the behaviour the ⋯ menu shares): paper, a 1px Ink 2 edge, 6px corners, no shadow, three 44px items in sans 0.9375rem 600 ink, the band on hover: **Profile** (to `/users/<handle>`, `aria-current="page"` on the owner's profile), **Settings** (to `/settings`, `aria-current="page"` there; the one link to it) and **Log out** (the same POST form). The button carries `aria-haspopup="menu"` and `aria-expanded`; the panel is `role="menu"` with `menuitem`s. Opening focuses Profile, the arrow keys walk the items, Escape closes and hands focus back to the avatar, and a press outside closes. The ring inside the menu is the site's clay, not the bar's marigold.
 - **Below 768** the espresso bar keeps the wordmark, the Search icon (a 44px box, so Search is reachable from the bar at every width) and the avatar, or Log in signed out; the wordmark and Log in are 44px tall. The destinations move to a **tab bar** pinned to the screen's bottom: paper (`--color-bg`) with a 1px Rule 2 (`--color-border-2`) top edge, four equal columns, each a 22px line icon over its label in sans 0.75rem 600, Ink 2, ink on the band on hover (decided 9 November 2026), at least 56px tall, padded clear of the home indicator (`env(safe-area-inset-bottom)`). The current item is ink with a 2px clay top edge drawn over the rule. The tab bar is not rendered in Cook (`?cook=1`) or on the editor routes (`/recipes/new`, `/recipes/[slug]/edit`), whose own pinned bars (Done cooking; Save and Cancel) take the bottom of the screen.
 - In forced colours, where cream and tan become one colour, the current bar link is underlined (4px offset), the current Search icon takes a 2px CanvasText outline inside its 44px box, and on the owner's profile the avatar's disc takes a 2px CanvasText outline at every width; each outline gives way to the focus ring while focused. In the tab bar the idle items' transparent top edge is painted Canvas, so only the current item keeps a line.
 
@@ -361,7 +375,7 @@ Decided 29 October 2026, revised twice the same day: first the commit message le
 - **Measurement** (Settings "Show quantities in": As written, Metric, US; `convertIngredient` in `src/lib/recipes/convert.ts`): a signed-in cook's choice converts ingredient quantities on the recipe reading view only, after scaling (scale, convert, round once, from the full-precision quantity). Nothing stored changes. Signed out, unset, or reading a past version (a record), the list is exactly as without it. **What converts**: a weight to a weight (g, kg, mg and oz, lb) and a volume to a volume (ml, dl, L and fl oz, cup, pint, quart, gallon), at US customary sizes (a 236.6 ml cup, a 29.6 ml fluid ounce, not the 250 ml metric or imperial cup), each end of a range in one unit. **What never converts**: across dimensions (no cups to grams; the gram hint stays as it is), teaspoons and tablespoons (kitchen-universal, as metric cookbooks keep them), quantities already in the cook's system (the author's own numbers, not re-rounded), counts, pinches, sticks, "to taste", unparsed lines, temperatures in the method and pan sizes. **Rounding**: metric in grams or millilitres, to 1 below 50, 5 below 1000, and 10 from 1000, shown as kg or L (`1.36 kg`); US to kitchen fractions, ¼ ⅓ ½ ⅔ ¾ for volumes (and ⅛ below one), ¼ ½ ¾ for weights, in the largest natural unit that fits: quart from 1, cup from ¼, tablespoon 1 to 4, teaspoon up to 3, pound from 1, else ounces (so 15 ml is 1 tbsp and 454 g is 1 lb). A rounded value more than 6% from the exact one does not land; the next unit is tried, and with none the line stays as written (200 ml stays 200 ml in US). **Display**: a converted measure reads clay by the Dynamic Is Clay Rule, and the measure as written follows it in the gram hint's place and tone, Ink 3 in parentheses, read as "written as" to a screen reader, sharing the bracket with the weight on a volume (`530 ml (2¼ cups, 281g) flour`); a converted weight drops the gram figure, since one side is already grams. Scaled too, the bracket holds the scaled measure and is clay like a scaled weight. One Ink 3 line under the list, only when a row converted: "Converted to metric; as written in parentheses." or "Converted to US units; …", then a "Change in Settings" link to the section.
 
 - **Tags:** a comma-separated line at 1rem; each tag a clay 600 link, Clay Deep on hover, the commas Ink 2 (revised 29 October 2026: grey tags carried no link affordance).
-- **Stats row** (Spencer, 31 October 2026: "I like the stats row 1b"): under the byline, two items, "N forks · N versions", each a 16px Ink 2 icon (`aria-hidden`) and its words, which carry the meaning: forks (the fork icon; "2 forks", "1 fork", "No forks"; a clay link to the forks list when there are any) and versions (the versions icon; "3 versions", a clay link to the version bar, `#versions`, which opens its list on landing; "1 version" is plain, since one version has no bar). It shares the byline's size, 1rem on a 1.5 line, so the header keeps one metadata size; the text is Ink 2, the links clay 600. No dots between items: a 20px column gap, wrapping on narrow screens. It stays while cooking: it is information, not an action. The icons the row shares with the action row live once in `Icons.svelte`. Both are line art in one 1.5 stroke on a 16px box, legible at 14px, no dots or fills (decided 9 November 2026): the fork is a vertical handle under a short crossbar with four prongs rising from it, each prong a single stroke; versions is a stack of pages, three short horizontal strokes each offset right of the one above, chosen over a branch with two dots because it is horizontal where the fork is vertical and a branch reads as a fork.
+- **Stats row** (Spencer, 31 October 2026: "I like the stats row 1b"): under the byline, two items, "N forks · N versions", each a 16px Ink 2 icon (`aria-hidden`) and its words, which carry the meaning: forks (the fork icon; "2 forks", "1 fork", "No forks"; a clay link to the forks list when there are any) and versions (the versions icon; "3 versions", a clay link to the version bar, `#versions`, which opens its list on landing; "1 version" is plain, since one version has no bar). It shares the byline's size, 1rem on a 1.5 line, so the header keeps one metadata size; the text is Ink 2, the links clay 600. No dots between items: a 20px column gap, wrapping on narrow screens. It stays while cooking: it is information, not an action. The icons the row shares with the action row live once in `Icons.svelte`. Both are line art in one 1.5 stroke on a 16px box, legible at 14px, no dots or fills (decided 9 November 2026): the fork is three upright tines whose outer two curve into one round shoulder, the middle tine running on down as a straight handle (option 1A, Spencer, 11 November 2026: "1a for now for logo but redesign candidate"; it replaced four prongs on a crossbar, which read as a comb at 16px). It is a redesign candidate: a deeper head and a handle widening toward its end are under review. The wordmark carries no mark beside it; versions is a stack of pages, three short horizontal strokes each offset right of the one above, chosen over a branch with two dots because it is horizontal where the fork is vertical and a branch reads as a fork.
 - **Personal line** (signed in, not while cooking; only ever the reader's own): "You cooked this on Sun 8 Nov" after one Journal entry of the recipe, "You cooked this 4 times, last on Tue 3 Nov" after more; the day links to the latest entry. Counted from the reader's own entries on every load, never stored.
 - **Actions:** the 44px pills (see Buttons), unpinned, the band's last line, directly after the measure: Cook, then Edit recipe for the owner or Save and Fork for a visitor, then a ghost Add to Journal for anyone signed in (the recipe, version and serves prefilled); below 700px Cook keeps its own row and the rest pair up, a lone last pill spanning. Actions are pills in the action row, never a line below it; horizontal space first, vertical only when it carries meaning (Spencer, 9 November 2026). Save is a toggle button whose word never changes: it always reads "Save", followed by the recipe's save count once it has one ("Save · 14", the count compact, the dot `aria-hidden`), the visible text is the accessible name, and the state is carried by `aria-pressed` (Spencer, 31 October 2026: "i don't like it growing size with favorited"); no `aria-label` that differs from the visible text. The count follows the press at once. Off, it is the ink outline pill with an outline bookmark in the button's ink. On, the pill fills with the pale marigold tint (`--color-marigold-tint`, #fbefd0; #f7e4b6, `--color-marigold-tint-hover`, on hover so it still reacts) inside a 1px marigold border, the bookmark fills marigold and keeps its ink edge, and the word stays ink, so it reads as on without competing with the solid marigold Cook beside it (Spencer, 31 October 2026; a clay star looked wrong). In forced colours, where the tint and the marigold fill go, the pressed pill takes a 2px border and a Highlight bookmark on a CanvasText edge, as the ticks do. Logged out, Save is a ghost "Log in to save" pill with the unfilled bookmark, leading to login and back (Spencer, 10 November 2026: "should also probably be a ghost button"); below 700px it spans the row under Cook.
 - **Cooking mode** (roadmap M18, shipped 31 October 2026; Spencer's shape, 30 October: one toggle, wake lock, ticks kept, bigger method type, actions and bar hidden): a "Cook" pill with a pot icon from the fork and bookmark stroke set opens the action row, marigold, the row's one fill and first in Tab order, for everyone, logged in or not, on any version; below 700px it spans its own full-width row with Save and Fork sharing the row beneath, alone or not (Spencer, 31 October 2026, gave Cook its own full-width row so the band reads as two clean rows). Pressed it reads "Done cooking", carries `aria-pressed`, and steps down to Save's on-state: the outline pill with the marigold tint inside a marigold border, a 2px border in forced colours. Only the shown word is rendered (8 November 2026: the reserved "Done cooking" width read as a blank gap beside "Cook"); the pill grows while cooking, when Save and Fork have already stepped aside. While cooking, Fork, Edit and Save are not rendered, a signed-in cook gets a ghost "Add to Journal" beside Done cooking, and the version bar goes; the title band, the measure, the scaler, the ingredient rows with their ticks and Clear ticks, and the section tabs below 1024 stay. Method step text goes from 1.0625rem to 1.25rem on a 1.55 line (1.125rem below 700px), and the clay numeral, the row's face, keeps its proportion to it (1.3125rem, 1.1875rem on a phone); annotations keep their size. The page root carries `data-cooking`, which the method's CSS keys off, so no prop reaches the method. `?cook=1` is written with the scaler's shallow replace, so a reload or a shared link stays cooking and Done drops it; both writers build on `page.shallow`'s URL, so neither drops the other's parameter. A screen wake lock is held while cooking, asked for again when the tab comes back (the browser drops it on hide), released on Done, on leaving the page and on unload; where the API is missing a one-line Ink 3 note under the pill says "Your screen may still sleep.", and a refused lock is silent. No animation, and nothing new turns clay.
@@ -390,7 +404,7 @@ End of day, 29 October 2026 (Spencer's decisions): the native select is the only
 
 Spencer's rule: reuse where the shape is the same; never force a component onto an item that is genuinely different. One of each:
 
-- **`Icons.svelte`** (`src/lib/components/`): every line icon drawn more than once: `audienceIcon` (lock, the two people, globe), lock, Friends (the tab bar's drawing, the one Friends), like, more, fork, versions, save, journal (the book on Add to Journal), chevron, search. The editor's heading H is a typed letter in `GroupedTextEditor`, not an icon. Audience words come from `AUDIENCE_LABEL` in `src/lib/audience.ts`, and their one sentence each from `AUDIENCE_NOTE` beside it. **Icons beside text** (Spencer, 11 November 2026): the icon and its words share a flex row with `align-items: center`, so the middle of the icon sits on the middle of the words' line in every browser. Never place an icon with a vertical offset (margin, `top`, `translate`, `vertical-align`, `align-self`): an offset is tuned to one browser's font metrics and sits wrong in another. `src/lib/icons.test.ts` fails on any such rule.
+- **`Icons.svelte`** (`src/lib/components/`): every line icon drawn more than once: `audienceIcon` (lock, the two people, globe), lock, Friends (the tab bar's drawing, the one Friends), like, more, fork, versions, save, journal, chevron, search. Journal is one drawing for the tab bar's Journal and Add to Journal (option 2B, Spencer, 11 November 2026; it replaced the tab's calendar and the action's side-on book): a spiral notepad on a 24 box, three rings over a page of three lines, set at 16 in the pill and 22 in the tab bar, its stroke scaled to stay 1.5 on screen as Friends' is. The rings sit 4 units apart, not the option's 3.5, so they stay three distinct rings at 16px. The editor's heading H is a typed letter in `GroupedTextEditor`, not an icon. Audience words come from `AUDIENCE_LABEL` in `src/lib/audience.ts`, and their one sentence each from `AUDIENCE_NOTE` beside it. **Icons beside text** (Spencer, 11 November 2026): the icon and its words share a flex row with `align-items: center`, so the middle of the icon sits on the middle of the words' line in every browser. Never place an icon with a vertical offset (margin, `top`, `translate`, `vertical-align`, `align-self`): an offset is tuned to one browser's font metrics and sits wrong in another. `src/lib/icons.test.ts` fails on any such rule.
 - **`ConfirmStep`** (`ui/`): an action asked twice in place: the trigger gives way to a red-outline confirm (a plain ghost with `destructive={false}`, for a step that loses nothing), a ghost keep button and the sentence (Ink 2, body size) on the trigger's line, the box widening from the trigger's width over 180ms ease-out (instant under reduced motion); under 700px the sentence wraps beneath the buttons. Focus to the step, Escape or keep hands it back. Delete recipe (Move to Trash), the Trash's Delete forever, Delete entry, the profile's Remove friend and Block, and the version bar's Restore. The Friends feed's ⋯ menu keeps its own block step.
 - **`FormActions`** (`ui/`): an editor's last row: Save, a ghost Cancel with Save's padding, and an optional danger control pinned right (its own line on a phone). The recipe editor and the Journal form.
 - **`ChoiceGroup`** (`ui/`): a fieldset of radio rows (icon, word, one sentence), the radio clay and centred on the word, 6px from it; one or two columns. Both audience choices.
@@ -398,7 +412,7 @@ Spencer's rule: reuse where the shape is the same; never force a component onto 
 - **`CookLink`** (`ui/`): a cook as one profile link, `Avatar` then `.handle`, as wide as the two; above a card's stretched title link and before it in Tab order; a 24px hit at desktop, 44px below 700 without moving the line. Discover's lead and Discover cards; the lead takes the 44px from 900 down, where it turns one column.
 - **`EmptyPanel`** (`ui/`): a list page with nothing in it: an h2, one sentence and the way out, ruled at the top; `centered` drops the rule and centres it. Cookbook's empty library, the empty Trash, the Journal and Friends. Discover and Search keep `.empty-state`-style lines; Cookbook's no-match message keeps its own.
 - **`ResultStatus`** (`ui/`): "N recipes match", said only while filtering, to a screen reader only (the cards say it; Spencer dropped Cookbook's visible count, 9 November 2026), always in the DOM as a polite status and taking no space. Cookbook, Search and Discover.
-- **app.css utilities**: `.text-btn` (a clay 600 word-button, 24px hit, 44px on a phone or touch screen, Clay Deep on hover, no underline; `.text-btn--ink` is ink, clay on hover), `.btn-ghost.danger` (Diff Remove red outline and text; `.danger-hover` turns red only on hover or focus), `.hit-link` (an inline link's 24px and 44px hit without moving it), `.dot-list` (the drawn dot between items, silent to a screen reader), `.lock-note` (the owner-only lifted paper), `.page-inner--narrow` (its children at 680px on the column's left edge, the Journal's entry pages), `.page-head` and `.page-sub` (a list page's title and its line), `.row-list` and `.list-row` with `.list-row-what`, `.list-row-title`, `.list-row-meta` and `.list-row-actions` (rows across the page column, ruled between, what on the left and actions on the right, one line from 700px, stacked below: the Trash and the Cookbook's Drafts).
+- **app.css utilities**: `.text-btn` (a clay 600 word-button, 24px hit, 44px on a phone or touch screen, Clay Deep and underlined on hover; `.text-btn--ink` is ink, clay and underlined on hover), `.inline-action` (an action inside a sentence, underlined at rest, Clay Deep on hover), the one underline (1px, 3px below the words, shared by every underlined word), `.btn-ghost.danger` (Diff Remove red outline and text; `.danger-hover` turns red only on hover or focus), `.hit-link` (an inline link's 24px and 44px hit without moving it), `.dot-list` (the drawn dot between items, silent to a screen reader), `.lock-note` (the owner-only lifted paper), `.page-inner--narrow` (its children at 680px on the column's left edge, the Journal's entry pages), `.page-head` and `.page-sub` (a list page's title and its line), `.row-list` and `.list-row` with `.list-row-what`, `.list-row-title`, `.list-row-meta` and `.list-row-actions` (rows across the page column, ruled between, what on the left and actions on the right, one line from 700px, stacked below: the Trash and the Cookbook's Drafts).
 
 ## Do's and Don'ts
 
@@ -408,7 +422,7 @@ Spencer's rule: reuse where the shape is the same; never force a component onto 
 - **Do** say "Log in" for signing in and "Log out" for its opposite, everywhere: the navbar, the login page's tab, subtitle and button, and every link to it. "Sign up" is the other verb, and "Sign in" beside it differs by two letters. The confirm-email page's way on reads "Log in" too.
 - **Do** end a failure the cook can retry with "Try again.", never "Please try again.", and refuse an action on someone else's recipe with "Not authorized" (31 October 2026).
 - **Do** keep clay for titles, links and version marks, and marigold for the one action.
-- **Do** separate surfaces with a tone step or a 1px rule; reserve shadows for dialogs.
+- **Do** separate surfaces with a tone step or a 1px rule; reserve shadows for a list dropped from a field.
 - **Do** keep body text at 16px, ink, with a measure under about 72 characters.
 - **Do** compose desktop and iPad first; give the phone its own crop and order without reshaping the desktop.
 - **Do** hold the layout when a recipe has no photo; the clay-tint panel is the fallback.

@@ -20,7 +20,7 @@ Status against the app published on 11 Nov 2026 and the git log. Items from the 
 | --- | --- | --- |
 | Accent roles | Each accent has one job: marigold the primary action, clay text and reader-changed values, semantic colours for feedback and diffs; colour is never the only signal (S1, Z 3) | done (closed control set, hover rules); keep checking per screen |
 | Palette | Explore a slightly brassier, less saturated yellow by full-screen comparison; no hex chosen; contrast verified on real pairs in default, hover, focus and disabled states (S1, S2) | backlog |
-| Hovers | Grey may turn ink, clay darkens to Clay Deep, ink turns clay; text buttons change colour only (decided 10 Nov); the hover palette as a whole is a P1 revisit | done; revisit in backlog |
+| Hovers | One step of colour; text buttons, arrow links, handles and the back link also underline; an action inside a sentence is underlined at rest; one 1px underline, 3px below the words; boxes fill with the band (the Hover Rule, decided 11 Nov) | done |
 | Typography roles | Type carries hierarchy before containers; one title, readable body, quieter supporting line; remove redundant eyebrows and labels; mono only for identifiers; review long comparison prose for needless mono (S1, Z 1) | partly done (editor hints sans, one `.vid` chip); diff page head still mono throughout: backlog |
 | Grid and alignment | Shared left edges and baselines; group times, Serves and Makes, source and audience coherently; room for long titles (Z 2) | backlog (with the editor composition, E01) |
 | Layout and spacing | Standard page headers, widths, section spacing, action alignment; smaller heroes and empty upload areas (S1) | partly done (one page width, shared `.page-head`); heroes: reproduce |

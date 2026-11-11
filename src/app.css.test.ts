@@ -41,6 +41,9 @@ const pairs: [string, string, number][] = [
 	['--color-text', '--color-marigold', 4.5],
 	['--color-text', '--color-marigold-hover', 4.5],
 	['--color-text', '--color-band', 4.5],
+	// The menu panel's edge (a UI boundary, 3:1), on paper and over the band.
+	['--color-text-2', '--color-bg', 3],
+	['--color-text-2', '--color-band', 3],
 	['--color-text-tan', '--color-navbar-bg', 4.5],
 	['--color-text-cream', '--color-navbar-bg', 4.5],
 	['--color-marigold', '--color-navbar-bg', 3]
@@ -68,6 +71,22 @@ describe('app.css tokens', () => {
 	});
 });
 
+/** A stylesheet's rules, comments dropped, :global() unwrapped. A pattern, not a parser. */
+const rulesOf = (source: string) =>
+	[...source.replace(/\/\*[\s\S]*?\*\//g, '').matchAll(/([^{}]+)\{([^{}]*)\}/g)].map((m) => ({
+		selectors: m[1].split(',').map((s) => s.trim().replace(/:global\((.+?)\)/g, '$1')),
+		body: m[2]
+	}));
+
+/** app.css and every component's <style>. */
+const stylesheets = readdirSync(new URL('.', import.meta.url), { recursive: true })
+	.map(String)
+	.filter((f) => f.endsWith('.svelte') || f === 'app.css')
+	.map((f) => {
+		const source = readFileSync(new URL(f, import.meta.url), 'utf8');
+		return { f, style: f === 'app.css' ? source : (source.split('<style>')[1] ?? '') };
+	});
+
 // Hovers must be seen (decided 9 November 2026): the primary darkens clearly,
 // the ghost takes the band.
 describe('app.css hovers', () => {
@@ -83,7 +102,7 @@ describe('app.css hovers', () => {
 		expect(body('.btn-ghost:hover')).toMatch(/background:\s*var\(--color-band\)/);
 	});
 
-	// One direction (decided 9 November 2026): clay text deepens, never turns ink.
+	// The Hover Rule (DESIGN.md): clay text deepens, never turns ink.
 	test('a clay link deepens to clay deep on hover, a clearly darker step', () => {
 		expect(body('a:hover')).toMatch(/color:\s*var\(--color-accent-hover\)/);
 		const step = contrast(tokens['--color-accent'], tokens['--color-accent-hover']);
@@ -95,20 +114,10 @@ describe('app.css hovers', () => {
 	// file or app.css, or a bare link (`a`, `a.x`) no rule recolours. A heuristic
 	// over selectors, not a cascade: it catches the direct case.
 	test('no hover turns clay text ink', () => {
-		const rulesOf = (source: string) =>
-			[...source.replace(/\/\*[\s\S]*?\*\//g, '').matchAll(/([^{}]+)\{([^{}]*)\}/g)].map((m) => ({
-				selectors: m[1].split(',').map((s) => s.trim().replace(/:global\((.+?)\)/g, '$1')),
-				body: m[2]
-			}));
 		const coloured = (rules: ReturnType<typeof rulesOf>, value: RegExp) =>
 			new Set(rules.filter((r) => value.test(r.body)).flatMap((r) => r.selectors));
 		const global = rulesOf(css);
-		const files = readdirSync(new URL('.', import.meta.url), { recursive: true })
-			.map(String)
-			.filter((f) => f.endsWith('.svelte') || f === 'app.css');
-		const offenders = files.flatMap((f) => {
-			const source = readFileSync(new URL(f, import.meta.url), 'utf8');
-			const style = f === 'app.css' ? source : (source.split('<style>')[1] ?? '');
+		const offenders = stylesheets.flatMap(({ f, style }) => {
 			const rules = [...rulesOf(style), ...global];
 			const clay = coloured(rules, /(^|[\s;])color:\s*var\(--color-accent\)/);
 			const recoloured = coloured(rules, /(^|[\s;])color:/);
@@ -126,17 +135,89 @@ describe('app.css hovers', () => {
 	});
 });
 
+// The hover rule (Spencer, 11 November 2026): words that act underline on
+// hover with one shared underline, titles turn clay with none, boxes fill
+// with the band, and an action inside a sentence is underlined at rest.
+describe('the hover rule', () => {
+	const UNDERLINE = /text-decoration-line:\s*underline/;
+	const all = stylesheets.flatMap(({ f, style }) => rulesOf(style).map((r) => ({ f, ...r })));
+	const hovers = all.filter((r) => r.selectors.some((s) => s.includes(':hover')));
+
+	// The one definition: every underlined word takes its weight and offset here.
+	const shared = rulesOf(css).filter((r) => /text-underline-offset/.test(r.body));
+	const underlined = shared.flatMap((r) => r.selectors);
+
+	test('one underline, 1px and 3px below the words, defined once', () => {
+		expect(shared).toHaveLength(1);
+		expect(shared[0].body).toMatch(/text-decoration-thickness:\s*1px/);
+		expect(shared[0].body).toMatch(/text-underline-offset:\s*3px/);
+		// No hover draws its own: it only switches the line on.
+		const own = hovers.filter((r) =>
+			/text-underline-offset|text-decoration-thickness/.test(r.body)
+		);
+		expect(own.map((r) => `${r.f}: ${r.selectors.join(', ')}`)).toEqual([]);
+	});
+
+	test('text buttons, arrow links, the back link and handles underline on hover', () => {
+		const body = (selector: string) => cssRule(css, selector);
+		for (const control of ['.text-btn', '.arrow-link', '.clear-ticks']) {
+			expect(body(`${control}:hover`)).toMatch(UNDERLINE);
+			expect(underlined).toContain(control);
+		}
+		// The ink text button is a .text-btn too, so it shares the definition.
+		expect(body('.text-btn--ink:hover')).toMatch(UNDERLINE);
+		// Words whose colour is a name keep it and gain the line.
+		expect(body('.back-link:hover')).toMatch(UNDERLINE);
+		expect(body('.back-link:hover')).not.toMatch(/(^|[\s;])color:/);
+		for (const word of ['.back-link', '.username', '.handle']) expect(underlined).toContain(word);
+	});
+
+	// A colour change alone is not a hover on a word that acts.
+	test('no text control hovers by colour alone', () => {
+		const WORDS = /\.(text-btn|arrow-link|back-link|clear-ticks|username|handle)\b/;
+		const offenders = hovers
+			.filter((r) => r.selectors.some((s) => s.includes(':hover') && WORDS.test(s)))
+			// The navbar's handle on espresso steps tan to cream, outside the rule.
+			.filter((r) => !r.selectors.every((s) => s.includes('.on-dark')))
+			.filter((r) => !UNDERLINE.test(r.body))
+			.map((r) => `${r.f}: ${r.selectors.join(', ')}`);
+		expect(offenders).toEqual([]);
+	});
+
+	test('a title turns clay and is never underlined', () => {
+		const titles = all.filter((r) => r.selectors.some((s) => /title/.test(s)));
+		const lined = titles.filter((r) => /text-decoration(-line)?:\s*underline/.test(r.body));
+		expect(lined.map((r) => `${r.f}: ${r.selectors.join(', ')}`)).toEqual([]);
+	});
+
+	// "Clear search" beside "No recipes match 'tikka'": underlined at rest, so
+	// it reads as an action on touch, and deeper clay on hover.
+	test('an action inside a sentence is underlined at rest and deepens on hover', () => {
+		expect(cssRules(css, '.inline-action').some((b) => UNDERLINE.test(b))).toBe(true);
+		expect(underlined).toContain('.inline-action');
+		expect(cssRule(css, '.inline-action:hover')).toMatch(/color:\s*var\(--color-accent-hover\)/);
+	});
+
+	// A tap on iOS leaves :hover set until the next tap elsewhere.
+	test('the word hovers apply only where a pointer hovers', () => {
+		const hoverBlocks = css.split('@media (hover: hover)').slice(1).join('');
+		for (const control of ['.text-btn', '.arrow-link', '.back-link', '.inline-action']) {
+			expect(hoverBlocks).toContain(`${control}:hover`);
+			expect(css.split('@media (hover: hover)')[0]).not.toContain(`${control}:hover`);
+		}
+	});
+});
+
 // The shared utilities that replaced per-component copies (9 November 2026).
 describe('app.css shared utilities', () => {
 	const body = (selector: string) => cssRule(css, selector);
 	const phone = css.slice(css.indexOf('@media (max-width: 699px), (pointer: coarse)'));
 
-	test('a text button is clay at 24px, a thumb on a phone, and its hover deepens, no underline', () => {
+	test('a text button is clay at 24px, a thumb on a phone, and its hover deepens', () => {
 		expect(body('.text-btn')).toMatch(/color:\s*var\(--color-accent\)/);
 		expect(body('.text-btn')).toMatch(/min-height:\s*24px/);
 		expect(phone).toMatch(/\.text-btn \{\s*min-height: 44px/);
 		expect(body('.text-btn:hover')).toMatch(/color:\s*var\(--color-accent-hover\)/);
-		expect(body('.text-btn:hover')).not.toMatch(/text-decoration/);
 		expect(body('.text-btn--ink:hover')).toMatch(/color:\s*var\(--color-accent\)/);
 	});
 

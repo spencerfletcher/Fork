@@ -37,13 +37,12 @@
 		font-size: 0.9375rem;
 	}
 
-	/* `.handle` is app.css's; the hover is the link's, avatar included. */
-	.handle {
-		transition: color 0.15s ease;
-	}
-
-	.cook-link:hover .handle {
-		color: var(--color-accent-hover);
+	/* `.handle` is app.css's; the hover is the link's, avatar included, and
+	   underlines the handle only: its clay holds (the hover rule). */
+	@media (hover: hover) {
+		.cook-link:hover .handle {
+			text-decoration-line: underline;
+		}
 	}
 
 	/* A 44px hit on a phone without moving the line. */

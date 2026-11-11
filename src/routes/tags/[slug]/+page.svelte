@@ -19,7 +19,7 @@
 			<RecipeGrid recipes={data.recipes} />
 		{:else}
 			<p class="empty-state">
-				No recipes with this tag yet. <a href="/discover">Explore all →</a>
+				No recipes with this tag yet. <a class="inline-action" href="/discover">Explore all →</a>
 			</p>
 		{/if}
 	</div>

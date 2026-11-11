@@ -30,7 +30,8 @@
 </a>
 
 <style>
-	/* Clay like every other link in running text; ink on hover. */
+	/* Clay like every other link in running text. A handle keeps its clay on
+	   hover and underlines, with app.css's one underline (the hover rule). */
 	.username {
 		font-family: var(--font-mono);
 		font-size: 0.9375em;
@@ -38,8 +39,10 @@
 		transition: color 0.15s ease;
 	}
 
-	.username:hover {
-		color: var(--color-accent-hover);
+	@media (hover: hover) {
+		.username:hover {
+			text-decoration-line: underline;
+		}
 	}
 
 	.username.on-dark {

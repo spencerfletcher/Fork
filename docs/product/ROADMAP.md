@@ -251,11 +251,7 @@ Items waiting on Spencer's eye. Rules live in [DESIGN.md](../../DESIGN.md); the 
 
 | Item | What is open | Phase | Source |
 | --- | --- | --- | --- |
-| Hover palette | Revisit the hover colours as a whole, Clay Deep (#6e2500, kept for now) included. Decided so far: grey text may turn ink, clay darkens to Clay Deep, ink turns clay | P1 | R, OD |
-| Text-button hover underline | Whether word-buttons underline on hover; off for now, colour change only | P1 | R, OD |
-| Dropdown panel background | The lifted white reads out of place against paper | P1 | R, OD |
-| Fork icon and logo | The stats-row fork glyph reads poorly and is the likely app mark; a proper mark, not a quick fix | P1 | R, OD |
-| Journal icon | The book is a placeholder, and the tab bar draws a calendar while the action draws a notebook; refine with the fork icon | P1 | R, code-health audit |
+| Fork icon and logo | 1A (three tines on a round shoulder) ships for now (OD, 11 Nov: "1a for now for logo but redesign candidate"); open: a deeper head and a handle widening toward its end, upright or on the diagonal | P1 | R, OD |
 | Cook-mode distinction | The cooking view looks too close to the recipe page | P1 | R, OD |
 | Serving scaler redesign | The control does not feel like Fork; a design round, with the S01 to S08 behaviour | P2 | R |
 | Tick affordance | Revisit candidate (M20) | P2 | DS |
@@ -437,6 +433,7 @@ Other preserved preferences: warm cookbook styling, desktop two-column reading, 
 - 11 Nov: durable drafts are saved on the device in P1; synced drafts are P2, beside the profile and settings work (OD: "saved on device for P1 and synced later").
 - 11 Nov: deleted recipes are recoverable from Trash for 30 days, P1 (OD: "30 days in trash is fine").
 - 11 Nov: when an author unpublishes or deletes a saved recipe, the saver keeps a read-only copy of the version they saved, marked as no longer shared by the author, and cannot re-share it (OD: "yes keep what you saved").
+- 11 Nov: P1 design calls: fork icon 1A for now, still a redesign candidate; Journal is one spiral notepad (2B); menus are paper with a 1px Ink 2 edge, the band on hover and no shadow (4A softened); hovers are one step of colour, text buttons and arrow links also underline, an action inside a sentence is underlined at rest, one 1px underline 3px below the words (5A with 6B) (OD, git).
 - 11 Nov: all importers are P2; the first competitor migration importer moves from P1 to join paste, URL and file import (OD: "Move all importers to P2").
 - 11 Nov: the first paid offer is one annual plan, no tiers at first; price and entitlements are decided later (OD: "Shape is one annual plan sure. Details decide later.").
 - 11 Nov: household or power packaging and the first native platform are deferred, listed under section 15 (OD: "decide later").

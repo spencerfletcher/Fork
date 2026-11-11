@@ -107,7 +107,7 @@
 			<p class="empty">
 				{#if filtered}
 					No recipes match. Try another search or fewer filters.
-					<a href="?">Clear filters</a>
+					<a class="inline-action" href="?">Clear filters</a>
 				{:else}
 					No recipes yet.
 				{/if}

@@ -34,6 +34,16 @@ describe('TabBar', () => {
 		expect(current[0]).toHaveAttribute('aria-current', 'page');
 	});
 
+	// One Journal drawing (2B, 11 November 2026): the tab draws Add to Journal's
+	// notepad from Icons.svelte, not a calendar of its own.
+	test('Journal draws the shared journal icon', () => {
+		render(TabBar);
+		const svg = screen.getByRole('link', { name: 'Journal' }).querySelector('svg')!;
+		expect(source).toMatch(/\{@render journalIcon\(24\)\}/);
+		expect(svg.querySelector('rect')).not.toBeNull();
+		expect(svg.querySelector('path')!.getAttribute('d')).toMatch(/^M8 3v4M12 3v4M16 3v4/);
+	});
+
 	test('Cook hides it', () => {
 		at('/recipes/dal?cook=1', '/recipes/[slug]');
 		render(TabBar);

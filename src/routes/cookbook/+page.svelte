@@ -89,10 +89,10 @@
 					{#if data.searchQuery}
 						<h2>No recipes match “{data.searchQuery}”.</h2>
 						<p>Search looks at titles, descriptions and ingredients.</p>
-						<a href={filterHref(data.filter, ['q'])}>Clear search</a>
+						<a class="inline-action" href={filterHref(data.filter, ['q'])}>Clear search</a>
 					{:else}
 						<h2>No recipes match these filters.</h2>
-						<a href={filterHref('all', ['tags'])}>Show all recipes</a>
+						<a class="inline-action" href={filterHref('all', ['tags'])}>Show all recipes</a>
 					{/if}
 				</div>
 			{/if}
