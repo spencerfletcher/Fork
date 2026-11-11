@@ -1,11 +1,9 @@
 import { describe, test, expect, beforeAll, afterAll } from 'vitest';
 import { eq } from 'drizzle-orm';
 
-import { inRollback, localDb } from '#lib/testing/db.js';
+import { closeDbAfter, localDb, stamp, withProfiles } from '#lib/testing/db.js';
 
-afterAll(async () => {
-	if (localDb) await (await import('#lib/server/db/index.js')).closeDb();
-});
+closeDbAfter();
 
 // Times cooked and last cooked, derived from the viewer's own entries: against
 // the local Supabase stack, inside a transaction that is always rolled back.
@@ -24,14 +22,7 @@ describe.skipIf(!localDb)('times and last cooked, against the real database', ()
 	async function withKitchen(
 		body: (tx: Tx, me: string, other: string, ids: [number, number]) => Promise<void>
 	) {
-		const stamp = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-		const me = `test-me-${stamp}`;
-		const other = `test-other-${stamp}`;
-		await inRollback(async (tx) => {
-			await tx.insert(schema.profiles).values([
-				{ id: me, username: `me-${stamp}` },
-				{ id: other, username: `ot-${stamp}` }
-			]);
+		await withProfiles(2, async (tx, [me, other], stamp) => {
 			const rows = await tx
 				.insert(schema.recipes)
 				.values([
@@ -114,10 +105,9 @@ describe.skipIf(!localDb)('kept copies in the Journal, against the real database
 	let db: typeof import('#lib/server/db/index.js').db;
 	let schema: typeof import('#lib/server/db/schema.js');
 	let journal: typeof import('./journal.js');
-	const stamp = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 	let author: string;
 	let saver: string;
-	const slug = `journal-kept-${stamp}`;
+	const slug = `journal-kept-${stamp()}`;
 
 	beforeAll(async () => {
 		({ db } = await import('#lib/server/db/index.js'));

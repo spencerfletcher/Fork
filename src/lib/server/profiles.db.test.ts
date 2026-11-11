@@ -1,12 +1,10 @@
-import { describe, test, expect, beforeAll, afterAll } from 'vitest';
+import { describe, test, expect, beforeAll } from 'vitest';
 import { and, eq, sql } from 'drizzle-orm';
 
-import { inRollback, localDb } from '#lib/testing/db.js';
+import { closeDbAfter, localDb, withProfiles } from '#lib/testing/db.js';
 import { FORMER_USERNAME_DAYS, USERNAME_CHANGES_PER_WINDOW } from '#lib/auth/rules.js';
 
-afterAll(async () => {
-	if (localDb) await (await import('#lib/server/db/index.js')).closeDb();
-});
+closeDbAfter();
 
 // Runs only against the local Supabase stack, each test inside a transaction
 // that is always rolled back, so it leaves no row behind.
@@ -23,14 +21,7 @@ describe.skipIf(!localDb)('username changes, against the real database', () => {
 
 	/** Two fresh profiles, A and B, with names `a-<stamp>` and `b-<stamp>`; rolled back after. */
 	async function withTwo(body: (tx: Tx, a: string, b: string, stamp: string) => Promise<void>) {
-		const stamp = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-		await inRollback(async (tx) => {
-			await tx.insert(schema.profiles).values([
-				{ id: `test-a-${stamp}`, username: `a-${stamp}` },
-				{ id: `test-b-${stamp}`, username: `b-${stamp}` }
-			]);
-			await body(tx, `test-a-${stamp}`, `test-b-${stamp}`, stamp);
-		});
+		await withProfiles(2, (tx, [a, b], stamp) => body(tx, a, b, stamp));
 	}
 
 	const nameOf = async (tx: Tx, id: string) =>

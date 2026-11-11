@@ -1,8 +1,11 @@
 import { describe, test, expect, beforeAll, afterAll } from 'vitest';
-import { localDb } from '#lib/testing/db.js';
+import { closeDbAfter, localDb } from '#lib/testing/db.js';
 import { loadEvent, loadPage } from '#lib/testing/actions.js';
 import { parentAndFork } from '#lib/testing/ftsLeak.js';
 import type { PageData } from './$types';
+
+// After the describe's own teardown, which still needs the pool.
+closeDbAfter();
 
 describe.skipIf(!localDb)('/users/[username] load, against the real database', () => {
 	let rows: Awaited<ReturnType<typeof parentAndFork>>;
@@ -11,7 +14,6 @@ describe.skipIf(!localDb)('/users/[username] load, against the real database', (
 	});
 	afterAll(async () => {
 		await rows?.remove();
-		await (await import('#lib/server/db/index.js')).closeDb();
 	});
 
 	test("the serialised profile's recipes carry no search vector", async () => {

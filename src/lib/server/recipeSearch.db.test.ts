@@ -1,14 +1,12 @@
-import { describe, test, expect, beforeAll, afterAll } from 'vitest';
+import { describe, test, expect, beforeAll } from 'vitest';
 import { and, inArray } from 'drizzle-orm';
 
-import { inRollback, localDb } from '#lib/testing/db.js';
+import { closeDbAfter, inRollback, localDb } from '#lib/testing/db.js';
 import type { Tx } from '#lib/server/db/index.js';
 import type { RecipeContent } from '#lib/recipes/types.js';
 import { MARK_END, MARK_START } from '#lib/highlight.js';
 
-afterAll(async () => {
-	if (localDb) await (await import('#lib/server/db/index.js')).closeDb();
-});
+closeDbAfter();
 
 const plain = (s: string | undefined) => s?.replaceAll(MARK_START, '[').replaceAll(MARK_END, ']');
 

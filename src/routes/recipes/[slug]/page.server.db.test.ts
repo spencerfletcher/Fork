@@ -1,14 +1,11 @@
 import { describe, test, expect, beforeAll, afterAll } from 'vitest';
 import { inArray } from 'drizzle-orm';
 
-import { localDb } from '#lib/testing/db.js';
+import { closeDbAfter, localDb, stamp } from '#lib/testing/db.js';
 import { loadEvent, loadPage } from '#lib/testing/actions.js';
 import type { PageData } from './$types';
 
-// The pool is closed once the file is done, so no connection outlives the run.
-afterAll(async () => {
-	if (localDb) await (await import('#lib/server/db/index.js')).closeDb();
-});
+closeDbAfter();
 
 // What the saver's page data carries of a recipe its author withdrew and then
 // rewrote: committed rows (the load reads through the pool) between two seed
@@ -17,9 +14,9 @@ describe.skipIf(!localDb)('a kept copy in the page data, against the real databa
 	let db: typeof import('#lib/server/db/index.js').db;
 	let schema: typeof import('#lib/server/db/schema.js');
 	let load: typeof import('./+page.server.js').load;
-	const stamp = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-	const copySlug = `page-kept-${stamp}`;
-	const liveSlug = `page-live-${stamp}`;
+	const run = stamp();
+	const copySlug = `page-kept-${run}`;
+	const liveSlug = `page-live-${run}`;
 	let author: string;
 	let saver: string;
 	// Words the author wrote after withdrawing it, which the saver was never given.

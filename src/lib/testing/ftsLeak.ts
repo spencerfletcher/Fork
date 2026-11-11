@@ -3,14 +3,15 @@
 // is imported inside, as in db.ts: it throws without DATABASE_URL.
 import { inArray } from 'drizzle-orm';
 import { makeContent } from '#lib/recipes/fixtures.js';
+import { stamp } from './db.js';
 
 export async function parentAndFork() {
 	const { db } = await import('#lib/server/db/index.js');
 	const schema = await import('#lib/server/db/schema.js');
 	const profile = await db.query.profiles.findFirst();
 	if (!profile) throw new Error('Seed the local database first (pnpm db:seed)');
-	const stamp = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-	const [parentSlug, forkSlug] = [`fts-parent-${stamp}`, `fts-fork-${stamp}`];
+	const run = stamp();
+	const [parentSlug, forkSlug] = [`fts-parent-${run}`, `fts-fork-${run}`];
 	const [parent] = await db
 		.insert(schema.recipes)
 		.values({ authorId: profile.id, slug: parentSlug, title: 'Parent', visibility: 'public' })

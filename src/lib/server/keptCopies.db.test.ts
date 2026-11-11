@@ -1,14 +1,11 @@
-import { describe, test, expect, beforeAll, afterAll } from 'vitest';
+import { describe, test, expect, beforeAll } from 'vitest';
 import { and, eq, inArray, type SQL } from 'drizzle-orm';
 
-import { inRollback, localDb } from '#lib/testing/db.js';
+import { closeDbAfter, localDb, withProfiles } from '#lib/testing/db.js';
 import type { Visibility } from '#lib/recipes/validation.js';
 import { NOTE_MAX } from '#lib/saves.js';
 
-// The pool is closed once the file is done, so no connection outlives the run.
-afterAll(async () => {
-	if (localDb) await (await import('#lib/server/db/index.js')).closeDb();
-});
+closeDbAfter();
 
 // Runs only against the local Supabase stack, each test inside a transaction
 // that is always rolled back, so it leaves no row behind.
@@ -30,14 +27,7 @@ describe.skipIf(!localDb)('kept copies, against the real database', () => {
 
 	/** An author, their friend and a stranger, then everything is rolled back. */
 	async function withPeople(body: (tx: Tx, p: People) => Promise<void>) {
-		const stamp = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-		const [author, friend, stranger] = ['a', 'f', 'x'].map((p) => `test-${p}-${stamp}`);
-		await inRollback(async (tx) => {
-			await tx.insert(schema.profiles).values([
-				{ id: author, username: `a-${stamp}` },
-				{ id: friend, username: `f-${stamp}` },
-				{ id: stranger, username: `x-${stamp}` }
-			]);
+		await withProfiles(3, async (tx, [author, friend, stranger]) => {
 			await tx
 				.insert(schema.friendships)
 				.values({ requesterId: friend, addresseeId: author, status: 'accepted' });

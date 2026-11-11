@@ -1,16 +1,14 @@
-import { describe, test, expect, beforeAll, afterAll } from 'vitest';
+import { describe, test, expect, beforeAll } from 'vitest';
 import { eq } from 'drizzle-orm';
 
-import { inRollback, localDb } from '#lib/testing/db.js';
+import { closeDbAfter, localDb, withProfiles } from '#lib/testing/db.js';
 import {
 	COLLECTION_NAME_ERROR,
 	COLLECTION_NAME_MAX,
 	STARTER_COLLECTIONS
 } from '#lib/collections.js';
 
-afterAll(async () => {
-	if (localDb) await (await import('#lib/server/db/index.js')).closeDb();
-});
+closeDbAfter();
 
 // Runs only against the local Supabase stack, each test inside a transaction
 // that is always rolled back, so it leaves no row behind.
@@ -28,16 +26,7 @@ describe.skipIf(!localDb)('collections, against the real database', () => {
 
 	/** Two cooks, A and B, rolled back after. */
 	async function withTwo(body: (tx: Tx, a: { id: string }, b: { id: string }) => Promise<void>) {
-		const stamp = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-		await inRollback(async (tx) => {
-			const a = { id: `test-a-${stamp}` };
-			const b = { id: `test-b-${stamp}` };
-			await tx.insert(schema.profiles).values([
-				{ id: a.id, username: `a-${stamp}` },
-				{ id: b.id, username: `b-${stamp}` }
-			]);
-			await body(tx, a, b);
-		});
+		await withProfiles(2, (tx, [a, b]) => body(tx, { id: a }, { id: b }));
 	}
 
 	let n = 0;

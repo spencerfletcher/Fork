@@ -1,7 +1,7 @@
 import { describe, test, expect, beforeAll, afterAll, vi } from 'vitest';
 import { inArray } from 'drizzle-orm';
 
-import { localDb } from '#lib/testing/db.js';
+import { closeDbAfter, localDb, stamp } from '#lib/testing/db.js';
 import { loadEvent, loadPage } from '#lib/testing/actions.js';
 import type { PageData } from './$types';
 
@@ -11,10 +11,7 @@ vi.mock('#lib/server/trash.js', async (importOriginal) => ({
 	purgeExpiredTrash: vi.fn()
 }));
 
-// The pool is closed once the file is done, so no connection outlives the run.
-afterAll(async () => {
-	if (localDb) await (await import('#lib/server/db/index.js')).closeDb();
-});
+closeDbAfter();
 
 // A saver's Cookbook card for a recipe its author withdrew and then rewrote:
 // committed rows (the load reads through the pool) between two seed profiles,
@@ -23,8 +20,8 @@ describe.skipIf(!localDb)("a kept copy's Cookbook card, against the real databas
 	let db: typeof import('#lib/server/db/index.js').db;
 	let schema: typeof import('#lib/server/db/schema.js');
 	let load: typeof import('./+page.server.js').load;
-	const stamp = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-	const slug = `cookbook-kept-${stamp}`;
+	const run = stamp();
+	const slug = `cookbook-kept-${run}`;
 	let author: string;
 	let saver: string;
 	let collectionId: number;
@@ -59,7 +56,7 @@ describe.skipIf(!localDb)("a kept copy's Cookbook card, against the real databas
 		await db.insert(schema.favorites).values({ userId: saver, recipeId: id, copyVersion: 1 });
 		[{ id: collectionId }] = await db
 			.insert(schema.collections)
-			.values({ ownerId: saver, name: `Kept ${stamp}` })
+			.values({ ownerId: saver, name: `Kept ${run}` })
 			.returning({ id: schema.collections.id });
 		await db.insert(schema.collectionRecipes).values({ collectionId, recipeId: id });
 	});

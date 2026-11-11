@@ -1,14 +1,11 @@
-import { describe, test, expect, beforeAll, afterAll } from 'vitest';
+import { describe, test, expect, beforeAll } from 'vitest';
 import { asc, eq, sql } from 'drizzle-orm';
 
-import { inRollback, localDb } from '#lib/testing/db.js';
+import { closeDbAfter, localDb, withProfiles } from '#lib/testing/db.js';
 import { makeContent, makeIngredient, makeStep } from '#lib/recipes/fixtures.js';
 import { recipeCopies, restoredCommitMessage, versionContent } from '#lib/recipes/content.js';
 
-// The pool is closed once the file is done, so no connection outlives the run.
-afterAll(async () => {
-	if (localDb) await (await import('#lib/server/db/index.js')).closeDb();
-});
+closeDbAfter();
 
 // Runs only against the local Supabase stack, each test inside a transaction
 // that is always rolled back, so it leaves no row behind.
@@ -56,10 +53,7 @@ describe.skipIf(!localDb)('restoreVersion, against the real database', () => {
 	async function withRecipe(
 		body: (tx: Tx, ids: { recipeId: number; userId: string }) => Promise<void>
 	) {
-		const stamp = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-		const userId = `test-restore-${stamp}`;
-		await inRollback(async (tx) => {
-			await tx.insert(schema.profiles).values({ id: userId, username: `r-${stamp}` });
+		await withProfiles(1, async (tx, [userId], stamp) => {
 			const [recipe] = await tx
 				.insert(schema.recipes)
 				.values({

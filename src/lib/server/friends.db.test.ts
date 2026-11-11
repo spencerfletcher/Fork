@@ -1,13 +1,10 @@
-import { describe, test, expect, beforeAll, afterAll } from 'vitest';
+import { describe, test, expect, beforeAll } from 'vitest';
 import { and, eq, inArray, or } from 'drizzle-orm';
 
-import { inRollback, localDb } from '#lib/testing/db.js';
+import { closeDbAfter, localDb, stamp, withProfiles } from '#lib/testing/db.js';
 import type { Visibility } from '#lib/recipes/validation.js';
 
-// The pool is closed once the file is done, so no connection outlives the run.
-afterAll(async () => {
-	if (localDb) await (await import('#lib/server/db/index.js')).closeDb();
-});
+closeDbAfter();
 
 // Runs only against the local Supabase stack, each test inside a transaction
 // that is always rolled back, so it leaves no row behind.
@@ -24,14 +21,7 @@ describe.skipIf(!localDb)('unfriend and block, against the real database', () =>
 
 	/** Runs `body` on a fresh pair of friends, A and B, then rolls everything back. */
 	async function withFriends(body: (tx: Tx, a: string, b: string) => Promise<void>) {
-		const stamp = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-		const a = `test-a-${stamp}`;
-		const b = `test-b-${stamp}`;
-		await inRollback(async (tx) => {
-			await tx.insert(schema.profiles).values([
-				{ id: a, username: `a-${stamp}` },
-				{ id: b, username: `b-${stamp}` }
-			]);
+		await withProfiles(2, async (tx, [a, b]) => {
 			await tx
 				.insert(schema.friendships)
 				.values({ requesterId: a, addresseeId: b, status: 'accepted' });
@@ -171,11 +161,11 @@ describe.skipIf(!localDb)('unfriend and block, against the real database', () =>
 
 	test("a fork unfriend makes private leaves its savers a kept copy, as any withdrawal does, and clears an old one's", async () => {
 		await withFriends(async (tx, a, b) => {
-			const stamp = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-			const [saver, stranger] = [`test-s-${stamp}`, `test-x-${stamp}`];
+			const run = stamp();
+			const [saver, stranger] = [`test-s-${run}`, `test-x-${run}`];
 			await tx.insert(schema.profiles).values([
-				{ id: saver, username: `s-${stamp}` },
-				{ id: stranger, username: `x-${stamp}` }
+				{ id: saver, username: `s-${run}` },
+				{ id: stranger, username: `x-${run}` }
 			]);
 			// The saver is B's friend, so sees B's Friends fork; the stranger holds
 			// a copy left by an earlier withdrawal and cannot see it now.

@@ -1,13 +1,10 @@
 import { describe, test, expect, beforeAll, afterAll, vi } from 'vitest';
 import { eq, inArray } from 'drizzle-orm';
 
-import { inRollback, localDb } from '#lib/testing/db.js';
+import { closeDbAfter, inRollback, localDb } from '#lib/testing/db.js';
 import { TRASH_DAYS } from '#lib/trash.js';
 
-// The pool is closed once the file is done, so no connection outlives the run.
-afterAll(async () => {
-	if (localDb) await (await import('#lib/server/db/index.js')).closeDb();
-});
+closeDbAfter();
 
 const DAY = 86_400_000;
 
