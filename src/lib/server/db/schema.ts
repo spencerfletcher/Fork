@@ -1,6 +1,7 @@
 import type { Ingredient, Step } from '#lib/recipes/types.js';
 import type { Visibility } from '#lib/recipes/validation.js';
 import type { Measurement } from '#lib/measurement.js';
+import { NOTE_MAX } from '#lib/saves.js';
 import {
 	pgTable,
 	serial,
@@ -260,9 +261,6 @@ export const recipesToTags = pgTable(
 ).enableRLS();
 
 // ─── Favorites ────────────────────────────────────────────────────────────────
-
-/** The longest private note a saver may keep on a saved recipe. */
-export const NOTE_MAX = 2000;
 
 // A save. Version numbers, not ids: they are what the page and ?version= name,
 // and a recipe's numbers never change (versions are append-only).

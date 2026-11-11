@@ -1,6 +1,7 @@
 import { error, redirect } from '@sveltejs/kit';
 import { db } from '#lib/server/db/index.js';
 import { recipes, recipeVersions, recipesToTags, favorites } from '#lib/server/db/schema.js';
+import { NOTE_MAX, NOTE_TOO_LONG } from '#lib/saves.js';
 import { eq, desc, and } from 'drizzle-orm';
 import { recipeSlug, plural, wholeNumber, text } from '#lib/helpers.js';
 import { ensureProfile } from '#lib/server/profiles.js';
@@ -10,6 +11,7 @@ import { gramsFor } from '#lib/server/ingredientDensities.js';
 import {
 	canViewRow,
 	friendIdsOnce,
+	keptCopy,
 	NOT_AUTHORIZED,
 	ownRecipe,
 	viewableRecipe
@@ -20,6 +22,8 @@ import { VERSION_NOT_FOUND } from './versionError.js';
 import { failure, requireUser, SESSION_ENDED } from '#lib/server/actions.js';
 import { STALE_MESSAGE } from '#lib/server/submission.js';
 import { restoreVersion } from '#lib/server/versions.js';
+import { keepVersion, setNote } from '#lib/server/keptCopies.js';
+import { deleteForever } from '#lib/server/trash.js';
 import {
 	collectionsOf,
 	createCollection,
@@ -35,10 +39,12 @@ const NOT_IN_COLLECTIONS =
 export const load: PageServerLoad = async ({ params, url, locals: { user } }) => {
 	const recipeSlug = params.slug;
 	const versionParam = url.searchParams.get('version');
+	const requestedVersion = versionParam ? wholeNumber(versionParam) : null;
+	if (versionParam && requestedVersion === null) throw error(404, VERSION_NOT_FOUND);
 
 	// One friends lookup serves both access checks below.
 	const friends = friendIdsOnce(user);
-	const recipe = await viewableRecipe(
+	const shown = await viewableRecipe(
 		recipeSlug,
 		user,
 		{
@@ -52,7 +58,17 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 		},
 		friends
 	);
-	if (!recipe) throw error(404, 'Recipe not found');
+	// Not visible: a saver may still keep a read-only copy of it, the one
+	// version they kept, with no tags (tags follow the recipe's visibility).
+	const copy = shown
+		? null
+		: await keptCopy(recipeSlug, user, { author: true, parent: { with: { author: true } } });
+	if (!shown && !copy) throw error(404, 'Recipe not found');
+	const recipe = shown ?? {
+		...copy!.recipe,
+		recipesToTags: [],
+		versions: [{ ...copy!.version, creator: null }]
+	};
 
 	// A public fork can come from a private recipe. Readers who can't see that
 	// recipe get no parent data at all; parentId alone lets the page say so.
@@ -64,17 +80,6 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 		parent: parentVisible ? recipe.parent : null,
 		parentDeleted: recipe.parentId !== null && (recipe.parent === null || !!recipe.parent.deletedAt)
 	};
-
-	// Resolve which version's content to display. Creation and forking write a
-	// version in the same transaction as the recipe, so every recipe has one.
-	const latestVersion = recipe.versions[0];
-	const requestedVersion = versionParam ? wholeNumber(versionParam) : null;
-	if (versionParam && requestedVersion === null) throw error(404, VERSION_NOT_FOUND);
-	const currentVersion =
-		requestedVersion === null
-			? latestVersion
-			: recipe.versions.find((v) => v.versionNumber === requestedVersion);
-	if (!currentVersion) throw error(404, VERSION_NOT_FOUND);
 
 	// Independent lookups, one round trip. The fork count is the forks the
 	// viewer can see, the cards' and the forks page's rule (visibleTo), so no
@@ -91,6 +96,17 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 		user ? lastEntryFor(user.id, recipe.id) : null
 	]);
 	const isFavorited = !!favorite;
+
+	// Resolve which version's content to display: ?version= when asked, else
+	// the version the saver keeps, else the latest. Creation and forking write
+	// a version in the same transaction as the recipe, so every recipe has one.
+	const latestVersion = recipe.versions[0];
+	const keptVersion = copy ? null : (favorite?.keptVersion ?? null);
+	const arrival = requestedVersion ?? keptVersion;
+	const currentVersion =
+		arrival === null ? latestVersion : recipe.versions.find((v) => v.versionNumber === arrival);
+	if (!currentVersion) throw error(404, VERSION_NOT_FOUND);
+
 	// Add to collection is for a recipe in the reader's library: their own, or saved.
 	const collections =
 		user && (recipe.authorId === user.id || isFavorited)
@@ -100,14 +116,19 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 	return {
 		recipe: visibleRecipe,
 		currentVersion,
-		forkCount,
-		favoriteCount,
+		// A copy shows no counts: it is the saver's, no longer the author's recipe.
+		forkCount: copy ? 0 : forkCount,
+		favoriteCount: copy ? 0 : favoriteCount,
 		// Weights come from local tables at load time, so the page never pays for
 		// an external lookup; lines the tables do not know get null.
 		grams: currentVersion.ingredients.map(gramsFor),
 		allVersions: recipe.versions,
 		isFavorited,
 		collections,
+		/** The reader's own save: the version they keep and their note; null when not saved. */
+		save: favorite ? { keptVersion, note: favorite.note } : null,
+		/** A read-only copy of a recipe its author withdrew, for this saver alone. */
+		keptCopy: !!copy,
 		/** Signed in: the personal line's data; signed out there is no line. */
 		journal: user
 			? {
@@ -127,6 +148,16 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 		}
 	};
 };
+
+/** What a keep or follow that no longer applies is told. */
+const KEEP_REFUSED = 'Could not change the version you keep. Reload the page.';
+
+/** The recipe at `slug` the reader may see, or their kept copy of it; a 404 otherwise. */
+async function libraryRecipe(slug: string, user: { id: string }) {
+	const recipe = (await viewableRecipe(slug, user)) ?? (await keptCopy(slug, user))?.recipe;
+	if (!recipe) throw error(404, 'Recipe not found');
+	return recipe;
+}
 
 export const actions: Actions = {
 	toggleFavorite: async ({ params, locals: { user } }) => {
@@ -159,8 +190,7 @@ export const actions: Actions = {
 		if (collectionId === null || (member !== '1' && member !== '0'))
 			return failure(400, 'invalid', 'Invalid form state, reload the page');
 
-		const recipe = await viewableRecipe(params.slug, user);
-		if (!recipe) throw error(404, 'Recipe not found');
+		const recipe = await libraryRecipe(params.slug, user);
 		if (!(await setMembership(user, collectionId, recipe.id, member === '1')))
 			return failure(404, 'not_found', NOT_IN_COLLECTIONS);
 		return { collected: collectionId };
@@ -170,13 +200,61 @@ export const actions: Actions = {
 	newCollection: async ({ params, request, locals: { user } }) => {
 		if (!user) return failure(401, 'unauthenticated', SESSION_ENDED('try again'));
 		const name = text(await request.formData(), 'name');
-		const recipe = await viewableRecipe(params.slug, user);
-		if (!recipe) throw error(404, 'Recipe not found');
+		const recipe = await libraryRecipe(params.slug, user);
 		const created = await createCollection(user.id, name);
 		if ('error' in created) return failure(400, 'invalid', created.error, { name });
 		if (!(await setMembership(user, created.id, recipe.id, true)))
 			return failure(404, 'not_found', NOT_IN_COLLECTIONS);
 		return { collected: created.id };
+	},
+
+	// Keep this version: the saver opens the recipe at `version` from now on.
+	// Never the author's, who has Restore; never a copy, which keeps its own.
+	keep: async ({ params, request, locals: { user } }) => {
+		if (!user) return failure(401, 'unauthenticated', SESSION_ENDED('try again'));
+		const version = wholeNumber(text(await request.formData(), 'version'));
+		if (version === null) return failure(400, 'invalid', 'Invalid form state, reload the page');
+		const recipe = await viewableRecipe(params.slug, user);
+		if (!recipe) throw error(404, 'Recipe not found');
+		if (recipe.authorId === user.id || !(await keepVersion(user.id, recipe.id, version)))
+			return failure(404, 'not_found', KEEP_REFUSED);
+		return { kept: version };
+	},
+
+	// Follow latest version: the save stops keeping one.
+	follow: async ({ params, locals: { user } }) => {
+		if (!user) return failure(401, 'unauthenticated', SESSION_ENDED('try again'));
+		const recipe = await viewableRecipe(params.slug, user);
+		if (!recipe) throw error(404, 'Recipe not found');
+		if (!(await keepVersion(user.id, recipe.id, null)))
+			return failure(404, 'not_found', KEEP_REFUSED);
+		return { kept: null };
+	},
+
+	// The saver's private note, on a saved recipe or their kept copy of one.
+	note: async ({ params, request, locals: { user } }) => {
+		if (!user) return failure(401, 'unauthenticated', SESSION_ENDED('save again'));
+		const note = text(await request.formData(), 'note');
+		if (note.trim().length > NOTE_MAX) return failure(400, 'invalid', NOTE_TOO_LONG, { note });
+		const recipe = await libraryRecipe(params.slug, user);
+		if (!(await setNote(user.id, recipe.id, note)))
+			return failure(404, 'not_found', 'Save the recipe to keep a note on it.', { note });
+		return { noted: true };
+	},
+
+	// The saver removes their copy of a recipe its author withdrew: the save,
+	// its note and its collection places go. An erased recipe's last copy
+	// takes the rest of it with it (deleteForever).
+	removeCopy: async ({ params, locals: { user, supabase } }) => {
+		if (!user) return failure(401, 'unauthenticated', SESSION_ENDED('try again'));
+		const copy = await keptCopy(params.slug, user);
+		if (!copy) throw error(404, 'Recipe not found');
+		await db
+			.delete(favorites)
+			.where(and(eq(favorites.userId, user.id), eq(favorites.recipeId, copy.recipe.id)));
+		await leaveCollections(user.id, copy.recipe.id);
+		if (copy.recipe.erasedAt) await deleteForever(copy.recipe.id, supabase);
+		throw redirect(303, '/cookbook?filter=saved');
 	},
 
 	fork: async ({ params, locals: { user } }) => {

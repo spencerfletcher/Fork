@@ -3,6 +3,7 @@ import { and, eq, inArray, type SQL } from 'drizzle-orm';
 
 import { inRollback, localDb } from '#lib/testing/db.js';
 import type { Visibility } from '#lib/recipes/validation.js';
+import { NOTE_MAX } from '#lib/saves.js';
 
 // The pool is closed once the file is done, so no connection outlives the run.
 afterAll(async () => {
@@ -152,9 +153,7 @@ describe.skipIf(!localDb)('kept copies, against the real database', () => {
 			expect(await idsWhere(tx, visibility.inLibraryOf({ id: friend }), [recipe.id])).toEqual([
 				recipe.id
 			]);
-			expect(await idsWhere(tx, visibility.inLibraryOf({ id: stranger }), [recipe.id])).toEqual(
-				[]
-			);
+			expect(await idsWhere(tx, visibility.inLibraryOf({ id: stranger }), [recipe.id])).toEqual([]);
 		});
 	});
 
@@ -186,10 +185,7 @@ describe.skipIf(!localDb)('kept copies, against the real database', () => {
 			expect(await kept.keepVersion(friend, recipe.id, 2, tx)).toBe(true);
 			const row = () =>
 				tx.query.favorites.findFirst({
-					where: and(
-						eq(schema.favorites.userId, friend),
-						eq(schema.favorites.recipeId, recipe.id)
-					)
+					where: and(eq(schema.favorites.userId, friend), eq(schema.favorites.recipeId, recipe.id))
 				});
 			expect((await row())?.keptVersion).toBe(2);
 			// A version the recipe does not have is refused.
@@ -215,7 +211,7 @@ describe.skipIf(!localDb)('kept copies, against the real database', () => {
 				tx.insert(schema.favorites).values({
 					userId: friend,
 					recipeId: recipe.id,
-					note: 'x'.repeat(schema.NOTE_MAX + 1)
+					note: 'x'.repeat(NOTE_MAX + 1)
 				})
 			).rejects.toThrow();
 		});
