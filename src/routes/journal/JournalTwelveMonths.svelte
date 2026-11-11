@@ -74,12 +74,20 @@
 		color: var(--color-text-2);
 	}
 
+	/* Two rows of six, older on top, until the half is wide enough for one
+	   row of twelve with a year under its month name. */
 	.jtwelve-months {
 		display: grid;
-		grid-template-columns: repeat(12, minmax(0, 1fr));
-		gap: 6px;
+		grid-template-columns: repeat(6, minmax(0, 1fr));
+		gap: var(--space-3) 6px;
 		margin-top: var(--space-3);
 		text-align: center;
+	}
+
+	@media (min-width: 900px) {
+		.jtwelve-months {
+			grid-template-columns: repeat(12, minmax(0, 1fr));
+		}
 	}
 
 	.jtwelve-cell {
@@ -149,16 +157,11 @@
 		white-space: nowrap;
 	}
 
-	/* A phone: the months in one row of twelve, the list under them, so the
-	   summary pushes the entries down no more than about 330px. */
+	/* A phone: the halves stacked, the months over the list. */
 	@media (max-width: 699px) {
 		.jtwelve {
 			grid-template-columns: minmax(0, 1fr);
 			gap: var(--space-5);
-		}
-
-		.jtwelve-months {
-			gap: 3px;
 		}
 
 		.jtwelve-cell {

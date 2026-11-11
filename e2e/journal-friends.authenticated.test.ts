@@ -46,7 +46,7 @@ test.describe('Journal', () => {
 		await expect(page.getByText('E2E leftover fried rice')).toHaveCount(0);
 	});
 
-	test('the last-12-months summary counts each month and the most cooked, within 330px on a phone', async ({
+	test('the last-12-months summary counts each month, the totals and the most cooked', async ({
 		page
 	}) => {
 		await page.setViewportSize({ width: 390, height: 844 });
@@ -81,15 +81,39 @@ test.describe('Journal', () => {
 		await expect(top.first()).toBeVisible();
 		expect(await top.count()).toBeGreaterThanOrEqual(recipes.size);
 		await expect(top.first()).toContainText(/\d+ times?$/);
-
-		const summary = page.locator('section.jtwelve');
-		const firstMonth = page.getByRole('heading', { level: 2, name: /\d{4}$/ }).first();
-		const [box, monthBox] = [await summary.boundingBox(), await firstMonth.boundingBox()];
-		expect(monthBox!.y - box!.y).toBeLessThanOrEqual(330);
-		expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
-			390
+		// Other tests log entries, so the totals are checked for their shape.
+		await expect(page.locator('.jtwelve-totals')).toHaveText(
+			/^(1 cook|\d+ cooks), (1 dish|\d+ different dishes)$/
 		);
 	});
+
+	for (const width of [390, 320]) {
+		test(`on a ${width}px phone the months are two rows of six, no name clipped, no sideways scroll`, async ({
+			page
+		}) => {
+			await page.setViewportSize({ width, height: 844 });
+			await page.goto('/journal');
+			const cells = page.locator('.jtwelve-months li');
+			await expect(cells).toHaveCount(SUMMARY_MONTHS);
+			const tops = await cells.evaluateAll((items) =>
+				items.map((li) => Math.round(li.getBoundingClientRect().top))
+			);
+			const half = SUMMARY_MONTHS / 2;
+			expect(new Set(tops.slice(0, half)).size).toBe(1);
+			expect(new Set(tops.slice(half)).size).toBe(1);
+			expect(tops[half]).toBeGreaterThan(tops[0]);
+			// A label wider than its cell overflows it: scrollWidth outgrows clientWidth.
+			const clipped = await page
+				.locator('.jtwelve-name, .jtwelve-year')
+				.evaluateAll((labels) =>
+					labels.filter((l) => l.scrollWidth > l.clientWidth).map((l) => l.textContent)
+				);
+			expect(clipped).toEqual([]);
+			expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+				width
+			);
+		});
+	}
 
 	test('a missing dish is refused in words, and what was typed stays', async ({ page }) => {
 		await gotoHydrated(page, '/journal/new');
