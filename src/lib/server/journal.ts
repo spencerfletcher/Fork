@@ -260,20 +260,22 @@ export const sourceColumns = {
 };
 
 /** The viewer's own entries matching `where`, newest cooked first, each with its source. */
-async function ownEntries(viewer: NonNullable<Viewer>, where?: SQL) {
+async function ownEntries(viewer: NonNullable<Viewer>, where?: SQL, conn: Tx | typeof db = db) {
 	const [rows, friendIds] = await Promise.all([
-		db
+		conn
 			.select({ entry: logEntries, ...sourceColumns })
 			.from(logEntries)
 			.leftJoin(recipes, eq(recipes.id, logEntries.recipeId))
 			.leftJoin(recipeVersions, eq(recipeVersions.id, logEntries.versionId))
 			.where(and(eq(logEntries.userId, viewer.id), where))
 			.orderBy(desc(logEntries.cookedOn), desc(logEntries.createdAt)),
-		friendIdsOf(viewer.id)
+		friendIdsOf(viewer.id, conn)
 	]);
-	const kept = await keptVersionsOf(viewer, [
-		...new Set(rows.flatMap((r) => r.entry.recipeId ?? []))
-	]);
+	const kept = await keptVersionsOf(
+		viewer,
+		[...new Set(rows.flatMap((r) => r.entry.recipeId ?? []))],
+		conn
+	);
 	return rows.map((row) => ({
 		...row.entry,
 		source: sourceOf(
@@ -286,8 +288,8 @@ async function ownEntries(viewer: NonNullable<Viewer>, where?: SQL) {
 }
 
 /** Everything in someone's own Journal, newest cooked first, each with its source. */
-export function journalOf(viewer: NonNullable<Viewer>) {
-	return ownEntries(viewer);
+export function journalOf(viewer: NonNullable<Viewer>, conn: Tx | typeof db = db) {
+	return ownEntries(viewer, undefined, conn);
 }
 
 /** One of the viewer's own entries with its source, or null when it is not theirs. */

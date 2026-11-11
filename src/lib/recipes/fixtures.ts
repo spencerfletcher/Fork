@@ -39,6 +39,47 @@ export function makeContent(overrides: Partial<RecipeContent> = {}): RecipeConte
 	};
 }
 
+/** Every field set: a dough and a filling making 12 buns, grouped steps with notes, rest time, a source. */
+export function makeBuns(overrides: Partial<RecipeContent> = {}): RecipeContent {
+	return makeContent({
+		title: 'Cinnamon buns',
+		description: 'Soft, sticky, best warm.',
+		servings: null,
+		makes: '12 buns',
+		prepTimeMinutes: 30,
+		cookTimeMinutes: 25,
+		restTimeMinutes: 90,
+		sourceName: 'Grandma Ruth',
+		sourceUrl: 'https://example.com/buns',
+		notes: 'Bake on the middle shelf.\nThey freeze well.',
+		makeAhead: 'Shape the night before and chill.',
+		equipment: 'Stand mixer, 9 by 13 tin',
+		storage: 'Airtight tin, 2 days.',
+		reheating: '10 minutes at 150°C.',
+		imageUrl: 'https://example.com/buns.jpg',
+		ingredients: [
+			...inGroup('Dough', [makeIngredient('500 g flour'), makeIngredient('250 ml warm milk')]),
+			...inGroup('Filling', [
+				makeIngredient('100 g soft butter'),
+				makeIngredient('2 tbsp cinnamon')
+			])
+		],
+		steps: [
+			...inGroup('Dough', [
+				makeStep('Knead for 10 minutes.'),
+				makeStep('Rise until doubled.', { type: 'tip', text: 'A barely warm oven helps.' })
+			]),
+			...inGroup('Filling', [
+				makeStep('Spread, roll and cut into 12.', {
+					type: 'warning',
+					text: 'Cold butter tears the dough.'
+				})
+			])
+		],
+		...overrides
+	});
+}
+
 // A version as the version bar and header list it: number and commit message.
 export function makeVersion(versionNumber: number, commitMessage: string) {
 	return { id: versionNumber, versionNumber, commitMessage };
