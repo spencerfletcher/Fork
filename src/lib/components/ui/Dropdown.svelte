@@ -57,7 +57,7 @@
 	function onkeydown(e: KeyboardEvent) {
 		if (e.key === 'Escape') return close();
 		if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
-		const items = [...(root?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? [])];
+		const items = [...(root?.querySelectorAll<HTMLElement>('[role^="menuitem"]') ?? [])];
 		if (items.length === 0) return;
 		e.preventDefault();
 		const at = items.indexOf(document.activeElement as HTMLElement);

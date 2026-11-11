@@ -32,6 +32,21 @@ function renderOpen() {
 }
 
 describe('Dropdown', () => {
+	test('the arrow keys walk every item, checkable ones included, wrapping at the ends', async () => {
+		const checks = createRawSnippet(() => ({
+			render: () =>
+				'<div role="menu"><button type="button" role="menuitemcheckbox" aria-checked="true">To cook</button><button type="button" role="menuitem">New collection</button></div>'
+		}));
+		render(Dropdown, { props: { trigger, panel: checks } });
+		await fireEvent.click(screen.getByRole('button', { name: 'Your account' }));
+		const first = screen.getByRole('menuitemcheckbox', { name: 'To cook' });
+		first.focus();
+		await fireEvent.keyDown(first, { key: 'ArrowDown' });
+		expect(screen.getByRole('menuitem', { name: 'New collection' })).toHaveFocus();
+		await fireEvent.keyDown(document.activeElement!, { key: 'ArrowDown' });
+		expect(first).toHaveFocus();
+	});
+
 	test('a press on a menu link closes the menu at once, before the new page paints', async () => {
 		await renderOpen();
 		await fireEvent.click(screen.getByRole('menuitem', { name: 'Profile' }));
