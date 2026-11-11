@@ -2,6 +2,9 @@
 	import { enhance } from '$app/forms';
 	import { pendingEnhance } from '#lib/pendingEnhance.svelte.js';
 	import ChoiceGroup from '#lib/components/ui/ChoiceGroup.svelte';
+	import ConfirmStep from '#lib/components/ui/ConfirmStep.svelte';
+	import type { SubmitFunction } from '$app/forms';
+	import { clearDrafts } from '#lib/drafts.js';
 	import { audienceIcon } from '#lib/components/Icons.svelte';
 	import { AUDIENCE_LABEL, AUDIENCE_NOTE } from '#lib/audience.js';
 	import {
@@ -41,6 +44,15 @@
 	const usernameSave = pendingEnhance({ reset: false, keepOnError: true });
 	const audienceSave = pendingEnhance({ reset: false, keepOnError: true });
 	const measurementSave = pendingEnhance({ reset: false, keepOnError: true });
+	const deletion = pendingEnhance({ reset: false, keepOnError: true });
+	// This device's editor drafts go with the account, once the server has deleted it.
+	const deleteAccount: SubmitFunction = async (input) => {
+		const after = await deletion.submit(input);
+		return async (opts) => {
+			if (opts.result.type === 'redirect' && data.user) clearDrafts(data.user.id);
+			await after?.(opts);
+		};
+	};
 
 	// svelte-ignore state_referenced_locally
 	let username = $state(form?.username ?? data.settings.username);
@@ -70,6 +82,7 @@
 	);
 	const audienceProblem = $derived(audienceSave.error ?? resultFor('audience')?.error);
 	const measurementProblem = $derived(measurementSave.error ?? resultFor('measurement')?.error);
+	const deleteProblem = $derived(deletion.error ?? resultFor('delete')?.error ?? null);
 
 	// "Saved." until the value moves away from what was saved.
 	const usernameSaved = $derived(
@@ -251,6 +264,57 @@
 				</div>
 			</div>
 		</section>
+
+		<section class="setting" aria-labelledby="delete-heading">
+			<div class="setting-head">
+				<h2 id="delete-heading">Delete account</h2>
+				<p class="setting-note">Your account and everything in it, for good.</p>
+			</div>
+			<div class="setting-body">
+				<ul class="form-hint goes">
+					<li>Your recipes and their history are deleted for everyone.</li>
+					<li>
+						People who saved one of your recipes keep their read-only copy, without your name.
+					</li>
+					<li>Forks of your recipes stay with the cooks who made them.</li>
+					<li>Your Journal, collections, saves and friends are removed.</li>
+					<li>This cannot be undone.</li>
+				</ul>
+				<p>
+					<a class="hit-link" href={exportHref('json')} download>Download your data first</a>
+				</p>
+				<div>
+					<ConfirmStep
+						trigger="Delete account"
+						label="Delete your account?"
+						explanation="Everything above goes for good, now."
+						confirmLabel="Delete my account"
+						pendingLabel="Deleting…"
+						keepLabel="Keep account"
+						action="?/deleteAccount"
+						enhance={deleteAccount}
+						pending={deletion.pending}
+						error={deleteProblem}>
+						{#snippet fields()}
+							<div class="field confirm-name">
+								<label for="confirm-username">
+									Type your username, <span class="handle">{data.settings.username}</span>
+									, to confirm
+								</label>
+								<input
+									id="confirm-username"
+									name="confirmUsername"
+									type="text"
+									required
+									autocomplete="off"
+									autocapitalize="none"
+									spellcheck="false" />
+							</div>
+						{/snippet}
+					</ConfirmStep>
+				</div>
+			</div>
+		</section>
 	</div>
 </div>
 
@@ -340,5 +404,17 @@
 
 	.form-hint {
 		margin: 0;
+	}
+
+	.goes {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-1);
+		padding-left: 1.25em;
+	}
+
+	/* The typed name takes the step's first line, the buttons the next. */
+	.confirm-name {
+		flex-basis: 100%;
 	}
 </style>
