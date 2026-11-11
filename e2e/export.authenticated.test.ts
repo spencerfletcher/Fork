@@ -44,6 +44,16 @@ test.describe('Export', () => {
 		expect(md).toContain(`## ${COOKIES}`);
 		expect(md).toContain('### Earlier versions');
 	});
+
+	test('an older version’s ⋯ menu offers the export too: it is the whole recipe', async ({
+		page
+	}) => {
+		await openCookies(page);
+		await gotoHydrated(page, `${new URL(page.url()).pathname}?version=1`);
+		await page.getByRole('button', { name: 'More actions' }).click();
+		await expect(page.getByRole('menuitem', { name: 'Export JSON' })).toBeVisible();
+		await expect(page.getByRole('menuitem', { name: 'Export Markdown' })).toBeVisible();
+	});
 });
 
 test.describe('Export, signed out', () => {

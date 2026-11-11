@@ -75,10 +75,17 @@ describe('Navbar', () => {
 		expect(current.map((a) => a.textContent?.trim())).toEqual([label]);
 	});
 
-	test('logo links to the home page', () => {
+	// The F. mark, drawn as paths so it renders the same everywhere; the link
+	// carries the name.
+	test('the F. mark links home, named Fork', () => {
 		render(Navbar, { props: { user: null } });
-		// No stray space before the marigold stop.
-		expect(screen.getByRole('link', { name: 'Fork.' })).toHaveAttribute('href', '/');
+		const home = screen.getByRole('link', { name: 'Fork' });
+		expect(home).toHaveAttribute('href', '/');
+		expect(home).toHaveTextContent(/^$/);
+		const mark = home.querySelector('svg')!;
+		expect(mark).toHaveAttribute('aria-hidden', 'true');
+		expect(mark.querySelectorAll('path')).toHaveLength(2);
+		expect(mark.querySelector('text')).toBeNull();
 	});
 
 	test('Search stays one tap away at every width, current on /search', () => {
@@ -186,7 +193,7 @@ describe('Navbar signed in', () => {
 	test('a press outside closes it', async () => {
 		render(Navbar, { props: { user: signedIn(), profile } });
 		await fireEvent.click(avatar());
-		await fireEvent.click(screen.getByRole('link', { name: 'Fork.' }));
+		await fireEvent.click(screen.getByRole('link', { name: 'Fork' }));
 		expect(screen.queryByRole('menu')).toBeNull();
 	});
 
@@ -252,11 +259,19 @@ describe('Navbar layout', () => {
 		expect(rule('.nav-avatar-button')).toMatch(/height:\s*44px/);
 	});
 
-	// Log in and the brand are thumb targets on a phone.
-	test('below 768 the brand and the text links are 44px tall', () => {
+	// Log in is a thumb target on a phone; the mark is one at every width.
+	test('below 768 the text links are 44px tall', () => {
 		const phone = style.match(/@media \(max-width: 767px\)\s*{([\s\S]*?)\n\t}/)![1];
-		const block = cssRule(phone, '.nav-brand, .navbar-link:not(.hidden)');
+		const block = cssRule(phone, '.navbar-link:not(.hidden)');
 		expect(block).toMatch(/min-height:\s*44px/);
+	});
+
+	// The mark's F stands as tall as the retired wordmark's capitals (Bitter 600
+	// at 1.375rem: 15.4px), centred by the row, never nudged.
+	test('the mark is a 44px target whose F is the old cap height', () => {
+		expect(rule('.nav-brand')).toMatch(/min-height:\s*44px/);
+		expect(rule('.nav-brand')).toMatch(/align-items:\s*center/);
+		expect(rule('.nav-brand svg')).toMatch(/height:\s*15\.7px/);
 	});
 
 	test("the bar's marigold ring reaches every link in it", () => {

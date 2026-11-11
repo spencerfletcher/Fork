@@ -30,7 +30,8 @@ const { goto, page, navigated } = vi.hoisted(() => ({
 	page: {
 		url: new URL('http://localhost/recipes/cookies'),
 		state: {},
-		shallow: null as { url: URL } | null
+		shallow: null as { url: URL } | null,
+		data: { user: null as { id: string } | null }
 	},
 	navigated: [] as (() => void)[]
 }));
@@ -55,7 +56,7 @@ async function playBack(
 
 function makeProps(overrides: Record<string, unknown> = {}) {
 	return {
-		recipe: { slug: 'cookies', title: 'Cookies' },
+		recipe: { slug: 'cookies', title: 'Cookies', authorId: 'author-1' },
 		canFork: false,
 		canFavorite: true,
 		canEdit: false,
@@ -99,12 +100,20 @@ describe('RecipeActions More actions', () => {
 		expect(screen.getByRole('menuitem', { name: 'Print' })).toBeInTheDocument();
 	});
 
+	// The export is the whole recipe, so the owner gets it on every version,
+	// not only the latest where Edit shows (Spencer, 11 November 2026).
 	test.each([
-		['the owner', true],
-		['anyone else', false]
-	])('%s: Export rows for this recipe in the menu, or none', async (_, canEdit) => {
+		['the owner on the latest version', 'author-1', true, true],
+		['the owner on an older version', 'author-1', false, true],
+		['a signed-in visitor', 'someone-else', false, false],
+		['someone signed out', null, false, false]
+	])('%s: Export rows for this recipe in the menu, or none', async (_, viewer, canEdit, rows) => {
+		page.data.user = viewer ? { id: viewer } : null;
 		render(RecipeActions, {
-			props: makeProps({ canEdit, recipe: { slug: 'brown-butter-buns', title: 'Buns' } })
+			props: makeProps({
+				canEdit,
+				recipe: { slug: 'brown-butter-buns', title: 'Buns', authorId: 'author-1' }
+			})
 		});
 		await fireEvent.click(screen.getByRole('button', { name: 'More actions' }));
 		await tick();
@@ -112,8 +121,9 @@ describe('RecipeActions More actions', () => {
 			.queryAllByRole('menuitem', { name: /^Export/ })
 			.map((a) => a.getAttribute('href'));
 		expect(hrefs).toEqual(
-			canEdit ? EXPORT_FORMATS.map((f) => exportHref(f, 'brown-butter-buns')) : []
+			rows ? EXPORT_FORMATS.map((f) => exportHref(f, 'brown-butter-buns')) : []
 		);
+		page.data.user = null;
 	});
 });
 

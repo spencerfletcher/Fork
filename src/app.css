@@ -498,7 +498,7 @@
 	.more-button:hover,
 	.more-button[aria-expanded='true'] {
 		color: var(--color-text);
-		background: var(--color-tint);
+		background: var(--color-band);
 	}
 
 	/* A button that reads as a word: clay 600 in the line's face, no box.

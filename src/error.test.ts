@@ -14,9 +14,11 @@ describe('fallback error page', () => {
 		expect(html).toMatch(/<h1>Error %sveltekit\.status% – %sveltekit\.error\.message%<\/h1>/);
 	});
 
-	test('wears the Fork bar and leads home', () => {
-		// No whitespace between the word and its stop, or the bar reads "Fork .".
-		expect(html).toMatch(/class="brand">Fork<span>\.<\/span><\/a>/);
+	test('wears the Fork bar and leads home by the F. mark', () => {
+		const brand = /<a href="\/" class="brand" aria-label="Fork">([\s\S]*?)<\/a>/.exec(html)![1];
+		expect(brand).toMatch(/<svg viewBox="32\.59 26\.88 37\.5 46\.01" aria-hidden="true">/);
+		expect(brand.match(/<path\b/g)).toHaveLength(2);
+		expect(brand).not.toMatch(/<text|Fork/);
 	});
 
 	test('tries again first, by reloading, and goes home as the ghost', () => {
@@ -55,13 +57,10 @@ describe('fallback error page', () => {
 		expect(px(rule('.btn-primary'), 'border')).toBe('1px solid transparent');
 	});
 
-	test("the wordmark link fits the phone bar's 52px", () => {
-		// 1.375rem at the body's 1.5 line height, plus its vertical padding.
+	test("the mark's link is a 44px target, its F the app bar's 15.7px", () => {
 		const brand = rule('.brand');
-		expect(px(brand, 'line-height')).toBeUndefined();
-		expect(px(rule('body'), 'line-height')).toBe('1.5');
-		const height = 22 * 1.5 + 2 * parseFloat(px(brand, 'padding')!);
-		expect(height).toBeLessThanOrEqual(52);
-		expect(height).toBeGreaterThanOrEqual(44);
+		expect(px(brand, 'min-height')).toBe('44px');
+		expect(px(brand, 'align-items')).toBe('center');
+		expect(px(rule('.brand svg'), 'height')).toBe('15.7px');
 	});
 });

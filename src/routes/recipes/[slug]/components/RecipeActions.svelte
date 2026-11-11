@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { afterNavigate } from '$app/navigation';
+	import { page } from '$app/state';
 	import { setShallowParam } from './shallowParam';
 	import type { Recipe } from '#lib/server/db/schema.js';
 	import { forkIcon, journalIcon, saveIcon } from '#lib/components/Icons.svelte';
@@ -20,7 +21,7 @@
 		journalHref,
 		collections = null
 	}: {
-		recipe: Pick<Recipe, 'slug' | 'title'>;
+		recipe: Pick<Recipe, 'slug' | 'title' | 'authorId'>;
 		canFork: boolean;
 		canFavorite: boolean;
 		/** The owner on the latest version: Edit, in Fork's place. */
@@ -39,6 +40,9 @@
 	} = $props();
 
 	let error = $state('');
+	// The export is the whole recipe, so the owner gets it on every version,
+	// not only the latest where Edit shows. `page.data.user` is the layout's.
+	const isOwner = $derived(!!page.data?.user && page.data.user.id === recipe.authorId);
 	// The click flips it optimistically; it resets to the prop whenever the
 	// page loads another recipe or reloads this one.
 	const favorite = optimisticToggle(() => initialFavorited, {
@@ -167,7 +171,7 @@
 		</a>
 	{/if}
 	<!-- Everyone, last: the reader's collections (in their library) and Print. -->
-	<MoreActions {collections} exportSlug={canEdit ? recipe.slug : null} />
+	<MoreActions {collections} exportSlug={isOwner ? recipe.slug : null} />
 
 	{#if error}
 		<p class="form-error basis-full" role="alert">{error}</p>
