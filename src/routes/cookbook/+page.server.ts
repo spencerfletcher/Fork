@@ -4,6 +4,7 @@ import { recipes, recipesToTags } from '#lib/server/db/schema.js';
 import { cardList } from '#lib/server/recipeCounts.js';
 import { tagSelection, visibleTags } from '#lib/server/tagFilter.js';
 import { inLibraryOf } from '#lib/server/visibility.js';
+import { inTrashOf, purgeExpiredTrash } from '#lib/server/trash.js';
 import { parseFilters, textSearch } from '#lib/server/recipeSearch.js';
 import { requireUser } from '#lib/server/actions.js';
 import { oneOf } from '#lib/helpers.js';
@@ -12,20 +13,26 @@ import type { PageServerLoad } from './$types';
 
 const META = { title: 'Cookbook' };
 
-export const load: PageServerLoad = async ({ url, locals: { user } }) => {
+export const load: PageServerLoad = async ({ url, locals: { user, supabase } }) => {
 	requireUser(url, user);
+	// The Cookbook is the frequent page every cook opens, so it runs the purge.
+	await purgeExpiredTrash(supabase);
 
 	const filter: CookbookFilter = oneOf(COOKBOOK_FILTERS, url.searchParams.get('filter')) ?? 'all';
 	const { searchQuery, tagSlugs } = parseFilters(url);
 
-	const library = await db
-		.select({ id: recipes.id, authorId: recipes.authorId })
-		.from(recipes)
-		.where(inLibraryOf(user));
+	const [library, trash] = await Promise.all([
+		db
+			.select({ id: recipes.id, authorId: recipes.authorId })
+			.from(recipes)
+			.where(inLibraryOf(user)),
+		// For the Trash link, shown only when the Trash holds something.
+		db.$count(recipes, inTrashOf(user.id))
+	]);
 
 	const isMine = (r: { authorId: string | null }) => r.authorId === user.id;
 	const mine = library.filter(isMine).length;
-	const counts = { all: library.length, mine, saved: library.length - mine };
+	const counts = { all: library.length, mine, saved: library.length - mine, trash };
 
 	// With nothing in the library a query or tags filter nothing: the page hears
 	// of neither, so it shows the empty cookbook rather than "0 recipes match".
