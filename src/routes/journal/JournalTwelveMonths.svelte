@@ -85,17 +85,17 @@
 		font-variant-numeric: tabular-nums;
 	}
 
-	/* The count scale: the one fill, marigold, in steps from its pale tint. */
+	/* The count scale: the one fill, marigold, in even steps from lifted paper. */
 	.jtwelve-cell[data-tone='1'] {
-		background: var(--color-marigold-tint);
+		background: var(--color-count-1);
 	}
 
 	.jtwelve-cell[data-tone='2'] {
-		background: var(--color-marigold-tint-hover);
+		background: var(--color-count-2);
 	}
 
 	.jtwelve-cell[data-tone='3'] {
-		background: var(--color-marigold);
+		background: var(--color-count-3);
 		border-color: transparent;
 	}
 
