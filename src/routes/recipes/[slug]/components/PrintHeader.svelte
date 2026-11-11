@@ -70,7 +70,7 @@
 	</p>
 	<p>{measure.join(' · ')}</p>
 	{#if times.length > 0}<p>{times.join(' · ')}</p>{/if}
-	{#if content.description}<p class="description">{content.description}</p>{/if}
+	{#if content.description}<p class="print-description">{content.description}</p>{/if}
 	<p class="address">{href}</p>
 </div>
 
@@ -96,7 +96,7 @@
 		line-height: 1.4;
 	}
 
-	.description {
+	.print-description {
 		margin-top: 6pt;
 	}
 

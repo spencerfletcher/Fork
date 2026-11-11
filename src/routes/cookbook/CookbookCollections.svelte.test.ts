@@ -82,6 +82,8 @@ describe('Cookbook collections', () => {
 	});
 
 	test('Rename edits the name in place and posts the collection’s id', async () => {
+		// The page's query rides on the action, so the rename lands back in this view.
+		page.url = new URL('http://localhost/cookbook?collection=1&q=dal');
 		renderShelf({ id: 1, name: 'To cook' });
 		await fireEvent.click(screen.getByRole('button', { name: 'Rename To cook' }));
 		await tick();
@@ -89,7 +91,7 @@ describe('Cookbook collections', () => {
 		expect(box).toHaveValue('To cook');
 		expect(box).toHaveFocus();
 		const form = box.closest('form')!;
-		expect(form).toHaveAttribute('action', '?/renameCollection');
+		expect(form).toHaveAttribute('action', `?/renameCollection&${page.url.search.slice(1)}`);
 		expect(form.querySelector('input[name="id"]')).toHaveValue('1');
 
 		await fireEvent.keyDown(box, { key: 'Escape' });

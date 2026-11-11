@@ -73,8 +73,9 @@ test.describe('Recipe detail page', () => {
 		await page.goto('/');
 		await page.getByRole('link', { name: FORK_RE }).first().click();
 		await expect(page).toHaveURL(/\/recipes\//);
-		await expect(page.getByText(/forked from/i)).toBeVisible();
-		await expect(page.getByText(COOKIES_RE)).toBeVisible();
+		// In the band: the print header, hidden on screen, says it too.
+		await expect(page.locator('.hero').getByText(/forked from/i)).toBeVisible();
+		await expect(page.locator('.hero').getByText(COOKIES_RE)).toBeVisible();
 	});
 
 	test('the stats row counts forks and versions; the fork count opens the list of forks', async ({
