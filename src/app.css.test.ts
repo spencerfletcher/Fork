@@ -285,6 +285,13 @@ describe('app.css shared utilities', () => {
 	});
 });
 
+describe('app.css phone tab bar', () => {
+	test('focus scrolls clear of the fixed tab bar, by the room the page ends with', () => {
+		const room = cssRule(css, 'body:has(.tab-bar) main').match(/padding-bottom:\s*([^;]+);/)![1];
+		expect(cssRule(css, 'html:has(.tab-bar)')).toContain(`scroll-padding-bottom: ${room};`);
+	});
+});
+
 describe('app.css forced colours', () => {
 	// Every tag tab carries a transparent 2px underline, which forced colours
 	// would paint, marking every tab current. Canvas hides it again, so only

@@ -904,6 +904,12 @@
 			padding-bottom: calc(57px + env(safe-area-inset-bottom));
 		}
 
+		/* The same room when focus scrolls the page, so a focused control (a
+		   card's ⋯ menu opening near the foot) never sits under the bar. */
+		html:has(.tab-bar) {
+			scroll-padding-bottom: calc(57px + env(safe-area-inset-bottom));
+		}
+
 		/* A screen-tall auth or error page leaves that room too, or it scrolls for nothing. */
 		body:has(.tab-bar) .auth-page {
 			min-height: calc(100dvh - 56px - 57px - env(safe-area-inset-bottom));
