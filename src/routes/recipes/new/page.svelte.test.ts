@@ -41,7 +41,8 @@ describe('New recipe page labels', () => {
 			expect(mark, name).toHaveAttribute('aria-hidden', 'true');
 			expect(box).toBeRequired();
 		}
-		expect(screen.getByRole('textbox', { name: 'Makes' })).not.toBeRequired();
+		// Makes waits behind its Add button, submitted empty: never required.
+		expect(screen.getByRole('button', { name: 'Add Makes' })).toBeInTheDocument();
 		expect(document.querySelector('form')).not.toHaveTextContent(/optional|\*/i);
 	});
 

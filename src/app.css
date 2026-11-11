@@ -1134,6 +1134,94 @@
 		grid-column: 1 / -1;
 	}
 
+	/* The editor's Serves and Source rows: each box with its Add button
+	   beside it (AddFields), level with the box. Serves is a few digits, the
+	   yield a phrase; an open link takes its own line under Source. */
+	.field-row.serves-row {
+		grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+	}
+
+	.field-row.source-row {
+		grid-template-columns: minmax(0, 1fr) auto;
+	}
+
+	.source-row > .field + .field {
+		grid-column: 1 / -1;
+	}
+
+	.field-row > .add-line {
+		align-self: end;
+		min-height: 41px;
+	}
+
+	/* The editor's facts from 900 (E6, Spencer, 11 November 2026): label-left
+	   rows on hairline rules, like the recipe page's ruled heads. Each box keeps
+	   its own label, and its error and hint run under the boxes. A row of
+	   several boxes lays its fields' labels and boxes out in one grid, labels
+	   on the boxes' baseline. */
+	@media (min-width: 900px) {
+		.facts {
+			border-top: 1px solid var(--color-border);
+		}
+
+		.facts > .field,
+		.fold-rows > * {
+			padding-block: 8px;
+			border-bottom: 1px solid var(--color-border);
+		}
+
+		.facts > .field,
+		.facts .field-row {
+			display: grid;
+			grid-template-columns: 128px minmax(0, 1fr);
+			grid-auto-flow: row dense;
+			gap: 8px 16px;
+			align-items: baseline;
+		}
+
+		.facts > .field > :not(label),
+		.facts .field-row :is(.field-error, .form-hint) {
+			grid-column: 2 / -1;
+		}
+
+		.facts .field-row > .field {
+			display: contents;
+		}
+
+		.facts .field-row.serves-row {
+			grid-template-columns: 128px 6rem auto minmax(0, 1fr);
+		}
+
+		.facts .field-row.times-row {
+			grid-template-columns: 128px minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr);
+		}
+
+		.facts .field-row.source-row {
+			grid-template-columns: 128px minmax(0, 1fr) auto minmax(0, 1fr);
+		}
+
+		.facts .field-row > .add-line {
+			grid-column: 3 / -1;
+			min-height: 0;
+		}
+
+		/* A legend cannot be a grid item; floated, it takes the label column. */
+		.facts .field-tags {
+			display: block;
+		}
+
+		.facts .field-tags > legend {
+			float: left;
+			width: 128px;
+			margin: 0;
+			padding-top: 10px;
+		}
+
+		.facts .field-tags > :not(legend) {
+			margin-left: 144px;
+		}
+	}
+
 	.form-actions {
 		display: flex;
 		align-items: center;

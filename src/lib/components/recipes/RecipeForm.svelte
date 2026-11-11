@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount, type Snippet } from 'svelte';
+	import { onMount, tick, type Snippet } from 'svelte';
 	import { enhance, type SubmitFunction } from '$app/forms';
 	import { clearDraft, draftAge, loadDraft, saveDraft, type DraftRecipe } from '#lib/drafts.js';
 	import { pendingEnhance } from '#lib/pendingEnhance.svelte.js';
@@ -7,15 +7,14 @@
 	import {
 		parseDraftContent,
 		fieldOfMessage,
-		NUMBER_FIELDS,
 		VISIBILITIES,
 		type RecipeDraft
 	} from '#lib/recipes/validation.js';
-	import { fieldErrors } from '#lib/recipes/fieldErrors.svelte.js';
+	import { fieldErrors, focusField } from '#lib/recipes/fieldErrors.svelte.js';
+	import { factsSummary } from '#lib/recipes/factsSummary.js';
 	import { normaliseTagNames, tagKey } from '#lib/recipes/tags.js';
 	import type { TagChip } from '#lib/recipes/types.js';
 	import { generatedCommitMessage } from '#lib/recipes/content.js';
-	import { MAX_MAKES, TEXT_LIMITS } from '#lib/recipes/limits.js';
 	import { draftChangedGroups } from '#lib/recipes/draftChanges.js';
 	import TagInput from '#lib/components/ui/TagInput.svelte';
 	import IngredientEditor from './IngredientEditor.svelte';
@@ -23,14 +22,13 @@
 	import PhotoField from './PhotoField.svelte';
 	import FieldError from '#lib/components/ui/FieldError.svelte';
 	import MoreDetails from './MoreDetails.svelte';
+	import ServesRow from './ServesRow.svelte';
 	import TimesRow from './TimesRow.svelte';
 	import SourceFields from './SourceFields.svelte';
-	import FormActions from '#lib/components/ui/FormActions.svelte';
+	import SaveBar from './SaveBar.svelte';
 	import ChoiceGroup from '#lib/components/ui/ChoiceGroup.svelte';
-	import { audienceIcon } from '#lib/components/Icons.svelte';
+	import { audienceIcon, chevronIcon } from '#lib/components/Icons.svelte';
 	import { AUDIENCE_LABEL, AUDIENCE_NOTE } from '#lib/audience.js';
-
-	// The radio trio's sentences, offered in VISIBILITIES order (Only me first).
 
 	let {
 		baseline,
@@ -72,7 +70,7 @@
 		leaving?: boolean;
 		/** The recipe has forks, which a narrower audience leaves where they are. */
 		hasForks?: boolean;
-		/** The edit page's Delete recipe, its own form, pinned right on the actions row. */
+		/** The edit page's Delete recipe, its own form, at the form's end. */
 		danger?: Snippet;
 		/** Where this editor's draft lives on the device (`draftKey` in
 		 *  #lib/drafts); omitted, nothing is stored. */
@@ -80,10 +78,6 @@
 		/** The recipe an edit changes, stored with its draft so the Cookbook can list it. */
 		draftRecipe?: DraftRecipe;
 	} = $props();
-
-	// The actions row sits outside the form, Save joined to it by form=, so
-	// Delete recipe's own form shares the row without nesting.
-	const formId = $props.id();
 
 	// The whole form as one object. A failed save hands back what was
 	// submitted, invalid values included, and the fields refill from it. It is
@@ -141,9 +135,6 @@
 	});
 
 	const generated = $derived(groups && groups.length > 0 ? generatedCommitMessage(groups) : null);
-	const placeholder = $derived(generated ?? 'What changed in this version?');
-	// A blank message saves the generated one, as the server trims; say so.
-	const savesGenerated = $derived(generated !== null && !draft.commitMessage.trim());
 
 	// Inline errors in the server's own wording (#lib/recipes/fieldErrors).
 	// svelte-ignore state_referenced_locally
@@ -165,7 +156,8 @@
 		const name = fieldOfMessage(form.error);
 		if (!name) return;
 		errors[name] = form.error;
-		document.getElementById(name)?.focus();
+		// After the render a refusal causes: an Add field it names opens first.
+		tick().then(() => focusField(document.getElementById(name)));
 	});
 
 	const globalError = $derived(
@@ -179,21 +171,23 @@
 		if (globalError && !save.pending) submitButton?.focus();
 	});
 
-	// On a phone the bar covers the screen's bottom edge. A tall box tabbed into
-	// with only its top showing counts as in view, so the browser neither
-	// scrolls nor applies scroll-padding-bottom; this brings the whole field,
-	// its error and hint lines too, above the bar. Elsewhere the bar sits below
-	// every field and this never fires.
-	let actions: HTMLDivElement | undefined = $state();
+	// Keeps a focused field clear of the pinned bar (SaveBar).
+	let bar: SaveBar | undefined = $state();
 
-	function clearBar(e: FocusEvent) {
-		const target = e.target as HTMLElement;
-		if (!actions || actions.contains(target)) return;
-		const el = target.closest('.field') ?? target;
-		if (el.getBoundingClientRect().bottom <= actions.getBoundingClientRect().top) return;
-		const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-		el.scrollIntoView({ block: 'nearest', behavior: reduce ? 'instant' : 'smooth' });
-	}
+	// The facts fold on a phone into a summary (native details); from 700 they
+	// are always shown, so the fold is opened for good there.
+	let foldOpen = $state(false);
+	onMount(() => {
+		const wide = window.matchMedia?.('(min-width: 700px)');
+		if (!wide) return;
+		const widen = () => {
+			if (wide.matches) foldOpen = true;
+		};
+		widen();
+		wide.addEventListener?.('change', widen);
+		return () => wide.removeEventListener?.('change', widen);
+	});
+	const summary = $derived(factsSummary(draft, chosen || (!!imageUrl && !draft.removeImage)));
 
 	// Leaving a dirty form keeps the work as a draft, so it asks nothing: the
 	// draft is written first, so the last keystrokes are in it. It asks only
@@ -334,7 +328,6 @@
 {/snippet}
 
 <form
-	id={formId}
 	method="POST"
 	{action}
 	enctype="multipart/form-data"
@@ -342,15 +335,18 @@
 	class="form"
 	onfocusout={fields.onfocusout}
 	oninvalidcapture={fields.onInvalid}
-	onfocusin={clearBar}
+	onfocusin={(e) => bar?.clearBar(e.target)}
 	oninput={fields.oninput}>
 	<fieldset disabled={save.pending} class="contents">
 		{#if draft.editRevision}
 			<input type="hidden" name="editRevision" value={draft.editRevision} />
 		{/if}
 
-		<div class="form-grid">
-			<div class="form-col">
+		<!-- The facts on the left in label-left rows, the photo and audience on
+		     the right; one column below 900. On a phone the facts fold into a
+		     summary between the description and Ingredients. -->
+		<div class="editor-top">
+			<div class="facts">
 				<div class="field">
 					<label for="title">
 						Title <span class="field-required" aria-hidden="true">Required</span>
@@ -377,56 +373,31 @@
 					</textarea>
 				</div>
 
+				<details class="fold" bind:open={foldOpen}>
+					<summary class="fold-summary">
+						<span class="fold-facts">
+							{#each summary.facts as fact, i (i)}<span>{fact}</span>{/each}
+						</span>
+						<span class="text-btn">{summary.action}{@render chevronIcon(foldOpen)}</span>
+					</summary>
+					<div class="fold-rows">
+						<ServesRow bind:draft {errors} />
+						<TimesRow bind:draft {errors} />
+						<SourceFields bind:draft {errors} />
+						<fieldset class="field field-tags">
+							<legend class="field-legend">Tags</legend>
+							<TagInput {allTags} bind:selected={draft.tags} />
+						</fieldset>
+					</div>
+				</details>
+			</div>
+
+			<div class="side">
 				<PhotoField
 					{imageUrl}
 					bind:removeImage={draft.removeImage}
 					bind:chosen
 					hadPhoto={form?.draft?.hadPhoto === true} />
-
-				<!-- Serves stays a string so the dirty check compares like with like;
-				     bind:value on a number input would hand back numbers and null. The
-				     yield sits beside the portions rather than in place of them: it never
-				     sets servings, and scaling stays by servings. -->
-				<div class="field-row serves-row">
-					<div class="field">
-						<label for="servings">{NUMBER_FIELDS.servings.formLabel}</label>
-						<input
-							id="servings"
-							name="servings"
-							type="number"
-							min={NUMBER_FIELDS.servings.min}
-							value={draft.servings}
-							oninput={(e) => (draft.servings = e.currentTarget.value)}
-							{...aria('servings')} />
-					</div>
-					<div class="field">
-						<label for="makes">Makes</label>
-						<input
-							id="makes"
-							name="makes"
-							type="text"
-							maxlength={MAX_MAKES}
-							placeholder="12 buns, 1 L stock"
-							bind:value={draft.makes}
-							aria-invalid={errors.makes ? 'true' : undefined}
-							aria-describedby={errors.makes ? 'makes-error makes-hint' : 'makes-hint'} />
-						{@render fieldError('makes')}
-						<p class="form-hint" id="makes-hint">
-							What one batch produces, when that isn't portions.
-						</p>
-					</div>
-					{@render fieldError('servings')}
-				</div>
-
-				<TimesRow bind:draft {errors} />
-
-				<SourceFields bind:draft {errors} />
-
-				<fieldset class="field field-tags">
-					<legend class="field-legend">Tags</legend>
-					<TagInput {allTags} bind:selected={draft.tags} />
-				</fieldset>
-
 				<ChoiceGroup
 					name="visibility"
 					legend="Who can see this recipe"
@@ -439,82 +410,44 @@
 					icon={audienceIcon}
 					hint={hasForks ? "Making this more private doesn't hide existing forks." : null} />
 			</div>
+		</div>
 
+		<!-- Method takes the wider column: a step is sentences, an ingredient a
+		     quantity and a name. -->
+		<div class="form-grid">
 			<div class="form-col">
 				<IngredientEditor
 					bind:value={draft.ingredients}
 					error={errors.ingredients}
 					disabled={save.pending} />
+			</div>
+			<div class="form-col">
 				<StepEditor bind:value={draft.steps} error={errors.steps} disabled={save.pending} />
-
-				<div class="field">
-					<label for="notes">Notes</label>
-					<textarea
-						id="notes"
-						name="notes"
-						rows="4"
-						maxlength={TEXT_LIMITS.notes.max}
-						bind:value={draft.notes}
-						aria-invalid={errors.notes ? 'true' : undefined}
-						aria-describedby={errors.notes ? 'notes-error notes-hint' : 'notes-hint'}>
-					</textarea>
-					{@render fieldError('notes')}
-					<p class="form-hint" id="notes-hint">
-						For the whole recipe: what to watch for, swaps, serving ideas.
-					</p>
-				</div>
-
 				<MoreDetails bind:draft {errors} />
 			</div>
 		</div>
 
-		{#if nextVersion}
-			<div class="field field-message">
-				<label for="commitMessage">What changed?</label>
-				<input
-					id="commitMessage"
-					name="commitMessage"
-					type="text"
-					{placeholder}
-					aria-describedby={savesGenerated ? 'commitMessage-hint' : undefined}
-					bind:value={draft.commitMessage} />
-				{#if savesGenerated}
-					<p class="form-hint" id="commitMessage-hint">Left blank, saves as: {generated}</p>
-				{/if}
-			</div>
-		{/if}
-
 		{#if globalError}
 			<p class="form-error" role="alert">{globalError}</p>
 		{/if}
+
+		<SaveBar
+			bind:this={bar}
+			message={!!nextVersion}
+			bind:commitMessage={draft.commitMessage}
+			{generated}
+			{submitLabel}
+			pending={save.pending}
+			{cancelHref}
+			bind:submitButton />
 	</fieldset>
 </form>
 
-<div class="actions-bar" bind:this={actions}>
-	<FormActions
-		{submitLabel}
-		pending={save.pending}
-		{cancelHref}
-		form={formId}
-		bind:submitButton
-		{danger} />
-</div>
+{#if danger}
+	<div class="form-end">{@render danger()}</div>
+{/if}
 
 <style>
-	/* Serves is a number of a few digits; the yield is a phrase. */
-	.serves-row {
-		grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
-	}
-
-	textarea[name='notes'] {
-		min-height: calc(4lh + 18px);
-	}
-
-	/* field-sizing: content ignores rows; this keeps an empty box typeable. */
-	textarea[name='description'] {
-		min-height: calc(3lh + 18px);
-	}
-
 	/* One line tall where field-sizing is unsupported, as the input it replaced
 	   was; it grows only by wrapping, never by dragging. */
 	textarea[name='title'] {
@@ -522,40 +455,121 @@
 		resize: none;
 	}
 
-	/* Outside the form, so the form's 16px gap is its own margin. */
-	.actions-bar {
-		margin-top: var(--space-4);
+	/* field-sizing: content ignores rows; this keeps an empty box typeable. */
+	textarea[name='description'] {
+		min-height: calc(3lh + 18px);
 	}
 
-	/* A plain 1px Rule, like every other rule in the editor. */
-	.field-message {
-		border-top: 1px solid var(--color-border);
+	.facts,
+	.side,
+	.fold-rows {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-4);
+	}
+
+	.fold-summary {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		padding-block: 8px;
+		border-block: 1px solid var(--color-border);
+		cursor: pointer;
+		list-style: none;
+	}
+
+	.fold-summary::-webkit-details-marker {
+		display: none;
+	}
+
+	/* At most two lines: a fact that does not fit moves whole to the next
+	   line, and a third line is cut off whole, so no word is ever halved. The
+	   yield and the audience lead, so they are always on show. */
+	.fold-facts {
+		flex: 1;
+		min-width: 0;
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0 14px;
+		max-height: 3em;
+		overflow: hidden;
+		font-size: 0.9375rem;
+		line-height: 1.5;
+		color: var(--color-text-2);
+	}
+
+	.fold-summary .text-btn {
+		flex-shrink: 0;
+	}
+
+	.fold-summary :global(.chevron) {
+		width: 12px;
+		height: 12px;
+	}
+
+	.fold-summary :global(.chevron.up) {
+		transform: rotate(180deg);
+	}
+
+	.fold[open] .fold-rows {
+		padding-top: var(--space-4);
+	}
+
+	/* Delete recipe, its own form, at the end, right; an open step widens
+	   leftwards from it, as in FormActions' danger slot. */
+	.form-end {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-end;
+		margin-top: var(--space-5);
+	}
+
+	.form-end :global(.step) {
+		justify-content: flex-end;
+	}
+
+	@media (min-width: 700px) {
+		/* The fold is a phone's. Where ::details-content exists, the facts show
+		   before the page's script opens the fold for good. */
+		@supports selector(::details-content) {
+			.fold-summary {
+				display: none;
+			}
+
+			.fold::details-content {
+				content-visibility: visible;
+			}
+		}
+	}
+
+	.editor-top {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-4);
+		margin-bottom: var(--space-5);
+	}
+
+	@media (min-width: 900px) {
+		.editor-top {
+			display: grid;
+			grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+			gap: 40px;
+			align-items: start;
+		}
+
+		/* The rows' rules space them (app.css, the editor's facts). */
+		.facts,
+		.fold-rows,
+		.fold[open] .fold-rows {
+			gap: 0;
+			padding-top: 0;
+		}
 	}
 
 	@media (max-width: 699px) {
-		/* Save and Cancel ride the screen's bottom edge, so a long form saves
-		   without a scroll to its end. Edge to edge across the 18px gutters,
-		   and above the home indicator. */
-		.actions-bar {
-			position: sticky;
-			bottom: 0;
-			z-index: 1;
-			margin-inline: -18px;
-			padding: 8px 18px calc(8px + env(safe-area-inset-bottom));
-			background: var(--color-surface);
-			border-top: 1px solid var(--color-border);
-		}
-
-		/* A field focused by Tab stops above the bar: its height, the 4px ring
-		   and a pixel to spare. On html, which scrolls; keyed to the bar so the
-		   rule leaves with the editor. */
-		:global(html:has(.actions-bar)) {
-			scroll-padding-bottom: calc(70px + env(safe-area-inset-bottom));
-		}
-
-		/* Delete recipe's own line makes the bar two rows tall. */
-		:global(html:has(.actions-bar .danger)) {
-			scroll-padding-bottom: calc(126px + env(safe-area-inset-bottom));
+		/* The photo and audience are in the fold too: hidden while it is closed. */
+		.editor-top:has(.fold:not([open])) .side {
+			display: none;
 		}
 	}
 </style>

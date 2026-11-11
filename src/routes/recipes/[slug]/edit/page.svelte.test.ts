@@ -162,7 +162,7 @@ describe('Edit page form', () => {
 
 	test('an ungrouped version with no yield refills as before, with Makes empty and no read-back', () => {
 		render(EditPage, { props: { data: makeData(), form: null } });
-		expect(screen.getByLabelText(/^Makes/)).toHaveValue('');
+		expect(document.querySelector('input[type="hidden"][name="makes"]')).toHaveValue('');
 		expect(document.getElementById('ingredients-readback')).toBeNull();
 		expect(document.getElementById('steps-readback')).toBeNull();
 	});
@@ -355,8 +355,8 @@ describe('Edit page form', () => {
 		expect(update).not.toHaveBeenCalled();
 		const alert = screen.getByRole('alert');
 		expect(alert).toHaveTextContent(NOT_AUTHORIZED);
-		// Under Delete recipe, on the actions row's right.
-		expect(alert.closest('.form-actions .danger')).not.toBeNull();
+		// Under Delete recipe, at the form's end.
+		expect(alert.closest('.form-end')).not.toBeNull();
 		expect(title()).toHaveValue('Cookies');
 	});
 
@@ -486,7 +486,9 @@ describe('Edit page form', () => {
 
 	test('a source link that is not a web address is refused under its box', async () => {
 		render(EditPage, { props: { data: makeData(), form: null } });
+		await fireEvent.click(screen.getByRole('button', { name: 'Add Link' }));
 		const link = screen.getByLabelText('Source link');
+		expect(link).toHaveFocus();
 		await fireEvent.input(link, { target: { value: 'javascript:alert(1)' } });
 		await fireEvent.focusOut(link);
 		expect(link).toHaveAttribute('aria-invalid', 'true');
@@ -506,16 +508,30 @@ describe('Edit page form', () => {
 		expect(screen.getByLabelText('Source link')).toHaveValue('https://a.example/');
 	});
 
-	test('More details is closed while its notes are empty, and open once one is filled', () => {
+	test('the optional notes are Add buttons while empty, and a filled one opens with its text', () => {
 		const empty = render(EditPage, { props: { data: makeData(), form: null } });
-		const details = () => document.querySelector('details.more-details') as HTMLDetailsElement;
-		expect(details().open).toBe(false);
-		expect(screen.getByText('More details').tagName).toBe('SUMMARY');
-		expect(screen.getByLabelText('Notes')).toBeVisible();
+		for (const name of ['Notes', 'Make ahead', 'Equipment', 'Storage', 'Reheating'])
+			expect(screen.getByRole('button', { name: `Add ${name}` })).toBeInTheDocument();
+		expect(screen.queryByLabelText('Storage')).toBeNull();
 		empty.unmount();
 		render(EditPage, { props: { data: makeData({ content: { storage: 'Cold' } }), form: null } });
-		expect(details().open).toBe(true);
 		expect(screen.getByLabelText('Storage')).toHaveValue('Cold');
+		expect(screen.queryByRole('button', { name: 'Add Storage' })).toBeNull();
+	});
+
+	test('Delete recipe sits at the form’s end, outside the pinned save bar', () => {
+		render(EditPage, { props: { data: makeData(), form: null } });
+		const del = screen.getByRole('button', { name: 'Delete recipe' });
+		const save = screen.getByRole('button', { name: 'Save' });
+		expect(save.closest('.save-bar')).not.toBeNull();
+		expect(del.closest('.save-bar')).toBeNull();
+		expect(save.compareDocumentPosition(del) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+	});
+
+	test('What changed? sits in the save bar beside Save', () => {
+		render(EditPage, { props: { data: makeData(), form: null } });
+		const bar = screen.getByRole('button', { name: 'Save' }).closest('.save-bar');
+		expect(bar).toContainElement(screen.getByLabelText('What changed?'));
 	});
 
 	test('a server error for the ingredients lands under the ingredients box and focuses it', async () => {
@@ -670,6 +686,15 @@ describe('Edit page drafts on this device', () => {
 		);
 		expect(line()).toHaveAttribute('aria-live', 'polite');
 		expect(discard()).toHaveClass('text-btn');
+	});
+
+	test('a restored draft opens every Add field that holds text, with its text', () => {
+		seed({ storage: 'Airtight tin', makes: '36 cookies', sourceUrl: 'example.com' });
+		render(EditPage, { props: { data: signedIn(), form: null } });
+		expect(screen.getByLabelText('Storage')).toHaveValue('Airtight tin');
+		expect(screen.getByLabelText(/^Makes/)).toHaveValue('36 cookies');
+		expect(screen.getByLabelText('Source link')).toHaveValue('example.com');
+		expect(screen.getByRole('button', { name: 'Add Equipment' })).toBeInTheDocument();
 	});
 
 	test('Discard draft returns to the server’s content and forgets the draft', async () => {
