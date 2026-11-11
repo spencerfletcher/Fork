@@ -12,10 +12,20 @@ vi.mock('#lib/server/trash.js', async (importOriginal) => ({
 	...(await importOriginal<typeof import('#lib/server/trash.js')>()),
 	purgeExpiredTrash: purgeMock
 }));
+const collectionsMock = vi.hoisted(() => ({
+	collectionsOf: vi.fn(),
+	recipeIdsIn: vi.fn(),
+	createCollection: vi.fn(),
+	renameCollection: vi.fn(),
+	deleteCollection: vi.fn()
+}));
+vi.mock('#lib/server/collections.js', () => collectionsMock);
 const { select: selectMock, selectDistinct: selectDistinctMock } = db;
 const findManyMock = db.query.recipes.findMany;
 
-import { load } from './+page.server';
+import { load, actions } from './+page.server';
+import { formEvent, invokeAction } from '#lib/testing/actions.js';
+import { COLLECTION_NAME_ERROR } from '#lib/collections.js';
 import { CARD_WITH } from '#lib/server/recipeCounts.js';
 import { inTrashOf } from '#lib/server/trash.js';
 import { recipes } from '#lib/server/db/schema.js';
@@ -61,6 +71,8 @@ describe('/cookbook load', () => {
 		vi.clearAllMocks();
 		selectDistinctMock.mockReturnValue(chain([]));
 		findManyMock.mockResolvedValue([]);
+		collectionsMock.collectionsOf.mockResolvedValue([]);
+		collectionsMock.recipeIdsIn.mockResolvedValue(null);
 	});
 
 	test('sends a signed-out visitor to log in, coming back to the same filters', async () => {
@@ -211,5 +223,136 @@ describe('/cookbook load', () => {
 		});
 		expect(selectDistinctMock).not.toHaveBeenCalled();
 		expect(findManyMock).not.toHaveBeenCalled();
+	});
+});
+
+const QUICK = { id: 41, name: 'Quick', count: 2 };
+
+describe('/cookbook load, within a collection', () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+		selectDistinctMock.mockReturnValue(chain([]));
+		findManyMock.mockResolvedValue([]);
+		collectionsMock.collectionsOf.mockResolvedValue([QUICK]);
+		collectionsMock.recipeIdsIn.mockResolvedValue([2, 3]);
+	});
+
+	test('lists the viewer’s collections with their counts', async () => {
+		mockLibrary(LIBRARY);
+		findManyByIds();
+
+		const result = await loadResult();
+
+		expect(collectionsMock.collectionsOf).toHaveBeenCalledWith(USER);
+		expect(result.collections).toEqual([QUICK]);
+		expect(result.collection).toBeNull();
+		expect(collectionsMock.recipeIdsIn).not.toHaveBeenCalled();
+	});
+
+	test('?collection= shows its recipes, the segments counting inside it, the subtitle the whole library', async () => {
+		mockLibrary(LIBRARY);
+		findManyByIds();
+
+		const result = await loadResult(`?collection=${QUICK.id}&filter=mine`);
+
+		expect(collectionsMock.recipeIdsIn).toHaveBeenCalledWith(USER, QUICK.id);
+		expect(result.collection).toEqual({ id: QUICK.id, name: QUICK.name });
+		expect(result.recipes.map((r) => r.id)).toEqual([2]);
+		expect(result.inView).toEqual({ all: 2, mine: 1, saved: 1 });
+		expect(result.counts).toMatchObject({ all: 3, mine: 2, saved: 1 });
+	});
+
+	test('a collection that is not the viewer’s, or not a number, reads as none', async () => {
+		for (const search of ['?collection=999', '?collection=abc']) {
+			vi.clearAllMocks();
+			collectionsMock.collectionsOf.mockResolvedValue([QUICK]);
+			collectionsMock.recipeIdsIn.mockResolvedValue(null);
+			mockLibrary(LIBRARY);
+			findManyByIds();
+
+			const result = await loadResult(search);
+
+			expect(result.collection).toBeNull();
+			expect(result.recipes).toHaveLength(LIBRARY.length);
+		}
+	});
+
+	test('an empty collection returns no recipes and asks for no cards', async () => {
+		collectionsMock.recipeIdsIn.mockResolvedValue([]);
+		mockLibrary(LIBRARY);
+
+		const result = await loadResult(`?collection=${QUICK.id}`);
+
+		expect(result.recipes).toEqual([]);
+		expect(result.inView).toEqual({ all: 0, mine: 0, saved: 0 });
+		expect(findManyMock).not.toHaveBeenCalled();
+	});
+});
+
+describe('/cookbook collection actions', () => {
+	const act = (name: keyof typeof actions, fields: Record<string, string>, user = USER) =>
+		invokeAction(actions[name], formEvent({ fields, locals: { user } }));
+
+	beforeEach(() => vi.clearAllMocks());
+
+	test('a lapsed session is told to log in, for every action', async () => {
+		for (const name of ['createCollection', 'renameCollection', 'deleteCollection'] as const) {
+			const result = await invokeAction(actions[name], formEvent({ locals: { user: null } }));
+			expect(result).toMatchObject({ status: 401, data: { code: 'unauthenticated' } });
+		}
+	});
+
+	test('create opens the new collection', async () => {
+		collectionsMock.createCollection.mockResolvedValue({ id: 77 });
+
+		const result = await act('createCollection', { name: 'Italian' });
+
+		expect(collectionsMock.createCollection).toHaveBeenCalledWith(USER.id, 'Italian');
+		expect(result).toMatchObject({ status: 303, location: '/cookbook?collection=77' });
+	});
+
+	test('a refused name comes back as the form’s error, with the name as typed', async () => {
+		const error = COLLECTION_NAME_ERROR.taken('Quick');
+		collectionsMock.createCollection.mockResolvedValue({ error });
+
+		const result = await act('createCollection', { name: 'Quick' });
+
+		expect(result).toMatchObject({
+			status: 400,
+			data: { code: 'invalid', error, name: 'Quick', intent: 'create' }
+		});
+	});
+
+	test('rename names the collection; another cook’s is not found', async () => {
+		collectionsMock.renameCollection.mockResolvedValueOnce({ renamed: true });
+		expect(await act('renameCollection', { id: '41', name: 'Fast' })).toEqual({ renamed: 41 });
+		expect(collectionsMock.renameCollection).toHaveBeenCalledWith(USER.id, 41, 'Fast');
+
+		collectionsMock.renameCollection.mockResolvedValueOnce({ renamed: false });
+		expect(await act('renameCollection', { id: '41', name: 'Fast' })).toMatchObject({
+			status: 404,
+			data: { code: 'not_found' }
+		});
+	});
+
+	test('rename with a refused name says why', async () => {
+		collectionsMock.renameCollection.mockResolvedValue({ error: COLLECTION_NAME_ERROR.empty });
+		expect(await act('renameCollection', { id: '41', name: ' ' })).toMatchObject({
+			status: 400,
+			data: { code: 'invalid', error: COLLECTION_NAME_ERROR.empty, intent: 'rename' }
+		});
+	});
+
+	test('delete goes back to the whole Cookbook; a bad or foreign id is refused', async () => {
+		collectionsMock.deleteCollection.mockResolvedValueOnce(true);
+		expect(await act('deleteCollection', { id: '41' })).toMatchObject({
+			status: 303,
+			location: '/cookbook'
+		});
+		expect(collectionsMock.deleteCollection).toHaveBeenCalledWith(USER.id, 41);
+
+		collectionsMock.deleteCollection.mockResolvedValueOnce(false);
+		expect(await act('deleteCollection', { id: '41' })).toMatchObject({ status: 404 });
+		expect(await act('deleteCollection', { id: 'x' })).toMatchObject({ status: 400 });
 	});
 });
