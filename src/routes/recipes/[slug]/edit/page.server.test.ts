@@ -1,5 +1,5 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
-import { REQUIRED_MESSAGES } from '#lib/recipes/validation.js';
+import { CAP_MESSAGES, CAPS, REQUIRED_MESSAGES } from '#lib/recipes/validation.js';
 import { chain } from '#lib/testing/drizzle.js';
 import { invokeAction as invoke, formEvent, loadEvent, photoFile } from '#lib/testing/actions.js';
 import { loginHref } from '#lib/auth/loginHref.js';
@@ -233,6 +233,29 @@ describe('save', () => {
 		});
 		expect(uploadMock).not.toHaveBeenCalled();
 		expect(transactionMock).not.toHaveBeenCalled();
+	});
+
+	test('a title, description or tag longer than its cap saves when the recipe already has it, and is refused when typed new', async () => {
+		const long = {
+			title: 'T'.repeat(CAPS.title + 1),
+			description: 'D'.repeat(CAPS.description + 1),
+			tag: 'G'.repeat(CAPS.tag + 1)
+		};
+		findRecipeMock.mockResolvedValue({
+			...RECIPE,
+			title: long.title,
+			description: long.description,
+			recipesToTags: [{ tag: { name: long.tag } }]
+		});
+		const kept = {
+			...UNCHANGED,
+			title: long.title,
+			description: long.description,
+			tags: [long.tag]
+		};
+		expect((await save(kept)).status).toBe(303);
+		const refused = await save({ ...kept, title: `${long.title}!` });
+		expect(refused.data).toMatchObject({ error: CAP_MESSAGES.title, code: 'invalid' });
 	});
 
 	test('returns 400 when editRevision is not an integer', async () => {

@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeAll } from 'vitest';
-import { asc, eq } from 'drizzle-orm';
+import { and, asc, eq } from 'drizzle-orm';
 
 import { closeDbAfter, localDb, withProfiles } from '#lib/testing/db.js';
 import { makeContent, makeIngredient, makeStep } from '#lib/recipes/fixtures.js';
@@ -86,6 +86,33 @@ describe.skipIf(!localDb)('restoreVersion, against the real database', () => {
 		const [row] = await tx.select().from(schema.recipes).where(eq(schema.recipes.id, recipeId));
 		return row;
 	};
+	test('a version longer than the caps on public text is restored as it is: the caps refuse only a save', async () => {
+		const { CAPS } = await import('#lib/recipes/validation.js');
+		await withRecipe(async (tx, { recipeId, userId }) => {
+			const long = {
+				title: 'T'.repeat(CAPS.title + 1),
+				description: 'D'.repeat(CAPS.description + 1)
+			};
+			await tx
+				.update(schema.recipeVersions)
+				.set({ ...long, commitMessage: 'M'.repeat(CAPS.commitMessage + 1) })
+				.where(eq(schema.recipeVersions.recipeId, recipeId));
+			await tx
+				.update(schema.recipeVersions)
+				.set({ title: 'Short' })
+				.where(
+					and(
+						eq(schema.recipeVersions.recipeId, recipeId),
+						eq(schema.recipeVersions.versionNumber, 2)
+					)
+				);
+			expect(await versions.restoreVersion(tx, recipeId, userId, REVISION, 1)).toEqual({
+				versionNumber: 3
+			});
+			expect(await recipeRow(tx, recipeId)).toMatchObject(long);
+		});
+	});
+
 	test("restoring v1 appends v3 with v1's content; v1 and v2 are unchanged", async () => {
 		await withRecipe(async (tx, { recipeId, userId }) => {
 			const before = await versionRows(tx, recipeId);

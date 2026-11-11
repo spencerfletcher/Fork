@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import {
+	capError,
 	draftOf,
 	parseDraftContent,
 	parseSettings,
@@ -13,7 +14,7 @@ import {
 	type UploadedImage
 } from '#lib/server/images.js';
 import { failure, type FailureCode } from '#lib/server/actions.js';
-import type { RecipeDraft } from '#lib/recipes/validation.js';
+import type { CapBefore, RecipeDraft } from '#lib/recipes/validation.js';
 
 // The recipe editor's submission, shared by the new and edit actions. Parsing
 // and the upload are two steps because each action does its own check between
@@ -25,8 +26,12 @@ import type { RecipeDraft } from '#lib/recipes/validation.js';
 export const STALE_MESSAGE =
 	'This recipe was changed in another tab. Reload to see the latest version, then reapply your edits.';
 
-/** The draft exactly as typed, its parsed content and its settings; or the 400 to return. */
-export function readSubmission(formData: FormData) {
+/**
+ * The draft exactly as typed, its parsed content and its settings; or the 400
+ * to return. An edit passes what the recipe has now, `before`, so a long value
+ * saved before the caps is never what refuses it.
+ */
+export function readSubmission(formData: FormData, before?: CapBefore) {
 	const draft = draftOf(formData);
 	const content = parseDraftContent(draft);
 	if (!content.ok)
@@ -34,6 +39,11 @@ export function readSubmission(formData: FormData) {
 	const settings = parseSettings(formData);
 	if (!settings.ok)
 		return { ok: false as const, failure: failure(400, 'invalid', settings.error, { draft }) };
+	const capped = capError(
+		{ ...content.value, commitMessage: draft.commitMessage, tagNames: settings.value.tagNames },
+		before
+	);
+	if (capped) return { ok: false as const, failure: failure(400, 'invalid', capped, { draft }) };
 	return { ok: true as const, draft, content: content.value, settings: settings.value };
 }
 

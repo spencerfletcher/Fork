@@ -16,7 +16,7 @@ import {
 import { formatDuration, readDuration, TIME_FIELDS, type TimeField } from './times.js';
 
 export { TIME_FIELDS, type TimeField };
-import { normaliseTagNames } from './tags.js';
+import { normaliseTagNames, tagKey } from './tags.js';
 import { oneOf, text, slugify } from '#lib/helpers.js';
 
 // Largest value a Postgres `integer` column holds.
@@ -70,6 +70,56 @@ export function numberMessages(field: NumberField) {
 		belowMin: `${label} must be at least ${min}`,
 		tooLarge: `${label} is too large`
 	};
+}
+
+/**
+ * Caps on the words other cooks read, in characters after trimming. Checked
+ * on a save (capError, through readSubmission), never in the content schema,
+ * which also reads stored versions (the editor's baseline), so text saved
+ * before the caps still loads, forks and restores. ponytail: no database check
+ * constraints, as production's longest values are unverified; once
+ * `pnpm db:read:prod` shows none over, a migration can add
+ * `check (char_length(title) <= 150)` and the rest.
+ */
+export const CAPS = {
+	title: 150,
+	description: 500,
+	commitMessage: 200,
+	tag: 40,
+	tags: 20
+} as const;
+
+export const CAP_MESSAGES = {
+	title: `Title is too long (${CAPS.title} characters max)`,
+	description: `Description is too long (${CAPS.description} characters max)`,
+	commitMessage: `“What changed?” is too long (${CAPS.commitMessage} characters max)`,
+	tag: `A tag is too long (${CAPS.tag} characters max)`,
+	tags: `Too many tags (${CAPS.tags} max)`
+} as const;
+
+/** What the recipe has now, on an edit: a value it already has is never refused. */
+export type CapBefore = { title: string; description: string | null; tagNames: string[] };
+
+/** Characters, as Postgres's char_length counts them: an emoji is one. */
+const charCount = (s: string) => Array.from(s).length;
+
+/** The first cap a save's trimmed words break, or null; what `before` already has passes. */
+export function capError(
+	saved: { title: string; description: string | null; commitMessage: string; tagNames: string[] },
+	before?: CapBefore
+): string | null {
+	const over = (field: 'title' | 'description') => {
+		const value = saved[field];
+		return value !== null && charCount(value) > CAPS[field] && value !== before?.[field];
+	};
+	if (over('title')) return CAP_MESSAGES.title;
+	if (over('description')) return CAP_MESSAGES.description;
+	if (charCount(saved.commitMessage.trim()) > CAPS.commitMessage) return CAP_MESSAGES.commitMessage;
+	const had = new Set(before?.tagNames.map(tagKey));
+	if (saved.tagNames.some((name) => charCount(name) > CAPS.tag && !had.has(tagKey(name))))
+		return CAP_MESSAGES.tag;
+	if (saved.tagNames.length > Math.max(CAPS.tags, had.size)) return CAP_MESSAGES.tags;
+	return null;
 }
 
 /** What a required field says when it is empty; the editor shows the same live. */
@@ -403,7 +453,9 @@ export function draftOf(formData: FormData): RecipeDraft {
 // Every message a content field can be refused with. A Record over the
 // fields, so a new one must say which messages are its own.
 const MESSAGES_OF: Record<keyof ContentFields, string[]> = {
-	title: [REQUIRED_MESSAGES.title],
+	title: [REQUIRED_MESSAGES.title, CAP_MESSAGES.title],
+	// The description, the commit message and tags have no inline error in
+	// the editor, so their caps' messages show as the form's own error.
 	description: [],
 	sourceName: [textTooLong('sourceName')],
 	sourceUrl: Object.values(SOURCE_URL_MESSAGES),

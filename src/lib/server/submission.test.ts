@@ -2,6 +2,9 @@ import { describe, test, expect, vi } from 'vitest';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { formOf, photoFile } from '#lib/testing/actions.js';
 import {
+	CAPS,
+	CAP_MESSAGES,
+	fieldOfMessage,
 	PHOTO_MAX_BYTES,
 	PHOTO_SIZE_MESSAGE,
 	PHOTO_TYPE_MESSAGE
@@ -40,6 +43,77 @@ describe('readSubmission', () => {
 		if (read.ok) return;
 		expect(read.failure.status).toBe(400);
 		expect(read.failure.data.draft.ingredients).toBe(VALID.ingredients);
+	});
+});
+
+describe('readSubmission: length caps on public text', () => {
+	const chars = (n: number, c = 'a') => c.repeat(n);
+	const tags = (n: number) => Array.from({ length: n }, (_, i) => `tag ${i}`);
+	const refusal = (
+		fields: Record<string, string | string[]>,
+		before?: Parameters<typeof readSubmission>[1]
+	) => {
+		const read = readSubmission(form({ ...VALID, ...fields } as Record<string, string>), before);
+		return read.ok ? null : read.failure.data.error;
+	};
+	// formOf takes arrays for repeated fields.
+	const withTags = (names: string[]) => formOf({ ...VALID, tags: names });
+
+	test('each cap holds its value, counted after trimming, and one more character is refused', () => {
+		const at = {
+			title: chars(CAPS.title),
+			description: chars(CAPS.description),
+			commitMessage: chars(CAPS.commitMessage)
+		};
+		expect(refusal({ ...at, title: `  ${at.title}  ` })).toBeNull();
+		for (const field of ['title', 'description', 'commitMessage'] as const)
+			expect(refusal({ ...at, [field]: chars(CAPS[field] + 1) })).toBe(CAP_MESSAGES[field]);
+	});
+
+	test('characters, not UTF-16 units: an emoji counts once', () => {
+		expect(refusal({ title: chars(CAPS.title, '🍅') })).toBeNull();
+	});
+
+	test('a tag of the cap is kept, one longer refused; so with the number of tags', () => {
+		const ok = readSubmission(withTags([chars(CAPS.tag), ...tags(CAPS.tags - 1)]));
+		expect(ok.ok).toBe(true);
+		const long = readSubmission(withTags([chars(CAPS.tag + 1)]));
+		expect(long.ok ? null : long.failure.data.error).toBe(CAP_MESSAGES.tag);
+		const many = readSubmission(withTags(tags(CAPS.tags + 1)));
+		expect(many.ok ? null : many.failure.data.error).toBe(CAP_MESSAGES.tags);
+	});
+
+	test('an edit is never refused for what the recipe already has: its title, description and tags', () => {
+		const before = {
+			title: chars(CAPS.title + 5),
+			description: chars(CAPS.description + 5),
+			tagNames: [chars(CAPS.tag + 5), ...tags(CAPS.tags + 2)]
+		};
+		const read = readSubmission(
+			formOf({
+				...VALID,
+				title: before.title,
+				description: before.description,
+				tags: before.tagNames.map((t) => t.toUpperCase())
+			}),
+			before
+		);
+		expect(read.ok).toBe(true);
+		// A changed one is held to the cap, and the tags may not grow past it.
+		expect(refusal({ title: before.title + 'b' }, before)).toBe(CAP_MESSAGES.title);
+		const grown = readSubmission(withTags([...before.tagNames, 'one more']), before);
+		expect(grown.ok ? null : grown.failure.data.error).toBe(CAP_MESSAGES.tags);
+		const newLong = readSubmission(
+			withTags([...before.tagNames.slice(1), chars(CAPS.tag + 1, 'z')]),
+			before
+		);
+		expect(newLong.ok ? null : newLong.failure.data.error).toBe(CAP_MESSAGES.tag);
+	});
+
+	test('the title’s message shows under the title; the others show as the form’s own error', () => {
+		expect(fieldOfMessage(CAP_MESSAGES.title)).toBe('title');
+		for (const field of ['description', 'commitMessage', 'tag', 'tags'] as const)
+			expect(fieldOfMessage(CAP_MESSAGES[field])).toBeUndefined();
 	});
 });
 
