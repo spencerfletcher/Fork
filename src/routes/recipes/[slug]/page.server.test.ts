@@ -732,7 +732,10 @@ describe('restore', () => {
 	});
 
 	test('a page loaded before the last save is stale, before the transaction', async () => {
-		const result = await restore({ ...VALID, editRevision: String(SOURCE_RECIPE.editRevision - 1) });
+		const result = await restore({
+			...VALID,
+			editRevision: String(SOURCE_RECIPE.editRevision - 1)
+		});
 		expect(result).toMatchObject({ status: 409, data: { code: 'stale', error: STALE_MESSAGE } });
 		expect(transactionMock).not.toHaveBeenCalled();
 	});
@@ -742,7 +745,7 @@ describe('restore', () => {
 		expect(await restore(VALID)).toMatchObject({ status: 409, data: { code: 'stale' } });
 	});
 
-	test("a version this recipe does not have is not found", async () => {
+	test('a version this recipe does not have is not found', async () => {
 		restoreMock.mockResolvedValue('not_found');
 		expect(await restore({ ...VALID, version: '9' })).toMatchObject({
 			status: 404,

@@ -45,7 +45,9 @@ describe.skipIf(!localDb)('restoreVersion, against the real database', () => {
 	const REVISION = 3;
 
 	/** A Friends recipe at v2 with one tag, its row holding v2's copies; then rolled back. */
-	async function withRecipe(body: (tx: Tx, ids: { recipeId: number; userId: string }) => Promise<void>) {
+	async function withRecipe(
+		body: (tx: Tx, ids: { recipeId: number; userId: string }) => Promise<void>
+	) {
 		const stamp = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 		const userId = `test-restore-${stamp}`;
 		await inRollback(async (tx) => {
@@ -117,12 +119,16 @@ describe.skipIf(!localDb)('restoreVersion, against the real database', () => {
 				editRevision: REVISION + 1
 			});
 			const [{ found }] = await tx
-				.select({ found: sql<boolean>`${schema.recipes.fts} @@ plainto_tsquery('english', 'plain')` })
+				.select({
+					found: sql<boolean>`${schema.recipes.fts} @@ plainto_tsquery('english', 'plain')`
+				})
 				.from(schema.recipes)
 				.where(eq(schema.recipes.id, recipeId));
 			expect(found).toBe(true);
 			expect(
-				await tx.query.recipesToTags.findMany({ where: eq(schema.recipesToTags.recipeId, recipeId) })
+				await tx.query.recipesToTags.findMany({
+					where: eq(schema.recipesToTags.recipeId, recipeId)
+				})
 			).toEqual(tagsBefore);
 		});
 	});
