@@ -3,6 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import source from './RecipeForm.svelte?raw';
 import photoSource from './PhotoField.svelte?raw';
+import { cssRule } from '#lib/testing/css.js';
 import RecipeForm from './RecipeForm.svelte';
 import {
 	draftOf,
@@ -26,12 +27,10 @@ const style = source.slice(source.indexOf('<style>'));
 
 describe('RecipeForm photo buttons', () => {
 	test('reach 44px on a phone or under a coarse pointer', () => {
-		const photoStyle = photoSource.slice(photoSource.indexOf('<style>'));
-		const media = photoStyle.slice(
-			photoStyle.indexOf('@media (max-width: 699px), (pointer: coarse)')
+		const media = photoSource.slice(
+			photoSource.indexOf('@media (max-width: 699px), (pointer: coarse)')
 		);
-		const block = media.slice(0, media.indexOf('\n\t}\n'));
-		expect(block).toMatch(/\.photo-choose,\s*\.photo-keep\s*{[^}]*min-height:\s*44px/);
+		expect(cssRule(media, '.photo-choose, .photo-keep')).toMatch(/min-height:\s*44px/);
 	});
 });
 
@@ -130,19 +129,10 @@ describe('RecipeForm save error that names no field', () => {
 });
 
 describe('RecipeForm actions on a phone', () => {
-	// Every phone-only block, joined, so the test does not care which one holds a rule.
-	const phone = style
-		.split('@media (max-width: 699px) {')
-		.slice(1)
-		.map((rest) => rest.slice(0, rest.indexOf('\n\t}\n')))
-		.join('\n');
-	const rule = (selector: string) => {
-		const at = phone.indexOf(`${selector} {`);
-		return at < 0 ? '' : phone.slice(at, phone.indexOf('}', at));
-	};
+	const phone = style.slice(style.indexOf('@media (max-width: 699px) {'));
 
 	test('a field focused near the bottom scrolls clear of the bar', () => {
-		expect(rule(':global(html:has(.actions-bar))')).toMatch(
+		expect(cssRule(phone, ':global(html:has(.actions-bar))')).toMatch(
 			/scroll-padding-bottom:[^;]*env\(safe-area-inset-bottom\)/
 		);
 	});
@@ -247,8 +237,7 @@ describe('RecipeForm title box', () => {
 
 	// field-sizing grows it; without it, rows="1" and this floor keep the input's height.
 	test("keeps the single-line boxes' height where field-sizing is unsupported, and no resize grip", () => {
-		const at = style.indexOf("textarea[name='title'] {");
-		const rule = style.slice(at, style.indexOf('}', at));
+		const rule = cssRule(style, "textarea[name='title']");
 		expect(rule).toMatch(/min-height:\s*calc\(1lh \+ 20px\)/);
 		expect(rule).toMatch(/resize:\s*none/);
 	});

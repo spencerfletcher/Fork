@@ -2,6 +2,7 @@ import { describe, test, expect } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/svelte';
 import ChoiceGroup from './ChoiceGroup.svelte';
 import source from './ChoiceGroup.svelte?raw';
+import { cssRule } from '#lib/testing/css.js';
 
 const options = [
 	{ value: 'tea', label: 'Tea', note: 'Hot leaves.' },
@@ -40,7 +41,7 @@ describe('ChoiceGroup', () => {
 		const { container } = render(ChoiceGroup, { props: { ...props, columns: 2 } });
 		expect(container.querySelector('.choices')).toHaveClass('two');
 		// jsdom applies no component CSS, so the rules are read from the source.
-		expect(source).toMatch(/\.choice \{[^}]*gap: 2px 6px/);
-		expect(source).toMatch(/\.choice input \{[^}]*align-self: center/);
+		expect(cssRule(source, '.choice')).toMatch(/gap: 2px 6px/);
+		expect(cssRule(source, '.choice input')).toMatch(/align-self: center/);
 	});
 });

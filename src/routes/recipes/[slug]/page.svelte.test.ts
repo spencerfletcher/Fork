@@ -2,6 +2,7 @@ import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/svelte';
 import Page from './+page.svelte';
 import pageSource from './+page.svelte?raw';
+import { cssRule } from '#lib/testing/css.js';
 import type { PageData } from './$types';
 import { makeContent, makeIngredient, makeVersion } from '#lib/recipes/fixtures.js';
 import { FRACTIONS } from '#lib/recipes/scale.js';
@@ -131,14 +132,17 @@ describe('recipe page title band', () => {
 	test('the band is the --color-band cream, its photo a 4:3 inset of 504px', () => {
 		// jsdom applies no CSS, so the geometry is read from source; the e2e
 		// spec pins the band's computed colour.
-		expect(pageSource).toMatch(/\.hero \{[^}]*background: var\(--color-band\);/);
-		expect(pageSource).toMatch(/grid-template-columns: minmax\(0, 1fr\) 504px;/);
-		expect(pageSource).toMatch(/aspect-ratio: 4 \/ 3;/);
+		expect(cssRule(pageSource, '.hero')).toMatch(/background: var\(--color-band\);/);
+		expect(cssRule(pageSource, '.hero-inner')).toMatch(
+			/grid-template-columns: minmax\(0, 1fr\) 504px;/
+		);
+		expect(cssRule(pageSource, '.recipe-photo img')).toMatch(/aspect-ratio: 4 \/ 3;/);
 	});
 
 	test('in forced colours only the pressed section tab keeps its underline', () => {
-		expect(pageSource).toMatch(
-			/@media \(forced-colors: active\) \{\s*\.section-tabs button:not\(\[aria-pressed='true'\]\) \{\s*border-bottom-color: Canvas;/
+		const forced = pageSource.slice(pageSource.indexOf('@media (forced-colors: active)'));
+		expect(cssRule(forced, ".section-tabs button:not([aria-pressed='true'])")).toMatch(
+			/border-bottom-color: Canvas;/
 		);
 	});
 });

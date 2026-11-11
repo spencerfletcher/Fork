@@ -3,6 +3,7 @@ import { render } from '@testing-library/svelte';
 import Details from './Details.svelte';
 import source from './Details.svelte?raw';
 import { makeContent } from '#lib/recipes/fixtures.js';
+import { cssRule } from '#lib/testing/css.js';
 
 function line(container: HTMLElement) {
 	return container.querySelector('.details')!.textContent!.replace(/\s+/g, ' ').trim();
@@ -91,8 +92,8 @@ describe('Details', () => {
 		expect(container.querySelector('.line')).toHaveClass('dot-list');
 		const style = source.slice(source.indexOf('<style>'));
 		const phone = style.slice(style.indexOf('@media (max-width: 699px)'));
-		expect(phone).toMatch(/\.line \{[^}]*display: block/);
-		expect(phone).toMatch(/\.line \+ \.line::before[^{]*\{[^}]*content: none/);
+		expect(cssRule(phone, '.line')).toMatch(/display: block/);
+		expect(cssRule(phone, '.line + .line::before')).toMatch(/content: none/);
 	});
 
 	test('renders nothing when there is nothing to show', () => {
