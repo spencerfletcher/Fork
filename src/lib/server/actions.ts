@@ -7,6 +7,7 @@ export const FAILURE_CODES = [
 	'stale',
 	'upload_failed',
 	'save_failed',
+	'delete_failed',
 	'unauthenticated',
 	'not_found',
 	'auth_failed',

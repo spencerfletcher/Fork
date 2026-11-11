@@ -4,18 +4,21 @@ import { chain } from '#lib/testing/drizzle.js';
 import { invokeAction, formEvent, loadEvent } from '#lib/testing/actions.js';
 import { loginHref } from '#lib/auth/loginHref.js';
 import { SESSION_ENDED } from '#lib/server/actions.js';
+import { ACCOUNT_DELETED, DELETE_FAILED, TYPE_USERNAME } from '#lib/account.js';
 import { USERNAME_MESSAGE, USERNAME_TAKEN } from '#lib/auth/rules.js';
 import { profiles } from '#lib/server/db/schema.js';
 import { AS_WRITTEN } from '#lib/measurement.js';
 import { dayLabel } from '#lib/journal.js';
 import { actions, load } from './+page.server';
 
-const { findProfileMock, updateMock, changeUsernameMock, ensureProfileMock } = vi.hoisted(() => ({
-	findProfileMock: vi.fn(),
-	updateMock: vi.fn(),
-	changeUsernameMock: vi.fn(),
-	ensureProfileMock: vi.fn().mockResolvedValue(undefined)
-}));
+const { findProfileMock, updateMock, changeUsernameMock, ensureProfileMock, deleteAccountMock } =
+	vi.hoisted(() => ({
+		findProfileMock: vi.fn(),
+		updateMock: vi.fn(),
+		changeUsernameMock: vi.fn(),
+		ensureProfileMock: vi.fn().mockResolvedValue(undefined),
+		deleteAccountMock: vi.fn()
+	}));
 
 vi.mock('#lib/server/db/index.js', () => ({
 	db: { query: { profiles: { findFirst: findProfileMock } }, update: updateMock }
@@ -24,6 +27,7 @@ vi.mock('#lib/server/profiles.js', () => ({
 	changeUsername: changeUsernameMock,
 	ensureProfile: ensureProfileMock
 }));
+vi.mock('#lib/server/account.js', () => ({ deleteAccount: deleteAccountMock }));
 
 const ME = { id: 'me-1', email: 'me@example.com' };
 
@@ -168,5 +172,73 @@ describe('measurement action', () => {
 		const result = await post('measurement', { measurement: 'us' }, null);
 		expect(result).toMatchObject({ status: 401, data: { code: 'unauthenticated' } });
 		expect(updateMock).not.toHaveBeenCalled();
+	});
+});
+
+describe('deleteAccount action', () => {
+	function auth() {
+		return {
+			updateUser: vi.fn().mockResolvedValue({ error: null }),
+			signOut: vi.fn().mockResolvedValue({ error: null })
+		};
+	}
+	const del = (fields: Record<string, string>, user: typeof ME | null = ME, a = auth()) =>
+		invokeAction(
+			actions.deleteAccount as never,
+			formEvent({ fields, locals: { user, supabase: { auth: a } } })
+		);
+
+	beforeEach(() => {
+		findProfileMock.mockResolvedValue({ username: 'cook' });
+		deleteAccountMock.mockResolvedValue(undefined);
+	});
+
+	test('the typed username, as sign-up normalises it, deletes the signed-in account, marks it, signs out everywhere and lands on the goodbye', async () => {
+		const a = auth();
+		const result = await del({ confirmUsername: ' Cook ', id: 'someone-else' }, ME, a);
+		expect(findProfileMock.mock.calls[0][0].where).toEqual(eq(profiles.id, 'me-1'));
+		expect(deleteAccountMock).toHaveBeenCalledWith('me-1', { auth: a });
+		expect(a.updateUser).toHaveBeenCalledWith({ data: { account_deleted: true } });
+		expect(a.signOut).toHaveBeenCalledWith({ scope: 'global' });
+		expect(a.updateUser.mock.invocationCallOrder[0]).toBeGreaterThan(
+			deleteAccountMock.mock.invocationCallOrder[0]
+		);
+		expect(result).toMatchObject({ status: 303, location: ACCOUNT_DELETED });
+	});
+
+	test('any other name, or none, is refused under the step and nothing is deleted', async () => {
+		for (const confirmUsername of ['cook2', '', 'someone']) {
+			const a = auth();
+			const result = await del({ confirmUsername }, ME, a);
+			expect(result).toMatchObject({
+				status: 400,
+				data: { section: 'delete', code: 'invalid', error: TYPE_USERNAME }
+			});
+			expect(a.signOut).not.toHaveBeenCalled();
+		}
+		expect(deleteAccountMock).not.toHaveBeenCalled();
+	});
+
+	test('a lapsed session is a 401 with the delete wording, nothing deleted', async () => {
+		const result = await del({ confirmUsername: 'cook' }, null);
+		expect(result).toMatchObject({
+			status: 401,
+			data: { section: 'delete', code: 'unauthenticated', error: SESSION_ENDED('delete again') }
+		});
+		expect(deleteAccountMock).not.toHaveBeenCalled();
+	});
+
+	test('a failure part way keeps the session, so the cook can try again', async () => {
+		const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+		deleteAccountMock.mockRejectedValue(new Error('db down'));
+		const a = auth();
+		const result = await del({ confirmUsername: 'cook' }, ME, a);
+		expect(result).toMatchObject({
+			status: 500,
+			data: { section: 'delete', code: 'delete_failed', error: DELETE_FAILED }
+		});
+		expect(a.updateUser).not.toHaveBeenCalled();
+		expect(a.signOut).not.toHaveBeenCalled();
+		error.mockRestore();
 	});
 });
