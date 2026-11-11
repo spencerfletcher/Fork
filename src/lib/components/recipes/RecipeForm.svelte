@@ -24,6 +24,7 @@
 	import IngredientEditor from './IngredientEditor.svelte';
 	import StepEditor from './StepEditor.svelte';
 	import PhotoField from './PhotoField.svelte';
+	import FieldError from './FieldError.svelte';
 	import FormActions from '#lib/components/ui/FormActions.svelte';
 	import ChoiceGroup from '#lib/components/ui/ChoiceGroup.svelte';
 	import { audienceIcon } from '#lib/components/Icons.svelte';
@@ -344,9 +345,7 @@
 {@render header?.(outcome, restored ? draftNote : undefined, fields.count > 0)}
 
 {#snippet fieldError(name: string)}
-	{#if errors[name]}
-		<p class="field-error" id="{name}-error" role="alert">{errors[name]}</p>
-	{/if}
+	<FieldError {name} error={errors[name]} />
 {/snippet}
 
 <form
@@ -595,16 +594,6 @@
 </div>
 
 <style>
-	/* The row's errors and hint run its full width, 8px under the boxes. */
-	.field-row {
-		row-gap: var(--space-2);
-	}
-
-	.field-row > .field-error,
-	.field-row > .form-hint {
-		grid-column: 1 / -1;
-	}
-
 	/* Serves is a number of a few digits; the yield is a phrase. */
 	.serves-row {
 		grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);

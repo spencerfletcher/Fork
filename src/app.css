@@ -1110,10 +1110,16 @@
 		margin-bottom: var(--space-2);
 	}
 
+	/* The row's errors and hint run its full width, 8px under the boxes. */
 	.field-row {
 		display: grid;
 		grid-template-columns: repeat(3, 1fr);
-		gap: var(--space-4);
+		gap: var(--space-2) var(--space-4);
+	}
+
+	.field-row > .field-error,
+	.field-row > .form-hint {
+		grid-column: 1 / -1;
 	}
 
 	.form-actions {
