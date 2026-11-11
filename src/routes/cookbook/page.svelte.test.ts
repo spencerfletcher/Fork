@@ -11,7 +11,7 @@ import { cssRule } from '#lib/testing/css.js';
 const style = source.slice(source.indexOf('<style>'));
 
 const { page } = vi.hoisted(() => ({ page: { url: new URL('http://localhost/cookbook') } }));
-vi.mock('$app/navigation', () => ({ goto: vi.fn() }));
+vi.mock('$app/navigation', () => ({ goto: vi.fn(), snapshot: vi.fn() }));
 vi.mock('$app/state', () => ({ page }));
 vi.mock('$app/forms', () => ({ enhance: () => ({ destroy: () => {} }) }));
 

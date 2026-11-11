@@ -3,7 +3,7 @@ import { render, screen, within } from '@testing-library/svelte';
 import Discover from './Discover.svelte';
 
 const { page } = vi.hoisted(() => ({ page: { url: new URL('http://localhost/discover') } }));
-vi.mock('$app/navigation', () => ({ goto: vi.fn() }));
+vi.mock('$app/navigation', () => ({ goto: vi.fn(), snapshot: vi.fn() }));
 vi.mock('$app/state', () => ({ page }));
 
 function makeCard(id: number, overrides: Record<string, unknown> = {}) {

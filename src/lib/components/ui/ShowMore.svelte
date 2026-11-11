@@ -71,8 +71,14 @@
 </script>
 
 {#if list.next}
+	<!-- No hover preload: the link's URL reads every page up to it; a press fetches one. -->
 	<p class="show-more">
-		<a class="btn-ghost" href={nextHref} onclick={more} aria-busy={pending || undefined}>
+		<a
+			class="btn-ghost"
+			href={nextHref}
+			onclick={more}
+			aria-busy={pending || undefined}
+			data-sveltekit-preload-data="off">
 			{pending ? 'Loading…' : 'Show more'}
 		</a>
 	</p>

@@ -3,7 +3,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import SearchPage from './+page.svelte';
 
 const { preloadMock } = vi.hoisted(() => ({ preloadMock: vi.fn() }));
-vi.mock('$app/navigation', () => ({ goto: vi.fn(), preloadData: preloadMock }));
+vi.mock('$app/navigation', () => ({ goto: vi.fn(), preloadData: preloadMock, snapshot: vi.fn() }));
 
 const data = {
 	recipes: [],

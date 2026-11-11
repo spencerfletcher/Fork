@@ -6,7 +6,7 @@ const { preloadMock, page } = vi.hoisted(() => ({
 	preloadMock: vi.fn(),
 	page: { url: new URL('http://localhost/journal'), shallow: null, state: {} }
 }));
-vi.mock('$app/navigation', () => ({ goto: vi.fn(), preloadData: preloadMock }));
+vi.mock('$app/navigation', () => ({ goto: vi.fn(), preloadData: preloadMock, snapshot: vi.fn() }));
 vi.mock('$app/state', () => ({ page }));
 vi.mock('$app/forms', () => ({ enhance: () => ({ destroy: () => {} }) }));
 
