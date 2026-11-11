@@ -1,8 +1,21 @@
-import { DENSITIES, ML_PER_UNIT, GRAMS_PER_WEIGHT_UNIT, PIECE_GRAMS } from './gramTables.js';
+import {
+	DENSITIES,
+	ML_IS_GRAMS_TOLERANCE,
+	ML_PER_UNIT,
+	GRAMS_PER_WEIGHT_UNIT,
+	PIECE_GRAMS,
+	WEIGHED_NEAR_WATER
+} from './gramTables.js';
 import type { Ingredient } from '#lib/recipes/types.js';
 
-/** grams2 is the upper end when the line gave a range such as "1-2 cups". */
-export type GramResult = { grams: number; grams2: number | null; approximate: boolean };
+/** grams2 is the upper end when the line gave a range such as "1-2 cups".
+ * likeWater: a liquid whose millilitres are its grams (likeWater below). */
+export type GramResult = {
+	grams: number;
+	grams2: number | null;
+	approximate: boolean;
+	likeWater: boolean;
+};
 
 // Words that describe handling, not what the thing is. Size words survive
 // parsing because parse-ingredient is told they are not units.
@@ -73,10 +86,24 @@ function candidates(name: string): string[] {
 
 // Whole-name match only, so "peanut butter" is not butter and "rice flour" is
 // not flour. A plural last word is tried in the singular: eggs, tomatoes, chives.
-function lookup(table: Record<string, number>, name: string): number | null {
+function matchedKey(table: Record<string, number>, name: string): string | undefined {
 	const keys = candidates(name).flatMap((c) => [c, c.replace(/es$/, ''), c.replace(/s$/, '')]);
-	const key = keys.find((candidate) => candidate in table);
+	return keys.find((candidate) => candidate in table);
+}
+
+function lookup(table: Record<string, number>, name: string): number | null {
+	const key = matchedKey(table, name);
 	return key === undefined ? null : table[key];
+}
+
+/** A density close enough to water's that millilitres read as grams. */
+export const mlIsGrams = (density: number) => Math.abs(density - 1) <= ML_IS_GRAMS_TOLERANCE;
+
+/** The name is poured and its millilitres are its grams: Metric keeps it in ml. */
+function likeWater(name: string): boolean {
+	const key = matchedKey(DENSITIES, name);
+	if (key === undefined) return false;
+	return mlIsGrams(DENSITIES[key]) && !(WEIGHED_NEAR_WATER as readonly string[]).includes(key);
 }
 
 /**
@@ -106,10 +133,11 @@ export function lookupPieceGrams(quantity: number, name: string): number | null 
 function convert(quantity: number, unit: string, name: string): GramResult | null {
 	if (unit) {
 		const grams = lookupGrams(quantity, unit, name);
-		if (grams !== null) return { grams, grams2: null, approximate: false };
+		if (grams !== null)
+			return { grams, grams2: null, approximate: false, likeWater: likeWater(name) };
 	}
 	const grams = lookupPieceGrams(quantity, unit ? `${unit} ${name}` : name);
-	return grams === null ? null : { grams, grams2: null, approximate: true };
+	return grams === null ? null : { grams, grams2: null, approximate: true, likeWater: false };
 }
 
 /**

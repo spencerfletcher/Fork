@@ -42,7 +42,7 @@ function makeData(imageUrl: string | null = null): PageData {
 		// Two versions, so the version bar renders.
 		allVersions: [version, { ...makeVersion(1, 'Initial recipe'), ...content }],
 		forkCount: 0,
-		grams: [{ grams: 125, grams2: null, approximate: false }, null],
+		grams: [{ grams: 125, grams2: null, approximate: false, likeWater: false }, null],
 		isFavorited: false,
 		user: null
 	} as unknown as PageData;
@@ -74,7 +74,8 @@ describe('recipe page measurement', () => {
 	test('a cook who chose metric reads the latest version converted', () => {
 		page.url = new URL('http://localhost/recipes/cookies');
 		render(Page, { props: { data: withProfile('metric') } });
-		expect(rows()[0]).toHaveTextContent('235 ml written as (1 cup, 125g) flour');
+		// Flour is weighed: grams first, the cups in brackets.
+		expect(rows()[0]).toHaveTextContent('125 g written as (1 cup) flour');
 		expect(screen.getByText(/^Converted to metric/)).toBeInTheDocument();
 	});
 

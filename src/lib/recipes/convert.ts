@@ -1,8 +1,9 @@
 // Unit conversion on the recipe page: a cook's Settings preference (metric or
 // US) applied at render time, after serving scaling. Nothing here is saved;
-// the stored line stays the source of truth. Only a weight to a weight or a
-// volume to a volume converts, never across (cups to grams is the gram hint's
-// job), and only when the rounded result is within TOLERANCE of the true one.
+// the stored line stays the source of truth. A weight converts to a weight
+// and a volume to a volume, except that Metric leads with the gram estimate
+// for a volume of something weighed (flour, sugar, honey: not a likeWater), and
+// only when the rounded result is within TOLERANCE of the true one.
 import { unitsOfMeasure } from 'parse-ingredient';
 import type { Ingredient } from './types.js';
 import type { GramResult } from '#lib/server/ingredientDensities.js';
@@ -68,6 +69,14 @@ const LADDERS = {
 export const TOLERANCE = 0.06;
 
 /**
+ * The least weight a teaspoon or tablespoon row is weighed at in Metric. A
+ * kitchen scale reads in 1 g steps, so under 5 g one step is a fifth of the
+ * amount and the spoon is the better measure: ¼ tsp (0.5g) stays a spoon,
+ * 1 tsp (6g) salt is 6 g.
+ */
+export const MIN_SPOON_GRAMS = 5;
+
+/**
  * Kitchen fractions a US quantity rounds to: measuring cups and spoons have
  * thirds and an ⅛ teaspoon; a scale reads quarters. ⅛ only below one.
  */
@@ -130,28 +139,50 @@ function land(bases: number[], to: Measurement, dimension: Dimension) {
  * beside it; null when the row stays as written, which is also when `to` is
  * null (no preference), the row has no unit this table knows, or its unit
  * is already in the cook's system. A converted weight drops the gram hint:
- * one side of it is already in grams.
+ * one side of it is already in grams. In Metric a volume of something
+ * weighed, with a measured (not whole-item) estimate, leads with that
+ * estimate instead (spoons from MIN_SPOON_GRAMS); `estimate` says so.
  */
 export function convertIngredient(
 	ingredient: Ingredient,
 	grams: GramResult | null,
 	to: Measurement | null
-): { ingredient: Ingredient; grams: GramResult | null; written: string | null } {
-	const unchanged = { ingredient, grams, written: null };
+): {
+	ingredient: Ingredient;
+	grams: GramResult | null;
+	written: string | null;
+	estimate: boolean;
+} {
+	const unchanged = { ingredient, grams, written: null, estimate: false };
 	const { quantity, quantity2, unit, name } = ingredient;
 	const id = unitId(unit);
 	const split = splitMeasure(ingredient);
 	if (to === null || quantity === null || id === undefined || split === null) return unchanged;
 	const from = UNITS[id];
-	if (from.system === to || from.system === 'spoon') return unchanged;
+
+	const weighed =
+		to === 'metric' &&
+		from.dimension === 'volume' &&
+		// A whole-item estimate never reaches here: a count has no volume unit.
+		grams !== null &&
+		!grams.likeWater &&
+		(from.system !== 'spoon' || grams.grams >= MIN_SPOON_GRAMS);
+	// A weight that does not round within tolerance falls back to the volume rules.
+	const weight = weighed
+		? land(grams.grams2 === null ? [grams.grams] : [grams.grams, grams.grams2], to, 'mass')
+		: null;
+	if (weight === null && (from.system === to || from.system === 'spoon')) return unchanged;
 
 	const quantities = quantity2 === null ? [quantity] : [quantity, quantity2];
-	const landed = land(
-		quantities.map((q) => q * from.size),
-		to,
-		from.dimension
-	);
+	const landed =
+		weight ??
+		land(
+			quantities.map((q) => q * from.size),
+			to,
+			from.dimension
+		);
 	if (landed === null) return unchanged;
+	const estimate = weight !== null;
 
 	const [low, high = null] = landed.values;
 	const format = (n: number) =>
@@ -166,7 +197,8 @@ export function convertIngredient(
 			unit: shownUnit,
 			text: [measure, shownUnit, split.between, name].filter(Boolean).join(' ')
 		},
-		grams: from.dimension === 'mass' ? null : grams,
-		written: split.measure
+		grams: from.dimension === 'mass' || estimate ? null : grams,
+		written: split.measure,
+		estimate
 	};
 }

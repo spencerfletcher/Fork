@@ -178,6 +178,30 @@ export const DENSITIES: Record<string, number> = {
 	'red wine': 0.994
 };
 
+/**
+ * How far from 1 g/ml a density may sit for its millilitres to read as its
+ * grams ("15 ml is 15 g": water, yes; oil at 0.91, no). Metric keeps such a
+ * liquid in ml and leads with grams for everything else. No density in the
+ * table sits within 0.01 of the edge: 0.95 and 1.045 are in, 0.925 and 1.07 out.
+ */
+export const ML_IS_GRAMS_TOLERANCE = 0.06;
+
+/**
+ * The DENSITIES keys within ML_IS_GRAMS_TOLERANCE of water that are not
+ * poured, which the density alone cannot tell: Metric weighs them.
+ */
+export const WEIGHED_NEAR_WATER = [
+	'sour cream',
+	'cream cheese',
+	'yogurt',
+	'plain yogurt',
+	'greek yogurt',
+	'crushed tomatoes',
+	'diced tomatoes',
+	'tomato sauce',
+	'tahini'
+] as const;
+
 /** Volume of 1 unit in ml */
 export const ML_PER_UNIT: Record<string, number> = {
 	tsp: 4.929,
