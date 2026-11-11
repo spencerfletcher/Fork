@@ -95,6 +95,63 @@ test.describe('Auth pages', () => {
 		).toBeVisible();
 	});
 
+	// The local stack confirms sign-ups at once, so no link is mailed; the page
+	// still names the address from the cookie and never puts it in the URL.
+	test('signing up lands on "Check your email" naming the address, which stays out of the URL', async ({
+		page
+	}) => {
+		const suffix = Date.now().toString(36);
+		const email = `confirm-${suffix}@example.com`;
+		await gotoHydrated(page, '/signup');
+		await page.getByLabel('Email').fill(email);
+		await page.getByLabel('Username').fill(`confirm_${suffix}`);
+		await page.getByLabel('Password').fill('password-123');
+		await page.getByRole('button', { name: 'Create account' }).click();
+
+		await expect(page).toHaveURL('/confirm-email');
+		await expect(page.getByRole('heading', { level: 1 })).toHaveText('Check your email');
+		await expect(page.getByText(`We sent a confirmation link to ${email}.`)).toBeVisible();
+		await expect(page).toHaveTitle('Check your email — Fork');
+		await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/);
+	});
+
+	// Supabase answers alike for an unknown and a confirmed address, so the page does too.
+	test('resend gives the same answer for an unknown and a real address, announced', async ({
+		page
+	}) => {
+		for (const email of [
+			`nobody-${Date.now().toString(36)}@example.com`,
+			process.env.E2E_USER_EMAIL ?? ''
+		]) {
+			await gotoHydrated(page, '/confirm-email');
+			await expect(
+				page.getByText('We sent a confirmation link to the address you signed up with.', {
+					exact: false
+				})
+			).toBeVisible();
+			await page.getByLabel('Email').fill(email);
+			await page.getByRole('button', { name: 'Resend link' }).click();
+			const status = page.getByRole('status');
+			await expect(status).toHaveText(
+				`If ${email} is waiting to be confirmed, a new link is on its way.`
+			);
+			await expect(status).toBeFocused();
+		}
+	});
+
+	test("Supabase's redirect for a dead link reads as expired, with a way to a new one", async ({
+		page
+	}) => {
+		await page.setViewportSize({ width: 390, height: 844 });
+		await page.goto('/confirm-email?error=access_denied&error_code=otp_expired');
+		await expect(page.getByRole('heading', { level: 1 })).toHaveText('Link expired');
+		await expect(page).toHaveTitle('Link expired — Fork');
+		const resend = page.getByRole('button', { name: 'Resend link' });
+		expect((await resend.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+		const logIn = page.getByRole('link', { name: 'Log in' });
+		expect((await logIn.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+	});
+
 	test('new recipe page redirects unauthenticated users to login', async ({ page }) => {
 		await page.goto('/recipes/new');
 		// Should either redirect to /login or show an error — not the new recipe form
