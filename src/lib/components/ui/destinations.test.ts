@@ -5,11 +5,11 @@ const current = (path: string) =>
 	DESTINATIONS.filter((d) => isCurrent(d, path)).map((d) => d.label);
 
 describe('DESTINATIONS', () => {
-	// Discover first (Spencer, 9 November 2026), the bar and the tab bar alike.
-	test('bar order: Discover, Cookbook, Journal, Friends', () => {
+	// Cookbook first (Spencer, 12 November 2026), the bar and the tab bar alike.
+	test('bar order: Cookbook, Discover, Journal, Friends', () => {
 		expect(DESTINATIONS.map((d) => d.label)).toEqual([
-			'Discover',
 			'Cookbook',
+			'Discover',
 			'Journal',
 			'Friends'
 		]);

@@ -6,7 +6,7 @@
 	import { plural } from '#lib/helpers.js';
 	import { pagedList } from '#lib/pagedList.svelte.js';
 	import JournalEntry from './JournalEntry.svelte';
-	import JournalYear from './JournalYear.svelte';
+	import JournalTwelveMonths from './JournalTwelveMonths.svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -57,7 +57,7 @@
 				{/snippet}
 			</EmptyPanel>
 		{:else}
-			{#if data.year}<JournalYear year={data.year} />{/if}
+			{#if data.twelveMonths}<JournalTwelveMonths summary={data.twelveMonths} />{/if}
 			<div bind:this={entries}>
 				{#each groups as group (group.month)}
 					<section class="month-group">

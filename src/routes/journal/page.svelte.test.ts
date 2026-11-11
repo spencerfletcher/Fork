@@ -1,5 +1,6 @@
 import { describe, test, expect, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
+import { SUMMARY_MONTHS, summaryMonths } from '#lib/journal.js';
 import JournalPage from './+page.svelte';
 
 const { preloadMock, page } = vi.hoisted(() => ({
@@ -33,17 +34,18 @@ const data = {
 	total: 40,
 	oldest: '2024-05-01',
 	logged: null as { cookedOn: string } | null,
-	year: null as null | {
-		year: number;
-		months: (number | null)[];
+	twelveMonths: null as null | {
+		months: { month: string; cooks: number }[];
+		dishes: number;
 		top: { recipeId: number; times: number; title: string; href: string | null }[];
 	}
 };
-const YEAR = {
-	year: 2026,
-	months: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, null],
+const SUMMARY = {
+	months: summaryMonths('2026-11-12').map((month, i) => ({ month, cooks: i })),
+	dishes: 3,
 	top: [{ recipeId: 1, times: 4, title: 'Miso Salmon', href: '/recipes/miso-salmon' }]
 };
+const HEADING = `Last ${SUMMARY_MONTHS} months`;
 
 const renderJournal = (overrides: Partial<typeof data> = {}) =>
 	render(JournalPage, { props: { data: { ...data, ...overrides } } as never });
@@ -77,31 +79,31 @@ describe('Journal page', () => {
 		expect(screen.queryByRole('link', { name: 'Show more' })).toBeNull();
 	});
 
-	test('the year summary sits above the month groups, its headings before theirs', () => {
-		renderJournal({ year: YEAR });
+	test('the last-12-months summary sits above the month groups, its headings before theirs', () => {
+		renderJournal({ twelveMonths: SUMMARY });
 		expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent?.trim())).toEqual([
-			'2026 so far',
-			'Most cooked this year',
+			HEADING,
+			`Most cooked in the last ${SUMMARY_MONTHS} months`,
 			'November 2026',
 			'October 2026'
 		]);
 	});
 
-	test('no year summary without entries this year', () => {
+	test('no summary without entries in the last 12 months', () => {
 		renderJournal();
-		expect(screen.queryByRole('heading', { name: /so far/ })).toBeNull();
+		expect(screen.queryByRole('heading', { name: HEADING })).toBeNull();
 	});
 
-	test('Show more leaves the year summary as the page loaded it', async () => {
+	test('Show more leaves the summary as the page loaded it', async () => {
 		preloadMock.mockResolvedValue({
 			type: 'loaded',
 			status: 200,
-			data: { ...data, entries: [entry(1, '2026-10-02')], next: null, year: null }
+			data: { ...data, entries: [entry(1, '2026-10-02')], next: null, twelveMonths: null }
 		});
-		renderJournal({ year: YEAR });
+		renderJournal({ twelveMonths: SUMMARY });
 		await fireEvent.click(screen.getByRole('link', { name: 'Show more' }));
 		await waitFor(() => expect(screen.getByText('1 more entry')).toBeInTheDocument());
 		expect(screen.getByRole('link', { name: 'Miso Salmon' })).toBeInTheDocument();
-		expect(screen.getAllByRole('heading', { name: '2026 so far' })).toHaveLength(1);
+		expect(screen.getAllByRole('heading', { name: HEADING })).toHaveLength(1);
 	});
 });

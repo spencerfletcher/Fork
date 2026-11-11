@@ -71,17 +71,31 @@ export function groupByMonth<T extends { cookedOn: string }>(
 	return groups;
 }
 
-/** How many recipes the Journal's year summary lists. */
+/** How many calendar months the Journal's summary covers, the current one last. */
+export const SUMMARY_MONTHS = 12;
+
+/**
+ * The first day of each month the summary covers, oldest first, ending with
+ * the month of `today` (a YYYY-MM-DD day): on 2026-11-12, 2025-12-01 to 2026-11-01.
+ */
+export function summaryMonths(today: string): string[] {
+	const [year, month] = [day(today).getUTCFullYear(), day(today).getUTCMonth()];
+	return Array.from({ length: SUMMARY_MONTHS }, (_, i) =>
+		new Date(Date.UTC(year, month - SUMMARY_MONTHS + 1 + i, 1)).toISOString().slice(0, 10)
+	);
+}
+
+/** How many recipes the Journal's summary lists. */
 export const MOST_COOKED = 5;
 
 /** The marigold steps a cooked month's cell can take, above the bare one for none. */
 export const TONE_STEPS = 3;
 
 /**
- * A month's step on the year summary's count scale, relative to the year's
+ * A month's step on the summary's count scale, relative to the window's
  * busiest month: 0 for none cooked, else 1 to TONE_STEPS by even shares of `most`.
  */
-export function monthTone(cooks: number | null, most: number): number {
+export function monthTone(cooks: number, most: number): number {
 	if (!cooks) return 0;
 	return Math.ceil((cooks / most) * TONE_STEPS);
 }

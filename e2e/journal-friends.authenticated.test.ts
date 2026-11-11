@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { gotoHydrated } from './helpers';
 import { SEED_LOG } from '../src/lib/server/db/seedData';
+import { monthLabel, SUMMARY_MONTHS, summaryMonths } from '../src/lib/journal';
 
 // Signed in as the seed user (spencerfletcher's place in fork_e2e), whose
 // friend devcooks and pending requester priyabakes the seed writes. The file
@@ -45,45 +46,74 @@ test.describe('Journal', () => {
 		await expect(page.getByText('E2E leftover fried rice')).toHaveCount(0);
 	});
 
-	test('the year summary counts each month and the most cooked, within 330px on a phone', async ({
+	test('the last-12-months summary counts each month, the totals and the most cooked', async ({
 		page
 	}) => {
 		await page.setViewportSize({ width: 390, height: 844 });
-		await page.goto('/journal');
-		const now = new Date();
-		const year = now.getUTCFullYear();
-		const months = page.getByRole('list', { name: `${year} so far` }).getByRole('listitem');
-		await expect(months).toHaveCount(12);
-		// Other tests log entries today, so this month's count is theirs to change.
-		for (let m = 0; m < 12; m++) {
-			if (m === now.getUTCMonth()) continue;
-			const prefix = `${year}-${String(m + 1).padStart(2, '0')}`;
-			const cooks = mine.filter((e) => e.cookedOn.startsWith(prefix)).length;
-			const name = new Date(Date.UTC(year, m, 1)).toLocaleDateString('en-GB', {
-				month: 'long',
-				timeZone: 'UTC'
-			});
-			await expect(months.nth(m)).toContainText(
-				`${name}: ${m > now.getUTCMonth() && cooks === 0 ? 'to come' : `${cooks} cook`}`
-			);
+		// The first load writes the browser's zone into the tz cookie; the reload reads it.
+		await gotoHydrated(page, '/journal');
+		await page.reload();
+		// The browser's zone is in the tz cookie by now; the server's day follows it.
+		const today = await page.evaluate(() => {
+			const d = new Date();
+			const pad = (n: number) => String(n).padStart(2, '0');
+			return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+		});
+		const window = summaryMonths(today);
+		const months = page
+			.getByRole('list', { name: `Last ${SUMMARY_MONTHS} months` })
+			.getByRole('listitem');
+		await expect(months).toHaveCount(SUMMARY_MONTHS);
+		// Other tests log entries today, so the current month's count is theirs to change.
+		for (const [i, month] of window.slice(0, -1).entries()) {
+			const cooks = mine.filter((e) => e.cookedOn.startsWith(month.slice(0, 7))).length;
+			await expect(months.nth(i)).toContainText(`${monthLabel(month)}: ${cooks} cook`);
 		}
 		const recipes = new Set(
-			mine.filter((e) => e.recipe && e.cookedOn.startsWith(String(year))).map((e) => e.recipe)
+			mine
+				.filter((e) => e.recipe && e.cookedOn >= window[0] && e.cookedOn <= today)
+				.map((e) => e.recipe)
 		);
-		const top = page.getByRole('list', { name: 'Most cooked this year' }).getByRole('listitem');
+		const top = page
+			.getByRole('list', { name: `Most cooked in the last ${SUMMARY_MONTHS} months` })
+			.getByRole('listitem');
 		// The seed cook logs fewer recipes than the summary lists; other tests may log more.
 		await expect(top.first()).toBeVisible();
 		expect(await top.count()).toBeGreaterThanOrEqual(recipes.size);
 		await expect(top.first()).toContainText(/\d+ times?$/);
-
-		const summary = page.locator('section.jyear');
-		const firstMonth = page.getByRole('heading', { level: 2, name: /\d{4}$/ }).first();
-		const [box, monthBox] = [await summary.boundingBox(), await firstMonth.boundingBox()];
-		expect(monthBox!.y - box!.y).toBeLessThanOrEqual(330);
-		expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
-			390
+		// Other tests log entries, so the totals are checked for their shape.
+		await expect(page.locator('.jtwelve-totals')).toHaveText(
+			/^(1 cook|\d+ cooks), (1 dish|\d+ different dishes)$/
 		);
 	});
+
+	for (const width of [390, 320]) {
+		test(`on a ${width}px phone the months are two rows of six, no name clipped, no sideways scroll`, async ({
+			page
+		}) => {
+			await page.setViewportSize({ width, height: 844 });
+			await page.goto('/journal');
+			const cells = page.locator('.jtwelve-months li');
+			await expect(cells).toHaveCount(SUMMARY_MONTHS);
+			const tops = await cells.evaluateAll((items) =>
+				items.map((li) => Math.round(li.getBoundingClientRect().top))
+			);
+			const half = SUMMARY_MONTHS / 2;
+			expect(new Set(tops.slice(0, half)).size).toBe(1);
+			expect(new Set(tops.slice(half)).size).toBe(1);
+			expect(tops[half]).toBeGreaterThan(tops[0]);
+			// A label wider than its cell overflows it: scrollWidth outgrows clientWidth.
+			const clipped = await page
+				.locator('.jtwelve-name, .jtwelve-year')
+				.evaluateAll((labels) =>
+					labels.filter((l) => l.scrollWidth > l.clientWidth).map((l) => l.textContent)
+				);
+			expect(clipped).toEqual([]);
+			expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+				width
+			);
+		});
+	}
 
 	test('a missing dish is refused in words, and what was typed stays', async ({ page }) => {
 		await gotoHydrated(page, '/journal/new');

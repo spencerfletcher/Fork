@@ -230,6 +230,11 @@
 	--color-marigold-tint: #fbefd0;
 	--color-marigold-tint-hover: #f7e4b6;
 	/* pale marigold — a pressed toggle (Favorite), ink on it */
+	--color-count-1: #fee0b5;
+	--color-count-2: #fcc164;
+	--color-count-3: var(--color-marigold);
+	/* the Journal's count scale above lifted paper: even OKLCH lightness steps
+	   (0.994, 0.921, 0.847, 0.773); ink on them 14.06, 11.01 and 8.53:1 */
 
 	/* Tags */
 	--color-tag: #4a443e;

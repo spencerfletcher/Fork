@@ -1,30 +1,39 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
-import { loadEvent, loadPage } from '#lib/testing/actions.js';
+import { cookieJar, loadEvent, loadPage } from '#lib/testing/actions.js';
 
 const journal = vi.hoisted(() => ({
 	ENTRIES_PER_PAGE: 30,
 	journalOf: vi.fn(),
 	journalSummary: vi.fn(),
-	journalYear: vi.fn(),
+	journalTwelveMonths: vi.fn(),
 	ownEntry: vi.fn()
 }));
 vi.mock('#lib/server/journal.js', () => journal);
+// A day no clock gives today, so the test sees the cook's day passed through.
+const COOK_DAY = '2031-01-02';
+const tz = vi.hoisted(() => ({ todayFor: vi.fn() }));
+vi.mock('#lib/server/timeZone.js', () => tz);
 
 import { load } from './+page.server';
 import type { PageData } from './$types';
 
 const USER = { id: 'cook-3' };
 const entry = (id: number, cookedOn = '2026-11-01') => ({ id, cookedOn });
-const YEAR = { year: 2026, months: [3, ...Array(11).fill(null)], top: [] };
+const SUMMARY = { months: [{ month: '2026-11-01', cooks: 3 }], dishes: 2, top: [] };
+const COOKIES = cookieJar({ tz: 'Pacific/Auckland' });
 const journalPage = (search = '') =>
-	loadPage<PageData>(load, loadEvent({ path: `/journal${search}`, user: USER }));
+	loadPage<PageData>(load, {
+		...(loadEvent({ path: `/journal${search}`, user: USER }) as object),
+		cookies: COOKIES
+	});
 
 beforeEach(() => {
 	vi.clearAllMocks();
 	journal.journalOf.mockResolvedValue({ entries: [entry(2), entry(1)], next: 'c1' });
 	journal.journalSummary.mockResolvedValue({ total: 80, oldest: '2024-05-01' });
 	journal.ownEntry.mockResolvedValue(null);
-	journal.journalYear.mockResolvedValue(YEAR);
+	journal.journalTwelveMonths.mockResolvedValue(SUMMARY);
+	tz.todayFor.mockReturnValue(COOK_DAY);
 });
 
 describe('/journal load', () => {
@@ -64,18 +73,16 @@ describe('/journal load', () => {
 		expect((await journalPage('?logged=abc')).logged).toBeNull();
 	});
 
-	test('the year summary comes with the page, for this year', async () => {
-		const before = new Date();
+	test('the last-12-months summary comes with the page, ending on the cook’s own today', async () => {
 		const data = await journalPage('?page=2');
-		expect(data.year).toEqual(YEAR);
-		const [viewer, today] = journal.journalYear.mock.calls[0];
-		expect(viewer).toEqual(USER);
-		expect(today.getTime()).toBeGreaterThanOrEqual(before.getTime());
+		expect(data.twelveMonths).toEqual(SUMMARY);
+		expect(tz.todayFor).toHaveBeenCalledWith(COOKIES);
+		expect(journal.journalTwelveMonths).toHaveBeenCalledWith(USER, COOK_DAY);
 	});
 
-	test('a Show more fetch (?after=) reads no year summary: the page keeps the one it loaded', async () => {
+	test('a Show more fetch (?after=) reads no summary: the page keeps the one it loaded', async () => {
 		const data = await journalPage('?after=2026-11-01~2');
-		expect(journal.journalYear).not.toHaveBeenCalled();
-		expect(data.year).toBeNull();
+		expect(journal.journalTwelveMonths).not.toHaveBeenCalled();
+		expect(data.twelveMonths).toBeNull();
 	});
 });
