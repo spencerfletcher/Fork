@@ -15,6 +15,7 @@ import {
 	type Visibility
 } from '#lib/recipes/validation.js';
 import { AUDIENCE_LABEL } from '#lib/audience.js';
+import { chooseOption, chosenValue } from '#lib/testing/choices.js';
 import { MAKES_TOO_LONG, MAX_MAKES } from '#lib/recipes/limits.js';
 
 vi.mock('$app/navigation', () => ({ beforeNavigate: () => {} }));
@@ -338,26 +339,27 @@ describe('RecipeForm audience', () => {
 		});
 	};
 
-	test('the stored audience is the checked radio, and a click moves it', async () => {
+	const AUDIENCE = 'Who can see this recipe';
+
+	test('the stored audience is the chosen one, submitted as visibility, and a choice moves it', async () => {
 		renderWith('friends');
-		expect(screen.getByRole('radio', { name: 'Friends' })).toBeChecked();
-		expect(screen.getByRole('radio', { name: 'Only me' })).not.toBeChecked();
-		await fireEvent.click(screen.getByRole('radio', { name: 'Public' }));
-		expect(screen.getByRole('radio', { name: 'Public' })).toBeChecked();
-		expect(screen.getByRole('radio', { name: 'Friends' })).not.toBeChecked();
+		expect(screen.getByRole('combobox', { name: AUDIENCE })).toHaveTextContent(
+			AUDIENCE_LABEL.friends
+		);
+		expect(chosenValue('visibility')).toBe('friends');
+		await chooseOption(AUDIENCE, AUDIENCE_LABEL.public);
+		expect(chosenValue('visibility')).toBe('public');
 	});
 
-	test('a private draft checks Only me by default', () => {
+	test('a private draft shows Only me by default', () => {
 		renderWith('private');
-		expect(screen.getByRole('radio', { name: 'Only me' })).toBeChecked();
-		expect(screen.getByRole('radio', { name: 'Friends' })).not.toBeChecked();
-		expect(screen.getByRole('radio', { name: 'Public' })).not.toBeChecked();
+		expect(chosenValue('visibility')).toBe('private');
 	});
 
-	test('with forks, each choice is described as leaving them too', () => {
+	test('with forks, the hint describes the box', () => {
 		renderWith('public', { hasForks: true });
-		expect(screen.getByRole('radio', { name: 'Only me' })).toHaveAccessibleDescription(
-			"Only you can see it. You can share it later. Making this more private doesn't hide existing forks."
+		expect(screen.getByRole('combobox', { name: AUDIENCE })).toHaveAccessibleDescription(
+			"Making this more private doesn't hide existing forks."
 		);
 	});
 

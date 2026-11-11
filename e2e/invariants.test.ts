@@ -129,11 +129,11 @@ const TARGETS: Target[] = [
 		square: true
 	},
 	{
-		// All three audience rows: Only me, Friends, Public.
-		name: 'audience radio rows',
+		// The editor's audience dropdown, closed.
+		name: 'audience box',
 		auth: true,
 		open: goto('/recipes/new'),
-		target: (p) => p.locator('label:has(> input[name="visibility"])'),
+		target: (p) => p.getByRole('combobox', { name: 'Who can see this recipe' }),
 		coarse: true
 	},
 	{

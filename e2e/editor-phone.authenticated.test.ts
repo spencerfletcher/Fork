@@ -7,7 +7,7 @@
  */
 
 import { expect, test } from '@playwright/test';
-import { deleteRecipe, gotoHydrated, uniqueTitle } from './helpers';
+import { chooseAudience, deleteRecipe, gotoHydrated, uniqueTitle } from './helpers';
 import { SEED } from '../src/lib/server/db/seedData';
 
 const COOKIES = SEED.find((r) => r.slug === 'classic-chocolate-chip-cookies')!.versions.at(-1)!;
@@ -36,7 +36,7 @@ test('on a phone, the filled cookie recipe takes a fix to its last step’s bake
 	await page.keyboard.type(COOKIES.makeAhead!);
 	await page.getByRole('button', { name: 'Add Storage' }).click();
 	await page.keyboard.type(COOKIES.storage!);
-	await page.getByRole('radio', { name: 'Only me' }).check();
+	await chooseAudience(page, 'Only me');
 	await page.getByRole('button', { name: /create recipe/i }).click();
 	await page.waitForURL(/\/recipes\/(?!new)/);
 	const url = page.url().split('?')[0];

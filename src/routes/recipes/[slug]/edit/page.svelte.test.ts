@@ -16,6 +16,7 @@ import {
 import { MAX_DURATION_MINUTES } from '#lib/recipes/times.js';
 import { UNREACHABLE_MESSAGE } from '#lib/pendingEnhance.svelte.js';
 import { draftKey, saveDraft } from '#lib/drafts.js';
+import { chooseOption, chosenValue } from '#lib/testing/choices.js';
 import { NOT_AUTHORIZED } from '#lib/server/visibility.js';
 
 // Capture the form's submit callback so a test can drive the pending state by hand.
@@ -202,7 +203,7 @@ describe('Edit page form', () => {
 		render(EditPage, { props: { data: makeData(), form: null } });
 		await fireEvent.click(screen.getByRole('button', { name: 'Remove Dessert' }));
 		expect(editingLine('Editing v2 · saves settings only')).toBeInTheDocument();
-		await fireEvent.click(screen.getByRole('combobox'));
+		await fireEvent.click(screen.getByRole('combobox', { name: /tag/i }));
 		await fireEvent.click(screen.getByRole('option', { name: /Dessert/ }));
 		expect(editingLine('Editing v2')).toBeInTheDocument();
 	});
@@ -242,13 +243,13 @@ describe('Edit page form', () => {
 
 	test('a settings-only change says no version will be written', async () => {
 		render(EditPage, { props: { data: makeData(), form: null } });
-		await fireEvent.click(screen.getByRole('radio', { name: 'Friends' }));
+		await chooseOption('Who can see this recipe', 'Friends');
 		expect(editingLine('Editing v2 · saves settings only')).toBeInTheDocument();
 	});
 
 	test('a message typed on a settings-only change promises a version, since the save keeps it', async () => {
 		render(EditPage, { props: { data: makeData(), form: null } });
-		await fireEvent.click(screen.getByRole('radio', { name: 'Friends' }));
+		await chooseOption('Who can see this recipe', 'Friends');
 		expect(editingLine('Editing v2 · saves settings only')).toBeInTheDocument();
 		const message = screen.getByLabelText(/what changed/i);
 		await fireEvent.input(message, { target: { value: 'Private for now' } });
@@ -287,7 +288,7 @@ describe('Edit page form', () => {
 	test('an invalid draft with a settings change promises nothing', async () => {
 		render(EditPage, { props: { data: makeData(), form: null } });
 		await fireEvent.input(title(), { target: { value: '' } });
-		await fireEvent.click(screen.getByRole('radio', { name: 'Friends' }));
+		await chooseOption('Who can see this recipe', 'Friends');
 		expect(editingLine('Editing v2')).toBeInTheDocument();
 	});
 
@@ -389,7 +390,7 @@ describe('Edit page form', () => {
 			(i) => (i as HTMLInputElement).value
 		);
 		expect(tags).toEqual(['Spicy']);
-		expect(screen.getByRole('radio', { name: 'Friends' })).toBeChecked();
+		expect(chosenValue('visibility')).toBe('friends');
 		expect(document.querySelector('.form-error')).toBeNull();
 		expect(title()).toHaveAttribute('aria-invalid', 'true');
 		expect(title()).toHaveAccessibleDescription(REQUIRED_MESSAGES.title);

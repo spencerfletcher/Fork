@@ -5,6 +5,9 @@ import { tick } from 'svelte';
 import type { SubmitFunction } from '$app/forms';
 import NewPage from './+page.svelte';
 import { draftKey } from '#lib/drafts.js';
+import { chosenValue } from '#lib/testing/choices.js';
+import { AUDIENCE_LABEL, AUDIENCE_NOTE } from '#lib/audience.js';
+import { VISIBILITIES } from '#lib/recipes/validation.js';
 
 const captured = vi.hoisted(() => ({ submits: [] as SubmitFunction[] }));
 vi.mock('$app/navigation', () => ({ beforeNavigate: () => {} }));
@@ -46,29 +49,20 @@ describe('New recipe page labels', () => {
 		expect(document.querySelector('form')).not.toHaveTextContent(/optional|\*/i);
 	});
 
-	test('who can see the recipe is three named radios, each described by its sentence', () => {
+	test('who can see the recipe is one box listing the three audiences, each with its sentence', async () => {
 		render(NewPage, { props: { data, form: null } });
-		const group = screen.getByRole('group', { name: 'Who can see this recipe' });
-		const radios = within(group).getAllByRole('radio');
-		expect(radios.map((r) => [r.getAttribute('value'), r.getAttribute('name')])).toEqual([
-			['private', 'visibility'],
-			['friends', 'visibility'],
-			['public', 'visibility']
-		]);
-		expect(within(group).getByRole('radio', { name: 'Only me' })).toHaveAccessibleDescription(
-			'Only you can see it. You can share it later.'
-		);
-		expect(within(group).getByRole('radio', { name: 'Friends' })).toHaveAccessibleDescription(
-			'Approved friends can see, save and fork it. It stays out of Discover.'
-		);
-		expect(within(group).getByRole('radio', { name: 'Public' })).toHaveAccessibleDescription(
-			'Anyone can find, save and fork it.'
-		);
+		await fireEvent.click(screen.getByRole('combobox', { name: 'Who can see this recipe' }));
+		const options = screen.getAllByRole('option');
+		expect(options).toHaveLength(VISIBILITIES.length);
+		VISIBILITIES.forEach((v, i) => {
+			expect(options[i]).toHaveTextContent(AUDIENCE_LABEL[v]);
+			expect(options[i]).toHaveTextContent(AUDIENCE_NOTE[v]);
+		});
 	});
 
 	test('the audience starts at Only me, or at the default chosen in Settings', () => {
 		const { unmount } = render(NewPage, { props: { data, form: null } });
-		expect(screen.getByRole('radio', { name: 'Only me' })).toBeChecked();
+		expect(chosenValue('visibility')).toBe('private');
 		unmount();
 		render(NewPage, {
 			props: {
@@ -76,7 +70,7 @@ describe('New recipe page labels', () => {
 				form: null
 			}
 		});
-		expect(screen.getByRole('radio', { name: 'Friends' })).toBeChecked();
+		expect(chosenValue('visibility')).toBe('friends');
 	});
 });
 
@@ -190,7 +184,7 @@ describe('New recipe page validation errors', () => {
 		await tick();
 		expect(screen.getByLabelText(/title/i)).toHaveValue('Soup');
 		expect(screen.getByLabelText(/^prep/i)).toHaveValue('-5');
-		expect(screen.getByRole('radio', { name: 'Public' })).toBeChecked();
+		expect(chosenValue('visibility')).toBe('public');
 		expect(document.querySelector('input[name="tags"]')).toHaveValue('Dessert');
 	});
 

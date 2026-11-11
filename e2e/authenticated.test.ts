@@ -6,7 +6,14 @@
  */
 
 import { expect, test, type Page } from '@playwright/test';
-import { cookiesLink, createRecipe, deleteRecipe, gotoHydrated, uniqueTitle } from './helpers';
+import {
+	chooseAudience,
+	cookiesLink,
+	createRecipe,
+	deleteRecipe,
+	gotoHydrated,
+	uniqueTitle
+} from './helpers';
 
 // ─── Home (logged in) ─────────────────────────────────────────────────────────
 
@@ -216,7 +223,7 @@ test.describe('New recipe page', () => {
 			await page.getByRole('textbox', { name: 'Ingredients', exact: true }).fill('2 cups flour');
 			await page.getByRole('textbox', { name: 'Method', exact: true }).fill('Mix all ingredients.');
 			// Private, so the guest project's seed counts never see it.
-			await page.getByRole('radio', { name: 'Only me' }).check();
+			await chooseAudience(page, 'Only me');
 
 			await page.getByRole('button', { name: /create recipe/i }).click();
 
@@ -820,7 +827,7 @@ test.describe('Groups and yield', () => {
 				/Reads as 3 steps in 2 groups:\s*Make the dough 1–2\s*Bake 3/
 			);
 			// Private, so the guest project's seed counts never see it.
-			await page.getByRole('radio', { name: 'Only me' }).check();
+			await chooseAudience(page, 'Only me');
 			await page.getByRole('button', { name: /create recipe/i }).click();
 			await page.waitForURL(/\/recipes\/(?!new)/);
 			url = page.url().split('?')[0];

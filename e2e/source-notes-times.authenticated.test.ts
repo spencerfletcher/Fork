@@ -5,7 +5,7 @@
  */
 
 import { expect, test } from '@playwright/test';
-import { deleteRecipe, gotoHydrated } from './helpers';
+import { chooseAudience, deleteRecipe, gotoHydrated } from './helpers';
 
 test('a source, a rest and notes show on the page, in the diff after an edit, and in print', async ({
 	page
@@ -28,7 +28,7 @@ test('a source, a rest and notes show on the page, in the diff after an edit, an
 	await page.getByRole('button', { name: 'Add Storage' }).click();
 	await expect(page.getByLabel('Storage')).toBeFocused();
 	await page.getByLabel('Storage').fill('Wrapped, one day');
-	await page.getByRole('radio', { name: 'Only me' }).check();
+	await chooseAudience(page, 'Only me');
 	await page.getByRole('button', { name: /create recipe/i }).click();
 	await page.waitForURL(/\/recipes\/(?!new)/);
 	const url = page.url().split('?')[0];

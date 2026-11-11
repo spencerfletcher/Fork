@@ -26,7 +26,7 @@
 	import TimesRow from './TimesRow.svelte';
 	import SourceFields from './SourceFields.svelte';
 	import SaveBar from './SaveBar.svelte';
-	import ChoiceGroup from '#lib/components/ui/ChoiceGroup.svelte';
+	import ChoiceSelect from '#lib/components/ui/ChoiceSelect.svelte';
 	import { audienceIcon, chevronIcon } from '#lib/components/Icons.svelte';
 	import { AUDIENCE_LABEL, AUDIENCE_NOTE } from '#lib/audience.js';
 
@@ -398,9 +398,11 @@
 					bind:removeImage={draft.removeImage}
 					bind:chosen
 					hadPhoto={form?.draft?.hadPhoto === true} />
-				<ChoiceGroup
+				<ChoiceSelect
 					name="visibility"
-					legend="Who can see this recipe"
+					label="Who can see this recipe"
+					disabled={save.pending}
+					error={errors.visibility}
 					options={VISIBILITIES.map((value) => ({
 						value,
 						label: AUDIENCE_LABEL[value],
