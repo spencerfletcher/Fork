@@ -103,7 +103,7 @@ Built the same day in five slices, each in its own worktree, reviewed once, merg
 
 Final state on master: 1581 unit tests, svelte-check 0 errors, eslint clean, e2e 215 passed (51 skipped by the auth project split). Local dev database migrated to 0010 and reseeded (spencerfletcher, friend devcooks, pending request priyabakes).
 
-Deviations from this summary, all deliberate: Save is hidden for owners; Discover's lead card and Recent changes hide while a filter is active; the top-bar handle shows from 1024 and the initial alone from 768; the Steps box is labelled Method; log entries may carry an external link instead of a recipe; a privatised fork can return to Friends only once its author can see the parent again.
+Deviations from this summary, all deliberate: Save is hidden for owners; Discover's lead card and Recent changes stay while a filter is active and draw from the filtered set; the top bar shows the avatar alone at every width, no handle; the Steps box is labelled Method; log entries may carry an external link instead of a recipe; a privatised fork can return to Friends only once its author can see the parent again.
 
 Still to do before prod: Spencer's pass on the working app (taste calls), `pnpm db:migrate:prod` and the Netlify publish back to back (0008 drops `is_public`), then remove the `cream-palette` hook ignore.
 
