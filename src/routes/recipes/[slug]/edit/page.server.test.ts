@@ -24,9 +24,11 @@ const {
 	syncTagsMock,
 	countMock,
 	canViewRowMock,
-	dbUpdate
+	dbUpdate,
+	grantMock
 } = vi.hoisted(() => ({
 	dbUpdate: vi.fn(),
+	grantMock: vi.fn().mockResolvedValue(undefined),
 	countMock: vi.fn(),
 	canViewRowMock: vi.fn(),
 	findRecipeMock: vi.fn(),
@@ -51,6 +53,7 @@ vi.mock('#lib/server/visibility.js', async (importOriginal) => ({
 	...(await importOriginal<typeof import('#lib/server/visibility.js')>()),
 	canViewRow: canViewRowMock
 }));
+vi.mock('#lib/server/keptCopies.js', () => ({ grantKeptCopies: grantMock }));
 vi.mock('#lib/server/tags.js', () => ({
 	syncTags: syncTagsMock,
 	listTags: vi.fn().mockResolvedValue([])
@@ -347,6 +350,20 @@ describe('save', () => {
 		expect(set).not.toHaveProperty('title');
 	});
 
+	test("going private grants the savers' kept copies first, from the audience it had, in the save's transaction", async () => {
+		await save({ ...UNCHANGED, visibility: 'private' });
+		expect(grantMock).toHaveBeenCalledWith(tx, {
+			id: LOCKED.id,
+			authorId: OWNER.id,
+			visibility: LOCKED.visibility
+		});
+	});
+
+	test('narrowing to Friends grants no copy: an audience change, not a withdrawal', async () => {
+		await save({ ...UNCHANGED, visibility: 'friends' });
+		expect(grantMock).not.toHaveBeenCalled();
+	});
+
 	test('a typed message on a settings-only save is kept: a version carrying it and the latest content', async () => {
 		await save({
 			...UNCHANGED,
@@ -617,6 +634,23 @@ describe('deleteRecipe', () => {
 		expect(transactionMock).not.toHaveBeenCalled();
 		expect(removeMock).not.toHaveBeenCalled();
 		expect(result).toMatchObject({ status: 303, location: '/cookbook/trash' });
+	});
+
+	test("moving a shared recipe to the Trash grants its savers' kept copies first; a private one grants none", async () => {
+		setUp();
+		await del();
+		expect(grantMock).toHaveBeenCalledWith(
+			expect.anything(),
+			expect.objectContaining({
+				id: RECIPE.id,
+				authorId: OWNER.id,
+				visibility: RECIPE.visibility
+			})
+		);
+		grantMock.mockClear();
+		findRecipeMock.mockResolvedValue({ ...RECIPE, visibility: 'private' });
+		await del();
+		expect(grantMock).not.toHaveBeenCalled();
 	});
 
 	test('refuses another user with the 403 the load and save throw, moving nothing', async () => {

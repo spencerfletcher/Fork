@@ -109,6 +109,50 @@ describe.skipIf(!localDb)('the Trash, against the real database', () => {
 		expect(remove).toHaveBeenCalledWith([`u/${stamp}-own.png`]);
 	});
 
+	test("deleting for good while a saver keeps a copy erases it: the saver's version and its photo stay, everything else goes", async () => {
+		const savers = await db.query.profiles.findMany({
+			where: (p, { ne }) => ne(p.id, userId),
+			limit: 2
+		});
+		if (savers.length < 2) throw new Error('Seed the local database first (pnpm db:seed)');
+		const [keeper, other] = savers.map((p) => p.id);
+		const id = await insertRecipe(
+			`trash-erase-${stamp}`,
+			[photo('erase-1'), photo('erase-2'), photo('erase-3')],
+			{ deletedAt: new Date() }
+		);
+		await db.insert(schema.favorites).values([
+			{ userId: keeper, recipeId: id, copyVersion: 2, note: 'Mine' },
+			{ userId: other, recipeId: id }
+		]);
+		const remove = vi.fn().mockResolvedValue({ error: null });
+		const client = { storage: { from: () => ({ remove }) } } as never;
+
+		await trash.deleteForever(id, client);
+
+		const row = await db.query.recipes.findFirst({ where: eq(schema.recipes.id, id) });
+		expect(row?.erasedAt).toBeInstanceOf(Date);
+		const versions = await db.query.recipeVersions.findMany({
+			where: eq(schema.recipeVersions.recipeId, id)
+		});
+		expect(versions.map((v) => v.versionNumber)).toEqual([2]);
+		const saves = await db.query.favorites.findMany({ where: eq(schema.favorites.recipeId, id) });
+		expect(saves.map((s) => [s.userId, s.note])).toEqual([[keeper, 'Mine']]);
+		expect(remove).toHaveBeenCalledWith(
+			expect.arrayContaining([`u/${stamp}-erase-1.png`, `u/${stamp}-erase-3.png`])
+		);
+		expect(remove.mock.calls.flat(2)).not.toContain(`u/${stamp}-erase-2.png`);
+		// Gone from the author's Trash, and the purge passes over it.
+		expect(await trash.trashedRecipe(`trash-erase-${stamp}`, userId)).toBeNull();
+
+		// The last copy removed, the next deleteForever takes the rest.
+		await db.delete(schema.favorites).where(eq(schema.favorites.recipeId, id));
+		remove.mockClear();
+		await trash.deleteForever(id, client);
+		expect(await db.query.recipes.findFirst({ where: eq(schema.recipes.id, id) })).toBeUndefined();
+		expect(remove).toHaveBeenCalledWith([`u/${stamp}-erase-2.png`]);
+	});
+
 	test('a live recipe is never deleted for good', async () => {
 		const id = await insertRecipe(`trash-live-${stamp}`, [photo('live')]);
 		const remove = vi.fn();

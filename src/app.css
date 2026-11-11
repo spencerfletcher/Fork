@@ -609,12 +609,24 @@
 		overflow-wrap: anywhere;
 	}
 
-	/* The owner-only lifted paper: a Journal note and its form field. */
+	/* The owner-only lifted paper: a Journal note and its form field, a saver's
+	   note and their kept copy's notice on the recipe page. */
 	.lock-note {
 		padding: 12px 14px;
 		background: var(--color-surface);
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-md);
+	}
+
+	/* Its label: the lock and who sees it ("· only you"). */
+	.lock-note__label {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		margin: 0 0 4px;
+		font-size: 0.8125rem;
+		font-weight: 600;
+		color: var(--color-text-2);
 	}
 
 	/* ── Page layout ── */

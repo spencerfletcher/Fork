@@ -9,7 +9,15 @@ import {
 	type LogEntry,
 	type Recipe
 } from './db/schema.js';
-import { canView, friendIdsOf, inLibraryOf, viewableRecipe, type Viewer } from './visibility.js';
+import {
+	canView,
+	friendIdsOf,
+	inLibraryOf,
+	keptCopy,
+	viewableRecipe,
+	type Viewer
+} from './visibility.js';
+import { keptVersionsOf } from './keptCopies.js';
 import { numberMessages, type Result } from '#lib/recipes/validation.js';
 import { oneOf, text, wholeNumber } from '#lib/helpers.js';
 import { day, MAX_LINK } from '#lib/journal.js';
@@ -126,6 +134,8 @@ export type LinkedRecipe = {
 /**
  * The recipe and version a form names, when the viewer may see it. A missing
  * version number means the latest; a number the recipe does not have is refused.
+ * A saver's kept copy of a withdrawn recipe resolves to its one version, by
+ * that version's title, and reads as private: nobody else can open it.
  */
 export async function resolveRecipe(
 	viewer: NonNullable<Viewer>,
@@ -135,7 +145,19 @@ export async function resolveRecipe(
 	const recipe = await viewableRecipe(slug, viewer, {
 		versions: { orderBy: [desc(recipeVersions.versionNumber)] }
 	});
-	if (!recipe) return null;
+	if (!recipe) {
+		const copy = await keptCopy(slug, viewer);
+		if (!copy || (versionNumber !== null && versionNumber !== copy.version.versionNumber))
+			return null;
+		return {
+			recipeId: copy.recipe.id,
+			versionId: copy.version.id,
+			slug: copy.recipe.slug,
+			title: copy.version.title,
+			versionNumber: copy.version.versionNumber,
+			visibility: 'private'
+		};
+	}
 	const version =
 		versionNumber === null
 			? recipe.versions[0]
@@ -175,17 +197,32 @@ export type SourceRow = {
 	sourceUrl: string | null;
 };
 
-/** The source an entry shows `viewer`, by the recipes' one access rule. */
+/**
+ * The source an entry shows `viewer`, by the recipes' one access rule. `kept`
+ * holds the viewer's kept copies (keptVersionsOf), passed for their own
+ * entries only: a copy links for its saver alone, by its kept title.
+ */
 export function sourceOf(
 	row: SourceRow,
 	viewer: NonNullable<Viewer>,
-	friendIds: string[]
+	friendIds: string[],
+	kept?: Map<number, { title: string }>
 ): EntrySource {
 	if (row.recipeId === null) {
 		if (row.sourceUrl === null) return { kind: 'improvised' };
 		const host = new URL(row.sourceUrl).hostname.replace(/^www\./, '');
 		return { kind: 'link', url: row.sourceUrl, host };
 	}
+	const copy = kept?.get(row.recipeId);
+	if (copy && row.recipe)
+		return {
+			kind: 'recipe',
+			slug: row.recipe.slug,
+			title: copy.title,
+			versionNumber: row.versionNumber,
+			visibility: 'private',
+			own: false
+		};
 	// A recipe in the Trash reads as deleted, its owner's entries included.
 	if (!row.recipe || row.recipe.deletedAt) return { kind: 'deleted' };
 	if (!canView(row.recipe, viewer, friendIds)) return { kind: 'hidden' };
@@ -234,12 +271,16 @@ async function ownEntries(viewer: NonNullable<Viewer>, where?: SQL) {
 			.orderBy(desc(logEntries.cookedOn), desc(logEntries.createdAt)),
 		friendIdsOf(viewer.id)
 	]);
+	const kept = await keptVersionsOf(viewer, [
+		...new Set(rows.flatMap((r) => r.entry.recipeId ?? []))
+	]);
 	return rows.map((row) => ({
 		...row.entry,
 		source: sourceOf(
 			{ ...row, recipeId: row.entry.recipeId, sourceUrl: row.entry.sourceUrl },
 			viewer,
-			friendIds
+			friendIds,
+			kept
 		)
 	}));
 }
@@ -320,10 +361,15 @@ export async function defaultAudience(userId: string): Promise<LogAudience> {
 	return latest?.audience ?? 'private';
 }
 
-/** The recipes the form offers: the viewer's own and their saved ones, by title, each with its latest version. */
+/**
+ * The recipes the form offers: the viewer's own and their saved ones, by title,
+ * each with its latest version. A kept copy offers its kept version, by that
+ * version's title, never the row's later private edits.
+ */
 export async function recipeChoices(viewer: NonNullable<Viewer>) {
-	return db
+	const rows = await db
 		.select({
+			id: recipes.id,
 			slug: recipes.slug,
 			title: recipes.title,
 			visibility: recipes.visibility,
@@ -336,4 +382,19 @@ export async function recipeChoices(viewer: NonNullable<Viewer>) {
 		.from(recipes)
 		.where(inLibraryOf(viewer))
 		.orderBy(asc(recipes.title));
+	const kept = await keptVersionsOf(
+		viewer,
+		rows.map((r) => r.id)
+	);
+	return rows.map(({ id, ...choice }) => {
+		const copy = kept.get(id);
+		return copy
+			? {
+					...choice,
+					title: copy.title,
+					visibility: 'private' as const,
+					latestVersion: copy.versionNumber
+				}
+			: choice;
+	});
 }

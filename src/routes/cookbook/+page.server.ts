@@ -1,10 +1,11 @@
 import { redirect } from '@sveltejs/kit';
-import { and, inArray } from 'drizzle-orm';
+import { and, inArray, sql } from 'drizzle-orm';
 import { db } from '#lib/server/db/index.js';
 import { recipes, recipesToTags } from '#lib/server/db/schema.js';
 import { cardList } from '#lib/server/recipeCounts.js';
 import { tagSelection, visibleTags } from '#lib/server/tagFilter.js';
-import { inLibraryOf } from '#lib/server/visibility.js';
+import { inLibraryOf, keptCopyOf } from '#lib/server/visibility.js';
+import { keptVersionsOf } from '#lib/server/keptCopies.js';
 import { inTrashOf, purgeExpiredTrash } from '#lib/server/trash.js';
 import { parseFilters, textSearch } from '#lib/server/recipeSearch.js';
 import { failure, requireUser, SESSION_ENDED } from '#lib/server/actions.js';
@@ -33,7 +34,12 @@ export const load: PageServerLoad = async ({ url, locals: { user, supabase } }) 
 
 	const [library, trash, collections, memberIds] = await Promise.all([
 		db
-			.select({ id: recipes.id, authorId: recipes.authorId })
+			.select({
+				id: recipes.id,
+				authorId: recipes.authorId,
+				// A saved recipe its author withdrew, kept as the saver's copy.
+				kept: sql<boolean>`${keptCopyOf(user)}`
+			})
 			.from(recipes)
 			.where(inLibraryOf(user)),
 		// For the Trash link, shown only when the Trash holds something.
@@ -81,14 +87,19 @@ export const load: PageServerLoad = async ({ url, locals: { user, supabase } }) 
 	);
 
 	// Chips come from the whole library, not the filtered subset, or narrowing
-	// would remove the chips needed to widen again (as Favorites did).
+	// would remove the chips needed to widen again (as Favorites did). A kept
+	// copy lends none: tags follow the recipe's visibility.
 	const allTags = await visibleTags(
 		inArray(
 			recipesToTags.recipeId,
-			library.map((r) => r.id)
+			library.filter((r) => !r.kept).map((r) => r.id)
 		)
 	);
-	const inFilterIds = inFilter.map((r) => r.id);
+	// A text search leaves kept copies out: its matcher reads every version
+	// and the recipe row, which may hold what the author wrote after withdrawing it.
+	// ponytail: a copy is found by no word; match its kept version alone if missed.
+	const keptIds = new Set(library.filter((r) => r.kept).map((r) => r.id));
+	const inFilterIds = inFilter.filter((r) => !(searchQuery && r.kept)).map((r) => r.id);
 	const { selectedTags, matches } = await tagSelection(allTags, tagSlugs, inFilterIds);
 	const candidateIds = matches ? [...matches.keys()] : inFilterIds;
 	if (candidateIds.length === 0)
@@ -112,8 +123,29 @@ export const load: PageServerLoad = async ({ url, locals: { user, supabase } }) 
 		{ tagRank: searchQuery ? null : matches, cooked: true }
 	);
 
+	// A copy's card reads the kept version, never the row's later private edits,
+	// and shows no audience or version count of the author's.
+	const copies = await keptVersionsOf(
+		user,
+		withCounts.filter((r) => keptIds.has(r.id)).map((r) => r.id)
+	);
 	return {
-		recipes: withCounts.map((r) => ({ ...r, saved: !isMine(r) })),
+		recipes: withCounts.map((r) => {
+			const copy = copies.get(r.id);
+			const card = { ...r, saved: !isMine(r), kept: !!copy };
+			return copy
+				? {
+						...card,
+						title: copy.title,
+						description: copy.description,
+						imageUrl: copy.imageUrl,
+						prepTimeMinutes: copy.prepTimeMinutes,
+						cookTimeMinutes: copy.cookTimeMinutes,
+						versionCount: 0,
+						visibility: undefined
+					}
+				: card;
+		}),
 		counts,
 		...shelf,
 		filter,

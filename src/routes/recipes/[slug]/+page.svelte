@@ -17,19 +17,31 @@
 	import { changedGroups } from '#lib/recipes/content.js';
 	import { wholeNumber } from '#lib/helpers.js';
 	import { loginHref as buildLoginHref } from '#lib/auth/loginHref.js';
+	import { lockIcon } from '#lib/components/Icons.svelte';
+	import ConfirmStep from '#lib/components/ui/ConfirmStep.svelte';
+	import { pendingEnhance } from '#lib/pendingEnhance.svelte.js';
+	import KeepLine from './components/KeepLine.svelte';
+	import SaverNote from './components/SaverNote.svelte';
 
 	let { data }: { data: PageData } = $props();
 
 	const { recipe, currentVersion, allVersions } = $derived(data);
 	// allVersions is newest first.
 	const isViewingHistory = $derived(currentVersion.versionNumber !== allVersions[0].versionNumber);
+	// The version a saver keeps reads as the recipe does for them, not as a
+	// record: Save and their units apply there as on the latest.
+	const kept = $derived(data.save?.keptVersion ?? null);
+	const isReading = $derived(!isViewingHistory || currentVersion.versionNumber === kept);
 
 	const tags = $derived(recipe.recipesToTags?.map((r) => r.tag) ?? []);
 	const user = $derived(data.user);
 	const isOwner = $derived(user?.id === recipe.authorId);
-	const canFork = $derived(!!user && !isOwner && !isViewingHistory);
-	// The owner's row is Cook and Edit only (decided 9 Nov 2026).
-	const canFavorite = $derived(!!user && !isOwner && !isViewingHistory);
+	// Fork copies the latest version, so it is offered there only; never on a
+	// kept copy, which cannot be re-shared.
+	const canFork = $derived(!!user && !isOwner && !isViewingHistory && !data.keptCopy);
+	// The owner's row is Cook and Edit only (decided 9 Nov 2026). A kept copy
+	// is removed from its notice, not unsaved.
+	const canFavorite = $derived(!!user && !isOwner && isReading && !data.keptCopy);
 	const canEdit = $derived(isOwner && !isViewingHistory);
 	// An older version reading the same as the latest has nothing to restore.
 	const canRestore = $derived(
@@ -49,9 +61,10 @@
 	const stored = $derived(currentVersion.servings ?? 0);
 	let serves = $derived(parseServes(url.searchParams.get('serves'), stored));
 	const factor = $derived(stored > 0 ? serves / stored : 1);
-	// The cook's Settings units, on the latest version only: a past version is
-	// a record and reads as written. Signed out or unset, null.
-	const measurement = $derived(isViewingHistory ? null : (data.profile?.measurement ?? null));
+	// The cook's Settings units, on the latest version (or the one they keep)
+	// only: a past version is a record and reads as written. Signed out or
+	// unset, null.
+	const measurement = $derived(isReading ? (data.profile?.measurement ?? null) : null);
 
 	// Signed in: the Journal entry for the version and the serves being read,
 	// for Add to Journal and Finish cooking; a scale that is not a whole
@@ -125,6 +138,9 @@
 		else jump(0);
 	}
 
+	// Removing a kept copy lands on the Cookbook's Saved shelf.
+	const removal = pendingEnhance({ keepFailure: true, keepOnError: true });
+
 	// Exit: back to reading at the same version and scale, the ticks kept.
 	function exit() {
 		cooking = false;
@@ -169,6 +185,29 @@
 		<div class="hero page">
 			<div class="hero-inner page-inner">
 				<div class="hero-text">
+					{#if data.keptCopy}
+						<!-- Before the title: what this page is, before what it says
+						     (section 7: a read-only copy, marked, never re-shared). -->
+						<div class="kept-copy lock-note">
+							<p class="lock-note__label">{@render lockIcon()}No longer shared by the author</p>
+							<p>
+								Your copy of v{currentVersion.versionNumber}, as you saved it. Only you can see it;
+								it can’t be shared or forked.
+							</p>
+							<ConfirmStep
+								trigger="Remove from Cookbook"
+								triggerClass="text-btn"
+								label="Remove your copy of {currentVersion.title}?"
+								explanation="Your copy and your note go for good."
+								confirmLabel="Remove"
+								pendingLabel="Removing…"
+								keepLabel="Keep"
+								action="?/removeCopy"
+								enhance={removal.submit}
+								pending={removal.pending}
+								error={removal.error} />
+						</div>
+					{/if}
 					<!-- The measure says the serves the list is scaled to, so it stays true. -->
 					<RecipeHeader
 						{recipe}
@@ -177,7 +216,20 @@
 						forkCount={data.forkCount}
 						versionCount={allVersions.length}
 						{tags}
-						journal={data.journal}>
+						journal={data.journal}
+						stats={!data.keptCopy}>
+						{#snippet saver()}
+							{#if data.save && !isOwner}
+								{#if !data.keptCopy}
+									<KeepLine
+										slug={recipe.slug}
+										{kept}
+										viewing={currentVersion.versionNumber}
+										latest={allVersions[0].versionNumber} />
+								{/if}
+								<SaverNote note={data.save.note} />
+							{/if}
+						{/snippet}
 						{#snippet actions()}
 							<RecipeActions
 								{recipe}
@@ -215,7 +267,8 @@
 						{currentVersion}
 						versions={allVersions}
 						{isViewingHistory}
-						{canRestore} />
+						{canRestore}
+						{kept} />
 				</div>
 			{/if}
 
@@ -349,6 +402,18 @@
 
 	.hero-text {
 		min-width: 0;
+	}
+
+	/* The kept copy's notice: lifted paper above the title, Ink 2 words. */
+	.kept-copy {
+		margin-bottom: 16px;
+		font-size: 0.9375rem;
+		line-height: 1.5;
+		color: var(--color-text-2);
+	}
+
+	.kept-copy :global(form) {
+		margin-top: 4px;
 	}
 
 	/* 4:3, inset: its right edge on the wrap's, 6px corners. */

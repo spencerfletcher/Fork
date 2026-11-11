@@ -1,5 +1,5 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
-import { and, eq, gt, lte } from 'drizzle-orm';
+import { and, eq, gt, isNull, lte } from 'drizzle-orm';
 import { chain } from '#lib/testing/drizzle.js';
 import { recipes } from './db/schema.js';
 import { TRASH_DAYS } from '#lib/trash.js';
@@ -45,7 +45,8 @@ function setUpDelete(
 	imageUrls: (string | null)[],
 	kept: string[] = []
 ) {
-	const lock = chain();
+	// Awaited without .for, the same chain is the kept-copies read: none.
+	const lock = chain([]);
 	lock.for = vi.fn().mockResolvedValue(locked ? [locked] : []);
 	const tx = {
 		select: vi.fn().mockReturnValue(lock),
@@ -68,7 +69,11 @@ describe('the 30 days', () => {
 
 	test("the owner's Trash holds their recipes deleted after the cutoff only", () => {
 		expect(inTrashOf('owner', NOW)).toEqual(
-			and(eq(recipes.authorId, 'owner'), gt(recipes.deletedAt, trashCutoff(NOW)))
+			and(
+				eq(recipes.authorId, 'owner'),
+				gt(recipes.deletedAt, trashCutoff(NOW)),
+				isNull(recipes.erasedAt)
+			)
 		);
 	});
 
@@ -149,7 +154,9 @@ describe('purgeExpiredTrash', () => {
 		setUpDelete({ deletedAt: NOW }, []);
 		const now = later();
 		await purgeExpiredTrash(SUPABASE, now);
-		expect(expired.where).toHaveBeenCalledWith(lte(recipes.deletedAt, trashCutoff(now)));
+		expect(expired.where).toHaveBeenCalledWith(
+			and(lte(recipes.deletedAt, trashCutoff(now)), isNull(recipes.erasedAt))
+		);
 		expect(transactionMock).toHaveBeenCalledTimes(2);
 	});
 

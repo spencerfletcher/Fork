@@ -10,6 +10,7 @@ import { SESSION_ENDED } from '#lib/server/actions.js';
 import { STALE_MESSAGE } from '#lib/server/submission.js';
 import { NOT_AUTHORIZED } from '#lib/server/visibility.js';
 import { loginHref } from '#lib/auth/loginHref.js';
+import { NOTE_MAX, NOTE_TOO_LONG } from '#lib/saves.js';
 
 // ─── Hoisted mocks ────────────────────────────────────────────────────────────
 
@@ -54,6 +55,21 @@ vi.mock('#lib/server/db/index.js', () => ({
 }));
 
 vi.mock('#lib/server/profiles.js', () => ({ ensureProfile: ensureProfileMock }));
+const keptMock = vi.hoisted(() => ({
+	keptCopy: vi.fn().mockResolvedValue(null),
+	keepVersion: vi.fn().mockResolvedValue(true),
+	setNote: vi.fn().mockResolvedValue(true),
+	deleteForever: vi.fn().mockResolvedValue(undefined)
+}));
+vi.mock('#lib/server/visibility.js', async (importOriginal) => ({
+	...(await importOriginal<typeof import('#lib/server/visibility.js')>()),
+	keptCopy: keptMock.keptCopy
+}));
+vi.mock('#lib/server/keptCopies.js', () => ({
+	keepVersion: keptMock.keepVersion,
+	setNote: keptMock.setNote
+}));
+vi.mock('#lib/server/trash.js', () => ({ deleteForever: keptMock.deleteForever }));
 vi.mock('#lib/server/journal.js', () => ({ lastEntryFor: lastEntryMock }));
 vi.mock('#lib/server/versions.js', () => ({ restoreVersion: restoreMock }));
 const collectionsMock = vi.hoisted(() => ({
@@ -908,5 +924,164 @@ describe('collect and newCollection', () => {
 			data: { code: 'invalid', error: 'Name the collection.' }
 		});
 		expect(collectionsMock.setMembership).not.toHaveBeenCalled();
+	});
+});
+
+// ─── Keep this version, notes and kept copies ─────────────────────────────────
+
+describe('Keep this version', () => {
+	const SAVER = { id: 'saver', email: 's@test.com' };
+	const v = (n: number) => ({ id: n, versionNumber: n, commitMessage: `v${n}`, ...LATEST });
+	const THREE = { ...SOURCE_RECIPE, parent: null, versions: [v(3), v(2), v(1)] };
+
+	beforeEach(() => {
+		vi.clearAllMocks();
+		countMock.mockResolvedValue(0);
+		selectMock.mockReturnValue(chain([]));
+		findRecipeMock.mockResolvedValue(THREE);
+	});
+
+	const loadAt = (path = '/recipes/classic-cookies') =>
+		invoke(load as never, loadEvent({ params: { slug: 'classic-cookies' }, path, user: SAVER }));
+
+	test('a save that keeps v2 opens on v2, and says so; ?version= still browses', async () => {
+		findFavoriteMock.mockResolvedValue({ keptVersion: 2, note: 'Less salt' });
+		expect(await loadAt()).toMatchObject({
+			currentVersion: { versionNumber: 2 },
+			save: { keptVersion: 2, note: 'Less salt' },
+			keptCopy: false,
+			journal: { addHref: '/journal/new?recipe=classic-cookies&version=2' }
+		});
+		expect(await loadAt('/recipes/classic-cookies?version=3')).toMatchObject({
+			currentVersion: { versionNumber: 3 }
+		});
+	});
+
+	test('a save that follows the latest opens on the latest; no save, no save data', async () => {
+		findFavoriteMock.mockResolvedValue({ keptVersion: null, note: null });
+		expect(await loadAt()).toMatchObject({
+			currentVersion: { versionNumber: 3 },
+			save: { keptVersion: null }
+		});
+		findFavoriteMock.mockResolvedValue(undefined);
+		expect(await loadAt()).toMatchObject({ save: null });
+	});
+
+	const act = (name: keyof typeof actions, fields: Record<string, string> = {}, user = SAVER) =>
+		invoke(actions[name] as never, makeEvent({ user, fields }));
+
+	test('keep writes the version asked for; follow clears it', async () => {
+		expect(await act('keep', { version: '2' })).toEqual({ kept: 2 });
+		expect(keptMock.keepVersion).toHaveBeenCalledWith(SAVER.id, SOURCE_RECIPE.id, 2);
+		expect(await act('follow')).toEqual({ kept: null });
+		expect(keptMock.keepVersion).toHaveBeenLastCalledWith(SAVER.id, SOURCE_RECIPE.id, null);
+	});
+
+	test('keep refuses the author, a recipe not saved, and a version that is not a number', async () => {
+		const author = { id: SOURCE_RECIPE.authorId, email: 'a@test.com' };
+		expect(await act('keep', { version: '2' }, author)).toMatchObject({
+			status: 404,
+			data: { code: 'not_found' }
+		});
+		expect(keptMock.keepVersion).not.toHaveBeenCalled();
+		keptMock.keepVersion.mockResolvedValueOnce(false);
+		expect(await act('keep', { version: '2' })).toMatchObject({ status: 404 });
+		expect(await act('keep', { version: 'x' })).toMatchObject({ status: 400 });
+		expect(await act('keep', { version: '2' }, null as never)).toMatchObject({ status: 401 });
+	});
+
+	test('a recipe the reader cannot see cannot be kept: keep never overrides access', async () => {
+		findRecipeMock.mockResolvedValue({ ...THREE, visibility: 'private' });
+		expect(await act('keep', { version: '2' })).toMatchObject({ status: 404 });
+		expect(keptMock.keepVersion).not.toHaveBeenCalled();
+	});
+
+	test("note keeps the saver's words; over NOTE_MAX it is refused with the words handed back", async () => {
+		expect(await act('note', { note: 'Less salt' })).toEqual({ noted: true });
+		expect(keptMock.setNote).toHaveBeenCalledWith(SAVER.id, SOURCE_RECIPE.id, 'Less salt');
+		const long = 'x'.repeat(NOTE_MAX + 1);
+		expect(await act('note', { note: long })).toMatchObject({
+			status: 400,
+			data: { error: NOTE_TOO_LONG, note: long }
+		});
+		keptMock.setNote.mockResolvedValueOnce(false);
+		expect(await act('note', { note: 'x' })).toMatchObject({ status: 404 });
+	});
+
+	describe('a kept copy', () => {
+		const COPY = {
+			recipe: { ...SOURCE_RECIPE, visibility: 'private', parent: null, erasedAt: null },
+			version: v(2)
+		};
+		beforeEach(() => {
+			findRecipeMock.mockResolvedValue({ ...THREE, visibility: 'private' });
+			keptMock.keptCopy.mockResolvedValue(COPY);
+			findFavoriteMock.mockResolvedValue({ keptVersion: 2, copyVersion: 2, note: 'Mine' });
+		});
+
+		test('opens read-only at the kept version alone: no other version, no tags, no counts', async () => {
+			countMock.mockResolvedValue(5);
+			const data = await loadAt();
+			expect(data).toMatchObject({
+				keptCopy: true,
+				currentVersion: { versionNumber: 2 },
+				allVersions: [{ versionNumber: 2 }],
+				// The row's copies follow the author's latest, perhaps written after
+				// withdrawing it: the page's data carries the kept version's instead.
+				recipe: {
+					recipesToTags: [],
+					title: LATEST.title,
+					description: LATEST.description,
+					imageUrl: LATEST.imageUrl
+				},
+				favoriteCount: 0,
+				forkCount: 0,
+				save: { keptVersion: null, note: 'Mine' }
+			});
+			expect(keptMock.keptCopy).toHaveBeenCalledWith(
+				'classic-cookies',
+				SAVER,
+				expect.not.objectContaining({ versions: expect.anything() })
+			);
+			expect(await loadAt('/recipes/classic-cookies?version=3')).toMatchObject({
+				status: 404,
+				body: { message: VERSION_NOT_FOUND }
+			});
+		});
+
+		test('cannot be forked, kept at another version or followed', async () => {
+			expect(await act('fork')).toMatchObject({ status: 404 });
+			expect(await act('keep', { version: '3' })).toMatchObject({ status: 404 });
+			expect(await act('follow')).toMatchObject({ status: 404 });
+			expect(keptMock.keepVersion).not.toHaveBeenCalled();
+		});
+
+		test('takes a note, and is removed by its saver, leaving their collections', async () => {
+			expect(await act('note', { note: 'Still good' })).toEqual({ noted: true });
+			dbDelete.mockReturnValue(chain());
+			expect(await act('removeCopy')).toMatchObject({
+				status: 303,
+				location: '/cookbook?filter=saved'
+			});
+			expect(dbDelete).toHaveBeenCalledWith(favorites);
+			expect(collectionsMock.leaveCollections).toHaveBeenCalledWith(SAVER.id, SOURCE_RECIPE.id);
+			expect(keptMock.deleteForever).not.toHaveBeenCalled();
+		});
+
+		test("removing an erased recipe's copy runs deleteForever, which takes the rest once no copy is left", async () => {
+			keptMock.keptCopy.mockResolvedValue({
+				...COPY,
+				recipe: { ...COPY.recipe, erasedAt: new Date() }
+			});
+			dbDelete.mockReturnValue(chain());
+			await act('removeCopy');
+			expect(keptMock.deleteForever).toHaveBeenCalledWith(SOURCE_RECIPE.id, undefined);
+		});
+
+		test('removeCopy without a copy is a 404 and removes nothing', async () => {
+			keptMock.keptCopy.mockResolvedValue(null);
+			expect(await act('removeCopy')).toMatchObject({ status: 404 });
+			expect(dbDelete).not.toHaveBeenCalled();
+		});
 	});
 });

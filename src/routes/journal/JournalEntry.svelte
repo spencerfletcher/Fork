@@ -228,16 +228,6 @@
 		max-width: 60ch;
 	}
 
-	.lock-note__label {
-		display: flex;
-		align-items: center;
-		gap: 6px;
-		margin: 0 0 4px;
-		font-size: 0.8125rem;
-		font-weight: 600;
-		color: var(--color-text-2);
-	}
-
 	.lock-note :is(.arrow-link, .text-btn) {
 		margin-left: 4px;
 		white-space: nowrap;

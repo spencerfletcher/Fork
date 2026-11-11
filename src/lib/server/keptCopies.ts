@@ -1,0 +1,132 @@
+import { and, eq, inArray, max, notInArray, sql } from 'drizzle-orm';
+import { db, type Tx } from './db/index.js';
+import {
+	favorites,
+	recipeVersions,
+	recipes,
+	type Recipe,
+	type RecipeVersion
+} from './db/schema.js';
+import { canView, friendIdsOf, keptCopyOf } from './visibility.js';
+
+// Keep this version and the copies it leads to (roadmap section 7, "Saves and
+// access"). The save row holds the saver's choice (keptVersion), the copy the
+// author's withdrawal left them (copyVersion) and their note; the access rule
+// for a copy is keptCopyOf in visibility.ts.
+
+/**
+ * Called in the transaction that makes a live recipe private or moves it to
+ * the Trash, before the change, while it still has its audience. Every saver
+ * who can see it now keeps a copy of their kept version, or else the latest;
+ * every other saver (one unfriended from a Friends recipe, say) is left with
+ * none, whatever an earlier withdrawal gave them. The author's own save is
+ * never a copy.
+ */
+export async function grantKeptCopies(
+	tx: Tx | typeof db,
+	recipe: Pick<Recipe, 'id' | 'authorId' | 'visibility'>
+): Promise<void> {
+	const savers = await tx
+		.select({ userId: favorites.userId })
+		.from(favorites)
+		.where(eq(favorites.recipeId, recipe.id));
+	if (savers.length === 0) return;
+
+	// The author's friends are each friend's friend: the friendship has no direction.
+	const authorFriends =
+		recipe.visibility === 'friends' && recipe.authorId
+			? await friendIdsOf(recipe.authorId, tx)
+			: [];
+	const live = { ...recipe, deletedAt: null };
+	const sees = (userId: string) =>
+		userId !== recipe.authorId &&
+		canView(live, { id: userId }, authorFriends.includes(userId) ? [recipe.authorId!] : []);
+	const viewers = savers.map((s) => s.userId).filter(sees);
+
+	const [{ latest }] = await tx
+		.select({ latest: max(recipeVersions.versionNumber) })
+		.from(recipeVersions)
+		.where(eq(recipeVersions.recipeId, recipe.id));
+	const forRecipe = eq(favorites.recipeId, recipe.id);
+	if (viewers.length > 0)
+		await tx
+			.update(favorites)
+			.set({ copyVersion: sql`coalesce(${favorites.keptVersion}, ${latest})` })
+			.where(and(forRecipe, inArray(favorites.userId, viewers)));
+	await tx
+		.update(favorites)
+		.set({ copyVersion: null })
+		.where(viewers.length > 0 ? and(forRecipe, notInArray(favorites.userId, viewers)) : forRecipe);
+}
+
+const saveOf = (userId: string, recipeId: number) =>
+	and(eq(favorites.userId, userId), eq(favorites.recipeId, recipeId));
+
+/**
+ * Keep `versionNumber` of a recipe the cook saved, or follow the latest again
+ * with null. False when they have not saved it or it has no such version.
+ * The caller checks they may see the recipe.
+ */
+export async function keepVersion(
+	userId: string,
+	recipeId: number,
+	versionNumber: number | null,
+	conn: Tx | typeof db = db
+): Promise<boolean> {
+	if (versionNumber !== null) {
+		const exists = await conn.$count(
+			recipeVersions,
+			and(eq(recipeVersions.recipeId, recipeId), eq(recipeVersions.versionNumber, versionNumber))
+		);
+		if (exists === 0) return false;
+	}
+	const rows = await conn
+		.update(favorites)
+		.set({ keptVersion: versionNumber })
+		.where(saveOf(userId, recipeId))
+		.returning({ recipeId: favorites.recipeId });
+	return rows.length > 0;
+}
+
+/** The cook's note on a recipe they saved, trimmed; empty clears it. False when they have not saved it. */
+export async function setNote(
+	userId: string,
+	recipeId: number,
+	note: string,
+	conn: Tx | typeof db = db
+): Promise<boolean> {
+	const rows = await conn
+		.update(favorites)
+		.set({ note: note.trim() || null })
+		.where(saveOf(userId, recipeId))
+		.returning({ recipeId: favorites.recipeId });
+	return rows.length > 0;
+}
+
+/**
+ * For those of `recipeIds` that `user` keeps as copies, the version they keep.
+ * A list showing a copy reads its words from here, never from the recipe row,
+ * whose copies of the latest version may hold edits the author made after
+ * withdrawing it.
+ */
+export async function keptVersionsOf(
+	user: { id: string },
+	recipeIds: number[],
+	conn: Tx | typeof db = db
+): Promise<Map<number, RecipeVersion>> {
+	if (recipeIds.length === 0) return new Map();
+	const rows = await conn
+		.select({ version: recipeVersions })
+		.from(recipeVersions)
+		.innerJoin(recipes, eq(recipes.id, recipeVersions.recipeId))
+		.innerJoin(
+			favorites,
+			and(
+				eq(favorites.recipeId, recipes.id),
+				eq(favorites.userId, user.id),
+				eq(favorites.copyVersion, recipeVersions.versionNumber)
+			)
+		)
+		.where(and(inArray(recipes.id, recipeIds), keptCopyOf(user)));
+	return new Map(rows.map((r) => [r.version.recipeId, r.version]));
+}

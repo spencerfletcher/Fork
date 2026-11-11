@@ -23,6 +23,7 @@ import {
 	friendIdsOf,
 	friendIdsOnce,
 	inLibraryOf,
+	keptCopyOf,
 	NOT_AUTHORIZED,
 	ownRecipe,
 	viewableRecipe,
@@ -185,14 +186,25 @@ describe('ownRecipe', () => {
 });
 
 describe('inLibraryOf', () => {
-	test('visible, and either written or saved by the viewer', () => {
+	test('visible, and either written or saved by the viewer; or a copy they keep', () => {
 		const dialect = new PgDialect();
 		const visible = dialect.sqlToQuery(visibleTo(OTHER));
+		const kept = dialect.sqlToQuery(keptCopyOf(OTHER));
 		const { sql, params } = dialect.sqlToQuery(inLibraryOf(OTHER));
+		// The kept copies' placeholders follow the library's eight.
+		const keptSql = kept.sql.replace(/\$(\d+)/g, (_, n: string) => `$${Number(n) + 8}`);
 		expect(sql).toBe(
-			`(${visible.sql} and ("recipes"."author_id" = $7 or "recipes"."id" in (select "recipe_id" from "favorites" where "favorites"."user_id" = $8)))`
+			`((${visible.sql} and ("recipes"."author_id" = $7 or "recipes"."id" in (select "recipe_id" from "favorites" where "favorites"."user_id" = $8))) or ${keptSql})`
 		);
-		expect(params).toEqual([...visible.params, OTHER.id, OTHER.id]);
+		expect(params).toEqual([...visible.params, OTHER.id, OTHER.id, ...kept.params]);
+	});
+
+	test('a kept copy is a withdrawn recipe (private, or in the Trash) whose save holds a copy version', () => {
+		const { sql, params } = new PgDialect().sqlToQuery(keptCopyOf(OTHER));
+		expect(sql).toBe(
+			'(("recipes"."deleted_at" is not null or "recipes"."visibility" = $1) and "recipes"."id" in (select "recipe_id" from "favorites" where ("favorites"."user_id" = $2 and "favorites"."copy_version" is not null)))'
+		);
+		expect(params).toEqual(['private', OTHER.id]);
 	});
 });
 

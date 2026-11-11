@@ -1,7 +1,15 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { and, eq, gt, inArray, lte, type SQL } from 'drizzle-orm';
+import { and, eq, gt, inArray, isNotNull, isNull, lte, notInArray, type SQL } from 'drizzle-orm';
+import { QueryBuilder } from 'drizzle-orm/pg-core';
 import { db } from './db/index.js';
-import { recipes, recipeVersions } from './db/schema.js';
+import {
+	collectionRecipes,
+	collections,
+	favorites,
+	recipes,
+	recipesToTags,
+	recipeVersions
+} from './db/schema.js';
 import { imagePathOf, removeRecipeImage } from './images.js';
 import { plural } from '#lib/helpers.js';
 import { TRASH_DAYS } from '#lib/trash.js';
@@ -19,7 +27,11 @@ export function trashCutoff(now = new Date()): Date {
  * days is invisible and unrestorable whether or not the purge has run.
  */
 export function inTrashOf(userId: string, now = new Date()): SQL {
-	return and(eq(recipes.authorId, userId), gt(recipes.deletedAt, trashCutoff(now))) as SQL;
+	return and(
+		eq(recipes.authorId, userId),
+		gt(recipes.deletedAt, trashCutoff(now)),
+		isNull(recipes.erasedAt)
+	) as SQL;
 }
 
 /**
@@ -50,6 +62,11 @@ export function trashAge(deletedAt: Date, now = new Date()) {
  * cascade), then the photos. Forks keep their parentId and say the original
  * was deleted; Journal entries keep their recipe id and say the same. Only a
  * recipe still in the Trash goes: one restored meanwhile is left alone.
+ *
+ * While savers keep copies (copyVersion, keptCopies.ts) the recipe is erased
+ * instead: the row and the versions they keep stay, for them alone, and every
+ * other version, tag link, save and collection link goes, with the photos no
+ * kept version shows. Run again once the last copy is removed, it deletes the rest.
  */
 export async function deleteForever(recipeId: number, supabase: SupabaseClient): Promise<void> {
 	// The save action's row lock: a save waits, then finds no row and removes
@@ -65,7 +82,41 @@ export async function deleteForever(recipeId: number, supabase: SupabaseClient):
 			where: eq(recipeVersions.recipeId, recipeId),
 			columns: { imageUrl: true }
 		});
-		await tx.delete(recipes).where(eq(recipes.id, recipeId));
+		const copies = await tx
+			.select({ userId: favorites.userId, version: favorites.copyVersion })
+			.from(favorites)
+			.where(and(eq(favorites.recipeId, recipeId), isNotNull(favorites.copyVersion)));
+		if (copies.length === 0) {
+			await tx.delete(recipes).where(eq(recipes.id, recipeId));
+		} else {
+			const keepers = copies.map((c) => c.userId);
+			const othersCollections = new QueryBuilder()
+				.select({ id: collections.id })
+				.from(collections)
+				.where(notInArray(collections.ownerId, keepers));
+			await tx.delete(recipeVersions).where(
+				and(
+					eq(recipeVersions.recipeId, recipeId),
+					notInArray(
+						recipeVersions.versionNumber,
+						copies.map((c) => c.version!)
+					)
+				)
+			);
+			await tx.delete(recipesToTags).where(eq(recipesToTags.recipeId, recipeId));
+			await tx
+				.delete(favorites)
+				.where(and(eq(favorites.recipeId, recipeId), isNull(favorites.copyVersion)));
+			await tx
+				.delete(collectionRecipes)
+				.where(
+					and(
+						eq(collectionRecipes.recipeId, recipeId),
+						inArray(collectionRecipes.collectionId, othersCollections)
+					)
+				);
+			await tx.update(recipes).set({ erasedAt: new Date() }).where(eq(recipes.id, recipeId));
+		}
 		return [...new Set(versions.flatMap((v) => v.imageUrl ?? []))];
 	});
 
@@ -111,7 +162,7 @@ export async function purgeExpiredTrash(supabase: SupabaseClient, now = new Date
 		const expired = await db
 			.select({ id: recipes.id })
 			.from(recipes)
-			.where(lte(recipes.deletedAt, trashCutoff(now)));
+			.where(and(lte(recipes.deletedAt, trashCutoff(now)), isNull(recipes.erasedAt)));
 		for (const { id } of expired) await deleteForever(id, supabase);
 	} catch (e) {
 		console.error('Could not purge the Trash', e);

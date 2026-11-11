@@ -3,6 +3,7 @@ import {
 	and,
 	eq,
 	inArray,
+	isNotNull,
 	isNull,
 	or,
 	sql,
@@ -13,9 +14,15 @@ import {
 	type SQLWrapper
 } from 'drizzle-orm';
 import { QueryBuilder } from 'drizzle-orm/pg-core';
-import { db } from './db/index.js';
+import { db, type Tx } from './db/index.js';
 import * as schema from './db/schema.js';
-import { favorites, friendships, recipes, type FriendshipStatus } from './db/schema.js';
+import {
+	favorites,
+	friendships,
+	recipes,
+	recipeVersions,
+	type FriendshipStatus
+} from './db/schema.js';
 import { VISIBILITIES, type Visibility } from '#lib/recipes/validation.js';
 
 /** Whoever is reading: a signed-in user, or nobody. */
@@ -94,8 +101,8 @@ export async function ownRecipe<W extends RecipeWith>(
 }
 
 /** The ids of everyone with an accepted friendship with `userId`, whichever of them asked. */
-export async function friendIdsOf(userId: string): Promise<string[]> {
-	const rows = await db
+export async function friendIdsOf(userId: string, conn: Tx | typeof db = db): Promise<string[]> {
+	const rows = await conn
 		.select({ requesterId: friendships.requesterId, addresseeId: friendships.addresseeId })
 		.from(friendships)
 		.where(
@@ -153,9 +160,62 @@ export function visibleTo(user: Viewer): SQL {
 }
 
 /**
- * A viewer's library as a query condition on `recipes`: their own recipes and
+ * The recipes `user` keeps a read-only copy of, as a condition on `recipes`:
+ * ones they saved that the author has since withdrawn (made private, or moved
+ * to the Trash, erased included) while they could see it, which set the save's
+ * copyVersion (grantKeptCopies, keptCopies.ts). The copy is that one version,
+ * for the saver alone; it never makes the recipe visible (visibleTo), and a
+ * recipe narrowed to Friends or lost by an unfriend is not withdrawn. The one
+ * rule for copies: a moderator takedown, when there is one, must end it here.
+ */
+export function keptCopyOf(user: { id: string }): SQL {
+	const copied = new QueryBuilder()
+		.select({ id: favorites.recipeId })
+		.from(favorites)
+		.where(and(eq(favorites.userId, user.id), isNotNull(favorites.copyVersion)));
+	return and(
+		or(isNotNull(recipes.deletedAt), eq(recipes.visibility, 'private')),
+		inArray(recipes.id, copied)
+	) as SQL;
+}
+
+/**
+ * The recipe at `slug` with `withRelations` when `user` keeps a copy of it,
+ * with the one version they keep; null otherwise. viewableRecipe's sibling for
+ * the saver's read-only copy: callers try viewableRecipe first. Never pass
+ * `versions` in `withRelations`: the copy is the kept version alone.
+ */
+export async function keptCopy<W extends RecipeWith>(
+	slug: string,
+	user: Viewer,
+	withRelations?: W
+): Promise<{ recipe: RecipeRow<W>; version: schema.RecipeVersion } | null> {
+	if (!user) return null;
+	const row = await db.query.recipes.findFirst({
+		where: and(eq(recipes.slug, slug), keptCopyOf(user)),
+		with: withRelations
+	});
+	if (!row) return null;
+	const [version] = await db
+		.select({ version: recipeVersions })
+		.from(recipeVersions)
+		.innerJoin(
+			favorites,
+			and(
+				eq(favorites.recipeId, recipeVersions.recipeId),
+				eq(favorites.copyVersion, recipeVersions.versionNumber)
+			)
+		)
+		.where(and(eq(favorites.userId, user.id), eq(recipeVersions.recipeId, row.id)));
+	// findFirst cannot carry a generic `with` through to its result type.
+	return version ? { recipe: row as RecipeRow<W>, version: version.version } : null;
+}
+
+/**
+ * A viewer's library as a query condition on `recipes`: their own recipes,
  * the ones they saved that they may still see (an author can narrow a recipe
- * or unfriend them after the save). The saves subquery is a builder, not
+ * or unfriend them after the save), and the copies they keep of saved ones
+ * the author withdrew (keptCopyOf). The saves subquery is a builder, not
  * db.select, so it stays SQL inside any query.
  */
 export function inLibraryOf(user: { id: string }): SQL {
@@ -163,9 +223,9 @@ export function inLibraryOf(user: { id: string }): SQL {
 		.select({ id: favorites.recipeId })
 		.from(favorites)
 		.where(eq(favorites.userId, user.id));
-	return and(
-		visibleTo(user),
-		or(eq(recipes.authorId, user.id), inArray(recipes.id, savedIds))
+	return or(
+		and(visibleTo(user), or(eq(recipes.authorId, user.id), inArray(recipes.id, savedIds))),
+		keptCopyOf(user)
 	) as SQL;
 }
 

@@ -20,6 +20,10 @@ const collectionsMock = vi.hoisted(() => ({
 	deleteCollection: vi.fn()
 }));
 vi.mock('#lib/server/collections.js', () => collectionsMock);
+const { keptVersionsMock } = vi.hoisted(() => ({
+	keptVersionsMock: vi.fn().mockResolvedValue(new Map())
+}));
+vi.mock('#lib/server/keptCopies.js', () => ({ keptVersionsOf: keptVersionsMock }));
 const { select: selectMock, selectDistinct: selectDistinctMock } = db;
 const findManyMock = db.query.recipes.findMany;
 
@@ -40,7 +44,7 @@ const makeEvent = (search = '', user: { id: string } | null = USER) =>
 
 const loadResult = (search = '') => loadPage<PageData>(load, makeEvent(search));
 
-type LibraryRow = { id: number; authorId: string | null };
+type LibraryRow = { id: number; authorId: string | null; kept?: boolean };
 
 /** The library lookup, then whatever follows (tag matches, then the count aggregates). */
 function mockLibrary(rows: LibraryRow[], ...after: ReturnType<typeof chain>[]) {
@@ -91,8 +95,9 @@ describe('/cookbook load', () => {
 		const libraryWhere = sqlOf(selectMock.mock.results[0].value.where.mock.calls[0][0]);
 		// Own by author id, saved through the favourites subquery, both under visibleTo.
 		expect(libraryWhere.sql).toContain('"favorites"');
-		// visibleTo names the viewer three times; own-recipes and the favourites subquery once each.
-		expect(libraryWhere.params.filter((p) => p === USER.id)).toHaveLength(5);
+		// visibleTo names the viewer three times; own-recipes, the favourites
+		// subquery and the kept copies' subquery once each.
+		expect(libraryWhere.params.filter((p) => p === USER.id)).toHaveLength(6);
 	});
 
 	test('counts the library by filter, whatever the filter shows, and the Trash for its link', async () => {
@@ -153,6 +158,56 @@ describe('/cookbook load', () => {
 
 		const saved = Object.fromEntries(result.recipes.map((r) => [r.id, r.saved]));
 		expect(saved).toEqual({ 1: false, 2: false, 3: true });
+	});
+
+	describe('a kept copy of a recipe its author withdrew', () => {
+		const WITH_COPY: LibraryRow[] = [...LIBRARY, { id: 4, authorId: OTHER, kept: true }];
+		const COPY_VERSION = {
+			recipeId: 4,
+			versionNumber: 2,
+			title: 'Soup as kept',
+			description: 'Kept words',
+			imageUrl: null,
+			prepTimeMinutes: 5,
+			cookTimeMinutes: 10
+		};
+
+		beforeEach(() => {
+			mockLibrary(WITH_COPY);
+			findManyMock.mockImplementation(async ({ where }: { where: SQL }) => {
+				const params = sqlOf(where).params;
+				return WITH_COPY.filter((r) => params.includes(r.id)).map((r) => ({
+					...r,
+					title: r.id === 4 ? 'Renamed in private' : 'T',
+					visibility: r.id === 4 ? 'private' : 'public',
+					author: { id: r.authorId, username: r.authorId }
+				}));
+			});
+			keptVersionsMock.mockResolvedValue(new Map([[4, COPY_VERSION]]));
+		});
+
+		test('counts as saved, and its card reads from the kept version, marked kept, with no audience or version mark', async () => {
+			const result = await loadResult('?filter=saved');
+			expect(result.counts).toMatchObject({ all: 4, saved: 2 });
+			expect(keptVersionsMock).toHaveBeenCalledWith(USER, [4]);
+			expect(result.recipes.find((r) => r.id === 4)).toMatchObject({
+				title: 'Soup as kept',
+				description: 'Kept words',
+				prepTimeMinutes: 5,
+				saved: true,
+				kept: true,
+				versionCount: 0,
+				visibility: undefined
+			});
+			expect(result.recipes.find((r) => r.id === 3)).toMatchObject({ kept: false });
+		});
+
+		test('lends no tag chips, and drops out of a text search, whose matcher reads every version', async () => {
+			await loadResult('?q=soup');
+			const scope = sqlOf(selectDistinctMock.mock.results[0].value.where.mock.calls[0][0]);
+			expect(scope.params).not.toContain(4);
+			expect(sqlOf(findManyMock.mock.calls[0][0].where).params).not.toContain(4);
+		});
 	});
 
 	test('cards get their author relation and fork counts the viewer may see', async () => {
