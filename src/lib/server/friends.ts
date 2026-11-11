@@ -16,7 +16,7 @@ import {
 } from './db/schema.js';
 import { eitherWay, friendIdsOf, onAlias, visibleTo, type Viewer } from './visibility.js';
 import { canSeeEntry, sourceColumns, sourceOf } from './journal.js';
-import { grantKeptCopies } from './keptCopies.js';
+import { grantKeptCopies, revokeKeptCopies } from './keptCopies.js';
 
 /** Where two people stand, from the first one's side. */
 export type Relation = 'self' | 'none' | 'sent' | 'received' | 'friends' | 'blocked';
@@ -179,7 +179,8 @@ export function unfriend(me: string, them: string): Promise<void> {
 
 /**
  * Block = unfriend, then the pair's one row says blocked with the blocker as
- * requester. A pair already blocked (either way) stays as it is.
+ * requester, then each side's kept copies of the other's recipes end
+ * (revokeKeptCopies). A pair already blocked (either way) stays as it is.
  */
 export async function blockIn(tx: Tx, me: string, them: string): Promise<void> {
 	if (me === them) return;
@@ -192,7 +193,7 @@ export async function blockIn(tx: Tx, me: string, them: string): Promise<void> {
 		.values(blocked)
 		.onConflictDoNothing()
 		.returning({ requesterId: friendships.requesterId });
-	if (inserted.length > 0) return;
+	if (inserted.length > 0) return revokeKeptCopies(tx, me, them);
 	// A request or accept raced in after the unfriend: the block takes the pair's
 	// one row, and the forks are privatised again for any friendship it briefly made.
 	// A block they raced in first stays theirs.
@@ -200,6 +201,7 @@ export async function blockIn(tx: Tx, me: string, them: string): Promise<void> {
 	if (!raced || raced.status === 'blocked') return;
 	await tx.update(friendships).set(blocked).where(pairOf(me, them));
 	await privatiseForksIn(tx, me, them);
+	await revokeKeptCopies(tx, me, them);
 }
 
 export function block(me: string, them: string): Promise<void> {

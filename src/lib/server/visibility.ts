@@ -107,18 +107,32 @@ export async function ownRecipe<W extends RecipeWith>(
 	return recipe;
 }
 
-/** The ids of everyone with an accepted friendship with `userId`, whichever of them asked. */
-export async function friendIdsOf(userId: string, conn: Tx | typeof db = db): Promise<string[]> {
+/** The ids of everyone `userId` has a friendships row in `status` with, whichever way round. */
+async function pairedWith(
+	userId: string,
+	status: FriendshipStatus,
+	conn: Tx | typeof db
+): Promise<string[]> {
 	const rows = await conn
 		.select({ requesterId: friendships.requesterId, addresseeId: friendships.addresseeId })
 		.from(friendships)
 		.where(
 			and(
-				eq(friendships.status, 'accepted'),
+				eq(friendships.status, status),
 				or(eq(friendships.requesterId, userId), eq(friendships.addresseeId, userId))
 			)
 		);
 	return rows.map((r) => (r.requesterId === userId ? r.addresseeId : r.requesterId));
+}
+
+/** The ids of everyone with an accepted friendship with `userId`, whichever of them asked. */
+export function friendIdsOf(userId: string, conn: Tx | typeof db = db): Promise<string[]> {
+	return pairedWith(userId, 'accepted', conn);
+}
+
+/** The ids of everyone in a block with `userId`, whichever of them blocked. */
+export function blockedIdsOf(userId: string, conn: Tx | typeof db = db): Promise<string[]> {
+	return pairedWith(userId, 'blocked', conn);
 }
 
 /**

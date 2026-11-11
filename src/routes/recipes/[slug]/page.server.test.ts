@@ -1134,6 +1134,15 @@ describe('Keep this version', () => {
 			});
 		});
 
+		test('whose author deleted their account still opens, with no author to name', async () => {
+			keptMock.keptCopy.mockResolvedValue({
+				...COPY,
+				recipe: { ...COPY.recipe, authorId: null, author: null }
+			});
+			const data = await loadAt();
+			expect(data).toMatchObject({ keptCopy: true, recipe: { authorId: null, author: null } });
+		});
+
 		test('cannot be forked, kept at another version or followed', async () => {
 			expect(await act('fork')).toMatchObject({ status: 404 });
 			expect(await act('keep', { version: '3' })).toMatchObject({ status: 404 });

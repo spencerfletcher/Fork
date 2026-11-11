@@ -111,6 +111,13 @@ describe('RecipeHeader fork attribution', () => {
 		renderHeader();
 		expect(screen.queryByText(/forked from/i)).not.toBeInTheDocument();
 	});
+
+	test('an author whose account is gone gets no byline: no name, no link', () => {
+		const { container } = renderHeader({ recipe: makeRecipe({ author: null }) });
+		expect(byline(container)).toBe('');
+		expect(screen.queryByText(/^By/)).not.toBeInTheDocument();
+		expect(screen.queryAllByRole('link')).toHaveLength(0);
+	});
 });
 
 // ─── The chip ─────────────────────────────────────────────────────────────────

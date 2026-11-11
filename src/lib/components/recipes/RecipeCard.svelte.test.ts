@@ -359,6 +359,20 @@ describe('RecipeCard in the Cookbook', () => {
 			'No longer shared by @devcooks'
 		);
 	});
+
+	test('a kept copy whose author deleted their account names no one and links nowhere', () => {
+		const { container } = render(RecipeCard, {
+			props: {
+				recipe: { ...makeRecipe(), author: null },
+				variant: 'cookbook',
+				saved: true,
+				kept: true
+			}
+		});
+		const line = container.querySelector('.card-source')!;
+		expect(line.textContent!.replace(/\s+/g, ' ').trim()).toBe('No longer shared by its author');
+		expect(line.querySelector('a')).toBeNull();
+	});
 });
 
 describe('RecipeCard on Discover', () => {

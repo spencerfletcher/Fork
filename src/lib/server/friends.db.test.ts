@@ -261,6 +261,50 @@ describe.skipIf(!localDb)('unfriend and block, against the real database', () =>
 		});
 	});
 
+	test('a block ends the kept copies each side holds of the other’s recipes, and no one else’s', async () => {
+		await withFriends(async (tx, a, b) => {
+			const run = stamp();
+			const other = `test-o-${run}`;
+			await tx.insert(schema.profiles).values({ id: other, username: `o-${run}` });
+			const aPrivate = await makeRecipe(tx, a, 'private');
+			const bPublic = await makeRecipe(tx, b, 'public');
+			await tx
+				.update(schema.recipes)
+				.set({ deletedAt: new Date() })
+				.where(eq(schema.recipes.id, bPublic.id));
+			await tx.insert(schema.favorites).values([
+				{ userId: b, recipeId: aPrivate.id, copyVersion: 1 },
+				{ userId: a, recipeId: bPublic.id, copyVersion: 1 },
+				{ userId: other, recipeId: aPrivate.id, copyVersion: 1 }
+			]);
+
+			await friends.blockIn(tx, a, b);
+
+			const copies = await tx
+				.select({
+					userId: schema.favorites.userId,
+					recipeId: schema.favorites.recipeId,
+					copy: schema.favorites.copyVersion
+				})
+				.from(schema.favorites)
+				.where(inArray(schema.favorites.recipeId, [aPrivate.id, bPublic.id]));
+			expect(copies.map((c) => [c.userId, c.recipeId, c.copy]).sort()).toEqual(
+				[
+					[b, aPrivate.id, null],
+					[a, bPublic.id, null],
+					[other, aPrivate.id, 1]
+				].sort()
+			);
+			// The save stays but leaves the library, and lifting the block gives nothing back.
+			const { inLibraryOf } = await import('./visibility.js');
+			const inLibrary = (userId: string, id: number) =>
+				tx.$count(schema.recipes, and(eq(schema.recipes.id, id), inLibraryOf({ id: userId })));
+			expect(await inLibrary(b, aPrivate.id)).toBe(0);
+			await tx.delete(schema.friendships).where(eq(schema.friendships.requesterId, a));
+			expect(await inLibrary(b, aPrivate.id)).toBe(0);
+		});
+	});
+
 	test('the database refuses a reverse duplicate and a friendship with oneself', async () => {
 		await withFriends(async (tx, a, b) => {
 			// Each insert in a savepoint, so its failure leaves the outer transaction usable.

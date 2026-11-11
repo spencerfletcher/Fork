@@ -97,6 +97,83 @@ describe.skipIf(!localDb)('kept copies, against the real database', () => {
 		});
 	});
 
+	test('a saver in a block with the author, either way round, is granted no copy, even of a public recipe', async () => {
+		await withProfiles(4, async (tx, [author, blockedByAuthor, blockedAuthor, other]) => {
+			const recipe = await makeRecipe(tx, author, 'public');
+			await tx.insert(schema.friendships).values([
+				{ requesterId: author, addresseeId: blockedByAuthor, status: 'blocked' },
+				{ requesterId: blockedAuthor, addresseeId: author, status: 'blocked' }
+			]);
+			await tx.insert(schema.favorites).values([
+				// An old copy from a withdrawal before the block goes too.
+				{ userId: blockedByAuthor, recipeId: recipe.id, copyVersion: 1 },
+				{ userId: blockedAuthor, recipeId: recipe.id },
+				{ userId: other, recipeId: recipe.id }
+			]);
+			await kept.grantKeptCopies(tx, recipe);
+			expect(await copyVersionOf(tx, blockedByAuthor, recipe.id)).toBeNull();
+			expect(await copyVersionOf(tx, blockedAuthor, recipe.id)).toBeNull();
+			expect(await copyVersionOf(tx, other, recipe.id)).toBe(3);
+		});
+	});
+
+	test('narrowing Public to Friends leaves a saver who is not a friend no copy and no access, export included', async () => {
+		await withPeople(async (tx, { author, friend, stranger }) => {
+			const recipe = await makeRecipe(tx, author, 'public');
+			await tx.insert(schema.favorites).values([
+				{ userId: friend, recipeId: recipe.id },
+				{ userId: stranger, recipeId: recipe.id }
+			]);
+			// An audience change, not a withdrawal: the editor grants nothing (pinned in its own test).
+			await tx
+				.update(schema.recipes)
+				.set({ visibility: 'friends' })
+				.where(eq(schema.recipes.id, recipe.id));
+			expect(await idsWhere(tx, visibility.keptCopyOf({ id: stranger }), [recipe.id])).toEqual([]);
+			expect(await idsWhere(tx, visibility.inLibraryOf({ id: stranger }), [recipe.id])).toEqual([]);
+			expect(await idsWhere(tx, visibility.inLibraryOf({ id: friend }), [recipe.id])).toEqual([
+				recipe.id
+			]);
+			const { exportFor } = await import('./export.js');
+			const saves = (await exportFor(stranger, 'https://fork.test', undefined, tx)).saves;
+			expect(saves).toEqual([]);
+		});
+	});
+
+	test("a copy outlives its author's profile: kept, in the library and the export, with no author named", async () => {
+		await withPeople(async (tx, { author, friend }) => {
+			const recipe = await makeRecipe(tx, author, 'public');
+			await tx.insert(schema.favorites).values({ userId: friend, recipeId: recipe.id });
+			await kept.grantKeptCopies(tx, recipe);
+			await tx
+				.update(schema.recipes)
+				.set({ visibility: 'private' })
+				.where(eq(schema.recipes.id, recipe.id));
+			await tx.insert(schema.logEntries).values({
+				userId: friend,
+				recipeId: recipe.id,
+				dish: 'v3',
+				cookedOn: '2026-11-08'
+			});
+			// The account goes: recipes.author_id is set null, the save stays.
+			await tx.delete(schema.profiles).where(eq(schema.profiles.id, author));
+
+			expect(await idsWhere(tx, visibility.keptCopyOf({ id: friend }), [recipe.id])).toEqual([
+				recipe.id
+			]);
+			expect(await idsWhere(tx, visibility.inLibraryOf({ id: friend }), [recipe.id])).toEqual([
+				recipe.id
+			]);
+			expect(
+				(await kept.keptVersionsOf({ id: friend }, [recipe.id], tx)).get(recipe.id)?.title
+			).toBe('v3');
+			const { exportFor } = await import('./export.js');
+			const archive = await exportFor(friend, 'https://fork.test', undefined, tx);
+			expect(archive.saves).toMatchObject([{ title: 'v3', author: null, keptCopy: 3 }]);
+			expect(archive.journal).toMatchObject([{ source: { kind: 'recipe', title: 'v3' } }]);
+		});
+	});
+
 	test("the author's own save of their recipe is never a copy", async () => {
 		await withPeople(async (tx, { author }) => {
 			const recipe = await makeRecipe(tx, author, 'public');

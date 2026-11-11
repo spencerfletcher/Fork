@@ -170,14 +170,26 @@ export const actions: Actions = {
 		if (!user) return signedOut('delete again');
 
 		const recipe = await ownRecipe(params.slug, user.id);
-		// Each saver who could see it keeps a read-only copy. Outside a
-		// transaction: a copy counts only while the recipe is withdrawn
-		// (keptCopyOf), so one granted before a failed move is never shown.
-		if (recipe.visibility !== 'private') await grantKeptCopies(db, recipe);
-		await db
-			.update(recipes)
-			.set({ deletedAt: new Date(), editRevision: sql`${recipes.editRevision} + 1` })
-			.where(eq(recipes.id, recipe.id));
+		// Each saver who could see it keeps a read-only copy, granted under the
+		// save's row lock from the audience the move ends, so a save changing it
+		// meanwhile either lands first (and is read here) or waits.
+		await db.transaction(async (tx) => {
+			const [locked] = await tx
+				.select({ visibility: recipes.visibility })
+				.from(recipes)
+				.where(eq(recipes.id, recipe.id))
+				.for('update');
+			if (locked && locked.visibility !== 'private')
+				await grantKeptCopies(tx, {
+					id: recipe.id,
+					authorId: recipe.authorId,
+					visibility: locked.visibility
+				});
+			await tx
+				.update(recipes)
+				.set({ deletedAt: new Date(), editRevision: sql`${recipes.editRevision} + 1` })
+				.where(eq(recipes.id, recipe.id));
+		});
 
 		throw redirect(303, '/cookbook/trash');
 	}
