@@ -126,7 +126,10 @@ describe('blockIn', () => {
 
 	// A request inserted between the unfriend's delete and the block's insert.
 	test('a request that raced in is overwritten by the block, not a unique-index error', async () => {
+		// The pair row, then each side's Friends recipes and forks to privatise.
 		selectMock
+			.mockReturnValueOnce(chain([]))
+			.mockReturnValueOnce(chain([]))
 			.mockReturnValueOnce(chain([]))
 			.mockReturnValueOnce(chain([]))
 			.mockReturnValueOnce(chain([]))
@@ -140,7 +143,10 @@ describe('blockIn', () => {
 	});
 
 	test('a block they raced in first is kept as theirs', async () => {
+		// The pair row, then each side's Friends recipes and forks to privatise.
 		selectMock
+			.mockReturnValueOnce(chain([]))
+			.mockReturnValueOnce(chain([]))
 			.mockReturnValueOnce(chain([]))
 			.mockReturnValueOnce(chain([]))
 			.mockReturnValueOnce(chain([]))
