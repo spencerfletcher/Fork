@@ -71,6 +71,12 @@
 		}
 	}
 
+	/* The Cookbook's select bar takes its place (SelectBar; app.css keeps the
+	   page clear of it). */
+	:global(body:has(.select-bar)) .tab-bar {
+		display: none;
+	}
+
 	.tab-bar a {
 		display: flex;
 		flex-direction: column;

@@ -89,4 +89,9 @@ describe('TabBar', () => {
 	test('below 768 only', () => {
 		expect(source).toMatch(/@media \(min-width: 768px\)\s*\{\s*\.tab-bar\s*\{\s*display:\s*none/);
 	});
+
+	// In the component, not app.css: a layered rule there loses to this unlayered one.
+	test("gives way to the Cookbook's select bar", () => {
+		expect(cssRule(source, ':global(body:has(.select-bar)) .tab-bar')).toMatch(/display:\s*none/);
+	});
 });

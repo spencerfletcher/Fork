@@ -920,11 +920,7 @@
 	   every width, and on a phone the tab bar gives way to it, as it does to
 	   the editor's save bar. The page ends clear of it and focus stops above
 	   it, by the height it measures (it wraps on a phone). After the tab bar's
-	   rules, which these replace while it shows. */
-	body:has(.select-bar) .tab-bar {
-		display: none;
-	}
-
+	   rules, which these replace while it shows; TabBar hides itself. */
 	body:has(.select-bar) main {
 		padding-bottom: var(--select-bar-height, 0px);
 	}
