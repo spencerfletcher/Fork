@@ -44,6 +44,14 @@ test.describe('Collections', () => {
 		await expect(page.getByRole('heading', { level: 2, name: renamed, exact: true })).toBeVisible();
 		await expect(page).toHaveURL(/\/cookbook\?collection=\d+&q=e2e$/);
 
+		// Reloaded at ?page=3 (Show more wrote it), leaving the collection starts
+		// the list at its first page, the search kept.
+		await gotoHydrated(page, `${page.url()}&page=3`);
+		await expect(collectionsNav(page).getByRole('link', { name: 'All recipes' })).toHaveAttribute(
+			'href',
+			'?q=e2e'
+		);
+
 		await page.getByRole('button', { name: 'Delete collection' }).click();
 		const step = page.getByRole('group', { name: `Delete ${renamed}?` });
 		await expect(step).toContainText('its recipes stay in your Cookbook');
