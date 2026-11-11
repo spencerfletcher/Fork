@@ -224,7 +224,7 @@ Cookbook lane:
 
 | Item | What it is | Status | Source |
 | --- | --- | --- | --- |
-| Dark mode and reading preferences | After core readability; contrast-tested tokens and stable reflow; cooking comfort over themes | later | R, DD |
+| Dark mode and reading preferences | After core readability; contrast-tested tokens and stable reflow; cooking comfort over themes. Direction (OD, 11 Nov 2026): swap the paper and espresso relationship for surfaces and type, keep the marigold period constant, and tune clay links, muted text and dividers separately on dark surfaces; the L8 (dark) and L7 (light) marks are the pair | later (todo, direction set) | R, DD, OD |
 | Link sharing of private recipes | Later | later | DS |
 | Duplicate your own recipe | Likely "Start from an existing recipe" on New recipe, not a Fork button (E11) | later | DS |
 | Help in the editor | A Help menu beside Section heading when the tips grow | later | DS |
