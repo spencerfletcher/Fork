@@ -6,6 +6,13 @@ import { AUDIENCE_LABEL, AUDIENCE_NOTE } from '#lib/audience.js';
 import { FORMER_USERNAME_DAYS, USERNAME_TAKEN } from '#lib/auth/rules.js';
 import { SESSION_ENDED } from '#lib/server/actions.js';
 import { VISIBILITIES, type Visibility } from '#lib/recipes/validation.js';
+import {
+	AS_WRITTEN,
+	MEASUREMENT_CHOICES,
+	MEASUREMENT_LABEL,
+	MEASUREMENT_NOTE,
+	type Measurement
+} from '#lib/measurement.js';
 
 vi.mock('$app/forms', () => ({ enhance: () => ({ destroy: () => {} }) }));
 
@@ -24,7 +31,7 @@ describe('Settings page', () => {
 	test('one h1 and a titled section per setting', () => {
 		renderPage();
 		expect(screen.getByRole('heading', { level: 1, name: 'Settings' })).toBeInTheDocument();
-		for (const name of ['Account', 'Username', 'Default audience']) {
+		for (const name of ['Account', 'Username', 'Default audience', 'Measurement']) {
 			expect(section(name)).toBeInTheDocument();
 		}
 	});
@@ -39,11 +46,52 @@ describe('Settings page', () => {
 			'/forgot-password'
 		);
 	});
+});
 
-	test('there is no measurement control until quantities convert', () => {
+describe('Measurement section', () => {
+	const group = () => screen.getByRole('group', { name: 'Show quantities in' });
+	const withMeasurement = (measurement: Measurement | null) =>
+		({
+			email: 'cook@example.com',
+			settings: { username: 'cook', defaultVisibility: 'friends', measurement }
+		}) as never;
+
+	test('As written, Metric and US, in their words and sentences; unset is As written', () => {
 		renderPage();
-		expect(screen.queryByText(/quantities/i)).toBeNull();
-		expect(document.querySelector('[name="measurement"]')).toBeNull();
+		for (const value of MEASUREMENT_CHOICES) {
+			const radio = within(group()).getByRole('radio', { name: MEASUREMENT_LABEL[value] });
+			expect(radio).toHaveAccessibleDescription(new RegExp(MEASUREMENT_NOTE[value]));
+			expect(radio).toHaveProperty('checked', value === AS_WRITTEN);
+		}
+	});
+
+	test('a stored preference starts checked and posts as its own form', () => {
+		renderPage(null, withMeasurement('us'));
+		const us = within(group()).getByRole('radio', { name: MEASUREMENT_LABEL.us });
+		expect(us).toHaveProperty('checked', true);
+		expect(us).toHaveAttribute('name', 'measurement');
+		expect(us.closest('form')).toHaveAttribute('action', '?/measurement');
+		expect(
+			within(section('Measurement')).getByRole('button', { name: 'Save' })
+		).toBeInTheDocument();
+	});
+
+	test('a save says Saved in this section only', () => {
+		renderPage({ section: 'measurement', saved: true });
+		expect(within(section('Measurement')).getByText('Saved.')).toHaveRole('status');
+		expect(within(section('Default audience')).queryByText('Saved.')).toBeNull();
+	});
+
+	test('a refusal shows in this section, focused', async () => {
+		renderPage({
+			section: 'measurement',
+			code: 'unauthenticated',
+			error: SESSION_ENDED('save again')
+		});
+		await tick();
+		const alert = within(section('Measurement')).getByRole('alert');
+		expect(alert).toHaveTextContent(SESSION_ENDED('save again'));
+		expect(alert).toHaveFocus();
 	});
 });
 

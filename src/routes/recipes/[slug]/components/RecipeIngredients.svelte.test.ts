@@ -392,3 +392,99 @@ describe('RecipeIngredients groups', () => {
 		expect(screen.queryByRole('heading', { level: 3 })).toBeNull();
 	});
 });
+
+describe('RecipeIngredients measurement', () => {
+	const US = '2 cups milk\n8 oz cream cheese\n1/2 tsp salt\n2 large eggs\nsalt to taste';
+	const US_GRAMS: GramResult[] = [
+		{ grams: 480, grams2: null, approximate: false },
+		{ grams: 227, grams2: null, approximate: false },
+		null,
+		{ grams: 100, grams2: null, approximate: true },
+		null
+	];
+
+	function renderIn(
+		measurement: 'metric' | 'us' | null | undefined,
+		text = US,
+		grams = US_GRAMS,
+		factor = 1
+	) {
+		return render(RecipeIngredients, {
+			props: {
+				ingredients: parseIngredientText(text),
+				grams,
+				storageKey: KEY,
+				factor,
+				...(measurement === undefined ? {} : { measurement })
+			}
+		});
+	}
+
+	const byText = (text: string) => screen.getByText((_, el) => el?.textContent === text);
+
+	test('no preference (signed out, or As written) renders exactly what no prop renders', () => {
+		const { container: without, unmount } = renderIn(undefined);
+		const before = without.innerHTML;
+		unmount();
+		const { container: written } = renderIn(null);
+		expect(written.innerHTML).toBe(before);
+		expect(screen.queryByText(/Change in Settings/)).toBeNull();
+	});
+
+	test('metric: a US measure reads clay, the original in Ink 3 parentheses, spoons and counts as typed', () => {
+		renderIn('metric');
+		const [milk, cheese, salt, eggs] = rows();
+		expect(milk).toHaveTextContent('475 ml written as (2 cups, 480g) milk');
+		expect(milk.querySelector('.font-semibold')).toHaveClass('text-accent');
+		expect(milk.querySelector('.font-semibold')).toHaveTextContent('475 ml');
+		// A converted weight is grams already: no second gram figure.
+		expect(cheese).toHaveTextContent('225 g written as (8 oz) cream cheese');
+		const original = byText('written as (8 oz)');
+		expect(original).toHaveClass('text-text-3');
+		expect(original.querySelector('.sr-only')).toHaveTextContent('written as');
+		expect(salt).toHaveTextContent('½ tsp salt');
+		expect(salt.querySelector('.text-accent')).toBeNull();
+		expect(eggs).toHaveTextContent('2 large eggs (≈100g)');
+		expect(eggs.querySelector('.text-accent')).toBeNull();
+	});
+
+	test('a converted list says so once, with a link to Settings', () => {
+		renderIn('metric');
+		const notice = screen.getByText(/^Converted to metric/);
+		expect(notice).toHaveTextContent(
+			'Converted to metric; as written in parentheses. Change in Settings'
+		);
+		expect(notice).toHaveClass('form-hint');
+		expect(screen.getByRole('link', { name: 'Change in Settings' })).toHaveAttribute(
+			'href',
+			'/settings#measurement-heading'
+		);
+	});
+
+	test('US: a metric list converts', () => {
+		renderIn('us', '250 g butter\n500 ml stock', [null, null]);
+		expect(rows()[0]).toHaveTextContent('8¾ oz written as (250 g) butter');
+		expect(rows()[1]).toHaveTextContent('2 cups written as (500 ml) stock');
+		expect(screen.getByText(/^Converted to US units/)).toBeInTheDocument();
+	});
+
+	test('US: a US list is left as written, with no notice', () => {
+		renderIn('us');
+		expect(rows()[0]).toHaveTextContent('2 cups (480g) milk');
+		expect(document.querySelector('label .text-accent')).toBeNull();
+		expect(screen.queryByText(/^Converted to/)).toBeNull();
+	});
+
+	test('scaled then converted: the original is the scaled measure, clay like the scaled weight', () => {
+		renderIn('metric', '1 cup milk', [{ grams: 240, grams2: null, approximate: false }], 2);
+		expect(rows()[0]).toHaveTextContent('475 ml written as (2 cups, 480g) milk');
+		expect(byText('written as (2 cups, 480g)')).toHaveClass('text-accent');
+	});
+
+	test('a ticked converted row recedes to Ink 3 like the rest', () => {
+		renderIn('metric');
+		expect(rows()[0].querySelector('.font-semibold')).toHaveClass(
+			'group-has-[:checked]:text-text-3'
+		);
+	});
+});

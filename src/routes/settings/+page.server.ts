@@ -65,8 +65,7 @@ export const actions: Actions = {
 		return saved('audience');
 	},
 
-	// No control on the page yet: quantities are not converted until the
-	// conversion lands, so the page shows no setting it cannot honour.
+	// The recipe page converts quantities to it (convertIngredient).
 	measurement: async ({ request, locals: { user } }) => {
 		if (!user) return sessionEnded('measurement');
 		const raw = text(await request.formData(), 'measurement');

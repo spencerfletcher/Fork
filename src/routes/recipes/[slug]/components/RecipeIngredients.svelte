@@ -3,6 +3,8 @@
 	import type { Ingredient } from '#lib/recipes/types.js';
 	import type { GramResult } from '#lib/server/ingredientDensities.js';
 	import { FRACTIONS, scaleIngredient } from '#lib/recipes/scale.js';
+	import { convertIngredient } from '#lib/recipes/convert.js';
+	import type { Measurement } from '#lib/measurement.js';
 	import { groupStartingAt } from '#lib/recipes/groups.js';
 	import { tickList } from './ticks.svelte.js';
 
@@ -11,6 +13,7 @@
 		grams,
 		storageKey,
 		factor = 1,
+		measurement = null,
 		control
 	}: {
 		ingredients: Ingredient[];
@@ -18,9 +21,22 @@
 		storageKey: string;
 		/** The serving multiplier; lines that cannot be scaled print as typed. */
 		factor?: number;
+		/** The cook's Settings units; null shows every line as written. */
+		measurement?: Measurement | null;
 		/** The scale control, right of the eyebrow, above the same rule. */
 		control?: Snippet;
 	} = $props();
+
+	const SYSTEM_NAME = { metric: 'metric', us: 'US units' } as const satisfies Record<
+		Measurement,
+		string
+	>;
+
+	// Scale first, then convert from the scaled full-precision quantity.
+	function shown(typed: Ingredient, i: number) {
+		const scaled = scaleIngredient(typed, grams[i], factor);
+		return { ...convertIngredient(scaled.ingredient, scaled.grams, measurement), scaled };
+	}
 
 	const ticks = tickList(() => storageKey);
 
@@ -31,11 +47,15 @@
 
 	function formatGrams({ grams, grams2, approximate }: GramResult): string {
 		const range = grams2 === null ? '' : `–${round(grams2)}`;
-		return `(${approximate ? '≈' : ''}${round(grams)}${range}g)`;
+		return `${approximate ? '≈' : ''}${round(grams)}${range}g`;
 	}
 
 	// "1/2" and its kin as the glyphs a cookbook sets.
 	const vulgar = (s: string) => s.replace(/\b[1-7]\/[2348]\b/g, (f) => FRACTIONS[f] ?? f);
+
+	// A converted row's bracket: the measure as written, then its weight if any.
+	const writtenAs = (written: string, result: GramResult | null) =>
+		`(${[vulgar(written), result && formatGrams(result)].filter(Boolean).join(', ')})`;
 
 	// The line as typed, split into what is set bold and what is not, with the
 	// weight between. A measured line bolds its measure and the weight sits
@@ -56,6 +76,7 @@
 	const anyScaled = $derived(
 		ingredients.some((typed, i) => scaleIngredient(typed, grams[i], factor).ingredient !== typed)
 	);
+	const anyConverted = $derived(ingredients.some((typed, i) => shown(typed, i).written !== null));
 	// One note for whatever on the list is an estimate.
 	const note = $derived.by(() => {
 		if (anyScaled && anyApproximate)
@@ -75,11 +96,13 @@
 	</div>
 	<div>
 		{#each ingredients as typed, i (i)}
-			{@const { ingredient, grams: result } = scaleIngredient(typed, grams[i], factor)}
+			{@const { ingredient, grams: result, written, scaled: scaledRow } = shown(typed, i)}
 			{@const { bold, after } = parts(ingredient)}
 			<!-- A row scaling changed reads clay, measure and weight, as an estimate
-			     (Spencer, 31 October 2026); ticked, it recedes to Ink 3 like the rest. -->
-			{@const scaled = ingredient !== typed}
+			     (Spencer, 31 October 2026); ticked, it recedes to Ink 3 like the rest.
+			     A converted measure reads clay too; the measure it was written as
+			     stays beside it, clay only when scaling changed it. -->
+			{@const scaled = scaledRow.ingredient !== typed}
 			{@const group = groupStartingAt(ingredients, i)}
 			<!-- A group's name over its rows: the serif at title size, ink, 20px of air
 			     above (14 at the top of the list). Ungrouped rows draw nothing. -->
@@ -105,18 +128,27 @@
 				<span class="tick translate-y-[2px]" aria-hidden="true"></span>
 				<span class="group-has-[:checked]:text-text-3 min-w-0 [overflow-wrap:anywhere]">
 					{#if bold}<span
-							class={['font-semibold', scaled && 'text-accent group-has-[:checked]:text-text-3']}>
+							class={[
+								'font-semibold',
+								(scaled || written) && 'text-accent group-has-[:checked]:text-text-3'
+							]}>
 							{bold}
 						</span>{/if}
-					{#if result}
-						<!-- Same size as the line: WebKit strikes each inline box at its own
-						     font metrics, so a smaller span would get a lower, separate line. -->
+					<!-- Same size as the line: WebKit strikes each inline box at its own
+					     font metrics, so a smaller span would get a lower, separate line. -->
+					{#if result && !written}
 						<span
 							class={scaled ? 'text-accent group-has-[:checked]:text-text-3' : 'text-text-3'}
 							title={result.approximate
 								? 'Typical weight for a whole item; actual items vary'
 								: undefined}>
-							{formatGrams(result)}
+							({formatGrams(result)})
+						</span>
+					{:else if written}
+						<!-- The measure as written, and its weight, share one bracket. -->
+						<span class={scaled ? 'text-accent group-has-[:checked]:text-text-3' : 'text-text-3'}>
+							<span class="sr-only">written as</span>
+							{writtenAs(written, result)}
 						</span>
 					{/if}
 					{after}
@@ -124,6 +156,13 @@
 			</label>
 		{/each}
 	</div>
+	<!-- Only when a line was converted: the reader's Settings changed what they read. -->
+	{#if measurement && anyConverted}
+		<p class="form-hint">
+			Converted to {SYSTEM_NAME[measurement]}; as written in parentheses.
+			<a href="/settings#measurement-heading" class="hit-link">Change in Settings</a>
+		</p>
+	{/if}
 	<!-- The list's foot: the weights note at the start, Clear ticks at the end,
 	     only while a line is ticked. Clear ticks is Ink 3 at the note's size, a
 	     24px hit, 44px on a phone or under a coarse pointer. -->

@@ -65,11 +65,31 @@ export function parseServes(value: string | null, fallback: number): number {
 
 // A full-word unit follows the quantity: "1 cup", "2 cups". Abbreviations
 // ("tsp", "g") have no plural and pass through.
-function unitFor(unit: string, quantity: number): string {
+export function unitFor(unit: string, quantity: number): string {
 	for (const [singular, { plural }] of Object.entries(unitsOfMeasure)) {
 		if (unit === singular || unit === plural) return quantity > 1 ? plural : singular;
 	}
 	return unit;
+}
+
+/**
+ * The parser's own split of a typed line: the measure (number and unit, as
+ * typed) and any words between the unit and the name. Null when the name is
+ * not the end of the text ("zest of 1 lemon") or the unit is not in it, so
+ * the line cannot be rewritten.
+ */
+export function splitMeasure({ text, name, unit }: Ingredient): {
+	measure: string;
+	between: string;
+} | null {
+	if (!text.endsWith(name)) return null;
+	const prefix = text.slice(0, text.length - name.length);
+	const at = unit ? prefix.indexOf(unit) : prefix.length;
+	if (at < 0) return null;
+	return {
+		measure: prefix.slice(0, at + unit.length).trim(),
+		between: prefix.slice(at + unit.length).trim()
+	};
 }
 
 /**
@@ -85,19 +105,16 @@ export function scaleIngredient(
 	factor: number
 ): { ingredient: Ingredient; grams: GramResult | null } {
 	const unchanged = { ingredient, grams };
-	const { text, name, unit } = ingredient;
+	const { name, unit } = ingredient;
 	const quantity = scaleQuantity(ingredient.quantity, factor);
-	if (factor === 1 || quantity === null || !text.endsWith(name)) return unchanged;
-
-	const prefix = text.slice(0, text.length - name.length);
-	const at = unit ? prefix.indexOf(unit) : prefix.length;
-	if (at < 0) return unchanged;
+	const split = splitMeasure(ingredient);
+	if (factor === 1 || quantity === null || split === null) return unchanged;
 
 	const quantity2 = scaleQuantity(ingredient.quantity2, factor);
 	const measure =
 		formatScaled(quantity) + (quantity2 === null ? '' : `–${formatScaled(quantity2)}`);
 	const shownUnit = unit && unitFor(unit, quantity2 ?? quantity);
-	const between = prefix.slice(at + unit.length).trim();
+	const { between } = split;
 	return {
 		ingredient: {
 			...ingredient,

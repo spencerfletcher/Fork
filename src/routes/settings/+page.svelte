@@ -11,6 +11,13 @@
 		USERNAME_MIN
 	} from '#lib/auth/rules.js';
 	import { VISIBILITIES, type Visibility } from '#lib/recipes/validation.js';
+	import {
+		AS_WRITTEN,
+		MEASUREMENT_CHOICES,
+		MEASUREMENT_LABEL,
+		MEASUREMENT_NOTE,
+		type MeasurementChoice
+	} from '#lib/measurement.js';
 	import type { PageData } from './$types';
 	import type { Section } from './+page.server';
 
@@ -32,11 +39,16 @@
 	// section's save does, and a refusal is shown only where it belongs.
 	const usernameSave = pendingEnhance({ reset: false, keepOnError: true });
 	const audienceSave = pendingEnhance({ reset: false, keepOnError: true });
+	const measurementSave = pendingEnhance({ reset: false, keepOnError: true });
 
 	// svelte-ignore state_referenced_locally
 	let username = $state(form?.username ?? data.settings.username);
 	// svelte-ignore state_referenced_locally
 	let defaultVisibility = $state<Visibility>(data.settings.defaultVisibility);
+	// Unset is stored as null and posted as AS_WRITTEN.
+	const storedMeasurement = $derived<MeasurementChoice>(data.settings.measurement ?? AS_WRITTEN);
+	// svelte-ignore state_referenced_locally
+	let measurement = $state<MeasurementChoice>(storedMeasurement);
 
 	const resultFor = (section: Section) => (form?.section === section ? form : null);
 
@@ -56,6 +68,7 @@
 		usernameSave.error ?? (usernameError ? undefined : resultFor('username')?.error)
 	);
 	const audienceProblem = $derived(audienceSave.error ?? resultFor('audience')?.error);
+	const measurementProblem = $derived(measurementSave.error ?? resultFor('measurement')?.error);
 
 	// "Saved." until the value moves away from what was saved.
 	const usernameSaved = $derived(
@@ -63,6 +76,9 @@
 	);
 	const audienceSaved = $derived(
 		!!resultFor('audience')?.saved && defaultVisibility === data.settings.defaultVisibility
+	);
+	const measurementSaved = $derived(
+		!!resultFor('measurement')?.saved && measurement === storedMeasurement
 	);
 
 	// Save was disabled while the request was out, so focus fell to the body;
@@ -80,6 +96,9 @@
 	});
 	$effect(() => {
 		if (audienceSave.error) focusProblem('audience');
+	});
+	$effect(() => {
+		if (measurementSave.error) focusProblem('measurement');
 	});
 </script>
 
@@ -180,6 +199,35 @@
 					hint="Forks start as Only me, and this never changes recipes you already have."
 					bind:value={defaultVisibility} />
 				{@render saveRow(audienceSave.pending, audienceSaved, audienceProblem, 'audience-problem')}
+			</form>
+		</section>
+
+		<section class="setting" aria-labelledby="measurement-heading">
+			<div class="setting-head">
+				<h2 id="measurement-heading">Measurement</h2>
+				<p class="setting-note">The units a recipe's quantities are shown in.</p>
+			</div>
+			<form
+				method="POST"
+				action="?/measurement"
+				class="form setting-body"
+				use:enhance={measurementSave.submit}>
+				<ChoiceGroup
+					name="measurement"
+					legend="Show quantities in"
+					options={MEASUREMENT_CHOICES.map((value) => ({
+						value,
+						label: MEASUREMENT_LABEL[value],
+						note: MEASUREMENT_NOTE[value]
+					}))}
+					hint="Only the recipe page converts; recipes and their versions stay as written."
+					bind:value={measurement} />
+				{@render saveRow(
+					measurementSave.pending,
+					measurementSaved,
+					measurementProblem,
+					'measurement-problem'
+				)}
 			</form>
 		</section>
 	</div>

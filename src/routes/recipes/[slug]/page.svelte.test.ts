@@ -57,6 +57,38 @@ beforeEach(() => {
 	page.shallow = null;
 });
 
+describe('recipe page measurement', () => {
+	const withProfile = (measurement: 'metric' | 'us' | null, history = false) => {
+		const data = makeData();
+		return {
+			...data,
+			user: { id: 'cook' },
+			profile: { measurement },
+			currentVersion: history ? data.allVersions[1] : data.currentVersion
+		} as unknown as PageData;
+	};
+
+	test('a cook who chose metric reads the latest version converted', () => {
+		page.url = new URL('http://localhost/recipes/cookies');
+		render(Page, { props: { data: withProfile('metric') } });
+		expect(rows()[0]).toHaveTextContent('235 ml written as (1 cup, 125g) flour');
+		expect(screen.getByText(/^Converted to metric/)).toBeInTheDocument();
+	});
+
+	test('a past version is a record: as written whatever the preference', () => {
+		page.url = new URL('http://localhost/recipes/cookies?v=1');
+		render(Page, { props: { data: withProfile('metric', true) } });
+		expect(rows()[0]).toHaveTextContent('1 cup (125g) flour');
+		expect(screen.queryByText(/^Converted to/)).toBeNull();
+	});
+
+	test('signed out, the list is as written', () => {
+		load();
+		expect(rows()[0]).toHaveTextContent('1 cup (125g) flour');
+		expect(screen.queryByText(/^Converted to/)).toBeNull();
+	});
+});
+
 describe('recipe page scaling', () => {
 	test('at the stored serves the box reads them and the lines are as typed', () => {
 		load();
