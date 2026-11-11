@@ -23,13 +23,21 @@ import { deleteForever, moveToTrash } from './trash.js';
  *    recipes.author_id (the erased rows savers keep) and
  *    recipe_versions.created_by are set null.
  * 4. Their Journal photos and avatar are removed from Storage.
+ * 5. Last, their login: the auth.users row, through the app's own database
+ *    connection (the app holds no service key for the admin API); identities
+ *    and sessions, and refresh tokens through sessions, cascade. Their address
+ *    can then sign up again, as a new cook.
  *
  * Every step reads what is left, so a failure part way leaves an account the
  * next call finishes, and a second call does nothing. Each recipe's row is
- * locked first, as every other writer of it locks it. The Supabase auth user
- * is the caller's (the Settings action).
+ * locked first, as every other writer of it locks it. 'login_kept' when the
+ * database refused the login's delete: the caller marks it instead (the
+ * Settings action, signed out again by hooks.server.ts).
  */
-export async function deleteAccount(userId: string, supabase: SupabaseClient): Promise<void> {
+export async function deleteAccount(
+	userId: string,
+	supabase: SupabaseClient
+): Promise<'login_deleted' | 'login_kept'> {
 	const ownedWhere = (deleted: boolean) =>
 		and(
 			eq(recipes.authorId, userId),
@@ -95,10 +103,33 @@ export async function deleteAccount(userId: string, supabase: SupabaseClient): P
 	// folder locally (no policies); a sweep for files under a folder with no
 	// profile, with a service client, would clear them.
 	const paths = photos.flatMap((url) => (url ? (imagePathOf(url) ?? []) : []));
-	if (paths.length === 0) return;
-	try {
-		await removeRecipeImage(supabase, ...paths);
-	} catch (e) {
-		console.error('Could not remove a deleted account’s photos', paths.join(', '), e);
+	if (paths.length > 0) {
+		try {
+			await removeRecipeImage(supabase, ...paths);
+		} catch (e) {
+			console.error('Could not remove a deleted account’s photos', paths.join(', '), e);
+		}
 	}
+
+	try {
+		// Compared as text: a profile id is the auth user's uuid, but a text
+		// column, so an id that is no uuid matches nothing instead of failing.
+		await db.execute(sql`delete from auth.users where id::text = ${userId}`);
+		return 'login_deleted';
+	} catch (e) {
+		if (!loginDeleteRefused(e)) throw e;
+		console.error('Could not delete the login of deleted account', userId, e);
+		return 'login_kept';
+	}
+}
+
+/**
+ * The database role may not delete from auth.users (42501, permission
+ * denied), or the database has no auth schema (42P01: fork_e2e, whose auth
+ * lives in the stack's postgres database).
+ */
+function loginDeleteRefused(e: unknown): boolean {
+	const pgError = e instanceof Error && e.cause ? e.cause : e;
+	const code = (pgError as { code?: string } | null)?.code;
+	return code === '42501' || code === '42P01';
 }

@@ -97,18 +97,21 @@ export const actions: Actions = {
 		if (!profile || typed !== profile.username) {
 			return failure(400, 'invalid', TYPE_USERNAME, { section: 'delete' });
 		}
+		let login: Awaited<ReturnType<typeof deleteAccount>>;
 		try {
-			await deleteAccount(user.id, supabase);
+			login = await deleteAccount(user.id, supabase);
 		} catch (e) {
 			// Still signed in: every step reads what is left, so trying again finishes it.
 			console.error('Could not delete account', user.id, e);
 			return failure(500, 'delete_failed', DELETE_FAILED, { section: 'delete' });
 		}
-		// The auth user stays: deleting it needs the service key, which the app
-		// does not hold. Marked, so hooks.server.ts signs it out on any later
-		// sign-in and no page's ensureProfile makes it a new profile.
-		const { error } = await supabase.auth.updateUser({ data: { account_deleted: true } });
-		if (error) console.error('Could not mark the deleted account', user.id, error);
+		// The database refused to delete the login: marked instead, so
+		// hooks.server.ts signs it out on any later sign-in and no page's
+		// ensureProfile makes it a new profile.
+		if (login === 'login_kept') {
+			const { error } = await supabase.auth.updateUser({ data: { account_deleted: true } });
+			if (error) console.error('Could not mark the deleted account', user.id, error);
+		}
 		await supabase.auth.signOut({ scope: 'global' });
 		throw redirect(303, ACCOUNT_DELETED);
 	}

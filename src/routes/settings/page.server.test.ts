@@ -190,19 +190,28 @@ describe('deleteAccount action', () => {
 
 	beforeEach(() => {
 		findProfileMock.mockResolvedValue({ username: 'cook' });
-		deleteAccountMock.mockResolvedValue(undefined);
+		deleteAccountMock.mockResolvedValue('login_deleted');
 	});
 
-	test('the typed username, as sign-up normalises it, deletes the signed-in account, marks it, signs out everywhere and lands on the goodbye', async () => {
+	test('the typed username, as sign-up normalises it, deletes the signed-in account and its login, signs out everywhere and lands on the goodbye', async () => {
 		const a = auth();
 		const result = await del({ confirmUsername: ' Cook ', id: 'someone-else' }, ME, a);
 		expect(findProfileMock.mock.calls[0][0].where).toEqual(eq(profiles.id, 'me-1'));
 		expect(deleteAccountMock).toHaveBeenCalledWith('me-1', { auth: a });
-		expect(a.updateUser).toHaveBeenCalledWith({ data: { account_deleted: true } });
+		expect(a.updateUser).not.toHaveBeenCalled();
 		expect(a.signOut).toHaveBeenCalledWith({ scope: 'global' });
+		expect(result).toMatchObject({ status: 303, location: ACCOUNT_DELETED });
+	});
+
+	test('a login the database would not delete is marked, so hooks.server.ts signs it out on any later sign-in', async () => {
+		deleteAccountMock.mockResolvedValue('login_kept');
+		const a = auth();
+		const result = await del({ confirmUsername: 'cook' }, ME, a);
+		expect(a.updateUser).toHaveBeenCalledWith({ data: { account_deleted: true } });
 		expect(a.updateUser.mock.invocationCallOrder[0]).toBeGreaterThan(
 			deleteAccountMock.mock.invocationCallOrder[0]
 		);
+		expect(a.signOut).toHaveBeenCalledWith({ scope: 'global' });
 		expect(result).toMatchObject({ status: 303, location: ACCOUNT_DELETED });
 	});
 
