@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import { REQUIRED_MESSAGES } from '#lib/recipes/validation.js';
+import { contentDraft, REQUIRED_MESSAGES } from '#lib/recipes/validation.js';
 import { render } from 'svelte/server';
 import NewPage from './+page.svelte';
 
@@ -9,20 +9,9 @@ describe('new page, server rendered', () => {
 		const form = {
 			error: REQUIRED_MESSAGES.title,
 			draft: {
+				...contentDraft(null, { editRevision: '', visibility: 'private', tags: [] }),
 				title: 'Soup',
-				description: '',
-				servings: '',
-				makes: '',
-				prepTimeMinutes: '-5',
-				cookTimeMinutes: '',
-				ingredients: '',
-				steps: '',
-				commitMessage: '',
-				editRevision: '',
-				visibility: 'private',
-				tags: [],
-				hadPhoto: false,
-				removeImage: false
+				prepTimeMinutes: '-5'
 			}
 		};
 		const { body } = render(NewPage, { props: { data: { allTags: [] }, form } as never });

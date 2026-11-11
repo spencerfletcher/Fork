@@ -128,6 +128,12 @@ const LATEST = makeContent({
 	makes: '24 cookies',
 	prepTimeMinutes: 20,
 	cookTimeMinutes: 12,
+	// A fork carries the source, the rest and the notes forward as content.
+	restTimeMinutes: 120,
+	sourceName: 'Gran',
+	sourceUrl: 'https://gran.example/cookies',
+	notes: 'Chill well.',
+	storage: 'Tin',
 	imageUrl: 'https://img/version.png',
 	ingredients: [makeIngredient('salt'), ...inGroup('Dough', [makeIngredient('2 cups flour')])],
 	steps: inGroup('Bake', [makeStep('Mix.')])

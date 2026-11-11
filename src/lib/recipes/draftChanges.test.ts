@@ -1,22 +1,15 @@
 import { describe, test, expect } from 'vitest';
 import { draftChangedGroups } from './draftChanges.js';
-import { parseDraftContent, type RecipeDraft } from './validation.js';
+import { contentDraft, parseDraftContent, type RecipeDraft } from './validation.js';
 
 const base: RecipeDraft = {
+	...contentDraft(null, { editRevision: '3', visibility: 'public', tags: ['Dessert'] }),
 	title: 'Cookies',
-	description: '',
 	servings: '4',
-	makes: '',
 	prepTimeMinutes: '10',
 	cookTimeMinutes: '20',
 	ingredients: '1 cup flour\n2 eggs',
-	steps: 'Mix.\n\nBake.',
-	commitMessage: '',
-	editRevision: '3',
-	visibility: 'public',
-	tags: ['Dessert'],
-	hadPhoto: false,
-	removeImage: false
+	steps: 'Mix.\n\nBake.'
 };
 
 describe('draftChangedGroups', () => {
@@ -28,6 +21,15 @@ describe('draftChangedGroups', () => {
 	test('a typed yield is a yield change, and a heading an ingredients change', () => {
 		const draft = { ...base, makes: '12 buns', ingredients: '# Dough\n1 cup flour\n2 eggs' };
 		expect(draftChangedGroups(from, draft, false)).toEqual(['yield', 'ingredients']);
+	});
+
+	test('a source, a rest time and a storage note are their own groups, in order', () => {
+		const draft = { ...base, sourceName: 'Gran', restTimeMinutes: '1 h', storage: 'Cold' };
+		expect(draftChangedGroups(from, draft, false)).toEqual(['source', 'times', 'notes']);
+	});
+
+	test('a time retyped in other words is no change', () => {
+		expect(draftChangedGroups(from, { ...base, prepTimeMinutes: '10 minutes' }, false)).toEqual([]);
 	});
 
 	test('whitespace and a commit message are not changes', () => {

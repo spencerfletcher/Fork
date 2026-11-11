@@ -1,5 +1,11 @@
 import { describe, test, expect } from 'vitest';
-import { changedGroups, generatedCommitMessage, recipeCopies, type ContentGroup } from './content';
+import {
+	changedGroups,
+	generatedCommitMessage,
+	recipeCopies,
+	versionContent,
+	type ContentGroup
+} from './content';
 import { getTableColumns } from 'drizzle-orm';
 import { recipes, recipeVersions } from '#lib/server/db/schema.js';
 import { inGroup, makeContent, makeIngredient, makeStep } from './fixtures';
@@ -44,6 +50,16 @@ describe('changedGroups', () => {
 		);
 	});
 
+	test('rest is a time, the source name and link are one group, every note is "notes"', () => {
+		expect(changedGroups(base, makeContent({ restTimeMinutes: 60 }))).toEqual(['times']);
+		expect(changedGroups(base, makeContent({ sourceName: 'Gran' }))).toEqual(['source']);
+		expect(changedGroups(base, makeContent({ sourceUrl: 'https://a.example/' }))).toEqual([
+			'source'
+		]);
+		for (const field of ['notes', 'makeAhead', 'equipment', 'storage', 'reheating'] as const)
+			expect(changedGroups(base, makeContent({ [field]: 'x' }))).toEqual(['notes']);
+	});
+
 	test('groups come back in the fixed order whatever changed', () => {
 		const to = makeContent({ steps: [makeStep('Stir.')], servings: 8, title: 'Biscuits' });
 		expect(changedGroups(base, to)).toEqual(['title', 'servings', 'steps']);
@@ -79,6 +95,38 @@ describe('generatedCommitMessage', () => {
 	});
 });
 
+describe('versionContent', () => {
+	test('carries every content column of a version and nothing else', () => {
+		const NOT_CONTENT = [
+			'id',
+			'recipeId',
+			'versionNumber',
+			'commitMessage',
+			'createdAt',
+			'createdBy'
+		];
+		const expected = Object.keys(getTableColumns(recipeVersions)).filter(
+			(c) => !NOT_CONTENT.includes(c)
+		);
+		const version = { ...makeContent(), id: 1, versionNumber: 2, commitMessage: 'm' };
+		expect(Object.keys(versionContent(version)).sort()).toEqual(expected.sort());
+	});
+
+	test('the new fields carry their values', () => {
+		const content = makeContent({
+			restTimeMinutes: 480,
+			sourceName: 'Jerusalem',
+			sourceUrl: 'https://a.example/',
+			notes: 'Line one\nLine two',
+			makeAhead: 'Keeps 3 days',
+			equipment: 'A tin',
+			storage: 'Airtight',
+			reheating: 'Low oven'
+		});
+		expect(versionContent(content)).toEqual(content);
+	});
+});
+
 describe('recipeCopies', () => {
 	// What a version holds that is not content, and the content that lives on
 	// versions only. Every other version column must be copied to the recipe
@@ -92,7 +140,15 @@ describe('recipeCopies', () => {
 		'createdBy',
 		'ingredients',
 		'steps',
-		'makes'
+		'makes',
+		'restTimeMinutes',
+		'sourceName',
+		'sourceUrl',
+		'notes',
+		'makeAhead',
+		'equipment',
+		'storage',
+		'reheating'
 	];
 
 	const content = makeContent({

@@ -2,7 +2,7 @@ import { describe, test, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/svelte';
 import RecipeCard from './RecipeCard.svelte';
 import source from './RecipeCard.svelte?raw';
-import { formatTime } from '#lib/helpers.js';
+import { formatDuration } from '#lib/recipes/times.js';
 import { dayLabel } from '#lib/journal.js';
 import { cssRule } from '#lib/testing/css.js';
 import { MARK_END, MARK_START } from '#lib/highlight.js';
@@ -47,22 +47,18 @@ describe('RecipeCard', () => {
 		expect(link).toHaveAttribute('href', '/recipes/banana-bread-xyz');
 	});
 
-	test('shows combined total time when both prep and cook time are set', () => {
+	test('shows prep and cook as two spans, never an invented total', () => {
 		render(RecipeCard, {
 			props: { recipe: makeRecipe({ prepTimeMinutes: 20, cookTimeMinutes: 30 }) }
 		});
-		expect(screen.getByText('50 min')).toBeInTheDocument();
+		expect(screen.getByText('20 min prep')).toBeInTheDocument();
+		expect(screen.getByText('30 min cook')).toBeInTheDocument();
+		expect(screen.queryByText('50 min')).toBeNull();
 	});
 
 	test('reads its times the way the recipe page does, in hours from an hour', () => {
-		const [prep, cook] = [30, 60];
-		const { unmount } = render(RecipeCard, {
-			props: { recipe: makeRecipe({ prepTimeMinutes: prep, cookTimeMinutes: cook }) }
-		});
-		expect(screen.getByText(formatTime(prep + cook))).toBeInTheDocument();
-		unmount();
-		render(RecipeCard, { props: { recipe: makeRecipe({ cookTimeMinutes: cook + prep }) } });
-		expect(screen.getByText(`${formatTime(cook + prep)} cook`)).toBeInTheDocument();
+		render(RecipeCard, { props: { recipe: makeRecipe({ cookTimeMinutes: 90 }) } });
+		expect(screen.getByText(`${formatDuration(90)} cook`)).toBeInTheDocument();
 	});
 
 	test('shows prep-only label when only prepTimeMinutes is set', () => {

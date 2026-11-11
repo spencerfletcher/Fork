@@ -1,8 +1,6 @@
 <script lang="ts">
 	import type { PageData, ActionData } from './$types';
-	import type { RecipeDraft } from '#lib/recipes/validation.js';
-	import { ingredientsToText } from '#lib/recipes/ingredients.js';
-	import { stepsToText } from '#lib/recipes/steps.js';
+	import { contentDraft } from '#lib/recipes/validation.js';
 	import RecipeForm from '#lib/components/recipes/RecipeForm.svelte';
 	import { pendingEnhance } from '#lib/pendingEnhance.svelte.js';
 	import DeleteRecipe from './DeleteRecipe.svelte';
@@ -15,22 +13,11 @@
 	// What was loaded, as the form's strings. Only the initial value is wanted:
 	// a successful save redirects, a failed one keeps the page and its baseline.
 	// svelte-ignore state_referenced_locally
-	const baseline: RecipeDraft = {
-		title: latestVersion.title,
-		description: latestVersion.description ?? '',
-		servings: latestVersion.servings?.toString() ?? '',
-		makes: latestVersion.makes ?? '',
-		prepTimeMinutes: latestVersion.prepTimeMinutes?.toString() ?? '',
-		cookTimeMinutes: latestVersion.cookTimeMinutes?.toString() ?? '',
-		ingredients: ingredientsToText(latestVersion.ingredients),
-		steps: stepsToText(latestVersion.steps),
-		commitMessage: '',
+	const baseline = contentDraft(latestVersion, {
 		editRevision: String(recipe.editRevision),
 		visibility: recipe.visibility,
-		tags: recipe.recipesToTags.map((r) => r.tag.name),
-		hadPhoto: false,
-		removeImage: false
-	};
+		tags: recipe.recipesToTags.map((r) => r.tag.name)
+	});
 
 	const current = $derived(latestVersion.versionNumber);
 

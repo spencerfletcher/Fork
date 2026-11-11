@@ -7,6 +7,7 @@
 	import { forkIcon, versionsIcon } from '#lib/components/Icons.svelte';
 	import type { Recipe } from '#lib/server/db/schema.js';
 	import type { RecipeContent, TagChip } from '#lib/recipes/types.js';
+	import { sourceLabel } from '#lib/recipes/validation.js';
 
 	// Only what the header renders: the viewed version for the dish and the
 	// recipe row for where it lives. The version bar below the hero carries
@@ -19,6 +20,9 @@
 		| 'makes'
 		| 'prepTimeMinutes'
 		| 'cookTimeMinutes'
+		| 'restTimeMinutes'
+		| 'sourceName'
+		| 'sourceUrl'
 		| 'imageUrl'
 	>;
 
@@ -93,6 +97,22 @@
 			<span>forked from a private recipe</span>
 		{/if}
 	</p>
+
+	<!-- Where the recipe came from outside Fork, apart from who wrote it here
+	     and what it was forked from. The link is the author's, never fetched,
+	     and passes no referrer or ranking on. -->
+	{#if currentVersion.sourceName || currentVersion.sourceUrl}
+		<p class="source font-sans [overflow-wrap:anywhere]">
+			Source:
+			{#if currentVersion.sourceUrl}
+				<a class="hit-link" href={currentVersion.sourceUrl} rel="noopener noreferrer nofollow">
+					{sourceLabel(currentVersion.sourceName, currentVersion.sourceUrl)}
+				</a>
+			{:else}
+				{currentVersion.sourceName}
+			{/if}
+		</p>
+	{/if}
 
 	{#if currentVersion.description}
 		<p class="description">{currentVersion.description}</p>
@@ -170,6 +190,18 @@
 		font-size: 1rem;
 		font-weight: 600;
 		line-height: 1.5;
+	}
+
+	/* At the byline's size in Ink 2, the link clay and 600, as the stats row's. */
+	.source {
+		margin-top: 8px;
+		font-size: 1rem;
+		line-height: 1.5;
+		color: var(--color-text-2);
+	}
+
+	.source a {
+		font-weight: 600;
 	}
 
 	/* The counts at the byline's size, so the header keeps one metadata size;

@@ -1,10 +1,9 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest';
-import { REQUIRED_MESSAGES } from '#lib/recipes/validation.js';
+import { contentDraft, REQUIRED_MESSAGES } from '#lib/recipes/validation.js';
 import { render, screen, fireEvent, within } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import type { SubmitFunction } from '$app/forms';
 import NewPage from './+page.svelte';
-import type { Visibility } from '#lib/recipes/validation.js';
 import { draftKey } from '#lib/drafts.js';
 
 const captured = vi.hoisted(() => ({ submits: [] as SubmitFunction[] }));
@@ -26,22 +25,7 @@ beforeEach(() => {
 
 const data = { allTags: [] } as never;
 
-const EMPTY_DRAFT = {
-	title: '',
-	description: '',
-	servings: '',
-	makes: '',
-	prepTimeMinutes: '',
-	cookTimeMinutes: '',
-	ingredients: '',
-	steps: '',
-	commitMessage: '',
-	editRevision: '',
-	visibility: 'private' as Visibility,
-	tags: [] as string[],
-	hadPhoto: false,
-	removeImage: false
-};
+const EMPTY_DRAFT = contentDraft(null, { editRevision: '', visibility: 'private', tags: [] });
 
 function failed(draft: Partial<typeof EMPTY_DRAFT>, error: string = REQUIRED_MESSAGES.title) {
 	return { error, code: 'invalid' as const, draft: { ...EMPTY_DRAFT, ...draft } };
@@ -204,7 +188,7 @@ describe('New recipe page validation errors', () => {
 		});
 		await tick();
 		expect(screen.getByLabelText(/title/i)).toHaveValue('Soup');
-		expect(screen.getByLabelText(/^prep/i)).toHaveValue(-5);
+		expect(screen.getByLabelText(/^prep/i)).toHaveValue('-5');
 		expect(screen.getByRole('radio', { name: 'Public' })).toBeChecked();
 		expect(document.querySelector('input[name="tags"]')).toHaveValue('Dessert');
 	});

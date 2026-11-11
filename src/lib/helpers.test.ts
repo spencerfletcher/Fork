@@ -2,7 +2,6 @@ import { describe, test, expect } from 'vitest';
 import {
 	compactCount,
 	formatDate,
-	formatTime,
 	MILLION,
 	oneOf,
 	plural,
@@ -11,20 +10,6 @@ import {
 	THOUSAND,
 	wholeNumber
 } from './helpers';
-
-describe('formatTime', () => {
-	test('under an hour reads in minutes', () => {
-		expect(formatTime(45)).toBe('45 min');
-	});
-
-	test('whole hours drop the minutes', () => {
-		expect(formatTime(120)).toBe('2h');
-	});
-
-	test('hours and minutes read "1h 30m"', () => {
-		expect(formatTime(90)).toBe('1h 30m');
-	});
-});
 
 describe('formatDate', () => {
 	const date = new Date(2026, 1, 28);

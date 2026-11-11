@@ -60,7 +60,9 @@ describe('Discover', () => {
 		expect(link).toHaveAttribute('href', '/recipes/r-9');
 		const lead = link.closest<HTMLElement>('.lead')!;
 		expect(within(lead).getByText('@cook9')).toBeInTheDocument();
-		expect(within(lead).getByText('1h 10m')).toBeInTheDocument();
+		expect(within(lead).getByText('45 min prep')).toBeInTheDocument();
+		expect(within(lead).getByText('25 min cook')).toBeInTheDocument();
+		expect(within(lead).queryByText('1 h 10 min')).toBeNull();
 		expect(within(lead).getByText('Serves 12')).toBeInTheDocument();
 		expect(within(lead).getByText('v3')).toBeInTheDocument();
 		expect(within(lead).queryByText(/Open recipe/)).toBeNull();

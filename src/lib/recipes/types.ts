@@ -34,8 +34,24 @@ export type RecipeContent = {
 	/** What one batch produces when that isn't portions ("12 buns"). Free
 	 *  text, never read as servings; the scale factor comes from servings alone. */
 	makes: string | null;
+	/** Times in whole minutes, typed as words (times.ts). Each is its own
+	 *  span: no total is stored or shown, since they can overlap. */
 	prepTimeMinutes: number | null;
 	cookTimeMinutes: number | null;
+	/** Rising, chilling, marinating: waiting the cook does not attend. */
+	restTimeMinutes: number | null;
+	/** Where the recipe came from outside Fork: a book, a person, a website.
+	 *  Not Fork authorship and not the parent a fork came from. */
+	sourceName: string | null;
+	/** An http(s) address, never fetched; shown as a link out. */
+	sourceUrl: string | null;
+	/** The author's notes for the whole recipe, line breaks kept. */
+	notes: string | null;
+	/** Short labelled notes beside it ("Dough keeps 3 days chilled"). */
+	makeAhead: string | null;
+	equipment: string | null;
+	storage: string | null;
+	reheating: string | null;
 	imageUrl: string | null;
 	ingredients: Ingredient[];
 	steps: Step[];

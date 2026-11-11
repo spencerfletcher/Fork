@@ -269,7 +269,23 @@ export type SeedRecipe = {
 	versions: SeedVersion[];
 };
 
+// What a version says when it has no source, rest or notes.
+const NO_EXTRAS = {
+	restTimeMinutes: null,
+	sourceName: null,
+	sourceUrl: null,
+	notes: null,
+	makeAhead: null,
+	equipment: null,
+	storage: null,
+	reheating: null
+};
+
+// A source with no web address (a card in a drawer) and, from v3, a rest and
+// notes; the tikka has a linked source, a marinade rest and, at v3, notes.
 const COOKIE_META = {
+	...NO_EXTRAS,
+	sourceName: "Grandma Ruth's recipe card",
 	title: 'Classic Chocolate Chip Cookies',
 	description:
 		'The definitive chocolate chip cookie — crisp edges, chewy centers, and pockets of melted chocolate in every bite.',
@@ -281,6 +297,10 @@ const COOKIE_META = {
 };
 
 const TIKKA_META = {
+	...NO_EXTRAS,
+	sourceName: 'Wikipedia',
+	sourceUrl: 'https://en.wikipedia.org/wiki/Chicken_tikka_masala',
+	restTimeMinutes: 60,
 	title: 'Chicken Tikka Masala',
 	description:
 		'Rich, aromatic, and deeply satisfying — a restaurant-quality tikka masala built from a yogurt-marinated chicken and a slow-simmered tomato cream sauce.',
@@ -318,6 +338,11 @@ export const SEED: SeedRecipe[] = [
 				title: 'Thick and Chewy Chocolate Chip Cookies',
 				servings: 36,
 				cookTimeMinutes: 13,
+				restTimeMinutes: 120,
+				notes:
+					'Bake one test cookie first. If it spreads thin, chill the rest of the dough longer.\nUnsalted butter is assumed; with salted, halve the salt.',
+				makeAhead: 'Dough keeps 3 days chilled, or 3 months frozen in balls',
+				storage: 'Airtight tin, up to 5 days',
 				ingredientsText: COOKIE_INGREDIENTS_V3,
 				stepsText: COOKIE_STEPS_V3,
 				commitMessage:
@@ -333,6 +358,9 @@ export const SEED: SeedRecipe[] = [
 		forkOf: { slug: 'classic-chocolate-chip-cookies' },
 		versions: [
 			{
+				// A fork carries its parent's source forward as content.
+				...NO_EXTRAS,
+				sourceName: COOKIE_META.sourceName,
 				title: 'Brown Butter Chocolate Chip Cookies',
 				description:
 					'A fork of the classic — brown butter adds a deep, nutty complexity that takes these cookies to another level.',
@@ -371,6 +399,9 @@ export const SEED: SeedRecipe[] = [
 				...TIKKA_META,
 				ingredientsText: TIKKA_INGREDIENTS_V2,
 				stepsText: TIKKA_STEPS_V3,
+				notes: 'Better the next day, when the spices have settled.',
+				equipment: 'A heavy pan with a lid',
+				reheating: 'Gently on the stove with a splash of water',
 				commitMessage:
 					'Worked the smoked paprika into the marinade, finished the sauce with cold butter',
 				createdAt: '2026-03-10'
@@ -385,6 +416,7 @@ export const SEED: SeedRecipe[] = [
 		visibility: 'public',
 		versions: [
 			{
+				...NO_EXTRAS,
 				title: 'Weeknight Red Lentil Dal',
 				description:
 					'Soft, spoonable dal in half an hour, finished with a sizzle of cumin, garlic and chilli in butter.',
@@ -409,6 +441,7 @@ export const SEED: SeedRecipe[] = [
 		visibility: 'friends',
 		versions: [
 			{
+				...NO_EXTRAS,
 				title: 'Shakshuka',
 				description: 'Eggs poached in a smoky, spiced tomato and pepper sauce.',
 				servings: 3,
@@ -430,6 +463,7 @@ export const SEED: SeedRecipe[] = [
 		visibility: 'private',
 		versions: [
 			{
+				...NO_EXTRAS,
 				title: 'Miso Butter Noodles',
 				description: null,
 				servings: 2,

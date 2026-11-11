@@ -21,6 +21,19 @@ describe('Details', () => {
 		expect(container.querySelector('h2, h3, h4, dl')).toBeNull();
 	});
 
+	test('rest is its own pair after cook, and nothing adds the times up', () => {
+		const { container } = render(Details, {
+			props: {
+				content: makeContent({ prepTimeMinutes: 15, cookTimeMinutes: 45, restTimeMinutes: 480 })
+			}
+		});
+		const pairs = [...container.querySelectorAll('.pair')].map((el) =>
+			el.textContent!.replace(/\s+/g, ' ').trim()
+		);
+		expect(pairs.slice(0, 3)).toEqual(['15 min prep', '45 min cook', '8 h rest']);
+		expect(container.textContent).not.toMatch(/total/i);
+	});
+
 	test('a pair never splits: each value and label share one no-wrap span', () => {
 		const { container } = render(Details, {
 			props: { content: makeContent({ servings: 6, prepTimeMinutes: 15, cookTimeMinutes: 45 }) }

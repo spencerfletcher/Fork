@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { PageData, ActionData } from './$types';
-	import type { RecipeDraft } from '#lib/recipes/validation.js';
+	import { contentDraft } from '#lib/recipes/validation.js';
 	import RecipeForm from '#lib/components/recipes/RecipeForm.svelte';
 	import { draftKey } from '#lib/drafts.js';
 
@@ -8,22 +8,11 @@
 
 	// The audience starts at the cook's default from Settings; forks keep their own rule.
 	// svelte-ignore state_referenced_locally
-	const EMPTY: RecipeDraft = {
-		title: '',
-		description: '',
-		servings: '',
-		makes: '',
-		prepTimeMinutes: '',
-		cookTimeMinutes: '',
-		ingredients: '',
-		steps: '',
-		commitMessage: '',
+	const EMPTY = contentDraft(null, {
 		editRevision: '',
 		visibility: data.profile?.defaultVisibility ?? 'private',
-		tags: [],
-		hadPhoto: false,
-		removeImage: false
-	};
+		tags: []
+	});
 </script>
 
 <div class="page">

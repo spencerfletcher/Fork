@@ -5,7 +5,15 @@ import type { SubmitFunction } from '$app/forms';
 import EditPage from './+page.svelte';
 import { inGroup, makeContent, makeIngredient, makeStep } from '#lib/recipes/fixtures.js';
 import type { RecipeContent } from '#lib/recipes/types.js';
-import { numberMessages, type RecipeDraft, REQUIRED_MESSAGES } from '#lib/recipes/validation.js';
+import {
+	contentDraft,
+	numberMessages,
+	SOURCE_URL_MESSAGES,
+	timeMessages,
+	type RecipeDraft,
+	REQUIRED_MESSAGES
+} from '#lib/recipes/validation.js';
+import { MAX_DURATION_MINUTES } from '#lib/recipes/times.js';
 import { UNREACHABLE_MESSAGE } from '#lib/pendingEnhance.svelte.js';
 import { draftKey, saveDraft } from '#lib/drafts.js';
 
@@ -73,22 +81,12 @@ function makeData(
 
 /** The draft the server would echo back for makeData, with overrides. */
 function failed(draft: Partial<RecipeDraft>, error: string = REQUIRED_MESSAGES.title) {
-	const base: RecipeDraft = {
-		title: 'Cookies',
-		description: '',
-		servings: '4',
-		makes: '',
-		prepTimeMinutes: '10',
-		cookTimeMinutes: '20',
-		ingredients: '1 cup flour\n2 eggs',
-		steps: 'Mix.\n\nBake.\ntip: gently',
-		commitMessage: '',
+	const { latestVersion } = makeData() as unknown as { latestVersion: RecipeContent };
+	const base: RecipeDraft = contentDraft(latestVersion, {
 		editRevision: '3',
 		visibility: 'private',
-		tags: ['Dessert', 'Baking'],
-		hadPhoto: false,
-		removeImage: false
-	};
+		tags: ['Dessert', 'Baking']
+	});
 	return { error, code: 'invalid' as const, draft: { ...base, ...draft } };
 }
 
@@ -385,7 +383,7 @@ describe('Edit page form', () => {
 		});
 		await tick();
 		expect(title()).toHaveValue('Biscuits');
-		expect(screen.getByLabelText(/^prep/i)).toHaveValue(-5);
+		expect(screen.getByLabelText(/^prep/i)).toHaveValue('-5');
 		const tags = [...document.querySelectorAll('input[name="tags"]')].map(
 			(i) => (i as HTMLInputElement).value
 		);
@@ -428,45 +426,95 @@ describe('Edit page form', () => {
 		expect(title()).not.toHaveAttribute('aria-invalid');
 	});
 
+	test("servings 2.5 says the server's whole message on blur", async () => {
+		render(EditPage, { props: { data: makeData(), form: null } });
+		const field = document.getElementById('servings') as HTMLInputElement;
+		await fireEvent.input(field, { target: { value: '2.5' } });
+		await fireEvent.focusOut(field);
+		expect(field).toHaveAccessibleDescription(numberMessages('servings').whole);
+	});
+
+	test('the times load as words and are typed as words', async () => {
+		render(EditPage, {
+			props: { data: makeData({ content: { restTimeMinutes: 90 } }), form: null }
+		});
+		expect(screen.getByLabelText(/^prep/i)).toHaveValue('10 min');
+		expect(screen.getByLabelText(/^rest/i)).toHaveValue('1 h 30 min');
+		expect(screen.getByLabelText(/^cook/i)).toHaveAttribute('type', 'text');
+	});
+
 	test.each([
-		['prepTimeMinutes', '-5', 'belowMin'],
-		['cookTimeMinutes', '1.5', 'whole'],
-		['cookTimeMinutes', '-1.5', 'whole'],
-		['servings', '2.5', 'whole']
+		['prepTimeMinutes', 'soon', 'unreadable'],
+		['cookTimeMinutes', '-5', 'unreadable'],
+		['restTimeMinutes', `${MAX_DURATION_MINUTES + 1}`, 'tooLong']
 	] as const)("%s %j says the server's %s message on blur", async (name, value, kind) => {
 		render(EditPage, { props: { data: makeData(), form: null } });
 		const field = document.getElementById(name) as HTMLInputElement;
 		await fireEvent.input(field, { target: { value } });
 		await fireEvent.focusOut(field);
-		expect(field).toHaveAccessibleDescription(numberMessages(name)[kind]);
+		expect(field).toHaveAttribute('aria-invalid', 'true');
+		// The message first, then the format hint the row shares.
+		expect(field).toHaveAccessibleDescription(
+			expect.stringMatching(new RegExp(`^${RegExp.escape(timeMessages(name)[kind])} Like`))
+		);
+		// The browser blocks the save on it too.
+		expect(field.validity.valid).toBe(false);
+		await fireEvent.input(field, { target: { value: '1 h' } });
+		expect(field).not.toHaveAttribute('aria-invalid');
+		expect(field.validity.valid).toBe(true);
 	});
 
-	test('number errors sit under the whole row, in field order, each still describing its own box', async () => {
+	test('time errors sit under the whole row, in field order, each still describing its own box', async () => {
 		render(EditPage, { props: { data: makeData(), form: null } });
-		for (const [name, value] of [
-			['cookTimeMinutes', '1.5'],
-			['servings', '0']
-		]) {
+		for (const name of ['restTimeMinutes', 'prepTimeMinutes']) {
 			const field = document.getElementById(name) as HTMLInputElement;
-			await fireEvent.input(field, { target: { value } });
+			await fireEvent.input(field, { target: { value: 'soon' } });
 			await fireEvent.focusOut(field);
 		}
-		const row = document.getElementById('servings')!.closest('.field-row')!;
+		const row = document.getElementById('prepTimeMinutes')!.closest('.field-row')!;
 		const errors = [...row.children].filter((el) => el.matches('.field-error'));
-		expect(errors.map((el) => el.id)).toEqual(['servings-error', 'cookTimeMinutes-error']);
-		// After all three boxes, not inside a column.
-		const lastField = row.querySelector('#cookTimeMinutes')!.closest('.field')!;
+		expect(errors.map((el) => el.id)).toEqual(['prepTimeMinutes-error', 'restTimeMinutes-error']);
+		const lastField = row.querySelector('#restTimeMinutes')!.closest('.field')!;
 		expect(
 			lastField.compareDocumentPosition(errors[0]) & Node.DOCUMENT_POSITION_FOLLOWING
 		).toBeTruthy();
-		expect(document.getElementById('servings')).toHaveAccessibleDescription(
-			numberMessages('servings').belowMin
-		);
-		expect(document.getElementById('cookTimeMinutes')).toHaveAttribute('aria-invalid', 'true');
-		expect(document.getElementById('cookTimeMinutes')).toHaveAccessibleDescription(
-			numberMessages('cookTimeMinutes').whole
-		);
-		expect(document.getElementById('prepTimeMinutes')).not.toHaveAttribute('aria-invalid');
+		expect(document.getElementById('cookTimeMinutes')).not.toHaveAttribute('aria-invalid');
+		// The format hint describes every box in the row.
+		expect(document.getElementById('cookTimeMinutes')).toHaveAccessibleDescription(/^Like 45 min/);
+	});
+
+	test('a source link that is not a web address is refused under its box', async () => {
+		render(EditPage, { props: { data: makeData(), form: null } });
+		const link = screen.getByLabelText('Source link');
+		await fireEvent.input(link, { target: { value: 'javascript:alert(1)' } });
+		await fireEvent.focusOut(link);
+		expect(link).toHaveAttribute('aria-invalid', 'true');
+		expect(link).toHaveAccessibleDescription(SOURCE_URL_MESSAGES.invalid);
+		await fireEvent.input(link, { target: { value: 'example.com/pie' } });
+		expect(link).not.toHaveAttribute('aria-invalid');
+	});
+
+	test('the source loads into its two boxes', () => {
+		render(EditPage, {
+			props: {
+				data: makeData({ content: { sourceName: 'Gran', sourceUrl: 'https://a.example/' } }),
+				form: null
+			}
+		});
+		expect(screen.getByLabelText('Source')).toHaveValue('Gran');
+		expect(screen.getByLabelText('Source link')).toHaveValue('https://a.example/');
+	});
+
+	test('More details is closed while its notes are empty, and open once one is filled', () => {
+		const empty = render(EditPage, { props: { data: makeData(), form: null } });
+		const details = () => document.querySelector('details.more-details') as HTMLDetailsElement;
+		expect(details().open).toBe(false);
+		expect(screen.getByText('More details').tagName).toBe('SUMMARY');
+		expect(screen.getByLabelText('Notes')).toBeVisible();
+		empty.unmount();
+		render(EditPage, { props: { data: makeData({ content: { storage: 'Cold' } }), form: null } });
+		expect(details().open).toBe(true);
+		expect(screen.getByLabelText('Storage')).toHaveValue('Cold');
 	});
 
 	test('a server error for the ingredients lands under the ingredients box and focuses it', async () => {

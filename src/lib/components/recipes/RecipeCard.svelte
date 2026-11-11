@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Recipe } from '#lib/server/db/schema.js';
-	import { formatTime, plural } from '#lib/helpers.js';
+	import { plural } from '#lib/helpers.js';
+	import { timeSpans } from '#lib/recipes/times.js';
 	import type { Visibility } from '#lib/recipes/validation.js';
 	import { AUDIENCE_LABEL } from '#lib/audience.js';
 	import { audienceIcon } from '#lib/components/Icons.svelte';
@@ -86,10 +87,8 @@
 			parts.push({ text: `@${recipe.author.username}`, username: recipe.author.username });
 		}
 
-		const { prepTimeMinutes: prep, cookTimeMinutes: cook } = recipe;
-		if (prep && cook) parts.push({ text: formatTime(prep + cook) });
-		else if (prep) parts.push({ text: `${formatTime(prep)} prep` });
-		else if (cook) parts.push({ text: `${formatTime(cook)} cook` });
+		// Each time its own part: they can overlap, so no total.
+		for (const { value, word } of timeSpans(recipe)) parts.push({ text: `${value} ${word}` });
 
 		// From v2 only: v1 is every unedited recipe and says nothing.
 		if ((recipe.versionCount ?? 0) > 1) {

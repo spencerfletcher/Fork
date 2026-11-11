@@ -10,8 +10,10 @@ import {
 	PHOTO_MAX_BYTES,
 	PHOTO_TYPE_MESSAGE,
 	PHOTO_SIZE_MESSAGE,
-	REQUIRED_MESSAGES
+	REQUIRED_MESSAGES,
+	SOURCE_URL_MESSAGES
 } from '#lib/recipes/validation.js';
+import { OVERNIGHT_MINUTES } from '#lib/recipes/times.js';
 
 const invoke = (event: unknown) => invokeAction(actions.default as never, event);
 
@@ -169,6 +171,45 @@ describe('new recipe action', () => {
 		expect(version.ingredients[0].group).toBe('Dough');
 		expect(version.steps[0].group).toBe('Bake');
 		expect(recipe).not.toHaveProperty('makes');
+	});
+
+	test('stores the source, the times as minutes and the notes on version 1 only', async () => {
+		await invoke(
+			makeEvent({
+				fields: {
+					...FULL,
+					prepTimeMinutes: '1 h 30',
+					restTimeMinutes: 'overnight',
+					sourceName: 'Gran',
+					sourceUrl: 'gran.example/soup',
+					notes: 'Season late.',
+					reheating: 'Gently'
+				}
+			})
+		);
+		const recipe = tx.recipeInsert.values.mock.calls[0][0];
+		const version = tx.versionInsert.values.mock.calls[0][0];
+		expect(version).toMatchObject({
+			prepTimeMinutes: 90,
+			restTimeMinutes: OVERNIGHT_MINUTES,
+			sourceName: 'Gran',
+			sourceUrl: 'https://gran.example/soup',
+			notes: 'Season late.',
+			reheating: 'Gently',
+			storage: null
+		});
+		expect(recipe.prepTimeMinutes).toBe(90);
+		for (const key of ['restTimeMinutes', 'sourceName', 'sourceUrl', 'notes', 'reheating'])
+			expect(recipe).not.toHaveProperty(key);
+	});
+
+	test('a source link that is not http or https is refused, and nothing is written', async () => {
+		const result = await invoke(
+			makeEvent({ fields: { ...FULL, sourceUrl: 'javascript:alert(1)' } })
+		);
+		expect(result.status).toBe(400);
+		expect(result.data).toMatchObject({ code: 'invalid', error: SOURCE_URL_MESSAGES.invalid });
+		expect(transactionMock).not.toHaveBeenCalled();
 	});
 
 	test('an empty group is refused with the draft, and nothing is written', async () => {

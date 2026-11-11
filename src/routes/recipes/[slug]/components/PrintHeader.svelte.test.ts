@@ -31,6 +31,21 @@ function renderHeader(overrides: Partial<Parameters<typeof render<typeof PrintHe
 }
 
 describe('PrintHeader', () => {
+	test('prints the rest with the times and the source in full, its address too', () => {
+		const { lines } = renderHeader({
+			content: makeContent({
+				title: 'Cookies',
+				prepTimeMinutes: 15,
+				cookTimeMinutes: 13,
+				restTimeMinutes: 120,
+				sourceName: 'Jerusalem',
+				sourceUrl: 'https://example.com/a'
+			})
+		});
+		expect(lines).toContain('15 min prep · 13 min cook · 2 h rest');
+		expect(lines).toContain('Source: Jerusalem · https://example.com/a');
+	});
+
 	test('title, byline, version and serves, times, description and the address', () => {
 		const { lines } = renderHeader();
 		expect(lines).toEqual([

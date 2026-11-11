@@ -5,16 +5,20 @@
 import type { RecipeContent } from './types.js';
 
 // The groups a change is reported under, in the order the generated commit
-// message lists them. Both minute fields fold into one "times" group.
+// message lists them. The minute fields fold into one "times" group, the
+// source's name and link into "source", and the notes with their labelled
+// short notes into "notes".
 export const CONTENT_GROUPS = [
 	'title',
 	'description',
+	'source',
 	'photo',
 	'servings',
 	'yield',
 	'times',
 	'ingredients',
-	'steps'
+	'steps',
+	'notes'
 ] as const;
 export type ContentGroup = (typeof CONTENT_GROUPS)[number];
 
@@ -28,14 +32,16 @@ export const normaliseDescription = (description: string | null): string | null 
 const VIEW: Record<ContentGroup, (c: RecipeContent) => unknown> = {
 	title: (c) => normaliseTitle(c.title),
 	description: (c) => normaliseDescription(c.description),
+	source: (c) => [c.sourceName, c.sourceUrl],
 	photo: (c) => c.imageUrl,
 	servings: (c) => c.servings,
 	yield: (c) => c.makes,
-	times: (c) => [c.prepTimeMinutes, c.cookTimeMinutes],
+	times: (c) => [c.prepTimeMinutes, c.cookTimeMinutes, c.restTimeMinutes],
 	// The group is part of a row, so moving a line or renaming its heading counts.
 	ingredients: (c) => c.ingredients.map((i) => [i.group ?? '', i.text]),
 	steps: (c) =>
-		c.steps.map((s) => [s.group ?? '', s.text, s.annotation?.type ?? '', s.annotation?.text ?? ''])
+		c.steps.map((s) => [s.group ?? '', s.text, s.annotation?.type ?? '', s.annotation?.text ?? '']),
+	notes: (c) => [c.notes, c.makeAhead, c.equipment, c.storage, c.reheating]
 };
 
 /** The groups whose value differs, in CONTENT_GROUPS order. */
@@ -59,13 +65,28 @@ export function restoredCommitMessage(versionNumber: number): string {
 
 /** A version's content alone, without its number, message or authorship. */
 export function versionContent(version: RecipeContent): RecipeContent {
-	const { makes, ingredients, steps } = version;
-	return { ...recipeCopies(version), makes, ingredients, steps };
+	const { makes, ingredients, steps, restTimeMinutes, sourceName, sourceUrl } = version;
+	const { notes, makeAhead, equipment, storage, reheating } = version;
+	return {
+		...recipeCopies(version),
+		makes,
+		restTimeMinutes,
+		sourceName,
+		sourceUrl,
+		notes,
+		makeAhead,
+		equipment,
+		storage,
+		reheating,
+		ingredients,
+		steps
+	};
 }
 
 /**
  * The content the recipe row keeps a copy of (schema.ts), for create, edit and
- * fork alike. Ingredients, steps and makes live on versions only.
+ * fork alike. Everything else (ingredients, steps, makes, rest, source,
+ * notes) lives on versions only.
  */
 export function recipeCopies({
 	title,

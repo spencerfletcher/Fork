@@ -102,6 +102,23 @@ describe('VersionDiff', () => {
 		expect(text(rowWith(container, 'cook'))).toBe('Changed: ~ 11 min to 13 min cook');
 	});
 
+	test('rest reads as a time, the source and notes by their labels', () => {
+		const { container } = renderDiff(
+			[],
+			[],
+			[
+				{ field: 'sourceName', from: null, to: 'Gran' },
+				{ field: 'restTimeMinutes', from: null, to: 90 },
+				{ field: 'notes', from: 'One', to: 'One\nTwo' },
+				{ field: 'reheating', from: 'Warm', to: null }
+			]
+		);
+		expect(text(rowWith(container, 'Source'))).toBe('Changed: ~ Source: — to Gran');
+		expect(text(rowWith(container, 'rest'))).toBe('Changed: ~ — to 1 h 30 min rest');
+		expect(rowWith(container, 'Notes').querySelector('ins')!.textContent).toBe('One\nTwo');
+		expect(text(rowWith(container, 'Reheating'))).toBe('Changed: ~ Reheating: Warm to —');
+	});
+
 	test('a time removed in Details reads — with no unit attached', () => {
 		const { container } = renderDiff([], [], [{ field: 'prepTimeMinutes', from: 10, to: null }]);
 		expect(text(rowWith(container, 'prep'))).toBe('Changed: ~ 10 min to — prep');

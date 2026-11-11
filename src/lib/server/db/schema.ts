@@ -351,6 +351,16 @@ export const recipeVersions = pgTable(
 		makes: text(),
 		prepTimeMinutes: integer('prep_time_minutes'),
 		cookTimeMinutes: integer('cook_time_minutes'),
+		// Source, rest, make-ahead and the notes live on versions only, like
+		// makes: no list reads them, and search reads versions (recipeSearch.ts).
+		restTimeMinutes: integer('rest_time_minutes'),
+		makeAhead: text('make_ahead'),
+		sourceName: text('source_name'),
+		sourceUrl: text('source_url'),
+		notes: text(),
+		equipment: text(),
+		storage: text(),
+		reheating: text(),
 		imageUrl: text('image_url'),
 		ingredients: jsonb().notNull().$type<Ingredient[]>(),
 		steps: jsonb().notNull().$type<Step[]>(),

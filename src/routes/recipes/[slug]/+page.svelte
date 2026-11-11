@@ -8,6 +8,7 @@
 	import VersionBar from './components/VersionBar.svelte';
 	import RecipeIngredients from './components/RecipeIngredients.svelte';
 	import RecipeMethod from './components/RecipeMethod.svelte';
+	import RecipeNotes from './components/RecipeNotes.svelte';
 	import RecipeActions from './components/RecipeActions.svelte';
 	import ServesControl from './components/ServesControl.svelte';
 	import PrintHeader from './components/PrintHeader.svelte';
@@ -314,6 +315,9 @@
 					<RecipeMethod
 						steps={currentVersion.steps}
 						storageKey={ticksKey(recipe.slug, currentVersion.versionNumber, 'steps')} />
+					<!-- Under the method, on its tab below 1024px, and while cooking before
+					     Finish: storage and reheating are read once the cooking is done. -->
+					<RecipeNotes content={currentVersion} />
 					<!-- After the last step, where it leads on to the optional Journal
 					     entry; Exit in the header leaves earlier (Spencer, 11 November 2026). -->
 					{#if cooking}

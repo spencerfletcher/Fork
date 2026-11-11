@@ -15,8 +15,28 @@ export const LINE_TOO_LONG = `An ingredient line is too long (${MAX_LINE} charac
 export const MAX_GROUP_NAME = 60;
 export const groupNameTooLong = (items: 'ingredients' | 'steps') =>
 	`${items === 'ingredients' ? 'An ingredient' : 'A step'} group name is too long (${MAX_GROUP_NAME} characters max)`;
-export const MAX_MAKES = 80;
-export const MAKES_TOO_LONG = `Makes is too long (${MAX_MAKES} characters max)`;
+
+/** The free-text content fields: the label their message names and their cap.
+ *  The short ones are a phrase each; notes are paragraphs. */
+export const TEXT_LIMITS = {
+	makes: { label: 'Makes', max: 80 },
+	sourceName: { label: 'Source', max: 120 },
+	makeAhead: { label: 'Make ahead', max: 200 },
+	equipment: { label: 'Equipment', max: 300 },
+	storage: { label: 'Storage', max: 300 },
+	reheating: { label: 'Reheating', max: 300 },
+	notes: { label: 'Notes', max: 4000 }
+} as const;
+export type TextField = keyof typeof TEXT_LIMITS;
+export const textTooLong = (field: TextField) => {
+	const { label, max } = TEXT_LIMITS[field];
+	return `${label} ${field === 'notes' ? 'are' : 'is'} too long (${max.toLocaleString('en-US')} characters max)`;
+};
+export const MAX_MAKES = TEXT_LIMITS.makes.max;
+export const MAKES_TOO_LONG = textTooLong('makes');
+
+/** A source link's cap, as typed: room for any real address. */
+export const MAX_SOURCE_URL = 2000;
 
 /** The limit message for a field's raw text, or null when it is within bounds.
  *  Only ingredient lines reach the parser, so only they are capped per line. */

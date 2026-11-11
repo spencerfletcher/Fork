@@ -4,7 +4,12 @@ import {
 	parseDraftContent,
 	parseSettings,
 	draftOf,
+	contentDraft,
 	numberMessages,
+	timeMessages,
+	readSourceUrl,
+	SOURCE_URL_MESSAGES,
+	TIME_FIELDS,
 	fieldOfMessage,
 	REQUIRED_MESSAGES,
 	tagNameMessage,
@@ -19,8 +24,13 @@ import {
 	MAX_GROUP_NAME,
 	MAX_LINE,
 	MAX_MAKES,
-	groupNameTooLong
+	MAX_SOURCE_URL,
+	TEXT_LIMITS,
+	groupNameTooLong,
+	textTooLong
 } from './limits';
+import { MAX_DURATION_MINUTES, OVERNIGHT_MINUTES } from './times';
+import { makeContent, makeIngredient, makeStep } from './fixtures';
 
 const form = (fields: Record<string, string | string[]>) => formOf(fields);
 
@@ -201,10 +211,6 @@ describe('parseDraftContent(draftOf(form))', () => {
 			expect(parseContent(form({ ...FULL, servings: value }))).toEqual(rejected);
 		});
 
-		test.each(bad)('rejects prep time %j', (value) => {
-			expect(parseContent(form({ ...FULL, prepTimeMinutes: value }))).toEqual(rejected);
-		});
-
 		// A number input sends what was typed, and counts these as whole numbers.
 		test.each([
 			['2.0', 2],
@@ -220,11 +226,6 @@ describe('parseDraftContent(draftOf(form))', () => {
 			['servings', '0', 'belowMin'],
 			['servings', '-3', 'belowMin'],
 			['servings', '2.5', 'whole'],
-			['prepTimeMinutes', '-5', 'belowMin'],
-			['prepTimeMinutes', '1.5', 'whole'],
-			['prepTimeMinutes', '-1.5', 'whole'],
-			['cookTimeMinutes', '-5', 'belowMin'],
-			['cookTimeMinutes', '1.5', 'whole'],
 			['servings', '1e400', 'tooLarge']
 		] as const)('%s %j is refused with its %s message', (field, value, kind) => {
 			expect(parseContent(form({ ...FULL, [field]: value }))).toEqual({
@@ -237,14 +238,6 @@ describe('parseDraftContent(draftOf(form))', () => {
 			expect(parseContent(form({ ...FULL, servings: '0' }))).toEqual(rejected);
 		});
 
-		test('keeps zero prep and cook time', () => {
-			const value = unwrap(
-				parseContent(form({ ...FULL, prepTimeMinutes: '0', cookTimeMinutes: '0' }))
-			);
-			expect(value.prepTimeMinutes).toBe(0);
-			expect(value.cookTimeMinutes).toBe(0);
-		});
-
 		test('trims surrounding whitespace', () => {
 			expect(unwrap(parseContent(form({ ...FULL, servings: ' 4 ' }))).servings).toBe(4);
 		});
@@ -254,6 +247,112 @@ describe('parseDraftContent(draftOf(form))', () => {
 				2147483647
 			);
 			expect(parseContent(form({ ...FULL, servings: '2147483648' }))).toEqual(rejected);
+		});
+	});
+
+	describe('times', () => {
+		test.each(Object.keys(TIME_FIELDS) as Array<keyof typeof TIME_FIELDS>)(
+			'%s reads plain language as minutes',
+			(field) => {
+				expect(unwrap(parseContent(form({ ...FULL, [field]: '1 h 30' })))[field]).toBe(90);
+				expect(unwrap(parseContent(form({ ...FULL, [field]: 'overnight' })))[field]).toBe(
+					OVERNIGHT_MINUTES
+				);
+				expect(unwrap(parseContent(form({ ...FULL, [field]: '0' })))[field]).toBe(0);
+				expect(unwrap(parseContent(form({ ...FULL, [field]: ' ' })))[field]).toBeNull();
+			}
+		);
+
+		test('rest is missing from an old form and reads as none', () => {
+			expect(unwrap(parseContent(form(FULL))).restTimeMinutes).toBeNull();
+		});
+
+		test.each([
+			['prepTimeMinutes', 'soon', 'unreadable'],
+			['cookTimeMinutes', '-5', 'unreadable'],
+			['restTimeMinutes', `${MAX_DURATION_MINUTES + 1} min`, 'tooLong']
+		] as const)('%s %j is refused with its %s message', (field, value, kind) => {
+			expect(parseContent(form({ ...FULL, [field]: value }))).toEqual({
+				ok: false,
+				error: timeMessages(field)[kind]
+			});
+		});
+
+		test('each time names itself in its messages', () => {
+			expect(timeMessages('restTimeMinutes').unreadable).toBe(
+				'Write the rest time like 45 min, 1 h 30 or 2 days'
+			);
+			expect(timeMessages('prepTimeMinutes').tooLong).toBe('Prep time is too long (30 days max)');
+		});
+	});
+
+	describe('source', () => {
+		test('a name alone is kept, trimmed; blank is null', () => {
+			const value = unwrap(parseContent(form({ ...FULL, sourceName: '  Gran  ' })));
+			expect(value).toMatchObject({ sourceName: 'Gran', sourceUrl: null });
+			expect(unwrap(parseContent(form(FULL))).sourceName).toBeNull();
+		});
+
+		test.each([
+			['https://www.bbc.co.uk/food/x', 'https://www.bbc.co.uk/food/x'],
+			['http://example.com', 'http://example.com/'],
+			['  example.com/pie ', 'https://example.com/pie'],
+			['HTTPS://Example.com/A', 'https://example.com/A']
+		])('the link %j is kept as %j', (typed, url) => {
+			expect(readSourceUrl(typed)).toEqual({ ok: true, url });
+			expect(unwrap(parseContent(form({ ...FULL, sourceUrl: typed }))).sourceUrl).toBe(url);
+		});
+
+		test.each([
+			'javascript:alert(1)',
+			'ftp://example.com/x',
+			'data:text/html,hi',
+			'mailto:a@b.example',
+			'https://localhost',
+			'not a link',
+			'https://'
+		])('the link %j is refused', (typed) => {
+			expect(readSourceUrl(typed)).toEqual({ ok: false, error: SOURCE_URL_MESSAGES.invalid });
+			expect(parseContent(form({ ...FULL, sourceUrl: typed }))).toEqual({
+				ok: false,
+				error: SOURCE_URL_MESSAGES.invalid
+			});
+		});
+
+		test('a link past the cap is refused', () => {
+			const long = `https://example.com/${'x'.repeat(MAX_SOURCE_URL)}`;
+			expect(readSourceUrl(long)).toEqual({ ok: false, error: SOURCE_URL_MESSAGES.tooLong });
+		});
+
+		test('blank is no link', () => {
+			expect(readSourceUrl('  ')).toEqual({ ok: true, url: null });
+		});
+	});
+
+	describe('notes and the short text fields', () => {
+		test('notes keep their line breaks, as one kind', () => {
+			const value = unwrap(parseContent(form({ ...FULL, notes: ' One\r\n\r\nTwo\n ' })));
+			expect(value.notes).toBe('One\n\nTwo');
+		});
+
+		test.each(Object.keys(TEXT_LIMITS) as Array<keyof typeof TEXT_LIMITS>)(
+			'%s is trimmed, blank is null, and past its cap is refused',
+			(field) => {
+				expect(unwrap(parseContent(form({ ...FULL, [field]: ' x ' })))[field]).toBe('x');
+				expect(unwrap(parseContent(form({ ...FULL, [field]: ' ' })))[field]).toBeNull();
+				const long = 'x'.repeat(TEXT_LIMITS[field].max + 1);
+				expect(parseContent(form({ ...FULL, [field]: long }))).toEqual({
+					ok: false,
+					error: textTooLong(field)
+				});
+			}
+		);
+
+		test('the messages read as sentences', () => {
+			expect(textTooLong('notes')).toBe(
+				`Notes are too long (${TEXT_LIMITS.notes.max.toLocaleString('en-US')} characters max)`
+			);
+			expect(textTooLong('makes')).toBe(MAKES_TOO_LONG);
 		});
 	});
 
@@ -282,12 +381,18 @@ describe('the editor reads the same messages', () => {
 		['servings', 'x'],
 		['servings', '0'],
 		['servings', '2147483648'],
-		['prepTimeMinutes', '1.5'],
-		['prepTimeMinutes', '-5'],
+		['prepTimeMinutes', 'soon'],
 		['prepTimeMinutes', '2147483648'],
-		['cookTimeMinutes', '1.5'],
-		['cookTimeMinutes', '-5'],
+		['cookTimeMinutes', 'soon'],
 		['cookTimeMinutes', '2147483648'],
+		['restTimeMinutes', 'soon'],
+		['restTimeMinutes', '2147483648'],
+		['sourceUrl', 'ftp://example.com'],
+		['sourceUrl', `https://example.com/${'x'.repeat(MAX_SOURCE_URL)}`],
+		...Object.entries(TEXT_LIMITS).map(([field, { max }]): [string, string] => [
+			field,
+			'x'.repeat(max + 1)
+		]),
 		['ingredients', ''],
 		['ingredients', 'x'.repeat(MAX_LINE + 1)],
 		['ingredients', 'x\n'.repeat(MAX_FIELD)],
@@ -296,8 +401,7 @@ describe('the editor reads the same messages', () => {
 		['ingredients', '# Dough'],
 		['ingredients', `# ${'x'.repeat(MAX_GROUP_NAME + 1)}\nflour`],
 		['steps', '# Bake'],
-		['steps', `# ${'x'.repeat(MAX_GROUP_NAME + 1)}\nMix.`],
-		['makes', 'x'.repeat(MAX_MAKES + 1)]
+		['steps', `# ${'x'.repeat(MAX_GROUP_NAME + 1)}\nMix.`]
 	];
 
 	test.each(REFUSALS)('%s %#: the message names its field', (field, value) => {
@@ -349,12 +453,53 @@ describe('parseSettings', () => {
 	});
 });
 
+describe('contentDraft', () => {
+	const settings = { editRevision: '3', visibility: 'friends' as const, tags: ['Soup'] };
+
+	test('a version reads back through the parser as the same content', () => {
+		const content = makeContent({
+			description: 'Warm.',
+			makes: '2 L',
+			prepTimeMinutes: 90,
+			cookTimeMinutes: 2880,
+			restTimeMinutes: OVERNIGHT_MINUTES,
+			sourceName: 'Gran',
+			sourceUrl: 'https://example.com/soup',
+			notes: 'One\n\nTwo',
+			makeAhead: 'Keeps',
+			equipment: 'Pot',
+			storage: 'Cold',
+			reheating: 'Gently',
+			ingredients: [makeIngredient('1 cup flour'), makeIngredient('2 eggs')],
+			steps: [makeStep('Mix.'), makeStep('Bake.', { type: 'tip', text: 'watch it' })]
+		});
+		const draft = contentDraft(content, settings);
+		expect(draft).toMatchObject({ prepTimeMinutes: '1 h 30 min', cookTimeMinutes: '2 days' });
+		// The photo is a file, not a form string, so only it is not read back.
+		expect({ ...unwrap(parseDraftContent(draft)), imageUrl: content.imageUrl }).toEqual(content);
+	});
+
+	test('no content is a blank form with the settings given', () => {
+		const draft = contentDraft(null, settings);
+		expect(draft).toMatchObject({ title: '', notes: '', restTimeMinutes: '', ...settings });
+		expect(draft.hadPhoto).toBe(false);
+	});
+});
+
 describe('draftOf', () => {
 	test('returns every text field exactly as submitted, valid or not', () => {
 		const fd = form({
 			...FULL,
 			prepTimeMinutes: '-5',
+			restTimeMinutes: 'overnight',
 			makes: ' 12 buns',
+			sourceName: 'Gran',
+			sourceUrl: 'example.com',
+			notes: 'A\nB',
+			makeAhead: 'Keeps',
+			equipment: 'Tin',
+			storage: 'Cold',
+			reheating: 'Warm',
 			commitMessage: 'Tweak',
 			editRevision: '3',
 			visibility: 'public',
@@ -367,7 +512,15 @@ describe('draftOf', () => {
 			servings: '4',
 			prepTimeMinutes: '-5',
 			cookTimeMinutes: '20',
+			restTimeMinutes: 'overnight',
 			makes: ' 12 buns',
+			sourceName: 'Gran',
+			sourceUrl: 'example.com',
+			notes: 'A\nB',
+			makeAhead: 'Keeps',
+			equipment: 'Tin',
+			storage: 'Cold',
+			reheating: 'Warm',
 			ingredients: '1 cup flour\n2 eggs',
 			steps: 'Mix.\n\nBake.',
 			commitMessage: 'Tweak',

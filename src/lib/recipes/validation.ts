@@ -1,37 +1,73 @@
 import { z } from 'zod';
 import type { Ingredient, Step, RecipeContent } from './types.js';
-import { parseIngredientGroups } from './ingredients.js';
-import { parseStepGroups } from './steps.js';
+import { ingredientsToText, parseIngredientGroups } from './ingredients.js';
+import { parseStepGroups, stepsToText } from './steps.js';
 import {
 	LINE_TOO_LONG,
-	MAKES_TOO_LONG,
 	MAX_GROUP_NAME,
-	MAX_MAKES,
+	MAX_SOURCE_URL,
+	TEXT_LIMITS,
 	fieldTooLong,
 	groupNameTooLong,
-	limitError
+	limitError,
+	textTooLong,
+	type TextField
 } from './limits.js';
+import { formatDuration, readDuration, TIME_FIELDS, type TimeField } from './times.js';
+
+export { TIME_FIELDS, type TimeField };
 import { normaliseTagNames } from './tags.js';
 import { oneOf, text, slugify } from '#lib/helpers.js';
 
 // Largest value a Postgres `integer` column holds.
 const INT4_MAX = 2_147_483_647;
 
-/** The number fields: their name in messages, their label on the form, their floor, and what a whole one counts. */
+/** The number fields: their name in messages, their label on the form and their floor. */
 export const NUMBER_FIELDS = {
-	servings: { label: 'Servings', formLabel: 'Serves', min: 1, unit: '' },
-	prepTimeMinutes: { label: 'Prep time', formLabel: 'Prep (min)', min: 0, unit: ' of minutes' },
-	cookTimeMinutes: { label: 'Cook time', formLabel: 'Cook (min)', min: 0, unit: ' of minutes' }
+	servings: { label: 'Servings', formLabel: 'Serves', min: 1 }
 } as const;
+
+/** What a time field says when it cannot be read or runs past the cap; the editor shows the same live. */
+export function timeMessages(field: TimeField) {
+	const { label, word } = TIME_FIELDS[field];
+	return {
+		unreadable: `Write the ${word} time like 45 min, 1 h 30 or 2 days`,
+		tooLong: `${label} is too long (30 days max)`
+	};
+}
+
+/** What the source link says when it is refused; the editor shows the same live. */
+export const SOURCE_URL_MESSAGES = {
+	invalid: 'Write the source link as a web address, like https://example.com',
+	tooLong: `Source link is too long (${MAX_SOURCE_URL.toLocaleString('en-US')} characters max)`
+} as const;
+
+/**
+ * A typed source link as it is stored: blank is none; an address without a
+ * scheme is taken as https; only http and https to a named host are kept, so
+ * the page never links to a script or a file. Never fetched.
+ */
+export function readSourceUrl(
+	typed: string
+): { ok: true; url: string | null } | { ok: false; error: string } {
+	const text = typed.trim();
+	if (text === '') return { ok: true, url: null };
+	if (text.length > MAX_SOURCE_URL) return { ok: false, error: SOURCE_URL_MESSAGES.tooLong };
+	const withScheme = /^[a-z][a-z\d+.-]*:/i.test(text) ? text : `https://${text}`;
+	const url = URL.canParse(withScheme) ? new URL(withScheme) : null;
+	if (!url || !['http:', 'https:'].includes(url.protocol) || !url.hostname.includes('.'))
+		return { ok: false, error: SOURCE_URL_MESSAGES.invalid };
+	return { ok: true, url: url.href };
+}
 
 export type NumberField = keyof typeof NUMBER_FIELDS;
 
 /** What a number field says when it is not whole, below its floor or too large; the editor shows the same live. */
 export function numberMessages(field: NumberField) {
-	const { label, min, unit } = NUMBER_FIELDS[field];
+	const { label, min } = NUMBER_FIELDS[field];
 	return {
-		whole: `${label} must be a whole number${unit}`,
-		belowMin: min === 0 ? `${label} can't be negative` : `${label} must be at least ${min}`,
+		whole: `${label} must be a whole number`,
+		belowMin: `${label} must be at least ${min}`,
 		tooLarge: `${label} is too large`
 	};
 }
@@ -127,20 +163,48 @@ const bounded = (label: typeof INGREDIENTS | typeof STEPS) =>
 		if (message) ctx.addIssue({ code: 'custom', message });
 	});
 
+/** A typed time as minutes, refused with the message the editor shows live. */
+const duration = (field: TimeField) =>
+	z.string().transform((s, ctx) => {
+		const read = readDuration(s);
+		if (read.ok) return read.minutes;
+		ctx.addIssue({ code: 'custom', message: timeMessages(field)[read.reason] });
+		return z.NEVER;
+	});
+
+/** Free text, trimmed, one kind of line break, capped; blank is absent. */
+const optionalText = (field: TextField) =>
+	z
+		.string()
+		.transform((s) => s.replace(/\r\n?/g, '\n').trim())
+		.pipe(z.string().max(TEXT_LIMITS[field].max, textTooLong(field)))
+		.transform((s) => s || null);
+
+const sourceUrl = z.string().transform((s, ctx) => {
+	const read = readSourceUrl(s);
+	if (read.ok) return read.url;
+	ctx.addIssue({ code: 'custom', message: read.error });
+	return z.NEVER;
+});
+
+/** How a source reads: its name, else the link's host without "www.". */
+export function sourceLabel(name: string | null, url: string | null): string {
+	return name ?? (url ? new URL(url).hostname.replace(/^www\./, '') : '');
+}
+
 const recipeContentSchema = z.object({
 	title: z.string().trim().min(1, REQUIRED_MESSAGES.title),
 	description: z
 		.string()
 		.trim()
 		.transform((s) => s || null),
+	sourceName: optionalText('sourceName'),
+	sourceUrl,
 	servings: optionalInt('servings'),
-	makes: z
-		.string()
-		.trim()
-		.max(MAX_MAKES, MAKES_TOO_LONG)
-		.transform((s) => s || null),
-	prepTimeMinutes: optionalInt('prepTimeMinutes'),
-	cookTimeMinutes: optionalInt('cookTimeMinutes'),
+	makes: optionalText('makes'),
+	prepTimeMinutes: duration('prepTimeMinutes'),
+	cookTimeMinutes: duration('cookTimeMinutes'),
+	restTimeMinutes: duration('restTimeMinutes'),
 	ingredients: bounded(INGREDIENTS)
 		.transform(parseIngredientGroups)
 		.pipe(grouped<Ingredient>('ingredients'))
@@ -148,7 +212,12 @@ const recipeContentSchema = z.object({
 	steps: bounded(STEPS)
 		.transform(parseStepGroups)
 		.pipe(grouped<Step>('steps'))
-		.pipe(z.array(z.custom<Step>()).min(1, REQUIRED_MESSAGES.steps))
+		.pipe(z.array(z.custom<Step>()).min(1, REQUIRED_MESSAGES.steps)),
+	notes: optionalText('notes'),
+	makeAhead: optionalText('makeAhead'),
+	equipment: optionalText('equipment'),
+	storage: optionalText('storage'),
+	reheating: optionalText('reheating')
 });
 
 /** What a parser hands back: the typed value, or the first message to show the user. */
@@ -174,8 +243,16 @@ export type RecipeDraft = {
 	makes: string;
 	prepTimeMinutes: string;
 	cookTimeMinutes: string;
+	restTimeMinutes: string;
+	sourceName: string;
+	sourceUrl: string;
 	ingredients: string;
 	steps: string;
+	notes: string;
+	makeAhead: string;
+	equipment: string;
+	storage: string;
+	reheating: string;
 	commitMessage: string;
 	editRevision: string;
 	visibility: Visibility;
@@ -207,20 +284,28 @@ const settingsSchema = z.object({
 });
 
 /**
- * The versioned content (title, description, servings, times, ingredients,
- * steps) from the form's draft strings: an action passes `draftOf(formData)`,
- * the editor its live draft.
+ * The versioned content (title, description, source, servings, times,
+ * ingredients, steps, notes) from the form's draft strings: an action passes
+ * `draftOf(formData)`, the editor its live draft.
  */
 export function parseDraftContent(draft: RecipeDraft): Result<ContentFields> {
 	return parse(recipeContentSchema, {
 		title: draft.title,
 		description: draft.description,
+		sourceName: draft.sourceName,
+		sourceUrl: draft.sourceUrl,
 		servings: draft.servings,
 		makes: draft.makes,
 		prepTimeMinutes: draft.prepTimeMinutes,
 		cookTimeMinutes: draft.cookTimeMinutes,
+		restTimeMinutes: draft.restTimeMinutes,
 		ingredients: draft.ingredients,
-		steps: draft.steps
+		steps: draft.steps,
+		notes: draft.notes,
+		makeAhead: draft.makeAhead,
+		equipment: draft.equipment,
+		storage: draft.storage,
+		reheating: draft.reheating
 	});
 }
 
@@ -244,6 +329,41 @@ export function parseSettings(formData: FormData): Result<Settings> {
 }
 
 /**
+ * A version's content as the form's strings, times as words, with the
+ * recipe's settings; with no content (a new recipe) every field is blank.
+ */
+export function contentDraft(
+	content: ContentFields | null,
+	settings: Pick<RecipeDraft, 'editRevision' | 'visibility' | 'tags'>
+): RecipeDraft {
+	const words = (s: string | null | undefined) => s ?? '';
+	const time = (minutes: number | null | undefined) =>
+		minutes == null ? '' : formatDuration(minutes);
+	return {
+		title: words(content?.title),
+		description: words(content?.description),
+		sourceName: words(content?.sourceName),
+		sourceUrl: words(content?.sourceUrl),
+		servings: content?.servings?.toString() ?? '',
+		makes: words(content?.makes),
+		prepTimeMinutes: time(content?.prepTimeMinutes),
+		cookTimeMinutes: time(content?.cookTimeMinutes),
+		restTimeMinutes: time(content?.restTimeMinutes),
+		ingredients: content ? ingredientsToText(content.ingredients) : '',
+		steps: content ? stepsToText(content.steps) : '',
+		notes: words(content?.notes),
+		makeAhead: words(content?.makeAhead),
+		equipment: words(content?.equipment),
+		storage: words(content?.storage),
+		reheating: words(content?.reheating),
+		commitMessage: '',
+		...settings,
+		hadPhoto: false,
+		removeImage: false
+	};
+}
+
+/**
  * Every submitted field exactly as typed, so a failed save can hand the form
  * back what the user entered, invalid values included. Nothing here is
  * validated or trimmed; that is the parsers' job.
@@ -257,8 +377,16 @@ export function draftOf(formData: FormData): RecipeDraft {
 		makes: text(formData, 'makes'),
 		prepTimeMinutes: text(formData, 'prepTimeMinutes'),
 		cookTimeMinutes: text(formData, 'cookTimeMinutes'),
+		restTimeMinutes: text(formData, 'restTimeMinutes'),
+		sourceName: text(formData, 'sourceName'),
+		sourceUrl: text(formData, 'sourceUrl'),
 		ingredients: text(formData, 'ingredients'),
 		steps: text(formData, 'steps'),
+		notes: text(formData, 'notes'),
+		makeAhead: text(formData, 'makeAhead'),
+		equipment: text(formData, 'equipment'),
+		storage: text(formData, 'storage'),
+		reheating: text(formData, 'reheating'),
 		commitMessage: text(formData, 'commitMessage'),
 		editRevision: text(formData, 'editRevision'),
 		visibility: visibilityOf(formData),
@@ -274,10 +402,18 @@ export function draftOf(formData: FormData): RecipeDraft {
 const MESSAGES_OF: Record<keyof ContentFields, string[]> = {
 	title: [REQUIRED_MESSAGES.title],
 	description: [],
+	sourceName: [textTooLong('sourceName')],
+	sourceUrl: Object.values(SOURCE_URL_MESSAGES),
 	servings: Object.values(numberMessages('servings')),
-	makes: [MAKES_TOO_LONG],
-	prepTimeMinutes: Object.values(numberMessages('prepTimeMinutes')),
-	cookTimeMinutes: Object.values(numberMessages('cookTimeMinutes')),
+	makes: [textTooLong('makes')],
+	prepTimeMinutes: Object.values(timeMessages('prepTimeMinutes')),
+	cookTimeMinutes: Object.values(timeMessages('cookTimeMinutes')),
+	restTimeMinutes: Object.values(timeMessages('restTimeMinutes')),
+	notes: [textTooLong('notes')],
+	makeAhead: [textTooLong('makeAhead')],
+	equipment: [textTooLong('equipment')],
+	storage: [textTooLong('storage')],
+	reheating: [textTooLong('reheating')],
 	ingredients: [
 		REQUIRED_MESSAGES.ingredients,
 		fieldTooLong(INGREDIENTS),

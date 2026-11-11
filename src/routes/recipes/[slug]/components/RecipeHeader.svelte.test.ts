@@ -397,3 +397,40 @@ describe('RecipeHeader personal line', () => {
 		expect(signedOut.container.querySelector('.personal')).toBeNull();
 	});
 });
+
+// ─── Source ───────────────────────────────────────────────────────────────────
+
+describe('RecipeHeader source', () => {
+	const withSource = (sourceName: string | null, sourceUrl: string | null) =>
+		renderHeader({ currentVersion: { ...V1, sourceName, sourceUrl } });
+
+	test('a name with a link reads as the name, linking out without passing anything on', () => {
+		const { container } = withSource('Jerusalem', 'https://example.com/book');
+		const link = screen.getByRole('link', { name: 'Jerusalem' });
+		expect(link).toHaveAttribute('href', 'https://example.com/book');
+		expect(link).toHaveAttribute('rel', 'noopener noreferrer nofollow');
+		expect(container.querySelector('.source')!.textContent!.replace(/\s+/g, ' ').trim()).toBe(
+			'Source: Jerusalem'
+		);
+	});
+
+	test('a link with no name shows its host', () => {
+		withSource(null, 'https://www.bbc.co.uk/food/recipes/x');
+		expect(screen.getByRole('link', { name: 'bbc.co.uk' })).toHaveAttribute(
+			'href',
+			'https://www.bbc.co.uk/food/recipes/x'
+		);
+	});
+
+	test('a name with no link is plain text', () => {
+		const { container } = withSource('Gran', null);
+		expect(container.querySelector('.source')).toHaveTextContent('Source: Gran');
+		expect(container.querySelector('.source a')).toBeNull();
+	});
+
+	test('no source, no line; a source is never part of the byline', () => {
+		expect(withSource(null, null).container.querySelector('.source')).toBeNull();
+		const { container } = withSource('Gran', null);
+		expect(container.querySelector('.byline')).not.toHaveTextContent('Gran');
+	});
+});

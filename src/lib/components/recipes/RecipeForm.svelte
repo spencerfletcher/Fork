@@ -8,16 +8,21 @@
 		parseDraftContent,
 		numberMessages,
 		fieldOfMessage,
+		readSourceUrl,
+		timeMessages,
 		NUMBER_FIELDS,
 		REQUIRED_MESSAGES,
+		TIME_FIELDS,
 		VISIBILITIES,
 		type NumberField,
-		type RecipeDraft
+		type RecipeDraft,
+		type TimeField
 	} from '#lib/recipes/validation.js';
+	import { formatDuration, OVERNIGHT_MINUTES, readDuration } from '#lib/recipes/times.js';
 	import { normaliseTagNames, tagKey } from '#lib/recipes/tags.js';
 	import type { TagChip } from '#lib/recipes/types.js';
 	import { generatedCommitMessage } from '#lib/recipes/content.js';
-	import { MAX_MAKES } from '#lib/recipes/limits.js';
+	import { MAX_MAKES, MAX_SOURCE_URL, TEXT_LIMITS } from '#lib/recipes/limits.js';
 	import { draftChangedGroups } from '#lib/recipes/draftChanges.js';
 	import TagInput from '#lib/components/ui/TagInput.svelte';
 	import IngredientEditor from './IngredientEditor.svelte';
@@ -141,7 +146,35 @@
 	// A blank message saves the generated one, as the server trims; say so.
 	const savesGenerated = $derived(generated !== null && !draft.commitMessage.trim());
 
-	const numberFields = Object.keys(NUMBER_FIELDS) as NumberField[];
+	const timeFields = Object.keys(TIME_FIELDS) as TimeField[];
+	const TIME_PLACEHOLDER: Record<TimeField, string> = {
+		prepTimeMinutes: '15 min',
+		cookTimeMinutes: '1 h',
+		restTimeMinutes: 'Overnight'
+	};
+
+	// The labelled short notes in "More details", in the order the page shows them.
+	const MORE_FIELDS = [
+		{ name: 'makeAhead', placeholder: 'Dough keeps 3 days chilled' },
+		{ name: 'equipment', placeholder: 'A 23 cm springform tin' },
+		{ name: 'storage', placeholder: 'Airtight, up to 5 days' },
+		{ name: 'reheating', placeholder: 'Covered, 15 min at 160°C' }
+	] as const;
+
+	// What a typed field the browser cannot judge says, in the server's own
+	// wording; '' when it is fine. Set as the box's custom validity, so a save
+	// with one wrong is blocked like any other invalid field.
+	function typedMessage(name: string, value: string): string {
+		if (name in TIME_FIELDS) {
+			const read = readDuration(value);
+			return read.ok ? '' : timeMessages(name as TimeField)[read.reason];
+		}
+		if (name === 'sourceUrl') {
+			const read = readSourceUrl(value);
+			return read.ok ? '' : read.error;
+		}
+		return '';
+	}
 
 	// Inline errors, one per field name, in the server's own wording. A field is
 	// checked when it is left after an edit, when it blocks a submit, and on
@@ -165,8 +198,10 @@
 	function validate(target: EventTarget | null) {
 		const el = target as HTMLInputElement | HTMLTextAreaElement;
 		const name = el?.name;
-		if (!name || !(name in REQUIRED_MESSAGES || name in NUMBER_FIELDS)) return;
-		errors[name] = validityMessage(name, el.validity);
+		if (!name) return;
+		if (name in TIME_FIELDS || name === 'sourceUrl') errors[name] = typedMessage(name, el.value);
+		else if (name in REQUIRED_MESSAGES || name in NUMBER_FIELDS)
+			errors[name] = validityMessage(name, el.validity);
 	}
 
 	function validityMessage(name: string, v: ValidityState): string {
@@ -435,45 +470,98 @@
 					bind:chosen
 					hadPhoto={form?.draft?.hadPhoto === true} />
 
-				<!-- Number fields stay strings so the dirty check compares like with like;
-				     bind:value on a number input would hand back numbers and null. -->
+				<!-- Serves stays a string so the dirty check compares like with like;
+				     bind:value on a number input would hand back numbers and null. The
+				     yield sits beside the portions rather than in place of them: it never
+				     sets servings, and scaling stays by servings. -->
+				<div class="field-row serves-row">
+					<div class="field">
+						<label for="servings">{NUMBER_FIELDS.servings.formLabel}</label>
+						<input
+							id="servings"
+							name="servings"
+							type="number"
+							min={NUMBER_FIELDS.servings.min}
+							value={draft.servings}
+							oninput={(e) => (draft.servings = e.currentTarget.value)}
+							{...aria('servings')} />
+					</div>
+					<div class="field">
+						<label for="makes">Makes</label>
+						<input
+							id="makes"
+							name="makes"
+							type="text"
+							maxlength={MAX_MAKES}
+							placeholder="12 buns, 1 L stock"
+							bind:value={draft.makes}
+							aria-invalid={errors.makes ? 'true' : undefined}
+							aria-describedby={errors.makes ? 'makes-error makes-hint' : 'makes-hint'} />
+						{@render fieldError('makes')}
+						<p class="form-hint" id="makes-hint">
+							What one batch produces, when that isn't portions.
+						</p>
+					</div>
+					{@render fieldError('servings')}
+				</div>
+
+				<!-- Times are typed as words and stored as minutes; each is its own
+				     span on the page, never added up. No picker: a hint and the same
+				     message the server gives are enough. -->
 				<div class="field-row">
-					{#each numberFields as name (name)}
+					{#each timeFields as name (name)}
 						<div class="field">
-							<label for={name}>{NUMBER_FIELDS[name].formLabel}</label>
+							<label for={name}>{TIME_FIELDS[name].formLabel}</label>
 							<input
 								id={name}
 								{name}
-								type="number"
-								min={NUMBER_FIELDS[name].min}
-								value={draft[name]}
-								oninput={(e) => (draft[name] = e.currentTarget.value)}
-								{...aria(name)} />
+								type="text"
+								autocomplete="off"
+								placeholder={TIME_PLACEHOLDER[name]}
+								bind:value={draft[name]}
+								{@attach (el) => el.setCustomValidity(typedMessage(name, draft[name]))}
+								aria-invalid={errors[name] ? 'true' : undefined}
+								aria-describedby={errors[name] ? `${name}-error times-hint` : 'times-hint'} />
 						</div>
 					{/each}
-					<!-- Under the whole row, in field order: a 150px column would wrap them. -->
-					{#each numberFields as name (name)}
+					<!-- Under the whole row, in field order: a narrow column would wrap them. -->
+					{#each timeFields as name (name)}
 						{@render fieldError(name)}
 					{/each}
+					<p class="form-hint" id="times-hint">
+						Like 45 min, 1 h 30 or 2 days; overnight is {formatDuration(OVERNIGHT_MINUTES)}. Rest is
+						rising, chilling or marinating.
+					</p>
 				</div>
 
-				<!-- Yield, beside the portions rather than in place of them: it never sets
-				     servings, and scaling stays by servings. -->
+				<!-- Where it came from outside Fork, apart from who wrote it here. -->
 				<div class="field">
-					<label for="makes">Makes</label>
+					<label for="sourceName">Source</label>
 					<input
-						id="makes"
-						name="makes"
+						id="sourceName"
+						name="sourceName"
 						type="text"
-						maxlength={MAX_MAKES}
-						placeholder="12 buns, 1 L stock"
-						bind:value={draft.makes}
-						aria-invalid={errors.makes ? 'true' : undefined}
-						aria-describedby={errors.makes ? 'makes-error makes-hint' : 'makes-hint'} />
-					{@render fieldError('makes')}
-					<p class="form-hint" id="makes-hint">
-						What one batch produces, when that isn't portions.
-					</p>
+						maxlength={TEXT_LIMITS.sourceName.max}
+						placeholder="A cookbook, a person, a website"
+						bind:value={draft.sourceName}
+						aria-invalid={errors.sourceName ? 'true' : undefined}
+						aria-describedby={errors.sourceName ? 'sourceName-error' : undefined} />
+					{@render fieldError('sourceName')}
+				</div>
+				<div class="field">
+					<label for="sourceUrl">Source link</label>
+					<input
+						id="sourceUrl"
+						name="sourceUrl"
+						type="text"
+						inputmode="url"
+						autocomplete="off"
+						maxlength={MAX_SOURCE_URL}
+						placeholder="https://"
+						bind:value={draft.sourceUrl}
+						{@attach (el) => el.setCustomValidity(typedMessage('sourceUrl', draft.sourceUrl))}
+						{...aria('sourceUrl')} />
+					{@render fieldError('sourceUrl')}
 				</div>
 
 				<fieldset class="field field-tags">
@@ -500,6 +588,48 @@
 					error={errors.ingredients}
 					disabled={save.pending} />
 				<StepEditor bind:value={draft.steps} error={errors.steps} disabled={save.pending} />
+
+				<div class="field">
+					<label for="notes">Notes</label>
+					<textarea
+						id="notes"
+						name="notes"
+						rows="4"
+						maxlength={TEXT_LIMITS.notes.max}
+						bind:value={draft.notes}
+						aria-invalid={errors.notes ? 'true' : undefined}
+						aria-describedby={errors.notes ? 'notes-error notes-hint' : 'notes-hint'}>
+					</textarea>
+					{@render fieldError('notes')}
+					<p class="form-hint" id="notes-hint">
+						For the whole recipe: what to watch for, swaps, serving ideas.
+					</p>
+				</div>
+
+				<!-- Optional short notes, out of the way until one is wanted: open
+				     whenever one is filled or refused, so nothing typed is hidden. -->
+				<details
+					class="more-details"
+					open={MORE_FIELDS.some(({ name }) => draft[name].trim() || errors[name])}>
+					<summary>More details</summary>
+					<div class="more-fields">
+						{#each MORE_FIELDS as { name, placeholder } (name)}
+							<div class="field">
+								<label for={name}>{TEXT_LIMITS[name].label}</label>
+								<input
+									id={name}
+									{name}
+									type="text"
+									maxlength={TEXT_LIMITS[name].max}
+									{placeholder}
+									bind:value={draft[name]}
+									aria-invalid={errors[name] ? 'true' : undefined}
+									aria-describedby={errors[name] ? `${name}-error` : undefined} />
+								{@render fieldError(name)}
+							</div>
+						{/each}
+					</div>
+				</details>
 			</div>
 		</div>
 
@@ -536,13 +666,40 @@
 </div>
 
 <style>
-	/* The row's errors run its full width, a field's 8px under the boxes. */
+	/* The row's errors and hint run its full width, 8px under the boxes. */
 	.field-row {
 		row-gap: var(--space-2);
 	}
 
-	.field-row > .field-error {
+	.field-row > .field-error,
+	.field-row > .form-hint {
 		grid-column: 1 / -1;
+	}
+
+	/* Serves is a number of a few digits; the yield is a phrase. */
+	.serves-row {
+		grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+	}
+
+	/* A label's voice, with a 44px row to press. */
+	.more-details summary {
+		display: list-item;
+		padding-block: 11px;
+		cursor: pointer;
+		font-size: 0.9375rem;
+		font-weight: 600;
+		line-height: 22px;
+	}
+
+	.more-fields {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-4);
+		padding-top: var(--space-2);
+	}
+
+	textarea[name='notes'] {
+		min-height: calc(4lh + 18px);
 	}
 
 	/* field-sizing: content ignores rows; this keeps an empty box typeable. */

@@ -1,13 +1,16 @@
 <script lang="ts">
 	import type { RecipeContent } from '#lib/recipes/types.js';
-	import { formatTime } from '#lib/helpers.js';
 	import { scaleMakes } from '#lib/recipes/scale.js';
+	import { timeSpans } from '#lib/recipes/times.js';
 
 	let {
 		content,
 		storedServings
 	}: {
-		content: Pick<RecipeContent, 'prepTimeMinutes' | 'cookTimeMinutes' | 'servings' | 'makes'>;
+		content: Pick<
+			RecipeContent,
+			'prepTimeMinutes' | 'cookTimeMinutes' | 'restTimeMinutes' | 'servings' | 'makes'
+		>;
 		/** The version's own servings; when `content.servings` differs, they are scaled and read clay. */
 		storedServings?: number | null;
 	} = $props();
@@ -21,13 +24,11 @@
 	const makes = $derived(content.makes ? scaleMakes(content.makes, factor) : null);
 
 	// The times value then label, the serves label then value, in two groups:
-	// "15 min prep · 13 min cook" and "Serves 36 · Makes 36 cookies".
+	// "15 min prep · 13 min cook · 2 h rest" and "Serves 36 · Makes 36 cookies".
+	// Each time its own pair and never a total: they can overlap.
 	const lines = $derived.by(() => {
 		const all: [string, string | null][][] = [
-			[
-				['prep', content.prepTimeMinutes ? formatTime(content.prepTimeMinutes) : null],
-				['cook', content.cookTimeMinutes ? formatTime(content.cookTimeMinutes) : null]
-			],
+			timeSpans(content).map(({ value, word }) => [word, value]),
 			[
 				['Serves', content.servings ? String(content.servings) : null],
 				['Makes', makes?.text ?? null]

@@ -364,6 +364,30 @@ describe('recipe page cooking mode', () => {
 		expect(container.querySelector('.main')).toContainElement(finish);
 	});
 
+	test("the author's notes sit under the method, reading and cooking, before Finish", () => {
+		const data = makeData();
+		const withNotes = {
+			...data,
+			currentVersion: { ...data.currentVersion, notes: 'Rest it.', storage: 'Cold' }
+		};
+		page.url = new URL('http://localhost/recipes/cookies');
+		const reading = render(Page, { props: { data: withNotes } });
+		const notes = () => reading.container.querySelector<HTMLElement>('#notes')!;
+		expect(reading.container.querySelector('.main')).toContainElement(notes());
+		expect(notes()).toHaveTextContent('Rest it.');
+		reading.unmount();
+
+		page.url = new URL('http://localhost/recipes/cookies?cook=1');
+		const { container } = render(Page, { props: { data: withNotes } });
+		const finish = screen.getByRole('button', { name: 'Finish cooking' });
+		const section = container.querySelector('#notes')!;
+		expect(
+			container.querySelector('#method')!.compareDocumentPosition(section) &
+				Node.DOCUMENT_POSITION_FOLLOWING
+		).toBeTruthy();
+		expect(section.compareDocumentPosition(finish) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+	});
+
 	test('signed out, Finish cooking leaves cooking for the reading view', async () => {
 		load('?cook=1');
 		await fireEvent.click(screen.getByRole('button', { name: 'Finish cooking' }));

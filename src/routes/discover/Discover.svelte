@@ -3,7 +3,8 @@
 	import RecipeCard from '#lib/components/recipes/RecipeCard.svelte';
 	import SearchFilters from '#lib/components/ui/SearchFilters.svelte';
 	import ResultStatus from '#lib/components/ui/ResultStatus.svelte';
-	import { formatTime, plural } from '#lib/helpers.js';
+	import { plural } from '#lib/helpers.js';
+	import { timeSpans } from '#lib/recipes/times.js';
 	import type { loadDiscover } from './discover.server.js';
 
 	// One page for /discover and the signed-out home.
@@ -14,14 +15,8 @@
 		!!data.searchQuery || data.selectedTags.length > 0 || !!data.friendsOnly
 	);
 
-	const leadTime = $derived.by(() => {
-		if (!lead) return '';
-		const { prepTimeMinutes: prep, cookTimeMinutes: cook } = lead;
-		if (prep && cook) return formatTime(prep + cook);
-		if (prep) return `${formatTime(prep)} prep`;
-		if (cook) return `${formatTime(cook)} cook`;
-		return '';
-	});
+	// Each time its own pair: they can overlap, so no total.
+	const leadTimes = $derived(lead ? timeSpans(lead) : []);
 </script>
 
 <div class="page">
@@ -60,7 +55,7 @@
 						<a class="lead-link" href="/recipes/{lead.slug}">{lead.title}</a>
 					</h2>
 					<p class="lead-measure dot-list">
-						{#if leadTime}<span>{leadTime}</span>{/if}
+						{#each leadTimes as { value, word } (word)}<span>{value} {word}</span>{/each}
 						{#if lead.servings}<span>Serves {lead.servings}</span>{/if}
 						{#if lead.versionCount > 1}<span class="vid">v{lead.versionCount}</span>{/if}
 					</p>

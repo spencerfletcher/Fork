@@ -8,8 +8,8 @@
 		type MetaField,
 		type StepDiffRow
 	} from '#lib/recipes/diff.js';
-	import { formatTime } from '#lib/helpers.js';
-	import { NUMBER_FIELDS, type NumberField } from '#lib/recipes/validation.js';
+	import { formatDuration } from '#lib/recipes/times.js';
+	import { TIME_FIELDS, type TimeField } from '#lib/recipes/validation.js';
 
 	let {
 		metaDiff,
@@ -31,8 +31,15 @@
 	const LABEL = {
 		title: 'Title',
 		description: 'Description',
+		sourceName: 'Source',
+		sourceUrl: 'Source link',
 		imageUrl: 'Photo',
-		makes: 'Makes'
+		makes: 'Makes',
+		notes: 'Notes',
+		makeAhead: 'Make ahead',
+		equipment: 'Equipment',
+		storage: 'Storage',
+		reheating: 'Reheating'
 	} as const;
 
 	// Zero is a value; only null is "not set".
@@ -40,13 +47,9 @@
 
 	// The measure fields read as the recipe page's measure does: value then
 	// label, "4 to 8 servings", "11 min to 13 min cook".
-	type MeasureField = NumberField;
-	const isMeasure = (field: MetaField): field is MeasureField => field in NUMBER_FIELDS;
-	const measure = (field: MeasureField, value: string | number | null) =>
-		value === null || field === 'servings' ? show(value) : formatTime(Number(value));
-	const TIME_LABEL = { prepTimeMinutes: 'prep', cookTimeMinutes: 'cook' } as const;
-	const measureLabel = (field: MeasureField, to: string | number | null) =>
-		field === 'servings' ? (to === 1 ? 'serving' : 'servings') : TIME_LABEL[field];
+	const isTime = (field: MetaField): field is TimeField => field in TIME_FIELDS;
+	const time = (value: string | number | null) =>
+		value === null ? show(value) : formatDuration(Number(value));
 
 	const GUTTER = { added: '+', removed: '−', modified: '~', unchanged: ' ' } as const;
 	const PREFIX = { added: 'Added:', removed: 'Removed:', modified: 'Changed:' } as const;
@@ -128,14 +131,15 @@
 	{/if}
 {/snippet}
 
-<!-- Title, description, servings and times. Only rendered when something
+<!-- Title, description, source, servings, times and notes. Only rendered when something
      changed: an empty Details panel would be noise above every diff. -->
 {#if metaDiff.length > 0}
 	{#snippet metaRows()}
 		{#each metaDiff as row (row.field)}
 			<div class="diff-row diff-modified" role="listitem">
 				{@render gutter('modified')}
-				<span class="diff-content diff-content--meta">
+				<!-- Notes keep their line breaks; a long link wraps. -->
+				<span class="diff-content diff-content--meta [overflow-wrap:anywhere] whitespace-pre-line">
 					{#if row.field === 'imageUrl'}
 						{LABEL[row.field]}:
 						{#if row.from}<img
@@ -146,9 +150,12 @@
 								class="diff-thumb diff-added"
 								src={String(row.to)}
 								alt="After" />{:else}<span class="diff-added">—</span>{/if}
-					{:else if isMeasure(row.field)}
-						{@render change(measure(row.field, row.from), measure(row.field, row.to))}
-						{measureLabel(row.field, row.to)}
+					{:else if row.field === 'servings'}
+						{@render change(show(row.from), show(row.to))}
+						{row.to === 1 ? 'serving' : 'servings'}
+					{:else if isTime(row.field)}
+						{@render change(time(row.from), time(row.to))}
+						{TIME_FIELDS[row.field].word}
 					{:else}
 						{LABEL[row.field]}:
 						{@render change(show(row.from), show(row.to))}

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { formatServes, scaleMakes } from '#lib/recipes/scale.js';
-	import { formatTime } from '#lib/helpers.js';
+	import { timeSpans } from '#lib/recipes/times.js';
 	import type { RecipeContent } from '#lib/recipes/types.js';
 
 	// The recipe's head on paper (DESIGN.md, Print): what the band and the
@@ -22,7 +22,14 @@
 		};
 		content: Pick<
 			RecipeContent,
-			'title' | 'description' | 'makes' | 'prepTimeMinutes' | 'cookTimeMinutes'
+			| 'title'
+			| 'description'
+			| 'makes'
+			| 'prepTimeMinutes'
+			| 'cookTimeMinutes'
+			| 'restTimeMinutes'
+			| 'sourceName'
+			| 'sourceUrl'
 		>;
 		versionNumber: number;
 		/** The version's own servings, 0 when it has none. */
@@ -45,12 +52,10 @@
 		].filter(Boolean)
 	);
 
-	const times = $derived(
-		[
-			content.prepTimeMinutes && `${formatTime(content.prepTimeMinutes)} prep`,
-			content.cookTimeMinutes && `${formatTime(content.cookTimeMinutes)} cook`
-		].filter(Boolean)
-	);
+	const times = $derived(timeSpans(content).map(({ value, word }) => `${value} ${word}`));
+
+	// Paper cannot follow a link, so the address prints in full after the name.
+	const source = $derived([content.sourceName, content.sourceUrl].filter(Boolean).join(' · '));
 </script>
 
 <!-- Hidden from the accessibility tree as well as the screen: the band and
@@ -70,6 +75,7 @@
 	</p>
 	<p>{measure.join(' · ')}</p>
 	{#if times.length > 0}<p>{times.join(' · ')}</p>{/if}
+	{#if source}<p>Source: {source}</p>{/if}
 	{#if content.description}<p class="print-description">{content.description}</p>{/if}
 	<p class="address">{href}</p>
 </div>

@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import { REQUIRED_MESSAGES } from '#lib/recipes/validation.js';
+import { contentDraft, REQUIRED_MESSAGES } from '#lib/recipes/validation.js';
 import { render } from 'svelte/server';
 import EditPage from './+page.svelte';
 import { makeContent } from '#lib/recipes/fixtures.js';
@@ -24,20 +24,8 @@ describe('edit page, server rendered', () => {
 		const form = {
 			error: REQUIRED_MESSAGES.title,
 			draft: {
-				title: 'Biscuits',
-				description: '',
-				servings: '4',
-				makes: '',
-				prepTimeMinutes: '10',
-				cookTimeMinutes: '20',
-				ingredients: '1 cup flour',
-				steps: 'Mix.',
-				commitMessage: '',
-				editRevision: '3',
-				visibility: 'private',
-				tags: [],
-				hadPhoto: false,
-				removeImage: false
+				...contentDraft(data.latestVersion, { editRevision: '3', visibility: 'private', tags: [] }),
+				title: 'Biscuits'
 			}
 		};
 		const { body } = render(EditPage, { props: { data, form } as never });

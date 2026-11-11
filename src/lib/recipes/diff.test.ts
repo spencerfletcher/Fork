@@ -399,6 +399,30 @@ describe('diffMeta', () => {
 		]);
 	});
 
+	test('reports the source, rest and notes, each in field order', () => {
+		const to = makeContent({
+			sourceName: 'Gran',
+			sourceUrl: 'https://a.example/',
+			restTimeMinutes: 60,
+			notes: 'Rest it.',
+			makeAhead: 'Keeps',
+			equipment: 'Tin',
+			storage: 'Cold',
+			reheating: 'Warm'
+		});
+		expect(diffMeta(base, to).map((row) => row.field)).toEqual([
+			'sourceName',
+			'sourceUrl',
+			'restTimeMinutes',
+			'notes',
+			'makeAhead',
+			'equipment',
+			'storage',
+			'reheating'
+		]);
+		expect(diffMeta(to, base)).toContainEqual({ field: 'notes', from: 'Rest it.', to: null });
+	});
+
 	test('reports the normalised values, not the raw ones', () => {
 		const to = makeContent({ title: ' Biscuits ' });
 		expect(diffMeta(base, to)).toEqual([{ field: 'title', from: 'Cookies', to: 'Biscuits' }]);
