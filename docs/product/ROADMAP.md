@@ -100,7 +100,7 @@ The differentiating experience is continuity: a recipe travels from capture thro
 | --- | --- | --- | --- |
 | Groups and Makes | Ingredient and method groups by `# Name` lines, Makes separate from Serves, the scaling notice ("Pan sizes and oven temperatures are not scaled") | shipped | DS, R |
 | Section heading tool | Direct Section heading button inserting `# Section name` with the name selected; typed and pasted markers give the same groups; the `#` stays visible in a softer colour; ordinary recipes need no markers; no general Markdown | shipped | DS, R, E03 |
-| Source, notes, times | Source name and URL separate (E07); notes; time entry with rest and make-ahead (E08); equipment, storage and reheating as author notes; carried through edit, read, history, preview, print and archive | next | R, CM, DD |
+| Source, notes, times | Source name and URL separate (E07); notes; time entry with rest and make-ahead (E08); equipment, storage and reheating as author notes; carried through edit, read, history, preview, print and archive. Built through edit, read, history, diff, restore, fork, kept copies, search and print; preview (Editor preview, P2) and archive (no export yet) carry it when they are built | in flight (built, awaiting publish) | R, CM, DD |
 | Restore as new version | Restore an old version by appending a new one; past content never changes | in flight (built, awaiting publish) | R, PA |
 | Durable drafts | Draft recovery across reload, tab close and crash, saved on the device; drafts never flood version history; synced drafts are a P2 item | in flight (built, awaiting publish) | R (9 Nov evening), AQ, OD |
 | Trash | Deleted recipes recoverable for 30 days | in flight (built, awaiting publish) | R (9 Nov evening), OD |
