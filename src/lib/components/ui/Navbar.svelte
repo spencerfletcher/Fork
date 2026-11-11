@@ -15,9 +15,26 @@
 	const onOwnProfile = $derived(!!profile && path === `/users/${profile.username}`);
 
 	const current = (active: boolean) => (active ? ('page' as const) : undefined);
+
+	// The status strip shows while the bar still covers the screen's top 4px
+	// (the root loses them), and is gone once the bar has scrolled away. On
+	// until the observer first reports, so the server render has it at rest.
+	let nav: HTMLElement;
+	let barAtTop = $state(true);
+	$effect(() => {
+		const observer = new IntersectionObserver(([entry]) => (barAtTop = entry.isIntersecting), {
+			rootMargin: '-4px 0px 0px 0px'
+		});
+		observer.observe(nav);
+		return () => observer.disconnect();
+	});
 </script>
 
-<nav class="bg-navbar-bg relative z-50 px-5" aria-label="Site">
+{#if barAtTop}
+	<div class="status-strip" aria-hidden="true"></div>
+{/if}
+
+<nav class="bg-navbar-bg relative z-50 px-5" aria-label="Site" bind:this={nav}>
 	<div class="mx-auto flex h-[52px] max-w-(--max-width) items-center justify-between gap-5 md:h-14">
 		<!-- Logo + destinations. They never shrink. -->
 		<div class="flex shrink-0 items-center gap-6">
@@ -105,23 +122,26 @@
 
 <style>
 	/* The bar scrolls away with the page; it is never pinned. With
-	   viewport-fit=cover it starts at the screen's edge, so it runs up behind
-	   the status bar. The page itself stays paper: iOS Safari tints the status
-	   bar from html and body, and from fixed boxes at the top. */
+	   viewport-fit=cover it starts at the screen's edge, so on the home screen,
+	   where the inset is real, it runs up behind the status bar. */
 	nav {
 		padding-top: env(safe-area-inset-top);
 	}
 
-	/* A pull past the top shows what sits above the page. This strip, parked
-	   there and scrolling with the bar, makes the bar read as running upward.
-	   Absolute, not fixed, so it never tints the status bar. */
-	nav::before {
-		content: '';
-		position: absolute;
-		bottom: 100%;
+	/* In the browser the inset is 0 and Safari 26 tints the status bar from a
+	   full-width fixed box at the viewport's top edge, else from body's paper.
+	   This is that box, in the bar's colour, under the bar and invisible at
+	   rest; it reaches a screen upward so a pull past the top shows espresso.
+	   Unmounted once the bar has scrolled away, so the tint goes back to paper
+	   and nothing dark stays pinned. No theme-color: older iOS would keep the
+	   status bar espresso while scrolled. */
+	.status-strip {
+		position: fixed;
+		top: -100vh;
 		left: 0;
 		right: 0;
-		height: 100vh;
+		height: calc(100vh + 4px);
+		z-index: 49;
 		background: var(--color-navbar-bg);
 		pointer-events: none;
 	}
