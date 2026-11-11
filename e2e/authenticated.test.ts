@@ -312,26 +312,41 @@ test.describe('Edit recipe page', () => {
 		}
 	});
 
-	test('leaving a dirty editor asks first, and staying keeps the draft', async ({ page }) => {
+	test('leaving a dirty editor asks nothing, the draft keeps the words; a chosen photo still asks', async ({
+		page
+	}) => {
 		const url = await createRecipe(page, 'E2E Guard', '4');
 		try {
+			let dialogs = 0;
+			const count = () => dialogs++;
+			page.on('dialog', count);
 			await gotoHydrated(page, `${url}/edit`);
 			await page.locator('textarea[name="title"]').fill('E2E Guard Edited');
-			// Playwright dismisses dialogs on its own, so wait for the event itself:
-			// without the guard there is no dialog and the wait times out.
-			let dialog = page.waitForEvent('dialog');
 			await page.getByRole('link', { name: 'Cancel' }).click();
-			let d = await dialog;
-			expect(d.message()).toBe('Leave without saving? Your changes will be lost.');
-			await d.dismiss();
-			await expect(page).toHaveURL(/\/edit$/);
+			await page.waitForURL(url);
+			expect(dialogs).toBe(0);
+			await gotoHydrated(page, `${url}/edit`);
 			await expect(page.locator('textarea[name="title"]')).toHaveValue('E2E Guard Edited');
 
-			dialog = page.waitForEvent('dialog');
+			// A chosen photo is not in the draft, so leaving asks and says so.
+			page.off('dialog', count);
+			await page.locator('input[name="image"]').setInputFiles({
+				name: 'dot.png',
+				mimeType: 'image/png',
+				buffer: Buffer.from(
+					'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
+					'base64'
+				)
+			});
+			// Playwright dismisses dialogs on its own, so wait for the event itself.
+			const dialog = page.waitForEvent('dialog');
 			await page.getByRole('link', { name: 'Cancel' }).click();
-			d = await dialog;
-			await d.accept();
-			await page.waitForURL(url);
+			const d = await dialog;
+			expect(d.message()).toBe(
+				"Leave without saving? The photo you chose won't be kept; the rest is saved as a draft on this device."
+			);
+			await d.dismiss();
+			await expect(page).toHaveURL(/\/edit$/);
 		} finally {
 			await deleteRecipe(page, url);
 		}

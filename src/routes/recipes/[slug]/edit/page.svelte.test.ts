@@ -275,7 +275,7 @@ describe('Edit page form', () => {
 		);
 	});
 
-	test('a dirty form asks before navigating away and cancels on no', async () => {
+	test('with no draft storage, a dirty form asks before navigating away and cancels on no', async () => {
 		vi.spyOn(window, 'confirm').mockReturnValue(false);
 		render(EditPage, { props: { data: makeData(), form: null } });
 		await fireEvent.input(title(), { target: { value: 'Biscuits' } });
@@ -715,6 +715,60 @@ describe('Edit page drafts on this device', () => {
 		expect(stored().draft.title).toBe('Chewy cookies');
 		await run('redirect');
 		expect(stored()).toBeNull();
+	});
+
+	test('with the draft kept, leaving asks nothing and stores the last keystroke first', async () => {
+		vi.useFakeTimers();
+		try {
+			const confirm = vi.spyOn(window, 'confirm');
+			render(EditPage, { props: { data: signedIn(), form: null } });
+			await fireEvent.input(title(), { target: { value: 'Chewy cookies' } });
+			// Inside the half-second debounce: nothing stored yet.
+			expect(stored()).toBeNull();
+			for (const type of ['link', 'leave']) {
+				const cancel = vi.fn();
+				nav.guards[0]({ cancel, type });
+				expect(cancel).not.toHaveBeenCalled();
+			}
+			expect(confirm).not.toHaveBeenCalled();
+			expect(stored().draft.title).toBe('Chewy cookies');
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
+	test('when the draft cannot be written, leaving asks with the old warning', async () => {
+		vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+			throw new DOMException('full', 'QuotaExceededError');
+		});
+		const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+		render(EditPage, { props: { data: signedIn(), form: null } });
+		await fireEvent.input(title(), { target: { value: 'Chewy cookies' } });
+		const cancel = vi.fn();
+		nav.guards[0]({ cancel, type: 'link' });
+		expect(confirm).toHaveBeenCalledWith('Leave without saving? Your changes will be lost.');
+		expect(cancel).toHaveBeenCalled();
+		const close = vi.fn();
+		nav.guards[0]({ cancel: close, type: 'leave' });
+		expect(close).toHaveBeenCalled();
+	});
+
+	test('a chosen photo is not in the draft, so leaving still asks, and says what goes', async () => {
+		const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true);
+		render(EditPage, { props: { data: signedIn(), form: null } });
+		await fireEvent.input(title(), { target: { value: 'Chewy cookies' } });
+		const input = screen.getByLabelText('Choose a photo') as HTMLInputElement;
+		Object.defineProperty(input, 'files', {
+			value: [new File(['x'], 'c.png', { type: 'image/png' })]
+		});
+		await fireEvent.change(input);
+		const cancel = vi.fn();
+		nav.guards[0]({ cancel, type: 'link' });
+		expect(confirm).toHaveBeenCalledWith(
+			"Leave without saving? The photo you chose won't be kept; the rest is saved as a draft on this device."
+		);
+		expect(cancel).not.toHaveBeenCalled();
+		expect(stored().draft.title).toBe('Chewy cookies');
 	});
 
 	test('storage that throws leaves the editor working', async () => {

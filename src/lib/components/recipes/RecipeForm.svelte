@@ -236,17 +236,20 @@
 		el.scrollIntoView({ block: 'nearest', behavior: reduce ? 'instant' : 'smooth' });
 	}
 
-	// Leaving a dirty form asks first. A tab close or hard reload cannot show
-	// our wording, so cancelling there hands the question to the browser. The
-	// save's own redirect happens while submitting, which never asks.
+	// Leaving a dirty form keeps the work as a draft, so it asks nothing: the
+	// draft is written first, so the last keystrokes are in it. It asks only
+	// when something would really go: the draft could not be written, or a
+	// chosen photo, which no draft holds. A tab close or hard reload cannot
+	// show our wording, so cancelling there hands the question to the browser.
+	// The save's own redirect happens while submitting, which never asks.
 	beforeNavigate((navigation) => {
 		if (!dirty || save.pending || leaving) return;
-		if (
-			navigation.type === 'leave' ||
-			!confirm('Leave without saving? Your changes will be lost.')
-		) {
-			navigation.cancel();
-		}
+		const onDevice = persist();
+		if (onDevice && !chosen) return;
+		const question = onDevice
+			? "Leave without saving? The photo you chose won't be kept; the rest is saved as a draft on this device."
+			: 'Leave without saving? Your changes will be lost.';
+		if (navigation.type === 'leave' || !confirm(question)) navigation.cancel();
 	});
 
 	// The draft is kept on this device as it is typed (#lib/drafts), so a
@@ -262,25 +265,31 @@
 	let timer: ReturnType<typeof setTimeout> | undefined;
 	// A successful save has redirected; nothing may store the draft again.
 	let saved = false;
+	// Whether the device holds what was last written: false until a write
+	// lands, and after one the storage refused.
+	let kept = false;
 
-	function persist() {
+	/** Stores the draft now; true when the device holds the form's words. */
+	function persist(): boolean {
 		clearTimeout(timer);
-		if (!draftKey || saved) return;
+		if (!draftKey || saved) return false;
 		const now = JSON.stringify([serialise(draft), draft.editRevision, chosen]);
-		if (now === written) return;
+		if (now === written) return kept;
 		written = now;
 		if (sameAsServer(draft)) {
 			clearDraft(draftKey);
 			// Nothing differs from the server, so its revision is safe to save on.
 			draft.editRevision = baseline.editRevision;
 			restored = null;
+			kept = true;
 		} else {
-			saveDraft(draftKey, {
+			kept = saveDraft(draftKey, {
 				draft: $state.snapshot(draft),
 				savedAt: Date.now(),
 				photoLost: chosen
 			});
 		}
+		return kept;
 	}
 
 	// A failed save's reply is newer than anything stored, so it wins.
@@ -299,6 +308,7 @@
 					photoLost: stored.photoLost
 				};
 				written = JSON.stringify([serialise(draft), draft.editRevision, false]);
+				kept = true;
 			}
 		}
 		return persist;

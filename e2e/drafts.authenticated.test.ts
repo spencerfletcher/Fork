@@ -23,8 +23,15 @@ async function draftStored(page: Page, title: string) {
 		.toBe(true);
 }
 
-/** Leaving a dirty editor asks first (the browser's own question on a reload); say yes. */
-const acceptLeaving = (page: Page) => page.on('dialog', (d) => void d.accept());
+/** The draft keeps the work, so leaving a dirty editor asks nothing: count any question. */
+function countDialogs(page: Page) {
+	const seen = { count: 0 };
+	page.on('dialog', (d) => {
+		seen.count++;
+		void d.accept();
+	});
+	return seen;
+}
 
 const titleBox = (page: Page) => page.locator('textarea[name="title"]');
 const stateLine = (page: Page) => page.locator('.editing');
@@ -55,12 +62,13 @@ test.describe('Editor drafts on this device', () => {
 	test('an edit survives a reload, and the state line says it was restored', async ({ page }) => {
 		const url = await createRecipe(page, 'E2E Draft Reload');
 		try {
-			acceptLeaving(page);
+			const dialogs = countDialogs(page);
 			await gotoHydrated(page, `${url}/edit`);
 			await titleBox(page).fill('E2E Draft Reload Typed');
 			await draftStored(page, 'E2E Draft Reload Typed');
 			await page.reload();
 			await expect(titleBox(page)).toHaveValue('E2E Draft Reload Typed');
+			expect(dialogs.count).toBe(0);
 			await expect(stateLine(page)).toContainText(/Draft from .+ restored\./);
 			await expect(page.getByRole('button', { name: 'Discard draft' })).toBeVisible();
 		} finally {
@@ -73,7 +81,7 @@ test.describe('Editor drafts on this device', () => {
 	}) => {
 		const url = await createRecipe(page, 'E2E Draft Discard');
 		try {
-			acceptLeaving(page);
+			const dialogs = countDialogs(page);
 			await gotoHydrated(page, `${url}/edit`);
 			await titleBox(page).fill('E2E Draft Discard Typed');
 			await draftStored(page, 'E2E Draft Discard Typed');
@@ -84,6 +92,7 @@ test.describe('Editor drafts on this device', () => {
 			await page.reload();
 			await expect(titleBox(page)).toHaveValue('E2E Draft Discard');
 			await expect(stateLine(page)).not.toContainText('restored');
+			expect(dialogs.count).toBe(0);
 		} finally {
 			await deleteRecipe(page, url);
 		}
@@ -111,13 +120,14 @@ test.describe('Editor drafts on this device', () => {
 	});
 
 	test('a new recipe’s draft survives leaving the editor and coming back', async ({ page }) => {
-		acceptLeaving(page);
+		const dialogs = countDialogs(page);
 		await gotoHydrated(page, '/recipes/new');
 		await titleBox(page).fill('E2E Draft New');
 		await page.getByRole('textbox', { name: 'Method', exact: true }).fill('Stir.');
 		await draftStored(page, 'E2E Draft New');
 		await page.getByRole('link', { name: 'Cancel' }).click();
 		await page.waitForURL(/\/cookbook/);
+		expect(dialogs.count).toBe(0);
 		await gotoHydrated(page, '/recipes/new');
 		await expect(titleBox(page)).toHaveValue('E2E Draft New');
 		await expect(page.locator('textarea[name="steps"]')).toHaveValue('Stir.');
