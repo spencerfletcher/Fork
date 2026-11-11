@@ -4,6 +4,7 @@ import { tick } from 'svelte';
 import type { SubmitFunction } from '$app/forms';
 import DeleteRecipe from './DeleteRecipe.svelte';
 import { pendingEnhance } from '#lib/pendingEnhance.svelte.js';
+import { TRASH_DAYS } from '#lib/trash.js';
 
 const captured = vi.hoisted(() => ({ submits: [] as SubmitFunction[] }));
 vi.mock('$app/forms', () => ({
@@ -24,7 +25,7 @@ function renderDelete(error: string | null = null) {
 }
 
 const trigger = () => screen.getByRole('button', { name: 'Delete recipe' });
-const confirmButton = () => screen.queryByRole('button', { name: 'Delete permanently' });
+const confirmButton = () => screen.queryByRole('button', { name: 'Move to Trash' });
 const keep = () => screen.getByRole('button', { name: 'Keep recipe' });
 
 /** Opens the confirm step, as a press of the trigger does. */
@@ -38,16 +39,16 @@ describe('DeleteRecipe', () => {
 		renderDelete();
 		expect(trigger()).toHaveAttribute('type', 'button');
 		expect(confirmButton()).toBeNull();
-		expect(screen.queryByText(/cannot be undone/)).toBeNull();
+		expect(screen.queryByText(/restore it/)).toBeNull();
 	});
 
-	test('pressing it names what goes and moves focus to the confirm step', async () => {
+	test('pressing it says the recipe goes to the Trash for TRASH_DAYS and moves focus to the step', async () => {
 		renderDelete();
 		await open();
-		const step = screen.getByRole('group', { name: 'Delete Brown Butter Cookies?' });
+		const step = screen.getByRole('group', { name: 'Move Brown Butter Cookies to Trash?' });
 		expect(step).toHaveFocus();
 		expect(step).toHaveAccessibleDescription(
-			'Deletes every version of Brown Butter Cookies and its photos. This cannot be undone.'
+			`Moves Brown Butter Cookies to your Trash. You can restore it for ${TRASH_DAYS} days.`
 		);
 		expect(confirmButton()).toHaveAttribute('type', 'submit');
 		expect(confirmButton()!.closest('form')).toHaveAttribute('action', '?/deleteRecipe');
@@ -77,12 +78,12 @@ describe('DeleteRecipe', () => {
 		await open();
 		await captured.submits[0]({} as never);
 		await tick();
-		const deleting = screen.getByRole('button', { name: 'Deleting…' });
+		const deleting = screen.getByRole('button', { name: 'Moving…' });
 		expect(deleting).toBeDisabled();
 		expect(keep()).toBeDisabled();
 		await fireEvent.keyDown(deleting, { key: 'Escape' });
 		await tick();
-		expect(screen.getByRole('button', { name: 'Deleting…' })).toBeInTheDocument();
+		expect(screen.getByRole('button', { name: 'Moving…' })).toBeInTheDocument();
 	});
 
 	test("shows the server's refusal as an alert", () => {

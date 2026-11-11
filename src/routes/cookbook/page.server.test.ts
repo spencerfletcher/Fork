@@ -2,13 +2,23 @@ import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { chain, sqlOf } from '#lib/testing/drizzle.js';
 import { loadEvent, loadPage } from '#lib/testing/actions.js';
 
-const db = await vi.hoisted(async () => (await import('#lib/testing/drizzle.js')).mockDb());
+const db = await vi.hoisted(async () => ({
+	...(await import('#lib/testing/drizzle.js')).mockDb(),
+	$count: vi.fn()
+}));
 vi.mock('#lib/server/db/index.js', () => ({ db }));
+const { purgeMock } = vi.hoisted(() => ({ purgeMock: vi.fn().mockResolvedValue(undefined) }));
+vi.mock('#lib/server/trash.js', async (importOriginal) => ({
+	...(await importOriginal<typeof import('#lib/server/trash.js')>()),
+	purgeExpiredTrash: purgeMock
+}));
 const { select: selectMock, selectDistinct: selectDistinctMock } = db;
 const findManyMock = db.query.recipes.findMany;
 
 import { load } from './+page.server';
 import { CARD_WITH } from '#lib/server/recipeCounts.js';
+import { inTrashOf } from '#lib/server/trash.js';
+import { recipes } from '#lib/server/db/schema.js';
 import type { SQL } from 'drizzle-orm';
 import type { PageData } from './$types';
 
@@ -73,13 +83,29 @@ describe('/cookbook load', () => {
 		expect(libraryWhere.params.filter((p) => p === USER.id)).toHaveLength(5);
 	});
 
-	test('counts the library by filter, whatever the filter shows', async () => {
+	test('counts the library by filter, whatever the filter shows, and the Trash for its link', async () => {
 		mockLibrary(LIBRARY);
 		findManyByIds();
+		db.$count.mockResolvedValue(4);
 
 		const result = await loadResult('?filter=saved');
 
-		expect(result.counts).toEqual({ all: 3, mine: 2, saved: 1 });
+		expect(result.counts).toEqual({ all: 3, mine: 2, saved: 1, trash: 4 });
+		const [table, where] = db.$count.mock.calls[0] as [unknown, SQL];
+		expect(table).toBe(recipes);
+		// inTrashOf reads the clock, so the cutoff param is left out.
+		expect(sqlOf(where).sql).toBe(sqlOf(inTrashOf(USER.id)).sql);
+		expect(sqlOf(where).params[0]).toBe(USER.id);
+	});
+
+	test('an empty library still counts the Trash, and the visit runs the purge', async () => {
+		mockLibrary([]);
+		db.$count.mockResolvedValue(1);
+
+		const result = await loadResult();
+
+		expect(result.counts.trash).toBe(1);
+		expect(purgeMock).toHaveBeenCalledTimes(1);
 	});
 
 	test('Mine shows own recipes only, Saved only the others’, All both', async () => {

@@ -30,7 +30,7 @@ function makeRecipe(overrides: Record<string, unknown> = {}) {
 
 const base = {
 	recipes: [] as ReturnType<typeof makeRecipe>[],
-	counts: { all: 0, mine: 0, saved: 0 },
+	counts: { all: 0, mine: 0, saved: 0, trash: 0 },
 	filter: 'all' as (typeof COOKBOOK_FILTERS)[number],
 	allTags: [],
 	searchQuery: '',
@@ -52,7 +52,7 @@ const full = {
 			author: { id: 's', username: 'samlind' }
 		})
 	],
-	counts: { all: 9, mine: 6, saved: 3 }
+	counts: { all: 9, mine: 6, saved: 3, trash: 0 }
 };
 
 beforeEach(() => {
@@ -77,6 +77,25 @@ describe('Cookbook page', () => {
 		);
 		expect(screen.queryByRole('searchbox')).toBeNull();
 		expect(screen.queryByRole('img')).toBeNull();
+	});
+
+	test('the Trash link sits at the foot only while the Trash holds something, the empty cookbook included', () => {
+		renderCookbook();
+		expect(screen.queryByRole('link', { name: /Trash/ })).toBeNull();
+
+		for (const data of [
+			{ counts: { ...base.counts, trash: 2 } },
+			{ ...full, counts: { ...full.counts, trash: 2 } }
+		]) {
+			const { unmount } = renderCookbook(data);
+			const link = screen.getByRole('link', { name: 'Trash (2) →' });
+			expect(link).toHaveAttribute('href', '/cookbook/trash');
+			expect(link).toHaveClass('arrow-link');
+			// Last on the page: after the grid or the empty panel.
+			const links = screen.getAllByRole('link');
+			expect(links[links.length - 1]).toBe(link);
+			unmount();
+		}
 	});
 
 	test('the count sentence says how many are yours and how many saved', () => {

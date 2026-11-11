@@ -23,8 +23,10 @@ const {
 	removeMock,
 	syncTagsMock,
 	countMock,
-	canViewRowMock
+	canViewRowMock,
+	dbUpdate
 } = vi.hoisted(() => ({
+	dbUpdate: vi.fn(),
 	countMock: vi.fn(),
 	canViewRowMock: vi.fn(),
 	findRecipeMock: vi.fn(),
@@ -61,6 +63,7 @@ vi.mock('#lib/server/db/index.js', () => ({
 			tags: { findMany: vi.fn().mockResolvedValue([]) }
 		},
 		insert: dbInsert,
+		update: dbUpdate,
 		selectDistinct: dbSelectDistinct,
 		transaction: transactionMock,
 		$count: countMock
@@ -588,74 +591,46 @@ describe('save', () => {
 // ─── deleteRecipe ─────────────────────────────────────────────────────────────
 
 describe('deleteRecipe', () => {
-	const photo = (name: string) =>
-		`http://127.0.0.1:54321/storage/v1/object/public/recipe-images/owner-123/${name}.png`;
-
-	/** The recipe with one version per photo url; null is a version with no photo. */
-	const withVersions = (...imageUrls: (string | null)[]) => ({
-		...RECIPE,
-		versions: imageUrls.map((imageUrl) => ({ imageUrl }))
-	});
-
-	let deleteChain: ReturnType<typeof chain>;
-	let tx: ReturnType<typeof makeTx>;
-
-	/** `kept` is what another recipe's versions still show once this one is gone.
-	 *  The versions are read, and the row deleted, inside the transaction. */
-	function setUp(recipe: { versions: unknown[] }, kept: string[] = []) {
+	function setUp() {
 		vi.clearAllMocks();
-		findRecipeMock.mockResolvedValue(recipe);
-		tx = makeTx();
-		Object.assign(tx.query.recipeVersions, {
-			findMany: vi.fn().mockResolvedValue(recipe.versions)
-		});
-		deleteChain = tx.deleteChain;
-		transactionMock.mockImplementation(async (fn: (t: unknown) => unknown) => fn(tx));
-		dbSelectDistinct.mockReturnValue(chain(kept.map((imageUrl) => ({ imageUrl }))));
+		findRecipeMock.mockResolvedValue(RECIPE);
+		const update = chain();
+		dbUpdate.mockReturnValue(update);
+		return update;
 	}
 
 	const del = (user: typeof OWNER | null = OWNER) =>
 		invoke(actions.deleteRecipe, makeEvent({ user }));
 
-	test("the owner's delete removes the row, each distinct photo once, and lands on /recipes", async () => {
-		setUp(withVersions(photo('a'), photo('a'), null, photo('b')));
+	test("the owner's delete moves the recipe to the Trash and lands there, removing nothing", async () => {
+		const update = setUp();
+		const before = Date.now();
 		const result = await del();
-		// Under the save action's row lock, so a save cannot land mid-delete.
-		expect(transactionMock).toHaveBeenCalledTimes(1);
-		expect(tx.lockFor).toHaveBeenCalledWith('update');
-		expect(tx.delete).toHaveBeenCalledTimes(1);
-		expect(deleteChain.where).toHaveBeenCalledTimes(1);
-		expect(removeMock).toHaveBeenCalledTimes(1);
-		expect(removeMock).toHaveBeenCalledWith(SUPABASE, 'owner-123/a.png', 'owner-123/b.png');
-		expect(result).toMatchObject({ status: 303, location: '/cookbook' });
-	});
-
-	test("keeps a photo another recipe still shows, as a fork shows its parent's", async () => {
-		setUp(withVersions(photo('a'), photo('b')), [photo('a')]);
-		await del();
-		expect(removeMock).toHaveBeenCalledWith(SUPABASE, 'owner-123/b.png');
-	});
-
-	test('removes nothing from storage when no photo is in the bucket', async () => {
-		setUp(withVersions(null, 'https://images.example.com/cake.jpg'));
-		const result = await del();
-		expect(removeMock).not.toHaveBeenCalled();
-		expect(result).toMatchObject({ status: 303, location: '/cookbook' });
-	});
-
-	test('refuses another user with the 403 the load and save throw, deleting nothing', async () => {
-		setUp(withVersions(photo('a')));
-		const result = await del(OTHER);
-		expect(result).toMatchObject({ status: 403, body: { message: NOT_AUTHORIZED } });
+		expect(dbUpdate).toHaveBeenCalledWith(recipes);
+		const [set] = update.set.mock.calls[0] as [{ deletedAt: Date; editRevision: SQL }];
+		expect(set.deletedAt.getTime()).toBeGreaterThanOrEqual(before);
+		// The revision moves on, so a save already past its own ownRecipe check is refused as stale.
+		expect(new PgDialect().sqlToQuery(set.editRevision).sql).toBe('"recipes"."edit_revision" + 1');
+		expect(new PgDialect().sqlToQuery(update.where.mock.calls[0][0])).toMatchObject({
+			params: [RECIPE.id]
+		});
 		expect(transactionMock).not.toHaveBeenCalled();
 		expect(removeMock).not.toHaveBeenCalled();
+		expect(result).toMatchObject({ status: 303, location: '/cookbook/trash' });
+	});
+
+	test('refuses another user with the 403 the load and save throw, moving nothing', async () => {
+		setUp();
+		const result = await del(OTHER);
+		expect(result).toMatchObject({ status: 403, body: { message: NOT_AUTHORIZED } });
+		expect(dbUpdate).not.toHaveBeenCalled();
 	});
 
 	test('a lapsed session is a 401 in the { error, code } shape', async () => {
-		setUp(withVersions(photo('a')));
+		setUp();
 		const result = await del(null);
 		expect(result).toMatchObject({ status: 401, data: { code: 'unauthenticated' } });
-		expect(transactionMock).not.toHaveBeenCalled();
+		expect(dbUpdate).not.toHaveBeenCalled();
 	});
 });
 
@@ -668,9 +643,10 @@ describe('edit load', () => {
 		expect(data.forkCount).toBe(3);
 		const [table, filter] = countMock.mock.calls[0] as [unknown, SQL];
 		expect(table).toBe(recipes);
-		// Only the parent link: a private fork still means forks exist.
+		// Only the parent link and live forks: a private fork still means forks
+		// exist, one in the Trash does not.
 		expect(new PgDialect().sqlToQuery(filter)).toMatchObject({
-			sql: '"recipes"."parent_id" = $1',
+			sql: '("recipes"."parent_id" = $1 and "recipes"."deleted_at" is null)',
 			params: [42]
 		});
 	});

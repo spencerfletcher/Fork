@@ -1,7 +1,7 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { chain } from '#lib/testing/drizzle.js';
 import { loadEvent } from '#lib/testing/actions.js';
-import { and, desc, eq, inArray } from 'drizzle-orm';
+import { and, desc, eq, inArray, isNull } from 'drizzle-orm';
 import { recipes, recipeVersions } from '#lib/server/db/schema.js';
 
 const { findFirstMock, findManyMock, selectMock } = vi.hoisted(() => ({
@@ -64,10 +64,13 @@ describe('/recipes/[slug]/forks load', () => {
 		expect(await run(OWNER)).toMatchObject({ recipe: { slug: RECIPE.slug } });
 	});
 
-	test('a logged-out visitor sees the public forks only', async () => {
+	test('a logged-out visitor sees the public forks only, none in the Trash', async () => {
 		await run(null);
 		expect(forksQuery().where).toEqual(
-			and(eq(recipes.parentId, RECIPE.id), eq(recipes.visibility, 'public'))
+			and(
+				eq(recipes.parentId, RECIPE.id),
+				and(isNull(recipes.deletedAt), eq(recipes.visibility, 'public'))
+			)
 		);
 	});
 

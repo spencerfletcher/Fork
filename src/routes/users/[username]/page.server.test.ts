@@ -3,7 +3,7 @@ import { chain, sqlOf } from '#lib/testing/drizzle.js';
 import { loadEvent, loadPage } from '#lib/testing/actions.js';
 import { load } from './+page.server';
 import type { PageData } from './$types';
-import { recipes } from '#lib/server/db/schema.js';
+import { recipes, recipeVersions } from '#lib/server/db/schema.js';
 import { namedBy } from '#lib/server/profiles.js';
 import { and, eq } from 'drizzle-orm';
 import { visibleTo } from '#lib/server/visibility.js';
@@ -191,5 +191,9 @@ describe('users/[username] load', () => {
 		const commitChain = selectMock.mock.results[0].value;
 		const joinedTables = commitChain.innerJoin.mock.calls.map((call: unknown[]) => call[0]);
 		expect(joinedTables).toContain(recipes);
+		// Public as a signed-out visitor sees it, so a recipe in the Trash counts nothing.
+		expect(commitChain.where.mock.calls[0][0]).toEqual(
+			and(eq(recipeVersions.createdBy, 'user-1'), visibleTo(null))
+		);
 	});
 });

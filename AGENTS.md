@@ -55,6 +55,7 @@ Planning and design docs: start at `docs/README.md`, which names the current pro
 - `tagSelection(allTags, slugs, withinIds?)` (`src/lib/server/tagFilter.ts`): the URL's tags resolved and matched
 - `failure(status, code, error, extra?)` and `FAILURE_CODES` (`src/lib/server/actions.ts`): every `fail()` in the `{ error, code }` shape, codes from one list
 - `requireUser(url, user)` and `SESSION_ENDED(verb)` (`src/lib/server/actions.ts`): the signed-out redirect and its one wording
+- `trashedRecipe(slug, userId)`, `inTrashOf(userId)`, `deleteForever(recipeId, supabase)` and `purgeExpiredTrash(supabase)` (`src/lib/server/trash.ts`): the owner's restorable trashed recipe or null, the Trash as SQL (`TRASH_DAYS` from `src/lib/trash.ts`), the one permanent-deletion path, and the hourly purge. `viewableRecipe`, `ownRecipe`, `visibleTo` and `canView` never return a trashed recipe
 - `storePhoto(formData, supabase, userId)` (`src/lib/server/submission.ts`): a form's photo stored, or why it was refused
 - `oneOf(list, value)` (`src/lib/helpers.ts`): a value from an `as const` list, else undefined
 - `wholeNumber(s)` (`src/lib/helpers.ts`): digits only as a number, else null

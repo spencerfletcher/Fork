@@ -9,7 +9,7 @@ const findManyMock = db.query.recipes.findMany;
 
 import { load } from './+page.server';
 import { CARD_WITH } from '#lib/server/recipeCounts.js';
-import { and, desc, eq } from 'drizzle-orm';
+import { and, desc, eq, isNull } from 'drizzle-orm';
 import { recipes } from '#lib/server/db/schema.js';
 import { authorIsFriendOf, visibleTo } from '#lib/server/visibility.js';
 import { PgDialect } from 'drizzle-orm/pg-core';
@@ -162,8 +162,8 @@ describe('search visibility', () => {
 		expect(selectDistinctMock.mock.results[0].value.where).toHaveBeenCalledWith(own);
 	});
 
-	test('a logged-out visitor finds public recipes only', async () => {
-		const pub = eq(recipes.visibility, 'public');
+	test('a logged-out visitor finds public recipes only, none in the Trash', async () => {
+		const pub = and(isNull(recipes.deletedAt), eq(recipes.visibility, 'public'));
 		await loadResult(makeEvent(''));
 		expect(findManyMock.mock.calls[0][0].where).toEqual(and(pub, undefined, undefined));
 		expect(selectDistinctMock.mock.results[0].value.where).toHaveBeenCalledWith(pub);
@@ -217,7 +217,7 @@ describe('search load, the Friends filter', () => {
 
 		expect(result.friendsOnly).toBeUndefined();
 		expect(findManyMock.mock.calls[0][0].where).toEqual(
-			and(eq(recipes.visibility, 'public'), undefined, undefined)
+			and(and(isNull(recipes.deletedAt), eq(recipes.visibility, 'public')), undefined, undefined)
 		);
 	});
 });

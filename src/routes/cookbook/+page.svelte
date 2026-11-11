@@ -93,6 +93,14 @@
 				</div>
 			{/if}
 		{/if}
+
+		<!-- At the foot, not among the filters: the Trash is a rare errand, not a
+		     view of the library, so it stays out of the way until something is in it. -->
+		{#if data.counts.trash > 0}
+			<p class="cookbook-trash" class:centered={data.counts.all === 0}>
+				<a href="/cookbook/trash" class="arrow-link">Trash ({data.counts.trash}) →</a>
+			</p>
+		{/if}
 	</div>
 </div>
 
@@ -215,6 +223,15 @@
 		.seg a[aria-current='page'] {
 			outline: 2px solid CanvasText;
 		}
+	}
+
+	.cookbook-trash {
+		margin-top: var(--space-6);
+	}
+
+	/* Under the empty cookbook's centred panel. */
+	.cookbook-trash.centered {
+		text-align: center;
 	}
 
 	.cookbook-none {

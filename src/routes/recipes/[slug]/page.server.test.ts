@@ -427,6 +427,22 @@ describe('load: fork attribution', () => {
 		expect((await loadData(FORKER)).recipe).toMatchObject({ parentDeleted: false });
 	});
 
+	test('says the parent was deleted while it is in the Trash, to its owner too, and links it again once restored', async () => {
+		const fork = forkOf({ visibility: 'public', authorId: 'original-author' });
+		findRecipeMock.mockResolvedValue({
+			...fork,
+			parent: { ...fork.parent, deletedAt: new Date() }
+		});
+		const owner = { id: 'original-author', email: 'o@test.dev' };
+		expect((await loadData(owner)).recipe).toMatchObject({ parent: null, parentDeleted: true });
+
+		findRecipeMock.mockResolvedValue({ ...fork, parent: { ...fork.parent, deletedAt: null } });
+		expect((await loadData(owner)).recipe).toMatchObject({
+			parent: { slug: 'secret-original' },
+			parentDeleted: false
+		});
+	});
+
 	test("includes a private parent for the parent's owner", async () => {
 		findRecipeMock.mockResolvedValue(
 			forkOf({ visibility: 'private', authorId: 'original-author' })

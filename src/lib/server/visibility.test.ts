@@ -1,5 +1,5 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
-import { eq } from 'drizzle-orm';
+import { and, eq, isNull } from 'drizzle-orm';
 import { PgDialect } from 'drizzle-orm/pg-core';
 import { chain } from '#lib/testing/drizzle.js';
 import { drizzle } from 'drizzle-orm/postgres-js';
@@ -33,10 +33,11 @@ const OWNER = { id: 'owner' };
 const FRIEND = { id: 'friend' };
 const OTHER = { id: 'other' };
 
-const row = (visibility: Visibility, authorId: string | null = OWNER.id) => ({
-	visibility,
-	authorId
-});
+const row = (
+	visibility: Visibility,
+	authorId: string | null = OWNER.id,
+	deletedAt: Date | null = null
+) => ({ visibility, authorId, deletedAt });
 
 beforeEach(() => {
 	vi.clearAllMocks();
@@ -62,6 +63,15 @@ describe('canView', () => {
 		expect(canView(row('friends'), OTHER, [FRIEND.id])).toBe(false);
 		expect(canView(row('friends'), FRIEND)).toBe(false);
 		expect(canView(row('friends'), null, [OWNER.id])).toBe(false);
+	});
+
+	test('a recipe in the Trash is visible to nobody, its owner included', () => {
+		for (const visibility of VISIBILITIES) {
+			const trashed = row(visibility, OWNER.id, new Date());
+			expect(canView(trashed, OWNER)).toBe(false);
+			expect(canView(trashed, FRIEND, [OWNER.id])).toBe(false);
+			expect(canView(trashed, null)).toBe(false);
+		}
 	});
 
 	test('a non-public recipe whose author was deleted is visible to nobody', () => {
@@ -126,7 +136,10 @@ describe('viewableRecipe', () => {
 		const withRelations = { author: true } as const;
 		expect(await viewableRecipe('soup', OTHER, withRelations)).toBe(recipe);
 		expect(findRecipeMock).toHaveBeenCalledWith(
-			expect.objectContaining({ where: eq(recipes.slug, 'soup'), with: withRelations })
+			expect.objectContaining({
+				where: and(eq(recipes.slug, 'soup'), isNull(recipes.deletedAt)),
+				with: withRelations
+			})
 		);
 	});
 
@@ -154,9 +167,12 @@ describe('ownRecipe', () => {
 		expect(await ownRecipe('soup', OWNER.id)).toBe(recipe);
 	});
 
-	test('a 404 for no recipe', async () => {
+	test('a 404 for no recipe, and none for one in the Trash: the slug lookup reads live rows only', async () => {
 		findRecipeMock.mockResolvedValue(undefined);
 		await expect(ownRecipe('gone', OWNER.id)).rejects.toMatchObject({ status: 404 });
+		expect(findRecipeMock).toHaveBeenCalledWith(
+			expect.objectContaining({ where: and(eq(recipes.slug, 'gone'), isNull(recipes.deletedAt)) })
+		);
 	});
 
 	test('a 403 that says Not authorized for anyone else, even on a public recipe', async () => {
@@ -181,16 +197,17 @@ describe('inLibraryOf', () => {
 });
 
 describe('visibleTo', () => {
-	test('a logged-out visitor sees public recipes only', () => {
-		expect(visibleTo(null)).toEqual(eq(recipes.visibility, 'public'));
-		expect(visibleTo(undefined)).toEqual(eq(recipes.visibility, 'public'));
+	test('a logged-out visitor sees public recipes only, none in the Trash', () => {
+		const expected = and(isNull(recipes.deletedAt), eq(recipes.visibility, 'public'));
+		expect(visibleTo(null)).toEqual(expected);
+		expect(visibleTo(undefined)).toEqual(expected);
 	});
 
-	test('a signed-in visitor also sees their own, and friends recipes by an accepted friend either way', () => {
+	test('a signed-in visitor also sees their own, and friends recipes by an accepted friend either way, none in the Trash', () => {
 		const { sql, params } = new PgDialect().sqlToQuery(visibleTo(OTHER));
 		expect(params).toEqual(['public', OTHER.id, 'friends', 'accepted', OTHER.id, OTHER.id]);
 		expect(sql).toBe(
-			'("recipes"."visibility" = $1 or "recipes"."author_id" = $2 or ("recipes"."visibility" = $3 and exists (select 1 from "friendships" "fr" where "fr"."status" = $4 and (least("fr"."requester_id", "fr"."addressee_id") = least($5, "recipes"."author_id") and greatest("fr"."requester_id", "fr"."addressee_id") = greatest($6, "recipes"."author_id")))))'
+			'("recipes"."deleted_at" is null and ("recipes"."visibility" = $1 or "recipes"."author_id" = $2 or ("recipes"."visibility" = $3 and exists (select 1 from "friendships" "fr" where "fr"."status" = $4 and (least("fr"."requester_id", "fr"."addressee_id") = least($5, "recipes"."author_id") and greatest("fr"."requester_id", "fr"."addressee_id") = greatest($6, "recipes"."author_id"))))))'
 		);
 	});
 
