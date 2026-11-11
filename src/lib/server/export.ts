@@ -2,7 +2,7 @@
 // with every version, their collections, saves and Journal. Other cooks'
 // recipes appear only as references (slug, link, title, handle) and only where
 // the cook may see them now; a kept copy's content is the author's and stays out.
-import { error } from '@sveltejs/kit';
+import { error, json } from '@sveltejs/kit';
 import { and, asc, eq, isNull, or } from 'drizzle-orm';
 import { db, type Tx } from './db/index.js';
 import { collectionRecipes, collections, favorites, profiles, recipes } from './db/schema.js';
@@ -10,9 +10,15 @@ import { canView, friendIdsOf, inLibraryOf, NO_FTS } from './visibility.js';
 import { keptVersionsOf } from './keptCopies.js';
 import { journalOf, type EntrySource } from './journal.js';
 import { versionContent } from '#lib/recipes/content.js';
+import { oneOf } from '#lib/helpers.js';
+import { toMarkdown } from '#lib/export/markdown.js';
+import type { FailureCode } from './actions.js';
 import {
 	EXPORT_FORMAT,
+	EXPORT_FORMATS,
 	EXPORT_VERSION,
+	exportFilename,
+	type ExportFormat,
 	type ExportRecipe,
 	type ForkExport,
 	type JournalSource,
@@ -187,4 +193,41 @@ function journalSource(source: EntrySource, url: (slug: string) => string): Jour
 	}
 	if (source.kind === 'link') return { kind: 'link', url: source.url };
 	return { kind: source.kind };
+}
+
+export const EXPORT_SIGNED_OUT = 'Log in to download your data.';
+export const EXPORT_BAD_FORMAT = 'Ask for format=json or format=md.';
+
+const refusal = (status: number, code: FailureCode, message: string) =>
+	json({ error: message, code }, { status, headers: { 'Cache-Control': 'no-store' } });
+
+/** Who is downloading and in which format, or the refusal: 401 signed out, 400 for a format not offered. */
+export function exportRequest(
+	url: URL,
+	user: { id: string } | null
+): { user: { id: string }; format: ExportFormat } | Response {
+	if (!user) return refusal(401, 'unauthenticated', EXPORT_SIGNED_OUT);
+	const format = oneOf(EXPORT_FORMATS, url.searchParams.get('format'));
+	if (!format) return refusal(400, 'invalid', EXPORT_BAD_FORMAT);
+	return { user, format };
+}
+
+const CONTENT_TYPE: Record<ExportFormat, string> = {
+	json: 'application/json; charset=utf-8',
+	md: 'text/markdown; charset=utf-8'
+};
+
+/** The export as a download in `format`, never cached. */
+export function exportResponse(ex: ForkExport, format: ExportFormat): Response {
+	const body = format === 'json' ? JSON.stringify(ex, null, 2) : toMarkdown(ex);
+	const name = exportFilename(ex, format);
+	return new Response(body, {
+		headers: {
+			'Content-Type': CONTENT_TYPE[format],
+			// A slug may hold any script's letters ("味噌"), which a header cannot:
+			// an ASCII name for old clients, the real one encoded (RFC 6266).
+			'Content-Disposition': `attachment; filename="${name.replace(/[^\x20-\x7e]|"/g, '_')}"; filename*=UTF-8''${encodeURIComponent(name)}`,
+			'Cache-Control': 'no-store'
+		}
+	});
 }
