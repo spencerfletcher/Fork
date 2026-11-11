@@ -43,7 +43,7 @@
 				</p>
 			</div>
 			{#if count > 0}
-				<a class="btn-primary no-underline" href="/journal/new">Add to Journal</a>
+				<a class="btn-primary" href="/journal/new">Add to Journal</a>
 			{/if}
 		</div>
 
@@ -52,7 +52,7 @@
 				Log what you cook: a recipe, a link or something improvised. Only you see it unless you
 				share it.
 				{#snippet action()}
-					<a class="btn-primary no-underline" href="/journal/new">Add to Journal</a>
+					<a class="btn-primary" href="/journal/new">Add to Journal</a>
 				{/snippet}
 			</EmptyPanel>
 		{:else}

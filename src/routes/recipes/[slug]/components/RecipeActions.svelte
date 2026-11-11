@@ -96,13 +96,13 @@
 
 	{#if loginHref}
 		<!-- Logged out: Save's ghost pill and bookmark, leading to login and back. -->
-		<a href={loginHref} class="btn-ghost login no-underline">
+		<a href={loginHref} class="btn-ghost login">
 			{@render saveIcon(false)}
 			Log in to save
 		</a>
 	{:else}
 		{#if canEdit}
-			<a href="/recipes/{recipe.slug}/edit" class="btn-ghost edit no-underline">
+			<a href="/recipes/{recipe.slug}/edit" class="btn-ghost edit">
 				<svg
 					class="size-4"
 					viewBox="0 0 16 16"
@@ -121,7 +121,7 @@
 			<form method="POST" action="?/toggleFavorite" use:enhance={favorite.submit}>
 				<button
 					type="submit"
-					class="btn-ghost favorite flex items-center justify-center gap-2 no-underline"
+					class="btn-ghost favorite flex items-center justify-center gap-2"
 					aria-pressed={isFavorited}>
 					{@render saveIcon(isFavorited)}
 					<span class="save-label dot-list">
@@ -165,7 +165,7 @@
 	{/if}
 	<!-- Signed in: last in the row. -->
 	{#if journalHref}
-		<a href={journalHref} class="btn-ghost log no-underline">
+		<a href={journalHref} class="btn-ghost log">
 			{@render journalIcon()}
 			Add to Journal
 		</a>
