@@ -14,6 +14,8 @@
 	let {
 		trigger,
 		triggerClass = 'btn-ghost danger',
+		triggerRole,
+		triggerIcon,
 		label,
 		explanation,
 		confirmLabel,
@@ -30,6 +32,10 @@
 		/** The trigger's words, such as "Delete recipe". */
 		trigger: string;
 		triggerClass?: string;
+		/** 'menuitem' inside a menu (the card's ⋯), so the arrow keys walk to it. */
+		triggerRole?: 'menuitem';
+		/** Drawn before the trigger's words, as a menu row's icon. */
+		triggerIcon?: Snippet;
 		/** The step's spoken name, such as "Delete Pancakes?"; without it the step is named by the explanation. */
 		label?: string;
 		/** What goes, in one sentence, shown beside the buttons (beneath them on a phone). */
@@ -130,7 +136,13 @@
 		</div>
 	</form>
 {:else}
-	<button type="button" class={triggerClass} bind:this={triggerButton} onclick={show}>
+	<button
+		type="button"
+		class={triggerClass}
+		role={triggerRole}
+		bind:this={triggerButton}
+		onclick={show}>
+		{@render triggerIcon?.()}
 		{trigger}
 	</button>
 {/if}

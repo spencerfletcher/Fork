@@ -7,13 +7,27 @@ import CookbookPage from './+page.svelte';
 import { COOKBOOK_FILTERS } from './filters.js';
 import source from './+page.svelte?raw';
 import { cssRule } from '#lib/testing/css.js';
+import type { SubmitFunction } from '$app/forms';
 
 const style = source.slice(source.indexOf('<style>'));
 
-const { page } = vi.hoisted(() => ({ page: { url: new URL('http://localhost/cookbook') } }));
-vi.mock('$app/navigation', () => ({ goto: vi.fn(), snapshot: vi.fn() }));
+const { page, goto, submits } = vi.hoisted(() => ({
+	page: { url: new URL('http://localhost/cookbook') } as {
+		url: URL;
+		shallow?: { url: URL };
+	},
+	goto: vi.fn(),
+	// Each form's enhance callback, so a test can play back an action's result.
+	submits: new Map<HTMLFormElement, SubmitFunction>()
+}));
+vi.mock('$app/navigation', () => ({ goto, snapshot: vi.fn(), afterNavigate: vi.fn() }));
 vi.mock('$app/state', () => ({ page }));
-vi.mock('$app/forms', () => ({ enhance: () => ({ destroy: () => {} }) }));
+vi.mock('$app/forms', () => ({
+	enhance: (form: HTMLFormElement, submit: SubmitFunction) => {
+		submits.set(form, submit);
+		return { destroy: () => {} };
+	}
+}));
 
 function makeRecipe(overrides: Record<string, unknown> = {}) {
 	return {
@@ -54,6 +68,10 @@ const onePage = <D extends { recipes: unknown[] }>(data: D) => ({
 function renderCookbook(overrides: Partial<typeof base> = {}) {
 	return render(CookbookPage, { props: { data: onePage({ ...base, ...overrides }) } as never });
 }
+
+/** ResultStatus's count (the ⋯'s outcome is the page's other status). */
+const resultStatus = () =>
+	screen.getAllByRole('status').find((s) => s.getAttribute('aria-live') === 'polite')!;
 
 const full = {
 	recipes: [
@@ -200,15 +218,15 @@ describe('Cookbook page', () => {
 	test('a filter that empties the grid keeps the filters and tells a screen reader 0 recipes match', () => {
 		renderCookbook({ ...full, recipes: [], searchQuery: 'saffron' });
 		expect(screen.getByRole('searchbox')).toHaveValue('saffron');
-		expect(screen.getByRole('status')).toHaveTextContent('0 recipes match');
-		expect(screen.getByRole('status')).toHaveClass('sr-only');
+		expect(resultStatus()).toHaveTextContent('0 recipes match');
+		expect(resultStatus()).toHaveClass('sr-only');
 		expect(screen.getByRole('heading', { name: 'No recipes match “saffron”.' })).toBeVisible();
 		expect(screen.getByRole('link', { name: 'Clear search' })).toHaveAttribute('href', '/cookbook');
 	});
 
 	test('a filter with matches announces the count to screen readers only', () => {
 		renderCookbook({ ...full, selectedTags: ['baking'] });
-		const status = screen.getByRole('status');
+		const status = resultStatus();
 		expect(status).toHaveTextContent(`${full.recipes.length} recipe`);
 		expect(status).toHaveClass('sr-only');
 		expect(status).toHaveAttribute('aria-live', 'polite');
@@ -216,7 +234,7 @@ describe('Cookbook page', () => {
 
 	test('the status stays quiet over the unfiltered library', () => {
 		renderCookbook(full);
-		expect(screen.getByRole('status')).toHaveTextContent('');
+		expect(resultStatus()).toHaveTextContent('');
 	});
 
 	test('New recipe sits in the header over a full library', () => {
@@ -240,6 +258,82 @@ describe('Cookbook page', () => {
 		expect(cssRule(phone, '.cookbook-head')).toMatch(/flex-direction:\s*column/);
 		expect(cssRule(phone, '.cookbook-head')).toMatch(/align-items:\s*stretch/);
 		expect(cssRule(phone, '.cookbook-new')).toMatch(/width:\s*100%/);
+	});
+});
+
+describe('Cookbook: a card’s ⋯ takes the recipe out of the library', () => {
+	beforeEach(() => {
+		goto.mockReset();
+		page.shallow = undefined;
+		submits.clear();
+		// The collections are asked for on open; unanswered, they do not matter here.
+		vi.stubGlobal(
+			'fetch',
+			vi.fn(() => new Promise(() => {}))
+		);
+	});
+
+	/** Opens `title`'s ⋯, presses `row`, confirms, and plays the action's redirect back. */
+	async function takeOut(title: string, row: string) {
+		await fireEvent.click(screen.getByRole('button', { name: `More actions for ${title}` }));
+		await fireEvent.click(screen.getByRole('menuitem', { name: row }));
+		await tick();
+		const form = screen.getByRole('group', { name: new RegExp(title) }).closest('form')!;
+		const after = await submits.get(form)!({
+			action: new URL(form.action),
+			formElement: form,
+			formData: new FormData(form),
+			controller: new AbortController(),
+			submitter: null,
+			cancel: () => {}
+		} as never);
+		await after?.({
+			result: { type: 'redirect', status: 303, location: '/cookbook/trash' },
+			update: vi.fn()
+		} as never);
+		await tick();
+	}
+
+	test('Move to Trash reloads the page at its own URL, place and all, says so with the Trash link, and focuses the card in its place', async () => {
+		// Show more wrote ?page=2 by a shallow replace, which page.url does not follow.
+		page.url = new URL('http://localhost/cookbook?filter=mine');
+		page.shallow = { url: new URL('http://localhost/cookbook?filter=mine&page=2') };
+		const [dal, poke] = full.recipes;
+		const { rerender } = renderCookbook(full);
+		goto.mockImplementation(() =>
+			rerender({ data: onePage({ ...base, ...full, recipes: [poke] }) } as never)
+		);
+
+		await takeOut(dal.title, 'Move to Trash');
+
+		// Scroll and focus left alone (reset: false); every load runs again.
+		expect(goto).toHaveBeenCalledExactlyOnceWith(page.shallow.url.href, {
+			replace: true,
+			reset: false,
+			refreshAll: true
+		});
+		const status = screen.getByText(/to your/).closest('[role="status"]') as HTMLElement;
+		expect(status).toHaveTextContent(`Moved ${dal.title} to your Trash.`);
+		expect(within(status).getByRole('link', { name: 'Open Trash' })).toHaveAttribute(
+			'href',
+			'/cookbook/trash'
+		);
+		await vi.waitFor(() => expect(screen.getByRole('link', { name: poke.title })).toHaveFocus());
+	});
+
+	test('a kept copy’s Remove from Cookbook says it went; the last card hands focus to the title', async () => {
+		const copy = makeRecipe({ title: 'Old Soup', saved: true, kept: true });
+		const { rerender } = renderCookbook({ ...full, recipes: [copy] });
+		goto.mockImplementation(() =>
+			rerender({ data: onePage({ ...base, ...full, recipes: [] }) } as never)
+		);
+
+		await takeOut(copy.title, 'Remove from Cookbook');
+
+		expect(goto).toHaveBeenCalledOnce();
+		expect(goto.mock.calls[0][0]).toBe(page.url.href);
+		expect(screen.getByText('Removed your copy of Old Soup.')).toBeInTheDocument();
+		await vi.waitFor(() => expect(screen.getByRole('heading', { level: 1 })).toHaveFocus());
 	});
 });
 

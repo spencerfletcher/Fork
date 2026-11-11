@@ -915,6 +915,45 @@ describe('load: Add to collection', () => {
 	});
 });
 
+describe('collections: the ⋯ on a Cookbook card asks when it opens', () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+		findRecipeMock.mockResolvedValue({ ...SOURCE_RECIPE, visibility: 'public' });
+		findFavoriteMock.mockResolvedValue(undefined);
+		collectionsMock.collectionsOf.mockResolvedValue(SHELVES);
+	});
+
+	const ask = (user: typeof FORKER | null = FORKER) =>
+		invoke(actions.collections as never, makeEvent({ user }));
+
+	test('signed out is told the session ended', async () => {
+		expect(await ask(null)).toMatchObject({ status: 401, data: { code: 'unauthenticated' } });
+		expect(collectionsMock.collectionsOf).not.toHaveBeenCalled();
+	});
+
+	test('a saved recipe lists the reader’s collections marked for it', async () => {
+		findFavoriteMock.mockResolvedValue({ userId: FORKER.id, recipeId: SOURCE_RECIPE.id });
+		expect(await ask()).toEqual({ collections: SHELVES });
+		expect(collectionsMock.collectionsOf).toHaveBeenCalledWith(FORKER, SOURCE_RECIPE.id);
+	});
+
+	test('the reader’s own recipe lists them too', async () => {
+		findRecipeMock.mockResolvedValue({ ...SOURCE_RECIPE, authorId: FORKER.id });
+		expect(await ask()).toEqual({ collections: SHELVES });
+	});
+
+	test('a recipe they can see but have not saved is not in their library: not found', async () => {
+		expect(await ask()).toMatchObject({ status: 404, data: { code: 'not_found' } });
+		expect(collectionsMock.collectionsOf).not.toHaveBeenCalled();
+	});
+
+	test('a recipe they cannot see is a 404', async () => {
+		findRecipeMock.mockResolvedValue({ ...SOURCE_RECIPE, visibility: 'private' });
+		expect(await ask()).toMatchObject({ status: 404 });
+		expect(collectionsMock.collectionsOf).not.toHaveBeenCalled();
+	});
+});
+
 describe('collect and newCollection', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();

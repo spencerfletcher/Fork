@@ -6,20 +6,28 @@
 	// in it. A press flips it at once and flips back if the server refuses.
 	let {
 		collection,
+		action,
+		refresh,
 		report
 	}: {
 		collection: { id: number; name: string; has?: boolean };
+		/** The recipe's collect action, by its full path. */
+		action: string;
+		/** Reload the page's data after a press; off where the list is the menu's own. */
+		refresh: boolean;
 		report: (error: string) => void;
 	} = $props();
 
+	// `refresh` read once: a menu is either the page's or its own for its whole life.
+	// svelte-ignore state_referenced_locally
 	const member = optimisticToggle(() => !!collection.has, {
 		failure: 'Could not change that collection. Try again.',
 		report: (message) => report(message),
-		refresh: true
+		refresh
 	});
 </script>
 
-<form method="POST" action="?/collect" role="none" use:enhance={member.submit}>
+<form method="POST" {action} role="none" use:enhance={member.submit}>
 	<input type="hidden" name="collectionId" value={collection.id} />
 	<!-- Read when the form is sent, before the flip: the state this press asks for. -->
 	<input type="hidden" name="member" value={member.on ? '0' : '1'} />

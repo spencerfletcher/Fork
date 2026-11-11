@@ -9,6 +9,7 @@
 	import { dayLabel } from '#lib/journal.js';
 	import Username from '#lib/components/ui/Username.svelte';
 	import { segments, type SearchMatch } from '#lib/highlight.js';
+	import MoreActions from './MoreActions.svelte';
 
 	// Only what the card renders, so a column added to the table does not ripple
 	// into every card fixture.
@@ -49,7 +50,8 @@
 		showDescription = true,
 		variant = 'list',
 		saved = false,
-		kept = false
+		kept = false,
+		onremoved
 	}: {
 		recipe: CardRecipe;
 		index?: number;
@@ -59,7 +61,11 @@
 		saved?: boolean;
 		/** A saved recipe its author withdrew, kept as the saver's copy. */
 		kept?: boolean;
+		/** Cookbook: the ⋯ moved it to the Trash or removed the copy; the page takes it away. */
+		onremoved?: (how: 'trash' | 'copy') => void;
 	} = $props();
+
+	const hasMenu = $derived(variant === 'cookbook');
 
 	const isList = $derived(variant === 'list');
 
@@ -142,23 +148,31 @@
 
 	<!-- Title, meta and any extra line: one block, spaced by its gap alone. -->
 	<div class="card-text">
+		<!-- The ⋯ ends the first line under the photo: the title's, or on a
+		     panel the meta row's. -->
 		{#if recipe.imageUrl}
-			<h3 class="card-title">{@render title()}</h3>
+			<div class="card-line">
+				<h3 class="card-title">{@render title()}</h3>
+				{#if hasMenu}{@render more()}{/if}
+			</div>
 		{/if}
 
-		<div class="meta-row dot-list">
-			{#each metaParts as part (part.text)}
-				{#if part.username}
-					<span class="meta-item meta-author"><Username username={part.username} /></span>
-				{:else if part.icon}
-					<span class="meta-item meta-audience">
-						{@render audienceIcon(part.icon)}
-						{part.text}
-					</span>
-				{:else}
-					<span class="meta-item" class:vid={part.accent}>{part.text}</span>
-				{/if}
-			{/each}
+		<div class="card-line">
+			<div class="meta-row dot-list">
+				{#each metaParts as part (part.text)}
+					{#if part.username}
+						<span class="meta-item meta-author"><Username username={part.username} /></span>
+					{:else if part.icon}
+						<span class="meta-item meta-audience">
+							{@render audienceIcon(part.icon)}
+							{part.text}
+						</span>
+					{:else}
+						<span class="meta-item" class:vid={part.accent}>{part.text}</span>
+					{/if}
+				{/each}
+			</div>
+			{#if hasMenu && !recipe.imageUrl}{@render more()}{/if}
 		</div>
 
 		{#if saved && variant === 'cookbook'}
@@ -191,6 +205,25 @@
 	{#each segments(text) as run, i (i)}{#if run.mark}<mark>
 				{run.text}
 			</mark>{:else}{run.text}{/if}{/each}
+{/snippet}
+
+<!-- The recipe page's ⋯, the rows a card offers: a sibling above the stretched
+     link and after it in Tab order, as the author link is. -->
+{#snippet more()}
+	<div class="card-more">
+		<MoreActions
+			slug={recipe.slug}
+			title={recipe.title}
+			collections="on-open"
+			label="More actions for {recipe.title}"
+			journal
+			edit={!saved}
+			exports={!saved}
+			trash={!saved}
+			fork={saved && !kept}
+			removeCopy={kept}
+			{onremoved} />
+	</div>
 {/snippet}
 
 {#snippet title()}
@@ -301,6 +334,34 @@
 		display: flex;
 		flex-direction: column;
 		gap: 6px;
+	}
+
+	/* The title or meta row, and the ⋯ at its end on a Cookbook card. */
+	.card-line {
+		display: flex;
+		align-items: flex-start;
+		gap: 4px;
+	}
+
+	.card-line > .card-title,
+	.card-line > .meta-row {
+		flex: 1;
+		min-width: 0;
+	}
+
+	/* Above the stretched link, so hovering or pressing it is not the recipe.
+	   The 44px square overhangs its line evenly, so the line keeps its height
+	   and the ⋯ (centred in the square by flex) sits on the line's middle; its
+	   right edge on the column's. Open, it rises over the next card's ⋯. */
+	.card-more {
+		position: relative;
+		z-index: 2;
+		flex: none;
+		margin: -11px -10px -11px 0;
+	}
+
+	.card-more:has(:global([aria-expanded='true'])) {
+		z-index: 3;
 	}
 
 	/* Two lines at most, Ink 3 sans at the meta size. */
