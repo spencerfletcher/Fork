@@ -2,12 +2,19 @@ import { describe, test, expect, vi, beforeEach } from 'vitest';
 import type { User } from '@supabase/supabase-js';
 import { ensureProfile, usernameTaken } from './profiles';
 
-const { findFirstMock, insertMock } = vi.hoisted(() => ({
+const { findFirstMock, findFormerMock, insertMock } = vi.hoisted(() => ({
 	findFirstMock: vi.fn(),
+	findFormerMock: vi.fn(),
 	insertMock: vi.fn()
 }));
 vi.mock('./db/index.js', () => ({
-	db: { query: { profiles: { findFirst: findFirstMock } }, insert: insertMock }
+	db: {
+		query: {
+			profiles: { findFirst: findFirstMock },
+			formerUsernames: { findFirst: findFormerMock }
+		},
+		insert: insertMock
+	}
 }));
 
 /** An insert chain whose `.returning()` resolves `rows`. */
@@ -91,11 +98,29 @@ describe('ensureProfile', () => {
 describe('usernameTaken', () => {
 	test('is true when a profile already has the username', async () => {
 		findFirstMock.mockResolvedValue({ id: 'user-9' });
+		findFormerMock.mockResolvedValue(undefined);
 		expect(await usernameTaken('alex')).toBe(true);
+	});
+
+	test('is true when a profile gave it up: it stays reserved to them', async () => {
+		findFirstMock.mockResolvedValue(undefined);
+		findFormerMock.mockResolvedValue({ profileId: 'user-9' });
+		expect(await usernameTaken('alex')).toBe(true);
+		expect(await usernameTaken('alex', 'user-2')).toBe(true);
+	});
+
+	test('is false for its owner, current or former', async () => {
+		findFirstMock.mockResolvedValue({ id: 'user-2' });
+		findFormerMock.mockResolvedValue(undefined);
+		expect(await usernameTaken('alex', 'user-2')).toBe(false);
+		findFirstMock.mockResolvedValue(undefined);
+		findFormerMock.mockResolvedValue({ profileId: 'user-2' });
+		expect(await usernameTaken('alex', 'user-2')).toBe(false);
 	});
 
 	test('is false when no profile has it', async () => {
 		findFirstMock.mockResolvedValue(undefined);
+		findFormerMock.mockResolvedValue(undefined);
 		expect(await usernameTaken('alex')).toBe(false);
 	});
 });
