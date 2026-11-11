@@ -4,10 +4,13 @@ import Page from './+page.svelte';
 import pageSource from './+page.svelte?raw';
 import { cssRule } from '#lib/testing/css.js';
 import type { PageData } from './$types';
-import { makeContent, makeIngredient, makeVersion } from '#lib/recipes/fixtures.js';
+import { makeContent, makeIngredient, makeStep, makeVersion } from '#lib/recipes/fixtures.js';
 import { FRACTIONS } from '#lib/recipes/scale.js';
 import { loginHref } from '#lib/auth/loginHref.js';
 import { compactCount } from '#lib/helpers.js';
+import { lastShallowUrl } from '#lib/testing/navigation.js';
+import { tick } from 'svelte';
+import { ticksKey, saveTicks } from './components/ticks';
 
 // The page owns the serves: read from ?serves= on load, scaled into the
 // ingredient list. The control's own behaviour is in ServesControl's tests.
@@ -217,45 +220,110 @@ describe('recipe page after a shallow replace', () => {
 describe('recipe page cooking mode', () => {
 	const article = () => document.querySelector('article')!;
 	const bar = () => document.querySelector('.bar-row');
+	const cookHeader = () => document.querySelector('header.cook-header');
 
-	test('not cooking: no data-cooking, the bar and the actions show, Cook unpressed', () => {
+	test('not cooking: no data-cooking, the band, the bar and the actions show', () => {
 		load();
 		expect(article()).not.toHaveAttribute('data-cooking');
+		expect(document.querySelector('.hero')).not.toBeNull();
 		expect(bar()).not.toBeNull();
+		expect(cookHeader()).toBeNull();
 		expect(screen.getByRole('link', { name: 'Log in to save' })).toBeInTheDocument();
-		expect(screen.getByRole('button', { name: 'Cook' })).toHaveAttribute('aria-pressed', 'false');
+		expect(screen.getByRole('button', { name: 'Cook' })).toBeInTheDocument();
 	});
 
-	test('Cook marks the page, hides the bar and the actions, and writes ?cook=1', async () => {
+	test('Cook swaps the band for the cooking header, hides the bar, and writes ?cook=1', async () => {
 		load();
 		await fireEvent.click(screen.getByRole('button', { name: 'Cook' }));
 		expect(article()).toHaveAttribute('data-cooking');
+		expect(document.querySelector('.hero')).toBeNull();
 		expect(bar()).toBeNull();
 		expect(screen.queryByRole('link', { name: 'Log in to save' })).toBeNull();
-		expect(screen.getByRole('button', { name: 'Done cooking' })).toHaveAttribute(
-			'aria-pressed',
-			'true'
-		);
+		expect(cookHeader()).not.toBeNull();
+		expect(screen.getByRole('button', { name: 'Exit' })).toBeInTheDocument();
 		expect(new URL(goto.mock.lastCall![0]).searchParams.get('cook')).toBe('1');
 	});
 
-	test('?cook=1 on load opens in cooking mode; Done restores the page and drops it', async () => {
+	test('cooking, the title is the one h1, in the cooking header', () => {
+		const data = makeData();
 		load('?cook=1');
-		expect(article()).toHaveAttribute('data-cooking');
-		expect(bar()).toBeNull();
-		await fireEvent.click(screen.getByRole('button', { name: 'Done cooking' }));
-		expect(article()).not.toHaveAttribute('data-cooking');
-		expect(bar()).not.toBeNull();
-		expect(screen.getByRole('link', { name: 'Log in to save' })).toBeInTheDocument();
-		expect(new URL(goto.mock.lastCall![0]).searchParams.has('cook')).toBe(false);
+		const headings = screen.getAllByRole('heading', { level: 1 });
+		expect(headings).toHaveLength(1);
+		expect(cookHeader()).toContainElement(headings[0]);
+		expect(headings[0]).toHaveTextContent(data.currentVersion.title);
 	});
 
-	test('the header links its version count to the bar only while the bar is there', () => {
-		const { unmount } = load();
-		expect(screen.getByRole('link', { name: '2 versions' })).toHaveAttribute('href', '#versions');
-		unmount();
+	test('the cooking header says the serves being cooked', () => {
+		load('?cook=1&serves=6');
+		expect(cookHeader()!.querySelector('.serves')!.textContent!.replace(/\s+/g, ' ')).toMatch(
+			/Serves 6 · 1\.5x/
+		);
+	});
+
+	test('Exit leaves cooking for the reading view, drops ?cook and keeps the ticks', async () => {
+		load('?cook=1&serves=8');
+		const step = () => document.querySelector<HTMLInputElement>('#method input')!;
+		await fireEvent.click(step());
+		expect(step().checked).toBe(true);
+		await fireEvent.click(screen.getByRole('button', { name: 'Exit' }));
+		expect(article()).not.toHaveAttribute('data-cooking');
+		expect(document.querySelector('.hero')).not.toBeNull();
+		expect(bar()).not.toBeNull();
+		const url = lastShallowUrl(goto);
+		expect(url.searchParams.has('cook')).toBe(false);
+		expect(url.searchParams.get('serves')).toBe('8');
+		expect(step().checked).toBe(true);
+		await fireEvent.click(step());
+	});
+
+	test('Finish cooking comes after the method, the one primary while cooking', () => {
+		const { container } = load('?cook=1');
+		const finish = screen.getByRole('button', { name: 'Finish cooking' });
+		expect(finish).toHaveClass('btn-primary');
+		expect(container.querySelectorAll('.btn-primary')).toHaveLength(1);
+		const method = container.querySelector('#method')!;
+		expect(method.compareDocumentPosition(finish) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+		expect(container.querySelector('.main')).toContainElement(finish);
+	});
+
+	test('signed out, Finish cooking leaves cooking for the reading view', async () => {
 		load('?cook=1');
-		expect(screen.queryByRole('link', { name: '2 versions' })).toBeNull();
+		await fireEvent.click(screen.getByRole('button', { name: 'Finish cooking' }));
+		expect(article()).not.toHaveAttribute('data-cooking');
+		expect(goto).toHaveBeenCalledOnce();
+		expect(lastShallowUrl(goto).searchParams.has('cook')).toBe(false);
+	});
+
+	test('signed in, Finish cooking leaves cooking, then opens the Journal entry for these serves', async () => {
+		const ADD = '/journal/new?recipe=cookies&version=2';
+		page.url = new URL('http://localhost/recipes/cookies?cook=1&serves=8');
+		const data = { ...makeData(), user: { id: 'v' }, journal: { lastEntry: null, addHref: ADD } };
+		render(Page, { props: { data: data as PageData } });
+		await fireEvent.click(screen.getByRole('button', { name: 'Finish cooking' }));
+		await tick();
+		expect(goto).toHaveBeenCalledTimes(2);
+		// First the cooking entry is replaced, so Back from the Journal returns to reading.
+		const [dropped, opts] = goto.mock.calls[0];
+		expect(opts).toMatchObject({ shallow: true, replace: true });
+		expect(new URL(dropped).searchParams.has('cook')).toBe(false);
+		expect(goto.mock.calls[1]).toEqual([`${ADD}&serves=8`]);
+	});
+
+	test('signed in, Add to Journal in the band carries a whole ?serves=', () => {
+		const ADD = '/journal/new?recipe=cookies&version=2';
+		const open = (search: string) => {
+			page.url = new URL(`http://localhost/recipes/cookies${search}`);
+			const data = { ...makeData(), user: { id: 'v' }, journal: { lastEntry: null, addHref: ADD } };
+			return render(Page, { props: { data: data as PageData } });
+		};
+		const scaled = open('?serves=6');
+		expect(screen.getByRole('link', { name: 'Add to Journal' })).toHaveAttribute(
+			'href',
+			`${ADD}&serves=6`
+		);
+		scaled.unmount();
+		open('?serves=1.5');
+		expect(screen.getByRole('link', { name: 'Add to Journal' })).toHaveAttribute('href', ADD);
 	});
 
 	test('cooking, the article names the version being read; not cooking, it does not', () => {
@@ -278,13 +346,14 @@ describe('recipe page cooking mode', () => {
 		expect(article()).toHaveAttribute('data-version', '1');
 	});
 
-	test('a reload of that URL lands in Cook on the same version and scale', () => {
+	test('a reload of that URL lands in Cook on the same version and scale, on Method', () => {
 		page.url = new URL('http://localhost/recipes/cookies?version=1&serves=8&cook=1');
 		const data = makeData();
 		render(Page, { props: { data: { ...data, currentVersion: data.allVersions[1] } } });
 		expect(article()).toHaveAttribute('data-cooking');
 		expect(article()).toHaveAttribute('data-version', '1');
 		expect(screen.getByRole('spinbutton', { name: 'Servings' })).toHaveValue(8);
+		expect(screen.getByRole('button', { name: 'Method' })).toHaveAttribute('aria-pressed', 'true');
 	});
 
 	test('only ?cook=1 cooks', () => {
@@ -292,11 +361,126 @@ describe('recipe page cooking mode', () => {
 		expect(article()).not.toHaveAttribute('data-cooking');
 	});
 
-	test('cooking keeps the ticks, the scaler and the section tabs', () => {
+	test('cooking keeps the ticks, the scaler and the section switch', () => {
 		load('?cook=1');
 		expect(screen.getByRole('spinbutton', { name: 'Servings' })).toBeInTheDocument();
 		expect(screen.getAllByRole('checkbox').length).toBeGreaterThan(0);
 		expect(screen.getByRole('navigation', { name: 'Recipe sections' })).toBeInTheDocument();
+	});
+});
+
+// While cooking each view keeps its own place: the ginger lookup (Spencer,
+// 11 November 2026). jsdom does not scroll, so the window's scroll is a stand-in.
+describe('recipe page cooking switch', () => {
+	let y = 0;
+	beforeEach(() => {
+		y = 0;
+		Object.defineProperty(window, 'scrollY', { get: () => y, configurable: true });
+		vi.spyOn(window, 'scrollTo').mockImplementation(((opts: ScrollToOptions) => {
+			y = opts.top ?? y;
+		}) as typeof window.scrollTo);
+	});
+
+	// The switch restores the scroll after the view has rendered.
+	async function press(name: string) {
+		await fireEvent.click(screen.getByRole('button', { name }));
+		await tick();
+	}
+
+	test('switching restores each view to where it was, instantly, with no history entry', async () => {
+		load('?cook=1');
+		goto.mockClear();
+		// The views start 150px down the page, under the cooking header.
+		const content = document.getElementById('recipe')!;
+		content.getBoundingClientRect = () => ({ top: 150 - y }) as DOMRect;
+		y = 900;
+		await press('Ingredients');
+		// First visit: the view's top.
+		expect(y).toBe(150);
+		y = 120;
+		await press('Method');
+		expect(y).toBe(900);
+		expect(window.scrollTo).toHaveBeenLastCalledWith({ top: 900, behavior: 'instant' });
+		await press('Ingredients');
+		expect(y).toBe(120);
+		expect(goto).not.toHaveBeenCalled();
+	});
+
+	test('the pressed segment is the view showing, and focus stays on it', async () => {
+		load('?cook=1');
+		const ingredients = screen.getByRole('button', { name: 'Ingredients' });
+		ingredients.focus();
+		await press('Ingredients');
+		expect(ingredients).toHaveAttribute('aria-pressed', 'true');
+		expect(screen.getByRole('button', { name: 'Method' })).toHaveAttribute('aria-pressed', 'false');
+		expect(document.activeElement).toBe(ingredients);
+	});
+
+	test('pressing the view already showing moves nothing', async () => {
+		load('?cook=1');
+		y = 400;
+		await press('Method');
+		expect(y).toBe(400);
+	});
+
+	test('entering Cook with steps ticked lands on the first open step', async () => {
+		const data = makeData();
+		const steps = [makeStep('One.'), makeStep('Two.'), makeStep('Three.')];
+		saveTicks(ticksKey('cookies', 2, 'steps'), [0]);
+		const into = vi.fn();
+		Element.prototype.scrollIntoView = into;
+		page.url = new URL('http://localhost/recipes/cookies');
+		render(Page, {
+			props: { data: { ...data, currentVersion: { ...data.currentVersion, steps } } }
+		});
+		await press('Cook');
+		await tick();
+		expect(into).toHaveBeenCalledOnce();
+		expect(into.mock.contexts[0]).toHaveTextContent('Two.');
+		expect(screen.getByRole('button', { name: 'Method' })).toHaveAttribute('aria-pressed', 'true');
+		saveTicks(ticksKey('cookies', 2, 'steps'), []);
+	});
+
+	test('entering Cook with nothing ticked starts at the top', async () => {
+		const into = vi.fn();
+		Element.prototype.scrollIntoView = into;
+		load();
+		y = 700;
+		await press('Cook');
+		await tick();
+		expect(into).not.toHaveBeenCalled();
+		expect(y).toBe(0);
+	});
+});
+
+describe('recipe page cooking CSS', () => {
+	// jsdom applies no component CSS, so the rules are read from source; the
+	// e2e spec pins the computed layout.
+	test('one done language while cooking: neither list strikes a ticked row', () => {
+		expect(cssRule(pageSource, 'article[data-cooking] :global(label:has(:checked))')).toMatch(
+			/text-decoration-line: none;/
+		);
+	});
+
+	test('the espresso bar and the site tab bar step aside while cooking', () => {
+		expect(
+			cssRule(pageSource, ':global(body:has(article[data-cooking]) :is(.nav-shell, .tab-bar))')
+		).toMatch(/display: none;/);
+	});
+
+	test('below 1024 the switch is pinned to the bottom, clear of the home indicator', () => {
+		const narrow = pageSource.slice(pageSource.indexOf('@media (max-width: 1023px)'));
+		const rule = cssRule(narrow, '[data-cooking] .section-tabs');
+		expect(rule).toMatch(/position: fixed;/);
+		expect(rule).toMatch(/bottom: 0;/);
+		expect(rule).toMatch(/env\(safe-area-inset-bottom\)/);
+	});
+
+	test('in forced colours only the current segment keeps its top line', () => {
+		const forced = pageSource.slice(pageSource.lastIndexOf('@media (forced-colors: active)'));
+		expect(
+			cssRule(forced, "[data-cooking] .section-tabs button:not([aria-pressed='true'])")
+		).toMatch(/border-top-color: Canvas;/);
 	});
 });
 

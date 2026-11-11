@@ -8,9 +8,9 @@ import { page } from '$app/state';
  * builds on page.shallow's URL when there is one, and the serves control and
  * Cook keep each other's param.
  */
-export function setShallowParam(name: string, value: string | null) {
+export function setShallowParam(name: string, value: string | null): Promise<void> {
 	const url = new URL((page.shallow?.url ?? page.url).href);
 	if (value === null) url.searchParams.delete(name);
 	else url.searchParams.set(name, value);
-	goto(url, { shallow: true, replace: true, state: page.state });
+	return goto(url, { shallow: true, replace: true, state: page.state });
 }
