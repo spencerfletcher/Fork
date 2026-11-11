@@ -36,7 +36,9 @@ vi.mock('#lib/server/db/index.js', () => ({
 	db: {
 		query: {
 			recipes: { findFirst: findRecipeMock },
-			favorites: { findFirst: findFavoriteMock }
+			favorites: { findFirst: findFavoriteMock },
+			// The forker's Settings: a Public default, which a fork must not take.
+			profiles: { findFirst: vi.fn().mockResolvedValue({ defaultVisibility: 'public' }) }
 		},
 		$count: countMock,
 		select: selectMock,
@@ -631,7 +633,8 @@ describe('visibility: a friends recipe', () => {
 		expect(result).toMatchObject({ status: 404 });
 	});
 
-	test('a friend can fork it, and the fork starts private', async () => {
+	// The db mock's profile has a Public default: Settings never widens a fork.
+	test("a friend can fork it, and the fork starts private, whatever the forker's default audience", async () => {
 		friendsWith(SOURCE_RECIPE.authorId);
 		const tx = makeTx();
 		transactionMock.mockImplementationOnce(
