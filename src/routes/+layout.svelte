@@ -89,6 +89,7 @@
 		<meta name="twitter:image" content={image} />
 
 		<!-- The one {@html} on user text: ldScript escapes <, > and & in the JSON. -->
+		<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 		{#if meta.jsonLd}{@html ldScript(meta.jsonLd)}{/if}
 	{/if}
 </svelte:head>

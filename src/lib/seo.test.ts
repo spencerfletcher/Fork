@@ -163,7 +163,12 @@ describe('recipeMeta: description', () => {
 	});
 
 	test('a recipe that makes something says so, and a bare one says only its name', () => {
-		const bare = { description: null, servings: null, prepTimeMinutes: null, cookTimeMinutes: null };
+		const bare = {
+			description: null,
+			servings: null,
+			prepTimeMinutes: null,
+			cookTimeMinutes: null
+		};
 		expect(
 			recipeMeta(withVersion({ ...bare, makes: '12 buns', ingredients: [makeIngredient('flour')] }))
 				.description

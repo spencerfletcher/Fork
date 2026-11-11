@@ -177,10 +177,9 @@ function recipeData(input: RecipeMetaInput, image: string | null): Record<string
 		datePublished: input.published.toISOString(),
 		dateModified: version.createdAt.toISOString(),
 		recipeYield: nonEmpty(
-			[
-				version.servings ? `${version.servings} servings` : null,
-				version.makes
-			].filter((y) => y !== null)
+			[version.servings ? `${version.servings} servings` : null, version.makes].filter(
+				(y) => y !== null
+			)
 		),
 		prepTime: isoDuration(version.prepTimeMinutes),
 		cookTime: isoDuration(version.cookTimeMinutes),

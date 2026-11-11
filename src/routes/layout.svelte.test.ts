@@ -51,7 +51,12 @@ const publicRecipe = (title = 'Cookies', imageUrl: string | null = 'https://img.
 
 describe('layout head: a public page', () => {
 	test('previews with absolute URLs from the request origin, canonical without the query', () => {
-		renderLayout('/recipes/[slug]', null, publicRecipe(), 'https://fork.test/recipes/c?serves=8&cook=1');
+		renderLayout(
+			'/recipes/[slug]',
+			null,
+			publicRecipe(),
+			'https://fork.test/recipes/c?serves=8&cook=1'
+		);
 		expect(head('link[rel="canonical"]')).toHaveAttribute('href', 'https://fork.test/recipes/c');
 		expect(content('meta[property="og:url"]')).toBe('https://fork.test/recipes/c');
 		expect(content('meta[property="og:title"]')).toBe('Cookies');
@@ -62,7 +67,12 @@ describe('layout head: a public page', () => {
 	});
 
 	test('a recipe without a photo shows the site card as a small card', () => {
-		renderLayout('/recipes/[slug]', null, publicRecipe('Cookies', null), 'https://fork.test/recipes/c');
+		renderLayout(
+			'/recipes/[slug]',
+			null,
+			publicRecipe('Cookies', null),
+			'https://fork.test/recipes/c'
+		);
 		expect(content('meta[property="og:image"]')).toBe(`https://fork.test${DEFAULT_IMAGE}`);
 		expect(content('meta[name="twitter:card"]')).toBe('summary');
 	});

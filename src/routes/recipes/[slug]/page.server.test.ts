@@ -1011,10 +1011,11 @@ describe('Keep this version', () => {
 		invoke(load as never, loadEvent({ params: { slug: 'classic-cookies' }, path, user: SAVER }));
 
 	test('an earlier version previews as itself, with no Recipe data: that is the latest version, on the canonical page', async () => {
-		const { meta } = await loadAt('/recipes/classic-cookies?version=2');
+		const metaAt = async (path: string) => ((await loadAt(path)) as { meta: PageMeta }).meta;
+		const meta = await metaAt('/recipes/classic-cookies?version=2');
 		expect(meta).toMatchObject({ title: LATEST.title, type: 'article' });
 		expect(meta.jsonLd).toBeUndefined();
-		expect((await loadAt('/recipes/classic-cookies?version=3')).meta.jsonLd).toMatchObject({
+		expect((await metaAt('/recipes/classic-cookies?version=3')).jsonLd).toMatchObject({
 			dateModified: v(3).createdAt.toISOString(),
 			datePublished: v(1).createdAt.toISOString()
 		});
