@@ -257,36 +257,47 @@ test.describe('Edit recipe page', () => {
 		}
 	});
 
-	test('Tab walks the editor top to bottom at every width, because the grid reorders nothing', async ({
+	test('Tab walks the editor in the order it reads at every width, because the grid reorders nothing', async ({
 		page
 	}) => {
 		const url = await createRecipe(page, 'E2E Tab Order', { servings: '4', cookTimeMinutes: '20' });
-		const expected = [
-			'title',
-			'description',
-			'image',
-			'servings',
-			'makes',
-			'prepTimeMinutes',
-			'cookTimeMinutes',
-			'restTimeMinutes',
-			'sourceName',
-			'sourceUrl',
-			'tag-combobox',
-			// One stop for the radio group, then each text box's Section heading before it.
-			'visibility',
+		// The long boxes and what follows them, the same at every width: each
+		// text box's Section heading before it, the empty notes as Add buttons,
+		// then the pinned bar.
+		const rest = [
 			'Section heading',
 			'ingredients',
 			'Section heading',
 			'steps',
-			'notes',
-			// "More details", closed while its notes are empty: one stop.
-			'More details',
+			'Add Notes',
+			'Add Make ahead',
+			'Add Equipment',
+			'Add Storage',
+			'Add Reheating',
 			'commitMessage',
 			'Save',
 			'Cancel'
 		];
-		const walk = async () => {
+		// Desktop: the facts column, then the photo and audience beside it.
+		const desktop = [
+			'title',
+			'description',
+			'servings',
+			'Add Makes',
+			'prepTimeMinutes',
+			'cookTimeMinutes',
+			'restTimeMinutes',
+			'sourceName',
+			'Add Link',
+			'tag-combobox',
+			'image',
+			// One stop for the radio group.
+			'visibility',
+			...rest
+		];
+		// A phone: the facts folded into their summary, one stop.
+		const phone = ['title', 'description', 'summary', ...rest];
+		const walk = async (expected: string[]) => {
 			await page.locator('textarea[name="title"]').focus();
 			const seen: string[] = [];
 			for (let i = 0; i < expected.length; i++) {
@@ -298,6 +309,7 @@ test.describe('Edit recipe page', () => {
 						.map((n) => n.textContent ?? '')
 						.join('')
 						.trim();
+					if (el.localName === 'summary') return 'summary';
 					return el.getAttribute('name') || el.id || words || '';
 				});
 				seen.push(name);
@@ -309,9 +321,10 @@ test.describe('Edit recipe page', () => {
 		};
 		try {
 			await gotoHydrated(page, `${url}/edit`);
-			expect(await walk()).toEqual(expected);
+			expect(await walk(desktop)).toEqual(desktop);
 			await page.setViewportSize({ width: 390, height: 900 });
-			expect(await walk()).toEqual(expected);
+			await gotoHydrated(page, `${url}/edit`);
+			expect(await walk(phone)).toEqual(phone);
 		} finally {
 			await deleteRecipe(page, url);
 		}
@@ -793,6 +806,7 @@ test.describe('Groups and yield', () => {
 			await gotoHydrated(page, '/recipes/new');
 			await page.locator('textarea[name="title"]').fill('E2E Cinnamon Buns');
 			await page.locator('input[name="servings"]').fill('4');
+			await page.getByRole('button', { name: 'Add Makes' }).click();
 			await page.getByLabel(/^Makes/).fill('12 buns');
 			await page.getByRole('textbox', { name: 'Ingredients', exact: true }).fill(INGREDIENTS);
 			await page
