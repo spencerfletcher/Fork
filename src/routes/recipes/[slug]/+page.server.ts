@@ -3,10 +3,10 @@ import { db } from '#lib/server/db/index.js';
 import { recipes, recipeVersions, recipesToTags, favorites } from '#lib/server/db/schema.js';
 import { NOTE_MAX, NOTE_TOO_LONG } from '#lib/saves.js';
 import { eq, desc, and } from 'drizzle-orm';
-import { recipeSlug, plural, wholeNumber, text } from '#lib/helpers.js';
+import { recipeSlug, wholeNumber, text } from '#lib/helpers.js';
 import { ensureProfile } from '#lib/server/profiles.js';
 import { recipeCopies, versionContent } from '#lib/recipes/content.js';
-import { absoluteImage, clampDescription } from '#lib/seo.js';
+import { recipeMeta } from '#lib/seo.js';
 import { gramsFor } from '#lib/server/ingredientDensities.js';
 import {
 	canViewRow,
@@ -153,15 +153,21 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 					addHref: `/journal/new?recipe=${encodeURIComponent(recipe.slug)}&version=${currentVersion.versionNumber}`
 				}
 			: null,
-		meta: {
-			title: currentVersion.title,
-			description: clampDescription(
-				currentVersion.description ??
-					`${currentVersion.title} on Fork — ${plural(recipe.versions.length, 'version')}, with the full history of what changed and why.`
-			),
-			image: absoluteImage(currentVersion.imageUrl),
-			type: 'article' as const
-		}
+		// Judged as a signed-out visitor would see it, whoever loaded the page.
+		meta: recipeMeta({
+			origin: url.origin,
+			slug: recipe.slug,
+			isPublic: shown?.visibility === 'public',
+			latest: currentVersion === latestVersion,
+			author: recipe.author?.username ?? null,
+			tags: recipe.recipesToTags.map((rt) => rt.tag.name),
+			parentSlug:
+				visibleRecipe.parent?.visibility === 'public' && !visibleRecipe.parentDeleted
+					? visibleRecipe.parent.slug
+					: null,
+			published: recipe.versions.at(-1)!.createdAt,
+			version: currentVersion
+		})
 	};
 };
 

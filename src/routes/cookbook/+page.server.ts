@@ -20,7 +20,7 @@ import { oneOf, text, wholeNumber } from '#lib/helpers.js';
 import { COOKBOOK_FILTERS, type CookbookFilter } from './filters.js';
 import type { Actions, PageServerLoad } from './$types';
 
-const META = { title: 'Cookbook' };
+const META = { title: 'Cookbook', noindex: true };
 
 export const load: PageServerLoad = async ({ url, locals: { user, supabase } }) => {
 	requireUser(url, user);

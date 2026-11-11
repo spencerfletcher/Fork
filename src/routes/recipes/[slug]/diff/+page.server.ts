@@ -67,7 +67,9 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 				fromNum === toNum
 					? `v${toNum} · same version · ${recipe.title}`
 					: `v${fromNum} → v${toNum} · ${recipe.title}`,
-			description: `What changed between v${fromNum} and v${toNum} of ${recipe.title} on Fork.`
+			description: `What changed between v${fromNum} and v${toNum} of ${recipe.title} on Fork.`,
+			// A recipe not everyone may see previews nothing (the layout drops the description).
+			noindex: recipe.visibility !== 'public'
 		}
 	};
 };

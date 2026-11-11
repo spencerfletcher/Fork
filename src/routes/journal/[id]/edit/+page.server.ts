@@ -64,7 +64,7 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 		choices: offered,
 		keepLabel,
 		photoUrl: entry.photoUrl,
-		meta: { title: `Edit ${entry.dish}` }
+		meta: { title: `Edit ${entry.dish}`, noindex: true }
 	};
 };
 

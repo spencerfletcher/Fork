@@ -53,6 +53,12 @@ describe('/recipes/[slug]/forks load', () => {
 		expect(await run()).toMatchObject({ status: 404 });
 	});
 
+	test("a public recipe's forks page previews; a private one is noindex to its author", async () => {
+		expect(await run()).toMatchObject({ meta: { noindex: false } });
+		findFirstMock.mockResolvedValue({ ...RECIPE, visibility: 'private' });
+		expect(await run(OWNER)).toMatchObject({ meta: { noindex: true } });
+	});
+
 	test('404s a private recipe to anyone but its author', async () => {
 		findFirstMock.mockResolvedValue({ ...RECIPE, visibility: 'private' });
 		expect(await run(VISITOR)).toMatchObject({ status: 404 });

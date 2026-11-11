@@ -51,7 +51,7 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 		link: ''
 	};
 
-	return { values, choices: offered, meta: { title: 'Add to Journal' } };
+	return { values, choices: offered, meta: { title: 'Add to Journal', noindex: true } };
 };
 
 export const actions: Actions = {

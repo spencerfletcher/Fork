@@ -63,7 +63,9 @@ describe('settings load', () => {
 		expect(ensureProfileMock).toHaveBeenCalledWith(ME);
 		expect(data).toMatchObject({
 			email: 'me@example.com',
-			settings: { username: 'cook', defaultVisibility: 'friends', measurement: null }
+			settings: { username: 'cook', defaultVisibility: 'friends', measurement: null },
+			// A signed-in page: kept out of search, no preview.
+			meta: { noindex: true }
 		});
 	});
 });
