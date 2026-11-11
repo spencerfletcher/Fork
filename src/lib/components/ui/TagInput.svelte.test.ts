@@ -452,3 +452,20 @@ describe('TagInput closing', () => {
 		expect(screen.queryByRole('listbox')).toBeNull();
 	});
 });
+
+describe('TagInput above the box', () => {
+	test('at the screen’s foot the list opens upward, joined at the box’s top', async () => {
+		render(TagInput, { props: { allTags, above: true } });
+		await fireEvent.click(getInput());
+		await tick();
+		expect(screen.getByRole('listbox').parentElement).toHaveClass('tag-combo--above');
+		expect(cssRule(source, '.tag-combo--above .tag-menu')).toMatch(/bottom:\s*100%/);
+	});
+
+	test('below the box by default', async () => {
+		render(TagInput, { props: { allTags } });
+		await fireEvent.click(getInput());
+		await tick();
+		expect(screen.getByRole('listbox').parentElement).not.toHaveClass('tag-combo--above');
+	});
+});
