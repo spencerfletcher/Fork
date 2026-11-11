@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeAll } from 'vitest';
-import { asc, eq, sql } from 'drizzle-orm';
+import { asc, eq } from 'drizzle-orm';
 
 import { closeDbAfter, localDb, withProfiles } from '#lib/testing/db.js';
 import { makeContent, makeIngredient, makeStep } from '#lib/recipes/fixtures.js';
@@ -120,13 +120,6 @@ describe.skipIf(!localDb)('restoreVersion, against the real database', () => {
 				visibility: 'friends',
 				editRevision: REVISION + 1
 			});
-			const [{ found }] = await tx
-				.select({
-					found: sql<boolean>`${schema.recipes.fts} @@ plainto_tsquery('english', 'plain')`
-				})
-				.from(schema.recipes)
-				.where(eq(schema.recipes.id, recipeId));
-			expect(found).toBe(true);
 			expect(
 				await tx.query.recipesToTags.findMany({
 					where: eq(schema.recipesToTags.recipeId, recipeId)

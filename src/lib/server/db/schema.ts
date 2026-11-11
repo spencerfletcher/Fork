@@ -10,7 +10,6 @@ import {
 	timestamp,
 	primaryKey,
 	jsonb,
-	customType,
 	index,
 	unique,
 	check,
@@ -19,12 +18,6 @@ import {
 } from 'drizzle-orm/pg-core';
 import { relations, sql } from 'drizzle-orm';
 
-// tsvector is a native Postgres type not built into Drizzle
-const tsvector = customType<{ data: string }>({
-	dataType() {
-		return 'tsvector';
-	}
-});
 import type { InferSelectModel } from 'drizzle-orm';
 
 // Every table enables row level security with no policies: the anon key ships
@@ -73,8 +66,7 @@ export const recipes = pgTable(
 		authorId: text('author_id').references(() => profiles.id, { onDelete: 'set null' }),
 		slug: text().notNull().unique(),
 		// Copies of the latest version's content (title, description, photo,
-		// servings, times), kept so search (the generated fts column) and list
-		// cards can read recipes without a join. Written in the same transaction
+		// servings, times), kept so list cards can read recipes without a join. Written in the same transaction
 		// as the version that defines them; never edited on their own.
 		title: text().notNull(),
 		description: text(),
@@ -108,15 +100,9 @@ export const recipes = pgTable(
 		// #lib/server/moderation.ts): seen by its author and moderators only, no
 		// copies kept for savers, no forks or saves (#lib/server/visibility.ts).
 		// Null for a recipe not hidden; Restore sets it back to null.
-		suppressedAt: timestamp('suppressed_at'),
-		// Full-text search vector: title (weight A) + description (weight B)
-		// Generated automatically by Postgres — never set manually
-		fts: tsvector('fts').generatedAlwaysAs(
-			sql`setweight(to_tsvector('english', coalesce(title, '')), 'A') || setweight(to_tsvector('english', coalesce(description, '')), 'B')`
-		)
+		suppressedAt: timestamp('suppressed_at')
 	},
 	(table) => [
-		index('recipes_fts_idx').using('gin', table.fts),
 		// A profile's recipes, the library and the feed read by author.
 		index('recipes_author_idx').on(table.authorId),
 		// Fork counts on every card list read by parent.

@@ -103,7 +103,6 @@ describe('cardList', () => {
 		const query = findManyMock.mock.calls[0][0];
 		expect(sqlOf(query.where)).toEqual(sqlOf(WHERE));
 		expect(query).toMatchObject({
-			columns: { fts: false },
 			with: CARD_WITH,
 			limit: 6,
 			offset: 0
