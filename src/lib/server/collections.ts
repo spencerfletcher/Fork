@@ -38,8 +38,8 @@ async function makeStarters(userId: string, conn: Conn) {
  */
 export async function collectionsOf(
 	user: Cook,
-	conn: Conn = db,
-	recipeId?: number
+	recipeId?: number,
+	conn: Conn = db
 ): Promise<CollectionRow[]> {
 	await makeStarters(user.id, conn);
 	const rows = await conn

@@ -2,7 +2,7 @@ import { error, redirect } from '@sveltejs/kit';
 import { db } from '#lib/server/db/index.js';
 import { recipes, recipeVersions, recipesToTags, favorites } from '#lib/server/db/schema.js';
 import { eq, desc, and } from 'drizzle-orm';
-import { slugify, randomSuffix, plural, wholeNumber } from '#lib/helpers.js';
+import { slugify, randomSuffix, plural, wholeNumber, text } from '#lib/helpers.js';
 import { ensureProfile } from '#lib/server/profiles.js';
 import { recipeCopies, versionContent } from '#lib/recipes/content.js';
 import { absoluteImage, clampDescription } from '#lib/seo.js';
@@ -20,7 +20,17 @@ import { VERSION_NOT_FOUND } from './versionError.js';
 import { failure, requireUser, SESSION_ENDED } from '#lib/server/actions.js';
 import { STALE_MESSAGE } from '#lib/server/submission.js';
 import { restoreVersion } from '#lib/server/versions.js';
+import {
+	collectionsOf,
+	createCollection,
+	leaveCollections,
+	setMembership
+} from '#lib/server/collections.js';
 import type { PageServerLoad, Actions } from './$types';
+
+/** A collection gone meanwhile, or a recipe no longer in the reader's library. */
+const NOT_IN_COLLECTIONS =
+	'That collection or recipe is no longer in your Cookbook. Reload the page.';
 
 export const load: PageServerLoad = async ({ params, url, locals: { user } }) => {
 	const recipeSlug = params.slug;
@@ -81,6 +91,11 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 		user ? lastEntryFor(user.id, recipe.id) : null
 	]);
 	const isFavorited = !!favorite;
+	// Add to collection is for a recipe in the reader's library: their own, or saved.
+	const collections =
+		user && (recipe.authorId === user.id || isFavorited)
+			? await collectionsOf(user, recipe.id)
+			: null;
 
 	return {
 		recipe: visibleRecipe,
@@ -92,6 +107,7 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 		grams: currentVersion.ingredients.map(gramsFor),
 		allVersions: recipe.versions,
 		isFavorited,
+		collections,
 		/** Signed in: the personal line's data; signed out there is no line. */
 		journal: user
 			? {
@@ -126,7 +142,41 @@ export const actions: Actions = {
 			.returning({ recipeId: favorites.recipeId });
 		if (removed.length === 0) {
 			await db.insert(favorites).values({ userId: user.id, recipeId: recipe.id });
+		} else {
+			// Out of the saver's collections too, so saving again starts clean.
+			await leaveCollections(user.id, recipe.id);
 		}
+	},
+
+	// Puts the recipe in one of the reader's collections (member=1) or takes it
+	// out (member=0). setMembership checks the collection is theirs and, to add,
+	// that the recipe is in their library.
+	collect: async ({ params, request, locals: { user } }) => {
+		if (!user) return failure(401, 'unauthenticated', SESSION_ENDED('try again'));
+		const form = await request.formData();
+		const collectionId = wholeNumber(text(form, 'collectionId'));
+		const member = text(form, 'member');
+		if (collectionId === null || (member !== '1' && member !== '0'))
+			return failure(400, 'invalid', 'Invalid form state, reload the page');
+
+		const recipe = await viewableRecipe(params.slug, user);
+		if (!recipe) throw error(404, 'Recipe not found');
+		if (!(await setMembership(user, collectionId, recipe.id, member === '1')))
+			return failure(404, 'not_found', NOT_IN_COLLECTIONS);
+		return { collected: collectionId };
+	},
+
+	// A new collection named in the menu, with this recipe already in it.
+	newCollection: async ({ params, request, locals: { user } }) => {
+		if (!user) return failure(401, 'unauthenticated', SESSION_ENDED('try again'));
+		const name = text(await request.formData(), 'name');
+		const recipe = await viewableRecipe(params.slug, user);
+		if (!recipe) throw error(404, 'Recipe not found');
+		const created = await createCollection(user.id, name);
+		if ('error' in created) return failure(400, 'invalid', created.error, { name });
+		if (!(await setMembership(user, created.id, recipe.id, true)))
+			return failure(404, 'not_found', NOT_IN_COLLECTIONS);
+		return { collected: created.id };
 	},
 
 	fork: async ({ params, locals: { user } }) => {

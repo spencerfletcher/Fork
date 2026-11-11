@@ -56,6 +56,13 @@ vi.mock('#lib/server/db/index.js', () => ({
 vi.mock('#lib/server/profiles.js', () => ({ ensureProfile: ensureProfileMock }));
 vi.mock('#lib/server/journal.js', () => ({ lastEntryFor: lastEntryMock }));
 vi.mock('#lib/server/versions.js', () => ({ restoreVersion: restoreMock }));
+const collectionsMock = vi.hoisted(() => ({
+	collectionsOf: vi.fn(),
+	createCollection: vi.fn(),
+	setMembership: vi.fn(),
+	leaveCollections: vi.fn()
+}));
+vi.mock('#lib/server/collections.js', () => collectionsMock);
 
 // The slug suffix must be deterministic so we can predict slugs.
 vi.spyOn(crypto, 'randomUUID').mockReturnValue('abc12345-0000-4000-8000-000000000000');
@@ -592,6 +599,12 @@ describe('toggleFavorite', () => {
 		expect(dbInsert).not.toHaveBeenCalled();
 	});
 
+	test('an unsave takes the recipe out of the saver’s collections, so a later save starts clean', async () => {
+		dbDelete.mockReturnValue(chain([{ recipeId: SOURCE_RECIPE.id }]));
+		await invoke(actions.toggleFavorite as never, makeEvent({ user: FORKER }));
+		expect(collectionsMock.leaveCollections).toHaveBeenCalledWith(FORKER.id, SOURCE_RECIPE.id);
+	});
+
 	test('with nothing to remove, the recipe is favorited', async () => {
 		dbDelete.mockReturnValue(chain([]));
 		const insert = chain();
@@ -599,6 +612,7 @@ describe('toggleFavorite', () => {
 		await invoke(actions.toggleFavorite as never, makeEvent({ user: FORKER }));
 		expect(dbInsert).toHaveBeenCalledWith(favorites);
 		expect(insert.values).toHaveBeenCalledWith({ userId: FORKER.id, recipeId: SOURCE_RECIPE.id });
+		expect(collectionsMock.leaveCollections).not.toHaveBeenCalled();
 	});
 
 	test('signed out is a 401 form failure saying the session ended, and touches nothing', async () => {
@@ -783,5 +797,116 @@ describe('restore', () => {
 	test('ownership lost under the lock is the 403', async () => {
 		restoreMock.mockResolvedValue('forbidden');
 		expect(await restore(VALID)).toMatchObject({ status: 403 });
+	});
+});
+
+// ─── Collections ──────────────────────────────────────────────────────────────
+
+const SHELVES = [
+	{ id: 5, name: 'To cook', count: 1, has: true },
+	{ id: 6, name: 'Quick', count: 0, has: false }
+];
+
+describe('load: Add to collection', () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+		findFavoriteMock.mockResolvedValue(undefined);
+		countMock.mockResolvedValue(0);
+		selectMock.mockReturnValue(chain([]));
+		collectionsMock.collectionsOf.mockResolvedValue(SHELVES);
+	});
+
+	const collectionsFor = async (user: typeof FORKER | null, authorId = 'original-author') => {
+		findRecipeMock.mockResolvedValue({
+			...forkOf({ visibility: 'public', authorId: 'original-author' }),
+			authorId
+		});
+		return ((await load(makeLoadEvent(user) as never)) as { collections: unknown }).collections;
+	};
+
+	test('signed out, or a recipe not in the reader’s library, has none and asks for none', async () => {
+		expect(await collectionsFor(null)).toBeNull();
+		expect(await collectionsFor(FORKER)).toBeNull();
+		expect(collectionsMock.collectionsOf).not.toHaveBeenCalled();
+	});
+
+	test('the reader’s own recipe, or one they saved, lists their collections marked for it', async () => {
+		expect(await collectionsFor(FORKER, FORKER.id)).toEqual(SHELVES);
+		expect(collectionsMock.collectionsOf).toHaveBeenCalledWith(FORKER, 99);
+
+		findFavoriteMock.mockResolvedValue({ userId: FORKER.id, recipeId: 99 });
+		expect(await collectionsFor(FORKER)).toEqual(SHELVES);
+	});
+});
+
+describe('collect and newCollection', () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+		findRecipeMock.mockResolvedValue({ ...SOURCE_RECIPE, visibility: 'public' });
+	});
+
+	const collect = (fields: Record<string, string>, user: typeof FORKER | null = FORKER) =>
+		invoke(actions.collect as never, makeEvent({ user, fields }));
+
+	test('signed out is told the session ended, for both', async () => {
+		for (const action of [actions.collect, actions.newCollection]) {
+			const result = await invoke(action as never, makeEvent({ user: null }));
+			expect(result).toMatchObject({ status: 401, data: { code: 'unauthenticated' } });
+		}
+		expect(collectionsMock.setMembership).not.toHaveBeenCalled();
+	});
+
+	test('puts the recipe in or takes it out, as the form asks', async () => {
+		collectionsMock.setMembership.mockResolvedValue(true);
+		expect(await collect({ collectionId: '6', member: '1' })).toEqual({ collected: 6 });
+		expect(collectionsMock.setMembership).toHaveBeenCalledWith(FORKER, 6, SOURCE_RECIPE.id, true);
+		await collect({ collectionId: '6', member: '0' });
+		expect(collectionsMock.setMembership).toHaveBeenLastCalledWith(
+			FORKER,
+			6,
+			SOURCE_RECIPE.id,
+			false
+		);
+	});
+
+	test('a malformed form is invalid; a collection not theirs or a recipe not in their library is not found', async () => {
+		expect(await collect({ collectionId: 'x', member: '1' })).toMatchObject({ status: 400 });
+		expect(await collect({ collectionId: '6', member: 'yes' })).toMatchObject({ status: 400 });
+		collectionsMock.setMembership.mockResolvedValue(false);
+		expect(await collect({ collectionId: '6', member: '1' })).toMatchObject({
+			status: 404,
+			data: { code: 'not_found' }
+		});
+	});
+
+	test('a recipe the reader cannot see is a 404 and changes nothing', async () => {
+		findRecipeMock.mockResolvedValue({ ...SOURCE_RECIPE, visibility: 'private' });
+		expect(await collect({ collectionId: '6', member: '1' })).toMatchObject({ status: 404 });
+		expect(collectionsMock.setMembership).not.toHaveBeenCalled();
+	});
+
+	test('newCollection makes the collection with this recipe in it', async () => {
+		collectionsMock.createCollection.mockResolvedValue({ id: 9 });
+		collectionsMock.setMembership.mockResolvedValue(true);
+		const result = await invoke(
+			actions.newCollection as never,
+			makeEvent({ user: FORKER, fields: { name: 'Italian' } })
+		);
+		expect(collectionsMock.createCollection).toHaveBeenCalledWith(FORKER.id, 'Italian');
+		expect(collectionsMock.setMembership).toHaveBeenCalledWith(FORKER, 9, SOURCE_RECIPE.id, true);
+		expect(result).toEqual({ collected: 9 });
+	});
+
+	test('newCollection with a refused name says why and makes nothing', async () => {
+		collectionsMock.createCollection.mockResolvedValue({ error: 'Name the collection.' });
+		const result = await invoke(
+			actions.newCollection as never,
+			makeEvent({ user: FORKER, fields: { name: '' } })
+		);
+		expect(result).toMatchObject({
+			status: 400,
+			data: { code: 'invalid', error: 'Name the collection.' }
+		});
+		expect(collectionsMock.setMembership).not.toHaveBeenCalled();
 	});
 });

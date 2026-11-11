@@ -50,7 +50,7 @@ describe.skipIf(!localDb)('collections, against the real database', () => {
 	}
 
 	const names = async (tx: Tx, user: { id: string }) =>
-		(await c.collectionsOf(user, tx)).map((x) => x.name);
+		(await c.collectionsOf(user, undefined, tx)).map((x) => x.name);
 
 	async function created(tx: Tx, user: { id: string }, name: string) {
 		const result = await c.createCollection(user.id, name, tx);
@@ -62,7 +62,8 @@ describe.skipIf(!localDb)('collections, against the real database', () => {
 		await withTwo(async (tx, a) => {
 			expect(await names(tx, a)).toEqual([...STARTER_COLLECTIONS]);
 			expect(await names(tx, a)).toEqual([...STARTER_COLLECTIONS]);
-			for (const { id } of await c.collectionsOf(a, tx)) await c.deleteCollection(a.id, id, tx);
+			for (const { id } of await c.collectionsOf(a, undefined, tx))
+				await c.deleteCollection(a.id, id, tx);
 			expect(await names(tx, a)).toEqual([]);
 		});
 	});
@@ -118,7 +119,7 @@ describe.skipIf(!localDb)('collections, against the real database', () => {
 			expect(await c.setMembership(a, quick, own, true, tx)).toBe(true);
 
 			expect(await c.recipeIdsIn(a, quick, tx)).toEqual(expect.arrayContaining([own, publicSaved]));
-			expect((await c.collectionsOf(a, tx)).find((x) => x.id === quick)?.count).toBe(2);
+			expect((await c.collectionsOf(a, undefined, tx)).find((x) => x.id === quick)?.count).toBe(2);
 			expect(await c.recipeIdsIn(b, quick, tx)).toBeNull();
 
 			expect(await c.setMembership(a, quick, own, false, tx)).toBe(true);
@@ -128,10 +129,10 @@ describe.skipIf(!localDb)('collections, against the real database', () => {
 
 	test('a cook’s collection memberships of one recipe', async () => {
 		await withTwo(async (tx, a) => {
-			const [toCook, favorites] = (await c.collectionsOf(a, tx)).map((x) => x.id);
+			const [toCook, favorites] = (await c.collectionsOf(a, undefined, tx)).map((x) => x.id);
 			const own = await recipe(tx, a.id);
 			await c.setMembership(a, favorites, own, true, tx);
-			expect(await c.collectionsOf(a, tx, own)).toEqual([
+			expect(await c.collectionsOf(a, own, tx)).toEqual([
 				{ id: toCook, name: 'To cook', count: 0, has: false },
 				{ id: favorites, name: 'Favorites', count: 1, has: true }
 			]);
@@ -155,7 +156,7 @@ describe.skipIf(!localDb)('collections, against the real database', () => {
 				.set({ visibility: 'private' })
 				.where(eq(schema.recipes.id, saved));
 			expect(await c.recipeIdsIn(a, quick, tx)).toEqual([]);
-			expect((await c.collectionsOf(a, tx)).find((x) => x.id === quick)?.count).toBe(0);
+			expect((await c.collectionsOf(a, undefined, tx)).find((x) => x.id === quick)?.count).toBe(0);
 
 			await trash(own, null);
 			expect(await c.recipeIdsIn(a, quick, tx)).toEqual([own]);
