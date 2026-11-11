@@ -167,7 +167,7 @@ describe.skipIf(!localDb)('Cookbook bulk actions, against the real database', ()
 			const before = await tx.query.recipes.findFirst({ where: eq(schema.recipes.id, r.own1) });
 			const result = await bulk.tagAll(
 				{ id: a },
-				tag,
+				[tag],
 				[r.own1, r.own2, r.saved, r.kept, ...r.outside],
 				tx
 			);
@@ -186,24 +186,31 @@ describe.skipIf(!localDb)('Cookbook bulk actions, against the real database', ()
 			expect(versions).toHaveLength(1);
 
 			// Again, in another case: the stored tag, already on both.
-			expect(await bulk.tagAll({ id: a }, tag.toUpperCase(), [r.own1, r.own2], tx)).toEqual({
+			expect(await bulk.tagAll({ id: a }, [tag.toUpperCase()], [r.own1, r.own2], tx)).toEqual({
 				changed: 0,
 				already: 2,
 				full: 0,
 				skipped: 0
 			});
 			expect(await tagsOf(tx, r.own1)).toEqual([tag]);
+
+			// Two at once, one of them held: the other is added.
+			expect(await bulk.tagAll({ id: a }, [tag, `Vegan ${s}`], [r.own1], tx)).toMatchObject({
+				changed: 1,
+				already: 0
+			});
+			expect((await tagsOf(tx, r.own1)).sort()).toEqual([tag, `Vegan ${s}`].sort());
 		});
 	});
 
-	test('a recipe already holding the most tags is skipped, and counted', async () => {
+	test('a recipe the new tags would take past the most is skipped, and counted', async () => {
 		await withProfiles(1, async (tx, [a], s) => {
 			const full = await recipe(tx, a);
 			const roomy = await recipe(tx, a);
 			const made = await tx
 				.insert(schema.tags)
 				.values(
-					Array.from({ length: CAPS.tags }, (_, i) => ({
+					Array.from({ length: CAPS.tags - 1 }, (_, i) => ({
 						name: `Full ${s} ${i}`,
 						slug: `full-${s}-${i}`
 					}))
@@ -213,14 +220,18 @@ describe.skipIf(!localDb)('Cookbook bulk actions, against the real database', ()
 				.insert(schema.recipesToTags)
 				.values(made.map((t) => ({ recipeId: full, tagId: t.id })));
 
-			expect(await bulk.tagAll({ id: a }, `Extra ${s}`, [full, roomy], tx)).toEqual({
+			// One more fits the recipe one short of the most; two do not.
+			const two = [`Extra ${s}`, `More ${s}`];
+			expect(await bulk.tagAll({ id: a }, two, [full, roomy], tx)).toEqual({
 				changed: 1,
 				already: 0,
 				full: 1,
 				skipped: 0
 			});
+			expect(await tagsOf(tx, full)).toHaveLength(CAPS.tags - 1);
+			expect((await tagsOf(tx, roomy)).sort()).toEqual(two.sort());
+			expect(await bulk.tagAll({ id: a }, [two[0]], [full], tx)).toMatchObject({ changed: 1 });
 			expect(await tagsOf(tx, full)).toHaveLength(CAPS.tags);
-			expect(await tagsOf(tx, roomy)).toEqual([`Extra ${s}`]);
 		});
 	});
 

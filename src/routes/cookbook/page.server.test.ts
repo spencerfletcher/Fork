@@ -363,7 +363,8 @@ describe('/cookbook bulk actions, for select mode', () => {
 				ids,
 				collectionId: '4',
 				member: '1',
-				name: 'Quick'
+				name: 'Quick',
+				tags: 'Quick'
 			});
 			expect(result).toMatchObject({ status: 400, data: { code: 'invalid' } });
 		}
@@ -429,26 +430,32 @@ describe('/cookbook bulk actions, for select mode', () => {
 		});
 	});
 
-	test('a tag is trimmed and goes to the database with its counts back', async () => {
+	test('the tags are trimmed, repeats dropped, and go to the database with the counts back', async () => {
 		const counts = { changed: 2, already: 1, full: 1, skipped: 2 };
 		bulkMock.tagAll.mockResolvedValue(counts);
-		expect(await act('bulkTag', { ids: '3,5', name: '  Quick ' })).toEqual({
-			tagged: 'Quick',
-			...counts
-		});
-		expect(bulkMock.tagAll).toHaveBeenCalledWith(USER, 'Quick', [3, 5]);
+		const fields = { ids: '3,5', tags: ['  Quick ', 'Vegan', 'quick'] };
+		const result = await invokeAction(
+			actions.bulkTag,
+			formEvent({ fields, locals: { user: USER } })
+		);
+		expect(result).toEqual({ tagged: ['Quick', 'Vegan'], ...counts });
+		expect(bulkMock.tagAll).toHaveBeenCalledWith(USER, ['Quick', 'Vegan'], [3, 5]);
 	});
 
-	test('a blank tag, or one over the cap, is refused before the database', async () => {
-		expect(await act('bulkTag', { ids: '3', name: '  ' })).toMatchObject({
+	test('no tag, a tag over the cap, or too many tags, is refused before the database', async () => {
+		expect(await act('bulkTag', { ids: '3', tags: '  ' })).toMatchObject({
 			status: 400,
 			data: { code: 'invalid' }
 		});
-		expect(await act('bulkTag', { ids: '3', name: 'x'.repeat(CAPS.tag + 1) })).toMatchObject({
+		expect(await act('bulkTag', { ids: '3', tags: 'x'.repeat(CAPS.tag + 1) })).toMatchObject({
 			status: 400,
 			data: { code: 'invalid', error: CAP_MESSAGES.tag }
 		});
-		expect(await act('bulkTag', { ids: '3', name: 'x'.repeat(CAPS.tag) })).not.toHaveProperty(
+		const many = { ids: '3', tags: Array.from({ length: CAPS.tags + 1 }, (_, i) => `t${i}`) };
+		expect(
+			await invokeAction(actions.bulkTag, formEvent({ fields: many, locals: { user: USER } }))
+		).toMatchObject({ status: 400, data: { error: CAP_MESSAGES.tags } });
+		expect(await act('bulkTag', { ids: '3', tags: 'x'.repeat(CAPS.tag) })).not.toHaveProperty(
 			'status'
 		);
 		expect(bulkMock.tagAll).toHaveBeenCalledTimes(1);

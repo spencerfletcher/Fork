@@ -25,6 +25,7 @@ import {
 	trashAll
 } from '#lib/server/bulk.js';
 import { tagsCapError } from '#lib/recipes/validation.js';
+import { normaliseTagNames } from '#lib/recipes/tags.js';
 import { oneOf, text, wholeNumber } from '#lib/helpers.js';
 import { CARD_SORTS, listPage, type CardSort } from '#lib/listPage.js';
 import {
@@ -283,15 +284,16 @@ export const actions: Actions = {
 		return { collected: id, ...counts };
 	},
 
-	// The cook's own recipes only, under the editor's tag caps.
+	// The cook's own recipes only, under the editor's tag caps; the tags as
+	// TagInput sends them.
 	bulkTag: async ({ request, locals: { user } }) => {
 		if (!user) return signedOut();
 		const { form, ids } = await selection(request);
-		const name = text(form, 'name').trim();
-		if (!ids || !name) return failure(400, 'invalid', BAD_FORM);
-		const capped = tagsCapError([name]);
+		const names = normaliseTagNames(form.getAll('tags').map(String));
+		if (!ids || names.length === 0) return failure(400, 'invalid', BAD_FORM);
+		const capped = tagsCapError(names);
 		if (capped) return failure(400, 'invalid', capped);
-		return { tagged: name, ...(await tagAll(user, name, ids)) };
+		return { tagged: names, ...(await tagAll(user, names, ids)) };
 	},
 
 	// The cook's own recipes only, each as Delete recipe moves one.

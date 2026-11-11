@@ -138,14 +138,15 @@ export async function newCollectionWith(
 }
 
 /**
- * Adds one tag to each of the cook's own recipes in the selection, as the
+ * Adds `names` to each of the cook's own recipes in the selection, as the
  * editor saves tags: a setting, so no version is written, and the revision
- * moves on so an open editor goes stale. A recipe already holding CAPS.tags
- * tags is left as it is (`full`); `already` had it. The name is checked by the caller.
+ * moves on so an open editor goes stale. A recipe the missing ones would take
+ * past CAPS.tags is left as it is (`full`); `already` had them all. The
+ * names are checked by the caller.
  */
 export async function tagAll(
 	user: Cook,
-	name: string,
+	names: string[],
 	ids: number[],
 	conn: Conn = db
 ): Promise<{ changed: number; already: number; full: number; skipped: number }> {
@@ -153,22 +154,30 @@ export async function tagAll(
 		const own = (await selectionOf(user, ids, true, tx, true)).map((r) => r.id);
 		const skipped = ids.length - own.length;
 		if (own.length === 0) return { changed: 0, already: 0, full: 0, skipped };
-		const [tagId] = await tagIdsFor(tx, [name]);
+		const tagIds = await tagIdsFor(tx, names);
 		const held = await tx
 			.select({
 				id: recipesToTags.recipeId,
 				n: count(),
-				has: sql<boolean>`bool_or(${recipesToTags.tagId} = ${tagId})`
+				have: sql<number>`count(*) filter (where ${inArray(recipesToTags.tagId, tagIds)})`.mapWith(
+					Number
+				)
 			})
 			.from(recipesToTags)
 			.where(inArray(recipesToTags.recipeId, own))
 			.groupBy(recipesToTags.recipeId);
 		const byId = new Map(held.map((h) => [h.id, h]));
-		const already = own.filter((id) => byId.get(id)?.has);
-		const full = own.filter((id) => !byId.get(id)?.has && (byId.get(id)?.n ?? 0) >= CAPS.tags);
+		const missing = (id: number) => tagIds.length - (byId.get(id)?.have ?? 0);
+		const already = own.filter((id) => missing(id) === 0);
+		const full = own.filter(
+			(id) => missing(id) > 0 && (byId.get(id)?.n ?? 0) + missing(id) > CAPS.tags
+		);
 		const taking = own.filter((id) => !already.includes(id) && !full.includes(id));
 		if (taking.length > 0) {
-			await tx.insert(recipesToTags).values(taking.map((recipeId) => ({ recipeId, tagId })));
+			await tx
+				.insert(recipesToTags)
+				.values(taking.flatMap((recipeId) => tagIds.map((tagId) => ({ recipeId, tagId }))))
+				.onConflictDoNothing();
 			await commitSave(tx, taking, {});
 		}
 		return { changed: taking.length, already: already.length, full: full.length, skipped };
