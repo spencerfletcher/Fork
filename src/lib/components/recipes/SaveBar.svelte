@@ -108,7 +108,10 @@
 </div>
 
 <style>
-	/* Edge to edge across the gutters, above the home indicator. */
+	/* Edge to edge across the gutters, above the home indicator. Past the
+	   site's column the fill and its rule run on to the window's edges, drawn
+	   as the border image's outset, which paints but never scrolls; the bar's
+	   own box, and so its contents, stay on the column. */
 	.save-bar {
 		position: sticky;
 		bottom: 0;
@@ -120,6 +123,8 @@
 		padding: 8px 24px calc(8px + env(safe-area-inset-bottom));
 		background: var(--color-surface);
 		border-top: 1px solid var(--color-border);
+		border-image: linear-gradient(var(--color-border) 0 1px, var(--color-surface) 0) 0 fill / 0 / 0
+			100vw;
 	}
 
 	/* A field focused by Tab stops above the bar: its height, the 4px ring and

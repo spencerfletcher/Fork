@@ -469,6 +469,16 @@ describe('RecipeForm save bar', () => {
 			/scroll-padding-bottom:[^;]*env\(safe-area-inset-bottom\)/
 		);
 	});
+
+	// A border image's outset paints past the box without adding to the page's scroll width.
+	test("the bar's fill and rule run to the window's edges at every width, its contents on the column", () => {
+		const barStyle = barSource.slice(barSource.indexOf('<style>'));
+		const bar = cssRule(barStyle, '.save-bar');
+		expect(bar).toMatch(
+			/border-image:\s*linear-gradient\(var\(--color-border\) 0 1px, var\(--color-surface\) 0\) 0 fill \/ 0 \/\s*0\s+100vw/
+		);
+		expect(bar).toMatch(/margin-inline:\s*-24px[\s\S]*padding:\s*8px 24px/);
+	});
 });
 
 describe('RecipeForm blocked on a text box', () => {
