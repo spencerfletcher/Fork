@@ -89,3 +89,17 @@ test.describe('Navbar at 768, signed in', () => {
 		await expect(page.getByRole('button', { name: 'Log out' })).toHaveCount(0);
 	});
 });
+
+test.describe('Friends filter', () => {
+	for (const width of [390, 1280]) {
+		test(`the icon is centred on its words at ${width}`, async ({ page }) => {
+			await page.setViewportSize({ width, height: 900 });
+			await page.goto('/discover');
+			const filter = page.getByRole('button', { name: 'Friends’ recipes' });
+			const icon = (await filter.locator('svg').boundingBox())!;
+			const words = (await filter.locator('span').boundingBox())!;
+			const middle = (box: { y: number; height: number }) => box.y + box.height / 2;
+			expect(Math.abs(middle(icon) - middle(words))).toBeLessThanOrEqual(1);
+		});
+	}
+});

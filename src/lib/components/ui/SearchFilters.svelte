@@ -163,16 +163,16 @@
 		cursor: pointer;
 	}
 
-	/* A tag tab (app.css) with its icon before the words, on their line. */
+	/* A tag tab (app.css) with its icon before the words, centred on their
+	   line by the row, not by an offset (DESIGN.md, Icons beside text). */
 	.friends-filter {
 		display: inline-flex;
-		align-items: flex-end;
+		align-items: center;
 		gap: 6px;
 	}
 
 	.friends-filter :global(.icon) {
 		flex-shrink: 0;
-		margin-bottom: 7px;
 	}
 
 	/* A hairline between the audience filter and the tags, the height of the
