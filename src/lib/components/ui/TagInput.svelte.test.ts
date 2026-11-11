@@ -4,6 +4,7 @@ import { render, screen, fireEvent } from '@testing-library/svelte';
 import TagInput from './TagInput.svelte';
 import source from './TagInput.svelte?raw';
 import { cssRule, cssRules } from '#lib/testing/css.js';
+import { CAPS, CAP_MESSAGES } from '#lib/recipes/validation.js';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -265,6 +266,53 @@ describe('TagInput', () => {
 		expect(screen.queryByText(/Create/i)).not.toBeInTheDocument();
 		await fireEvent.keyDown(getInput(), { key: 'Enter' });
 		expect(container.querySelectorAll('input[type="hidden"][name="tags"]')).toHaveLength(1);
+	});
+});
+
+// The server's caps (capError), checked as a tag is added, so a refused tag is never added.
+describe('TagInput caps', () => {
+	const pills = () => [...document.querySelectorAll<HTMLInputElement>('input[name="tags"]')];
+	const add = async (name: string) => {
+		await fireEvent.input(getInput(), { target: { value: name } });
+		await fireEvent.keyDown(getInput(), { key: 'Enter' });
+	};
+
+	test('a tag over the length cap is not added, and says so under the search', async () => {
+		render(TagInput, { props: { allTags } });
+		await add('🍅'.repeat(CAPS.tag + 1));
+		expect(pills()).toHaveLength(0);
+		expect(getInput()).toHaveAttribute('aria-invalid', 'true');
+		expect(getInput()).toHaveAccessibleDescription(CAP_MESSAGES.tag);
+		// Each keystroke checks again; a short one is added.
+		await fireEvent.input(getInput(), { target: { value: 'Short' } });
+		expect(getInput()).not.toHaveAttribute('aria-invalid');
+		await add('🍅'.repeat(CAPS.tag));
+		expect(pills()).toHaveLength(1);
+	});
+
+	test('one tag past the count cap is not added and says Too many tags until one is removed', async () => {
+		const full = Array.from({ length: CAPS.tags }, (_, i) => `t${i}`);
+		render(TagInput, { props: { allTags, selected: full } });
+		await add('One more');
+		expect(pills()).toHaveLength(CAPS.tags);
+		expect(getInput()).toHaveAccessibleDescription(CAP_MESSAGES.tags);
+		await fireEvent.click(screen.getByRole('button', { name: 'Remove t0' }));
+		expect(getInput()).not.toHaveAttribute('aria-invalid');
+	});
+
+	// The server lets what the recipe already has through, so the field does.
+	test('a long tag the recipe already had is added back, and its count may stay over the cap', async () => {
+		const long = 'x'.repeat(CAPS.tag + 1);
+		const had = [long, ...Array.from({ length: CAPS.tags }, (_, i) => `t${i}`)];
+		render(TagInput, { props: { allTags, selected: had.slice(1), before: had } });
+		await add(long);
+		expect(pills()).toHaveLength(had.length);
+		expect(getInput()).not.toHaveAttribute('aria-invalid');
+	});
+
+	test("the server's refusal shows under the search", () => {
+		render(TagInput, { props: { allTags, error: CAP_MESSAGES.tags } });
+		expect(getInput()).toHaveAccessibleDescription(CAP_MESSAGES.tags);
 	});
 });
 

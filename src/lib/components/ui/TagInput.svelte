@@ -2,14 +2,25 @@
 	import { tick } from 'svelte';
 	import { tagKey } from '#lib/recipes/tags.js';
 	import type { TagChip } from '#lib/recipes/types.js';
+	import { tagsCapError } from '#lib/recipes/validation.js';
+	import FieldError from './FieldError.svelte';
 
 	let {
 		allTags,
-		selected = $bindable([])
+		selected = $bindable([]),
+		before = [],
+		error = $bindable()
 	}: {
 		allTags: TagChip[];
 		selected?: string[];
+		/** The tags the recipe had: the caps let them through, as the server does. */
+		before?: string[];
+		/** Why the last tag was not added, or the server's refusal of the tags. */
+		error?: string;
 	} = $props();
+
+	// What adding `name` would break, in the server's words; '' when it fits.
+	const refusal = (name: string) => tagsCapError([...selected, name], before) ?? '';
 
 	let query = $state('');
 	let open = $state(false);
@@ -42,8 +53,13 @@
 		active = -1;
 	}
 
+	// A tag the caps refuse is not added; the message says why.
 	function pick(name: string) {
-		if (!isSelected(name)) selected = [...selected, name];
+		if (!isSelected(name)) {
+			error = refusal(name);
+			if (error) return;
+			selected = [...selected, name];
+		}
 		query = '';
 		active = -1;
 	}
@@ -53,6 +69,7 @@
 	async function remove(name: string) {
 		const i = selected.indexOf(name);
 		selected = selected.filter((s) => s !== name);
+		if (error) error = refusal(query.trim());
 		await tick();
 		const buttons = rootEl.querySelectorAll<HTMLButtonElement>('.tag-remove');
 		(
@@ -149,6 +166,8 @@
 			oninput={() => {
 				open = true;
 				active = -1;
+				// Once refused, each keystroke checks again.
+				if (error) error = refusal(query.trim());
 			}}
 			onkeydown={handleKeydown}
 			autocomplete="off"
@@ -158,7 +177,9 @@
 			aria-haspopup="listbox"
 			aria-autocomplete="list"
 			aria-controls={showDropdown ? 'tag-listbox' : undefined}
-			aria-activedescendant={active >= 0 ? `tag-option-${active}` : undefined} />
+			aria-activedescendant={active >= 0 ? `tag-option-${active}` : undefined}
+			aria-invalid={error ? 'true' : undefined}
+			aria-describedby={error ? 'tags-error' : undefined} />
 
 		{#if showDropdown}
 			<!-- tabindex -1: a scrollable box with nothing focusable inside would be a Tab stop. -->
@@ -219,6 +240,7 @@
 			</ul>
 		{/if}
 	</div>
+	<FieldError name="tags" {error} />
 </div>
 
 <style>

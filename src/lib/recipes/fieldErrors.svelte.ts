@@ -2,19 +2,26 @@ import {
 	fieldOfMessage,
 	numberMessages,
 	readSourceUrl,
+	textCapError,
 	timeMessages,
+	CAP_MESSAGES,
 	NUMBER_FIELDS,
 	REQUIRED_MESSAGES,
 	TIME_FIELDS,
 	type NumberField,
+	type RecipeDraft,
 	type TimeField
 } from '#lib/recipes/validation.js';
 import { readDuration } from '#lib/recipes/times.js';
 
 // What a typed field the browser cannot judge says, in the server's own
 // wording; '' when it is fine. Set as the box's custom validity, so a save
-// with one wrong is blocked like any other invalid field.
-export function typedMessage(name: string, value: string): string {
+// with one wrong is blocked like any other invalid field. `before` is what the
+// box started with: a long value the cook has not changed passes, as it does
+// on the server.
+export function typedMessage(name: string, value: string, before?: string): string {
+	if (name === 'title' || name === 'description' || name === 'commitMessage')
+		return textCapError(name, value, before) ?? '';
 	if (name in TIME_FIELDS) {
 		const read = readDuration(value);
 		return read.ok ? '' : timeMessages(name as TimeField)[read.reason];
@@ -27,8 +34,10 @@ export function typedMessage(name: string, value: string): string {
 }
 
 function validityMessage(name: string, v: ValidityState): string {
-	if (v.valid) return '';
 	if (v.valueMissing) return REQUIRED_MESSAGES[name as keyof typeof REQUIRED_MESSAGES];
+	// A custom message is typedMessage's, read from the value: the validity
+	// lags the keystroke being checked.
+	if (v.valid || v.customError) return '';
 	// Not whole before below the floor, in the server's order, so -1.5 says the same in both.
 	const messages = numberMessages(name as NumberField);
 	return v.rangeUnderflow && !v.stepMismatch ? messages.belowMin : messages.whole;
@@ -50,8 +59,12 @@ export function focusField(el: HTMLElement | null) {
  * together. Passing through an untouched field says nothing, as the auth
  * pages do. A server-rendered reply shows a field's message too, as the draft
  * is shown: `form` seeds the initial state, since no effect runs there.
+ * `before` is what the capped boxes started with, for typedMessage.
  */
-export function fieldErrors(form: { error: string } | null) {
+export function fieldErrors(
+	form: { error: string } | null,
+	before?: Pick<RecipeDraft, 'title' | 'description'>
+) {
 	const serverField = form ? fieldOfMessage(form.error) : undefined;
 	const errors = $state<Record<string, string>>(
 		form && serverField ? { [serverField]: form.error } : {}
@@ -66,8 +79,11 @@ export function fieldErrors(form: { error: string } | null) {
 		const el = target as HTMLInputElement | HTMLTextAreaElement;
 		const name = el?.name;
 		if (!name) return;
-		if (name in TIME_FIELDS || name === 'sourceUrl') errors[name] = typedMessage(name, el.value);
-		else if (name in REQUIRED_MESSAGES || name in NUMBER_FIELDS)
+		const started = name === 'title' || name === 'description' ? before?.[name] : undefined;
+		const typed = typedMessage(name, el.value, started);
+		if (typed || name in TIME_FIELDS || name === 'sourceUrl' || name in CAP_MESSAGES)
+			errors[name] = typed;
+		if (!typed && (name in REQUIRED_MESSAGES || name in NUMBER_FIELDS))
 			errors[name] = validityMessage(name, el.validity);
 	}
 

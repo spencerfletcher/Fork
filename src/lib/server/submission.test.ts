@@ -110,10 +110,16 @@ describe('readSubmission: length caps on public text', () => {
 		expect(newLong.ok ? null : newLong.failure.data.error).toBe(CAP_MESSAGES.tag);
 	});
 
-	test('the title’s message shows under the title; the others show as the form’s own error', () => {
-		expect(fieldOfMessage(CAP_MESSAGES.title)).toBe('title');
-		for (const field of ['description', 'commitMessage', 'tag', 'tags'] as const)
-			expect(fieldOfMessage(CAP_MESSAGES[field])).toBeUndefined();
+	test('each refusal names its field, so the message shows under it', () => {
+		const fieldOf = {
+			title: 'title',
+			description: 'description',
+			commitMessage: 'commitMessage',
+			tag: 'tags',
+			tags: 'tags'
+		} as const;
+		for (const cap of Object.keys(CAP_MESSAGES) as Array<keyof typeof CAP_MESSAGES>)
+			expect(fieldOfMessage(CAP_MESSAGES[cap])).toBe(fieldOf[cap]);
 	});
 });
 

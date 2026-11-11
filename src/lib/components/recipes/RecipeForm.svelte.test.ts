@@ -1,5 +1,5 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/svelte';
+import { render, screen, fireEvent, cleanup } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import source from './RecipeForm.svelte?raw';
 import barSource from './SaveBar.svelte?raw';
@@ -12,6 +12,8 @@ import {
 	PHOTO_SIZE_MESSAGE,
 	emptyGroupMessage,
 	timeMessages,
+	CAPS,
+	CAP_MESSAGES,
 	type Visibility
 } from '#lib/recipes/validation.js';
 import { AUDIENCE_LABEL } from '#lib/audience.js';
@@ -484,5 +486,113 @@ describe('RecipeForm blocked on a text box', () => {
 		const box = screen.getByRole('textbox', { name: 'Ingredients' });
 		expect(box).toHaveFocus();
 		expect(box).toHaveAccessibleDescription(/^At least one ingredient is required/);
+	});
+});
+
+describe('RecipeForm length caps', () => {
+	const chars = (n: number, c = 'a') => c.repeat(n);
+	const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+	const renderWith = (fields: Record<string, string | string[]> = {}, error?: string) => {
+		const fd = new FormData();
+		for (const [k, v] of Object.entries(fields)) for (const one of [v].flat()) fd.append(k, one);
+		const baseline = draftOf(fd);
+		render(RecipeForm, {
+			props: {
+				baseline,
+				form: error ? { error, draft: baseline } : null,
+				allTags: [],
+				submitLabel: 'Save',
+				cancelHref: '/recipes',
+				nextVersion: 2
+			}
+		});
+	};
+	const type = async (el: HTMLElement, value: string) => {
+		await fireEvent.input(el, { target: { value } });
+		await fireEvent.focusOut(el);
+	};
+
+	for (const [field, label] of [
+		['title', /^Title/],
+		['description', 'Description'],
+		['commitMessage', 'What changed?']
+	] as const) {
+		test(`${field}: too long says so under the box on leaving it, counting characters after trimming`, async () => {
+			renderWith();
+			const box = screen.getByLabelText(label);
+			// An emoji is one character, as the server counts; spaces round it are trimmed.
+			await type(box, `  ${chars(CAPS[field], '🍅')}  `);
+			expect(box).not.toHaveAttribute('aria-invalid');
+			await type(box, chars(CAPS[field] + 1));
+			expect(box).toHaveAttribute('aria-invalid', 'true');
+			expect(box).toHaveAccessibleDescription(new RegExp(`^${escape(CAP_MESSAGES[field])}`));
+			// Once flagged, each keystroke checks again.
+			await fireEvent.input(box, { target: { value: chars(CAPS[field]) } });
+			expect(box).not.toHaveAttribute('aria-invalid');
+			// No maxlength: a pasted long text is never cut short.
+			expect(box).not.toHaveAttribute('maxlength');
+		});
+
+		test(`${field}: a blocked save says so and focuses the box`, async () => {
+			renderWith({ title: 'Cookies', ingredients: '1 cup flour', steps: 'Mix.' });
+			const box = screen.getByLabelText(label) as HTMLInputElement;
+			await fireEvent.input(box, { target: { value: chars(CAPS[field] + 1) } });
+			await tick();
+			expect(box.validity.customError).toBe(true);
+			box.dispatchEvent(new Event('invalid', { cancelable: true }));
+			await tick();
+			expect(box).toHaveFocus();
+			expect(screen.getByText(CAP_MESSAGES[field])).toHaveClass('field-error');
+		});
+
+		test(`${field}: the server's refusal shows under the box and focuses it, not as the form's error`, async () => {
+			renderWith({ title: 'Cookies' }, CAP_MESSAGES[field]);
+			await tick();
+			await tick();
+			const box = screen.getByLabelText(label);
+			expect(box).toHaveFocus();
+			expect(box).toHaveAccessibleDescription(new RegExp(`^${escape(CAP_MESSAGES[field])}`));
+			expect(document.querySelector('.form-error')).toBeNull();
+		});
+	}
+
+	// The server lets a value the recipe already has through; so does the box.
+	test('an existing over-cap title or description the cook has not changed is not flagged', async () => {
+		const long = { title: chars(CAPS.title + 5), description: chars(CAPS.description + 5) };
+		renderWith(long);
+		for (const [name, label] of [
+			['title', /^Title/],
+			['description', 'Description']
+		] as const) {
+			const box = screen.getByLabelText(label) as HTMLInputElement;
+			await type(box, `${long[name]} `);
+			await tick();
+			expect(box).not.toHaveAttribute('aria-invalid');
+			expect(box.validity.valid).toBe(true);
+			await type(box, `${long[name]}b`);
+			expect(box).toHaveAttribute('aria-invalid', 'true');
+		}
+	});
+
+	test("What changed?'s message sits above the pinned bar from 700, so the bar keeps its height", () => {
+		const barStyle = barSource.slice(barSource.indexOf('<style>'));
+		const wide = barStyle.slice(barStyle.indexOf('@media (min-width: 700px)'));
+		expect(cssRule(wide, '.field-message :global(.field-error)')).toMatch(
+			/position:\s*absolute;\s*bottom:\s*calc\(100% - 1px\)/
+		);
+	});
+
+	test('a server refusal of the tags shows under Tags and focuses the tag search, opening the details', async () => {
+		for (const message of [CAP_MESSAGES.tag, CAP_MESSAGES.tags]) {
+			renderWith({ title: 'Cookies', tags: ['one'] }, message);
+			await tick();
+			await tick();
+			const search = screen.getByRole('combobox', { name: /tag/i });
+			expect((document.querySelector('details') as HTMLDetailsElement).open).toBe(true);
+			expect(search).toHaveFocus();
+			expect(search).toHaveAccessibleDescription(message);
+			expect(document.querySelector('.form-error')).toBeNull();
+			cleanup();
+		}
 	});
 });
