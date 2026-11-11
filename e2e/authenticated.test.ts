@@ -458,20 +458,118 @@ async function deleteRecipe(page: Page, url: string) {
 }
 
 test.describe('Delete recipe', () => {
-	test('the owner deletes a recipe from its editor, confirming first, and lands on My Recipes', async ({
+	test('the owner moves a recipe to the Trash from its editor, confirming first, and lands on the Trash', async ({
 		page
 	}) => {
 		const url = await createRecipe(page, 'E2E Delete Me', '2');
 		await gotoHydrated(page, `${url}/edit`);
 		await page.getByRole('button', { name: 'Delete recipe' }).click();
-		const step = page.getByRole('group', { name: 'Delete E2E Delete Me?' });
+		const step = page.getByRole('group', { name: 'Move E2E Delete Me to Trash?' });
 		await expect(step).toBeFocused();
-		await expect(step).toContainText('This cannot be undone.');
-		await page.getByRole('button', { name: 'Delete permanently' }).click();
-		await page.waitForURL(/\/cookbook$/);
+		await expect(step).toContainText('You can restore it for 30 days.');
+		await page.getByRole('button', { name: 'Move to Trash' }).click();
+		await page.waitForURL(/\/cookbook\/trash$/);
+		await expect(trashRow(page, 'E2E Delete Me').first()).toContainText('Deleted today');
 
 		const response = await page.goto(url);
 		expect(response?.status()).toBe(404);
+	});
+});
+
+// ─── Trash ────────────────────────────────────────────────────────────────────
+//
+// Other tests' cleanup moves their recipes to the Trash too, so these never
+// assume an empty Trash: each finds its own row by a title no other test uses.
+
+/** A title no other test or run shares, and its one searchable word. */
+function uniqueTitle() {
+	const word = `trashtest${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+	return { title: `E2E ${word}`, word };
+}
+
+const trashRow = (page: Page, title: string) =>
+	page
+		.getByRole('listitem')
+		.filter({ has: page.getByRole('heading', { name: title, exact: true }) });
+
+/** Whether the page at `path` links the recipe titled `title` (Discover can link it more than once). */
+async function expectListed(page: Page, path: string, title: string, listed: boolean) {
+	await page.goto(path);
+	const links = page.getByRole('link', { name: title });
+	if (listed) await expect(links.first()).toBeVisible();
+	else await expect(links).toHaveCount(0);
+}
+
+test.describe('Trash', () => {
+	test('a trashed recipe leaves the Cookbook, Discover and Search and 404s; Restore brings it back with its versions', async ({
+		page
+	}) => {
+		const { title, word } = uniqueTitle();
+		const url = await createRecipe(page, title, '2');
+		try {
+			await gotoHydrated(page, `${url}/edit`);
+			await page.locator('input[name="commitMessage"]').fill('a second version');
+			await page.getByRole('button', { name: 'Save', exact: true }).click();
+			await page.waitForURL(url);
+			await expectVersions(page, 2);
+			for (const path of [`/cookbook?q=${word}`, `/discover?q=${word}`, `/search?q=${word}`]) {
+				await expectListed(page, path, title, true);
+			}
+
+			await gotoHydrated(page, `${url}/edit`);
+			await page.getByRole('button', { name: 'Delete recipe' }).click();
+			await page.getByRole('button', { name: 'Move to Trash' }).click();
+			await page.waitForURL(/\/cookbook\/trash$/);
+			const row = trashRow(page, title);
+			await expect(row).toContainText('Deleted today');
+			await expect(row).toContainText('30 days left');
+
+			for (const path of [`/cookbook?q=${word}`, `/discover?q=${word}`, `/search?q=${word}`]) {
+				await expectListed(page, path, title, false);
+			}
+			// The same 404 as a recipe that never existed, at any version, and its editor too.
+			for (const path of [url, `${url}?version=1`, `${url}/edit`, `${url}/diff?from=1&to=2`]) {
+				expect((await page.goto(path))?.status(), path).toBe(404);
+			}
+
+			// The Cookbook's foot leads to the Trash while it holds something.
+			await page.goto('/cookbook');
+			await page.getByRole('link', { name: /^Trash \(\d+\) →$/ }).click();
+			await page.waitForURL(/\/cookbook\/trash$/);
+
+			await page.locator('html[data-hydrated]').waitFor({ state: 'attached' });
+			await trashRow(page, title)
+				.getByRole('button', { name: `Restore ${title}` })
+				.click();
+			await page.waitForURL(url);
+			await expect(page.locator('h1')).toContainText(title);
+			await expectVersions(page, 2);
+			await expectListed(page, `/cookbook?q=${word}`, title, true);
+		} finally {
+			await deleteRecipe(page, url);
+		}
+	});
+
+	test('Delete forever, asked in place, removes the recipe for good', async ({ page }) => {
+		const { title } = uniqueTitle();
+		const url = await createRecipe(page, title, '2');
+		await deleteRecipe(page, url);
+
+		await gotoHydrated(page, '/cookbook/trash');
+		const row = trashRow(page, title);
+		await row.getByRole('button', { name: 'Delete forever' }).click();
+		const step = page.getByRole('group', { name: `Delete ${title} forever?` });
+		await expect(step).toBeFocused();
+		await expect(step).toContainText('The recipe and its history cannot be restored.');
+		await step.getByRole('button', { name: 'Delete forever' }).click();
+		await expect(row).toHaveCount(0);
+		await expect(page.getByRole('status').filter({ hasText: 'deleted forever' })).toContainText(
+			`${title} deleted forever.`
+		);
+
+		await page.reload();
+		await expect(trashRow(page, title)).toHaveCount(0);
+		expect((await page.goto(url))?.status()).toBe(404);
 	});
 });
 
