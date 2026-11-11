@@ -804,7 +804,8 @@ test.describe('Recipe detail page', () => {
 		await page.getByRole('button', { name: '3 versions' }).click();
 		const message = page.locator('.version-bar .current .message');
 		await expect(message).toContainText(SEED[0].versions.at(-1)!.commitMessage);
-		await expect(page.getByRole('button', { name: 'more' })).toHaveCount(0);
+		// The note's own "more", not the action row's More actions menu.
+		await expect(page.locator('.version-bar').getByRole('button', { name: 'more' })).toHaveCount(0);
 		const { scrollHeight, clientHeight } = await message.evaluate((el) => ({
 			scrollHeight: el.scrollHeight,
 			clientHeight: el.clientHeight
@@ -1223,13 +1224,16 @@ test.describe('Recipe detail page', () => {
 		// common Android width.
 		for (const width of [320, 360, 375]) {
 			await page.setViewportSize({ width, height: 900 });
-			const pills = await page.locator('.actions a, .actions button').evaluateAll((els) =>
-				els.map((el) => ({
-					text: (el as HTMLElement).innerText.trim(),
-					height: el.getBoundingClientRect().height,
-					overflow: el.scrollWidth - el.clientWidth
-				}))
-			);
+			const pills = await page
+				// The ⋯ menu is an icon, not a labelled pill.
+				.locator('.actions a, .actions button:not(.more-button)')
+				.evaluateAll((els) =>
+					els.map((el) => ({
+						text: (el as HTMLElement).innerText.trim(),
+						height: el.getBoundingClientRect().height,
+						overflow: el.scrollWidth - el.clientWidth
+					}))
+				);
 			expect(pills.map((p) => p.text)).toEqual(['Cook', 'Log in to save']);
 			for (const pill of pills) {
 				expect(pill.height, `${width} ${pill.text}`).toBe(44);
