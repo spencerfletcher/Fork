@@ -36,7 +36,6 @@
 		forkCount,
 		versionCount,
 		tags,
-		cooking = false,
 		actions,
 		journal = null
 	}: {
@@ -49,8 +48,6 @@
 		/** Every version of the recipe; the bar under the band lists them from two up. */
 		versionCount: number;
 		tags: TagChip[];
-		/** Cooking mode hides the version bar, so the count does not link to it. */
-		cooking?: boolean;
 		/** The action row (Cook, then Save and Fork or Edit), the last line of the header. */
 		actions?: Snippet;
 		/** Signed in: the personal line under the actions; null signed out. */
@@ -121,7 +118,7 @@
 		</span>
 		<span class="stat">
 			{@render versionsIcon()}
-			{#if versionCount > 1 && !cooking}
+			{#if versionCount > 1}
 				<a class="hit-link" href="#versions">{counted(versionCount, 'version')}</a>
 			{:else}
 				{counted(versionCount, 'version')}
@@ -135,7 +132,7 @@
 
 	<!-- The personal line: how often and when last the reader logged this
 	     recipe. Logging it again is the Add to Journal pill in the action row. -->
-	{#if journal?.lastEntry && !cooking}
+	{#if journal?.lastEntry}
 		<p class="personal font-sans">
 			You cooked this {journal.lastEntry.timesCooked > 1
 				? `${plural(journal.lastEntry.timesCooked, 'time')}, last on`

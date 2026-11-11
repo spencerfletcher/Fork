@@ -3,8 +3,9 @@
 	import { DESTINATIONS, isCurrent } from './destinations.js';
 	import { friendsIcon, journalIcon } from '#lib/components/Icons.svelte';
 
-	// Cook and the editor pin their own bars (Done cooking; Save and Cancel),
-	// so the tab bar leaves the screen to them.
+	// Cook and the editor pin their own bars (Ingredients | Method; Save and
+	// Cancel), so the tab bar leaves the screen to them. Cook entered in place
+	// is a shallow URL this does not see; the recipe page hides the bar then.
 	const EDITOR_ROUTES = ['/recipes/new', '/recipes/[slug]/edit'];
 	const hidden = $derived(
 		EDITOR_ROUTES.includes(page.route.id ?? '') || page.url.searchParams.get('cook') === '1'

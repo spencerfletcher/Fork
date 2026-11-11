@@ -47,7 +47,8 @@ describe('RecipeMethod', () => {
 		});
 		expect(screen.getAllByRole('listitem')).toHaveLength(2);
 		for (const box of screen.getAllByRole('checkbox')) expect(box).toHaveClass('sr-only');
-		expect(container.querySelector('.tick')).toBeNull();
+		// The one tick picture is cooking's done check, hidden while reading.
+		expect(container.querySelector('.tick:not(.step-check)')).toBeNull();
 	});
 
 	test('a ticked step turns its numeral and text Ink 3 and keeps its strike', () => {
@@ -123,8 +124,11 @@ describe('RecipeMethod', () => {
 		// digits, and the numeral's box ends the column, so the gap never moves.
 		for (const n of ['1', '12']) {
 			const numeral = screen.getByText(n);
-			expect(numeral).toHaveClass('justify-self-end', 'tabular-nums');
-			expect(numeral.parentElement).toHaveClass(
+			expect(numeral).toHaveClass('tabular-nums');
+			// The numeral's column (it holds cooking's done check too) ends the grid column.
+			const column = numeral.parentElement!;
+			expect(column).toHaveClass('justify-self-end', 'items-end');
+			expect(column.parentElement).toHaveClass(
 				'gap-4',
 				// minmax(0, …): a long unbroken word wraps instead of widening the page.
 				'[grid-template-columns:2ch_minmax(0,1fr)]',
@@ -154,18 +158,40 @@ describe('RecipeMethod while cooking', () => {
 		expect(text.closest('label')).toHaveClass('step');
 	});
 
-	test('the text goes up a step to 1.25rem on a 1.55 line, the numeral with it', () => {
-		expect(rule(':global([data-cooking]) .step-text')).toMatch(/font-size:\s*1\.25rem/);
-		expect(rule(':global([data-cooking]) .step-text')).toMatch(/line-height:\s*1\.55/);
-		// The numeral is the row's face: 21px against the text's 20, as 18 is to 17.
-		expect(rule(':global([data-cooking]) .step')).toMatch(/font-size:\s*1\.3125rem/);
-	});
-
-	test('on a phone the text is 1.125rem, the numeral 1.1875rem', () => {
+	// Spencer, 11 November 2026: a little larger than 3B's 1.25rem and a little
+	// smaller than 3C's 1.375rem on a phone; the numeral hangs in clay Bitter.
+	test('on a phone the text is 1.3125rem on a 1.45 line, the numeral 1.625rem', () => {
 		const phone = style.slice(style.indexOf('@media (max-width: 699px)'));
 		expect(phone.length).toBeLessThan(style.length);
-		expect(rule(':global([data-cooking]) .step-text', phone)).toMatch(/font-size:\s*1\.125rem/);
-		expect(rule(':global([data-cooking]) .step', phone)).toMatch(/font-size:\s*1\.1875rem/);
+		expect(rule(':global([data-cooking]) .step-text', phone)).toMatch(/font-size:\s*1\.3125rem/);
+		expect(rule(':global([data-cooking]) .step-text', phone)).toMatch(/line-height:\s*1\.45/);
+		expect(rule(':global([data-cooking]) .step', phone)).toMatch(/font-size:\s*1\.625rem/);
+	});
+
+	test('wider, the text is 1.375rem on a 1.5 line, the numeral 1.75rem', () => {
+		expect(rule(':global([data-cooking]) .step-text')).toMatch(/font-size:\s*1\.375rem/);
+		expect(rule(':global([data-cooking]) .step-text')).toMatch(/line-height:\s*1\.5;/);
+		expect(rule(':global([data-cooking]) .step')).toMatch(/font-size:\s*1\.75rem/);
+	});
+
+	// A struck paragraph is hard to reread: cooking, a done step is a check
+	// beside its numeral and Ink 3 text. The page lifts the strike (its tests).
+	test('a done step shows the tick check under its numeral, only while cooking', async () => {
+		render(RecipeMethod, { props: { storageKey: KEY, steps: [makeStep('Mix.')] } });
+		const label = screen.getByText('Mix.').closest('label')!;
+		const check = label.querySelector('.step-check')!;
+		expect(check).toHaveClass('tick');
+		expect(check).toHaveAttribute('aria-hidden', 'true');
+		// In the numeral's column, so the text keeps its edge.
+		expect(check.parentElement).toContainElement(screen.getByText('1'));
+		expect(rule('.step-check')).toMatch(/display:\s*none/);
+		expect(rule(':global([data-cooking]) .step:has(:checked) .step-check')).toMatch(
+			/display:\s*block/
+		);
+		// Ticked, the numeral and the text recede to Ink 3, 4.9:1 on paper.
+		await fireEvent.click(screen.getByRole('checkbox'));
+		expect(screen.getByText('1')).toHaveClass('group-has-[:checked]:text-text-3');
+		expect(screen.getByText('Mix.')).toHaveClass('group-has-[:checked]:text-text-3');
 	});
 });
 

@@ -252,13 +252,13 @@ Items waiting on Spencer's eye. Rules live in [DESIGN.md](../../DESIGN.md); the 
 | Item | What is open | Phase | Source |
 | --- | --- | --- | --- |
 | Fork icon and logo | 1A (three tines on a round shoulder) ships for now (OD, 11 Nov: "1a for now for logo but redesign candidate"); open: a deeper head and a handle widening toward its end, upright or on the diagonal | P1 | R, OD |
-| Cook-mode distinction | The cooking view looks too close to the recipe page | P1 | R, OD |
+| Cook-mode distinction | Closed 11 November 2026: Spencer's direction from the Call 3 options is built (paper cooking header, bottom Ingredients \| Method switch, Finish cooking); see DESIGN.md, Cooking | done | R, OD |
 | Serving scaler redesign | The control does not feel like Fork; a design round, with the S01 to S08 behaviour | P2 | R |
 | Tick affordance | Revisit candidate (M20) | P2 | DS |
 | Three-voice type stack | Eyebrow, Bitter heading and sans rows: keep where each adds information | revisit | DS, Z |
 | Brassier yellow | Explore a slightly less saturated yellow within the identity through full-screen comparisons; no replacement token chosen | revisit | S1, S2 |
 | Friends filter chip | The bordered marigold-tint "Friends' recipes" chip has no DESIGN row (moving into the tag row in flight) | P1 | code-health audit |
-| Cook phone title | Truncates to one line in the strip; alternatives: a two-line strip or "Done" alone | revisit | DS |
+| Cook phone title | Closed 11 November 2026: the cooking header sets the title on two lines at most | done | DS |
 | Current-step marker | Optional marker or focused view during cooking refinement; the MVP has none | P2 | DD |
 
 ## 7. Product rules that hold across phases

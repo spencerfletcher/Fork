@@ -1,15 +1,20 @@
 <script lang="ts">
+	import { tick } from 'svelte';
+	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import type { PageData } from './$types';
 	import RecipeHeader from './components/RecipeHeader.svelte';
+	import CookHeader from './components/CookHeader.svelte';
 	import VersionBar from './components/VersionBar.svelte';
 	import RecipeIngredients from './components/RecipeIngredients.svelte';
 	import RecipeMethod from './components/RecipeMethod.svelte';
 	import RecipeActions from './components/RecipeActions.svelte';
 	import ServesControl from './components/ServesControl.svelte';
 	import { ticksKey } from './components/ticks';
+	import { setShallowParam } from './components/shallowParam';
 	import { parseServes } from '#lib/recipes/scale.js';
 	import { changedGroups } from '#lib/recipes/content.js';
+	import { wholeNumber } from '#lib/helpers.js';
 	import { loginHref as buildLoginHref } from '#lib/auth/loginHref.js';
 
 	let { data }: { data: PageData } = $props();
@@ -47,27 +52,85 @@
 	// a record and reads as written. Signed out or unset, null.
 	const measurement = $derived(isViewingHistory ? null : (data.profile?.measurement ?? null));
 
-	// Cooking mode: ?cook=1 on load, written back by the Cook toggle with the
-	// same shallow replace. The article's data-cooking is what the method's
-	// CSS keys off; the bar and the other actions are not rendered.
+	// Signed in: the Journal entry for the version and the serves being read,
+	// for Add to Journal and Finish cooking; a scale that is not a whole
+	// number is left for the cook to type.
+	const servesParam = $derived(url.searchParams.get('serves'));
+	const journalHref = $derived(
+		data.journal && servesParam && wholeNumber(servesParam) !== null
+			? `${data.journal.addHref}&serves=${servesParam}`
+			: data.journal?.addHref
+	);
+
+	// Cooking mode: ?cook=1 on load, written by Cook and dropped by Exit and
+	// Finish cooking with the scaler's shallow replace. The article's
+	// data-cooking is what the lists' CSS keys off.
 	let cooking = $derived(url.searchParams.get('cook') === '1');
 
 	// Below 1024px the Ingredients | Method bar shows one section at a time in
 	// place of the other, so the reader never scrolls past one to reach the
-	// other. Switching brings the section's top back under the bar if the page
-	// was scrolled into the old one. Writable derived: a parent or fork link
-	// keeps this page mounted, so another recipe opens on Ingredients again;
-	// keyed on the slug string, so a data reload of this one keeps the tab.
+	// other. Reading, it opens on Ingredients, and switching brings the
+	// section's top back under the bar if the page was scrolled into the old
+	// one; cooking, it opens on Method and is pinned at the bottom. Writable
+	// derived: a parent or fork link keeps this page mounted, so another
+	// recipe opens afresh; keyed on the slug string, so a data reload of this
+	// one keeps the tab.
+	type Tab = 'ingredients' | 'method';
 	const slug = $derived(recipe.slug);
-	let tab = $derived.by((): 'ingredients' | 'method' => {
+	let tab = $derived.by((): Tab => {
 		void slug;
-		return 'ingredients';
+		return cooking ? 'method' : 'ingredients';
 	});
 	let content: HTMLElement | undefined = $state();
 
-	function show(next: typeof tab) {
+	// Cooking, each view keeps its own scroll position, so a cook halfway
+	// through step 5 can check the ginger and come back to the same line
+	// (Spencer, 11 November 2026). A first visit starts at the view's top.
+	// Plain, not state: only the switch reads it. No history entry per switch.
+	let positions: Partial<Record<Tab, number>> = {};
+	const jump = (top: number) => window.scrollTo({ top, behavior: 'instant' });
+
+	async function show(next: Tab) {
+		if (!cooking) {
+			tab = next;
+			if (content && content.getBoundingClientRect().top < 0) content.scrollIntoView();
+			return;
+		}
+		if (next === tab || !content) return;
+		const viewTop = Math.min(window.scrollY, content.getBoundingClientRect().top + window.scrollY);
+		positions[tab] = window.scrollY;
 		tab = next;
-		if (content && content.getBoundingClientRect().top < 0) content.scrollIntoView();
+		await tick();
+		jump(positions[next] ?? viewTop);
+	}
+
+	// Entering Cook lands on Method: at the first open step when some are
+	// ticked (a resume), else at the top.
+	async function cook() {
+		positions = {};
+		cooking = true;
+		await tick();
+		const steps = [...(content?.querySelectorAll('#method li') ?? [])];
+		const done = (li: Element) => li.querySelector('input:checked') !== null;
+		const open = steps.find((li) => !done(li));
+		if (open && steps.some(done)) open.scrollIntoView({ block: 'start', behavior: 'instant' });
+		else jump(0);
+	}
+
+	// Exit: back to reading at the same version and scale, the ticks kept.
+	function exit() {
+		cooking = false;
+		setShallowParam('cook', null);
+		jump(0);
+	}
+
+	// Finish cooking, signed in, goes on to the optional Journal entry for
+	// these serves; cooking's history entry is replaced first, so Back from
+	// the Journal returns to reading. Signed out it is Exit.
+	async function finish() {
+		if (!journalHref) return exit();
+		await setShallowParam('cook', null);
+		await goto(journalHref);
 	}
 </script>
 
@@ -77,47 +140,51 @@
 	class="min-h-dvh"
 	data-cooking={cooking || undefined}
 	data-version={cooking ? currentVersion.versionNumber : undefined}>
-	<!-- The title band: the recipe's words on deeper cream, its photo inset at
+	<!-- Cooking, the band, its actions, the stats and the tags give way to the
+	     cooking header: the title and the serves being cooked, and Exit. -->
+	{#if cooking}
+		<CookHeader title={currentVersion.title} {stored} {serves} onexit={exit} />
+	{:else}
+		<!-- The title band: the recipe's words on deeper cream, its photo inset at
 	     the right. Title, byline and deck first, so a stranger reads what this
 	     version is before anything else; the photo is last, so a stacked band
 	     reads words, buttons, then the photo. -->
-	<div class="hero page">
-		<div class="hero-inner page-inner">
-			<div class="hero-text">
-				<!-- The measure says the serves the list is scaled to, so it stays true. -->
-				<RecipeHeader
-					{recipe}
-					currentVersion={{ ...currentVersion, servings: stored > 0 ? serves : null }}
-					storedServings={stored}
-					forkCount={data.forkCount}
-					versionCount={allVersions.length}
-					{tags}
-					{cooking}
-					journal={data.journal}>
-					{#snippet actions()}
-						<RecipeActions
-							{recipe}
-							{canFork}
-							{canFavorite}
-							{canEdit}
-							initialFavorited={data.isFavorited}
-							favoriteCount={data.favoriteCount}
-							{loginHref}
-							{cooking}
-							journalHref={data.journal?.addHref}
-							oncook={(next) => (cooking = next)} />
-					{/snippet}
-				</RecipeHeader>
-			</div>
-			{#if currentVersion.imageUrl}
-				<figure class="recipe-photo">
-					<!-- The one image above the fold: fetched first, decoded off the main
+		<div class="hero page">
+			<div class="hero-inner page-inner">
+				<div class="hero-text">
+					<!-- The measure says the serves the list is scaled to, so it stays true. -->
+					<RecipeHeader
+						{recipe}
+						currentVersion={{ ...currentVersion, servings: stored > 0 ? serves : null }}
+						storedServings={stored}
+						forkCount={data.forkCount}
+						versionCount={allVersions.length}
+						{tags}
+						journal={data.journal}>
+						{#snippet actions()}
+							<RecipeActions
+								{recipe}
+								{canFork}
+								{canFavorite}
+								{canEdit}
+								initialFavorited={data.isFavorited}
+								favoriteCount={data.favoriteCount}
+								{loginHref}
+								{journalHref}
+								oncook={cook} />
+						{/snippet}
+					</RecipeHeader>
+				</div>
+				{#if currentVersion.imageUrl}
+					<figure class="recipe-photo">
+						<!-- The one image above the fold: fetched first, decoded off the main
 				     thread. Decorative: the h1 beside it already names the recipe. -->
-					<img src={currentVersion.imageUrl} alt="" fetchpriority="high" decoding="async" />
-				</figure>
-			{/if}
+						<img src={currentVersion.imageUrl} alt="" fetchpriority="high" decoding="async" />
+					</figure>
+				{/if}
+			</div>
 		</div>
-	</div>
+	{/if}
 
 	<!-- The version bar: the hinge between the dish and the recipe. Its bottom
 	     edge is the divider; there is no rule. -->
@@ -134,7 +201,9 @@
 				</div>
 			{/if}
 
-			<!-- Toggle buttons, not links: pressed marks the section showing. -->
+			<!-- Toggle buttons, not links: pressed marks the section showing. While
+			     cooking it is the bottom switch, still first in the Tab order, as
+			     tabs come before what they show. -->
 			<nav class="section-tabs" aria-label="Recipe sections" data-pinned>
 				<button
 					type="button"
@@ -174,6 +243,16 @@
 					<RecipeMethod
 						steps={currentVersion.steps}
 						storageKey={ticksKey(recipe.slug, currentVersion.versionNumber, 'steps')} />
+					<!-- After the last step, where it leads on to the optional Journal
+					     entry; Exit in the header leaves earlier (Spencer, 11 November 2026). -->
+					{#if cooking}
+						<div class="finish">
+							<button type="button" class="btn-primary" onclick={finish}>Finish cooking</button>
+							{#if journalHref}
+								<p class="form-hint">Then add it to your Journal, if you like.</p>
+							{/if}
+						</div>
+					{/if}
 				</div>
 			</div>
 		</div>
@@ -193,6 +272,29 @@
 	   sets its own spacing above and below. */
 	.body {
 		padding-block: 0;
+	}
+
+	/* Cooking (Spencer, 11 November 2026): the espresso bar and the site's tab
+	   bar step aside, so the paper header meets the screen's top edge (and the
+	   status bar, which Safari colours from a pinned box there, stays paper). */
+	:global(body:has(article[data-cooking]) :is(.nav-shell, .tab-bar)) {
+		display: none;
+	}
+
+	/* One done language on the cooking screen: a ticked row in either list
+	   keeps its check and its Ink 3 text, and is never struck through, so a
+	   finished step can be reread. Reading keeps the strike rows. */
+	article[data-cooking] :global(label:has(:checked)) {
+		text-decoration-line: none;
+	}
+
+	/* After the last step: the one marigold while cooking. */
+	.finish {
+		margin-top: 32px;
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 8px;
 	}
 
 	/* The skip link lands here; focus then moves on to the first ingredient. */
@@ -384,6 +486,52 @@
 			clip-path: inset(50%);
 			white-space: nowrap;
 		}
+
+		/* Cooking, the tabs are the one pinned bar, at the thumb: the phone tab
+		   bar's look (paper, a Rule 2 line above, the current segment ink with
+		   a 2px clay top edge drawn over it), 56px targets, padded clear of the
+		   home indicator. Nothing is pinned at the top. */
+		[data-cooking] .section-tabs {
+			position: fixed;
+			top: auto;
+			right: 0;
+			bottom: 0;
+			left: 0;
+			z-index: 40;
+			margin: 0;
+			padding-bottom: env(safe-area-inset-bottom);
+			border-bottom: 0;
+			border-top: 1px solid var(--color-border-2);
+		}
+
+		[data-cooking] .section-tabs button {
+			min-height: 56px;
+			margin: -1px 0 0;
+			padding: 0;
+			border-bottom: 0;
+			border-top: 2px solid transparent;
+		}
+
+		[data-cooking] .section-tabs button[aria-pressed='true'] {
+			border-top-color: var(--color-accent);
+		}
+
+		/* The ring inside the bar, as the tab bar's, so the screen's edge never clips it. */
+		[data-cooking] .section-tabs button:focus-visible {
+			outline-offset: -4px;
+		}
+
+		/* The page ends clear of the bar (57px: the targets and the rule), and a
+		   row focused by Tab scrolls clear of it with 6px to spare; there is no
+		   bar at the top to clear. */
+		:global(body:has(article[data-cooking]) main) {
+			padding-bottom: calc(57px + env(safe-area-inset-bottom));
+		}
+
+		:global(html:has(#recipe):has(article[data-cooking])) {
+			scroll-padding-top: 6px;
+			scroll-padding-bottom: calc(63px + env(safe-area-inset-bottom));
+		}
 	}
 
 	@media (max-width: 699px) {
@@ -404,6 +552,14 @@
 		.content-layout {
 			padding-top: 18px;
 			padding-bottom: 32px;
+		}
+	}
+
+	/* Forced colours paint the transparent top edge both segments carry; Canvas
+	   hides it, so only the current one keeps its line. */
+	@media (forced-colors: active) and (max-width: 1023px) {
+		[data-cooking] .section-tabs button:not([aria-pressed='true']) {
+			border-top-color: Canvas;
 		}
 	}
 </style>

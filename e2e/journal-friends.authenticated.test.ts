@@ -57,7 +57,7 @@ test.describe('Journal', () => {
 });
 
 test.describe('Recipe page entry points', () => {
-	test('the personal line links the last entry; Cook carries the version and serves', async ({
+	test('the personal line links the last entry; Finish cooking opens the entry with the version and serves', async ({
 		page
 	}) => {
 		const logged = mine[0];
@@ -72,16 +72,22 @@ test.describe('Recipe page entry points', () => {
 		);
 
 		await page.getByRole('button', { name: 'Cook' }).click();
+		await expect(page).toHaveURL(/[?&]cook=1/);
 		const url = new URL(page.url());
 		url.searchParams.set('serves', '8');
-		await page.goto(url.href);
-		const add = page.getByRole('link', { name: 'Add to Journal' });
-		await expect(add).toHaveAttribute('href', /recipe=.+&version=\d+&serves=8/);
-		await add.click();
+		await gotoHydrated(page, url.href);
+		await page.getByRole('button', { name: 'Finish cooking' }).click();
 
+		await expect(page).toHaveURL(/\/journal\/new\?recipe=.+&version=\d+&serves=8/);
 		await expect(page.getByLabel(/Dish/)).toHaveValue(logged.dish);
 		await expect(page.getByLabel(/Servings/)).toHaveValue('8');
 		await expect(page.getByLabel(/From a recipe/)).not.toHaveValue('');
+
+		// Back from the entry returns to reading, not to cooking.
+		await page.goBack();
+		await expect(page).toHaveURL(/serves=8/);
+		await expect(page).not.toHaveURL(/cook=/);
+		await expect(page.getByRole('button', { name: 'Cook' })).toBeVisible();
 	});
 });
 

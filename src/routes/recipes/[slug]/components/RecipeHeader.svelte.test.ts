@@ -225,12 +225,6 @@ describe('RecipeHeader stats row', () => {
 		expect(screen.getByRole('link', { name: '3 versions' })).toHaveAttribute('href', '#versions');
 	});
 
-	test('cooking hides the version bar, so the version count is not a link to it', () => {
-		const { container } = renderHeader({ versionCount: 3, cooking: true });
-		expect(screen.queryByRole('link', { name: '3 versions' })).toBeNull();
-		expect(stats(container)).toContain('3 versions');
-	});
-
 	test('says nothing of saves or favorites: the count is on the Save pill', () => {
 		const { container } = renderHeader({ forkCount: 2, versionCount: 3 });
 		expect(container.querySelector('.stats')!.textContent).not.toMatch(/save|favorite/i);
@@ -394,19 +388,12 @@ describe('RecipeHeader personal line', () => {
 		);
 	});
 
-	test('never logged, signed out or cooking: no line', () => {
+	test('never logged or signed out: no line', () => {
 		const first = renderHeader({ journal: { lastEntry: null, addHref: ADD } });
 		expect(first.container.querySelector('.personal')).toBeNull();
 		first.unmount();
 
 		const signedOut = renderHeader({ journal: null });
 		expect(signedOut.container.querySelector('.personal')).toBeNull();
-		signedOut.unmount();
-
-		const cooking = renderHeader({
-			journal: { lastEntry: { id: 12, cookedOn: '2026-11-08', timesCooked: 1 }, addHref: ADD },
-			cooking: true
-		});
-		expect(cooking.container.querySelector('.personal')).toBeNull();
 	});
 });

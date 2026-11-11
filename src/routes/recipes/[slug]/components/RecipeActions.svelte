@@ -1,11 +1,10 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { afterNavigate } from '$app/navigation';
-	import { page } from '$app/state';
 	import { setShallowParam } from './shallowParam';
 	import type { Recipe } from '#lib/server/db/schema.js';
 	import { forkIcon, journalIcon, saveIcon } from '#lib/components/Icons.svelte';
-	import { compactCount, wholeNumber } from '#lib/helpers.js';
+	import { compactCount } from '#lib/helpers.js';
 	import { optimisticToggle } from '#lib/optimisticToggle.svelte.js';
 
 	let {
@@ -16,7 +15,6 @@
 		initialFavorited,
 		favoriteCount,
 		loginHref,
-		cooking,
 		oncook,
 		journalHref
 	}: {
@@ -30,20 +28,11 @@
 		favoriteCount: number;
 		/** Logged out on the latest version: where "Log in to save" sends the visitor and back. */
 		loginHref?: string;
-		/** Cooking mode: Save, Fork and Edit step aside, the screen is kept awake. */
-		cooking: boolean;
-		oncook: (cooking: boolean) => void;
-		/** Signed in: Add to Journal for the version being read; Cook adds the serves. */
+		/** Cook enters cooking, which has its own header; this row is not shown there. */
+		oncook: () => void;
+		/** Signed in: Add to Journal for the version and serves being read. */
 		journalHref?: string;
 	} = $props();
-
-	// The scaler writes ?serves= with a shallow replace, so the newest URL is page.shallow's.
-	const serves = $derived((page.shallow?.url ?? page.url).searchParams.get('serves'));
-	const logHref = $derived(
-		journalHref && serves && wholeNumber(serves) !== null
-			? `${journalHref}&serves=${serves}`
-			: journalHref
-	);
 
 	let error = $state('');
 	// The click flips it optimistically; it resets to the prop whenever the
@@ -64,47 +53,10 @@
 	afterNavigate(() => (error = ''));
 
 	// The URL carries ?cook=1 so a reload or a shared link stays in the mode.
-	function toggleCook() {
-		const next = !cooking;
-		oncook(next);
-		setShallowParam('cook', next ? '1' : null);
+	function cook() {
+		oncook();
+		setShallowParam('cook', '1');
 	}
-
-	// The screen stays awake while cooking. The browser drops the lock when
-	// the tab hides, so coming back asks again. Where the API is missing or
-	// refuses, the mode works without it and never throws.
-	let noWakeLock = $state(false);
-	$effect(() => {
-		if (!cooking) return;
-		if (!('wakeLock' in navigator)) {
-			noWakeLock = true;
-			return;
-		}
-		let lock: WakeLockSentinel | undefined;
-		let done = false;
-		const request = () =>
-			navigator.wakeLock.request('screen').then(
-				(next) => {
-					if (done) next.release().catch(() => {});
-					else lock = next;
-				},
-				() => {}
-			);
-		const release = () => lock?.release().catch(() => {});
-		const onVisibility = () => {
-			if (document.visibilityState === 'visible' && (!lock || lock.released)) request();
-		};
-		request();
-		document.addEventListener('visibilitychange', onVisibility);
-		// Unload; a page kept in the back-forward cache asks again when shown.
-		window.addEventListener('pagehide', release);
-		return () => {
-			done = true;
-			release();
-			document.removeEventListener('visibilitychange', onVisibility);
-			window.removeEventListener('pagehide', release);
-		};
-	});
 </script>
 
 <!-- Back from the new fork can restore this page from the back-forward cache,
@@ -116,13 +68,9 @@
 
 <div class="actions">
 	<!-- Cook is the one marigold fill for everyone, first in the row and in the
-	     Tab order. Pressed it steps down to the outlined pill with the tint, and
-	     the other actions go, so "Done cooking" growing shifts nothing. -->
-	<button
-		type="button"
-		class={['cook', cooking ? 'btn-ghost' : 'btn-primary']}
-		aria-pressed={cooking}
-		onclick={toggleCook}>
+	     Tab order. It opens cooking, whose own header and Finish cooking take
+	     it from there. -->
+	<button type="button" class="cook btn-primary" onclick={cook}>
 		<svg
 			class="size-4"
 			viewBox="0 0 16 16"
@@ -135,20 +83,16 @@
 			<path
 				d="M2 7.5h12M3.5 7.5v4a2 2 0 0 0 2 2h5a2 2 0 0 0 2-2v-4M6 5c0-1 1-1.2 1-2.5M9.5 5c0-1 1-1.2 1-2.5" />
 		</svg>
-		{#if cooking}
-			<span>Done cooking</span>
-		{:else}
-			<span>Cook</span>
-		{/if}
+		Cook
 	</button>
 
-	{#if !cooking && loginHref}
+	{#if loginHref}
 		<!-- Logged out: Save's ghost pill and bookmark, leading to login and back. -->
 		<a href={loginHref} class="btn-ghost login no-underline">
 			{@render saveIcon(false)}
 			Log in to save
 		</a>
-	{:else if !cooking}
+	{:else}
 		{#if canEdit}
 			<a href="/recipes/{recipe.slug}/edit" class="btn-ghost edit no-underline">
 				<svg
@@ -214,17 +158,14 @@
 			</form>
 		{/if}
 	{/if}
-	<!-- Signed in: last in the row, and the one action beside Done cooking. -->
-	{#if logHref}
-		<a href={logHref} class="btn-ghost log no-underline">
+	<!-- Signed in: last in the row. -->
+	{#if journalHref}
+		<a href={journalHref} class="btn-ghost log no-underline">
 			{@render journalIcon()}
 			Add to Journal
 		</a>
 	{/if}
 
-	{#if cooking && noWakeLock}
-		<p class="note text-text-2 basis-full text-sm">Your screen may still sleep.</p>
-	{/if}
 	{#if error}
 		<p class="form-error basis-full" role="alert">{error}</p>
 	{/if}
@@ -254,13 +195,11 @@
 	/* Saved: the word stays "Save"; the state is the pale marigold tint and
 	   border, quieter than the solid marigold Cook beside it (Spencer, 31
 	   October 2026). */
-	.cook[aria-pressed='true'],
 	.favorite[aria-pressed='true'] {
 		background: var(--color-marigold-tint);
 		border-color: var(--color-marigold);
 	}
 
-	.cook[aria-pressed='true']:hover,
 	.favorite[aria-pressed='true']:hover {
 		background: var(--color-marigold-tint-hover);
 	}
@@ -268,7 +207,6 @@
 	/* Forced colours strip the tint and the marigold star, so pressed keeps a
 	   heavier border and paints its star in Highlight, as the ticks do. */
 	@media (forced-colors: active) {
-		.cook[aria-pressed='true'],
 		.favorite[aria-pressed='true'] {
 			border-width: 2px;
 		}
@@ -298,8 +236,7 @@
 
 		.cook,
 		.log:nth-child(even),
-		.login,
-		.note {
+		.login {
 			grid-column: 1 / -1;
 		}
 	}
