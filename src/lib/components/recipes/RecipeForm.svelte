@@ -602,5 +602,11 @@
 		.editor-top:has(.fold:not([open])) .side {
 			display: none;
 		}
+
+		/* The form's own gap is the one between sections; this margin on top of
+		   it left 48px under the folded summary. */
+		.editor-top {
+			margin-bottom: 0;
+		}
 	}
 </style>

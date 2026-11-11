@@ -416,6 +416,11 @@ describe('RecipeForm phone details', () => {
 		expect(summary()).toHaveTextContent(/Edit details$/);
 	});
 
+	test('on a phone the folded summary sits one section gap, the form’s own, above Ingredients', () => {
+		const phone = style.slice(style.lastIndexOf('@media (max-width: 699px)'));
+		expect(cssRule(phone, '.editor-top')).toMatch(/margin-bottom:\s*0/);
+	});
+
 	test('a save blocked by a bad Rest time opens the details and focuses Rest in one action', () => {
 		renderWith({
 			title: 'Cookies',
