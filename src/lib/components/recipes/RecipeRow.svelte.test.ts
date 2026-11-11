@@ -177,3 +177,42 @@ describe('RecipeRow', () => {
 		});
 	});
 });
+
+describe('RecipeRow in select mode', () => {
+	const selecting = (checked: boolean, onchange = vi.fn()) => ({
+		...row({ saved: true, select: { checked, onchange } }),
+		onchange
+	});
+
+	test('the row is a checkbox named for the recipe, at its start, with no link and no ⋯', () => {
+		const { container } = selecting(false);
+		const box = screen.getByRole('checkbox', { name: 'Chocolate Cake' });
+		expect(container.querySelector('li')!.firstElementChild).toBe(box.closest('label'));
+		expect(screen.queryByRole('link', { name: 'Chocolate Cake' })).toBeNull();
+		expect(screen.queryByRole('button', { name: /More actions/ })).toBeNull();
+		expect(screen.getByRole('heading', { name: 'Chocolate Cake' })).toBeInTheDocument();
+	});
+
+	test('a press says the new state', async () => {
+		const { onchange } = selecting(false);
+		await fireEvent.click(screen.getByRole('checkbox'));
+		expect(onchange).toHaveBeenCalledWith(true);
+	});
+
+	test('a chosen row reads checked, its meta line (the saver’s handle) inert', () => {
+		selecting(true);
+		expect(screen.getByRole('checkbox')).toBeChecked();
+		expect(
+			screen.getByRole('link', { name: /devcooks/ }).closest<HTMLElement>('.row-meta')!.inert
+		).toBe(true);
+	});
+
+	test('a chosen row is tinted, marigold at its start; the tick column takes the ⋯’s place', () => {
+		expect(cssRule(source, '.recipe-row:has(.row-select :checked)')).toMatch(
+			/background:\s*var\(--color-marigold-tint\)/
+		);
+		expect(cssRule(source, '.recipe-row.selecting')).toMatch(
+			/grid-template-columns:\s*28px 64px minmax\(0, 1fr\) 190px 250px/
+		);
+	});
+});

@@ -578,3 +578,57 @@ describe('RecipeCard in the Cookbook: the ⋯', () => {
 		expect(screen.queryByRole('button', { name: /More actions/ })).toBeNull();
 	});
 });
+
+// ─── Select mode (the Cookbook) ───────────────────────────────────────────────
+
+describe('RecipeCard in select mode', () => {
+	const selecting = (checked: boolean, onchange = vi.fn()) => {
+		render(RecipeCard, {
+			props: {
+				recipe: makeRecipe({ author: { id: 'u2', username: 'lucia' } }),
+				variant: 'cookbook',
+				saved: true,
+				select: { checked, onchange }
+			}
+		});
+		return onchange;
+	};
+
+	test('the card is a checkbox named for the recipe, not a link, and has no ⋯', () => {
+		selecting(false);
+		const box = screen.getByRole('checkbox', { name: 'Chocolate Cake' });
+		expect(box).not.toBeChecked();
+		expect(screen.queryByRole('link', { name: 'Chocolate Cake' })).toBeNull();
+		expect(screen.queryByRole('button', { name: /More actions/ })).toBeNull();
+		// The whole card is its label, the tick drawn on a disc at the photo's corner.
+		const label = box.closest('label')!;
+		expect(label).toHaveClass('card-stretched-link');
+		expect(label.querySelector('.select-disc .tick')).not.toBeNull();
+	});
+
+	test('a press says the new state', async () => {
+		const onchange = selecting(false);
+		await fireEvent.click(screen.getByRole('checkbox'));
+		expect(onchange).toHaveBeenCalledWith(true);
+	});
+
+	test('a chosen card reads checked', () => {
+		selecting(true);
+		expect(screen.getByRole('checkbox', { name: 'Chocolate Cake' })).toBeChecked();
+	});
+
+	test('the saver’s handle is no link meanwhile: the text under the photo is inert', () => {
+		selecting(false);
+		expect(
+			screen.getByRole('link', { name: /lucia/ }).closest<HTMLElement>('.card-text')!.inert
+		).toBe(true);
+	});
+
+	test('a chosen card’s photo or panel is ringed in marigold', () => {
+		const ring = cssRule(
+			source,
+			'.recipe-card:has(.card-select :checked) :is(.card-img-wrap, .card-panel)::after'
+		);
+		expect(ring).toMatch(/box-shadow:\s*inset 0 0 0 3px var\(--color-marigold\)/);
+	});
+});
