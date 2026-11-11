@@ -112,6 +112,16 @@ test.describe('Navbar at 768, signed in', () => {
 	});
 });
 
+test.describe('Cookbook segments on a phone', () => {
+	test('All, Mine and Saved are each a 44px target', async ({ page }) => {
+		await page.setViewportSize({ width: 390, height: 844 });
+		await page.goto('/cookbook');
+		for (const link of await page.getByRole('group', { name: 'Show' }).getByRole('link').all()) {
+			expect((await link.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+		}
+	});
+});
+
 test.describe('Friends filter', () => {
 	for (const width of [390, 1280]) {
 		test(`the icon is centred on its words at ${width}`, async ({ page }) => {
