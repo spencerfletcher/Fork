@@ -5,6 +5,7 @@ import { tick } from 'svelte';
 import type { SubmitFunction } from '$app/forms';
 import NewPage from './+page.svelte';
 import type { Visibility } from '#lib/recipes/validation.js';
+import { draftKey } from '#lib/drafts.js';
 
 const captured = vi.hoisted(() => ({ submits: [] as SubmitFunction[] }));
 vi.mock('$app/navigation', () => ({ beforeNavigate: () => {} }));
@@ -273,5 +274,36 @@ describe('New recipe page editor state', () => {
 		expect(ingredients).toHaveValue('');
 		expect(ingredients.closest('form')).not.toBeNull();
 		expect(document.querySelector('textarea[name="steps"]')).toHaveValue('');
+	});
+});
+
+describe('New recipe page draft on this device', () => {
+	const KEY = draftKey('user-a', 'new');
+	const signedIn = { allTags: [], user: { id: 'user-a' } } as never;
+
+	beforeEach(() => localStorage.clear());
+
+	test('what was typed comes back on the next visit, and the line says so', async () => {
+		const first = render(NewPage, { props: { data: signedIn, form: null } });
+		await fireEvent.input(screen.getByRole('textbox', { name: 'Title' }), {
+			target: { value: 'Soup' }
+		});
+		first.unmount();
+		expect(JSON.parse(localStorage.getItem(KEY)!).draft.title).toBe('Soup');
+
+		render(NewPage, { props: { data: signedIn, form: null } });
+		expect(screen.getByRole('textbox', { name: 'Title' })).toHaveValue('Soup');
+		expect(document.querySelector('.editing')).toHaveTextContent(
+			'saves as v1 · Draft from just now restored. Discard draft'
+		);
+	});
+
+	test('signed out, nothing is stored', async () => {
+		render(NewPage, { props: { data, form: null } });
+		await fireEvent.input(screen.getByRole('textbox', { name: 'Title' }), {
+			target: { value: 'Soup' }
+		});
+		window.dispatchEvent(new Event('pagehide'));
+		expect(localStorage.length).toBe(0);
 	});
 });

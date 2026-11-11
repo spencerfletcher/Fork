@@ -7,6 +7,7 @@ import { inGroup, makeContent, makeIngredient, makeStep } from '#lib/recipes/fix
 import type { RecipeContent } from '#lib/recipes/types.js';
 import { numberMessages, type RecipeDraft, REQUIRED_MESSAGES } from '#lib/recipes/validation.js';
 import { UNREACHABLE_MESSAGE } from '#lib/pendingEnhance.svelte.js';
+import { draftKey, saveDraft } from '#lib/drafts.js';
 
 // Capture the form's submit callback so a test can drive the pending state by hand.
 const captured = vi.hoisted(() => ({ submits: [] as SubmitFunction[] }));
@@ -42,6 +43,7 @@ function makeData(
 ) {
 	return {
 		recipe: {
+			id: 7,
 			slug: 'cookies',
 			title: 'Cookies',
 			description: null,
@@ -101,6 +103,7 @@ beforeEach(() => {
 	captured.submits.length = 0;
 	nav.guards.length = 0;
 	vi.restoreAllMocks();
+	localStorage.clear();
 });
 
 describe('Edit page forks hint', () => {
@@ -592,5 +595,137 @@ describe('Edit page form', () => {
 		expect(document.querySelector('input[name="image"]')).toHaveAccessibleName('Replace photo');
 		// Nothing left to save: the form is clean again.
 		expect(editingLine('Editing v2')).toBeInTheDocument();
+	});
+});
+
+describe('Edit page drafts on this device', () => {
+	const USER = 'user-a';
+	const KEY = draftKey(USER, '7');
+	const signedIn = (user = USER) => ({ ...(makeData() as object), user: { id: user } }) as never;
+	const MINUTE = 60 * 1000;
+	/** Stores what the device would hold for makeData's recipe, with overrides. */
+	const seed = (draft: Partial<RecipeDraft>, ago = 5 * MINUTE, photoLost = false) =>
+		saveDraft(KEY, { draft: failed(draft).draft, savedAt: Date.now() - ago, photoLost });
+	const stored = () => JSON.parse(localStorage.getItem(KEY) ?? 'null');
+	const line = () => document.querySelector('.editing');
+	const discard = () => screen.getByRole('button', { name: 'Discard draft' });
+	const noDiscard = () => screen.queryByRole('button', { name: 'Discard draft' });
+
+	test('a stored draft that differs is restored and the state line says so, with its age', () => {
+		seed({ title: 'Chewy cookies' });
+		render(EditPage, { props: { data: signedIn(), form: null } });
+		expect(title()).toHaveValue('Chewy cookies');
+		expect(line()).toHaveTextContent(
+			'Editing v2 · saves as v3 · Draft from 5 minutes ago restored. Discard draft'
+		);
+		expect(line()).toHaveAttribute('aria-live', 'polite');
+		expect(discard()).toHaveClass('text-btn');
+	});
+
+	test('Discard draft returns to the server’s content and forgets the draft', async () => {
+		seed({ title: 'Chewy cookies' });
+		render(EditPage, { props: { data: signedIn(), form: null } });
+		await fireEvent.click(discard());
+		expect(title()).toHaveValue('Cookies');
+		expect(editingLine('Editing v2')).toBeInTheDocument();
+		expect(stored()).toBeNull();
+	});
+
+	test('a draft the same as the server’s content is not offered, and is cleared', async () => {
+		seed({});
+		render(EditPage, { props: { data: signedIn(), form: null } });
+		await tick();
+		expect(noDiscard()).toBeNull();
+		expect(stored()).toBeNull();
+	});
+
+	test('a draft from before the recipe changed is offered, says so, and keeps its revision', () => {
+		seed({ title: 'Chewy cookies', editRevision: '2' });
+		render(EditPage, { props: { data: signedIn(), form: null } });
+		expect(title()).toHaveValue('Chewy cookies');
+		expect(line()).toHaveTextContent(
+			'restored. The recipe has changed since, so saving this draft will be refused.'
+		);
+		// The server's stale check compares this, so a blind overwrite is refused.
+		expect(hiddenRevision()).toHaveValue('2');
+	});
+
+	test('a chosen photo is not kept, and the restore says so', () => {
+		seed({ title: 'Chewy cookies' }, MINUTE, true);
+		render(EditPage, { props: { data: signedIn(), form: null } });
+		expect(line()).toHaveTextContent(
+			"Draft from 1 minute ago restored. The photo you chose wasn't kept."
+		);
+	});
+
+	test('another user’s draft on the same device is never shown', () => {
+		seed({ title: 'Chewy cookies' });
+		render(EditPage, { props: { data: signedIn('user-b'), form: null } });
+		expect(title()).toHaveValue('Cookies');
+		expect(noDiscard()).toBeNull();
+	});
+
+	test('a failed save’s reply wins over a stored draft', () => {
+		seed({ title: 'Chewy cookies' });
+		render(EditPage, { props: { data: signedIn(), form: failed({ title: 'From the server' }) } });
+		expect(title()).toHaveValue('From the server');
+		expect(noDiscard()).toBeNull();
+	});
+
+	test('typing is stored after a pause, not on the keystroke', async () => {
+		vi.useFakeTimers();
+		try {
+			render(EditPage, { props: { data: signedIn(), form: null } });
+			await fireEvent.input(title(), { target: { value: 'Chewy cookies' } });
+			expect(stored()).toBeNull();
+			await vi.advanceTimersByTimeAsync(1000);
+			expect(stored().draft.title).toBe('Chewy cookies');
+			expect(stored().draft.editRevision).toBe('3');
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
+	test('hiding the page stores the draft at once', async () => {
+		render(EditPage, { props: { data: signedIn(), form: null } });
+		await fireEvent.input(title(), { target: { value: 'Chewy cookies' } });
+		window.dispatchEvent(new Event('pagehide'));
+		expect(stored().draft.title).toBe('Chewy cookies');
+	});
+
+	test('typing back to the server’s content clears the draft and its line', async () => {
+		seed({ title: 'Chewy cookies' });
+		render(EditPage, { props: { data: signedIn(), form: null } });
+		await fireEvent.input(title(), { target: { value: 'Cookies' } });
+		window.dispatchEvent(new Event('pagehide'));
+		await tick();
+		expect(stored()).toBeNull();
+		expect(noDiscard()).toBeNull();
+	});
+
+	test('a successful save clears the draft; a failed one keeps it', async () => {
+		seed({ title: 'Chewy cookies' });
+		render(EditPage, { props: { data: signedIn(), form: null } });
+		const run = async (type: string) => {
+			const finish = (await captured.submits[0]({} as never)) as (i: unknown) => Promise<void>;
+			await finish({ result: { type }, update: async () => {} });
+			window.dispatchEvent(new Event('pagehide'));
+		};
+		await run('failure');
+		expect(stored().draft.title).toBe('Chewy cookies');
+		await run('redirect');
+		expect(stored()).toBeNull();
+	});
+
+	test('storage that throws leaves the editor working', async () => {
+		const refuse = () => {
+			throw new DOMException('refused', 'QuotaExceededError');
+		};
+		vi.spyOn(Storage.prototype, 'getItem').mockImplementation(refuse);
+		vi.spyOn(Storage.prototype, 'setItem').mockImplementation(refuse);
+		render(EditPage, { props: { data: signedIn(), form: null } });
+		await fireEvent.input(title(), { target: { value: 'Chewy cookies' } });
+		window.dispatchEvent(new Event('pagehide'));
+		expect(editingLine('Editing v2 · saves as v3')).toBeInTheDocument();
 	});
 });

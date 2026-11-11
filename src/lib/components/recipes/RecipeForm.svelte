@@ -1,6 +1,7 @@
 <script lang="ts">
-	import type { Snippet } from 'svelte';
-	import { enhance } from '$app/forms';
+	import { onMount, type Snippet } from 'svelte';
+	import { enhance, type SubmitFunction } from '$app/forms';
+	import { clearDraft, draftAge, loadDraft, saveDraft } from '#lib/drafts.js';
 	import { pendingEnhance } from '#lib/pendingEnhance.svelte.js';
 	import { beforeNavigate } from '$app/navigation';
 	import {
@@ -47,7 +48,8 @@
 		header,
 		leaving = false,
 		hasForks = false,
-		danger
+		danger,
+		draftKey
 	}: {
 		/** What was loaded, as the form's strings. Dirty-checking compares against it. */
 		baseline: RecipeDraft;
@@ -66,14 +68,18 @@
 		nextVersion?: number;
 		/** The page's header, handed the outcome of a save ("saves as v4",
 		 *  "saves settings only", or '' while the form is clean or invalid),
-		 *  and whether any field is showing an error. */
-		header?: Snippet<[outcome: string, invalid: boolean]>;
+		 *  while a restored draft is showing its words and Discard draft for
+		 *  the same line, and whether any field is showing an error. */
+		header?: Snippet<[outcome: string, draftNote: Snippet | undefined, invalid: boolean]>;
 		/** Another form on the page is leaving on purpose (a delete), so the guard stays quiet. */
 		leaving?: boolean;
 		/** The recipe has forks, which a narrower audience leaves where they are. */
 		hasForks?: boolean;
 		/** The edit page's Delete recipe, its own form, pinned right on the actions row. */
 		danger?: Snippet;
+		/** Where this editor's draft lives on the device (`draftKey` in
+		 *  #lib/drafts); omitted, nothing is stored. */
+		draftKey?: string;
 	} = $props();
 
 	// The actions row sits outside the form, Save joined to it by form=, so
@@ -248,9 +254,116 @@
 			navigation.cancel();
 		}
 	});
+
+	// The draft is kept on this device as it is typed (#lib/drafts), so a
+	// reload, a closed tab or a crash loses nothing. It never reaches the
+	// server: only Save writes a version.
+	let restored = $state<{ age: string; stale: boolean; photoLost: boolean } | null>(null);
+	// Content and settings only: a draft from an older revision whose fields
+	// match the server's has nothing left to offer.
+	const sameAsServer = (d: RecipeDraft) =>
+		serialise({ ...d, editRevision: baseline.editRevision }) === serialise(baseline);
+	// What was last written or read, so a quiet page writes nothing.
+	let written = '';
+	let timer: ReturnType<typeof setTimeout> | undefined;
+	// A successful save has redirected; nothing may store the draft again.
+	let saved = false;
+
+	function persist() {
+		clearTimeout(timer);
+		if (!draftKey || saved) return;
+		const now = JSON.stringify([serialise(draft), draft.editRevision, chosen]);
+		if (now === written) return;
+		written = now;
+		if (sameAsServer(draft)) {
+			clearDraft(draftKey);
+			// Nothing differs from the server, so its revision is safe to save on.
+			draft.editRevision = baseline.editRevision;
+			restored = null;
+		} else {
+			saveDraft(draftKey, {
+				draft: $state.snapshot(draft),
+				savedAt: Date.now(),
+				photoLost: chosen
+			});
+		}
+	}
+
+	// A failed save's reply is newer than anything stored, so it wins.
+	onMount(() => {
+		const stored = draftKey && !form ? loadDraft(draftKey) : null;
+		if (draftKey && stored) {
+			const next: RecipeDraft = { ...baseline, ...stored.draft, hadPhoto: false };
+			if (sameAsServer(next)) clearDraft(draftKey);
+			else {
+				draft = next;
+				restored = {
+					age: draftAge(stored.savedAt),
+					// The stale check compares the draft's revision, kept as stored, so
+					// saving over a newer version is still refused.
+					stale: Number(baseline.editRevision) > Number(next.editRevision),
+					photoLost: stored.photoLost
+				};
+				written = JSON.stringify([serialise(draft), draft.editRevision, false]);
+			}
+		}
+		return persist;
+	});
+
+	// Debounced: stored half a second after typing stops, or as the page hides.
+	$effect(() => {
+		void [serialise(draft), chosen];
+		clearTimeout(timer);
+		timer = setTimeout(persist, 500);
+	});
+
+	const draftWords = $derived(
+		restored
+			? [
+					`Draft from ${restored.age} restored.`,
+					restored.stale && 'The recipe has changed since, so saving this draft will be refused.',
+					restored.photoLost && "The photo you chose wasn't kept."
+				]
+					.filter(Boolean)
+					.join(' ')
+			: ''
+	);
+
+	function discard() {
+		if (draftKey) clearDraft(draftKey);
+		draft = { ...baseline };
+		restored = null;
+	}
+
+	const submit: SubmitFunction = async (input) => {
+		const finish = await save.submit(input);
+		return async (opts) => {
+			if (opts.result.type === 'redirect' && draftKey) {
+				saved = true;
+				clearTimeout(timer);
+				clearDraft(draftKey);
+			}
+			if (finish) await finish(opts);
+		};
+	};
 </script>
 
-{@render header?.(outcome, errorCount > 0)}
+<svelte:window onpagehide={persist} />
+<svelte:document
+	onvisibilitychange={() => {
+		if (document.visibilityState === 'hidden') persist();
+	}} />
+
+{#snippet draftNote()}
+	{#if restored}
+		{draftWords}
+		<button type="button" class="text-btn" disabled={save.pending} onclick={discard}>
+			Discard draft
+		</button>
+	{/if}
+{/snippet}
+
+{@render header?.(outcome, restored ? draftNote : undefined, errorCount > 0)}
 
 {#snippet fieldError(name: string)}
 	{#if errors[name]}
@@ -263,7 +376,7 @@
 	method="POST"
 	{action}
 	enctype="multipart/form-data"
-	use:enhance={save.submit}
+	use:enhance={submit}
 	class="form"
 	onfocusout={(e) => {
 		if (edited[(e.target as HTMLInputElement).name]) validate(e.target);

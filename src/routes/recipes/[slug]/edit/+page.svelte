@@ -6,6 +6,7 @@
 	import RecipeForm from '#lib/components/recipes/RecipeForm.svelte';
 	import { pendingEnhance } from '#lib/pendingEnhance.svelte.js';
 	import DeleteRecipe from './DeleteRecipe.svelte';
+	import { draftKey } from '#lib/drafts.js';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -52,17 +53,18 @@
 			cancelHref="/recipes/{recipe.slug}"
 			imageUrl={latestVersion.imageUrl}
 			nextVersion={current + 1}
-			hasForks={data.forkCount > 0}>
-			{#snippet header(outcome)}
+			hasForks={data.forkCount > 0}
+			draftKey={data.user ? draftKey(data.user.id, String(recipe.id)) : undefined}>
+			{#snippet header(outcome, draftNote)}
 				<div class="editor-header">
 					<a href="/recipes/{recipe.slug}" class="back-link">← {recipe.title}</a>
 					<div class="editor-title">
 						<h1>Edit Recipe</h1>
 						<!-- Always in the DOM, so the outcome is announced when it changes. -->
 						<span class="editing" aria-live="polite">
-							{#each `Editing v${current}${outcome ? ` · ${outcome}` : ''}`.split(/(v\d+)/) as part, i (i)}
+							{#each `Editing v${current}${outcome ? ` · ${outcome}` : ''}${draftNote ? ' · ' : ''}`.split(/(v\d+)/) as part, i (i)}
 								{#if i % 2}<span class="mono-id">{part}</span>{:else}{part}{/if}
-							{/each}
+							{/each}{@render draftNote?.()}
 						</span>
 					</div>
 				</div>
