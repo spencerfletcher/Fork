@@ -11,11 +11,11 @@
 		VISIBILITIES,
 		type RecipeDraft
 	} from '#lib/recipes/validation.js';
-	import { fieldErrors, typedMessage } from '#lib/recipes/fieldErrors.svelte.js';
+	import { fieldErrors } from '#lib/recipes/fieldErrors.svelte.js';
 	import { normaliseTagNames, tagKey } from '#lib/recipes/tags.js';
 	import type { TagChip } from '#lib/recipes/types.js';
 	import { generatedCommitMessage } from '#lib/recipes/content.js';
-	import { MAX_MAKES, MAX_SOURCE_URL, TEXT_LIMITS } from '#lib/recipes/limits.js';
+	import { MAX_MAKES, TEXT_LIMITS } from '#lib/recipes/limits.js';
 	import { draftChangedGroups } from '#lib/recipes/draftChanges.js';
 	import TagInput from '#lib/components/ui/TagInput.svelte';
 	import IngredientEditor from './IngredientEditor.svelte';
@@ -24,6 +24,7 @@
 	import FieldError from './FieldError.svelte';
 	import MoreDetails from './MoreDetails.svelte';
 	import TimesRow from './TimesRow.svelte';
+	import SourceFields from './SourceFields.svelte';
 	import FormActions from '#lib/components/ui/FormActions.svelte';
 	import ChoiceGroup from '#lib/components/ui/ChoiceGroup.svelte';
 	import { audienceIcon } from '#lib/components/Icons.svelte';
@@ -419,35 +420,7 @@
 
 				<TimesRow bind:draft {errors} />
 
-				<!-- Where it came from outside Fork, apart from who wrote it here. -->
-				<div class="field">
-					<label for="sourceName">Source</label>
-					<input
-						id="sourceName"
-						name="sourceName"
-						type="text"
-						maxlength={TEXT_LIMITS.sourceName.max}
-						placeholder="A cookbook, a person, a website"
-						bind:value={draft.sourceName}
-						aria-invalid={errors.sourceName ? 'true' : undefined}
-						aria-describedby={errors.sourceName ? 'sourceName-error' : undefined} />
-					{@render fieldError('sourceName')}
-				</div>
-				<div class="field">
-					<label for="sourceUrl">Source link</label>
-					<input
-						id="sourceUrl"
-						name="sourceUrl"
-						type="text"
-						inputmode="url"
-						autocomplete="off"
-						maxlength={MAX_SOURCE_URL}
-						placeholder="https://"
-						bind:value={draft.sourceUrl}
-						{@attach (el) => el.setCustomValidity(typedMessage('sourceUrl', draft.sourceUrl))}
-						{...aria('sourceUrl')} />
-					{@render fieldError('sourceUrl')}
-				</div>
+				<SourceFields bind:draft {errors} />
 
 				<fieldset class="field field-tags">
 					<legend class="field-legend">Tags</legend>
