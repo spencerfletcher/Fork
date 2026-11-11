@@ -5,6 +5,7 @@ const journal = vi.hoisted(() => ({
 	ENTRIES_PER_PAGE: 30,
 	journalOf: vi.fn(),
 	journalSummary: vi.fn(),
+	journalYear: vi.fn(),
 	ownEntry: vi.fn()
 }));
 vi.mock('#lib/server/journal.js', () => journal);
@@ -14,6 +15,7 @@ import type { PageData } from './$types';
 
 const USER = { id: 'cook-3' };
 const entry = (id: number, cookedOn = '2026-11-01') => ({ id, cookedOn });
+const YEAR = { year: 2026, months: [3, ...Array(11).fill(null)], top: [] };
 const journalPage = (search = '') =>
 	loadPage<PageData>(load, loadEvent({ path: `/journal${search}`, user: USER }));
 
@@ -22,6 +24,7 @@ beforeEach(() => {
 	journal.journalOf.mockResolvedValue({ entries: [entry(2), entry(1)], next: 'c1' });
 	journal.journalSummary.mockResolvedValue({ total: 80, oldest: '2024-05-01' });
 	journal.ownEntry.mockResolvedValue(null);
+	journal.journalYear.mockResolvedValue(YEAR);
 });
 
 describe('/journal load', () => {
@@ -59,5 +62,20 @@ describe('/journal load', () => {
 	test('?logged= for no entry of the cook’s says nothing', async () => {
 		expect((await journalPage('?logged=404')).logged).toBeNull();
 		expect((await journalPage('?logged=abc')).logged).toBeNull();
+	});
+
+	test('the year summary comes with the page, for this year', async () => {
+		const before = new Date();
+		const data = await journalPage('?page=2');
+		expect(data.year).toEqual(YEAR);
+		const [viewer, today] = journal.journalYear.mock.calls[0];
+		expect(viewer).toEqual(USER);
+		expect(today.getTime()).toBeGreaterThanOrEqual(before.getTime());
+	});
+
+	test('a Show more fetch (?after=) reads no year summary: the page keeps the one it loaded', async () => {
+		const data = await journalPage('?after=2026-11-01~2');
+		expect(journal.journalYear).not.toHaveBeenCalled();
+		expect(data.year).toBeNull();
 	});
 });

@@ -45,6 +45,46 @@ test.describe('Journal', () => {
 		await expect(page.getByText('E2E leftover fried rice')).toHaveCount(0);
 	});
 
+	test('the year summary counts each month and the most cooked, within 330px on a phone', async ({
+		page
+	}) => {
+		await page.setViewportSize({ width: 390, height: 844 });
+		await page.goto('/journal');
+		const now = new Date();
+		const year = now.getUTCFullYear();
+		const months = page.getByRole('list', { name: `${year} so far` }).getByRole('listitem');
+		await expect(months).toHaveCount(12);
+		// Other tests log entries today, so this month's count is theirs to change.
+		for (let m = 0; m < 12; m++) {
+			if (m === now.getUTCMonth()) continue;
+			const prefix = `${year}-${String(m + 1).padStart(2, '0')}`;
+			const cooks = mine.filter((e) => e.cookedOn.startsWith(prefix)).length;
+			const name = new Date(Date.UTC(year, m, 1)).toLocaleDateString('en-GB', {
+				month: 'long',
+				timeZone: 'UTC'
+			});
+			await expect(months.nth(m)).toContainText(
+				`${name}: ${m > now.getUTCMonth() && cooks === 0 ? 'to come' : `${cooks} cook`}`
+			);
+		}
+		const recipes = new Set(
+			mine.filter((e) => e.recipe && e.cookedOn.startsWith(String(year))).map((e) => e.recipe)
+		);
+		const top = page.getByRole('list', { name: 'Most cooked this year' }).getByRole('listitem');
+		// The seed cook logs fewer recipes than the summary lists; other tests may log more.
+		await expect(top.first()).toBeVisible();
+		expect(await top.count()).toBeGreaterThanOrEqual(recipes.size);
+		await expect(top.first()).toContainText(/\d+ times?$/);
+
+		const summary = page.locator('section.jyear');
+		const firstMonth = page.getByRole('heading', { level: 2, name: /\d{4}$/ }).first();
+		const [box, monthBox] = [await summary.boundingBox(), await firstMonth.boundingBox()];
+		expect(monthBox!.y - box!.y).toBeLessThanOrEqual(330);
+		expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+			390
+		);
+	});
+
 	test('a missing dish is refused in words, and what was typed stays', async ({ page }) => {
 		await gotoHydrated(page, '/journal/new');
 		await page.getByLabel(/Caption/).fill('Kept after the refusal');
