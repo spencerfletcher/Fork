@@ -12,6 +12,9 @@ export const USERNAME_PATTERN = `[A-Z${USERNAME_CHARS}]{${USERNAME_MIN},${USERNA
 
 export const USERNAME_MESSAGE = `Usernames are ${USERNAME_MIN} to ${USERNAME_MAX} characters: letters, digits, - or _`;
 
+/** Sign-up's and Settings' refusal of a handle someone else holds, now or formerly. */
+export const USERNAME_TAKEN = 'That username is taken';
+
 const USERNAME = new RegExp(`^[${USERNAME_CHARS}]{${USERNAME_MIN},${USERNAME_MAX}}$`, 'v');
 
 /** The stored form of a typed handle. */

@@ -4,7 +4,12 @@ import { text } from '#lib/helpers.js';
 import { failure } from '#lib/server/actions.js';
 import { ensureProfile, usernameTaken } from '#lib/server/profiles.js';
 import { localPath } from '#lib/server/localPath.js';
-import { USERNAME_MESSAGE, normalizeUsername, validUsername } from '#lib/auth/rules.js';
+import {
+	USERNAME_MESSAGE,
+	USERNAME_TAKEN,
+	normalizeUsername,
+	validUsername
+} from '#lib/auth/rules.js';
 
 // Redirect users who are already logged in away from the signup page, to where
 // they were headed or home. A redirectTo from the login page is kept so "Log in"
@@ -33,7 +38,7 @@ export const actions: Actions = {
 		// Checked before the auth user exists, so a taken handle costs nothing;
 		// ensureProfile still suffixes on the rare race between here and the insert.
 		if (await usernameTaken(username)) {
-			return failure(400, 'invalid', 'That username is taken', { field: 'username' });
+			return failure(400, 'invalid', USERNAME_TAKEN, { field: 'username' });
 		}
 
 		const { data, error: err } = await supabase.auth.signUp({ email, password });
