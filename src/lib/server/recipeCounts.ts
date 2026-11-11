@@ -79,8 +79,6 @@ export async function cardList(
 		: undefined;
 	const rows = await db.query.recipes.findMany({
 		where: and(where, afterKey),
-		// The search vector is the database's own, never a card's.
-		columns: { fts: false },
 		extras: { cursorAt: sql<string>`${recipes.updatedAt}::text`.as('cursor_at') },
 		with: CARD_WITH,
 		orderBy: [...rank, desc(recipes.updatedAt), desc(recipes.id)],

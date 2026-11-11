@@ -6,6 +6,8 @@ export const variables = defineEnvVars({
 	PUBLIC_SUPABASE_URL: { public: true, static: true },
 	PUBLIC_SUPABASE_ANON_KEY: { public: true, static: true },
 	DATABASE_URL: { schema: (input) => input ?? '' },
+	// Moderators' auth user ids, comma-separated (isModerator); unset, nobody.
+	MODERATOR_IDS: { schema: (input) => input ?? '' },
 	// Connections per server process; unset, 5 in dev and 10 in production.
 	DB_POOL_MAX: {
 		schema: (input) => {

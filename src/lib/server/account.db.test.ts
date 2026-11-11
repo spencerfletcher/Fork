@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeAll, afterAll, vi } from 'vitest';
-import { and, eq, inArray, or } from 'drizzle-orm';
+import { and, eq, inArray, or, sql } from 'drizzle-orm';
 
 import { closeDbAfter, localDb, stamp } from '#lib/testing/db.js';
 import type { Visibility } from '#lib/recipes/validation.js';
@@ -321,7 +321,92 @@ describe.skipIf(!localDb)('deleting an account, against the real database', () =
 	});
 
 	test('running it again changes nothing and does not throw', async () => {
-		await expect(account.deleteAccount(owner, supabase)).resolves.toBeUndefined();
+		await expect(account.deleteAccount(owner, supabase)).resolves.toBe('login_deleted');
 		expect((await favoriteOf(friend, world.pub.id))?.copyVersion).toBe(1);
+	});
+});
+
+// A real Supabase Auth user, signed up through the local stack's auth API
+// (confirmations are off locally, so sign-up opens a session).
+describe.skipIf(!localDb)('deleting an account removes its login', () => {
+	let db: typeof import('./db/index.js').db;
+	let schema: typeof import('./db/schema.js');
+	let account: typeof import('./account.js');
+	const s = stamp();
+	const email = `delete-login-${s}@fork.test`;
+	const password = `Pw-${s}`;
+	const username = `dl-${s}`.slice(0, 20);
+	const storage = { storage: { from: () => ({ remove: async () => ({ error: null }) }) } } as never;
+	let userId = '';
+	let againId: string | undefined;
+
+	const signUp = async () => {
+		const { createClient } = await import('@supabase/supabase-js');
+		const client = createClient(
+			process.env.PUBLIC_SUPABASE_URL ?? '',
+			process.env.PUBLIC_SUPABASE_ANON_KEY ?? '',
+			{ auth: { persistSession: false } }
+		);
+		const { data, error } = await client.auth.signUp({ email, password });
+		if (error || !data.user || !data.session) throw error ?? new Error('No user or session');
+		return data.user.id;
+	};
+	const left = async (id: string) => {
+		const count = async (table: string) => {
+			const [row] = await db.execute<{ n: number }>(
+				sql`select count(*)::int as n from ${sql.raw(table)} where ${sql.raw(table === 'auth.users' ? 'id' : 'user_id')} = ${id}::uuid`
+			);
+			return row.n;
+		};
+		return {
+			users: await count('auth.users'),
+			identities: await count('auth.identities'),
+			sessions: await count('auth.sessions')
+		};
+	};
+
+	beforeAll(async () => {
+		({ db } = await import('./db/index.js'));
+		schema = await import('./db/schema.js');
+		account = await import('./account.js');
+		userId = await signUp();
+		await db.insert(schema.profiles).values({ id: userId, username });
+	});
+
+	afterAll(async () => {
+		await db.delete(schema.formerUsernames).where(eq(schema.formerUsernames.username, username));
+		await db.execute(
+			sql`delete from auth.users where id in (${userId}::uuid, ${againId ?? userId}::uuid)`
+		);
+	});
+
+	test('the auth user, its identities and its sessions are gone, and a second run is still safe', async () => {
+		expect(await left(userId)).toEqual({ users: 1, identities: 1, sessions: 1 });
+		await expect(account.deleteAccount(userId, storage)).resolves.toBe('login_deleted');
+		expect(await left(userId)).toEqual({ users: 0, identities: 0, sessions: 0 });
+		await expect(account.deleteAccount(userId, storage)).resolves.toBe('login_deleted');
+	});
+
+	test('the address can sign up again, and the old username stays reserved', async () => {
+		againId = await signUp();
+		expect(againId).not.toBe(userId);
+		const { usernameTaken } = await import('./profiles.js');
+		expect(await usernameTaken(username)).toBe(true);
+	});
+
+	test('a refused login delete is logged and kept for the caller to mark; any other error fails the deletion', async () => {
+		const refusal = (code: string) =>
+			Object.assign(new Error('Failed query'), { cause: Object.assign(new Error(code), { code }) });
+		const execute = vi.spyOn(db, 'execute');
+		const logged = vi.spyOn(console, 'error').mockImplementation(() => {});
+		for (const code of ['42501', '42P01', '23503']) {
+			execute.mockRejectedValueOnce(refusal(code));
+			await expect(account.deleteAccount(userId, storage)).resolves.toBe('login_kept');
+		}
+		expect(logged).toHaveBeenCalledTimes(3);
+		execute.mockRejectedValueOnce(refusal('57P01'));
+		await expect(account.deleteAccount(userId, storage)).rejects.toThrow('Failed query');
+		execute.mockRestore();
+		logged.mockRestore();
 	});
 });

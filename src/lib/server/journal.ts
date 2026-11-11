@@ -205,7 +205,10 @@ export type EntrySource =
 
 export type SourceRow = {
 	recipeId: number | null;
-	recipe: Pick<Recipe, 'slug' | 'title' | 'visibility' | 'authorId' | 'deletedAt'> | null;
+	recipe: Pick<
+		Recipe,
+		'slug' | 'title' | 'visibility' | 'authorId' | 'deletedAt' | 'suppressedAt'
+	> | null;
 	versionNumber: number | null;
 	sourceUrl: string | null;
 };
@@ -267,7 +270,8 @@ export const sourceColumns = {
 		title: recipes.title,
 		visibility: recipes.visibility,
 		authorId: recipes.authorId,
-		deletedAt: recipes.deletedAt
+		deletedAt: recipes.deletedAt,
+		suppressedAt: recipes.suppressedAt
 	},
 	versionNumber: recipeVersions.versionNumber
 };

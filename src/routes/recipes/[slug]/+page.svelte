@@ -23,6 +23,7 @@
 	import ConfirmStep from '#lib/components/ui/ConfirmStep.svelte';
 	import { pendingEnhance } from '#lib/pendingEnhance.svelte.js';
 	import KeepLine from './components/KeepLine.svelte';
+	import Moderation from './components/Moderation.svelte';
 	import SaverNote from './components/SaverNote.svelte';
 
 	let { data }: { data: PageData } = $props();
@@ -190,6 +191,12 @@
 								error={removal.error} />
 						</div>
 					{/if}
+					<Moderation
+						slug={recipe.slug}
+						title={currentVersion.title}
+						hidden={data.hidden}
+						moderator={data.moderator}
+						isAuthor={isOwner} />
 					<!-- The measure says the serves the list is scaled to, so it stays true. -->
 					<RecipeHeader
 						{recipe}

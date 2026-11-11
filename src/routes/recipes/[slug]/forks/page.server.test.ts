@@ -70,12 +70,16 @@ describe('/recipes/[slug]/forks load', () => {
 		expect(await run(OWNER)).toMatchObject({ recipe: { slug: RECIPE.slug } });
 	});
 
-	test('a logged-out visitor sees the public forks only, none in the Trash', async () => {
+	test('a logged-out visitor sees the public forks only, none in the Trash or hidden', async () => {
 		await run(null);
 		expect(forksQuery().where).toEqual(
 			and(
 				eq(recipes.parentId, RECIPE.id),
-				and(isNull(recipes.deletedAt), eq(recipes.visibility, 'public'))
+				and(
+					isNull(recipes.deletedAt),
+					isNull(recipes.suppressedAt),
+					eq(recipes.visibility, 'public')
+				)
 			)
 		);
 	});

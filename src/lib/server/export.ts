@@ -6,7 +6,7 @@ import { error, json } from '@sveltejs/kit';
 import { and, asc, eq, isNull, or } from 'drizzle-orm';
 import { db, type Tx } from './db/index.js';
 import { collectionRecipes, collections, favorites, profiles, recipes } from './db/schema.js';
-import { canView, friendIdsOf, inLibraryOf, NO_FTS } from './visibility.js';
+import { canView, friendIdsOf, inLibraryOf } from './visibility.js';
 import { keptVersionsOf } from './keptCopies.js';
 import { wholeJournalOf, type EntrySource } from './journal.js';
 import { versionContent } from '#lib/recipes/content.js';
@@ -57,11 +57,10 @@ export async function exportFor(
 				isNull(recipes.erasedAt),
 				recipeId === undefined ? undefined : eq(recipes.id, recipeId)
 			),
-			columns: NO_FTS,
 			with: {
 				versions: { orderBy: (v, { asc }) => [asc(v.versionNumber)] },
 				recipesToTags: { with: { tag: true } },
-				parent: { columns: NO_FTS, with: { author: { columns: { username: true } } } }
+				parent: { with: { author: { columns: { username: true } } } }
 			},
 			orderBy: [asc(recipes.createdAt), asc(recipes.id)]
 		}),

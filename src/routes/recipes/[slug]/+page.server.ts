@@ -2,7 +2,7 @@ import { error, redirect } from '@sveltejs/kit';
 import { db } from '#lib/server/db/index.js';
 import { recipes, recipeVersions, recipesToTags, favorites } from '#lib/server/db/schema.js';
 import { NOTE_MAX, NOTE_TOO_LONG } from '#lib/saves.js';
-import { eq, desc, and } from 'drizzle-orm';
+import { eq, desc, and, isNull } from 'drizzle-orm';
 import { recipeSlug, wholeNumber, text } from '#lib/helpers.js';
 import { ensureProfile } from '#lib/server/profiles.js';
 import { recipeCopies, versionContent } from '#lib/recipes/content.js';
@@ -12,7 +12,6 @@ import {
 	canViewRow,
 	friendIdsOnce,
 	keptCopy,
-	NO_FTS,
 	NOT_AUTHORIZED,
 	ownRecipe,
 	viewableRecipe
@@ -31,6 +30,8 @@ import {
 	leaveCollections,
 	setMembership
 } from '#lib/server/collections.js';
+import { isModerator } from '#lib/server/moderation.js';
+import { HIDDEN_REFUSED } from '#lib/moderation.js';
 import type { PageServerLoad, Actions } from './$types';
 
 /** A collection gone meanwhile, or a recipe no longer in the reader's library. */
@@ -54,7 +55,7 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 		{
 			recipesToTags: { with: { tag: true } },
 			author: true,
-			parent: { columns: NO_FTS, with: { author: PARENT_AUTHOR } },
+			parent: { with: { author: PARENT_AUTHOR } },
 			versions: {
 				orderBy: [desc(recipeVersions.versionNumber)],
 				with: { creator: true }
@@ -68,7 +69,7 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 		? null
 		: await keptCopy(recipeSlug, user, {
 				author: true,
-				parent: { columns: NO_FTS, with: { author: PARENT_AUTHOR } }
+				parent: { with: { author: PARENT_AUTHOR } }
 			});
 	if (!shown && !copy) throw error(404, 'Recipe not found');
 	// The row may hold what the author wrote after withdrawing it, so a copy
@@ -149,6 +150,10 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 		save: favorite ? { keptVersion, note: favorite.note } : null,
 		/** A read-only copy of a recipe its author withdrew, for this saver alone. */
 		keptCopy: !!copy,
+		/** Hidden from other cooks by a moderator: only its author and moderators load it. */
+		hidden: !!shown?.suppressedAt,
+		/** The reader may hide or restore it. */
+		moderator: isModerator(user),
 		/** Signed in: the personal line's data; signed out there is no line. */
 		journal: user
 			? {
@@ -161,7 +166,7 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 		meta: recipeMeta({
 			origin: url.origin,
 			slug: recipe.slug,
-			isPublic: shown?.visibility === 'public',
+			isPublic: shown?.visibility === 'public' && !shown.suppressedAt,
 			latest: currentVersion === latestVersion,
 			author: recipe.author?.username ?? null,
 			tags: recipe.recipesToTags.map((rt) => rt.tag.name),
@@ -199,6 +204,7 @@ export const actions: Actions = {
 			.where(and(eq(favorites.userId, user.id), eq(favorites.recipeId, recipe.id)))
 			.returning({ recipeId: favorites.recipeId });
 		if (removed.length === 0) {
+			if (recipe.suppressedAt) return failure(400, 'invalid', HIDDEN_REFUSED);
 			// A second save of the same recipe (another tab, a double press) is the same save.
 			await db
 				.insert(favorites)
@@ -317,6 +323,8 @@ export const actions: Actions = {
 			author: true
 		});
 		if (!source) throw error(404, 'Source recipe not found');
+		// For its author and moderators too: a fork would be a copy nobody hid.
+		if (source.suppressedAt) return failure(400, 'invalid', HIDDEN_REFUSED);
 
 		const copied = source.versions[0];
 		if (!copied) return failure(404, 'not_found', `This recipe has no v${version}.`);
@@ -401,5 +409,32 @@ export const actions: Actions = {
 				`v${versionNumber} is the same as the latest version: nothing to restore.`
 			);
 		throw redirect(303, `/recipes/${params.slug}`);
-	}
+	},
+
+	// A moderator hides the recipe from other cooks, or restores it. Any live
+	// recipe at the slug, one the moderator could not open included (a reported
+	// Friends recipe); anyone else is told what a missing recipe tells them.
+	hide: ({ params, locals: { user } }) => setHidden(params.slug, user, true),
+	unhide: ({ params, locals: { user } }) => setHidden(params.slug, user, false)
 };
+
+async function setHidden(slug: string, user: App.Locals['user'], hidden: boolean) {
+	if (!user) return signedOut();
+	if (!isModerator(user)) return failure(404, 'not_found', 'Recipe not found');
+	const recipe = await db.query.recipes.findFirst({
+		where: and(eq(recipes.slug, slug), isNull(recipes.deletedAt)),
+		columns: { id: true }
+	});
+	if (!recipe) return failure(404, 'not_found', 'Recipe not found');
+	// Not a save: the author's revision and the lists' order stay as they are.
+	// Hiding one already hidden keeps the time it was first hidden.
+	await db
+		.update(recipes)
+		.set({ suppressedAt: hidden ? new Date() : null })
+		.where(
+			hidden
+				? and(eq(recipes.id, recipe.id), isNull(recipes.suppressedAt))
+				: eq(recipes.id, recipe.id)
+		);
+	return { hidden };
+}

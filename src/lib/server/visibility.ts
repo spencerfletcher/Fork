@@ -24,19 +24,28 @@ import {
 	type FriendshipStatus
 } from './db/schema.js';
 import { VISIBILITIES, type Visibility } from '#lib/recipes/validation.js';
+import { isModerator } from './moderation.js';
 
 /** Whoever is reading: a signed-in user, or nobody. */
 export type Viewer = { id: string } | null | undefined;
-type Row = { visibility: Visibility; authorId: string | null; deletedAt: Date | null };
+type Row = {
+	visibility: Visibility;
+	authorId: string | null;
+	deletedAt: Date | null;
+	suppressedAt: Date | null;
+};
 
 /**
  * A recipe is visible when it is not in the Trash and it is public, the viewer
  * wrote it, or it is shared with friends and its author is one of `friendIds`
  * (the viewer's accepted friends, from friendIdsOf). A trashed recipe is seen
- * by nobody, its owner included: only the Trash (trash.ts) reads it.
+ * by nobody, its owner included: only the Trash (trash.ts) reads it. One a
+ * moderator hid (suppressedAt) is seen only by its author, and by moderators
+ * among those who could see it otherwise.
  */
 export function canView(row: Row, user: Viewer, friendIds: string[] = []): boolean {
 	if (row.deletedAt) return false;
+	if (row.suppressedAt && !(user && (row.authorId === user.id || isModerator(user)))) return false;
 	if (row.visibility === 'public') return true;
 	if (!user || row.authorId === null) return false;
 	if (row.authorId === user.id) return true;
@@ -62,19 +71,12 @@ export async function canViewRow(
 
 type Schema = ExtractTablesWithRelations<typeof schema>;
 type RecipeWith = NonNullable<DBQueryConfig<'one', true, Schema, Schema['recipes']>['with']>;
-/** The search vector is the database's own: never loaded, so never sent to a page. */
-export const NO_FTS = { fts: false } as const;
-type RecipeRow<W extends RecipeWith> = BuildQueryResult<
-	Schema,
-	Schema['recipes'],
-	{ columns: typeof NO_FTS; with: W }
->;
+type RecipeRow<W extends RecipeWith> = BuildQueryResult<Schema, Schema['recipes'], { with: W }>;
 
 /** The live recipe at `slug`: one in the Trash is not found, for its owner too. */
 async function recipeBySlug<W extends RecipeWith>(slug: string, withRelations?: W) {
 	const row = await db.query.recipes.findFirst({
 		where: and(eq(recipes.slug, slug), isNull(recipes.deletedAt)),
-		columns: NO_FTS,
 		with: withRelations
 	});
 	// findFirst cannot carry a generic `with` through to its result type.
@@ -166,12 +168,18 @@ export function authorIsFriendOf(userId: string): SQL {
 	return sql`exists (select 1 from ${friendships} "fr" where ${fr(friendships.status)} = ${'accepted' satisfies FriendshipStatus} and ${eitherWay(pair, userId, recipes.authorId)})`;
 }
 
-/** The same rule as canView, as a query condition on `recipes`: never a recipe in the Trash. */
+/**
+ * The same rule as canView, as a query condition on `recipes`: never a recipe
+ * in the Trash, and of the ones a moderator hid only the viewer's own (all of
+ * them, for a moderator).
+ */
 export function visibleTo(user: Viewer): SQL {
 	const live = isNull(recipes.deletedAt);
-	if (!user) return and(live, eq(recipes.visibility, 'public')) as SQL;
+	const shown = isNull(recipes.suppressedAt);
+	if (!user) return and(live, shown, eq(recipes.visibility, 'public')) as SQL;
 	return and(
 		live,
+		isModerator(user) ? undefined : or(shown, eq(recipes.authorId, user.id)),
 		or(
 			eq(recipes.visibility, 'public'),
 			eq(recipes.authorId, user.id),
@@ -187,7 +195,8 @@ export function visibleTo(user: Viewer): SQL {
  * copyVersion (grantKeptCopies, keptCopies.ts). The copy is that one version,
  * for the saver alone; it never makes the recipe visible (visibleTo), and a
  * recipe narrowed to Friends or lost by an unfriend is not withdrawn. The one
- * rule for copies: a moderator takedown, when there is one, must end it here.
+ * rule for copies: one a moderator hid shows none while it is hidden; copies
+ * are granted as if it were not (grantKeptCopies), so they return on Restore.
  */
 export function keptCopyOf(user: { id: string }): SQL {
 	const copied = new QueryBuilder()
@@ -195,6 +204,7 @@ export function keptCopyOf(user: { id: string }): SQL {
 		.from(favorites)
 		.where(and(eq(favorites.userId, user.id), isNotNull(favorites.copyVersion)));
 	return and(
+		isNull(recipes.suppressedAt),
 		or(isNotNull(recipes.deletedAt), eq(recipes.visibility, 'private')),
 		inArray(recipes.id, copied)
 	) as SQL;
@@ -214,7 +224,6 @@ export async function keptCopy<W extends RecipeWith>(
 	if (!user) return null;
 	const row = await db.query.recipes.findFirst({
 		where: and(eq(recipes.slug, slug), keptCopyOf(user)),
-		columns: NO_FTS,
 		with: withRelations
 	});
 	if (!row) return null;

@@ -1,5 +1,6 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
-import { chain } from '#lib/testing/drizzle.js';
+import { and, eq, isNull } from 'drizzle-orm';
+import { chain, sqlOf } from '#lib/testing/drizzle.js';
 import { invokeAction as invoke, formEvent, loadEvent } from '#lib/testing/actions.js';
 import { actions, load } from './+page.server';
 import { VERSION_NOT_FOUND } from './versionError.js';
@@ -9,6 +10,7 @@ import type { Visibility } from '#lib/recipes/validation.js';
 import { SESSION_ENDED } from '#lib/server/actions.js';
 import { STALE_MESSAGE } from '#lib/server/submission.js';
 import { NOT_AUTHORIZED } from '#lib/server/visibility.js';
+import { HIDDEN_REFUSED } from '#lib/moderation.js';
 import { loginHref } from '#lib/auth/loginHref.js';
 import { NOTE_MAX, NOTE_TOO_LONG } from '#lib/saves.js';
 import type { PageMeta } from '#lib/seo.js';
@@ -22,12 +24,14 @@ const {
 	selectMock,
 	dbInsert,
 	dbDelete,
+	dbUpdate,
 	transactionMock,
 	ensureProfileMock,
 	lastEntryMock,
 	restoreMock
 } = vi.hoisted(() => ({
 	restoreMock: vi.fn(),
+	dbUpdate: vi.fn(),
 	findRecipeMock: vi.fn(),
 	findFavoriteMock: vi.fn(),
 	countMock: vi.fn(),
@@ -51,9 +55,11 @@ vi.mock('#lib/server/db/index.js', () => ({
 		select: selectMock,
 		insert: dbInsert,
 		delete: dbDelete,
+		update: dbUpdate,
 		transaction: transactionMock
 	}
 }));
+vi.mock('$app/env/private', () => ({ MODERATOR_IDS: 'mod-id' }));
 
 vi.mock('#lib/server/profiles.js', () => ({ ensureProfile: ensureProfileMock }));
 const keptMock = vi.hoisted(() => ({
@@ -1221,5 +1227,117 @@ describe('Keep this version', () => {
 			expect(await act('removeCopy')).toMatchObject({ status: 404 });
 			expect(keptMock.removeCopy).not.toHaveBeenCalled();
 		});
+	});
+});
+
+// ─── a recipe a moderator hid ─────────────────────────────────────────────────
+
+describe('a recipe a moderator hid', () => {
+	const MODERATOR = { id: 'mod-id', email: 'mod@test.com' };
+	const AUTHOR = { id: SOURCE_RECIPE.authorId, email: 'a@test.com' };
+	const HIDDEN = { ...SOURCE_RECIPE, parent: null, deletedAt: null, suppressedAt: new Date() };
+
+	beforeEach(() => {
+		vi.clearAllMocks();
+		findRecipeMock.mockResolvedValue(HIDDEN);
+		findFavoriteMock.mockResolvedValue(undefined);
+		countMock.mockResolvedValue(0);
+		selectMock.mockReturnValue(chain([]));
+		dbDelete.mockReturnValue(chain([]));
+		dbInsert.mockReturnValue(chain());
+		dbUpdate.mockReturnValue(chain());
+	});
+
+	const data = async (user: { id: string; email: string } | null) =>
+		(await load(makeLoadEvent(user) as never)) as {
+			hidden: boolean;
+			moderator: boolean;
+			meta: PageMeta;
+		};
+
+	test('is not found for anyone but its author and moderators', async () => {
+		for (const user of [null, FORKER])
+			expect(await invoke(load as never, makeLoadEvent(user))).toMatchObject({ status: 404 });
+	});
+
+	test('its author reads it marked hidden, with no Recipe data for search engines', async () => {
+		const page = await data(AUTHOR);
+		expect(page).toMatchObject({ hidden: true, moderator: false });
+		expect(page.meta).toEqual({ title: LATEST.title, noindex: true });
+	});
+
+	test('a moderator reads it marked hidden, and as a moderator', async () => {
+		expect(await data(MODERATOR)).toMatchObject({ hidden: true, moderator: true });
+		findRecipeMock.mockResolvedValue({ ...HIDDEN, suppressedAt: null });
+		expect(await data(MODERATOR)).toMatchObject({ hidden: false, moderator: true });
+		expect(await data(FORKER)).toMatchObject({ hidden: false, moderator: false });
+	});
+
+	test('fork and save are refused, for a moderator and its author too, and copy nothing', async () => {
+		for (const user of [MODERATOR, AUTHOR]) {
+			for (const action of [actions.fork, actions.toggleFavorite]) {
+				const result = await invoke(action as never, makeEvent({ user }));
+				expect(result).toMatchObject({
+					status: 400,
+					data: { code: 'invalid', error: HIDDEN_REFUSED }
+				});
+			}
+		}
+		expect(transactionMock).not.toHaveBeenCalled();
+		expect(dbInsert).not.toHaveBeenCalled();
+	});
+
+	test('an unsave still goes through, so a moderator can let go of one they had saved', async () => {
+		dbDelete.mockReturnValue(chain([{ recipeId: HIDDEN.id }]));
+		expect(
+			await invoke(actions.toggleFavorite as never, makeEvent({ user: MODERATOR }))
+		).toBeUndefined();
+		expect(dbDelete).toHaveBeenCalledWith(favorites);
+	});
+
+	test.each([
+		['hide', true],
+		['unhide', false]
+	] as const)(
+		'%s sets the hidden time for a moderator, by the live recipe at the slug',
+		async (name, hidden) => {
+			const update = chain();
+			dbUpdate.mockReturnValue(update);
+			const result = await invoke(actions[name] as never, makeEvent({ user: MODERATOR }));
+			expect(result).toEqual({ hidden });
+			expect(dbUpdate).toHaveBeenCalledWith(recipes);
+			const set = update.set.mock.calls[0][0] as { suppressedAt: Date | null };
+			expect(set).toEqual({ suppressedAt: hidden ? expect.any(Date) : null });
+			// Hiding again keeps the first hiding's time; Restore clears it whatever it was.
+			expect(sqlOf(update.where.mock.calls[0][0])).toEqual(
+				sqlOf(
+					hidden
+						? and(eq(recipes.id, HIDDEN.id), isNull(recipes.suppressedAt))!
+						: eq(recipes.id, HIDDEN.id)
+				)
+			);
+		}
+	);
+
+	test.each(['hide', 'unhide'] as const)(
+		'%s is refused as not found for anyone but a moderator, its author included, and changes nothing',
+		async (name) => {
+			for (const user of [FORKER, AUTHOR]) {
+				const result = await invoke(actions[name] as never, makeEvent({ user }));
+				expect(result).toMatchObject({ status: 404, data: { code: 'not_found' } });
+			}
+			expect(await invoke(actions[name] as never, makeEvent({ user: null }))).toMatchObject({
+				status: 401
+			});
+			expect(findRecipeMock).not.toHaveBeenCalled();
+			expect(dbUpdate).not.toHaveBeenCalled();
+		}
+	);
+
+	test('hide answers not found for a slug with no live recipe', async () => {
+		findRecipeMock.mockResolvedValue(undefined);
+		const result = await invoke(actions.hide as never, makeEvent({ user: MODERATOR }));
+		expect(result).toMatchObject({ status: 404, data: { code: 'not_found' } });
+		expect(dbUpdate).not.toHaveBeenCalled();
 	});
 });

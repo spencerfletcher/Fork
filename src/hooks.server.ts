@@ -17,8 +17,8 @@ export const handle: Handle = async ({ event, resolve }) => {
 	const {
 		data: { user }
 	} = await event.locals.supabase.auth.getUser();
-	// Delete account (Settings) leaves the auth user marked, as the app cannot
-	// delete it: signed out here, so no page's ensureProfile makes it a profile.
+	// Delete account (Settings) marks the auth user when the database refused
+	// to delete it: signed out here, so no page's ensureProfile makes it a profile.
 	if (user?.user_metadata?.account_deleted) {
 		await event.locals.supabase.auth.signOut({ scope: 'local' });
 		event.locals.user = null;

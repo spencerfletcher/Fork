@@ -4,7 +4,8 @@ import { ACCOUNT_DELETED, GOODBYE, TYPE_USERNAME } from '../src/lib/account';
 
 // A guest spec on purpose: it signs up its own throwaway account (the local
 // stack confirms no email) and deletes that, never a seed user. Its auth user
-// stays in local Auth, marked deleted: the app cannot delete auth users.
+// stays in local Auth, marked deleted: the suite's fork_e2e has no auth schema,
+// so the login's delete is refused and this is the fallback path.
 test('Delete account asks for the username typed, then signs out to the goodbye, and the account cannot sign back in', async ({
 	page
 }) => {

@@ -69,10 +69,15 @@ export const actions: Actions = {
 			});
 		const recipe = await ownRecipe(params.slug, user.id, {
 			recipesToTags: { with: { tag: true } },
-			parent: { columns: { visibility: true, authorId: true, deletedAt: true } }
+			parent: { columns: { visibility: true, authorId: true, deletedAt: true, suppressedAt: true } }
 		});
 
-		const submission = readSubmission(formData);
+		// What the recipe has now is never what refuses the save (CAPS).
+		const submission = readSubmission(formData, {
+			title: recipe.title,
+			description: recipe.description,
+			tagNames: recipe.recipesToTags.map((rt) => rt.tag.name)
+		});
 		if (!submission.ok) return submission.failure;
 		const { draft, content, settings } = submission;
 

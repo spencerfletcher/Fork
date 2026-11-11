@@ -82,6 +82,31 @@ describe.skipIf(!localDb)('kept copies, against the real database', () => {
 		});
 	});
 
+	test('hiding never changes who keeps a copy: made private while hidden, both savers have theirs after Restore, and neither sees it meanwhile', async () => {
+		await withPeople(async (tx, { author, friend, stranger }) => {
+			const recipe = await makeRecipe(tx, author, 'public');
+			await tx.insert(schema.favorites).values([
+				{ userId: friend, recipeId: recipe.id },
+				{ userId: stranger, recipeId: recipe.id }
+			]);
+			const set = (values: { suppressedAt?: Date | null; visibility?: Visibility }) =>
+				tx.update(schema.recipes).set(values).where(eq(schema.recipes.id, recipe.id));
+			await set({ suppressedAt: new Date() });
+			// The author makes it private, as the editor's save does.
+			await kept.grantKeptCopies(tx, recipe);
+			await set({ visibility: 'private' });
+
+			const seen = (userId: string) =>
+				idsWhere(tx, visibility.inLibraryOf({ id: userId }), [recipe.id]);
+			for (const saver of [friend, stranger]) {
+				expect(await copyVersionOf(tx, saver, recipe.id)).toBe(3);
+				expect(await seen(saver)).toEqual([]);
+			}
+			await set({ suppressedAt: null });
+			for (const saver of [friend, stranger]) expect(await seen(saver)).toEqual([recipe.id]);
+		});
+	});
+
 	test('withdrawing a Friends recipe grants a copy to savers who are friends only: an unfriended saver keeps nothing', async () => {
 		await withPeople(async (tx, { author, friend, stranger }) => {
 			const recipe = await makeRecipe(tx, author, 'friends');

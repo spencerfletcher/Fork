@@ -28,8 +28,8 @@ describe('handle', () => {
 		expect(signOut).not.toHaveBeenCalled();
 	});
 
-	// Settings' Delete account leaves the auth user (no service key) marked:
-	// signing in again must not make it a new, empty profile.
+	// Settings' Delete account marks the auth user when the database refused
+	// to delete it: signing in again must not make it a new, empty profile.
 	test('an account deleted in Settings is signed out and treated as signed out', async () => {
 		getUser.mockResolvedValue({
 			data: { user: { id: 'u1', user_metadata: { account_deleted: true } } }
