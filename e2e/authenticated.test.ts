@@ -82,7 +82,12 @@ test.describe('Fork', () => {
 				twoLines: 2 * parseFloat(getComputedStyle(el).lineHeight)
 			}))
 		);
-		expect(pills.map((p) => p.text.split(/\s/)[0])).toEqual(['Cook', 'Edit', 'Add']);
+		expect(pills.map((p) => p.text)).toEqual([
+			'Cook',
+			'Edit recipe',
+			'Add to collection',
+			'Add to Journal'
+		]);
 		for (const pill of pills) {
 			expect(pill.height, pill.text).toBeGreaterThanOrEqual(44);
 			expect(pill.height, pill.text).toBeLessThan(pill.twoLines);

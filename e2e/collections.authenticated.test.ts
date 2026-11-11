@@ -53,7 +53,7 @@ test.describe('Collections', () => {
 		await page.getByRole('textbox', { name: 'Collection name' }).fill(name);
 		await page.getByRole('button', { name: 'Create' }).click();
 		await page.waitForURL(/\/cookbook\?collection=\d+$/);
-		await expect(page.getByRole('heading', { level: 2, name })).toBeVisible();
+		await expect(page.getByRole('heading', { level: 2, name, exact: true })).toBeVisible();
 		await expect(page.getByText(`Nothing in ${name} yet`)).toBeVisible();
 		await expect(collectionsNav(page).getByRole('link', { name })).toHaveAttribute(
 			'aria-current',
@@ -63,7 +63,9 @@ test.describe('Collections', () => {
 		await page.getByRole('button', { name: `Rename ${name}` }).click();
 		await page.getByRole('textbox', { name: 'Collection name' }).fill(renamed);
 		await page.getByRole('button', { name: 'Save', exact: true }).click();
-		await expect(page.getByRole('heading', { level: 2, name: renamed })).toBeVisible();
+		// Still inside the collection after the rename.
+		await expect(page.getByRole('heading', { level: 2, name: renamed, exact: true })).toBeVisible();
+		await expect(page).toHaveURL(/\/cookbook\?collection=\d+$/);
 
 		await page.getByRole('button', { name: 'Delete collection' }).click();
 		const step = page.getByRole('group', { name: `Delete ${renamed}?` });
@@ -108,7 +110,10 @@ test.describe('Collections', () => {
 		// Unchecking takes it out; the collection stays.
 		await gotoHydrated(page, path);
 		await page.getByRole('button', { name: 'Add to collection' }).click();
+		// The row flips before the server answers; leaving sooner would abort the request.
+		const saved = page.waitForResponse((r) => r.url().includes('?/collect'));
 		await page.getByRole('menuitemcheckbox', { name }).click();
+		await saved;
 		await expect(page.getByRole('menuitemcheckbox', { name })).toHaveAttribute(
 			'aria-checked',
 			'false'
