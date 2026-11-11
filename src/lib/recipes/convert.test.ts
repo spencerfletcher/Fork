@@ -387,7 +387,8 @@ describe('a nonzero quantity never renders as zero', () => {
 		for (const n of measure.split(/\s+/)[0].split(/[–-]/)) expectPositive(n, where);
 		if (grams) {
 			const weight = formatGrams(grams);
-			for (const g of weight.replace(/^≈|g$/g, '').split('–')) expectPositive(g, `${where} (${weight})`);
+			for (const g of weight.replace(/^≈|g$/g, '').split('–'))
+				expectPositive(g, `${where} (${weight})`);
 		}
 	});
 });

@@ -186,10 +186,7 @@ describe('journal/new action', () => {
 		insertMock.mockReturnValue({
 			values: () => ({ returning: () => Promise.reject(new Error('db')) })
 		});
-		const result = await invoke(
-			{ dish: 'Buns', cookedOn: '2026-11-08' },
-			photoFile('p.png')
-		);
+		const result = await invoke({ dish: 'Buns', cookedOn: '2026-11-08' }, photoFile('p.png'));
 		expect(result).toMatchObject({ status: 500, data: { code: 'save_failed' } });
 		expect(removeMock).toHaveBeenCalledWith(expect.anything(), 'user-1/p.png');
 	});

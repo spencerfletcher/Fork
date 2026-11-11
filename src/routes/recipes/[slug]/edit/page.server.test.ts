@@ -267,10 +267,7 @@ describe('save', () => {
 
 	test('a tab already stale on the loaded row is refused before it uploads anything', async () => {
 		findRecipeMock.mockResolvedValue({ ...RECIPE, editRevision: 2 });
-		const result = await save(
-			{ ...UNCHANGED, servings: '8' },
-			{ file: photoFile('a.png') }
-		);
+		const result = await save({ ...UNCHANGED, servings: '8' }, { file: photoFile('a.png') });
 		expect(result.status).toBe(409);
 		expect(result.data).toMatchObject({ code: 'stale' });
 		expect(uploadMock).not.toHaveBeenCalled();
@@ -559,12 +556,7 @@ describe('save', () => {
 		});
 		await save(UNCHANGED, { file: photoFile('a.png') });
 		expect(order).toEqual(['upload', 'transaction']);
-		expect(uploadMock).toHaveBeenCalledWith(
-			SUPABASE,
-			'owner-123',
-			expect.any(File),
-			'image/png'
-		);
+		expect(uploadMock).toHaveBeenCalledWith(SUPABASE, 'owner-123', expect.any(File), 'image/png');
 		expect(tx.updateChain.set.mock.calls[0][0]).toMatchObject({ imageUrl: 'https://cdn/new.png' });
 		expect(versionInserts()[0]).toMatchObject({
 			imageUrl: 'https://cdn/new.png',
@@ -595,10 +587,7 @@ describe('save', () => {
 	test('a throw inside the transaction removes the new upload and returns 500 with the draft', async () => {
 		transactionMock.mockRejectedValue(new Error('db down'));
 		const error = vi.spyOn(console, 'error').mockImplementation(() => {});
-		const result = await save(
-			{ ...UNCHANGED, servings: '8' },
-			{ file: photoFile('a.png') }
-		);
+		const result = await save({ ...UNCHANGED, servings: '8' }, { file: photoFile('a.png') });
 		expect(result.status).toBe(500);
 		expect(result.data).toMatchObject({
 			error: 'Could not save the recipe. Try again.',

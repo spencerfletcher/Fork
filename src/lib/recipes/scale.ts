@@ -57,7 +57,7 @@ export function formatGrams({ grams, grams2, approximate }: GramResult): string 
 	return `${approximate ? '≈' : ''}${round(grams)}${range}g`;
 }
 
-const round2 =(n: number) => Math.round(n * 100) / 100;
+const round2 = (n: number) => Math.round(n * 100) / 100;
 
 /** Servings to at most two decimals, trailing zeros trimmed. */
 export function formatServes(n: number): string {

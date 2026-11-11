@@ -27,11 +27,14 @@ function storageMock(
 const png = photoFile('Dinner Photo.PNG');
 
 describe('photoTypeOf', () => {
-	test.each(PHOTO_TYPES)('%s is read from its bytes, whatever the browser called it', async (type) => {
-		const bytes = new Uint8Array(16);
-		bytes.set(PHOTO_MAGIC[type]);
-		expect(await photoTypeOf(new File([bytes], 'x.bin', { type: 'image/png' }))).toBe(type);
-	});
+	test.each(PHOTO_TYPES)(
+		'%s is read from its bytes, whatever the browser called it',
+		async (type) => {
+			const bytes = new Uint8Array(16);
+			bytes.set(PHOTO_MAGIC[type]);
+			expect(await photoTypeOf(new File([bytes], 'x.bin', { type: 'image/png' }))).toBe(type);
+		}
+	);
 
 	test('anything else is no photo: text, an SVG, a short file, a RIFF that is not WebP', async () => {
 		const riff = new Uint8Array(16);
@@ -56,7 +59,12 @@ describe('uploadRecipeImage', () => {
 
 	test('the extension and content type are the checked type, never the name the browser sent', async () => {
 		const m = storageMock();
-		await uploadRecipeImage(m.supabase, 'user-1', photoFile('page.html', 'image/webp'), 'image/webp');
+		await uploadRecipeImage(
+			m.supabase,
+			'user-1',
+			photoFile('page.html', 'image/webp'),
+			'image/webp'
+		);
 		const [path, , options] = m.upload.mock.calls[0];
 		expect(path).toMatch(/^user-1\/[A-Za-z0-9_-]+\.webp$/);
 		expect(options).toEqual({ contentType: 'image/webp', upsert: false });

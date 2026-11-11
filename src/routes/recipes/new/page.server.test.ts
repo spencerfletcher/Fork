@@ -278,8 +278,7 @@ describe('new recipe action', () => {
 	});
 
 	test('a photo over the size cap is refused with the draft; one at the cap is stored', async () => {
-		const sized = (bytes: number) =>
-			photoFile('big.jpg', PHOTO_TYPES[0], bytes);
+		const sized = (bytes: number) => photoFile('big.jpg', PHOTO_TYPES[0], bytes);
 		const over = await invoke(makeEvent({ fields: FULL, file: sized(PHOTO_MAX_BYTES + 1) }));
 		expect(over.status).toBe(400);
 		expect(over.data).toMatchObject({
