@@ -49,5 +49,26 @@ test.describe('Public recipe metadata', () => {
 		const robots = await (await request.get('/robots.txt')).text();
 		expect(robots).toContain('Disallow: /cookbook');
 		expect(robots).not.toMatch(/Disallow: \/recipes\/?$/m);
+		expect(robots).toMatch(/^Sitemap: https?:\/\/[^/]+\/sitemap\.xml$/m);
+	});
+
+	test('the sitemap parses and lists the public cookies, never a Friends recipe', async ({
+		page,
+		request
+	}) => {
+		const path = await cookiesPath(page);
+		const origin = new URL(page.url()).origin;
+		const response = await request.get('/sitemap.xml');
+		expect(response.headers()['content-type']).toBe('application/xml');
+		const xml = await response.text();
+		const locs = await page.evaluate((text) => {
+			const doc = new DOMParser().parseFromString(text, 'application/xml');
+			if (doc.querySelector('parsererror')) throw new Error('sitemap.xml does not parse');
+			return [...doc.getElementsByTagName('loc')].map((loc) => loc.textContent);
+		}, xml);
+		expect(locs).toContain(origin + path);
+		expect(locs).toContain(`${origin}/discover`);
+		// devcooks' Shakshuka is shared with friends only.
+		expect(locs.some((loc) => loc?.includes('/recipes/shakshuka-'))).toBe(false);
 	});
 });
