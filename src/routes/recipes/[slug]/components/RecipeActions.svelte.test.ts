@@ -336,7 +336,7 @@ describe('RecipeActions row', () => {
 			props: makeProps({ canFork: true, favoriteCount: 3 })
 		});
 		expect(names(container)).toEqual(['Cook', 'Save 3', 'Fork', 'More actions']);
-		expect(screen.getByRole('button', { name: 'Cook' })).toHaveClass('btn-primary');
+		expect(screen.getByRole('link', { name: 'Cook' })).toHaveClass('btn-primary');
 		expect(screen.getByRole('button', { name: /^Save/ })).toHaveClass('btn-ghost');
 		expect(screen.getByRole('button', { name: 'Fork' })).toHaveClass('btn-ghost');
 	});
@@ -349,7 +349,7 @@ describe('RecipeActions row', () => {
 		]) {
 			const { container, unmount } = render(RecipeActions, { props: makeProps(overrides) });
 			expect([...container.querySelectorAll('.btn-primary')]).toEqual([
-				screen.getByRole('button', { name: 'Cook' })
+				screen.getByRole('link', { name: 'Cook' })
 			]);
 			unmount();
 		}
@@ -385,11 +385,10 @@ describe('RecipeActions row', () => {
 
 	test('with nothing else offered (logged out on an older version), only Cook and More are rendered', () => {
 		render(RecipeActions, { props: makeProps({ canFavorite: false }) });
+		expect(screen.getAllByRole('link')).toEqual([screen.getByRole('link', { name: 'Cook' })]);
 		expect(screen.getAllByRole('button')).toEqual([
-			screen.getByRole('button', { name: 'Cook' }),
 			screen.getByRole('button', { name: 'More actions' })
 		]);
-		expect(screen.queryByRole('link')).toBeNull();
 	});
 
 	test('the owner gets Cook, then Edit recipe outlined', () => {
@@ -457,7 +456,7 @@ describe('RecipeActions Cook', () => {
 		['on an older version', { canFavorite: false }]
 	])('%s, the row offers Cook as a marigold pill, first', (_, overrides) => {
 		const { container } = render(RecipeActions, { props: makeProps(overrides) });
-		const cook = screen.getByRole('button', { name: 'Cook' });
+		const cook = screen.getByRole('link', { name: 'Cook' });
 		expect(cook).toHaveClass('btn-primary');
 		expect(container.querySelector('.actions')!.firstElementChild).toBe(cook);
 		expect(cook.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
@@ -465,18 +464,45 @@ describe('RecipeActions Cook', () => {
 
 	test('it is an action, not a toggle: no pressed state', () => {
 		render(RecipeActions, { props: makeProps() });
-		expect(screen.getByRole('button', { name: 'Cook' })).not.toHaveAttribute('aria-pressed');
+		expect(screen.getByRole('link', { name: 'Cook' })).not.toHaveAttribute('aria-pressed');
+	});
+
+	// A link, so it cooks before hydration and without script: the same page
+	// with ?cook=1, every other param kept.
+	test('Cook links to this page with ?cook=1, keeping ?version= and a shallow ?serves=', () => {
+		page.shallow = { url: new URL('http://localhost/recipes/cookies?version=2&serves=8') };
+		render(RecipeActions, { props: makeProps() });
+		const href = screen.getByRole('link', { name: 'Cook' }).getAttribute('href')!;
+		const target = new URL(href, 'http://localhost/recipes/cookies');
+		expect(target.pathname).toBe('/recipes/cookies');
+		expect(target.searchParams.get('cook')).toBe('1');
+		expect(target.searchParams.get('version')).toBe('2');
+		expect(target.searchParams.get('serves')).toBe('8');
 	});
 
 	test('Cook hands back and writes ?cook=1, keeping a shallow ?serves=', async () => {
 		const oncook = vi.fn();
 		page.shallow = { url: new URL('http://localhost/recipes/cookies?serves=8') };
 		render(RecipeActions, { props: makeProps({ oncook }) });
-		await fireEvent.click(screen.getByRole('button', { name: 'Cook' }));
+		const cook = screen.getByRole('link', { name: 'Cook' });
+		const event = new MouseEvent('click', { bubbles: true, cancelable: true, button: 0 });
+		cook.dispatchEvent(event);
+		await tick();
+		expect(event.defaultPrevented).toBe(true);
 		expect(oncook).toHaveBeenCalledOnce();
 		expect(lastShallowUrl(goto).searchParams.get('cook')).toBe('1');
 		expect(lastShallowUrl(goto).searchParams.get('serves')).toBe('8');
 		expect(lastShallowUrl(goto).pathname).toBe('/recipes/cookies');
+	});
+
+	test('a modified click is left to the browser (a new tab), not cooked here', () => {
+		const oncook = vi.fn();
+		render(RecipeActions, { props: makeProps({ oncook }) });
+		const event = new MouseEvent('click', { bubbles: true, cancelable: true, metaKey: true });
+		screen.getByRole('link', { name: 'Cook' }).dispatchEvent(event);
+		expect(event.defaultPrevented).toBe(false);
+		expect(oncook).not.toHaveBeenCalled();
+		expect(goto).not.toHaveBeenCalled();
 	});
 });
 

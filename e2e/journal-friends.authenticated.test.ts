@@ -111,7 +111,7 @@ test.describe('Recipe page entry points', () => {
 			/\/journal#entry-\d+/
 		);
 
-		await page.getByRole('button', { name: 'Cook' }).click();
+		await page.getByRole('link', { name: 'Cook' }).click();
 		await expect(page).toHaveURL(/[?&]cook=1/);
 		const url = new URL(page.url());
 		url.searchParams.set('serves', '8');
@@ -127,7 +127,7 @@ test.describe('Recipe page entry points', () => {
 		await page.goBack();
 		await expect(page).toHaveURL(/serves=8/);
 		await expect(page).not.toHaveURL(/cook=/);
-		await expect(page.getByRole('button', { name: 'Cook' })).toBeVisible();
+		await expect(page.getByRole('link', { name: 'Cook' })).toBeVisible();
 	});
 });
 
