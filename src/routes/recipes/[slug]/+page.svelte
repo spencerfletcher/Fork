@@ -171,6 +171,7 @@
 								favoriteCount={data.favoriteCount}
 								{loginHref}
 								{journalHref}
+								collections={data.collections}
 								oncook={cook} />
 						{/snippet}
 					</RecipeHeader>

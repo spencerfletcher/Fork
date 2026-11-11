@@ -65,6 +65,24 @@ function makeProps(overrides: Record<string, unknown> = {}) {
 	};
 }
 
+// ─── Add to collection ────────────────────────────────────────────────────────
+
+describe('RecipeActions Add to collection', () => {
+	test('shown only for a recipe in the reader’s library, right after Save', () => {
+		const { unmount } = render(RecipeActions, { props: makeProps({ collections: null }) });
+		expect(screen.queryByRole('button', { name: 'Add to collection' })).toBeNull();
+		unmount();
+
+		render(RecipeActions, {
+			props: makeProps({ canFork: true, collections: [{ id: 1, name: 'To cook', has: false }] })
+		});
+		const names = screen
+			.getAllByRole('button')
+			.map((b) => b.textContent?.replace(/\s+/g, ' ').trim());
+		expect(names.indexOf('Add to collection')).toBe(names.indexOf('Save') + 1);
+	});
+});
+
 // ─── Save button ──────────────────────────────────────────────────────────────
 
 describe('RecipeActions save button', () => {

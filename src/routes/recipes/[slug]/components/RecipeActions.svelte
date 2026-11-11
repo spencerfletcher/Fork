@@ -6,6 +6,7 @@
 	import { forkIcon, journalIcon, saveIcon } from '#lib/components/Icons.svelte';
 	import { compactCount } from '#lib/helpers.js';
 	import { optimisticToggle } from '#lib/optimisticToggle.svelte.js';
+	import AddToCollection from './AddToCollection.svelte';
 
 	let {
 		recipe,
@@ -16,7 +17,8 @@
 		favoriteCount,
 		loginHref,
 		oncook,
-		journalHref
+		journalHref,
+		collections = null
 	}: {
 		recipe: Pick<Recipe, 'slug' | 'title'>;
 		canFork: boolean;
@@ -32,6 +34,8 @@
 		oncook: () => void;
 		/** Signed in: Add to Journal for the version and serves being read. */
 		journalHref?: string;
+		/** The reader's collections, for a recipe in their library (own or saved); null hides Add to collection. */
+		collections?: { id: number; name: string; has?: boolean }[] | null;
 	} = $props();
 
 	let error = $state('');
@@ -127,6 +131,10 @@
 					</span>
 				</button>
 			</form>
+		{/if}
+		{#if collections}
+			<!-- Beside Save, never in its place: Save stays the one-press keep. -->
+			<AddToCollection {collections} />
 		{/if}
 		{#if canFork}
 			<!-- One click. The server writes the first commit message itself. -->

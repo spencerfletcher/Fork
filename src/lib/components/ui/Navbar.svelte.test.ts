@@ -31,6 +31,7 @@ const profile = {
 	avatarUrl: null,
 	defaultVisibility: 'private' as const,
 	measurement: null,
+	startersMadeAt: null,
 	createdAt: new Date()
 };
 const style = source.slice(source.indexOf('<style>'));

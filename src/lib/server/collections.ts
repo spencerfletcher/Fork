@@ -9,8 +9,8 @@ import { COLLECTION_NAME_ERROR, STARTER_COLLECTIONS, collectionName } from '#lib
 type Conn = Tx | typeof db;
 type Cook = { id: string };
 
-/** A cook's collection with the recipes in it they can still see; `has` when asked about one recipe. */
-export type CollectionRow = { id: number; name: string; count: number; has?: boolean };
+/** A cook's collection, counting the recipes in it they can still see; `has` says whether one asked-about recipe is in it. */
+export type CollectionRow = { id: number; name: string; count: number; has: boolean };
 
 /**
  * The starter collections, once per cook: the profile's stamp says they were
@@ -42,7 +42,7 @@ export async function collectionsOf(
 	conn: Conn = db
 ): Promise<CollectionRow[]> {
 	await makeStarters(user.id, conn);
-	const rows = await conn
+	return conn
 		.select({
 			id: collections.id,
 			name: collections.name,
@@ -55,7 +55,6 @@ export async function collectionsOf(
 		.where(eq(collections.ownerId, user.id))
 		.groupBy(collections.id)
 		.orderBy(asc(collections.createdAt), asc(collections.id));
-	return recipeId === undefined ? rows.map(({ has: _, ...row }) => row) : rows;
 }
 
 /** The ids of the recipes in the cook's collection they can still see, or null when it is not theirs. */
