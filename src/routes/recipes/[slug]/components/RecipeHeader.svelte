@@ -37,7 +37,9 @@
 		versionCount,
 		tags,
 		actions,
-		journal = null
+		journal = null,
+		stats = true,
+		saver
 	}: {
 		recipe: HeaderRecipe;
 		currentVersion: HeaderContent;
@@ -55,6 +57,10 @@
 			lastEntry: { id: number; cookedOn: string; timesCooked: number } | null;
 			addHref: string;
 		} | null;
+		/** The forks and versions counts; off for a saver's kept copy, which has neither. */
+		stats?: boolean;
+		/** The saver's own lines under the personal line: the version they keep, their note. */
+		saver?: Snippet;
 	} = $props();
 
 	// "No forks", "1 fork", "2 forks".
@@ -107,24 +113,26 @@
 	     each count an icon and its words, no dots; the icons separate. A count
 	     links only where there is something to open: the forks list, and the
 	     version bar, which exists from two versions up. -->
-	<p class="stats font-sans">
-		<span class="stat">
-			{@render forkIcon()}
-			{#if forkCount > 0}
-				<a class="hit-link" href="/recipes/{recipe.slug}/forks">{counted(forkCount, 'fork')}</a>
-			{:else}
-				{counted(forkCount, 'fork')}
-			{/if}
-		</span>
-		<span class="stat">
-			{@render versionsIcon()}
-			{#if versionCount > 1}
-				<a class="hit-link" href="#versions">{counted(versionCount, 'version')}</a>
-			{:else}
-				{counted(versionCount, 'version')}
-			{/if}
-		</span>
-	</p>
+	{#if stats}
+		<p class="stats font-sans">
+			<span class="stat">
+				{@render forkIcon()}
+				{#if forkCount > 0}
+					<a class="hit-link" href="/recipes/{recipe.slug}/forks">{counted(forkCount, 'fork')}</a>
+				{:else}
+					{counted(forkCount, 'fork')}
+				{/if}
+			</span>
+			<span class="stat">
+				{@render versionsIcon()}
+				{#if versionCount > 1}
+					<a class="hit-link" href="#versions">{counted(versionCount, 'version')}</a>
+				{:else}
+					{counted(versionCount, 'version')}
+				{/if}
+			</span>
+		</p>
+	{/if}
 
 	{#if actions}
 		<div class="actions-row">{@render actions()}</div>
@@ -142,6 +150,8 @@
 			</a>
 		</p>
 	{/if}
+
+	{@render saver?.()}
 </header>
 
 <style>

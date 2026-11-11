@@ -302,3 +302,19 @@ describe('VersionBar', () => {
 		});
 	});
 });
+
+describe('VersionBar on the version a saver keeps', () => {
+	test('reading the kept v2 needs no way back: the keep line carries the latest', () => {
+		renderBar({ currentVersion: THREE[1], isViewingHistory: true, kept: 2 });
+		expect(screen.queryByRole('link', { name: /Back to/ })).toBeNull();
+		expect(screen.getByText('Version 2 of 3, the version you keep.')).toBeInTheDocument();
+	});
+
+	test('reading another older version while keeping one, Back goes to the latest by number', () => {
+		renderBar({ currentVersion: THREE[2], isViewingHistory: true, kept: 2 });
+		expect(screen.getByRole('link', { name: 'Back to v3' })).toHaveAttribute(
+			'href',
+			'/recipes/my-fork?version=3'
+		);
+	});
+});

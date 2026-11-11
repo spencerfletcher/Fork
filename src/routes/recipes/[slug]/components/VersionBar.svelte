@@ -12,7 +12,8 @@
 		currentVersion,
 		versions,
 		isViewingHistory,
-		canRestore = false
+		canRestore = false,
+		kept = null
 	}: {
 		recipe: Pick<Recipe, 'slug' | 'editRevision'>;
 		currentVersion: BarVersion;
@@ -21,6 +22,8 @@
 		isViewingHistory: boolean;
 		/** The owner, on an older version that differs from the latest. */
 		canRestore?: boolean;
+		/** The version the saver keeps, which the recipe opens on; null follows the latest. */
+		kept?: number | null;
 	} = $props();
 
 	const count = $derived(versions.length);
@@ -90,9 +93,11 @@
 		<div class="current" class:confirming={restoring}>
 			<span class="version-number vid">
 				<span class="sr-only">
-					{isViewingHistory
-						? `Version ${n} of ${count}, an older version.`
-						: `Version ${n}, the latest.`}
+					{!isViewingHistory
+						? `Version ${n}, the latest.`
+						: n === kept
+							? `Version ${n} of ${count}, the version you keep.`
+							: `Version ${n} of ${count}, an older version.`}
 				</span>
 				<span aria-hidden="true">v{n}</span>
 			</span>
@@ -102,9 +107,17 @@
 			<!-- The separators are drawn between items by CSS, never typed, so no
 				     wrapped line can begin or end with one. -->
 			<span class="controls dot-list text-text-2">
-				{#if isViewingHistory}
+				<!-- On the kept version the keep line names the latest; while keeping,
+				     the bare URL opens the kept version, so Back names the latest. -->
+				{#if isViewingHistory && n !== kept}
 					<span class="item">
-						<a class="hit-link" href="/recipes/{recipe.slug}">Back to v{latest}</a>
+						<a
+							class="hit-link"
+							href={kept === null
+								? `/recipes/${recipe.slug}`
+								: `/recipes/${recipe.slug}?version=${latest}`}>
+							Back to v{latest}
+						</a>
 					</span>
 				{/if}
 				{#if canRestore}

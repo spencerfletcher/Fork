@@ -47,7 +47,8 @@
 		alwaysShowAuthor = false,
 		showDescription = true,
 		variant = 'list',
-		saved = false
+		saved = false,
+		kept = false
 	}: {
 		recipe: CardRecipe;
 		index?: number;
@@ -55,6 +56,8 @@
 		showDescription?: boolean;
 		variant?: 'list' | 'cookbook' | 'discover';
 		saved?: boolean;
+		/** A saved recipe its author withdrew, kept as the saver's copy. */
+		kept?: boolean;
 	} = $props();
 
 	const isList = $derived(variant === 'list');
@@ -161,7 +164,7 @@
 
 		{#if saved && variant === 'cookbook'}
 			<p class="card-source">
-				Saved from
+				{kept ? 'No longer shared by' : 'Saved from'}
 				{#if recipe.author}
 					<Username username={recipe.author.username} />
 				{:else}

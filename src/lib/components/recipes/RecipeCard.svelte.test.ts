@@ -354,6 +354,15 @@ describe('RecipeCard in the Cookbook', () => {
 		expect(link).toHaveAttribute('href', '/users/devcooks');
 		expect(link).toHaveClass('username');
 	});
+
+	test('a kept copy of a recipe its author withdrew says so, in place of whose it is', () => {
+		const { container } = render(RecipeCard, {
+			props: { recipe: { ...makeRecipe(), author }, variant: 'cookbook', saved: true, kept: true }
+		});
+		expect(container.querySelector('.card-source')).toHaveTextContent(
+			'No longer shared by @devcooks'
+		);
+	});
 });
 
 describe('RecipeCard on Discover', () => {

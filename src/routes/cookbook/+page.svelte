@@ -89,7 +89,12 @@
 				{#if data.recipes.length > 0}
 					<div class="cookbook-grid">
 						{#each data.recipes as recipe, i (recipe.id)}
-							<RecipeCard {recipe} index={i} variant="cookbook" saved={recipe.saved} />
+							<RecipeCard
+								{recipe}
+								index={i}
+								variant="cookbook"
+								saved={recipe.saved}
+								kept={recipe.kept} />
 						{/each}
 					</div>
 				{:else}

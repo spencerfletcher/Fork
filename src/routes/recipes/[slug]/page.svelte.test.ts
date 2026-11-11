@@ -577,3 +577,78 @@ describe('recipe page section tabs', () => {
 		expect(pressed('Ingredients')).toBe('true');
 	});
 });
+
+describe('a saved recipe: Keep this version and the note', () => {
+	const saved = (keptVersion: number | null, onVersion = 2) => {
+		const data = makeData();
+		return {
+			...data,
+			user: { id: 'saver' },
+			isFavorited: true,
+			journal: { lastEntry: null, addHref: '/journal/new?recipe=cookies&version=1' },
+			profile: { measurement: 'metric' },
+			save: { keptVersion, note: null },
+			keptCopy: false,
+			currentVersion: onVersion === 2 ? data.allVersions[0] : data.allVersions[1]
+		} as unknown as PageData;
+	};
+
+	test('offers Keep this version and a note to the saver; the author gets neither', () => {
+		page.url = new URL('http://localhost/recipes/cookies');
+		const { unmount } = render(Page, { props: { data: saved(null) } });
+		expect(screen.getByRole('button', { name: 'Keep this version, v2' })).toBeInTheDocument();
+		expect(screen.getByRole('button', { name: 'Add a note' })).toBeInTheDocument();
+		unmount();
+		const own = { ...saved(null), user: { id: 'a' }, save: null } as unknown as PageData;
+		render(Page, { props: { data: own } });
+		expect(screen.queryByRole('button', { name: /Keep this version/ })).toBeNull();
+		expect(screen.queryByRole('button', { name: 'Add a note' })).toBeNull();
+	});
+
+	test('on the kept older version it reads like the latest: Save is offered and the cook’s units apply', () => {
+		page.url = new URL('http://localhost/recipes/cookies');
+		render(Page, { props: { data: saved(1, 1) } });
+		expect(screen.getByText(/^Keeping/)).toBeInTheDocument();
+		expect(screen.getByRole('button', { name: /^Save/ })).toBeInTheDocument();
+		expect(screen.getByText(/^Converted to metric/)).toBeInTheDocument();
+		// Fork copies the latest, so it is offered on the latest only.
+		expect(screen.queryByRole('button', { name: 'Fork' })).toBeNull();
+	});
+});
+
+describe('a kept copy of a recipe its author withdrew', () => {
+	const copy = () => {
+		const data = makeData();
+		return {
+			...data,
+			user: { id: 'saver' },
+			isFavorited: true,
+			allVersions: [data.allVersions[1]],
+			currentVersion: data.allVersions[1],
+			journal: { lastEntry: null, addHref: '/journal/new?recipe=cookies&version=1' },
+			collections: [],
+			save: { keptVersion: null, note: 'Mine' },
+			keptCopy: true
+		} as unknown as PageData;
+	};
+
+	test('says it is no longer shared and is the saver’s alone, with Remove; no Save, Fork, counts or keep line', () => {
+		page.url = new URL('http://localhost/recipes/cookies');
+		render(Page, { props: { data: copy() } });
+		expect(screen.getByText('No longer shared by the author')).toBeInTheDocument();
+		expect(
+			screen.getByText(
+				'Your copy of v1, as you saved it. Only you can see it; it can’t be shared or forked.'
+			)
+		).toBeInTheDocument();
+		expect(screen.getByRole('button', { name: 'Remove from Cookbook' })).toBeInTheDocument();
+		expect(screen.queryByRole('button', { name: /^Save/ })).toBeNull();
+		expect(screen.queryByRole('button', { name: 'Fork' })).toBeNull();
+		expect(screen.queryByText(/No forks/)).toBeNull();
+		expect(screen.queryByRole('button', { name: /Keep this version/ })).toBeNull();
+		// Cook, Add to Journal and the note stay.
+		expect(screen.getByRole('button', { name: 'Cook' })).toBeInTheDocument();
+		expect(screen.getByRole('link', { name: 'Add to Journal' })).toBeInTheDocument();
+		expect(screen.getByText('Mine')).toBeInTheDocument();
+	});
+});
