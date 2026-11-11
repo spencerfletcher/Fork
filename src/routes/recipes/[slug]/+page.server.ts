@@ -64,10 +64,19 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 		? null
 		: await keptCopy(recipeSlug, user, { author: true, parent: { with: { author: true } } });
 	if (!shown && !copy) throw error(404, 'Recipe not found');
-	// The row's copies follow the author's latest, perhaps written after they
-	// withdrew it; a copy carries its kept version's instead.
+	// The row may hold what the author wrote after withdrawing it, so a copy
+	// takes only its identity and lineage from the row, never a spread of it,
+	// and its words from the kept version. Its revision and audience are not the
+	// saver's to see: a copy has no Restore (the version bar's revision is a
+	// placeholder) and no audience line.
 	const recipe = shown ?? {
-		...copy!.recipe,
+		id: copy!.recipe.id,
+		slug: copy!.recipe.slug,
+		authorId: copy!.recipe.authorId,
+		author: copy!.recipe.author,
+		parentId: copy!.recipe.parentId,
+		parent: copy!.recipe.parent,
+		editRevision: 0,
 		...recipeCopies(versionContent(copy!.version)),
 		recipesToTags: [],
 		versions: [{ ...copy!.version, creator: null }]

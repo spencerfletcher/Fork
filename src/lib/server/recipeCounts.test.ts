@@ -101,6 +101,7 @@ describe('cardList', () => {
 		await cardList(WHERE, ORDER, viewer, { limit: 5 });
 		expect(findManyMock).toHaveBeenCalledWith({
 			where: WHERE,
+			columns: { fts: false },
 			with: CARD_WITH,
 			orderBy: ORDER,
 			limit: 5

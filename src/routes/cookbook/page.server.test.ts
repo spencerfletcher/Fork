@@ -190,15 +190,18 @@ describe('/cookbook load', () => {
 			const result = await loadResult('?filter=saved');
 			expect(result.counts).toMatchObject({ all: 4, saved: 2 });
 			expect(keptVersionsMock).toHaveBeenCalledWith(USER, [4]);
-			expect(result.recipes.find((r) => r.id === 4)).toMatchObject({
+			const card = result.recipes.find((r) => r.id === 4);
+			expect(card).toMatchObject({
 				title: 'Soup as kept',
 				description: 'Kept words',
 				prepTimeMinutes: 5,
 				saved: true,
 				kept: true,
 				versionCount: 0,
-				visibility: undefined
+				forkCount: 0
 			});
+			// Only a pick of the row: page.server.db.test.ts pins the whole card.
+			expect(card).not.toHaveProperty('visibility');
 			expect(result.recipes.find((r) => r.id === 3)).toMatchObject({ kept: false });
 		});
 
