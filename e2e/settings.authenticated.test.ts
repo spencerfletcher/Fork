@@ -60,7 +60,7 @@ test.describe('Settings', () => {
 		const field = (await box.getByRole('textbox', { name: 'Username' }).boundingBox())!;
 		expect(field.x).toBeGreaterThan(heading.x + heading.width);
 		expect(field.width).toBeLessThanOrEqual(560);
-		await expect(box).toHaveCSS('border-top-style', 'none');
+		await expect(box).toHaveCSS('border-top-width', '0px');
 
 		await page.setViewportSize({ width: 390, height: 900 });
 		const stacked = (await box.getByRole('textbox', { name: 'Username' }).boundingBox())!;

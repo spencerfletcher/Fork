@@ -338,14 +338,19 @@ test.describe('Edit recipe page', () => {
 					'base64'
 				)
 			});
-			// Playwright dismisses dialogs on its own, so wait for the event itself.
-			const dialog = page.waitForEvent('dialog');
+			// Answered inside the handler: the click cannot return while the
+			// question is open, so awaiting the dialog after the click deadlocks.
+			let asked = '';
+			page.once('dialog', (d) => {
+				asked = d.message();
+				void d.dismiss();
+			});
 			await page.getByRole('link', { name: 'Cancel' }).click();
-			const d = await dialog;
-			expect(d.message()).toBe(
-				"Leave without saving? The photo you chose won't be kept; the rest is saved as a draft on this device."
-			);
-			await d.dismiss();
+			await expect
+				.poll(() => asked)
+				.toBe(
+					"Leave without saving? The photo you chose won't be kept; the rest is saved as a draft on this device."
+				);
 			await expect(page).toHaveURL(/\/edit$/);
 		} finally {
 			await deleteRecipe(page, url);
