@@ -8,6 +8,7 @@ import { COOKBOOK_FILTERS, COOKBOOK_VIEWS } from './filters.js';
 import type { CardSort } from '#lib/listPage.js';
 import source from './+page.svelte?raw';
 import { cssRule } from '#lib/testing/css.js';
+import { TRASH_DAYS } from '#lib/trash.js';
 import type { SubmitFunction } from '$app/forms';
 
 const style = source.slice(source.indexOf('<style>'));
@@ -578,5 +579,245 @@ describe('Cookbook drafts on this device', () => {
 		expect(within(drafts()).getByRole('listitem')).toHaveClass('list-row');
 		expect(within(drafts()).getByRole('link', { name: 'Continue Soup' })).toHaveClass('text-btn');
 		expect(within(drafts()).getByRole('button', { name: 'Discard Soup' })).toHaveClass('text-btn');
+	});
+});
+
+describe('Cookbook select mode', () => {
+	const [dal, poke] = full.recipes;
+
+	beforeEach(() => {
+		goto.mockReset();
+		goto.mockResolvedValue(undefined);
+		page.shallow = undefined;
+		submits.clear();
+		// The bar's ⋯ and its layout ask the screen's width; a desktop here.
+		vi.stubGlobal('matchMedia', () => ({
+			matches: false,
+			addEventListener: () => {},
+			removeEventListener: () => {}
+		}));
+		// The bar measures its height; jsdom lays nothing out.
+		vi.stubGlobal(
+			'ResizeObserver',
+			class {
+				observe() {}
+				unobserve() {}
+				disconnect() {}
+			}
+		);
+	});
+
+	const bar = () => screen.getByRole('region', { name: 'Selection' });
+	const select = () => screen.getByRole('button', { name: 'Select' });
+
+	/** Plays `form`'s enhance callback through to `result`. */
+	async function settle(form: HTMLFormElement, result: Record<string, unknown>) {
+		const formData = new FormData(form);
+		const after = await submits.get(form)!({
+			action: new URL(form.action),
+			formElement: form,
+			formData,
+			controller: new AbortController(),
+			submitter: null,
+			cancel: () => {}
+		} as never);
+		await after?.({ result, update: vi.fn() } as never);
+		await tick();
+		return formData;
+	}
+
+	async function selecting(overrides: Partial<typeof base> = {}) {
+		renderCookbook({ ...full, ...overrides });
+		await tick();
+		await fireEvent.click(select());
+		await tick();
+	}
+
+	test('Select is a toggle at the end of the filter tools, with Sort and Grid | List', async () => {
+		renderCookbook(full);
+		await tick();
+		expect(select()).toHaveAttribute('aria-pressed', 'false');
+		expect(select()).toHaveClass('text-btn', 'text-btn--ink');
+		expect(select().parentElement).toHaveClass('cookbook-view');
+		expect(select().parentElement!.lastElementChild).toBe(select());
+	});
+
+	test('pressed, every card is a checkbox named for its recipe, no link; the bar takes focus', async () => {
+		await selecting();
+		expect(select()).toHaveAttribute('aria-pressed', 'true');
+		for (const r of full.recipes) {
+			expect(screen.getByRole('checkbox', { name: r.title })).not.toBeChecked();
+			expect(screen.queryByRole('link', { name: r.title })).toBeNull();
+		}
+		expect(screen.queryByRole('button', { name: /More actions for/ })).toBeNull();
+		expect(within(bar()).getByRole('button', { name: 'Select all 2 shown' })).toHaveFocus();
+		expect(within(bar()).getByText('None selected')).toBeInTheDocument();
+	});
+
+	test('the list view’s rows are checkboxes too', async () => {
+		await selecting({ view: 'list' });
+		expect(screen.getByRole('checkbox', { name: dal.title }).closest('li')).toHaveClass('list-row');
+	});
+
+	test('the count says how many and whose; Select all takes every card shown', async () => {
+		await selecting();
+		await fireEvent.click(screen.getByRole('checkbox', { name: dal.title }));
+		expect(bar()).toHaveTextContent('1 selected');
+		await fireEvent.click(within(bar()).getByRole('button', { name: 'Select all 2 shown' }));
+		await tick();
+		expect(bar()).toHaveTextContent('2 selected');
+		expect(bar()).toHaveTextContent('1 yours, 1 saved');
+		expect(screen.getByRole('checkbox', { name: poke.title })).toBeChecked();
+		expect(within(bar()).getByRole('button', { name: 'Select all 2 shown' })).toBeDisabled();
+	});
+
+	test('with only saved recipes chosen, Add tag and Move to Trash are not offered', async () => {
+		await selecting();
+		await fireEvent.click(screen.getByRole('checkbox', { name: poke.title }));
+		await tick();
+		expect(within(bar()).getByRole('button', { name: /Add to collection/ })).toBeEnabled();
+		expect(within(bar()).queryByRole('button', { name: 'Add tag' })).toBeNull();
+		expect(within(bar()).queryByRole('button', { name: 'Move to Trash' })).toBeNull();
+
+		await fireEvent.click(screen.getByRole('checkbox', { name: dal.title }));
+		await tick();
+		expect(within(bar()).getByRole('button', { name: 'Add tag' })).toBeInTheDocument();
+		expect(within(bar()).getByRole('button', { name: 'Move to Trash' })).toBeInTheDocument();
+	});
+
+	test('Cancel leaves the mode, the choice gone, focus back on Select; Escape on a card too', async () => {
+		await selecting();
+		await fireEvent.click(screen.getByRole('checkbox', { name: dal.title }));
+		await fireEvent.click(within(bar()).getByRole('button', { name: 'Cancel' }));
+		await tick();
+		expect(screen.queryByRole('region', { name: 'Selection' })).toBeNull();
+		expect(select()).toHaveFocus();
+		expect(screen.getByRole('link', { name: dal.title })).toBeInTheDocument();
+
+		await fireEvent.click(select());
+		await tick();
+		expect(screen.getByRole('checkbox', { name: dal.title })).not.toBeChecked();
+		await fireEvent.keyDown(screen.getByRole('checkbox', { name: dal.title }), { key: 'Escape' });
+		await tick();
+		expect(screen.queryByRole('region', { name: 'Selection' })).toBeNull();
+		expect(select()).toHaveFocus();
+	});
+
+	test('Move to Trash asks first, for the own ones alone, then reloads in place and says so', async () => {
+		await selecting({ counts: { ...full.counts, trash: 1 } });
+		await fireEvent.click(within(bar()).getByRole('button', { name: 'Select all 2 shown' }));
+		await tick();
+		await fireEvent.click(within(bar()).getByRole('button', { name: 'Move to Trash' }));
+		await tick();
+		const step = screen.getByRole('group', { name: 'Move 1 recipe to Trash?' });
+		expect(step).toHaveAccessibleDescription(
+			`Moves your 1 recipe to your Trash; the 1 saved one stays. You can restore it for ${TRASH_DAYS} days.`
+		);
+		// The step stands in for the bar's other buttons.
+		expect(within(bar()).queryByRole('button', { name: /Add to collection/ })).toBeNull();
+		const form = step.closest('form')!;
+		expect(form).toHaveAttribute('action', '/cookbook?/bulkTrash');
+
+		const sent = await settle(form, {
+			type: 'success',
+			status: 200,
+			data: { moved: 1, skipped: 1 }
+		});
+		expect(sent.get('ids')).toBe(`${dal.id},${poke.id}`);
+		expect(goto).toHaveBeenCalledExactlyOnceWith(page.url.href, {
+			replace: true,
+			reset: false,
+			refreshAll: true
+		});
+		await tick();
+		expect(bar()).toHaveTextContent('1 recipe moved to Trash.');
+		expect(within(bar()).getByRole('link', { name: 'Trash (1) →' })).toHaveAttribute(
+			'href',
+			'/cookbook/trash'
+		);
+		expect(bar()).toHaveTextContent('None selected');
+	});
+
+	test('Add tag is the editor’s tag search, saying whose recipes take it, and posts the tags', async () => {
+		await selecting({ allTags: [{ id: 1, name: 'Quick', slug: 'quick' }] as never });
+		await fireEvent.click(within(bar()).getByRole('button', { name: 'Select all 2 shown' }));
+		await tick();
+		await fireEvent.click(within(bar()).getByRole('button', { name: 'Add tag' }));
+		await tick();
+		const box = within(bar()).getByRole('combobox', { name: 'Search or create a tag' });
+		expect(box).toHaveFocus();
+		expect(bar()).toHaveTextContent('Adds to your 1 recipe; the 1 saved one stays as it is.');
+		await fireEvent.input(box, { target: { value: 'Quick' } });
+		await fireEvent.keyDown(box, { key: 'Enter' });
+		await tick();
+		const form = box.closest('form')!;
+		expect(form).toHaveAttribute('action', '/cookbook?/bulkTag');
+
+		const data = { tagged: ['Quick'], changed: 1, already: 0, full: 0, skipped: 1 };
+		const sent = await settle(form, { type: 'success', status: 200, data });
+		expect(sent.getAll('tags')).toEqual(['Quick']);
+		expect(sent.get('ids')).toBe(`${dal.id},${poke.id}`);
+		await tick();
+		expect(bar()).toHaveTextContent('Added “Quick” to 1 recipe.');
+		expect(within(bar()).getByRole('button', { name: 'Add tag' })).toHaveFocus();
+		expect(screen.getByRole('checkbox', { name: dal.title })).toBeChecked();
+		expect(goto).toHaveBeenCalledOnce();
+	});
+
+	test('Add to collection lists the collections for the selection and says what a press did', async () => {
+		const fetchMock = vi.fn(async () => ({
+			text: async () =>
+				JSON.stringify({
+					type: 'success',
+					data: { collections: [{ id: 4, name: 'Quick', has: 'mixed' }] }
+				})
+		}));
+		vi.stubGlobal('fetch', fetchMock);
+		await selecting();
+		await fireEvent.click(within(bar()).getByRole('button', { name: 'Select all 2 shown' }));
+		await tick();
+		await fireEvent.click(within(bar()).getByRole('button', { name: /Add to collection/ }));
+		const row = await screen.findByRole('menuitemcheckbox', { name: 'Quick' });
+		expect(row).toHaveAttribute('aria-checked', 'mixed');
+		expect(fetchMock).toHaveBeenCalledWith('/cookbook?/bulkCollections', expect.anything());
+
+		await fireEvent.click(row);
+		await settle(row.closest('form')!, {
+			type: 'success',
+			status: 200,
+			data: { collected: 4, changed: 1, skipped: 0 }
+		});
+		await vi.waitFor(() => expect(bar()).toHaveTextContent('Added 1 recipe to Quick.'));
+		expect(goto).toHaveBeenCalledOnce();
+		expect(screen.getByRole('checkbox', { name: poke.title })).toBeChecked();
+	});
+
+	test('on a phone, Select all and Move to Trash are in the bar’s ⋯; the step opens in the bar', async () => {
+		vi.stubGlobal('matchMedia', () => ({
+			matches: true,
+			addEventListener: () => {},
+			removeEventListener: () => {}
+		}));
+		await selecting();
+		expect(within(bar()).queryByRole('button', { name: 'Select all 2 shown' })).toBeNull();
+		const more = within(bar()).getByRole('button', { name: 'More for the selection' });
+		expect(more).toHaveFocus();
+		await fireEvent.click(more);
+		await tick();
+		await fireEvent.click(screen.getByRole('menuitem', { name: 'Select all 2 shown' }));
+		await tick();
+		expect(bar()).toHaveTextContent('2 selected');
+
+		await fireEvent.click(more);
+		await tick();
+		await fireEvent.click(screen.getByRole('menuitem', { name: 'Move to Trash' }));
+		await tick();
+		await tick();
+		const step = screen.getByRole('group', { name: 'Move 1 recipe to Trash?' });
+		expect(step).toHaveFocus();
+		await fireEvent.click(within(step).getByRole('button', { name: 'Keep recipes' }));
+		await vi.waitFor(() =>
+			expect(within(bar()).getByRole('button', { name: 'More for the selection' })).toHaveFocus()
+		);
 	});
 });
