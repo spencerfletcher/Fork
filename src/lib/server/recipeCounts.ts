@@ -73,9 +73,9 @@ export async function cardList(
 	const ranked = rank.length > 0;
 	const offset = ranked && after && OFFSET.test(after) ? Number(after) : 0;
 	const key = ranked ? null : KEYSET.exec(after ?? '');
-	// The plain bound lets the updated_at index range-scan; the row compare breaks the tie.
+	// Postgres turns the row compare into a range on the live updated_at index.
 	const afterKey = key
-		? sql`${recipes.updatedAt} <= ${key[1]}::timestamp AND (${recipes.updatedAt}, ${recipes.id}) < (${key[1]}::timestamp, ${Number(key[2])})`
+		? sql`(${recipes.updatedAt}, ${recipes.id}) < (${key[1]}::timestamp, ${Number(key[2])})`
 		: undefined;
 	const rows = await db.query.recipes.findMany({
 		where: and(where, afterKey),
