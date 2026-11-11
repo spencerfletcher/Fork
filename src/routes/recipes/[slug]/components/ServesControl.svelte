@@ -115,10 +115,7 @@
 		font-size: 0.75rem;
 		font-variant-numeric: tabular-nums;
 		color: var(--color-text-2);
-	}
-
-	/* The note belongs to the count, not the box: a step more room before it. */
-	.factor {
+		/* The note belongs to the count, not the box: a step more room before it. */
 		margin-left: 4px;
 	}
 
@@ -156,13 +153,12 @@
 			font-size: 1rem;
 		}
 
-		.label,
-		.factor {
+		.label {
 			margin-left: 6px;
 		}
 
 		.factor {
-			margin-right: 4px;
+			margin-inline: 6px 4px;
 		}
 	}
 </style>
