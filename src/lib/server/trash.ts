@@ -115,7 +115,21 @@ export async function deleteForever(recipeId: number, supabase: SupabaseClient):
 						inArray(collectionRecipes.collectionId, othersCollections)
 					)
 				);
-			await tx.update(recipes).set({ erasedAt: new Date() }).where(eq(recipes.id, recipeId));
+			// The row's copies of the latest are the author's, perhaps written after
+			// the withdrawal: blanked, so the row holds nothing a saver was not given.
+			// Each saver reads their own kept version.
+			await tx
+				.update(recipes)
+				.set({
+					erasedAt: new Date(),
+					title: '',
+					description: null,
+					imageUrl: null,
+					servings: null,
+					prepTimeMinutes: null,
+					cookTimeMinutes: null
+				})
+				.where(eq(recipes.id, recipeId));
 		}
 		return [...new Set(versions.flatMap((v) => v.imageUrl ?? []))];
 	});

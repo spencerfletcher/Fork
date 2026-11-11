@@ -153,6 +153,42 @@ describe.skipIf(!localDb)('the Trash, against the real database', () => {
 		expect(remove).toHaveBeenCalledWith([`u/${stamp}-erase-2.png`]);
 	});
 
+	test("an erased recipe's row keeps none of the author's latest words, times or photo", async () => {
+		const [keeper] = await db.query.profiles.findMany({
+			where: (p, { ne }) => ne(p.id, userId),
+			limit: 1
+		});
+		const id = await insertRecipe(`trash-erase-blank-${stamp}`, [photo('blank-1')], {
+			deletedAt: new Date()
+		});
+		await db
+			.update(schema.recipes)
+			.set({
+				title: 'Renamed in private',
+				description: 'Written after',
+				imageUrl: photo('blank-later'),
+				servings: 4,
+				prepTimeMinutes: 5,
+				cookTimeMinutes: 6
+			})
+			.where(eq(schema.recipes.id, id));
+		await db.insert(schema.favorites).values({ userId: keeper.id, recipeId: id, copyVersion: 1 });
+		const remove = vi.fn().mockResolvedValue({ error: null });
+
+		await trash.deleteForever(id, { storage: { from: () => ({ remove }) } } as never);
+
+		const row = await db.query.recipes.findFirst({ where: eq(schema.recipes.id, id) });
+		expect(row).toMatchObject({
+			title: '',
+			description: null,
+			imageUrl: null,
+			servings: null,
+			prepTimeMinutes: null,
+			cookTimeMinutes: null
+		});
+		expect(JSON.stringify(row)).not.toMatch(/renamed|written/i);
+	});
+
 	test('a live recipe is never deleted for good', async () => {
 		const id = await insertRecipe(`trash-live-${stamp}`, [photo('live')]);
 		const remove = vi.fn();
