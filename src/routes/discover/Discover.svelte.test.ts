@@ -1,6 +1,8 @@
 import { describe, test, expect, vi } from 'vitest';
 import { render, screen, within } from '@testing-library/svelte';
 import Discover from './Discover.svelte';
+import source from './Discover.svelte?raw';
+import { cssRule } from '#lib/testing/css.js';
 
 const { page } = vi.hoisted(() => ({ page: { url: new URL('http://localhost/discover') } }));
 vi.mock('$app/navigation', () => ({ goto: vi.fn(), snapshot: vi.fn() }));
@@ -150,5 +152,13 @@ describe('Discover', () => {
 		renderDiscover({ searchQuery: 'saffron' });
 		expect(screen.getByRole('status')).toHaveTextContent('0 recipes match');
 		expect(screen.getByRole('link', { name: 'Clear filters' })).toBeInTheDocument();
+	});
+});
+
+// A long unbroken title must wrap inside the lead's words column rather than
+// push Discover wider than the screen.
+describe('Discover lead title', () => {
+	test('breaks a long word anywhere', () => {
+		expect(cssRule(source, '.lead-title')).toMatch(/overflow-wrap:\s*anywhere;/);
 	});
 });

@@ -178,6 +178,7 @@
 		font-size: clamp(1.5rem, 1.1rem + 1.4vw, 2.25rem);
 		line-height: 1.15;
 		text-wrap: pretty;
+		overflow-wrap: anywhere;
 	}
 
 	.lead:hover .lead-title {
