@@ -76,8 +76,8 @@ export default defineConfig({
 		// ── 4. Tests that change the seed user's own settings ─────────────────────
 		// A rename, a default audience or a measurement preference shows on every
 		// page the other signed-in tests read, so these run once those are done.
-		// To run one alone without the rest first: `playwright test <file> --no-deps`
-		// (after any run has left e2e/.auth/user.json).
+		// Running one of them alone still runs those first: every run reseeds the
+		// database, so the sign-in from an earlier run is no longer valid.
 		{
 			name: 'chromium-account',
 			use: {

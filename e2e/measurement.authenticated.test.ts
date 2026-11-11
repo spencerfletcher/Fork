@@ -19,7 +19,8 @@ async function saveMeasurement(page: Page, choice: 'As written' | 'Metric' | 'US
 	const box = page.getByRole('region', { name: 'Measurement' });
 	await box.getByRole('radio', { name: choice }).check();
 	await box.getByRole('button', { name: 'Save' }).click();
-	await expect(box.getByRole('status')).toHaveText('Saved.');
+	// The choice group's hint is a status too; the Save row's is the one that says Saved.
+	await expect(box.getByRole('status').filter({ hasText: 'Saved.' })).toBeVisible();
 }
 
 const flourRow = (page: Page) =>
