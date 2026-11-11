@@ -15,7 +15,9 @@
 		saveIcon,
 		journalIcon,
 		chevronIcon,
-		searchIcon
+		searchIcon,
+		imageIcon,
+		plusIcon
 	};
 </script>
 
@@ -204,3 +206,39 @@
 {/snippet}
 
 <!-- The editor toolbar's Section heading: an H. -->
+
+<!-- A picture: the photo field's empty tile. Drawn on 24, set at 24. -->
+{#snippet imageIcon()}
+	<svg
+		class="icon"
+		width="24"
+		height="24"
+		viewBox="0 0 24 24"
+		aria-hidden="true"
+		fill="none"
+		stroke="currentColor"
+		stroke-width="1.5"
+		stroke-linecap="round"
+		stroke-linejoin="round">
+		<rect x="3.5" y="5" width="17" height="14" rx="2" />
+		<path d="m3.5 16 5-4.5 4 3.5 2.5-2 5 3.5" />
+		<circle cx="15.5" cy="9.5" r="1.5" />
+	</svg>
+{/snippet}
+
+<!-- A plus, before the words it adds (Add photo). -->
+{#snippet plusIcon()}
+	<svg
+		class="icon"
+		width="16"
+		height="16"
+		viewBox="0 0 16 16"
+		aria-hidden="true"
+		fill="none"
+		stroke="currentColor"
+		stroke-width="1.5"
+		stroke-linecap="round"
+		stroke-linejoin="round">
+		<path d="M8 3.5v9M3.5 8h9" />
+	</svg>
+{/snippet}
