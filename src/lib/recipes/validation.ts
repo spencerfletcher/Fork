@@ -48,8 +48,12 @@ export const PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'
 /** The largest photo a save stores. Netlify buffers a function request at
  *  6 MB, about 4.5 MB of binary, so this leaves room for the rest of the form. */
 export const PHOTO_MAX_BYTES = 4 * 1024 * 1024;
-export const PHOTO_TYPE_MESSAGE = 'Choose a JPEG, PNG, WebP or GIF photo.';
-export const PHOTO_SIZE_MESSAGE = `Choose a photo under ${PHOTO_MAX_BYTES / 1024 / 1024} MB.`;
+const PHOTO_TYPE_NAMES = 'JPEG, PNG, WebP or GIF';
+const PHOTO_MAX_MB = PHOTO_MAX_BYTES / 1024 / 1024;
+export const PHOTO_TYPE_MESSAGE = `Choose a ${PHOTO_TYPE_NAMES} photo.`;
+export const PHOTO_SIZE_MESSAGE = `Choose a photo under ${PHOTO_MAX_MB} MB.`;
+/** The photo field's format hint, from the same types and limit. */
+export const PHOTO_HINT = `${PHOTO_TYPE_NAMES}, up to ${PHOTO_MAX_MB} MB`;
 
 /** Why a chosen photo cannot be stored, or null when it can. */
 export function photoError(file: File): string | null {

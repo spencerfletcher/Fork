@@ -261,7 +261,7 @@ describe('Edit page form', () => {
 	test('choosing a photo file counts as a content change at once, before the preview loads', async () => {
 		render(EditPage, { props: { data: makeData(), form: null } });
 		const file = new File(['x'], 'c.png', { type: 'image/png' });
-		const input = screen.getByLabelText('Choose a photo') as HTMLInputElement;
+		const input = screen.getByLabelText('Add photo') as HTMLInputElement;
 		Object.defineProperty(input, 'files', { value: [file] });
 		await fireEvent.change(input);
 		expect(editingLine('Editing v2 · saves as v3')).toBeInTheDocument();
@@ -529,15 +529,15 @@ describe('Edit page form', () => {
 		expect(screen.queryByText(/choose the photo again/i)).toBeNull();
 	});
 
-	test('a photo is chosen with a text button over the hidden native input: Choose a photo, or Replace under one', async () => {
+	test('a photo is chosen with a pill over the hidden native input: Add photo, or Replace on one', async () => {
 		const photoInput = () => document.querySelector('input[name="image"]') as HTMLInputElement;
 		const { unmount } = render(EditPage, { props: { data: makeData(), form: null } });
 		expect(photoInput()).toHaveClass('sr-only');
-		const button = photoInput().closest('label')!;
-		expect(button).toHaveClass('text-btn');
-		expect(button).toHaveTextContent(/^\s*Choose a photo\s*$/);
-		// One name, the button's, not the field label's "Photo" before it.
-		expect(photoInput()).toHaveAccessibleName('Choose a photo');
+		const pill = photoInput().closest('label')!;
+		expect(pill).toHaveClass('pill-btn');
+		expect(pill).toHaveTextContent(/^\s*Add photo\s*$/);
+		// One name, the pill's, not the field label's "Photo" before it.
+		expect(photoInput()).toHaveAccessibleName('Add photo');
 		unmount();
 
 		render(EditPage, {
@@ -545,15 +545,14 @@ describe('Edit page form', () => {
 		});
 		expect(photoInput().closest('label')).toHaveTextContent('Replace photo');
 		expect(photoInput()).toHaveAccessibleName('Replace photo');
-		// Below the photo, never over it.
+		// Replace first, then Remove, after the photo they sit over.
 		const photo = screen.getByRole('img', { name: /preview/i });
 		const remove = screen.getByRole('button', { name: /remove photo/i });
-		for (const action of [photoInput().closest('label')!, remove]) {
-			expect(photo.contains(action)).toBe(false);
-			expect(photo.compareDocumentPosition(action) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-		}
+		const replace = photoInput().closest('label')!;
+		expect(photo.compareDocumentPosition(replace) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+		expect(replace.compareDocumentPosition(remove) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 		await fireEvent.click(remove);
-		expect(photoInput().closest('label')).toHaveTextContent('Choose a photo');
+		expect(photoInput()).toHaveAccessibleName('Add photo');
 	});
 
 	test('shows the current photo and a Remove photo control that marks it for removal', async () => {
@@ -571,28 +570,30 @@ describe('Edit page form', () => {
 		expect(editingLine('Editing v2 · saves as v3')).toBeInTheDocument();
 	});
 
-	test('Keep photo, offered once the photo is marked for removal, brings it back and unmarks it', async () => {
+	test('Undo, offered once the photo is marked for removal, brings it back and unmarks it', async () => {
 		render(EditPage, {
 			props: { data: makeData({ imageUrl: 'https://cdn/cookies.png' }), form: null }
 		});
-		expect(screen.queryByRole('button', { name: 'Keep photo' })).toBeNull();
+		const undo = () => screen.queryByRole('button', { name: 'Undo photo removal' });
+		expect(undo()).toBeNull();
 		await fireEvent.click(screen.getByRole('button', { name: /remove photo/i }));
 		await tick();
-		const keep = screen.getByRole('button', { name: 'Keep photo' });
-		expect(keep).toHaveClass('text-btn');
-		expect(keep).toHaveAttribute('type', 'button');
+		expect(screen.getByText('Photo removed')).toBeInTheDocument();
+		expect(undo()).toHaveClass('text-btn');
+		expect(undo()).toHaveAttribute('type', 'button');
 		// The control pressed has gone; focus lands on the way back, not the page.
-		expect(keep).toHaveFocus();
-		await fireEvent.click(keep);
+		expect(undo()).toHaveFocus();
+		await fireEvent.click(undo()!);
 		await tick();
 		expect(screen.getByRole('img', { name: /preview/i })).toHaveAttribute(
 			'src',
 			'https://cdn/cookies.png'
 		);
 		expect(document.querySelector('input[name="removeImage"]')).toBeNull();
-		expect(screen.queryByRole('button', { name: 'Keep photo' })).toBeNull();
-		expect(screen.getByRole('button', { name: /remove photo/i })).toHaveFocus();
-		expect(document.querySelector('input[name="image"]')).toHaveAccessibleName('Replace photo');
+		expect(undo()).toBeNull();
+		const input = document.querySelector('input[name="image"]');
+		expect(input).toHaveFocus();
+		expect(input).toHaveAccessibleName('Replace photo');
 		// Nothing left to save: the form is clean again.
 		expect(editingLine('Editing v2')).toBeInTheDocument();
 	});
@@ -764,7 +765,7 @@ describe('Edit page drafts on this device', () => {
 		const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true);
 		render(EditPage, { props: { data: signedIn(), form: null } });
 		await fireEvent.input(title(), { target: { value: 'Chewy cookies' } });
-		const input = screen.getByLabelText('Choose a photo') as HTMLInputElement;
+		const input = screen.getByLabelText('Add photo') as HTMLInputElement;
 		Object.defineProperty(input, 'files', {
 			value: [new File(['x'], 'c.png', { type: 'image/png' })]
 		});
@@ -776,6 +777,35 @@ describe('Edit page drafts on this device', () => {
 		);
 		expect(cancel).not.toHaveBeenCalled();
 		expect(stored().draft.title).toBe('Chewy cookies');
+	});
+
+	test('a chosen photo taken out by Remove stops the question; Undo brings it back', async () => {
+		// jsdom has no DataTransfer, which Undo uses to put the file back.
+		vi.stubGlobal(
+			'DataTransfer',
+			class {
+				files: File[] = [];
+				items = { add: (f: File) => this.files.push(f) };
+			}
+		);
+		const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true);
+		render(EditPage, { props: { data: signedIn(), form: null } });
+		await fireEvent.input(title(), { target: { value: 'Chewy cookies' } });
+		const input = screen.getByLabelText('Add photo') as HTMLInputElement;
+		Object.defineProperty(input, 'files', {
+			value: [new File(['x'], 'c.png', { type: 'image/png' })],
+			writable: true
+		});
+		await fireEvent.change(input);
+		await fireEvent.click(await screen.findByRole('button', { name: 'Remove photo' }));
+		nav.guards[0]({ cancel: vi.fn(), type: 'link' });
+		expect(confirm).not.toHaveBeenCalled();
+		await fireEvent.click(screen.getByRole('button', { name: 'Undo photo removal' }));
+		nav.guards[0]({ cancel: vi.fn(), type: 'link' });
+		expect(confirm).toHaveBeenCalledWith(
+			"Leave without saving? The photo you chose won't be kept; the rest is saved as a draft on this device."
+		);
+		vi.unstubAllGlobals();
 	});
 
 	test('storage that throws leaves the editor working', async () => {

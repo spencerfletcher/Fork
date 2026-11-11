@@ -1,5 +1,4 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest';
-import { readFileSync } from 'node:fs';
 import { render, screen, fireEvent } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import source from './RecipeForm.svelte?raw';
@@ -24,28 +23,6 @@ const reduced = { matches: false };
 
 // jsdom applies no component CSS, so the declarations are read from the source.
 const style = source.slice(source.indexOf('<style>'));
-
-describe('RecipeForm photo buttons', () => {
-	// The 44px is .text-btn's own, in app.css; the buttons only carry the class.
-	test('reach 44px on a phone or under a coarse pointer', async () => {
-		const { container } = render(RecipeForm, {
-			props: {
-				baseline: draftOf(new FormData()),
-				form: null,
-				allTags: [],
-				submitLabel: 'Save',
-				cancelHref: '/recipes',
-				imageUrl: 'https://img/photo.jpg'
-			}
-		});
-		await fireEvent.click(screen.getByRole('button', { name: 'Remove photo' }));
-		expect(container.querySelector('.photo-choose')).toHaveClass('text-btn');
-		expect(screen.getByRole('button', { name: 'Keep photo' })).toHaveClass('text-btn');
-		const appCss = readFileSync('src/app.css', 'utf8');
-		const coarse = appCss.slice(appCss.indexOf('@media (max-width: 699px), (pointer: coarse)'));
-		expect(cssRule(coarse, '.text-btn')).toMatch(/min-height:\s*44px/);
-	});
-});
 
 describe('RecipeForm photo input', () => {
 	test('offers the types a save stores', () => {
@@ -90,7 +67,7 @@ describe('RecipeForm photo over the size cap', () => {
 		expect(input).toHaveAttribute('aria-invalid', 'true');
 		expect(input.getAttribute('aria-describedby')).toBe(error.id);
 		expect(clear).toHaveBeenCalledWith('');
-		expect(screen.getByText('Choose a photo')).toBeInTheDocument();
+		expect(input).toHaveAccessibleName('Add photo');
 		await pick(PHOTO_MAX_BYTES);
 		expect(screen.queryByText(PHOTO_SIZE_MESSAGE)).toBeNull();
 		expect(input).not.toHaveAttribute('aria-invalid');
@@ -99,8 +76,8 @@ describe('RecipeForm photo over the size cap', () => {
 });
 
 describe('RecipeForm photo removed on a new recipe', () => {
-	// No stored photo, so no Keep photo takes the place of the ×: focus goes to the input.
-	test('focus moves to the photo input, not the page', async () => {
+	// The pills give way to the compact row: focus lands on its Undo, not the page.
+	test('focus moves to Undo', async () => {
 		render(RecipeForm, {
 			props: {
 				baseline: draftOf(new FormData()),
@@ -118,7 +95,7 @@ describe('RecipeForm photo removed on a new recipe', () => {
 		await fireEvent.click(remove);
 		await tick();
 		expect(screen.queryByRole('button', { name: 'Remove photo' })).toBeNull();
-		expect(document.activeElement).toBe(input);
+		expect(screen.getByRole('button', { name: 'Undo photo removal' })).toHaveFocus();
 	});
 });
 

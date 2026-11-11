@@ -486,8 +486,6 @@
 		letter-spacing: normal;
 		text-transform: none;
 		color: var(--color-accent);
-		/* For a label wearing it (a photo field's Choose); a button has it already. */
-		cursor: pointer;
 	}
 
 	/* Ink at rest, clay on hover: a text button among clay links. */
@@ -498,6 +496,63 @@
 	@media (max-width: 699px), (pointer: coarse) {
 		.text-btn {
 			min-height: 44px;
+		}
+	}
+
+	/* A pill-shaped button: 36px, 44px on a phone or touch screen, sans 600
+	   ink, no shadow. Outlined in ink at rest; --paper is the paper fill that
+	   sits on a photo (the photo field's Replace and Remove). Both fill the
+	   band on hover. Focus keeps the clay ring with paper inside and outside
+	   it, so it shows on a dark photo and a pale one alike. A label wearing it holds a hidden input,
+	   so its ring follows the input's focus. */
+	.pill-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		min-height: 36px;
+		padding: 0 14px;
+		border: 1px solid var(--color-text);
+		border-radius: 100px;
+		background: transparent;
+		font-family: var(--font-sans);
+		font-size: 0.9375rem;
+		font-weight: 600;
+		line-height: 1;
+		letter-spacing: normal;
+		text-transform: none;
+		color: var(--color-text);
+		white-space: nowrap;
+		cursor: pointer;
+		transition: background 0.15s ease;
+	}
+
+	.pill-btn--paper {
+		background: var(--color-bg);
+		border-color: transparent;
+	}
+
+	.pill-btn:hover {
+		background: var(--color-band);
+	}
+
+	.pill-btn:is(:focus-visible, :has(:focus-visible)) {
+		outline: 2px solid var(--color-accent);
+		outline-offset: 2px;
+		box-shadow: 0 0 0 6px var(--color-bg);
+	}
+
+	/* Forced colours drop the halo, so the ring is drawn inside the pill, on
+	   its own fill, where a dark photo cannot swallow it. */
+	@media (forced-colors: active) {
+		.pill-btn:is(:focus-visible, :has(:focus-visible)) {
+			outline-offset: -4px;
+		}
+	}
+
+	@media (max-width: 699px), (pointer: coarse) {
+		.pill-btn {
+			min-height: 44px;
+			padding: 0 16px;
 		}
 	}
 
@@ -932,8 +987,11 @@
 		gap: var(--space-2);
 	}
 
-	/* The eyebrow: labels and section headings in one voice (h4 is it too). */
-	.field label,
+	/* The eyebrow: labels and section headings in one voice (h4 is it too).
+	   Not a pill-btn label (the photo field's Add photo and Replace), which
+	   keeps its button voice; :where adds no weight, so the rule's own
+	   specificity is unchanged. */
+	.field label:not(:where(.pill-btn)),
 	.field-legend,
 	.eyebrow-label {
 		font-family: var(--font-sans);
@@ -955,7 +1013,7 @@
 
 	/* The editor's boxes are the body face, mono being for identifiers only
 	   (Spencer, 31 October 2026). One line height, so every single-line box is
-	   one height: 41px at desktop and 44px on a phone, the photo buttons' own. */
+	   one height: 41px at desktop and 44px on a phone. */
 	.editor .form :is(input[type='text'], input[type='number'], textarea) {
 		line-height: 1.4;
 	}

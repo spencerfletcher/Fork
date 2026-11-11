@@ -280,7 +280,7 @@ describe('app.css forced colours', () => {
 	// the current tab keeps its line.
 	test('only the current tag tab keeps its underline', () => {
 		const blocks = css.split('@media (forced-colors: active)').slice(1);
-		const tabs = blocks.find((b) => b.includes('.tag-tabs'));
+		const tabs = blocks.find((b) => b.slice(0, b.indexOf('}')).includes('.tag-tabs'));
 		expect(tabs).toBeDefined();
 		const rule = tabs!.slice(0, tabs!.indexOf('}'));
 		expect(rule).toContain(".tag-tabs a:not([aria-current='page'])");
