@@ -167,7 +167,8 @@
 				{#if recipe.author}
 					<Username username={recipe.author.username} />
 				{:else}
-					another cook
+					<!-- The author's account is gone (author_id set null). -->
+					{kept ? 'its author' : 'another cook'}
 				{/if}
 			</p>
 		{/if}

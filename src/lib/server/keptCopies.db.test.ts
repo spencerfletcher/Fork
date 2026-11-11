@@ -140,6 +140,40 @@ describe.skipIf(!localDb)('kept copies, against the real database', () => {
 		});
 	});
 
+	test("a copy outlives its author's profile: kept, in the library and the export, with no author named", async () => {
+		await withPeople(async (tx, { author, friend }) => {
+			const recipe = await makeRecipe(tx, author, 'public');
+			await tx.insert(schema.favorites).values({ userId: friend, recipeId: recipe.id });
+			await kept.grantKeptCopies(tx, recipe);
+			await tx
+				.update(schema.recipes)
+				.set({ visibility: 'private' })
+				.where(eq(schema.recipes.id, recipe.id));
+			await tx.insert(schema.logEntries).values({
+				userId: friend,
+				recipeId: recipe.id,
+				dish: 'v3',
+				cookedOn: '2026-11-08'
+			});
+			// The account goes: recipes.author_id is set null, the save stays.
+			await tx.delete(schema.profiles).where(eq(schema.profiles.id, author));
+
+			expect(await idsWhere(tx, visibility.keptCopyOf({ id: friend }), [recipe.id])).toEqual([
+				recipe.id
+			]);
+			expect(await idsWhere(tx, visibility.inLibraryOf({ id: friend }), [recipe.id])).toEqual([
+				recipe.id
+			]);
+			expect(
+				(await kept.keptVersionsOf({ id: friend }, [recipe.id], tx)).get(recipe.id)?.title
+			).toBe('v3');
+			const { exportFor } = await import('./export.js');
+			const archive = await exportFor(friend, 'https://fork.test', undefined, tx);
+			expect(archive.saves).toMatchObject([{ title: 'v3', author: null, keptCopy: 3 }]);
+			expect(archive.journal).toMatchObject([{ source: { kind: 'recipe', title: 'v3' } }]);
+		});
+	});
+
 	test("the author's own save of their recipe is never a copy", async () => {
 		await withPeople(async (tx, { author }) => {
 			const recipe = await makeRecipe(tx, author, 'public');
