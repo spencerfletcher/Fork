@@ -365,12 +365,12 @@ Fork is one click, decided 29 October 2026: the pill submits, the server makes t
 
 ### Logo
 
-The F. mark (Spencer, 11 November 2026: "ship the new logo"): "F." in Bitter ExtraBold (800) outlines, the F cream (or ink on paper) and the full stop marigold. The stop sits at gap G3, 0.117 em left of the F's advance: Bitter's own F-to-period kern, so the pair is spaced as the typeface sets "F."; the pair is centred C3, by eye: across, halfway between the ink box's centre and the ink's centroid; down, the cap height centred and lifted 0.5 of 100. Every mark is paths only, no `<text>` and no font loaded, so it renders the same everywhere. It is Fork's icon: the browser tab, the home screen and the share image. The "Fork." wordmark (Bitter 600, cream, with a marigold full stop) stays in the top bar and on `src/error.html`.
+The F. mark (Spencer, 11 November 2026: "ship the new logo"): "F." in Bitter ExtraBold (800) outlines, the F cream (or ink on paper) and the full stop marigold. The stop sits at gap G3, 0.117 em left of the F's advance: Bitter's own F-to-period kern, so the pair is spaced as the typeface sets "F."; the pair is centred C3, by eye: across, halfway between the ink box's centre and the ink's centroid; down, the cap height centred and lifted 0.5 of 100. Every mark is paths only, no `<text>` and no font loaded, so it renders the same everywhere. It is Fork's icon: the browser tab and the home screen. The "Fork." wordmark (Bitter 600, cream, with a marigold full stop) is in the top bar, on `src/error.html` and on the share image (Spencer, 12 November 2026: "share image wording Fork. alone").
 
 - **Favicon**: `favicon.svg` is the 16px-tuned drawing (the stop enlarged and the pair grid-fitted so the F's stem, the baseline and the stop fall on pixel edges), with 32 and 16 PNG fallbacks.
 - **App icon**: L8, the dark tile (espresso, corners 22 of 100), in the manifest at 192 and 512. The touch icon (180) and the manifest's maskable icon (512) are the same drawing on a full square: iOS and Android cut their own corners, and the ink sits well inside the maskable 80% circle. The manifest's `display` is `browser`: Fork does not install as a standalone app.
 - **L7**, the paper tile with a Rule 2 edge and an ink F, is L8's counterpart for light surfaces, at 64px and up.
-- **Share card** (`/og.jpg`, 2400 by 1260): espresso, the mark large on the left, "Fork" in Bitter 800 cream and "Recipes that remember every change." in Bitter 600 tan beside it.
+- **Share card** (`/og.jpg`, 2400 by 1260): espresso, the "Fork." wordmark large and centred, set as the top bar sets it (Bitter's own spacing before the stop), and "Recipes that remember every change." in Bitter 600 tan centred under it.
 
 ### Navigation
 
