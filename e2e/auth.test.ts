@@ -148,7 +148,7 @@ test.describe('Auth pages', () => {
 		await expect(page).toHaveTitle('Link expired — Fork');
 		const resend = page.getByRole('button', { name: 'Resend link' });
 		expect((await resend.boundingBox())!.height).toBeGreaterThanOrEqual(44);
-		const logIn = page.getByRole('link', { name: 'Log in' });
+		const logIn = page.getByRole('main').getByRole('link', { name: 'Log in' });
 		expect((await logIn.boundingBox())!.height).toBeGreaterThanOrEqual(44);
 	});
 
