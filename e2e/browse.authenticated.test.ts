@@ -57,7 +57,7 @@ test.describe('Cookbook filters', () => {
 
 test.describe('Cookbook filter row', () => {
 	for (const width of [1280, 834]) {
-		test(`at ${width} the segments and the search box share a row, the box to the container's edge`, async ({
+		test(`at ${width} the segments and the search box share a row, the box to the row's end or to Sort`, async ({
 			page
 		}) => {
 			await page.setViewportSize({ width, height: 900 });
@@ -65,9 +65,21 @@ test.describe('Cookbook filter row', () => {
 			const inner = (await page.locator('.page-inner').first().boundingBox())!;
 			const seg = (await page.getByRole('group', { name: 'Show' }).boundingBox())!;
 			const search = (await page.getByRole('searchbox').boundingBox())!;
-			expect(Math.round(search.x + search.width)).toBe(Math.round(inner.x + inner.width));
+			const sort = (await page.getByRole('combobox', { name: 'Sort', exact: true }).boundingBox())!;
+			const views = (await page.getByRole('group', { name: 'View' }).boundingBox())!;
 			expect(search.x).toBeGreaterThan(seg.x + seg.width);
 			expect(Math.abs(search.y + search.height / 2 - (seg.y + seg.height / 2))).toBeLessThan(2);
+			// Grid | List ends its row at the container's edge either way.
+			expect(Math.round(views.x + views.width)).toBe(Math.round(inner.x + inner.width));
+			if (width >= 1100) {
+				// Sort and Grid | List end the first row, after the box.
+				expect(sort.x).toBeGreaterThan(search.x + search.width);
+				expect(Math.abs(views.y + views.height / 2 - (seg.y + seg.height / 2))).toBeLessThan(2);
+			} else {
+				// The box takes the row; Sort and Grid | List sit under the tags.
+				expect(Math.round(search.x + search.width)).toBe(Math.round(inner.x + inner.width));
+				expect(sort.y).toBeGreaterThan(search.y + search.height);
+			}
 		});
 	}
 });

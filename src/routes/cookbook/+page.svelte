@@ -10,6 +10,7 @@
 	import ShowMore from '#lib/components/ui/ShowMore.svelte';
 	import CookbookDrafts from './CookbookDrafts.svelte';
 	import CookbookCollections from './CookbookCollections.svelte';
+	import CookbookSort from './CookbookSort.svelte';
 	import { plural } from '#lib/helpers.js';
 	import { hrefWith } from '#lib/listPage.js';
 	import { pagedList } from '#lib/pagedList.svelte.js';
@@ -152,6 +153,7 @@
 						initialTags={data.selectedTags}
 						availableTags={data.allTags} />
 					<div class="cookbook-view">
+						<CookbookSort sort={data.sort} searching={!!data.searchQuery} />
 						<div class="seg" role="group" aria-label="View">
 							{#each COOKBOOK_VIEWS as v (v)}
 								<a href={viewHref(v)} aria-current={data.view === v ? 'page' : undefined}>
@@ -322,11 +324,12 @@
 	}
 
 	/* From 768 the segments and the search box share a row, the box filling to
-	   the container's edge; the tag tabs keep the row below. */
+	   the container's edge; the tag tabs keep the row below, and Sort and
+	   Grid | List a row under them. From 1100 those two end the first row. */
 	@media (min-width: 768px) {
 		.cookbook-filters {
 			display: grid;
-			grid-template-columns: auto minmax(0, 1fr) auto;
+			grid-template-columns: auto minmax(0, 1fr);
 			align-items: center;
 			gap: 14px 16px;
 		}
@@ -339,22 +342,31 @@
 			max-width: none;
 		}
 
-		.cookbook-filters > :global(.search-filters > :not(form)) {
+		.cookbook-filters > :global(.search-filters > :not(form)),
+		.cookbook-view {
 			grid-column: 1 / -1;
 		}
+	}
 
-		/* The row's end, after the search box; the tags keep the row below. */
+	@media (min-width: 1100px) {
+		.cookbook-filters {
+			grid-template-columns: auto minmax(0, 1fr) auto;
+		}
+
 		.cookbook-view {
 			grid-row: 1;
 			grid-column: 3;
 		}
 	}
 
-	/* Below 768 a row of its own under the tags. */
+	/* Sort, then Grid | List at the row's end; on the narrowest phone the
+	   switch wraps under the select rather than squeezing it. */
 	.cookbook-view {
 		display: flex;
+		flex-wrap: wrap;
 		align-items: center;
-		gap: 12px;
+		justify-content: space-between;
+		gap: 12px 16px;
 	}
 
 	/* A phone: the strip spans the column, three equal segments, each a 44px
@@ -367,6 +379,11 @@
 		.seg a {
 			flex: 1;
 			min-height: 44px;
+		}
+
+		/* The words alone, so Sort keeps room for its longest order on the row. */
+		.seg a :global(.icon) {
+			display: none;
 		}
 	}
 

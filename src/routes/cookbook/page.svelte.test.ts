@@ -5,6 +5,7 @@ import { draftKey, saveDraft, type DraftRecipe } from '#lib/drafts.js';
 import { draftOf } from '#lib/recipes/validation.js';
 import CookbookPage from './+page.svelte';
 import { COOKBOOK_FILTERS, COOKBOOK_VIEWS } from './filters.js';
+import type { CardSort } from '#lib/listPage.js';
 import source from './+page.svelte?raw';
 import { cssRule } from '#lib/testing/css.js';
 import type { SubmitFunction } from '$app/forms';
@@ -56,6 +57,7 @@ const base = {
 	collection: null as { id: number; name: string } | null,
 	filter: 'all' as (typeof COOKBOOK_FILTERS)[number],
 	view: 'grid' as (typeof COOKBOOK_VIEWS)[number],
+	sort: 'newest' as CardSort,
 	allTags: [],
 	searchQuery: '',
 	selectedTags: [] as string[]
@@ -216,6 +218,19 @@ describe('Cookbook page', () => {
 			name: /^Saved/
 		});
 		expect(saved).toHaveAttribute('href', '?q=dal&filter=saved');
+	});
+
+	test('Sort sits in the filter row with Grid | List, showing the page’s order; a search disables it', () => {
+		const { container, unmount } = renderCookbook({ ...full, sort: 'cooked' });
+		const sort = screen.getByRole('combobox', { name: 'Sort' }) as HTMLSelectElement;
+		expect(sort.value).toBe('cooked');
+		expect(sort.closest('.cookbook-view')).toBe(
+			screen.getByRole('group', { name: 'View' }).closest('.cookbook-view')
+		);
+		expect(container.querySelector('.cookbook-filters .cookbook-view')).not.toBeNull();
+		unmount();
+		renderCookbook({ ...full, sort: 'cooked', searchQuery: 'dal' });
+		expect(screen.getByRole('combobox', { name: 'Sort' })).toBeDisabled();
 	});
 
 	describe('Grid | List', () => {

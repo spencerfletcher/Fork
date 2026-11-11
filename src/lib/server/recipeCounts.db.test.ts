@@ -1,8 +1,10 @@
 import { describe, test, expect, beforeAll, afterAll } from 'vitest';
-import { eq, inArray, like, sql } from 'drizzle-orm';
+import { eq, inArray, like, or, sql } from 'drizzle-orm';
 
 import { closeDbAfter, localDb, stamp, withProfiles } from '#lib/testing/db.js';
 import type { Tx } from '#lib/server/db/index.js';
+import { CARD_SORTS, type CardSort } from '#lib/listPage.js';
+import { makeContent } from '#lib/recipes/fixtures.js';
 
 closeDbAfter();
 
@@ -189,6 +191,133 @@ describe.skipIf(!localDb)(
 					conn: tx
 				});
 				expect(browse.cards[0]).not.toHaveProperty('tags');
+			});
+		});
+
+		/** `days` as `userId`'s Journal entries of `recipeId`. */
+		async function cooked(tx: Tx, userId: string, recipeId: number, days: string[]) {
+			await tx
+				.insert(schema.logEntries)
+				.values(days.map((cookedOn) => ({ userId, recipeId, dish: 'Dish', cookedOn })));
+		}
+
+		/**
+		 * A cook's shelf of nine, six never cooked by them (one of which a stranger
+		 * cooked often, which must not count): titles, then its id by title.
+		 */
+		async function cookedShelf(tx: Tx, cook: string, stranger: string, s: string) {
+			const titles = [
+				'banana',
+				'Apple',
+				'cherry',
+				'date',
+				'Elder',
+				'fig',
+				'grape',
+				'Hazel',
+				'iris'
+			];
+			const ids = await shelf(tx, cook, s, titles);
+			const id = Object.fromEntries(titles.map((t, i) => [t, ids[i]]));
+			await cooked(tx, cook, id.banana, ['2026-01-05']);
+			await cooked(tx, cook, id.Apple, ['2026-03-01', '2026-03-02', '2026-03-03']);
+			await cooked(tx, cook, id.cherry, ['2025-12-01', '2026-02-10']);
+			await cooked(tx, stranger, id.date, ['2026-04-01', '2026-04-02', '2026-04-03', '2026-04-04']);
+			return { titles, id };
+		}
+
+		/** Every page of `limit` under `sort`, as titles, following each page's cursor. */
+		async function walkSorted(tx: Tx, cook: string, sort: CardSort, limit: number) {
+			const seen: string[] = [];
+			let after: string | null = null;
+			let pages = 0;
+			do {
+				const page: Awaited<ReturnType<typeof cardList>> = await cardList(
+					theirs(cook),
+					[],
+					{ id: cook },
+					{ after, limit, cooked: true, sort, conn: tx }
+				);
+				seen.push(...page.cards.map((c) => c.title));
+				after = page.next;
+			} while (after && ++pages < 20);
+			return seen;
+		}
+
+		// The tie-break under every sort: the newest change, then the higher id.
+		// Here the change times are one, so the newer recipe (higher id) first.
+		const byNewest = (titles: string[], all: string[]) =>
+			[...titles].sort((a, b) => all.indexOf(b) - all.indexOf(a));
+
+		test('each sort orders by the viewer’s own Journal, ties as the newest change', async () => {
+			await withProfiles(2, async (tx, [cook, stranger], s) => {
+				const { titles } = await cookedShelf(tx, cook, stranger, s);
+				const never = byNewest(
+					titles.filter((t) => !['banana', 'Apple', 'cherry'].includes(t)),
+					titles
+				);
+				const walk = (sort: CardSort) => walkSorted(tx, cook, sort, 20);
+
+				expect(await walk('newest')).toEqual(byNewest(titles, titles));
+				// Last cooked, newest first; never cooked last.
+				expect(await walk('cooked')).toEqual(['Apple', 'cherry', 'banana', ...never]);
+				// Times cooked; the stranger's four entries count for nothing.
+				expect(await walk('most')).toEqual(['Apple', 'cherry', 'banana', ...never]);
+				// Never cooked first, then the longest ago.
+				expect(await walk('stale')).toEqual([...never, 'banana', 'cherry', 'Apple']);
+				// Whatever its case.
+				expect(await walk('title')).toEqual([...titles].sort((a, b) => a.localeCompare(b)));
+			});
+		});
+
+		test('Most cooked breaks a tie in count by the latest day', async () => {
+			await withProfiles(1, async (tx, [cook], s) => {
+				// Older has the higher id, so the plain tie-break would put it first.
+				const [newer, older] = await shelf(tx, cook, s, ['Newer', 'Older']);
+				await cooked(tx, cook, older, ['2026-01-01', '2026-01-02']);
+				await cooked(tx, cook, newer, ['2025-01-01', '2026-02-01']);
+				expect(await walkSorted(tx, cook, 'most', 5)).toEqual(['Newer', 'Older']);
+			});
+		});
+
+		test('every sort pages through its ties with no recipe twice and none missed', async () => {
+			await withProfiles(2, async (tx, [cook, stranger], s) => {
+				const { titles } = await cookedShelf(tx, cook, stranger, s);
+				for (const sort of CARD_SORTS) {
+					const whole = await walkSorted(tx, cook, sort, 20);
+					expect(new Set(whole).size).toBe(titles.length);
+					for (const limit of [1, 2, 4]) {
+						expect(await walkSorted(tx, cook, sort, limit), `${sort} by ${limit}`).toEqual(whole);
+					}
+				}
+			});
+		});
+
+		test('A to Z files a kept copy under the title it keeps, not the withdrawn row’s', async () => {
+			await withProfiles(2, async (tx, [cook, author], s) => {
+				const [mine] = await shelf(tx, cook, s, ['Middle']);
+				const [row] = await tx
+					.insert(schema.recipes)
+					.values({ authorId: author, slug: `kept-${s}`, title: 'Aardvark', visibility: 'private' })
+					.returning({ id: schema.recipes.id });
+				await tx.insert(schema.recipeVersions).values({
+					recipeId: row.id,
+					versionNumber: 1,
+					commitMessage: 'v',
+					...makeContent({ title: 'Zucchini bread' }),
+					createdBy: author
+				});
+				await tx
+					.insert(schema.favorites)
+					.values({ userId: cook, recipeId: row.id, copyVersion: 1 });
+				const where = or(eq(schema.recipes.id, mine), eq(schema.recipes.id, row.id));
+				const page = await cardList(
+					where,
+					[],
+					{ id: cook },
+					{ after: null, limit: 5, cooked: true, sort: 'title', conn: tx }
+				);
+				expect(page.cards.map((c) => c.id)).toEqual([mine, row.id]);
 			});
 		});
 	}

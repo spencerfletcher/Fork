@@ -6,6 +6,13 @@ export const CARDS_PER_PAGE = 24;
 /** The most pages one `?page=` read renders, so a URL cannot ask for a whole table. */
 export const MAX_PAGES = 40;
 
+/**
+ * A card list's orders, in the Cookbook's Sort menu's order; `?sort=` holds
+ * one, absent is the first. The cooked ones read the viewer's own Journal.
+ */
+export const CARD_SORTS = ['newest', 'cooked', 'most', 'stale', 'title'] as const;
+export type CardSort = (typeof CARD_SORTS)[number];
+
 /** The params that say where in a list the reader is, not what it lists: a filter change drops them. */
 const PLACE = ['page', 'after'];
 

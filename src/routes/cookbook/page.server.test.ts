@@ -122,6 +122,42 @@ describe('/cookbook load', () => {
 		expect(result.next).toBeNull();
 	});
 
+	describe('the sort', () => {
+		/** The page's sort, and the SQL the cards were ordered by. */
+		const sortOf = async (search: string) => {
+			selectMock.mockReturnValueOnce(counted(2, 1));
+			db.$count.mockResolvedValue(2);
+			const result = await loadResult(search);
+			const { orderBy } = findManyMock.mock.calls[0][0];
+			return { sort: result.sort, order: (orderBy as SQL[]).map((o) => sqlOf(o).sql).join(', ') };
+		};
+
+		test('is the newest change, with no Journal read, when the URL names none', async () => {
+			const { sort, order } = await sortOf('');
+			expect(sort).toBe('newest');
+			expect(order).not.toContain('log_entries');
+		});
+
+		test('?sort= picks one, ordered by the cook’s own Journal', async () => {
+			const { sort, order } = await sortOf('?sort=stale');
+			expect(sort).toBe('stale');
+			expect(order).toContain('log_entries');
+			expect(order).toContain('NULLS FIRST');
+		});
+
+		test('garbage reads as the newest change', async () => {
+			const { sort, order } = await sortOf('?sort=random');
+			expect(sort).toBe('newest');
+			expect(order).not.toContain('log_entries');
+		});
+
+		test('a search ranks by best match, the sort kept for when the search is cleared', async () => {
+			const { sort, order } = await sortOf('?sort=most&q=dal');
+			expect(sort).toBe('most');
+			expect(order).not.toContain('log_entries');
+		});
+	});
+
 	describe('the view, Grid or List', () => {
 		const viewOf = async (search: string, cookie?: string) => {
 			selectMock.mockReturnValueOnce(counted(2, 1));

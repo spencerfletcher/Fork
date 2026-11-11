@@ -3,6 +3,7 @@ import { render, screen, within } from '@testing-library/svelte';
 import { plural } from '#lib/helpers.js';
 import { monthLabel, monthTone, SUMMARY_MONTHS, summaryMonths } from '#lib/journal.js';
 import JournalTwelveMonths from './JournalTwelveMonths.svelte';
+import type { CardSort } from '#lib/listPage.js';
 
 // April 2030 to March 2031: the year changes in the window.
 const COUNTS = [4, 0, 2, 8, 0, 0, 1, 0, 0, 3, 0, 5];
@@ -77,6 +78,16 @@ describe('JournalTwelveMonths', () => {
 			TOP[0].href
 		);
 		expect(within(rows[1]).queryByRole('link')).toBeNull();
+	});
+
+	test('the most cooked list closes on the Cookbook sorted by what has waited longest', () => {
+		renderSummary();
+		const link = screen.getByRole('link', { name: 'What haven’t I made lately? →' });
+		const sort: CardSort = 'stale';
+		expect(link).toHaveAttribute('href', `/cookbook?sort=${sort}`);
+		expect(link).toHaveClass('arrow-link');
+		const list = screen.getByRole('list', { name: TOP_HEADING });
+		expect(list.compareDocumentPosition(link) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 	});
 
 	test('a window cooked only from links and improvisation shows the months alone', () => {

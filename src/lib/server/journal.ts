@@ -462,6 +462,24 @@ export async function lastEntryFor(userId: string, recipeId: number, tx: Tx | ty
 export type Cooked = { timesCooked: number; lastCookedOn: string };
 
 /**
+ * cookedCounts' two facts as SQL on each `recipes` row, for ordering a card
+ * list by them in the same read: how often `userId` cooked it (0 when never)
+ * and their latest day (null when never). Raw names inside, because a
+ * relational query renames every column to its root table; each reads the
+ * cook's own entries of one recipe through log_entries_user_idx.
+ * ponytail: each card reads all the cook's entries and keeps its own; 6-12 ms
+ * at 300 recipes and 400 entries by EXPLAIN ANALYZE. A
+ * (user_id, recipe_id) index is the upgrade when a Journal runs to thousands.
+ */
+export function cookedOrder(userId: string): { times: SQL<number>; last: SQL<string | null> } {
+	const theirs = sql`le.user_id = ${userId} AND le.recipe_id = ${recipes.id}`;
+	return {
+		times: sql<number>`(SELECT count(*) FROM log_entries le WHERE ${theirs})`,
+		last: sql<string | null>`(SELECT max(le.cooked_on) FROM log_entries le WHERE ${theirs})`
+	};
+}
+
+/**
  * How often and when last the viewer cooked each of `recipeIds`, from their
  * own entries only: one grouped query for the whole list. A recipe they never
  * logged has no key. Derived on every read, never stored.

@@ -17,7 +17,7 @@ import {
 	renameCollection
 } from '#lib/server/collections.js';
 import { oneOf, text, wholeNumber } from '#lib/helpers.js';
-import { listPage } from '#lib/listPage.js';
+import { CARD_SORTS, listPage, type CardSort } from '#lib/listPage.js';
 import {
 	COOKBOOK_FILTERS,
 	COOKBOOK_VIEWS,
@@ -66,6 +66,7 @@ export const load: PageServerLoad = async ({ url, cookies, locals: { user, supab
 
 	const filter: CookbookFilter = oneOf(COOKBOOK_FILTERS, url.searchParams.get('filter')) ?? 'all';
 	const { searchQuery, tagSlugs } = parseFilters(url);
+	const sort: CardSort = oneOf(CARD_SORTS, url.searchParams.get('sort')) ?? 'newest';
 	// A view in the URL is a choice (the switch's links), so the device keeps it;
 	// it wins over the one kept.
 	const askedView = oneOf(COOKBOOK_VIEWS, url.searchParams.get('view'));
@@ -112,6 +113,7 @@ export const load: PageServerLoad = async ({ url, cookies, locals: { user, supab
 			...shelf,
 			filter,
 			view,
+			sort,
 			allTags: [],
 			searchQuery: '',
 			selectedTags: [],
@@ -139,7 +141,12 @@ export const load: PageServerLoad = async ({ url, cookies, locals: { user, supab
 		text.where
 	);
 	const [{ cards, next }, total] = await Promise.all([
-		cardList(where, text.rank, user, { ...listPage(url), cooked: true }),
+		// A search orders by best match; the sort waits in the URL until it is cleared.
+		cardList(where, text.rank, user, {
+			...listPage(url),
+			cooked: true,
+			sort: searchQuery ? 'newest' : sort
+		}),
 		// Unfiltered, the segment's count is the total.
 		searchQuery || tags.where ? db.$count(recipes, where) : inView[filter]
 	]);
@@ -183,6 +190,7 @@ export const load: PageServerLoad = async ({ url, cookies, locals: { user, supab
 		...shelf,
 		filter,
 		view,
+		sort,
 		allTags,
 		searchQuery,
 		selectedTags: tags.selectedTags,
