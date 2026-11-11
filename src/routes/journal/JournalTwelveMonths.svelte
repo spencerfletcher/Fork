@@ -9,6 +9,7 @@
 		$props();
 
 	const most = $derived(Math.max(...summary.months.map((m) => m.cooks)));
+	const cooks = $derived(summary.months.reduce((sum, m) => sum + m.cooks, 0));
 	const shortName = (iso: string) => formatDate(day(iso), { month: 'short', timeZone: 'UTC' });
 	// The first cell names its year, and so does a January: where the year changes.
 	const yearOf = (iso: string, i: number) =>
@@ -18,6 +19,9 @@
 <section class="jtwelve">
 	<div>
 		<h2 class="eyebrow-label" id="jtwelve-months">Last {SUMMARY_MONTHS} months</h2>
+		<p class="jtwelve-totals">
+			{plural(cooks, 'cook')}, {plural(summary.dishes, 'dish', 'different dishes')}
+		</p>
 		<ol class="jtwelve-months" aria-labelledby="jtwelve-months">
 			{#each summary.months as { month, cooks }, i (month)}
 				<!-- The number is always printed, so the tone is never the only signal. -->
@@ -62,6 +66,12 @@
 		grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
 		gap: var(--space-7);
 		margin-bottom: var(--space-6);
+	}
+
+	.jtwelve-totals {
+		margin-top: var(--space-2);
+		font-size: 0.9375rem;
+		color: var(--color-text-2);
 	}
 
 	.jtwelve-months {

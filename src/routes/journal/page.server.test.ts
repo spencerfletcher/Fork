@@ -19,7 +19,7 @@ import type { PageData } from './$types';
 
 const USER = { id: 'cook-3' };
 const entry = (id: number, cookedOn = '2026-11-01') => ({ id, cookedOn });
-const SUMMARY = { months: [{ month: '2026-11-01', cooks: 3 }], top: [] };
+const SUMMARY = { months: [{ month: '2026-11-01', cooks: 3 }], dishes: 2, top: [] };
 const COOKIES = cookieJar({ tz: 'Pacific/Auckland' });
 const journalPage = (search = '') =>
 	loadPage<PageData>(load, {

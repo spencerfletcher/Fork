@@ -275,6 +275,26 @@ describe.skipIf(!localDb)("the Journal's last 12 months, against the real databa
 		});
 	});
 
+	test('different dishes: each recipe once, and recipe-less entries by their dish, trimmed and in any case', async () => {
+		await withProfiles(2, async (tx, [me, other]) => {
+			const [a, b] = [2_000_000_001, 2_000_000_002];
+			await tx.insert(schema.logEntries).values([
+				{ ...cooked(me, FIRST, a), dish: 'Ragu' },
+				{ ...cooked(me, TODAY, a), dish: 'Sunday ragu' },
+				{ ...cooked(me, TODAY, b), dish: 'Fried rice' },
+				{ ...cooked(me, TODAY), dish: 'Fried rice' },
+				{ ...cooked(me, TODAY), dish: '  fried RICE ' },
+				{ ...cooked(me, TODAY), dish: 'Dal' },
+				{ ...cooked(me, shift(FIRST, -1)), dish: 'Soup' },
+				{ ...cooked(me, shift(TODAY, 1)), dish: 'Stew' },
+				{ ...cooked(other, TODAY), dish: 'Pho' }
+			]);
+			const summary = await journal.journalTwelveMonths({ id: me }, TODAY, tx);
+			// Recipes a and b, then "fried rice" and "dal".
+			expect(summary?.dishes).toBe(4);
+		});
+	});
+
 	test('the most cooked recipes in the window, most first, at most MOST_COOKED; improvised and earlier entries never', async () => {
 		await withProfiles(1, async (tx, [me], s) => {
 			const n = MOST_COOKED + 1;

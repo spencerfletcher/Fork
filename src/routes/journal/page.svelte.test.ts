@@ -36,11 +36,13 @@ const data = {
 	logged: null as { cookedOn: string } | null,
 	twelveMonths: null as null | {
 		months: { month: string; cooks: number }[];
+		dishes: number;
 		top: { recipeId: number; times: number; title: string; href: string | null }[];
 	}
 };
 const SUMMARY = {
 	months: summaryMonths('2026-11-12').map((month, i) => ({ month, cooks: i })),
+	dishes: 3,
 	top: [{ recipeId: 1, times: 4, title: 'Miso Salmon', href: '/recipes/miso-salmon' }]
 };
 const HEADING = `Last ${SUMMARY_MONTHS} months`;

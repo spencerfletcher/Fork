@@ -2,6 +2,7 @@ import {
 	and,
 	asc,
 	count,
+	countDistinct,
 	desc,
 	eq,
 	inArray,
@@ -361,8 +362,10 @@ export async function journalSummary(userId: string) {
  * (an entry dated after today is outside it), and the MOST_COOKED recipes
  * they logged most there, most first. A recipe the viewer may no longer open
  * (Trash, deleted, out of sight) still counts, by the dish its latest entry
- * names and no link, as sourceOf decides. Null when the window holds no entry.
- * Both reads walk log_entries_user_idx (user_id, cooked_on) over the window.
+ * names and no link, as sourceOf decides. `dishes` counts the different
+ * dishes cooked there: each recipe once, and each recipe-less entry by its
+ * dish, trimmed and in any case. Null when the window holds no entry. All
+ * three reads walk log_entries_user_idx (user_id, cooked_on) over the window.
  */
 export async function journalTwelveMonths(
 	viewer: NonNullable<Viewer>,
@@ -377,8 +380,13 @@ export async function journalTwelveMonths(
 	);
 	const month = sql<string>`to_char(${logEntries.cookedOn}, 'YYYY-MM-01')`;
 	const times = count();
-	const [perMonth, most, friendIds] = await Promise.all([
+	const dish = sql`case when ${logEntries.recipeId} is not null then 'r' || ${logEntries.recipeId} else 'd' || lower(btrim(${logEntries.dish})) end`;
+	const [perMonth, [{ dishes }], most, friendIds] = await Promise.all([
 		conn.select({ month, cooks: count() }).from(logEntries).where(inWindow).groupBy(month),
+		conn
+			.select({ dishes: countDistinct(dish) })
+			.from(logEntries)
+			.where(inWindow),
 		conn
 			.select({
 				recipeId: logEntries.recipeId,
@@ -403,6 +411,7 @@ export async function journalTwelveMonths(
 	);
 	return {
 		months: months.map((m) => ({ month: m, cooks: counts.get(m) ?? 0 })),
+		dishes,
 		top: most.map((row) => {
 			// No version number: the summary links the recipe, not one cook of it.
 			const source = sourceOf(

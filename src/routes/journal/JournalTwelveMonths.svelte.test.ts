@@ -16,8 +16,11 @@ const TOP = [
 	{ recipeId: 1, times: 5, title: 'Miso Salmon', href: '/recipes/miso-salmon' },
 	{ recipeId: 2, times: 1, title: 'Dish from a recipe now gone', href: null }
 ];
+const DISHES = 9;
 const renderSummary = (overrides = {}) =>
-	render(JournalTwelveMonths, { props: { summary: { months: MONTHS, top: TOP, ...overrides } } });
+	render(JournalTwelveMonths, {
+		props: { summary: { months: MONTHS, dishes: DISHES, top: TOP, ...overrides } }
+	});
 
 describe('JournalTwelveMonths', () => {
 	test('the twelve months, oldest first, each read as its month, year and count', () => {
@@ -27,6 +30,20 @@ describe('JournalTwelveMonths', () => {
 		expect(months.map((m) => m.querySelector('.sr-only')?.textContent?.trim())).toEqual(
 			MONTHS.map((m) => `${monthLabel(m.month)}: ${plural(m.cooks, 'cook')}`)
 		);
+	});
+
+	test('the totals: every cook in the window, and how many different dishes', () => {
+		const cooks = COUNTS.reduce((a, b) => a + b, 0);
+		renderSummary();
+		expect(
+			screen.getByText(`${plural(cooks, 'cook')}, ${plural(DISHES, 'dish', 'different dishes')}`)
+		).toBeInTheDocument();
+	});
+
+	test('the totals read in the singular for one', () => {
+		const one = MONTHS.map((m, i) => ({ ...m, cooks: i === 0 ? 1 : 0 }));
+		renderSummary({ months: one, dishes: 1 });
+		expect(screen.getByText('1 cook, 1 dish')).toBeInTheDocument();
 	});
 
 	test('the year is printed on the first cell and where January starts a new one, nowhere else', () => {
