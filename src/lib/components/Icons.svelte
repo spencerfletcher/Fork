@@ -119,9 +119,11 @@
 		fill="none"
 		stroke="currentColor"
 		stroke-width="1.5"
-		stroke-linecap="round">
-		<!-- Four prongs rising from a short crossbar, a handle below: each one stroke. -->
-		<path d="M4.25 1.5V7M6.75 1.5V7M9.25 1.5V7M11.75 1.5V7M4.25 7h7.5M8 7v7.5" />
+		stroke-linecap="round"
+		stroke-linejoin="round">
+		<!-- Three tines: the outer two curve into one round shoulder, the middle
+		     one runs on down as the handle (1A, a redesign candidate). -->
+		<path d="M5 1.5V5a3 3 0 0 0 6 0V1.5M8 1.5v13" />
 	</svg>
 {/snippet}
 

@@ -17,6 +17,21 @@ const ICON_RULE = /([^{}]*(?:\.icon\)?|\bsvg)\s*)\{([^{}]*)\}/g;
 const NUDGE =
 	/(?:^|;)\s*(margin-top|margin-bottom|margin-block[a-z-]*|top|bottom|translate|vertical-align|align-self)\s*:|transform\s*:[^;]*translateY/;
 
+const icons = sources.find((s) => s.file.endsWith('components/Icons.svelte'))!.text;
+/** The markup of one snippet in Icons.svelte, up to its {/snippet}. */
+const snippet = (name: string) => {
+	const at = icons.indexOf(`{#snippet ${name}(`);
+	return at < 0 ? '' : icons.slice(at, icons.indexOf('{/snippet}', at));
+};
+
+describe('the shared drawings', () => {
+	// 1A (Spencer, 11 November 2026): three tines on a round shoulder, a
+	// straight handle. A redesign candidate, so the drawing is pinned here.
+	test('the fork is three tines on a round shoulder', () => {
+		expect(snippet('forkIcon')).toContain('d="M5 1.5V5a3 3 0 0 0 6 0V1.5M8 1.5v13"');
+	});
+});
+
 describe('icons beside text', () => {
 	test('no icon is placed by a vertical offset', () => {
 		const nudged = sources.flatMap(({ file, text }) =>

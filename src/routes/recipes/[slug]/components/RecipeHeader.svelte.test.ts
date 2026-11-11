@@ -257,11 +257,13 @@ describe('RecipeHeader stats row', () => {
 			expect(icon).toHaveAttribute('fill', 'none');
 			expect(icon.querySelectorAll('circle, [fill]:not(svg)')).toHaveLength(0);
 		}
-		// Every stroke is a straight line: no arcs or curves.
 		const d = (icon: Element) => [...icon.querySelectorAll('path')].map((p) => p.getAttribute('d'));
-		for (const path of [...d(fork), ...d(versions)]) expect(path).toMatch(/^[MmHhVv\d.\s-]+$/);
-		// The fork: four prongs, a crossbar and a handle, each its own stroke.
-		expect(d(fork).join(' ').match(/M/g)).toHaveLength(6);
+		// Versions is straight strokes only.
+		for (const path of d(versions)) expect(path).toMatch(/^[MmHhVv\d.\s-]+$/);
+		// The fork (1A): the outer tines and their round shoulder as one stroke,
+		// the middle tine running on as the handle as the other.
+		expect(d(fork).join(' ').match(/M/g)).toHaveLength(2);
+		expect(d(fork).join(' ').match(/a/g)).toHaveLength(1);
 		expect(d(versions)).not.toEqual(d(fork));
 	});
 
