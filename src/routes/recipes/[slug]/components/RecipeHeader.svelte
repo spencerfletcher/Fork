@@ -27,6 +27,8 @@
 	>;
 
 	interface HeaderRecipe extends Pick<Recipe, 'slug' | 'parentId'> {
+		/** The parent's version the fork copied; null or absent for a fork from before it was recorded. */
+		parentVersion?: number | null;
 		author?: { id: string; username: string } | null;
 		parent?: { slug: string; title: string } | null;
 		/** parentId points at a recipe that was deleted, rather than one withheld as private. */
@@ -87,9 +89,15 @@
 			</span>{/if}
 		{#if recipe.parent}
 			<span>
-				forked from <a class="hit-link" href="/recipes/{recipe.parent.slug}">
-					{recipe.parent.title}
-				</a>
+				<!-- The exact version copied, when the fork recorded it (exact origins). -->
+				forked from {#if recipe.parentVersion}<a
+						class="hit-link"
+						href="/recipes/{recipe.parent.slug}?version={recipe.parentVersion}">
+						{recipe.parent.title},
+						<span class="mono-id">v{recipe.parentVersion}</span>
+					</a>{:else}<a class="hit-link" href="/recipes/{recipe.parent.slug}">
+						{recipe.parent.title}
+					</a>{/if}
 			</span>
 		{:else if recipe.parentDeleted}
 			<span>Original recipe deleted</span>

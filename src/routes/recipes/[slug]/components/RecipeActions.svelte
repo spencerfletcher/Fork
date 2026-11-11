@@ -12,6 +12,7 @@
 	let {
 		recipe,
 		canFork,
+		forkVersion,
 		canFavorite,
 		canEdit,
 		initialFavorited,
@@ -23,6 +24,8 @@
 	}: {
 		recipe: Pick<Recipe, 'slug' | 'title' | 'authorId'>;
 		canFork: boolean;
+		/** The version being read, which Fork copies; absent copies the latest. */
+		forkVersion?: number;
 		canFavorite: boolean;
 		/** The owner on the latest version: Edit, in Fork's place. */
 		canEdit: boolean;
@@ -156,6 +159,10 @@
 						else error = 'Could not fork this recipe. Try again.';
 					};
 				}}>
+				{#if forkVersion !== undefined}<input
+						type="hidden"
+						name="version"
+						value={forkVersion} />{/if}
 				<button type="submit" class="btn-ghost" disabled={forking} aria-busy={forking || undefined}>
 					{@render forkIcon()}
 					Fork

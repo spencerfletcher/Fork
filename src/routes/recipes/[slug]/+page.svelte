@@ -38,9 +38,9 @@
 	const tags = $derived(recipe.recipesToTags?.map((r) => r.tag) ?? []);
 	const user = $derived(data.user);
 	const isOwner = $derived(user?.id === recipe.authorId);
-	// Fork copies the latest version, so it is offered there only; never on a
-	// kept copy, which cannot be re-shared.
-	const canFork = $derived(!!user && !isOwner && !isViewingHistory && !data.keptCopy);
+	// Fork copies the version being read, on any version; never on a kept
+	// copy, which cannot be re-shared.
+	const canFork = $derived(!!user && !isOwner && !data.keptCopy);
 	// The owner's row is Cook and Edit only (decided 9 Nov 2026). A kept copy
 	// is removed from its notice, not unsaved.
 	const canFavorite = $derived(!!user && !isOwner && isReading && !data.keptCopy);
@@ -216,6 +216,7 @@
 							<RecipeActions
 								{recipe}
 								{canFork}
+								forkVersion={currentVersion.versionNumber}
 								{canFavorite}
 								{canEdit}
 								initialFavorited={data.isFavorited}

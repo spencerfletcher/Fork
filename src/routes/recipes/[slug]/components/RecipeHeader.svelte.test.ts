@@ -73,6 +73,21 @@ describe('RecipeHeader fork attribution', () => {
 		expect(container.querySelector('.attribution')).toBeNull();
 	});
 
+	test('a fork that recorded the version it copied names it and links that version', () => {
+		const { container } = renderHeader({
+			recipe: makeRecipe({
+				author: { id: 'u1', username: 'me' },
+				parentId: 42,
+				parentVersion: 2,
+				parent: { slug: 'original', title: 'The Original' }
+			})
+		});
+		expect(byline(container)).toBe('By @me · forked from The Original, v2');
+		const parent = screen.getByRole('link', { name: 'The Original, v2' });
+		expect(parent).toHaveAttribute('href', '/recipes/original?version=2');
+		expect(parent.querySelector('.mono-id')).toHaveTextContent('v2');
+	});
+
 	test('its own forks are not in the byline: they moved to the stats row', () => {
 		const { container } = renderHeader({
 			forkCount: 2,
