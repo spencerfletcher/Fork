@@ -299,7 +299,7 @@
 							<div class="field confirm-name">
 								<label for="confirm-username">
 									Type <span class="handle">{data.settings.username}</span>
-									 to confirm
+									to confirm
 								</label>
 								<input
 									id="confirm-username"
