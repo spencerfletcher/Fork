@@ -23,6 +23,7 @@ import { ensureProfile } from '#lib/server/profiles.js';
 import { failure, requireUser, signedOut } from '#lib/server/actions.js';
 import { oneOf, text, wholeNumber } from '#lib/helpers.js';
 import type { Actions, PageServerLoad } from './$types';
+import { privatePage } from '#lib/seo.js';
 
 export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 	requireUser(url, user);
@@ -34,7 +35,7 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 		next,
 		requests,
 		friendCount: friendIds.length,
-		meta: { title: 'Friends', noindex: true }
+		meta: privatePage('Friends')
 	};
 };
 

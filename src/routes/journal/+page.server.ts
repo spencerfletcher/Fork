@@ -3,6 +3,7 @@ import { requireUser } from '#lib/server/actions.js';
 import { wholeNumber } from '#lib/helpers.js';
 import { listPage } from '#lib/listPage.js';
 import type { PageServerLoad } from './$types';
+import { privatePage } from '#lib/seo.js';
 
 export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 	requireUser(url, user);
@@ -22,6 +23,6 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 		total,
 		oldest,
 		logged: logged && { cookedOn: logged.cookedOn },
-		meta: { title: 'Journal', noindex: true }
+		meta: privatePage('Journal')
 	};
 };

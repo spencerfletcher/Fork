@@ -13,6 +13,7 @@ import { BAD_FORM, failure, requireUser, signedOut } from '#lib/server/actions.j
 import { text } from '#lib/helpers.js';
 import { NOT_IN_TRASH } from '#lib/trash.js';
 import type { Actions, PageServerLoad } from './$types';
+import { privatePage } from '#lib/seo.js';
 
 // The owner's Trash: their deleted recipes still inside TRASH_DAYS, newest
 // deletion first. Nobody else's recipes are ever read here.
@@ -31,7 +32,7 @@ export const load: PageServerLoad = async ({ url, locals: { user, supabase } }) 
 	return {
 		// inTrashOf only matches rows with a deletion time.
 		recipes: rows.map((r) => ({ slug: r.slug, title: r.title, ...trashAge(r.deletedAt!, now) })),
-		meta: { title: 'Trash', noindex: true }
+		meta: privatePage('Trash')
 	};
 };
 

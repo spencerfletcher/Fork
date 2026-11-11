@@ -28,6 +28,7 @@ import {
 	ownRecipe,
 	WIDENS_PARENT
 } from '#lib/server/visibility.js';
+import { privatePage } from '#lib/seo.js';
 
 export const load: PageServerLoad = async ({ params, url, locals: { user } }) => {
 	requireUser(url, user);
@@ -51,7 +52,7 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 		latestVersion,
 		allTags,
 		forkCount,
-		meta: { title: `Edit ${latestVersion.title}`, noindex: true }
+		meta: privatePage(`Edit ${latestVersion.title}`)
 	};
 };
 

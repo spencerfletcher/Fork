@@ -11,13 +11,14 @@ import { syncTags, listTags } from '#lib/server/tags.js';
 import type { RecipeContent } from '#lib/recipes/types.js';
 import { recipeCopies } from '#lib/recipes/content.js';
 import { ensureProfile } from '#lib/server/profiles.js';
+import { privatePage } from '#lib/seo.js';
 
 export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 	requireUser(url, user);
 
 	const allTags = await listTags();
 
-	return { allTags, meta: { title: 'New Recipe', noindex: true } };
+	return { allTags, meta: privatePage('New Recipe') };
 };
 
 export const actions: Actions = {

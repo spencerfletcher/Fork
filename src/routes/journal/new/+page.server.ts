@@ -9,6 +9,7 @@ import { wholeNumber } from '#lib/helpers.js';
 import { entryFailure, type EntryValues, type RecipeChoice } from '../entryForm.js';
 import { prepareEntry } from '../save.server.js';
 import type { Actions, PageServerLoad } from './$types';
+import { privatePage } from '#lib/seo.js';
 
 const digits = (value: string | null) => (value && wholeNumber(value) !== null ? value : '');
 
@@ -51,7 +52,7 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 		link: ''
 	};
 
-	return { values, choices: offered, meta: { title: 'Add to Journal', noindex: true } };
+	return { values, choices: offered, meta: privatePage('Add to Journal') };
 };
 
 export const actions: Actions = {

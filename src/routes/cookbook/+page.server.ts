@@ -20,8 +20,9 @@ import { oneOf, text, wholeNumber } from '#lib/helpers.js';
 import { listPage } from '#lib/listPage.js';
 import { COOKBOOK_FILTERS, type CookbookFilter } from './filters.js';
 import type { Actions, PageServerLoad } from './$types';
+import { privatePage } from '#lib/seo.js';
 
-const META = { title: 'Cookbook', noindex: true };
+const META = privatePage('Cookbook');
 
 /**
  * The library's counts by segment, whole and inside `inCollection`: one pass

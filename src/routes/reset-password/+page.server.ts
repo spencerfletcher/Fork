@@ -3,12 +3,10 @@ import type { Actions, PageServerLoad } from './$types';
 import { text } from '#lib/helpers.js';
 import { failure } from '#lib/server/actions.js';
 import { PASSWORD_MIN } from '#lib/auth/rules.js';
+import { privatePage } from '#lib/seo.js';
 
 // The tab reads as the card heads itself: the form, or the expired link.
-const meta = (linkValid: boolean) => ({
-	title: linkValid ? 'Reset password' : 'Link expired',
-	noindex: true
-});
+const meta = (linkValid: boolean) => privatePage(linkValid ? 'Reset password' : 'Link expired');
 
 /**
  * Set when the emailed link is traded for a session, so the password form is

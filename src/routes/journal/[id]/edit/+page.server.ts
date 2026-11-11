@@ -10,6 +10,7 @@ import { wholeNumber } from '#lib/helpers.js';
 import { entryFailure, type EntryValues, type RecipeChoice } from '../../entryForm.js';
 import { prepareEntry } from '../../save.server.js';
 import type { Actions, PageServerLoad } from './$types';
+import { privatePage } from '#lib/seo.js';
 
 const NOT_FOUND = 'Entry not found';
 
@@ -64,7 +65,7 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 		choices: offered,
 		keepLabel,
 		photoUrl: entry.photoUrl,
-		meta: { title: `Edit ${entry.dish}`, noindex: true }
+		meta: privatePage(`Edit ${entry.dish}`)
 	};
 };
 

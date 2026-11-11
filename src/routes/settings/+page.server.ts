@@ -17,6 +17,7 @@ import {
 } from '#lib/auth/rules.js';
 import { VISIBILITIES } from '#lib/recipes/validation.js';
 import { AS_WRITTEN, MEASUREMENTS } from '#lib/measurement.js';
+import { privatePage } from '#lib/seo.js';
 
 /** Each section is its own form, so a result names the one it belongs to. */
 export type Section = 'username' | 'audience' | 'measurement' | 'delete';
@@ -31,7 +32,7 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 	return {
 		email: user.email ?? '',
 		settings: settings!,
-		meta: { title: 'Settings', noindex: true }
+		meta: privatePage('Settings')
 	};
 };
 
