@@ -25,16 +25,18 @@ describe('textSearch', () => {
 		expect(textSearch('')).toEqual({ where: undefined, orderBy: [desc(recipes.updatedAt)] });
 	});
 
-	test('matches the recipe text or an ingredient name, ranked, newest breaking ties', () => {
+	test('matches on the title or any version, ranked by tier, then saves, then newest', () => {
 		const { where, orderBy } = textSearch('cookie');
 		if (!where) throw new Error('expected a condition');
 		const { sql, params } = new PgDialect().sqlToQuery(where);
-		expect(sql).toContain('"fts" @@ websearch_to_tsquery');
-		expect(sql).toContain("ing->>'name'");
+		expect(sql).toContain('websearch_to_tsquery');
+		expect(sql).toContain("i->>'name'");
+		expect(sql).toContain("s->>'text'");
 		expect(params).toContain('cookie');
-		expect(orderBy).toHaveLength(2);
-		expect(new PgDialect().sqlToQuery(orderBy[0]).sql).toContain('ts_rank');
-		expect(orderBy[1]).toEqual(desc(recipes.updatedAt));
+		expect(orderBy).toHaveLength(3);
+		expect(new PgDialect().sqlToQuery(orderBy[0]).sql).toContain('CASE');
+		expect(new PgDialect().sqlToQuery(orderBy[1]).sql).toContain('favorites');
+		expect(orderBy[2]).toEqual(desc(recipes.updatedAt));
 	});
 
 	test('the ingredient subquery keeps its own table inside a relational findMany', () => {
@@ -44,7 +46,7 @@ describe('textSearch', () => {
 		const { where } = textSearch('cookie');
 		if (!where) throw new Error('expected a condition');
 		const { sql } = new PgDialect().sqlToQuery(mapColumnsInSQLToAlias(where, 'recipes'));
-		expect(sql).toContain('"recipe_versions"."recipe_id" = "recipes"."id"');
+		expect(sql).toContain('v.recipe_id = "recipes"."id"');
 		expect(sql).not.toContain('"recipes"."recipe_id"');
 	});
 });

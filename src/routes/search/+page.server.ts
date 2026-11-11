@@ -5,7 +5,8 @@ import { tagSelection, visibleTags } from '#lib/server/tagFilter.js';
 import { clampDescription } from '#lib/seo.js';
 import { plural } from '#lib/helpers.js';
 import { authorIsFriendOf, visibleTo } from '#lib/server/visibility.js';
-import { parseFilters, textSearch } from '#lib/server/recipeSearch.js';
+import { parseFilters, searchMatches, textSearch } from '#lib/server/recipeSearch.js';
+import { db } from '#lib/server/db/index.js';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ url, locals: { user } }) => {
@@ -33,7 +34,7 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 	}
 
 	const text = textSearch(searchQuery);
-	// Rank by how many selected tags matched, unless searching: FTS rank wins then.
+	// Rank by how many selected tags matched, unless searching: where the query matched wins then.
 	const withCounts = await cardList(
 		and(
 			visibilityCondition,
@@ -46,8 +47,17 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 		{ tagRank: searchQuery ? null : matches }
 	);
 
+	// Each result says why it matched, read for the results alone.
+	const why = searchQuery
+		? await searchMatches(
+				searchQuery,
+				withCounts.map((r) => r.id),
+				db
+			)
+		: new Map();
+
 	return {
-		recipes: withCounts,
+		recipes: withCounts.map((r) => ({ ...r, match: why.get(r.id) })),
 		allTags,
 		searchQuery,
 		selectedTags,

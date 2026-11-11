@@ -358,6 +358,15 @@
 		color: var(--color-text);
 	}
 
+	/* A search's matched words: the pale marigold behind them, the words in
+	   their own colour (a clay panel title stays clay). Forced colours keep
+	   the browser's Mark. */
+	mark {
+		background: var(--color-marigold-tint);
+		color: inherit;
+		border-radius: 2px;
+	}
+
 	button,
 	[role='link'],
 	[role='button'],
