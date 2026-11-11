@@ -18,7 +18,7 @@ import {
 } from '#lib/server/friends.js';
 import { friendIdsOf } from '#lib/server/visibility.js';
 import { ensureProfile } from '#lib/server/profiles.js';
-import { failure, requireUser, SESSION_ENDED } from '#lib/server/actions.js';
+import { failure, requireUser, signedOut } from '#lib/server/actions.js';
 import { oneOf, text, wholeNumber } from '#lib/helpers.js';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -39,7 +39,7 @@ async function pair(request: Request, user: App.Locals['user']) {
 	if (!user)
 		return {
 			ok: false as const,
-			failure: failure(401, 'unauthenticated', SESSION_ENDED('try again'))
+			failure: signedOut()
 		};
 	const formData = await request.formData();
 	const otherId = text(formData, 'userId');
@@ -98,7 +98,7 @@ export const actions: Actions = {
 	},
 
 	like: async ({ request, locals: { user } }) => {
-		if (!user) return failure(401, 'unauthenticated', SESSION_ENDED('try again'));
+		if (!user) return signedOut();
 		const entryId = wholeNumber(text(await request.formData(), 'entryId'));
 		if (entryId === null) return invalid('Choose an entry.');
 		const result = await toggleLike(user, entryId);
@@ -108,7 +108,7 @@ export const actions: Actions = {
 	},
 
 	report: async ({ request, locals: { user } }) => {
-		if (!user) return failure(401, 'unauthenticated', SESSION_ENDED('try again'));
+		if (!user) return signedOut();
 		const formData = await request.formData();
 		const targetType = oneOf(REPORT_TARGETS, text(formData, 'targetType'));
 		const targetId = text(formData, 'targetId').trim();

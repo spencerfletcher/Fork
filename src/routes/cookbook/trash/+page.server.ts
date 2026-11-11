@@ -9,7 +9,7 @@ import {
 	trashAge,
 	trashedRecipe
 } from '#lib/server/trash.js';
-import { failure, requireUser, SESSION_ENDED } from '#lib/server/actions.js';
+import { failure, requireUser, signedOut } from '#lib/server/actions.js';
 import { text } from '#lib/helpers.js';
 import { NOT_IN_TRASH } from '#lib/trash.js';
 import type { Actions, PageServerLoad } from './$types';
@@ -48,7 +48,7 @@ export const actions: Actions = {
 	// Everything comes back as it was: versions, tags, saves and forks' link
 	// were never touched. Opens the recipe, which says it is back.
 	restore: async ({ request, locals: { user } }) => {
-		if (!user) return failure(401, 'unauthenticated', SESSION_ENDED('try again'));
+		if (!user) return signedOut();
 		const found = await trashedFromForm(request, user.id);
 		if (!found.recipe) return found.failure;
 
@@ -61,7 +61,7 @@ export const actions: Actions = {
 	},
 
 	deleteForever: async ({ request, locals: { user, supabase } }) => {
-		if (!user) return failure(401, 'unauthenticated', SESSION_ENDED('delete again'));
+		if (!user) return signedOut('delete again');
 		const found = await trashedFromForm(request, user.id);
 		if (!found.recipe) return found.failure;
 		await deleteForever(found.recipe.id, supabase);

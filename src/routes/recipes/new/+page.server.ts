@@ -6,7 +6,7 @@ import { draftOf } from '#lib/recipes/validation.js';
 import { recipeSlug } from '#lib/helpers.js';
 import { removeRecipeImage } from '#lib/server/images.js';
 import { readSubmission, uploadPhoto } from '#lib/server/submission.js';
-import { failure, requireUser, SESSION_ENDED } from '#lib/server/actions.js';
+import { failure, requireUser, signedOut } from '#lib/server/actions.js';
 import { syncTags, listTags } from '#lib/server/tags.js';
 import type { RecipeContent } from '#lib/recipes/types.js';
 import { recipeCopies } from '#lib/recipes/content.js';
@@ -25,7 +25,7 @@ export const actions: Actions = {
 		const formData = await request.formData();
 		// A lapsed session hands the draft back too, so logging in again loses nothing.
 		if (!user)
-			return failure(401, 'unauthenticated', SESSION_ENDED('save again'), {
+			return signedOut('save again', {
 				draft: draftOf(formData)
 			});
 		const submission = readSubmission(formData);

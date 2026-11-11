@@ -20,7 +20,7 @@ import {
 import { attachRecipeCounts } from '#lib/server/recipeCounts.js';
 import { lastEntryFor } from '#lib/server/journal.js';
 import { VERSION_NOT_FOUND } from './versionError.js';
-import { failure, requireUser, SESSION_ENDED } from '#lib/server/actions.js';
+import { failure, requireUser, signedOut } from '#lib/server/actions.js';
 import { STALE_MESSAGE } from '#lib/server/submission.js';
 import { restoreVersion } from '#lib/server/versions.js';
 import { keepVersion, removeCopy, setNote } from '#lib/server/keptCopies.js';
@@ -177,7 +177,7 @@ async function libraryRecipe(slug: string, user: { id: string }) {
 
 export const actions: Actions = {
 	toggleFavorite: async ({ params, locals: { user } }) => {
-		if (!user) return failure(401, 'unauthenticated', SESSION_ENDED('try again'));
+		if (!user) return signedOut();
 
 		const recipe = await viewableRecipe(params.slug, user);
 		if (!recipe) throw error(404, 'Recipe not found');
@@ -203,7 +203,7 @@ export const actions: Actions = {
 	// out (member=0). setMembership checks the collection is theirs and, to add,
 	// that the recipe is in their library.
 	collect: async ({ params, request, locals: { user } }) => {
-		if (!user) return failure(401, 'unauthenticated', SESSION_ENDED('try again'));
+		if (!user) return signedOut();
 		const form = await request.formData();
 		const collectionId = wholeNumber(text(form, 'collectionId'));
 		const member = text(form, 'member');
@@ -218,7 +218,7 @@ export const actions: Actions = {
 
 	// A new collection named in the menu, with this recipe already in it.
 	newCollection: async ({ params, request, locals: { user } }) => {
-		if (!user) return failure(401, 'unauthenticated', SESSION_ENDED('try again'));
+		if (!user) return signedOut();
 		const name = text(await request.formData(), 'name');
 		const recipe = await libraryRecipe(params.slug, user);
 		const created = await createCollection(user.id, name);
@@ -231,7 +231,7 @@ export const actions: Actions = {
 	// Keep this version: the saver opens the recipe at `version` from now on.
 	// Never the author's, who has Restore; never a copy, which keeps its own.
 	keep: async ({ params, request, locals: { user } }) => {
-		if (!user) return failure(401, 'unauthenticated', SESSION_ENDED('try again'));
+		if (!user) return signedOut();
 		const version = wholeNumber(text(await request.formData(), 'version'));
 		if (version === null) return failure(400, 'invalid', 'Invalid form state, reload the page');
 		const recipe = await viewableRecipe(params.slug, user);
@@ -243,7 +243,7 @@ export const actions: Actions = {
 
 	// Follow latest version: the save stops keeping one.
 	follow: async ({ params, locals: { user } }) => {
-		if (!user) return failure(401, 'unauthenticated', SESSION_ENDED('try again'));
+		if (!user) return signedOut();
 		const recipe = await viewableRecipe(params.slug, user);
 		if (!recipe) throw error(404, 'Recipe not found');
 		if (!(await keepVersion(user.id, recipe.id, null)))
@@ -253,7 +253,7 @@ export const actions: Actions = {
 
 	// The saver's private note, on a saved recipe or their kept copy of one.
 	note: async ({ params, request, locals: { user } }) => {
-		if (!user) return failure(401, 'unauthenticated', SESSION_ENDED('save again'));
+		if (!user) return signedOut('save again');
 		const note = text(await request.formData(), 'note');
 		if (note.trim().length > NOTE_MAX) return failure(400, 'invalid', NOTE_TOO_LONG, { note });
 		const recipe = await libraryRecipe(params.slug, user);
@@ -266,7 +266,7 @@ export const actions: Actions = {
 	// its note and its collection places go. An erased recipe's last copy
 	// takes the rest of it with it (deleteForever).
 	removeCopy: async ({ params, locals: { user, supabase } }) => {
-		if (!user) return failure(401, 'unauthenticated', SESSION_ENDED('try again'));
+		if (!user) return signedOut();
 		const copy = await keptCopy(params.slug, user);
 		if (!copy) throw error(404, 'Recipe not found');
 		if (await removeCopy(user.id, copy.recipe.id)) await deleteForever(copy.recipe.id, supabase);
@@ -274,7 +274,7 @@ export const actions: Actions = {
 	},
 
 	fork: async ({ params, locals: { user } }) => {
-		if (!user) return failure(401, 'unauthenticated', SESSION_ENDED('try again'));
+		if (!user) return signedOut();
 
 		const source = await viewableRecipe(params.slug, user, {
 			versions: { orderBy: [desc(recipeVersions.versionNumber)], limit: 1 },

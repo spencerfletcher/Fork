@@ -28,6 +28,14 @@ export function failure<T extends object = Record<never, never>>(
 export const SESSION_ENDED = (retry: 'save again' | 'delete again' | 'try again') =>
 	`Your session ended. Log in in another tab, then ${retry}.`;
 
+/** The 401 an action returns when its session lapsed, with whatever the form hands back. */
+export function signedOut<T extends object = Record<never, never>>(
+	retry: Parameters<typeof SESSION_ENDED>[0] = 'try again',
+	extra?: T
+) {
+	return failure(401, 'unauthenticated', SESSION_ENDED(retry), extra);
+}
+
 /** Narrows to a signed-in user; anyone else is sent to log in and brought back to `url`. */
 export function requireUser<U>(url: URL, user: U): asserts user is NonNullable<U> {
 	if (!user) throw redirect(303, loginHref(url.pathname + url.search));

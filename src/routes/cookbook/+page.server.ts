@@ -8,7 +8,7 @@ import { inLibraryOf, keptCopyOf } from '#lib/server/visibility.js';
 import { keptVersionsOf } from '#lib/server/keptCopies.js';
 import { inTrashOf, purgeExpiredTrash } from '#lib/server/trash.js';
 import { parseFilters, textSearch } from '#lib/server/recipeSearch.js';
-import { failure, requireUser, SESSION_ENDED } from '#lib/server/actions.js';
+import { failure, requireUser, signedOut } from '#lib/server/actions.js';
 import {
 	collectionsOf,
 	createCollection,
@@ -172,7 +172,7 @@ const BAD_FORM = 'Invalid form state, reload the page';
 export const actions: Actions = {
 	// Opens the new collection, whose empty state says how to fill it.
 	createCollection: async ({ request, locals: { user } }) => {
-		if (!user) return failure(401, 'unauthenticated', SESSION_ENDED('try again'));
+		if (!user) return signedOut();
 		const name = text(await request.formData(), 'name');
 		const result = await createCollection(user.id, name);
 		if ('error' in result) return failure(400, 'invalid', result.error, { name, intent: 'create' });
@@ -180,7 +180,7 @@ export const actions: Actions = {
 	},
 
 	renameCollection: async ({ request, locals: { user } }) => {
-		if (!user) return failure(401, 'unauthenticated', SESSION_ENDED('try again'));
+		if (!user) return signedOut();
 		const form = await request.formData();
 		const id = wholeNumber(text(form, 'id'));
 		const name = text(form, 'name');
@@ -193,7 +193,7 @@ export const actions: Actions = {
 
 	// The recipes stay where they are; only the collection and its links go.
 	deleteCollection: async ({ request, locals: { user } }) => {
-		if (!user) return failure(401, 'unauthenticated', SESSION_ENDED('delete again'));
+		if (!user) return signedOut('delete again');
 		const id = wholeNumber(text(await request.formData(), 'id'));
 		if (id === null) return failure(400, 'invalid', BAD_FORM);
 		if (!(await deleteCollection(user.id, id)))

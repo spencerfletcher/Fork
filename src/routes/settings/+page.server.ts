@@ -2,7 +2,7 @@ import { eq } from 'drizzle-orm';
 import type { Actions, PageServerLoad } from './$types';
 import { db } from '#lib/server/db/index.js';
 import { profiles } from '#lib/server/db/schema.js';
-import { failure, requireUser, SESSION_ENDED } from '#lib/server/actions.js';
+import { failure, requireUser, signedOut } from '#lib/server/actions.js';
 import { changeUsername, ensureProfile } from '#lib/server/profiles.js';
 import { oneOf, text } from '#lib/helpers.js';
 import { dayLabel } from '#lib/journal.js';
@@ -30,13 +30,10 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 
 const saved = (section: Section) => ({ section, saved: true as const });
 
-const sessionEnded = (section: Section) =>
-	failure(401, 'unauthenticated', SESSION_ENDED('save again'), { section });
-
 // Every write is keyed by the signed-in user's id; nothing submitted names a profile.
 export const actions: Actions = {
 	username: async ({ request, locals: { user } }) => {
-		if (!user) return sessionEnded('username');
+		if (!user) return signedOut('save again', { section: 'username' });
 		const username = normalizeUsername(text(await request.formData(), 'username'));
 		if (!validUsername(username)) {
 			return failure(400, 'invalid', USERNAME_MESSAGE, { section: 'username', username });
@@ -53,7 +50,7 @@ export const actions: Actions = {
 	},
 
 	audience: async ({ request, locals: { user } }) => {
-		if (!user) return sessionEnded('audience');
+		if (!user) return signedOut('save again', { section: 'audience' });
 		const defaultVisibility = oneOf(
 			VISIBILITIES,
 			text(await request.formData(), 'defaultVisibility')
@@ -67,7 +64,7 @@ export const actions: Actions = {
 
 	// The recipe page converts quantities to it (convertIngredient).
 	measurement: async ({ request, locals: { user } }) => {
-		if (!user) return sessionEnded('measurement');
+		if (!user) return signedOut('save again', { section: 'measurement' });
 		const raw = text(await request.formData(), 'measurement');
 		const measurement = raw === AS_WRITTEN ? null : oneOf(MEASUREMENTS, raw);
 		if (measurement === undefined) {

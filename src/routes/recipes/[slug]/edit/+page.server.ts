@@ -15,7 +15,7 @@ import { sameTags } from '#lib/recipes/tags.js';
 import type { RecipeContent } from '#lib/recipes/types.js';
 import { removeRecipeImage } from '#lib/server/images.js';
 import { readSubmission, STALE_MESSAGE, uploadPhoto } from '#lib/server/submission.js';
-import { failure, requireUser, SESSION_ENDED } from '#lib/server/actions.js';
+import { failure, requireUser, signedOut } from '#lib/server/actions.js';
 import { wholeNumber } from '#lib/helpers.js';
 import { syncTags, listTags } from '#lib/server/tags.js';
 import { grantKeptCopies } from '#lib/server/keptCopies.js';
@@ -62,7 +62,7 @@ export const actions: Actions = {
 		const formData = await request.formData();
 		// A lapsed session hands the draft back too, so logging in again loses nothing.
 		if (!user)
-			return failure(401, 'unauthenticated', SESSION_ENDED('save again'), {
+			return signedOut('save again', {
 				draft: draftOf(formData)
 			});
 		const recipe = await ownRecipe(params.slug, user.id, {
@@ -167,7 +167,7 @@ export const actions: Actions = {
 	// then deleted for good (#lib/server/trash.ts). The revision moves on, so a
 	// save already past its ownRecipe check is refused as stale under its lock.
 	deleteRecipe: async ({ params, locals: { user } }) => {
-		if (!user) return failure(401, 'unauthenticated', SESSION_ENDED('delete again'));
+		if (!user) return signedOut('delete again');
 
 		const recipe = await ownRecipe(params.slug, user.id);
 		// Each saver who could see it keeps a read-only copy. Outside a
