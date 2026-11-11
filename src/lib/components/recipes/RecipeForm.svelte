@@ -8,12 +8,9 @@
 		parseDraftContent,
 		fieldOfMessage,
 		NUMBER_FIELDS,
-		TIME_FIELDS,
 		VISIBILITIES,
-		type RecipeDraft,
-		type TimeField
+		type RecipeDraft
 	} from '#lib/recipes/validation.js';
-	import { formatDuration, OVERNIGHT_MINUTES } from '#lib/recipes/times.js';
 	import { fieldErrors, typedMessage } from '#lib/recipes/fieldErrors.svelte.js';
 	import { normaliseTagNames, tagKey } from '#lib/recipes/tags.js';
 	import type { TagChip } from '#lib/recipes/types.js';
@@ -26,6 +23,7 @@
 	import PhotoField from './PhotoField.svelte';
 	import FieldError from './FieldError.svelte';
 	import MoreDetails from './MoreDetails.svelte';
+	import TimesRow from './TimesRow.svelte';
 	import FormActions from '#lib/components/ui/FormActions.svelte';
 	import ChoiceGroup from '#lib/components/ui/ChoiceGroup.svelte';
 	import { audienceIcon } from '#lib/components/Icons.svelte';
@@ -145,13 +143,6 @@
 	const placeholder = $derived(generated ?? 'What changed in this version?');
 	// A blank message saves the generated one, as the server trims; say so.
 	const savesGenerated = $derived(generated !== null && !draft.commitMessage.trim());
-
-	const timeFields = Object.keys(TIME_FIELDS) as TimeField[];
-	const TIME_PLACEHOLDER: Record<TimeField, string> = {
-		prepTimeMinutes: '15 min',
-		cookTimeMinutes: '1 h',
-		restTimeMinutes: 'Overnight'
-	};
 
 	// Inline errors in the server's own wording (#lib/recipes/fieldErrors).
 	// svelte-ignore state_referenced_locally
@@ -426,34 +417,7 @@
 					{@render fieldError('servings')}
 				</div>
 
-				<!-- Times are typed as words and stored as minutes; each is its own
-				     span on the page, never added up. No picker: a hint and the same
-				     message the server gives are enough. -->
-				<div class="field-row">
-					{#each timeFields as name (name)}
-						<div class="field">
-							<label for={name}>{TIME_FIELDS[name].formLabel}</label>
-							<input
-								id={name}
-								{name}
-								type="text"
-								autocomplete="off"
-								placeholder={TIME_PLACEHOLDER[name]}
-								bind:value={draft[name]}
-								{@attach (el) => el.setCustomValidity(typedMessage(name, draft[name]))}
-								aria-invalid={errors[name] ? 'true' : undefined}
-								aria-describedby={errors[name] ? `${name}-error times-hint` : 'times-hint'} />
-						</div>
-					{/each}
-					<!-- Under the whole row, in field order: a narrow column would wrap them. -->
-					{#each timeFields as name (name)}
-						{@render fieldError(name)}
-					{/each}
-					<p class="form-hint" id="times-hint">
-						Like 45 min, 1 h 30 or 2 days; overnight is {formatDuration(OVERNIGHT_MINUTES)}. Rest is
-						rising, chilling or marinating.
-					</p>
-				</div>
+				<TimesRow bind:draft {errors} />
 
 				<!-- Where it came from outside Fork, apart from who wrote it here. -->
 				<div class="field">
