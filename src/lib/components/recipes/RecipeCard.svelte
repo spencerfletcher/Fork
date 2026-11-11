@@ -405,7 +405,7 @@
 		position: relative;
 		z-index: 2;
 		flex: none;
-		margin: -11px -10px -11px 0;
+		margin: -11px 0;
 	}
 
 	.card-more:has(:global([aria-expanded='true'])) {

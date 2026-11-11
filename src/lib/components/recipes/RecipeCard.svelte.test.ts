@@ -545,6 +545,10 @@ describe('RecipeCard in the Cookbook: the ⋯', () => {
 		expect(rule).toMatch(/z-index:\s*2/);
 	});
 
+	test('the 44px square overhangs its line above and below only, never past the card', () => {
+		expect(cssRule(source, '.card-more')).toMatch(/margin:\s*-11px 0;/);
+	});
+
 	test('the cook’s own recipe: Edit, the Exports and Move to Trash, no Fork', async () => {
 		card();
 		const rows = await rowsAfterOpening();
