@@ -7,6 +7,8 @@ import {
 	recipes,
 	tags,
 	recipesToTags,
+	formerUsernames,
+	reports,
 	recipeVersions,
 	profiles,
 	friendships,
@@ -71,6 +73,9 @@ async function seed() {
 	await db.delete(recipesToTags);
 	await db.delete(recipeVersions);
 	await db.delete(recipes);
+	// These outlive their profile (owner set null), so the cascade no longer clears them.
+	await db.delete(formerUsernames);
+	await db.delete(reports);
 	await db.delete(profiles);
 
 	// ── Create seed users (replacing any earlier ones in Auth) ───────────────
