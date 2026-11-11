@@ -66,15 +66,4 @@ test.describe('a Cookbook card’s ⋯', () => {
 			await postAction(page, '/cookbook/trash?/deleteForever', { slug });
 		}
 	});
-
-	test('a saved recipe’s menu offers Fork, nothing of the owner’s', async ({ page }) => {
-		await gotoHydrated(page, '/cookbook?filter=saved');
-		const card = page.locator('.recipe-card', { hasText: 'Saved from' }).first();
-		await card.getByRole('button', { name: /^More actions for / }).click();
-		const menu = page.getByRole('menu', { name: 'More actions' });
-		await expect(menu.getByRole('menuitem', { name: 'Fork' })).toBeVisible();
-		await expect(menu.getByRole('menuitem', { name: 'Add to Journal' })).toBeVisible();
-		for (const row of ['Edit recipe', 'Move to Trash', 'Export JSON'])
-			await expect(menu.getByRole('menuitem', { name: row })).toHaveCount(0);
-	});
 });

@@ -137,4 +137,23 @@ test.describe('Keep this version', () => {
 		await expect(page.getByRole('button', { name: /Keep this version/ })).toHaveCount(0);
 		await expect(page.getByRole('button', { name: 'Add a note' })).toHaveCount(0);
 	});
+	// Here, not in the card menu's own spec: it changes the seed cook's saves.
+	test('a saved recipe’s ⋯ on the Cookbook card offers Fork, nothing of the owner’s', async ({
+		page
+	}) => {
+		const path = await openShakshuka(page);
+		try {
+			await save(page);
+			await gotoHydrated(page, '/cookbook?filter=saved');
+			const card = page.locator('.recipe-card', { hasText: SHAKSHUKA });
+			await card.getByRole('button', { name: `More actions for ${SHAKSHUKA}` }).click();
+			const menu = page.getByRole('menu', { name: 'More actions' });
+			await expect(menu.getByRole('menuitem', { name: 'Fork' })).toBeVisible();
+			await expect(menu.getByRole('menuitem', { name: 'Add to Journal' })).toBeVisible();
+			for (const row of ['Edit recipe', 'Move to Trash', 'Export JSON'])
+				await expect(menu.getByRole('menuitem', { name: row })).toHaveCount(0);
+		} finally {
+			await unsave(page, path);
+		}
+	});
 });

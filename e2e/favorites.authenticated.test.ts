@@ -15,6 +15,8 @@ test.describe('Favorites, now the Cookbook’s Saved filter', () => {
 	test('with nothing saved, Saved keeps the filters and says 0 recipes match', async ({ page }) => {
 		await page.goto('/cookbook?filter=saved');
 		await expect(page.getByRole('searchbox')).toBeVisible();
-		await expect(page.getByRole('status')).toHaveText('0 recipes match');
+		await expect(page.getByRole('status').filter({ hasText: 'match' })).toHaveText(
+			'0 recipes match'
+		);
 	});
 });
