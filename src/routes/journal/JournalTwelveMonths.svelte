@@ -9,7 +9,7 @@
 		$props();
 
 	const most = $derived(Math.max(...summary.months.map((m) => m.cooks)));
-	const cooks = $derived(summary.months.reduce((sum, m) => sum + m.cooks, 0));
+	const totalCooks = $derived(summary.months.reduce((sum, m) => sum + m.cooks, 0));
 	const shortName = (iso: string) => formatDate(day(iso), { month: 'short', timeZone: 'UTC' });
 	// The first cell names its year, and so does a January: where the year changes.
 	const yearOf = (iso: string, i: number) =>
@@ -20,7 +20,7 @@
 	<div>
 		<h2 class="eyebrow-label" id="jtwelve-months">Last {SUMMARY_MONTHS} months</h2>
 		<p class="jtwelve-totals">
-			{plural(cooks, 'cook')}, {plural(summary.dishes, 'dish', 'different dishes')}
+			{plural(totalCooks, 'cook')}, {plural(summary.dishes, 'dish', 'different dishes')}
 		</p>
 		<ol class="jtwelve-months" aria-labelledby="jtwelve-months">
 			{#each summary.months as { month, cooks }, i (month)}
