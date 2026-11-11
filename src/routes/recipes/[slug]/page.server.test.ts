@@ -1,6 +1,6 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
-import { eq } from 'drizzle-orm';
-import { chain } from '#lib/testing/drizzle.js';
+import { and, eq, isNull } from 'drizzle-orm';
+import { chain, sqlOf } from '#lib/testing/drizzle.js';
 import { invokeAction as invoke, formEvent, loadEvent } from '#lib/testing/actions.js';
 import { actions, load } from './+page.server';
 import { VERSION_NOT_FOUND } from './versionError.js';
@@ -1259,7 +1259,14 @@ describe('a recipe a moderator hid', () => {
 			expect(dbUpdate).toHaveBeenCalledWith(recipes);
 			const set = update.set.mock.calls[0][0] as { suppressedAt: Date | null };
 			expect(set).toEqual({ suppressedAt: hidden ? expect.any(Date) : null });
-			expect(update.where).toHaveBeenCalledWith(eq(recipes.id, HIDDEN.id));
+			// Hiding again keeps the first hiding's time; Restore clears it whatever it was.
+			expect(sqlOf(update.where.mock.calls[0][0])).toEqual(
+				sqlOf(
+					hidden
+						? and(eq(recipes.id, HIDDEN.id), isNull(recipes.suppressedAt))!
+						: eq(recipes.id, HIDDEN.id)
+				)
+			);
 		}
 	);
 

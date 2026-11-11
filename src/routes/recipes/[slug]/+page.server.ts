@@ -409,9 +409,14 @@ async function setHidden(slug: string, user: App.Locals['user'], hidden: boolean
 	});
 	if (!recipe) return failure(404, 'not_found', 'Recipe not found');
 	// Not a save: the author's revision and the lists' order stay as they are.
+	// Hiding one already hidden keeps the time it was first hidden.
 	await db
 		.update(recipes)
 		.set({ suppressedAt: hidden ? new Date() : null })
-		.where(eq(recipes.id, recipe.id));
+		.where(
+			hidden
+				? and(eq(recipes.id, recipe.id), isNull(recipes.suppressedAt))
+				: eq(recipes.id, recipe.id)
+		);
 	return { hidden };
 }
