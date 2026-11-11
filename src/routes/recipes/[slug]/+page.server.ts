@@ -207,6 +207,21 @@ export const actions: Actions = {
 		}
 	},
 
+	// The reader's collections marked for this recipe, for a Cookbook card's ⋯,
+	// which asks as it opens rather than with the page. Only for a recipe in
+	// their library (their own, or saved), as the page's load lists them.
+	collections: async ({ params, locals: { user } }) => {
+		if (!user) return signedOut();
+		const recipe = await libraryRecipe(params.slug, user);
+		const inLibrary =
+			recipe.authorId === user.id ||
+			!!(await db.query.favorites.findFirst({
+				where: and(eq(favorites.userId, user.id), eq(favorites.recipeId, recipe.id))
+			}));
+		if (!inLibrary) return failure(404, 'not_found', NOT_IN_COLLECTIONS);
+		return { collections: await collectionsOf(user, recipe.id) };
+	},
+
 	// Puts the recipe in one of the reader's collections (member=1) or takes it
 	// out (member=0). setMembership checks the collection is theirs and, to add,
 	// that the recipe is in their library.
