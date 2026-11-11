@@ -63,6 +63,8 @@ Planning and design docs: start at `docs/README.md`, which names the current pro
 - `compactCount(n)` (`src/lib/helpers.ts`): "1.2k", "2.5M" for a pill
 - `day(iso)`, `dayLabel(string | Date)` and `sourceHref(source)` (`src/lib/journal.ts`): a calendar day read as UTC, its label, a journal entry's recipe link
 - `pendingEnhance(...)` (`src/lib/pendingEnhance.svelte.ts`): a form's pending and kept-error state; `keepFailure` holds a refusal from another route's action, which SvelteKit does not hand to the page's `form`
+- `convertIngredient(ingredient, grams, measurement)` (`src/lib/recipes/convert.ts`): a row in the cook's metric or US units for display, with the measure as written, or the row unchanged; tables in `UNITS`, rules in DESIGN.md under Measurement
+- `splitMeasure(ingredient)` and `unitFor(unit, n)` (`src/lib/recipes/scale.ts`): a typed line's measure and the words after it, for rewriting; a full-word unit's singular or plural
 - `optimisticToggle(initial, { failure, report, refresh? })` (`src/lib/optimisticToggle.svelte.ts`): a pressed state that flips at once, rolls back on refusal, one request at a time
 - Testing: `loadEvent`, `formEvent` and `formOf` (`src/lib/testing/actions.ts`), `mockDb` (`src/lib/testing/drizzle.ts`, hoisted at the call site), `sqlOf(q)` (same file: a query fragment as its SQL text and params), `inRollback` (`src/lib/testing/db.ts`), `lastShallowUrl(goto)` (`src/lib/testing/navigation.ts`: the URL of a mocked `goto`'s last call, asserted a shallow replace), `cssRule(source, selector)` and `cssRules` (`src/lib/testing/css.ts`: a rule's body read from app.css or a `<style>`, for the tests jsdom cannot style); e2e: `gotoHydrated`, `COOKIES_RE`, `openCookies` (`e2e/helpers.ts`)
 
