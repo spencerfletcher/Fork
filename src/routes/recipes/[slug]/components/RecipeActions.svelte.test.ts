@@ -142,9 +142,9 @@ describe('RecipeActions save button', () => {
 	test('carries the save count after the word, compact', () => {
 		render(RecipeActions, { props: makeProps({ favoriteCount: 1234 }) });
 		const button = screen.getByRole('button', { name: /^Save/ });
-		expect(button.textContent!.replace(/\s+/g, ' ').trim()).toBe(`Save · ${compactCount(1234)}`);
-		// The dot is drawn for the eye only.
-		expect(button.querySelector('.count [aria-hidden="true"]')).toHaveTextContent('·');
+		expect(button.textContent!.replace(/\s+/g, ' ').trim()).toBe(`Save ${compactCount(1234)}`);
+		// The dot is drawn for the eye only, by app.css's .dot-list.
+		expect(button.querySelector('.count')!.parentElement).toHaveClass('dot-list');
 	});
 
 	test('with no saves the pill says Save alone', () => {
@@ -307,7 +307,7 @@ describe('RecipeActions row', () => {
 		const { container } = render(RecipeActions, {
 			props: makeProps({ canFork: true, favoriteCount: 3 })
 		});
-		expect(names(container)).toEqual(['Cook', 'Save · 3', 'Fork', 'More actions']);
+		expect(names(container)).toEqual(['Cook', 'Save 3', 'Fork', 'More actions']);
 		expect(screen.getByRole('button', { name: 'Cook' })).toHaveClass('btn-primary');
 		expect(screen.getByRole('button', { name: /^Save/ })).toHaveClass('btn-ghost');
 		expect(screen.getByRole('button', { name: 'Fork' })).toHaveClass('btn-ghost');
@@ -488,13 +488,7 @@ describe('RecipeActions Add to Journal in the row', () => {
 		const { container } = render(RecipeActions, {
 			props: makeProps({ canFork: true, favoriteCount: 3, journalHref: href })
 		});
-		expect(names(container)).toEqual([
-			'Cook',
-			'Save · 3',
-			'Fork',
-			'Add to Journal',
-			'More actions'
-		]);
+		expect(names(container)).toEqual(['Cook', 'Save 3', 'Fork', 'Add to Journal', 'More actions']);
 		expect(screen.getByRole('link', { name: 'Add to Journal' })).toHaveAttribute('href', href);
 	});
 });

@@ -33,7 +33,9 @@ describe('CookHeader', () => {
 		const serves = 6;
 		render(CookHeader, { props: makeProps({ stored, serves }) });
 		const factor = `${formatServes(serves / stored)}x`;
-		expect(servesLine()).toBe(`Serves ${serves} · ${factor}`);
+		expect(servesLine()).toBe(`Serves ${serves} ${factor}`);
+		// The dot is drawn for the eye only, by app.css's .dot-list.
+		expect(document.querySelector('.serves')).toHaveClass('dot-list');
 		const clay = [...document.querySelectorAll('.serves .text-accent')].map((e) => e.textContent);
 		expect(clay).toEqual([String(serves), factor]);
 	});

@@ -66,10 +66,9 @@
 			{#if stored > 0}
 				<!-- Scaled, the number and the multiplier are clay, the Dynamic Is Clay
 				     Rule; the multiplier is written as the scaler writes it. -->
-				<p class="serves">
+				<p class="serves dot-list">
 					Serves <b class={[scaled && 'text-accent']}>{formatServes(serves)}</b>
 					{#if scaled}
-						<span class="dot" aria-hidden="true">·</span>
 						<span class="text-accent">{formatServes(serves / stored)}x</span>
 					{/if}
 				</p>
@@ -121,6 +120,8 @@
 		font-size: 1rem;
 		line-height: 1.5;
 		color: var(--color-text-2);
+		/* The space before the dot is typed, so the pad sits after it. */
+		--dot-space: 0 0.25em 0 0;
 	}
 
 	.serves b {
@@ -130,10 +131,6 @@
 
 	.serves b.text-accent {
 		color: var(--color-accent);
-	}
-
-	.dot {
-		color: var(--color-text-3);
 	}
 
 	.exit {

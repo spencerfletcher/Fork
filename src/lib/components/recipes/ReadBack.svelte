@@ -8,15 +8,17 @@
      a heading typed in the wrong place is seen before the save. -->
 <p class="readback" {id}>
 	<span class="lead">{value.lead}</span>
-	{#each value.parts as part, i (i)}
-		<!-- A real space between parts, for a screen reader and a copy; the flex row drops it. -->
-		<!-- eslint-disable-next-line svelte/no-useless-mustaches -- a bare space between blocks is dropped -->
-		{#if i > 0}{' '}{/if}
-		<span class="part">
-			{#if part.name === undefined}Ungrouped{:else}<b>{part.name || 'No name'}</b>{/if}
-			{part.detail}
-		</span>
-	{/each}
+	<span class="parts dot-list">
+		{#each value.parts as part, i (i)}
+			<!-- A real space between parts, for a screen reader and a copy; the flex row drops it. -->
+			<!-- eslint-disable-next-line svelte/no-useless-mustaches -- a bare space between blocks is dropped -->
+			{#if i > 0}{' '}{/if}
+			<span class="part">
+				{#if part.name === undefined}Ungrouped{:else}<b>{part.name || 'No name'}</b>{/if}
+				{part.detail}
+			</span>
+		{/each}
+	</span>
 </p>
 
 <style>
@@ -38,9 +40,9 @@
 		margin-right: 0.4em;
 	}
 
-	/* The dot between parts is drawn, never typed, as on the measure line. */
-	.part + .part::before {
-		content: '·' / '';
-		padding: 0 0.5em;
+	/* The parts stay the row's own flex items; app.css's .dot-list draws the dot. */
+	.parts {
+		display: contents;
+		--dot-space: 0 0.5em;
 	}
 </style>

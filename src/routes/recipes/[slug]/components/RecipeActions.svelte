@@ -120,13 +120,10 @@
 					class="btn-ghost favorite flex items-center justify-center gap-2 no-underline"
 					aria-pressed={isFavorited}>
 					{@render saveIcon(isFavorited)}
-					<span>
-						Save
+					<span class="save-label dot-list">
+						<span>Save</span>
 						{#if saves > 0}
-							<span class="count">
-								<span aria-hidden="true">·</span>
-								{savesText}
-							</span>
+							<span class="count">{savesText}</span>
 						{/if}
 					</span>
 				</button>
@@ -196,6 +193,11 @@
 		min-height: 44px;
 		padding: 8px 18px 8px 16px;
 		border-radius: var(--radius-pill);
+	}
+
+	/* The space before the count's dot is typed, so the pad sits after it. */
+	.save-label {
+		--dot-space: 0 0.25em 0 0;
 	}
 
 	/* Saved: the word stays "Save"; the state is the pale marigold tint and
