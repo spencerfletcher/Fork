@@ -608,22 +608,24 @@ describe('save', () => {
 // ─── deleteRecipe ─────────────────────────────────────────────────────────────
 
 describe('deleteRecipe', () => {
-	function setUp() {
+	let tx: ReturnType<typeof makeTx>;
+	function setUp(locked: unknown = LOCKED) {
 		vi.clearAllMocks();
 		findRecipeMock.mockResolvedValue(RECIPE);
-		const update = chain();
-		dbUpdate.mockReturnValue(update);
-		return update;
+		tx = makeTx({ locked: [locked] });
+		transactionMock.mockImplementation(async (cb: (t: unknown) => Promise<unknown>) => cb(tx));
+		return tx.updateChain;
 	}
 
 	const del = (user: typeof OWNER | null = OWNER) =>
 		invoke(actions.deleteRecipe, makeEvent({ user }));
 
-	test("the owner's delete moves the recipe to the Trash and lands there, removing nothing", async () => {
+	test("the owner's delete moves the recipe to the Trash under its row lock and lands there, removing nothing", async () => {
 		const update = setUp();
 		const before = Date.now();
 		const result = await del();
-		expect(dbUpdate).toHaveBeenCalledWith(recipes);
+		expect(tx.lockFor).toHaveBeenCalledWith('update');
+		expect(tx.update).toHaveBeenCalledWith(recipes);
 		const [set] = update.set.mock.calls[0] as [{ deletedAt: Date; editRevision: SQL }];
 		expect(set.deletedAt.getTime()).toBeGreaterThanOrEqual(before);
 		// The revision moves on, so a save already past its own ownRecipe check is refused as stale.
@@ -631,24 +633,24 @@ describe('deleteRecipe', () => {
 		expect(new PgDialect().sqlToQuery(update.where.mock.calls[0][0])).toMatchObject({
 			params: [RECIPE.id]
 		});
-		expect(transactionMock).not.toHaveBeenCalled();
+		expect(dbUpdate).not.toHaveBeenCalled();
 		expect(removeMock).not.toHaveBeenCalled();
 		expect(result).toMatchObject({ status: 303, location: '/cookbook/trash' });
 	});
 
-	test("moving a shared recipe to the Trash grants its savers' kept copies first; a private one grants none", async () => {
-		setUp();
+	test("moving a shared recipe to the Trash grants its savers' kept copies first, in the move's transaction, from the locked audience", async () => {
+		setUp({ ...LOCKED, visibility: 'friends' });
 		await del();
-		expect(grantMock).toHaveBeenCalledWith(
-			expect.anything(),
-			expect.objectContaining({
-				id: RECIPE.id,
-				authorId: OWNER.id,
-				visibility: RECIPE.visibility
-			})
+		expect(grantMock).toHaveBeenCalledWith(tx, {
+			id: RECIPE.id,
+			authorId: OWNER.id,
+			visibility: 'friends'
+		});
+		expect(grantMock.mock.invocationCallOrder[0]).toBeLessThan(
+			tx.update.mock.invocationCallOrder[0]
 		);
-		grantMock.mockClear();
-		findRecipeMock.mockResolvedValue({ ...RECIPE, visibility: 'private' });
+		// Made private by a save that landed before the lock: nothing to grant.
+		setUp({ ...LOCKED, visibility: 'private' });
 		await del();
 		expect(grantMock).not.toHaveBeenCalled();
 	});
@@ -657,14 +659,14 @@ describe('deleteRecipe', () => {
 		setUp();
 		const result = await del(OTHER);
 		expect(result).toMatchObject({ status: 403, body: { message: NOT_AUTHORIZED } });
-		expect(dbUpdate).not.toHaveBeenCalled();
+		expect(transactionMock).not.toHaveBeenCalled();
 	});
 
 	test('a lapsed session is a 401 in the { error, code } shape', async () => {
 		setUp();
 		const result = await del(null);
 		expect(result).toMatchObject({ status: 401, data: { code: 'unauthenticated' } });
-		expect(dbUpdate).not.toHaveBeenCalled();
+		expect(transactionMock).not.toHaveBeenCalled();
 	});
 });
 
