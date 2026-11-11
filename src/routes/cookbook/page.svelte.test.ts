@@ -13,6 +13,7 @@ const style = source.slice(source.indexOf('<style>'));
 const { page } = vi.hoisted(() => ({ page: { url: new URL('http://localhost/cookbook') } }));
 vi.mock('$app/navigation', () => ({ goto: vi.fn() }));
 vi.mock('$app/state', () => ({ page }));
+vi.mock('$app/forms', () => ({ enhance: () => ({ destroy: () => {} }) }));
 
 function makeRecipe(overrides: Record<string, unknown> = {}) {
 	return {
@@ -34,6 +35,9 @@ function makeRecipe(overrides: Record<string, unknown> = {}) {
 const base = {
 	recipes: [] as ReturnType<typeof makeRecipe>[],
 	counts: { all: 0, mine: 0, saved: 0, trash: 0 },
+	inView: { all: 0, mine: 0, saved: 0 },
+	collections: [] as { id: number; name: string; count: number }[],
+	collection: null as { id: number; name: string } | null,
 	filter: 'all' as (typeof COOKBOOK_FILTERS)[number],
 	allTags: [],
 	searchQuery: '',
@@ -55,7 +59,9 @@ const full = {
 			author: { id: 's', username: 'samlind' }
 		})
 	],
-	counts: { all: 9, mine: 6, saved: 3, trash: 0 }
+	counts: { all: 9, mine: 6, saved: 3, trash: 0 },
+	inView: { all: 9, mine: 6, saved: 3 },
+	collections: [{ id: 4, name: 'Quick', count: 2 }]
 };
 
 beforeEach(() => {
@@ -125,11 +131,54 @@ describe('Cookbook page', () => {
 		expect(links.find((a) => a.getAttribute('aria-current') === 'page')).toHaveTextContent('Saved');
 	});
 
+	test('inside a collection the segments count it, the line under the title the whole library', () => {
+		renderCookbook({
+			...full,
+			collection: { id: 4, name: 'Quick' },
+			inView: { all: 2, mine: 1, saved: 1 }
+		});
+		const group = screen.getByRole('group', { name: 'Show' });
+		expect(group).toHaveTextContent(/All\s*2\s*Mine\s*1\s*Saved\s*1/);
+		expect(screen.getByText(/^9 recipes: 6 yours, 3 saved/)).toBeInTheDocument();
+		expect(screen.getByRole('heading', { level: 2, name: 'Quick' })).toBeInTheDocument();
+	});
+
+	test('an empty collection says how to fill it, with no filters over it', () => {
+		renderCookbook({
+			...full,
+			recipes: [],
+			collection: { id: 4, name: 'Quick' },
+			inView: { all: 0, mine: 0, saved: 0 }
+		});
+		expect(screen.getByRole('heading', { level: 2, name: 'Nothing in Quick yet' })).toBeVisible();
+		expect(
+			screen.getByText(
+				'Open a recipe from your Cookbook and choose Add to collection, beside Save.'
+			)
+		).toBeInTheDocument();
+		expect(screen.queryByRole('searchbox')).toBeNull();
+		expect(screen.getByRole('navigation', { name: 'Collections' })).toBeInTheDocument();
+	});
+
+	test('the collections sit over the filters, not over an empty cookbook', () => {
+		const { unmount } = renderCookbook(full);
+		const nav = screen.getByRole('navigation', { name: 'Collections' });
+		expect(
+			nav.compareDocumentPosition(screen.getByRole('group', { name: 'Show' })) &
+				Node.DOCUMENT_POSITION_FOLLOWING
+		).toBeTruthy();
+		unmount();
+		renderCookbook({ collections: full.collections });
+		expect(screen.queryByRole('navigation', { name: 'Collections' })).toBeNull();
+	});
+
 	test('the filter links keep the search and the tags', () => {
 		page.url = new URL('http://localhost/cookbook?q=dal&tags=baking&filter=mine');
 		renderCookbook({ ...full, filter: 'mine', searchQuery: 'dal', selectedTags: ['baking'] });
 		const href = (name: string) =>
-			screen.getByRole('link', { name: new RegExp(`^${name}`) }).getAttribute('href');
+			within(screen.getByRole('group', { name: 'Show' }))
+				.getByRole('link', { name: new RegExp(`^${name}`) })
+				.getAttribute('href');
 		expect(href('Saved')).toBe('?q=dal&tags=baking&filter=saved');
 		expect(href('All')).toBe('?q=dal&tags=baking');
 	});

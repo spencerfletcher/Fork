@@ -5,6 +5,7 @@
 	import EmptyPanel from '#lib/components/ui/EmptyPanel.svelte';
 	import ResultStatus from '#lib/components/ui/ResultStatus.svelte';
 	import CookbookDrafts from './CookbookDrafts.svelte';
+	import CookbookCollections from './CookbookCollections.svelte';
 	import { plural } from '#lib/helpers.js';
 	import { COOKBOOK_FILTERS, type CookbookFilter } from './filters.js';
 	import type { PageData } from './$types';
@@ -14,7 +15,7 @@
 	const LABELS: Record<CookbookFilter, string> = { all: 'All', mine: 'Mine', saved: 'Saved' };
 
 	const filtered = $derived(
-		!!data.searchQuery || data.selectedTags.length > 0 || data.filter !== 'all'
+		!!data.searchQuery || data.selectedTags.length > 0 || data.filter !== 'all' || !!data.collection
 	);
 
 	// A filter link keeps the search and tags; All is the bare page.
@@ -60,41 +61,49 @@
 				{/snippet}
 			</EmptyPanel>
 		{:else}
-			<div class="cookbook-filters">
-				<div class="seg" role="group" aria-label="Show">
-					{#each COOKBOOK_FILTERS as f (f)}
-						<a href={filterHref(f)} aria-current={data.filter === f ? 'page' : undefined}>
-							{LABELS[f]}
-							<span class="n">{data.counts[f]}</span>
-						</a>
-					{/each}
-				</div>
-				<SearchFilters
-					initialQuery={data.searchQuery}
-					initialTags={data.selectedTags}
-					availableTags={data.allTags} />
-			</div>
-
-			<!-- Screen readers only (Spencer, 9 November 2026): the cards say the count. -->
-			<ResultStatus count={data.recipes.length} {filtered} />
-
-			{#if data.recipes.length > 0}
-				<div class="cookbook-grid">
-					{#each data.recipes as recipe, i (recipe.id)}
-						<RecipeCard {recipe} index={i} variant="cookbook" saved={recipe.saved} />
-					{/each}
-				</div>
+			<CookbookCollections collections={data.collections} collection={data.collection} />
+			{#if data.collection && data.inView.all === 0}
+				<!-- No filters over an empty collection, as over an empty cookbook. -->
+				<EmptyPanel title="Nothing in {data.collection.name} yet">
+					Open a recipe from your Cookbook and choose Add to collection, beside Save.
+				</EmptyPanel>
 			{:else}
-				<div class="cookbook-none">
-					{#if data.searchQuery}
-						<h2>No recipes match “{data.searchQuery}”.</h2>
-						<p>Search looks at titles, descriptions and ingredients.</p>
-						<a class="inline-action" href={filterHref(data.filter, ['q'])}>Clear search</a>
-					{:else}
-						<h2>No recipes match these filters.</h2>
-						<a class="inline-action" href={filterHref('all', ['tags'])}>Show all recipes</a>
-					{/if}
+				<div class="cookbook-filters">
+					<div class="seg" role="group" aria-label="Show">
+						{#each COOKBOOK_FILTERS as f (f)}
+							<a href={filterHref(f)} aria-current={data.filter === f ? 'page' : undefined}>
+								{LABELS[f]}
+								<span class="n">{data.inView[f]}</span>
+							</a>
+						{/each}
+					</div>
+					<SearchFilters
+						initialQuery={data.searchQuery}
+						initialTags={data.selectedTags}
+						availableTags={data.allTags} />
 				</div>
+
+				<!-- Screen readers only (Spencer, 9 November 2026): the cards say the count. -->
+				<ResultStatus count={data.recipes.length} {filtered} />
+
+				{#if data.recipes.length > 0}
+					<div class="cookbook-grid">
+						{#each data.recipes as recipe, i (recipe.id)}
+							<RecipeCard {recipe} index={i} variant="cookbook" saved={recipe.saved} />
+						{/each}
+					</div>
+				{:else}
+					<div class="cookbook-none">
+						{#if data.searchQuery}
+							<h2>No recipes match “{data.searchQuery}”.</h2>
+							<p>Search looks at titles, descriptions and ingredients.</p>
+							<a class="inline-action" href={filterHref(data.filter, ['q'])}>Clear search</a>
+						{:else}
+							<h2>No recipes match these filters.</h2>
+							<a class="inline-action" href={filterHref('all', ['tags'])}>Show all recipes</a>
+						{/if}
+					</div>
+				{/if}
 			{/if}
 		{/if}
 
