@@ -11,6 +11,7 @@ import { STALE_MESSAGE } from '#lib/server/submission.js';
 import { NOT_AUTHORIZED } from '#lib/server/visibility.js';
 import { loginHref } from '#lib/auth/loginHref.js';
 import { NOTE_MAX, NOTE_TOO_LONG } from '#lib/saves.js';
+import type { PageMeta } from '#lib/seo.js';
 
 // ─── Hoisted mocks ────────────────────────────────────────────────────────────
 
@@ -154,8 +155,16 @@ const SOURCE_RECIPE = {
 	createdAt: new Date(),
 	updatedAt: new Date(),
 	editRevision: 3,
-	versions: [{ id: 1, versionNumber: 1, commitMessage: 'Initial recipe', ...LATEST }],
-	recipesToTags: [{ tagId: 7 }],
+	versions: [
+		{
+			id: 1,
+			versionNumber: 1,
+			commitMessage: 'Initial recipe',
+			...LATEST,
+			createdAt: new Date('2026-03-01T00:00:00Z')
+		}
+	],
+	recipesToTags: [{ tagId: 7, tag: { name: 'Dessert' } }],
 	author: { username: 'chef' }
 };
 
@@ -394,9 +403,52 @@ async function loadData(user: { id: string; email: string } | null = null) {
 		favoriteCount: number;
 		currentVersion: { ingredients: unknown[] } | null;
 		grams: unknown[];
-		meta: { title: string; description: string; image: string };
+		meta: PageMeta;
 	};
 }
+
+describe('load: page metadata by audience', () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+		findFavoriteMock.mockResolvedValue(undefined);
+		countMock.mockResolvedValue(0);
+		selectMock.mockReturnValue(chain([]));
+	});
+
+	const recipeOf = (visibility: Visibility, parent: Visibility = 'public') => ({
+		...forkOf({ visibility: parent, authorId: 'original-author' }),
+		visibility
+	});
+
+	test('a public recipe carries Recipe data with absolute URLs from the request, its public parent and tags', async () => {
+		findRecipeMock.mockResolvedValue(recipeOf('public'));
+		const { meta } = await loadData();
+		expect(meta.noindex).toBeFalsy();
+		expect(meta.jsonLd).toMatchObject({
+			url: 'http://localhost/recipes/the-fork',
+			author: { url: 'http://localhost/users/chef' },
+			keywords: 'Dessert',
+			datePublished: SOURCE_RECIPE.versions[0].createdAt.toISOString()
+		});
+		expect(meta.jsonLd!.isBasedOn).toContain('http://localhost/recipes/secret-original');
+	});
+
+	test('a parent the world cannot see is not named in the Recipe data, even to its owner', async () => {
+		findRecipeMock.mockResolvedValue(recipeOf('public', 'friends'));
+		const { meta } = await loadData({ id: 'original-author', email: 'o@test.com' });
+		expect(JSON.stringify(meta.jsonLd)).not.toContain('secret-original');
+	});
+
+	test.each(['friends', 'private'] as const)(
+		'a %s recipe gives its viewer the title alone, noindex',
+		async (visibility) => {
+			findRecipeMock.mockResolvedValue(recipeOf(visibility));
+			// The author, who may see it.
+			const { meta } = await loadData({ id: 'fork-author', email: 'a@test.com' });
+			expect(meta).toEqual({ title: LATEST.title, noindex: true });
+		}
+	);
+});
 
 describe('load: fork attribution', () => {
 	beforeEach(() => {
@@ -939,7 +991,13 @@ describe('collect and newCollection', () => {
 
 describe('Keep this version', () => {
 	const SAVER = { id: 'saver', email: 's@test.com' };
-	const v = (n: number) => ({ id: n, versionNumber: n, commitMessage: `v${n}`, ...LATEST });
+	const v = (n: number) => ({
+		id: n,
+		versionNumber: n,
+		commitMessage: `v${n}`,
+		...LATEST,
+		createdAt: new Date(Date.UTC(2026, 0, n))
+	});
 	const THREE = { ...SOURCE_RECIPE, parent: null, versions: [v(3), v(2), v(1)] };
 
 	beforeEach(() => {
@@ -951,6 +1009,16 @@ describe('Keep this version', () => {
 
 	const loadAt = (path = '/recipes/classic-cookies') =>
 		invoke(load as never, loadEvent({ params: { slug: 'classic-cookies' }, path, user: SAVER }));
+
+	test('an earlier version previews as itself, with no Recipe data: that is the latest version, on the canonical page', async () => {
+		const { meta } = await loadAt('/recipes/classic-cookies?version=2');
+		expect(meta).toMatchObject({ title: LATEST.title, type: 'article' });
+		expect(meta.jsonLd).toBeUndefined();
+		expect((await loadAt('/recipes/classic-cookies?version=3')).meta.jsonLd).toMatchObject({
+			dateModified: v(3).createdAt.toISOString(),
+			datePublished: v(1).createdAt.toISOString()
+		});
+	});
 
 	test('a save that keeps v2 opens on v2, and says so; ?version= still browses', async () => {
 		findFavoriteMock.mockResolvedValue({ keptVersion: 2, note: 'Less salt' });
@@ -1025,6 +1093,14 @@ describe('Keep this version', () => {
 			findRecipeMock.mockResolvedValue({ ...THREE, visibility: 'private' });
 			keptMock.keptCopy.mockResolvedValue(COPY);
 			findFavoriteMock.mockResolvedValue({ keptVersion: 2, copyVersion: 2, note: 'Mine' });
+		});
+
+		test('is noindex and previews nothing but its title, whatever the row says now', async () => {
+			keptMock.keptCopy.mockResolvedValue({
+				...COPY,
+				recipe: { ...COPY.recipe, visibility: 'public' }
+			});
+			expect((await loadAt()).meta).toEqual({ title: LATEST.title, noindex: true });
 		});
 
 		test('opens read-only at the kept version alone: no other version, no tags, no counts', async () => {
