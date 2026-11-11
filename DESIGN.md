@@ -2,121 +2,121 @@
 name: Fork
 description: Recipes under version control, set like an annotated cookbook on cream paper.
 colors:
-paper: '#f7f3ec'
-lifted-paper: '#fffdf9'
-clay-tint: '#f5e9e0'
-band: '#efe8db'
-espresso: '#1a1408'
-ink: '#1a1714'
-ink-2: '#4a443e'
-ink-3: '#6f6960'
-cream: '#f7f3ec'
-tan: '#b8a880'
-clay: '#b23c00'
-clay-deep: '#6e2500'
-marigold: '#eca620'
-marigold-deep: '#d08f06'
-rule: '#e4ded4'
-rule-2: '#d9d3c8'
-diff-add: '#2f6b37'
-diff-add-bg: '#e6f0e3'
-diff-remove: '#a3362b'
-diff-remove-bg: '#f6e3e0'
+  paper: '#f7f3ec'
+  lifted-paper: '#fffdf9'
+  clay-tint: '#f5e9e0'
+  band: '#efe8db'
+  espresso: '#1a1408'
+  ink: '#1a1714'
+  ink-2: '#4a443e'
+  ink-3: '#6f6960'
+  cream: '#f7f3ec'
+  tan: '#b8a880'
+  clay: '#b23c00'
+  clay-deep: '#6e2500'
+  marigold: '#eca620'
+  marigold-deep: '#d08f06'
+  rule: '#e4ded4'
+  rule-2: '#d9d3c8'
+  diff-add: '#2f6b37'
+  diff-add-bg: '#e6f0e3'
+  diff-remove: '#a3362b'
+  diff-remove-bg: '#f6e3e0'
 typography:
-display:
-fontFamily: 'Bitter, Georgia, serif'
-fontSize: '2.5rem'
-fontWeight: 500
-lineHeight: 1.15
-headline:
-fontFamily: 'Bitter, Georgia, serif'
-fontSize: '1.75rem'
-fontWeight: 500
-lineHeight: 1.25
-title:
-fontFamily: 'Bitter, Georgia, serif'
-fontSize: '1.0625rem'
-fontWeight: 500
-lineHeight: 1.25
-body:
-fontFamily: 'Source Sans 3, -apple-system, BlinkMacSystemFont, sans-serif'
-fontSize: '1rem'
-fontWeight: 400
-lineHeight: 1.65
-label:
-fontFamily: 'Source Sans 3, -apple-system, BlinkMacSystemFont, sans-serif'
-fontSize: '0.75rem'
-fontWeight: 600
-lineHeight: 1.2
-letterSpacing: '0.05em'
-mono:
-fontFamily: 'JetBrains Mono, Fira Code, monospace'
-fontSize: '0.75rem'
-fontWeight: 400
-lineHeight: 1.5
+  display:
+    fontFamily: 'Bitter, Georgia, serif'
+    fontSize: '2.5rem'
+    fontWeight: 500
+    lineHeight: 1.15
+  headline:
+    fontFamily: 'Bitter, Georgia, serif'
+    fontSize: '1.75rem'
+    fontWeight: 500
+    lineHeight: 1.25
+  title:
+    fontFamily: 'Bitter, Georgia, serif'
+    fontSize: '1.0625rem'
+    fontWeight: 500
+    lineHeight: 1.25
+  body:
+    fontFamily: 'Source Sans 3, -apple-system, BlinkMacSystemFont, sans-serif'
+    fontSize: '1rem'
+    fontWeight: 400
+    lineHeight: 1.65
+  label:
+    fontFamily: 'Source Sans 3, -apple-system, BlinkMacSystemFont, sans-serif'
+    fontSize: '0.75rem'
+    fontWeight: 600
+    lineHeight: 1.2
+    letterSpacing: '0.05em'
+  mono:
+    fontFamily: 'JetBrains Mono, Fira Code, monospace'
+    fontSize: '0.75rem'
+    fontWeight: 400
+    lineHeight: 1.5
 rounded:
-sm: '4px'
-md: '6px'
-lg: '8px'
-pill: '100px'
+  sm: '4px'
+  md: '6px'
+  lg: '8px'
+  pill: '100px'
 spacing:
-'1': '4px'
-'2': '8px'
-'3': '12px'
-'4': '16px'
-'5': '24px'
-'6': '32px'
-'7': '48px'
-'8': '64px'
+  '1': '4px'
+  '2': '8px'
+  '3': '12px'
+  '4': '16px'
+  '5': '24px'
+  '6': '32px'
+  '7': '48px'
+  '8': '64px'
 components:
-button-primary:
-backgroundColor: '{colors.marigold}'
-textColor: '{colors.ink}'
-typography: '{typography.body}'
-rounded: '{rounded.md}'
-padding: '11px 16px'
-border: '1px solid transparent'
-button-primary-hover:
-backgroundColor: '{colors.marigold-deep}'
-textColor: '{colors.ink}'
-button-ghost:
-backgroundColor: 'transparent'
-textColor: '{colors.ink}'
-typography: '{typography.body}'
-rounded: '{rounded.md}'
-padding: '11px 16px'
-button-ghost-hover:
-backgroundColor: '{colors.band}'
-textColor: '{colors.ink}'
-input:
-backgroundColor: '{colors.lifted-paper}'
-textColor: '{colors.ink}'
-typography: '{typography.body}'
-rounded: '{rounded.md}'
-padding: '9px 12px'
-tag:
-backgroundColor: 'transparent'
-textColor: '{colors.ink-2}'
-rounded: '{rounded.pill}'
-padding: '2px 9px'
-tag-hover:
-backgroundColor: '{colors.clay-tint}'
-textColor: '{colors.ink-2}'
-version-chip:
-backgroundColor: '{colors.marigold}'
-textColor: '{colors.ink}'
-typography: '{typography.mono}'
-rounded: '{rounded.sm}'
-padding: '0 6px'
-card:
-backgroundColor: '{colors.lifted-paper}'
-textColor: '{colors.ink}'
-rounded: '{rounded.lg}'
-padding: '16px'
-navbar:
-backgroundColor: '{colors.espresso}'
-textColor: '{colors.tan}'
-height: '56px'
+  button-primary:
+    backgroundColor: '{colors.marigold}'
+    textColor: '{colors.ink}'
+    typography: '{typography.body}'
+    rounded: '{rounded.md}'
+    padding: '11px 16px'
+    border: '1px solid transparent'
+  button-primary-hover:
+    backgroundColor: '{colors.marigold-deep}'
+    textColor: '{colors.ink}'
+  button-ghost:
+    backgroundColor: 'transparent'
+    textColor: '{colors.ink}'
+    typography: '{typography.body}'
+    rounded: '{rounded.md}'
+    padding: '11px 16px'
+  button-ghost-hover:
+    backgroundColor: '{colors.band}'
+    textColor: '{colors.ink}'
+  input:
+    backgroundColor: '{colors.lifted-paper}'
+    textColor: '{colors.ink}'
+    typography: '{typography.body}'
+    rounded: '{rounded.md}'
+    padding: '9px 12px'
+  tag:
+    backgroundColor: 'transparent'
+    textColor: '{colors.ink-2}'
+    rounded: '{rounded.pill}'
+    padding: '2px 9px'
+  tag-hover:
+    backgroundColor: '{colors.clay-tint}'
+    textColor: '{colors.ink-2}'
+  version-chip:
+    backgroundColor: '{colors.marigold}'
+    textColor: '{colors.ink}'
+    typography: '{typography.mono}'
+    rounded: '{rounded.sm}'
+    padding: '0 6px'
+  card:
+    backgroundColor: '{colors.lifted-paper}'
+    textColor: '{colors.ink}'
+    rounded: '{rounded.lg}'
+    padding: '16px'
+  navbar:
+    backgroundColor: '{colors.espresso}'
+    textColor: '{colors.tan}'
+    height: '56px'
 ---
 
 # Design System: Fork
