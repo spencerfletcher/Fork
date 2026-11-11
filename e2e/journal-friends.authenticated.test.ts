@@ -64,7 +64,8 @@ test.describe('Recipe page entry points', () => {
 		await page.goto('/journal');
 		await page.locator('article', { hasText: logged.dish }).locator('.jsource a').click();
 
-		await expect(page.getByText(/You cooked this on Sun 8 Nov/)).toBeVisible();
+		// Cooked once in the seed: the one-entry wording, no count.
+		await expect(page.locator('.personal')).toHaveText(/^\s*You cooked this on\s+Sun 8 Nov\s*$/);
 		await expect(page.getByRole('link', { name: 'Sun 8 Nov' })).toHaveAttribute(
 			'href',
 			/\/journal#entry-\d+/
@@ -99,6 +100,35 @@ test.describe('Friends', () => {
 		await expect(page.getByRole('button', { name: /Comment/ })).toHaveCount(0);
 		// A friend's Only me entry never reaches the feed.
 		await expect(page.getByRole('heading', { name: friendsPrivate.dish })).toHaveCount(0);
+	});
+
+	test("an entry's title links to the recipe at the version cooked; no source line under it", async ({
+		page
+	}) => {
+		await page.goto('/friends');
+		const entry = page.locator('article', {
+			has: page.getByRole('heading', { name: friendsFirst.dish })
+		});
+		const title = entry.getByRole('heading', { name: friendsFirst.dish }).getByRole('link');
+		await expect(title).toHaveAttribute('href', /^\/recipes\/shakshuka-[^?]+\?version=1$/);
+		await expect(entry.getByText(/Shakshuka · v1/)).toHaveCount(0);
+		await title.click();
+		await expect(page).toHaveURL(/\/recipes\/shakshuka-.+\?version=1$/);
+		await expect(page.getByRole('heading', { level: 1, name: 'Shakshuka' })).toBeVisible();
+	});
+
+	test('⋯ sets the handle in Mute in mono, in the row’s colour', async ({ page }) => {
+		await gotoHydrated(page, '/friends');
+		await page
+			.getByRole('button', { name: /^More for @devcooks/ })
+			.first()
+			.click();
+		const mute = page.getByRole('menuitem', { name: 'Mute @devcooks' });
+		const handle = mute.locator('.handle');
+		await expect(handle).toHaveText('@devcooks');
+		await expect(handle).toHaveCSS('font-family', /JetBrains Mono/);
+		const rowColour = await mute.evaluate((el) => getComputedStyle(el).color);
+		await expect(handle).toHaveCSS('color', rowColour);
 	});
 
 	test('Like toggles with its count and aria-pressed, and survives a reload', async ({ page }) => {

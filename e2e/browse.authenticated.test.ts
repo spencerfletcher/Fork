@@ -122,6 +122,32 @@ test.describe('Cookbook segments on a phone', () => {
 	});
 });
 
+test.describe('Cookbook cards: times and last cooked', () => {
+	// The seed logs Chicken Tikka Masala once, on Sun 8 Nov, by the seed user.
+	for (const width of [320, 390, 1280]) {
+		test(`a cooked recipe says so in its meta row, on at most two lines at ${width}`, async ({
+			page
+		}) => {
+			await page.setViewportSize({ width, height: 900 });
+			await page.goto('/cookbook');
+			const card = page.locator('.recipe-card', { hasText: 'Chicken Tikka Masala' });
+			const meta = card.locator('.meta-row');
+			await expect(meta.locator('.meta-item').last()).toHaveText('Cooked on Sun 8 Nov');
+			const lineHeight = await meta
+				.locator('.meta-item')
+				.last()
+				.evaluate((el) => parseFloat(getComputedStyle(el).lineHeight));
+			expect((await meta.boundingBox())!.height).toBeLessThan(lineHeight * 3);
+		});
+	}
+
+	test('Discover, about the recipe, never says who cooked it', async ({ page }) => {
+		await page.goto('/discover');
+		await expect(page.getByText('Chicken Tikka Masala').first()).toBeVisible();
+		await expect(page.getByText(/^Cooked (on|\d)/)).toHaveCount(0);
+	});
+});
+
 test.describe('Friends filter', () => {
 	for (const width of [390, 1280]) {
 		test(`the icon is centred on its words at ${width}`, async ({ page }) => {
