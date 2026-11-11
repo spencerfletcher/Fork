@@ -6,6 +6,8 @@ import {
 	MILLION,
 	oneOf,
 	plural,
+	recipeSlug,
+	slugify,
 	THOUSAND,
 	wholeNumber
 } from './helpers';
@@ -96,5 +98,44 @@ describe('compactCount', () => {
 	test('from a million, the same rule with M', () => {
 		expect(compactCount(MILLION)).toBe('1M');
 		expect(compactCount(2.5 * MILLION)).toBe('2.5M');
+	});
+});
+
+describe('slugify', () => {
+	test('an English title reads as before: lower case, hyphens, no punctuation', () => {
+		expect(slugify('Classic Chocolate-Chip Cookies!')).toBe('classic-chocolate-chip-cookies');
+		expect(slugify('  snake_case  & more ')).toBe('snake-case-more');
+	});
+
+	test('Latin accents fold to their letters; other scripts keep theirs', () => {
+		expect(slugify('Crème Brûlée')).toBe('creme-brulee');
+		expect(slugify('味噌汁')).toBe('味噌汁');
+		expect(slugify('Борщ по-домашнему')).toBe('борщ-по-домашнему');
+		// A kana's voicing mark is part of the letter, not an accent to fold.
+		expect(slugify('ガーリック')).toBe('ガーリック');
+	});
+});
+
+describe('recipeSlug', () => {
+	const SUFFIX = /-[0-9a-f]{8}$/;
+
+	test('a title in Latin letters, then a random suffix', () => {
+		const slug = recipeSlug('Crème Brûlée');
+		expect(slug).toMatch(SUFFIX);
+		expect(slug.replace(SUFFIX, '')).toBe('creme-brulee');
+	});
+
+	test('a title with no Latin letters still gets a readable ASCII slug, unique by its suffix', () => {
+		for (const title of ['味噌汁', 'Борщ', '!!!']) {
+			const slug = recipeSlug(title);
+			expect(slug).toMatch(new RegExp(`^recipe${SUFFIX.source}`));
+		}
+		expect(recipeSlug('Pho 越南').replace(SUFFIX, '')).toBe('pho');
+		expect(recipeSlug('味噌汁')).not.toBe(recipeSlug('味噌汁'));
+	});
+
+	test('it can sit in a Location header, which takes bytes up to 255 only', () => {
+		const slug = recipeSlug('Борщ crème 味噌');
+		expect(() => new Headers({ location: `/recipes/${slug}` })).not.toThrow();
 	});
 });

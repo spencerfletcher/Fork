@@ -3,7 +3,7 @@ import type { Actions, PageServerLoad } from './$types';
 import { db } from '#lib/server/db/index.js';
 import { recipes, recipeVersions } from '#lib/server/db/schema.js';
 import { draftOf } from '#lib/recipes/validation.js';
-import { slugify, randomSuffix } from '#lib/helpers.js';
+import { recipeSlug } from '#lib/helpers.js';
 import { removeRecipeImage } from '#lib/server/images.js';
 import { readSubmission, uploadPhoto } from '#lib/server/submission.js';
 import { failure, requireUser, SESSION_ENDED } from '#lib/server/actions.js';
@@ -46,7 +46,7 @@ export const actions: Actions = {
 
 		const submitted: RecipeContent = { ...content, imageUrl: image?.url ?? null };
 		const copies = recipeCopies(submitted);
-		const slug = `${slugify(copies.title)}-${randomSuffix()}`;
+		const slug = recipeSlug(copies.title);
 
 		try {
 			await db.transaction(async (tx) => {
