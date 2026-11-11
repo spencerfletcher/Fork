@@ -1,4 +1,5 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
+import type { SQL } from 'drizzle-orm';
 import { chain, sqlOf } from '#lib/testing/drizzle.js';
 
 const db = await vi.hoisted(async () => (await import('#lib/testing/drizzle.js')).mockDb());
