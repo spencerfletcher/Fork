@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { COOKIES, gotoHydrated } from './helpers';
 
 test.describe('Search results', () => {
 	test('cards carry the author, like the feed', async ({ page }) => {
@@ -39,5 +40,44 @@ test.describe('Search results', () => {
 		await page.getByRole('link', { name: 'Clear filters' }).click();
 		await expect(page).toHaveURL(/\/search\?q=zzzz$/);
 		await expect(page.getByRole('searchbox')).toHaveValue('zzzz');
+	});
+
+	test('a new query keeps the tags; Clear search keeps them too', async ({ page }) => {
+		await gotoHydrated(page, '/search?tags=dessert');
+		await page.getByRole('searchbox').fill('zzzz');
+		await page.getByRole('searchbox').press('Enter');
+		await expect(page).toHaveURL(/[?&]tags=dessert/);
+		await expect(page).toHaveURL(/[?&]q=zzzz/);
+		await page.getByRole('link', { name: 'Clear search' }).click();
+		await expect(page).toHaveURL(/\/search\?tags=dessert$/);
+	});
+});
+
+test.describe('Search relevance', () => {
+	const card = (page: import('@playwright/test').Page, title: string | RegExp) =>
+		page.locator('div.recipe-card').filter({ hasText: title });
+
+	test('the exact title comes first', async ({ page }) => {
+		await page.goto('/search?q=' + encodeURIComponent('chicken tikka masala'));
+		await expect(page.locator('div.recipe-card').first()).toContainText('Chicken Tikka Masala');
+	});
+
+	test('a match in the ingredients says so, the word marked', async ({ page }) => {
+		await page.goto('/search?q=ginger');
+		const match = card(page, 'Chicken Tikka Masala').locator('.card-match');
+		await expect(match).toHaveText(/^Ingredient: fresh ginger/);
+		await expect(match.locator('mark')).toHaveText('ginger');
+	});
+
+	test('a match only in an older version is found, labelled and ranked last', async ({ page }) => {
+		// The seed's cookies were "Classic Chocolate Chip Cookies" until v3; the
+		// brown-butter fork says "classic" in its current description.
+		await page.goto('/search?q=classic');
+		const cards = page.locator('div.recipe-card');
+		await expect(card(page, COOKIES).locator('.card-match')).toHaveText(
+			/^In an older version \(v2\): Classic Chocolate Chip Cookies/
+		);
+		await expect(card(page, 'Brown Butter').locator('.card-match')).toHaveText(/^Description: /);
+		await expect(cards.last()).toContainText(COOKIES);
 	});
 });
