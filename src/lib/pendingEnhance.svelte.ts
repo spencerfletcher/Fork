@@ -12,13 +12,22 @@ export const UNREACHABLE_MESSAGE = "Couldn't reach the server. Your changes are 
  * `keepFailure` holds a failure's `error` too: SvelteKit hands a failure to
  * the page's `form` only when the action is the page's own, so a form posting
  * to another route (the profile's Add friend) shows the refusal itself.
+ * `unreachable` is the caller's own wording for a network failure, where
+ * "your changes are still here" is not what happened (Fork).
  */
 export function pendingEnhance({
 	reset,
 	done,
 	keepOnError,
-	keepFailure
-}: { reset?: boolean; done?: () => void; keepOnError?: boolean; keepFailure?: boolean } = {}) {
+	keepFailure,
+	unreachable = UNREACHABLE_MESSAGE
+}: {
+	reset?: boolean;
+	done?: () => void;
+	keepOnError?: boolean;
+	keepFailure?: boolean;
+	unreachable?: string;
+} = {}) {
 	let pending = $state(false);
 	let error = $state<string | null>(null);
 
@@ -29,14 +38,14 @@ export function pendingEnhance({
 			try {
 				if (keepFailure && result.type === 'failure') {
 					const message: unknown = result.data?.error;
-					error = typeof message === 'string' ? message : UNREACHABLE_MESSAGE;
+					error = typeof message === 'string' ? message : unreachable;
 					return;
 				}
 				if (keepOnError && result.type === 'error') {
 					// No status is a network failure; a 4xx is the server's own refusal.
 					const refused = result.status !== undefined && result.status < 500;
 					const message: unknown = result.error?.message;
-					error = refused && typeof message === 'string' ? message : UNREACHABLE_MESSAGE;
+					error = refused && typeof message === 'string' ? message : unreachable;
 					return;
 				}
 				// In place: SvelteKit 3 would land on the action's URL, and a relative

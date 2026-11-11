@@ -100,6 +100,13 @@ describe('pendingEnhance', () => {
 		expect(form.error).toBe(UNREACHABLE_MESSAGE);
 	});
 
+	test("unreachable: a caller's own wording for a network failure", async () => {
+		const form = pendingEnhance({ keepOnError: true, unreachable: 'Nothing was sent.' });
+		const after = (await (form.submit as unknown as () => After)()) as After;
+		await after({ result: { type: 'error' }, update: async () => {} });
+		expect(form.error).toBe('Nothing was sent.');
+	});
+
 	test('the held error clears on the next submit', async () => {
 		const form = pendingEnhance({ keepOnError: true });
 		const after = (await (form.submit as unknown as () => After)()) as After;
