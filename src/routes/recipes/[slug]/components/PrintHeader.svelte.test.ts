@@ -85,6 +85,29 @@ describe('PrintHeader', () => {
 		expect(lines[1]).toBe('By @maya · forked from Gran’s cookies, v2');
 	});
 
+	test("a fork names its parent's author by handle, mono as the fork's own", () => {
+		const { container, lines } = renderHeader({
+			recipe: {
+				author: { username: 'maya' },
+				parent: { title: 'Gran’s cookies', author: { username: 'gran' } },
+				parentId: 9,
+				parentVersion: 2
+			}
+		});
+		expect(lines[1]).toBe("By @maya · forked from @gran's Gran’s cookies, v2");
+		expect([...container.querySelectorAll('.mono-id')].map((e) => e.textContent)).toEqual([
+			'@maya',
+			'@gran'
+		]);
+	});
+
+	test('a hidden parent prints the private wording, no handle', () => {
+		const { lines } = renderHeader({
+			recipe: { author: { username: 'maya' }, parent: null, parentId: 9 }
+		});
+		expect(lines[1]).toBe('By @maya · forked from a private recipe');
+	});
+
 	test('a recipe with no servings prints its version alone', () => {
 		const { lines } = renderHeader({ stored: 0, serves: 0 });
 		expect(lines[2]).toBe('v3 · Makes 12 cookies');

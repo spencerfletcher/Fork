@@ -84,6 +84,17 @@ test.describe('Recipe detail page', () => {
 			.locator('.hero .byline')
 			.getByRole('link', { name: `${COOKIES}, v${copied}` });
 		await expect(from).toHaveAttribute('href', new RegExp(`\\?version=${copied}$`));
+		// The parent's author by handle before its title, a link to their profile.
+		const parentAuthor = SEED[0].author ?? 'spencerfletcher';
+		await expect(page.locator('.hero .byline')).toContainText(
+			`forked from @${parentAuthor}'s ${COOKIES}`
+		);
+		await expect(
+			page
+				.locator('.hero .byline')
+				.getByRole('link', { name: `@${parentAuthor}` })
+				.last()
+		).toHaveAttribute('href', `/users/${parentAuthor}`);
 		await from.click();
 		await expect(page).toHaveURL(new RegExp(`\\?version=${copied}$`));
 		await expect(page.getByRole('heading', { level: 1 })).toHaveText(

@@ -55,10 +55,61 @@ function byline(container: HTMLElement) {
 // ─── Fork attribution ─────────────────────────────────────────────────────────
 
 describe('RecipeHeader fork attribution', () => {
-	// Decided 29 October 2026: the fork info folds into the byline, there is no
-	// attribution line, and the parent's author is not named (it is one click
-	// away on the parent).
-	test('a fork says so in the byline, linking the parent without its author', () => {
+	// The fork info folds into the byline; there is no attribution line. The
+	// parent's author is named by handle (decided 12 November 2026).
+	test("a fork names the parent's author, the handle its own link in the author's face", () => {
+		const { container } = renderHeader({
+			recipe: makeRecipe({
+				author: { id: 'u1', username: 'me' },
+				parentId: 42,
+				parentVersion: 2,
+				parent: { slug: 'original', title: 'The Original', author: { username: 'gran' } }
+			})
+		});
+		expect(byline(container)).toBe("By @me · forked from @gran's The Original, v2");
+		const own = screen.getByRole('link', { name: '@me' });
+		const theirs = screen.getByRole('link', { name: '@gran' });
+		expect(theirs).toHaveAttribute('href', '/users/gran');
+		// Styled exactly as the fork's own handle in the same line.
+		expect(theirs.className).toBe(own.className);
+		// The title and version stay the one link to the copied version.
+		expect(screen.getByRole('link', { name: 'The Original, v2' })).toHaveAttribute(
+			'href',
+			'/recipes/original?version=2'
+		);
+		// The handle and its 's wrap as one unit, broken only when wider than the line.
+		expect(theirs.parentElement).toHaveClass('inline-block', 'max-w-full');
+		expect(theirs.parentElement).toHaveTextContent("@gran's");
+	});
+
+	test('a fork of your own recipe names you twice', () => {
+		const { container } = renderHeader({
+			recipe: makeRecipe({
+				author: { id: 'u1', username: 'me' },
+				parentId: 42,
+				parent: { slug: 'original', title: 'The Original', author: { username: 'me' } }
+			})
+		});
+		expect(byline(container)).toBe("By @me · forked from @me's The Original");
+		expect(screen.getAllByRole('link', { name: '@me' })).toHaveLength(2);
+	});
+
+	test("a parent whose author's account is gone keeps its title, with no handle", () => {
+		const { container } = renderHeader({
+			recipe: makeRecipe({
+				author: { id: 'u1', username: 'me' },
+				parentId: 42,
+				parent: { slug: 'original', title: 'The Original', author: null }
+			})
+		});
+		expect(byline(container)).toBe('By @me · forked from The Original');
+		expect(screen.getAllByRole('link').map((a) => a.textContent!.trim())).toEqual([
+			'@me',
+			'The Original'
+		]);
+	});
+
+	test('a fork says so in the byline, linking the parent', () => {
 		const { container } = renderHeader({
 			recipe: makeRecipe({
 				author: { id: 'u1', username: 'me' },

@@ -30,7 +30,8 @@
 		/** The parent's version the fork copied; null or absent for a fork from before it was recorded. */
 		parentVersion?: number | null;
 		author?: { id: string; username: string } | null;
-		parent?: { slug: string; title: string } | null;
+		/** The parent's author is null once their account is gone. */
+		parent?: { slug: string; title: string; author?: { username: string } | null } | null;
 		/** parentId points at a recipe that was deleted, rather than one withheld as private. */
 		parentDeleted?: boolean;
 	}
@@ -80,17 +81,23 @@
 <header class="recipe-header">
 	<h1 class="title font-serif font-medium">{currentVersion.title}</h1>
 
-	<!-- Who, and what it was forked from (the parent's title, not its author,
-	     who is one click away). One line; there is no separate attribution
-	     line. Decided 29 October 2026. -->
+	<!-- Who, and what it was forked from: the parent's author by handle, then
+	     its title. One line; there is no separate attribution line. -->
 	<p class="byline dot-list font-sans [overflow-wrap:anywhere]">
 		{#if recipe.author}<span>
 				By <Username username={recipe.author.username} class="hit-link" />
 			</span>{/if}
 		{#if recipe.parent}
 			<span>
-				<!-- The exact version copied, when the fork recorded it (exact origins). -->
-				forked from {#if recipe.parentVersion}<a
+				<!-- The handle and its 's wrap as one unit, broken only when wider
+				     than the line. The exact version copied, when the fork recorded
+				     it (exact origins). -->
+				forked from
+				{#if recipe.parent.author}
+					<!-- prettier-ignore -->
+					<span class="inline-block max-w-full"><Username username={recipe.parent.author.username} class="hit-link" />'s</span>
+				{/if}
+				{#if recipe.parentVersion}<a
 						class="hit-link"
 						href="/recipes/{recipe.parent.slug}?version={recipe.parentVersion}">
 						{recipe.parent.title},
