@@ -1,5 +1,6 @@
 import type { Ingredient, Step } from '#lib/recipes/types.js';
 import type { Visibility } from '#lib/recipes/validation.js';
+import type { Measurement } from '#lib/measurement.js';
 import {
 	pgTable,
 	serial,
@@ -36,6 +37,10 @@ export const profiles = pgTable('profiles', {
 	id: text().primaryKey(), // Supabase auth user ID
 	username: text().notNull().unique(),
 	avatarUrl: text('avatar_url'),
+	// The audience a new recipe starts at (Settings); private until changed.
+	defaultVisibility: text('default_visibility').$type<Visibility>().notNull().default('private'),
+	// Units quantities are shown in (Settings); null shows them as written.
+	measurement: text().$type<Measurement>(),
 	createdAt: timestamp('created_at').notNull().defaultNow()
 }).enableRLS();
 
@@ -66,6 +71,9 @@ export const recipes = pgTable(
 		// Bumped once per committed save (version or settings-only). The edit form
 		// sends it back and a save with a stale value is refused.
 		editRevision: integer('edit_revision').notNull().default(0),
+		// In the Trash since then: hidden everywhere but the owner's Trash, and
+		// removed for good 30 days later. Null for a live recipe.
+		deletedAt: timestamp('deleted_at'),
 		// Full-text search vector: title (weight A) + description (weight B)
 		// Generated automatically by Postgres — never set manually
 		fts: tsvector('fts').generatedAlwaysAs(

@@ -25,7 +25,14 @@ function makeUser(email: string): User {
 }
 
 const signedIn = () => makeUser('chef@example.com');
-const profile = { id: 'user-abc', username: 'chefmaria', avatarUrl: null, createdAt: new Date() };
+const profile = {
+	id: 'user-abc',
+	username: 'chefmaria',
+	avatarUrl: null,
+	defaultVisibility: 'private' as const,
+	measurement: null,
+	createdAt: new Date()
+};
 const style = source.slice(source.indexOf('<style>'));
 
 afterEach(() => {
