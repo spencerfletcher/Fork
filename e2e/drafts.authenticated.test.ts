@@ -119,6 +119,39 @@ test.describe('Editor drafts on this device', () => {
 		}
 	});
 
+	test('the Cookbook lists this device’s drafts: Continue opens the editor, Discard forgets it', async ({
+		page
+	}) => {
+		const url = await createRecipe(page, 'E2E Draft Listed');
+		try {
+			await gotoHydrated(page, `${url}/edit`);
+			await titleBox(page).fill('E2E Draft Listed Typed');
+			await draftStored(page, 'E2E Draft Listed Typed');
+			await gotoHydrated(page, '/cookbook');
+			const drafts = page.getByRole('region', { name: 'Drafts' });
+			await expect(drafts.getByText('Kept on this device only.')).toBeVisible();
+			const row = drafts.getByRole('listitem').filter({ hasText: 'E2E Draft Listed Typed' });
+			await expect(row).toContainText('Changes to E2E Draft Listed');
+			await expect(row).toContainText(/edited (just now|\d+ minutes? ago)/);
+
+			await row.getByRole('link', { name: 'Continue E2E Draft Listed Typed' }).click();
+			await page.waitForURL(`${url}/edit`);
+			await expect(titleBox(page)).toHaveValue('E2E Draft Listed Typed');
+
+			await gotoHydrated(page, '/cookbook');
+			await page
+				.getByRole('region', { name: 'Drafts' })
+				.getByRole('button', { name: 'Discard E2E Draft Listed Typed' })
+				.click();
+			await expect(page.getByRole('region', { name: 'Drafts' })).toHaveCount(0);
+			await page.reload();
+			await expect(page.getByRole('heading', { level: 1, name: 'Cookbook' })).toBeVisible();
+			await expect(page.getByRole('region', { name: 'Drafts' })).toHaveCount(0);
+		} finally {
+			await deleteRecipe(page, url);
+		}
+	});
+
 	test('a new recipe’s draft survives leaving the editor and coming back', async ({ page }) => {
 		const dialogs = countDialogs(page);
 		await gotoHydrated(page, '/recipes/new');

@@ -50,6 +50,28 @@ test.describe('Settings', () => {
 		await expect(page.getByRole('radio', { name: 'Only me' })).toBeChecked();
 	});
 
+	test('full width: each section’s head beside its controls at desktop, stacked on a phone', async ({
+		page
+	}) => {
+		await page.setViewportSize({ width: 1280, height: 900 });
+		await gotoHydrated(page, '/settings');
+		const box = section(page, 'Username');
+		const heading = (await box.getByRole('heading', { name: 'Username' }).boundingBox())!;
+		const field = (await box.getByRole('textbox', { name: 'Username' }).boundingBox())!;
+		expect(field.x).toBeGreaterThan(heading.x + heading.width);
+		expect(field.width).toBeLessThanOrEqual(560);
+		await expect(box).toHaveCSS('border-top-style', 'none');
+
+		await page.setViewportSize({ width: 390, height: 900 });
+		const stacked = (await box.getByRole('textbox', { name: 'Username' }).boundingBox())!;
+		expect(stacked.y).toBeGreaterThan((await box.getByRole('heading').boundingBox())!.y);
+		expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+			390
+		);
+	});
+
+	// One rename and its undo leave one former name, inside the limit of two
+	// new names in 30 days, and the e2e database is reseeded every run.
 	test('a new username shows at once, and the old profile link redirects to it', async ({
 		page
 	}) => {
