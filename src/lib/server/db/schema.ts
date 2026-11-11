@@ -118,6 +118,11 @@ export const recipes = pgTable(
 		index('recipes_live_updated_idx')
 			.on(table.updatedAt)
 			.where(sql`${table.deletedAt} is null`),
+		// A profile's live recipes newest first (cardList by author), read
+		// backward like the one above; the keyset cursor is a range on it.
+		index('recipes_author_live_updated_idx')
+			.on(table.authorId, table.updatedAt, table.id)
+			.where(sql`${table.deletedAt} is null`),
 		// A cook's Trash, newest deletion first (inTrashOf, the Trash page), over
 		// trashed rows only.
 		index('recipes_trash_idx')
@@ -224,7 +229,16 @@ export const logEntries = pgTable(
 		audience: text().$type<LogAudience>().notNull().default('private'),
 		createdAt: timestamp('created_at').notNull().defaultNow()
 	},
-	(table) => [index('log_entries_user_idx').on(table.userId, table.cookedOn)]
+	(table) => [
+		index('log_entries_user_idx').on(table.userId, table.cookedOn),
+		// The Friends feed's entries newest first (feedFor), read backward and
+		// filtered by friend: one ordered walk instead of every friend's entries
+		// sorted. A (user_id, created_at) index cannot keep that order across
+		// several friends, and the planner passed it over.
+		index('log_entries_friends_created_idx')
+			.on(table.createdAt, table.id)
+			.where(sql`${table.audience} = 'friends'`)
+	]
 ).enableRLS();
 
 export const likes = pgTable(
