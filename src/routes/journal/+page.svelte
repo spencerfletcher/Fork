@@ -2,25 +2,32 @@
 	import { page } from '$app/state';
 	import { dayLabel, groupByMonth, monthLabel } from '#lib/journal.js';
 	import EmptyPanel from '#lib/components/ui/EmptyPanel.svelte';
+	import ShowMore from '#lib/components/ui/ShowMore.svelte';
 	import { plural } from '#lib/helpers.js';
+	import { pagedList } from '#lib/pagedList.svelte.js';
 	import JournalEntry from './JournalEntry.svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
 
-	const groups = $derived(groupByMonth(data.entries));
-	const count = $derived(data.entries.length);
-	const oldest = $derived(data.entries.at(-1));
+	const list = pagedList(
+		() => data,
+		(d) => ({ items: d.entries, next: d.next })
+	);
+	let entries = $state<HTMLElement>();
+
+	// A page appended to the last month's entries joins its group.
+	const groups = $derived(groupByMonth(list.items));
+	// The whole Journal's, not the entries shown.
+	const count = $derived(data.total);
 	const summary = $derived(
-		oldest
-			? `${plural(count, 'entry', 'entries')} since ${monthLabel(oldest.cookedOn).split(' ')[0]}`
+		data.oldest
+			? `${plural(count, 'entry', 'entries')} since ${monthLabel(data.oldest).split(' ')[0]}`
 			: ''
 	);
 
 	// The form lands here with ?logged=<id>, the delete with ?deleted=1.
-	const logged = $derived(
-		data.entries.find((e) => String(e.id) === page.url.searchParams.get('logged'))
-	);
+	const logged = $derived(data.logged);
 	const deleted = $derived(page.url.searchParams.has('deleted'));
 </script>
 
@@ -49,14 +56,17 @@
 				{/snippet}
 			</EmptyPanel>
 		{:else}
-			{#each groups as group (group.month)}
-				<section class="month-group">
-					<h2 class="month">{group.month}</h2>
-					{#each group.entries as entry (entry.id)}
-						<JournalEntry {entry} />
-					{/each}
-				</section>
-			{/each}
+			<div bind:this={entries}>
+				{#each groups as group (group.month)}
+					<section class="month-group">
+						<h2 class="month">{group.month}</h2>
+						{#each group.entries as entry (entry.id)}
+							<JournalEntry {entry} />
+						{/each}
+					</section>
+				{/each}
+			</div>
+			<ShowMore {list} container={entries} items="article" noun="entry" nouns="entries" />
 		{/if}
 	</div>
 </div>
