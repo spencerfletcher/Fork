@@ -27,7 +27,8 @@ export function optimisticToggle(
 		return async ({ result, update }) => {
 			busy = false;
 			if (result.type === 'success') {
-				if (refresh) await update({ reset: false });
+				// In place, so the page's query (?serves=) and an open menu stay.
+				if (refresh) await update({ reset: false, navigate: false });
 				return;
 			}
 			// Flip back: nothing was saved. A lapsed session says so in the server's

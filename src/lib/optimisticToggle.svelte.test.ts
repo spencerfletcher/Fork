@@ -9,7 +9,7 @@ type Result = {
 };
 type After = (opts: {
 	result: Result;
-	update: (options?: { reset?: boolean }) => Promise<void>;
+	update: (options?: { reset?: boolean; navigate?: boolean }) => Promise<void>;
 }) => Promise<void>;
 
 const FAILURE = 'Could not save that. Try again.';
@@ -75,10 +75,12 @@ describe('optimisticToggle', () => {
 		expect(press(toggle.submit).cancel).not.toHaveBeenCalled();
 	});
 
-	test('refresh applies a success without resetting the form', async () => {
+	// Navigating to the action URL would drop the page's query (?serves=) and
+	// close an open menu: the success is applied where the reader is.
+	test('refresh applies a success in place, without resetting the form', async () => {
 		const { toggle } = makeToggle(false, true);
 		const run = press(toggle.submit);
 		await run.settle({ type: 'success' });
-		expect(run.update).toHaveBeenCalledWith({ reset: false });
+		expect(run.update).toHaveBeenCalledWith({ reset: false, navigate: false });
 	});
 });

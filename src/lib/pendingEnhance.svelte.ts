@@ -4,7 +4,8 @@ export const UNREACHABLE_MESSAGE = "Couldn't reach the server. Your changes are 
 
 /**
  * A form's enhance callback that is `pending` from submit until the result has
- * been applied. `reset: false` keeps the fields as typed; `done` runs after.
+ * been applied, on this page at its URL (query kept), unless the action
+ * redirects. `reset: false` keeps the fields as typed; `done` runs after.
  * `keepOnError` holds an error result (a network failure or a thrown `error()`)
  * as `error` instead of applying it: applying renders the error page over the
  * form, which is not a navigation, so nothing typed survives and no guard asks.
@@ -38,7 +39,9 @@ export function pendingEnhance({
 					error = refused && typeof message === 'string' ? message : UNREACHABLE_MESSAGE;
 					return;
 				}
-				await update({ reset });
+				// In place: SvelteKit 3 would land on the action's URL, and a relative
+				// `?/name` action has dropped the page's query. Redirects still go.
+				await update({ reset, navigate: false });
 			} finally {
 				pending = false;
 			}

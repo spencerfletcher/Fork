@@ -28,11 +28,6 @@
 		return query ? `?${query}` : page.url.pathname;
 	}
 
-	// A form action's own query replaces the page's, and SvelteKit lands on what
-	// is left of it: a rename carries the page's query so the cook stays in the
-	// collection, with its search and filters.
-	const keptQuery = $derived(page.url.search ? `&${page.url.search.slice(1)}` : '');
-
 	let creating = $state(false);
 	let renaming = $state(false);
 	let newButton: HTMLButtonElement | undefined = $state();
@@ -62,7 +57,7 @@
 {#snippet nameForm(which: 'create' | 'rename', state: typeof create)}
 	<form
 		method="POST"
-		action={which === 'create' ? '?/createCollection' : `?/renameCollection${keptQuery}`}
+		action={which === 'create' ? '?/createCollection' : '?/renameCollection'}
 		class="name-form"
 		use:enhance={state.submit}>
 		{#if which === 'rename' && collection}

@@ -11,7 +11,7 @@ type Result = {
 };
 type After = (opts: {
 	result: Result;
-	update: (options?: { reset?: boolean }) => Promise<void>;
+	update: (options?: { reset?: boolean; navigate?: boolean }) => Promise<void>;
 }) => Promise<void>;
 
 /** Runs the submit callback as enhance would, with the result not yet applied. */
@@ -55,7 +55,15 @@ describe('pendingEnhance', () => {
 
 	test('reset is passed to update: false keeps the fields as typed', async () => {
 		const run = await submitWith(pendingEnhance({ reset: false }).submit);
-		expect(run.update).toHaveBeenCalledWith({ reset: false });
+		expect(run.update).toHaveBeenCalledWith(expect.objectContaining({ reset: false }));
+		await run.finish();
+	});
+
+	// SvelteKit 3 lands a result on the action's URL, and a relative `?/name`
+	// action has dropped the page's query (?serves=, ?version=, ?collection=).
+	test('update applies the result on this page, never navigating to the action URL', async () => {
+		const run = await submitWith(pendingEnhance().submit, { type: 'success' });
+		expect(run.update).toHaveBeenCalledWith({ reset: undefined, navigate: false });
 		await run.finish();
 	});
 
