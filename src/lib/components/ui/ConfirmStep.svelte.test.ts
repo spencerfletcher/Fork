@@ -42,6 +42,14 @@ describe('ConfirmStep', () => {
 		expect(screen.getByRole('button', { name: props.keepLabel })).not.toHaveClass('danger');
 	});
 
+	test('a step that loses nothing is not red: destructive={false} makes the confirm a plain ghost', async () => {
+		render(ConfirmStep, { props: { ...props, destructive: false } });
+		await open();
+		const confirm = screen.getByRole('button', { name: props.confirmLabel });
+		expect(confirm).toHaveClass('btn-ghost');
+		expect(confirm).not.toHaveClass('danger');
+	});
+
 	test('opens from outside through bind:open, and a pending post shows its words and holds the step open', async () => {
 		render(ConfirmStep, {
 			props: { ...props, open: true, pending: true, pendingLabel: 'Blocking…' }
