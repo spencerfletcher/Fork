@@ -4,6 +4,7 @@
 	import SearchFilters from '#lib/components/ui/SearchFilters.svelte';
 	import EmptyPanel from '#lib/components/ui/EmptyPanel.svelte';
 	import ResultStatus from '#lib/components/ui/ResultStatus.svelte';
+	import CookbookDrafts from './CookbookDrafts.svelte';
 	import { plural } from '#lib/helpers.js';
 	import { COOKBOOK_FILTERS, type CookbookFilter } from './filters.js';
 	import type { PageData } from './$types';
@@ -32,7 +33,8 @@
 	<div class="page-inner">
 		<div class="page-head cookbook-head">
 			<div>
-				<h1>Cookbook</h1>
+				<!-- Focusable for the Drafts list, which hands focus here once its last row goes. -->
+				<h1 tabindex="-1">Cookbook</h1>
 				{#if data.counts.all > 0}
 					<p class="page-sub">
 						{plural(data.counts.all, 'recipe')}: {data.counts.mine} yours, {data.counts.saved} saved from
@@ -45,6 +47,8 @@
 				<a href="/recipes/new" class="btn-primary btn-sm cookbook-new">New recipe</a>
 			{/if}
 		</div>
+
+		{#if data.user}<CookbookDrafts userId={data.user.id} />{/if}
 
 		{#if data.counts.all === 0}
 			<!-- No filters over an empty library (decided 29 October 2026). -->
