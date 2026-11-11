@@ -3,12 +3,13 @@
 	import type { SubmitFunction } from '$app/forms';
 	import { tick, type Snippet } from 'svelte';
 
-	// A destructive action asked twice, in place: no browser confirm() and no
+	// An action asked twice, in place: no browser confirm() and no
 	// dialog. The trigger opens a step in its own spot on its own line: the
 	// confirm, the keep button, then the sentence that says what goes. Only the
 	// step's button posts. Focus moves to the step; Escape or the keep button
 	// closes it and hands focus back to the trigger. Used by Delete recipe,
-	// Delete entry, and the profile's Remove friend and Block.
+	// Delete entry, the profile's Remove friend and Block, and the version
+	// bar's Restore, the one that loses nothing and so is not red.
 	let {
 		trigger,
 		triggerClass = 'btn-ghost danger',
@@ -17,6 +18,7 @@
 		confirmLabel,
 		pendingLabel = confirmLabel,
 		keepLabel,
+		destructive = true,
 		action,
 		enhance,
 		pending = false,
@@ -35,6 +37,8 @@
 		/** The confirm button's words while the post is in flight. */
 		pendingLabel?: string;
 		keepLabel: string;
+		/** Red, as something goes; false for a step that loses nothing. */
+		destructive?: boolean;
 		action: string;
 		enhance?: SubmitFunction;
 		/** While posting, both buttons are disabled and the step will not close. */
@@ -113,7 +117,7 @@
 			onkeydown={(e) => {
 				if (e.key === 'Escape') close();
 			}}>
-			<button type="submit" class="btn-ghost danger" disabled={pending}>
+			<button type="submit" class="btn-ghost" class:danger={destructive} disabled={pending}>
 				{pending ? pendingLabel : confirmLabel}
 			</button>
 			<button type="button" class="btn-ghost" disabled={pending} onclick={close}>

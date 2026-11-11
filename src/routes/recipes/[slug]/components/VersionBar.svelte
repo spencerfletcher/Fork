@@ -2,6 +2,8 @@
 	import { afterNavigate } from '$app/navigation';
 	import type { Recipe, RecipeVersion } from '#lib/server/db/schema.js';
 	import { chevronIcon } from '#lib/components/Icons.svelte';
+	import ConfirmStep from '#lib/components/ui/ConfirmStep.svelte';
+	import { pendingEnhance } from '#lib/pendingEnhance.svelte.js';
 
 	type BarVersion = Pick<RecipeVersion, 'id' | 'versionNumber' | 'commitMessage'>;
 
@@ -9,25 +11,35 @@
 		recipe,
 		currentVersion,
 		versions,
-		isViewingHistory
+		isViewingHistory,
+		canRestore = false
 	}: {
-		recipe: Pick<Recipe, 'slug'>;
+		recipe: Pick<Recipe, 'slug' | 'editRevision'>;
 		currentVersion: BarVersion;
 		/** Every version, newest first. */
 		versions: BarVersion[];
 		isViewingHistory: boolean;
+		/** The owner, on an older version that differs from the latest. */
+		canRestore?: boolean;
 	} = $props();
 
 	const count = $derived(versions.length);
 	const latest = $derived(versions[0].versionNumber);
 	const n = $derived(currentVersion.versionNumber);
 	let open = $state(false);
+	let restoring = $state(false);
+	// A refusal (a save in another tab, say) shows under the step; a success
+	// redirects to the latest, where the bar names the new version.
+	const restoration = pendingEnhance({ keepFailure: true, keepOnError: true });
 	let toggle: HTMLButtonElement | undefined = $state();
 	let bar: HTMLElement | undefined = $state();
 
 	// SvelteKit keeps this component mounted when only the query changes, so
 	// the list's own links would otherwise leave it open over the next view.
-	afterNavigate(() => (open = false));
+	afterNavigate(() => {
+		open = false;
+		restoring = false;
+	});
 
 	// Escape closes the list only while focus is inside the bar; from the
 	// method below it is not the bar's to take, and taking it would scroll
@@ -43,7 +55,7 @@
 	// clicks on it or a link are theirs. The history rows below are no target.
 	function onBarClick(event: MouseEvent) {
 		const target = event.target as Element;
-		if (target.closest('a, button')) return;
+		if (target.closest('a, button, form')) return;
 		if (!open) open = true;
 		else if (target.closest('.current')) open = false;
 	}
@@ -75,7 +87,7 @@
 		aria-label="Version history"
 		bind:this={bar}
 		onclick={onBarClick}>
-		<div class="current">
+		<div class="current" class:confirming={restoring}>
 			<span class="version-number vid">
 				<span class="sr-only">
 					{isViewingHistory
@@ -94,6 +106,29 @@
 					<span class="item">
 						<a class="hit-link" href="/recipes/{recipe.slug}">Back to v{latest}</a>
 					</span>
+				{/if}
+				{#if canRestore}
+					<!-- A div, as the step inside it is a form. -->
+					<div class="item restore">
+						<ConfirmStep
+							bind:open={restoring}
+							trigger="Restore this version"
+							triggerClass="text-btn"
+							explanation="Restore v{n}? It is saved as v{latest + 1}; nothing is lost."
+							confirmLabel="Restore"
+							pendingLabel="Restoring…"
+							keepLabel="Keep current"
+							destructive={false}
+							action="?/restore"
+							enhance={restoration.submit}
+							pending={restoration.pending}
+							error={restoration.error}>
+							{#snippet fields()}
+								<input type="hidden" name="version" value={n} />
+								<input type="hidden" name="editRevision" value={recipe.editRevision} />
+							{/snippet}
+						</ConfirmStep>
+					</div>
 				{/if}
 				<span class="item">
 					<button
@@ -205,6 +240,47 @@
 		white-space: nowrap;
 	}
 
+	.restore {
+		display: inline-block;
+	}
+
+	/* A word in the line like the toggle: no box of its own, so the line keeps
+	   its height; the hit grows on the pseudo below. */
+	.restore :global(.text-btn) {
+		min-height: 0;
+		position: relative;
+		font-size: inherit;
+	}
+
+	/* Confirming, the controls take a row of their own under the note at every
+	   width, as below 1024, and the step a row under them, after the toggle,
+	   rather than crush the note or split "Back to v3 · 3 versions"; its dot
+	   goes, as nothing precedes it there. */
+	.current.confirming {
+		flex-wrap: wrap;
+		row-gap: 8px;
+	}
+
+	.confirming > .controls {
+		flex: 1 1 100%;
+		margin-left: 36px;
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		column-gap: 10px;
+		row-gap: 8px;
+	}
+
+	.confirming .restore {
+		flex: 1 1 100%;
+		order: 1;
+		white-space: normal;
+	}
+
+	.confirming .restore::before {
+		content: none;
+	}
+
 	.version-bar a,
 	.versions-toggle {
 		color: var(--color-accent);
@@ -229,7 +305,8 @@
 	}
 
 	/* Its hit grows on a pseudo, so the focus ring hugs the words: 24px here. */
-	.versions-toggle::before {
+	.versions-toggle::before,
+	.restore :global(.text-btn)::before {
 		content: '';
 		position: absolute;
 		inset: -4px 0;
@@ -328,8 +405,22 @@
 
 		/* The toggle's 44px, on its pseudo: a ring this tall would cut through
 		   the note above. */
-		.versions-toggle::before {
+		.versions-toggle::before,
+		.restore :global(.text-btn)::before {
 			inset: -11px 0;
+		}
+
+		/* Restore cannot share the row: it takes one of its own after the
+		   toggle, with no dot to begin it, 22px under the row above so the two
+		   rows' 44px hits never overlap. */
+		.restore {
+			flex: 1 1 100%;
+			order: 1;
+			margin-top: 22px;
+		}
+
+		.restore::before {
+			content: none;
 		}
 
 		.history li {

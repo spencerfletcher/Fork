@@ -7,6 +7,7 @@ import { makeVersion } from '#lib/recipes/fixtures.js';
 import { cssRule } from '#lib/testing/css.js';
 
 vi.mock('$app/navigation', () => ({ afterNavigate: () => {} }));
+vi.mock('$app/forms', () => ({ enhance: () => ({ destroy: () => {} }) }));
 
 type Props = ComponentProps<typeof VersionBar>;
 
@@ -25,7 +26,7 @@ const THREE = [
 function renderBar(overrides: Partial<Props> = {}) {
 	return render(VersionBar, {
 		props: {
-			recipe: { slug: 'my-fork' },
+			recipe: { slug: 'my-fork', editRevision: 7 },
 			currentVersion: THREE[0],
 			versions: THREE,
 			isViewingHistory: false,
@@ -139,7 +140,9 @@ describe('VersionBar', () => {
 		// phrase. jsdom applies no component CSS, so the rule is read from the source.
 		// The dot is app.css's .dot-list, which no phone rule here turns off.
 		expect(current.querySelector('.controls')).toHaveClass('dot-list');
-		expect(source).not.toMatch(/::before \{\s*content: none;/);
+		// Only Restore's own row drops its dot.
+		const dotsOff = [...source.matchAll(/([^{}]*)::before \{\s*content: none;/g)];
+		expect(dotsOff.map((m) => m[1].trim())).toEqual(['.confirming .restore', '.restore']);
 
 		expect(screen.queryByRole('link', { name: /compare/i })).toBeNull();
 		await fireEvent.click(screen.getByRole('button', { name: '3 versions' }));
@@ -240,8 +243,62 @@ describe('VersionBar', () => {
 		);
 		for (const selectors of padded) expect(selectors).not.toMatch(/\.versions-toggle\b(?!::)/);
 		expect(style).toMatch(/\.versions-toggle \{[^}]*position: relative;/);
-		expect(style).toMatch(/\.versions-toggle::before \{[^}]*content: '';[^}]*inset: -4px 0;/);
+		expect(style).toMatch(/\.versions-toggle::before[^{]*\{[^}]*content: '';[^}]*inset: -4px 0;/);
 		const phone = style.slice(style.indexOf('@media (max-width: 699px)'));
-		expect(phone).toMatch(/\.versions-toggle::before \{\s*inset: -11px 0;/);
+		expect(phone).toMatch(/\.versions-toggle::before[^{]*\{\s*inset: -11px 0;/);
+	});
+
+	describe('Restore', () => {
+		const older = { currentVersion: THREE[2], isViewingHistory: true, canRestore: true };
+		const RESTORE = { name: 'Restore this version' };
+
+		test('a text button in the controls, between the way back and the toggle', () => {
+			const { container } = renderBar(older);
+			const restore = screen.getByRole('button', RESTORE);
+			expect(restore).toHaveClass('text-btn');
+			const words = [...container.querySelectorAll('.controls > .item')].map((el) =>
+				el.textContent!.replace(/\s+/g, ' ').trim()
+			);
+			expect(words).toEqual(['Back to v3', 'Restore this version', '3 versions']);
+		});
+
+		test('only when the page says so', () => {
+			renderBar({ ...older, canRestore: false });
+			expect(screen.queryByRole('button', RESTORE)).toBeNull();
+		});
+
+		test('confirms in place with the numbers from the data, posting the version and the revision', async () => {
+			const { container } = renderBar(older);
+			await fireEvent.click(screen.getByRole('button', RESTORE));
+			const step = screen.getByRole('group', {
+				name: 'Restore v1? It is saved as v4; nothing is lost.'
+			});
+			expect(step).toHaveFocus();
+			const confirm = screen.getByRole('button', { name: 'Restore' });
+			expect(confirm).not.toHaveClass('danger');
+			expect(screen.getByRole('button', { name: 'Keep current' })).toBeInTheDocument();
+			const form = confirm.closest('form')!;
+			expect(form).toHaveAttribute('action', '?/restore');
+			expect(Object.fromEntries(new FormData(form))).toEqual({ version: '1', editRevision: '7' });
+			// Confirming, the step takes a row of its own under the note.
+			expect(container.querySelector('.current')).toHaveClass('confirming');
+		});
+
+		test('a click inside the open step does not open the history list', async () => {
+			renderBar(older);
+			await fireEvent.click(screen.getByRole('button', RESTORE));
+			await fireEvent.click(screen.getByRole('group'));
+			expect(screen.getByRole('button', { name: /versions/ })).toHaveAttribute(
+				'aria-expanded',
+				'false'
+			);
+		});
+
+		test('on a phone it takes a row of its own after the toggle, with no dot to begin it', () => {
+			const phone = source.slice(source.indexOf('@media (max-width: 699px)'));
+			expect(cssRule(phone, '.restore')).toMatch(/flex:\s*1 1 100%/);
+			expect(cssRule(phone, '.restore')).toMatch(/order:\s*1/);
+			expect(cssRule(source, '.restore::before')).toMatch(/content:\s*none/);
+		});
 	});
 });

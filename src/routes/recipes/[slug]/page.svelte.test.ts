@@ -171,6 +171,50 @@ describe('recipe page owner', () => {
 	});
 });
 
+// Restore brings an older version back as the newest: only the owner, only on
+// an older version, and only when it differs from the latest.
+describe('recipe page restore', () => {
+	const RESTORE = { name: 'Restore this version' };
+
+	function view(opts: { user: string | null; version: 1 | 2; sameContent?: boolean }) {
+		page.url = new URL(`http://localhost/recipes/cookies?version=${opts.version}`);
+		const data = makeData();
+		const [latest, first] = data.allVersions;
+		const older = opts.sameContent ? first : { ...first, title: 'Plain cookies' };
+		const allVersions = [latest, older];
+		render(Page, {
+			props: {
+				data: {
+					...data,
+					user: opts.user ? { id: opts.user } : null,
+					allVersions,
+					currentVersion: opts.version === 1 ? older : latest
+				} as PageData
+			}
+		});
+	}
+
+	test('the owner reading an older version that differs gets Restore', () => {
+		view({ user: 'a', version: 1 });
+		expect(screen.getByRole('button', RESTORE)).toBeInTheDocument();
+	});
+
+	test('not on the latest version', () => {
+		view({ user: 'a', version: 2 });
+		expect(screen.queryByRole('button', RESTORE)).toBeNull();
+	});
+
+	test('not for anyone but the owner, signed in or not', () => {
+		view({ user: 'someone-else', version: 1 });
+		expect(screen.queryByRole('button', RESTORE)).toBeNull();
+	});
+
+	test('not when the older version reads the same as the latest: nothing to restore', () => {
+		view({ user: 'a', version: 1, sameContent: true });
+		expect(screen.queryByRole('button', RESTORE)).toBeNull();
+	});
+});
+
 describe('recipe page logged out', () => {
 	test('Log in to save leads to login and back to this page, query included', () => {
 		load('?serves=8');

@@ -9,6 +9,7 @@
 	import ServesControl from './components/ServesControl.svelte';
 	import { ticksKey } from './components/ticks';
 	import { parseServes } from '#lib/recipes/scale.js';
+	import { changedGroups } from '#lib/recipes/content.js';
 	import { loginHref as buildLoginHref } from '#lib/auth/loginHref.js';
 
 	let { data }: { data: PageData } = $props();
@@ -24,6 +25,10 @@
 	// The owner's row is Cook and Edit only (decided 9 Nov 2026).
 	const canFavorite = $derived(!!user && !isOwner && !isViewingHistory);
 	const canEdit = $derived(isOwner && !isViewingHistory);
+	// An older version reading the same as the latest has nothing to restore.
+	const canRestore = $derived(
+		isOwner && isViewingHistory && changedGroups(allVersions[0], currentVersion).length > 0
+	);
 	// The scaler and Cook write the URL with a shallow replace, which leaves
 	// page.url behind. A data reload (Favorite) or Back re-reads it, so the
 	// newest URL is page.shallow's when there is one.
@@ -117,7 +122,12 @@
 		<div class="page-inner">
 			{#if !cooking}
 				<div class="bar-row">
-					<VersionBar {recipe} {currentVersion} versions={allVersions} {isViewingHistory} />
+					<VersionBar
+						{recipe}
+						{currentVersion}
+						versions={allVersions}
+						{isViewingHistory}
+						{canRestore} />
 				</div>
 			{/if}
 

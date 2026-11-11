@@ -4,15 +4,22 @@ import { recipes, recipeVersions, recipesToTags, favorites } from '#lib/server/d
 import { eq, desc, and } from 'drizzle-orm';
 import { slugify, randomSuffix, plural, wholeNumber } from '#lib/helpers.js';
 import { ensureProfile } from '#lib/server/profiles.js';
-import type { RecipeContent } from '#lib/recipes/types.js';
-import { recipeCopies } from '#lib/recipes/content.js';
+import { recipeCopies, versionContent } from '#lib/recipes/content.js';
 import { absoluteImage, clampDescription } from '#lib/seo.js';
 import { gramsFor } from '#lib/server/ingredientDensities.js';
-import { canViewRow, friendIdsOnce, viewableRecipe } from '#lib/server/visibility.js';
+import {
+	canViewRow,
+	friendIdsOnce,
+	NOT_AUTHORIZED,
+	ownRecipe,
+	viewableRecipe
+} from '#lib/server/visibility.js';
 import { attachRecipeCounts } from '#lib/server/recipeCounts.js';
 import { lastEntryFor } from '#lib/server/journal.js';
 import { VERSION_NOT_FOUND } from './versionError.js';
-import { failure, SESSION_ENDED } from '#lib/server/actions.js';
+import { failure, requireUser, SESSION_ENDED } from '#lib/server/actions.js';
+import { STALE_MESSAGE } from '#lib/server/submission.js';
+import { restoreVersion } from '#lib/server/versions.js';
 import type { PageServerLoad, Actions } from './$types';
 
 export const load: PageServerLoad = async ({ params, url, locals: { user } }) => {
@@ -143,9 +150,8 @@ export const actions: Actions = {
 
 		// One snapshot of the latest version is the whole content of the fork;
 		// the source row contributes only its settings and lineage.
-		const copies = recipeCopies(latestVersion);
-		const { makes, ingredients, steps } = latestVersion;
-		const snapshot: RecipeContent = { ...copies, makes, ingredients, steps };
+		const snapshot = versionContent(latestVersion);
+		const copies = recipeCopies(snapshot);
 		const slug = `${slugify(snapshot.title)}-${randomSuffix()}`;
 
 		let newSlug: string | null = null;
@@ -185,5 +191,35 @@ export const actions: Actions = {
 		});
 
 		throw redirect(303, `/recipes/${newSlug}/edit`);
+	},
+
+	// Brings an older version back by appending it as the newest; no version
+	// changes. Only the owner, and only from a page loaded at the current
+	// revision, as an edit save is.
+	restore: async ({ params, request, url, locals: { user } }) => {
+		requireUser(url, user);
+		const recipe = await ownRecipe(params.slug, user.id);
+
+		const formData = await request.formData();
+		const versionNumber = wholeNumber(String(formData.get('version') ?? ''));
+		const editRevision = wholeNumber(String(formData.get('editRevision') ?? ''));
+		if (versionNumber === null || editRevision === null)
+			return failure(400, 'invalid', 'Invalid form state, reload the page');
+		if (recipe.editRevision !== editRevision) return failure(409, 'stale', STALE_MESSAGE);
+
+		const outcome = await db.transaction((tx) =>
+			restoreVersion(tx, recipe.id, user.id, editRevision, versionNumber)
+		);
+		if (outcome === 'forbidden') throw error(403, NOT_AUTHORIZED);
+		if (outcome === 'stale') return failure(409, 'stale', STALE_MESSAGE);
+		if (outcome === 'not_found')
+			return failure(404, 'not_found', `This recipe has no v${versionNumber}.`);
+		if (outcome === 'unchanged')
+			return failure(
+				400,
+				'invalid',
+				`v${versionNumber} is the same as the latest version: nothing to restore.`
+			);
+		throw redirect(303, `/recipes/${params.slug}`);
 	}
 };
