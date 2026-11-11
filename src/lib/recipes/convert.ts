@@ -163,10 +163,9 @@ export function convertIngredient(
 	const weighed =
 		to === 'metric' &&
 		from.dimension === 'volume' &&
+		// A whole-item estimate never reaches here: a count has no volume unit.
 		grams !== null &&
-		!grams.approximate &&
 		!grams.liquid &&
-		(quantity2 === null || grams.grams2 !== null) &&
 		(from.system !== 'spoon' || grams.grams >= MIN_SPOON_GRAMS);
 	// A weight that does not round within tolerance falls back to the volume rules.
 	const weight = weighed

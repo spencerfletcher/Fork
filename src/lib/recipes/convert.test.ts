@@ -251,6 +251,9 @@ describe('convertIngredient: grams first for what is weighed', () => {
 		expect(weighed(`${at} tsp salt`).text).toBe(`${MIN_SPOON_GRAMS} g salt`);
 		const under = (MIN_SPOON_GRAMS - 0.5) / tspOf(1, 'salt');
 		expect(weighed(`${under} tsp salt`).written).toBeNull();
+		// A whole gram under it rounds exactly, so only the threshold keeps the spoon.
+		const whole = (MIN_SPOON_GRAMS - 1) / tspOf(1, 'salt');
+		expect(weighed(`${whole} tsp salt`).written).toBeNull();
 		expect(weighed('1/4 tsp espresso powder').written).toBeNull();
 	});
 
