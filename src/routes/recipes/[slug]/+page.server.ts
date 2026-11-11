@@ -64,8 +64,11 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 		? null
 		: await keptCopy(recipeSlug, user, { author: true, parent: { with: { author: true } } });
 	if (!shown && !copy) throw error(404, 'Recipe not found');
+	// The row's copies follow the author's latest, perhaps written after they
+	// withdrew it; a copy carries its kept version's instead.
 	const recipe = shown ?? {
 		...copy!.recipe,
+		...recipeCopies(versionContent(copy!.version)),
 		recipesToTags: [],
 		versions: [{ ...copy!.version, creator: null }]
 	};

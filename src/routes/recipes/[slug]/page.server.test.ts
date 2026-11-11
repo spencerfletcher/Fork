@@ -1026,7 +1026,14 @@ describe('Keep this version', () => {
 				keptCopy: true,
 				currentVersion: { versionNumber: 2 },
 				allVersions: [{ versionNumber: 2 }],
-				recipe: { recipesToTags: [] },
+				// The row's copies follow the author's latest, perhaps written after
+				// withdrawing it: the page's data carries the kept version's instead.
+				recipe: {
+					recipesToTags: [],
+					title: LATEST.title,
+					description: LATEST.description,
+					imageUrl: LATEST.imageUrl
+				},
 				favoriteCount: 0,
 				forkCount: 0,
 				save: { keptVersion: null, note: 'Mine' }
