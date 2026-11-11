@@ -107,7 +107,7 @@ The differentiating experience is continuity: a recipe travels from capture thro
 | Photo access follows audience | Private and Friends-level photos are not publicly addressable | next | R (9 Nov evening) |
 | Settings page | Account, username, default audience; later the measurement and inline-quantity preferences | next | R (9 Nov evening) |
 | Measurement preference | Metric or US per user | next | R (9 Nov evening) |
-| Last and times cooked | Derived from log entries, on cards and the recipe page (the personal "You cooked this on" line is shipped) | next | R (9 Nov evening), M17 |
+| Last and times cooked | Derived from log entries, on Cookbook cards and the recipe page's personal line; never on cards about the recipe (Discover, Search, tags, profiles) | shipped | R (9 Nov evening), M17 |
 | Cookbook and Discover | Separate destinations; a route never changes meaning on sign-in | shipped | DS |
 | Collections | v1 manual collections ("To cook", "Good for parties", "Quick", "Healthy", "Italian"); starter collections "To cook" and "Favorites"; optional "Add to collection" beside Save or in the menu, never replacing Save's confirmation; multiple membership; membership not copies; owned and saved organize the same way; the data model leaves room for a rule. Personal library works without a feed | next | R, OD, L06, M6 |
 | Keep this version | An option on a saved recipe, shown on the page ("Keeping v3 · Follow latest version"); lasts across visits; never overrides access. If the author unpublishes or deletes the recipe, the saver keeps a read-only copy of the version they saved, marked as no longer shared by the author, and cannot re-share it (section 7). Private notes on saved recipes | next | R, DS, L11, OD |
@@ -118,7 +118,7 @@ The differentiating experience is continuity: a recipe travels from capture thro
 | Export and archive | Human-readable export and a structured archive with supported versions, provenance, photos, groups, organization; selected or whole library (X02, X03); round-trip fixture proves fidelity; export stays available whatever the payment status | next | R, CM, M16 |
 | Public recipe metadata | Verify public previews; add Recipe structured data for public recipes | next | M2 |
 | Photo field redesign | The photo itself with two pill overlays (Replace, Remove), or one Add photo pill when empty; ends today's two text-button styles | next (P1, soon) | R (9 Nov evening), OD |
-| Feed card title | Drop the "Shakshuka · v1" source line; the entry title links to the recipe at the cooked version | next (P1 polish) | R (9 Nov evening), OD |
+| Feed card title | Drop the "Shakshuka · v1" source line; the entry title links to the recipe at the cooked version | shipped | R (9 Nov evening), OD |
 | Editor composition | Title and metadata left, bounded photo right, ingredients and method below (E01); optional fields collapse and show when filled (E02); the Zed-inspired refinement pass | next | DD, Z |
 
 ### P2: Cook, record and connect
