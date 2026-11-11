@@ -178,6 +178,15 @@ describe('loadDiscover', () => {
 		expect(result.searchQuery).toBe('@DevCooks dal');
 	});
 
+	test('an @handle a cook gave up still finds them, through the one resolver', async () => {
+		selectMock.mockReturnValue(chain([]));
+
+		await loadDiscover(url('?q=' + encodeURIComponent('@devcooks')), VIEWER);
+
+		const where = sqlOf(findManyMock.mock.calls[0][0].where).sql;
+		expect(where).toContain('"former_usernames"');
+	});
+
 	// The friends rule's fragment, its placeholders numbered as $ alone, counted.
 	const friendRules = (where: SQL) => {
 		const strip = (q: SQL) => sqlOf(q).sql.replace(/\$\d+/g, '$');

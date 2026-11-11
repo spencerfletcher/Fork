@@ -1,9 +1,10 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
-import { chain } from '#lib/testing/drizzle.js';
+import { chain, sqlOf } from '#lib/testing/drizzle.js';
 import { loadEvent, loadPage } from '#lib/testing/actions.js';
 import { load } from './+page.server';
 import type { PageData } from './$types';
-import { profiles, recipes } from '#lib/server/db/schema.js';
+import { recipes } from '#lib/server/db/schema.js';
+import { namedBy } from '#lib/server/profiles.js';
 import { and, eq } from 'drizzle-orm';
 import { visibleTo } from '#lib/server/visibility.js';
 import { attachRecipeCounts } from '#lib/server/recipeCounts.js';
@@ -86,11 +87,21 @@ describe('users/[username] load', () => {
 		});
 	});
 
-	test('looks the username up as given when it is already lowercase', async () => {
+	test('looks the username up as given when it is already lowercase, current or former', async () => {
 		findProfileMock.mockResolvedValue(makeProfile());
 		findRecipesMock.mockResolvedValue([]);
 		await load(makeLoadEvent('chefmaria'));
-		expect(findProfileMock).toHaveBeenCalledWith({ where: eq(profiles.username, 'chefmaria') });
+		expect(sqlOf(findProfileMock.mock.calls[0][0].where)).toEqual(sqlOf(namedBy('chefmaria')));
+	});
+
+	// A renamed cook's old links keep working: one permanent hop to the new name.
+	test('a former username redirects permanently to the current one, query kept', async () => {
+		findProfileMock.mockResolvedValue(makeProfile({ username: 'mariacooks' }));
+		await expect(load(makeLoadEvent('chefmaria', null, '?tab=forks'))).rejects.toMatchObject({
+			status: 301,
+			location: '/users/mariacooks?tab=forks'
+		});
+		expect(findRecipesMock).not.toHaveBeenCalled();
 	});
 
 	test("the relation is the viewer's with this person; signed out there is none", async () => {

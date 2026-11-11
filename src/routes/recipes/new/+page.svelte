@@ -6,6 +6,8 @@
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
+	// The audience starts at the cook's default from Settings; forks keep their own rule.
+	// svelte-ignore state_referenced_locally
 	const EMPTY: RecipeDraft = {
 		title: '',
 		description: '',
@@ -17,7 +19,7 @@
 		steps: '',
 		commitMessage: '',
 		editRevision: '',
-		visibility: 'private',
+		visibility: data.profile?.defaultVisibility ?? 'private',
 		tags: [],
 		hadPhoto: false,
 		removeImage: false

@@ -49,6 +49,8 @@ Planning and design docs: start at `docs/README.md`, which names the current pro
 - `inLibraryOf(user)` (`src/lib/server/visibility.ts`): SQL for own recipes plus saved ones the viewer may see
 - `authorIsFriendOf(userId)` (`src/lib/server/visibility.ts`): SQL for recipes whose author is an accepted friend; visibleTo's friends rule and the Friends filter (Discover, Search), always ANDed with `visibleTo`
 - `eitherWay([requester, addressee], a, b)` (`src/lib/server/visibility.ts`): the friendship pair matched either way round, as the unique index orders it
+- `namedBy(username)` (`src/lib/server/profiles.ts`): SQL for the profile a URL username or `@handle` names, current or former; every reader of a username from the URL goes through it (the caller redirects when the current name differs)
+- `changeUsername(id, username, conn?)` and `usernameTaken(username, self?, conn?)` (`src/lib/server/profiles.ts`): a rename that keeps the old name reserved to its owner, and the taken check across current and former names
 - `cardList(where, orderBy, viewer, { tagRank?, limit? })` (`src/lib/server/recipeCounts.ts`): recipe cards with their counts, more tag matches first
 - `tagSelection(allTags, slugs, withinIds?)` (`src/lib/server/tagFilter.ts`): the URL's tags resolved and matched
 - `failure(status, code, error, extra?)` and `FAILURE_CODES` (`src/lib/server/actions.ts`): every `fail()` in the `{ error, code }` shape, codes from one list

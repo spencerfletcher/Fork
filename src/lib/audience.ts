@@ -8,3 +8,10 @@ export const AUDIENCE_LABEL: Record<Visibility, string> = {
 	friends: 'Friends',
 	public: 'Public'
 };
+
+/** A recipe audience's one sentence, under its word in the editor and Settings. */
+export const AUDIENCE_NOTE: Record<Visibility, string> = {
+	private: 'Only you can see it. You can share it later.',
+	friends: 'Approved friends can see, save and fork it. It stays out of Discover.',
+	public: 'Anyone can find, save and fork it.'
+};
