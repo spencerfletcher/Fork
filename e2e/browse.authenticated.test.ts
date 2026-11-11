@@ -124,7 +124,8 @@ test.describe('Cookbook segments on a phone', () => {
 
 test.describe('Cookbook cards: times and last cooked', () => {
 	// The seed logs Chicken Tikka Masala once, on Sun 8 Nov, by the seed user.
-	for (const width of [320, 390, 1280]) {
+	// A phone's two-across card wraps it further; cookbook-view's spec checks it fits.
+	for (const width of [834, 1280]) {
 		test(`a cooked recipe says so in its meta row, on at most two lines at ${width}`, async ({
 			page
 		}) => {

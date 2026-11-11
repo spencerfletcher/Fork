@@ -1,7 +1,8 @@
 import { describe, test, expect, beforeAll, afterAll } from 'vitest';
 import { eq, inArray, like, sql } from 'drizzle-orm';
 
-import { closeDbAfter, localDb, stamp } from '#lib/testing/db.js';
+import { closeDbAfter, localDb, stamp, withProfiles } from '#lib/testing/db.js';
+import type { Tx } from '#lib/server/db/index.js';
 
 closeDbAfter();
 
@@ -121,3 +122,74 @@ describe.skipIf(!localDb)("cardList's pages, against the real database", () => {
 		expect(page.cards.map((c) => c.slug.slice(prefix.length))).toEqual(['a', 'b']);
 	});
 });
+
+// Rolled back: cardList reads through the transaction it is handed.
+describe.skipIf(!localDb)(
+	"cardList on the viewer's own shelf, in a rolled-back transaction",
+	() => {
+		type Schema = typeof import('#lib/server/db/schema.js');
+		let schema: Schema;
+		let cardList: typeof import('./recipeCounts.js').cardList;
+
+		beforeAll(async () => {
+			schema = await import('#lib/server/db/schema.js');
+			({ cardList } = await import('./recipeCounts.js'));
+		});
+
+		/** `titles` as the cook's own public recipes, in order, ids ascending; returns their ids. */
+		async function shelf(tx: Tx, authorId: string, s: string, titles: string[]) {
+			const rows = await tx
+				.insert(schema.recipes)
+				.values(
+					titles.map((title, i) => ({
+						authorId,
+						slug: `shelf-${s}-${i}`,
+						title,
+						visibility: 'public' as const,
+						// One change time for all, so only the id breaks a tie.
+						updatedAt: sql`'2020-01-01'::timestamp`
+					}))
+				)
+				.returning({ id: schema.recipes.id });
+			return rows.map((r) => r.id);
+		}
+
+		const theirs = (authorId: string) => eq(schema.recipes.authorId, authorId);
+
+		test('each card carries its first three tags by name, the Cookbook only', async () => {
+			await withProfiles(1, async (tx, [cook], s) => {
+				const [tagged, bare] = await shelf(tx, cook, s, ['Tagged', 'Bare']);
+				const made = await tx
+					.insert(schema.tags)
+					.values(
+						['soup', 'dinner', 'quick', 'autumn'].map((n) => ({
+							name: `${n}-${s}`,
+							slug: `${n}-${s}`
+						}))
+					)
+					.returning({ id: schema.tags.id });
+				await tx
+					.insert(schema.recipesToTags)
+					.values(made.map((t) => ({ recipeId: tagged, tagId: t.id })));
+
+				const viewer = { id: cook };
+				const page = await cardList(theirs(cook), [], viewer, {
+					after: null,
+					limit: 5,
+					cooked: true,
+					conn: tx
+				});
+				const byId = new Map(page.cards.map((c) => [c.id, c]));
+				expect(byId.get(tagged)?.tags).toEqual([`autumn-${s}`, `dinner-${s}`, `quick-${s}`]);
+				expect(byId.get(bare)?.tags).toEqual([]);
+
+				const browse = await cardList(theirs(cook), [], viewer, {
+					after: null,
+					limit: 5,
+					conn: tx
+				});
+				expect(browse.cards[0]).not.toHaveProperty('tags');
+			});
+		});
+	}
+);

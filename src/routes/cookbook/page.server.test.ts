@@ -1,6 +1,7 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { chain, sqlOf } from '#lib/testing/drizzle.js';
-import { loadEvent, loadPage } from '#lib/testing/actions.js';
+import { cookieJar, loadEvent, loadPage } from '#lib/testing/actions.js';
+import { VIEW_COOKIE } from './filters.js';
 
 const db = await vi.hoisted(async () => ({
 	...(await import('#lib/testing/drizzle.js')).mockDb(),
@@ -119,6 +120,44 @@ describe('/cookbook load', () => {
 		expect(sqlOf(query.where).params).toContain('saffron');
 		expect(query.limit).toBe(25);
 		expect(result.next).toBeNull();
+	});
+
+	describe('the view, Grid or List', () => {
+		const viewOf = async (search: string, cookie?: string) => {
+			selectMock.mockReturnValueOnce(counted(2, 1));
+			const cookies = cookieJar(cookie === undefined ? {} : { [VIEW_COOKIE]: cookie });
+			const event = loadEvent({ path: `/cookbook${search}`, user: USER, cookies });
+			const result = await loadPage<PageData>(load, event);
+			return { view: result.view, cookies };
+		};
+
+		test('is the grid with neither the URL nor the device saying otherwise', async () => {
+			const { view, cookies } = await viewOf('');
+			expect(view).toBe('grid');
+			expect(cookies.set).not.toHaveBeenCalled();
+		});
+
+		test('the device remembers the cook’s last choice', async () => {
+			expect((await viewOf('', 'list')).view).toBe('list');
+		});
+
+		test('the URL wins over the device, and is remembered for a year on the Cookbook', async () => {
+			const { view, cookies } = await viewOf('?view=grid', 'list');
+			expect(view).toBe('grid');
+			expect(cookies.set).toHaveBeenCalledWith(VIEW_COOKIE, 'grid', {
+				path: '/cookbook',
+				httpOnly: true,
+				sameSite: 'lax',
+				maxAge: 60 * 60 * 24 * 365
+			});
+		});
+
+		test('garbage in the URL or the cookie reads as the default, and is not remembered', async () => {
+			const { view, cookies } = await viewOf('?view=table', 'mosaic');
+			expect(view).toBe('grid');
+			expect(cookies.set).not.toHaveBeenCalled();
+			expect((await viewOf('?view=table', 'list')).view).toBe('list');
+		});
 	});
 });
 

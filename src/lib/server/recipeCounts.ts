@@ -1,4 +1,4 @@
-import { db } from '#lib/server/db/index.js';
+import { db, type Tx } from '#lib/server/db/index.js';
 import { recipes, recipeVersions } from '#lib/server/db/schema.js';
 import { and, count, desc, inArray, sql, type SQL } from 'drizzle-orm';
 import { visibleTo, type Viewer } from './visibility.js';
@@ -17,7 +17,8 @@ export const CARD_WITH = { author: { columns: { id: true, username: true } } } a
  */
 export async function attachRecipeCounts<T extends { id: number }>(
 	recipeList: T[],
-	viewer: Viewer = null
+	viewer: Viewer = null,
+	conn: Tx | typeof db = db
 ): Promise<(T & { versionCount: number; forkCount: number })[]> {
 	const ids = recipeList.map((r) => r.id);
 
@@ -27,13 +28,13 @@ export async function attachRecipeCounts<T extends { id: number }>(
 
 	// recipe_versions is append-only — a row per edit, forever — so this
 	// aggregate must never full-scan it. Scoped to the recipes actually passed in.
-	const versionCounts = await db
+	const versionCounts = await conn
 		.select({ recipeId: recipeVersions.recipeId, count: count() })
 		.from(recipeVersions)
 		.where(inArray(recipeVersions.recipeId, ids))
 		.groupBy(recipeVersions.recipeId);
 
-	const forkCounts = await db
+	const forkCounts = await conn
 		.select({ parentId: recipes.parentId, count: count() })
 		.from(recipes)
 		.where(and(inArray(recipes.parentId, ids), visibleTo(viewer)))
@@ -61,13 +62,19 @@ const KEYSET = /^(\d{4}-\d\d-\d\d \d\d:\d\d:\d\d(?:\.\d{1,6})?)~(\d+)$/;
  * computed per query, so a ranked cursor is a position instead. A cursor that
  * is not one reads as the first page. With `cooked` (the viewer's own shelf
  * only, never a list about the recipe) a card the viewer has logged also
- * carries their times and last cooked.
+ * carries their times and last cooked, and every card its first three tags
+ * by name, for the list view's row.
  */
 export async function cardList(
 	where: SQL | undefined,
 	rank: SQL[],
 	viewer: Viewer,
-	{ after, limit, cooked }: { after: string | null; limit: number; cooked?: boolean }
+	{
+		after,
+		limit,
+		cooked,
+		conn = db
+	}: { after: string | null; limit: number; cooked?: boolean; conn?: Tx | typeof db }
 ) {
 	const ranked = rank.length > 0;
 	// A ranked cursor is how many cards came before.
@@ -77,9 +84,18 @@ export async function cardList(
 	const afterKey = key
 		? sql`(${recipes.updatedAt}, ${recipes.id}) < (${key[1]}::timestamp, ${Number(key[2])})`
 		: undefined;
-	const rows = await db.query.recipes.findMany({
+	// In the same read: three short names per card, never a query per card.
+	// Raw names inside: the relational query renames every column to its root table.
+	const firstTags = cooked
+		? sql<string[]>`array(SELECT t.name FROM recipes_to_tags rt JOIN tags t ON t.id = rt.tag_id
+				WHERE rt.recipe_id = ${recipes.id} ORDER BY t.name LIMIT 3)`
+		: sql<null>`null`;
+	const rows = await conn.query.recipes.findMany({
 		where: and(where, afterKey),
-		extras: { cursorAt: sql<string>`${recipes.updatedAt}::text`.as('cursor_at') },
+		extras: {
+			cursorAt: sql<string>`${recipes.updatedAt}::text`.as('cursor_at'),
+			firstTags: firstTags.as('first_tags')
+		},
 		with: CARD_WITH,
 		orderBy: [...rank, desc(recipes.updatedAt), desc(recipes.id)],
 		// One more than the page says whether a page follows.
@@ -96,13 +112,17 @@ export async function cardList(
 			: null;
 	// The cursor is the page's, never a card's.
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	const cards = page.map(({ cursorAt, ...card }) => card);
-	const withCounts = await attachRecipeCounts(cards, viewer);
+	const cards = page.map(({ cursorAt, firstTags, ...card }) => ({
+		...card,
+		...(firstTags ? { tags: firstTags } : {})
+	}));
+	const withCounts = await attachRecipeCounts(cards, viewer, conn);
 	const cookedById =
 		cooked && viewer
 			? await cookedCounts(
 					viewer.id,
-					cards.map((r) => r.id)
+					cards.map((r) => r.id),
+					conn
 				)
 			: new Map<number, Cooked>();
 	return { cards: withCounts.map((r) => ({ ...r, ...cookedById.get(r.id) })), next };

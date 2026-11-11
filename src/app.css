@@ -910,12 +910,19 @@
 		}
 	}
 
-	/* Cookbook: your shelf, dense and uniform. One column on a phone, so the
-	   photos lead at full width; two from 700, four from 1100. */
+	/* Cookbook: your shelf, dense and uniform. Two across on a phone, tighter,
+	   so a long shelf scans (Spencer, 12 November 2026: A2's 2x2 on the phone);
+	   two from 700 at the desktop gaps, four from 1100. */
 	.cookbook-grid {
 		display: grid;
-		grid-template-columns: minmax(0, 1fr);
-		gap: 32px 24px;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 20px 14px;
+	}
+
+	@media (min-width: 700px) {
+		.cookbook-grid {
+			gap: 32px 24px;
+		}
 	}
 
 	/* Discover: looser, three at most, more air between rows. */

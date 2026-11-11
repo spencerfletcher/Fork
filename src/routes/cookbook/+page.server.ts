@@ -18,11 +18,25 @@ import {
 } from '#lib/server/collections.js';
 import { oneOf, text, wholeNumber } from '#lib/helpers.js';
 import { listPage } from '#lib/listPage.js';
-import { COOKBOOK_FILTERS, type CookbookFilter } from './filters.js';
+import {
+	COOKBOOK_FILTERS,
+	COOKBOOK_VIEWS,
+	VIEW_COOKIE,
+	type CookbookFilter,
+	type CookbookView
+} from './filters.js';
 import type { Actions, PageServerLoad } from './$types';
 import { privatePage } from '#lib/seo.js';
 
 const META = privatePage('Cookbook');
+
+/** The view is the device's: server-read (no grid-then-list flash), never sent to script. */
+const VIEW_COOKIE_OPTIONS = {
+	path: '/cookbook',
+	httpOnly: true,
+	sameSite: 'lax',
+	maxAge: 60 * 60 * 24 * 365
+} as const;
 
 /**
  * The library's counts by segment, whole and inside `inCollection`: one pass
@@ -45,13 +59,19 @@ async function shelfCounts(user: { id: string }, inCollection: SQL | undefined) 
 	return { library: split(row.all, row.mine), inView: split(row.inAll, row.inMine) };
 }
 
-export const load: PageServerLoad = async ({ url, locals: { user, supabase } }) => {
+export const load: PageServerLoad = async ({ url, cookies, locals: { user, supabase } }) => {
 	requireUser(url, user);
 	// The Cookbook is the frequent page every cook opens, so it runs the purge.
 	await purgeExpiredTrash(supabase);
 
 	const filter: CookbookFilter = oneOf(COOKBOOK_FILTERS, url.searchParams.get('filter')) ?? 'all';
 	const { searchQuery, tagSlugs } = parseFilters(url);
+	// A view in the URL is a choice (the switch's links), so the device keeps it;
+	// it wins over the one kept.
+	const askedView = oneOf(COOKBOOK_VIEWS, url.searchParams.get('view'));
+	if (askedView) cookies.set(VIEW_COOKIE, askedView, VIEW_COOKIE_OPTIONS);
+	const view: CookbookView =
+		askedView ?? oneOf(COOKBOOK_VIEWS, cookies.get(VIEW_COOKIE) ?? null) ?? 'grid';
 
 	const collectionId = wholeNumber(url.searchParams.get('collection') ?? '');
 
@@ -91,6 +111,7 @@ export const load: PageServerLoad = async ({ url, locals: { user, supabase } }) 
 			counts,
 			...shelf,
 			filter,
+			view,
 			allTags: [],
 			searchQuery: '',
 			selectedTags: [],
@@ -161,6 +182,7 @@ export const load: PageServerLoad = async ({ url, locals: { user, supabase } }) 
 		counts,
 		...shelf,
 		filter,
+		view,
 		allTags,
 		searchQuery,
 		selectedTags: tags.selectedTags,

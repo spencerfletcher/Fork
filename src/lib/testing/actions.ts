@@ -82,15 +82,22 @@ export function cookieJar(initial: Record<string, string> = {}) {
 
 /**
  * A load event: `path` (with any query) on localhost, the route `params`, and
- * `user` as the only local. Typed `never`, so it passes as any route's event.
+ * `user` as the only local, and `cookies` (an empty `cookieJar` unless given).
+ * Typed `never`, so it passes as any route's event.
  */
 export function loadEvent(
-	opts: { path?: string; user?: { id: string } | null; params?: Record<string, string> } = {}
+	opts: {
+		path?: string;
+		user?: { id: string } | null;
+		params?: Record<string, string>;
+		cookies?: ReturnType<typeof cookieJar>;
+	} = {}
 ): never {
 	return {
 		url: new URL(opts.path ?? '/', 'http://localhost'),
 		params: opts.params ?? {},
-		locals: { user: opts.user ?? null }
+		locals: { user: opts.user ?? null },
+		cookies: opts.cookies ?? cookieJar()
 	} as never;
 }
 

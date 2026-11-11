@@ -325,6 +325,16 @@ describe('RecipeCard audience mark', () => {
 describe('RecipeCard in the Cookbook', () => {
 	const author = { id: 'u2', username: 'devcooks' };
 
+	test('two across on a phone, so its title keeps the small size; Discover’s one column steps up', () => {
+		const { container, unmount } = render(RecipeCard, {
+			props: { recipe: makeRecipe(), variant: 'cookbook' }
+		});
+		expect(container.querySelector('.recipe-card')).not.toHaveClass('recipe-card--roomy');
+		unmount();
+		const discover = render(RecipeCard, { props: { recipe: makeRecipe(), variant: 'discover' } });
+		expect(discover.container.querySelector('.recipe-card')).toHaveClass('recipe-card--roomy');
+	});
+
 	test('an own recipe carries no owner line, no fork count and no description', () => {
 		render(RecipeCard, {
 			props: {
