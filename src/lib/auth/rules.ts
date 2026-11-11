@@ -15,6 +15,12 @@ export const USERNAME_MESSAGE = `Usernames are ${USERNAME_MIN} to ${USERNAME_MAX
 /** Sign-up's and Settings' refusal of a handle someone else holds, now or formerly. */
 export const USERNAME_TAKEN = 'That username is taken';
 
+/** A given-up name redirects to its last owner, and nobody else may take it, for this long. */
+export const FORMER_USERNAME_DAYS = 30;
+
+/** New names a cook may take within FORMER_USERNAME_DAYS; taking an own former name back is free. */
+export const USERNAME_CHANGES_PER_WINDOW = 2;
+
 const USERNAME = new RegExp(`^[${USERNAME_CHARS}]{${USERNAME_MIN},${USERNAME_MAX}}$`, 'v');
 
 /** The stored form of a typed handle. */

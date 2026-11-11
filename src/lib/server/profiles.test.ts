@@ -28,16 +28,29 @@ function insertChain(rows: unknown[]) {
 
 const alex = { id: 'user-2', email: 'alex@outlook.com' } as User;
 
-beforeEach(() => vi.clearAllMocks());
+beforeEach(() => {
+	vi.clearAllMocks();
+	findFormerMock.mockResolvedValue(undefined);
+});
 
 describe('ensureProfile', () => {
-	test("inserts the email's local part when it is free, with no lookup first", async () => {
+	test("inserts the email's local part when it is free, with no profile lookup first", async () => {
 		const chain = insertChain([{ id: 'user-2' }]);
 		insertMock.mockReturnValue(chain);
 		await ensureProfile(alex);
 		expect(insertMock).toHaveBeenCalledTimes(1);
 		expect(chain.values).toHaveBeenCalledWith({ id: 'user-2', username: 'alex' });
 		expect(findFirstMock).not.toHaveBeenCalled();
+	});
+
+	test("never hands out another cook's still-reserved former name: it goes straight to the suffix", async () => {
+		findFormerMock.mockResolvedValue({ profileId: 'user-9' });
+		const chain = insertChain([{ id: 'user-2' }]);
+		insertMock.mockReturnValue(chain);
+		await ensureProfile(alex);
+		expect(insertMock).toHaveBeenCalledTimes(1);
+		const inserted = chain.values.mock.calls[0][0] as { username: string };
+		expect(inserted.username).toMatch(/^alex-[a-f0-9]{4}$/);
 	});
 
 	test('treats a conflict on the id as success: the profile already exists', async () => {
