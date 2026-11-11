@@ -59,7 +59,9 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 			title: `@${profile.username}`,
 			description: clampDescription(
 				`${plural(publicCount, 'public recipe')} and ${plural(commitCount, 'change')} on Fork.`
-			)
+			),
+			// Nothing public to show a search engine or a preview.
+			noindex: publicCount === 0
 		}
 	};
 };

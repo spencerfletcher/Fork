@@ -32,6 +32,6 @@ export const load: PageServerLoad = async ({ params, locals: { user } }) => {
 			})),
 			user
 		),
-		meta: { title: `Forks of ${recipe.title}` }
+		meta: { title: `Forks of ${recipe.title}`, noindex: recipe.visibility !== 'public' }
 	};
 };

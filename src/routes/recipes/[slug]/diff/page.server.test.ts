@@ -60,6 +60,14 @@ describe('compare page load', () => {
 		expect(data.meta.title).toBe('v2 → v3 · Classic Cookies');
 	});
 
+	test('a public recipe compare previews; one not everyone may see is noindex', async () => {
+		type Meta = { meta: { noindex: boolean } };
+		expect(((await loadWith('?from=2&to=3')) as Meta).meta.noindex).toBe(false);
+		findRecipeMock.mockResolvedValue({ ...RECIPE, visibility: 'private' });
+		const own = (await loadWith('?from=2&to=3', { id: 'author' })) as Meta;
+		expect(own.meta.noindex).toBe(true);
+	});
+
 	test('the same version on both sides is named once in the tab title, not "v2 → v2"', async () => {
 		const data = (await loadWith('?from=2&to=2')) as { meta: { title: string } };
 		expect(data.meta.title).toBe('v2 · same version · Classic Cookies');

@@ -157,6 +157,14 @@ describe('users/[username] load', () => {
 		const result = await loadPage<PageData>(load as never, makeLoadEvent('chefmaria', 'user-1'));
 		expect(result.recipes).toHaveLength(3);
 		expect(result.meta.description).toBe('1 public recipe and 0 changes on Fork.');
+		expect(result.meta.noindex).toBe(false);
+	});
+
+	test('a profile with no public recipe is noindex, even to its owner who sees the rest', async () => {
+		findProfileMock.mockResolvedValue(makeProfile());
+		findRecipesMock.mockResolvedValue([{ id: 2, visibility: 'friends' }]);
+		const result = await loadPage<PageData>(load as never, makeLoadEvent('chefmaria', 'user-1'));
+		expect(result.meta.noindex).toBe(true);
 	});
 
 	test('returns public recipes for the user', async () => {
