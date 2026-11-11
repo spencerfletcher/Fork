@@ -1,4 +1,5 @@
 import { describe, test, expect, vi } from 'vitest';
+import { SESSION_ENDED } from '#lib/server/actions.js';
 import { pendingEnhance, UNREACHABLE_MESSAGE } from './pendingEnhance.svelte.js';
 
 type Submit = ReturnType<typeof pendingEnhance>['submit'];
@@ -29,7 +30,7 @@ describe('pendingEnhance', () => {
 		const form = pendingEnhance({ keepFailure: true });
 		const after = (await (form.submit as unknown as () => After)()) as After;
 		const update = vi.fn(async () => {});
-		const words = 'Your session ended. Log in in another tab, then try again.';
+		const words = SESSION_ENDED('try again');
 		await after({ result: { type: 'failure', status: 401, data: { error: words } }, update });
 		expect(update).not.toHaveBeenCalled();
 		expect(form.pending).toBe(false);

@@ -1,7 +1,5 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
-import { chain } from '#lib/testing/drizzle.js';
-import { PgDialect } from 'drizzle-orm/pg-core';
-import type { SQL } from 'drizzle-orm';
+import { chain, sqlOf } from '#lib/testing/drizzle.js';
 
 const db = await vi.hoisted(async () => (await import('#lib/testing/drizzle.js')).mockDb());
 vi.mock('#lib/server/db/index.js', () => ({ db }));
@@ -13,7 +11,6 @@ import { CARD_WITH } from '#lib/server/recipeCounts.js';
 import { authorIsFriendOf, visibleTo } from '#lib/server/visibility.js';
 
 const VIEWER = { id: 'viewer-5' };
-const sqlOf = (q: SQL) => new PgDialect().sqlToQuery(q);
 const url = (search = '') => new URL(`http://localhost/discover${search}`);
 
 const row = (id: number, username = 'maria') => ({

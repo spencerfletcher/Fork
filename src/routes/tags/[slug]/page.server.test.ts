@@ -1,8 +1,7 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
-import { chain } from '#lib/testing/drizzle.js';
+import { chain, sqlOf } from '#lib/testing/drizzle.js';
 import { loadEvent } from '#lib/testing/actions.js';
-import { desc, type SQL } from 'drizzle-orm';
-import { PgDialect } from 'drizzle-orm/pg-core';
+import { desc } from 'drizzle-orm';
 import { recipes } from '#lib/server/db/schema.js';
 import { visibleTo } from '#lib/server/visibility.js';
 
@@ -25,7 +24,6 @@ import { load } from './+page.server';
 const makeEvent = (user: { id: string } | null = null) =>
 	loadEvent({ params: { slug: 'dessert' }, user });
 const event = makeEvent();
-const sqlOf = (q: SQL) => new PgDialect().sqlToQuery(q);
 
 beforeEach(() => {
 	vi.clearAllMocks();

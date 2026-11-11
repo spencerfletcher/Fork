@@ -1,4 +1,5 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
+import { REQUIRED_MESSAGES } from '#lib/recipes/validation.js';
 import { chain } from '#lib/testing/drizzle.js';
 import { invokeAction as invoke, formEvent, loadEvent } from '#lib/testing/actions.js';
 import { loginHref } from '#lib/auth/loginHref.js';
@@ -220,7 +221,7 @@ describe('save', () => {
 		);
 		expect(result.status).toBe(400);
 		expect(result.data).toMatchObject({
-			error: 'Title is required',
+			error: REQUIRED_MESSAGES.title,
 			code: 'invalid',
 			draft: { title: '', prepTimeMinutes: '-5', editRevision: '0', hadPhoto: true }
 		});

@@ -1,4 +1,6 @@
 import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
+import { lastShallowUrl } from '#lib/testing/navigation.js';
+import { SESSION_ENDED } from '#lib/server/actions.js';
 import { render, screen, fireEvent } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import RecipeActions from './RecipeActions.svelte';
@@ -209,7 +211,7 @@ describe('RecipeActions when a request fails', () => {
 
 	test('a signed-out fork says the session ended, in the alert', async () => {
 		render(RecipeActions, { props: makeProps({ canFork: true }) });
-		const words = 'Your session ended. Log in in another tab, then try again.';
+		const words = SESSION_ENDED('try again');
 		await playBack('?/fork', { type: 'failure', status: 401, data: { error: words } });
 		expect(screen.getByRole('alert')).toHaveTextContent(words);
 	});
@@ -363,13 +365,6 @@ describe('RecipeActions row', () => {
 
 // ─── Cooking mode ─────────────────────────────────────────────────────────────
 
-/** The URL handed to the last shallow navigation. */
-function lastUrl(): URL {
-	const [url, opts] = goto.mock.lastCall!;
-	expect(opts).toMatchObject({ shallow: true, replace: true });
-	return new URL(url);
-}
-
 describe('RecipeActions Cook toggle', () => {
 	beforeEach(() => {
 		goto.mockClear();
@@ -432,9 +427,9 @@ describe('RecipeActions Cook toggle', () => {
 		render(RecipeActions, { props: makeProps({ oncook }) });
 		await fireEvent.click(screen.getByRole('button', { name: 'Cook' }));
 		expect(oncook).toHaveBeenCalledWith(true);
-		expect(lastUrl().searchParams.get('cook')).toBe('1');
-		expect(lastUrl().searchParams.get('serves')).toBe('8');
-		expect(lastUrl().pathname).toBe('/recipes/cookies');
+		expect(lastShallowUrl(goto).searchParams.get('cook')).toBe('1');
+		expect(lastShallowUrl(goto).searchParams.get('serves')).toBe('8');
+		expect(lastShallowUrl(goto).pathname).toBe('/recipes/cookies');
 	});
 
 	test('Done cooking hands back false and drops ?cook', async () => {
@@ -443,8 +438,8 @@ describe('RecipeActions Cook toggle', () => {
 		render(RecipeActions, { props: makeProps({ oncook, cooking: true }) });
 		await fireEvent.click(screen.getByRole('button', { name: 'Done cooking' }));
 		expect(oncook).toHaveBeenCalledWith(false);
-		expect(lastUrl().searchParams.has('cook')).toBe(false);
-		expect(lastUrl().searchParams.get('serves')).toBe('2');
+		expect(lastShallowUrl(goto).searchParams.has('cook')).toBe(false);
+		expect(lastShallowUrl(goto).searchParams.get('serves')).toBe('2');
 		page.url = new URL('http://localhost/recipes/cookies');
 	});
 });

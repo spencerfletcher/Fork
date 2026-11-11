@@ -1,4 +1,5 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest';
+import { REQUIRED_MESSAGES } from '#lib/recipes/validation.js';
 import { render, screen, fireEvent, within } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import type { SubmitFunction } from '$app/forms';
@@ -41,7 +42,7 @@ const EMPTY_DRAFT = {
 	removeImage: false
 };
 
-function failed(draft: Partial<typeof EMPTY_DRAFT>, error = 'Title is required') {
+function failed(draft: Partial<typeof EMPTY_DRAFT>, error: string = REQUIRED_MESSAGES.title) {
 	return { error, code: 'invalid' as const, draft: { ...EMPTY_DRAFT, ...draft } };
 }
 
@@ -91,7 +92,7 @@ describe('New recipe page validation errors', () => {
 		await tick();
 		const title = screen.getByLabelText(/^title/i);
 		expect(title).toHaveAttribute('aria-invalid', 'true');
-		expect(title).toHaveAccessibleDescription('Title is required');
+		expect(title).toHaveAccessibleDescription(REQUIRED_MESSAGES.title);
 		expect(title).toHaveFocus();
 		// Announced at the field; the global alert stays empty.
 		expect(screen.getByRole('alert')).toHaveAttribute('id', 'title-error');
@@ -113,7 +114,7 @@ describe('New recipe page validation errors', () => {
 		expect(title).toHaveFocus();
 		// Each message is announced as it appears.
 		expect(screen.getAllByRole('alert').map((el) => el.textContent?.trim())).toEqual([
-			'Title is required',
+			REQUIRED_MESSAGES.title,
 			'At least one ingredient is required'
 		]);
 	});
@@ -152,7 +153,7 @@ describe('New recipe page validation errors', () => {
 		expect(title).not.toHaveAttribute('aria-invalid');
 		await fireEvent.focusOut(title);
 		expect(title).toHaveAttribute('aria-invalid', 'true');
-		expect(title).toHaveAccessibleDescription('Title is required');
+		expect(title).toHaveAccessibleDescription(REQUIRED_MESSAGES.title);
 		await fireEvent.input(title, { target: { value: 'Soup' } });
 		expect(title).not.toHaveAttribute('aria-invalid');
 		expect(title).not.toHaveAccessibleDescription();

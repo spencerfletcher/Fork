@@ -201,9 +201,12 @@
 		align-items: center;
 	}
 
-	/* No photo: words only, one 760px reading column, a roomier 40px of band. */
-	.hero:not(:has(.recipe-photo)) {
-		padding-block: 40px;
+	/* No photo: words only, one 760px reading column, and on a desktop a
+	   roomier 40px of band. */
+	@media (min-width: 1024px) {
+		.hero:not(:has(.recipe-photo)) {
+			padding-block: 40px;
+		}
 	}
 
 	.hero-inner:not(:has(.recipe-photo)) {
@@ -250,29 +253,35 @@
 		align-self: stretch;
 	}
 
-	/* A long list scrolls inside the aside rather than past the screen: capped
-	   to the viewport less 24px above and below, with a thin Rule 2 bar.
-	   overflow clips at the padding edge, so 4px of padding (the focus ring's
-	   2px plus its 2px offset) keeps a row's ring whole; the matching negative
-	   margin, top and height leave the list exactly where it was. */
+	/* A long list scrolls inside the aside rather than past the screen, on a
+	   desktop: capped to the viewport less 24px above and below, with a thin
+	   Rule 2 bar. overflow clips at the padding edge, so 4px of padding (the
+	   focus ring's 2px plus its 2px offset) keeps a row's ring whole; the
+	   matching negative margin, top and height leave the list exactly where it
+	   was. */
 	.sidebar-sticky {
-		position: sticky;
 		top: 20px;
-		max-height: calc(100dvh - 40px);
 		padding: 4px;
 		margin: -4px;
-		overflow-y: auto;
 		scrollbar-width: thin;
 		scrollbar-color: var(--color-border-2) transparent;
 		/* A row focused by Tab scrolls clear of the 24px fade: the fade, the 4px
 		   ring, the row's 1px rule and a pixel to spare. */
 		scroll-padding-bottom: 30px;
-		/* The last row hidden below the fold is signalled by a 24px fade. The
-		   animation runs on the box's own scroll, so a list that fits has no
-		   timeline and no fade, and the fade lifts at the end of the scroll.
-		   Where scroll timelines are unsupported there is no fade at all. */
-		animation: aside-fade linear both;
-		animation-timeline: scroll(self);
+	}
+
+	@media (min-width: 1024px) {
+		.sidebar-sticky {
+			position: sticky;
+			max-height: calc(100dvh - 40px);
+			overflow-y: auto;
+			/* The last row hidden below the fold is signalled by a 24px fade. The
+			   animation runs on the box's own scroll, so a list that fits has no
+			   timeline and no fade, and the fade lifts at the end of the scroll.
+			   Where scroll timelines are unsupported there is no fade at all. */
+			animation: aside-fade linear both;
+			animation-timeline: scroll(self);
+		}
 	}
 
 	@keyframes aside-fade {
@@ -290,10 +299,6 @@
 	@media (max-width: 1023px) {
 		.hero-inner {
 			grid-template-columns: minmax(0, 1fr);
-		}
-
-		.hero:not(:has(.recipe-photo)) {
-			padding-block: 24px;
 		}
 
 		.recipe-photo {
@@ -364,13 +369,6 @@
 			overflow: hidden;
 			clip-path: inset(50%);
 			white-space: nowrap;
-		}
-
-		.sidebar-sticky {
-			position: static;
-			max-height: none;
-			overflow-y: visible;
-			animation: none;
 		}
 	}
 

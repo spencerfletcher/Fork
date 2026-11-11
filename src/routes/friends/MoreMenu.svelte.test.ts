@@ -1,4 +1,5 @@
 import { describe, test, expect, vi } from 'vitest';
+import { SESSION_ENDED } from '#lib/server/actions.js';
 import { render, screen, fireEvent, within } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import type { SubmitFunction } from '$app/forms';
@@ -71,7 +72,7 @@ describe('MoreMenu', () => {
 			props: { userId: 'u1', username: 'devcooks', label: 'More for @devcooks' }
 		});
 		await fireEvent.click(screen.getByRole('button', { name: 'More for @devcooks' }));
-		const words = 'Your session ended. Log in in another tab, then try again.';
+		const words = SESSION_ENDED('try again');
 		const after = await (
 			submits.get('/friends?/mute') as unknown as () => Promise<
 				(opts: { result: unknown; update: () => Promise<void> }) => Promise<void>

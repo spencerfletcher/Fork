@@ -161,10 +161,6 @@
 		margin: 8px 0 0;
 	}
 
-	.relation button:not(.text-btn) {
-		min-height: 44px;
-	}
-
 	.relation-error {
 		margin: 8px 0 0;
 	}

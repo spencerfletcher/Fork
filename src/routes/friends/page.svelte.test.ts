@@ -1,4 +1,5 @@
 import { describe, test, expect, vi } from 'vitest';
+import { SESSION_ENDED } from '#lib/server/actions.js';
 import { render, screen } from '@testing-library/svelte';
 import Page from './+page.svelte';
 
@@ -21,7 +22,7 @@ function makeData(overrides: Record<string, unknown> = {}) {
 
 describe('Friends page', () => {
 	test("a refused Accept or Decline says why, under the page's title", () => {
-		const words = 'Your session ended. Log in in another tab, then try again.';
+		const words = SESSION_ENDED('try again');
 		render(Page, {
 			props: {
 				data: makeData({ requests: [REQUEST] }),

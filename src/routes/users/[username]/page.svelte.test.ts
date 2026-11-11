@@ -1,4 +1,5 @@
 import { describe, test, expect, vi } from 'vitest';
+import { SESSION_ENDED } from '#lib/server/actions.js';
 import { render, screen, fireEvent } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import type { SubmitFunction } from '$app/forms';
@@ -125,7 +126,7 @@ describe('Profile relationship control', () => {
 
 	test('a signed-out Add friend says the session ended, under the button', async () => {
 		renderProfile({ relation: 'none' });
-		const words = 'Your session ended. Log in in another tab, then try again.';
+		const words = SESSION_ENDED('try again');
 		const after = await (
 			submits.get('/friends?/request') as unknown as () => Promise<
 				(opts: { result: unknown; update: () => Promise<void> }) => Promise<void>

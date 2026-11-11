@@ -1,4 +1,5 @@
 import { describe, test, expect } from 'vitest';
+import { REQUIRED_MESSAGES } from '#lib/recipes/validation.js';
 import { render } from 'svelte/server';
 import NewPage from './+page.svelte';
 
@@ -6,7 +7,7 @@ import NewPage from './+page.svelte';
 describe('new page, server rendered', () => {
 	test('renders the returned draft in the inputs', () => {
 		const form = {
-			error: 'Title is required',
+			error: REQUIRED_MESSAGES.title,
 			draft: {
 				title: 'Soup',
 				description: '',
@@ -28,7 +29,7 @@ describe('new page, server rendered', () => {
 		expect(body).toMatch(/<textarea[^>]*name="title"[^>]*>Soup<\/textarea>/);
 		expect(body).toContain('value="-5"');
 		// The field's message too: the effect that places it never runs on the server.
-		expect(body).toMatch(/<p[^>]*id="title-error"[^>]*>Title is required<\/p>/);
+		expect(body).toMatch(new RegExp(`<p[^>]*id="title-error"[^>]*>${REQUIRED_MESSAGES.title}</p>`));
 		expect(body).toMatch(
 			/<textarea[^>]*aria-invalid="true"[^>]*name="title"|name="title"[^>]*aria-invalid="true"/
 		);

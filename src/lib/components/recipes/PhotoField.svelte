@@ -168,12 +168,4 @@
 		outline: 2px solid var(--color-accent);
 		outline-offset: 2px;
 	}
-
-	/* A thumb's 44px, on a phone or any touch screen. */
-	@media (max-width: 699px), (pointer: coarse) {
-		.photo-choose,
-		.photo-keep {
-			min-height: 44px;
-		}
-	}
 </style>

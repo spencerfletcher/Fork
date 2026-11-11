@@ -1,4 +1,5 @@
 import { describe, test, expect, vi } from 'vitest';
+import { SESSION_ENDED } from '#lib/server/actions.js';
 import { render, screen, fireEvent } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import type { SubmitFunction } from '$app/forms';
@@ -17,7 +18,7 @@ describe('DeleteEntry', () => {
 	test('a signed-out delete says the session ended, under the step', async () => {
 		render(DeleteEntry, { props: { dish: 'Buns' } });
 		await fireEvent.click(screen.getByRole('button', { name: 'Delete entry' }));
-		const words = 'Your session ended. Log in in another tab, then delete again.';
+		const words = SESSION_ENDED('delete again');
 		const after = await (
 			submits.at(-1) as unknown as () => Promise<
 				(opts: { result: unknown; update: () => Promise<void> }) => Promise<void>

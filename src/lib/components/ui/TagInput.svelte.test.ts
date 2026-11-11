@@ -3,6 +3,7 @@ import { tick } from 'svelte';
 import { render, screen, fireEvent } from '@testing-library/svelte';
 import TagInput from './TagInput.svelte';
 import source from './TagInput.svelte?raw';
+import { cssRule, cssRules } from '#lib/testing/css.js';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -274,17 +275,17 @@ describe('TagInput tag pill remove button', () => {
 	// The button is the 16px glyph box, so its focus ring stays pill-sized; the
 	// hit grows outward on a ::before, so the pill keeps its size too.
 	test('is a 16px box with a 24px hit on a ::before with a mouse', () => {
-		expect(style).toMatch(
-			/\.tag-remove\s*{[^}]*position:\s*relative[^}]*width:\s*16px[^}]*height:\s*16px/
+		expect(cssRule(style, '.tag-remove')).toMatch(
+			/position:\s*relative[^}]*width:\s*16px[^}]*height:\s*16px/
 		);
-		expect(style).toMatch(
-			/\.tag-remove::before\s*{[^}]*content:\s*''[^}]*position:\s*absolute[^}]*inset:\s*-4px/
+		expect(cssRule(style, '.tag-remove::before')).toMatch(
+			/content:\s*''[^}]*position:\s*absolute[^}]*inset:\s*-4px/
 		);
 	});
 
 	test('is a 44px hit on a phone or under a coarse pointer, grown the same way', () => {
 		const media = style.slice(style.indexOf('@media (max-width: 699px), (pointer: coarse)'));
-		expect(media).toMatch(/^@media[^{]*{\s*\.tag-remove::before\s*{[^}]*inset:\s*-14px/);
+		expect(cssRule(media, '.tag-remove::before')).toMatch(/inset:\s*-14px/);
 	});
 
 	test('removing a pill moves focus to the next pill, else the previous, else the input', async () => {
@@ -305,9 +306,10 @@ describe('TagInput tag pill remove button', () => {
 describe('TagInput active option', () => {
 	// The hover tint is 1.09:1 on the list, too faint to find the arrowed-to option by.
 	test('is drawn with an accent line inside its edge, outside any media query', () => {
-		// One tab of indent: a top-level rule, not the forced-colours one.
-		expect(style).toMatch(
-			/\n\t\.tag-option\[aria-selected='true'\] {[^}]*outline: 2px solid var\(--color-accent\);[^}]*outline-offset: -2px;/
+		// Read before the forced-colours block: a top-level rule, not that one.
+		const topLevel = style.slice(0, style.indexOf('@media (forced-colors: active)'));
+		expect(cssRules(topLevel, ".tag-option[aria-selected='true']").join('\n')).toMatch(
+			/outline: 2px solid var\(--color-accent\);[^}]*outline-offset: -2px;/
 		);
 	});
 });

@@ -1,4 +1,5 @@
 import { describe, test, expect, vi } from 'vitest';
+import { SESSION_ENDED } from '#lib/server/actions.js';
 import { render, screen } from '@testing-library/svelte';
 import { tick, type ComponentProps } from 'svelte';
 import type { SubmitFunction } from '$app/forms';
@@ -79,7 +80,7 @@ describe('JournalEntry', () => {
 		render(JournalEntry, {
 			props: { entry: { ...entry, source: { ...entry.source, own: false } } }
 		});
-		const words = 'Your session ended. Log in in another tab, then try again.';
+		const words = SESSION_ENDED('try again');
 		const after = await (
 			submits.at(-1) as unknown as () => Promise<
 				(opts: { result: unknown; update: () => Promise<void> }) => Promise<void>

@@ -2,6 +2,7 @@ import { describe, test, expect } from 'vitest';
 import { render, screen, within } from '@testing-library/svelte';
 import VersionDiff from './VersionDiff.svelte';
 import source from './VersionDiff.svelte?raw';
+import { cssRule } from '#lib/testing/css.js';
 import {
 	diffIngredients,
 	diffSteps,
@@ -362,8 +363,7 @@ describe('VersionDiff', () => {
 // the diff wider than a phone: the flex item may shrink, and the word breaks.
 describe('VersionDiff long words', () => {
 	test('the row content can shrink and breaks a long word anywhere', () => {
-		const start = source.indexOf('\t.diff-content {');
-		const rule = source.slice(start, source.indexOf('}', start));
+		const rule = cssRule(source, '.diff-content');
 		expect(rule).toMatch(/min-width:\s*0;/);
 		expect(rule).toMatch(/overflow-wrap:\s*anywhere;/);
 	});
@@ -394,7 +394,7 @@ describe('VersionDiff groups', () => {
 		expect(within(method).getByRole('heading', { level: 4 })).toHaveTextContent('Bake');
 		// Group names are words, not identifiers: never the diff's mono.
 		expect(within(items[0]).getByRole('heading')).toHaveClass('diff-group');
-		expect(source).toMatch(/\.diff-group\s*{[^}]*font-family:\s*var\(--font-serif\)/);
+		expect(cssRule(source, '.diff-group')).toMatch(/font-family:\s*var\(--font-serif\)/);
 	});
 
 	test('a renamed group reads old to new in its heading', () => {

@@ -35,6 +35,7 @@
 	// noScroll): a pressed filter keeps keyboard focus rather than dropping it to
 	// the body, and the page stays where it was (decided 29 October 2026).
 	function applyFilters() {
+		// A throwaway built into a URL and dropped, not state: nothing reads it reactively.
 		// eslint-disable-next-line svelte/prefer-svelte-reactivity
 		const params = new URLSearchParams(otherParams);
 
