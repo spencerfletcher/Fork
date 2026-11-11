@@ -356,7 +356,7 @@ export async function journalSummary(userId: string) {
 
 /**
  * The last SUMMARY_MONTHS calendar months on top of the Journal, the current
- * one last, by `today`'s UTC day (no cook's time zone is stored): each month's
+ * one last, ending with `today` (the cook's YYYY-MM-DD day, todayFor): each month's
  * count of the viewer's entries from the window's first day through today
  * (an entry dated after today is outside it), and the MOST_COOKED recipes
  * they logged most there, most first. A recipe the viewer may no longer open
@@ -366,14 +366,14 @@ export async function journalSummary(userId: string) {
  */
 export async function journalTwelveMonths(
 	viewer: NonNullable<Viewer>,
-	today: Date,
+	today: string,
 	conn: Tx | typeof db = db
 ) {
 	const months = summaryMonths(today);
 	const inWindow = and(
 		eq(logEntries.userId, viewer.id),
 		sql`${logEntries.cookedOn} >= ${months[0]}::date`,
-		sql`${logEntries.cookedOn} <= ${today.toISOString().slice(0, 10)}::date`
+		sql`${logEntries.cookedOn} <= ${today}::date`
 	);
 	const month = sql<string>`to_char(${logEntries.cookedOn}, 'YYYY-MM-01')`;
 	const times = count();

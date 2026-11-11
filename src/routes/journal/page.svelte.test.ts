@@ -40,7 +40,7 @@ const data = {
 	}
 };
 const SUMMARY = {
-	months: summaryMonths(new Date('2026-11-12T12:00:00Z')).map((month, i) => ({ month, cooks: i })),
+	months: summaryMonths('2026-11-12').map((month, i) => ({ month, cooks: i })),
 	top: [{ recipeId: 1, times: 4, title: 'Miso Salmon', href: '/recipes/miso-salmon' }]
 };
 const HEADING = `Last ${SUMMARY_MONTHS} months`;

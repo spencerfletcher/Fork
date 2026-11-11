@@ -50,9 +50,16 @@ test.describe('Journal', () => {
 		page
 	}) => {
 		await page.setViewportSize({ width: 390, height: 844 });
-		await page.goto('/journal');
-		const now = new Date();
-		const window = summaryMonths(now);
+		// The first load writes the browser's zone into the tz cookie; the reload reads it.
+		await gotoHydrated(page, '/journal');
+		await page.reload();
+		// The browser's zone is in the tz cookie by now; the server's day follows it.
+		const today = await page.evaluate(() => {
+			const d = new Date();
+			const pad = (n: number) => String(n).padStart(2, '0');
+			return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+		});
+		const window = summaryMonths(today);
 		const months = page
 			.getByRole('list', { name: `Last ${SUMMARY_MONTHS} months` })
 			.getByRole('listitem');
@@ -62,7 +69,6 @@ test.describe('Journal', () => {
 			const cooks = mine.filter((e) => e.cookedOn.startsWith(month.slice(0, 7))).length;
 			await expect(months.nth(i)).toContainText(`${monthLabel(month)}: ${cooks} cook`);
 		}
-		const today = now.toISOString().slice(0, 10);
 		const recipes = new Set(
 			mine
 				.filter((e) => e.recipe && e.cookedOn >= window[0] && e.cookedOn <= today)

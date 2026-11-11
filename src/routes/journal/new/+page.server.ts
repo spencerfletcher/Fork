@@ -10,10 +10,11 @@ import { entryFailure, type EntryValues, type RecipeChoice } from '../entryForm.
 import { prepareEntry } from '../save.server.js';
 import type { Actions, PageServerLoad } from './$types';
 import { privatePage } from '#lib/seo.js';
+import { todayFor } from '#lib/server/timeZone.js';
 
 const digits = (value: string | null) => (value && wholeNumber(value) !== null ? value : '');
 
-export const load: PageServerLoad = async ({ url, locals: { user } }) => {
+export const load: PageServerLoad = async ({ url, cookies, locals: { user } }) => {
 	requireUser(url, user);
 
 	// Cook's "Add to Journal" sends ?recipe=<slug>&version=<n>&serves=<n>.
@@ -41,8 +42,8 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 
 	const values: EntryValues = {
 		dish: linked?.title ?? '',
-		// The page sets the reader's own today once it runs; this is the server's.
-		cookedOn: new Date().toISOString().slice(0, 10),
+		// The cook's own today by their zone cookie; the page sets the browser's once it runs.
+		cookedOn: todayFor(cookies),
 		servings: linked ? digits(url.searchParams.get('serves')) : '',
 		caption: '',
 		note: '',

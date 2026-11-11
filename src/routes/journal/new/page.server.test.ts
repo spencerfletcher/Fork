@@ -1,6 +1,13 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { chain } from '#lib/testing/drizzle.js';
-import { invokeAction, formEvent, loadEvent, loadPage, photoFile } from '#lib/testing/actions.js';
+import {
+	cookieJar,
+	invokeAction,
+	formEvent,
+	loadEvent,
+	loadPage,
+	photoFile
+} from '#lib/testing/actions.js';
 import { loginHref } from '#lib/auth/loginHref.js';
 import { PHOTO_SIZE_MESSAGE, PHOTO_MAX_BYTES } from '#lib/recipes/validation.js';
 import { ENTRY_MESSAGES } from '#lib/server/journal.js';
@@ -31,6 +38,11 @@ vi.mock('#lib/server/images.js', async (importOriginal) => ({
 	removeRecipeImage: removeMock
 }));
 vi.mock('#lib/server/profiles.js', () => ({ ensureProfile: vi.fn().mockResolvedValue(undefined) }));
+// A day no clock gives today, so the test sees the cook's day passed through.
+const COOK_DAY = '2031-01-02';
+const tz = vi.hoisted(() => ({ todayFor: vi.fn() }));
+vi.mock('#lib/server/timeZone.js', () => tz);
+const COOKIES = cookieJar({ tz: 'Pacific/Auckland' });
 
 const USER = { id: 'user-1' };
 const LINKED = {
@@ -49,13 +61,17 @@ const invoke = (fields: Record<string, string>, file?: File, user: typeof USER |
 	);
 
 const loadAt = (search: string, user: typeof USER | null = USER) =>
-	loadPage<PageData>(load as never, loadEvent({ path: `/journal/new${search}`, user }));
+	loadPage<PageData>(load as never, {
+		...(loadEvent({ path: `/journal/new${search}`, user }) as object),
+		cookies: COOKIES
+	});
 
 beforeEach(() => {
 	vi.clearAllMocks();
 	insertMock.mockReturnValue(chain([{ id: 99 }]));
 	choicesMock.mockResolvedValue([]);
 	audienceMock.mockResolvedValue('friends');
+	tz.todayFor.mockReturnValue(COOK_DAY);
 });
 
 describe('journal/new load', () => {
@@ -64,6 +80,12 @@ describe('journal/new load', () => {
 			status: 303,
 			location: loginHref('/journal/new?recipe=x')
 		});
+	});
+
+	test('the date starts on the cook’s own today, by their time zone cookie', async () => {
+		const data = await loadAt('');
+		expect(tz.todayFor).toHaveBeenCalledWith(COOKIES);
+		expect(data.values.cookedOn).toBe(COOK_DAY);
 	});
 
 	test("Cook's link prefills the dish, recipe, version and serves; the audience is the remembered one", async () => {

@@ -6,7 +6,7 @@ import JournalTwelveMonths from './JournalTwelveMonths.svelte';
 
 // April 2030 to March 2031: the year changes in the window.
 const COUNTS = [4, 0, 2, 8, 0, 0, 1, 0, 0, 3, 0, 5];
-const MONTHS = summaryMonths(new Date('2031-03-05T12:00:00Z')).map((month, i) => ({
+const MONTHS = summaryMonths('2031-03-05').map((month, i) => ({
 	month,
 	cooks: COUNTS[i]
 }));

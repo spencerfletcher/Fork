@@ -224,10 +224,9 @@ describe.skipIf(!localDb)("the Journal's last 12 months, against the real databa
 	});
 
 	// 12 Nov 2026: the window is 1 December 2025 to today.
-	const TODAY = new Date('2026-11-12T12:00:00Z');
+	const TODAY = '2026-11-12';
 	const MONTHS = summaryMonths(TODAY);
 	const FIRST = MONTHS[0];
-	const TODAY_ISO = TODAY.toISOString().slice(0, 10);
 	const shift = (iso: string, days: number) => {
 		const d = new Date(`${iso}T00:00:00Z`);
 		d.setUTCDate(d.getUTCDate() + days);
@@ -247,14 +246,14 @@ describe.skipIf(!localDb)("the Journal's last 12 months, against the real databa
 				shift(FIRST, 30),
 				`${MONTHS[1].slice(0, 7)}-01`,
 				`${MONTHS[1].slice(0, 7)}-31`,
-				TODAY_ISO
+				TODAY
 			];
 			await tx
 				.insert(schema.logEntries)
 				.values([
 					...inside.map((d, i) => cooked(me, d, i === 1 ? 2_000_000_000 : null)),
 					cooked(me, shift(FIRST, -1)),
-					cooked(me, shift(TODAY_ISO, 1)),
+					cooked(me, shift(TODAY, 1)),
 					cooked(other, MONTHS[2])
 				]);
 			const summary = await journal.journalTwelveMonths({ id: me }, TODAY, tx);
@@ -271,7 +270,7 @@ describe.skipIf(!localDb)("the Journal's last 12 months, against the real databa
 		await withProfiles(1, async (tx, [me]) => {
 			await tx
 				.insert(schema.logEntries)
-				.values([cooked(me, shift(FIRST, -1)), cooked(me, shift(TODAY_ISO, 1))]);
+				.values([cooked(me, shift(FIRST, -1)), cooked(me, shift(TODAY, 1))]);
 			expect(await journal.journalTwelveMonths({ id: me }, TODAY, tx)).toBeNull();
 		});
 	});
@@ -299,7 +298,7 @@ describe.skipIf(!localDb)("the Journal's last 12 months, against the real databa
 					),
 					...Array.from({ length: n + 1 }, () => cooked(me, MONTHS[2])),
 					...Array.from({ length: n + 1 }, () => cooked(me, shift(FIRST, -1), rows[0].id)),
-					...Array.from({ length: n + 1 }, () => cooked(me, shift(TODAY_ISO, 1), rows[0].id))
+					...Array.from({ length: n + 1 }, () => cooked(me, shift(TODAY, 1), rows[0].id))
 				]);
 			const summary = await journal.journalTwelveMonths({ id: me }, TODAY, tx);
 			const expected = rows

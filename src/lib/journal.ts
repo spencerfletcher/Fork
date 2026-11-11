@@ -75,11 +75,11 @@ export function groupByMonth<T extends { cookedOn: string }>(
 export const SUMMARY_MONTHS = 12;
 
 /**
- * The first day of each month the summary covers, oldest first, by `today`'s
- * UTC month: on 12 Nov 2026, 2025-12-01 to 2026-11-01.
+ * The first day of each month the summary covers, oldest first, ending with
+ * the month of `today` (a YYYY-MM-DD day): on 2026-11-12, 2025-12-01 to 2026-11-01.
  */
-export function summaryMonths(today: Date): string[] {
-	const [year, month] = [today.getUTCFullYear(), today.getUTCMonth()];
+export function summaryMonths(today: string): string[] {
+	const [year, month] = [day(today).getUTCFullYear(), day(today).getUTCMonth()];
 	return Array.from({ length: SUMMARY_MONTHS }, (_, i) =>
 		new Date(Date.UTC(year, month - SUMMARY_MONTHS + 1 + i, 1)).toISOString().slice(0, 10)
 	);

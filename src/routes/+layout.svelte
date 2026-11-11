@@ -5,6 +5,7 @@
 	import Navbar from '#lib/components/ui/Navbar.svelte';
 	import TabBar from '#lib/components/ui/TabBar.svelte';
 	import { page } from '$app/state';
+	import { rememberTimeZone } from '#lib/timeZone.js';
 	import {
 		DEFAULT_IMAGE,
 		DEFAULT_META,
@@ -21,6 +22,8 @@
 	// gotoHydrated); SvelteKit exposes no hydration signal of its own.
 	onMount(() => {
 		document.documentElement.dataset.hydrated = '';
+		// The server reads the cook's calendar day from it (todayFor).
+		rememberTimeZone();
 	});
 
 	// The single source of head tags. Pages contribute by returning `meta` from
