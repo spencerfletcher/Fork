@@ -11,10 +11,8 @@ import {
 } from '#lib/server/trash.js';
 import { failure, requireUser, SESSION_ENDED } from '#lib/server/actions.js';
 import { text } from '#lib/helpers.js';
+import { NOT_IN_TRASH } from '#lib/trash.js';
 import type { Actions, PageServerLoad } from './$types';
-
-/** What Restore and Delete forever say when the recipe is not, or no longer, in the viewer's Trash. */
-export const NOT_IN_TRASH = 'That recipe is no longer in your Trash.';
 
 // The owner's Trash: their deleted recipes still inside TRASH_DAYS, newest
 // deletion first. Nobody else's recipes are ever read here.

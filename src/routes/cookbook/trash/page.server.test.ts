@@ -21,7 +21,8 @@ vi.mock('#lib/server/trash.js', async (importOriginal) => ({
 	purgeExpiredTrash: purgeMock
 }));
 
-import { actions, load, NOT_IN_TRASH } from './+page.server';
+import { actions, load } from './+page.server';
+import { NOT_IN_TRASH } from '#lib/trash.js';
 import { inTrashOf } from '#lib/server/trash.js';
 import type { PageData } from './$types';
 
