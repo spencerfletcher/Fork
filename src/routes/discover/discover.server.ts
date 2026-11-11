@@ -4,14 +4,13 @@ import { db } from '#lib/server/db/index.js';
 import { favorites, profiles, recipes, recipeVersions } from '#lib/server/db/schema.js';
 import { cardList } from '#lib/server/recipeCounts.js';
 import { tagSelection, visibleTags } from '#lib/server/tagFilter.js';
-import { authorIsFriendOf, visibleTo } from '#lib/server/visibility.js';
+import { authorIsFriendOf, visibleTo, type Viewer } from '#lib/server/visibility.js';
 import { parseFilters, textSearch } from '#lib/server/recipeSearch.js';
 import { namedBy } from '#lib/server/profiles.js';
+import { listPage } from '#lib/listPage.js';
 
 /** The lead card is the most-saved recipe in the set over this many days, else the set's newest. */
 export const LEAD_WINDOW_DAYS = 7;
-/** The most recipes one Discover page lists, lead included. */
-export const DISCOVER_LIMIT = 60;
 /** How many small cards the Recent changes row holds. */
 export const RECENT_CHANGES = 3;
 
@@ -36,12 +35,7 @@ export async function loadDiscover(url: URL, user: { id: string } | null) {
 
 	const visible = visibleTo(user);
 	const allTags = await visibleTags(visible);
-	const { selectedTags, matches } = await tagSelection(allTags, tagSlugs);
-
-	const base = { allTags, searchQuery, selectedTags, friendsOnly };
-	const empty = { ...base, lead: null, recentChanges: [], recipes: [] };
-
-	if (matches?.size === 0) return empty;
+	const tags = tagSelection(allTags, tagSlugs);
 
 	const byHandle = handle
 		? inArray(
@@ -54,34 +48,51 @@ export async function loadDiscover(url: URL, user: { id: string } | null) {
 		visible,
 		byHandle,
 		friendsOnly && user ? authorIsFriendOf(user.id) : undefined,
-		matches ? inArray(recipes.id, [...matches.keys()]) : undefined,
+		tags.where,
 		text.where
 	);
-	const [counted, leadRows, recent] = await Promise.all([
-		cardList(inSet, text.orderBy, user, {
-			tagRank: searchQuery ? null : matches,
-			// ponytail: no pagination yet, P1 adds it
-			limit: DISCOVER_LIMIT
-		}),
-		mostSaved(inSet),
-		recentChanges(inSet)
+	// Show more's fetch (`after`) wants the next cards alone: no lead, no Recent changes.
+	const { after, limit } = listPage(url);
+	const [{ cards, next }, total, leadRows, recent] = await Promise.all([
+		cardList(inSet, text.rank, user, { after, limit }),
+		db.$count(recipes, inSet),
+		after ? [] : mostSaved(inSet),
+		after ? [] : recentChanges(inSet)
 	]);
-	// A text query orders by relevance, so the newest is not always first.
-	const newest = counted.reduce<(typeof counted)[number] | null>(
-		(a, r) => (!a || r.updatedAt > a.updatedAt ? r : a),
-		null
-	);
-	const lead = counted.find((r) => r.id === leadRows[0]?.recipeId) ?? newest;
+	const leadId = leadRows[0]?.recipeId;
+	// Unranked, the first card is the newest; a text query orders by relevance.
+	const lead = after
+		? null
+		: (cards.find((r) => r.id === leadId) ??
+			(leadId === undefined && text.rank.length === 0
+				? (cards[0] ?? null)
+				: await newestOrLead(inSet, leadId, user)));
 	return {
-		...base,
+		allTags,
+		searchQuery,
+		selectedTags: tags.selectedTags,
+		friendsOnly,
 		lead,
 		recentChanges: recent.map((v) => ({
 			...v,
 			href: `/recipes/${v.slug}/diff?from=${v.versionNumber - 1}&to=${v.versionNumber}`
 		})),
 		// The lead stays in the grid, so Newest first and its count are the whole set.
-		recipes: counted
+		recipes: cards,
+		next,
+		total
 	};
+}
+
+/** The lead when it is not among the first cards: `leadId`'s card, else the set's newest. */
+async function newestOrLead(inSet: SQL | undefined, leadId: number | undefined, user: Viewer) {
+	const { cards } = await cardList(
+		and(inSet, leadId === undefined ? undefined : eq(recipes.id, leadId)),
+		[],
+		user,
+		{ after: null, limit: 1 }
+	);
+	return cards[0] ?? null;
 }
 
 /** The recipe in `inSet` saved most often in the lead window, if any was saved. */

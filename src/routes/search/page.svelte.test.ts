@@ -1,8 +1,9 @@
 import { describe, test, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/svelte';
+import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import SearchPage from './+page.svelte';
 
-vi.mock('$app/navigation', () => ({ goto: vi.fn() }));
+const { preloadMock } = vi.hoisted(() => ({ preloadMock: vi.fn() }));
+vi.mock('$app/navigation', () => ({ goto: vi.fn(), preloadData: preloadMock, snapshot: vi.fn() }));
 
 const data = {
 	recipes: [],
@@ -13,9 +14,48 @@ const data = {
 	user: null as { id: string } | null
 };
 
+/** One page, the whole list: the total is the cards given, and no page follows. */
 function renderSearch(overrides: Partial<typeof data> = {}) {
-	return render(SearchPage, { props: { data: { ...data, ...overrides } } as never });
+	const shown = { ...data, ...overrides };
+	return render(SearchPage, {
+		props: { data: { ...shown, total: shown.recipes.length, next: null } } as never
+	});
 }
+
+const card = (id: number) => ({
+	id,
+	slug: `r${id}`,
+	title: `R${id}`,
+	description: null,
+	imageUrl: null,
+	parentId: null,
+	prepTimeMinutes: null,
+	cookTimeMinutes: null
+});
+
+describe('Search page, a list longer than a page', () => {
+	test('counts the whole list, and Show more appends the next page after the first', async () => {
+		preloadMock.mockResolvedValue({
+			type: 'loaded',
+			status: 200,
+			data: { ...data, recipes: [card(3), card(4)], next: null, total: 4 }
+		});
+		render(SearchPage, {
+			props: { data: { ...data, recipes: [card(1), card(2)], next: 'c2', total: 4 } } as never
+		});
+		expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('4 recipes');
+
+		await fireEvent.click(screen.getByRole('link', { name: 'Show more' }));
+
+		await waitFor(() =>
+			expect(
+				screen.getAllByRole('link', { name: /^R\d$/ }).map((a) => a.getAttribute('href'))
+			).toEqual(['/recipes/r1', '/recipes/r2', '/recipes/r3', '/recipes/r4'])
+		);
+		expect(screen.queryByRole('link', { name: 'Show more' })).toBeNull();
+		expect(screen.getByText('2 more recipes')).toBeInTheDocument();
+	});
+});
 
 describe('Search page results', () => {
 	test('cards know their place, so the first row of photos loads eagerly', () => {

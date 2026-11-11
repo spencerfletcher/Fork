@@ -3,12 +3,21 @@
 	import RecipeCard from '#lib/components/recipes/RecipeCard.svelte';
 	import SearchFilters from '#lib/components/ui/SearchFilters.svelte';
 	import ResultStatus from '#lib/components/ui/ResultStatus.svelte';
+	import ShowMore from '#lib/components/ui/ShowMore.svelte';
 	import { plural } from '#lib/helpers.js';
+	import { pagedList } from '#lib/pagedList.svelte.js';
 	import { timeSpans } from '#lib/recipes/times.js';
 	import type { loadDiscover } from './discover.server.js';
 
 	// One page for /discover and the signed-out home.
-	let { data }: { data: Awaited<ReturnType<typeof loadDiscover>> } = $props();
+	type DiscoverData = Awaited<ReturnType<typeof loadDiscover>>;
+	let { data }: { data: DiscoverData } = $props();
+
+	const list = pagedList(
+		() => data,
+		(d: DiscoverData) => ({ items: d.recipes, next: d.next })
+	);
+	let grid = $state<HTMLElement>();
 
 	const lead = $derived(data.lead);
 	const filtered = $derived(
@@ -34,7 +43,7 @@
 				friendsOnly={data.friendsOnly} />
 		</div>
 
-		<ResultStatus count={data.recipes.length} {filtered} />
+		<ResultStatus count={data.total} {filtered} />
 
 		{#if lead}
 			<!-- The title link stretches over the card; the cook link sits above it,
@@ -85,18 +94,19 @@
 			</section>
 		{/if}
 
-		{#if data.recipes.length > 0}
+		{#if list.items.length > 0}
 			<section class="grid-section">
 				<p class="order">
 					<span class="eyebrow-label">Newest first</span>
-					<span>{plural(data.recipes.length, 'recipe')}</span>
+					<span>{plural(data.total, 'recipe')}</span>
 				</p>
-				<div class="discover-grid">
-					{#each data.recipes as recipe, i (recipe.id)}
+				<div class="discover-grid" bind:this={grid}>
+					{#each list.items as recipe, i (recipe.id)}
 						<!-- Offset by the lead, which takes the high-priority fetch. -->
 						<RecipeCard {recipe} index={i + 1} variant="discover" />
 					{/each}
 				</div>
+				<ShowMore {list} container={grid} noun="recipe" />
 			</section>
 		{:else}
 			<p class="empty">

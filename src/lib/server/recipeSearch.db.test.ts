@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeAll } from 'vitest';
-import { and, inArray } from 'drizzle-orm';
+import { and, desc, inArray } from 'drizzle-orm';
 
 import { closeDbAfter, inRollback, localDb } from '#lib/testing/db.js';
 import type { Tx } from '#lib/server/db/index.js';
@@ -80,7 +80,7 @@ describe.skipIf(!localDb)('search ranking and explanations, against the real dat
 			// Through the relational query, as cardList runs it, so its alias rebinding is exercised.
 			const rows = await tx.query.recipes.findMany({
 				where: and(inArray(schema.recipes.id, [...ids, ids[0] + 1000000]), text.where),
-				orderBy: text.orderBy,
+				orderBy: [...text.rank, desc(schema.recipes.updatedAt)],
 				columns: { id: true }
 			});
 			expect(rows.map((r) => r.id)).toEqual([exact, snaps, stirFry, soup, noodles, older]);

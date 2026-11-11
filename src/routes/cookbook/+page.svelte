@@ -4,13 +4,22 @@
 	import SearchFilters from '#lib/components/ui/SearchFilters.svelte';
 	import EmptyPanel from '#lib/components/ui/EmptyPanel.svelte';
 	import ResultStatus from '#lib/components/ui/ResultStatus.svelte';
+	import ShowMore from '#lib/components/ui/ShowMore.svelte';
 	import CookbookDrafts from './CookbookDrafts.svelte';
 	import CookbookCollections from './CookbookCollections.svelte';
 	import { plural } from '#lib/helpers.js';
+	import { withoutPlace } from '#lib/listPage.js';
+	import { pagedList } from '#lib/pagedList.svelte.js';
 	import { COOKBOOK_FILTERS, type CookbookFilter } from './filters.js';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
+
+	const list = pagedList(
+		() => data,
+		(d) => ({ items: d.recipes, next: d.next })
+	);
+	let grid = $state<HTMLElement>();
 
 	const LABELS: Record<CookbookFilter, string> = { all: 'All', mine: 'Mine', saved: 'Saved' };
 
@@ -18,10 +27,10 @@
 		!!data.searchQuery || data.selectedTags.length > 0 || data.filter !== 'all' || !!data.collection
 	);
 
-	// A filter link keeps the search and tags; All is the bare page.
+	// A filter link keeps the search and tags; All is the bare page. Either
+	// starts the list over at its first page.
 	function filterHref(filter: CookbookFilter, without: string[] = []): string {
-		// eslint-disable-next-line svelte/prefer-svelte-reactivity
-		const params = new URLSearchParams(page.url.search);
+		const params = withoutPlace(page.url.searchParams);
 		if (filter === 'all') params.delete('filter');
 		else params.set('filter', filter);
 		for (const key of without) params.delete(key);
@@ -84,11 +93,11 @@
 				</div>
 
 				<!-- Screen readers only (Spencer, 9 November 2026): the cards say the count. -->
-				<ResultStatus count={data.recipes.length} {filtered} />
+				<ResultStatus count={data.total} {filtered} />
 
-				{#if data.recipes.length > 0}
-					<div class="cookbook-grid">
-						{#each data.recipes as recipe, i (recipe.id)}
+				{#if list.items.length > 0}
+					<div class="cookbook-grid" bind:this={grid}>
+						{#each list.items as recipe, i (recipe.id)}
 							<RecipeCard
 								{recipe}
 								index={i}
@@ -97,6 +106,7 @@
 								kept={recipe.kept} />
 						{/each}
 					</div>
+					<ShowMore {list} container={grid} noun="recipe" />
 				{:else}
 					<div class="cookbook-none">
 						{#if data.searchQuery}

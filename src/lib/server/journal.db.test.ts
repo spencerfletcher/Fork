@@ -164,3 +164,49 @@ describe.skipIf(!localDb)('kept copies in the Journal, against the real database
 		});
 	});
 });
+
+// Committed rows (journalOf reads through the pool) for a fresh cook, removed
+// after with the profile.
+describe.skipIf(!localDb)("the Journal's pages, against the real database", () => {
+	let db: typeof import('./db/index.js').db;
+	let schema: typeof import('#lib/server/db/schema.js');
+	let journal: typeof import('./journal.js');
+	const cook = `test-journal-${stamp()}`;
+	// Two on one day, so the tie is broken by the later logged.
+	const DAYS = ['2026-03-02', '2026-03-02', '2026-02-10', '2026-01-05', '2025-12-24'];
+	let ids: number[];
+
+	beforeAll(async () => {
+		({ db } = await import('./db/index.js'));
+		schema = await import('#lib/server/db/schema.js');
+		journal = await import('./journal.js');
+		await db.insert(schema.profiles).values({ id: cook, username: cook });
+		const rows = await db
+			.insert(schema.logEntries)
+			.values(DAYS.map((cookedOn, i) => ({ userId: cook, dish: `Dish ${i}`, cookedOn })))
+			.returning({ id: schema.logEntries.id });
+		ids = rows.map((r) => r.id);
+	});
+
+	afterAll(async () => {
+		if (db) await db.delete(schema.profiles).where(eq(schema.profiles.id, cook));
+	});
+
+	test('pages follow on, newest cooked first, the later logged first on one day, none twice', async () => {
+		const seen: number[][] = [];
+		let after: string | null = null;
+		do {
+			const page: Awaited<ReturnType<typeof journal.journalOf>> = await journal.journalOf(
+				{ id: cook },
+				{ after, limit: 2 }
+			);
+			seen.push(page.entries.map((e) => e.id));
+			after = page.next;
+		} while (after && seen.length < 10);
+		expect(seen).toEqual([[ids[1], ids[0]], [ids[2], ids[3]], [ids[4]]]);
+	});
+
+	test('the summary counts every entry and names the oldest day, whatever the page', async () => {
+		expect(await journal.journalSummary(cook)).toEqual({ total: 5, oldest: '2025-12-24' });
+	});
+});

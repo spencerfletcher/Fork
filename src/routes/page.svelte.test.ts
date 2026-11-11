@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/svelte';
 import Page from './+page.svelte';
 
 const { page } = vi.hoisted(() => ({ page: { url: new URL('http://localhost/') } }));
-vi.mock('$app/navigation', () => ({ goto: vi.fn() }));
+vi.mock('$app/navigation', () => ({ goto: vi.fn(), snapshot: vi.fn() }));
 vi.mock('$app/state', () => ({ page }));
 
 // Signed out, home is Discover; the landing hero and its sample diff are gone.

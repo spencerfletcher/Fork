@@ -3,7 +3,7 @@ import { render, screen, within } from '@testing-library/svelte';
 import Discover from './Discover.svelte';
 
 const { page } = vi.hoisted(() => ({ page: { url: new URL('http://localhost/discover') } }));
-vi.mock('$app/navigation', () => ({ goto: vi.fn() }));
+vi.mock('$app/navigation', () => ({ goto: vi.fn(), snapshot: vi.fn() }));
 vi.mock('$app/state', () => ({ page }));
 
 function makeCard(id: number, overrides: Record<string, unknown> = {}) {
@@ -35,8 +35,13 @@ const base = {
 	friendsOnly: undefined as boolean | undefined
 };
 
-const renderDiscover = (overrides: Partial<typeof base> = {}) =>
-	render(Discover, { props: { data: { ...base, ...overrides } } as never });
+/** One page, the whole list: the total is the cards given, and no page follows. */
+const renderDiscover = (overrides: Partial<typeof base> = {}) => {
+	const data = { ...base, ...overrides };
+	return render(Discover, {
+		props: { data: { ...data, total: data.recipes.length, next: null } } as never
+	});
+};
 
 describe('Discover', () => {
 	test('the heading and the lede', () => {

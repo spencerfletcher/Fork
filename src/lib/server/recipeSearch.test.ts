@@ -1,7 +1,6 @@
 import { describe, test, expect } from 'vitest';
-import { desc, mapColumnsInSQLToAlias } from 'drizzle-orm';
+import { mapColumnsInSQLToAlias } from 'drizzle-orm';
 import { PgDialect } from 'drizzle-orm/pg-core';
-import { recipes } from './db/schema.js';
 import { parseFilters, textSearch } from './recipeSearch.js';
 
 const url = (search: string) => new URL(`http://localhost/search${search}`);
@@ -21,22 +20,21 @@ describe('parseFilters', () => {
 });
 
 describe('textSearch', () => {
-	test('without a query it matches everything, newest change first', () => {
-		expect(textSearch('')).toEqual({ where: undefined, orderBy: [desc(recipes.updatedAt)] });
+	test('without a query it matches everything and ranks nothing (browse order)', () => {
+		expect(textSearch('')).toEqual({ where: undefined, rank: [] });
 	});
 
-	test('matches on the title or any version, ranked by tier, then saves, then newest', () => {
-		const { where, orderBy } = textSearch('cookie');
+	test('matches on the title or any version, ranked by tier, then saves', () => {
+		const { where, rank } = textSearch('cookie');
 		if (!where) throw new Error('expected a condition');
 		const { sql, params } = new PgDialect().sqlToQuery(where);
 		expect(sql).toContain('websearch_to_tsquery');
 		expect(sql).toContain("i->>'name'");
 		expect(sql).toContain("s->>'text'");
 		expect(params).toContain('cookie');
-		expect(orderBy).toHaveLength(3);
-		expect(new PgDialect().sqlToQuery(orderBy[0]).sql).toContain('CASE');
-		expect(new PgDialect().sqlToQuery(orderBy[1]).sql).toContain('favorites');
-		expect(orderBy[2]).toEqual(desc(recipes.updatedAt));
+		expect(rank).toHaveLength(2);
+		expect(new PgDialect().sqlToQuery(rank[0]).sql).toContain('CASE');
+		expect(new PgDialect().sqlToQuery(rank[1]).sql).toContain('favorites');
 	});
 
 	test('the ingredient subquery keeps its own table inside a relational findMany', () => {

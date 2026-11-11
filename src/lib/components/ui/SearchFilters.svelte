@@ -5,6 +5,7 @@
 	import TagTabs from './TagTabs.svelte';
 	import { friendsIcon, searchIcon } from '#lib/components/Icons.svelte';
 	import type { TagChip } from '#lib/recipes/types.js';
+	import { withoutPlace } from '#lib/listPage.js';
 
 	let {
 		initialQuery = '',
@@ -20,9 +21,12 @@
 	} = $props();
 
 	// The params this component writes. Any other (Cookbook's `filter`) is the
-	// page's own and rides along untouched.
+	// page's own and rides along untouched, but for the list's loaded place: a
+	// new filter starts the list at its first page.
 	const OWN = ['q', 'tags', 'friends'];
-	const otherParams = $derived([...page.url.searchParams].filter(([key]) => !OWN.includes(key)));
+	const otherParams = $derived(
+		[...withoutPlace(page.url.searchParams)].filter(([key]) => !OWN.includes(key))
+	);
 
 	// Writable derived: typing and pressing change them, and the URL stays the
 	// source of truth: a navigation (back button, a shared link) changes the

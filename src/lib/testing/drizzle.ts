@@ -35,12 +35,18 @@ export function chain(rows: unknown = undefined) {
 
 /**
  * The db the recipe list pages read (select, selectDistinct, the recipes
- * findMany), each a vi.fn. vi.mock factories are hoisted above imports, so
+ * findMany, and $count for their totals, 0 unless set), each a vi.fn.
+ * vi.mock factories are hoisted above imports, so
  * build it inside vi.hoisted:
  *
  *   const db = await vi.hoisted(async () => (await import('#lib/testing/drizzle.js')).mockDb());
  *   vi.mock('#lib/server/db/index.js', () => ({ db }));
  */
 export function mockDb() {
-	return { select: vi.fn(), selectDistinct: vi.fn(), query: { recipes: { findMany: vi.fn() } } };
+	return {
+		select: vi.fn(),
+		selectDistinct: vi.fn(),
+		$count: vi.fn().mockResolvedValue(0),
+		query: { recipes: { findMany: vi.fn() } }
+	};
 }

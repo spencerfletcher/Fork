@@ -1,4 +1,4 @@
-import { desc, inArray, sql, type SQL } from 'drizzle-orm';
+import { inArray, sql, type SQL } from 'drizzle-orm';
 import type { db, Tx } from './db/index.js';
 import { recipes } from './db/schema.js';
 import { MARK_END, MARK_START, type SearchMatch } from '#lib/highlight.js';
@@ -58,21 +58,20 @@ function tier(query: string, tsQuery: SQL): SQL {
 
 /**
  * A recipe matches the query on its title, or on anything any of its versions
- * says. Results rank by where they matched (`tier`), then by saves, then by the
- * newest change: popularity only breaks ties. Without a query everything
- * matches, newest change first, the order browse uses.
+ * says. Results rank by where they matched (`tier`), then by saves; cardList
+ * breaks the rest by the newest change, as browse orders: popularity only
+ * breaks ties. Without a query everything matches and nothing ranks.
  */
-export function textSearch(query: string): { where: SQL | undefined; orderBy: SQL[] } {
-	if (!query) return { where: undefined, orderBy: [desc(recipes.updatedAt)] };
+export function textSearch(query: string): { where: SQL | undefined; rank: SQL[] } {
+	if (!query) return { where: undefined, rank: [] };
 	// ponytail: every version's text is parsed per search (no index can serve
 	// it); an indexed tsvector per version is the upgrade once recipes grow.
 	const rank = tier(query, sql`websearch_to_tsquery('english', ${query})`);
 	return {
 		where: sql`${rank} IS NOT NULL`,
-		orderBy: [
+		rank: [
 			sql`${rank}`,
-			sql`(SELECT count(*) FROM favorites f WHERE f.recipe_id = ${recipeId}) DESC`,
-			desc(recipes.updatedAt)
+			sql`(SELECT count(*) FROM favorites f WHERE f.recipe_id = ${recipeId}) DESC`
 		]
 	};
 }

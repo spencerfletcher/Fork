@@ -1,7 +1,6 @@
 import { db } from '#lib/server/db/index.js';
 import { recipes, recipeVersions } from '#lib/server/db/schema.js';
-import { and, count, inArray, type SQL } from 'drizzle-orm';
-import { byTagMatches } from './tagFilter.js';
+import { and, count, desc, inArray, sql, type SQL } from 'drizzle-orm';
 import { visibleTo, type Viewer } from './visibility.js';
 import { cookedCounts, type Cooked } from './journal.js';
 
@@ -49,39 +48,64 @@ export async function attachRecipeCounts<T extends { id: number }>(
 	}));
 }
 
+/** A browse cursor: the last card's change time, to the microsecond as Postgres prints it, and its id. */
+const KEYSET = /^(\d{4}-\d\d-\d\d \d\d:\d\d:\d\d(?:\.\d{1,6})?)~(\d+)$/;
+/** A ranked cursor: how many cards came before. */
+const OFFSET = /^\d+$/;
+
 /**
- * The recipe cards matching `where`, in `orderBy`, each with its counts for
- * `viewer`. With `tagRank` (a selection's match counts, passed only when no
- * text query ranks the list) recipes matching more selected tags come first.
- * With `cooked` (the viewer's own shelf only, never a list about the recipe)
- * a card the viewer has logged also carries their times and last cooked.
+ * One page of the recipe cards matching `where`, each with its counts for
+ * `viewer`, and the cursor of the page after it (null at the end). The order
+ * is `rank` (a text query's), then the newest change, then the higher id, so
+ * no two cards tie. Without a rank the cursor is a keyset on (updated_at, id):
+ * a card changed between pages neither repeats nor shifts the rest. A rank is
+ * computed per query, so a ranked cursor is a position instead. A cursor that
+ * is not one reads as the first page. With `cooked` (the viewer's own shelf
+ * only, never a list about the recipe) a card the viewer has logged also
+ * carries their times and last cooked.
  */
 export async function cardList(
 	where: SQL | undefined,
-	orderBy: SQL[],
+	rank: SQL[],
 	viewer: Viewer,
-	{
-		tagRank,
-		limit,
-		cooked
-	}: { tagRank?: Map<number, number> | null; limit?: number; cooked?: boolean } = {}
+	{ after, limit, cooked }: { after: string | null; limit: number; cooked?: boolean }
 ) {
-	// The search vector is the database's own, never a card's.
+	const ranked = rank.length > 0;
+	const offset = ranked && after && OFFSET.test(after) ? Number(after) : 0;
+	const key = ranked ? null : KEYSET.exec(after ?? '');
+	// Postgres turns the row compare into a range on the live updated_at index.
+	const afterKey = key
+		? sql`(${recipes.updatedAt}, ${recipes.id}) < (${key[1]}::timestamp, ${Number(key[2])})`
+		: undefined;
 	const rows = await db.query.recipes.findMany({
-		where,
+		where: and(where, afterKey),
+		// The search vector is the database's own, never a card's.
 		columns: { fts: false },
+		extras: { cursorAt: sql<string>`${recipes.updatedAt}::text`.as('cursor_at') },
 		with: CARD_WITH,
-		orderBy,
-		limit
+		orderBy: [...rank, desc(recipes.updatedAt), desc(recipes.id)],
+		// One more than the page says whether a page follows.
+		limit: limit + 1,
+		offset
 	});
-	if (tagRank && tagRank.size > 0) rows.sort(byTagMatches(tagRank));
-	const withCounts = await attachRecipeCounts(rows, viewer);
+	const page = rows.slice(0, limit);
+	const last = page.at(-1);
+	const next =
+		rows.length > limit && last
+			? ranked
+				? String(offset + limit)
+				: `${last.cursorAt}~${last.id}`
+			: null;
+	// The cursor is the page's, never a card's.
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	const cards = page.map(({ cursorAt, ...card }) => card);
+	const withCounts = await attachRecipeCounts(cards, viewer);
 	const cookedById =
 		cooked && viewer
 			? await cookedCounts(
 					viewer.id,
-					rows.map((r) => r.id)
+					cards.map((r) => r.id)
 				)
 			: new Map<number, Cooked>();
-	return withCounts.map((r) => ({ ...r, ...cookedById.get(r.id) }));
+	return { cards: withCounts.map((r) => ({ ...r, ...cookedById.get(r.id) })), next };
 }

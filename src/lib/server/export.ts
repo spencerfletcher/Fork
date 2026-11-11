@@ -8,7 +8,7 @@ import { db, type Tx } from './db/index.js';
 import { collectionRecipes, collections, favorites, profiles, recipes } from './db/schema.js';
 import { canView, friendIdsOf, inLibraryOf, NO_FTS } from './visibility.js';
 import { keptVersionsOf } from './keptCopies.js';
-import { journalOf, type EntrySource } from './journal.js';
+import { wholeJournalOf, type EntrySource } from './journal.js';
 import { versionContent } from '#lib/recipes/content.js';
 import { oneOf } from '#lib/helpers.js';
 import { toMarkdown } from '#lib/export/markdown.js';
@@ -147,7 +147,7 @@ export async function exportFor(
 			where: eq(collections.ownerId, userId),
 			orderBy: [asc(collections.createdAt), asc(collections.id)]
 		}),
-		journalOf(user, conn),
+		wholeJournalOf(user, conn),
 		keptVersionsOf(user, [...new Set([...saved, ...members].map((r) => r.recipe.id))], conn)
 	]);
 	// A kept copy is titled by the version kept, never the row's later edits.

@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, inArray, max, sql, type SQL } from 'drizzle-orm';
+import { and, asc, count, desc, eq, inArray, max, min, sql, type SQL } from 'drizzle-orm';
 import { db, type Tx } from './db/index.js';
 import {
 	logEntries,
@@ -259,16 +259,25 @@ export const sourceColumns = {
 	versionNumber: recipeVersions.versionNumber
 };
 
-/** The viewer's own entries matching `where`, newest cooked first, each with its source. */
-async function ownEntries(viewer: NonNullable<Viewer>, where?: SQL, conn: Tx | typeof db = db) {
+/**
+ * The first `limit` (all of them without one) of the viewer's own entries matching `where`, newest
+ * cooked first and then the later logged (the higher id), each with its source.
+ */
+async function ownEntries(
+	viewer: NonNullable<Viewer>,
+	where: SQL | undefined,
+	limit?: number,
+	conn: Tx | typeof db = db
+) {
+	const query = conn
+		.select({ entry: logEntries, ...sourceColumns })
+		.from(logEntries)
+		.leftJoin(recipes, eq(recipes.id, logEntries.recipeId))
+		.leftJoin(recipeVersions, eq(recipeVersions.id, logEntries.versionId))
+		.where(and(eq(logEntries.userId, viewer.id), where))
+		.orderBy(desc(logEntries.cookedOn), desc(logEntries.id));
 	const [rows, friendIds] = await Promise.all([
-		conn
-			.select({ entry: logEntries, ...sourceColumns })
-			.from(logEntries)
-			.leftJoin(recipes, eq(recipes.id, logEntries.recipeId))
-			.leftJoin(recipeVersions, eq(recipeVersions.id, logEntries.versionId))
-			.where(and(eq(logEntries.userId, viewer.id), where))
-			.orderBy(desc(logEntries.cookedOn), desc(logEntries.createdAt)),
+		limit === undefined ? query : query.limit(limit),
 		friendIdsOf(viewer.id, conn)
 	]);
 	const kept = await keptVersionsOf(
@@ -287,14 +296,55 @@ async function ownEntries(viewer: NonNullable<Viewer>, where?: SQL, conn: Tx | t
 	}));
 }
 
-/** Everything in someone's own Journal, newest cooked first, each with its source. */
-export function journalOf(viewer: NonNullable<Viewer>, conn: Tx | typeof db = db) {
-	return ownEntries(viewer, undefined, conn);
+/** Everything in someone's own Journal, newest cooked first, each with its source: the export's read. */
+export function wholeJournalOf(viewer: NonNullable<Viewer>, conn: Tx | typeof db = db) {
+	return ownEntries(viewer, undefined, undefined, conn);
+}
+
+/** Entries in one page of the Journal: about a month of dinners. */
+export const ENTRIES_PER_PAGE = 30;
+
+/** A Journal cursor: the last entry's cooked day and id. */
+const ENTRY_KEY = /^(\d{4}-\d\d-\d\d)~(\d+)$/;
+
+/**
+ * One page of someone's own Journal, newest cooked first, each with its
+ * source, and the cursor of the page after it (null at the end): a keyset on
+ * (cooked_on, id), so an entry logged between pages shifts nothing. A cursor
+ * that is not one reads as the first page.
+ */
+export async function journalOf(
+	viewer: NonNullable<Viewer>,
+	{ after, limit }: { after: string | null; limit: number }
+) {
+	const key = ENTRY_KEY.exec(after ?? '');
+	const rows = await ownEntries(
+		viewer,
+		key
+			? sql`(${logEntries.cookedOn}, ${logEntries.id}) < (${key[1]}::date, ${Number(key[2])})`
+			: undefined,
+		limit + 1
+	);
+	const entries = rows.slice(0, limit);
+	const last = entries.at(-1);
+	return {
+		entries,
+		next: rows.length > limit && last ? `${last.cookedOn}~${last.id}` : null
+	};
+}
+
+/** How many entries someone's Journal holds and its oldest cooked day, for the summary line. */
+export async function journalSummary(userId: string) {
+	const [row] = await db
+		.select({ total: count(), oldest: min(logEntries.cookedOn) })
+		.from(logEntries)
+		.where(eq(logEntries.userId, userId));
+	return row;
 }
 
 /** One of the viewer's own entries with its source, or null when it is not theirs. */
 export async function ownEntry(viewer: NonNullable<Viewer>, id: number) {
-	const [entry] = await ownEntries(viewer, eq(logEntries.id, id));
+	const [entry] = await ownEntries(viewer, eq(logEntries.id, id), 1);
 	return entry ?? null;
 }
 
