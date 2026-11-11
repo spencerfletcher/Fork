@@ -5,6 +5,7 @@ import type { SubmitFunction } from '$app/forms';
 import DeleteRecipe from './DeleteRecipe.svelte';
 import { pendingEnhance } from '#lib/pendingEnhance.svelte.js';
 import { TRASH_DAYS } from '#lib/trash.js';
+import { NOT_AUTHORIZED } from '#lib/server/visibility.js';
 
 const captured = vi.hoisted(() => ({ submits: [] as SubmitFunction[] }));
 vi.mock('$app/forms', () => ({
@@ -87,7 +88,7 @@ describe('DeleteRecipe', () => {
 	});
 
 	test("shows the server's refusal as an alert", () => {
-		renderDelete('Not authorized');
-		expect(screen.getByRole('alert')).toHaveTextContent('Not authorized');
+		renderDelete(NOT_AUTHORIZED);
+		expect(screen.getByRole('alert')).toHaveTextContent(NOT_AUTHORIZED);
 	});
 });

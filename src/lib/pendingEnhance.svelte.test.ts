@@ -1,5 +1,6 @@
 import { describe, test, expect, vi } from 'vitest';
 import { SESSION_ENDED } from '#lib/server/actions.js';
+import { NOT_AUTHORIZED } from '#lib/server/visibility.js';
 import { pendingEnhance, UNREACHABLE_MESSAGE } from './pendingEnhance.svelte.js';
 
 type Submit = ReturnType<typeof pendingEnhance>['submit'];
@@ -83,10 +84,10 @@ describe('pendingEnhance', () => {
 		const form = pendingEnhance({ keepOnError: true });
 		const after = (await (form.submit as unknown as () => After)()) as After;
 		await after({
-			result: { type: 'error', status: 403, error: { message: 'Not authorized' } },
+			result: { type: 'error', status: 403, error: { message: NOT_AUTHORIZED } },
 			update: async () => {}
 		});
-		expect(form.error).toBe('Not authorized');
+		expect(form.error).toBe(NOT_AUTHORIZED);
 	});
 
 	test('keepOnError: a server failure (5xx) is held as unreachable', async () => {

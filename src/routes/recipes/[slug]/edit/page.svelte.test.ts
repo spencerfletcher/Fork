@@ -16,6 +16,7 @@ import {
 import { MAX_DURATION_MINUTES } from '#lib/recipes/times.js';
 import { UNREACHABLE_MESSAGE } from '#lib/pendingEnhance.svelte.js';
 import { draftKey, saveDraft } from '#lib/drafts.js';
+import { NOT_AUTHORIZED } from '#lib/server/visibility.js';
 
 // Capture the form's submit callback so a test can drive the pending state by hand.
 const captured = vi.hoisted(() => ({ submits: [] as SubmitFunction[] }));
@@ -349,11 +350,11 @@ describe('Edit page form', () => {
 		// ownRecipe throws error(403); enhance hands it back as an error result.
 		const finish = (await captured.submits[1]({} as never)) as (input: unknown) => Promise<void>;
 		const update = vi.fn(async () => {});
-		const result = { type: 'error', status: 403, error: { message: 'Not authorized' } };
+		const result = { type: 'error', status: 403, error: { message: NOT_AUTHORIZED } };
 		await finish({ result, update }).then(tick);
 		expect(update).not.toHaveBeenCalled();
 		const alert = screen.getByRole('alert');
-		expect(alert).toHaveTextContent('Not authorized');
+		expect(alert).toHaveTextContent(NOT_AUTHORIZED);
 		// Under Delete recipe, on the actions row's right.
 		expect(alert.closest('.form-actions .danger')).not.toBeNull();
 		expect(title()).toHaveValue('Cookies');
