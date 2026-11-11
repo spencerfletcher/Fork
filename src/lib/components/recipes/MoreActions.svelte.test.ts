@@ -2,7 +2,7 @@ import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, within } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import MoreActions from './MoreActions.svelte';
-import source from './MoreActions.svelte?raw';
+import source from './CollectionChecks.svelte?raw';
 import { cssRule } from '#lib/testing/css.js';
 import { COLLECTION_NAME_MAX } from '#lib/collections.js';
 import { SESSION_ENDED } from '#lib/server/actions.js';
