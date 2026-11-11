@@ -117,6 +117,29 @@ describe.skipIf(!localDb)('kept copies, against the real database', () => {
 		});
 	});
 
+	test('narrowing Public to Friends leaves a saver who is not a friend no copy and no access, export included', async () => {
+		await withPeople(async (tx, { author, friend, stranger }) => {
+			const recipe = await makeRecipe(tx, author, 'public');
+			await tx.insert(schema.favorites).values([
+				{ userId: friend, recipeId: recipe.id },
+				{ userId: stranger, recipeId: recipe.id }
+			]);
+			// An audience change, not a withdrawal: the editor grants nothing (pinned in its own test).
+			await tx
+				.update(schema.recipes)
+				.set({ visibility: 'friends' })
+				.where(eq(schema.recipes.id, recipe.id));
+			expect(await idsWhere(tx, visibility.keptCopyOf({ id: stranger }), [recipe.id])).toEqual([]);
+			expect(await idsWhere(tx, visibility.inLibraryOf({ id: stranger }), [recipe.id])).toEqual([]);
+			expect(await idsWhere(tx, visibility.inLibraryOf({ id: friend }), [recipe.id])).toEqual([
+				recipe.id
+			]);
+			const { exportFor } = await import('./export.js');
+			const saves = (await exportFor(stranger, 'https://fork.test', undefined, tx)).saves;
+			expect(saves).toEqual([]);
+		});
+	});
+
 	test("the author's own save of their recipe is never a copy", async () => {
 		await withPeople(async (tx, { author }) => {
 			const recipe = await makeRecipe(tx, author, 'public');
