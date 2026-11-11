@@ -6,7 +6,7 @@
  */
 
 import { expect, test, type Page } from '@playwright/test';
-import { deleteRecipe, gotoHydrated } from './helpers';
+import { createRecipe, deleteRecipe, gotoHydrated } from './helpers';
 
 /** Waits until the debounced write has landed, so a reload has something to restore. */
 async function draftStored(page: Page, title: string) {
@@ -35,18 +35,6 @@ function countDialogs(page: Page) {
 
 const titleBox = (page: Page) => page.locator('textarea[name="title"]');
 const stateLine = (page: Page) => page.locator('.editing');
-
-async function createRecipe(page: Page, title: string) {
-	test.slow();
-	await gotoHydrated(page, '/recipes/new');
-	await titleBox(page).fill(title);
-	await page.getByRole('textbox', { name: 'Ingredients', exact: true }).fill('2 cups flour');
-	await page.getByRole('textbox', { name: 'Method', exact: true }).fill('Mix all ingredients.');
-	await page.getByRole('radio', { name: 'Only me' }).check();
-	await page.getByRole('button', { name: /create recipe/i }).click();
-	await page.waitForURL(/\/recipes\/(?!new)/);
-	return page.url().split('?')[0];
-}
 
 test.describe('Editor drafts on this device', () => {
 	test('an edit survives a reload, and the state line says it was restored', async ({ page }) => {

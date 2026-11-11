@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test';
+import { test, type Page } from '@playwright/test';
 import { SEED } from '../src/lib/server/db/seedData';
 
 /** The seed's cookies (3 versions, renamed in v3), read from the seed so a rename cannot strand a test. */
@@ -44,13 +44,52 @@ export async function openCookies(page: Page) {
 	await gotoHydrated(page, await cookiesPath(page));
 }
 
-/** Moves the signed-in owner's recipe at `url` to the Trash, as a test's cleanup. */
-export async function deleteRecipe(page: Page, url: string) {
-	await page.evaluate(async (u) => {
-		await fetch(`${u}/edit?/deleteRecipe`, {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-			body: ''
-		});
-	}, url);
+/** `label` and a suffix no other test or run shares. */
+export const uniqueTitle = (label: string) =>
+	`${label} ${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+
+/**
+ * A private recipe of the signed-in cook's own ("Only me", so the guest
+ * project's seed counts never see it), returning its URL without the query.
+ */
+export async function createRecipe(
+	page: Page,
+	title: string,
+	{ servings, cookTimeMinutes }: { servings?: string; cookTimeMinutes?: string } = {}
+) {
+	// A test that makes its own recipe also edits and deletes it: several
+	// saves and page loads, which outrun 10s on a machine running the whole
+	// suite in parallel. Triples the timeout for that test only.
+	test.slow();
+	await gotoHydrated(page, '/recipes/new');
+	await page.locator('textarea[name="title"]').fill(title);
+	if (servings) await page.locator('input[name="servings"]').fill(servings);
+	if (cookTimeMinutes) await page.locator('input[name="cookTimeMinutes"]').fill(cookTimeMinutes);
+	await page.getByRole('textbox', { name: 'Ingredients', exact: true }).fill('2 cups flour');
+	await page.getByRole('textbox', { name: 'Method', exact: true }).fill('Mix all ingredients.');
+	await page.getByRole('radio', { name: 'Only me' }).check();
+	await page.getByRole('button', { name: /create recipe/i }).click();
+	await page.waitForURL(/\/recipes\/(?!new)/);
+	return page.url().split('?')[0];
 }
+
+/**
+ * Posts a form action from the page, as a cleanup step the test does not
+ * assert: the browser sets the Origin header, so SvelteKit's CSRF check passes.
+ */
+export async function postAction(page: Page, url: string, fields: Record<string, string> = {}) {
+	await page.evaluate(
+		async ([u, body]) => {
+			await fetch(u, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+				body: new URLSearchParams(body).toString()
+			});
+		},
+		[url, fields] as const
+	);
+}
+
+/** Moves the signed-in owner's recipe at `url` to the Trash, as a test's cleanup. */
+export const deleteRecipe = (page: Page, url: string) =>
+	postAction(page, `${url}/edit?/deleteRecipe`);

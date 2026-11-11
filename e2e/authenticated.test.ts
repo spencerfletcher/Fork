@@ -6,7 +6,7 @@
  */
 
 import { expect, test, type Page } from '@playwright/test';
-import { cookiesLink, deleteRecipe, gotoHydrated } from './helpers';
+import { cookiesLink, createRecipe, deleteRecipe, gotoHydrated, uniqueTitle } from './helpers';
 
 // ─── Home (logged in) ─────────────────────────────────────────────────────────
 
@@ -226,17 +226,8 @@ test.describe('New recipe page', () => {
 
 			createdRecipeUrl = page.url().split('?')[0];
 		} finally {
-			// Always clean up — use page.evaluate so the browser sets the correct
-			// Origin header and SvelteKit's CSRF check passes.
-			if (createdRecipeUrl) {
-				await page.evaluate(async (url) => {
-					await fetch(`${url}/edit?/deleteRecipe`, {
-						method: 'POST',
-						headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-						body: ''
-					});
-				}, createdRecipeUrl);
-			}
+			// Always clean up.
+			if (createdRecipeUrl) await deleteRecipe(page, createdRecipeUrl);
 		}
 	});
 });
@@ -254,7 +245,7 @@ test.describe('Edit recipe page', () => {
 	});
 
 	test('re-saving an unchanged recipe writes no version and returns to it', async ({ page }) => {
-		const url = await createRecipe(page, 'E2E Unchanged', '4');
+		const url = await createRecipe(page, 'E2E Unchanged', { servings: '4', cookTimeMinutes: '20' });
 		try {
 			await gotoHydrated(page, `${url}/edit`);
 			await page.getByRole('button', { name: 'Save', exact: true }).click();
@@ -269,7 +260,7 @@ test.describe('Edit recipe page', () => {
 	test('Tab walks the editor top to bottom at every width, because the grid reorders nothing', async ({
 		page
 	}) => {
-		const url = await createRecipe(page, 'E2E Tab Order', '4');
+		const url = await createRecipe(page, 'E2E Tab Order', { servings: '4', cookTimeMinutes: '20' });
 		const expected = [
 			'title',
 			'description',
@@ -329,7 +320,7 @@ test.describe('Edit recipe page', () => {
 	test('leaving a dirty editor asks nothing, the draft keeps the words; a chosen photo still asks', async ({
 		page
 	}) => {
-		const url = await createRecipe(page, 'E2E Guard', '4');
+		const url = await createRecipe(page, 'E2E Guard', { servings: '4', cookTimeMinutes: '20' });
 		try {
 			let dialogs = 0;
 			const count = () => dialogs++;
@@ -372,7 +363,7 @@ test.describe('Edit recipe page', () => {
 	});
 
 	test('the header line states the version a save will write', async ({ page }) => {
-		const url = await createRecipe(page, 'E2E Helper', '4');
+		const url = await createRecipe(page, 'E2E Helper', { servings: '4', cookTimeMinutes: '20' });
 		try {
 			await gotoHydrated(page, `${url}/edit`);
 			await expect(page.locator('.editing')).toHaveText('Editing v1');
@@ -391,7 +382,7 @@ test.describe('Edit recipe page', () => {
 		page
 	}) => {
 		await page.setViewportSize({ width: 390, height: 900 });
-		const url = await createRecipe(page, 'E2E Grow', '4');
+		const url = await createRecipe(page, 'E2E Grow', { servings: '4', cookTimeMinutes: '20' });
 		try {
 			await gotoHydrated(page, `${url}/edit`);
 			const box = page.getByRole('textbox', { name: 'Ingredients', exact: true });
@@ -413,7 +404,10 @@ test.describe('Edit recipe page', () => {
 	test('saving changed steps with a commit message adds a version carrying it', async ({
 		page
 	}) => {
-		const url = await createRecipe(page, 'E2E Commit Message', '4');
+		const url = await createRecipe(page, 'E2E Commit Message', {
+			servings: '4',
+			cookTimeMinutes: '20'
+		});
 		try {
 			await gotoHydrated(page, `${url}/edit`);
 			await page
@@ -432,7 +426,10 @@ test.describe('Edit recipe page', () => {
 	test('a message typed with nothing else changed saves a version carrying it', async ({
 		page
 	}) => {
-		const url = await createRecipe(page, 'E2E Message Alone', '4');
+		const url = await createRecipe(page, 'E2E Message Alone', {
+			servings: '4',
+			cookTimeMinutes: '20'
+		});
 		try {
 			await gotoHydrated(page, `${url}/edit`);
 			await page.locator('input[name="commitMessage"]').fill('a note on its own');
@@ -465,29 +462,11 @@ async function expectVersions(page: Page, n: number) {
 	await expect(page.locator('.version-bar .versions-toggle')).toHaveText(`${n} versions`);
 }
 
-async function createRecipe(page: Page, title: string, servings: string) {
-	// A test that makes its own recipe also edits and deletes it: several
-	// saves and page loads, which outrun 10s on a machine running the whole
-	// suite in parallel. Triples the timeout for that test only.
-	test.slow();
-	await gotoHydrated(page, '/recipes/new');
-	await page.locator('textarea[name="title"]').fill(title);
-	await page.locator('input[name="servings"]').fill(servings);
-	await page.locator('input[name="cookTimeMinutes"]').fill('20');
-	await page.getByRole('textbox', { name: 'Ingredients', exact: true }).fill('2 cups flour');
-	await page.getByRole('textbox', { name: 'Method', exact: true }).fill('Mix all ingredients.');
-	// Private, so the guest project's seed counts never see it.
-	await page.getByRole('radio', { name: 'Only me' }).check();
-	await page.getByRole('button', { name: /create recipe/i }).click();
-	await page.waitForURL(/\/recipes\/(?!new)/);
-	return page.url().split('?')[0];
-}
-
 test.describe('Delete recipe', () => {
 	test('the owner moves a recipe to the Trash from its editor, confirming first, and lands on the Trash', async ({
 		page
 	}) => {
-		const url = await createRecipe(page, 'E2E Delete Me', '2');
+		const url = await createRecipe(page, 'E2E Delete Me', { servings: '2', cookTimeMinutes: '20' });
 		await gotoHydrated(page, `${url}/edit`);
 		await page.getByRole('button', { name: 'Delete recipe' }).click();
 		const step = page.getByRole('group', { name: 'Move E2E Delete Me to Trash?' });
@@ -507,12 +486,6 @@ test.describe('Delete recipe', () => {
 // Other tests' cleanup moves their recipes to the Trash too, so these never
 // assume an empty Trash: each finds its own row by a title no other test uses.
 
-/** A title no other test or run shares, and its one searchable word. */
-function uniqueTitle() {
-	const word = `trashtest${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
-	return { title: `E2E ${word}`, word };
-}
-
 const trashRow = (page: Page, title: string) =>
 	page
 		.getByRole('listitem')
@@ -530,8 +503,10 @@ test.describe('Trash', () => {
 	test('a trashed recipe leaves the Cookbook, Discover and Search and 404s; Restore brings it back with its versions', async ({
 		page
 	}) => {
-		const { title, word } = uniqueTitle();
-		const url = await createRecipe(page, title, '2');
+		const title = uniqueTitle('E2E trashtest');
+		// Its one searchable word.
+		const word = title.split(' ').at(-1)!;
+		const url = await createRecipe(page, title, { servings: '2', cookTimeMinutes: '20' });
 		try {
 			await gotoHydrated(page, `${url}/edit`);
 			await page.locator('input[name="commitMessage"]').fill('a second version');
@@ -577,8 +552,8 @@ test.describe('Trash', () => {
 	});
 
 	test('Delete forever, asked in place, removes the recipe for good', async ({ page }) => {
-		const { title } = uniqueTitle();
-		const url = await createRecipe(page, title, '2');
+		const title = uniqueTitle('E2E trashtest');
+		const url = await createRecipe(page, title, { servings: '2', cookTimeMinutes: '20' });
 		await deleteRecipe(page, url);
 
 		await gotoHydrated(page, '/cookbook/trash');
@@ -601,8 +576,8 @@ test.describe('Trash', () => {
 	test('a row spans the page column on one line at desktop, its step too, and stacks on a phone without overflow', async ({
 		page
 	}) => {
-		const { title } = uniqueTitle();
-		const url = await createRecipe(page, title, '2');
+		const title = uniqueTitle('E2E trashtest');
+		const url = await createRecipe(page, title, { servings: '2', cookTimeMinutes: '20' });
 		await deleteRecipe(page, url);
 		try {
 			await page.setViewportSize({ width: 1280, height: 800 });
@@ -653,7 +628,10 @@ test.describe('Trash', () => {
 
 test.describe('One save', () => {
 	test('one save records servings, times and ingredients as a new version', async ({ page }) => {
-		const url = await createRecipe(page, 'E2E Four Servings', '4');
+		const url = await createRecipe(page, 'E2E Four Servings', {
+			servings: '4',
+			cookTimeMinutes: '20'
+		});
 		try {
 			await gotoHydrated(page, `${url}/edit`);
 			await page.locator('input[name="servings"]').fill('8');
@@ -680,7 +658,10 @@ test.describe('One save', () => {
 	});
 
 	test('renaming keeps the slug and the old version keeps its title', async ({ page }) => {
-		const url = await createRecipe(page, 'E2E Before Rename', '4');
+		const url = await createRecipe(page, 'E2E Before Rename', {
+			servings: '4',
+			cookTimeMinutes: '20'
+		});
 		try {
 			await gotoHydrated(page, `${url}/edit`);
 			await page.locator('textarea[name="title"]').fill('E2E After Rename');
@@ -699,7 +680,10 @@ test.describe('One save', () => {
 	});
 
 	test('a settings-only save creates no version', async ({ page }) => {
-		const url = await createRecipe(page, 'E2E Settings Only', '4');
+		const url = await createRecipe(page, 'E2E Settings Only', {
+			servings: '4',
+			cookTimeMinutes: '20'
+		});
 		try {
 			await gotoHydrated(page, `${url}/edit`);
 			// A tag is a setting; the recipe stays private.
@@ -715,7 +699,7 @@ test.describe('One save', () => {
 	});
 
 	test('a stale tab gets a conflict and keeps its draft', async ({ page, context }) => {
-		const url = await createRecipe(page, 'E2E Stale', '4');
+		const url = await createRecipe(page, 'E2E Stale', { servings: '4', cookTimeMinutes: '20' });
 		try {
 			const other = await context.newPage();
 			await gotoHydrated(other, `${url}/edit`);
@@ -740,7 +724,7 @@ test.describe('One save', () => {
 	});
 
 	test('an invalid field keeps the draft and re-enables the form', async ({ page }) => {
-		const url = await createRecipe(page, 'E2E Invalid', '4');
+		const url = await createRecipe(page, 'E2E Invalid', { servings: '4', cookTimeMinutes: '20' });
 		try {
 			await gotoHydrated(page, `${url}/edit`);
 			const long = '1 cup ' + 'x'.repeat(300);
@@ -767,7 +751,10 @@ test.describe('Compare page', () => {
 	test('a recipe with one version is a 400 whose helper line agrees with its message', async ({
 		page
 	}) => {
-		const url = await createRecipe(page, 'E2E One Version', '4');
+		const url = await createRecipe(page, 'E2E One Version', {
+			servings: '4',
+			cookTimeMinutes: '20'
+		});
 		try {
 			const response = await page.goto(`${url}/diff`);
 			expect(response?.status()).toBe(400);
@@ -893,7 +880,7 @@ test.describe('Restore', () => {
 	test('restoring v1 appends its content as v3, and v2 still opens with its own', async ({
 		page
 	}) => {
-		const url = await createRecipe(page, 'E2E Restore', '4');
+		const url = await createRecipe(page, 'E2E Restore', { servings: '4', cookTimeMinutes: '20' });
 		try {
 			await gotoHydrated(page, `${url}/edit`);
 			await page.getByRole('textbox', { name: 'Ingredients', exact: true }).fill('3 cups flour');
@@ -927,7 +914,10 @@ test.describe('Restore', () => {
 	test('Keep current closes the step and hands focus back; nothing is written', async ({
 		page
 	}) => {
-		const url = await createRecipe(page, 'E2E Keep Current', '4');
+		const url = await createRecipe(page, 'E2E Keep Current', {
+			servings: '4',
+			cookTimeMinutes: '20'
+		});
 		try {
 			await gotoHydrated(page, `${url}/edit`);
 			await page.locator('input[name="servings"]').fill('6');
@@ -950,7 +940,10 @@ test.describe('Restore', () => {
 	test('at 320 and 390 the bar keeps Back and the toggle on one row and Restore on its own, with no overflow', async ({
 		page
 	}) => {
-		const url = await createRecipe(page, 'E2E Restore Phone', '4');
+		const url = await createRecipe(page, 'E2E Restore Phone', {
+			servings: '4',
+			cookTimeMinutes: '20'
+		});
 		try {
 			await gotoHydrated(page, `${url}/edit`);
 			await page.locator('input[name="servings"]').fill('6');

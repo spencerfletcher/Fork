@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
-import { cookiesPath, gotoHydrated } from './helpers';
+import { cookiesPath, createRecipe, deleteRecipe, gotoHydrated } from './helpers';
 
 // Site-wide invariants, one sweep per rule. The file runs in both projects:
 // `chromium` (signed out) sweeps the public rows and `chromium-auth` (the seed
@@ -47,31 +47,14 @@ const newWithTag: Open = async (page) => {
 
 // A long unbroken title on a two-version recipe, for the compare page.
 const longTitleCompare: Open = async (page) => {
-	await goto('/recipes/new')(page);
-	await page.locator('textarea[name="title"]').fill('E2E' + 'x'.repeat(57));
-	await page.locator('input[name="servings"]').fill('4');
-	await page.getByRole('textbox', { name: 'Ingredients', exact: true }).fill('2 cups flour');
-	await page.getByRole('textbox', { name: 'Method', exact: true }).fill('Mix all ingredients.');
-	// Private, so the guest project's seed counts never see it.
-	await page.getByRole('radio', { name: 'Only me' }).check();
-	await page.getByRole('button', { name: /create recipe/i }).click();
-	await page.waitForURL(/\/recipes\/(?!new)/);
-	const url = page.url().split('?')[0];
+	const url = await createRecipe(page, 'E2E' + 'x'.repeat(57), { servings: '4' });
 	await goto(`${url}/edit`)(page);
 	await page.getByRole('textbox', { name: 'Method', exact: true }).fill('Mix, then bake.');
 	await page.getByRole('button', { name: 'Save', exact: true }).click();
 	await page.waitForURL(url);
 	await page.goto(`${url}/diff?from=1&to=2`);
 	await page.locator('article.version-card').first().waitFor();
-	return async () => {
-		await page.evaluate(async (u) => {
-			await fetch(`${u}/edit?/deleteRecipe`, {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-				body: ''
-			});
-		}, url);
-	};
+	return () => deleteRecipe(page, url);
 };
 
 async function opened(page: Page, open: Open, check: () => Promise<void>) {

@@ -7,47 +7,21 @@
  */
 
 import { expect, test, type Page } from '@playwright/test';
-import { gotoHydrated } from './helpers';
+import { createRecipe, deleteRecipe, gotoHydrated, postAction, uniqueTitle } from './helpers';
 import { SEED } from '../src/lib/server/db/seedData';
-
-const unique = (label: string) =>
-	`${label} ${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`;
 
 const collectionsNav = (page: Page) => page.getByRole('navigation', { name: 'Collections' });
 
-/** A private recipe of the seed user's own, returning its path. */
-async function createRecipe(page: Page, title: string, servings?: string) {
-	await gotoHydrated(page, '/recipes/new');
-	await page.locator('textarea[name="title"]').fill(title);
-	if (servings) await page.locator('input[name="servings"]').fill(servings);
-	await page.getByRole('textbox', { name: 'Ingredients', exact: true }).fill('2 cups flour');
-	await page.getByRole('textbox', { name: 'Method', exact: true }).fill('Mix all ingredients.');
-	await page.getByRole('radio', { name: 'Only me' }).check();
-	await page.getByRole('button', { name: /create recipe/i }).click();
-	await page.waitForURL(/\/recipes\/(?!new)/);
-	return new URL(page.url()).pathname;
-}
-
-/** Posts a form action from the page, as a cleanup step the test does not assert. */
-async function post(page: Page, url: string, fields: Record<string, string>) {
-	await page.evaluate(
-		async ([u, body]) => {
-			await fetch(u, {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-				body: new URLSearchParams(body).toString()
-			});
-		},
-		[url, fields] as const
-	);
-}
+/** The seed user's own private recipe, by its path. */
+const createdPath = async (page: Page, title: string, servings?: string) =>
+	new URL(await createRecipe(page, title, { servings })).pathname;
 
 test.describe('Collections', () => {
 	test('a collection is made, opened empty, renamed and deleted on the Cookbook', async ({
 		page
 	}) => {
-		const name = unique('E2E shelf');
-		const renamed = unique('E2E renamed');
+		const name = uniqueTitle('E2E shelf');
+		const renamed = uniqueTitle('E2E renamed');
 		await gotoHydrated(page, '/cookbook');
 
 		await page.getByRole('button', { name: 'New collection' }).click();
@@ -82,9 +56,9 @@ test.describe('Collections', () => {
 		page
 	}) => {
 		test.slow();
-		const title = unique('E2E Collected');
-		const name = unique('E2E party');
-		const path = await createRecipe(page, title);
+		const title = uniqueTitle('E2E Collected');
+		const name = uniqueTitle('E2E party');
+		const path = await createdPath(page, title);
 
 		await page.getByRole('button', { name: 'More actions' }).click();
 		await page.getByRole('menuitem', { name: 'New collection' }).click();
@@ -101,7 +75,7 @@ test.describe('Collections', () => {
 		await expect(page.getByRole('link', { name: title })).toBeVisible();
 
 		// The Trash hides it from the collection; restoring brings it back.
-		await post(page, `${path}/edit?/deleteRecipe`, {});
+		await deleteRecipe(page, path);
 		await gotoHydrated(page, collectionUrl);
 		await expect(page.getByText(`Nothing in ${name} yet`)).toBeVisible();
 		await gotoHydrated(page, '/cookbook/trash');
@@ -124,18 +98,18 @@ test.describe('Collections', () => {
 		await gotoHydrated(page, collectionUrl);
 		await expect(page.getByText(`Nothing in ${name} yet`)).toBeVisible();
 
-		await post(page, '/cookbook?/deleteCollection', { id });
-		await post(page, `${path}/edit?/deleteRecipe`, {});
-		await post(page, '/cookbook/trash?/deleteForever', { slug: path.split('/').pop()! });
+		await postAction(page, '/cookbook?/deleteCollection', { id });
+		await deleteRecipe(page, path);
+		await postAction(page, '/cookbook/trash?/deleteForever', { slug: path.split('/').pop()! });
 	});
 
 	test('a collection toggle keeps the page’s query: the scale on the latest, the version on a past one, and the menu open', async ({
 		page
 	}) => {
 		test.slow();
-		const title = unique('E2E Scaled');
-		const name = unique('E2E scaled shelf');
-		const path = await createRecipe(page, title, '4');
+		const title = uniqueTitle('E2E Scaled');
+		const name = uniqueTitle('E2E scaled shelf');
+		const path = await createdPath(page, title, '4');
 		let id: string | null = null;
 		try {
 			await page.getByRole('button', { name: 'More actions' }).click();
@@ -188,9 +162,9 @@ test.describe('Collections', () => {
 			await expect(page).toHaveURL(new RegExp(`${path}\\?version=1$`));
 			await expect(ingredients.getByText(/2 cups/)).toBeVisible();
 		} finally {
-			if (id) await post(page, '/cookbook?/deleteCollection', { id });
-			await post(page, `${path}/edit?/deleteRecipe`, {});
-			await post(page, '/cookbook/trash?/deleteForever', { slug: path.split('/').pop()! });
+			if (id) await postAction(page, '/cookbook?/deleteCollection', { id });
+			await deleteRecipe(page, path);
+			await postAction(page, '/cookbook/trash?/deleteForever', { slug: path.split('/').pop()! });
 		}
 	});
 
