@@ -5,24 +5,23 @@ import { load } from './+page.server';
 import type { PageData } from './$types';
 import { recipes, recipeVersions } from '#lib/server/db/schema.js';
 import { namedBy } from '#lib/server/profiles.js';
-import { and, eq } from 'drizzle-orm';
+import { and, desc, eq, inArray, type SQL } from 'drizzle-orm';
 import { visibleTo } from '#lib/server/visibility.js';
-import { attachRecipeCounts } from '#lib/server/recipeCounts.js';
+import { CARDS_PER_PAGE } from '#lib/listPage.js';
 
 // ─── Hoisted mocks ────────────────────────────────────────────────────────────
 
-const { findProfileMock, findRecipesMock, selectMock, relationMock } = vi.hoisted(() => ({
-	findProfileMock: vi.fn(),
-	findRecipesMock: vi.fn(),
-	selectMock: vi.fn(),
-	relationMock: vi.fn()
-}));
+const { findProfileMock, findRecipesMock, selectMock, relationMock, countMock } = vi.hoisted(
+	() => ({
+		findProfileMock: vi.fn(),
+		findRecipesMock: vi.fn(),
+		selectMock: vi.fn(),
+		relationMock: vi.fn(),
+		countMock: vi.fn()
+	})
+);
 
 vi.mock('#lib/server/friends.js', () => ({ relationOf: relationMock }));
-vi.mock('#lib/server/recipeCounts.js', async (importOriginal) => {
-	const real = await importOriginal<typeof import('#lib/server/recipeCounts.js')>();
-	return { ...real, attachRecipeCounts: vi.fn(real.attachRecipeCounts) };
-});
 
 vi.mock('#lib/server/db/index.js', () => ({
 	db: {
@@ -30,7 +29,8 @@ vi.mock('#lib/server/db/index.js', () => ({
 			profiles: { findFirst: findProfileMock },
 			recipes: { findMany: findRecipesMock }
 		},
-		select: selectMock
+		select: selectMock,
+		$count: countMock
 	}
 }));
 
@@ -54,6 +54,14 @@ function makeLoadEvent(username: string, viewerId: string | null = null, search 
 	});
 }
 
+/** Counts by condition: the public recipes for the preview, else the viewer's total. */
+function countsBy({ total, publicCount }: { total: number; publicCount: number }) {
+	const publicWhere = JSON.stringify(sqlOf(and(eq(recipes.authorId, 'user-1'), visibleTo(null))!));
+	countMock.mockImplementation(async (_table: unknown, where: SQL) =>
+		JSON.stringify(sqlOf(where)) === publicWhere ? publicCount : total
+	);
+}
+
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
 describe('users/[username] load', () => {
@@ -63,6 +71,7 @@ describe('users/[username] load', () => {
 		// aggregates (attachRecipeCounts) resolve to empty — same mock shape
 		// serves both since `.groupBy()` is just another link in the chain.
 		selectMock.mockReturnValue(chain([{ commitCount: 0 }]));
+		countMock.mockResolvedValue(0);
 	});
 
 	test('throws 404 when profile is not found', async () => {
@@ -131,51 +140,74 @@ describe('users/[username] load', () => {
 		findRecipesMock.mockResolvedValue([]);
 		for (const viewer of [null, 'someone-else', 'user-1']) {
 			findRecipesMock.mockClear();
+			countMock.mockClear();
 			await load(makeLoadEvent('chefmaria', viewer));
 			const user = viewer ? { id: viewer } : null;
-			expect(findRecipesMock.mock.calls[0][0].where).toEqual(
-				and(eq(recipes.authorId, 'user-1'), visibleTo(user))
-			);
+			const where = sqlOf(and(eq(recipes.authorId, 'user-1'), visibleTo(user))!);
+			expect(sqlOf(findRecipesMock.mock.calls[0][0].where)).toEqual(where);
+			// The grid's count is the same list's, whole.
+			expect(countMock.mock.calls.map((c) => sqlOf(c[1]))).toContainEqual(where);
 		}
 	});
 
-	test("fork counts are the viewer's: the counts are attached for the signed-in viewer", async () => {
-		const shown = [{ id: 7, visibility: 'public' }];
+	// The shared card list: newest change first, one page and a keyset cursor.
+	test('shows one page of cards, newest change first, with the cursor of the next', async () => {
 		findProfileMock.mockResolvedValue(makeProfile());
-		findRecipesMock.mockResolvedValue(shown);
-		await load(makeLoadEvent('chefmaria', 'viewer'));
-		expect(attachRecipeCounts).toHaveBeenCalledWith(shown, { id: 'viewer' });
+		const rows = Array.from({ length: CARDS_PER_PAGE + 1 }, (_, i) => ({
+			id: 100 - i,
+			visibility: 'public',
+			cursorAt: `2026-11-0${(i % 9) + 1} 10:00:00`
+		}));
+		findRecipesMock.mockResolvedValue(rows);
+		const result = await loadPage<PageData>(load as never, makeLoadEvent('chefmaria'));
+		const query = findRecipesMock.mock.calls[0][0];
+		expect(query.orderBy).toEqual([desc(recipes.updatedAt), desc(recipes.id)]);
+		expect(query.limit).toBe(CARDS_PER_PAGE + 1);
+		expect(result.recipes).toHaveLength(CARDS_PER_PAGE);
+		const last = rows[CARDS_PER_PAGE - 1];
+		expect(result.next).toBe(`${last.cursorAt}~${last.id}`);
 	});
 
-	test('the link preview counts public recipes only, even for the owner', async () => {
+	test('a cursor in the URL reads the page after it', async () => {
 		findProfileMock.mockResolvedValue(makeProfile());
-		findRecipesMock.mockResolvedValue([
-			{ id: 1, visibility: 'public' },
-			{ id: 2, visibility: 'friends' },
-			{ id: 3, visibility: 'private' }
-		]);
+		findRecipesMock.mockResolvedValue([]);
+		await load(makeLoadEvent('chefmaria', null, '?after=2026-11-03%2010:00:00~42'));
+		expect(sqlOf(findRecipesMock.mock.calls[0][0].where).params).toEqual(
+			expect.arrayContaining(['2026-11-03 10:00:00', 42])
+		);
+	});
+
+	test("fork counts are the viewer's: the counts are attached for the signed-in viewer", async () => {
+		findProfileMock.mockResolvedValue(makeProfile());
+		findRecipesMock.mockResolvedValue([{ id: 7, visibility: 'public', cursorAt: 'x' }]);
+		const forkChain = chain([]);
+		// The commit count, then the version and fork aggregates.
+		selectMock
+			.mockReturnValueOnce(chain([{ commitCount: 0 }]))
+			.mockReturnValueOnce(chain([]))
+			.mockReturnValueOnce(forkChain);
+		await load(makeLoadEvent('chefmaria', 'viewer'));
+		expect(sqlOf(forkChain.where.mock.calls[0][0])).toEqual(
+			sqlOf(and(inArray(recipes.parentId, [7]), visibleTo({ id: 'viewer' }))!)
+		);
+	});
+
+	test('the total and the link preview are counts, the preview of public recipes only, even for the owner', async () => {
+		findProfileMock.mockResolvedValue(makeProfile());
+		findRecipesMock.mockResolvedValue([{ id: 1, visibility: 'public' }]);
+		countsBy({ total: 61, publicCount: 30 });
 		const result = await loadPage<PageData>(load as never, makeLoadEvent('chefmaria', 'user-1'));
-		expect(result.recipes).toHaveLength(3);
-		expect(result.meta.description).toBe('1 public recipe and 0 changes on Fork.');
+		expect(result.total).toBe(61);
+		expect(result.meta.description).toBe('30 public recipes and 0 changes on Fork.');
 		expect(result.meta.noindex).toBe(false);
 	});
 
 	test('a profile with no public recipe is noindex, even to its owner who sees the rest', async () => {
 		findProfileMock.mockResolvedValue(makeProfile());
 		findRecipesMock.mockResolvedValue([{ id: 2, visibility: 'friends' }]);
+		countsBy({ total: 1, publicCount: 0 });
 		const result = await loadPage<PageData>(load as never, makeLoadEvent('chefmaria', 'user-1'));
 		expect(result.meta.noindex).toBe(true);
-	});
-
-	test('returns public recipes for the user', async () => {
-		findProfileMock.mockResolvedValue(makeProfile());
-		const recipes = [
-			{ id: 1, title: 'Pasta', slug: 'pasta-abc' },
-			{ id: 2, title: 'Soup', slug: 'soup-xyz' }
-		];
-		findRecipesMock.mockResolvedValue(recipes);
-		const result = await loadPage<PageData>(load as never, makeLoadEvent('chefmaria'));
-		expect(result.recipes).toHaveLength(2);
 	});
 
 	test('returns commitCount from db', async () => {

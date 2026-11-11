@@ -41,6 +41,8 @@ const data = {
 		}
 	],
 	commitCount: 5,
+	total: 2,
+	next: null as string | null,
 	relation: null as string | null
 };
 
@@ -72,6 +74,21 @@ describe('Profile page', () => {
 		const { container } = renderProfile();
 		expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('2 recipes');
 		expect(container.querySelector('.recipe-grid')).not.toBeNull();
+	});
+
+	// A long profile is paged: the count is the whole list's, Show more links the next page.
+	test('counts every recipe it lists and ends a long list in Show more', () => {
+		renderProfile({ total: 61, next: '2026-11-03 10:00:00~42' });
+		expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('61 recipes');
+		expect(screen.getByRole('link', { name: 'Show more' })).toHaveAttribute(
+			'href',
+			expect.stringMatching(/\?page=2$/)
+		);
+	});
+
+	test('the last page has no Show more', () => {
+		renderProfile();
+		expect(screen.queryByRole('link', { name: 'Show more' })).toBeNull();
 	});
 });
 

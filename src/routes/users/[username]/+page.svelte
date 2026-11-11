@@ -6,11 +6,16 @@
 	import ConfirmStep from '#lib/components/ui/ConfirmStep.svelte';
 	import Avatar from '#lib/components/ui/Avatar.svelte';
 	import { BLOCK_SENTENCE } from '#lib/journal.js';
+	import { pagedList } from '#lib/pagedList.svelte.js';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
 
-	const { profile, recipes, commitCount } = $derived(data);
+	const { profile, commitCount } = $derived(data);
+	const list = pagedList(
+		() => data,
+		(d) => ({ items: d.recipes, next: d.next })
+	);
 
 	// data.user is the signed-in viewer, from the root layout.
 	const isOwner = $derived(data.user?.id === profile.id);
@@ -108,8 +113,8 @@
 			</div>
 		</header>
 
-		{#if recipes.length > 0}
-			<RecipeGrid {recipes} />
+		{#if list.items.length > 0}
+			<RecipeGrid recipes={list.items} total={data.total} more={list} />
 		{:else}
 			<p class="empty-state">No public recipes yet.</p>
 		{/if}

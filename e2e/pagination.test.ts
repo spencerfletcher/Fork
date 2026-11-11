@@ -59,6 +59,24 @@ test.describe('Show more, signed out', () => {
 	});
 });
 
+test.describe('A profile, signed out', () => {
+	test('shows one page of its recipes, counts them all, and Show more appends the next', async ({
+		page
+	}) => {
+		const grid = page.locator('.recipe-grid > *');
+		await gotoHydrated(page, '/users/spencerfletcher?per=1');
+		await expect(grid).toHaveCount(1);
+		const heading = await page.getByRole('heading', { level: 2 }).innerText();
+		expect(Number(heading.match(/(\d+) recipes?/i)![1])).toBeGreaterThan(1);
+
+		await showMore(page).click();
+
+		await expect(grid).toHaveCount(2);
+		await expect(grid.nth(1)).toBeFocused();
+		await expect(page).toHaveURL(/[?&]page=2(&|$)/);
+	});
+});
+
 test.describe('Show more without JavaScript', () => {
 	test.use({ javaScriptEnabled: false });
 
