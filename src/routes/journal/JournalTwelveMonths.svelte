@@ -56,6 +56,9 @@
 					</li>
 				{/each}
 			</ol>
+			<p class="jtwelve-stale">
+				<a class="arrow-link" href="/cookbook?sort=stale">What haven’t I made lately? →</a>
+			</p>
 		</div>
 	{/if}
 </section>
@@ -133,6 +136,11 @@
 
 	.jtwelve-top {
 		margin-top: var(--space-2);
+	}
+
+	/* The Cookbook's Not cooked lately, closing the list. */
+	.jtwelve-stale {
+		margin-top: var(--space-4);
 	}
 
 	.jtwelve-top li {

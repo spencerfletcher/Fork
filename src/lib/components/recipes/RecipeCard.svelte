@@ -1,19 +1,21 @@
-<script lang="ts">
+<script lang="ts" module>
 	import type { Recipe } from '#lib/server/db/schema.js';
 	import { plural } from '#lib/helpers.js';
 	import { timeSpans } from '#lib/recipes/times.js';
 	import type { Visibility } from '#lib/recipes/validation.js';
 	import { AUDIENCE_LABEL } from '#lib/audience.js';
 	import { audienceIcon } from '#lib/components/Icons.svelte';
-	import CookLink from '#lib/components/ui/CookLink.svelte';
 	import { dayLabel } from '#lib/journal.js';
 	import Username from '#lib/components/ui/Username.svelte';
-	import { segments, type SearchMatch } from '#lib/highlight.js';
-	import MoreActions from './MoreActions.svelte';
+	import type { SearchMatch } from '#lib/highlight.js';
+
+	// What the card and the Cookbook's list row (RecipeRow) share, so the two
+	// views of one recipe never drift: its data, its meta line and its ⋯.
+	export { metaItem };
 
 	// Only what the card renders, so a column added to the table does not ripple
 	// into every card fixture.
-	interface CardRecipe extends Pick<
+	export interface CardRecipe extends Pick<
 		Recipe,
 		| 'slug'
 		| 'title'
@@ -30,9 +32,92 @@
 		/** The viewer's own, on their Cookbook only (cardList's `cooked`). */
 		timesCooked?: number;
 		lastCookedOn?: string;
+		/** The Cookbook only: the first three tags by name, for the list row. */
+		tags?: string[];
 		/** Search only: the title with the matched words marked, and where it matched. */
 		match?: SearchMatch;
 	}
+
+	/**
+	 * One item of the meta line, as data rather than nested markup. The dots
+	 * between items are drawn by CSS, so the list carries only the items.
+	 * `cooked` marks the viewer's own fact; `prefix` is words before a handle.
+	 */
+	export type MetaPart = {
+		text: string;
+		username?: string;
+		prefix?: string;
+		accent?: boolean;
+		icon?: Visibility;
+		cooked?: boolean;
+	};
+
+	/** The cook's own fact: "Cooked on Sun 8 Nov", "Cooked 4 times, last on Tue 3 Nov". */
+	export function cookedFact({ timesCooked: times, lastCookedOn: last }: CardRecipe) {
+		if (!times || !last) return null;
+		const day = dayLabel(last);
+		return times > 1 ? `Cooked ${plural(times, 'time')}, last on ${day}` : `Cooked on ${day}`;
+	}
+
+	/** The meta line's items; `browse` (every list but the Cookbook) adds the author and forks. */
+	export function metaPartsOf(recipe: CardRecipe, browse: boolean): MetaPart[] {
+		const parts: MetaPart[] = [];
+
+		if (recipe.visibility && recipe.visibility !== 'public') {
+			// Non-public recipes say who can see them; public is the default and says nothing.
+			parts.push({ text: AUDIENCE_LABEL[recipe.visibility], icon: recipe.visibility });
+		}
+
+		if (recipe.author && browse) {
+			parts.push({ text: `@${recipe.author.username}`, username: recipe.author.username });
+		}
+
+		// Each time its own part: they can overlap, so no total.
+		for (const { value, word } of timeSpans(recipe)) parts.push({ text: `${value} ${word}` });
+
+		// From v2 only: v1 is every unedited recipe and says nothing.
+		if ((recipe.versionCount ?? 0) > 1) {
+			parts.push({ text: `v${recipe.versionCount}`, accent: true });
+		}
+
+		if (recipe.forkCount && browse) {
+			parts.push({ text: plural(recipe.forkCount, 'fork') });
+		}
+
+		// A personal fact, last: the recipe page's personal line, shortened.
+		const cooked = cookedFact(recipe);
+		if (cooked) parts.push({ text: cooked, cooked: true });
+
+		return parts;
+	}
+
+	/** Whose a saved recipe is, or that its author withdrew it: the words before the handle. */
+	export const sourceWords = (kept: boolean) => (kept ? 'No longer shared by' : 'Saved from');
+
+	/** The words in place of a handle whose account is gone (author_id set null). */
+	export const nobody = (kept: boolean) => (kept ? 'its author' : 'another cook');
+
+	/** The Cookbook's ⋯ for one recipe: the rows a card or a list row offers. */
+	export function cardMenu(recipe: CardRecipe, saved: boolean, kept: boolean) {
+		return {
+			slug: recipe.slug,
+			title: recipe.title,
+			collections: 'on-open' as const,
+			label: `More actions for ${recipe.title}`,
+			journal: true,
+			edit: !saved,
+			exports: !saved,
+			trash: !saved,
+			fork: saved && !kept,
+			removeCopy: kept
+		};
+	}
+</script>
+
+<script lang="ts">
+	import CookLink from '#lib/components/ui/CookLink.svelte';
+	import { segments } from '#lib/highlight.js';
+	import MoreActions from './MoreActions.svelte';
 
 	// Position in the grid, when the page knows it: the first row's photos are
 	// fetched eagerly and the very first ahead of everything else. Without it
@@ -78,50 +163,13 @@
 
 	const href = $derived(`/recipes/${recipe.slug}`);
 
-	/**
-	 * The meta line, as data rather than nested markup. The dots between items
-	 * are drawn by CSS, so the list carries only the items.
-	 */
-	type MetaPart = { text: string; username?: string; accent?: boolean; icon?: Visibility };
-
-	const metaParts: MetaPart[] = $derived.by(() => {
-		const parts: MetaPart[] = [];
-
-		if (recipe.visibility && recipe.visibility !== 'public') {
-			// Non-public recipes say who can see them; public is the default and says nothing.
-			parts.push({ text: AUDIENCE_LABEL[recipe.visibility], icon: recipe.visibility });
-		}
-
-		if (recipe.author && isList) {
-			parts.push({ text: `@${recipe.author.username}`, username: recipe.author.username });
-		}
-
-		// Each time its own part: they can overlap, so no total.
-		for (const { value, word } of timeSpans(recipe)) parts.push({ text: `${value} ${word}` });
-
-		// From v2 only: v1 is every unedited recipe and says nothing.
-		if ((recipe.versionCount ?? 0) > 1) {
-			parts.push({ text: `v${recipe.versionCount}`, accent: true });
-		}
-
-		if (recipe.forkCount && isList) {
-			parts.push({ text: plural(recipe.forkCount, 'fork') });
-		}
-
-		// A personal fact, last: the recipe page's personal line, shortened.
-		const { timesCooked: times, lastCookedOn: last } = recipe;
-		if (times && last) {
-			const day = dayLabel(last);
-			parts.push({
-				text: times > 1 ? `Cooked ${plural(times, 'time')}, last on ${day}` : `Cooked on ${day}`
-			});
-		}
-
-		return parts;
-	});
+	const metaParts = $derived(metaPartsOf(recipe, isList));
 </script>
 
-<div class="recipe-card" class:author-always={alwaysShowAuthor} class:recipe-card--roomy={!isList}>
+<div
+	class="recipe-card"
+	class:author-always={alwaysShowAuthor}
+	class:recipe-card--roomy={variant === 'discover'}>
 	<!-- The cook is one link from avatar to handle, before the stretched recipe
 	     link so Tab reaches the profile first; a sibling, never nested. -->
 	{#if variant === 'discover' && recipe.author}
@@ -162,30 +210,18 @@
 
 		<div class="card-line">
 			<div class="meta-row dot-list">
-				{#each metaParts as part (part.text)}
-					{#if part.username}
-						<span class="meta-item meta-author"><Username username={part.username} /></span>
-					{:else if part.icon}
-						<span class="meta-item meta-audience">
-							{@render audienceIcon(part.icon)}
-							{part.text}
-						</span>
-					{:else}
-						<span class="meta-item" class:vid={part.accent}>{part.text}</span>
-					{/if}
-				{/each}
+				{#each metaParts as part (part.text)}{@render metaItem(part)}{/each}
 			</div>
 			{#if hasMenu && !recipe.imageUrl}{@render more()}{/if}
 		</div>
 
 		{#if saved && variant === 'cookbook'}
 			<p class="card-source">
-				{kept ? 'No longer shared by' : 'Saved from'}
+				{sourceWords(kept)}
 				{#if recipe.author}
 					<Username username={recipe.author.username} />
 				{:else}
-					<!-- The author's account is gone (author_id set null). -->
-					{kept ? 'its author' : 'another cook'}
+					{nobody(kept)}
 				{/if}
 			</p>
 		{/if}
@@ -214,20 +250,28 @@
      link and after it in Tab order, as the author link is. -->
 {#snippet more()}
 	<div class="card-more">
-		<MoreActions
-			slug={recipe.slug}
-			title={recipe.title}
-			collections="on-open"
-			label="More actions for {recipe.title}"
-			journal
-			edit={!saved}
-			exports={!saved}
-			trash={!saved}
-			fork={saved && !kept}
-			removeCopy={kept}
-			{onremoved}
-			{oncollected} />
+		<MoreActions {...cardMenu(recipe, saved, kept)} {onremoved} {oncollected} />
 	</div>
+{/snippet}
+
+<!-- One meta item. The list row renders it too, so it carries these styles;
+     `extra` is the row's class for an item it folds in on a phone only. -->
+{#snippet metaItem(part: MetaPart, extra: string = '')}
+	{#if part.username && part.prefix}
+		<span class="meta-item meta-source {extra}">
+			{part.prefix}
+			<Username username={part.username} />
+		</span>
+	{:else if part.username}
+		<span class="meta-item meta-author {extra}"><Username username={part.username} /></span>
+	{:else if part.icon}
+		<span class="meta-item meta-audience {extra}">
+			{@render audienceIcon(part.icon)}
+			{part.text}
+		</span>
+	{:else}
+		<span class="meta-item {extra}" class:vid={part.accent}>{part.text}</span>
+	{/if}
 {/snippet}
 
 {#snippet title()}
@@ -423,7 +467,8 @@
 	/* The author is Username at the meta size; above the card's stretched
 	   link, so it stays clickable. */
 	.meta-author,
-	.card-source :global(.username) {
+	.card-source :global(.username),
+	.meta-source :global(.username) {
 		position: relative;
 		z-index: 2;
 	}
@@ -448,8 +493,8 @@
 			display: none;
 		}
 
-		/* Cookbook and Discover are one column here: the photo is full width,
-		   so the title steps up with it. */
+		/* Discover is one column here: the photo is full width, so the title
+		   steps up with it. The Cookbook is two across, at the size above. */
 		.recipe-card--roomy .card-title,
 		.recipe-card--roomy .card-panel-title {
 			font-size: 1.1875rem;

@@ -1,9 +1,10 @@
-import { db } from '#lib/server/db/index.js';
+import { db, type Tx } from '#lib/server/db/index.js';
 import { recipes, recipeVersions } from '#lib/server/db/schema.js';
 import { and, count, desc, inArray, sql, type SQL } from 'drizzle-orm';
-import { visibleTo, type Viewer } from './visibility.js';
-import { cookedCounts, type Cooked } from './journal.js';
+import { keptCopyOf, visibleTo, type Viewer } from './visibility.js';
+import { cookedCounts, cookedOrder, type Cooked } from './journal.js';
 import { wholeNumber } from '#lib/helpers.js';
+import type { CardSort } from '#lib/listPage.js';
 
 /** The relations a recipe card renders: its author's id and handle, nothing more. */
 export const CARD_WITH = { author: { columns: { id: true, username: true } } } as const;
@@ -17,7 +18,8 @@ export const CARD_WITH = { author: { columns: { id: true, username: true } } } a
  */
 export async function attachRecipeCounts<T extends { id: number }>(
 	recipeList: T[],
-	viewer: Viewer = null
+	viewer: Viewer = null,
+	conn: Tx | typeof db = db
 ): Promise<(T & { versionCount: number; forkCount: number })[]> {
 	const ids = recipeList.map((r) => r.id);
 
@@ -27,13 +29,13 @@ export async function attachRecipeCounts<T extends { id: number }>(
 
 	// recipe_versions is append-only — a row per edit, forever — so this
 	// aggregate must never full-scan it. Scoped to the recipes actually passed in.
-	const versionCounts = await db
+	const versionCounts = await conn
 		.select({ recipeId: recipeVersions.recipeId, count: count() })
 		.from(recipeVersions)
 		.where(inArray(recipeVersions.recipeId, ids))
 		.groupBy(recipeVersions.recipeId);
 
-	const forkCounts = await db
+	const forkCounts = await conn
 		.select({ parentId: recipes.parentId, count: count() })
 		.from(recipes)
 		.where(and(inArray(recipes.parentId, ids), visibleTo(viewer)))
@@ -49,6 +51,32 @@ export async function attachRecipeCounts<T extends { id: number }>(
 	}));
 }
 
+/**
+ * What `sort` orders by ahead of the newest change and the id, which end every
+ * order so no two cards tie. The cooked sorts read the viewer's own Journal
+ * (never cooked: 0 times, no day, placed on purpose); A to Z ignores case and
+ * files a kept copy under the title it keeps, since the row may hold what its
+ * author wrote after withdrawing it, or nothing once erased.
+ */
+function sortKeys(sort: CardSort, viewer: Viewer): SQL[] {
+	if (sort === 'newest') return [];
+	if (sort === 'title') {
+		const title = viewer
+			? sql`CASE WHEN ${keptCopyOf(viewer)} THEN (SELECT v.title FROM favorites f
+					JOIN recipe_versions v ON v.recipe_id = f.recipe_id AND v.version_number = f.copy_version
+					WHERE f.user_id = ${viewer.id} AND f.recipe_id = ${recipes.id}) ELSE ${recipes.title} END`
+			: sql`${recipes.title}`;
+		return [sql`lower(${title})`];
+	}
+	// Signed out there is no Journal: every card ties, in the newest-change order.
+	const { times, last } = cookedOrder(viewer?.id ?? '');
+	return {
+		cooked: [sql`${last} DESC NULLS LAST`],
+		most: [sql`${times} DESC`, sql`${last} DESC NULLS LAST`],
+		stale: [sql`${last} ASC NULLS FIRST`]
+	}[sort];
+}
+
 /** A browse cursor: the last card's change time, to the microsecond as Postgres prints it, and its id. */
 const KEYSET = /^(\d{4}-\d\d-\d\d \d\d:\d\d:\d\d(?:\.\d{1,6})?)~(\d+)$/;
 
@@ -58,30 +86,57 @@ const KEYSET = /^(\d{4}-\d\d-\d\d \d\d:\d\d:\d\d(?:\.\d{1,6})?)~(\d+)$/;
  * is `rank` (a text query's), then the newest change, then the higher id, so
  * no two cards tie. Without a rank the cursor is a keyset on (updated_at, id):
  * a card changed between pages neither repeats nor shifts the rest. A rank is
- * computed per query, so a ranked cursor is a position instead. A cursor that
- * is not one reads as the first page. With `cooked` (the viewer's own shelf
- * only, never a list about the recipe) a card the viewer has logged also
- * carries their times and last cooked.
+ * computed per query, so a ranked cursor is a position instead, and so is a
+ * `sort` other than the newest change: its keys are derived per read (the
+ * viewer's Journal, a kept copy's title), and with the id last the order is
+ * total, so a page never repeats or skips a card while nothing changes; a
+ * card changed or cooked between pages may shift the rest by one, as a
+ * ranked list's may. A cursor that is not one reads as the first page. With
+ * `cooked` (the viewer's own shelf only, never a list about the recipe) a
+ * card the viewer has logged also
+ * carries their times and last cooked, and every card its first three tags
+ * by name, for the list view's row.
  */
 export async function cardList(
 	where: SQL | undefined,
 	rank: SQL[],
 	viewer: Viewer,
-	{ after, limit, cooked }: { after: string | null; limit: number; cooked?: boolean }
+	{
+		after,
+		limit,
+		cooked,
+		sort = 'newest',
+		conn = db
+	}: {
+		after: string | null;
+		limit: number;
+		cooked?: boolean;
+		sort?: CardSort;
+		conn?: Tx | typeof db;
+	}
 ) {
-	const ranked = rank.length > 0;
-	// A ranked cursor is how many cards came before.
-	const offset = ranked ? (wholeNumber(after ?? '') ?? 0) : 0;
-	const key = ranked ? null : KEYSET.exec(after ?? '');
+	const positional = rank.length > 0 || sort !== 'newest';
+	// A positional cursor is how many cards came before.
+	const offset = positional ? (wholeNumber(after ?? '') ?? 0) : 0;
+	const key = positional ? null : KEYSET.exec(after ?? '');
 	// Postgres turns the row compare into a range on the live updated_at index.
 	const afterKey = key
 		? sql`(${recipes.updatedAt}, ${recipes.id}) < (${key[1]}::timestamp, ${Number(key[2])})`
 		: undefined;
-	const rows = await db.query.recipes.findMany({
+	// In the same read: three short names per card, never a query per card.
+	// Raw names inside: the relational query renames every column to its root table.
+	const firstTags = cooked
+		? sql<string[]>`array(SELECT t.name FROM recipes_to_tags rt JOIN tags t ON t.id = rt.tag_id
+				WHERE rt.recipe_id = ${recipes.id} ORDER BY t.name LIMIT 3)`
+		: sql<null>`null`;
+	const rows = await conn.query.recipes.findMany({
 		where: and(where, afterKey),
-		extras: { cursorAt: sql<string>`${recipes.updatedAt}::text`.as('cursor_at') },
+		extras: {
+			cursorAt: sql<string>`${recipes.updatedAt}::text`.as('cursor_at'),
+			firstTags: firstTags.as('first_tags')
+		},
 		with: CARD_WITH,
-		orderBy: [...rank, desc(recipes.updatedAt), desc(recipes.id)],
+		orderBy: [...rank, ...sortKeys(sort, viewer), desc(recipes.updatedAt), desc(recipes.id)],
 		// One more than the page says whether a page follows.
 		limit: limit + 1,
 		offset
@@ -90,19 +145,23 @@ export async function cardList(
 	const last = page.at(-1);
 	const next =
 		rows.length > limit && last
-			? ranked
+			? positional
 				? String(offset + limit)
 				: `${last.cursorAt}~${last.id}`
 			: null;
 	// The cursor is the page's, never a card's.
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	const cards = page.map(({ cursorAt, ...card }) => card);
-	const withCounts = await attachRecipeCounts(cards, viewer);
+	const cards = page.map(({ cursorAt, firstTags, ...card }) => ({
+		...card,
+		...(firstTags ? { tags: firstTags } : {})
+	}));
+	const withCounts = await attachRecipeCounts(cards, viewer, conn);
 	const cookedById =
 		cooked && viewer
 			? await cookedCounts(
 					viewer.id,
-					cards.map((r) => r.id)
+					cards.map((r) => r.id),
+					conn
 				)
 			: new Map<number, Cooked>();
 	return { cards: withCounts.map((r) => ({ ...r, ...cookedById.get(r.id) })), next };

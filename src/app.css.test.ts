@@ -321,4 +321,14 @@ describe('app.css long words', () => {
 		expect(columns).toHaveLength(3);
 		for (const value of columns) expect(value).toMatch(/^repeat\(\d, minmax\(0, 1fr\)\)$/);
 	});
+
+	test('the Cookbook grid is two across from the narrowest phone, four from 1100', () => {
+		expect(rules('.cookbook-grid')[0]).toMatch(
+			/grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\);/
+		);
+		const wide = css.slice(
+			css.indexOf('@media (min-width: 1100px)', css.indexOf('.cookbook-grid {'))
+		);
+		expect(cssRule(wide, '.cookbook-grid')).toMatch(/repeat\(4, minmax\(0, 1fr\)\)/);
+	});
 });

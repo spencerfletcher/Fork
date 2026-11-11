@@ -4,7 +4,8 @@ import { tick } from 'svelte';
 import { draftKey, saveDraft, type DraftRecipe } from '#lib/drafts.js';
 import { draftOf } from '#lib/recipes/validation.js';
 import CookbookPage from './+page.svelte';
-import { COOKBOOK_FILTERS } from './filters.js';
+import { COOKBOOK_FILTERS, COOKBOOK_VIEWS } from './filters.js';
+import type { CardSort } from '#lib/listPage.js';
 import source from './+page.svelte?raw';
 import { cssRule } from '#lib/testing/css.js';
 import type { SubmitFunction } from '$app/forms';
@@ -55,6 +56,8 @@ const base = {
 	collections: [] as { id: number; name: string; count: number }[],
 	collection: null as { id: number; name: string } | null,
 	filter: 'all' as (typeof COOKBOOK_FILTERS)[number],
+	view: 'grid' as (typeof COOKBOOK_VIEWS)[number],
+	sort: 'newest' as CardSort,
 	allTags: [],
 	searchQuery: '',
 	selectedTags: [] as string[]
@@ -217,6 +220,58 @@ describe('Cookbook page', () => {
 		expect(saved).toHaveAttribute('href', '?q=dal&filter=saved');
 	});
 
+	test('Sort sits in the filter row with Grid | List, showing the page’s order; a search disables it', () => {
+		const { container, unmount } = renderCookbook({ ...full, sort: 'cooked' });
+		const sort = screen.getByRole('combobox', { name: 'Sort' }) as HTMLSelectElement;
+		expect(sort.value).toBe('cooked');
+		expect(sort.closest('.cookbook-view')).toBe(
+			screen.getByRole('group', { name: 'View' }).closest('.cookbook-view')
+		);
+		expect(container.querySelector('.cookbook-filters .cookbook-view')).not.toBeNull();
+		unmount();
+		renderCookbook({ ...full, sort: 'cooked', searchQuery: 'dal' });
+		expect(screen.getByRole('combobox', { name: 'Sort' })).toBeDisabled();
+	});
+
+	describe('Grid | List', () => {
+		const viewLinks = () =>
+			within(screen.getByRole('group', { name: 'View' })).getAllByRole('link');
+
+		test('two links drawn as the segments, the current one marked, Grid by default', () => {
+			renderCookbook(full);
+			const links = viewLinks();
+			expect(links.map((a) => a.textContent?.trim())).toEqual(['Grid', 'List']);
+			expect(links[0]).toHaveAttribute('aria-current', 'page');
+			expect(links[1]).not.toHaveAttribute('aria-current');
+			expect(links[0].closest('.seg')).toBe(screen.getByRole('group', { name: 'View' }));
+			// Icons beside the words are decoration, centred by the row.
+			expect(links[0].querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
+		});
+
+		test('each keeps the filters and drops the place, naming its view either way', () => {
+			page.url = new URL('http://localhost/cookbook?filter=mine&q=dal&page=3');
+			renderCookbook({ ...full, filter: 'mine', searchQuery: 'dal', view: 'list' });
+			const [grid, list] = viewLinks();
+			// Grid is named too: the device may remember List, and the URL wins.
+			expect(grid).toHaveAttribute('href', '?filter=mine&q=dal&view=grid');
+			expect(list).toHaveAttribute('href', '?filter=mine&q=dal&view=list');
+			expect(list).toHaveAttribute('aria-current', 'page');
+		});
+
+		test('List shows the shared rows, one per recipe, with no grid', () => {
+			const { container } = renderCookbook({ ...full, view: 'list' });
+			const rows = within(screen.getByRole('list', { name: 'Recipes' })).getAllByRole('listitem');
+			expect(rows).toHaveLength(2);
+			expect(container.querySelector('ul.row-list')).not.toBeNull();
+			expect(container.querySelector('.cookbook-grid')).toBeNull();
+			expect(within(rows[1]).getByText(/Saved from/)).toHaveTextContent('Saved from @samlind');
+			expect(within(rows[0]).getByRole('link', { name: 'Weeknight Dal' })).toHaveAttribute(
+				'href',
+				'/recipes/dal'
+			);
+		});
+	});
+
 	test('a filter that empties the grid keeps the filters and tells a screen reader 0 recipes match', () => {
 		renderCookbook({ ...full, recipes: [], searchQuery: 'saffron' });
 		expect(screen.getByRole('searchbox')).toHaveValue('saffron');
@@ -320,6 +375,26 @@ describe('Cookbook: a card’s ⋯ takes the recipe out of the library', () => {
 			'href',
 			'/cookbook/trash'
 		);
+		await vi.waitFor(() => expect(screen.getByRole('link', { name: poke.title })).toHaveFocus());
+	});
+
+	test('in the list view a row’s ⋯ does the same: the page reloads in place and the next row takes focus', async () => {
+		page.url = new URL('http://localhost/cookbook?view=list');
+		const [dal, poke] = full.recipes;
+		const listed = { ...full, view: 'list' as const };
+		const { rerender } = renderCookbook(listed);
+		goto.mockImplementation(() =>
+			rerender({ data: onePage({ ...base, ...listed, recipes: [poke] }) } as never)
+		);
+
+		await takeOut(dal.title, 'Move to Trash');
+
+		expect(goto).toHaveBeenCalledExactlyOnceWith(page.url.href, {
+			replace: true,
+			reset: false,
+			refreshAll: true
+		});
+		expect(screen.getByText(`Moved ${dal.title} to your Trash.`)).toBeInTheDocument();
 		await vi.waitFor(() => expect(screen.getByRole('link', { name: poke.title })).toHaveFocus());
 	});
 

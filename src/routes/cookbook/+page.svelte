@@ -3,16 +3,23 @@
 	import { page } from '$app/state';
 	import { tick } from 'svelte';
 	import RecipeCard from '#lib/components/recipes/RecipeCard.svelte';
+	import RecipeRow from '#lib/components/recipes/RecipeRow.svelte';
 	import SearchFilters from '#lib/components/ui/SearchFilters.svelte';
 	import EmptyPanel from '#lib/components/ui/EmptyPanel.svelte';
 	import ResultStatus from '#lib/components/ui/ResultStatus.svelte';
 	import ShowMore from '#lib/components/ui/ShowMore.svelte';
 	import CookbookDrafts from './CookbookDrafts.svelte';
 	import CookbookCollections from './CookbookCollections.svelte';
+	import CookbookSort from './CookbookSort.svelte';
 	import { plural } from '#lib/helpers.js';
 	import { hrefWith } from '#lib/listPage.js';
 	import { pagedList } from '#lib/pagedList.svelte.js';
-	import { COOKBOOK_FILTERS, type CookbookFilter } from './filters.js';
+	import {
+		COOKBOOK_FILTERS,
+		COOKBOOK_VIEWS,
+		type CookbookFilter,
+		type CookbookView
+	} from './filters.js';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -24,6 +31,7 @@
 	let grid = $state<HTMLElement>();
 
 	const LABELS: Record<CookbookFilter, string> = { all: 'All', mine: 'Mine', saved: 'Saved' };
+	const VIEW_LABELS: Record<CookbookView, string> = { grid: 'Grid', list: 'List' };
 
 	const filtered = $derived(
 		!!data.searchQuery || data.selectedTags.length > 0 || data.filter !== 'all' || !!data.collection
@@ -37,6 +45,11 @@
 			...Object.fromEntries(without.map((key) => [key, null]))
 		});
 	}
+
+	// Grid | List keeps the filters and starts the list over, as a filter does.
+	// Grid is named too, not dropped: the device may remember List, and the
+	// URL wins over it (the server keeps the choice for this device).
+	const viewHref = (view: CookbookView) => hrefWith(page.url, { view });
 
 	// A card's ⋯ changed the library. The page loads again at the URL the
 	// address bar shows, `?page=N` from Show more included, which loads every
@@ -53,7 +66,7 @@
 		});
 		await tick();
 		if (list.items.some((r) => r.id === recipe.id)) return 'kept';
-		const links = grid?.querySelectorAll<HTMLElement>('.card-stretched-link') ?? [];
+		const links = grid?.querySelectorAll<HTMLElement>('.card-stretched-link, .row-link') ?? [];
 		const next = links[Math.min(at, links.length - 1)];
 		(next ?? document.querySelector<HTMLElement>('h1'))?.focus();
 		return 'gone';
@@ -139,24 +152,48 @@
 						initialQuery={data.searchQuery}
 						initialTags={data.selectedTags}
 						availableTags={data.allTags} />
+					<div class="cookbook-view">
+						<CookbookSort sort={data.sort} searching={!!data.searchQuery} />
+						<div class="seg" role="group" aria-label="View">
+							{#each COOKBOOK_VIEWS as v (v)}
+								<a href={viewHref(v)} aria-current={data.view === v ? 'page' : undefined}>
+									{@render viewIcon(v)}
+									{VIEW_LABELS[v]}
+								</a>
+							{/each}
+						</div>
+					</div>
 				</div>
 
 				<!-- Screen readers only (Spencer, 9 November 2026): the cards say the count. -->
 				<ResultStatus count={data.total} {filtered} />
 
 				{#if list.items.length > 0}
-					<div class="cookbook-grid" bind:this={grid}>
-						{#each list.items as recipe, i (recipe.id)}
-							<RecipeCard
-								{recipe}
-								index={i}
-								variant="cookbook"
-								saved={recipe.saved}
-								kept={recipe.kept}
-								onremoved={(how) => takeAway(recipe, how)}
-								oncollected={() => collected(recipe)} />
-						{/each}
-					</div>
+					{#if data.view === 'list'}
+						<ul class="row-list" aria-label="Recipes" bind:this={grid}>
+							{#each list.items as recipe (recipe.id)}
+								<RecipeRow
+									{recipe}
+									saved={recipe.saved}
+									kept={recipe.kept}
+									onremoved={(how) => takeAway(recipe, how)}
+									oncollected={() => collected(recipe)} />
+							{/each}
+						</ul>
+					{:else}
+						<div class="cookbook-grid" bind:this={grid}>
+							{#each list.items as recipe, i (recipe.id)}
+								<RecipeCard
+									{recipe}
+									index={i}
+									variant="cookbook"
+									saved={recipe.saved}
+									kept={recipe.kept}
+									onremoved={(how) => takeAway(recipe, how)}
+									oncollected={() => collected(recipe)} />
+							{/each}
+						</div>
+					{/if}
 					<ShowMore {list} container={grid} noun="recipe" />
 				{:else}
 					<div class="cookbook-none">
@@ -182,6 +219,30 @@
 		{/if}
 	</div>
 </div>
+
+<!-- Drawn here alone, so not in Icons.svelte; its line art and 16px box. -->
+{#snippet viewIcon(view: CookbookView)}
+	<svg
+		class="icon"
+		width="16"
+		height="16"
+		viewBox="0 0 16 16"
+		aria-hidden="true"
+		fill="none"
+		stroke="currentColor"
+		stroke-width="1.5"
+		stroke-linecap="round"
+		stroke-linejoin="round">
+		{#if view === 'grid'}
+			<rect x="2.5" y="2.5" width="4.5" height="4.5" rx="1" />
+			<rect x="9" y="2.5" width="4.5" height="4.5" rx="1" />
+			<rect x="2.5" y="9" width="4.5" height="4.5" rx="1" />
+			<rect x="9" y="9" width="4.5" height="4.5" rx="1" />
+		{:else}
+			<path d="M2.5 4h11M2.5 8h11M2.5 12h11" />
+		{/if}
+	</svg>
+{/snippet}
 
 <style>
 	.cookbook-head {
@@ -238,6 +299,7 @@
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
+		gap: 4px;
 		min-height: 38px;
 		padding: 0 14px;
 		border-radius: 4px;
@@ -257,13 +319,13 @@
 	}
 
 	.seg .n {
-		margin-left: 4px;
 		font-weight: 400;
 		color: var(--color-text-3);
 	}
 
 	/* From 768 the segments and the search box share a row, the box filling to
-	   the container's edge; the tag tabs keep the row below. */
+	   the container's edge; the tag tabs keep the row below, and Sort and
+	   Grid | List a row under them. From 1100 those two end the first row. */
 	@media (min-width: 768px) {
 		.cookbook-filters {
 			display: grid;
@@ -280,21 +342,48 @@
 			max-width: none;
 		}
 
-		.cookbook-filters > :global(.search-filters > :not(form)) {
+		.cookbook-filters > :global(.search-filters > :not(form)),
+		.cookbook-view {
 			grid-column: 1 / -1;
 		}
+	}
+
+	@media (min-width: 1100px) {
+		.cookbook-filters {
+			grid-template-columns: auto minmax(0, 1fr) auto;
+		}
+
+		.cookbook-view {
+			grid-row: 1;
+			grid-column: 3;
+		}
+	}
+
+	/* Sort, then Grid | List at the row's end; on the narrowest phone the
+	   switch wraps under the select rather than squeezing it. */
+	.cookbook-view {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: 12px 16px;
 	}
 
 	/* A phone: the strip spans the column, three equal segments, each a 44px
 	   target inside the strip's 52px (its 3px padding and 1px border). */
 	@media (max-width: 767px) {
-		.seg {
+		.cookbook-filters > .seg {
 			align-self: stretch;
 		}
 
 		.seg a {
 			flex: 1;
 			min-height: 44px;
+		}
+
+		/* The words alone, so Sort keeps room for its longest order on the row. */
+		.seg a :global(.icon) {
+			display: none;
 		}
 	}
 
