@@ -178,6 +178,55 @@ export const DENSITIES: Record<string, number> = {
 	'red wine': 0.994
 };
 
+/**
+ * The DENSITIES keys that are poured: a metric cook measures these in
+ * millilitres, so Metric keeps them in ml with the gram hint. Every other key
+ * is weighed and Metric leads with its grams. A density near 1 is not the
+ * test: honey, syrups, yogurt, sour cream, tomato products, condiments and
+ * coconut oil (solid at room temperature, like butter) are weighed.
+ */
+export const LIQUIDS = [
+	'water',
+	'milk',
+	'whole milk',
+	'skim milk',
+	'buttermilk',
+	'heavy cream',
+	'heavy whipping cream',
+	'whipping cream',
+	'coconut milk',
+	'almond milk',
+	'oat milk',
+	'olive oil',
+	'vegetable oil',
+	'canola oil',
+	'sesame oil',
+	'avocado oil',
+	'soy sauce',
+	'fish sauce',
+	'worcestershire sauce',
+	'hot sauce',
+	'vinegar',
+	'apple cider vinegar',
+	'balsamic vinegar',
+	'rice vinegar',
+	'vanilla extract',
+	'vanilla',
+	'lemon juice',
+	'lime juice',
+	'orange juice',
+	'apple juice',
+	'apple cider',
+	'broth',
+	'chicken broth',
+	'beef broth',
+	'vegetable broth',
+	'stock',
+	'wine',
+	'white wine',
+	'red wine'
+] as const;
+
 /** Volume of 1 unit in ml */
 export const ML_PER_UNIT: Record<string, number> = {
 	tsp: 4.929,

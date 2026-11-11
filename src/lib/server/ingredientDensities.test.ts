@@ -1,7 +1,7 @@
 import { describe, test, expect } from 'vitest';
 import { gramsFor, lookupGrams, lookupPieceGrams } from './ingredientDensities';
 import { makeIngredient } from '#lib/recipes/fixtures.js';
-import { DENSITIES, ML_PER_UNIT } from './gramTables';
+import { DENSITIES, LIQUIDS, ML_PER_UNIT } from './gramTables';
 
 describe('lookupPieceGrams', () => {
 	test('multiplies the quantity by the per-item weight', () => {
@@ -116,7 +116,8 @@ describe('gramsFor', () => {
 		expect(gramsFor(makeIngredient('2 eggs'))).toEqual({
 			grams: 100,
 			grams2: null,
-			approximate: true
+			approximate: true,
+			liquid: false
 		});
 	});
 
@@ -125,7 +126,8 @@ describe('gramsFor', () => {
 		expect(gramsFor(makeIngredient('1-2 cups water'))).toEqual({
 			grams: cup,
 			grams2: 2 * cup,
-			approximate: false
+			approximate: false,
+			liquid: true
 		});
 	});
 
@@ -133,7 +135,8 @@ describe('gramsFor', () => {
 		expect(gramsFor(makeIngredient('2-3 eggs'))).toEqual({
 			grams: 100,
 			grams2: 150,
-			approximate: true
+			approximate: true,
+			liquid: false
 		});
 	});
 
@@ -141,12 +144,29 @@ describe('gramsFor', () => {
 		expect(gramsFor(makeIngredient('4 cloves garlic, minced'))).toEqual({
 			grams: 20,
 			grams2: null,
-			approximate: true
+			approximate: true,
+			liquid: false
 		});
 	});
 
 	test('returns null for an unparsed line', () => {
 		expect(gramsFor(makeIngredient('salt to taste'))).toBeNull();
+	});
+
+	test('marks a liquid by the density key its name matched, handling words and all', () => {
+		const liquid = (line: string) => gramsFor(makeIngredient(line))?.liquid;
+		expect(liquid('1 cup whole milk')).toBe(true);
+		expect(liquid('1 cup heavy cream, cold')).toBe(true);
+		expect(liquid('2 tbsp lemon juice')).toBe(true);
+		expect(liquid('1 cup all-purpose flour')).toBe(false);
+		// Syrups, honey and yogurt are weighed in metric kitchens.
+		expect(liquid('1/2 cup honey')).toBe(false);
+		expect(liquid('1/4 cup maple syrup')).toBe(false);
+		expect(liquid('1 cup plain yogurt')).toBe(false);
+	});
+
+	test('every liquid is a density key, so the two lists cannot drift', () => {
+		for (const key of LIQUIDS) expect(DENSITIES).toHaveProperty([key]);
 	});
 
 	test('returns null for a line the tables do not know', () => {
