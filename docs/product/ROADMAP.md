@@ -85,7 +85,7 @@ The differentiating experience is continuity: a recipe travels from capture thro
 | Save versus Fork | "Save" keeps a moving favourite; "Fork" makes an editable copy; counts read "saves" and "forks" | shipped | DS, OD |
 | Recipe deletion | Owner-only permanent deletion with a confirmation saying the recipe and its history cannot be restored; related records and media references handled; independent forks survive with "Original recipe deleted" | shipped | R, DS |
 | Account access | Account settings, username change with stable identity and old-link behaviour, confirmation page naming the address with resend, verified production mail (P0 to P1) | settings and username change built (awaiting publish); confirmation page and production mail next | R, PA |
-| Account lifecycle | Account deletion and retention defined independently of recipe deletion, before broad onboarding | next | R |
+| Account lifecycle | Account deletion and retention defined independently of recipe deletion, before broad onboarding | Delete account built (awaiting publish): every recipe through the recipe delete path, savers keep copies, forks survive; username reservation after deletion and auth-user removal next | R |
 | Media access check | Inspect the storage bucket policy and test intended private-media behaviour before promising private cookbooks; a public URL is a policy question, not a demonstrated leak | next | R, PA |
 | Backup and restore | Exercise a restore; restored data reapplies current restrictions and takedowns | next | R, US note |
 | Moderation foundations | Report (shipped) plus moderator disabling and restoration that reach current pages, old versions, diffs, images and variants, previews, search snippets, exports and caches | report shipped; suppression next | R, SL |
@@ -442,6 +442,7 @@ Other preserved preferences: warm cookbook styling, desktop two-column reading, 
 - 11 Nov: Fork is run by Spencer personally while it is free; an entity is formed before the first payment is taken (OD: "fine on running it while it's free and incorporate before taking payment").
 - 11 Nov: unfriending or blocking removes a saved Friends-only recipe from the saver's Cookbook with no copy kept; the keep-your-copy rule applies only when the author unpublishes or deletes (OD: "first is fine for saver friend rule").
 - 11 Nov: the working assumption is a US corporation (not an LLC), formed before the first payment; confirmed with a cross-border accountant before forming, since Spencer is tax resident in both the US and Canada (OD: "will assume that and can come back to accountant later").
+- 11 Nov: account deletion is the recipe delete path for every recipe: gone for everyone, savers keep their read-only copy with no author name, forks survive as "Original recipe deleted"; Journal, collections, saves, friendships and photos removed; the username stays reserved 30 days (OD: "Same as recipe delete").
 
 ## 15. Open questions for Spencer
 
@@ -500,3 +501,4 @@ None pending.
 - 2026-11-11: applied the five approved removals (now §16 lines 23 to 27); §17 has none pending; open question 10 (quality ambition wording) deleted.
 - 2026-11-11: recorded Spencer's answers to the open questions (§14, 11 Nov lines); importers to P2, synced drafts P2, Trash 30 days, saved copies kept, search opens the matched version; entity assumed a US corporation; §15 is now price, plus one item to confirm with a professional and deferred decisions; §16 lines 28 and 29.
 - 2026-11-11: saved Friends-only recipes are removed, not copied, when a friendship ends.
+- 2026-11-11: Account lifecycle: Delete account built; the 30-day username reservation and auth-user removal wait on a schema change and a service key.
