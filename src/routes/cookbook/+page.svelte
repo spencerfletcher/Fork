@@ -185,7 +185,8 @@
 		}
 	}
 
-	/* A phone: the strip spans the column, three equal segments, 44px hits. */
+	/* A phone: the strip spans the column, three equal segments, each 40px
+	   tall inside the strip's 48px (its 3px padding and 1px border). */
 	@media (max-width: 767px) {
 		.seg {
 			align-self: stretch;
