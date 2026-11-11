@@ -93,6 +93,11 @@ export const recipes = pgTable(
 		// In the Trash since then: hidden everywhere but the owner's Trash, and
 		// removed for good 30 days later. Null for a live recipe.
 		deletedAt: timestamp('deleted_at'),
+		// Deleted for good by its author while savers held kept copies: gone from
+		// the author's Trash and every list, the row and the versions those savers
+		// keep stay only for them (keptCopyOf, #lib/server/visibility.ts). The
+		// last copy removed deletes the rest. Null otherwise.
+		erasedAt: timestamp('erased_at'),
 		// Full-text search vector: title (weight A) + description (weight B)
 		// Generated automatically by Postgres — never set manually
 		fts: tsvector('fts').generatedAlwaysAs(
@@ -256,6 +261,11 @@ export const recipesToTags = pgTable(
 
 // ─── Favorites ────────────────────────────────────────────────────────────────
 
+/** The longest private note a saver may keep on a saved recipe. */
+export const NOTE_MAX = 2000;
+
+// A save. Version numbers, not ids: they are what the page and ?version= name,
+// and a recipe's numbers never change (versions are append-only).
 export const favorites = pgTable(
 	'favorites',
 	{
@@ -265,13 +275,24 @@ export const favorites = pgTable(
 		recipeId: integer('recipe_id')
 			.notNull()
 			.references(() => recipes.id, { onDelete: 'cascade' }),
-		createdAt: timestamp('created_at').notNull().defaultNow()
+		createdAt: timestamp('created_at').notNull().defaultNow(),
+		// Keep this version: the version the saver opens on arrival. Null follows
+		// the author's latest.
+		keptVersion: integer('kept_version'),
+		// The version the saver keeps as a read-only copy, set when the author made
+		// the recipe private or moved it to the Trash while the saver could see it
+		// (their kept version, else the latest then); null for a saver who could
+		// not. Read only while the recipe stays withdrawn (keptCopyOf).
+		copyVersion: integer('copy_version'),
+		// The saver's private note: never shown to anyone else, the author included.
+		note: text()
 	},
 	(table) => [
 		primaryKey({ columns: [table.userId, table.recipeId] }),
 		index('favorites_created_at_idx').on(table.createdAt),
 		// The save count on every recipe view; the primary key leads with the user.
-		index('favorites_recipe_idx').on(table.recipeId)
+		index('favorites_recipe_idx').on(table.recipeId),
+		check('favorites_note_length', sql`char_length(${table.note}) <= ${sql.raw(String(NOTE_MAX))}`)
 	]
 ).enableRLS();
 
