@@ -7,7 +7,7 @@ import RecipeActions from './RecipeActions.svelte';
 import { compactCount } from '#lib/helpers.js';
 import source from './RecipeActions.svelte?raw';
 import { readFileSync } from 'node:fs';
-import { cssRule } from '#lib/testing/css.js';
+import { cssRule, cssRules } from '#lib/testing/css.js';
 
 // Each form's enhance callback is captured so a test can play back a result.
 type Submit = (input: {
@@ -65,21 +65,37 @@ function makeProps(overrides: Record<string, unknown> = {}) {
 	};
 }
 
-// ─── Add to collection ────────────────────────────────────────────────────────
+// ─── More actions ─────────────────────────────────────────────────────────────
 
-describe('RecipeActions Add to collection', () => {
-	test('shown only for a recipe in the reader’s library, right after Save', () => {
-		const { unmount } = render(RecipeActions, { props: makeProps({ collections: null }) });
-		expect(screen.queryByRole('button', { name: 'Add to collection' })).toBeNull();
-		unmount();
+describe('RecipeActions More actions', () => {
+	test.each([
+		['the owner', { canEdit: true, canFavorite: false, journalHref: '/journal/new' }],
+		['a visitor', { canFork: true, journalHref: '/journal/new' }],
+		['logged out', { canFavorite: false, loginHref: '/login' }],
+		['on an older version', { canFavorite: false }]
+	])('%s gets the More trigger last in the row', (_, overrides) => {
+		const { container } = render(RecipeActions, { props: makeProps(overrides) });
+		const more = screen.getByRole('button', { name: 'More actions' });
+		expect(container.querySelector('.actions')!.lastElementChild).toContain(more);
+	});
 
+	test('Add to collection is no pill: its collections sit in the More menu', async () => {
 		render(RecipeActions, {
 			props: makeProps({ canFork: true, collections: [{ id: 1, name: 'To cook', has: false }] })
 		});
-		const names = screen
-			.getAllByRole('button')
-			.map((b) => b.textContent?.replace(/\s+/g, ' ').trim());
-		expect(names.indexOf('Add to collection')).toBe(names.indexOf('Save') + 1);
+		expect(screen.queryByRole('button', { name: 'Add to collection' })).toBeNull();
+		await fireEvent.click(screen.getByRole('button', { name: 'More actions' }));
+		await tick();
+		const menu = screen.getByRole('menu', { name: 'More actions' });
+		expect(menu).toContainElement(screen.getByRole('menuitemcheckbox', { name: 'To cook' }));
+	});
+
+	test('outside the library the menu offers Print alone', async () => {
+		render(RecipeActions, { props: makeProps({ collections: null }) });
+		await fireEvent.click(screen.getByRole('button', { name: 'More actions' }));
+		await tick();
+		expect(screen.queryByRole('menuitemcheckbox')).toBeNull();
+		expect(screen.getByRole('menuitem', { name: 'Print' })).toBeInTheDocument();
 	});
 });
 
@@ -283,15 +299,15 @@ describe('RecipeActions when a request fails', () => {
 
 describe('RecipeActions row', () => {
 	const names = (container: HTMLElement) =>
-		[...container.querySelectorAll<HTMLElement>('.actions a, .actions button')].map((el) =>
-			el.textContent!.replace(/\s+/g, ' ').trim()
+		[...container.querySelectorAll<HTMLElement>('.actions a, .actions button')].map(
+			(el) => el.textContent!.replace(/\s+/g, ' ').trim() || el.getAttribute('aria-label')
 		);
 
 	test('a visitor gets Cook in marigold first, then Save and Fork outlined', () => {
 		const { container } = render(RecipeActions, {
 			props: makeProps({ canFork: true, favoriteCount: 3 })
 		});
-		expect(names(container)).toEqual(['Cook', 'Save · 3', 'Fork']);
+		expect(names(container)).toEqual(['Cook', 'Save · 3', 'Fork', 'More actions']);
 		expect(screen.getByRole('button', { name: 'Cook' })).toHaveClass('btn-primary');
 		expect(screen.getByRole('button', { name: /^Save/ })).toHaveClass('btn-ghost');
 		expect(screen.getByRole('button', { name: 'Fork' })).toHaveClass('btn-ghost');
@@ -323,7 +339,7 @@ describe('RecipeActions row', () => {
 		const { container } = render(RecipeActions, {
 			props: makeProps({ canFavorite: false, loginHref: '/login?redirectTo=%2Frecipes%2Fcookies' })
 		});
-		expect(names(container)).toEqual(['Cook', 'Log in to save']);
+		expect(names(container)).toEqual(['Cook', 'Log in to save', 'More actions']);
 		const login = screen.getByRole('link', { name: 'Log in to save' });
 		expect(login).toHaveAttribute('href', '/login?redirectTo=%2Frecipes%2Fcookies');
 		expect(login).toHaveClass('btn-ghost');
@@ -333,9 +349,12 @@ describe('RecipeActions row', () => {
 		expect(document.querySelector('form')).toBeNull();
 	});
 
-	test('with nothing else offered (logged out on an older version), only Cook is rendered', () => {
+	test('with nothing else offered (logged out on an older version), only Cook and More are rendered', () => {
 		render(RecipeActions, { props: makeProps({ canFavorite: false }) });
-		expect(screen.getAllByRole('button')).toEqual([screen.getByRole('button', { name: 'Cook' })]);
+		expect(screen.getAllByRole('button')).toEqual([
+			screen.getByRole('button', { name: 'Cook' }),
+			screen.getByRole('button', { name: 'More actions' })
+		]);
 		expect(screen.queryByRole('link')).toBeNull();
 	});
 
@@ -343,7 +362,7 @@ describe('RecipeActions row', () => {
 		const { container } = render(RecipeActions, {
 			props: makeProps({ canEdit: true, canFavorite: false })
 		});
-		expect(names(container)).toEqual(['Cook', 'Edit recipe']);
+		expect(names(container)).toEqual(['Cook', 'Edit recipe', 'More actions']);
 		const edit = screen.getByRole('link', { name: 'Edit recipe' });
 		expect(edit).toHaveClass('btn-ghost');
 		expect(edit).toHaveAttribute('href', '/recipes/cookies/edit');
@@ -360,6 +379,15 @@ describe('RecipeActions row', () => {
 		// Edit now has Add to Journal beside it.
 		expect(spans).not.toContain('.edit');
 		expect(phone).toMatch(/grid-template-columns:\s*1fr 1fr/);
+	});
+
+	test('on a phone More takes the end of Cook’s row, out of the pairing', () => {
+		const style = source.slice(source.indexOf('<style>'));
+		const phone = style.slice(style.indexOf('@media (max-width: 699px)'));
+		expect(cssRule(phone, '.actions > :global(.dropdown)')).toMatch(/position:\s*absolute/);
+		expect(cssRule(phone, '.actions > :global(.dropdown)')).toMatch(/right:\s*0/);
+		// Cook leaves the trigger's 44px and the row's 10px gap.
+		expect(cssRules(phone, '.cook').join()).toMatch(/margin-right:\s*54px/);
 	});
 
 	test('on a phone Add to Journal spans only when it would sit alone after Cook', () => {
@@ -441,15 +469,15 @@ describe('RecipeActions Add to Journal', () => {
 describe('RecipeActions Add to Journal in the row', () => {
 	const HREF = '/journal/new?recipe=cookies&version=3';
 	const names = (container: HTMLElement) =>
-		[...container.querySelectorAll<HTMLElement>('.actions a, .actions button')].map((el) =>
-			el.textContent!.replace(/\s+/g, ' ').trim()
+		[...container.querySelectorAll<HTMLElement>('.actions a, .actions button')].map(
+			(el) => el.textContent!.replace(/\s+/g, ' ').trim() || el.getAttribute('aria-label')
 		);
 
 	test('the owner gets Cook, Edit recipe, then Add to Journal outlined', () => {
 		const { container } = render(RecipeActions, {
 			props: makeProps({ canEdit: true, canFavorite: false, journalHref: HREF })
 		});
-		expect(names(container)).toEqual(['Cook', 'Edit recipe', 'Add to Journal']);
+		expect(names(container)).toEqual(['Cook', 'Edit recipe', 'Add to Journal', 'More actions']);
 		const add = screen.getByRole('link', { name: 'Add to Journal' });
 		expect(add).toHaveClass('btn-ghost');
 		expect(add).toHaveAttribute('href', HREF);
@@ -460,7 +488,13 @@ describe('RecipeActions Add to Journal in the row', () => {
 		const { container } = render(RecipeActions, {
 			props: makeProps({ canFork: true, favoriteCount: 3, journalHref: href })
 		});
-		expect(names(container)).toEqual(['Cook', 'Save · 3', 'Fork', 'Add to Journal']);
+		expect(names(container)).toEqual([
+			'Cook',
+			'Save · 3',
+			'Fork',
+			'Add to Journal',
+			'More actions'
+		]);
 		expect(screen.getByRole('link', { name: 'Add to Journal' })).toHaveAttribute('href', href);
 	});
 });

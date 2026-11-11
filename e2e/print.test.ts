@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { cookiesPath } from './helpers';
+import { cookiesPath, gotoHydrated } from './helpers';
 import { SEED } from '../src/lib/server/db/seedData';
 
 // The recipe page on paper (DESIGN.md, Print), through print media emulation.
@@ -78,4 +78,25 @@ test('a ticked row prints un-struck and the tick circles go', async ({ page }) =
 test('the screen never shows the print header', async ({ page }) => {
 	await page.goto(await cookiesPath(page));
 	await expect(page.locator('.print-header')).toBeHidden();
+});
+
+test('signed out, the ⋯ menu offers Print alone; it closes the menu and prints, the scale kept', async ({
+	page
+}) => {
+	// The dialog itself is the browser's; the press is counted instead.
+	await page.addInitScript(() => {
+		(window as unknown as { printed: number }).printed = 0;
+		window.print = () => void (window as unknown as { printed: number }).printed++;
+	});
+	const url = `${await cookiesPath(page)}?serves=${COOKIE_SERVES * 2}`;
+	await gotoHydrated(page, url);
+	const more = page.getByRole('button', { name: 'More actions' });
+	await more.click();
+	const menu = page.getByRole('menu', { name: 'More actions' });
+	await expect(menu.getByRole('menuitem')).toHaveText(['Print']);
+	await menu.getByRole('menuitem', { name: 'Print' }).click();
+	await expect(menu).toBeHidden();
+	await expect(more).toBeFocused();
+	expect(await page.evaluate(() => (window as unknown as { printed: number }).printed)).toBe(1);
+	await expect(page).toHaveURL(new RegExp(`\\?serves=${COOKIE_SERVES * 2}$`));
 });

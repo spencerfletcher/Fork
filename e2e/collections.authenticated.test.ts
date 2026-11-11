@@ -1,6 +1,6 @@
 /**
  * Collections: made, renamed and deleted on the Cookbook; filled from a
- * recipe's Add to collection; a trashed recipe leaves its collections and
+ * recipe's ⋯ menu; a trashed recipe leaves its collections and
  * comes back with them. Signed in as the seed user, in parallel with other
  * specs: each test makes its own collection and recipe under a name no other
  * test uses, and removes them, so nothing here counts the whole library.
@@ -86,7 +86,7 @@ test.describe('Collections', () => {
 		const name = unique('E2E party');
 		const path = await createRecipe(page, title);
 
-		await page.getByRole('button', { name: 'Add to collection' }).click();
+		await page.getByRole('button', { name: 'More actions' }).click();
 		await page.getByRole('menuitem', { name: 'New collection' }).click();
 		await page.getByRole('textbox', { name: 'New collection' }).fill(name);
 		await page.getByRole('button', { name: 'Create' }).click();
@@ -112,7 +112,7 @@ test.describe('Collections', () => {
 
 		// Unchecking takes it out; the collection stays.
 		await gotoHydrated(page, path);
-		await page.getByRole('button', { name: 'Add to collection' }).click();
+		await page.getByRole('button', { name: 'More actions' }).click();
 		// The row flips before the server answers; leaving sooner would abort the request.
 		const saved = page.waitForResponse((r) => r.url().includes('?/collect'));
 		await page.getByRole('menuitemcheckbox', { name }).click();
@@ -138,7 +138,7 @@ test.describe('Collections', () => {
 		const path = await createRecipe(page, title, '4');
 		let id: string | null = null;
 		try {
-			await page.getByRole('button', { name: 'Add to collection' }).click();
+			await page.getByRole('button', { name: 'More actions' }).click();
 			await page.getByRole('menuitem', { name: 'New collection' }).click();
 			await page.getByRole('textbox', { name: 'New collection' }).fill(name);
 			await page.getByRole('button', { name: 'Create' }).click();
@@ -170,7 +170,7 @@ test.describe('Collections', () => {
 			await gotoHydrated(page, `${path}?serves=8`);
 			const ingredients = page.locator('#ingredients');
 			await expect(ingredients.getByText(/4 cups/)).toBeVisible();
-			await page.getByRole('button', { name: 'Add to collection' }).click();
+			await page.getByRole('button', { name: 'More actions' }).click();
 			expect((await toggle('false')).get('serves')).toBe('8');
 			expect((await toggle('true')).get('serves')).toBe('8');
 			await expect(page).toHaveURL(new RegExp(`${path}\\?serves=8$`));
@@ -183,7 +183,7 @@ test.describe('Collections', () => {
 			await page.getByRole('button', { name: 'Save', exact: true }).click();
 			await page.waitForURL(new RegExp(`${path}$`));
 			await gotoHydrated(page, `${path}?version=1`);
-			await page.getByRole('button', { name: 'Add to collection' }).click();
+			await page.getByRole('button', { name: 'More actions' }).click();
 			expect((await toggle('false')).get('version')).toBe('1');
 			await expect(page).toHaveURL(new RegExp(`${path}\\?version=1$`));
 			await expect(ingredients.getByText(/2 cups/)).toBeVisible();
@@ -209,6 +209,8 @@ test.describe('Collections', () => {
 		await gotoHydrated(page, '/users/devcooks');
 		await page.getByRole('link', { name: shakshuka }).first().click();
 		await expect(page.getByRole('button', { name: /^Save/ })).toBeVisible();
-		await expect(page.getByRole('button', { name: 'Add to collection' })).toHaveCount(0);
+		await page.getByRole('button', { name: 'More actions' }).click();
+		await expect(page.getByRole('menuitem', { name: 'Print' })).toBeVisible();
+		await expect(page.getByRole('menuitemcheckbox')).toHaveCount(0);
 	});
 });

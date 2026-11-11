@@ -2,19 +2,21 @@
 	import { enhance } from '$app/forms';
 	import { tick } from 'svelte';
 	import Dropdown from '#lib/components/ui/Dropdown.svelte';
-	import { plusIcon } from '#lib/components/Icons.svelte';
+	import { moreIcon, plusIcon } from '#lib/components/Icons.svelte';
 	import { pendingEnhance } from '#lib/pendingEnhance.svelte.js';
 	import { COLLECTION_NAME_MAX } from '#lib/collections.js';
 	import CollectionToggle from './CollectionToggle.svelte';
 
-	// Beside Save, for a recipe in the reader's library: a menu of their
-	// collections, each a check (a recipe may be in several), and New
-	// collection, named in place and made with this recipe in it. It never
-	// replaces Save, whose own press is the save.
+	// The ⋯ at the action row's end. For a recipe in the reader's library it
+	// lists their collections first, each a check (a recipe may be in
+	// several), and New collection, named in place and made with this recipe
+	// in it; then Print, for everyone. One flat menu, so the arrow keys walk
+	// every row and a toggle leaves it open.
 	let {
 		collections
 	}: {
-		collections: { id: number; name: string; has?: boolean }[];
+		/** Null outside the reader's library: the menu holds Print alone. */
+		collections: { id: number; name: string; has?: boolean }[] | null;
 	} = $props();
 
 	let naming = $state(false);
@@ -36,6 +38,13 @@
 		panelEl?.querySelector<HTMLElement>('.new-row')?.focus();
 	}
 
+	// The menu goes first, so the print dialog opens over the page alone.
+	async function print(close: () => void) {
+		close();
+		await tick();
+		window.print();
+	}
+
 	const refusal = $derived(creating.error ?? error);
 </script>
 
@@ -45,76 +54,122 @@
 		error = '';
 	}}>
 	{#snippet trigger(props)}
-		<button type="button" class="btn-ghost collect" aria-haspopup="menu" {...props}>
-			{@render plusIcon()}
-			Add to collection
+		<button
+			type="button"
+			class="more-button"
+			aria-haspopup="menu"
+			aria-label="More actions"
+			{...props}>
+			{@render moreIcon()}
 		</button>
 	{/snippet}
-	{#snippet panel()}
+	{#snippet panel(close)}
 		<div
-			class="menu-panel collect-panel"
+			class="menu-panel more-panel"
 			role={naming ? undefined : 'menu'}
-			aria-label="Collections"
+			aria-label="More actions"
 			bind:this={panelEl}>
-			{#each collections as collection (collection.id)}
-				<CollectionToggle {collection} report={(message) => (error = message)} />
-			{/each}
-			{#if naming}
-				<form
-					method="POST"
-					action="?/newCollection"
-					class="name-step"
-					use:enhance={creating.submit}>
-					<label for="new-collection-name">New collection</label>
-					<input
-						id="new-collection-name"
-						name="name"
-						type="text"
-						maxlength={COLLECTION_NAME_MAX}
-						required
-						autocomplete="off"
-						aria-invalid={creating.error ? true : undefined}
-						aria-describedby={creating.error ? 'new-collection-error' : undefined}
-						onkeydown={(e) => {
-							// Back to the list; a second Escape closes the menu.
-							if (e.key === 'Escape') {
-								e.stopPropagation();
-								back();
-							}
-						}} />
-					<button type="submit" class="btn-primary btn-sm" disabled={creating.pending}>
-						Create
-					</button>
-				</form>
-			{:else}
-				<button type="button" class="menu-row new-row" role="menuitem" onclick={name}>
-					{@render plusIcon()}
-					New collection
-				</button>
+			{#if collections}
+				<div role="group" aria-labelledby="more-collections">
+					<p id="more-collections" class="eyebrow-label group-label" role="presentation">
+						Collections
+					</p>
+					<!-- Many collections scroll here, half a row showing that there are more. -->
+					<div class="collection-rows">
+						{#each collections as collection (collection.id)}
+							<CollectionToggle {collection} report={(message) => (error = message)} />
+						{/each}
+					</div>
+					{#if naming}
+						<form
+							method="POST"
+							action="?/newCollection"
+							class="name-step"
+							use:enhance={creating.submit}>
+							<label for="new-collection-name">New collection</label>
+							<input
+								id="new-collection-name"
+								name="name"
+								type="text"
+								maxlength={COLLECTION_NAME_MAX}
+								required
+								autocomplete="off"
+								aria-invalid={creating.error ? true : undefined}
+								aria-describedby={creating.error ? 'new-collection-error' : undefined}
+								onkeydown={(e) => {
+									// Back to the list; a second Escape closes the menu.
+									if (e.key === 'Escape') {
+										e.stopPropagation();
+										back();
+									}
+								}} />
+							<button type="submit" class="btn-primary btn-sm" disabled={creating.pending}>
+								Create
+							</button>
+						</form>
+					{:else}
+						<button type="button" class="menu-row new-row" role="menuitem" onclick={name}>
+							{@render plusIcon()}
+							New collection
+						</button>
+					{/if}
+					{#if refusal}
+						<p id="new-collection-error" class="field-error" role="alert">{refusal}</p>
+					{/if}
+				</div>
+				<hr class="rule" />
 			{/if}
-			{#if refusal}
-				<p id="new-collection-error" class="field-error" role="alert">{refusal}</p>
-			{/if}
+			<button type="button" class="menu-row print-row" role="menuitem" onclick={() => print(close)}>
+				<svg
+					class="size-4"
+					viewBox="0 0 16 16"
+					aria-hidden="true"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="1.5"
+					stroke-linecap="round"
+					stroke-linejoin="round">
+					<path d="M4.5 6V2.5h7V6M4.5 11.5h-2v-5h11v5h-2M4.5 9.5h7v4h-7z" />
+				</svg>
+				Print
+			</button>
 		</div>
 	{/snippet}
 </Dropdown>
 
 <style>
-	/* Under the pill, from its left edge: the row of pills starts at the
-	   column's left, so a right-aligned panel would leave the screen. A pill
-	   in the phone grid's right column opens from its right edge instead
-	   (RecipeActions sets the two properties). */
-	.collect-panel {
+	/* Under the trigger, from its right edge: the trigger ends the row, so
+	   the panel opens back over the pills, inside the column. */
+	.more-panel {
 		--menu-top: calc(100% + 4px);
-		--menu-right: var(--collect-right, auto);
-		left: var(--collect-left, 0);
-		min-width: 220px;
 	}
 
-	.new-row {
+	.group-label {
+		padding: 6px 12px 4px;
+	}
+
+	.collection-rows {
+		display: flex;
+		flex-direction: column;
+		max-height: calc(44px * 6.5);
+		overflow-y: auto;
+	}
+
+	.new-row,
+	.print-row {
 		gap: 10px;
+	}
+
+	/* New collection sits under a rule, below the list. */
+	.new-row,
+	.name-step {
 		border-top: 1px solid var(--color-border);
-		border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+	}
+
+	.rule {
+		margin: 6px 0;
+		border: 0;
+		border-top: 1px solid var(--color-border);
 	}
 
 	.name-step {
@@ -122,11 +177,10 @@
 		flex-direction: column;
 		gap: 8px;
 		padding: 8px 6px 6px;
-		border-top: 1px solid var(--color-border);
 	}
 
 	/* A form's button, not one of the row's pills, whose corner it would inherit. */
-	.collect-panel .name-step .btn-primary {
+	.more-panel .name-step .btn-primary {
 		border-radius: var(--radius-md);
 	}
 
