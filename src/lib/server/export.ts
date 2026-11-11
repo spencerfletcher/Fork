@@ -94,7 +94,7 @@ export async function exportFor(
 		};
 	});
 
-	const base = {
+	const base: Omit<ForkExport, 'scope' | 'collections' | 'saves' | 'journal'> = {
 		format: EXPORT_FORMAT,
 		version: EXPORT_VERSION,
 		exportedAt: new Date().toISOString(),

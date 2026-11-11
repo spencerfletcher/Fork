@@ -54,8 +54,8 @@ const get = (slug: string, format = 'json', user: { id: string } | null = { id: 
 		loadEvent({ path: `/recipes/${slug}/export?format=${format}`, params: { slug }, user }) as never
 	);
 
-async function thrown(p: Promise<unknown>) {
-	const e = await p.catch((e: unknown) => e);
+async function thrown(p: unknown) {
+	const e = await Promise.resolve(p).catch((e: unknown) => e);
 	if (!isHttpError(e)) throw new Error('expected an HTTP error');
 	return e;
 }
