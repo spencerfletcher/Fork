@@ -33,7 +33,14 @@ function longLink(length: number, scheme = 'https') {
 function makeSourceRow(overrides: Partial<SourceRow> = {}): SourceRow {
 	return {
 		recipeId: 7,
-		recipe: { slug: 'dal', title: 'Dal', visibility: 'public', authorId: ME.id, deletedAt: null },
+		recipe: {
+			slug: 'dal',
+			title: 'Dal',
+			visibility: 'public',
+			authorId: ME.id,
+			deletedAt: null,
+			suppressedAt: null
+		},
 		versionNumber: 2,
 		sourceUrl: null,
 		...overrides
@@ -138,7 +145,8 @@ describe('sourceOf', () => {
 				title: 'Shakshuka',
 				visibility: 'friends',
 				authorId: FRIEND,
-				deletedAt: null
+				deletedAt: null,
+				suppressedAt: null
 			}
 		});
 		expect(sourceOf(row, ME, [FRIEND])).toMatchObject({ kind: 'recipe', own: false });
@@ -152,7 +160,8 @@ describe('sourceOf', () => {
 				title: 'Renamed in private',
 				visibility: 'private',
 				authorId: FRIEND,
-				deletedAt: null
+				deletedAt: null,
+				suppressedAt: null
 			}
 		});
 		expect(sourceOf(row, ME, [])).toEqual({ kind: 'hidden' });

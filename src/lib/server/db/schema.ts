@@ -104,6 +104,11 @@ export const recipes = pgTable(
 		// keep stay only for them (keptCopyOf, #lib/server/visibility.ts). The
 		// last copy removed deletes the rest. Null otherwise.
 		erasedAt: timestamp('erased_at'),
+		// Hidden from other cooks by a moderator since then (isModerator,
+		// #lib/server/moderation.ts): seen by its author and moderators only, no
+		// copies kept for savers, no forks or saves (#lib/server/visibility.ts).
+		// Null for a recipe not hidden; Restore sets it back to null.
+		suppressedAt: timestamp('suppressed_at'),
 		// Full-text search vector: title (weight A) + description (weight B)
 		// Generated automatically by Postgres — never set manually
 		fts: tsvector('fts').generatedAlwaysAs(

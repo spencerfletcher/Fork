@@ -1,8 +1,18 @@
-import { describe, test, expect, beforeAll } from 'vitest';
+import { describe, test, expect, beforeAll, vi } from 'vitest';
 import { and, eq, inArray, type SQL } from 'drizzle-orm';
 
 import { closeDbAfter, localDb, withProfiles } from '#lib/testing/db.js';
 import type { Visibility } from '#lib/recipes/validation.js';
+
+// The moderator is a profile made inside a test, so MODERATOR_IDS is read
+// through a getter on each isModerator call.
+const moderators = vi.hoisted(() => ({ ids: '' }));
+vi.mock('$app/env/private', async (importOriginal) => ({
+	...(await importOriginal<Record<string, unknown>>()),
+	get MODERATOR_IDS() {
+		return moderators.ids;
+	}
+}));
 
 closeDbAfter();
 
@@ -84,6 +94,78 @@ describe.skipIf(!localDb)('the Trash in the visibility SQL, against the real dat
 			await tx.update(schema.recipes).set({ deletedAt: null }).where(eq(schema.recipes.id, id));
 			expect(await idsWhere(tx, visibility.inLibraryOf({ id: owner }), [id])).toEqual([id]);
 			expect(await idsWhere(tx, visibility.inLibraryOf({ id: friend }), [id])).toEqual([id]);
+		});
+	});
+});
+
+describe.skipIf(!localDb)('a recipe a moderator hid, against the real database', () => {
+	let schema: typeof import('#lib/server/db/schema.js');
+	let visibility: typeof import('./visibility.js');
+	let sitemap: typeof import('./sitemap.js');
+	type Tx = import('./db/index.js').Tx;
+
+	beforeAll(async () => {
+		schema = await import('#lib/server/db/schema.js');
+		visibility = await import('./visibility.js');
+		sitemap = await import('./sitemap.js');
+	});
+
+	const ids = async (tx: Tx, where: SQL, id: number) =>
+		(
+			await tx
+				.select({ id: schema.recipes.id })
+				.from(schema.recipes)
+				.where(and(where, eq(schema.recipes.id, id)))
+		).map((r) => r.id);
+
+	test('only its author and moderators see it, savers lose it from their library and keep no copy, the sitemap leaves it out; Restore brings it all back', async () => {
+		await withProfiles(5, async (tx, [author, friend, saver, stranger, moderator], s) => {
+			moderators.ids = `someone-else, ${moderator}`;
+			await tx
+				.insert(schema.friendships)
+				.values({ requesterId: author, addresseeId: friend, status: 'accepted' });
+			const insert = async (visibility: Visibility, slug: string) =>
+				(
+					await tx
+						.insert(schema.recipes)
+						.values({ authorId: author, slug, title: 'T', visibility, suppressedAt: new Date() })
+						.returning({ id: schema.recipes.id })
+				)[0].id;
+			const pub = await insert('public', `hidden-pub-${s}`);
+			// Withdrawn, with a copy granted before it was hidden.
+			const priv = await insert('private', `hidden-priv-${s}`);
+			await tx.insert(schema.favorites).values([
+				{ userId: saver, recipeId: pub },
+				{ userId: saver, recipeId: priv, copyVersion: 1 }
+			]);
+
+			const sees = (viewer: { id: string } | null) => ids(tx, visibility.visibleTo(viewer), pub);
+			for (const viewer of [null, { id: friend }, { id: saver }, { id: stranger }])
+				expect(await sees(viewer)).toEqual([]);
+			expect(await sees({ id: author })).toEqual([pub]);
+			expect(await sees({ id: moderator })).toEqual([pub]);
+			// A moderator does not see a private recipe for being one.
+			expect(await ids(tx, visibility.visibleTo({ id: moderator }), priv)).toEqual([]);
+
+			const library = (id: number) => ids(tx, visibility.inLibraryOf({ id: saver }), id);
+			expect(await library(pub)).toEqual([]);
+			expect(await library(priv)).toEqual([]);
+			expect(await ids(tx, visibility.keptCopyOf({ id: saver }), priv)).toEqual([]);
+			expect(await ids(tx, visibility.inLibraryOf({ id: author }), pub)).toEqual([pub]);
+			const slugs = async () =>
+				(await sitemap.sitemapUrls('https://x', tx)).map((u) => u.loc.split('/').at(-1));
+			expect(await slugs()).not.toContain(`hidden-pub-${s}`);
+
+			await tx
+				.update(schema.recipes)
+				.set({ suppressedAt: null })
+				.where(inArray(schema.recipes.id, [pub, priv]));
+			for (const viewer of [null, { id: friend }, { id: saver }, { id: stranger }])
+				expect(await sees(viewer)).toEqual([pub]);
+			expect(await library(pub)).toEqual([pub]);
+			expect(await library(priv)).toEqual([priv]);
+			expect(await slugs()).toContain(`hidden-pub-${s}`);
+			moderators.ids = '';
 		});
 	});
 });

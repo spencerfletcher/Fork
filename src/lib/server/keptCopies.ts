@@ -26,7 +26,7 @@ import { leaveCollections } from './collections.js';
  */
 export async function grantKeptCopies(
 	tx: Tx | typeof db,
-	recipe: Pick<Recipe, 'id' | 'authorId' | 'visibility'>
+	recipe: Pick<Recipe, 'id' | 'authorId' | 'visibility' | 'suppressedAt'>
 ): Promise<void> {
 	const savers = await tx
 		.select({ userId: favorites.userId })

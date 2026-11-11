@@ -82,7 +82,11 @@ export function trashAge(deletedAt: Date, now = new Date()) {
 export async function moveToTrash(recipe: Pick<Recipe, 'id' | 'authorId'>): Promise<void> {
 	await db.transaction(async (tx) => {
 		const [locked] = await tx
-			.select({ visibility: recipes.visibility, deletedAt: recipes.deletedAt })
+			.select({
+				visibility: recipes.visibility,
+				deletedAt: recipes.deletedAt,
+				suppressedAt: recipes.suppressedAt
+			})
 			.from(recipes)
 			.where(eq(recipes.id, recipe.id))
 			.for('update');
@@ -91,7 +95,8 @@ export async function moveToTrash(recipe: Pick<Recipe, 'id' | 'authorId'>): Prom
 			await grantKeptCopies(tx, {
 				id: recipe.id,
 				authorId: recipe.authorId,
-				visibility: locked.visibility
+				visibility: locked.visibility,
+				suppressedAt: locked.suppressedAt
 			});
 		await tx
 			.update(recipes)

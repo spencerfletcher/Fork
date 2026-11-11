@@ -69,7 +69,7 @@ export const actions: Actions = {
 			});
 		const recipe = await ownRecipe(params.slug, user.id, {
 			recipesToTags: { with: { tag: true } },
-			parent: { columns: { visibility: true, authorId: true, deletedAt: true } }
+			parent: { columns: { visibility: true, authorId: true, deletedAt: true, suppressedAt: true } }
 		});
 
 		const submission = readSubmission(formData);
@@ -137,7 +137,8 @@ export const actions: Actions = {
 					await grantKeptCopies(tx, {
 						id: recipe.id,
 						authorId: user.id,
-						visibility: locked.visibility
+						visibility: locked.visibility,
+						suppressedAt: locked.suppressedAt
 					});
 
 				if (changed || message) {

@@ -15,6 +15,7 @@ const { selectMock, findRecipeMock } = vi.hoisted(() => ({
 vi.mock('#lib/server/db/index.js', () => ({
 	db: { select: selectMock, query: { recipes: { findFirst: findRecipeMock } } }
 }));
+vi.mock('$app/env/private', () => ({ MODERATOR_IDS: 'mod' }));
 
 import {
 	canView,
@@ -33,12 +34,14 @@ import {
 const OWNER = { id: 'owner' };
 const FRIEND = { id: 'friend' };
 const OTHER = { id: 'other' };
+const MODERATOR = { id: 'mod' };
 
 const row = (
 	visibility: Visibility,
 	authorId: string | null = OWNER.id,
-	deletedAt: Date | null = null
-) => ({ visibility, authorId, deletedAt });
+	deletedAt: Date | null = null,
+	suppressedAt: Date | null = null
+) => ({ visibility, authorId, deletedAt, suppressedAt });
 
 beforeEach(() => {
 	vi.clearAllMocks();
@@ -73,6 +76,18 @@ describe('canView', () => {
 			expect(canView(trashed, FRIEND, [OWNER.id])).toBe(false);
 			expect(canView(trashed, null)).toBe(false);
 		}
+	});
+
+	test('a recipe hidden by a moderator is visible to its author and to moderators who could see it otherwise', () => {
+		const hidden = (visibility: Visibility) => row(visibility, OWNER.id, null, new Date());
+		expect(canView(hidden('public'), OWNER)).toBe(true);
+		expect(canView(hidden('private'), OWNER)).toBe(true);
+		expect(canView(hidden('public'), MODERATOR)).toBe(true);
+		expect(canView(hidden('public'), OTHER)).toBe(false);
+		expect(canView(hidden('public'), null)).toBe(false);
+		expect(canView(hidden('friends'), FRIEND, [OWNER.id])).toBe(false);
+		expect(canView(hidden('private'), MODERATOR)).toBe(false);
+		expect(canView(row('public', null, null, new Date()), null)).toBe(false);
 	});
 
 	test('a non-public recipe whose author was deleted is visible to nobody', () => {
@@ -191,36 +206,54 @@ describe('inLibraryOf', () => {
 		const visible = dialect.sqlToQuery(visibleTo(OTHER));
 		const kept = dialect.sqlToQuery(keptCopyOf(OTHER));
 		const { sql, params } = dialect.sqlToQuery(inLibraryOf(OTHER));
-		// The kept copies' placeholders follow the library's eight.
-		const keptSql = kept.sql.replace(/\$(\d+)/g, (_, n: string) => `$${Number(n) + 8}`);
+		// The kept copies' placeholders follow the library's nine.
+		const keptSql = kept.sql.replace(/\$(\d+)/g, (_, n: string) => `$${Number(n) + 9}`);
 		expect(sql).toBe(
-			`((${visible.sql} and ("recipes"."author_id" = $7 or "recipes"."id" in (select "recipe_id" from "favorites" where "favorites"."user_id" = $8))) or ${keptSql})`
+			`((${visible.sql} and ("recipes"."author_id" = $8 or "recipes"."id" in (select "recipe_id" from "favorites" where "favorites"."user_id" = $9))) or ${keptSql})`
 		);
 		expect(params).toEqual([...visible.params, OTHER.id, OTHER.id, ...kept.params]);
 	});
 
-	test('a kept copy is a withdrawn recipe (private, or in the Trash) whose save holds a copy version', () => {
+	test('a kept copy is a withdrawn recipe (private, or in the Trash), not hidden by a moderator, whose save holds a copy version', () => {
 		const { sql, params } = new PgDialect().sqlToQuery(keptCopyOf(OTHER));
 		expect(sql).toBe(
-			'(("recipes"."deleted_at" is not null or "recipes"."visibility" = $1) and "recipes"."id" in (select "recipe_id" from "favorites" where ("favorites"."user_id" = $2 and "favorites"."copy_version" is not null)))'
+			'("recipes"."suppressed_at" is null and ("recipes"."deleted_at" is not null or "recipes"."visibility" = $1) and "recipes"."id" in (select "recipe_id" from "favorites" where ("favorites"."user_id" = $2 and "favorites"."copy_version" is not null)))'
 		);
 		expect(params).toEqual(['private', OTHER.id]);
 	});
 });
 
 describe('visibleTo', () => {
-	test('a logged-out visitor sees public recipes only, none in the Trash', () => {
-		const expected = and(isNull(recipes.deletedAt), eq(recipes.visibility, 'public'));
+	test('a logged-out visitor sees public recipes only, none in the Trash or hidden by a moderator', () => {
+		const expected = and(
+			isNull(recipes.deletedAt),
+			isNull(recipes.suppressedAt),
+			eq(recipes.visibility, 'public')
+		);
 		expect(visibleTo(null)).toEqual(expected);
 		expect(visibleTo(undefined)).toEqual(expected);
 	});
 
-	test('a signed-in visitor also sees their own, and friends recipes by an accepted friend either way, none in the Trash', () => {
+	test('a signed-in visitor also sees their own, and friends recipes by an accepted friend either way, none in the Trash, and of the hidden only their own', () => {
 		const { sql, params } = new PgDialect().sqlToQuery(visibleTo(OTHER));
-		expect(params).toEqual(['public', OTHER.id, 'friends', 'accepted', OTHER.id, OTHER.id]);
+		expect(params).toEqual([
+			OTHER.id,
+			'public',
+			OTHER.id,
+			'friends',
+			'accepted',
+			OTHER.id,
+			OTHER.id
+		]);
 		expect(sql).toBe(
-			'("recipes"."deleted_at" is null and ("recipes"."visibility" = $1 or "recipes"."author_id" = $2 or ("recipes"."visibility" = $3 and exists (select 1 from "friendships" "fr" where "fr"."status" = $4 and (least("fr"."requester_id", "fr"."addressee_id") = least($5, "recipes"."author_id") and greatest("fr"."requester_id", "fr"."addressee_id") = greatest($6, "recipes"."author_id"))))))'
+			'("recipes"."deleted_at" is null and ("recipes"."suppressed_at" is null or "recipes"."author_id" = $1) and ("recipes"."visibility" = $2 or "recipes"."author_id" = $3 or ("recipes"."visibility" = $4 and exists (select 1 from "friendships" "fr" where "fr"."status" = $5 and (least("fr"."requester_id", "fr"."addressee_id") = least($6, "recipes"."author_id") and greatest("fr"."requester_id", "fr"."addressee_id") = greatest($7, "recipes"."author_id"))))))'
 		);
+	});
+
+	test('a moderator also sees what is hidden, among what they could see otherwise', () => {
+		const { sql } = new PgDialect().sqlToQuery(visibleTo(MODERATOR));
+		expect(sql).not.toContain('suppressed_at');
+		expect(sql).toContain('"recipes"."deleted_at" is null and ("recipes"."visibility" = $1');
 	});
 
 	// The relational query builder re-aliases every column in `where` to the

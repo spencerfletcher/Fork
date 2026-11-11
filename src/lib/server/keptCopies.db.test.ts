@@ -51,7 +51,7 @@ describe.skipIf(!localDb)('kept copies, against the real database', () => {
 				createdBy: authorId
 			}))
 		);
-		return { id: row.id, authorId, visibility };
+		return { id: row.id, authorId, visibility, suppressedAt: null as Date | null };
 	}
 
 	async function copyVersionOf(tx: Tx, userId: string, recipeId: number) {
@@ -79,6 +79,19 @@ describe.skipIf(!localDb)('kept copies, against the real database', () => {
 			await kept.grantKeptCopies(tx, recipe);
 			expect(await copyVersionOf(tx, friend, recipe.id)).toBe(3);
 			expect(await copyVersionOf(tx, stranger, recipe.id)).toBe(2);
+		});
+	});
+
+	test('withdrawing a recipe a moderator hid grants no saver a copy, and ends one granted before', async () => {
+		await withPeople(async (tx, { author, friend, stranger }) => {
+			const recipe = { ...(await makeRecipe(tx, author, 'public')), suppressedAt: new Date() };
+			await tx.insert(schema.favorites).values([
+				{ userId: friend, recipeId: recipe.id },
+				{ userId: stranger, recipeId: recipe.id, copyVersion: 1 }
+			]);
+			await kept.grantKeptCopies(tx, recipe);
+			expect(await copyVersionOf(tx, friend, recipe.id)).toBeNull();
+			expect(await copyVersionOf(tx, stranger, recipe.id)).toBeNull();
 		});
 	});
 

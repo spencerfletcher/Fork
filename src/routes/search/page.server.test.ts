@@ -213,8 +213,12 @@ describe('search visibility', () => {
 		expect(selectDistinctMock.mock.results[0].value.where).toHaveBeenCalledWith(own);
 	});
 
-	test('a logged-out visitor finds public recipes only, none in the Trash', async () => {
-		const pub = and(isNull(recipes.deletedAt), eq(recipes.visibility, 'public'));
+	test('a logged-out visitor finds public recipes only, none in the Trash or hidden', async () => {
+		const pub = and(
+			isNull(recipes.deletedAt),
+			isNull(recipes.suppressedAt),
+			eq(recipes.visibility, 'public')
+		);
 		await loadResult(makeEvent(''));
 		expect(sqlOf(findManyMock.mock.calls[0][0].where)).toEqual(sqlOf(and(pub)!));
 		expect(selectDistinctMock.mock.results[0].value.where).toHaveBeenCalledWith(pub);
@@ -268,7 +272,15 @@ describe('search load, the Friends filter', () => {
 
 		expect(result.friendsOnly).toBeUndefined();
 		expect(sqlOf(findManyMock.mock.calls[0][0].where)).toEqual(
-			sqlOf(and(and(isNull(recipes.deletedAt), eq(recipes.visibility, 'public')))!)
+			sqlOf(
+				and(
+					and(
+						isNull(recipes.deletedAt),
+						isNull(recipes.suppressedAt),
+						eq(recipes.visibility, 'public')
+					)
+				)!
+			)
 		);
 	});
 });
