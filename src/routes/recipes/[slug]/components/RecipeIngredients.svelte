@@ -4,7 +4,7 @@
 	import type { GramResult } from '#lib/server/ingredientDensities.js';
 	import { FRACTIONS, scaleIngredient } from '#lib/recipes/scale.js';
 	import { convertIngredient } from '#lib/recipes/convert.js';
-	import type { Measurement } from '#lib/measurement.js';
+	import { WEIGHED_NOTE, type Measurement } from '#lib/measurement.js';
 	import { groupStartingAt } from '#lib/recipes/groups.js';
 	import { tickList } from './ticks.svelte.js';
 
@@ -77,6 +77,7 @@
 		ingredients.some((typed, i) => scaleIngredient(typed, grams[i], factor).ingredient !== typed)
 	);
 	const anyConverted = $derived(ingredients.some((typed, i) => shown(typed, i).written !== null));
+	const anyWeighed = $derived(ingredients.some((typed, i) => shown(typed, i).estimate));
 	// One note for whatever on the list is an estimate.
 	const note = $derived.by(() => {
 		if (anyScaled && anyApproximate)
@@ -160,6 +161,7 @@
 	{#if measurement && anyConverted}
 		<p class="form-hint">
 			Converted to {SYSTEM_NAME[measurement]}; as written in parentheses.
+			{#if anyWeighed}{WEIGHED_NOTE}{/if}
 			<a href="/settings#measurement-heading" class="hit-link">Change in Settings</a>
 		</p>
 	{/if}

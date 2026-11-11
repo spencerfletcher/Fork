@@ -1,10 +1,17 @@
 import { describe, test, expect } from 'vitest';
 import { makeIngredient } from './fixtures';
 import { scaleIngredient } from './scale';
-import { convertIngredient, TOLERANCE, UNITS } from './convert';
+import { convertIngredient, MIN_SPOON_GRAMS, TOLERANCE, UNITS } from './convert';
 import type { Measurement } from '#lib/measurement.js';
+import { gramsFor } from '#lib/server/ingredientDensities.js';
+import { DENSITIES, ML_PER_UNIT } from '#lib/server/gramTables.js';
 
-const grams = (g: number) => ({ grams: g, grams2: null, approximate: false });
+const grams = (g: number, liquid = false) => ({
+	grams: g,
+	grams2: null,
+	approximate: false,
+	liquid
+});
 
 /** The line as the cook's units show it, or null when it stays as written. */
 function shown(line: string, to: Measurement | null, factor = 1) {
@@ -172,8 +179,8 @@ describe('convertIngredient: ranges and scaling', () => {
 	});
 
 	test('the gram hint stays on volumes; a converted weight already shows grams on one side', () => {
-		const g = grams(125);
-		expect(convertIngredient(makeIngredient('1 cup flour'), g, 'metric').grams).toBe(g);
+		const g = grams(240, true);
+		expect(convertIngredient(makeIngredient('1 cup milk'), g, 'metric').grams).toBe(g);
 		expect(convertIngredient(makeIngredient('8 oz cheese'), grams(227), 'metric').grams).toBeNull();
 		expect(convertIngredient(makeIngredient('250 g butter'), g, 'us').grams).toBeNull();
 		expect(convertIngredient(makeIngredient('500 ml milk'), g, 'us').grams).toBe(g);
@@ -182,5 +189,119 @@ describe('convertIngredient: ranges and scaling', () => {
 	test('the converted row carries its quantities and unit', () => {
 		const { ingredient } = convertIngredient(makeIngredient('2-3 cups milk'), null, 'metric');
 		expect(ingredient).toMatchObject({ quantity: 475, quantity2: 710, unit: 'ml', name: 'milk' });
+	});
+});
+
+/** The line with its own gram estimate, scaled first, as the page does. */
+function weighed(line: string, to: Measurement = 'metric', factor = 1) {
+	const typed = makeIngredient(line);
+	const scaled = scaleIngredient(typed, gramsFor(typed), factor);
+	const { ingredient, grams, written, estimate } = convertIngredient(
+		scaled.ingredient,
+		scaled.grams,
+		to
+	);
+	return { text: ingredient.text, grams, written, estimate };
+}
+
+// Metric's steps: 1 g below 50, 5 g below 1000.
+const metricGrams = (g: number) => (g < 50 ? Math.round(g) : Math.round(g / 5) * 5);
+const cupsOf = (cups: number, key: string) => cups * ML_PER_UNIT.cup * DENSITIES[key];
+const tspOf = (tsp: number, key: string) => tsp * ML_PER_UNIT.tsp * DENSITIES[key];
+
+describe('convertIngredient: grams first for what is weighed', () => {
+	test('a dry ingredient in cups leads with its weight, the cups in brackets, no second gram figure', () => {
+		expect(weighed('2¼ cups all-purpose flour')).toEqual({
+			text: `${metricGrams(cupsOf(2.25, 'all-purpose flour'))} g all-purpose flour`,
+			grams: null,
+			written: '2¼ cups',
+			estimate: true
+		});
+	});
+
+	test('a liquid stays in millilitres and keeps its gram hint', () => {
+		const milk = weighed('1 cup milk');
+		expect(milk).toMatchObject({ text: '235 ml milk', written: '1 cup', estimate: false });
+		expect(milk.grams?.grams).toBeCloseTo(cupsOf(1, 'milk'));
+	});
+
+	test('honey is weighed, not poured', () => {
+		expect(weighed('1/2 cup honey')).toMatchObject({
+			text: `${metricGrams(cupsOf(0.5, 'honey'))} g honey`,
+			written: '1/2 cup'
+		});
+	});
+
+	test('a metric volume of something weighed leads with grams too', () => {
+		expect(weighed('250 ml flour')).toMatchObject({
+			text: `${metricGrams(250 * DENSITIES.flour)} g flour`,
+			written: '250 ml'
+		});
+	});
+
+	test(`a spoonful of at least ${MIN_SPOON_GRAMS} g leads with grams; under that, spoons stay`, () => {
+		const tspSalt = tspOf(1, 'salt');
+		expect(tspSalt).toBeGreaterThanOrEqual(MIN_SPOON_GRAMS);
+		expect(weighed('1 tsp salt')).toMatchObject({
+			text: `${metricGrams(tspSalt)} g salt`,
+			written: '1 tsp',
+			estimate: true
+		});
+		const at = MIN_SPOON_GRAMS / tspOf(1, 'salt');
+		expect(weighed(`${at} tsp salt`).text).toBe(`${MIN_SPOON_GRAMS} g salt`);
+		const under = (MIN_SPOON_GRAMS - 0.5) / tspOf(1, 'salt');
+		expect(weighed(`${under} tsp salt`).written).toBeNull();
+		expect(weighed('1/4 tsp espresso powder').written).toBeNull();
+	});
+
+	test('a spoonful of liquid stays a spoonful, however heavy', () => {
+		expect(tspOf(2, 'vanilla extract')).toBeGreaterThanOrEqual(MIN_SPOON_GRAMS);
+		expect(weighed('2 tsp vanilla extract').written).toBeNull();
+		expect(weighed('2 tbsp lemon juice').written).toBeNull();
+	});
+
+	test('a weight that cannot round within tolerance leaves the spoon as written', () => {
+		// 5.4 g rounds to 5 g, 7% off.
+		const tsp = 5.4 / tspOf(1, 'salt');
+		expect(Math.abs(5 - 5.4) / 5.4).toBeGreaterThan(TOLERANCE);
+		expect(weighed(`${tsp} tsp salt`).written).toBeNull();
+	});
+
+	test('a volume with no estimate converts to millilitres as before', () => {
+		expect(weighed('1 cup quinoa')).toMatchObject({ text: '235 ml quinoa', grams: null });
+	});
+
+	test('a range weighs both ends', () => {
+		const [low, high] = [2, 3].map((n) => metricGrams(cupsOf(n, 'flour')));
+		expect(weighed('2-3 cups flour')).toMatchObject({
+			text: `${low}–${high} g flour`,
+			written: '2-3 cups'
+		});
+	});
+
+	test('scaled, the estimate is scaled first and rounded once', () => {
+		// ⅓ cup is 42 g rounded; three of those would be 126 g, not a cup's 125 g.
+		expect(metricGrams(cupsOf(1 / 3, 'flour')) * 3).not.toBe(metricGrams(cupsOf(1, 'flour')));
+		expect(weighed('1/3 cup flour', 'metric', 3)).toMatchObject({
+			text: `${metricGrams(cupsOf(1, 'flour'))} g flour`,
+			written: '1 cup'
+		});
+		expect(weighed('1 cup flour', 'metric', 1.5)).toMatchObject({
+			text: `${metricGrams(cupsOf(1.5, 'flour'))} g flour`,
+			written: '1½ cups'
+		});
+	});
+
+	test('a whole-item estimate is not promoted: counts stay counts', () => {
+		expect(weighed('2 large eggs').written).toBeNull();
+	});
+
+	test('US is unchanged: cups stay cups, metric volumes become cups', () => {
+		expect(weighed('2 cups flour', 'us').written).toBeNull();
+		expect(weighed('1 tsp salt', 'us').written).toBeNull();
+		expect(weighed('500 ml flour', 'us')).toMatchObject({
+			text: '2 cups flour',
+			estimate: false
+		});
 	});
 });

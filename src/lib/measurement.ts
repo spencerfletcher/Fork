@@ -20,6 +20,9 @@ export const MEASUREMENT_LABEL: Record<MeasurementChoice, string> = {
 /** One sentence each, under the label in Settings. */
 export const MEASUREMENT_NOTE: Record<MeasurementChoice, string> = {
 	written: "Exactly as the recipe's author wrote them.",
-	metric: 'Grams and millilitres where a conversion is certain; spoons stay spoons.',
+	metric: 'Grams for what is weighed, millilitres for liquids, where a conversion is certain.',
 	us: 'Ounces, pounds and cups where a conversion is certain.'
 };
+
+/** After the recipe page's conversion notice when a row led with a gram estimate (Metric). */
+export const WEIGHED_NOTE = 'Weights from volume measures are estimates.';

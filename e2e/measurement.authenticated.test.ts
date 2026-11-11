@@ -2,15 +2,17 @@ import { expect, test, type Page } from '@playwright/test';
 import { SEED } from '../src/lib/server/db/seedData';
 import { parseIngredientText } from '../src/lib/recipes/ingredients';
 import { convertIngredient } from '../src/lib/recipes/convert';
+import { gramsFor } from '../src/lib/server/ingredientDensities';
+import { WEIGHED_NOTE } from '../src/lib/measurement';
 import { gotoHydrated, openCookies } from './helpers';
 
 // Signed in as the seed user. The preference goes back to As written in a
 // finally, since other files read recipe pages as this user.
 
 // The cookies' latest version is written in US units; its first row is flour
-// in cups, which Metric shows in millilitres.
+// in cups, which Metric weighs: grams first, the cups in brackets.
 const flour = parseIngredientText(SEED[0].versions.at(-1)!.ingredientsText)[0];
-const metric = convertIngredient(flour, null, 'metric');
+const metric = convertIngredient(flour, gramsFor(flour), 'metric');
 const converted = metric.ingredient.text.slice(0, -flour.name.length).trim();
 const written = metric.written!;
 
@@ -35,8 +37,12 @@ test('Metric in Settings converts a US recipe on its page, in clay, and As writt
 		const measure = flourRow(page).locator('.font-semibold');
 		await expect(measure).toHaveText(converted);
 		await expect(measure).toHaveClass(/text-accent/);
-		await expect(flourRow(page)).toContainText(`written as (${written}`);
-		await expect(page.getByText('Converted to metric; as written in parentheses.')).toBeVisible();
+		await expect(flourRow(page)).toContainText(`written as (${written})`);
+		// One gram figure: the leading one.
+		await expect(flourRow(page)).not.toContainText(/\dg\b/);
+		await expect(
+			page.getByText(`Converted to metric; as written in parentheses. ${WEIGHED_NOTE}`)
+		).toBeVisible();
 		await expect(page.getByRole('link', { name: 'Change in Settings' })).toHaveAttribute(
 			'href',
 			'/settings#measurement-heading'

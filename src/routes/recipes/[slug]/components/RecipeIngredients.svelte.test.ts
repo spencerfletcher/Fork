@@ -3,13 +3,19 @@ import { render, screen, fireEvent } from '@testing-library/svelte';
 import { createRawSnippet } from 'svelte';
 import { parseIngredientText } from '#lib/recipes/ingredients.js';
 import RecipeIngredients from './RecipeIngredients.svelte';
+import { WEIGHED_NOTE } from '#lib/measurement.js';
 import source from './RecipeIngredients.svelte?raw';
 import { readFileSync } from 'node:fs';
 import { ticksKey, loadTicks, saveTicks } from './ticks';
 import { FRACTIONS } from '#lib/recipes/scale.js';
 import { cssRules } from '#lib/testing/css.js';
 
-type GramResult = { grams: number; grams2: number | null; approximate: boolean } | null;
+type GramResult = {
+	grams: number;
+	grams2: number | null;
+	approximate: boolean;
+	liquid: boolean;
+} | null;
 
 const KEY = ticksKey('my-fork', 3, 'ingredients');
 const appCss = readFileSync('src/app.css', 'utf8');
@@ -64,8 +70,8 @@ describe('RecipeIngredients', () => {
 
 	test('works the weight into the line: after the measure, or trailing for a counted line', () => {
 		renderWith(LINES, [
-			{ grams: 281, grams2: null, approximate: false },
-			{ grams: 100, grams2: null, approximate: true },
+			{ grams: 281, grams2: null, approximate: false, liquid: false },
+			{ grams: 100, grams2: null, approximate: true, liquid: false },
 			null
 		]);
 		expect(rows()[0]).toHaveTextContent('2¼ cups (281g) all-purpose flour');
@@ -75,7 +81,7 @@ describe('RecipeIngredients', () => {
 	});
 
 	test('sets the weight apart in the muted tone', () => {
-		renderWith('1 cup flour', [{ grams: 125, grams2: null, approximate: false }]);
+		renderWith('1 cup flour', [{ grams: 125, grams2: null, approximate: false, liquid: false }]);
 		const accent = screen.getByText('(125g)');
 		expect(accent).toHaveClass('text-text-3');
 		expect(rows()[0]).toHaveTextContent('1 cup (125g) flour');
@@ -83,8 +89,8 @@ describe('RecipeIngredients', () => {
 
 	test('rounds to 0.1g below ten grams and to whole grams above', () => {
 		renderWith('1 tsp salt\n1 cup flour', [
-			{ grams: 5.6789, grams2: null, approximate: false },
-			{ grams: 125.4, grams2: null, approximate: false }
+			{ grams: 5.6789, grams2: null, approximate: false, liquid: false },
+			{ grams: 125.4, grams2: null, approximate: false, liquid: false }
 		]);
 		expect(screen.getByText('(5.7g)')).toBeInTheDocument();
 		expect(screen.getByText('(125g)')).toBeInTheDocument();
@@ -92,20 +98,20 @@ describe('RecipeIngredients', () => {
 
 	test('shows both ends of a range', () => {
 		renderWith('1-2 cups water\n2-3 eggs', [
-			{ grams: 240, grams2: 480, approximate: false },
-			{ grams: 100, grams2: 150, approximate: true }
+			{ grams: 240, grams2: 480, approximate: false, liquid: false },
+			{ grams: 100, grams2: 150, approximate: true, liquid: false }
 		]);
 		expect(rows()[0]).toHaveTextContent('1-2 cups (240–480g) water');
 		expect(rows()[1]).toHaveTextContent('2-3 eggs (≈100–150g)');
 	});
 
 	test('explains that a counted weight is a typical whole-item weight', () => {
-		renderWith('2 eggs', [{ grams: 100, grams2: null, approximate: true }]);
+		renderWith('2 eggs', [{ grams: 100, grams2: null, approximate: true, liquid: false }]);
 		expect(screen.getByText('(≈100g)')).toHaveAttribute('title', expect.stringMatching(/typical/i));
 	});
 
 	test('shows no estimate note when nothing shown is approximate', () => {
-		renderWith('1 cup flour', [{ grams: 125, grams2: null, approximate: false }]);
+		renderWith('1 cup flour', [{ grams: 125, grams2: null, approximate: false, liquid: false }]);
 		expect(screen.queryByText(/estimates/i)).not.toBeInTheDocument();
 	});
 
@@ -136,7 +142,7 @@ describe('RecipeIngredients', () => {
 	});
 
 	test('a ticked row turns its text Ink 3, grams included, and keeps its strike', () => {
-		renderWith('1 cup flour', [{ grams: 125, grams2: null, approximate: false }]);
+		renderWith('1 cup flour', [{ grams: 125, grams2: null, approximate: false, liquid: false }]);
 		const row = rows()[0];
 		const tick = row.querySelector('.tick')!;
 		// Ink 3 on the text, grams included (already Ink 3), 4.9:1 on paper; an
@@ -272,8 +278,8 @@ describe('RecipeIngredients', () => {
 			props: {
 				ingredients: parseIngredientText(LINES),
 				grams: [
-					{ grams: 281, grams2: null, approximate: false },
-					{ grams: 100, grams2: null, approximate: true },
+					{ grams: 281, grams2: null, approximate: false, liquid: false },
+					{ grams: 100, grams2: null, approximate: true, liquid: false },
 					null
 				],
 				storageKey: KEY,
@@ -289,7 +295,7 @@ describe('RecipeIngredients', () => {
 	});
 
 	test('a counted line that opens on a fraction glyph is bold whole, its weight trailing', () => {
-		renderWith('½ onion', [{ grams: 55, grams2: null, approximate: true }]);
+		renderWith('½ onion', [{ grams: 55, grams2: null, approximate: true, liquid: false }]);
 		expect(rows()[0].querySelector('.font-semibold')).toHaveTextContent('½ onion');
 		expect(rows()[0]).toHaveTextContent('½ onion (≈55g)');
 	});
@@ -319,7 +325,7 @@ describe('RecipeIngredients', () => {
 		render(RecipeIngredients, {
 			props: {
 				ingredients: parseIngredientText(LINES),
-				grams: [{ grams: 281, grams2: null, approximate: false }, null, null],
+				grams: [{ grams: 281, grams2: null, approximate: false, liquid: false }, null, null],
 				storageKey: KEY,
 				factor: 2
 			}
@@ -333,7 +339,11 @@ describe('RecipeIngredients', () => {
 	});
 
 	test('unscaled, nothing is clay and there is no estimate note', () => {
-		renderWith(LINES, [{ grams: 281, grams2: null, approximate: false }, null, null]);
+		renderWith(LINES, [
+			{ grams: 281, grams2: null, approximate: false, liquid: false },
+			null,
+			null
+		]);
 		expect(document.querySelector('label .text-accent')).toBeNull();
 		expect(screen.queryByText(/Scaled quantities/)).toBeNull();
 	});
@@ -342,7 +352,7 @@ describe('RecipeIngredients', () => {
 		render(RecipeIngredients, {
 			props: {
 				ingredients: parseIngredientText(LINES),
-				grams: [null, { grams: 100, grams2: null, approximate: true }, null],
+				grams: [null, { grams: 100, grams2: null, approximate: true, liquid: false }, null],
 				storageKey: KEY,
 				factor: 2
 			}
@@ -396,10 +406,10 @@ describe('RecipeIngredients groups', () => {
 describe('RecipeIngredients measurement', () => {
 	const US = '2 cups milk\n8 oz cream cheese\n1/2 tsp salt\n2 large eggs\nsalt to taste';
 	const US_GRAMS: GramResult[] = [
-		{ grams: 480, grams2: null, approximate: false },
-		{ grams: 227, grams2: null, approximate: false },
+		{ grams: 480, grams2: null, approximate: false, liquid: true },
+		{ grams: 227, grams2: null, approximate: false, liquid: false },
 		null,
-		{ grams: 100, grams2: null, approximate: true },
+		{ grams: 100, grams2: null, approximate: true, liquid: false },
 		null
 	];
 
@@ -476,9 +486,35 @@ describe('RecipeIngredients measurement', () => {
 	});
 
 	test('scaled then converted: the original is the scaled measure, clay like the scaled weight', () => {
-		renderIn('metric', '1 cup milk', [{ grams: 240, grams2: null, approximate: false }], 2);
+		renderIn(
+			'metric',
+			'1 cup milk',
+			[{ grams: 240, grams2: null, approximate: false, liquid: true }],
+			2
+		);
 		expect(rows()[0]).toHaveTextContent('475 ml written as (2 cups, 480g) milk');
 		expect(byText('written as (2 cups, 480g)')).toHaveClass('text-accent');
+	});
+
+	test('metric: a dry ingredient in cups leads with grams in clay, the cups written as, one gram figure', () => {
+		const flour = { grams: 281.6, grams2: null, approximate: false, liquid: false };
+		renderIn('metric', '2¼ cups all-purpose flour', [flour]);
+		const [row] = rows();
+		expect(row).toHaveTextContent('280 g written as (2¼ cups) all-purpose flour');
+		expect(row.textContent).not.toMatch(/\dg\b/);
+		expect(row.querySelector('.font-semibold')).toHaveTextContent('280 g');
+		expect(row.querySelector('.font-semibold')).toHaveClass('text-accent');
+		expect(byText('written as (2¼ cups)').querySelector('.sr-only')).toHaveTextContent(
+			'written as'
+		);
+		expect(screen.getByText(/^Converted to metric/)).toHaveTextContent(
+			`Converted to metric; as written in parentheses. ${WEIGHED_NOTE} Change in Settings`
+		);
+	});
+
+	test('the weights line is there only when a row led with grams', () => {
+		renderIn('metric');
+		expect(screen.queryByText(new RegExp(WEIGHED_NOTE))).toBeNull();
 	});
 
 	test('a ticked converted row recedes to Ink 3 like the rest', () => {
