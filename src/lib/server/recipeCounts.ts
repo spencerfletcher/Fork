@@ -66,7 +66,14 @@ export async function cardList(
 		cooked
 	}: { tagRank?: Map<number, number> | null; limit?: number; cooked?: boolean } = {}
 ) {
-	const rows = await db.query.recipes.findMany({ where, with: CARD_WITH, orderBy, limit });
+	// The search vector is the database's own, never a card's.
+	const rows = await db.query.recipes.findMany({
+		where,
+		columns: { fts: false },
+		with: CARD_WITH,
+		orderBy,
+		limit
+	});
 	if (tagRank && tagRank.size > 0) rows.sort(byTagMatches(tagRank));
 	const withCounts = await attachRecipeCounts(rows, viewer);
 	const cookedById =

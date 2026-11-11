@@ -22,7 +22,7 @@ import { VERSION_NOT_FOUND } from './versionError.js';
 import { failure, requireUser, SESSION_ENDED } from '#lib/server/actions.js';
 import { STALE_MESSAGE } from '#lib/server/submission.js';
 import { restoreVersion } from '#lib/server/versions.js';
-import { keepVersion, setNote } from '#lib/server/keptCopies.js';
+import { keepVersion, removeCopy, setNote } from '#lib/server/keptCopies.js';
 import { deleteForever } from '#lib/server/trash.js';
 import {
 	collectionsOf,
@@ -64,10 +64,19 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 		? null
 		: await keptCopy(recipeSlug, user, { author: true, parent: { with: { author: true } } });
 	if (!shown && !copy) throw error(404, 'Recipe not found');
-	// The row's copies follow the author's latest, perhaps written after they
-	// withdrew it; a copy carries its kept version's instead.
+	// The row may hold what the author wrote after withdrawing it, so a copy
+	// takes only its identity and lineage from the row, never a spread of it,
+	// and its words from the kept version. Its revision and audience are not the
+	// saver's to see: a copy has no Restore (the version bar's revision is a
+	// placeholder) and no audience line.
 	const recipe = shown ?? {
-		...copy!.recipe,
+		id: copy!.recipe.id,
+		slug: copy!.recipe.slug,
+		authorId: copy!.recipe.authorId,
+		author: copy!.recipe.author,
+		parentId: copy!.recipe.parentId,
+		parent: copy!.recipe.parent,
+		editRevision: 0,
 		...recipeCopies(versionContent(copy!.version)),
 		recipesToTags: [],
 		versions: [{ ...copy!.version, creator: null }]
@@ -256,11 +265,7 @@ export const actions: Actions = {
 		if (!user) return failure(401, 'unauthenticated', SESSION_ENDED('try again'));
 		const copy = await keptCopy(params.slug, user);
 		if (!copy) throw error(404, 'Recipe not found');
-		await db
-			.delete(favorites)
-			.where(and(eq(favorites.userId, user.id), eq(favorites.recipeId, copy.recipe.id)));
-		await leaveCollections(user.id, copy.recipe.id);
-		if (copy.recipe.erasedAt) await deleteForever(copy.recipe.id, supabase);
+		if (await removeCopy(user.id, copy.recipe.id)) await deleteForever(copy.recipe.id, supabase);
 		throw redirect(303, '/cookbook?filter=saved');
 	},
 

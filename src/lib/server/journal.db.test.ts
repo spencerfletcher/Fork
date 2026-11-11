@@ -162,6 +162,10 @@ describe.skipIf(!localDb)('kept copies in the Journal, against the real database
 
 	test("recipeChoices offers the copy by its kept version's title and number, never the row's", async () => {
 		const choices = await journal.recipeChoices({ id: saver });
+		expect(JSON.stringify(choices)).not.toContain('Renamed in private');
+		expect(JSON.stringify(await journal.resolveRecipe({ id: saver }, slug, null))).not.toContain(
+			'Renamed in private'
+		);
 		expect(choices.find((c) => c.slug === slug)).toEqual({
 			slug,
 			title: 'Soup v1',

@@ -62,12 +62,19 @@ export async function canViewRow(
 
 type Schema = ExtractTablesWithRelations<typeof schema>;
 type RecipeWith = NonNullable<DBQueryConfig<'one', true, Schema, Schema['recipes']>['with']>;
-type RecipeRow<W extends RecipeWith> = BuildQueryResult<Schema, Schema['recipes'], { with: W }>;
+/** The search vector is the database's own: never loaded, so never sent to a page. */
+const NO_FTS = { fts: false } as const;
+type RecipeRow<W extends RecipeWith> = BuildQueryResult<
+	Schema,
+	Schema['recipes'],
+	{ columns: typeof NO_FTS; with: W }
+>;
 
 /** The live recipe at `slug`: one in the Trash is not found, for its owner too. */
 async function recipeBySlug<W extends RecipeWith>(slug: string, withRelations?: W) {
 	const row = await db.query.recipes.findFirst({
 		where: and(eq(recipes.slug, slug), isNull(recipes.deletedAt)),
+		columns: NO_FTS,
 		with: withRelations
 	});
 	// findFirst cannot carry a generic `with` through to its result type.
@@ -193,6 +200,7 @@ export async function keptCopy<W extends RecipeWith>(
 	if (!user) return null;
 	const row = await db.query.recipes.findFirst({
 		where: and(eq(recipes.slug, slug), keptCopyOf(user)),
+		columns: NO_FTS,
 		with: withRelations
 	});
 	if (!row) return null;

@@ -123,8 +123,10 @@ export const load: PageServerLoad = async ({ url, locals: { user, supabase } }) 
 		{ tagRank: searchQuery ? null : matches, cooked: true }
 	);
 
-	// A copy's card reads the kept version, never the row's later private edits,
-	// and shows no audience or version count of the author's.
+	// A copy's card takes only its identity and lineage from the row, which may
+	// hold what the author wrote after withdrawing it, never a spread of it; its
+	// words come from the kept version, and it shows no audience or counts of
+	// the author's. The saver's own cooked line stays: it is theirs.
 	const copies = await keptVersionsOf(
 		user,
 		withCounts.filter((r) => keptIds.has(r.id)).map((r) => r.id)
@@ -132,19 +134,26 @@ export const load: PageServerLoad = async ({ url, locals: { user, supabase } }) 
 	return {
 		recipes: withCounts.map((r) => {
 			const copy = copies.get(r.id);
-			const card = { ...r, saved: !isMine(r), kept: !!copy };
-			return copy
-				? {
-						...card,
-						title: copy.title,
-						description: copy.description,
-						imageUrl: copy.imageUrl,
-						prepTimeMinutes: copy.prepTimeMinutes,
-						cookTimeMinutes: copy.cookTimeMinutes,
-						versionCount: 0,
-						visibility: undefined
-					}
-				: card;
+			if (!copy) return { ...r, saved: !isMine(r), kept: false };
+			return {
+				id: r.id,
+				slug: r.slug,
+				authorId: r.authorId,
+				author: r.author,
+				parentId: r.parentId,
+				title: copy.title,
+				description: copy.description,
+				imageUrl: copy.imageUrl,
+				prepTimeMinutes: copy.prepTimeMinutes,
+				cookTimeMinutes: copy.cookTimeMinutes,
+				versionCount: 0,
+				forkCount: 0,
+				...(r.timesCooked === undefined
+					? {}
+					: { timesCooked: r.timesCooked, lastCookedOn: r.lastCookedOn }),
+				saved: true,
+				kept: true
+			};
 		}),
 		counts,
 		...shelf,

@@ -1,5 +1,16 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { and, eq, gt, inArray, isNotNull, isNull, lte, notInArray, type SQL } from 'drizzle-orm';
+import {
+	and,
+	eq,
+	gt,
+	inArray,
+	isNotNull,
+	isNull,
+	lte,
+	notInArray,
+	or,
+	type SQL
+} from 'drizzle-orm';
 import { QueryBuilder } from 'drizzle-orm/pg-core';
 import { db } from './db/index.js';
 import {
@@ -115,7 +126,21 @@ export async function deleteForever(recipeId: number, supabase: SupabaseClient):
 						inArray(collectionRecipes.collectionId, othersCollections)
 					)
 				);
-			await tx.update(recipes).set({ erasedAt: new Date() }).where(eq(recipes.id, recipeId));
+			// The row's copies of the latest are the author's, perhaps written after
+			// the withdrawal: blanked, so the row holds nothing a saver was not given.
+			// Each saver reads their own kept version.
+			await tx
+				.update(recipes)
+				.set({
+					erasedAt: new Date(),
+					title: '',
+					description: null,
+					imageUrl: null,
+					servings: null,
+					prepTimeMinutes: null,
+					cookTimeMinutes: null
+				})
+				.where(eq(recipes.id, recipeId));
 		}
 		return [...new Set(versions.flatMap((v) => v.imageUrl ?? []))];
 	});
@@ -145,7 +170,7 @@ let lastPurge = -Infinity;
 
 /**
  * Deletes for good every recipe, any owner's, in the Trash longer than
- * TRASH_DAYS. Called by the Cookbook and Trash loads; a failure is logged and
+ * TRASH_DAYS, and every erased one no saver keeps a copy of any more. Called by the Cookbook and Trash loads; a failure is logged and
  * the page loads regardless.
  *
  * ponytail: opportunistic, at most once an hour per server instance, so
@@ -159,10 +184,21 @@ export async function purgeExpiredTrash(supabase: SupabaseClient, now = new Date
 	if (now.getTime() - lastPurge < PURGE_EVERY_MS) return;
 	lastPurge = now.getTime();
 	try {
+		// Also an erased recipe whose last copy went without removeCopy (the
+		// saver's profile deleted, a crash before its deleteForever).
+		const copied = new QueryBuilder()
+			.select({ id: favorites.recipeId })
+			.from(favorites)
+			.where(isNotNull(favorites.copyVersion));
 		const expired = await db
 			.select({ id: recipes.id })
 			.from(recipes)
-			.where(and(lte(recipes.deletedAt, trashCutoff(now)), isNull(recipes.erasedAt)));
+			.where(
+				or(
+					and(lte(recipes.deletedAt, trashCutoff(now)), isNull(recipes.erasedAt)),
+					and(isNotNull(recipes.erasedAt), notInArray(recipes.id, copied))
+				)
+			);
 		for (const { id } of expired) await deleteForever(id, supabase);
 	} catch (e) {
 		console.error('Could not purge the Trash', e);

@@ -59,6 +59,7 @@ const keptMock = vi.hoisted(() => ({
 	keptCopy: vi.fn().mockResolvedValue(null),
 	keepVersion: vi.fn().mockResolvedValue(true),
 	setNote: vi.fn().mockResolvedValue(true),
+	removeCopy: vi.fn().mockResolvedValue(false),
 	deleteForever: vi.fn().mockResolvedValue(undefined)
 }));
 vi.mock('#lib/server/visibility.js', async (importOriginal) => ({
@@ -67,7 +68,8 @@ vi.mock('#lib/server/visibility.js', async (importOriginal) => ({
 }));
 vi.mock('#lib/server/keptCopies.js', () => ({
 	keepVersion: keptMock.keepVersion,
-	setNote: keptMock.setNote
+	setNote: keptMock.setNote,
+	removeCopy: keptMock.removeCopy
 }));
 vi.mock('#lib/server/trash.js', () => ({ deleteForever: keptMock.deleteForever }));
 vi.mock('#lib/server/journal.js', () => ({ lastEntryFor: lastEntryMock }));
@@ -1058,22 +1060,17 @@ describe('Keep this version', () => {
 
 		test('takes a note, and is removed by its saver, leaving their collections', async () => {
 			expect(await act('note', { note: 'Still good' })).toEqual({ noted: true });
-			dbDelete.mockReturnValue(chain());
 			expect(await act('removeCopy')).toMatchObject({
 				status: 303,
 				location: '/cookbook?filter=saved'
 			});
-			expect(dbDelete).toHaveBeenCalledWith(favorites);
-			expect(collectionsMock.leaveCollections).toHaveBeenCalledWith(SAVER.id, SOURCE_RECIPE.id);
+			// The save and its collection places go in removeCopy (keptCopies.db.test.ts).
+			expect(keptMock.removeCopy).toHaveBeenCalledWith(SAVER.id, SOURCE_RECIPE.id);
 			expect(keptMock.deleteForever).not.toHaveBeenCalled();
 		});
 
-		test("removing an erased recipe's copy runs deleteForever, which takes the rest once no copy is left", async () => {
-			keptMock.keptCopy.mockResolvedValue({
-				...COPY,
-				recipe: { ...COPY.recipe, erasedAt: new Date() }
-			});
-			dbDelete.mockReturnValue(chain());
+		test('removing the last copy of an erased recipe runs deleteForever, which takes the rest', async () => {
+			keptMock.removeCopy.mockResolvedValueOnce(true);
 			await act('removeCopy');
 			expect(keptMock.deleteForever).toHaveBeenCalledWith(SOURCE_RECIPE.id, undefined);
 		});
@@ -1081,7 +1078,7 @@ describe('Keep this version', () => {
 		test('removeCopy without a copy is a 404 and removes nothing', async () => {
 			keptMock.keptCopy.mockResolvedValue(null);
 			expect(await act('removeCopy')).toMatchObject({ status: 404 });
-			expect(dbDelete).not.toHaveBeenCalled();
+			expect(keptMock.removeCopy).not.toHaveBeenCalled();
 		});
 	});
 });

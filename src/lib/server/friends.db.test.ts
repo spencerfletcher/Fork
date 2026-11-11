@@ -169,6 +169,49 @@ describe.skipIf(!localDb)('unfriend and block, against the real database', () =>
 		});
 	});
 
+	test("a fork unfriend makes private leaves its savers a kept copy, as any withdrawal does, and clears an old one's", async () => {
+		await withFriends(async (tx, a, b) => {
+			const stamp = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+			const [saver, stranger] = [`test-s-${stamp}`, `test-x-${stamp}`];
+			await tx.insert(schema.profiles).values([
+				{ id: saver, username: `s-${stamp}` },
+				{ id: stranger, username: `x-${stamp}` }
+			]);
+			// The saver is B's friend, so sees B's Friends fork; the stranger holds
+			// a copy left by an earlier withdrawal and cannot see it now.
+			await tx
+				.insert(schema.friendships)
+				.values({ requesterId: saver, addresseeId: b, status: 'accepted' });
+			const aFriends = await makeRecipe(tx, a, 'friends');
+			const fork = await makeRecipe(tx, b, 'friends', aFriends.id);
+			const { makeContent } = await import('#lib/recipes/fixtures.js');
+			await tx.insert(schema.recipeVersions).values(
+				[1, 2].map((versionNumber) => ({
+					recipeId: fork.id,
+					versionNumber,
+					commitMessage: 'v',
+					...makeContent(),
+					createdBy: b
+				}))
+			);
+			await tx.insert(schema.favorites).values([
+				{ userId: saver, recipeId: fork.id },
+				{ userId: stranger, recipeId: fork.id, copyVersion: 1 }
+			]);
+
+			await friends.unfriendIn(tx, a, b);
+
+			const saves = await tx
+				.select({ userId: schema.favorites.userId, copy: schema.favorites.copyVersion })
+				.from(schema.favorites)
+				.where(eq(schema.favorites.recipeId, fork.id));
+			expect(Object.fromEntries(saves.map((s) => [s.userId, s.copy]))).toEqual({
+				[saver]: 2,
+				[stranger]: null
+			});
+		});
+	});
+
 	test('a second unfriend or a block leaves an already-private fork as it is, revision included', async () => {
 		await withFriends(async (tx, a, b) => {
 			const aFriends = await makeRecipe(tx, a, 'friends');

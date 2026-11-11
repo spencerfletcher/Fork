@@ -16,6 +16,7 @@ import {
 } from './db/schema.js';
 import { eitherWay, friendIdsOf, onAlias, visibleTo, type Viewer } from './visibility.js';
 import { canSeeEntry, sourceColumns, sourceOf } from './journal.js';
+import { grantKeptCopies } from './keptCopies.js';
 
 /** Where two people stand, from the first one's side. */
 export type Relation = 'self' | 'none' | 'sent' | 'received' | 'friends' | 'blocked';
@@ -125,7 +126,8 @@ export async function declineRequest(me: string, them: string): Promise<void> {
 /**
  * Losing a friend loses access to their Friends recipes, so each side's forks
  * of the other's Friends-level recipes become private. editRevision moves on,
- * so an editor open on the fork cannot save the old audience back.
+ * so an editor open on the fork cannot save the old audience back. A withdrawal
+ * like any other, so each fork's savers who still see it keep a copy.
  */
 export async function privatiseForksIn(tx: Tx, a: string, b: string): Promise<void> {
 	const parent = alias(recipes, 'parent');
@@ -137,14 +139,25 @@ export async function privatiseForksIn(tx: Tx, a: string, b: string): Promise<vo
 			.select({ id: parent.id })
 			.from(parent)
 			.where(and(eq(parent.authorId, owner), eq(parent.visibility, 'friends')));
-		await tx
-			.update(recipes)
-			.set({ visibility: 'private', editRevision: sql`${recipes.editRevision} + 1` })
+		const forks = await tx
+			.select({ id: recipes.id, authorId: recipes.authorId, visibility: recipes.visibility })
+			.from(recipes)
 			.where(
 				and(
 					eq(recipes.authorId, forker),
 					ne(recipes.visibility, 'private'),
 					inArray(recipes.parentId, friendsRecipes)
+				)
+			);
+		if (forks.length === 0) continue;
+		for (const fork of forks) await grantKeptCopies(tx, fork);
+		await tx
+			.update(recipes)
+			.set({ visibility: 'private', editRevision: sql`${recipes.editRevision} + 1` })
+			.where(
+				inArray(
+					recipes.id,
+					forks.map((f) => f.id)
 				)
 			);
 	}
