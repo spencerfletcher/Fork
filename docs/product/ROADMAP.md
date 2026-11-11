@@ -117,7 +117,7 @@ The differentiating experience is continuity: a recipe travels from capture thro
 | Print | Readable single-recipe print with version, scale and source (X01); print neither clips nor loses notes or groups | next | R, CM |
 | Export and archive | Human-readable export and a structured archive with supported versions, provenance, photos, groups, organization; selected or whole library (X02, X03); round-trip fixture proves fidelity; export stays available whatever the payment status | next | R, CM, M16 |
 | Public recipe metadata | Verify public previews; add Recipe structured data for public recipes | next | M2 |
-| Photo field redesign | The photo itself with two pill overlays (Replace, Remove), or one Add photo pill when empty; ends today's two text-button styles | next (P1, soon) | R (9 Nov evening), OD |
+| Photo field redesign | The photo itself with two paper pills (Replace, Remove), or a compact row with an Add photo pill when empty; Remove undoable until save ("Photo removed · Undo"); built as option 7C on 11 Nov with the shared `.pill-btn`, which ends the two text-button styles | in flight (built, awaiting publish) | R (9 Nov evening), OD |
 | Feed card title | Drop the "Shakshuka · v1" source line; the entry title links to the recipe at the cooked version | shipped | R (9 Nov evening), OD |
 | Editor composition | Title and metadata left, bounded photo right, ingredients and method below (E01); optional fields collapse and show when filled (E02); the Zed-inspired refinement pass | next | DD, Z |
 
