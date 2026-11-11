@@ -38,25 +38,42 @@
 		});
 	}
 
-	// A card's ⋯ moved its recipe to the Trash or removed a kept copy. The page
-	// loads again at the URL the address bar shows, `?page=N` from Show more
-	// included, which loads every page shown: the card goes, the counts follow,
-	// and the cook keeps their place. Focus goes to the card now in its place,
-	// else the one before, else the page title, as the Drafts list's does.
-	let removed = $state<{ title: string; how: 'trash' | 'copy' } | null>(null);
-
-	async function takeAway(recipe: { id: number; title: string }, how: 'trash' | 'copy') {
+	// A card's ⋯ changed the library. The page loads again at the URL the
+	// address bar shows, `?page=N` from Show more included, which loads every
+	// page shown: the cards and the counts follow, and the cook keeps their
+	// place (scroll and focus left alone; an open menu stays open). A card that
+	// went hands focus to the card now in its place, else the one before, else
+	// the page title, as the Drafts list's does.
+	async function reload(recipe: { id: number }): Promise<'kept' | 'gone'> {
 		const at = list.items.findIndex((r) => r.id === recipe.id);
-		removed = { title: recipe.title, how };
 		await goto((page.shallow?.url ?? page.url).href, {
 			replace: true,
 			reset: false,
 			refreshAll: true
 		});
 		await tick();
+		if (list.items.some((r) => r.id === recipe.id)) return 'kept';
 		const links = grid?.querySelectorAll<HTMLElement>('.card-stretched-link') ?? [];
 		const next = links[Math.min(at, links.length - 1)];
 		(next ?? document.querySelector<HTMLElement>('h1'))?.focus();
+		return 'gone';
+	}
+
+	// Moved to the Trash, a kept copy removed, or unchecked out of the
+	// collection being viewed.
+	type Removed =
+		{ title: string; how: 'trash' | 'copy' } | { title: string; how: 'collection'; from: string };
+	let removed = $state<Removed | null>(null);
+
+	async function takeAway(recipe: { id: number; title: string }, how: 'trash' | 'copy') {
+		removed = { title: recipe.title, how };
+		await reload(recipe);
+	}
+
+	async function collected(recipe: { id: number; title: string }) {
+		const from = data.collection?.name;
+		if ((await reload(recipe)) === 'gone' && from)
+			removed = { title: recipe.title, how: 'collection', from };
 	}
 </script>
 
@@ -77,6 +94,8 @@
 					{#if removed?.how === 'trash'}
 						Moved {removed.title} to your Trash.
 						<a href="/cookbook/trash" class="inline-action">Open Trash</a>
+					{:else if removed?.how === 'collection'}
+						Removed {removed.title} from {removed.from}.
 					{:else if removed}
 						Removed your copy of {removed.title}.
 					{/if}
@@ -134,7 +153,8 @@
 								variant="cookbook"
 								saved={recipe.saved}
 								kept={recipe.kept}
-								onremoved={(how) => takeAway(recipe, how)} />
+								onremoved={(how) => takeAway(recipe, how)}
+								oncollected={() => collected(recipe)} />
 						{/each}
 					</div>
 					<ShowMore {list} container={grid} noun="recipe" />

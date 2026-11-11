@@ -26,7 +26,9 @@ vi.mock('$app/forms', () => ({
 	enhance: (form: HTMLFormElement, submit: SubmitFunction) => {
 		submits.set(form, submit);
 		return { destroy: () => {} };
-	}
+	},
+	// The test's fetch answers in JSON already.
+	deserialize: (text: string) => JSON.parse(text)
 }));
 
 function makeRecipe(overrides: Record<string, unknown> = {}) {
@@ -334,6 +336,82 @@ describe('Cookbook: a card’s ⋯ takes the recipe out of the library', () => {
 		expect(goto.mock.calls[0][0]).toBe(page.url.href);
 		expect(screen.getByText('Removed your copy of Old Soup.')).toBeInTheDocument();
 		await vi.waitFor(() => expect(screen.getByRole('heading', { level: 1 })).toHaveFocus());
+	});
+});
+
+describe('Cookbook: a card’s ⋯ changes a collection', () => {
+	const TO_COOK = { id: 5, name: 'To cook', count: 2 };
+
+	beforeEach(() => {
+		goto.mockReset();
+		page.url = new URL('http://localhost/cookbook?collection=5');
+		page.shallow = { url: new URL('http://localhost/cookbook?collection=5&page=2') };
+		submits.clear();
+		vi.stubGlobal(
+			'fetch',
+			vi.fn(async () => ({
+				text: async () =>
+					JSON.stringify({
+						type: 'success',
+						data: { collections: [{ ...TO_COOK, has: true }] }
+					})
+			}))
+		);
+	});
+
+	/** Opens `title`'s ⋯ and plays a successful press of To cook back. */
+	async function untick(title: string) {
+		await fireEvent.click(screen.getByRole('button', { name: `More actions for ${title}` }));
+		const row = await screen.findByRole('menuitemcheckbox', { name: 'To cook' });
+		const form = row.closest('form')!;
+		const after = await submits.get(form)!({
+			action: new URL(form.action),
+			formElement: form,
+			formData: new FormData(form),
+			controller: new AbortController(),
+			submitter: null,
+			cancel: () => {}
+		} as never);
+		await after?.({ result: { type: 'success', data: {} }, update: vi.fn() } as never);
+		await tick();
+	}
+
+	test('the page reloads in place, place and all, so the strip’s counts follow; a card still here keeps its menu', async () => {
+		const [dal] = full.recipes;
+		const { rerender } = renderCookbook({ ...full, collection: TO_COOK });
+		goto.mockImplementation(() =>
+			rerender({
+				data: onePage({ ...base, ...full, collection: TO_COOK, collections: [TO_COOK] })
+			} as never)
+		);
+		await untick(dal.title);
+		await vi.waitFor(() =>
+			expect(goto).toHaveBeenCalledExactlyOnceWith(page.shallow!.url.href, {
+				replace: true,
+				reset: false,
+				refreshAll: true
+			})
+		);
+		expect(screen.getByRole('menu', { name: 'More actions' })).toBeInTheDocument();
+		expect(screen.queryByText(/Removed .* from/)).toBeNull();
+	});
+
+	test('a card unticked from the collection being viewed goes, says so, and focus takes its place', async () => {
+		const [dal, poke] = full.recipes;
+		const { rerender } = renderCookbook({ ...full, collection: TO_COOK });
+		goto.mockImplementation(() =>
+			rerender({
+				data: onePage({ ...base, ...full, collection: TO_COOK, recipes: [poke] })
+			} as never)
+		);
+		await untick(dal.title);
+		await vi.waitFor(() =>
+			expect(screen.getByText(`Removed ${dal.title} from To cook.`)).toBeInTheDocument()
+		);
+		expect(
+			screen.getByText(`Removed ${dal.title} from To cook.`).closest('[role="status"]')
+		).not.toBeNull();
+		await vi.waitFor(() => expect(screen.getByRole('link', { name: poke.title })).toHaveFocus());
 	});
 });
 

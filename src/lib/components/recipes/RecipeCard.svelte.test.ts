@@ -507,7 +507,10 @@ describe('RecipeCard in the Cookbook: the ⋯', () => {
 	async function rowsAfterOpening() {
 		await fireEvent.click(screen.getByRole('button', { name: 'More actions for Chocolate Cake' }));
 		const menu = screen.getByRole('menu', { name: 'More actions' });
-		return [...menu.querySelectorAll('[role^="menuitem"]')].map((r) => r.textContent?.trim());
+		// The Loading collections… row aside, which the collections replace.
+		return [...menu.querySelectorAll('[role^="menuitem"]:not([aria-busy])')].map((r) =>
+			r.textContent?.trim()
+		);
 	}
 
 	test('ends the title’s line, after the stretched link in Tab order, never inside it', () => {

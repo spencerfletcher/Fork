@@ -8,7 +8,8 @@
 		collection,
 		action,
 		refresh,
-		report
+		report,
+		ondone
 	}: {
 		collection: { id: number; name: string; has?: boolean };
 		/** The recipe's collect action, by its full path. */
@@ -16,6 +17,8 @@
 		/** Reload the page's data after a press; off where the list is the menu's own. */
 		refresh: boolean;
 		report: (error: string) => void;
+		/** After a press the server took. */
+		ondone?: () => void;
 	} = $props();
 
 	// `refresh` read once: a menu is either the page's or its own for its whole life.
@@ -23,7 +26,8 @@
 	const member = optimisticToggle(() => !!collection.has, {
 		failure: 'Could not change that collection. Try again.',
 		report: (message) => report(message),
-		refresh
+		refresh,
+		done: () => ondone?.()
 	});
 </script>
 

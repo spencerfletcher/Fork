@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { createRecipe, gotoHydrated, postAction, uniqueTitle } from './helpers';
+import { createRecipe, deleteRecipe, gotoHydrated, postAction, uniqueTitle } from './helpers';
 import { TRASH_DAYS } from '../src/lib/trash';
 
 // The recipe's ⋯ on a Cookbook card (D1, roadmap L07): the recipe page's menu,
@@ -63,6 +63,56 @@ test.describe('a Cookbook card’s ⋯', () => {
 				'/cookbook/trash'
 			);
 		} finally {
+			await postAction(page, '/cookbook/trash?/deleteForever', { slug });
+		}
+	});
+
+	test('a collection made from a card shows in the strip at once; unchecked inside it, the card goes and says so', async ({
+		page
+	}) => {
+		const title = uniqueTitle('E2E Card collection');
+		const name = uniqueTitle('E2E Coll');
+		const path = await createRecipe(page, title);
+		const slug = path.split('/').pop()!;
+		try {
+			const listUrl = `/cookbook?q=${encodeURIComponent(title)}`;
+			await gotoHydrated(page, listUrl);
+			const card = page.locator('.recipe-card', { hasText: title });
+			const more = card.getByRole('button', { name: `More actions for ${title}` });
+			const menu = page.getByRole('menu', { name: 'More actions' });
+			const strip = page.getByRole('navigation', { name: 'Collections' });
+
+			// Focus waits on the loading row, then lands on the first collection.
+			await more.click();
+			await expect(menu.getByRole('menuitemcheckbox').first()).toBeFocused();
+
+			await menu.getByRole('menuitem', { name: 'New collection' }).click();
+			await page.getByRole('textbox', { name: 'New collection' }).fill(name);
+			await page.getByRole('button', { name: 'Create' }).click();
+			// The page reloaded in place: the strip has it, counted, and the menu is still open.
+			await expect(strip.getByRole('link', { name: new RegExp(`^${name}`) })).toContainText('1');
+			await expect(menu.getByRole('menuitem', { name: 'New collection' })).toBeFocused();
+			await expect(page).toHaveURL(listUrl);
+
+			await page.keyboard.press('Escape');
+			await strip.getByRole('link', { name: new RegExp(`^${name}`) }).click();
+			await expect(page).toHaveURL(/[?&]collection=\d+/);
+			await card.getByRole('button', { name: `More actions for ${title}` }).click();
+			const row = menu.getByRole('menuitemcheckbox', { name });
+			await expect(row).toHaveAttribute('aria-checked', 'true');
+			await row.click();
+
+			await expect(page.getByRole('status').filter({ hasText: 'Removed' })).toHaveText(
+				`Removed ${title} from ${name}.`
+			);
+			await expect(card).toHaveCount(0);
+			await expect(strip.getByRole('link', { name: new RegExp(`^${name}`) })).toContainText('0');
+
+			await page.getByRole('button', { name: 'Delete collection' }).click();
+			await page.getByRole('button', { name: 'Delete collection' }).click();
+			await expect(strip.getByRole('link', { name: new RegExp(`^${name}`) })).toHaveCount(0);
+		} finally {
+			await deleteRecipe(page, path);
 			await postAction(page, '/cookbook/trash?/deleteForever', { slug });
 		}
 	});

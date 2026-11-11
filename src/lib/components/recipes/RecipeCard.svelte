@@ -51,7 +51,8 @@
 		variant = 'list',
 		saved = false,
 		kept = false,
-		onremoved
+		onremoved,
+		oncollected
 	}: {
 		recipe: CardRecipe;
 		index?: number;
@@ -63,6 +64,8 @@
 		kept?: boolean;
 		/** Cookbook: the ⋯ moved it to the Trash or removed the copy; the page takes it away. */
 		onremoved?: (how: 'trash' | 'copy') => void;
+		/** Cookbook: the ⋯ changed one of its collections; the page reloads. */
+		oncollected?: () => void;
 	} = $props();
 
 	const hasMenu = $derived(variant === 'cookbook');
@@ -222,7 +225,8 @@
 			trash={!saved}
 			fork={saved && !kept}
 			removeCopy={kept}
-			{onremoved} />
+			{onremoved}
+			{oncollected} />
 	</div>
 {/snippet}
 

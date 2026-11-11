@@ -40,7 +40,8 @@
 		fork = false,
 		trash = false,
 		removeCopy = false,
-		onremoved
+		onremoved,
+		oncollected
 	}: {
 		slug: string;
 		title: string;
@@ -65,6 +66,8 @@
 		removeCopy?: boolean;
 		/** The recipe left the reader's library; the host takes it off the page. */
 		onremoved?: (how: 'trash' | 'copy') => void;
+		/** A collection was checked, unchecked or made from the menu; the host reloads its counts. */
+		oncollected?: () => void;
 	} = $props();
 
 	const base = $derived(`/recipes/${slug}`);
@@ -80,8 +83,15 @@
 	let loadError = $state('');
 	const rows = $derived(collections === 'on-open' ? fetched : collections);
 
+	// Only the latest request's answer is used: a menu opened twice quickly
+	// must not let the first, older answer land last. Focus held on the
+	// Loading row moves to the first row once the list is in; a reader who has
+	// moved on is left where they are.
+	let requests = 0;
 	async function load() {
+		const request = ++requests;
 		loadError = '';
+		let list: Collection[] | null = null;
 		try {
 			const response = await fetch(`${base}?/collections`, {
 				method: 'POST',
@@ -89,14 +99,20 @@
 				headers: { 'x-sveltekit-action': 'true' }
 			});
 			const result = deserialize(await response.text());
-			const list = result.type === 'success' ? result.data?.collections : undefined;
-			if (!Array.isArray(list)) throw new Error(result.type);
-			fetched = list;
+			const answer = result.type === 'success' ? result.data?.collections : undefined;
+			if (Array.isArray(answer)) list = answer;
 		} catch {
-			fetched = null;
-			loadError = 'Could not load your collections. Try again.';
+			// Unreachable reads as refused, below.
 		}
+		if (request !== requests) return;
+		const held = !!loadingRow && document.activeElement === loadingRow;
+		fetched = list;
+		if (!list) loadError = 'Could not load your collections. Try again.';
+		if (!held) return;
+		await tick();
+		panelEl?.querySelector<HTMLElement>('[role^="menuitem"]')?.focus();
 	}
+	let loadingRow: HTMLElement | undefined = $state();
 
 	const creating = pendingEnhance({ keepFailure: true, done: () => back() });
 
@@ -109,14 +125,21 @@
 		return async ({ result }) => {
 			if (result.type === 'success') await load();
 			creatingOwn = false;
-			if (result.type === 'success') return back();
+			if (result.type === 'success') {
+				oncollected?.();
+				return back();
+			}
 			const message: unknown = result.type === 'failure' ? result.data?.error : undefined;
 			ownRefusal =
 				typeof message === 'string' ? message : 'Could not make that collection. Try again.';
 		};
 	};
 
-	const forking = pendingEnhance({ keepFailure: true, keepOnError: true });
+	const forking = pendingEnhance({
+		keepFailure: true,
+		keepOnError: true,
+		unreachable: "Couldn't reach the server. Nothing was forked."
+	});
 
 	// Out of the Cookbook (the Trash, or a copy removed): the action's redirect
 	// is the move done, and the host takes the card off its page in place.
@@ -188,7 +211,16 @@
 						Collections
 					</p>
 					{#if rows === undefined}
-						<p class="group-note" role="presentation">Loading…</p>
+						<!-- A row, so opening has somewhere to put focus while the list is out. -->
+						<button
+							type="button"
+							class="menu-row loading-row"
+							role="menuitem"
+							aria-disabled="true"
+							aria-busy="true"
+							bind:this={loadingRow}>
+							Loading collections…
+						</button>
 					{:else if loadError}
 						<p class="field-error group-note" role="alert">{loadError}</p>
 					{:else if rows}
@@ -199,7 +231,8 @@
 									{collection}
 									action="{base}?/collect"
 									refresh={!onOpen}
-									report={(message) => (error = message)} />
+									report={(message) => (error = message)}
+									ondone={oncollected} />
 							{/each}
 						</div>
 						{#if naming}
@@ -380,6 +413,11 @@
 	.group-note {
 		padding: 6px 12px;
 		font-size: 0.875rem;
+		color: var(--color-text-2);
+	}
+
+	.loading-row {
+		font-weight: 400;
 		color: var(--color-text-2);
 	}
 
