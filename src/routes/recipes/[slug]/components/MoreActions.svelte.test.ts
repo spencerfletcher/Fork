@@ -1,7 +1,9 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, within } from '@testing-library/svelte';
 import { tick } from 'svelte';
-import AddToCollection from './AddToCollection.svelte';
+import MoreActions from './MoreActions.svelte';
+import source from './MoreActions.svelte?raw';
+import { cssRule } from '#lib/testing/css.js';
 import { COLLECTION_NAME_MAX } from '#lib/collections.js';
 import { SESSION_ENDED } from '#lib/server/actions.js';
 
@@ -33,24 +35,68 @@ async function playBack(form: HTMLFormElement, result: Result) {
 	return formData;
 }
 
-async function openMenu() {
-	render(AddToCollection, { props: { collections: [TO_COOK, QUICK] } });
-	await fireEvent.click(screen.getByRole('button', { name: 'Add to collection' }));
+async function openMenu(collections: (typeof TO_COOK)[] | null = [TO_COOK, QUICK]) {
+	render(MoreActions, { props: { collections } });
+	await fireEvent.click(screen.getByRole('button', { name: 'More actions' }));
 	await tick();
-	return screen.getByRole('menu', { name: 'Collections' });
+	return screen.getByRole('menu', { name: 'More actions' });
 }
+
+/** Every row the arrow keys walk, in order: checkboxes and plain items alike. */
+const rowsOf = (menu: HTMLElement) => [...menu.querySelectorAll<HTMLElement>('[role^="menuitem"]')];
 
 beforeEach(() => submits.clear());
 
-describe('Add to collection', () => {
-	test('a ghost pill that opens a menu, saying so', () => {
-		render(AddToCollection, { props: { collections: [TO_COOK] } });
-		const button = screen.getByRole('button', { name: 'Add to collection' });
-		expect(button).toHaveClass('btn-ghost');
+describe('More actions', () => {
+	test('an icon-only trigger, the ⋯ menu’s look, that opens a menu, saying so', () => {
+		render(MoreActions, { props: { collections: null } });
+		const button = screen.getByRole('button', { name: 'More actions' });
+		expect(button).toHaveClass('more-button');
 		expect(button).toHaveAttribute('aria-haspopup', 'menu');
 		expect(button).toHaveAttribute('aria-expanded', 'false');
+		expect(button.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
 	});
 
+	test('in the library: the Collections group, New collection, then Print, in that order', async () => {
+		const menu = await openMenu();
+		const group = within(menu).getByRole('group', { name: 'Collections' });
+		const items = rowsOf(menu).map((r) => r.textContent?.trim());
+		expect(items).toEqual(['To cook', 'Quick', 'New collection', 'Print']);
+		expect(within(group).queryByRole('menuitem', { name: 'Print' })).toBeNull();
+		expect(within(menu).getByRole('separator')).toBeInTheDocument();
+	});
+
+	test('outside the library, or signed out, the menu holds Print alone', async () => {
+		const menu = await openMenu(null);
+		expect(within(menu).queryByRole('group')).toBeNull();
+		expect(within(menu).queryByRole('separator')).toBeNull();
+		const items = rowsOf(menu);
+		expect(items.map((r) => r.textContent?.trim())).toEqual(['Print']);
+		expect(items[0]).toHaveFocus();
+	});
+
+	test('Print closes the menu, hands focus back, then prints', async () => {
+		const print = vi.spyOn(window, 'print').mockImplementation(() => {});
+		const menu = await openMenu();
+		await fireEvent.click(within(menu).getByRole('menuitem', { name: 'Print' }));
+		await vi.waitFor(() => expect(print).toHaveBeenCalledOnce());
+		expect(screen.queryByRole('menu')).toBeNull();
+		expect(screen.getByRole('button', { name: 'More actions' })).toHaveFocus();
+		print.mockRestore();
+	});
+
+	test('the arrow keys walk the collections and Print alike', async () => {
+		const menu = await openMenu();
+		const rows = rowsOf(menu);
+		await fireEvent.keyDown(rows[0], { key: 'ArrowUp' });
+		expect(rows.at(-1)).toHaveTextContent('Print');
+		expect(rows.at(-1)).toHaveFocus();
+		await fireEvent.keyDown(rows.at(-1)!, { key: 'ArrowDown' });
+		expect(rows[0]).toHaveFocus();
+	});
+});
+
+describe('More actions: collections', () => {
 	test('each collection is a checkable row, checked where the recipe is, focus on the first', async () => {
 		const menu = await openMenu();
 		const rows = within(menu).getAllByRole('menuitemcheckbox');
@@ -60,15 +106,24 @@ describe('Add to collection', () => {
 		expect(rows[0]).toHaveFocus();
 	});
 
-	test('a press flips the row at once and posts the state it asks for', async () => {
+	test('many collections scroll inside the menu, New collection and Print staying in view', () => {
+		// jsdom lays nothing out, so the cap is read from the source.
+		const rows = cssRule(source, '.collection-rows');
+		expect(rows).toMatch(/max-height:\s*calc\(44px \* 6\.5\)/);
+		expect(rows).toMatch(/overflow-y:\s*auto/);
+	});
+
+	test('a press flips the row at once, posts the state it asks for, and the menu stays open', async () => {
 		const menu = await openMenu();
 		const quick = within(menu).getByRole('menuitemcheckbox', { name: 'Quick' });
 		const form = quick.closest('form')!;
 		expect(form).toHaveAttribute('action', '?/collect');
 
+		await fireEvent.click(quick);
 		const sent = await playBack(form, { type: 'success' });
 		expect(Object.fromEntries(sent)).toEqual({ collectionId: '6', member: '1' });
 		expect(quick).toHaveAttribute('aria-checked', 'true');
+		expect(screen.getByRole('menu', { name: 'More actions' })).toBe(menu);
 	});
 
 	test('a refusal flips the row back and says why in the menu', async () => {
@@ -109,6 +164,11 @@ describe('Add to collection', () => {
 		await fireEvent.keyDown(screen.getByRole('textbox'), { key: 'Escape' });
 		await tick();
 		expect(screen.queryByRole('textbox')).toBeNull();
-		expect(screen.getByRole('menuitem', { name: 'New collection' })).toHaveFocus();
+		const row = screen.getByRole('menuitem', { name: 'New collection' });
+		expect(row).toHaveFocus();
+		await fireEvent.keyDown(row, { key: 'Escape' });
+		await tick();
+		expect(screen.queryByRole('menu')).toBeNull();
+		expect(screen.getByRole('button', { name: 'More actions' })).toHaveFocus();
 	});
 });

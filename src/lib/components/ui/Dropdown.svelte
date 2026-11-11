@@ -16,8 +16,8 @@
 	}: {
 		/** The consumer's button: spread the props onto it. */
 		trigger: Snippet<[{ 'aria-expanded': boolean; onclick: (e: MouseEvent) => void }]>;
-		/** Rendered only while open. */
-		panel: Snippet;
+		/** Rendered only while open; `close` shuts it and hands focus back (Print). */
+		panel: Snippet<[close: () => void]>;
 		onopen?: () => void;
 	} = $props();
 
@@ -77,7 +77,7 @@
 <div class="dropdown" bind:this={root} {onkeydown} {onclick}>
 	{@render trigger({ 'aria-expanded': open, onclick: toggle })}
 	{#if open}
-		{@render panel()}
+		{@render panel(close)}
 	{/if}
 </div>
 

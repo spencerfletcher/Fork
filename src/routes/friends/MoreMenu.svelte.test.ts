@@ -6,6 +6,7 @@ import type { SubmitFunction } from '$app/forms';
 import source from './MoreMenu.svelte?raw';
 import MoreMenu from './MoreMenu.svelte';
 import { cssRule } from '#lib/testing/css.js';
+import { readFileSync } from 'node:fs';
 
 // Each form's enhance callback is kept by its action, so a test can play back a result.
 const { submits } = vi.hoisted(() => ({ submits: new Map<string, SubmitFunction>() }));
@@ -25,9 +26,10 @@ const px = (block: string, property: string) =>
 
 describe('MoreMenu', () => {
 	test('the panel opens flush under the ⋯ button', () => {
-		const button = rule('.more-button');
-		const buttonTop = Number(button.match(/margin: (-?\d+)px/)![1]);
-		expect(px(rule('.panel'), '--menu-top')).toBe(buttonTop + px(button, 'height'));
+		// The margin is the feed's; the 44px square is app.css's shared trigger.
+		const buttonTop = Number(rule('.more-button').match(/margin: (-?\d+)px/)![1]);
+		const height = px(cssRule(readFileSync('src/app.css', 'utf8'), '.more-button'), 'height');
+		expect(px(rule('.panel'), '--menu-top')).toBe(buttonTop + height);
 	});
 
 	test('is a menu: the arrow keys walk its items, Escape hands focus back to ⋯', async () => {

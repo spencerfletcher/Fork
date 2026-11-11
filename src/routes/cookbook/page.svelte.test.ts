@@ -152,9 +152,7 @@ describe('Cookbook page', () => {
 		});
 		expect(screen.getByRole('heading', { level: 2, name: 'Nothing in Quick yet' })).toBeVisible();
 		expect(
-			screen.getByText(
-				'Open a recipe from your Cookbook and choose Add to collection, beside Save.'
-			)
+			screen.getByText('Open a recipe from your Cookbook and choose this collection in its ⋯ menu.')
 		).toBeInTheDocument();
 		expect(screen.queryByRole('searchbox')).toBeNull();
 		expect(screen.getByRole('navigation', { name: 'Collections' })).toBeInTheDocument();

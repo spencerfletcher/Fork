@@ -64,7 +64,7 @@ test.describe('Fork', () => {
 	});
 
 	// The seed user owns every seeded recipe, so the owner's row is what renders:
-	// Cook, Edit recipe and Add to Journal, no Save or Fork.
+	// Cook, Edit recipe and Add to Journal, no Save or Fork, then the ⋯.
 	test('at 320 each signed-in pill is at least 44px tall and its label holds one line', async ({
 		page
 	}) => {
@@ -74,20 +74,23 @@ test.describe('Fork', () => {
 		await page.waitForURL(/\/recipes\//);
 		const hero = page.locator('.hero');
 		await expect(hero.getByRole('link', { name: 'Edit recipe' })).toBeVisible();
-		const pills = await hero.locator('.actions a, .actions button').evaluateAll((els) =>
-			els.map((el) => ({
-				text: (el as HTMLElement).innerText.trim(),
-				height: el.getBoundingClientRect().height,
-				// Two lines of label plus the padding would pass this.
-				twoLines: 2 * parseFloat(getComputedStyle(el).lineHeight)
-			}))
-		);
-		expect(pills.map((p) => p.text)).toEqual([
-			'Cook',
-			'Edit recipe',
-			'Add to collection',
-			'Add to Journal'
-		]);
+		// The ⋯ is a 44px square, not a pill: it ends Cook's row.
+		const more = await hero.getByRole('button', { name: 'More actions' }).boundingBox();
+		const cook = await hero.getByRole('button', { name: 'Cook' }).boundingBox();
+		expect(more!.height).toBeGreaterThanOrEqual(44);
+		expect(more!.y).toBe(cook!.y);
+		expect(more!.x).toBeGreaterThan(cook!.x + cook!.width);
+		const pills = await hero
+			.locator('.actions > a, .actions > button, .actions > form button')
+			.evaluateAll((els) =>
+				els.map((el) => ({
+					text: (el as HTMLElement).innerText.trim(),
+					height: el.getBoundingClientRect().height,
+					// Two lines of label plus the padding would pass this.
+					twoLines: 2 * parseFloat(getComputedStyle(el).lineHeight)
+				}))
+			);
+		expect(pills.map((p) => p.text)).toEqual(['Cook', 'Edit recipe', 'Add to Journal']);
 		for (const pill of pills) {
 			expect(pill.height, pill.text).toBeGreaterThanOrEqual(44);
 			expect(pill.height, pill.text).toBeLessThan(pill.twoLines);

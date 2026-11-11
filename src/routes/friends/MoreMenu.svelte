@@ -114,21 +114,9 @@
 </Dropdown>
 
 <style>
+	/* Pulled into the feed item's corner; the look is app.css's .more-button. */
 	.more-button {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		width: 44px;
-		height: 44px;
 		margin: -10px -12px -10px 0;
-		border-radius: var(--radius-sm);
-		color: var(--color-text-2);
-	}
-
-	.more-button:hover,
-	.more-button[aria-expanded='true'] {
-		color: var(--color-text);
-		background: var(--color-tint);
 	}
 
 	/* Dropdown draws the overlay. Its top meets the button's bottom edge: the

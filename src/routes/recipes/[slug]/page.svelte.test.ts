@@ -199,7 +199,8 @@ describe('recipe page owner', () => {
 		// makeData's recipe is authored by 'a'.
 		const data = { ...makeData(), user: { id: 'a' }, favoriteCount: 1234 } as PageData;
 		const { container } = render(Page, { props: { data } });
-		const row = [...container.querySelectorAll('.actions a, .actions button')].map((el) =>
+		// The pills; the ⋯ after them holds collections and Print.
+		const row = [...container.querySelectorAll('.actions > a, .actions > button')].map((el) =>
 			el.textContent!.replace(/\s+/g, ' ').trim()
 		);
 		expect(row).toEqual(['Cook', 'Edit recipe']);

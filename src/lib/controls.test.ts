@@ -11,6 +11,7 @@ const CLOSED_SET = [
 	'text-btn',
 	'pill-btn',
 	'menu-row',
+	'more-button',
 	'clear-ticks'
 ] as const;
 
@@ -19,7 +20,6 @@ const STRUCTURAL = [
 	['lib/components/recipes/GroupedTextEditor.svelte', 'tool', 'editor toolbar item'],
 	['lib/components/ui/ConfirmStep.svelte', 'triggerClass', "caller's class, checked at the call"],
 	['lib/components/ui/Navbar.svelte', 'nav-avatar-button', 'icon-only avatar trigger'],
-	['routes/friends/MoreMenu.svelte', 'more-button', 'icon-only menu trigger'],
 	['lib/components/ui/TagInput.svelte', 'tag-remove', "a tag pill's remove glyph"],
 	['lib/components/ui/TagTabs.svelte', '', 'tag filter tab'],
 	['lib/components/ui/TagTabs.svelte', 'tag-tabs__clear', 'the tag tabs row’s Clear all tab'],

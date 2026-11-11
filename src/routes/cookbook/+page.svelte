@@ -65,7 +65,7 @@
 			{#if data.collection && data.inView.all === 0}
 				<!-- No filters over an empty collection, as over an empty cookbook. -->
 				<EmptyPanel title="Nothing in {data.collection.name} yet">
-					Open a recipe from your Cookbook and choose Add to collection, beside Save.
+					Open a recipe from your Cookbook and choose this collection in its ⋯ menu.
 				</EmptyPanel>
 			{:else}
 				<div class="cookbook-filters">

@@ -6,7 +6,7 @@
 	import { forkIcon, journalIcon, saveIcon } from '#lib/components/Icons.svelte';
 	import { compactCount } from '#lib/helpers.js';
 	import { optimisticToggle } from '#lib/optimisticToggle.svelte.js';
-	import AddToCollection from './AddToCollection.svelte';
+	import MoreActions from './MoreActions.svelte';
 
 	let {
 		recipe,
@@ -34,7 +34,7 @@
 		oncook: () => void;
 		/** Signed in: Add to Journal for the version and serves being read. */
 		journalHref?: string;
-		/** The reader's collections, for a recipe in their library (own or saved); null hides Add to collection. */
+		/** The reader's collections, for a recipe in their library (own or saved); null leaves them out of More. */
 		collections?: { id: number; name: string; has?: boolean }[] | null;
 	} = $props();
 
@@ -132,10 +132,6 @@
 				</button>
 			</form>
 		{/if}
-		{#if collections}
-			<!-- Beside Save, never in its place: Save stays the one-press keep. -->
-			<AddToCollection {collections} />
-		{/if}
 		{#if canFork}
 			<!-- One click. The server writes the first commit message itself. -->
 			<form
@@ -173,6 +169,8 @@
 			Add to Journal
 		</a>
 	{/if}
+	<!-- Everyone, last: the reader's collections (in their library) and Print. -->
+	<MoreActions {collections} />
 
 	{#if error}
 		<p class="form-error basis-full" role="alert">{error}</p>
@@ -226,13 +224,27 @@
 		}
 	}
 
-	/* The page's phone width: Cook takes the whole first row, the rest pair
-	   up beneath it. Add to Journal comes last, so it spans when it lands
-	   alone (an even child after Cook); the login link never has a partner. */
+	/* The page's phone width: Cook takes the first row, More at its end, and
+	   the rest pair up beneath it. Add to Journal comes last of the pills, so
+	   it spans when it lands alone (an even child after Cook); the login link
+	   never has a partner. More is out of the grid's flow, after every pill,
+	   so it changes no pill's place. */
 	@media (max-width: 699px) {
 		.actions {
+			position: relative;
 			display: grid;
 			grid-template-columns: 1fr 1fr;
+		}
+
+		.actions > :global(.dropdown) {
+			position: absolute;
+			top: 0;
+			right: 0;
+		}
+
+		/* The trigger's 44px and the row's 10px gap. */
+		.cook {
+			margin-right: 54px;
 		}
 
 		/* At 320 two pills with icons and labels do not share a row without wrapping. */
@@ -246,15 +258,6 @@
 		.log:nth-child(even),
 		.login {
 			grid-column: 1 / -1;
-		}
-
-		/* After Cook's full row, an odd child sits in the right column, so
-		   Add to collection's menu opens from its right edge. */
-		@media (min-width: 360px) {
-			.actions > :global(.dropdown:nth-child(odd)) {
-				--collect-left: auto;
-				--collect-right: 0;
-			}
 		}
 	}
 </style>
