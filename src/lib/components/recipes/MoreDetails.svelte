@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { TEXT_LIMITS } from '#lib/recipes/limits.js';
 	import type { RecipeDraft } from '#lib/recipes/validation.js';
-	import FieldError from './FieldError.svelte';
+	import FieldError from '#lib/components/ui/FieldError.svelte';
 
 	let {
 		draft = $bindable(),

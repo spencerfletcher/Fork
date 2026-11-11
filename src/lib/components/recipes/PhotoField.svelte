@@ -2,6 +2,7 @@
 	import { tick } from 'svelte';
 	import { PHOTO_HINT, PHOTO_TYPES, photoError } from '#lib/recipes/validation.js';
 	import { imageIcon, plusIcon } from '#lib/components/Icons.svelte';
+	import FieldError from '#lib/components/ui/FieldError.svelte';
 
 	let {
 		imageUrl,
@@ -163,9 +164,7 @@
 	{#if removeImage}
 		<input type="hidden" name="removeImage" value="on" />
 	{/if}
-	{#if error}
-		<p class="field-error" id="image-error" role="alert">{error}</p>
-	{/if}
+	<FieldError name="image" {error} />
 	{#if photoLost}
 		<p class="form-hint">Please choose the photo again.</p>
 	{/if}

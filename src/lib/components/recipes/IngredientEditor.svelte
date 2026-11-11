@@ -5,6 +5,7 @@
 	import { plural } from '#lib/helpers.js';
 	import ReadBack from './ReadBack.svelte';
 	import GroupedTextEditor from './GroupedTextEditor.svelte';
+	import FieldError from '#lib/components/ui/FieldError.svelte';
 
 	let {
 		value = $bindable(),
@@ -66,9 +67,7 @@
 		invalid={!!error}
 		{describedBy}
 		{disabled} />
-	{#if error}
-		<p class="field-error" id="ingredients-error" role="alert">{error}</p>
-	{/if}
+	<FieldError name="ingredients" {error} />
 	{#if groups}
 		<ReadBack id="ingredients-readback" value={groups} />
 	{/if}

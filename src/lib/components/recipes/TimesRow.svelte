@@ -2,7 +2,7 @@
 	import { TIME_FIELDS, type RecipeDraft, type TimeField } from '#lib/recipes/validation.js';
 	import { formatDuration, OVERNIGHT_MINUTES } from '#lib/recipes/times.js';
 	import { typedMessage } from '#lib/recipes/fieldErrors.svelte.js';
-	import FieldError from './FieldError.svelte';
+	import FieldError from '#lib/components/ui/FieldError.svelte';
 
 	let {
 		draft = $bindable(),

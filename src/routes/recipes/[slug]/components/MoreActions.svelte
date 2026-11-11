@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { tick } from 'svelte';
 	import Dropdown from '#lib/components/ui/Dropdown.svelte';
+	import FieldError from '#lib/components/ui/FieldError.svelte';
 	import { moreIcon, plusIcon } from '#lib/components/Icons.svelte';
 	import { pendingEnhance } from '#lib/pendingEnhance.svelte.js';
 	import { COLLECTION_NAME_MAX } from '#lib/collections.js';
@@ -117,9 +118,7 @@
 							New collection
 						</button>
 					{/if}
-					{#if refusal}
-						<p id="new-collection-error" class="field-error" role="alert">{refusal}</p>
-					{/if}
+					<FieldError name="new-collection" error={refusal} />
 				</div>
 				<hr class="rule" />
 			{/if}

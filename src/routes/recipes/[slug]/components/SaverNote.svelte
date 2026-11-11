@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { tick } from 'svelte';
 	import { lockIcon } from '#lib/components/Icons.svelte';
+	import FieldError from '#lib/components/ui/FieldError.svelte';
 	import { pendingEnhance } from '#lib/pendingEnhance.svelte.js';
 	import { NOTE_MAX } from '#lib/saves.js';
 
@@ -55,9 +56,7 @@
 				</button>
 				<button type="button" class="btn-ghost btn-sm" onclick={close}>Cancel</button>
 			</div>
-			{#if save.error}
-				<p id="saver-note-error" class="field-error" role="alert">{save.error}</p>
-			{/if}
+			<FieldError name="saver-note" error={save.error} />
 		</form>
 	{:else if note}
 		<div class="lock-note">

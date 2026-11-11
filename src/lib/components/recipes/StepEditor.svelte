@@ -4,6 +4,7 @@
 	import { limitError } from '#lib/recipes/limits.js';
 	import ReadBack from './ReadBack.svelte';
 	import GroupedTextEditor from './GroupedTextEditor.svelte';
+	import FieldError from '#lib/components/ui/FieldError.svelte';
 
 	let {
 		value = $bindable(),
@@ -33,9 +34,7 @@
 		invalid={!!error}
 		{describedBy}
 		{disabled} />
-	{#if error}
-		<p class="field-error" id="steps-error" role="alert">{error}</p>
-	{/if}
+	<FieldError name="steps" {error} />
 	{#if groups}
 		<ReadBack id="steps-readback" value={groups} />
 	{/if}

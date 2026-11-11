@@ -21,7 +21,7 @@
 	import IngredientEditor from './IngredientEditor.svelte';
 	import StepEditor from './StepEditor.svelte';
 	import PhotoField from './PhotoField.svelte';
-	import FieldError from './FieldError.svelte';
+	import FieldError from '#lib/components/ui/FieldError.svelte';
 	import MoreDetails from './MoreDetails.svelte';
 	import TimesRow from './TimesRow.svelte';
 	import SourceFields from './SourceFields.svelte';

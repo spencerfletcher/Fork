@@ -2,7 +2,7 @@
 	import { MAX_SOURCE_URL, TEXT_LIMITS } from '#lib/recipes/limits.js';
 	import type { RecipeDraft } from '#lib/recipes/validation.js';
 	import { typedMessage } from '#lib/recipes/fieldErrors.svelte.js';
-	import FieldError from './FieldError.svelte';
+	import FieldError from '#lib/components/ui/FieldError.svelte';
 
 	let {
 		draft = $bindable(),

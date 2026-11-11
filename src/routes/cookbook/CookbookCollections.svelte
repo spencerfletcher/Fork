@@ -3,6 +3,7 @@
 	import { page } from '$app/state';
 	import { tick } from 'svelte';
 	import ConfirmStep from '#lib/components/ui/ConfirmStep.svelte';
+	import FieldError from '#lib/components/ui/FieldError.svelte';
 	import { pendingEnhance } from '#lib/pendingEnhance.svelte.js';
 	import { COLLECTION_NAME_MAX } from '#lib/collections.js';
 
@@ -83,9 +84,7 @@
 			{which === 'create' ? 'Create' : 'Save'}
 		</button>
 		<button type="button" class="btn-ghost btn-sm" onclick={() => close(which)}>Cancel</button>
-		{#if state.error}
-			<p id="collection-{which}-error" class="field-error" role="alert">{state.error}</p>
-		{/if}
+		<FieldError name="collection-{which}" error={state.error} />
 	</form>
 {/snippet}
 
