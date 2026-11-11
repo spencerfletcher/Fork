@@ -42,6 +42,9 @@ async function unsave(page: Page, path: string) {
 }
 
 test.describe('Keep this version', () => {
+	// One recipe, one save row: the tests would undo each other's saves side by side.
+	test.describe.configure({ mode: 'serial' });
+
 	test('a saver keeps the version they read, it lasts across visits, and following the latest again ends it', async ({
 		page
 	}) => {

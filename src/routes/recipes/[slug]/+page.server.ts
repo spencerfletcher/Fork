@@ -175,7 +175,11 @@ export const actions: Actions = {
 			.where(and(eq(favorites.userId, user.id), eq(favorites.recipeId, recipe.id)))
 			.returning({ recipeId: favorites.recipeId });
 		if (removed.length === 0) {
-			await db.insert(favorites).values({ userId: user.id, recipeId: recipe.id });
+			// A second save of the same recipe (another tab, a double press) is the same save.
+			await db
+				.insert(favorites)
+				.values({ userId: user.id, recipeId: recipe.id })
+				.onConflictDoNothing();
 		} else {
 			// Out of the saver's collections too, so saving again starts clean.
 			await leaveCollections(user.id, recipe.id);
