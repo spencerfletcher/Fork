@@ -22,11 +22,13 @@ import { leaveCollections } from './collections.js';
  * every other saver (one unfriended from a Friends recipe, say) is left with
  * none, whatever an earlier withdrawal gave them. A saver in a block with the
  * author, whichever blocked, keeps none, even of a public recipe (canView reads
- * no blocks). The author's own save is never a copy.
+ * no blocks). The author's own save is never a copy. A recipe a moderator hid
+ * grants as if it were not hidden: hiding never changes who ends up with a
+ * copy, and keptCopyOf keeps the copies out of sight until it is restored.
  */
 export async function grantKeptCopies(
 	tx: Tx | typeof db,
-	recipe: Pick<Recipe, 'id' | 'authorId' | 'visibility' | 'suppressedAt'>
+	recipe: Pick<Recipe, 'id' | 'authorId' | 'visibility'>
 ): Promise<void> {
 	const savers = await tx
 		.select({ userId: favorites.userId })
@@ -40,7 +42,7 @@ export async function grantKeptCopies(
 			? await friendIdsOf(recipe.authorId, tx)
 			: [];
 	const blocked = recipe.authorId ? await blockedIdsOf(recipe.authorId, tx) : [];
-	const live = { ...recipe, deletedAt: null };
+	const live = { ...recipe, deletedAt: null, suppressedAt: null };
 	const sees = (userId: string) =>
 		userId !== recipe.authorId &&
 		!blocked.includes(userId) &&

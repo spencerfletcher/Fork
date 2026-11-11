@@ -195,8 +195,8 @@ export function visibleTo(user: Viewer): SQL {
  * copyVersion (grantKeptCopies, keptCopies.ts). The copy is that one version,
  * for the saver alone; it never makes the recipe visible (visibleTo), and a
  * recipe narrowed to Friends or lost by an unfriend is not withdrawn. The one
- * rule for copies: one a moderator hid keeps none while it is hidden (the
- * saves stay, so the copies return if it is restored).
+ * rule for copies: one a moderator hid shows none while it is hidden; copies
+ * are granted as if it were not (grantKeptCopies), so they return on Restore.
  */
 export function keptCopyOf(user: { id: string }): SQL {
 	const copied = new QueryBuilder()

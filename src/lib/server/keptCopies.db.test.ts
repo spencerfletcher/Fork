@@ -51,7 +51,7 @@ describe.skipIf(!localDb)('kept copies, against the real database', () => {
 				createdBy: authorId
 			}))
 		);
-		return { id: row.id, authorId, visibility, suppressedAt: null as Date | null };
+		return { id: row.id, authorId, visibility };
 	}
 
 	async function copyVersionOf(tx: Tx, userId: string, recipeId: number) {
@@ -82,16 +82,28 @@ describe.skipIf(!localDb)('kept copies, against the real database', () => {
 		});
 	});
 
-	test('withdrawing a recipe a moderator hid grants no saver a copy, and ends one granted before', async () => {
+	test('hiding never changes who keeps a copy: made private while hidden, both savers have theirs after Restore, and neither sees it meanwhile', async () => {
 		await withPeople(async (tx, { author, friend, stranger }) => {
-			const recipe = { ...(await makeRecipe(tx, author, 'public')), suppressedAt: new Date() };
+			const recipe = await makeRecipe(tx, author, 'public');
 			await tx.insert(schema.favorites).values([
 				{ userId: friend, recipeId: recipe.id },
-				{ userId: stranger, recipeId: recipe.id, copyVersion: 1 }
+				{ userId: stranger, recipeId: recipe.id }
 			]);
+			const set = (values: { suppressedAt?: Date | null; visibility?: Visibility }) =>
+				tx.update(schema.recipes).set(values).where(eq(schema.recipes.id, recipe.id));
+			await set({ suppressedAt: new Date() });
+			// The author makes it private, as the editor's save does.
 			await kept.grantKeptCopies(tx, recipe);
-			expect(await copyVersionOf(tx, friend, recipe.id)).toBeNull();
-			expect(await copyVersionOf(tx, stranger, recipe.id)).toBeNull();
+			await set({ visibility: 'private' });
+
+			const seen = (userId: string) =>
+				idsWhere(tx, visibility.inLibraryOf({ id: userId }), [recipe.id]);
+			for (const saver of [friend, stranger]) {
+				expect(await copyVersionOf(tx, saver, recipe.id)).toBe(3);
+				expect(await seen(saver)).toEqual([]);
+			}
+			await set({ suppressedAt: null });
+			for (const saver of [friend, stranger]) expect(await seen(saver)).toEqual([recipe.id]);
 		});
 	});
 

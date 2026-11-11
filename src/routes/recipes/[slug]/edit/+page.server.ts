@@ -142,8 +142,7 @@ export const actions: Actions = {
 					await grantKeptCopies(tx, {
 						id: recipe.id,
 						authorId: user.id,
-						visibility: locked.visibility,
-						suppressedAt: locked.suppressedAt
+						visibility: locked.visibility
 					});
 
 				if (changed || message) {

@@ -97,8 +97,8 @@ export const recipes = pgTable(
 		// last copy removed deletes the rest. Null otherwise.
 		erasedAt: timestamp('erased_at'),
 		// Hidden from other cooks by a moderator since then (isModerator,
-		// #lib/server/moderation.ts): seen by its author and moderators only, no
-		// copies kept for savers, no forks or saves (#lib/server/visibility.ts).
+		// #lib/server/moderation.ts): seen by its author and moderators only,
+		// savers' copies out of sight, no forks or saves (#lib/server/visibility.ts).
 		// Null for a recipe not hidden; Restore sets it back to null.
 		suppressedAt: timestamp('suppressed_at')
 	},

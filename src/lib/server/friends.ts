@@ -140,12 +140,7 @@ export async function privatiseForksIn(tx: Tx, a: string, b: string): Promise<vo
 			.from(parent)
 			.where(and(eq(parent.authorId, owner), eq(parent.visibility, 'friends')));
 		const forks = await tx
-			.select({
-				id: recipes.id,
-				authorId: recipes.authorId,
-				visibility: recipes.visibility,
-				suppressedAt: recipes.suppressedAt
-			})
+			.select({ id: recipes.id, authorId: recipes.authorId, visibility: recipes.visibility })
 			.from(recipes)
 			.where(
 				and(
