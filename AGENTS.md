@@ -47,6 +47,7 @@ Planning and design docs: start at `docs/README.md`, which names the current pro
 - `viewableRecipe(slug, user, with?)` (`src/lib/server/visibility.ts`): load a recipe by slug the viewer may see, or null (the caller throws its own 404)
 - `ownRecipe(slug, userId, with?)` (`src/lib/server/visibility.ts`): load the viewer's own recipe, or throw the one 403 (`NOT_AUTHORIZED`)
 - `inLibraryOf(user)` (`src/lib/server/visibility.ts`): SQL for own recipes plus saved ones the viewer may see
+- `authorIsFriendOf(userId)` (`src/lib/server/visibility.ts`): SQL for recipes whose author is an accepted friend; visibleTo's friends rule and the Friends filter (Discover, Search), always ANDed with `visibleTo`
 - `eitherWay([requester, addressee], a, b)` (`src/lib/server/visibility.ts`): the friendship pair matched either way round, as the unique index orders it
 - `cardList(where, orderBy, viewer, { tagRank?, limit? })` (`src/lib/server/recipeCounts.ts`): recipe cards with their counts, more tag matches first
 - `tagSelection(allTags, slugs, withinIds?)` (`src/lib/server/tagFilter.ts`): the URL's tags resolved and matched

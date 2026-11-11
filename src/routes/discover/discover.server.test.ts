@@ -8,15 +8,9 @@ vi.mock('#lib/server/db/index.js', () => ({ db }));
 const { select: selectMock, selectDistinct: selectDistinctMock } = db;
 const findManyMock = db.query.recipes.findMany;
 
-const { friendIdsOfMock } = vi.hoisted(() => ({ friendIdsOfMock: vi.fn() }));
-vi.mock('#lib/server/visibility.js', async (importOriginal) => ({
-	...(await importOriginal<typeof import('#lib/server/visibility.js')>()),
-	friendIdsOf: friendIdsOfMock
-}));
-
 import { loadDiscover, DISCOVER_LIMIT, LEAD_WINDOW_DAYS, RECENT_CHANGES } from './discover.server';
 import { CARD_WITH } from '#lib/server/recipeCounts.js';
-import { visibleTo } from '#lib/server/visibility.js';
+import { authorIsFriendOf, visibleTo } from '#lib/server/visibility.js';
 
 const VIEWER = { id: 'viewer-5' };
 const sqlOf = (q: SQL) => new PgDialect().sqlToQuery(q);
@@ -46,7 +40,6 @@ beforeEach(() => {
 	vi.clearAllMocks();
 	selectDistinctMock.mockReturnValue(chain([]));
 	findManyMock.mockResolvedValue(ROWS);
-	friendIdsOfMock.mockResolvedValue([]);
 });
 
 describe('loadDiscover', () => {
@@ -187,24 +180,29 @@ describe('loadDiscover', () => {
 		expect(result.searchQuery).toBe('@DevCooks dal');
 	});
 
-	test('friends=1 narrows to accepted friends’ recipes', async () => {
-		friendIdsOfMock.mockResolvedValue(['friend-1']);
+	// The friends rule's fragment, its placeholders numbered as $ alone, counted.
+	const friendRules = (where: SQL) => {
+		const strip = (q: SQL) => sqlOf(q).sql.replace(/\$\d+/g, '$');
+		return strip(where).split(strip(authorIsFriendOf(VIEWER.id))).length - 1;
+	};
+
+	test('friends=1 narrows to accepted friends’ recipes, inside what the viewer may see', async () => {
 		selectMock.mockReturnValue(chain([]));
 
 		const result = await loadDiscover(url('?friends=1'), VIEWER);
 
-		expect(friendIdsOfMock).toHaveBeenCalledWith(VIEWER.id);
-		expect(sqlOf(findManyMock.mock.calls[0][0].where).params).toContain('friend-1');
+		// Once inside visibleTo's friends rule, once more as the filter.
+		expect(friendRules(findManyMock.mock.calls[0][0].where)).toBe(2);
 		expect(result.friendsOnly).toBe(true);
 	});
 
-	test('friends=1 with no friends is an empty list, not everyone', async () => {
-		selectMock.mockReturnValue(chain([]));
+	test('without friends=1 nothing narrows to friends', async () => {
+		mockSelects([], []);
 
-		const result = await loadDiscover(url('?friends=1'), VIEWER);
+		const result = await loadDiscover(url(), VIEWER);
 
-		expect(result.recipes).toEqual([]);
-		expect(findManyMock).not.toHaveBeenCalled();
+		expect(friendRules(findManyMock.mock.calls[0][0].where)).toBe(1);
+		expect(result.friendsOnly).toBe(false);
 	});
 
 	test('signed out there is no friends toggle, and friends=1 is ignored', async () => {
@@ -213,7 +211,7 @@ describe('loadDiscover', () => {
 		const result = await loadDiscover(url('?friends=1'), null);
 
 		expect(result.friendsOnly).toBeUndefined();
-		expect(friendIdsOfMock).not.toHaveBeenCalled();
+		expect(friendRules(findManyMock.mock.calls[0][0].where)).toBe(0);
 	});
 
 	test('fork counts follow the viewer', async () => {

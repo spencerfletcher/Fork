@@ -4,7 +4,7 @@ import { cardList } from '#lib/server/recipeCounts.js';
 import { tagSelection, visibleTags } from '#lib/server/tagFilter.js';
 import { clampDescription } from '#lib/seo.js';
 import { plural } from '#lib/helpers.js';
-import { visibleTo } from '#lib/server/visibility.js';
+import { authorIsFriendOf, visibleTo } from '#lib/server/visibility.js';
 import { parseFilters, textSearch } from '#lib/server/recipeSearch.js';
 import type { PageServerLoad } from './$types';
 
@@ -21,13 +21,15 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 	});
 
 	const visibilityCondition = visibleTo(user);
+	// Signed out there is no Friends filter, so friends=1 is ignored.
+	const friendsOnly = user ? url.searchParams.get('friends') === '1' : undefined;
 
 	const allTags = await visibleTags(visibilityCondition);
 
 	// Tag filter: AND over the selected tags; the page hears only of the known ones.
 	const { selectedTags, matches } = await tagSelection(allTags, tagSlugs);
 	if (matches?.size === 0) {
-		return { recipes: [], allTags, searchQuery, selectedTags, meta: searchMeta(0) };
+		return { recipes: [], allTags, searchQuery, selectedTags, friendsOnly, meta: searchMeta(0) };
 	}
 
 	const text = textSearch(searchQuery);
@@ -35,6 +37,7 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 	const withCounts = await cardList(
 		and(
 			visibilityCondition,
+			friendsOnly && user ? authorIsFriendOf(user.id) : undefined,
 			matches ? inArray(recipes.id, [...matches.keys()]) : undefined,
 			text.where
 		),
@@ -48,6 +51,7 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 		allTags,
 		searchQuery,
 		selectedTags,
+		friendsOnly,
 		meta: searchMeta(withCounts.length)
 	};
 };

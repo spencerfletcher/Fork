@@ -9,6 +9,7 @@ const data = {
 	allTags: [],
 	searchQuery: '',
 	selectedTags: [] as string[],
+	friendsOnly: undefined as boolean | undefined,
 	user: null as { id: string } | null
 };
 
@@ -77,6 +78,29 @@ describe('Search page empty state', () => {
 		unmount();
 		renderSearch({ user: { id: 'u1' } });
 		expect(screen.getByRole('link', { name: 'All recipes' })).toHaveAttribute('href', '/discover');
+	});
+
+	test('with the Friends filter on, Clear filters drops it and keeps the query', () => {
+		renderSearch({ searchQuery: 'dal', friendsOnly: true });
+		expect(screen.getByText(/No recipes found/)).toBeInTheDocument();
+		expect(screen.getByRole('link', { name: 'Clear filters' })).toHaveAttribute(
+			'href',
+			'/search?q=dal'
+		);
+		expect(screen.getByRole('status')).toHaveTextContent('0 recipes match');
+	});
+});
+
+describe('Search page Friends filter', () => {
+	test('shows only when the loader offers it, pressed while on', () => {
+		const { unmount } = renderSearch();
+		expect(screen.queryByRole('button', { name: 'Friends’ recipes' })).toBeNull();
+		unmount();
+		renderSearch({ friendsOnly: true });
+		expect(screen.getByRole('button', { name: 'Friends’ recipes' })).toHaveAttribute(
+			'aria-pressed',
+			'true'
+		);
 	});
 });
 

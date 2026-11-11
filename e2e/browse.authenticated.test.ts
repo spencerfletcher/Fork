@@ -1,4 +1,6 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './helpers';
+import { SEED } from '../src/lib/server/db/seedData';
 
 // Signed in as the seed user. The file name puts it in the chromium-auth
 // project. Tests that need no favorites live in favorites.authenticated.test.ts.
@@ -16,6 +18,26 @@ test.describe('Navbar, signed in', () => {
 		await page.goto('/');
 		await expect(page).toHaveURL(/\/cookbook$/);
 		await expect(page.getByRole('heading', { level: 1, name: 'Cookbook' })).toBeVisible();
+	});
+});
+
+test.describe('Search, Friends filter', () => {
+	// The seed user's one friend is devcooks; their private recipe stays hidden.
+	const friendsTitles = SEED.filter((r) => r.author === 'devcooks' && r.visibility !== 'private')
+		.map((r) => r.versions.at(-1)!.title)
+		.sort();
+
+	test("Friends' recipes lists only friends' recipes the viewer may see", async ({ page }) => {
+		await gotoHydrated(page, '/search');
+		await page.getByRole('button', { name: 'Friends’ recipes' }).click();
+		await expect(page).toHaveURL(/[?&]friends=1/);
+		await expect(page.getByRole('button', { name: 'Friends’ recipes' })).toHaveAttribute(
+			'aria-pressed',
+			'true'
+		);
+		const titles = page.locator('.results h3');
+		await expect(titles).toHaveCount(friendsTitles.length);
+		expect((await titles.allTextContents()).sort()).toEqual(friendsTitles);
 	});
 });
 

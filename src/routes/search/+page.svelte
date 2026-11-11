@@ -7,7 +7,9 @@
 	let { data }: { data: PageData } = $props();
 
 	const recipes = $derived(data.recipes);
-	const filtered = $derived(!!data.searchQuery || data.selectedTags.length > 0);
+	const filtered = $derived(
+		!!data.searchQuery || data.selectedTags.length > 0 || !!data.friendsOnly
+	);
 </script>
 
 <div class="page">
@@ -19,7 +21,8 @@
 		<SearchFilters
 			initialQuery={data.searchQuery}
 			initialTags={data.selectedTags}
-			availableTags={data.allTags} />
+			availableTags={data.allTags}
+			friendsOnly={data.friendsOnly} />
 
 		<ResultStatus count={recipes.length} {filtered} />
 
@@ -29,9 +32,9 @@
 			<p class="empty-state mt-6">
 				<!-- Each link says what it does; All recipes goes where the tabs' All
 				     goes, Discover. -->
-				{#if data.selectedTags.length > 0}
+				{#if data.selectedTags.length > 0 || data.friendsOnly}
 					No recipes found. Try adjusting your search or clearing some filters.
-					<!-- Clears the tags only; the query stays. -->
+					<!-- Clears the tags and the Friends filter; the query stays. -->
 					<a
 						href={data.searchQuery
 							? `/search?q=${encodeURIComponent(data.searchQuery)}`

@@ -11,7 +11,9 @@ import { load } from './+page.server';
 import { CARD_WITH } from '#lib/server/recipeCounts.js';
 import { and, desc, eq } from 'drizzle-orm';
 import { recipes } from '#lib/server/db/schema.js';
-import { visibleTo } from '#lib/server/visibility.js';
+import { authorIsFriendOf, visibleTo } from '#lib/server/visibility.js';
+import { PgDialect } from 'drizzle-orm/pg-core';
+import type { SQL } from 'drizzle-orm';
 import type { PageData } from './$types';
 
 const makeEvent = (query = '', user: { id: string } | null = null) =>
@@ -165,5 +167,57 @@ describe('search visibility', () => {
 		await loadResult(makeEvent(''));
 		expect(findManyMock.mock.calls[0][0].where).toEqual(and(pub, undefined, undefined));
 		expect(selectDistinctMock.mock.results[0].value.where).toHaveBeenCalledWith(pub);
+	});
+});
+
+describe('search load, the Friends filter', () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+		selectDistinctMock.mockReturnValue(chain([]));
+		selectMock.mockReturnValue(chain([]));
+		findManyMock.mockResolvedValue([]);
+	});
+
+	const VIEWER = { id: 'viewer-7' };
+	// Placeholders numbered as $ alone, so a fragment matches wherever it sits.
+	const sqlOf = (q: SQL) => {
+		const { sql, params } = new PgDialect().sqlToQuery(q);
+		return { sql: sql.replace(/\$\d+/g, '$'), params };
+	};
+	const friendRules = (sql: string) => sql.split(sqlOf(authorIsFriendOf(VIEWER.id)).sql).length - 1;
+	const event = (search: string, user: { id: string } | null) =>
+		loadEvent({ path: `/search${search}`, user });
+
+	test('friends=1 keeps what the viewer may see, by friends, with the query and tags', async () => {
+		selectDistinctMock.mockReturnValue(chain([{ id: 3, name: 'Quick', slug: 'quick' }]));
+		selectMock.mockReturnValueOnce(chain([{ recipeId: 9 }]));
+
+		const result = await loadResult(event('?friends=1&q=dal&tags=quick', VIEWER));
+
+		const where = sqlOf(findManyMock.mock.calls[0][0].where);
+		expect(where.sql).toContain(sqlOf(visibleTo(VIEWER)).sql);
+		// Once inside visibleTo's friends rule, once more as the filter.
+		expect(friendRules(where.sql)).toBe(2);
+		expect(where.params).toContain('dal');
+		expect(where.params).toContain(9);
+		expect(result.friendsOnly).toBe(true);
+	});
+
+	test('without friends=1 the filter is off and nothing narrows to friends', async () => {
+		const result = await loadResult(event('?q=dal', VIEWER));
+
+		expect(result.friendsOnly).toBe(false);
+		const where = sqlOf(findManyMock.mock.calls[0][0].where);
+		expect(where.sql).toContain(sqlOf(visibleTo(VIEWER)).sql);
+		expect(friendRules(where.sql)).toBe(1);
+	});
+
+	test('signed out there is no Friends filter, and friends=1 is ignored', async () => {
+		const result = await loadResult(event('?friends=1', null));
+
+		expect(result.friendsOnly).toBeUndefined();
+		expect(findManyMock.mock.calls[0][0].where).toEqual(
+			and(eq(recipes.visibility, 'public'), undefined, undefined)
+		);
 	});
 });
