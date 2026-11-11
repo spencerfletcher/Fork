@@ -63,6 +63,10 @@ export async function createRecipe(
 	test.slow();
 	await gotoHydrated(page, '/recipes/new');
 	await page.locator('textarea[name="title"]').fill(title);
+	// On a phone the serves and times are in the folded details.
+	const fold = page.locator('details.fold');
+	if ((servings || cookTimeMinutes) && !(await fold.evaluate((d: HTMLDetailsElement) => d.open)))
+		await fold.locator('summary').click();
 	if (servings) await page.locator('input[name="servings"]').fill(servings);
 	if (cookTimeMinutes) await page.locator('input[name="cookTimeMinutes"]').fill(cookTimeMinutes);
 	await page.getByRole('textbox', { name: 'Ingredients', exact: true }).fill('2 cups flour');
