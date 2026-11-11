@@ -15,7 +15,16 @@ describe('parseIngredientLine', () => {
 		['salt to taste', null, null, '', 'salt to taste'],
 		['juice of half a lemon', null, null, '', 'juice of half a lemon'],
 		['flaky sea salt, for topping', null, null, '', 'flaky sea salt, for topping'],
-		['1 cup', 1, null, '', 'cup']
+		['1 cup', 1, null, '', 'cup'],
+		// A typed zero is the cook's number: kept, and shown as typed.
+		['0 cups flour', 0, null, 'cups', 'flour'],
+		// The parser drops a minus sign and the name with it ("-1 egg" read as
+		// 1 of nothing, which scales to a bare "2"), so a negative stays as written.
+		['-1 egg', null, null, '', '-1 egg'],
+		['−1 egg', null, null, '', '−1 egg'],
+		['-0.5 tsp salt', null, null, '', '-0.5 tsp salt'],
+		// A number too large to be finite is no number to scale.
+		['1e999 g salt', null, null, '', '1e999 g salt']
 	])('%j', (line, quantity, quantity2, unit, name) => {
 		expect(parseIngredientLine(line)).toEqual({ text: line, quantity, quantity2, unit, name });
 	});
