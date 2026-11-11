@@ -11,7 +11,7 @@
 
 	// One page for /discover and the signed-out home.
 	type DiscoverData = Awaited<ReturnType<typeof loadDiscover>>;
-	let { data }: { data: DiscoverData } = $props();
+	let { data, notice }: { data: DiscoverData; notice?: string } = $props();
 
 	const list = pagedList(
 		() => data,
@@ -33,6 +33,9 @@
 		<div class="page-head">
 			<h1>Discover</h1>
 			<p class="page-sub">Recipes from every cook on Fork.</p>
+			{#if notice}
+				<p class="page-sub" role="status">{notice}</p>
+			{/if}
 		</div>
 
 		<div class="discover-filters">
