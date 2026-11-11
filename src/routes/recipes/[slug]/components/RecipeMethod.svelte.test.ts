@@ -127,7 +127,7 @@ describe('RecipeMethod', () => {
 			expect(numeral).toHaveClass('tabular-nums');
 			// The numeral's column (it holds cooking's done check too) ends the grid column.
 			const column = numeral.parentElement!;
-			expect(column).toHaveClass('justify-self-end', 'items-end');
+			expect(column).toHaveClass('justify-self-end');
 			expect(column.parentElement).toHaveClass(
 				'gap-4',
 				// minmax(0, …): a long unbroken word wraps instead of widening the page.

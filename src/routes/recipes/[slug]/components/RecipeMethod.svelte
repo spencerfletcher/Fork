@@ -48,7 +48,7 @@
 						onchange={(e) => ticks.toggle(i, e.currentTarget.checked)} />
 					<!-- The numeral's column; while cooking a done step's check sits under
 					     the numeral, so the text keeps its edge. -->
-					<span class="flex flex-col items-end gap-1.5 justify-self-end">
+					<span class="relative justify-self-end">
 						<span class="text-accent group-has-[:checked]:text-text-3 font-medium tabular-nums">
 							{i + 1}
 						</span>
@@ -102,8 +102,13 @@
 
 	/* Done, while cooking: the check under the numeral and Ink 3 text; the
 	   page lifts the strike from both lists, so the step can be reread. */
+	/* Out of flow, so ticking a one-line step moves nothing below it. */
 	.step-check {
 		display: none;
+		position: absolute;
+		top: 100%;
+		right: 0;
+		margin-top: 2px;
 	}
 
 	:global([data-cooking]) .step:has(:checked) .step-check {
