@@ -7,6 +7,9 @@ import { inGroup, makeIngredient, makeStep, makeContent } from '#lib/recipes/fix
 import { favorites, friendships, recipes } from '#lib/server/db/schema.js';
 import type { Visibility } from '#lib/recipes/validation.js';
 import { SESSION_ENDED } from '#lib/server/actions.js';
+import { STALE_MESSAGE } from '#lib/server/submission.js';
+import { NOT_AUTHORIZED } from '#lib/server/visibility.js';
+import { loginHref } from '#lib/auth/loginHref.js';
 
 // ─── Hoisted mocks ────────────────────────────────────────────────────────────
 
@@ -19,8 +22,10 @@ const {
 	dbDelete,
 	transactionMock,
 	ensureProfileMock,
-	lastEntryMock
+	lastEntryMock,
+	restoreMock
 } = vi.hoisted(() => ({
+	restoreMock: vi.fn(),
 	findRecipeMock: vi.fn(),
 	findFavoriteMock: vi.fn(),
 	countMock: vi.fn(),
@@ -48,6 +53,7 @@ vi.mock('#lib/server/db/index.js', () => ({
 
 vi.mock('#lib/server/profiles.js', () => ({ ensureProfile: ensureProfileMock }));
 vi.mock('#lib/server/journal.js', () => ({ lastEntryFor: lastEntryMock }));
+vi.mock('#lib/server/versions.js', () => ({ restoreVersion: restoreMock }));
 
 // The slug suffix must be deterministic so we can predict slugs.
 vi.spyOn(crypto, 'randomUUID').mockReturnValue('abc12345-0000-4000-8000-000000000000');
@@ -664,5 +670,96 @@ describe('visibility: a friends recipe', () => {
 		);
 		const data = await loadData(FORKER);
 		expect(data.recipe.parent).toMatchObject({ slug: 'secret-original' });
+	});
+});
+
+// ─── restore action ───────────────────────────────────────────────────────────
+
+// The writes are restoreVersion's, proved against the real database in
+// versions.db.test.ts; these pin the action's checks and what it answers.
+describe('restore', () => {
+	const OWNER = { id: 'original-author', email: 'owner@test.com' };
+	const tx = { marker: 'tx' };
+
+	beforeEach(() => {
+		vi.clearAllMocks();
+		findRecipeMock.mockResolvedValue(SOURCE_RECIPE);
+		transactionMock.mockImplementation(async (cb: (t: unknown) => Promise<unknown>) => cb(tx));
+		restoreMock.mockResolvedValue({ versionNumber: 5 });
+	});
+
+	const PATH = '/recipes/classic-cookies?/restore';
+	const restore = (fields: Record<string, string>, user: typeof OWNER | null = OWNER) =>
+		invoke(actions.restore as never, {
+			...makeEvent({ user, fields, params: { slug: 'classic-cookies' } }),
+			url: new URL(PATH, 'http://localhost')
+		});
+	const VALID = { version: '2', editRevision: String(SOURCE_RECIPE.editRevision) };
+
+	test('restores the asked version at the loaded revision and lands on the latest', async () => {
+		const result = await restore(VALID);
+		expect(result).toMatchObject({ status: 303, location: '/recipes/classic-cookies' });
+		expect(restoreMock).toHaveBeenCalledWith(
+			tx,
+			SOURCE_RECIPE.id,
+			OWNER.id,
+			SOURCE_RECIPE.editRevision,
+			2
+		);
+	});
+
+	test('signed out is sent to log in and brought back', async () => {
+		const result = await restore(VALID, null);
+		expect(result).toMatchObject({ status: 303, location: loginHref(PATH) });
+		expect(findRecipeMock).not.toHaveBeenCalled();
+	});
+
+	test("another user's recipe is the one 403, and nothing is written", async () => {
+		const result = await restore(VALID, FORKER);
+		expect(result).toMatchObject({ status: 403, body: { message: NOT_AUTHORIZED } });
+		expect(transactionMock).not.toHaveBeenCalled();
+	});
+
+	test('a version or revision that is not a whole number is refused before the transaction', async () => {
+		for (const fields of [
+			{ ...VALID, version: '' },
+			{ ...VALID, version: '1.5' },
+			{ ...VALID, editRevision: 'x' }
+		]) {
+			expect(await restore(fields)).toMatchObject({ status: 400, data: { code: 'invalid' } });
+		}
+		expect(transactionMock).not.toHaveBeenCalled();
+	});
+
+	test('a page loaded before the last save is stale, before the transaction', async () => {
+		const result = await restore({ ...VALID, editRevision: String(SOURCE_RECIPE.editRevision - 1) });
+		expect(result).toMatchObject({ status: 409, data: { code: 'stale', error: STALE_MESSAGE } });
+		expect(transactionMock).not.toHaveBeenCalled();
+	});
+
+	test('a save that landed under the lock is stale too', async () => {
+		restoreMock.mockResolvedValue('stale');
+		expect(await restore(VALID)).toMatchObject({ status: 409, data: { code: 'stale' } });
+	});
+
+	test("a version this recipe does not have is not found", async () => {
+		restoreMock.mockResolvedValue('not_found');
+		expect(await restore({ ...VALID, version: '9' })).toMatchObject({
+			status: 404,
+			data: { code: 'not_found', error: 'This recipe has no v9.' }
+		});
+	});
+
+	test('content equal to the latest is refused: no empty version', async () => {
+		restoreMock.mockResolvedValue('unchanged');
+		expect(await restore(VALID)).toMatchObject({
+			status: 400,
+			data: { code: 'invalid', error: 'v2 is the same as the latest version: nothing to restore.' }
+		});
+	});
+
+	test('ownership lost under the lock is the 403', async () => {
+		restoreMock.mockResolvedValue('forbidden');
+		expect(await restore(VALID)).toMatchObject({ status: 403 });
 	});
 });
