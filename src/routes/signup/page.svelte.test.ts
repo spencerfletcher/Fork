@@ -2,7 +2,13 @@ import { describe, test, expect, vi } from 'vitest';
 import { render, screen, fireEvent, within } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import SignupPage from './+page.svelte';
-import { PASSWORD_MIN, USERNAME_MAX, USERNAME_MESSAGE, USERNAME_MIN } from '#lib/auth/rules.js';
+import {
+	PASSWORD_MIN,
+	USERNAME_MAX,
+	USERNAME_MESSAGE,
+	USERNAME_MIN,
+	suggestUsername
+} from '#lib/auth/rules.js';
 
 // The enhance mock keeps the page's submit callback so a test can start a
 // submission without a server.
@@ -309,5 +315,14 @@ describe('Sign-up page', () => {
 		submits.at(-1)!();
 		await tick();
 		expect(screen.getByRole('button', { name: 'Creating account…' })).toBeDisabled();
+	});
+
+	// Back from the confirm page's "Sign up again", with the address the link went to.
+	test('the remembered address fills the email, and its prefix the username', () => {
+		render(SignupPage, {
+			props: { form: null, data: { redirectTo: null, email: 'jo.cook@b.con' } } as never
+		});
+		expect(email().value).toBe('jo.cook@b.con');
+		expect(username().value).toBe(suggestUsername('jo.cook@b.con'));
 	});
 });

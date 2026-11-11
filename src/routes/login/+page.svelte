@@ -4,8 +4,13 @@
 	import { authHref } from '#lib/auth/loginHref.js';
 	import { EMAIL_MESSAGE, emailCheck, firstInvalid } from '#lib/auth/emailCheck.svelte.js';
 
-	let { form, data }: { form: { error?: string } | null; data: { redirectTo: string | null } } =
-		$props();
+	let {
+		form,
+		data
+	}: {
+		form: { error?: string; unconfirmed?: boolean } | null;
+		data: { redirectTo: string | null };
+	} = $props();
 
 	// Disabled while the request is out, so a second press cannot send it twice.
 	const submit = pendingEnhance();
@@ -32,7 +37,12 @@
 		</div>
 
 		{#if form?.error}
-			<div class="auth-error" role="alert">{form.error}</div>
+			<div class="auth-error" role="alert">
+				{form.error}
+				{#if form.unconfirmed}
+					<a class="inline-action hit-link" href="/confirm-email">Send it again</a>
+				{/if}
+			</div>
 		{/if}
 
 		<form method="POST" use:enhance={submit.submit} class="form">

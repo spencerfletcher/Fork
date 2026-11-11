@@ -1,5 +1,5 @@
 import { describe, test, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/svelte';
+import { render, screen, fireEvent, within } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import LoginPage from './+page.svelte';
 
@@ -192,5 +192,20 @@ describe('Login page', () => {
 		await tick();
 		const button = screen.getByRole('button', { name: 'Logging in…' });
 		expect(button).toBeDisabled();
+	});
+
+	test('an unconfirmed account gets a way to the confirm page, which can resend', () => {
+		render(LoginPage, {
+			props: {
+				form: { error: 'Confirm your email first: open the link we sent you.', unconfirmed: true },
+				data: { redirectTo: null }
+			} as never
+		});
+		const alert = screen.getByRole('alert');
+		expect(alert).toHaveTextContent('Confirm your email first: open the link we sent you.');
+		expect(within(alert).getByRole('link', { name: 'Send it again' })).toHaveAttribute(
+			'href',
+			'/confirm-email'
+		);
 	});
 });

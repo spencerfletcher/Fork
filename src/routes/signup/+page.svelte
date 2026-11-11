@@ -17,7 +17,7 @@
 		data
 	}: {
 		form: { error?: string; field?: 'username'; registered?: boolean } | null;
-		data: { redirectTo: string | null };
+		data: { redirectTo: string | null; email?: string | null };
 	} = $props();
 
 	// Disabled while the request is out, so a second press cannot send it twice.
@@ -30,8 +30,11 @@
 	// cover their messages.
 	const emailField = emailCheck();
 
-	let email = $state('');
-	let username = $state('');
+	// Back from the confirm page's "Sign up again", the address the link went to.
+	// svelte-ignore state_referenced_locally
+	let email = $state(data.email ?? '');
+	// svelte-ignore state_referenced_locally
+	let username = $state(suggestUsername(data.email ?? ''));
 	// Once the user has typed a handle of their own, the email stops suggesting one.
 	let usernameEdited = $state(false);
 
