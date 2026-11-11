@@ -255,7 +255,6 @@ Items waiting on Spencer's eye. Rules live in [DESIGN.md](../../DESIGN.md); the 
 | Text-button hover underline | Whether word-buttons underline on hover; off for now, colour change only | P1 | R, OD |
 | Dropdown panel background | The lifted white reads out of place against paper | P1 | R, OD |
 | Fork icon and logo | 1A (three tines on a round shoulder) ships for now (OD, 11 Nov: "1a for now for logo but redesign candidate"); open: a deeper head and a handle widening toward its end, upright or on the diagonal | P1 | R, OD |
-| Journal icon | The book is a placeholder, and the tab bar draws a calendar while the action draws a notebook; refine with the fork icon | P1 | R, code-health audit |
 | Cook-mode distinction | The cooking view looks too close to the recipe page | P1 | R, OD |
 | Serving scaler redesign | The control does not feel like Fork; a design round, with the S01 to S08 behaviour | P2 | R |
 | Tick affordance | Revisit candidate (M20) | P2 | DS |

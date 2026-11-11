@@ -30,6 +30,16 @@ describe('the shared drawings', () => {
 	test('the fork is three tines on a round shoulder', () => {
 		expect(snippet('forkIcon')).toContain('d="M5 1.5V5a3 3 0 0 0 6 0V1.5M8 1.5v13"');
 	});
+
+	// 2B (Spencer, 11 November 2026): a spiral notepad, the one Journal
+	// drawing, the tab's and Add to Journal's. Its rings sit 4 apart, not
+	// 3.5, so they stay three at 16px.
+	test('the journal is a spiral notepad', () => {
+		const journal = snippet('journalIcon');
+		expect(journal).toContain('viewBox="0 0 24 24"');
+		expect(journal).toContain('<rect x="5" y="5" width="14" height="16.5" rx="1.5" />');
+		expect(journal).toContain('d="M8 3v4M12 3v4M16 3v4M8.5 11.5h7M8.5 15h7M8.5 18.5h4"');
+	});
 });
 
 describe('icons beside text', () => {

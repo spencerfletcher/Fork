@@ -157,19 +157,23 @@
 	</svg>
 {/snippet}
 
-<!-- Add to Journal: a book seen from the side, its cover a little open from
-     the spine, the page edges showing. -->
-{#snippet journalIcon()}
+<!-- Journal: a spiral notepad, three rings over a page of lines (2B). The
+     tab bar's Journal and Add to Journal. Drawn on 24 like Friends; the rings
+     sit 4 apart so they stay three at 16. -->
+{#snippet journalIcon(size: number = 16)}
 	<svg
-		class="size-4"
-		viewBox="0 0 16 16"
+		class="icon"
+		width={size}
+		height={size}
+		viewBox="0 0 24 24"
 		aria-hidden="true"
 		fill="none"
 		stroke="currentColor"
-		stroke-width="1.5"
+		stroke-width={(1.5 * 24) / size}
 		stroke-linecap="round"
 		stroke-linejoin="round">
-		<path d="M5 2.5h8v11H5M5 2.5v11M5 2.5 2.5 3.75v11L5 13.5M8 5.5h2.5M8 8h2.5" />
+		<rect x="5" y="5" width="14" height="16.5" rx="1.5" />
+		<path d="M8 3v4M12 3v4M16 3v4M8.5 11.5h7M8.5 15h7M8.5 18.5h4" />
 	</svg>
 {/snippet}
 
