@@ -418,6 +418,24 @@ test.describe('Edit recipe page', () => {
 		expect(await message.evaluate((el) => getComputedStyle(el).borderTopWidth)).toBe('0px');
 	});
 
+	test('an Add button sits level with the box beside it, centred by the row, at every width', async ({
+		page
+	}) => {
+		for (const width of [1280, 834, 390]) {
+			await page.setViewportSize({ width, height: 900 });
+			await gotoHydrated(page, `${await cookiesPath(page)}/edit`);
+			if (width < 700) await page.locator('details.fold summary').click();
+			for (const [box, button] of [
+				['servings', 'Add Makes'],
+				['sourceName', 'Add Link']
+			]) {
+				const b = (await page.locator(`input[name="${box}"]`).boundingBox())!;
+				const a = (await page.getByRole('button', { name: button }).boundingBox())!;
+				expect(Math.abs(a.y + a.height / 2 - (b.y + b.height / 2))).toBeLessThanOrEqual(1);
+			}
+		}
+	});
+
 	test('a long ingredient list grows the editor on a phone and Save stays below it', async ({
 		page
 	}) => {

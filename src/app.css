@@ -1195,8 +1195,11 @@
 			grid-template-columns: 128px minmax(0, 1fr) auto minmax(0, 1fr);
 		}
 
+		/* Centred on the box's row, not on the labels' baseline: the line's
+		   baseline would be its plus icon's bottom edge. */
 		.facts .field-row > .add-line {
 			grid-column: 3 / -1;
+			align-self: center;
 			min-height: 0;
 		}
 
