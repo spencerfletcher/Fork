@@ -520,6 +520,45 @@ describe('Edit page form', () => {
 		expect(screen.queryByRole('button', { name: 'Add Storage' })).toBeNull();
 	});
 
+	test('Cmd+Enter or Ctrl+Enter in any field saves as Save does; plain Enter in a text box does not', async () => {
+		const submit = vi
+			.spyOn(HTMLFormElement.prototype, 'requestSubmit')
+			.mockImplementation(() => {});
+		render(EditPage, { props: { data: makeData(), form: null } });
+		const save = screen.getByRole('button', { name: 'Save' });
+		const steps = screen.getByRole('textbox', { name: /^method/i });
+		const plain = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true });
+		steps.dispatchEvent(plain);
+		expect(submit).not.toHaveBeenCalled();
+		expect(plain.defaultPrevented).toBe(false);
+		for (const mod of [{ metaKey: true }, { ctrlKey: true }]) {
+			const e = new KeyboardEvent('keydown', {
+				key: 'Enter',
+				bubbles: true,
+				cancelable: true,
+				...mod
+			});
+			steps.dispatchEvent(e);
+			// No newline typed: the save is the press's whole effect.
+			expect(e.defaultPrevented).toBe(true);
+		}
+		await fireEvent.keyDown(title(), { key: 'Enter', metaKey: true });
+		expect(submit).toHaveBeenCalledTimes(3);
+		expect(submit).toHaveBeenLastCalledWith(save);
+		expect(submit.mock.contexts[0]).toBe(document.querySelector('form[action="?/save"]'));
+	});
+
+	test('Cmd+Enter does nothing while a save is pending', async () => {
+		render(EditPage, { props: { data: makeData(), form: null } });
+		await fireEvent.input(title(), { target: { value: 'Biscuits' } });
+		await startSubmit();
+		const submit = vi
+			.spyOn(HTMLFormElement.prototype, 'requestSubmit')
+			.mockImplementation(() => {});
+		await fireEvent.keyDown(title(), { key: 'Enter', metaKey: true });
+		expect(submit).not.toHaveBeenCalled();
+	});
+
 	test('Delete recipe sits at the form’s end, outside the pinned save bar', () => {
 		render(EditPage, { props: { data: makeData(), form: null } });
 		const del = screen.getByRole('button', { name: 'Delete recipe' });

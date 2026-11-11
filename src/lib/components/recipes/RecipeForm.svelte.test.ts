@@ -451,6 +451,8 @@ describe('RecipeForm save bar', () => {
 		const bar = screen.getByRole('button', { name: 'Create recipe' }).closest('.save-bar');
 		expect(bar).toContainElement(screen.getByRole('link', { name: 'Cancel' }));
 		expect(screen.queryByLabelText(/what changed/i)).toBeNull();
+		// Off a Mac (jsdom has no platform), the save key's hint says Ctrl.
+		expect(bar).toHaveTextContent(/Ctrl Enter$/);
 	});
 
 	test('the bar is pinned to the bottom on every size, and the page keeps a focused field above it', () => {

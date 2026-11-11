@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import FormActions from '#lib/components/ui/FormActions.svelte';
 
 	// The editor's save bar, pinned to the screen's bottom (c1). Editing, What
@@ -28,6 +29,13 @@
 	const placeholder = $derived(generated ?? 'What changed in this version?');
 	// A blank message saves the generated one, as the server trims; say so.
 	const savesGenerated = $derived(generated !== null && !commitMessage.trim());
+
+	// The form saves on Cmd+Enter, Ctrl+Enter off a Mac (RecipeForm); the
+	// hint names the one this device has, so it waits for the browser.
+	let shortcut = $state('');
+	onMount(() => {
+		shortcut = /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘ Enter' : 'Ctrl Enter';
+	});
 
 	let bar: HTMLDivElement | undefined = $state();
 	let actions: HTMLDivElement | undefined = $state();
@@ -86,6 +94,7 @@
 	<div class="actions-bar" bind:this={actions}>
 		<FormActions {submitLabel} {pending} {cancelHref} bind:submitButton />
 	</div>
+	{#if shortcut}<span class="shortcut">{shortcut}</span>{/if}
 </div>
 
 <style>
@@ -137,7 +146,19 @@
 		white-space: nowrap;
 	}
 
+	/* Quiet, after Cancel: Ink 3 at the hint size. */
+	.shortcut {
+		font-size: 0.875rem;
+		color: var(--color-text-3);
+		white-space: nowrap;
+	}
+
 	@media (max-width: 699px) {
+		/* A phone has no hardware keyboard to say it to. */
+		.shortcut {
+			display: none;
+		}
+
 		/* What changed? stays in the page, a plain 1px Rule above it; only
 		   Save and Cancel ride the screen's bottom edge, across the 18px gutters. */
 		.save-bar {

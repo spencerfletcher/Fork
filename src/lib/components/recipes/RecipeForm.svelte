@@ -174,6 +174,16 @@
 	// Keeps a focused field clear of the pinned bar (SaveBar).
 	let bar: SaveBar | undefined = $state();
 
+	// Cmd+Enter (Ctrl+Enter off a Mac) saves from any field, through the same
+	// path as pressing Save: the browser's checks, then the blocked-save focus.
+	// Caught before a text box sees it, so it types no newline; plain Enter does.
+	function saveKey(e: KeyboardEvent) {
+		if (e.key !== 'Enter' || !(e.metaKey || e.ctrlKey)) return;
+		e.preventDefault();
+		e.stopPropagation();
+		if (!save.pending) (e.currentTarget as HTMLFormElement).requestSubmit(submitButton);
+	}
+
 	// The facts fold on a phone into a summary (native details); from 700 they
 	// are always shown, so the fold is opened for good there.
 	let foldOpen = $state(false);
@@ -336,6 +346,7 @@
 	onfocusout={fields.onfocusout}
 	oninvalidcapture={fields.onInvalid}
 	onfocusin={(e) => bar?.clearBar(e.target)}
+	onkeydowncapture={saveKey}
 	oninput={fields.oninput}>
 	<fieldset disabled={save.pending} class="contents">
 		{#if draft.editRevision}
