@@ -67,10 +67,16 @@ export async function createRecipe(
 	if (cookTimeMinutes) await page.locator('input[name="cookTimeMinutes"]').fill(cookTimeMinutes);
 	await page.getByRole('textbox', { name: 'Ingredients', exact: true }).fill('2 cups flour');
 	await page.getByRole('textbox', { name: 'Method', exact: true }).fill('Mix all ingredients.');
-	await page.getByRole('radio', { name: 'Only me' }).check();
+	await chooseAudience(page, 'Only me');
 	await page.getByRole('button', { name: /create recipe/i }).click();
 	await page.waitForURL(/\/recipes\/(?!new)/);
 	return page.url().split('?')[0];
+}
+
+/** Picks the editor's audience from its dropdown, as a cook's clicks would. */
+export async function chooseAudience(page: Page, word: 'Only me' | 'Friends' | 'Public') {
+	await page.getByRole('combobox', { name: 'Who can see this recipe' }).click();
+	await page.getByRole('option', { name: new RegExp(`^${word}`) }).click();
 }
 
 /**

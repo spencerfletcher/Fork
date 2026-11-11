@@ -5,7 +5,7 @@
  */
 
 import { expect, test } from '@playwright/test';
-import { deleteRecipe, gotoHydrated } from './helpers';
+import { chooseAudience, deleteRecipe, gotoHydrated } from './helpers';
 
 test('a source, a rest and notes show on the page, in the diff after an edit, and in print', async ({
 	page
@@ -18,13 +18,17 @@ test('a source, a rest and notes show on the page, in the diff after an edit, an
 	await page.getByLabel('Cook', { exact: true }).fill('25');
 	await page.getByLabel('Rest', { exact: true }).fill('overnight');
 	await page.getByLabel('Source', { exact: true }).fill('Gran’s notebook');
-	await page.getByLabel('Source link').fill('example.com/focaccia');
+	// Each Add button turns into its field with the cursor in it.
+	await page.getByRole('button', { name: 'Add Link' }).click();
+	await page.keyboard.type('example.com/focaccia');
 	await page.getByRole('textbox', { name: 'Ingredients', exact: true }).fill('500 g flour');
 	await page.getByRole('textbox', { name: 'Method', exact: true }).fill('Mix, rest, bake.');
+	await page.getByRole('button', { name: 'Add Notes' }).click();
 	await page.getByLabel('Notes').fill('Dimple it hard.\nMore oil than you think.');
-	await page.getByText('More details').click();
+	await page.getByRole('button', { name: 'Add Storage' }).click();
+	await expect(page.getByLabel('Storage')).toBeFocused();
 	await page.getByLabel('Storage').fill('Wrapped, one day');
-	await page.getByRole('radio', { name: 'Only me' }).check();
+	await chooseAudience(page, 'Only me');
 	await page.getByRole('button', { name: /create recipe/i }).click();
 	await page.waitForURL(/\/recipes\/(?!new)/);
 	const url = page.url().split('?')[0];

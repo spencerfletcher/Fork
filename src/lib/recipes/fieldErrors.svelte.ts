@@ -34,6 +34,14 @@ function validityMessage(name: string, v: ValidityState): string {
 	return v.rangeUnderflow && !v.stepMismatch ? messages.belowMin : messages.whole;
 }
 
+/** Focuses a field, first opening the fold it sits in (the phone editor's
+ *  details), so a blocked or refused save lands in it in one action. */
+export function focusField(el: HTMLElement | null) {
+	const fold = el?.closest('details');
+	if (fold) fold.open = true;
+	el?.focus();
+}
+
 /**
  * The recipe editor's inline errors, one per field name, in the server's own
  * wording. A field is checked when it is left after an edit, when it blocks a
@@ -91,7 +99,7 @@ export function fieldErrors(form: { error: string } | null) {
 				':is(input, textarea):invalid'
 			);
 			// A text box's textarea is hidden behind its live box, which has taken its id.
-			(bad?.hidden ? document.getElementById(bad.name) : bad)?.focus();
+			focusField(bad?.hidden ? document.getElementById(bad.name) : bad);
 		},
 		aria: (name: string) =>
 			errors[name] ? { 'aria-invalid': 'true' as const, 'aria-describedby': `${name}-error` } : {}

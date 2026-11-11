@@ -25,7 +25,7 @@
 <!-- Times are typed as words and stored as minutes; each is its own
      span on the page, never added up. No picker: a hint and the same
      message the server gives are enough. -->
-<div class="field-row">
+<div class="field-row times-row">
 	{#each timeFields as name (name)}
 		<div class="field">
 			<label for={name}>{TIME_FIELDS[name].formLabel}</label>

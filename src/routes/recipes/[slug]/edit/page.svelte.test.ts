@@ -16,6 +16,7 @@ import {
 import { MAX_DURATION_MINUTES } from '#lib/recipes/times.js';
 import { UNREACHABLE_MESSAGE } from '#lib/pendingEnhance.svelte.js';
 import { draftKey, saveDraft } from '#lib/drafts.js';
+import { chooseOption, chosenValue } from '#lib/testing/choices.js';
 import { NOT_AUTHORIZED } from '#lib/server/visibility.js';
 
 // Capture the form's submit callback so a test can drive the pending state by hand.
@@ -162,7 +163,7 @@ describe('Edit page form', () => {
 
 	test('an ungrouped version with no yield refills as before, with Makes empty and no read-back', () => {
 		render(EditPage, { props: { data: makeData(), form: null } });
-		expect(screen.getByLabelText(/^Makes/)).toHaveValue('');
+		expect(document.querySelector('input[type="hidden"][name="makes"]')).toHaveValue('');
 		expect(document.getElementById('ingredients-readback')).toBeNull();
 		expect(document.getElementById('steps-readback')).toBeNull();
 	});
@@ -202,7 +203,7 @@ describe('Edit page form', () => {
 		render(EditPage, { props: { data: makeData(), form: null } });
 		await fireEvent.click(screen.getByRole('button', { name: 'Remove Dessert' }));
 		expect(editingLine('Editing v2 · saves settings only')).toBeInTheDocument();
-		await fireEvent.click(screen.getByRole('combobox'));
+		await fireEvent.click(screen.getByRole('combobox', { name: /tag/i }));
 		await fireEvent.click(screen.getByRole('option', { name: /Dessert/ }));
 		expect(editingLine('Editing v2')).toBeInTheDocument();
 	});
@@ -242,13 +243,13 @@ describe('Edit page form', () => {
 
 	test('a settings-only change says no version will be written', async () => {
 		render(EditPage, { props: { data: makeData(), form: null } });
-		await fireEvent.click(screen.getByRole('radio', { name: 'Friends' }));
+		await chooseOption('Who can see this recipe', 'Friends');
 		expect(editingLine('Editing v2 · saves settings only')).toBeInTheDocument();
 	});
 
 	test('a message typed on a settings-only change promises a version, since the save keeps it', async () => {
 		render(EditPage, { props: { data: makeData(), form: null } });
-		await fireEvent.click(screen.getByRole('radio', { name: 'Friends' }));
+		await chooseOption('Who can see this recipe', 'Friends');
 		expect(editingLine('Editing v2 · saves settings only')).toBeInTheDocument();
 		const message = screen.getByLabelText(/what changed/i);
 		await fireEvent.input(message, { target: { value: 'Private for now' } });
@@ -287,7 +288,7 @@ describe('Edit page form', () => {
 	test('an invalid draft with a settings change promises nothing', async () => {
 		render(EditPage, { props: { data: makeData(), form: null } });
 		await fireEvent.input(title(), { target: { value: '' } });
-		await fireEvent.click(screen.getByRole('radio', { name: 'Friends' }));
+		await chooseOption('Who can see this recipe', 'Friends');
 		expect(editingLine('Editing v2')).toBeInTheDocument();
 	});
 
@@ -355,8 +356,8 @@ describe('Edit page form', () => {
 		expect(update).not.toHaveBeenCalled();
 		const alert = screen.getByRole('alert');
 		expect(alert).toHaveTextContent(NOT_AUTHORIZED);
-		// Under Delete recipe, on the actions row's right.
-		expect(alert.closest('.form-actions .danger')).not.toBeNull();
+		// Under Delete recipe, at the form's end.
+		expect(alert.closest('.form-end')).not.toBeNull();
 		expect(title()).toHaveValue('Cookies');
 	});
 
@@ -389,7 +390,7 @@ describe('Edit page form', () => {
 			(i) => (i as HTMLInputElement).value
 		);
 		expect(tags).toEqual(['Spicy']);
-		expect(screen.getByRole('radio', { name: 'Friends' })).toBeChecked();
+		expect(chosenValue('visibility')).toBe('friends');
 		expect(document.querySelector('.form-error')).toBeNull();
 		expect(title()).toHaveAttribute('aria-invalid', 'true');
 		expect(title()).toHaveAccessibleDescription(REQUIRED_MESSAGES.title);
@@ -486,7 +487,9 @@ describe('Edit page form', () => {
 
 	test('a source link that is not a web address is refused under its box', async () => {
 		render(EditPage, { props: { data: makeData(), form: null } });
+		await fireEvent.click(screen.getByRole('button', { name: 'Add Link' }));
 		const link = screen.getByLabelText('Source link');
+		expect(link).toHaveFocus();
 		await fireEvent.input(link, { target: { value: 'javascript:alert(1)' } });
 		await fireEvent.focusOut(link);
 		expect(link).toHaveAttribute('aria-invalid', 'true');
@@ -506,16 +509,69 @@ describe('Edit page form', () => {
 		expect(screen.getByLabelText('Source link')).toHaveValue('https://a.example/');
 	});
 
-	test('More details is closed while its notes are empty, and open once one is filled', () => {
+	test('the optional notes are Add buttons while empty, and a filled one opens with its text', () => {
 		const empty = render(EditPage, { props: { data: makeData(), form: null } });
-		const details = () => document.querySelector('details.more-details') as HTMLDetailsElement;
-		expect(details().open).toBe(false);
-		expect(screen.getByText('More details').tagName).toBe('SUMMARY');
-		expect(screen.getByLabelText('Notes')).toBeVisible();
+		for (const name of ['Notes', 'Make ahead', 'Equipment', 'Storage', 'Reheating'])
+			expect(screen.getByRole('button', { name: `Add ${name}` })).toBeInTheDocument();
+		expect(screen.queryByLabelText('Storage')).toBeNull();
 		empty.unmount();
 		render(EditPage, { props: { data: makeData({ content: { storage: 'Cold' } }), form: null } });
-		expect(details().open).toBe(true);
 		expect(screen.getByLabelText('Storage')).toHaveValue('Cold');
+		expect(screen.queryByRole('button', { name: 'Add Storage' })).toBeNull();
+	});
+
+	test('Cmd+Enter or Ctrl+Enter in any field saves as Save does; plain Enter in a text box does not', async () => {
+		const submit = vi
+			.spyOn(HTMLFormElement.prototype, 'requestSubmit')
+			.mockImplementation(() => {});
+		render(EditPage, { props: { data: makeData(), form: null } });
+		const save = screen.getByRole('button', { name: 'Save' });
+		const steps = screen.getByRole('textbox', { name: /^method/i });
+		const plain = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true });
+		steps.dispatchEvent(plain);
+		expect(submit).not.toHaveBeenCalled();
+		expect(plain.defaultPrevented).toBe(false);
+		for (const mod of [{ metaKey: true }, { ctrlKey: true }]) {
+			const e = new KeyboardEvent('keydown', {
+				key: 'Enter',
+				bubbles: true,
+				cancelable: true,
+				...mod
+			});
+			steps.dispatchEvent(e);
+			// No newline typed: the save is the press's whole effect.
+			expect(e.defaultPrevented).toBe(true);
+		}
+		await fireEvent.keyDown(title(), { key: 'Enter', metaKey: true });
+		expect(submit).toHaveBeenCalledTimes(3);
+		expect(submit).toHaveBeenLastCalledWith(save);
+		expect(submit.mock.contexts[0]).toBe(document.querySelector('form[action="?/save"]'));
+	});
+
+	test('Cmd+Enter does nothing while a save is pending', async () => {
+		render(EditPage, { props: { data: makeData(), form: null } });
+		await fireEvent.input(title(), { target: { value: 'Biscuits' } });
+		await startSubmit();
+		const submit = vi
+			.spyOn(HTMLFormElement.prototype, 'requestSubmit')
+			.mockImplementation(() => {});
+		await fireEvent.keyDown(title(), { key: 'Enter', metaKey: true });
+		expect(submit).not.toHaveBeenCalled();
+	});
+
+	test('Delete recipe sits at the form’s end, outside the pinned save bar', () => {
+		render(EditPage, { props: { data: makeData(), form: null } });
+		const del = screen.getByRole('button', { name: 'Delete recipe' });
+		const save = screen.getByRole('button', { name: 'Save' });
+		expect(save.closest('.save-bar')).not.toBeNull();
+		expect(del.closest('.save-bar')).toBeNull();
+		expect(save.compareDocumentPosition(del) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+	});
+
+	test('What changed? sits in the save bar beside Save', () => {
+		render(EditPage, { props: { data: makeData(), form: null } });
+		const bar = screen.getByRole('button', { name: 'Save' }).closest('.save-bar');
+		expect(bar).toContainElement(screen.getByLabelText('What changed?'));
 	});
 
 	test('a server error for the ingredients lands under the ingredients box and focuses it', async () => {
@@ -670,6 +726,15 @@ describe('Edit page drafts on this device', () => {
 		);
 		expect(line()).toHaveAttribute('aria-live', 'polite');
 		expect(discard()).toHaveClass('text-btn');
+	});
+
+	test('a restored draft opens every Add field that holds text, with its text', () => {
+		seed({ storage: 'Airtight tin', makes: '36 cookies', sourceUrl: 'example.com' });
+		render(EditPage, { props: { data: signedIn(), form: null } });
+		expect(screen.getByLabelText('Storage')).toHaveValue('Airtight tin');
+		expect(screen.getByLabelText(/^Makes/)).toHaveValue('36 cookies');
+		expect(screen.getByLabelText('Source link')).toHaveValue('example.com');
+		expect(screen.getByRole('button', { name: 'Add Equipment' })).toBeInTheDocument();
 	});
 
 	test('Discard draft returns to the server’s content and forgets the draft', async () => {

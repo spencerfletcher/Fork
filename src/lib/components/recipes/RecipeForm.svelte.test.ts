@@ -2,6 +2,7 @@ import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import source from './RecipeForm.svelte?raw';
+import barSource from './SaveBar.svelte?raw';
 import { cssRule } from '#lib/testing/css.js';
 import RecipeForm from './RecipeForm.svelte';
 import {
@@ -10,8 +11,11 @@ import {
 	PHOTO_MAX_BYTES,
 	PHOTO_SIZE_MESSAGE,
 	emptyGroupMessage,
+	timeMessages,
 	type Visibility
 } from '#lib/recipes/validation.js';
+import { AUDIENCE_LABEL } from '#lib/audience.js';
+import { chooseOption, chosenValue } from '#lib/testing/choices.js';
 import { MAKES_TOO_LONG, MAX_MAKES } from '#lib/recipes/limits.js';
 
 vi.mock('$app/navigation', () => ({ beforeNavigate: () => {} }));
@@ -115,16 +119,6 @@ describe('RecipeForm save error that names no field', () => {
 		await tick();
 		expect(screen.getByRole('alert')).toHaveTextContent('Could not save the recipe. Try again.');
 		expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Create recipe' }));
-	});
-});
-
-describe('RecipeForm actions on a phone', () => {
-	const phone = style.slice(style.indexOf('@media (max-width: 699px) {'));
-
-	test('a field focused near the bottom scrolls clear of the bar', () => {
-		expect(cssRule(phone, ':global(html:has(.actions-bar))')).toMatch(
-			/scroll-padding-bottom:[^;]*env\(safe-area-inset-bottom\)/
-		);
 	});
 });
 
@@ -345,32 +339,128 @@ describe('RecipeForm audience', () => {
 		});
 	};
 
-	test('the stored audience is the checked radio, and a click moves it', async () => {
+	const AUDIENCE = 'Who can see this recipe';
+
+	test('the stored audience is the chosen one, submitted as visibility, and a choice moves it', async () => {
 		renderWith('friends');
-		expect(screen.getByRole('radio', { name: 'Friends' })).toBeChecked();
-		expect(screen.getByRole('radio', { name: 'Only me' })).not.toBeChecked();
-		await fireEvent.click(screen.getByRole('radio', { name: 'Public' }));
-		expect(screen.getByRole('radio', { name: 'Public' })).toBeChecked();
-		expect(screen.getByRole('radio', { name: 'Friends' })).not.toBeChecked();
+		expect(screen.getByRole('combobox', { name: AUDIENCE })).toHaveTextContent(
+			AUDIENCE_LABEL.friends
+		);
+		expect(chosenValue('visibility')).toBe('friends');
+		await chooseOption(AUDIENCE, AUDIENCE_LABEL.public);
+		expect(chosenValue('visibility')).toBe('public');
 	});
 
-	test('a private draft checks Only me by default', () => {
+	test('a private draft shows Only me by default', () => {
 		renderWith('private');
-		expect(screen.getByRole('radio', { name: 'Only me' })).toBeChecked();
-		expect(screen.getByRole('radio', { name: 'Friends' })).not.toBeChecked();
-		expect(screen.getByRole('radio', { name: 'Public' })).not.toBeChecked();
+		expect(chosenValue('visibility')).toBe('private');
 	});
 
-	test('with forks, each choice is described as leaving them too', () => {
+	test('with forks, the hint describes the box', () => {
 		renderWith('public', { hasForks: true });
-		expect(screen.getByRole('radio', { name: 'Only me' })).toHaveAccessibleDescription(
-			"Only you can see it. You can share it later. Making this more private doesn't hide existing forks."
+		expect(screen.getByRole('combobox', { name: AUDIENCE })).toHaveAccessibleDescription(
+			"Making this more private doesn't hide existing forks."
 		);
 	});
 
 	test('without forks there is no hint', () => {
 		renderWith('public');
 		expect(screen.queryByText(/existing forks/)).toBeNull();
+	});
+});
+
+describe('RecipeForm phone details', () => {
+	const renderWith = (fields: Record<string, string>, error?: string) => {
+		const fd = new FormData();
+		for (const [k, v] of Object.entries(fields)) fd.append(k, v);
+		const baseline = draftOf(fd);
+		render(RecipeForm, {
+			props: {
+				baseline,
+				form: error ? { error, draft: baseline } : null,
+				allTags: [],
+				submitLabel: 'Create recipe',
+				cancelHref: '/recipes'
+			}
+		});
+	};
+	const fold = () => document.querySelector('details') as HTMLDetailsElement;
+	const summary = () => fold().querySelector('summary')!;
+
+	test('folds the facts between the description and Ingredients, closed on a phone', () => {
+		renderWith({});
+		expect(fold().open).toBe(false);
+		expect(fold()).toContainElement(screen.getByLabelText('Serves'));
+		expect(fold()).toContainElement(screen.getByLabelText('Rest'));
+		const description = screen.getByLabelText('Description');
+		const ingredients = screen.getByRole('textbox', { name: /^Ingredients/ });
+		expect(
+			description.compareDocumentPosition(fold()) & Node.DOCUMENT_POSITION_FOLLOWING
+		).toBeTruthy();
+		expect(
+			fold().compareDocumentPosition(ingredients) & Node.DOCUMENT_POSITION_FOLLOWING
+		).toBeTruthy();
+	});
+
+	test('empty, the summary names the audience and offers Add details', () => {
+		renderWith({ visibility: 'friends' });
+		expect(summary()).toHaveTextContent(`${AUDIENCE_LABEL.friends}`);
+		expect(summary()).toHaveTextContent(/Add details$/);
+	});
+
+	test('filled, the summary reads the yield as entered and the audience, and offers Edit details', () => {
+		renderWith({ makes: '36 cookies', visibility: 'public' });
+		expect(summary()).toHaveTextContent(`Makes 36 cookies${AUDIENCE_LABEL.public}`);
+		expect(summary()).toHaveTextContent(/Edit details$/);
+	});
+
+	test('a save blocked by a bad Rest time opens the details and focuses Rest in one action', () => {
+		renderWith({
+			title: 'Cookies',
+			ingredients: '1 cup flour',
+			steps: 'Mix.',
+			restTimeMinutes: 'a while'
+		});
+		const rest = screen.getByLabelText('Rest');
+		rest.dispatchEvent(new Event('invalid', { cancelable: true }));
+		expect(fold().open).toBe(true);
+		expect(rest).toHaveFocus();
+	});
+
+	test('a server refusal for a field in the details opens them and focuses it', async () => {
+		const message = timeMessages('restTimeMinutes').unreadable;
+		renderWith({ restTimeMinutes: 'a while' }, message);
+		await tick();
+		await tick();
+		expect(fold().open).toBe(true);
+		expect(screen.getByLabelText('Rest')).toHaveFocus();
+	});
+});
+
+describe('RecipeForm save bar', () => {
+	test('a new recipe has Save and Cancel in the bar, and no What changed?', () => {
+		render(RecipeForm, {
+			props: {
+				baseline: draftOf(new FormData()),
+				form: null,
+				allTags: [],
+				submitLabel: 'Create recipe',
+				cancelHref: '/recipes'
+			}
+		});
+		const bar = screen.getByRole('button', { name: 'Create recipe' }).closest('.save-bar');
+		expect(bar).toContainElement(screen.getByRole('link', { name: 'Cancel' }));
+		expect(screen.queryByLabelText(/what changed/i)).toBeNull();
+		// Off a Mac (jsdom has no platform), the save key's hint says Ctrl.
+		expect(bar).toHaveTextContent(/Ctrl Enter$/);
+	});
+
+	test('the bar is pinned to the bottom on every size, and the page keeps a focused field above it', () => {
+		const barStyle = barSource.slice(barSource.indexOf('<style>'));
+		expect(cssRule(barStyle, '.save-bar')).toMatch(/position:\s*sticky/);
+		expect(cssRule(barStyle, ':global(html:has(.save-bar))')).toMatch(
+			/scroll-padding-bottom:[^;]*env\(safe-area-inset-bottom\)/
+		);
 	});
 });
 

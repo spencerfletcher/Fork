@@ -2,66 +2,86 @@
 	import { TEXT_LIMITS } from '#lib/recipes/limits.js';
 	import type { RecipeDraft } from '#lib/recipes/validation.js';
 	import FieldError from '#lib/components/ui/FieldError.svelte';
+	import AddFields from '#lib/components/ui/AddFields.svelte';
 
 	let {
 		draft = $bindable(),
 		errors
 	}: {
-		/** The editor's draft; only the four short notes are read and written. */
+		/** The editor's draft; only the notes and the four short notes are read and written. */
 		draft: RecipeDraft;
 		/** Inline errors by field name. */
 		errors: Record<string, string>;
 	} = $props();
 
-	// The labelled short notes in "More details", in the order the page shows them.
-	const MORE_FIELDS = [
-		{ name: 'makeAhead', placeholder: 'Dough keeps 3 days chilled' },
-		{ name: 'equipment', placeholder: 'A 23 cm springform tin' },
-		{ name: 'storage', placeholder: 'Airtight, up to 5 days' },
-		{ name: 'reheating', placeholder: 'Covered, 15 min at 160°C' }
+	// The optional notes under Method, in the order the page shows them. Their
+	// Add buttons fit one line together, so each waits as a button until wanted.
+	const FIELDS = [
+		{ name: 'notes', label: 'Notes' },
+		{ name: 'makeAhead', label: TEXT_LIMITS.makeAhead.label },
+		{ name: 'equipment', label: TEXT_LIMITS.equipment.label },
+		{ name: 'storage', label: TEXT_LIMITS.storage.label },
+		{ name: 'reheating', label: TEXT_LIMITS.reheating.label }
 	] as const;
+	type Name = (typeof FIELDS)[number]['name'];
+
+	const PLACEHOLDER: Record<Exclude<Name, 'notes'>, string> = {
+		makeAhead: 'Dough keeps 3 days chilled',
+		equipment: 'A 23 cm springform tin',
+		storage: 'Airtight, up to 5 days',
+		reheating: 'Covered, 15 min at 160°C'
+	};
 </script>
 
-<!-- Optional short notes, out of the way until one is wanted: open
-     whenever one is filled or refused, so nothing typed is hidden. -->
-<details
-	class="more-details"
-	open={MORE_FIELDS.some(({ name }) => draft[name].trim() || errors[name])}>
-	<summary>More details</summary>
-	<div class="more-fields">
-		{#each MORE_FIELDS as { name, placeholder } (name)}
-			<div class="field">
-				<label for={name}>{TEXT_LIMITS[name].label}</label>
-				<input
-					id={name}
-					{name}
-					type="text"
-					maxlength={TEXT_LIMITS[name].max}
-					{placeholder}
-					bind:value={draft[name]}
-					aria-invalid={errors[name] ? 'true' : undefined}
-					aria-describedby={errors[name] ? `${name}-error` : undefined} />
-				<FieldError {name} error={errors[name]} />
-			</div>
-		{/each}
-	</div>
-</details>
+<div class="more-details">
+	<AddFields fields={FIELDS} value={(name) => draft[name as Name]} {errors}>
+		{#snippet field(key)}
+			{@const name = key as Name}
+			{#if name === 'notes'}
+				<div class="field">
+					<label for="notes">Notes</label>
+					<textarea
+						id="notes"
+						name="notes"
+						rows="4"
+						maxlength={TEXT_LIMITS.notes.max}
+						bind:value={draft.notes}
+						aria-invalid={errors.notes ? 'true' : undefined}
+						aria-describedby={errors.notes ? 'notes-error notes-hint' : 'notes-hint'}>
+					</textarea>
+					<FieldError name="notes" error={errors.notes} />
+					<p class="form-hint" id="notes-hint">
+						For the whole recipe: what to watch for, swaps, serving ideas.
+					</p>
+				</div>
+			{:else}
+				<div class="field">
+					<label for={name}>{TEXT_LIMITS[name].label}</label>
+					<input
+						id={name}
+						{name}
+						type="text"
+						maxlength={TEXT_LIMITS[name].max}
+						placeholder={PLACEHOLDER[name]}
+						bind:value={draft[name]}
+						aria-invalid={errors[name] ? 'true' : undefined}
+						aria-describedby={errors[name] ? `${name}-error` : undefined} />
+					<FieldError {name} error={errors[name]} />
+				</div>
+			{/if}
+		{/snippet}
+	</AddFields>
+</div>
 
 <style>
-	/* A label's voice, with a 44px row to press. */
-	.more-details summary {
-		display: list-item;
-		padding-block: 11px;
-		cursor: pointer;
-		font-size: 0.9375rem;
-		font-weight: 600;
-		line-height: 22px;
-	}
-
-	.more-fields {
+	.more-details {
 		display: flex;
 		flex-direction: column;
 		gap: var(--space-4);
-		padding-top: var(--space-2);
+	}
+
+	/* field-sizing: content ignores rows; this keeps an empty box typeable. */
+	textarea[name='notes'] {
+		min-height: calc(4lh + 18px);
 	}
 </style>
