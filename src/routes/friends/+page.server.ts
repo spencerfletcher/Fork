@@ -26,7 +26,7 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 	requireUser(url, user);
 	const [friendIds, requests] = await Promise.all([friendIdsOf(user.id), requestsFor(user.id)]);
 	const feed = await feedFor(user, friendIds);
-	return { feed, requests, friendCount: friendIds.length, meta: { title: 'Friends' } };
+	return { feed, requests, friendCount: friendIds.length, meta: { title: 'Friends', noindex: true } };
 };
 
 const invalid = (error: string) => failure(400, 'invalid', error);

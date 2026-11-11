@@ -31,7 +31,7 @@ export const load: PageServerLoad = async ({ url, locals: { user, supabase } }) 
 	return {
 		// inTrashOf only matches rows with a deletion time.
 		recipes: rows.map((r) => ({ slug: r.slug, title: r.title, ...trashAge(r.deletedAt!, now) })),
-		meta: { title: 'Trash' }
+		meta: { title: 'Trash', noindex: true }
 	};
 };
 

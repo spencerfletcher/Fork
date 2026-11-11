@@ -5,7 +5,10 @@ import { failure } from '#lib/server/actions.js';
 import { PASSWORD_MIN } from '#lib/auth/rules.js';
 
 // The tab reads as the card heads itself: the form, or the expired link.
-const meta = (linkValid: boolean) => ({ title: linkValid ? 'Reset password' : 'Link expired' });
+const meta = (linkValid: boolean) => ({
+	title: linkValid ? 'Reset password' : 'Link expired',
+	noindex: true
+});
 
 /**
  * Set when the emailed link is traded for a session, so the password form is

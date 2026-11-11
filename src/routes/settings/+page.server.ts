@@ -25,7 +25,7 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 		where: eq(profiles.id, user.id),
 		columns: { username: true, defaultVisibility: true, measurement: true }
 	});
-	return { email: user.email ?? '', settings: settings!, meta: { title: 'Settings' } };
+	return { email: user.email ?? '', settings: settings!, meta: { title: 'Settings', noindex: true } };
 };
 
 const saved = (section: Section) => ({ section, saved: true as const });

@@ -77,6 +77,7 @@ describe('journal/[id]/edit load', () => {
 		const data = await loadPage<PageData>(load as never, LOAD_EVENT);
 		expect(data.keepLabel).toBe('Recipe deleted');
 		expect(data.values.recipe).toBe(KEEP_SOURCE);
+		expect(data.meta.noindex).toBe(true);
 	});
 
 	test('a linked entry prefills its link and no recipe', async () => {

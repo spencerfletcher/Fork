@@ -70,7 +70,8 @@ describe('friends load', () => {
 		expect(data).toMatchObject({
 			feed: [],
 			friendCount: 2,
-			requests: [{ username: 'priyabakes' }]
+			requests: [{ username: 'priyabakes' }],
+			meta: { noindex: true }
 		});
 		// One friends lookup: the feed is handed the ids the count uses.
 		expect(m.friendIdsOf).toHaveBeenCalledTimes(1);

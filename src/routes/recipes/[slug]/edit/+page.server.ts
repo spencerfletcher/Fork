@@ -50,7 +50,7 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 		latestVersion,
 		allTags,
 		forkCount,
-		meta: { title: `Edit ${latestVersion.title}` }
+		meta: { title: `Edit ${latestVersion.title}`, noindex: true }
 	};
 };
 

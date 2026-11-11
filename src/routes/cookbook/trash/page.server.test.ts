@@ -63,6 +63,7 @@ describe('/cookbook/trash load', () => {
 		const data = await loadPage<PageData>(load, makeLoad());
 
 		expect(purgeMock).toHaveBeenCalledWith(SUPABASE);
+		expect(data.meta.noindex).toBe(true);
 		// inTrashOf reads the clock, so the cutoff param is left out.
 		const where = sqlOf(rows.where.mock.calls[0][0] as SQL);
 		expect(where.sql).toBe(sqlOf(inTrashOf(OWNER.id)).sql);
