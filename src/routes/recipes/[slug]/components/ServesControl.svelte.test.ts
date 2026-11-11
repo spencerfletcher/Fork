@@ -1,4 +1,5 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest';
+import { lastShallowUrl } from '#lib/testing/navigation.js';
 import { render, screen, fireEvent } from '@testing-library/svelte';
 import ServesControl from './ServesControl.svelte';
 import { MIN_SERVES } from '#lib/recipes/scale.js';
@@ -29,13 +30,6 @@ function renderControl(serves = STORED, stored = STORED) {
 }
 
 const box = () => screen.getByRole<HTMLInputElement>('spinbutton', { name: 'Servings' });
-
-/** The URL handed to the last shallow navigation. */
-function lastUrl(): URL {
-	const [url, opts] = goto.mock.lastCall!;
-	expect(opts).toMatchObject({ shallow: true, replace: true });
-	return new URL(url);
-}
 
 beforeEach(() => {
 	goto.mockClear();
@@ -68,14 +62,14 @@ describe('ServesControl', () => {
 		// cannot step under step="any", so the e2e spec presses ArrowUp.
 		await fireEvent.change(box(), { target: { value: String(STORED + 1) } });
 		expect(onchange).toHaveBeenCalledWith(STORED + 1);
-		expect(lastUrl().searchParams.get('serves')).toBe(String(STORED + 1));
+		expect(lastShallowUrl(goto).searchParams.get('serves')).toBe(String(STORED + 1));
 	});
 
 	test('typing a custom amount applies it on change and writes ?serves= with a shallow replace', async () => {
 		const { onchange } = renderControl();
 		await fireEvent.change(box(), { target: { value: '6' } });
 		expect(onchange).toHaveBeenCalledWith(6);
-		expect(lastUrl().searchParams.get('serves')).toBe('6');
+		expect(lastShallowUrl(goto).searchParams.get('serves')).toBe('6');
 	});
 
 	test('while scaled, the multiplier shows and Reset is offered', async () => {
@@ -126,7 +120,7 @@ describe('ServesControl', () => {
 		const { onchange } = renderControl(6);
 		await fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
 		expect(onchange).toHaveBeenCalledWith(STORED);
-		expect(lastUrl().searchParams.has('serves')).toBe(false);
+		expect(lastShallowUrl(goto).searchParams.has('serves')).toBe(false);
 	});
 
 	test('Reset hands focus to the box as it leaves, so the keyboard is not dropped', async () => {
@@ -171,7 +165,7 @@ describe('ServesControl and the other shallow writes', () => {
 		page.shallow = { url: new URL('http://localhost/recipes/cookies?cook=1') };
 		renderControl();
 		await fireEvent.change(box(), { target: { value: String(STORED * 2) } });
-		expect(lastUrl().searchParams.get('cook')).toBe('1');
-		expect(lastUrl().searchParams.get('serves')).toBe(String(STORED * 2));
+		expect(lastShallowUrl(goto).searchParams.get('cook')).toBe('1');
+		expect(lastShallowUrl(goto).searchParams.get('serves')).toBe(String(STORED * 2));
 	});
 });
