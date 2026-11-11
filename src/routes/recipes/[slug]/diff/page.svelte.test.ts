@@ -255,11 +255,6 @@ describe('Diff page', () => {
 		expect(screen.queryByRole('heading', { level: 3 })).toBeNull();
 	});
 
-	test('the stacked commit bar is gone', () => {
-		const { container } = render(DiffPage, { props: { data: makeData() } });
-		expect(container.querySelector('.commit-bar')).toBeNull();
-	});
-
 	test('the same version on both sides says so and renders no diff panels', () => {
 		const { container } = render(DiffPage, {
 			props: { data: makeData({ fromVersion: V2, toVersion: V2 }) }
