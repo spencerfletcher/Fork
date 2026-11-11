@@ -37,6 +37,9 @@ import type { PageServerLoad, Actions } from './$types';
 const NOT_IN_COLLECTIONS =
 	'That collection or recipe is no longer in your Cookbook. Reload the page.';
 
+/** The byline names the parent's author by handle: that one column of their profile, current after a rename. */
+const PARENT_AUTHOR = { columns: { username: true } } as const;
+
 export const load: PageServerLoad = async ({ params, url, locals: { user } }) => {
 	const recipeSlug = params.slug;
 	const versionParam = url.searchParams.get('version');
@@ -51,7 +54,7 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 		{
 			recipesToTags: { with: { tag: true } },
 			author: true,
-			parent: { columns: NO_FTS, with: { author: true } },
+			parent: { columns: NO_FTS, with: { author: PARENT_AUTHOR } },
 			versions: {
 				orderBy: [desc(recipeVersions.versionNumber)],
 				with: { creator: true }
@@ -65,7 +68,7 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 		? null
 		: await keptCopy(recipeSlug, user, {
 				author: true,
-				parent: { columns: NO_FTS, with: { author: true } }
+				parent: { columns: NO_FTS, with: { author: PARENT_AUTHOR } }
 			});
 	if (!shown && !copy) throw error(404, 'Recipe not found');
 	// The row may hold what the author wrote after withdrawing it, so a copy
