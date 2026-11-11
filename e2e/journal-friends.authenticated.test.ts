@@ -101,7 +101,7 @@ test.describe('Recipe page entry points', () => {
 		page
 	}) => {
 		const logged = mine[0];
-		await page.goto('/journal');
+		await gotoHydrated(page, '/journal');
 		await page.locator('article', { hasText: logged.dish }).locator('.jsource a').click();
 
 		// Cooked once in the seed: the one-entry wording, no count.
