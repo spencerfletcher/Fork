@@ -6,6 +6,7 @@
 	import type { Recipe } from '#lib/server/db/schema.js';
 	import { editIcon, forkIcon, journalIcon, saveIcon } from '#lib/components/Icons.svelte';
 	import { compactCount } from '#lib/helpers.js';
+	import { hrefWith } from '#lib/listPage.js';
 	import { optimisticToggle } from '#lib/optimisticToggle.svelte.js';
 	import MoreActions from '#lib/components/recipes/MoreActions.svelte';
 
@@ -64,7 +65,13 @@
 	afterNavigate(() => (error = ''));
 
 	// The URL carries ?cook=1 so a reload or a shared link stays in the mode.
-	function cook() {
+	// Cook is a link to it, so it cooks before hydration and without script;
+	// hydrated, a plain click enters cooking in place by the shallow replace,
+	// and a modified click (a new tab) is the browser's.
+	const cookHref = $derived(hrefWith(page.shallow?.url ?? page.url, { cook: '1' }));
+	function cook(e: MouseEvent) {
+		if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+		e.preventDefault();
 		oncook();
 		setShallowParam('cook', '1');
 	}
@@ -81,7 +88,7 @@
 	<!-- Cook is the one marigold fill for everyone, first in the row and in the
 	     Tab order. It opens cooking, whose own header and Finish cooking take
 	     it from there. -->
-	<button type="button" class="cook btn-primary" onclick={cook}>
+	<a href={cookHref} class="cook btn-primary" onclick={cook}>
 		<svg
 			class="size-4"
 			viewBox="0 0 16 16"
@@ -95,7 +102,7 @@
 				d="M2 7.5h12M3.5 7.5v4a2 2 0 0 0 2 2h5a2 2 0 0 0 2-2v-4M6 5c0-1 1-1.2 1-2.5M9.5 5c0-1 1-1.2 1-2.5" />
 		</svg>
 		Cook
-	</button>
+	</a>
 
 	{#if loginHref}
 		<!-- Logged out: Save's ghost pill and bookmark, leading to login and back. -->

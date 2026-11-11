@@ -83,4 +83,15 @@ describe('optimisticToggle', () => {
 		await run.settle({ type: 'success' });
 		expect(run.update).toHaveBeenCalledWith({ reset: false, navigate: false });
 	});
+
+	test('done runs after a success only, once it is applied', async () => {
+		const done = vi.fn();
+		const toggle = optimisticToggle(() => false, { failure: FAILURE, report: vi.fn(), done });
+		const refused = press(toggle.submit);
+		await refused.settle({ type: 'failure' });
+		expect(done).not.toHaveBeenCalled();
+		const run = press(toggle.submit);
+		await run.settle({ type: 'success' });
+		expect(done).toHaveBeenCalledOnce();
+	});
 });

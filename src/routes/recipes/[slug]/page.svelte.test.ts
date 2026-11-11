@@ -300,12 +300,12 @@ describe('recipe page cooking mode', () => {
 		expect(bar()).not.toBeNull();
 		expect(cookHeader()).toBeNull();
 		expect(screen.getByRole('link', { name: 'Log in to save' })).toBeInTheDocument();
-		expect(screen.getByRole('button', { name: 'Cook' })).toBeInTheDocument();
+		expect(screen.getByRole('link', { name: 'Cook' })).toBeInTheDocument();
 	});
 
 	test('Cook swaps the band for the cooking header, hides the bar, and writes ?cook=1', async () => {
 		load();
-		await fireEvent.click(screen.getByRole('button', { name: 'Cook' }));
+		await fireEvent.click(screen.getByRole('link', { name: 'Cook' }));
 		expect(article()).toHaveAttribute('data-cooking');
 		expect(document.querySelector('.hero')).toBeNull();
 		expect(bar()).toBeNull();
@@ -433,7 +433,7 @@ describe('recipe page cooking mode', () => {
 		page.url = new URL('http://localhost/recipes/cookies?version=1&serves=8');
 		const data = makeData();
 		render(Page, { props: { data: { ...data, currentVersion: data.allVersions[1] } } });
-		await fireEvent.click(screen.getByRole('button', { name: 'Cook' }));
+		await fireEvent.click(screen.getByRole('link', { name: 'Cook' }));
 		const url = new URL(goto.mock.lastCall![0]);
 		expect(url.searchParams.get('version')).toBe('1');
 		expect(url.searchParams.get('serves')).toBe('8');
@@ -528,7 +528,7 @@ describe('recipe page cooking switch', () => {
 		render(Page, {
 			props: { data: { ...data, currentVersion: { ...data.currentVersion, steps } } }
 		});
-		await press('Cook');
+		await fireEvent.click(screen.getByRole('link', { name: 'Cook' }));
 		await tick();
 		expect(into).toHaveBeenCalledOnce();
 		expect(into.mock.contexts[0]).toHaveTextContent('Two.');
@@ -541,7 +541,7 @@ describe('recipe page cooking switch', () => {
 		Element.prototype.scrollIntoView = into;
 		load();
 		y = 700;
-		await press('Cook');
+		await fireEvent.click(screen.getByRole('link', { name: 'Cook' }));
 		await tick();
 		expect(into).not.toHaveBeenCalled();
 		expect(y).toBe(0);
@@ -652,7 +652,7 @@ describe('a kept copy of a recipe its author withdrew', () => {
 		expect(screen.queryByText(/No forks/)).toBeNull();
 		expect(screen.queryByRole('button', { name: /Keep this version/ })).toBeNull();
 		// Cook, Add to Journal and the note stay.
-		expect(screen.getByRole('button', { name: 'Cook' })).toBeInTheDocument();
+		expect(screen.getByRole('link', { name: 'Cook' })).toBeInTheDocument();
 		expect(screen.getByRole('link', { name: 'Add to Journal' })).toBeInTheDocument();
 		expect(screen.getByText('Mine')).toBeInTheDocument();
 	});

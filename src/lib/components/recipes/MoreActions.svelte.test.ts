@@ -241,7 +241,7 @@ async function openCard(props: Record<string, unknown>) {
 	render(MoreActions, { props: props as never });
 	await fireEvent.click(screen.getByRole('button', { name: CARD.label }));
 	const menu = screen.getByRole('menu', { name: 'More actions' });
-	await vi.waitFor(() => expect(within(menu).queryByText('Loading…')).toBeNull());
+	await vi.waitFor(() => expect(within(menu).queryByText('Loading collections…')).toBeNull());
 	return menu;
 }
 
@@ -322,6 +322,93 @@ describe('More actions on a Cookbook card', () => {
 		expect(fork.closest('form')).toHaveAttribute('action', `/recipes/${CARD.slug}?/fork`);
 	});
 
+	test('focus waits on a Loading collections… row, then moves to the first collection', async () => {
+		let reply!: (r: { text: () => Promise<string> }) => void;
+		fetchMock.mockImplementationOnce(() => new Promise((resolve) => (reply = resolve)));
+		render(MoreActions, { props: OWN as never });
+		await fireEvent.click(screen.getByRole('button', { name: CARD.label }));
+		await tick();
+		const loading = screen.getByRole('menuitem', { name: 'Loading collections…' });
+		expect(loading).toHaveAttribute('aria-busy', 'true');
+		expect(loading).toHaveFocus();
+		reply({
+			text: async () => JSON.stringify({ type: 'success', data: { collections: [TO_COOK, QUICK] } })
+		});
+		await vi.waitFor(() =>
+			expect(screen.getByRole('menuitemcheckbox', { name: 'To cook' })).toHaveFocus()
+		);
+		expect(screen.queryByText('Loading collections…')).toBeNull();
+	});
+
+	test('a reader who has moved on keeps their place when the collections arrive', async () => {
+		let reply!: (r: { text: () => Promise<string> }) => void;
+		fetchMock.mockImplementationOnce(() => new Promise((resolve) => (reply = resolve)));
+		render(MoreActions, { props: OWN as never });
+		await fireEvent.click(screen.getByRole('button', { name: CARD.label }));
+		await tick();
+		await fireEvent.keyDown(document.activeElement!, { key: 'ArrowDown' });
+		const journal = screen.getByRole('menuitem', { name: 'Add to Journal' });
+		expect(journal).toHaveFocus();
+		reply({
+			text: async () => JSON.stringify({ type: 'success', data: { collections: [TO_COOK, QUICK] } })
+		});
+		await vi.waitFor(() => expect(screen.getAllByRole('menuitemcheckbox')).toHaveLength(2));
+		expect(journal).toHaveFocus();
+	});
+
+	test('only the latest answer counts: an older one arriving late is ignored', async () => {
+		const replies: ((r: { text: () => Promise<string> }) => void)[] = [];
+		fetchMock.mockImplementation(() => new Promise((resolve) => replies.push(resolve)));
+		render(MoreActions, { props: OWN as never });
+		const trigger = screen.getByRole('button', { name: CARD.label });
+		await fireEvent.click(trigger);
+		await fireEvent.click(trigger);
+		await fireEvent.click(trigger);
+		expect(replies).toHaveLength(2);
+		const send = (collections: unknown[]) => ({
+			text: async () => JSON.stringify({ type: 'success', data: { collections } })
+		});
+		replies[1](send([TO_COOK, QUICK]));
+		await vi.waitFor(() => expect(screen.getAllByRole('menuitemcheckbox')).toHaveLength(2));
+		replies[0](send([{ ...QUICK, name: 'Stale' }]));
+		await new Promise((r) => setTimeout(r));
+		await tick();
+		expect(screen.getAllByRole('menuitemcheckbox').map((r) => r.textContent?.trim())).toEqual([
+			'To cook',
+			'Quick'
+		]);
+	});
+
+	test('a collection checked, unchecked or made tells the host; a refusal does not', async () => {
+		const oncollected = vi.fn();
+		const menu = await openCard({ ...OWN, oncollected });
+		const quick = within(menu).getByRole('menuitemcheckbox', { name: 'Quick' });
+		await settle(quick.closest('form')!, {
+			type: 'failure',
+			data: { code: 'invalid', error: 'No.' }
+		});
+		expect(oncollected).not.toHaveBeenCalled();
+		await settle(quick.closest('form')!, { type: 'success' });
+		expect(oncollected).toHaveBeenCalledOnce();
+
+		await fireEvent.click(within(menu).getByRole('menuitem', { name: 'New collection' }));
+		await tick();
+		const form = screen.getByRole('textbox', { name: 'New collection' }).closest('form')!;
+		await settle(form, { type: 'failure', data: { code: 'invalid', error: 'Taken.' } });
+		expect(oncollected).toHaveBeenCalledOnce();
+		await settle(form, { type: 'success' });
+		await vi.waitFor(() => expect(oncollected).toHaveBeenCalledTimes(2));
+	});
+
+	test('Fork that cannot reach the server says nothing was forked', async () => {
+		const menu = await openCard(SAVED);
+		const form = within(menu).getByRole('menuitem', { name: 'Fork' }).closest('form')!;
+		await settle(form, { type: 'error' });
+		expect(within(menu).getByRole('alert')).toHaveTextContent(
+			"Couldn't reach the server. Nothing was forked."
+		);
+	});
+
 	test('Fork’s refusal is said in the menu', async () => {
 		const menu = await openCard(SAVED);
 		const form = within(menu).getByRole('menuitem', { name: 'Fork' }).closest('form')!;
@@ -386,7 +473,7 @@ describe('More actions on a Cookbook card', () => {
 		const trigger = screen.getByRole('button', { name: CARD.label });
 		await fireEvent.click(trigger);
 		await fireEvent.click(trigger);
-		await vi.waitFor(() => expect(screen.queryByText('Loading…')).toBeNull());
+		await vi.waitFor(() => expect(screen.queryByText('Loading collections…')).toBeNull());
 		expect(screen.queryByRole('alert')).toBeNull();
 	});
 

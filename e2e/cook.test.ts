@@ -77,7 +77,7 @@ test.describe('Cooking', () => {
 		await expect(page.locator('.version-bar')).toBeVisible();
 		expect(await stepSize(page)).toEqual({ text: '17px', line: '27.2px', numeral: '18px' });
 
-		await page.getByRole('button', { name: 'Cook' }).click();
+		await page.getByRole('link', { name: 'Cook' }).click();
 		await expect(page).toHaveURL(/[?&]cook=1/);
 		const header = page.locator('header.cook-header');
 		await expect(header.getByText('Cooking', { exact: true })).toBeVisible();
@@ -122,7 +122,7 @@ test.describe('Cooking', () => {
 		expect(await strike(row)).toBe('line-through');
 		await expect(row.locator('.step-check')).toBeHidden();
 
-		await page.getByRole('button', { name: 'Cook' }).click();
+		await page.getByRole('link', { name: 'Cook' }).click();
 		expect(await strike(row)).toBe('none');
 		expect(await strike(ingredient)).toBe('none');
 		await expect(row.locator('.step-check')).toBeVisible();
@@ -138,7 +138,7 @@ test.describe('Cooking', () => {
 		await page.setViewportSize({ width: 390, height: 844 });
 		await mockWakeLock(page);
 		await openCookies(page);
-		await page.getByRole('button', { name: 'Cook' }).click();
+		await page.getByRole('link', { name: 'Cook' }).click();
 		await expect(page).toHaveURL(/[?&]cook=1/);
 		await segment(page, 'Ingredients').click();
 		const servings = page.getByRole('spinbutton', { name: 'Servings' });
@@ -167,7 +167,7 @@ test.describe('Cooking', () => {
 		const errors: string[] = [];
 		page.on('pageerror', (e) => errors.push(e.message));
 		await openCookies(page);
-		await page.getByRole('button', { name: 'Cook' }).click();
+		await page.getByRole('link', { name: 'Cook' }).click();
 		await expect(page.getByRole('button', { name: 'Exit' })).toBeVisible();
 		await expect(page.getByText('Your screen may still sleep.')).toBeVisible();
 		expect(errors).toEqual([]);
@@ -181,7 +181,7 @@ test.describe('Cooking', () => {
 		await page.setViewportSize({ width: 390, height: 700 });
 		await mockWakeLock(page);
 		await openTikka(page);
-		await page.getByRole('button', { name: 'Cook' }).click();
+		await page.getByRole('link', { name: 'Cook' }).click();
 		await expect(segment(page, 'Method')).toHaveAttribute('aria-pressed', 'true');
 		const history = await page.evaluate(() => history.length);
 
@@ -218,7 +218,7 @@ test.describe('Cooking', () => {
 		await mockWakeLock(page);
 		await openCookies(page);
 		await expect(page.locator('.tab-bar')).toBeVisible();
-		await page.getByRole('button', { name: 'Cook' }).click();
+		await page.getByRole('link', { name: 'Cook' }).click();
 		await expect(page.locator('.tab-bar')).toBeHidden();
 		await expect(page.locator('.nav-shell')).toBeHidden();
 		const bar = (await switcher(page).boundingBox())!;
@@ -239,7 +239,7 @@ test.describe('Cooking', () => {
 		await page.setViewportSize({ width: 390, height: 600 });
 		await mockWakeLock(page);
 		await openTikka(page);
-		await page.getByRole('button', { name: 'Cook' }).click();
+		await page.getByRole('link', { name: 'Cook' }).click();
 		await segment(page, 'Ingredients').click();
 		const barTop = await top(page, '.section-tabs');
 		const boxes = page.locator('#ingredients input[type="checkbox"]');
@@ -267,7 +267,7 @@ test.describe('Cooking', () => {
 		await page.locator('#method label').nth(0).click();
 		await page.locator('#method label').nth(1).click();
 		await page.evaluate(() => window.scrollTo(0, 0));
-		await page.getByRole('button', { name: 'Cook' }).click();
+		await page.getByRole('link', { name: 'Cook' }).click();
 		await expect(page.locator('#method li').nth(2)).toBeInViewport();
 		expect(await scrollY(page)).toBeGreaterThan(0);
 	});
@@ -275,10 +275,31 @@ test.describe('Cooking', () => {
 	test('signed out, Finish cooking after the last step returns to reading', async ({ page }) => {
 		await mockWakeLock(page);
 		await openCookies(page);
-		await page.getByRole('button', { name: 'Cook' }).click();
+		await page.getByRole('link', { name: 'Cook' }).click();
 		await page.getByRole('button', { name: 'Finish cooking' }).click();
 		await expect(page).not.toHaveURL(/cook=/);
 		await expect(page.locator('.hero')).toBeVisible();
 		await expect.poll(() => wakeLockLog(page)).toEqual({ requests: 1, releases: 1 });
+	});
+});
+
+// Cook is a link, so it cooks before hydration and without script: the
+// server renders cooking from ?cook=1, the serves kept.
+test.describe('Cook without JavaScript', () => {
+	test.use({ javaScriptEnabled: false });
+
+	test('the link opens cooking at the same serves', async ({ page }) => {
+		await page.goto('/discover');
+		const href = await page
+			.getByRole('link', { name: new RegExp(TIKKA, 'i') })
+			.and(page.locator(':not([href*="/diff"])'))
+			.first()
+			.getAttribute('href');
+		await page.goto(`${href}?serves=8`);
+		await page.getByRole('link', { name: 'Cook' }).click();
+		await page.waitForURL(/[?&]cook=1/);
+		await expect(page).toHaveURL(/[?&]serves=8/);
+		await expect(page.locator('header.cook-header')).toBeVisible();
+		await expect(page.locator('.hero')).toHaveCount(0);
 	});
 });
