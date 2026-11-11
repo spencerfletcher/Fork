@@ -1,4 +1,4 @@
-import { sql } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { createClient } from '@supabase/supabase-js';
@@ -11,7 +11,9 @@ import {
 	profiles,
 	friendships,
 	logEntries,
-	likes
+	likes,
+	collections,
+	collectionRecipes
 } from './schema';
 import { slugify, randomSuffix } from '#lib/helpers.js';
 import { recipeCopies } from '#lib/recipes/content.js';
@@ -173,6 +175,31 @@ async function seed() {
 			versionRows.sort((a, b) => a.versionNumber - b.versionNumber).map((v) => v.id)
 		);
 	}
+
+	// ── Collections ──────────────────────────────────────────────────────────
+	// The first cook's starters already made and filled, plus one of their own;
+	// the others get theirs when they first open the Cookbook.
+	console.log('Seeding collections...');
+	await db
+		.update(profiles)
+		.set({ startersMadeAt: new Date() })
+		.where(eq(profiles.id, userIds.spencerfletcher));
+	const shelves = await db
+		.insert(collections)
+		.values(
+			['To cook', 'Favorites', 'Weeknight'].map((name) => ({
+				ownerId: userIds.spencerfletcher,
+				name
+			}))
+		)
+		.returning({ id: collections.id, name: collections.name });
+	const shelf = (name: string) => shelves.find((c) => c.name === name)!.id;
+	await db.insert(collectionRecipes).values([
+		{ collectionId: shelf('To cook'), recipeId: idBySlug.get('chicken-tikka-masala')! },
+		{ collectionId: shelf('To cook'), recipeId: idBySlug.get('red-lentil-dal')! },
+		{ collectionId: shelf('Favorites'), recipeId: idBySlug.get('classic-chocolate-chip-cookies')! },
+		{ collectionId: shelf('Weeknight'), recipeId: idBySlug.get('red-lentil-dal')! }
+	]);
 
 	// ── Journal ──────────────────────────────────────────────────────────────
 	console.log('Seeding log entries...');

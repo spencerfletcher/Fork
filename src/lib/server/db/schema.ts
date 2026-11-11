@@ -41,6 +41,9 @@ export const profiles = pgTable('profiles', {
 	defaultVisibility: text('default_visibility').$type<Visibility>().notNull().default('private'),
 	// Units quantities are shown in (Settings); null shows them as written.
 	measurement: text().$type<Measurement>(),
+	// When the starter collections were made; null until the cook first needs
+	// one. Kept so a starter the cook deleted is never made again.
+	startersMadeAt: timestamp('starters_made_at'),
 	createdAt: timestamp('created_at').notNull().defaultNow()
 }).enableRLS();
 
@@ -269,6 +272,45 @@ export const favorites = pgTable(
 		index('favorites_created_at_idx').on(table.createdAt),
 		// The save count on every recipe view; the primary key leads with the user.
 		index('favorites_recipe_idx').on(table.recipeId)
+	]
+).enableRLS();
+
+// ─── Collections ──────────────────────────────────────────────────────────────
+
+// A cook's named shelf in their Cookbook, filled by hand. Names are unique per
+// owner whatever their case. Counts and order are read, never stored.
+export const collections = pgTable(
+	'collections',
+	{
+		id: serial().primaryKey(),
+		ownerId: text('owner_id')
+			.notNull()
+			.references(() => profiles.id, { onDelete: 'cascade' }),
+		name: text().notNull(),
+		createdAt: timestamp('created_at').notNull().defaultNow()
+	},
+	(table) => [
+		uniqueIndex('collections_owner_name_idx').on(table.ownerId, sql`lower(${table.name})`)
+	]
+).enableRLS();
+
+// A recipe in a collection: a link, never a copy. Goes with its collection
+// and with the recipe's permanent deletion; a trashed recipe keeps its rows.
+export const collectionRecipes = pgTable(
+	'collection_recipes',
+	{
+		collectionId: integer('collection_id')
+			.notNull()
+			.references(() => collections.id, { onDelete: 'cascade' }),
+		recipeId: integer('recipe_id')
+			.notNull()
+			.references(() => recipes.id, { onDelete: 'cascade' }),
+		addedAt: timestamp('added_at').notNull().defaultNow()
+	},
+	// The key serves a collection's recipes; this index a recipe's collections.
+	(table) => [
+		primaryKey({ columns: [table.collectionId, table.recipeId] }),
+		index('collection_recipes_recipe_idx').on(table.recipeId)
 	]
 ).enableRLS();
 

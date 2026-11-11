@@ -134,7 +134,7 @@ export async function changeUsername(
 	}
 }
 
-const uniqueViolation = (e: unknown): boolean => {
+export const uniqueViolation = (e: unknown): boolean => {
 	const pgError = e instanceof Error && e.cause ? e.cause : e;
 	return (pgError as { code?: string } | null)?.code === '23505';
 };
