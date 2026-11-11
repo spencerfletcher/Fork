@@ -46,23 +46,22 @@
 			report={{ type: 'log_entry', id: String(entry.id) }}
 			label="More for @{item.username}'s {entry.dish}" />
 	</div>
-	<h2 class="dish">{entry.dish}</h2>
+	<!-- The title is the way to the recipe, at the version cooked (Spencer, 10
+	     November 2026); the version bar there says which one it is. -->
+	<h2 class="dish">
+		{#if source.kind === 'recipe'}
+			<a href={sourceHref(source)}>{entry.dish}</a>
+		{:else}
+			{entry.dish}
+		{/if}
+	</h2>
 	{#if entry.photoUrl}
 		<figure class="photo">
 			<img src={entry.photoUrl} alt="@{item.username}'s photo of {entry.dish}" loading="lazy" />
 		</figure>
 	{/if}
 	{#if entry.caption}<p class="caption">{entry.caption}</p>{/if}
-	{#if source.kind === 'recipe'}
-		<p class="source">
-			<a class="hit-link" href={sourceHref(source)}>
-				{source.title}{source.versionNumber ? ' · ' : ''}{#if source.versionNumber}<span
-						class="mono-id">
-						v{source.versionNumber}
-					</span>{/if}
-			</a>
-		</p>
-	{:else if source.kind === 'hidden'}
+	{#if source.kind === 'hidden'}
 		<p class="private-line">
 			@{item.username} cooked a private recipe. You can see the dish, not the recipe.
 		</p>
@@ -130,6 +129,15 @@
 		font-size: 1.375rem;
 		line-height: 1.25;
 		overflow-wrap: anywhere;
+	}
+
+	.dish a {
+		color: var(--color-text);
+		transition: color 0.15s ease;
+	}
+
+	.dish a:hover {
+		color: var(--color-accent);
 	}
 
 	.photo {

@@ -2,6 +2,8 @@ import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/svelte';
 import type { ComponentProps } from 'svelte';
 import FeedEntry from './FeedEntry.svelte';
+import source from './FeedEntry.svelte?raw';
+import { cssRule } from '#lib/testing/css.js';
 import { BLOCK_SENTENCE } from '#lib/journal.js';
 
 // enhance runs the submit callback the component hands it, so the optimistic
@@ -65,10 +67,33 @@ describe('FeedEntry', () => {
 			'alt',
 			"@devcooks's photo of Beet and Feta Salad"
 		);
-		expect(screen.getByRole('link', { name: /Orange · v2/ })).toHaveAttribute(
-			'href',
-			'/recipes/beet?version=2'
-		);
+	});
+
+	test('the title is the link to the recipe at the version cooked, with no source line under it', () => {
+		const { container } = render(FeedEntry, { props: { item: makeItem() } });
+		const title = screen.getByRole('heading', { name: 'Beet and Feta Salad' });
+		const link = screen.getByRole('link', { name: 'Beet and Feta Salad' });
+		expect(title).toContainElement(link);
+		expect(link).toHaveAttribute('href', '/recipes/beet?version=2');
+		expect(container.querySelector('.source')).toBeNull();
+		expect(screen.queryByText(/Orange/)).toBeNull();
+		// One Direction: an ink title turns clay on hover.
+		expect(cssRule(source, '.dish a:hover')).toContain('color: var(--color-accent)');
+	});
+
+	test('a deleted recipe: the title is plain text over "Recipe deleted"', () => {
+		render(FeedEntry, { props: { item: makeItem({ source: { kind: 'deleted' } }) } });
+		const title = screen.getByRole('heading', { name: 'Beet and Feta Salad' });
+		expect(title.querySelector('a')).toBeNull();
+		expect(screen.getByText('Recipe deleted')).toBeInTheDocument();
+		expect(screen.queryByRole('link', { name: /Beet/ })).toBeNull();
+	});
+
+	test('a recipe the reader may not see: the title is plain text', () => {
+		render(FeedEntry, { props: { item: makeItem({ source: { kind: 'hidden' } }) } });
+		expect(
+			screen.getByRole('heading', { name: 'Beet and Feta Salad' }).querySelector('a')
+		).toBeNull();
 	});
 
 	test('Like shows its count and flips at once, rolling back when the server refuses', async () => {
