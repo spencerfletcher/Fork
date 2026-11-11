@@ -119,7 +119,7 @@ describe('Navbar signed in', () => {
 	});
 
 	// The avatar alone, at every width: no handle and no Log out in the bar
-	// (decided 9 November 2026). It opens a menu of Profile and Log out.
+	// (decided 9 November 2026). It opens a menu of Profile, Settings and Log out.
 	const avatar = () => screen.getByRole('button', { name: 'Your account, @chefmaria' });
 
 	test('the avatar is a menu button with no handle or Log out beside it', () => {
@@ -133,30 +133,44 @@ describe('Navbar signed in', () => {
 		expect(screen.queryByRole('link', { name: 'Log in' })).toBeNull();
 	});
 
-	test('opening it shows Profile and Log out, focus on Profile', async () => {
+	test('opening it shows Profile, Settings and Log out, focus on Profile', async () => {
 		render(Navbar, { props: { user: signedIn(), profile } });
 		await fireEvent.click(avatar());
 		expect(avatar()).toHaveAttribute('aria-expanded', 'true');
 		const menu = screen.getByRole('menu');
 		const items = within(menu).getAllByRole('menuitem');
-		expect(items.map((i) => i.textContent?.trim())).toEqual(['Profile', 'Log out']);
+		expect(items.map((i) => i.textContent?.trim())).toEqual(['Profile', 'Settings', 'Log out']);
 		expect(items[0]).toHaveAttribute('href', '/users/chefmaria');
 		expect(items[0]).toHaveFocus();
+		expect(items[1]).toHaveAttribute('href', '/settings');
 		// Log out is the same real form post it was in the bar.
-		expect(items[1].closest('form')).toHaveAttribute('action', '/logout');
-		expect(items[1].closest('form')).toHaveAttribute('method', 'POST');
+		expect(items[2].closest('form')).toHaveAttribute('action', '/logout');
+		expect(items[2].closest('form')).toHaveAttribute('method', 'POST');
 	});
 
 	test('arrow keys move between the items', async () => {
 		render(Navbar, { props: { user: signedIn(), profile } });
 		await fireEvent.click(avatar());
-		const [profileItem, logOut] = screen.getAllByRole('menuitem');
+		const [profileItem, settings, logOut] = screen.getAllByRole('menuitem');
 		await fireEvent.keyDown(profileItem, { key: 'ArrowDown' });
+		expect(settings).toHaveFocus();
+		await fireEvent.keyDown(settings, { key: 'ArrowDown' });
 		expect(logOut).toHaveFocus();
 		await fireEvent.keyDown(logOut, { key: 'ArrowDown' });
 		expect(profileItem).toHaveFocus();
 		await fireEvent.keyDown(profileItem, { key: 'ArrowUp' });
 		expect(logOut).toHaveFocus();
+	});
+
+	test('Settings is current on /settings only', async () => {
+		page.url = new URL('http://localhost/settings');
+		render(Navbar, { props: { user: signedIn(), profile } });
+		await fireEvent.click(avatar());
+		expect(screen.getByRole('menuitem', { name: 'Settings' })).toHaveAttribute(
+			'aria-current',
+			'page'
+		);
+		expect(screen.getByRole('menuitem', { name: 'Profile' })).not.toHaveAttribute('aria-current');
 	});
 
 	test('Escape closes it and returns focus to the avatar', async () => {
@@ -192,13 +206,13 @@ describe('Navbar signed in', () => {
 		expect(screen.getByRole('menuitem', { name: 'Profile' })).not.toHaveAttribute('aria-current');
 	});
 
-	test('without a profile the menu still offers Log out', async () => {
+	test('without a profile the menu still offers Settings and Log out', async () => {
 		render(Navbar, { props: { user: signedIn() } });
 		const button = screen.getByRole('button', { name: 'Your account' });
 		expect(button).toHaveTextContent('C');
 		await fireEvent.click(button);
 		const items = screen.getAllByRole('menuitem');
-		expect(items.map((i) => i.textContent?.trim())).toEqual(['Log out']);
+		expect(items.map((i) => i.textContent?.trim())).toEqual(['Settings', 'Log out']);
 	});
 });
 

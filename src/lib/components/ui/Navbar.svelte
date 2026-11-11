@@ -60,7 +60,7 @@
 					{@render searchIcon('size-5')}
 				</a>
 				{#if user}
-					<!-- The avatar alone at every width, opening Profile and Log out
+					<!-- The avatar alone at every width, opening Profile, Settings and Log out
 				     (decided 9 November 2026). -->
 					<Dropdown>
 						{#snippet trigger(props)}
@@ -87,6 +87,13 @@
 										Profile
 									</a>
 								{/if}
+								<a
+									href="/settings"
+									class="menu-row"
+									role="menuitem"
+									aria-current={current(path === '/settings')}>
+									Settings
+								</a>
 								<form action="/logout" method="POST" role="none" use:enhance>
 									<button type="submit" class="menu-row" role="menuitem">Log out</button>
 								</form>
