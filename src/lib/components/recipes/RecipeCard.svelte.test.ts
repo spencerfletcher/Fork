@@ -5,6 +5,7 @@ import source from './RecipeCard.svelte?raw';
 import { formatTime } from '#lib/helpers.js';
 import { dayLabel } from '#lib/journal.js';
 import { cssRule } from '#lib/testing/css.js';
+import { MARK_END, MARK_START } from '#lib/highlight.js';
 
 const { mockGoto } = vi.hoisted(() => ({ mockGoto: vi.fn() }));
 vi.mock('$app/navigation', () => ({ goto: mockGoto }));
@@ -415,5 +416,56 @@ describe('RecipeCard: times and last cooked', () => {
 	test('never cooked, or no counts from the page: nothing', () => {
 		const { container } = cookbookCard({});
 		expect(container.querySelector('.meta-row')!.textContent).not.toContain('Cooked');
+	});
+
+	describe('a search match', () => {
+		const m = (s: string) => s.replaceAll('[', MARK_START).replaceAll(']', MARK_END);
+
+		test('marks the matched words in the title, the link still named by the plain title', () => {
+			const { container } = render(RecipeCard, {
+				props: {
+					recipe: makeRecipe({ title: 'Ginger snaps', match: { title: m('[Ginger] snaps') } })
+				}
+			});
+			expect([...container.querySelectorAll('mark')].map((e) => e.textContent)).toEqual(['Ginger']);
+			expect(container.querySelector('h3')?.textContent?.trim()).toBe('Ginger snaps');
+			expect(screen.getByRole('link', { name: 'Ginger snaps' })).toBeInTheDocument();
+		});
+
+		test('says where it matched in place of the description', () => {
+			const { container } = render(RecipeCard, {
+				props: {
+					recipe: makeRecipe({
+						title: 'Stir fry',
+						description: 'Quick.',
+						match: { title: 'Stir fry', label: 'Ingredient', text: m('fresh [ginger]') }
+					})
+				}
+			});
+			expect(container.querySelector('.card-match')?.textContent?.replace(/\s+/g, ' ').trim()).toBe(
+				'Ingredient: fresh ginger'
+			);
+			expect(container.querySelector('.card-match mark')?.textContent).toBe('ginger');
+			expect(screen.queryByText('Quick.')).not.toBeInTheDocument();
+		});
+
+		test("markup in a recipe's words is text, never HTML", () => {
+			const { container } = render(RecipeCard, {
+				props: {
+					recipe: makeRecipe({
+						title: '<img src=x onerror=alert(1)> cake',
+						match: {
+							title: m('<img src=x onerror=alert(1)> [cake]'),
+							label: 'Ingredient',
+							text: m('<b>[cake]</b> flour')
+						}
+					})
+				}
+			});
+			expect(container.querySelector('img')).toBeNull();
+			expect(container.querySelector('b')).toBeNull();
+			expect(container.querySelector('h3')?.textContent).toContain('<img src=x onerror=alert(1)>');
+			expect(container.querySelector('.card-match')?.textContent).toContain('<b>cake</b> flour');
+		});
 	});
 });

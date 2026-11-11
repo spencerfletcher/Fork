@@ -1,12 +1,17 @@
 /**
  * Converts a string into a URL-friendly slug.
- * e.g. "Classic Chocolate Chip Cookies" → "classic-chocolate-chip-cookies"
+ * e.g. "Classic Chocolate Chip Cookies" → "classic-chocolate-chip-cookies".
+ * Latin accents fold ("Crème" → "creme"); letters of other scripts stay
+ * ("味噌" → "味噌"), so a tag in any language has a slug.
  */
 export function slugify(text: string): string {
 	return text
+		.normalize('NFD')
+		.replace(/(\p{Script=Latin})\p{M}+/gu, '$1') // fold Latin accents only: a kana's voicing mark is its letter
+		.normalize('NFC')
 		.toLowerCase()
 		.trim()
-		.replace(/[^\w\s-]/g, '') // remove non-word chars (except spaces and hyphens)
+		.replace(/[^\p{L}\p{N}\s_-]/gu, '') // remove all but letters, digits, spaces, underscores and hyphens
 		.replace(/[\s_]+/g, '-') // spaces/underscores → hyphens
 		.replace(/--+/g, '-') // collapse multiple hyphens
 		.replace(/^-+|-+$/g, ''); // trim leading/trailing hyphens
@@ -56,6 +61,20 @@ export function text(formData: FormData, key: string): string {
 /** Eight URL-safe random characters, appended to slugs so titles need not be unique. */
 export function randomSuffix(): string {
 	return crypto.randomUUID().slice(0, 8);
+}
+
+/**
+ * A new recipe's slug: its title's Latin letters and digits, or "recipe" when
+ * it has none ("味噌汁" → "recipe-1a2b3c4d"), then a random suffix. ASCII
+ * only, because a slug goes into redirects' Location headers, which refuse
+ * any character above 255.
+ */
+export function recipeSlug(title: string): string {
+	const base = slugify(title)
+		.replace(/[^a-z0-9-]/g, '')
+		.replace(/--+/g, '-')
+		.replace(/^-+|-+$/g, '');
+	return `${base || 'recipe'}-${randomSuffix()}`;
 }
 
 /** `value` when it is one of `list`, else undefined, typed as the list's member. */

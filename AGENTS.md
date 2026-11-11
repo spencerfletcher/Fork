@@ -61,6 +61,8 @@ Planning and design docs: start at `docs/README.md`, which names the current pro
 - `storePhoto(formData, supabase, userId)` (`src/lib/server/submission.ts`): a form's photo stored, or why it was refused
 - `listDrafts(userId)` (`src/lib/drafts.ts`): this device's editor drafts for one cook, newest first, for the Cookbook's Drafts list; `saveDraft`, `loadDraft`, `clearDraft` beside it
 - `changeUsername(id, name)` (`src/lib/server/profiles.ts`): `changed`, `taken` or `too_soon` with the next allowed day; former names last `FORMER_USERNAME_DAYS`, at most `USERNAME_CHANGES_PER_WINDOW` new names in that window (`src/lib/auth/rules.ts`)
+- `textSearch(query)` and `searchMatches(query, ids, conn)` (`src/lib/server/recipeSearch.ts`): the `?q=` match and rank (title, then current ingredients, then the rest of the current version, then older versions; saves break ties) for any card list, and why each result matched, its words marked for `segments(marked)` (`src/lib/highlight.ts`) to render as text
+- `recipeSlug(title)` (`src/lib/helpers.ts`): a new recipe's ASCII slug with its random suffix ("recipe-…" for a title with no Latin letters); `slugify` keeps any script's letters, for tags
 - `oneOf(list, value)` (`src/lib/helpers.ts`): a value from an `as const` list, else undefined
 - `wholeNumber(s)` (`src/lib/helpers.ts`): digits only as a number, else null
 - `plural(n, word, pluralForm?)` (`src/lib/helpers.ts`): "1 fork", "2 forks", "2 entries"

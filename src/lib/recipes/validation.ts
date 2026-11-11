@@ -192,8 +192,7 @@ function parse<T>(schema: z.ZodType<T>, input: unknown): Result<T> {
 }
 
 /** What a tag name says when it makes no slug, so the tag would have no link. */
-export const tagNameMessage = (name: string) =>
-	`Tag "${name}" needs at least one letter or number from A to Z or 0 to 9`;
+export const tagNameMessage = (name: string) => `Tag "${name}" needs at least one letter or number`;
 
 const settingsSchema = z.object({
 	visibility: z.enum(VISIBILITIES),

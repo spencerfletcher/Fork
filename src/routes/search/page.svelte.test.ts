@@ -45,7 +45,7 @@ describe('Search page results', () => {
 describe('Search page empty state', () => {
 	test('with tags set, the message is followed by a Clear filters link', () => {
 		renderSearch({ searchQuery: 'zzzz', selectedTags: ['dessert'] });
-		expect(screen.getByText(/No recipes found/)).toBeInTheDocument();
+		expect(screen.getByText(/No recipes match “zzzz” with these filters/)).toBeInTheDocument();
 		// It clears the tags only: the query stays.
 		expect(screen.getByRole('link', { name: 'Clear filters' })).toHaveAttribute(
 			'href',
@@ -62,6 +62,20 @@ describe('Search page empty state', () => {
 		unmount();
 		renderSearch({ selectedTags: ['dessert'] });
 		expect(screen.getByRole('link', { name: 'Clear filters' })).toHaveAttribute('href', '/search');
+	});
+
+	test('with a query and filters, Clear search drops the query and keeps the tags and Friends', () => {
+		renderSearch({ searchQuery: 'zzzz', selectedTags: ['dessert', 'quick'], friendsOnly: true });
+		expect(screen.getByRole('link', { name: 'Clear search' })).toHaveAttribute(
+			'href',
+			`/search?tags=${encodeURIComponent('dessert,quick')}&friends=1`
+		);
+	});
+
+	test('with filters and no query, the message names the filters and offers Clear filters alone', () => {
+		renderSearch({ selectedTags: ['dessert'] });
+		expect(screen.getByText(/No recipes match these filters/)).toBeInTheDocument();
+		expect(screen.queryByRole('link', { name: 'Clear search' })).toBeNull();
 	});
 
 	test('with only a query set, the link says what it does: Clear search', () => {
@@ -82,7 +96,7 @@ describe('Search page empty state', () => {
 
 	test('with the Friends filter on, Clear filters drops it and keeps the query', () => {
 		renderSearch({ searchQuery: 'dal', friendsOnly: true });
-		expect(screen.getByText(/No recipes found/)).toBeInTheDocument();
+		expect(screen.getByText(/No recipes match “dal” with these filters/)).toBeInTheDocument();
 		expect(screen.getByRole('link', { name: 'Clear filters' })).toHaveAttribute(
 			'href',
 			'/search?q=dal'

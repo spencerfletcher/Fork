@@ -63,7 +63,7 @@ describe('localToday', () => {
 });
 
 describe('KEEP_SOURCE', () => {
-	// Recipe slugs are slugify output plus a suffix: word characters and hyphens only.
+	// Recipe slugs are recipeSlug output: ASCII letters, digits and hyphens only.
 	test('can never be a recipe slug', () => {
 		expect(slugify(KEEP_SOURCE)).not.toBe(KEEP_SOURCE);
 		expect(KEEP_SOURCE).toMatch(/[^\w-]/);

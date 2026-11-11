@@ -7,6 +7,7 @@
 	import CookLink from '#lib/components/ui/CookLink.svelte';
 	import { dayLabel } from '#lib/journal.js';
 	import Username from '#lib/components/ui/Username.svelte';
+	import { segments, type SearchMatch } from '#lib/highlight.js';
 
 	// Only what the card renders, so a column added to the table does not ripple
 	// into every card fixture.
@@ -27,6 +28,8 @@
 		/** The viewer's own, on their Cookbook only (cardList's `cooked`). */
 		timesCooked?: number;
 		lastCookedOn?: string;
+		/** Search only: the title with the matched words marked, and where it matched. */
+		match?: SearchMatch;
 	}
 
 	// Position in the grid, when the page knows it: the first row's photos are
@@ -131,14 +134,14 @@
 		<!-- No photo: the title stands in for it, inside the same 4:3 block, so a
 		     mixed grid keeps its rhythm and the title is not printed twice. -->
 		<div class="card-panel">
-			<h3 class="card-panel-title">{recipe.title}</h3>
+			<h3 class="card-panel-title">{@render title()}</h3>
 		</div>
 	{/if}
 
 	<!-- Title, meta and any extra line: one block, spaced by its gap alone. -->
 	<div class="card-text">
 		{#if recipe.imageUrl}
-			<h3 class="card-title">{recipe.title}</h3>
+			<h3 class="card-title">{@render title()}</h3>
 		{/if}
 
 		<div class="meta-row dot-list">
@@ -167,12 +170,29 @@
 			</p>
 		{/if}
 
-		<!-- At most one extra paragraph: no description, no line (Spencer, 31 October 2026). -->
-		{#if description}
+		<!-- At most one extra paragraph: no description, no line (Spencer, 31 October 2026).
+		     A search result that matched outside its title says where instead. -->
+		{#if recipe.match?.label}
+			<p class="card-description card-match">
+				{recipe.match.label}: {@render marked(recipe.match.text ?? '')}
+			</p>
+		{:else if description}
 			<p class="card-description">{description}</p>
 		{/if}
 	</div>
 </div>
+
+<!-- Marked words as <mark>, every run as escaped text: the words are a
+     recipe's own, so never {@html}. -->
+{#snippet marked(text: string)}
+	{#each segments(text) as run, i (i)}{#if run.mark}<mark>
+				{run.text}
+			</mark>{:else}{run.text}{/if}{/each}
+{/snippet}
+
+{#snippet title()}
+	{#if recipe.match}{@render marked(recipe.match.title)}{:else}{recipe.title}{/if}
+{/snippet}
 
 <style>
 	/* The card is content on the page's paper, not a tile: no surface, border or

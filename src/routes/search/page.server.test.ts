@@ -65,8 +65,41 @@ describe('search load', () => {
 		await loadResult(makeEvent('cookie'));
 
 		expect(findManyMock).toHaveBeenCalledTimes(1);
-		// Relevance first, then recency; without a query only recency applies.
-		expect(findManyMock.mock.calls[0][0].orderBy).toHaveLength(2);
+		// Where it matched, then saves, then recency; without a query only recency applies.
+		expect(findManyMock.mock.calls[0][0].orderBy).toHaveLength(3);
+	});
+
+	test('a result says why it matched when its title does not', async () => {
+		selectDistinctMock.mockReturnValue(chain([]));
+		selectMock
+			.mockReturnValueOnce(chain([])) // version counts
+			.mockReturnValueOnce(chain([])) // fork counts
+			.mockReturnValueOnce(
+				chain([
+					{
+						id: 1,
+						tier: 2,
+						title: 'Stir fry',
+						current: {
+							version: 1,
+							title: 'Stir fry',
+							ingredients: ['fresh ginger'],
+							description: null,
+							step: null
+						},
+						older: null
+					}
+				])
+			);
+		findManyMock.mockResolvedValue([{ id: 1, title: 'Stir fry', author: null }]);
+
+		const result = await loadResult(makeEvent('ginger'));
+
+		expect(result.recipes[0].match).toEqual({
+			title: 'Stir fry',
+			label: 'Ingredient',
+			text: 'fresh ginger'
+		});
 	});
 
 	test('keeps database order when there is no query', async () => {
@@ -84,12 +117,12 @@ describe('search load', () => {
 		expect(findManyMock.mock.calls[0][0].orderBy).toEqual([desc(recipes.updatedAt)]);
 	});
 
-	test('a ranked search breaks ties by the newest change', async () => {
+	test('a ranked search breaks its last ties by the newest change', async () => {
 		selectDistinctMock.mockReturnValue(chain([]));
 		selectMock.mockReturnValue(chain([]));
 		findManyMock.mockResolvedValue([]);
 		await loadResult(makeEvent('cookies'));
-		expect(findManyMock.mock.calls[0][0].orderBy[1]).toEqual(desc(recipes.updatedAt));
+		expect(findManyMock.mock.calls[0][0].orderBy.at(-1)).toEqual(desc(recipes.updatedAt));
 	});
 
 	// A slug no chip carries (renamed, mistyped) filters nothing: the page is

@@ -333,20 +333,19 @@ describe('parseSettings', () => {
 		expect(value.tagNames).toEqual(['Dessert', 'Baking']);
 	});
 
-	// A tag's link is its slug, built from ASCII letters and digits; with none there is no link.
-	test('refuses a tag name with no ASCII letter or digit, naming it', () => {
-		expect(parseSettings(form({ tags: ['Dessert', '日本'] }))).toEqual({
+	// A tag's link is its slug, built from its letters and digits in any script; with none there is no link.
+	test('refuses a tag name with no letter or digit, naming it', () => {
+		expect(parseSettings(form({ tags: ['Dessert', '!!'] }))).toEqual({
 			ok: false,
-			error: tagNameMessage('日本')
+			error: tagNameMessage('!!')
 		});
-		expect(tagNameMessage('日本')).toContain('日本');
+		expect(tagNameMessage('!!')).toContain('!!');
 	});
 
-	test('a name with any ASCII letter or digit is kept', () => {
-		expect(unwrap(parseSettings(form({ tags: ['Café', '7-up'] }))).tagNames).toEqual([
-			'Café',
-			'7-up'
-		]);
+	test('a name with any letter or digit is kept, in any script', () => {
+		expect(
+			unwrap(parseSettings(form({ tags: ['Café', '7-up', '日本', 'Борщ'] }))).tagNames
+		).toEqual(['Café', '7-up', '日本', 'Борщ']);
 	});
 });
 

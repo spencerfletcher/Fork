@@ -7,8 +7,22 @@
 	let { data }: { data: PageData } = $props();
 
 	const recipes = $derived(data.recipes);
-	const filtered = $derived(
-		!!data.searchQuery || data.selectedTags.length > 0 || !!data.friendsOnly
+	const hasFilters = $derived(data.selectedTags.length > 0 || !!data.friendsOnly);
+	const filtered = $derived(!!data.searchQuery || hasFilters);
+
+	// The empty state's ways out, each dropping one half of the search.
+	const href = (params: [string, string][]) =>
+		params.length
+			? `/search?${params.map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join('&')}`
+			: '/search';
+	const withoutFilters = $derived(href(data.searchQuery ? [['q', data.searchQuery]] : []));
+	const withoutQuery = $derived(
+		href([
+			...(data.selectedTags.length
+				? [['tags', data.selectedTags.join(',')] as [string, string]]
+				: []),
+			...(data.friendsOnly ? [['friends', '1'] as [string, string]] : [])
+		])
 	);
 </script>
 
@@ -30,20 +44,19 @@
 			<RecipeGrid {recipes} class="results" />
 		{:else}
 			<p class="empty-state mt-6">
-				<!-- Each link says what it does; All recipes goes where the tabs' All
-				     goes, Discover. -->
-				{#if data.selectedTags.length > 0 || data.friendsOnly}
-					No recipes found. Try adjusting your search or clearing some filters.
-					<!-- Clears the tags and the Friends filter; the query stays. -->
-					<a
-						class="inline-action"
-						href={data.searchQuery
-							? `/search?q=${encodeURIComponent(data.searchQuery)}`
-							: '/search'}>
-						Clear filters
-					</a>
-				{:else if filtered}
-					No recipes found. Try another search.
+				<!-- Each way out says what it does and keeps the rest: Clear filters
+				     keeps the query, Clear search keeps the tags and Friends. All
+				     recipes goes where the tabs' All goes, Discover. -->
+				{#if data.searchQuery && hasFilters}
+					No recipes match “{data.searchQuery}” with these filters.
+					<a class="inline-action" href={withoutFilters}>Clear filters</a>
+					or
+					<a class="inline-action" href={withoutQuery}>Clear search</a>
+				{:else if hasFilters}
+					No recipes match these filters.
+					<a class="inline-action" href={withoutFilters}>Clear filters</a>
+				{:else if data.searchQuery}
+					No recipes match “{data.searchQuery}”.
 					<a class="inline-action" href="/search">Clear search</a>
 				{:else}
 					Enter a recipe name or select tags to find recipes.

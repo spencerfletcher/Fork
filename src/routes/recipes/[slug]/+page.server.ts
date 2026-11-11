@@ -2,7 +2,7 @@ import { error, redirect } from '@sveltejs/kit';
 import { db } from '#lib/server/db/index.js';
 import { recipes, recipeVersions, recipesToTags, favorites } from '#lib/server/db/schema.js';
 import { eq, desc, and } from 'drizzle-orm';
-import { slugify, randomSuffix, plural, wholeNumber, text } from '#lib/helpers.js';
+import { recipeSlug, plural, wholeNumber, text } from '#lib/helpers.js';
 import { ensureProfile } from '#lib/server/profiles.js';
 import { recipeCopies, versionContent } from '#lib/recipes/content.js';
 import { absoluteImage, clampDescription } from '#lib/seo.js';
@@ -202,7 +202,7 @@ export const actions: Actions = {
 		// the source row contributes only its settings and lineage.
 		const snapshot = versionContent(latestVersion);
 		const copies = recipeCopies(snapshot);
-		const slug = `${slugify(snapshot.title)}-${randomSuffix()}`;
+		const slug = recipeSlug(snapshot.title);
 
 		let newSlug: string | null = null;
 
