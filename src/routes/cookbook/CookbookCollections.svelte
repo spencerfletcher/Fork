@@ -173,7 +173,7 @@
 		min-width: 0;
 	}
 
-	.name-form .field-error {
+	.name-form :global(.field-error) {
 		flex-basis: 100%;
 	}
 

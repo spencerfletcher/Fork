@@ -216,7 +216,7 @@
 		font-weight: 600;
 	}
 
-	.field-error {
+	.more-panel :global(.field-error) {
 		padding: 6px;
 	}
 </style>
