@@ -1,0 +1,2 @@
+CREATE INDEX "log_entries_friends_created_idx" ON "log_entries" USING btree ("created_at","id") WHERE "log_entries"."audience" = 'friends';--> statement-breakpoint
+CREATE INDEX "recipes_author_live_updated_idx" ON "recipes" USING btree ("author_id","updated_at","id") WHERE "recipes"."deleted_at" is null;
