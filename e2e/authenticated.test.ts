@@ -202,6 +202,8 @@ test.describe('New recipe page', () => {
 		for (const width of [390, 1280]) {
 			await page.setViewportSize({ width, height: 900 });
 			await gotoHydrated(page, '/recipes/new');
+			// On a phone the tags are in the folded details.
+			if (width < 700) await page.locator('summary').click();
 			const input = page.getByRole('combobox', { name: /tag/i });
 			// A screen that ends just below the box, as the edit page's does with a photo.
 			const bottom = await input.evaluate((el) => el.getBoundingClientRect().bottom);

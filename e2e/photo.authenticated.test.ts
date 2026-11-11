@@ -80,6 +80,8 @@ test.describe('Editor photo field', () => {
 	}) => {
 		await page.setViewportSize({ width: 320, height: 700 });
 		await gotoHydrated(page, '/recipes/new');
+		// On a phone the photo is in the folded details.
+		await page.locator('summary').click();
 		await photoInput(page).setInputFiles(DOT_PNG);
 		await expect(preview(page)).toBeVisible();
 		const replace = await page.locator('label.pill-btn').boundingBox();
