@@ -108,6 +108,18 @@ test.describe('Friends', () => {
 		await expect(page.getByRole('heading', { name: friendsPrivate.dish })).toHaveCount(0);
 	});
 
+	// `?per=1` shrinks a page so the seed's few items make several.
+	test('the feed shows one page and Show more appends the next, focused', async ({ page }) => {
+		const items = page.locator('.feed > *');
+		await gotoHydrated(page, '/friends?per=1');
+		await expect(items).toHaveCount(1);
+		await page.getByRole('link', { name: 'Show more' }).click();
+		await expect(items).toHaveCount(2);
+		await expect(page.getByText('1 more update', { exact: true })).toBeAttached();
+		await expect(items.nth(1)).toBeFocused();
+		await expect(page).toHaveURL(/[?&]page=2(&|$)/);
+	});
+
 	test("an entry's title links to the recipe at the version cooked; no source line under it", async ({
 		page
 	}) => {

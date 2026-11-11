@@ -278,3 +278,148 @@ describe.skipIf(!localDb)('unfriend and block, against the real database', () =>
 		});
 	});
 });
+
+describe.skipIf(!localDb)('the Friends feed, page by page, against the real database', () => {
+	type Tx = import('./db/index.js').Tx;
+	let schema: typeof import('#lib/server/db/schema.js');
+	let friends: typeof import('./friends.js');
+	let makeContent: typeof import('#lib/recipes/fixtures.js').makeContent;
+	let friendIdsOf: typeof import('./visibility.js').friendIdsOf;
+
+	beforeAll(async () => {
+		schema = await import('#lib/server/db/schema.js');
+		friends = await import('./friends.js');
+		({ makeContent } = await import('#lib/recipes/fixtures.js'));
+		({ friendIdsOf } = await import('./visibility.js'));
+	});
+
+	// One instant both sources share, to the microsecond.
+	const TIE = new Date('2026-11-01T12:00:00.000Z');
+	const LATER = new Date('2026-11-02T00:00:00.000Z');
+
+	let n = 0;
+	async function recipeWithVersions(
+		tx: Tx,
+		authorId: string,
+		visibility: Visibility,
+		versions: number,
+		createdAt = TIE
+	) {
+		const [recipe] = await tx
+			.insert(schema.recipes)
+			.values({ authorId, slug: `feed-${stamp()}-${n++}`, title: 'T', visibility })
+			.returning({ id: schema.recipes.id });
+		await tx.insert(schema.recipeVersions).values(
+			Array.from({ length: versions }, (_, i) => ({
+				recipeId: recipe.id,
+				versionNumber: i + 1,
+				commitMessage: 'v',
+				...makeContent(),
+				createdBy: authorId,
+				createdAt
+			}))
+		);
+		return recipe.id;
+	}
+
+	async function entries(
+		tx: Tx,
+		userId: string,
+		count: number,
+		audience: 'friends' | 'private' = 'friends',
+		createdAt = TIE
+	) {
+		await tx.insert(schema.logEntries).values(
+			Array.from({ length: count }, () => ({
+				userId,
+				dish: 'D',
+				cookedOn: '2026-11-01',
+				audience,
+				createdAt
+			}))
+		);
+	}
+
+	async function befriend(tx: Tx, a: string, b: string) {
+		await tx
+			.insert(schema.friendships)
+			.values({ requesterId: a, addresseeId: b, status: 'accepted' });
+	}
+
+	const feed = async (tx: Tx, me: string, after: string | null, limit: number) =>
+		friends.feedFor({ id: me }, await friendIdsOf(me, tx), { after, limit }, tx);
+
+	/** Every page of `me`'s feed, `per` at a time, following each page's cursor. */
+	async function walk(tx: Tx, me: string, per: number, between?: () => Promise<void>) {
+		const pages: string[][] = [];
+		let after: string | null = null;
+		do {
+			const page = await feed(tx, me, after, per);
+			pages.push(page.items.map((i) => i.id));
+			after = page.next;
+			if (pages.length === 1) await between?.();
+		} while (after && pages.length < 50);
+		return pages;
+	}
+
+	test('pages through entries and versions that share one timestamp with no repeat or gap', async () => {
+		await withProfiles(2, async (tx, [me, friend]) => {
+			await befriend(tx, me, friend);
+			await entries(tx, friend, 3);
+			await recipeWithVersions(tx, friend, 'public', 2);
+			await recipeWithVersions(tx, friend, 'friends', 2);
+
+			const whole = await feed(tx, me, null, 50);
+			expect(whole.items).toHaveLength(7);
+			expect(new Set(whole.items.map((i) => i.id)).size).toBe(7);
+			expect(whole.next).toBeNull();
+
+			for (const per of [1, 2, 3]) {
+				const pages = await walk(tx, me, per);
+				expect(pages.flat()).toEqual(whole.items.map((i) => i.id));
+				expect(pages.slice(0, -1).every((p) => p.length === per)).toBe(true);
+			}
+		});
+	});
+
+	test('an item added between pages shifts nothing: page two continues where page one ended', async () => {
+		await withProfiles(2, async (tx, [me, friend]) => {
+			await befriend(tx, me, friend);
+			await entries(tx, friend, 2);
+			await recipeWithVersions(tx, friend, 'public', 2);
+			const before = (await feed(tx, me, null, 50)).items.map((i) => i.id);
+
+			const pages = await walk(tx, me, 2, async () => {
+				await entries(tx, friend, 1, 'friends', LATER);
+				await recipeWithVersions(tx, friend, 'public', 1, LATER);
+			});
+
+			expect(pages.flat()).toEqual(before);
+			// The newer items lead the feed read afresh.
+			expect((await feed(tx, me, null, 50)).items).toHaveLength(before.length + 2);
+		});
+	});
+
+	test("shows only what the viewer may see: no private entry or recipe, no stranger's, none once blocked", async () => {
+		await withProfiles(3, async (tx, [me, friend, stranger]) => {
+			await befriend(tx, me, friend);
+			await entries(tx, friend, 1);
+			await entries(tx, friend, 1, 'private');
+			await recipeWithVersions(tx, friend, 'friends', 1);
+			await recipeWithVersions(tx, friend, 'private', 1);
+			const trashed = await recipeWithVersions(tx, friend, 'public', 1);
+			await tx
+				.update(schema.recipes)
+				.set({ deletedAt: new Date() })
+				.where(eq(schema.recipes.id, trashed));
+			await entries(tx, stranger, 1);
+			await recipeWithVersions(tx, stranger, 'public', 1);
+
+			const page = await feed(tx, me, null, 50);
+			expect(page.items.map((i) => i.kind).sort()).toEqual(['entry', 'event']);
+
+			await friends.blockIn(tx, me, friend);
+			expect((await feed(tx, me, null, 50)).items).toEqual([]);
+		});
+	});
+});

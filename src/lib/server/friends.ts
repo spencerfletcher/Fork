@@ -1,5 +1,5 @@
 import { alias } from 'drizzle-orm/pg-core';
-import { and, count, desc, eq, inArray, ne, sql } from 'drizzle-orm';
+import { and, count, desc, eq, inArray, ne, sql, type Column } from 'drizzle-orm';
 import { db, type Tx } from './db/index.js';
 import {
 	favorites,
@@ -297,25 +297,46 @@ export function requestsFor(me: string) {
 		.orderBy(desc(friendships.createdAt));
 }
 
-export const FEED_LIMIT = 50;
+/** A feed cursor: the last item's time (to the microsecond, as Postgres prints it), kind and row id. */
+const FEED_KEY = /^(\d{4}-\d\d-\d\d \d\d:\d\d:\d\d(?:\.\d{1,6})?)~(entry|event)~(\d+)$/;
+/** At one instant an entry comes before a version; then the higher id. */
+const KIND_RANK = { entry: 1, event: 0 } as const;
+type FeedKind = keyof typeof KIND_RANK;
+
+/** One source's rows after the cursor in the merged order: (time, kind, id) below the cursor's. */
+function afterFeedKey(key: RegExpExecArray | null, kind: FeedKind, at: Column, id: Column) {
+	if (!key) return undefined;
+	return sql`(${at}, ${KIND_RANK[kind]}::int, ${id}) < (${key[1]}::timestamp, ${KIND_RANK[key[2] as FeedKind]}::int, ${Number(key[3])})`;
+}
 
 /**
- * The Friends feed: friends' Friends-level log entries and the versions of
- * their recipes the viewer may see, in one chronology, minus anyone muted.
+ * One page of the Friends feed: friends' Friends-level log entries and the
+ * versions of their recipes the viewer may see, in one chronology, minus
+ * anyone muted, and the cursor of the page after it (null at the end).
  * `friendIds` is the viewer's, from friendIdsOf, which the page counts too.
+ * Newest first, then an entry before a version, then the higher id, so no two
+ * items tie: each source reads `limit + 1` after that keyset and the two
+ * merge, so an item added between pages shifts nothing. A cursor that is not
+ * one reads as the first page.
  */
-export async function feedFor(me: NonNullable<Viewer>, friendIds: string[]) {
-	const mutedRows = await db
+export async function feedFor(
+	me: NonNullable<Viewer>,
+	friendIds: string[],
+	{ after, limit }: { after: string | null; limit: number },
+	conn: Tx | typeof db = db
+) {
+	const mutedRows = await conn
 		.select({ id: mutes.mutedId })
 		.from(mutes)
 		.where(eq(mutes.muterId, me.id));
 	const muted = mutedRows.map((r) => r.id);
 	const shown = friendIds.filter((id) => !muted.includes(id));
-	if (shown.length === 0) return [];
+	if (shown.length === 0) return { items: [], next: null };
 
+	const key = FEED_KEY.exec(after ?? '');
 	const author = alias(profiles, 'author');
 	const [entryRows, versionRows] = await Promise.all([
-		db
+		conn
 			// Every column but the note, which is the owner's alone and never leaves the server for a friend.
 			.select({
 				entry: {
@@ -331,6 +352,7 @@ export async function feedFor(me: NonNullable<Viewer>, friendIds: string[]) {
 					sourceUrl: logEntries.sourceUrl,
 					createdAt: logEntries.createdAt
 				},
+				cursorAt: sql<string>`${logEntries.createdAt}::text`,
 				username: profiles.username,
 				...sourceColumns
 			})
@@ -338,14 +360,21 @@ export async function feedFor(me: NonNullable<Viewer>, friendIds: string[]) {
 			.innerJoin(profiles, eq(profiles.id, logEntries.userId))
 			.leftJoin(recipes, eq(recipes.id, logEntries.recipeId))
 			.leftJoin(recipeVersions, eq(recipeVersions.id, logEntries.versionId))
-			.where(and(inArray(logEntries.userId, shown), eq(logEntries.audience, 'friends')))
-			.orderBy(desc(logEntries.createdAt))
-			.limit(FEED_LIMIT),
-		db
+			.where(
+				and(
+					inArray(logEntries.userId, shown),
+					eq(logEntries.audience, 'friends'),
+					afterFeedKey(key, 'entry', logEntries.createdAt, logEntries.id)
+				)
+			)
+			.orderBy(desc(logEntries.createdAt), desc(logEntries.id))
+			.limit(limit + 1),
+		conn
 			.select({
 				id: recipeVersions.id,
 				versionNumber: recipeVersions.versionNumber,
 				at: recipeVersions.createdAt,
+				cursorAt: sql<string>`${recipeVersions.createdAt}::text`,
 				slug: recipes.slug,
 				title: recipes.title,
 				visibility: recipes.visibility,
@@ -354,23 +383,47 @@ export async function feedFor(me: NonNullable<Viewer>, friendIds: string[]) {
 			.from(recipeVersions)
 			.innerJoin(recipes, eq(recipes.id, recipeVersions.recipeId))
 			.innerJoin(author, eq(author.id, recipes.authorId))
-			.where(and(inArray(recipes.authorId, shown), visibleTo(me)))
-			.orderBy(desc(recipeVersions.createdAt))
-			.limit(FEED_LIMIT)
+			.where(
+				and(
+					inArray(recipes.authorId, shown),
+					visibleTo(me),
+					afterFeedKey(key, 'event', recipeVersions.createdAt, recipeVersions.id)
+				)
+			)
+			.orderBy(desc(recipeVersions.createdAt), desc(recipeVersions.id))
+			.limit(limit + 1)
 	]);
 
-	const entryIds = entryRows.map((r) => r.entry.id);
-	const recipeIds = entryRows.flatMap((r) => (r.entry.recipeId === null ? [] : [r.entry.recipeId]));
+	// The keyset's order in JS: the time as Postgres prints it compares as
+	// text (a Date drops the microseconds), then the kind, then the id.
+	const merged = [
+		...entryRows.map((row) => ({ kind: 'entry' as const, n: row.entry.id, row })),
+		...versionRows.map((row) => ({ kind: 'event' as const, n: row.id, row }))
+	].sort(
+		(x, y) =>
+			Number(y.row.cursorAt > x.row.cursorAt) - Number(y.row.cursorAt < x.row.cursorAt) ||
+			KIND_RANK[y.kind] - KIND_RANK[x.kind] ||
+			y.n - x.n
+	);
+	const page = merged.slice(0, limit);
+	const last = page.at(-1);
+	const next = merged.length > limit && last ? `${last.row.cursorAt}~${last.kind}~${last.n}` : null;
+
+	const entryRowsShown = page.flatMap((p) => (p.kind === 'entry' ? [p.row] : []));
+	const entryIds = entryRowsShown.map((r) => r.entry.id);
+	const recipeIds = entryRowsShown.flatMap((r) =>
+		r.entry.recipeId === null ? [] : [r.entry.recipeId]
+	);
 	const [counts, mine, saved] = await Promise.all([
-		likeCounts(entryIds),
+		likeCounts(entryIds, conn),
 		entryIds.length
-			? db
+			? conn
 					.select({ id: likes.logEntryId })
 					.from(likes)
 					.where(and(eq(likes.userId, me.id), inArray(likes.logEntryId, entryIds)))
 			: [],
 		recipeIds.length
-			? db
+			? conn
 					.select({ id: favorites.recipeId })
 					.from(favorites)
 					.where(and(eq(favorites.userId, me.id), inArray(favorites.recipeId, recipeIds)))
@@ -379,24 +432,32 @@ export async function feedFor(me: NonNullable<Viewer>, friendIds: string[]) {
 	const likedIds = new Set(mine.map((r) => r.id));
 	const savedIds = new Set(saved.map((r) => r.id));
 
-	const entries = entryRows.map((row) => ({
-		kind: 'entry' as const,
-		at: row.entry.createdAt,
-		entry: row.entry,
-		username: row.username,
-		source: sourceOf(
-			{ ...row, recipeId: row.entry.recipeId, sourceUrl: row.entry.sourceUrl },
-			me,
-			friendIds
-		),
-		likes: counts.get(row.entry.id) ?? 0,
-		liked: likedIds.has(row.entry.id),
-		saved: row.entry.recipeId !== null && savedIds.has(row.entry.recipeId)
-	}));
-	const events = versionRows.map((row) => ({ kind: 'event' as const, ...row }));
-	return [...entries, ...events]
-		.sort((x, y) => y.at.getTime() - x.at.getTime())
-		.slice(0, FEED_LIMIT);
+	// `id` keys an item across both kinds, for the list and Show more's de-duplication.
+	const items = page.map((p) => {
+		if (p.kind === 'event') {
+			// The cursor is the page's, never an item's.
+			// eslint-disable-next-line @typescript-eslint/no-unused-vars
+			const { cursorAt, id, ...event } = p.row;
+			return { kind: 'event' as const, id: `event-${id}`, ...event };
+		}
+		const row = p.row;
+		return {
+			kind: 'entry' as const,
+			id: `entry-${row.entry.id}`,
+			at: row.entry.createdAt,
+			entry: row.entry,
+			username: row.username,
+			source: sourceOf(
+				{ ...row, recipeId: row.entry.recipeId, sourceUrl: row.entry.sourceUrl },
+				me,
+				friendIds
+			),
+			likes: counts.get(row.entry.id) ?? 0,
+			liked: likedIds.has(row.entry.id),
+			saved: row.entry.recipeId !== null && savedIds.has(row.entry.recipeId)
+		};
+	});
+	return { items, next };
 }
 
-export type FeedItem = Awaited<ReturnType<typeof feedFor>>[number];
+export type FeedItem = Awaited<ReturnType<typeof feedFor>>['items'][number];

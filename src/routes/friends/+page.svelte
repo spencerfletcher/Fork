@@ -5,10 +5,18 @@
 	import Avatar from '#lib/components/ui/Avatar.svelte';
 	import { dayLabel } from '#lib/journal.js';
 	import EmptyPanel from '#lib/components/ui/EmptyPanel.svelte';
+	import ShowMore from '#lib/components/ui/ShowMore.svelte';
+	import { pagedList } from '#lib/pagedList.svelte.js';
 	import FeedEntry from './FeedEntry.svelte';
 	import type { ActionData, PageData } from './$types';
 
 	let { data, form }: { data: PageData; form?: ActionData } = $props();
+
+	const list = pagedList(
+		() => data,
+		(d) => ({ items: d.feed, next: d.next })
+	);
+	let feed = $state<HTMLElement>();
 
 	const inviteLink = $derived(
 		data.profile ? `${page.url.origin}/users/${data.profile.username}` : page.url.origin
@@ -100,35 +108,38 @@
 			</EmptyPanel>
 		{:else}
 			<div class="f-layout">
-				<div class="feed">
-					{#each data.feed as item (`${item.kind}-${item.kind === 'entry' ? item.entry.id : item.id}`)}
-						{#if item.kind === 'entry'}
-							<FeedEntry {item} />
-						{:else}
-							<article class="event">
-								<Avatar username={item.username} size={36} />
-								<p>
-									<Username username={item.username} class="hit-link" />
-									{#if item.versionNumber === 1}
-										shared <a class="hit-link" href="/recipes/{item.slug}">{item.title}</a>
-										{item.visibility === 'friends' ? 'with friends' : 'publicly'}
-									{:else}
-										changed <a class="hit-link" href="/recipes/{item.slug}">{item.title}</a>
-										,
-										<a
-											class="diff hit-link"
-											href="/recipes/{item.slug}/diff?from={item.versionNumber -
-												1}&to={item.versionNumber}">
-											<span class="mono-id">v{item.versionNumber - 1}</span>
-											→
-											<span class="mono-id">v{item.versionNumber}</span>
-										</a>
-									{/if}
-									<small>{dayLabel(item.at)}</small>
-								</p>
-							</article>
-						{/if}
-					{/each}
+				<div class="feed-col">
+					<div class="feed" bind:this={feed}>
+						{#each list.items as item (item.id)}
+							{#if item.kind === 'entry'}
+								<FeedEntry {item} />
+							{:else}
+								<article class="event">
+									<Avatar username={item.username} size={36} />
+									<p>
+										<Username username={item.username} class="hit-link" />
+										{#if item.versionNumber === 1}
+											shared <a class="hit-link" href="/recipes/{item.slug}">{item.title}</a>
+											{item.visibility === 'friends' ? 'with friends' : 'publicly'}
+										{:else}
+											changed <a class="hit-link" href="/recipes/{item.slug}">{item.title}</a>
+											,
+											<a
+												class="diff hit-link"
+												href="/recipes/{item.slug}/diff?from={item.versionNumber -
+													1}&to={item.versionNumber}">
+												<span class="mono-id">v{item.versionNumber - 1}</span>
+												→
+												<span class="mono-id">v{item.versionNumber}</span>
+											</a>
+										{/if}
+										<small>{dayLabel(item.at)}</small>
+									</p>
+								</article>
+							{/if}
+						{/each}
+					</div>
+					<ShowMore {list} container={feed} noun="update" />
 				</div>
 				<aside class="rail" aria-label="Requests and invite">
 					{@render requests()}

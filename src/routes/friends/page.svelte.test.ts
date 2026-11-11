@@ -45,7 +45,7 @@ describe('Friends page', () => {
 	test('with a feed: Newest first, the recipe event linking its diff, and the rail with the invite link', () => {
 		const event = {
 			kind: 'event',
-			id: 1,
+			id: 'event-1',
 			versionNumber: 4,
 			at: new Date('2026-11-09T10:00:00Z'),
 			slug: 'buns',
@@ -82,5 +82,29 @@ describe('Friends page', () => {
 		expect(container.querySelector('.event p')?.textContent?.replace(/\s+/g, ' ')).toContain(
 			'@devcooks shared Shakshuka with friends'
 		);
+	});
+
+	// A feed longer than a page ends in the shared Show more, to every page up to the next.
+	test('a long feed ends in Show more; the last page has none', () => {
+		const event = {
+			kind: 'event',
+			id: 'event-1',
+			versionNumber: 1,
+			at: new Date('2026-11-09T10:00:00Z'),
+			slug: 'buns',
+			title: 'Cardamom buns',
+			visibility: 'friends',
+			username: 'maria'
+		};
+		const { unmount } = render(Page, {
+			props: { data: makeData({ feed: [event], friendCount: 1, next: 'c' }) }
+		});
+		expect(screen.getByRole('link', { name: 'Show more' })).toHaveAttribute(
+			'href',
+			'/friends?page=2'
+		);
+		unmount();
+		render(Page, { props: { data: makeData({ feed: [event], friendCount: 1, next: null }) } });
+		expect(screen.queryByRole('link', { name: 'Show more' })).toBeNull();
 	});
 });
