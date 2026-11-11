@@ -57,8 +57,8 @@ test.describe('Public recipe metadata', () => {
 		request
 	}) => {
 		const path = await cookiesPath(page);
-		const origin = new URL(page.url()).origin;
 		const response = await request.get('/sitemap.xml');
+		const origin = new URL(response.url()).origin;
 		expect(response.headers()['content-type']).toBe('application/xml');
 		const xml = await response.text();
 		const locs = await page.evaluate((text) => {
