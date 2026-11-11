@@ -3,6 +3,7 @@ import { recipes, recipeVersions } from '#lib/server/db/schema.js';
 import { and, count, desc, inArray, sql, type SQL } from 'drizzle-orm';
 import { visibleTo, type Viewer } from './visibility.js';
 import { cookedCounts, type Cooked } from './journal.js';
+import { wholeNumber } from '#lib/helpers.js';
 
 /** The relations a recipe card renders: its author's id and handle, nothing more. */
 export const CARD_WITH = { author: { columns: { id: true, username: true } } } as const;
@@ -50,8 +51,6 @@ export async function attachRecipeCounts<T extends { id: number }>(
 
 /** A browse cursor: the last card's change time, to the microsecond as Postgres prints it, and its id. */
 const KEYSET = /^(\d{4}-\d\d-\d\d \d\d:\d\d:\d\d(?:\.\d{1,6})?)~(\d+)$/;
-/** A ranked cursor: how many cards came before. */
-const OFFSET = /^\d+$/;
 
 /**
  * One page of the recipe cards matching `where`, each with its counts for
@@ -71,7 +70,8 @@ export async function cardList(
 	{ after, limit, cooked }: { after: string | null; limit: number; cooked?: boolean }
 ) {
 	const ranked = rank.length > 0;
-	const offset = ranked && after && OFFSET.test(after) ? Number(after) : 0;
+	// A ranked cursor is how many cards came before.
+	const offset = ranked ? (wholeNumber(after ?? '') ?? 0) : 0;
 	const key = ranked ? null : KEYSET.exec(after ?? '');
 	// Postgres turns the row compare into a range on the live updated_at index.
 	const afterKey = key

@@ -351,8 +351,8 @@ export const actions: Actions = {
 		const recipe = await ownRecipe(params.slug, user.id);
 
 		const formData = await request.formData();
-		const versionNumber = wholeNumber(String(formData.get('version') ?? ''));
-		const editRevision = wholeNumber(String(formData.get('editRevision') ?? ''));
+		const versionNumber = wholeNumber(text(formData, 'version'));
+		const editRevision = wholeNumber(text(formData, 'editRevision'));
 		if (versionNumber === null || editRevision === null) return failure(400, 'invalid', BAD_FORM);
 		if (recipe.editRevision !== editRevision) return failure(409, 'stale', STALE_MESSAGE);
 

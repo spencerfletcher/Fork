@@ -132,6 +132,22 @@ describe('cardList', () => {
 		expect(cards).toHaveLength(2);
 		expect(next).toBe('6');
 	});
+
+	test.each([
+		['007', 7],
+		['', 0],
+		['-4', 0],
+		['4.5', 0],
+		['2026-11-11 10:00:00~3', 0]
+	])('a ranked cursor %j reads as offset %i', async (after, offset) => {
+		await cardList(WHERE, [sql`1`], viewer, { after, limit: 2 });
+		expect(findManyMock.mock.calls[0][0]).toMatchObject({ offset });
+	});
+
+	test('an unranked list never offsets, even after a number', async () => {
+		await cardList(WHERE, [], viewer, { after: '4', limit: 2 });
+		expect(findManyMock.mock.calls[0][0]).toMatchObject({ offset: 0 });
+	});
 });
 
 describe('cardList: times and last cooked', () => {
