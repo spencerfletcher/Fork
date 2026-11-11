@@ -5,7 +5,7 @@ import { logEntries } from '#lib/server/db/schema.js';
 import { ownEntry, recipeChoices } from '#lib/server/journal.js';
 import { KEEP_SOURCE } from '#lib/journal.js';
 import { imagePathOf, removeRecipeImage } from '#lib/server/images.js';
-import { failure, requireUser, SESSION_ENDED, signedOut } from '#lib/server/actions.js';
+import { requireUser, SESSION_ENDED, signedOut } from '#lib/server/actions.js';
 import { wholeNumber } from '#lib/helpers.js';
 import { entryFailure, type EntryValues, type RecipeChoice } from '../../entryForm.js';
 import { prepareEntry } from '../../save.server.js';
