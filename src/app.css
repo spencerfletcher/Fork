@@ -977,7 +977,10 @@
 	.clear-ticks,
 	.inline-action,
 	.username,
-	.handle {
+	.handle,
+	.version-bar a,
+	.versions-toggle,
+	.version-link .message {
 		text-decoration-thickness: 1px;
 		text-underline-offset: 3px;
 	}

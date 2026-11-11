@@ -170,11 +170,16 @@ describe('the hover rule', () => {
 		expect(body('.back-link:hover')).toMatch(UNDERLINE);
 		expect(body('.back-link:hover')).not.toMatch(/(^|[\s;])color:/);
 		for (const word of ['.back-link', '.username', '.handle']) expect(underlined).toContain(word);
+		// The version bar's word-links and toggle, and a history row's note (not its chip).
+		for (const word of ['.version-bar a', '.versions-toggle', '.version-link .message']) {
+			expect(underlined).toContain(word);
+		}
 	});
 
 	// A colour change alone is not a hover on a word that acts.
 	test('no text control hovers by colour alone', () => {
-		const WORDS = /\.(text-btn|arrow-link|back-link|clear-ticks|username|handle)\b/;
+		const WORDS =
+			/\.(text-btn|arrow-link|back-link|clear-ticks|username|handle|versions-toggle|version-link|version-bar a)\b/;
 		const offenders = hovers
 			.filter((r) => r.selectors.some((s) => s.includes(':hover') && WORDS.test(s)))
 			// The navbar's handle on espresso steps tan to cream, outside the rule.
