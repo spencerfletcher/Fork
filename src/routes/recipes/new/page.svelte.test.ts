@@ -79,6 +79,19 @@ describe('New recipe page labels', () => {
 			'Anyone can find, save and fork it.'
 		);
 	});
+
+	test('the audience starts at Only me, or at the default chosen in Settings', () => {
+		const { unmount } = render(NewPage, { props: { data, form: null } });
+		expect(screen.getByRole('radio', { name: 'Only me' })).toBeChecked();
+		unmount();
+		render(NewPage, {
+			props: {
+				data: { allTags: [], profile: { defaultVisibility: 'friends' } } as never,
+				form: null
+			}
+		});
+		expect(screen.getByRole('radio', { name: 'Friends' })).toBeChecked();
+	});
 });
 
 describe('New recipe page validation errors', () => {
