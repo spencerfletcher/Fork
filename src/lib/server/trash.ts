@@ -9,6 +9,7 @@ import {
 	lte,
 	notInArray,
 	or,
+	sql,
 	type SQL
 } from 'drizzle-orm';
 import { QueryBuilder } from 'drizzle-orm/pg-core';
@@ -19,9 +20,11 @@ import {
 	favorites,
 	recipes,
 	recipesToTags,
-	recipeVersions
+	recipeVersions,
+	type Recipe
 } from './db/schema.js';
 import { imagePathOf, removeRecipeImage } from './images.js';
+import { grantKeptCopies } from './keptCopies.js';
 import { plural } from '#lib/helpers.js';
 import { TRASH_DAYS } from '#lib/trash.js';
 
@@ -66,6 +69,35 @@ export function trashAge(deletedAt: Date, now = new Date()) {
 		deleted: days === 0 ? 'Deleted today' : `Deleted ${plural(days, 'day')} ago`,
 		left: `${plural(TRASH_DAYS - days, 'day')} left`
 	};
+}
+
+/**
+ * To the Trash: hidden everywhere, restorable by the owner for TRASH_DAYS.
+ * Each saver who could see it keeps a read-only copy, granted under the save's
+ * row lock from the audience the move ends, so a save changing it meanwhile
+ * either lands first (and is read here) or waits. The revision moves on, so a
+ * save already past its ownRecipe check is refused as stale under its lock.
+ * One already in the Trash is left as it is. The caller checks it is theirs.
+ */
+export async function moveToTrash(recipe: Pick<Recipe, 'id' | 'authorId'>): Promise<void> {
+	await db.transaction(async (tx) => {
+		const [locked] = await tx
+			.select({ visibility: recipes.visibility, deletedAt: recipes.deletedAt })
+			.from(recipes)
+			.where(eq(recipes.id, recipe.id))
+			.for('update');
+		if (!locked || locked.deletedAt) return;
+		if (locked.visibility !== 'private')
+			await grantKeptCopies(tx, {
+				id: recipe.id,
+				authorId: recipe.authorId,
+				visibility: locked.visibility
+			});
+		await tx
+			.update(recipes)
+			.set({ deletedAt: new Date(), editRevision: sql`${recipes.editRevision} + 1` })
+			.where(eq(recipes.id, recipe.id));
+	});
 }
 
 /**
