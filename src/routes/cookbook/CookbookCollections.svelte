@@ -6,6 +6,7 @@
 	import FieldError from '#lib/components/ui/FieldError.svelte';
 	import { pendingEnhance } from '#lib/pendingEnhance.svelte.js';
 	import { COLLECTION_NAME_MAX } from '#lib/collections.js';
+	import { hrefWith } from '#lib/listPage.js';
 
 	// The cook's collections as a row of tabs over the Cookbook's filters, a
 	// way to make one, and for the chosen one its name with Rename and Delete.
@@ -19,14 +20,9 @@
 		collection: { id: number; name: string } | null;
 	} = $props();
 
-	// The page's other filters kept; null is the whole Cookbook.
+	// The page's other filters kept, the list started over; null is the whole Cookbook.
 	function hrefFor(id: number | null): string {
-		// eslint-disable-next-line svelte/prefer-svelte-reactivity
-		const params = new URLSearchParams(page.url.search);
-		if (id === null) params.delete('collection');
-		else params.set('collection', String(id));
-		const query = params.toString();
-		return query ? `?${query}` : page.url.pathname;
+		return hrefWith(page.url, { collection: id === null ? null : String(id) });
 	}
 
 	let creating = $state(false);

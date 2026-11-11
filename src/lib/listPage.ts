@@ -33,3 +33,18 @@ export function withoutPlace(params: Pick<URLSearchParams, 'toString'>): URLSear
 	for (const key of PLACE) kept.delete(key);
 	return kept;
 }
+
+/**
+ * This page's link with `changes` applied (a value set in place, or appended
+ * when new; null drops the param) and the loaded place dropped: a link that
+ * changes what the list shows starts it at its first page.
+ */
+export function hrefWith(url: URL, changes: Record<string, string | null>): string {
+	const params = withoutPlace(url.searchParams);
+	for (const [key, value] of Object.entries(changes)) {
+		if (value === null) params.delete(key);
+		else params.set(key, value);
+	}
+	const query = params.toString();
+	return query ? `?${query}` : url.pathname;
+}

@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import { CARDS_PER_PAGE, listPage, MAX_PAGES, withoutPlace } from './listPage';
+import { CARDS_PER_PAGE, hrefWith, listPage, MAX_PAGES, withoutPlace } from './listPage';
 
 const url = (search: string) => new URL(`http://localhost/discover${search}`);
 
@@ -49,5 +49,21 @@ describe('withoutPlace', () => {
 	test('drops the loaded place and keeps every filter', () => {
 		const params = new URLSearchParams('q=soup&page=3&after=x&tags=quick&per=2');
 		expect(withoutPlace(params).toString()).toBe('q=soup&tags=quick&per=2');
+	});
+});
+
+describe('hrefWith', () => {
+	test('sets and drops params in place, and drops the loaded place', () => {
+		const at = new URL('http://localhost/cookbook?filter=mine&page=3&q=dal&after=x&tags=quick');
+		expect(hrefWith(at, { filter: 'saved', tags: null })).toBe('?filter=saved&q=dal');
+	});
+
+	test('a new param goes last; nothing left is the bare path', () => {
+		expect(hrefWith(new URL('http://localhost/cookbook?q=dal'), { collection: '7' })).toBe(
+			'?q=dal&collection=7'
+		);
+		expect(hrefWith(new URL('http://localhost/cookbook?page=2&q=dal'), { q: null })).toBe(
+			'/cookbook'
+		);
 	});
 });

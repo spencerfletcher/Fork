@@ -53,6 +53,21 @@ describe('Cookbook collections', () => {
 		);
 	});
 
+	test('another collection starts at its first page: the loaded place is dropped', () => {
+		// After a reload at ?page=3 (Show more wrote it), or a stale cursor.
+		page.url = new URL('http://localhost/cookbook?collection=1&page=3&after=x&q=dal');
+		renderShelf({ id: 1, name: 'To cook' });
+		const nav = screen.getByRole('navigation', { name: 'Collections' });
+		expect(within(nav).getByRole('link', { name: /^Quick/ })).toHaveAttribute(
+			'href',
+			'?collection=7&q=dal'
+		);
+		expect(within(nav).getByRole('link', { name: 'All recipes' })).toHaveAttribute(
+			'href',
+			'?q=dal'
+		);
+	});
+
 	test('New collection opens a named box in place, focused, held to the name limit', async () => {
 		renderShelf();
 		await fireEvent.click(screen.getByRole('button', { name: 'New collection' }));
