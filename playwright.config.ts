@@ -13,6 +13,9 @@ loadEnv('e2e');
 
 export const AUTH_FILE = path.join('e2e', '.auth', 'user.json');
 
+/** Specs that change the seed user's account settings; see the chromium-account project. */
+const ACCOUNT_SPECS = /(settings|measurement)\.authenticated\.test\.ts/;
+
 export default defineConfig({
 	globalSetup: './e2e/global-setup.ts',
 
@@ -66,7 +69,23 @@ export default defineConfig({
 			},
 			// invariants.test.ts runs here too, for its signed-in rows.
 			testMatch: /(authenticated|invariants)\.test\.ts/,
+			testIgnore: ACCOUNT_SPECS,
 			dependencies: ['setup']
+		},
+
+		// ── 4. Tests that change the seed user's own settings ─────────────────────
+		// A rename, a default audience or a measurement preference shows on every
+		// page the other signed-in tests read, so these run once those are done.
+		// To run one alone without the rest first: `playwright test <file> --no-deps`
+		// (after any run has left e2e/.auth/user.json).
+		{
+			name: 'chromium-account',
+			use: {
+				...devices['Desktop Chrome'],
+				storageState: AUTH_FILE
+			},
+			testMatch: ACCOUNT_SPECS,
+			dependencies: ['chromium-auth']
 		}
 	]
 });

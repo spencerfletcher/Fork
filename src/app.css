@@ -634,6 +634,8 @@
 		flex-wrap: wrap;
 		align-items: center;
 		gap: var(--space-2) var(--space-5);
+		/* A step opened here wraps inside the row rather than widening the page. */
+		max-width: 100%;
 	}
 
 	@media (max-width: 699px) {
