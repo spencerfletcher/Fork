@@ -6,19 +6,15 @@
 	import { beforeNavigate } from '$app/navigation';
 	import {
 		parseDraftContent,
-		numberMessages,
 		fieldOfMessage,
-		readSourceUrl,
-		timeMessages,
 		NUMBER_FIELDS,
-		REQUIRED_MESSAGES,
 		TIME_FIELDS,
 		VISIBILITIES,
-		type NumberField,
 		type RecipeDraft,
 		type TimeField
 	} from '#lib/recipes/validation.js';
-	import { formatDuration, OVERNIGHT_MINUTES, readDuration } from '#lib/recipes/times.js';
+	import { formatDuration, OVERNIGHT_MINUTES } from '#lib/recipes/times.js';
+	import { fieldErrors, typedMessage } from '#lib/recipes/fieldErrors.svelte.js';
 	import { normaliseTagNames, tagKey } from '#lib/recipes/tags.js';
 	import type { TagChip } from '#lib/recipes/types.js';
 	import { generatedCommitMessage } from '#lib/recipes/content.js';
@@ -131,8 +127,10 @@
 	const settingsChanged = $derived(settings(draft) !== settings(baseline));
 
 	const outcome = $derived.by(() => {
-		if (blocked && errorCount > 0) {
-			return errorCount === 1 ? '1 field needs attention' : `${errorCount} fields need attention`;
+		if (fields.blocked && fields.count > 0) {
+			return fields.count === 1
+				? '1 field needs attention'
+				: `${fields.count} fields need attention`;
 		}
 		if (!dirty || save.pending || !nextVersion || groups === null) return '';
 		// A typed message is never dropped: the save writes a version carrying it.
@@ -161,56 +159,11 @@
 		{ name: 'reheating', placeholder: 'Covered, 15 min at 160°C' }
 	] as const;
 
-	// What a typed field the browser cannot judge says, in the server's own
-	// wording; '' when it is fine. Set as the box's custom validity, so a save
-	// with one wrong is blocked like any other invalid field.
-	function typedMessage(name: string, value: string): string {
-		if (name in TIME_FIELDS) {
-			const read = readDuration(value);
-			return read.ok ? '' : timeMessages(name as TimeField)[read.reason];
-		}
-		if (name === 'sourceUrl') {
-			const read = readSourceUrl(value);
-			return read.ok ? '' : read.error;
-		}
-		return '';
-	}
-
-	// Inline errors, one per field name, in the server's own wording. A field is
-	// checked when it is left after an edit, when it blocks a submit, and on
-	// every keystroke once it carries an error, so the message and the browser's
-	// :user-invalid state come from the same validity and clear together.
-	// Passing through an untouched field says nothing, as the auth pages do.
-	// A server-rendered reply shows a field's message too, as the draft is
-	// shown: the initial state, since the effect below never runs there.
+	// Inline errors in the server's own wording (#lib/recipes/fieldErrors).
 	// svelte-ignore state_referenced_locally
-	const serverField = form ? fieldOfMessage(form.error) : undefined;
-	// svelte-ignore state_referenced_locally
-	let errors = $state<Record<string, string>>(
-		form && serverField ? { [serverField]: form.error } : {}
-	);
-	// Read only by handlers, so not state.
-	const edited: Record<string, boolean> = {};
-	// A blocked submit makes the outcome line count what still needs fixing.
-	let blocked = $state(false);
-	const errorCount = $derived(Object.values(errors).filter(Boolean).length);
-
-	function validate(target: EventTarget | null) {
-		const el = target as HTMLInputElement | HTMLTextAreaElement;
-		const name = el?.name;
-		if (!name) return;
-		if (name in TIME_FIELDS || name === 'sourceUrl') errors[name] = typedMessage(name, el.value);
-		else if (name in REQUIRED_MESSAGES || name in NUMBER_FIELDS)
-			errors[name] = validityMessage(name, el.validity);
-	}
-
-	function validityMessage(name: string, v: ValidityState): string {
-		if (v.valid) return '';
-		if (v.valueMissing) return REQUIRED_MESSAGES[name as keyof typeof REQUIRED_MESSAGES];
-		// Not whole before below the floor, in the server's order, so -1.5 says the same in both.
-		const messages = numberMessages(name as NumberField);
-		return v.rangeUnderflow && !v.stepMismatch ? messages.belowMin : messages.whole;
-	}
+	const fields = fieldErrors(form);
+	const errors = fields.errors;
+	const aria = fields.aria;
 
 	// Fields are disabled while saving, so nothing typed mid-request is lost by
 	// the redirect. FormData is built before this runs, so the submission is whole.
@@ -239,24 +192,6 @@
 	$effect(() => {
 		if (globalError && !save.pending) submitButton?.focus();
 	});
-
-	// A blocked submit fires invalid on each bad field in order. The inline
-	// message says it, so the browser's bubble, which would say it again, is
-	// cancelled; cancelling also stops the browser focusing the field, so the
-	// first invalid one is focused here.
-	function onInvalid(event: Event & { currentTarget: HTMLFormElement }) {
-		event.preventDefault();
-		blocked = true;
-		validate(event.target);
-		const bad = event.currentTarget.querySelector<HTMLInputElement | HTMLTextAreaElement>(
-			':is(input, textarea):invalid'
-		);
-		// A text box's textarea is hidden behind its live box, which has taken its id.
-		(bad?.hidden ? document.getElementById(bad.name) : bad)?.focus();
-	}
-
-	const aria = (name: string) =>
-		errors[name] ? { 'aria-invalid': 'true' as const, 'aria-describedby': `${name}-error` } : {};
 
 	// On a phone the bar covers the screen's bottom edge. A tall box tabbed into
 	// with only its top showing counts as in view, so the browser neither
@@ -406,7 +341,7 @@
 	{/if}
 {/snippet}
 
-{@render header?.(outcome, restored ? draftNote : undefined, errorCount > 0)}
+{@render header?.(outcome, restored ? draftNote : undefined, fields.count > 0)}
 
 {#snippet fieldError(name: string)}
 	{#if errors[name]}
@@ -421,16 +356,10 @@
 	enctype="multipart/form-data"
 	use:enhance={submit}
 	class="form"
-	onfocusout={(e) => {
-		if (edited[(e.target as HTMLInputElement).name]) validate(e.target);
-	}}
-	oninvalidcapture={onInvalid}
+	onfocusout={fields.onfocusout}
+	oninvalidcapture={fields.onInvalid}
 	onfocusin={clearBar}
-	oninput={(e) => {
-		const name = (e.target as HTMLInputElement).name;
-		edited[name] = true;
-		if (errors[name]) validate(e.target);
-	}}>
+	oninput={fields.oninput}>
 	<fieldset disabled={save.pending} class="contents">
 		{#if draft.editRevision}
 			<input type="hidden" name="editRevision" value={draft.editRevision} />
