@@ -189,7 +189,7 @@ describe('recipe page signed in', () => {
 		const data = { ...makeData(), user: { id: 'visitor' }, favoriteCount: 1234 } as PageData;
 		render(Page, { props: { data } });
 		const save = screen.getByRole('button', { name: /^Save/ });
-		expect(save.textContent).toContain(`· ${compactCount(1234)}`);
+		expect(save.textContent).toContain(compactCount(1234));
 		expect(screen.getByRole('button', { name: 'Fork' })).toBeInTheDocument();
 	});
 });
@@ -334,7 +334,7 @@ describe('recipe page cooking mode', () => {
 	test('the cooking header says the serves being cooked', () => {
 		load('?cook=1&serves=6');
 		expect(cookHeader()!.querySelector('.serves')!.textContent!.replace(/\s+/g, ' ')).toMatch(
-			/Serves 6 · 1\.5x/
+			/Serves 6 1\.5x/
 		);
 	});
 
