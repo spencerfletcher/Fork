@@ -99,7 +99,7 @@ function kitchenRound(value: number, dimension: Dimension): number {
 function unitId(unit: string): UnitId | undefined {
 	const find = (u: string) =>
 		Object.entries(unitsOfMeasure).find(
-			([id, d]) => id === u || d.short === u || d.plural === u || d.alternates.includes(u)
+			([id, d]) => id === u || d.short === u || d.plural === u || !!d.alternates?.includes(u)
 		)?.[0];
 	const id = find(unit) ?? find(unit.toLowerCase());
 	return id !== undefined && id in UNITS ? (id as UnitId) : undefined;
