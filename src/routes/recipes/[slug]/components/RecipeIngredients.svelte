@@ -2,7 +2,7 @@
 	import type { Snippet } from 'svelte';
 	import type { Ingredient } from '#lib/recipes/types.js';
 	import type { GramResult } from '#lib/server/ingredientDensities.js';
-	import { FRACTIONS, scaleIngredient } from '#lib/recipes/scale.js';
+	import { FRACTIONS, formatGrams, scaleIngredient } from '#lib/recipes/scale.js';
 	import { convertIngredient } from '#lib/recipes/convert.js';
 	import { WEIGHED_NOTE, type Measurement } from '#lib/measurement.js';
 	import { groupStartingAt } from '#lib/recipes/groups.js';
@@ -39,16 +39,6 @@
 	}
 
 	const ticks = tickList(() => storageKey);
-
-	// Whole grams, except below ten where a tenth matters: 5.7g, not 6g.
-	function round(g: number): number {
-		return g < 10 ? Math.round(g * 10) / 10 : Math.round(g);
-	}
-
-	function formatGrams({ grams, grams2, approximate }: GramResult): string {
-		const range = grams2 === null ? '' : `–${round(grams2)}`;
-		return `${approximate ? '≈' : ''}${round(grams)}${range}g`;
-	}
 
 	// "1/2" and its kin as the glyphs a cookbook sets.
 	const vulgar = (s: string) => s.replace(/\b[1-7]\/[2348]\b/g, (f) => FRACTIONS[f] ?? f);

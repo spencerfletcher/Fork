@@ -1,8 +1,8 @@
 import { describe, test, expect } from 'vitest';
 import { makeIngredient } from './fixtures';
-import { scaleIngredient } from './scale';
+import { FRACTIONS, MIN_SERVES, formatGrams, scaleIngredient, splitMeasure } from './scale';
 import { convertIngredient, MIN_SPOON_GRAMS, TOLERANCE, UNITS } from './convert';
-import type { Measurement } from '#lib/measurement.js';
+import { MEASUREMENTS, type Measurement } from '#lib/measurement.js';
 import { gramsFor } from '#lib/server/ingredientDensities.js';
 import { DENSITIES, ML_PER_UNIT } from '#lib/server/gramTables.js';
 
@@ -318,5 +318,76 @@ describe('convertIngredient: grams first for what is weighed', () => {
 			text: '2 cups flour',
 			estimate: false
 		});
+	});
+});
+
+// Every way a quantity reaches the page (as written, scaled, converted, its
+// gram estimate) across the multipliers the serves box reaches and every
+// measurement choice: a nonzero quantity never reads as zero, empty, NaN,
+// Infinity, an exponent or a zero fraction.
+describe('a nonzero quantity never renders as zero', () => {
+	const LINES = [
+		'⅛ tsp salt',
+		'1/8 tsp ground cloves',
+		'¼ tsp espresso powder',
+		'1 pinch saffron',
+		'0.5 g saffron',
+		'0.49 g yeast',
+		'1 g yeast',
+		'1 tbsp oil',
+		'1 ½ cups milk',
+		'2¼ cups flour',
+		'1/3 cup sugar',
+		'1-2 eggs',
+		'3 large eggs',
+		'1-2 tbsp honey',
+		'999.6 g flour',
+		'10000 g flour',
+		'1 kg flour',
+		'1 dl cream',
+		'250 ml milk',
+		'2 L stock',
+		'1 oz chocolate',
+		'3 lb beef',
+		'1 fl oz cream',
+		'1 gallon water'
+	];
+	// From the smallest serves of a recipe for twelve to twelve times it.
+	const FACTORS = [MIN_SERVES / 12, 1 / 8, 1 / 4, 1 / 3, 1 / 2, 2 / 3, 1, 1.5, 2, 3, 12];
+	const CHOICES = [null, ...MEASUREMENTS];
+
+	// A shown number ("2", "0.03", "1½", "⅛", "1.36", or a typed "1/8") as its value, else NaN.
+	function valueOf(shown: string): number {
+		const typed = /^(\d+)\/(\d+)$/.exec(shown);
+		if (typed) return Number(typed[1]) / Number(typed[2]);
+		const match = /^(\d+(?:\.\d+)?)?([½⅓⅔¼¾⅛⅜⅝⅞])?$/.exec(shown);
+		if (!match || shown === '') return NaN;
+		const fraction = Object.keys(FRACTIONS).find((f) => FRACTIONS[f] === match[2]);
+		const [n, d] = fraction ? fraction.split('/').map(Number) : [0, 1];
+		return Number(match[1] ?? 0) + n / d;
+	}
+
+	function expectPositive(shown: string, where: string) {
+		expect(shown, where).not.toMatch(/NaN|Infinity|e[+-]|^-|^0\/|^0+(\.0+)?$/);
+		const value = valueOf(shown);
+		expect(Number.isFinite(value) && value > 0, `${where}: "${shown}"`).toBe(true);
+	}
+
+	const cases = LINES.flatMap((line) =>
+		FACTORS.flatMap((factor) => CHOICES.map((to) => ({ line, factor, to })))
+	);
+
+	test.each(cases)('$line ×$factor in $to', ({ line, factor, to }) => {
+		const typed = makeIngredient(line);
+		expect(typed.quantity).toBeGreaterThan(0);
+		const scaled = scaleIngredient(typed, gramsFor(typed), factor);
+		const { ingredient, grams } = convertIngredient(scaled.ingredient, scaled.grams, to);
+		const where = `${line} ×${factor} ${to}: ${ingredient.text}`;
+		const measure = splitMeasure(ingredient)?.measure ?? ingredient.text;
+		for (const n of measure.split(/\s+/)[0].split(/[–-]/)) expectPositive(n, where);
+		if (grams) {
+			const weight = formatGrams(grams);
+			for (const g of weight.replace(/^≈|g$/g, '').split('–')) expectPositive(g, `${where} (${weight})`);
+		}
 	});
 });

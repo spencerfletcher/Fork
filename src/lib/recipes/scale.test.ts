@@ -3,6 +3,7 @@ import { makeIngredient } from './fixtures';
 import {
 	FRACTIONS,
 	MIN_SERVES,
+	formatGrams,
 	formatScaled,
 	formatServes,
 	parseServes,
@@ -59,6 +60,21 @@ describe('formatScaled', () => {
 		[0, '0']
 	])('%j → %j', (n, expected) => {
 		expect(formatScaled(n)).toBe(expected);
+	});
+});
+
+describe('formatGrams', () => {
+	test.each([
+		[grams(120), '120g'],
+		[grams(5.66), '5.7g'],
+		[grams(9.96), '10g'],
+		// Too small for a tenth: one significant digit, as a quantity, never 0g.
+		[grams(0.03), '0.03g'],
+		[grams(0.004, 0.008), '0.004–0.008g'],
+		[grams(100, null, true), '≈100g'],
+		[grams(0), '0g']
+	])('%j → %j', (result, expected) => {
+		expect(formatGrams(result)).toBe(expected);
 	});
 });
 
