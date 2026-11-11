@@ -72,6 +72,7 @@ Planning and design docs: start at `docs/README.md`, which names the current pro
 - `readDuration(typed)`, `formatDuration(minutes)` and `timeSpans(times)` (`src/lib/recipes/times.ts`): a typed time ("1 h 30", "overnight") as minutes or why not, minutes as "1 h 30 min", and a recipe's prep, cook and rest as separate value-and-word spans, never a total; `TIME_FIELDS` names them
 - `contentDraft(content, settings)` (`src/lib/recipes/validation.ts`): a version's content as the editor's form strings (times as words), or a blank form; the edit and new pages and every test draft start from it
 - `readSourceUrl(typed)` and `sourceLabel(name, url)` (`src/lib/recipes/validation.ts`): a source link kept as http(s) only, a bare address taken as https; how a source reads (its name, else the host)
+- `exportFor(userId, origin, recipeId?, conn?)` (`src/lib/server/export.ts`): the cook's own data as a `ForkExport` (`src/lib/export/archive.ts`, the one shape for the JSON and Markdown downloads); `exportRequest(url, user)` (the 401/400 refusals) and `exportResponse(ex, format)` (the uncached attachment) beside it; `toMarkdown(ex)` (`src/lib/export/markdown.ts`); `exportHref(format, slug?)` for the download links
 - `oneOf(list, value)` (`src/lib/helpers.ts`): a value from an `as const` list, else undefined
 - `wholeNumber(s)` (`src/lib/helpers.ts`): digits only as a number, else null
 - `plural(n, word, pluralForm?)` (`src/lib/helpers.ts`): "1 fork", "2 forks", "2 entries"
