@@ -137,7 +137,7 @@ Confirmed rejections: no gradients, no glass, no shadows on resting elements, no
 - Bitter for names and titles, Source Sans 3 for everything read, JetBrains Mono for identifiers and diffs only.
 - Clay is the only coloured text; marigold is the only fill.
 - Depth is tonal: paper, lifted paper, clay tint, espresso.
-- Version chips, bylines and diffs are first-class marks, set in mono.
+- Version chips, handles and diffs are first-class marks, set in mono.
 
 ## Colors
 
