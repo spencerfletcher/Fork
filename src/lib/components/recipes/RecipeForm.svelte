@@ -10,7 +10,7 @@
 		VISIBILITIES,
 		type RecipeDraft
 	} from '#lib/recipes/validation.js';
-	import { fieldErrors, focusField } from '#lib/recipes/fieldErrors.svelte.js';
+	import { fieldErrors, focusField, typedMessage } from '#lib/recipes/fieldErrors.svelte.js';
 	import { factsSummary } from '#lib/recipes/factsSummary.js';
 	import { normaliseTagNames, tagKey } from '#lib/recipes/tags.js';
 	import type { TagChip } from '#lib/recipes/types.js';
@@ -138,7 +138,7 @@
 
 	// Inline errors in the server's own wording (#lib/recipes/fieldErrors).
 	// svelte-ignore state_referenced_locally
-	const fields = fieldErrors(form);
+	const fields = fieldErrors(form, baseline);
 	const errors = fields.errors;
 	const aria = fields.aria;
 
@@ -157,7 +157,8 @@
 		if (!name) return;
 		errors[name] = form.error;
 		// After the render a refusal causes: an Add field it names opens first.
-		tick().then(() => focusField(document.getElementById(name)));
+		// The tags' box is their search.
+		tick().then(() => focusField(document.getElementById(name === 'tags' ? 'tag-combobox' : name)));
 	});
 
 	const globalError = $derived(
@@ -373,6 +374,8 @@
 						onkeydown={(e) => {
 							if (e.key === 'Enter') e.preventDefault();
 						}}
+						{@attach (el) =>
+							el.setCustomValidity(typedMessage('title', draft.title, baseline.title))}
 						{...aria('title')}>
 					</textarea>
 					{@render fieldError('title')}
@@ -380,13 +383,23 @@
 
 				<div class="field">
 					<label for="description">Description</label>
-					<textarea id="description" name="description" rows="3" bind:value={draft.description}>
+					<textarea
+						id="description"
+						name="description"
+						rows="3"
+						bind:value={draft.description}
+						{@attach (el) =>
+							el.setCustomValidity(
+								typedMessage('description', draft.description, baseline.description)
+							)}
+						{...aria('description')}>
 					</textarea>
+					{@render fieldError('description')}
 				</div>
 
 				<details class="fold" bind:open={foldOpen}>
 					<summary class="fold-summary">
-						<span class="fold-facts">
+						<span class="fold-facts dot-list">
 							{#each summary.facts as fact, i (i)}<span>{fact}</span>{/each}
 						</span>
 						<span class="text-btn">{summary.action}{@render chevronIcon(foldOpen)}</span>
@@ -397,7 +410,11 @@
 						<SourceFields bind:draft {errors} />
 						<fieldset class="field field-tags">
 							<legend class="field-legend">Tags</legend>
-							<TagInput {allTags} bind:selected={draft.tags} />
+							<TagInput
+								{allTags}
+								bind:selected={draft.tags}
+								before={baseline.tags}
+								bind:error={errors.tags} />
 						</fieldset>
 					</div>
 				</details>
@@ -448,6 +465,7 @@
 			bind:this={bar}
 			message={!!nextVersion}
 			bind:commitMessage={draft.commitMessage}
+			error={errors.commitMessage}
 			{generated}
 			{submitLabel}
 			pending={save.pending}
@@ -509,6 +527,21 @@
 		font-size: 0.9375rem;
 		line-height: 1.5;
 		color: var(--color-text-2);
+	}
+
+	/* The house dots (.dot-list), each centred in the gap before its fact
+	   rather than beside it, so the dot of a fact that wraps to the next line
+	   falls left of the box and is clipped: no line starts or ends with one. */
+	.fold-facts > span {
+		position: relative;
+	}
+
+	.fold-facts > span + span::before {
+		position: absolute;
+		right: 100%;
+		width: 14px;
+		padding: 0;
+		text-align: center;
 	}
 
 	.fold-summary .text-btn {
@@ -583,6 +616,12 @@
 		/* The photo and audience are in the fold too: hidden while it is closed. */
 		.editor-top:has(.fold:not([open])) .side {
 			display: none;
+		}
+
+		/* The form's own gap is the one between sections; this margin on top of
+		   it left 48px under the folded summary. */
+		.editor-top {
+			margin-bottom: 0;
 		}
 	}
 </style>

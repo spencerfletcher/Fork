@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import FormActions from '#lib/components/ui/FormActions.svelte';
+	import FieldError from '#lib/components/ui/FieldError.svelte';
+	import { typedMessage } from '#lib/recipes/fieldErrors.svelte.js';
 
 	// The editor's save bar, pinned to the screen's bottom (c1). Editing, What
 	// changed? sits beside Save from 700; on a phone it stays in the page and
@@ -9,6 +11,7 @@
 	let {
 		message = false,
 		commitMessage = $bindable(''),
+		error,
 		generated,
 		submitLabel,
 		pending,
@@ -18,6 +21,8 @@
 		/** Editing: the What changed? field is offered. */
 		message?: boolean;
 		commitMessage?: string;
+		/** What changed?'s inline error (fieldErrors). */
+		error?: string;
 		/** The message a blank field saves, or null while nothing would be generated. */
 		generated: string | null;
 		submitLabel: string;
@@ -84,8 +89,13 @@
 				name="commitMessage"
 				type="text"
 				{placeholder}
-				aria-describedby={savesGenerated ? 'commitMessage-hint' : undefined}
-				bind:value={commitMessage} />
+				aria-invalid={error ? 'true' : undefined}
+				aria-describedby={[error && 'commitMessage-error', savesGenerated && 'commitMessage-hint']
+					.filter(Boolean)
+					.join(' ') || undefined}
+				bind:value={commitMessage}
+				{@attach (el) => el.setCustomValidity(typedMessage('commitMessage', commitMessage))} />
+			<FieldError name="commitMessage" {error} />
 			{#if savesGenerated}
 				<p class="form-hint" id="commitMessage-hint">Left blank, saves as: {generated}</p>
 			{/if}
@@ -98,7 +108,10 @@
 </div>
 
 <style>
-	/* Edge to edge across the gutters, above the home indicator. */
+	/* Edge to edge across the gutters, above the home indicator. Past the
+	   site's column the fill and its rule run on to the window's edges, drawn
+	   as the border image's outset, which paints but never scrolls; the bar's
+	   own box, and so its contents, stay on the column. */
 	.save-bar {
 		position: sticky;
 		bottom: 0;
@@ -110,6 +123,8 @@
 		padding: 8px 24px calc(8px + env(safe-area-inset-bottom));
 		background: var(--color-surface);
 		border-top: 1px solid var(--color-border);
+		border-image: linear-gradient(var(--color-border) 0 1px, var(--color-surface) 0) 0 fill / 0 / 0
+			100vw;
 	}
 
 	/* A field focused by Tab stops above the bar: its height, the 4px ring and
@@ -151,6 +166,22 @@
 		font-size: 0.875rem;
 		color: var(--color-text-3);
 		white-space: nowrap;
+	}
+
+	@media (min-width: 700px) {
+		/* What changed?'s message sits above the bar, not in it, so the bar keeps
+		   the height the page's scroll padding allows for: a tab on the bar's
+		   fill, level with the label, covering the rule beneath it. */
+		.field-message :global(.field-error) {
+			position: absolute;
+			bottom: calc(100% - 1px);
+			left: 24px;
+			padding: 6px 12px;
+			background: var(--color-surface);
+			border: 1px solid var(--color-border);
+			border-bottom: 0;
+			border-radius: 6px 6px 0 0;
+		}
 	}
 
 	@media (max-width: 699px) {

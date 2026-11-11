@@ -103,23 +103,36 @@ export type CapBefore = { title: string; description: string | null; tagNames: s
 /** Characters, as Postgres's char_length counts them: an emoji is one. */
 const charCount = (s: string) => Array.from(s).length;
 
+/** The cap a box's trimmed words break, or null; what it `before` held passes. The editor checks a box as it is typed with this too. */
+export function textCapError(
+	field: 'title' | 'description' | 'commitMessage',
+	value: string,
+	before?: string | null
+): string | null {
+	const words = value.trim();
+	return charCount(words) > CAPS[field] && words !== before?.trim() ? CAP_MESSAGES[field] : null;
+}
+
+/** The cap a save's tags break, or null; a tag the recipe had passes, and it may keep as many as it had. The editor checks a tag as it is added with this too. */
+export function tagsCapError(tagNames: string[], before?: string[]): string | null {
+	const had = new Set(before?.map(tagKey));
+	if (tagNames.some((name) => charCount(name) > CAPS.tag && !had.has(tagKey(name))))
+		return CAP_MESSAGES.tag;
+	if (tagNames.length > Math.max(CAPS.tags, had.size)) return CAP_MESSAGES.tags;
+	return null;
+}
+
 /** The first cap a save's trimmed words break, or null; what `before` already has passes. */
 export function capError(
 	saved: { title: string; description: string | null; commitMessage: string; tagNames: string[] },
 	before?: CapBefore
 ): string | null {
-	const over = (field: 'title' | 'description') => {
-		const value = saved[field];
-		return value !== null && charCount(value) > CAPS[field] && value !== before?.[field];
-	};
-	if (over('title')) return CAP_MESSAGES.title;
-	if (over('description')) return CAP_MESSAGES.description;
-	if (charCount(saved.commitMessage.trim()) > CAPS.commitMessage) return CAP_MESSAGES.commitMessage;
-	const had = new Set(before?.tagNames.map(tagKey));
-	if (saved.tagNames.some((name) => charCount(name) > CAPS.tag && !had.has(tagKey(name))))
-		return CAP_MESSAGES.tag;
-	if (saved.tagNames.length > Math.max(CAPS.tags, had.size)) return CAP_MESSAGES.tags;
-	return null;
+	return (
+		textCapError('title', saved.title, before?.title) ??
+		textCapError('description', saved.description ?? '', before?.description) ??
+		textCapError('commitMessage', saved.commitMessage) ??
+		tagsCapError(saved.tagNames, before?.tagNames)
+	);
 }
 
 /** What a required field says when it is empty; the editor shows the same live. */
@@ -454,9 +467,7 @@ export function draftOf(formData: FormData): RecipeDraft {
 // fields, so a new one must say which messages are its own.
 const MESSAGES_OF: Record<keyof ContentFields, string[]> = {
 	title: [REQUIRED_MESSAGES.title, CAP_MESSAGES.title],
-	// The description, the commit message and tags have no inline error in
-	// the editor, so their caps' messages show as the form's own error.
-	description: [],
+	description: [CAP_MESSAGES.description],
 	sourceName: [textTooLong('sourceName')],
 	sourceUrl: Object.values(SOURCE_URL_MESSAGES),
 	servings: Object.values(numberMessages('servings')),
@@ -484,8 +495,12 @@ const MESSAGES_OF: Record<keyof ContentFields, string[]> = {
 	]
 };
 
-/** The field a content message belongs to, so the editor can show it there; undefined for any other message. */
-export function fieldOfMessage(message: string): keyof ContentFields | undefined {
+/** The field a content or cap message belongs to, so the editor can show it there; undefined for any other message. */
+export function fieldOfMessage(
+	message: string
+): keyof ContentFields | 'commitMessage' | 'tags' | undefined {
+	if (message === CAP_MESSAGES.commitMessage) return 'commitMessage';
+	if (message === CAP_MESSAGES.tag || message === CAP_MESSAGES.tags) return 'tags';
 	return (Object.keys(MESSAGES_OF) as Array<keyof ContentFields>).find(
 		(field) =>
 			MESSAGES_OF[field].includes(message) ||
