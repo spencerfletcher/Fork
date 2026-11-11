@@ -2,6 +2,7 @@ import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
 import { draftOf } from '#lib/recipes/validation.js';
 import {
 	clearDraft,
+	clearDrafts,
 	DRAFT_MAX_AGE_MS,
 	draftAge,
 	draftKey,
@@ -51,6 +52,16 @@ describe('drafts', () => {
 		saveDraft(draftKey('user-a', 'recipe-1'), stored('Mine'));
 		expect(draftKey('user-a', 'recipe-1')).not.toBe(draftKey('user-b', 'recipe-1'));
 		expect(loadDraft(draftKey('user-b', 'recipe-1'), NOW)).toBeNull();
+	});
+
+	test('logging out clears every draft of that user and nobody else’s', () => {
+		saveDraft(draftKey('user-a', 'new'), stored('Soup'));
+		saveDraft(draftKey('user-a', 'recipe-1'), stored('Stew'));
+		saveDraft(draftKey('user-ab', 'new'), stored('Theirs'));
+		clearDrafts('user-a');
+		expect(loadDraft(draftKey('user-a', 'new'), NOW)).toBeNull();
+		expect(loadDraft(draftKey('user-a', 'recipe-1'), NOW)).toBeNull();
+		expect(loadDraft(draftKey('user-ab', 'new'), NOW)).not.toBeNull();
 	});
 
 	test('clear removes it', () => {

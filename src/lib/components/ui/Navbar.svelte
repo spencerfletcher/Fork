@@ -7,6 +7,7 @@
 	import { searchIcon } from '#lib/components/Icons.svelte';
 	import Avatar from '#lib/components/ui/Avatar.svelte';
 	import Dropdown from './Dropdown.svelte';
+	import { clearDrafts } from '#lib/drafts.js';
 
 	let { user, profile = null }: { user: User | null; profile?: Profile | null } = $props();
 
@@ -94,7 +95,12 @@
 									aria-current={current(path === '/settings')}>
 									Settings
 								</a>
-								<form action="/logout" method="POST" role="none" use:enhance>
+								<form
+									action="/logout"
+									method="POST"
+									role="none"
+									use:enhance
+									onsubmit={() => clearDrafts(user.id)}>
 									<button type="submit" class="menu-row" role="menuitem">Log out</button>
 								</form>
 							</div>

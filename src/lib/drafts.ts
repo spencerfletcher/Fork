@@ -41,6 +41,16 @@ export function clearDraft(key: string) {
 	}
 }
 
+/** Logging out leaves none of that cook's drafts on the device. */
+export function clearDrafts(userId: string) {
+	try {
+		const keys = Array.from({ length: localStorage.length }, (_, i) => localStorage.key(i));
+		for (const k of keys) if (k?.startsWith(`${PREFIX}${userId}:`)) localStorage.removeItem(k);
+	} catch {
+		// Nothing stored can be shown either.
+	}
+}
+
 function read(key: string): StoredDraft | null {
 	try {
 		const value: unknown = JSON.parse(localStorage.getItem(key) ?? 'null');

@@ -12,8 +12,7 @@
 		REQUIRED_MESSAGES,
 		VISIBILITIES,
 		type NumberField,
-		type RecipeDraft,
-		type Visibility
+		type RecipeDraft
 	} from '#lib/recipes/validation.js';
 	import { normaliseTagNames, tagKey } from '#lib/recipes/tags.js';
 	import type { TagChip } from '#lib/recipes/types.js';
@@ -27,14 +26,9 @@
 	import FormActions from '#lib/components/ui/FormActions.svelte';
 	import ChoiceGroup from '#lib/components/ui/ChoiceGroup.svelte';
 	import { audienceIcon } from '#lib/components/Icons.svelte';
-	import { AUDIENCE_LABEL } from '#lib/audience.js';
+	import { AUDIENCE_LABEL, AUDIENCE_NOTE } from '#lib/audience.js';
 
 	// The radio trio's sentences, offered in VISIBILITIES order (Only me first).
-	const AUDIENCE_NOTE: Record<Visibility, string> = {
-		private: 'Only you can see it. You can share it later.',
-		friends: 'Approved friends can see, save and fork it. It stays out of Discover.',
-		public: 'Anyone can find, save and fork it.'
-	};
 
 	let {
 		baseline,
