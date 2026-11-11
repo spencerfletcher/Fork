@@ -485,6 +485,14 @@ describe('load: fork attribution', () => {
 		expect(data.recipe.parent).toMatchObject({ slug: 'secret-original' });
 	});
 
+	test("names the parent's author by handle, loading that one column of their profile", async () => {
+		findRecipeMock.mockResolvedValue(forkOf({ visibility: 'public', authorId: 'original-author' }));
+		const data = await loadData();
+		expect(data.recipe.parent).toMatchObject({ author: { username: 'original' } });
+		const [{ with: relations }] = findRecipeMock.mock.calls[0];
+		expect(relations.parent.with.author).toEqual({ columns: { username: true } });
+	});
+
 	test('withholds a private parent from a viewer who does not own it', async () => {
 		findRecipeMock.mockResolvedValue(
 			forkOf({ visibility: 'private', authorId: 'original-author' })
@@ -493,6 +501,8 @@ describe('load: fork attribution', () => {
 		expect(data.recipe.parent).toBeNull();
 		// parentId stays so the page can say it was forked from a private recipe.
 		expect(data.recipe.parentId).toBe(42);
+		// Nor does its author's handle reach the page by any other field.
+		expect(JSON.stringify(data)).not.toContain('"username":"original"');
 	});
 
 	test('withholds a private parent from a logged-out viewer', async () => {

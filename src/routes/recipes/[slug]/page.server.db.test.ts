@@ -170,6 +170,10 @@ describe.skipIf(!localDb)('forking a version, against the real database', () => 
 		if (!db) return;
 		await db.delete(schema.recipes).where(inArray(schema.recipes.authorId, people));
 		await db.delete(schema.recipes).where(eq(schema.recipes.id, parentId));
+		// The author's name before the rename test, kept reserved to them.
+		await db
+			.delete(schema.formerUsernames)
+			.where(inArray(schema.formerUsernames.profileId, people));
 		await db.delete(schema.profiles).where(inArray(schema.profiles.id, people));
 	});
 
@@ -280,6 +284,37 @@ describe.skipIf(!localDb)('forking a version, against the real database', () => 
 		await db.insert(schema.favorites).values({ userId: other, recipeId: row!.id });
 		const saved = (await exportFor(other, 'https://x')).saves.find((s) => s.slug === row!.slug);
 		expect(saved).toMatchObject({ title: 'quokka stew', author: `ex-forker-${run}` });
+	});
+
+	test("the byline's parent author: the current handle after a rename, and none for a hidden parent", async () => {
+		const { row } = await fork({ version: '2' });
+		await db
+			.update(schema.recipes)
+			.set({ visibility: 'public' })
+			.where(eq(schema.recipes.id, row!.id));
+		const { changeUsername } = await import('#lib/server/profiles.js');
+		const renamed = `ex-rn-${run}`;
+		expect(await changeUsername(author, renamed)).toMatchObject({ result: 'changed' });
+		const data = await pageOf(row!.slug, { id: other });
+		// The profile join's one column, nothing else of the profile.
+		expect(data.recipe.parent?.author).toEqual({ username: renamed });
+
+		await db
+			.update(schema.recipes)
+			.set({ visibility: 'private' })
+			.where(eq(schema.recipes.id, parentId));
+		try {
+			for (const viewer of [{ id: other }, null]) {
+				const hidden = await pageOf(row!.slug, viewer);
+				expect(hidden.recipe.parent).toBeNull();
+				expect(JSON.stringify(hidden)).not.toContain(`"username":"${renamed}"`);
+			}
+		} finally {
+			await db
+				.update(schema.recipes)
+				.set({ visibility: 'public' })
+				.where(eq(schema.recipes.id, parentId));
+		}
 	});
 
 	test("the parent deleted for good keeps the fork's copied photo and its v2 record; the fork reads as from a deleted recipe", async () => {
