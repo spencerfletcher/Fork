@@ -5,6 +5,7 @@
 	import { AUDIENCE_LABEL } from '#lib/audience.js';
 	import { audienceIcon } from '#lib/components/Icons.svelte';
 	import CookLink from '#lib/components/ui/CookLink.svelte';
+	import { dayLabel } from '#lib/journal.js';
 	import Username from '#lib/components/ui/Username.svelte';
 
 	// Only what the card renders, so a column added to the table does not ripple
@@ -23,6 +24,9 @@
 		author?: { id: string; username: string } | null;
 		versionCount?: number;
 		forkCount?: number;
+		/** The viewer's own, on their Cookbook only (cardList's `cooked`). */
+		timesCooked?: number;
+		lastCookedOn?: string;
 	}
 
 	// Position in the grid, when the page knows it: the first row's photos are
@@ -88,6 +92,15 @@
 
 		if (recipe.forkCount && isList) {
 			parts.push({ text: plural(recipe.forkCount, 'fork') });
+		}
+
+		// A personal fact, last: the recipe page's personal line, shortened.
+		const { timesCooked: times, lastCookedOn: last } = recipe;
+		if (times && last) {
+			const day = dayLabel(last);
+			parts.push({
+				text: times > 1 ? `Cooked ${plural(times, 'time')}, last on ${day}` : `Cooked on ${day}`
+			});
 		}
 
 		return parts;

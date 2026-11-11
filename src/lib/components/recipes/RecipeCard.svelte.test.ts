@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/svelte';
 import RecipeCard from './RecipeCard.svelte';
 import source from './RecipeCard.svelte?raw';
 import { formatTime } from '#lib/helpers.js';
+import { dayLabel } from '#lib/journal.js';
 import { cssRule } from '#lib/testing/css.js';
 
 const { mockGoto } = vi.hoisted(() => ({ mockGoto: vi.fn() }));
@@ -387,5 +388,32 @@ describe('RecipeCard on Discover', () => {
 			'/recipes/chocolate-cake-abc123'
 		]);
 		expect(container.querySelector('a a')).toBeNull();
+	});
+});
+
+describe('RecipeCard: times and last cooked', () => {
+	const cookbookCard = (overrides: Record<string, unknown>) =>
+		render(RecipeCard, {
+			props: { recipe: makeRecipe({ cookTimeMinutes: 40, ...overrides }), variant: 'cookbook' }
+		});
+	const lastItem = (container: HTMLElement) =>
+		container.querySelector('.meta-row .meta-item:last-child')!;
+
+	test('cooked once: the day, last in the meta row in the meta style', () => {
+		const { container } = cookbookCard({ timesCooked: 1, lastCookedOn: '2026-11-08' });
+		expect(lastItem(container).textContent!.trim()).toBe(`Cooked on ${dayLabel('2026-11-08')}`);
+		expect(lastItem(container)).not.toHaveClass('vid');
+	});
+
+	test('cooked more than once: the count and the last day', () => {
+		const { container } = cookbookCard({ timesCooked: 4, lastCookedOn: '2026-11-03' });
+		expect(lastItem(container).textContent!.trim()).toBe(
+			`Cooked 4 times, last on ${dayLabel('2026-11-03')}`
+		);
+	});
+
+	test('never cooked, or no counts from the page: nothing', () => {
+		const { container } = cookbookCard({});
+		expect(container.querySelector('.meta-row')!.textContent).not.toContain('Cooked');
 	});
 });
