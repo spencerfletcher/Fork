@@ -7,6 +7,7 @@ import CookbookPage from './+page.svelte';
 import { COOKBOOK_FILTERS, COOKBOOK_VIEWS } from './filters.js';
 import type { CardSort } from '#lib/listPage.js';
 import source from './+page.svelte?raw';
+import barSource from './SelectBar.svelte?raw';
 import { cssRule } from '#lib/testing/css.js';
 import { TRASH_DAYS } from '#lib/trash.js';
 import type { SubmitFunction } from '$app/forms';
@@ -670,6 +671,12 @@ describe('Cookbook select mode', () => {
 		expect(bar()).toHaveTextContent('1 yours, 1 saved');
 		expect(screen.getByRole('checkbox', { name: poke.title })).toBeChecked();
 		expect(within(bar()).getByRole('button', { name: 'Select all 2 shown' })).toBeDisabled();
+	});
+
+	test("Add to collection's chevron is the 12px disclosure mark, not the SVG's default size", () => {
+		const rule = cssRule(barSource, '.bar-tools :global(.chevron)');
+		expect(rule).toMatch(/width:\s*12px/);
+		expect(rule).toMatch(/height:\s*12px/);
 	});
 
 	test('with only saved recipes chosen, Add tag and Move to Trash are not offered', async () => {

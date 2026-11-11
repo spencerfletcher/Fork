@@ -409,6 +409,12 @@
 		gap: 6px;
 	}
 
+	/* :global, because the chevron comes from Icons.svelte. */
+	.bar-tools :global(.chevron) {
+		width: 12px;
+		height: 12px;
+	}
+
 	.tag-box {
 		flex: 1 1 18rem;
 		min-width: 0;
