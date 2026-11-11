@@ -122,16 +122,25 @@ export function eitherWay(
 	return sql`(least(${requester}, ${addressee}) = least(${a}, ${b}) and greatest(${requester}, ${addressee}) = greatest(${a}, ${b}))`;
 }
 
+/**
+ * The recipe's author has an accepted friendship with `userId`, whichever of
+ * them asked, as a query condition on `recipes`. visibleTo's friends rule, and
+ * the Friends filter on Discover and Search, which pair it with visibleTo: it
+ * narrows by author only and says nothing about what the viewer may see.
+ */
+export function authorIsFriendOf(userId: string): SQL {
+	const fr = (column: { name: string }) => onAlias('fr', column);
+	const pair: [SQL, SQL] = [fr(friendships.requesterId), fr(friendships.addresseeId)];
+	return sql`exists (select 1 from ${friendships} "fr" where ${fr(friendships.status)} = ${'accepted' satisfies FriendshipStatus} and ${eitherWay(pair, userId, recipes.authorId)})`;
+}
+
 /** The same rule as canView, as a query condition on `recipes`. */
 export function visibleTo(user: Viewer): SQL {
 	if (!user) return eq(recipes.visibility, 'public');
-	const fr = (column: { name: string }) => onAlias('fr', column);
-	const pair: [SQL, SQL] = [fr(friendships.requesterId), fr(friendships.addresseeId)];
-	const authorIsFriend = sql`exists (select 1 from ${friendships} "fr" where ${fr(friendships.status)} = ${'accepted' satisfies FriendshipStatus} and ${eitherWay(pair, user.id, recipes.authorId)})`;
 	return or(
 		eq(recipes.visibility, 'public'),
 		eq(recipes.authorId, user.id),
-		and(eq(recipes.visibility, 'friends'), authorIsFriend)
+		and(eq(recipes.visibility, 'friends'), authorIsFriendOf(user.id))
 	) as SQL;
 }
 

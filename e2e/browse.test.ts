@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { gotoHydrated } from './helpers';
 
 // The browse surfaces signed out. Assumes the seed: public recipes, one of
 // them with a second version.
@@ -67,6 +68,54 @@ test.describe('Discover, signed out', () => {
 	test('/recipes, now the Cookbook, asks a visitor to log in', async ({ page }) => {
 		await page.goto('/recipes');
 		await expect(page).toHaveURL(/\/login\?redirectTo=%2Fcookbook$/);
+	});
+});
+
+// Safari 26 tints the status bar from a fixed box at the top edge. Chromium
+// can only check the geometry; the tint itself is checked on an iPhone.
+test.describe('Status strip on a phone', () => {
+	test('at rest a full-width fixed strip in the bar colour; a screen down nothing pinned at the top', async ({
+		page
+	}) => {
+		await page.setViewportSize({ width: 390, height: 844 });
+		await gotoHydrated(page, '/discover');
+		const navBg = await page.locator('nav').evaluate((el) => getComputedStyle(el).backgroundColor);
+		const strip = await page.locator('.status-strip').evaluate((el) => {
+			const r = el.getBoundingClientRect();
+			const cs = getComputedStyle(el);
+			return {
+				top: r.top,
+				bottom: r.bottom,
+				width: r.width,
+				position: cs.position,
+				bg: cs.backgroundColor
+			};
+		});
+		expect(strip.position).toBe('fixed');
+		expect(strip.top).toBeLessThanOrEqual(0);
+		expect(strip.bottom).toBeGreaterThan(0);
+		expect(strip.width).toBe(390);
+		expect(strip.bg).toBe(navBg);
+
+		await page.evaluate(() => window.scrollTo(0, window.innerHeight));
+		expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(100);
+		await expect(page.locator('.status-strip')).toHaveCount(0);
+		const pinnedAtTop = await page.evaluate(() =>
+			[...document.querySelectorAll('body *')]
+				.filter((el) => {
+					const { position } = getComputedStyle(el);
+					const r = el.getBoundingClientRect();
+					return (
+						(position === 'fixed' || position === 'sticky') &&
+						r.width > 0 &&
+						r.height > 0 &&
+						r.top < 100 &&
+						r.bottom > 0
+					);
+				})
+				.map((el) => el.outerHTML.slice(0, 80))
+		);
+		expect(pinnedAtTop).toEqual([]);
 	});
 });
 

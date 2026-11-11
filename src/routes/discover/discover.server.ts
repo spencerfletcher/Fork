@@ -4,7 +4,7 @@ import { db } from '#lib/server/db/index.js';
 import { favorites, profiles, recipes, recipeVersions } from '#lib/server/db/schema.js';
 import { cardList } from '#lib/server/recipeCounts.js';
 import { tagSelection, visibleTags } from '#lib/server/tagFilter.js';
-import { friendIdsOf, visibleTo } from '#lib/server/visibility.js';
+import { authorIsFriendOf, visibleTo } from '#lib/server/visibility.js';
 import { parseFilters, textSearch } from '#lib/server/recipeSearch.js';
 
 /** The lead card is the most-saved recipe in the set over this many days, else the set's newest. */
@@ -41,8 +41,6 @@ export async function loadDiscover(url: URL, user: { id: string } | null) {
 	const empty = { ...base, lead: null, recentChanges: [], recipes: [] };
 
 	if (matches?.size === 0) return empty;
-	const friendIds = friendsOnly && user ? await friendIdsOf(user.id) : [];
-	if (friendsOnly && friendIds.length === 0) return empty;
 
 	const byHandle = handle
 		? inArray(
@@ -57,7 +55,7 @@ export async function loadDiscover(url: URL, user: { id: string } | null) {
 	const inSet = and(
 		visible,
 		byHandle,
-		friendsOnly ? inArray(recipes.authorId, friendIds) : undefined,
+		friendsOnly && user ? authorIsFriendOf(user.id) : undefined,
 		matches ? inArray(recipes.id, [...matches.keys()]) : undefined,
 		text.where
 	);

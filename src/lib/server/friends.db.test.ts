@@ -97,6 +97,40 @@ describe.skipIf(!localDb)('unfriend and block, against the real database', () =>
 		});
 	});
 
+	test("the Friends filter keeps a friend's recipes the viewer may see, never a stranger's or a blocked cook's", async () => {
+		const { visibleTo, authorIsFriendOf } = await import('./visibility.js');
+		await withFriends(async (tx, a, b) => {
+			const stranger = `stranger-${a}`;
+			const blocked = `blocked-${a}`;
+			const pending = `pending-${a}`;
+			await tx.insert(schema.profiles).values([
+				{ id: stranger, username: `s-${a}` },
+				{ id: blocked, username: `k-${a}` },
+				{ id: pending, username: `p-${a}` }
+			]);
+			await tx.insert(schema.friendships).values([
+				{ requesterId: blocked, addresseeId: a, status: 'blocked' },
+				{ requesterId: a, addresseeId: pending, status: 'pending' }
+			]);
+			const bPublic = await makeRecipe(tx, b, 'public');
+			const bFriends = await makeRecipe(tx, b, 'friends');
+			const others = [
+				await makeRecipe(tx, b, 'private'),
+				await makeRecipe(tx, a, 'public'),
+				await makeRecipe(tx, stranger, 'public'),
+				await makeRecipe(tx, blocked, 'public'),
+				await makeRecipe(tx, blocked, 'friends'),
+				await makeRecipe(tx, pending, 'public')
+			];
+			const ids = [bPublic.id, bFriends.id, ...others.map((r) => r.id)];
+			const rows = await tx.query.recipes.findMany({
+				where: and(inArray(schema.recipes.id, ids), visibleTo({ id: a }), authorIsFriendOf(a)),
+				columns: { id: true }
+			});
+			expect(rows.map((r) => r.id).sort((x, y) => x - y)).toEqual([bPublic.id, bFriends.id]);
+		});
+	});
+
 	test("unfriend privatises each side's forks of the other's Friends recipes, nothing else", async () => {
 		await withFriends(async (tx, a, b) => {
 			const aFriends = await makeRecipe(tx, a, 'friends');
