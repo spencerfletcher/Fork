@@ -17,12 +17,22 @@ test.describe('Cookbook Grid | List', () => {
 	}) => {
 		await page.setViewportSize({ width: 1280, height: 900 });
 		await gotoHydrated(page, '/cookbook');
-		const cards = await page.locator('.cookbook-grid .recipe-card').count();
 		await expect(viewLink(page, 'Grid')).toHaveAttribute('aria-current', 'page');
 
 		await viewLink(page, 'List').click();
 		await expect(page).toHaveURL(/\/cookbook\?view=list$/);
-		await expect(rows(page).getByRole('listitem')).toHaveCount(cards);
+		await expect(rows(page)).toBeVisible();
+		// Other specs add and trash the seed cook's recipes meanwhile, so the rows
+		// are counted against this same page's All, not an earlier grid.
+		const all = Number(
+			await page
+				.getByRole('group', { name: 'Show' })
+				.locator('a')
+				.first()
+				.locator('.n')
+				.textContent()
+		);
+		await expect(rows(page).getByRole('listitem')).toHaveCount(all);
 		await expect(viewLink(page, 'List')).toHaveAttribute('aria-current', 'page');
 		const tikka = rows(page).getByRole('listitem').filter({ hasText: 'Chicken Tikka Masala' });
 		await expect(tikka.locator('.row-cooked')).toHaveText('Cooked on Sun 8 Nov');
