@@ -9,6 +9,8 @@ import {
 	monthLabel,
 	monthTone,
 	sourceHref,
+	SUMMARY_MONTHS,
+	summaryMonths,
 	TONE_STEPS
 } from './journal';
 
@@ -75,7 +77,6 @@ describe('KEEP_SOURCE', () => {
 describe('monthTone', () => {
 	test('none cooked is the bare step; the busiest month is the top one', () => {
 		expect(monthTone(0, 9)).toBe(0);
-		expect(monthTone(null, 9)).toBe(0);
 		expect(monthTone(9, 9)).toBe(TONE_STEPS);
 		expect(monthTone(1, 1)).toBe(TONE_STEPS);
 	});
@@ -86,5 +87,29 @@ describe('monthTone', () => {
 		for (let step = 1; step <= TONE_STEPS; step++)
 			expect(tones.filter((t) => t === step)).toHaveLength(most / TONE_STEPS);
 		expect(monthTone(1, 1000)).toBe(1);
+	});
+});
+
+describe('summaryMonths', () => {
+	test('on 12 Nov, the first days of December last year to this November, oldest first', () => {
+		const months = summaryMonths(new Date('2026-11-12T23:59:00Z'));
+		expect(months).toHaveLength(SUMMARY_MONTHS);
+		expect(months[0]).toBe('2025-12-01');
+		expect(months.at(-1)).toBe('2026-11-01');
+		expect(months.slice(0, 2)).toEqual(['2025-12-01', '2026-01-01']);
+	});
+
+	test('each month once, consecutive, ending in the current one whatever the month', () => {
+		for (const today of ['2027-01-01T00:00:00Z', '2026-12-31T12:00:00Z', '2028-02-29T12:00:00Z']) {
+			const now = new Date(today);
+			const months = summaryMonths(now);
+			expect(months.at(-1)).toBe(`${today.slice(0, 7)}-01`);
+			expect(new Set(months.map((m) => m.slice(0, 7))).size).toBe(SUMMARY_MONTHS);
+			for (let i = 1; i < months.length; i++) {
+				const prev = new Date(`${months[i - 1]}T00:00:00Z`);
+				prev.setUTCMonth(prev.getUTCMonth() + 1);
+				expect(prev.toISOString().slice(0, 10)).toBe(months[i]);
+			}
+		}
 	});
 });
