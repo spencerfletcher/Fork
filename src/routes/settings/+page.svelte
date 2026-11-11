@@ -18,6 +18,7 @@
 		MEASUREMENT_NOTE,
 		type MeasurementChoice
 	} from '#lib/measurement.js';
+	import { EXPORT_FORMATS, FORMAT_LABEL, exportHref } from '#lib/export/archive.js';
 	import type { PageData } from './$types';
 	import type { Section } from './+page.server';
 
@@ -229,6 +230,26 @@
 					'measurement-problem'
 				)}
 			</form>
+		</section>
+
+		<section class="setting" aria-labelledby="data-heading">
+			<div class="setting-head">
+				<h2 id="data-heading">Your data</h2>
+				<p class="setting-note">Download everything you've made here.</p>
+			</div>
+			<div class="setting-body">
+				<p class="form-hint">
+					Your recipes with every version (private and trashed too), collections, saves and Journal,
+					as a JSON archive or a Markdown document. Photos are linked, not included.
+				</p>
+				<div class="save-row">
+					{#each EXPORT_FORMATS as format (format)}
+						<a class="btn-ghost" href={exportHref(format)} download>
+							Download {FORMAT_LABEL[format]}
+						</a>
+					{/each}
+				</div>
+			</div>
 		</section>
 	</div>
 </div>

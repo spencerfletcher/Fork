@@ -13,6 +13,7 @@ export const EXPORT_VERSION = 1;
 /** The two downloads: the structured archive and the readable document. */
 export const EXPORT_FORMATS = ['json', 'md'] as const;
 export type ExportFormat = (typeof EXPORT_FORMATS)[number];
+export const FORMAT_LABEL: Record<ExportFormat, string> = { json: 'JSON', md: 'Markdown' };
 
 /** Another record's pointer at a recipe: its slug, link, title and its author's handle (null for a deleted account). */
 export type RecipeRef = { slug: string; url: string; title: string; author: string | null };
@@ -86,6 +87,11 @@ export type ForkExport = {
 	saves: ExportSave[];
 	journal: ExportJournalEntry[];
 };
+
+/** Where a download is asked for: the whole library from Settings, or one recipe by its owner. */
+export function exportHref(format: ExportFormat, slug?: string): string {
+	return `${slug ? `/recipes/${encodeURIComponent(slug)}` : '/settings'}/export?format=${format}`;
+}
 
 /** "fork-export-cook-2026-11-11.json", or with the recipe's slug before the day. */
 export function exportFilename(ex: ForkExport, format: ExportFormat): string {

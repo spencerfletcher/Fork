@@ -5,6 +5,7 @@ import SettingsPage from './+page.svelte';
 import { AUDIENCE_LABEL, AUDIENCE_NOTE } from '#lib/audience.js';
 import { FORMER_USERNAME_DAYS, USERNAME_TAKEN } from '#lib/auth/rules.js';
 import { SESSION_ENDED } from '#lib/server/actions.js';
+import { EXPORT_FORMATS, FORMAT_LABEL, exportHref } from '#lib/export/archive.js';
 import { VISIBILITIES, type Visibility } from '#lib/recipes/validation.js';
 import {
 	AS_WRITTEN,
@@ -31,7 +32,7 @@ describe('Settings page', () => {
 	test('one h1 and a titled section per setting', () => {
 		renderPage();
 		expect(screen.getByRole('heading', { level: 1, name: 'Settings' })).toBeInTheDocument();
-		for (const name of ['Account', 'Username', 'Default audience', 'Measurement']) {
+		for (const name of ['Account', 'Username', 'Default audience', 'Measurement', 'Your data']) {
 			expect(section(name)).toBeInTheDocument();
 		}
 	});
@@ -44,6 +45,27 @@ describe('Settings page', () => {
 		expect(within(account).getByRole('link', { name: 'Change password' })).toHaveAttribute(
 			'href',
 			'/forgot-password'
+		);
+	});
+});
+
+describe('Your data section', () => {
+	test('a download per format, straight from the server, and a line on what is in it', () => {
+		renderPage();
+		const data = section('Your data');
+		const links = within(data).getAllByRole('link');
+		expect(links.map((a) => a.getAttribute('href'))).toEqual(
+			EXPORT_FORMATS.map((f) => exportHref(f))
+		);
+		for (const link of links) {
+			expect(link).toHaveAttribute('download');
+			expect(link).toHaveClass('btn-ghost');
+		}
+		expect(links.map((a) => a.textContent?.trim())).toEqual(
+			EXPORT_FORMATS.map((f) => `Download ${FORMAT_LABEL[f]}`)
+		);
+		expect(within(data).getByText(/every version/)).toHaveTextContent(
+			/Photos are linked, not included/
 		);
 	});
 });
