@@ -483,6 +483,24 @@
 		justify-content: center;
 	}
 
+	/* The ⋯ trigger: an icon-only 44px square, Ink 2, ink on the tint while
+	   hovered or open (the Friends feed's menu, the recipe page's More). */
+	.more-button {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 44px;
+		height: 44px;
+		border-radius: var(--radius-sm);
+		color: var(--color-text-2);
+	}
+
+	.more-button:hover,
+	.more-button[aria-expanded='true'] {
+		color: var(--color-text);
+		background: var(--color-tint);
+	}
+
 	/* A button that reads as a word: clay 600 in the line's face, no box.
 	   A 24px hit at desktop and a thumb's 44px on a phone or touch screen.
 	   Hover deepens to clay deep and underlines (the hover rule, below). */
