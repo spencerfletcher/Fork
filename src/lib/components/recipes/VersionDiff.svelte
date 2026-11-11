@@ -242,21 +242,12 @@
 		align-items: baseline;
 		gap: 0.75rem;
 		padding: 0.5rem 1rem;
+	}
+
+	/* A rule under each of the panel's items but the last. A group's first row
+	   sits inside its item, so the item draws the rule, not the row. */
+	.diff-panel > :not(:last-child) {
 		border-bottom: 1px solid var(--color-border);
-	}
-
-	.diff-row:last-child {
-		border-bottom: 0;
-	}
-
-	/* A group's first row sits in a wrapper that draws the rule instead. */
-	.diff-item {
-		border-bottom: 1px solid var(--color-border);
-	}
-
-	.diff-item:last-child,
-	.diff-item > .diff-row {
-		border-bottom: 0;
 	}
 
 	/* A group name in the recipe page's voice: words, not an identifier, so
@@ -282,14 +273,13 @@
 	.diff-content {
 		flex: 1;
 		min-width: 0;
-		max-width: 72ch;
 		line-height: 1.5;
 		overflow-wrap: anywhere;
 	}
 
-	/* Details runs the column, so a renamed title stays on one line. */
-	.diff-content--meta {
-		max-width: none;
+	/* Rows read at 72ch; Details runs the column, so a renamed title stays on one line. */
+	.diff-content:not(.diff-content--meta) {
+		max-width: 72ch;
 	}
 
 	.step-num {
