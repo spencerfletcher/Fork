@@ -6,6 +6,7 @@ import {
 	DRAFT_MAX_AGE_MS,
 	draftAge,
 	draftKey,
+	listDrafts,
 	loadDraft,
 	saveDraft,
 	type StoredDraft
@@ -118,6 +119,69 @@ describe('drafts', () => {
 		expect(loadDraft(key, NOW)).toBeNull();
 		localStorage.setItem(key, JSON.stringify({ savedAt: 'soon' }));
 		expect(loadDraft(key, NOW)).toBeNull();
+	});
+});
+
+describe('listDrafts', () => {
+	const cookies = { slug: 'cookies', title: 'Cookies' };
+
+	test('the new-recipe draft and each edit draft of this user, newest first', () => {
+		saveDraft(draftKey('user-a', 'new'), stored('', NOW - 3000));
+		saveDraft(draftKey('user-a', '7'), { ...stored('Chewy cookies', NOW - 1000), recipe: cookies });
+		expect(listDrafts('user-a', NOW)).toEqual([
+			{
+				key: draftKey('user-a', '7'),
+				title: 'Chewy cookies',
+				savedAt: NOW - 1000,
+				recipe: cookies
+			},
+			{ key: draftKey('user-a', 'new'), title: '', savedAt: NOW - 3000, recipe: null }
+		]);
+	});
+
+	test('another user’s drafts on the device are never listed', () => {
+		saveDraft(draftKey('user-b', 'new'), stored('Theirs'));
+		saveDraft(draftKey('user-ab', '7'), { ...stored('Also theirs'), recipe: cookies });
+		expect(listDrafts('user-a', NOW)).toEqual([]);
+	});
+
+	test('a draft past the age limit is not listed', () => {
+		saveDraft(draftKey('user-a', 'new'), stored('Old', NOW - DRAFT_MAX_AGE_MS - 1));
+		saveDraft(draftKey('user-a', '7'), {
+			...stored('Fresh', NOW - DRAFT_MAX_AGE_MS),
+			recipe: cookies
+		});
+		expect(listDrafts('user-a', NOW).map((d) => d.title)).toEqual(['Fresh']);
+	});
+
+	test('corrupt entries, and edit drafts that do not say which recipe, are skipped', () => {
+		localStorage.setItem(draftKey('user-a', 'new'), '{not json');
+		localStorage.setItem(draftKey('user-a', '8'), JSON.stringify({ savedAt: 'soon' }));
+		saveDraft(draftKey('user-a', '9'), stored('Before the link was kept'));
+		saveDraft(draftKey('user-a', '10'), {
+			...stored('Half a link'),
+			recipe: { slug: 3 } as never
+		});
+		saveDraft(draftKey('user-a', '7'), { ...stored('Chewy cookies'), recipe: cookies });
+		expect(listDrafts('user-a', NOW).map((d) => d.title)).toEqual(['Chewy cookies']);
+	});
+
+	test('storage that throws, or none at all, lists nothing', () => {
+		vi.stubGlobal('localStorage', {
+			...memoryStorage(),
+			key: () => {
+				throw new DOMException('denied', 'SecurityError');
+			}
+		});
+		expect(listDrafts('user-a', NOW)).toEqual([]);
+		vi.stubGlobal('localStorage', undefined);
+		expect(listDrafts('user-a', NOW)).toEqual([]);
+	});
+
+	test('the recipe an edit draft belongs to round-trips through load', () => {
+		const key = draftKey('user-a', '7');
+		saveDraft(key, { ...stored('Chewy cookies'), recipe: cookies });
+		expect(loadDraft(key, NOW)?.recipe).toEqual(cookies);
 	});
 });
 

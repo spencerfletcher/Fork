@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount, type Snippet } from 'svelte';
 	import { enhance, type SubmitFunction } from '$app/forms';
-	import { clearDraft, draftAge, loadDraft, saveDraft } from '#lib/drafts.js';
+	import { clearDraft, draftAge, loadDraft, saveDraft, type DraftRecipe } from '#lib/drafts.js';
 	import { pendingEnhance } from '#lib/pendingEnhance.svelte.js';
 	import { beforeNavigate } from '$app/navigation';
 	import {
@@ -43,7 +43,8 @@
 		leaving = false,
 		hasForks = false,
 		danger,
-		draftKey
+		draftKey,
+		draftRecipe
 	}: {
 		/** What was loaded, as the form's strings. Dirty-checking compares against it. */
 		baseline: RecipeDraft;
@@ -74,6 +75,8 @@
 		/** Where this editor's draft lives on the device (`draftKey` in
 		 *  #lib/drafts); omitted, nothing is stored. */
 		draftKey?: string;
+		/** The recipe an edit changes, stored with its draft so the Cookbook can list it. */
+		draftRecipe?: DraftRecipe;
 	} = $props();
 
 	// The actions row sits outside the form, Save joined to it by form=, so
@@ -286,7 +289,8 @@
 			kept = saveDraft(draftKey, {
 				draft: $state.snapshot(draft),
 				savedAt: Date.now(),
-				photoLost: chosen
+				photoLost: chosen,
+				recipe: draftRecipe
 			});
 		}
 		return kept;

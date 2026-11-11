@@ -693,6 +693,13 @@ describe('Edit page drafts on this device', () => {
 		expect(stored().draft.title).toBe('Chewy cookies');
 	});
 
+	test('the draft names the recipe it changes, for the Cookbook to list and link', async () => {
+		render(EditPage, { props: { data: signedIn(), form: null } });
+		await fireEvent.input(title(), { target: { value: 'Chewy cookies' } });
+		window.dispatchEvent(new Event('pagehide'));
+		expect(stored().recipe).toEqual({ slug: 'cookies', title: 'Cookies' });
+	});
+
 	test('typing back to the server’s content clears the draft and its line', async () => {
 		seed({ title: 'Chewy cookies' });
 		render(EditPage, { props: { data: signedIn(), form: null } });

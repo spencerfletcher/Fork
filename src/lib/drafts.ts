@@ -17,6 +17,18 @@ export type StoredDraft = {
 	savedAt: number;
 	/** A photo was chosen; its bytes are not kept, so a restore says so. */
 	photoLost: boolean;
+	/** The recipe an edit draft changes, for the Cookbook's Drafts list to name and link. */
+	recipe?: DraftRecipe;
+};
+
+export type DraftRecipe = { slug: string; title: string };
+
+/** One row of the Cookbook's Drafts list; `recipe` is null for the new-recipe draft. */
+export type ListedDraft = {
+	key: string;
+	title: string;
+	savedAt: number;
+	recipe: DraftRecipe | null;
 };
 
 /** One key per signed-in user and recipe ('new' for the new-recipe editor),
@@ -55,9 +67,13 @@ function read(key: string): StoredDraft | null {
 	try {
 		const value: unknown = JSON.parse(localStorage.getItem(key) ?? 'null');
 		if (typeof value !== 'object' || value === null) return null;
-		const { draft, savedAt, photoLost } = value as Partial<StoredDraft>;
+		const { draft, savedAt, photoLost, recipe } = value as Partial<StoredDraft>;
 		if (typeof savedAt !== 'number' || typeof draft !== 'object' || draft === null) return null;
-		return { draft, savedAt, photoLost: photoLost === true };
+		const linked =
+			typeof recipe?.slug === 'string' && typeof recipe.title === 'string'
+				? { recipe: { slug: recipe.slug, title: recipe.title } }
+				: {};
+		return { draft, savedAt, photoLost: photoLost === true, ...linked };
 	} catch {
 		return null;
 	}
@@ -76,6 +92,32 @@ export function loadDraft(key: string, now = Date.now()): StoredDraft | null {
 		return null;
 	}
 	return read(key);
+}
+
+/**
+ * This user's drafts on the device, newest first: the new-recipe draft, and
+ * each edit draft that says which recipe it changes (one stored before that
+ * was kept has nothing to link to, so it is left out). Expired or unreadable
+ * entries are skipped.
+ */
+export function listDrafts(userId: string, now = Date.now()): ListedDraft[] {
+	const prefix = `${PREFIX}${userId}:`;
+	const listed: ListedDraft[] = [];
+	try {
+		const keys = Array.from({ length: localStorage.length }, (_, i) => localStorage.key(i));
+		for (const key of keys) {
+			if (!key?.startsWith(prefix)) continue;
+			const value = read(key);
+			if (!value || now - value.savedAt > DRAFT_MAX_AGE_MS) continue;
+			const recipe = key === draftKey(userId, 'new') ? null : value.recipe;
+			if (recipe === undefined) continue;
+			const title = typeof value.draft.title === 'string' ? value.draft.title : '';
+			listed.push({ key, title, savedAt: value.savedAt, recipe });
+		}
+	} catch {
+		return [];
+	}
+	return listed.sort((a, b) => b.savedAt - a.savedAt);
 }
 
 const relative = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
