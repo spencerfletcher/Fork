@@ -107,14 +107,16 @@ describe.skipIf(!localDb)('times and last cooked, against the real database', ()
 });
 
 // The saver's kept copy of a withdrawn recipe in the Journal form: committed
-// rows (resolveRecipe reads through the pool), removed after.
+// rows (resolveRecipe reads through the pool) between two seed profiles, as
+// other files' tests read the first profile; the recipe goes after, its
+// versions and save with it.
 describe.skipIf(!localDb)('kept copies in the Journal, against the real database', () => {
 	let db: typeof import('#lib/server/db/index.js').db;
 	let schema: typeof import('#lib/server/db/schema.js');
 	let journal: typeof import('./journal.js');
 	const stamp = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-	const author = `test-ja-${stamp}`;
-	const saver = `test-js-${stamp}`;
+	let author: string;
+	let saver: string;
 	const slug = `journal-kept-${stamp}`;
 
 	beforeAll(async () => {
@@ -122,10 +124,9 @@ describe.skipIf(!localDb)('kept copies in the Journal, against the real database
 		schema = await import('#lib/server/db/schema.js');
 		journal = await import('./journal.js');
 		const { makeContent } = await import('#lib/recipes/fixtures.js');
-		await db.insert(schema.profiles).values([
-			{ id: author, username: `ja-${stamp}` },
-			{ id: saver, username: `js-${stamp}` }
-		]);
+		const profiles = await db.query.profiles.findMany({ limit: 2 });
+		if (profiles.length < 2) throw new Error('Seed the local database first (pnpm db:seed)');
+		[author, saver] = profiles.map((p) => p.id);
 		const [{ id }] = await db
 			.insert(schema.recipes)
 			.values({ authorId: author, slug, title: 'Renamed in private', visibility: 'private' })
@@ -143,10 +144,7 @@ describe.skipIf(!localDb)('kept copies in the Journal, against the real database
 	});
 
 	afterAll(async () => {
-		// Recipes, versions and saves go with the profiles (cascades and the recipe delete).
-		await db.delete(schema.recipes).where(eq(schema.recipes.slug, slug));
-		await db.delete(schema.profiles).where(eq(schema.profiles.id, author));
-		await db.delete(schema.profiles).where(eq(schema.profiles.id, saver));
+		if (db) await db.delete(schema.recipes).where(eq(schema.recipes.slug, slug));
 	});
 
 	test('resolveRecipe gives the saver their kept version only, by its own title', async () => {
