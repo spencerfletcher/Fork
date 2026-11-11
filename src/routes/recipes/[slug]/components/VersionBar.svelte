@@ -208,10 +208,6 @@
 		color: inherit;
 	}
 
-	.version-link:hover .message {
-		color: var(--color-text);
-	}
-
 	/* One column for every number, so the messages line up. The one being
 	   read is the marigold chip; the others are clay. */
 	.version-number {
@@ -299,14 +295,32 @@
 		color: var(--color-accent);
 	}
 
-	/* Open, the toggle reads ink; a hover, open or shut, deepens to clay. */
+	/* Open, the toggle reads ink. */
 	.versions-toggle[aria-expanded='true'] {
 		color: var(--color-text);
 	}
 
-	.version-bar a:hover,
-	.versions-toggle:hover {
-		color: var(--color-accent-hover);
+	/* The Hover Rule (DESIGN.md), only where a pointer hovers: clay words
+	   deepen and underline, the open toggle's ink turns clay. A history row is
+	   one link, chip and note: its note darkens and underlines, never the chip,
+	   an identifier. The line is app.css's one definition; the chevron, an
+	   icon in a flex row, takes none. */
+	@media (hover: hover) {
+		.version-bar a:not(.version-link):hover,
+		.versions-toggle:hover {
+			color: var(--color-accent-hover);
+			text-decoration-line: underline;
+		}
+
+		.versions-toggle[aria-expanded='true']:hover {
+			color: var(--color-accent);
+			text-decoration-line: underline;
+		}
+
+		.version-link:hover .message {
+			color: var(--color-text);
+			text-decoration-line: underline;
+		}
 	}
 
 	/* The toggle is a word in the line, not a button. */

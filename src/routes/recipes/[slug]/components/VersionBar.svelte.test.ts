@@ -227,6 +227,28 @@ describe('VersionBar', () => {
 		);
 	});
 
+	// The Hover Rule (DESIGN.md): words that act deepen and underline, only
+	// where a pointer hovers; a history row underlines its note, never its chip.
+	test('the links and toggle underline on hover, the chip never', () => {
+		const style = source.slice(source.indexOf('<style>'));
+		const [outside, ...inside] = style.split('@media (hover: hover)');
+		expect(outside).not.toMatch(/:hover[^{]*\{[^}]*color:/);
+		const hover = inside.join('');
+		const UNDERLINE = /text-decoration-line:\s*underline/;
+		const words = cssRule(hover, '.version-bar a:not(.version-link):hover');
+		expect(words).toMatch(/color:\s*var\(--color-accent-hover\)/);
+		expect(words).toMatch(UNDERLINE);
+		expect(cssRule(hover, '.versions-toggle:hover')).toMatch(UNDERLINE);
+		// Open, the toggle is ink: ink turns clay, as the ink text button does.
+		expect(cssRule(hover, ".versions-toggle[aria-expanded='true']:hover")).toMatch(
+			/color:\s*var\(--color-accent\);/
+		);
+		const note = cssRule(hover, '.version-link:hover .message');
+		expect(note).toMatch(UNDERLINE);
+		expect(note).toMatch(/color:\s*var\(--color-text\)/);
+		expect(style).not.toMatch(/\.version-link:hover\s*\{[^}]*underline/);
+	});
+
 	test('the chip keeps its box in forced colours: a transparent outline, inset so nothing moves', () => {
 		// Forced colours drop the marigold fill but draw the outline in the text colour.
 		const chip = cssRule(source, '.current .version-number');
