@@ -1,4 +1,16 @@
-import { and, asc, count, desc, eq, inArray, max, min, sql, type SQL } from 'drizzle-orm';
+import {
+	and,
+	asc,
+	count,
+	desc,
+	eq,
+	inArray,
+	isNotNull,
+	max,
+	min,
+	sql,
+	type SQL
+} from 'drizzle-orm';
 import { db, type Tx } from './db/index.js';
 import {
 	logEntries,
@@ -20,7 +32,7 @@ import {
 import { keptVersionsOf } from './keptCopies.js';
 import { numberMessages, type Result } from '#lib/recipes/validation.js';
 import { oneOf, text, wholeNumber } from '#lib/helpers.js';
-import { day, MAX_LINK } from '#lib/journal.js';
+import { day, MAX_LINK, sourceHref } from '#lib/journal.js';
 
 export const MAX_DISH = 200;
 export const MAX_ENTRY_TEXT = 2000;
@@ -340,6 +352,79 @@ export async function journalSummary(userId: string) {
 		.from(logEntries)
 		.where(eq(logEntries.userId, userId));
 	return row;
+}
+
+/** How many recipes the Journal's year summary lists. */
+export const MOST_COOKED = 5;
+
+/**
+ * The year on top of the Journal, by `today`'s UTC year: each month's count of
+ * the viewer's entries (null for a month still to come with none dated into
+ * it), and the MOST_COOKED recipes they logged most, most first. A recipe the
+ * viewer may no longer open (Trash, deleted, out of sight) still counts, by
+ * the dish its latest entry names and no link, as sourceOf decides. Null when
+ * the year holds no entry. Both reads walk log_entries_user_idx (user_id,
+ * cooked_on) over the year's range.
+ */
+export async function journalYear(
+	viewer: NonNullable<Viewer>,
+	today: Date,
+	conn: Tx | typeof db = db
+) {
+	const year = today.getUTCFullYear();
+	const inYear = and(
+		eq(logEntries.userId, viewer.id),
+		sql`${logEntries.cookedOn} >= ${`${year}-01-01`}::date`,
+		sql`${logEntries.cookedOn} < ${`${year + 1}-01-01`}::date`
+	);
+	const month = sql<number>`extract(month from ${logEntries.cookedOn})::int`.mapWith(Number);
+	const times = count();
+	const [perMonth, most, friendIds] = await Promise.all([
+		conn.select({ month, cooks: count() }).from(logEntries).where(inYear).groupBy(month),
+		conn
+			.select({
+				recipeId: logEntries.recipeId,
+				times,
+				dish: sql<string>`(array_agg(${logEntries.dish} order by ${logEntries.cookedOn} desc, ${logEntries.id} desc))[1]`,
+				recipe: sourceColumns.recipe
+			})
+			.from(logEntries)
+			.leftJoin(recipes, eq(recipes.id, logEntries.recipeId))
+			.where(and(inYear, isNotNull(logEntries.recipeId)))
+			.groupBy(logEntries.recipeId, recipes.id)
+			.orderBy(desc(times), desc(max(logEntries.cookedOn)), desc(logEntries.recipeId))
+			.limit(MOST_COOKED),
+		friendIdsOf(viewer.id, conn)
+	]);
+	if (perMonth.length === 0) return null;
+	const counts = new Map(perMonth.map((r) => [r.month, r.cooks]));
+	const kept = await keptVersionsOf(
+		viewer,
+		most.map((r) => r.recipeId!),
+		conn
+	);
+	return {
+		year,
+		months: Array.from(
+			{ length: 12 },
+			(_, m) => counts.get(m + 1) ?? (m > today.getUTCMonth() ? null : 0)
+		),
+		top: most.map((row) => {
+			// No version number: the summary links the recipe, not one cook of it.
+			const source = sourceOf(
+				{ ...row, versionNumber: null, sourceUrl: null },
+				viewer,
+				friendIds,
+				kept
+			);
+			return {
+				recipeId: row.recipeId!,
+				times: row.times,
+				title: source.kind === 'recipe' ? source.title : row.dish,
+				href: source.kind === 'recipe' ? sourceHref(source) : null
+			};
+		})
+	};
 }
 
 /** One of the viewer's own entries with its source, or null when it is not theirs. */

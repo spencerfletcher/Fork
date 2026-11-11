@@ -210,3 +210,130 @@ describe.skipIf(!localDb)("the Journal's pages, against the real database", () =
 		expect(await journal.journalSummary(cook)).toEqual({ total: 5, oldest: '2025-12-24' });
 	});
 });
+
+// The year summary on top of the Journal: two grouped reads, inside a
+// transaction that is always rolled back.
+describe.skipIf(!localDb)("the Journal's year, against the real database", () => {
+	let schema: typeof import('#lib/server/db/schema.js');
+	let journal: typeof import('./journal.js');
+
+	beforeAll(async () => {
+		schema = await import('#lib/server/db/schema.js');
+		journal = await import('./journal.js');
+	});
+
+	// Mid-April: May to December are still to come.
+	const TODAY = new Date('2026-04-15T12:00:00Z');
+	const THIS_MONTH = TODAY.getUTCMonth();
+	const cooked = (userId: string, cookedOn: string, recipeId: number | null = null) => ({
+		userId,
+		recipeId,
+		dish: `Dish on ${cookedOn}`,
+		cookedOn
+	});
+
+	test('each month this year counts the cook’s own entries, recipe or not; a month to come is null unless dated into', async () => {
+		await withProfiles(2, async (tx, [me, other]) => {
+			await tx
+				.insert(schema.logEntries)
+				.values([
+					cooked(me, '2026-01-01'),
+					cooked(me, '2026-01-31', 2_000_000_000),
+					cooked(me, '2026-03-09'),
+					cooked(me, '2026-06-01'),
+					cooked(me, '2025-12-31'),
+					cooked(me, '2027-01-01'),
+					cooked(other, '2026-02-02')
+				]);
+			const year = await journal.journalYear({ id: me }, TODAY, tx);
+			const expected: (number | null)[] = Array.from({ length: 12 }, (_, m) =>
+				m > THIS_MONTH ? null : 0
+			);
+			expected[0] = 2;
+			expected[2] = 1;
+			expected[5] = 1;
+			expect(year?.months).toEqual(expected);
+			expect(year?.year).toBe(TODAY.getUTCFullYear());
+		});
+	});
+
+	test('a year with no entries is no summary, whatever other years hold', async () => {
+		await withProfiles(1, async (tx, [me]) => {
+			await tx.insert(schema.logEntries).values(cooked(me, '2025-06-01'));
+			expect(await journal.journalYear({ id: me }, TODAY, tx)).toBeNull();
+		});
+	});
+
+	test('the most cooked recipes this year, most first, at most MOST_COOKED; improvised and other years never', async () => {
+		await withProfiles(1, async (tx, [me], s) => {
+			const n = journal.MOST_COOKED + 1;
+			const rows = await tx
+				.insert(schema.recipes)
+				.values(
+					Array.from({ length: n }, (_, i) => ({
+						authorId: me,
+						slug: `y${i}-${s}`,
+						title: `Recipe ${i}`,
+						visibility: 'public' as const
+					}))
+				)
+				.returning({ id: schema.recipes.id, slug: schema.recipes.slug });
+			// Recipe i is cooked i + 1 times this year; the least cooked falls off.
+			await tx
+				.insert(schema.logEntries)
+				.values([
+					...rows.flatMap((r, i) =>
+						Array.from({ length: i + 1 }, () => cooked(me, '2026-02-01', r.id))
+					),
+					...Array.from({ length: n + 1 }, () => cooked(me, '2026-02-01')),
+					...Array.from({ length: n + 1 }, () => cooked(me, '2025-02-01', rows[0].id))
+				]);
+			const year = await journal.journalYear({ id: me }, TODAY, tx);
+			const expected = rows
+				.map((r, i) => ({
+					recipeId: r.id,
+					times: i + 1,
+					title: `Recipe ${i}`,
+					href: `/recipes/${r.slug}`
+				}))
+				.reverse()
+				.slice(0, journal.MOST_COOKED);
+			expect(year?.top).toEqual(expected);
+		});
+	});
+
+	test('a recipe gone or out of sight still counts, by the dish its latest entry names, unlinked', async () => {
+		await withProfiles(2, async (tx, [me, other], s) => {
+			const [trashed, hidden, gone] = await tx
+				.insert(schema.recipes)
+				.values([
+					{
+						authorId: me,
+						slug: `t-${s}`,
+						title: 'Trashed',
+						visibility: 'public',
+						deletedAt: new Date()
+					},
+					{ authorId: other, slug: `h-${s}`, title: 'Hidden', visibility: 'private' },
+					{ authorId: me, slug: `g-${s}`, title: 'Gone', visibility: 'public' }
+				])
+				.returning({ id: schema.recipes.id });
+			await tx.insert(schema.logEntries).values([
+				{ ...cooked(me, '2026-01-02', trashed.id), dish: 'Older name' },
+				{ ...cooked(me, '2026-01-03', trashed.id), dish: 'Trashed dish' },
+				{ ...cooked(me, '2026-01-04', trashed.id), dish: 'Trashed dish' },
+				{ ...cooked(me, '2026-01-05', hidden.id), dish: 'Hidden dish' },
+				{ ...cooked(me, '2026-01-06', hidden.id), dish: 'Hidden dish' },
+				{ ...cooked(me, '2026-01-07', gone.id), dish: 'Gone dish' }
+			]);
+			await tx.delete(schema.recipes).where(eq(schema.recipes.id, gone.id));
+			const year = await journal.journalYear({ id: me }, TODAY, tx);
+			expect(year?.top).toEqual([
+				{ recipeId: trashed.id, times: 3, title: 'Trashed dish', href: null },
+				{ recipeId: hidden.id, times: 2, title: 'Hidden dish', href: null },
+				{ recipeId: gone.id, times: 1, title: 'Gone dish', href: null }
+			]);
+			expect(year?.months[0]).toBe(6);
+		});
+	});
+});
