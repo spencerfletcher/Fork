@@ -14,30 +14,9 @@ describe('fallback error page', () => {
 		expect(html).toMatch(/<h1>Error %sveltekit\.status% – %sveltekit\.error\.message%<\/h1>/);
 	});
 
-	test('wears the Fork bar and leads home by the F. mark', () => {
-		const brand = /<a href="\/" class="brand" aria-label="Fork">([\s\S]*?)<\/a>/.exec(html)![1];
-		expect(brand).toMatch(/<svg viewBox="32\.59 26\.88 37\.5 46\.01" aria-hidden="true">/);
-		expect(brand.match(/<path\b/g)).toHaveLength(2);
-		expect(brand).not.toMatch(/<text|Fork/);
-	});
-
-	// error.html cannot import Navbar, so it draws the mark again: a redraw in one
-	// file must show here.
-	test("draws the navbar's F. mark, its dot app.css's marigold", () => {
-		const navbar = readFileSync(join(__dirname, 'lib/components/ui/Navbar.svelte'), 'utf8');
-		const appCss = readFileSync(join(__dirname, 'app.css'), 'utf8');
-		const paths = (source: string) =>
-			[...source.matchAll(/<path\s+fill="([^"]+)"\s+d="([^"]+)"/g)].map((m) => ({
-				fill: m[1],
-				d: m[2]
-			}));
-		const ours = paths(html);
-		const bar = paths(navbar);
-		expect(ours).toHaveLength(2);
-		expect(ours.map((p) => p.d)).toEqual(bar.map((p) => p.d));
-		expect(bar[1].fill).toBe('var(--color-marigold)');
-		const marigold = /--color-marigold:\s*(#[0-9a-f]{3,8});/i.exec(appCss)![1];
-		expect(ours[1].fill.toLowerCase()).toBe(marigold.toLowerCase());
+	test('wears the Fork bar and leads home', () => {
+		// No whitespace between the word and its stop, or the bar reads "Fork .".
+		expect(html).toMatch(/class="brand">Fork<span>\.<\/span><\/a>/);
 	});
 
 	test('tries again first, by reloading, and goes home as the ghost', () => {
@@ -76,10 +55,21 @@ describe('fallback error page', () => {
 		expect(px(rule('.btn-primary'), 'border')).toBe('1px solid transparent');
 	});
 
-	test("the mark's link is a 44px target, its F the app bar's 15.7px", () => {
+	test("the wordmark link fits the phone bar's 52px", () => {
+		// 1.375rem at the body's 1.5 line height, plus its vertical padding.
 		const brand = rule('.brand');
-		expect(px(brand, 'min-height')).toBe('44px');
-		expect(px(brand, 'align-items')).toBe('center');
-		expect(px(rule('.brand svg'), 'height')).toBe('15.7px');
+		expect(px(brand, 'line-height')).toBeUndefined();
+		expect(px(rule('body'), 'line-height')).toBe('1.5');
+		const height = 22 * 1.5 + 2 * parseFloat(px(brand, 'padding')!);
+		expect(height).toBeLessThanOrEqual(52);
+		expect(height).toBeGreaterThanOrEqual(44);
+	});
+
+	// error.html cannot read app.css, so it repeats the stop's colour: a change
+	// in one file must show here.
+	test("the wordmark's stop is app.css's marigold", () => {
+		const appCss = readFileSync(join(__dirname, 'app.css'), 'utf8');
+		const marigold = /--color-marigold:\s*(#[0-9a-f]{3,8});/i.exec(appCss)![1];
+		expect(px(rule('.brand span'), 'color')?.toLowerCase()).toBe(marigold.toLowerCase());
 	});
 });

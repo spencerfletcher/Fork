@@ -15,6 +15,12 @@
 				src: url('%sveltekit.assets%/fonts/bitter-latin-500-normal.woff2') format('woff2');
 			}
 			@font-face {
+				font-family: 'Bitter';
+				font-weight: 600;
+				font-display: swap;
+				src: url('%sveltekit.assets%/fonts/bitter-latin-600-normal.woff2') format('woff2');
+			}
+			@font-face {
 				font-family: 'Source Sans 3';
 				font-weight: 400;
 				font-display: swap;
@@ -70,17 +76,19 @@
 				max-width: 1200px;
 				margin: 0 auto;
 			}
-			/* Navbar.svelte's F. mark: a 44px target, the F 15.7px tall. */
 			.brand {
-				display: inline-flex;
-				align-items: center;
-				min-height: 44px;
+				display: inline-block;
+				font-family: 'Bitter', Georgia, serif;
+				font-size: 1.375rem;
+				font-weight: 600;
+				letter-spacing: -0.01em;
 				color: #f7f3ec;
+				text-decoration: none;
+				/* 33px of line plus 18 of padding, inside the phone bar's 52. */
+				padding: 9px 0;
 			}
-			.brand svg {
-				height: 15.7px;
-				width: auto;
-				aspect-ratio: 37.5 / 46.01;
+			.brand span {
+				color: #eca620;
 			}
 			/* Centred on the screen like the login page, nothing boxed. */
 			.centre {
@@ -156,16 +164,9 @@
 	<body>
 		<header class="bar">
 			<div class="inner">
-				<a href="/" class="brand" aria-label="Fork">
-					<svg viewBox="32.59 26.88 37.5 46.01" aria-hidden="true">
-						<path
-							fill="currentColor"
-							d="M32.59 72.12V66.62L37.96 64.76L36.88 66.3V32.44L38.41 34.62L32.59 32.7V27.2L47.76 26.88H65.48L65.55 39.23H59.02L57.68 33.72L59.6 34.81H46.35L48.01 33.15V46.97L46.35 45.44H60.49V53.37H46.35L48.01 51.71V66.3L46.73 64.76L53.32 66.62V72.12Z" />
-						<path
-							fill="#eca620"
-							d="M58.12 67.13Q58.12 64.44 59.92 62.88Q61.71 61.31 64.14 61.31Q66.89 61.31 68.49 62.88Q70.09 64.44 70.09 67.13Q70.09 69.76 68.3 71.32Q66.51 72.89 64.14 72.89Q61.39 72.89 59.76 71.32Q58.12 69.76 58.12 67.13Z" />
-					</svg>
-				</a>
+				<!-- A line break inside the link would put a space before the stop. -->
+				<!-- prettier-ignore -->
+				<a href="/" class="brand">Fork<span>.</span></a>
 			</div>
 		</header>
 		<div class="centre">
