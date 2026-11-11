@@ -25,12 +25,25 @@ const { keptVersionsMock } = vi.hoisted(() => ({
 	keptVersionsMock: vi.fn().mockResolvedValue(new Map())
 }));
 vi.mock('#lib/server/keptCopies.js', () => ({ keptVersionsOf: keptVersionsMock }));
+const bulkMock = vi.hoisted(() => ({
+	collectionsFor: vi.fn(),
+	collectAll: vi.fn(),
+	newCollectionWith: vi.fn(),
+	tagAll: vi.fn(),
+	trashAll: vi.fn()
+}));
+vi.mock('#lib/server/bulk.js', async (importOriginal) => ({
+	...(await importOriginal<typeof import('#lib/server/bulk.js')>()),
+	...bulkMock
+}));
 const { select: selectMock, selectDistinct: selectDistinctMock } = db;
 const findManyMock = db.query.recipes.findMany;
 
 import { load, actions } from './+page.server';
 import { formEvent, invokeAction } from '#lib/testing/actions.js';
 import { COLLECTION_NAME_ERROR } from '#lib/collections.js';
+import { BULK_MAX } from '#lib/server/bulk.js';
+import { CAPS, CAP_MESSAGES } from '#lib/recipes/validation.js';
 import { inTrashOf } from '#lib/server/trash.js';
 import { recipes } from '#lib/server/db/schema.js';
 import type { SQL } from 'drizzle-orm';
@@ -313,5 +326,136 @@ describe('/cookbook collection actions', () => {
 		collectionsMock.deleteCollection.mockResolvedValueOnce(false);
 		expect(await act('deleteCollection', { id: '41' })).toMatchObject({ status: 404 });
 		expect(await act('deleteCollection', { id: 'x' })).toMatchObject({ status: 400 });
+	});
+});
+
+// Which ids each act takes (library, own, caps) is pinned against the real
+// database in src/lib/server/bulk.db.test.ts; these cover the form around it.
+describe('/cookbook bulk actions, for select mode', () => {
+	const act = (name: keyof typeof actions, fields: Record<string, string>, user = USER) =>
+		invokeAction(actions[name], formEvent({ fields, locals: { user } }));
+	const BULK = [
+		'bulkCollections',
+		'bulkCollect',
+		'bulkNewCollection',
+		'bulkTag',
+		'bulkTrash'
+	] as const;
+
+	beforeEach(() => vi.clearAllMocks());
+
+	test('a lapsed session is told to log in, for every one', async () => {
+		for (const name of BULK) {
+			const result = await invokeAction(actions[name], formEvent({ locals: { user: null } }));
+			expect(result).toMatchObject({ status: 401, data: { code: 'unauthenticated' } });
+		}
+	});
+
+	test.each([
+		['missing', ''],
+		['not a number', '3,x'],
+		['negative', '-3'],
+		['a fraction', '3.5'],
+		['over the cap', Array.from({ length: BULK_MAX + 1 }, (_, i) => i + 1).join(',')]
+	])('ids %s are refused by every one, and nothing is asked of the database', async (_, ids) => {
+		for (const name of BULK) {
+			const result = await act(name, {
+				ids,
+				collectionId: '4',
+				member: '1',
+				name: 'Quick'
+			});
+			expect(result).toMatchObject({ status: 400, data: { code: 'invalid' } });
+		}
+		for (const fn of Object.values(bulkMock)) expect(fn).not.toHaveBeenCalled();
+	});
+
+	test('repeats are dropped, and the cap itself is taken', async () => {
+		bulkMock.trashAll.mockResolvedValue({ moved: 2, skipped: 0 });
+		await act('bulkTrash', { ids: '5,3,5' });
+		expect(bulkMock.trashAll).toHaveBeenCalledWith(USER, [5, 3]);
+
+		const most = Array.from({ length: BULK_MAX }, (_, i) => i + 1);
+		await act('bulkTrash', { ids: most.join(',') });
+		expect(bulkMock.trashAll).toHaveBeenLastCalledWith(USER, most);
+	});
+
+	test('the collections come marked for the selection', async () => {
+		const collections = [{ id: 4, name: 'Quick', has: 'mixed' }];
+		bulkMock.collectionsFor.mockResolvedValue(collections);
+		expect(await act('bulkCollections', { ids: '3,5' })).toEqual({ collections });
+		expect(bulkMock.collectionsFor).toHaveBeenCalledWith(USER, [3, 5]);
+	});
+
+	test('collect adds (member=1) or removes (member=0), and says how many', async () => {
+		bulkMock.collectAll.mockResolvedValue({ changed: 2, skipped: 1 });
+		expect(await act('bulkCollect', { ids: '3,5,8', collectionId: '4', member: '1' })).toEqual({
+			collected: 4,
+			changed: 2,
+			skipped: 1
+		});
+		expect(bulkMock.collectAll).toHaveBeenCalledWith(USER, 4, [3, 5, 8], true);
+		await act('bulkCollect', { ids: '3', collectionId: '4', member: '0' });
+		expect(bulkMock.collectAll).toHaveBeenLastCalledWith(USER, 4, [3], false);
+	});
+
+	test("collect refuses a bad form and another cook's collection", async () => {
+		for (const fields of [
+			{ ids: '3', collectionId: 'x', member: '1' },
+			{ ids: '3', collectionId: '4', member: 'yes' }
+		])
+			expect(await act('bulkCollect', fields)).toMatchObject({ status: 400 });
+		bulkMock.collectAll.mockResolvedValue(null);
+		expect(await act('bulkCollect', { ids: '3', collectionId: '4', member: '1' })).toMatchObject({
+			status: 404,
+			data: { code: 'not_found' }
+		});
+	});
+
+	test('a new collection is made with the selection in it; a refused name says why', async () => {
+		bulkMock.newCollectionWith.mockResolvedValueOnce({ id: 9, changed: 2, skipped: 0 });
+		expect(await act('bulkNewCollection', { ids: '3,5', name: 'Sunday' })).toEqual({
+			collected: 9,
+			changed: 2,
+			skipped: 0
+		});
+		expect(bulkMock.newCollectionWith).toHaveBeenCalledWith(USER, 'Sunday', [3, 5]);
+
+		const error = COLLECTION_NAME_ERROR.taken('Sunday');
+		bulkMock.newCollectionWith.mockResolvedValueOnce({ error });
+		expect(await act('bulkNewCollection', { ids: '3', name: 'Sunday' })).toMatchObject({
+			status: 400,
+			data: { code: 'invalid', error, name: 'Sunday' }
+		});
+	});
+
+	test('a tag is trimmed and goes to the database with its counts back', async () => {
+		const counts = { changed: 2, already: 1, full: 1, skipped: 2 };
+		bulkMock.tagAll.mockResolvedValue(counts);
+		expect(await act('bulkTag', { ids: '3,5', name: '  Quick ' })).toEqual({
+			tagged: 'Quick',
+			...counts
+		});
+		expect(bulkMock.tagAll).toHaveBeenCalledWith(USER, 'Quick', [3, 5]);
+	});
+
+	test('a blank tag, or one over the cap, is refused before the database', async () => {
+		expect(await act('bulkTag', { ids: '3', name: '  ' })).toMatchObject({
+			status: 400,
+			data: { code: 'invalid' }
+		});
+		expect(await act('bulkTag', { ids: '3', name: 'x'.repeat(CAPS.tag + 1) })).toMatchObject({
+			status: 400,
+			data: { code: 'invalid', error: CAP_MESSAGES.tag }
+		});
+		expect(await act('bulkTag', { ids: '3', name: 'x'.repeat(CAPS.tag) })).not.toHaveProperty(
+			'status'
+		);
+		expect(bulkMock.tagAll).toHaveBeenCalledTimes(1);
+	});
+
+	test('Move to Trash says how many moved', async () => {
+		bulkMock.trashAll.mockResolvedValue({ moved: 3, skipped: 2 });
+		expect(await act('bulkTrash', { ids: '1,2,3,4,5' })).toEqual({ moved: 3, skipped: 2 });
 	});
 });
