@@ -161,6 +161,15 @@ describe('layout navigation', () => {
 	});
 });
 
+describe('layout footer', () => {
+	test('every page links once to Report a problem, which needs no account', () => {
+		renderLayout('/discover');
+		const links = screen.getAllByRole('link', { name: 'Report a problem' });
+		expect(links).toHaveLength(1);
+		expect(links[0]).toHaveAttribute('href', '/report');
+	});
+});
+
 describe('layout hydration mark', () => {
 	test('once mounted, the document is marked hydrated for the e2e suite to wait on', () => {
 		delete document.documentElement.dataset.hydrated;

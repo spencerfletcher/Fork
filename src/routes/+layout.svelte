@@ -103,6 +103,11 @@
 
 	<main id="main" class="flex-grow outline-none" tabindex="-1">
 		{@render children()}
+		<!-- Inside main, so it ends clear of the phone tab bar and the select bar
+		     as the page does (app.css). For anyone, signed in or not. -->
+		<footer class="site-footer">
+			<a class="inline-action" href="/report">Report a problem</a>
+		</footer>
 	</main>
 	<!-- Phone only; it hides itself in Cook and the editor. -->
 	<TabBar />
@@ -129,5 +134,18 @@
 
 	.skip-link:focus-visible {
 		transform: none;
+	}
+
+	.site-footer {
+		max-width: var(--max-width);
+		margin: 0 auto;
+		padding: var(--space-5);
+		font-size: 0.875rem;
+	}
+
+	@media (max-width: 699px) {
+		.site-footer {
+			padding-inline: 18px;
+		}
 	}
 </style>
