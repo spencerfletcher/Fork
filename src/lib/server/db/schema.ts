@@ -2,6 +2,7 @@ import type { Ingredient, Step } from '#lib/recipes/types.js';
 import type { Visibility } from '#lib/recipes/validation.js';
 import type { Measurement } from '#lib/measurement.js';
 import { NOTE_MAX } from '#lib/saves.js';
+import type { NotificationKind } from '#lib/notifications.js';
 import {
 	pgTable,
 	serial,
@@ -38,6 +39,16 @@ export const profiles = pgTable('profiles', {
 	// When the starter collections were made; null until the cook first needs
 	// one. Kept so a starter the cook deleted is never made again.
 	startersMadeAt: timestamp('starters_made_at'),
+	// When the cook last looked at their notifications: anything newer is unseen
+	// (#lib/server/notifications.ts). Null until they first look.
+	notificationsSeenAt: timestamp('notifications_seen_at'),
+	// The notification kinds the cook muted (Settings). Read through
+	// NOTIFICATION_KINDS, so a kind no longer in the list is ignored.
+	mutedNotifications: text('muted_notifications')
+		.array()
+		.$type<NotificationKind[]>()
+		.notNull()
+		.default([]),
 	createdAt: timestamp('created_at').notNull().defaultNow()
 }).enableRLS();
 
@@ -150,7 +161,11 @@ export const friendships = pgTable(
 			.notNull()
 			.references(() => profiles.id, { onDelete: 'cascade' }),
 		status: text().$type<FriendshipStatus>().notNull(),
-		createdAt: timestamp('created_at').notNull().defaultNow()
+		createdAt: timestamp('created_at').notNull().defaultNow(),
+		// When the addressee accepted: the requester's "accepted your request"
+		// notification, which created_at (the request) cannot date. Null while
+		// pending, and for a pair accepted before it was recorded.
+		acceptedAt: timestamp('accepted_at')
 	},
 	// The key serves lookups by requester; this index the other direction.
 	(table) => [

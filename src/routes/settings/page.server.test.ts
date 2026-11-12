@@ -9,6 +9,7 @@ import { USERNAME_MESSAGE, USERNAME_TAKEN } from '#lib/auth/rules.js';
 import { profiles } from '#lib/server/db/schema.js';
 import { AS_WRITTEN } from '#lib/measurement.js';
 import { dayLabel } from '#lib/journal.js';
+import { NOTIFICATION_KINDS } from '#lib/notifications.js';
 import { actions, load } from './+page.server';
 
 const { findProfileMock, updateMock, changeUsernameMock, ensureProfileMock, deleteAccountMock } =
@@ -61,13 +62,20 @@ describe('settings load', () => {
 		findProfileMock.mockResolvedValue({
 			username: 'cook',
 			defaultVisibility: 'friends',
-			measurement: null
+			measurement: null,
+			mutedNotifications: [NOTIFICATION_KINDS[1], 'retired-kind']
 		});
 		const data = await load(loadEvent({ path: '/settings', user: ME }));
 		expect(ensureProfileMock).toHaveBeenCalledWith(ME);
 		expect(data).toMatchObject({
 			email: 'me@example.com',
-			settings: { username: 'cook', defaultVisibility: 'friends', measurement: null },
+			settings: {
+				username: 'cook',
+				defaultVisibility: 'friends',
+				measurement: null,
+				// A stored kind no longer in the list is not shown as muted.
+				mutedNotifications: [NOTIFICATION_KINDS[1]]
+			},
 			// A signed-in page: kept out of search, no preview.
 			meta: { noindex: true }
 		});
@@ -171,6 +179,47 @@ describe('measurement action', () => {
 	test('a lapsed session is refused, nothing written', async () => {
 		const result = await post('measurement', { measurement: 'us' }, null);
 		expect(result).toMatchObject({ status: 401, data: { code: 'unauthenticated' } });
+		expect(updateMock).not.toHaveBeenCalled();
+	});
+});
+
+describe('notifications action', () => {
+	const muting = (muted: string[], user: typeof ME | null = ME) =>
+		invokeAction(
+			actions.notifications as never,
+			formEvent({ fields: { muted }, locals: { user } })
+		);
+
+	test("stores the muted kinds, once each in the list's order, on the signed-in profile only", async () => {
+		const [first, second] = NOTIFICATION_KINDS;
+		const update = nextUpdate();
+		const result = await muting([second, first, second]);
+		expect(update.set).toHaveBeenCalledWith({ mutedNotifications: [first, second] });
+		expect(update.where).toHaveBeenCalledWith(eq(profiles.id, 'me-1'));
+		expect(result).toEqual({ section: 'notifications', saved: true });
+	});
+
+	test('nothing ticked mutes nothing', async () => {
+		const update = nextUpdate();
+		await muting([]);
+		expect(update.set).toHaveBeenCalledWith({ mutedNotifications: [] });
+	});
+
+	test('refuses a kind that is not one, nothing written', async () => {
+		const result = await muting([NOTIFICATION_KINDS[0], 'comments']);
+		expect(result).toMatchObject({
+			status: 400,
+			data: { section: 'notifications', code: 'invalid' }
+		});
+		expect(updateMock).not.toHaveBeenCalled();
+	});
+
+	test('a lapsed session is refused, nothing written', async () => {
+		const result = await muting([NOTIFICATION_KINDS[0]], null);
+		expect(result).toMatchObject({
+			status: 401,
+			data: { section: 'notifications', code: 'unauthenticated' }
+		});
 		expect(updateMock).not.toHaveBeenCalled();
 	});
 });

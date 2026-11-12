@@ -102,7 +102,12 @@ async function seed() {
 		priyabakes: await createSeedUser(SEED_USER3_EMAIL, 'priyabakes')
 	};
 	await db.insert(friendships).values([
-		{ requesterId: userIds.devcooks, addresseeId: userIds.spencerfletcher, status: 'accepted' },
+		{
+			requesterId: userIds.devcooks,
+			addresseeId: userIds.spencerfletcher,
+			status: 'accepted',
+			acceptedAt: new Date()
+		},
 		{
 			requesterId: userIds.priyabakes,
 			addresseeId: userIds.spencerfletcher,

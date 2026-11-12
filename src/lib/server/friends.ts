@@ -14,7 +14,7 @@ import {
 	type FriendshipStatus,
 	type ReportTarget
 } from './db/schema.js';
-import { eitherWay, friendIdsOf, onAlias, visibleTo, type Viewer } from './visibility.js';
+import { eitherWay, friendIdsOf, inBlock, visibleTo, type Viewer } from './visibility.js';
 import { canSeeEntry, sourceColumns, sourceOf } from './journal.js';
 import { grantKeptCopies, revokeKeptCopies } from './keptCopies.js';
 
@@ -93,7 +93,7 @@ export async function sendRequest(
 async function acceptIn(tx: Tx | typeof db, me: string, them: string) {
 	const rows = await tx
 		.update(friendships)
-		.set({ status: 'accepted' })
+		.set({ status: 'accepted', acceptedAt: sql`now()` })
 		.where(
 			and(
 				eq(friendships.requesterId, them),
@@ -265,8 +265,7 @@ export async function toggleLike(
 }
 
 // A blocked row between the liker and the entry's owner, either way round.
-const bk = (column: { name: string }) => onAlias('bk', column);
-const likerBlocked = sql`exists (select 1 from ${friendships} "bk" where ${bk(friendships.status)} = ${'blocked' satisfies FriendshipStatus} and ${eitherWay([bk(friendships.requesterId), bk(friendships.addresseeId)], likes.userId, logEntries.userId)})`;
+const likerBlocked = inBlock(likes.userId, logEntries.userId);
 
 /** Like counts per entry, leaving out likes from anyone the owner blocked or was blocked by. */
 export async function likeCounts(
