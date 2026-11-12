@@ -1,6 +1,6 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { CAP_MESSAGES, CAPS, REQUIRED_MESSAGES } from '#lib/recipes/validation.js';
-import { chain } from '#lib/testing/drizzle.js';
+import { chain, sqlOf } from '#lib/testing/drizzle.js';
 import { invokeAction as invoke, formEvent, loadEvent, photoFile } from '#lib/testing/actions.js';
 import { loginHref } from '#lib/auth/loginHref.js';
 import { SESSION_ENDED } from '#lib/server/actions.js';
@@ -8,7 +8,6 @@ import { PHOTO_UPLOAD_FAILED, STALE_MESSAGE } from '#lib/server/submission.js';
 import { actions, load } from './+page.server';
 import { makeContent, makeIngredient, makeStep } from '#lib/recipes/fixtures.js';
 import { LOST_PARENT_ACCESS, NOT_AUTHORIZED, WIDENS_PARENT } from '#lib/server/visibility.js';
-import { PgDialect } from 'drizzle-orm/pg-core';
 import type { SQL } from 'drizzle-orm';
 import { recipes } from '#lib/server/db/schema.js';
 import { LIMITED, LIMITED_FAILURE } from '#lib/testing/rateLimit.js';
@@ -675,8 +674,8 @@ describe('deleteRecipe', () => {
 		const [set] = update.set.mock.calls[0] as [{ deletedAt: Date; editRevision: SQL }];
 		expect(set.deletedAt.getTime()).toBeGreaterThanOrEqual(before);
 		// The revision moves on, so a save already past its own ownRecipe check is refused as stale.
-		expect(new PgDialect().sqlToQuery(set.editRevision).sql).toBe('"recipes"."edit_revision" + 1');
-		expect(new PgDialect().sqlToQuery(update.where.mock.calls[0][0])).toMatchObject({
+		expect(sqlOf(set.editRevision).sql).toBe('"recipes"."edit_revision" + 1');
+		expect(sqlOf(update.where.mock.calls[0][0])).toMatchObject({
 			params: [RECIPE.id]
 		});
 		expect(dbUpdate).not.toHaveBeenCalled();
@@ -727,7 +726,7 @@ describe('edit load', () => {
 		expect(table).toBe(recipes);
 		// Only the parent link and live forks: a private fork still means forks
 		// exist, one in the Trash does not.
-		expect(new PgDialect().sqlToQuery(filter)).toMatchObject({
+		expect(sqlOf(filter)).toMatchObject({
 			sql: '("recipes"."parent_id" = $1 and "recipes"."deleted_at" is null)',
 			params: [42]
 		});

@@ -12,7 +12,6 @@ import { CARD_WITH } from '#lib/server/recipeCounts.js';
 import { and, desc, eq, isNull } from 'drizzle-orm';
 import { recipes } from '#lib/server/db/schema.js';
 import { authorIsFriendOf, visibleTo } from '#lib/server/visibility.js';
-import { PgDialect } from 'drizzle-orm/pg-core';
 import type { SQL } from 'drizzle-orm';
 import type { PageData } from './$types';
 
@@ -235,11 +234,10 @@ describe('search load, the Friends filter', () => {
 
 	const VIEWER = { id: 'viewer-7' };
 	// Placeholders numbered as $ alone, so a fragment matches wherever it sits.
-	const sqlOf = (q: SQL) => {
-		const { sql, params } = new PgDialect().sqlToQuery(q);
-		return { sql: sql.replace(/\$\d+/g, '$'), params };
-	};
-	const friendRules = (sql: string) => sql.split(sqlOf(authorIsFriendOf(VIEWER.id)).sql).length - 1;
+	const placeless = (q: SQL | string) =>
+		(typeof q === 'string' ? q : sqlOf(q).sql).replace(/\$\d+/g, '$');
+	const friendRules = (sql: string) =>
+		placeless(sql).split(placeless(authorIsFriendOf(VIEWER.id))).length - 1;
 	const event = (search: string, user: { id: string } | null) =>
 		loadEvent({ path: `/search${search}`, user });
 
@@ -249,7 +247,7 @@ describe('search load, the Friends filter', () => {
 		const result = await loadResult(event('?friends=1&q=dal&tags=quick', VIEWER));
 
 		const where = sqlOf(findManyMock.mock.calls[0][0].where);
-		expect(where.sql).toContain(sqlOf(visibleTo(VIEWER)).sql);
+		expect(placeless(where.sql)).toContain(placeless(visibleTo(VIEWER)));
 		// Once inside visibleTo's friends rule, once more as the filter.
 		expect(friendRules(where.sql)).toBe(2);
 		expect(where.params).toContain('dal');
@@ -263,7 +261,7 @@ describe('search load, the Friends filter', () => {
 
 		expect(result.friendsOnly).toBe(false);
 		const where = sqlOf(findManyMock.mock.calls[0][0].where);
-		expect(where.sql).toContain(sqlOf(visibleTo(VIEWER)).sql);
+		expect(placeless(where.sql)).toContain(placeless(visibleTo(VIEWER)));
 		expect(friendRules(where.sql)).toBe(1);
 	});
 

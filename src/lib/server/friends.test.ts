@@ -1,6 +1,5 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
-import { chain } from '#lib/testing/drizzle.js';
-import { PgDialect } from 'drizzle-orm/pg-core';
+import { chain, sqlOf } from '#lib/testing/drizzle.js';
 import type { SQL } from 'drizzle-orm';
 
 const { selectMock, insertMock, updateMock, deleteMock, transactionMock } = vi.hoisted(() => ({
@@ -168,7 +167,7 @@ describe('unblock', () => {
 	test('deletes only the block I wrote, never theirs or a friendship', async () => {
 		await unblock(ME, THEM);
 		const where = deleteMock.mock.results[0].value.where.mock.calls[0][0] as SQL;
-		expect(new PgDialect().sqlToQuery(where)).toMatchObject({
+		expect(sqlOf(where)).toMatchObject({
 			sql: '("friendships"."requester_id" = $1 and "friendships"."addressee_id" = $2 and "friendships"."status" = $3)',
 			params: [ME, THEM, 'blocked']
 		});
@@ -234,7 +233,7 @@ describe('feedFor', () => {
 			.mockReturnValueOnce(chain([]));
 		expect(await feedFor({ id: ME }, [THEM], PAGE)).toEqual({ items: [], next: null });
 		const where = entries.where.mock.calls[0][0] as SQL;
-		expect(new PgDialect().sqlToQuery(where)).toMatchObject({
+		expect(sqlOf(where)).toMatchObject({
 			sql: '("log_entries"."user_id" in ($1) and "log_entries"."audience" = $2)',
 			params: [THEM, 'friends']
 		});

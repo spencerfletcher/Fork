@@ -1,7 +1,6 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { and, eq, isNull } from 'drizzle-orm';
-import { PgDialect } from 'drizzle-orm/pg-core';
-import { chain } from '#lib/testing/drizzle.js';
+import { chain, sqlOf } from '#lib/testing/drizzle.js';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as schema from './db/schema.js';
@@ -202,10 +201,9 @@ describe('ownRecipe', () => {
 
 describe('inLibraryOf', () => {
 	test('visible, and either written or saved by the viewer; or a copy they keep', () => {
-		const dialect = new PgDialect();
-		const visible = dialect.sqlToQuery(visibleTo(OTHER));
-		const kept = dialect.sqlToQuery(keptCopyOf(OTHER));
-		const { sql, params } = dialect.sqlToQuery(inLibraryOf(OTHER));
+		const visible = sqlOf(visibleTo(OTHER));
+		const kept = sqlOf(keptCopyOf(OTHER));
+		const { sql, params } = sqlOf(inLibraryOf(OTHER));
 		// The kept copies' placeholders follow the library's nine.
 		const keptSql = kept.sql.replace(/\$(\d+)/g, (_, n: string) => `$${Number(n) + 9}`);
 		expect(sql).toBe(
@@ -215,7 +213,7 @@ describe('inLibraryOf', () => {
 	});
 
 	test('a kept copy is a withdrawn recipe (private, or in the Trash), not hidden by a moderator, whose save holds a copy version', () => {
-		const { sql, params } = new PgDialect().sqlToQuery(keptCopyOf(OTHER));
+		const { sql, params } = sqlOf(keptCopyOf(OTHER));
 		expect(sql).toBe(
 			'("recipes"."suppressed_at" is null and ("recipes"."deleted_at" is not null or "recipes"."visibility" = $1) and "recipes"."id" in (select "recipe_id" from "favorites" where ("favorites"."user_id" = $2 and "favorites"."copy_version" is not null)))'
 		);
@@ -235,7 +233,7 @@ describe('visibleTo', () => {
 	});
 
 	test('a signed-in visitor also sees their own, and friends recipes by an accepted friend either way, none in the Trash, and of the hidden only their own', () => {
-		const { sql, params } = new PgDialect().sqlToQuery(visibleTo(OTHER));
+		const { sql, params } = sqlOf(visibleTo(OTHER));
 		expect(params).toEqual([
 			OTHER.id,
 			'public',
@@ -251,7 +249,7 @@ describe('visibleTo', () => {
 	});
 
 	test('a moderator also sees what is hidden, among what they could see otherwise', () => {
-		const { sql } = new PgDialect().sqlToQuery(visibleTo(MODERATOR));
+		const { sql } = sqlOf(visibleTo(MODERATOR));
 		expect(sql).not.toContain('suppressed_at');
 		expect(sql).toContain('"recipes"."deleted_at" is null and ("recipes"."visibility" = $1');
 	});

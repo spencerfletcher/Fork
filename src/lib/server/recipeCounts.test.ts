@@ -1,7 +1,6 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { chain, sqlOf } from '#lib/testing/drizzle.js';
 import { and, desc, eq, inArray, sql, type SQL } from 'drizzle-orm';
-import { PgDialect } from 'drizzle-orm/pg-core';
 import { recipes, recipeVersions } from '#lib/server/db/schema.js';
 import { visibleTo } from './visibility';
 
@@ -71,11 +70,10 @@ describe('attachRecipeCounts', () => {
 
 		await attachRecipeCounts([{ id: 7 }], viewer);
 
-		const dialect = new PgDialect();
 		const forkWhere = (forkChain.where as ReturnType<typeof vi.fn>).mock.calls[0][0] as SQL;
 		const expected = and(inArray(recipes.parentId, [7]), visibleTo(viewer)) as SQL;
-		expect(dialect.sqlToQuery(forkWhere)).toEqual(dialect.sqlToQuery(expected));
-		expect(dialect.sqlToQuery(forkWhere).params).toContain(viewer.id);
+		expect(sqlOf(forkWhere)).toEqual(sqlOf(expected));
+		expect(sqlOf(forkWhere).params).toContain(viewer.id);
 	});
 
 	test('returns an empty list without querying when given no recipes', async () => {

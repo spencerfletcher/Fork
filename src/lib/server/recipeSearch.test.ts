@@ -1,6 +1,6 @@
 import { describe, test, expect } from 'vitest';
+import { sqlOf } from '#lib/testing/drizzle.js';
 import { mapColumnsInSQLToAlias } from 'drizzle-orm';
-import { PgDialect } from 'drizzle-orm/pg-core';
 import { parseFilters, textSearch } from './recipeSearch.js';
 
 const url = (search: string) => new URL(`http://localhost/search${search}`);
@@ -27,14 +27,14 @@ describe('textSearch', () => {
 	test('matches on the title or any version, ranked by tier, then saves', () => {
 		const { where, rank } = textSearch('cookie');
 		if (!where) throw new Error('expected a condition');
-		const { sql, params } = new PgDialect().sqlToQuery(where);
+		const { sql, params } = sqlOf(where);
 		expect(sql).toContain('websearch_to_tsquery');
 		expect(sql).toContain('recipe_version_doc(');
 		expect(sql).toContain('recipe_ingredient_names(');
 		expect(params).toContain('cookie');
 		expect(rank).toHaveLength(2);
-		expect(new PgDialect().sqlToQuery(rank[0]).sql).toContain('CASE');
-		expect(new PgDialect().sqlToQuery(rank[1]).sql).toContain('favorites');
+		expect(sqlOf(rank[0]).sql).toContain('CASE');
+		expect(sqlOf(rank[1]).sql).toContain('favorites');
 	});
 
 	test('the ingredient subquery keeps its own table inside a relational findMany', () => {
@@ -43,7 +43,7 @@ describe('textSearch', () => {
 		// "recipes"."recipe_id", which does not exist.
 		const { where } = textSearch('cookie');
 		if (!where) throw new Error('expected a condition');
-		const { sql } = new PgDialect().sqlToQuery(mapColumnsInSQLToAlias(where, 'recipes'));
+		const { sql } = sqlOf(mapColumnsInSQLToAlias(where, 'recipes'));
 		expect(sql).toContain('v.recipe_id = "recipes"."id"');
 		expect(sql).not.toContain('"recipes"."recipe_id"');
 	});
