@@ -1,3 +1,8 @@
+<script lang="ts" module>
+	/** The room a panel wants below its trigger before it would rather open upward: about seven rows. */
+	export const PANEL_ROOM = 320;
+</script>
+
 <script lang="ts">
 	import { tick, type Snippet } from 'svelte';
 	import { afterNavigate } from '$app/navigation';
@@ -36,6 +41,40 @@
 	let open = $state(false);
 	let root: HTMLElement | undefined = $state();
 	let button: HTMLElement | undefined;
+	let up = $state(false);
+	let room = $state<number | null>(null);
+
+	// The 4px between trigger and panel, and 8px kept clear of the edge.
+	const GAP = 4;
+	const MARGIN = 8;
+
+	// Decided once, on open, from the trigger's place alone (owner, 12 November
+	// 2026: "yes flip upward when no room below"): never from the panel's size,
+	// which grows as a menu's collections load. Below runs to the screen's foot
+	// less what a fixed bar covers there (the tab bar, the select bar, which
+	// give the page that as scroll-padding-bottom, app.css); above starts under
+	// the top bar while it is on screen. The panel is then no taller than its
+	// side's room and scrolls inside. A fixed panel (the picker's phone sheet)
+	// has its own place.
+	function place() {
+		const panel = root?.querySelector<HTMLElement>('.menu-panel');
+		if (!button || (panel && getComputedStyle(panel).position === 'fixed')) {
+			up = false;
+			room = null;
+			return;
+		}
+		const covered = parseFloat(getComputedStyle(document.documentElement).scrollPaddingBottom);
+		const floor = window.innerHeight - (covered || 0);
+		const ceiling = Math.max(
+			0,
+			document.querySelector('.nav-shell')?.getBoundingClientRect().bottom ?? 0
+		);
+		const trigger = button.getBoundingClientRect();
+		const below = floor - trigger.bottom - GAP - MARGIN;
+		const above = trigger.top - ceiling - GAP - MARGIN;
+		up = below < PANEL_ROOM && above > below;
+		room = Math.max(0, up ? above : below);
+	}
 
 	const controls = () =>
 		[...(root?.querySelectorAll<HTMLElement>('a[href], button, textarea') ?? [])].filter(
@@ -51,6 +90,8 @@
 		open = !open;
 		if (open) {
 			onopen?.();
+			await tick();
+			place();
 			await tick();
 			((root && focusOnOpen?.(root)) ?? controls()[0])?.focus();
 		}
@@ -96,7 +137,13 @@
 	}} />
 
 <!-- svelte-ignore a11y_no_static_element_interactions (keys bubble up from the controls inside) -->
-<div class="dropdown" bind:this={root} {onkeydown} {onclick}>
+<div
+	class="dropdown"
+	class:up
+	style:--menu-max-height={room === null ? undefined : `${room}px`}
+	bind:this={root}
+	{onkeydown}
+	{onclick}>
 	{@render trigger({ 'aria-expanded': open, onclick: toggle }, claim)}
 	{#if open}
 		{@render panel(close)}
@@ -124,10 +171,19 @@
 		width: max-content;
 		min-width: 180px;
 		max-width: min(300px, calc(100vw - 36px));
+		max-height: var(--menu-max-height, none);
+		overflow-y: auto;
+		overscroll-behavior: contain;
 		padding: 6px;
 		background: var(--color-bg);
 		border: 1px solid var(--color-text-2);
 		border-radius: var(--radius-md);
+	}
+
+	/* Opened upward (place), its foot 4px over the trigger. */
+	.dropdown.up :global(.menu-panel) {
+		top: auto;
+		bottom: calc(100% + 4px);
 	}
 
 	.dropdown :global(.menu-row) {

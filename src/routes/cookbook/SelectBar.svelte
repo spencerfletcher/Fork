@@ -427,11 +427,9 @@
 		min-width: 0;
 	}
 
-	/* The bar is at the foot, so its menus open upward, from its left edge. */
+	/* From the trigger's left edge; at the screen's foot, Dropdown opens it upward. */
 	.bar-panel {
-		--menu-top: auto;
 		--menu-right: auto;
-		bottom: calc(100% + 4px);
 		left: 0;
 	}
 

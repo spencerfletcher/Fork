@@ -1,7 +1,7 @@
-import { describe, test, expect, vi } from 'vitest';
+import { describe, test, expect, vi, afterEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/svelte';
 import { createRawSnippet, flushSync } from 'svelte';
-import Dropdown from './Dropdown.svelte';
+import Dropdown, { PANEL_ROOM } from './Dropdown.svelte';
 import source from './Dropdown.svelte?raw';
 import { cssRule } from '#lib/testing/css.js';
 
@@ -132,5 +132,86 @@ describe('Dropdown', () => {
 		navigated.forEach((callback) => callback(nav('goto', '/cookbook', '/cookbook?page=2')));
 		flushSync();
 		expect(screen.getByRole('menu')).toBeInTheDocument();
+	});
+
+	// Owner, 12 November 2026: "yes flip upward when no room below". The side
+	// is decided once, on open, from the trigger's place alone: never from the
+	// panel's own size, which grows as a menu's collections load.
+	describe('which side it opens on', () => {
+		const tallPanel = createRawSnippet(() => ({
+			render: () =>
+				'<div class="menu-panel" role="menu"><button type="button" role="menuitem">Log out</button></div>'
+		}));
+
+		/** The trigger 20px tall with its top at `top`; reading the panel's size throws. */
+		function place(top: number) {
+			vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (
+				this: HTMLElement
+			) {
+				if (this.closest('.menu-panel')) throw new Error('measured the panel');
+				return { top, bottom: top + 20, height: 20 } as DOMRect;
+			});
+		}
+
+		async function open(top: number) {
+			place(top);
+			render(Dropdown, { props: { trigger, panel: tallPanel } });
+			await fireEvent.click(screen.getByRole('button', { name: 'Your account' }));
+			return document.querySelector<HTMLElement>('.dropdown')!;
+		}
+
+		const maxHeight = (root: HTMLElement) =>
+			parseFloat(root.style.getPropertyValue('--menu-max-height'));
+
+		afterEach(() => vi.restoreAllMocks());
+
+		test('with a panel’s room below it opens downward, no taller than that room', async () => {
+			const root = await open(100);
+			expect(root).not.toHaveClass('up');
+			const below = window.innerHeight - 120;
+			expect(below).toBeGreaterThanOrEqual(PANEL_ROOM);
+			expect(maxHeight(root)).toBeLessThan(below);
+			expect(maxHeight(root)).toBeGreaterThan(below - 20);
+		});
+
+		test('near the foot with room above it opens upward, no taller than the room above', async () => {
+			const top = window.innerHeight - 40;
+			const root = await open(top);
+			expect(root).toHaveClass('up');
+			expect(maxHeight(root)).toBeLessThan(top);
+			expect(maxHeight(root)).toBeGreaterThan(top - 20);
+			expect(cssRule(source, '.dropdown.up :global(.menu-panel)')).toMatch(
+				/top:\s*auto;[\s\S]*bottom:\s*calc\(100% \+ 4px\)/
+			);
+		});
+
+		test('what a fixed bar covers at the foot is not room below', async () => {
+			// jsdom keeps no scroll-padding, so the page's is given here.
+			const real = window.getComputedStyle;
+			vi.spyOn(window, 'getComputedStyle').mockImplementation((el) =>
+				el === document.documentElement
+					? ({ scrollPaddingBottom: '300px' } as CSSStyleDeclaration)
+					: real(el)
+			);
+			// Uncovered, a panel's room below; covered, all but a sliver of it.
+			const top = window.innerHeight - PANEL_ROOM - 48;
+			const root = await open(top);
+			expect(root).toHaveClass('up');
+		});
+
+		test('short of room both ways it takes the roomier side', async () => {
+			vi.stubGlobal('innerHeight', PANEL_ROOM);
+			try {
+				expect(await open(PANEL_ROOM / 4)).not.toHaveClass('up');
+			} finally {
+				vi.unstubAllGlobals();
+			}
+		});
+
+		test('the panel scrolls inside its room', () => {
+			const rule = cssRule(source, '.dropdown :global(.menu-panel)');
+			expect(rule).toMatch(/max-height:\s*var\(--menu-max-height/);
+			expect(rule).toMatch(/overflow-y:\s*auto/);
+		});
 	});
 });
