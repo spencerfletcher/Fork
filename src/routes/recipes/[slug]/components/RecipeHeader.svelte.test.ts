@@ -1,4 +1,4 @@
-import { describe, test, expect, vi } from 'vitest';
+import { describe, test, expect, vi, beforeAll, afterAll } from 'vitest';
 import { render, screen } from '@testing-library/svelte';
 import { createRawSnippet } from 'svelte';
 import RecipeHeader from './RecipeHeader.svelte';
@@ -7,6 +7,10 @@ import type { ComponentProps } from 'svelte';
 import { makeContent, makeVersion } from '#lib/recipes/fixtures.js';
 import { scaling } from '#lib/recipes/scale.js';
 import { cssRule } from '#lib/testing/css.js';
+
+// dayLabel leaves the year off only for this year's days: the clock is pinned to the fixtures' year.
+beforeAll(() => vi.useFakeTimers({ toFake: ['Date'], now: new Date('2026-11-12T12:00:00Z') }));
+afterAll(() => vi.useRealTimers());
 
 vi.mock('$app/navigation', () => ({ afterNavigate: () => {} }));
 

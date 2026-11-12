@@ -1,10 +1,14 @@
-import { describe, test, expect, vi } from 'vitest';
+import { describe, test, expect, vi, beforeAll, afterAll } from 'vitest';
 import { SESSION_ENDED } from '#lib/server/actions.js';
 import { render, screen, within } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import Page from './+page.svelte';
 import source from './+page.svelte?raw';
 import { cssRule } from '#lib/testing/css.js';
+
+// dayLabel leaves the year off only for this year's days: the clock is pinned to the fixtures' year.
+beforeAll(() => vi.useFakeTimers({ toFake: ['Date'], now: new Date('2026-11-12T12:00:00Z') }));
+afterAll(() => vi.useRealTimers());
 
 const { page } = vi.hoisted(() => ({ page: { url: new URL('https://fork.test/friends') } }));
 vi.mock('$app/state', () => ({ page }));
