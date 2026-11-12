@@ -8,9 +8,13 @@ import type { GramResult } from '#lib/server/ingredientDensities.js';
 /** The furthest a recipe scales either way: a hundred times its batch, or a hundredth of it. */
 export const MAX_SCALE = 100;
 
+/** The scaler's hint under its field. A bare "1/2" is half a serving, not
+ *  half the recipe, so the hint's halving example carries its x. */
+export const SCALE_HINT = 'A number, or a scale: 2x, 1/2x, 50%';
+
 /** Why a typed scale is refused, in the words the scaler shows. */
 export const SCALE_MESSAGES = {
-	unreadable: 'Write a scale like 6, 2x, 1/2 or 50%',
+	unreadable: `Write ${SCALE_HINT.charAt(0).toLowerCase()}${SCALE_HINT.slice(1)}`,
 	zero: 'A scale can’t be zero',
 	negative: 'A scale can’t be negative',
 	outOfRange: `Scale between ${1 / MAX_SCALE}x and ${MAX_SCALE}x`

@@ -1,5 +1,4 @@
 <script lang="ts">
-	import type { Snippet } from 'svelte';
 	import type { Ingredient } from '#lib/recipes/types.js';
 	import type { GramResult } from '#lib/server/ingredientDensities.js';
 	import { FRACTIONS, SCALED_NOTES, formatGrams, scaleIngredient } from '#lib/recipes/scale.js';
@@ -13,8 +12,7 @@
 		grams,
 		storageKey,
 		factor = 1,
-		measurement = null,
-		control
+		measurement = null
 	}: {
 		ingredients: Ingredient[];
 		grams: (GramResult | null)[];
@@ -23,8 +21,6 @@
 		factor?: number;
 		/** The cook's Settings units; null shows every line as written. */
 		measurement?: Measurement | null;
-		/** The scale control, right of the eyebrow, above the same rule. */
-		control?: Snippet;
 	} = $props();
 
 	const SYSTEM_NAME = { metric: 'metric', us: 'US units' } as const satisfies Record<
@@ -75,11 +71,9 @@
 </script>
 
 <section id="ingredients" class="mb-3 scroll-mt-14">
-	<!-- The eyebrow and the control it scales share one baseline and one rule.
-	     It follows the eyebrow, and wraps under it at the start when the column is narrow. -->
+	<!-- The eyebrow above the one rule; the scaler is in the facts line. -->
 	<div class="border-border mb-1 flex flex-wrap items-baseline gap-x-4 border-b pb-2">
 		<h2 class="eyebrow-label">Ingredients</h2>
-		{@render control?.()}
 	</div>
 	<div>
 		{#each ingredients as typed, i (i)}

@@ -24,6 +24,8 @@ const STRUCTURAL = [
 	['lib/components/ui/TagTabs.svelte', '', 'tag filter tab'],
 	['lib/components/ui/TagTabs.svelte', 'tag-tabs__clear', 'the tag tabs row’s Clear all tab'],
 	['lib/components/ui/SearchFilters.svelte', 'friends-filter', 'the filter row’s friends tab'],
+	['routes/recipes/[slug]/components/ScalePanel.svelte', 'step minus', 'the scale field’s − cell'],
+	['routes/recipes/[slug]/components/ScalePanel.svelte', 'step plus', 'the scale field’s + cell'],
 	[
 		'routes/recipes/[slug]/components/SectionSwitch.svelte',
 		'eyebrow-label',

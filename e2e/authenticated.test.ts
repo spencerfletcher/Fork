@@ -684,6 +684,43 @@ test.describe('Trash', () => {
 	});
 });
 
+test.describe('A Makes-only recipe', () => {
+	test('scales its Makes count from the facts line: ½ a batch a step, ?makes= in the link', async ({
+		page
+	}) => {
+		test.slow();
+		let url: string | null = null;
+		try {
+			await page.setViewportSize({ width: 1280, height: 900 });
+			await gotoHydrated(page, '/recipes/new');
+			await page.locator('textarea[name="title"]').fill(uniqueTitle('E2E Cookies'));
+			await page.getByRole('button', { name: 'Add Makes' }).click();
+			await page.getByLabel(/^Makes/).fill('36 cookies');
+			await page.getByRole('textbox', { name: 'Ingredients', exact: true }).fill('2 cups flour');
+			await page.getByRole('textbox', { name: 'Method', exact: true }).fill('Mix.');
+			await chooseAudience(page, 'Only me');
+			await page.getByRole('button', { name: /create recipe/i }).click();
+			await page.waitForURL(/\/recipes\/(?!new)/);
+			url = page.url().split('?')[0];
+
+			const facts = page.locator('.recipe-header .details');
+			await expect(facts).toContainText(/Makes 36 cookies\s*Scale/);
+			await expect(facts).not.toContainText('Serves');
+			await facts.getByRole('button', { name: 'Scale', exact: true }).click();
+			const field = page.getByRole('textbox', { name: 'Makes', exact: true });
+			await expect(field).toHaveValue('36');
+			await page.getByRole('button', { name: 'More cookies', exact: true }).click();
+			await expect(facts).toContainText('Makes 54 cookies');
+			await expect(page).toHaveURL(/[?&]makes=54/);
+			await field.fill('2x');
+			await expect(facts).toContainText('Makes 72 cookies');
+			await expect(page.getByText(/4 cups/).first()).toBeVisible();
+		} finally {
+			if (url) await deleteRecipe(page, url);
+		}
+	});
+});
+
 test.describe('One save', () => {
 	test('one save records servings, times and ingredients as a new version', async ({ page }) => {
 		const url = await createRecipe(page, 'E2E Four Servings', {
@@ -698,11 +735,12 @@ test.describe('One save', () => {
 			await page.getByRole('button', { name: 'Save', exact: true }).click();
 			await page.waitForURL(url);
 
-			await expect(page.getByRole('spinbutton', { name: 'Servings' })).toHaveValue('8');
+			const facts = page.locator('.recipe-header .details');
+			await expect(facts).toContainText('Serves 8');
 			await expectVersions(page, 2);
 
 			await page.goto(`${url}?version=1`);
-			await expect(page.getByRole('spinbutton', { name: 'Servings' })).toHaveValue('4');
+			await expect(facts).toContainText('Serves 4');
 			await expect(page.getByText(/2 cups/).first()).toBeVisible();
 
 			await page.goto(`${url}/diff?from=1&to=2`);

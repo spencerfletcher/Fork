@@ -1,23 +1,63 @@
 <script lang="ts">
+	import { tick } from 'svelte';
 	import type { RecipeContent } from '#lib/recipes/types.js';
-	import { scaling, type Scaling } from '#lib/recipes/scale.js';
+	import { formatServes, scaling, type Scaling } from '#lib/recipes/scale.js';
 	import { timeSpans } from '#lib/recipes/times.js';
+	import { setShallowParam } from './shallowParam';
+	import ScalePanel, { TYPING_PAUSE_MS } from './ScalePanel.svelte';
 
 	let {
 		content,
-		scale
+		scale,
+		onscale
 	}: {
-		content: Pick<
-			RecipeContent,
-			'prepTimeMinutes' | 'cookTimeMinutes' | 'restTimeMinutes' | 'servings' | 'makes'
-		>;
+		/** The times are optional: the cooking header shows the yield alone. */
+		content: Pick<RecipeContent, 'servings' | 'makes'> &
+			Partial<Pick<RecipeContent, 'prepTimeMinutes' | 'cookTimeMinutes' | 'restTimeMinutes'>>;
 		/** The page's scaling of `content`; scaled Serves and Makes read clay. Absent, as stored. */
 		scale?: Scaling | null;
+		/** The page's count setter: given, the yield is followed by Scale and its panel. */
+		onscale?: (count: number) => void;
 	} = $props();
 
 	const shown = $derived(scale ?? scaling(content, null));
 	const scaled = $derived(!!shown?.scaled);
 	const makes = $derived(shown?.makes ?? null);
+	const scaler = $derived(onscale && shown);
+
+	// The URL carries the count so a scaled link shares, in the recipe's own
+	// param (?serves=, ?makes= or ?scale=), dropped at the recipe's own.
+	let heard = $state('');
+	let pause: ReturnType<typeof setTimeout> | undefined;
+	function change(next: number) {
+		if (!onscale || !shown) return;
+		onscale(next);
+		setShallowParam(shown.by, next === shown.base ? null : formatServes(next));
+		// The new yield said once typing pauses, not per keystroke.
+		clearTimeout(pause);
+		pause = setTimeout(() => (heard = yieldWords()), TYPING_PAUSE_MS);
+	}
+	$effect(() => () => clearTimeout(pause));
+	function yieldWords() {
+		if (!shown) return '';
+		if (shown.by === 'serves') return `Serves ${shown.serves}`;
+		if (shown.by === 'makes') return `Makes ${shown.makes?.text}`;
+		return `Scaled ${formatServes(shown.factor)}x`;
+	}
+
+	let open = $state(false);
+	let trigger: HTMLButtonElement | undefined = $state();
+	async function close() {
+		open = false;
+		await tick();
+		trigger?.focus();
+	}
+	// The line's Reset leaves with the scaling, so focus goes to Scale.
+	async function reset() {
+		if (shown) change(shown.base);
+		await tick();
+		trigger?.focus();
+	}
 
 	// The times value then label, the serves label then value, in two groups:
 	// "15 min prep · 13 min cook · 2 h rest" and "Serves 36 · Makes 36 cookies".
@@ -66,9 +106,36 @@
 						{/if}
 					</span>
 				{/each}
+				<!-- The yield is the last line: Scale follows it, and Reset while
+				     scaled with the panel closed, so the line alone says it is scaled
+				     and undoes it. -->
+				{#if scaler && l === lines.length - 1}
+					<!-- eslint-disable-next-line svelte/no-useless-mustaches -- a bare space between blocks is dropped -->
+					{' '}
+					<span>
+						<button
+							bind:this={trigger}
+							type="button"
+							class="text-btn hit-link"
+							aria-expanded={open}
+							aria-controls="scale-panel"
+							onclick={() => (open = !open)}>
+							Scale
+						</button>
+					</span>
+					<!-- eslint-disable-next-line svelte/no-useless-mustaches -- a bare space between blocks is dropped -->
+					{#if scaled && !open}{' '}
+						<span>
+							<button type="button" class="text-btn hit-link" onclick={reset}>Reset</button>
+						</span>{/if}
+				{/if}
 			</span>
 		{/each}
 	</p>
+	{#if scaler && shown}
+		{#if open}<ScalePanel scale={shown} onchange={change} onclose={close} />{/if}
+		<p class="sr-only" role="status" aria-live="polite">{heard}</p>
+	{/if}
 {/if}
 
 <style>
@@ -77,6 +144,12 @@
 	   text, so a screen reader does not read it out. */
 	.details {
 		--dot-space: 0 12px 0 8px;
+	}
+
+	/* In the line, at its size: a text button's look on the line's height,
+	   its hit reached by .hit-link rather than a 44px box. */
+	.details .text-btn {
+		min-height: 0;
 	}
 
 	/* The marker's dot is drawn too, never typed, like the pairs'. */

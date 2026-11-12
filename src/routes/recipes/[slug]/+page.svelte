@@ -10,7 +10,6 @@
 	import RecipeMethod from './components/RecipeMethod.svelte';
 	import RecipeNotes from './components/RecipeNotes.svelte';
 	import RecipeActions from './components/RecipeActions.svelte';
-	import ServesControl from './components/ServesControl.svelte';
 	import PrintHeader from './components/PrintHeader.svelte';
 	import SectionSwitch, { type Tab } from './components/SectionSwitch.svelte';
 	import { ticksKey } from './components/ticks';
@@ -60,8 +59,8 @@
 
 	// Scaling: a multiplier on the list, never saved, by the Serves, else the
 	// Makes count, else a bare multiplier. The recipe's own param (?serves=,
-	// ?makes= or ?scale=) sets it on load (server render included); the
-	// control writes it back with a shallow replace.
+	// ?makes= or ?scale=) sets it on load (server render included); Scale in
+	// the facts line writes it back with a shallow replace.
 	let count = $derived(linkedCount(currentVersion, url.searchParams));
 	const scale = $derived(scaling(currentVersion, count));
 	const factor = $derived(scale?.factor ?? 1);
@@ -157,9 +156,14 @@
 		{scale}
 		href={printHref} />
 	<!-- Cooking, the band, its actions, the stats and the tags give way to the
-	     cooking header: the title and the serves being cooked, and Exit. -->
+	     cooking header: the title, the yield being cooked with Scale, and Exit. -->
 	{#if cooking}
-		<CookHeader title={currentVersion.title} onexit={exit} />
+		<CookHeader
+			title={currentVersion.title}
+			content={currentVersion}
+			{scale}
+			onscale={(next) => (count = next)}
+			onexit={exit} />
 	{:else}
 		<!-- The title band: the recipe's words on deeper cream, its photo inset at
 	     the right. Title, byline and deck first, so a stranger reads what this
@@ -202,6 +206,7 @@
 						{recipe}
 						{currentVersion}
 						{scale}
+						onscale={(next) => (count = next)}
 						forkCount={data.forkCount}
 						{tags}
 						journal={data.journal}
@@ -278,11 +283,7 @@
 							grams={data.grams}
 							{factor}
 							{measurement}
-							control={scale ? scaler : undefined}
 							storageKey={ticksKey(recipe.slug, currentVersion.versionNumber, 'ingredients')} />
-						{#snippet scaler()}
-							{#if scale}<ServesControl {scale} onchange={(next) => (count = next)} />{/if}
-						{/snippet}
 					</div>
 				</aside>
 

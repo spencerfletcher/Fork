@@ -1,6 +1,5 @@
 import { describe, test, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/svelte';
-import { createRawSnippet } from 'svelte';
 import { parseIngredientText } from '#lib/recipes/ingredients.js';
 import RecipeIngredients from './RecipeIngredients.svelte';
 import { WEIGHED_NOTE } from '#lib/measurement.js';
@@ -236,21 +235,6 @@ describe('RecipeIngredients', () => {
 		expect(document.activeElement).toBe(screen.getAllByRole('checkbox')[0]);
 	});
 
-	test('Clear ticks passes over the scale control’s box to the first line', async () => {
-		const control = createRawSnippet(() => ({ render: () => '<input aria-label="Servings" />' }));
-		render(RecipeIngredients, {
-			props: {
-				ingredients: parseIngredientText(LINES),
-				grams: [null, null, null],
-				storageKey: KEY,
-				control
-			}
-		});
-		await fireEvent.click(rows()[2]);
-		await fireEvent.click(screen.getByRole('button', { name: 'Clear ticks' }));
-		expect(document.activeElement).toBe(screen.getAllByRole('checkbox')[0]);
-	});
-
 	// A mouse click (detail 1) must not scroll the page to the first line;
 	// Enter or Space (detail 0) may, so the keyboard user sees where focus went.
 	test('Clear ticks from a mouse moves focus without scrolling; from the keyboard it scrolls', async () => {
@@ -300,22 +284,13 @@ describe('RecipeIngredients', () => {
 		expect(rows()[0]).toHaveTextContent('½ onion (≈55g)');
 	});
 
-	test('a control sits in the eyebrow row after the heading, both above the one rule', () => {
-		const control = createRawSnippet(() => ({
-			render: () => '<span class="control">control</span>'
-		}));
-		render(RecipeIngredients, {
-			props: {
-				ingredients: parseIngredientText(LINES),
-				grams: [null, null, null],
-				storageKey: KEY,
-				control
-			}
-		});
+	// The scaler moved to the facts line (12 November 2026): the eyebrow row
+	// holds the heading alone, above the one rule.
+	test('the eyebrow row holds the heading alone, above the one rule', () => {
+		renderWith(LINES, [null, null, null]);
 		const heading = screen.getByRole('heading', { name: 'Ingredients' });
 		const row = heading.parentElement!;
-		expect(row).toContainElement(screen.getByText('control'));
-		expect(heading.nextElementSibling).toHaveTextContent('control');
+		expect(row.children).toHaveLength(1);
 		expect(row).toHaveClass('border-b');
 		expect(heading).not.toHaveClass('border-b');
 	});

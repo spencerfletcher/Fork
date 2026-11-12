@@ -1,9 +1,21 @@
 <script lang="ts">
+	import Details from './Details.svelte';
+	import type { RecipeContent } from '#lib/recipes/types.js';
+	import type { Scaling } from '#lib/recipes/scale.js';
+
 	let {
 		title,
+		content,
+		scale,
+		onscale,
 		onexit
 	}: {
 		title: string;
+		/** The version being cooked, for its yield. */
+		content: Pick<RecipeContent, 'servings' | 'makes'>;
+		scale: Scaling | null;
+		/** The page's count setter, as the recipe header's. */
+		onscale: (count: number) => void;
 		/** Leaves cooking with the ticks kept. */
 		onexit: () => void;
 	} = $props();
@@ -46,8 +58,9 @@
 </script>
 
 <!-- Cooking's own header (Spencer, 11 November 2026): paper, compact, the
-     title in Bitter under a small "Cooking" label, and a quiet Exit; the
-     scaler below says the serves. Not pinned: the bottom switch is the one pinned bar. -->
+     title in Bitter under a small "Cooking" label, and a quiet Exit; under
+     them the yield with Scale, the recipe header's facts line without its
+     times. Not pinned: the bottom switch is the one pinned bar. -->
 <header class="cook-header page">
 	<div class="page-inner cook-inner">
 		<div class="min-w-0">
@@ -55,6 +68,9 @@
 			<h1 class="title">{title}</h1>
 		</div>
 		<button type="button" class="text-btn text-btn--ink exit" onclick={onexit}>Exit</button>
+		<div class="yield">
+			<Details content={{ servings: content.servings, makes: content.makes }} {scale} {onscale} />
+		</div>
 	</div>
 	{#if noWakeLock}
 		<p class="page-inner form-hint">Your screen may still sleep.</p>
@@ -96,6 +112,16 @@
 
 	.exit {
 		font-size: 1rem;
+	}
+
+	/* Under the title and Exit both: the open panel's row needs the full
+	   width at 360px. */
+	.yield {
+		grid-column: 1 / -1;
+	}
+
+	.yield :global(.details) {
+		margin-top: 2px;
 	}
 
 	@media (max-width: 699px) {

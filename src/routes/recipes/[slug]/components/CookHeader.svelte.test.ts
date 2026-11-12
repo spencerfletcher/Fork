@@ -4,11 +4,28 @@ import { tick } from 'svelte';
 import CookHeader from './CookHeader.svelte';
 import source from './CookHeader.svelte?raw';
 import { cssRule } from '#lib/testing/css.js';
+import { makeContent } from '#lib/recipes/fixtures.js';
+import { scaling } from '#lib/recipes/scale.js';
+
+const { goto, page } = vi.hoisted(() => ({
+	goto: vi.fn(),
+	page: { url: new URL('http://localhost/recipes/cookies'), state: {}, shallow: null }
+}));
+vi.mock('$app/navigation', () => ({ goto }));
+vi.mock('$app/state', () => ({ page }));
 
 const TITLE = 'Chicken Tikka Masala';
 
 function makeProps(overrides: Record<string, unknown> = {}) {
-	return { title: TITLE, onexit: () => {}, ...overrides };
+	const content = makeContent({ servings: 4 });
+	return {
+		title: TITLE,
+		onexit: () => {},
+		content,
+		scale: scaling(content, null),
+		onscale: () => {},
+		...overrides
+	};
 }
 
 describe('CookHeader', () => {
@@ -18,12 +35,29 @@ describe('CookHeader', () => {
 		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(TITLE);
 	});
 
-	// The scaler, one line below, says the serves; the header does not repeat it.
-	test('no serves line under the title', () => {
-		// Even handed a scale, as the page once passed one.
-		render(CookHeader, { props: makeProps({ stored: 4, serves: 6 }) });
-		expect(screen.queryByText(/^Serves/)).toBeNull();
-		expect(document.querySelector('.serves')).toBeNull();
+	// The yield with Scale is the one place cooking says the serves: the
+	// recipe header's facts line, without its times, and the same scaler.
+	test('the yield and Scale under the title, the times left to the method', async () => {
+		const content = makeContent({ servings: 4, cookTimeMinutes: 45 });
+		const onscale = vi.fn();
+		render(CookHeader, { props: makeProps({ content, scale: scaling(content, 6), onscale }) });
+		const facts = document.querySelector('.cook-header .details')!;
+		expect(facts.textContent!.replace(/\s+/g, ' ').trim()).toBe('Serves 6 Scale Reset');
+		await fireEvent.click(screen.getByRole('button', { name: 'Scale' }));
+		await fireEvent.click(screen.getByRole('button', { name: 'Double' }));
+		expect(onscale).toHaveBeenLastCalledWith(12);
+	});
+
+	// The panel's five controls need the header's full width at 360px, so the
+	// yield sits under both the title and Exit.
+	test('the yield spans the header, under the title and Exit', () => {
+		expect(cssRule(source, '.yield')).toMatch(/grid-column:\s*1\s*\/\s*-1/);
+	});
+
+	test('a recipe with no yield has no line and no Scale', () => {
+		const content = makeContent({ servings: null, makes: null });
+		render(CookHeader, { props: makeProps({ content, scale: null, onscale: vi.fn() }) });
+		expect(screen.queryByRole('button', { name: 'Scale' })).toBeNull();
 	});
 
 	test('Exit is a quiet ink text button that hands back to the page', async () => {
