@@ -103,3 +103,13 @@ export async function postAction(page: Page, url: string, fields: Record<string,
 /** Moves the signed-in owner's recipe at `url` to the Trash, as a test's cleanup. */
 export const deleteRecipe = (page: Page, url: string) =>
 	postAction(page, `${url}/edit?/deleteRecipe`);
+
+/**
+ * The Cookbook picker opened at its collections (it must be closed), and the
+ * row of the collection whose name starts with `name`: rows end in the count.
+ */
+export async function collectionRow(page: Page, name: string) {
+	await page.getByRole('button', { name: /^Collections?(: |$)/ }).click();
+	const start = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+	return page.getByRole('menuitemradio', { name: new RegExp(`^${start}`) });
+}

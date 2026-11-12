@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { createRecipe, gotoHydrated, postAction, uniqueTitle } from './helpers';
+import { collectionRow, createRecipe, gotoHydrated, postAction, uniqueTitle } from './helpers';
 import { TRASH_DAYS } from '../src/lib/trash';
 
 // Select mode on the Cookbook (roadmap Library growth, B1): Select turns the
@@ -50,11 +50,12 @@ test.describe('Cookbook select mode', () => {
 				'aria-checked',
 				'true'
 			);
-			const link = page.getByRole('navigation', { name: 'Collections' }).getByRole('link', {
-				name: new RegExp(name)
-			});
-			await expect(link).toContainText('2');
-			collectionId = new URL((await link.getAttribute('href'))!, page.url()).searchParams.get(
+			await page.keyboard.press('Escape');
+			await expect(bar).toContainText('2 selected');
+			// The picker counts both; looking leaves the selection alone.
+			const row = await collectionRow(page, name);
+			await expect(row).toContainText('2');
+			collectionId = new URL((await row.getAttribute('href'))!, page.url()).searchParams.get(
 				'collection'
 			);
 			await page.keyboard.press('Escape');

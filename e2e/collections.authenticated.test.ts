@@ -7,10 +7,15 @@
  */
 
 import { expect, test, type Page } from '@playwright/test';
-import { createRecipe, deleteRecipe, gotoHydrated, postAction, uniqueTitle } from './helpers';
+import {
+	collectionRow,
+	createRecipe,
+	deleteRecipe,
+	gotoHydrated,
+	postAction,
+	uniqueTitle
+} from './helpers';
 import { SEED } from '../src/lib/server/db/seedData';
-
-const collectionsNav = (page: Page) => page.getByRole('navigation', { name: 'Collections' });
 
 /** The seed user's own private recipe, by its path. */
 const createdPath = async (page: Page, title: string, servings?: string) =>
@@ -24,16 +29,19 @@ test.describe('Collections', () => {
 		const renamed = uniqueTitle('E2E renamed');
 		await gotoHydrated(page, '/cookbook');
 
-		await page.getByRole('button', { name: 'New collection' }).click();
-		await page.getByRole('textbox', { name: 'Collection name' }).fill(name);
-		await page.getByRole('button', { name: 'Create' }).click();
+		// New collection is the picker's, at the foot of its collections.
+		await page.getByRole('button', { name: 'Collections', exact: true }).click();
+		await page.getByRole('menuitem', { name: 'New collection' }).click();
+		await page.getByRole('textbox', { name: 'New collection' }).fill(name);
+		await page.getByRole('button', { name: 'Create', exact: true }).click();
 		await page.waitForURL(/\/cookbook\?collection=\d+$/);
 		await expect(page.getByRole('heading', { level: 2, name, exact: true })).toBeVisible();
 		await expect(page.getByText(`Nothing in ${name} yet`)).toBeVisible();
-		await expect(collectionsNav(page).getByRole('link', { name })).toHaveAttribute(
-			'aria-current',
-			'page'
-		);
+		// Made, the picker closes; its button names the collection.
+		await expect(page.getByRole('menu', { name: 'Collections and tags' })).toHaveCount(0);
+		await expect(
+			page.getByRole('button', { name: `Collection: ${name}`, exact: true })
+		).toBeVisible();
 
 		// A search inside the collection, so the rename has a whole query to keep.
 		await gotoHydrated(page, `${page.url()}&q=e2e`);
@@ -47,17 +55,15 @@ test.describe('Collections', () => {
 		// Reloaded at ?page=3 (Show more wrote it), leaving the collection starts
 		// the list at its first page, the search kept.
 		await gotoHydrated(page, `${page.url()}&page=3`);
-		await expect(collectionsNav(page).getByRole('link', { name: 'All recipes' })).toHaveAttribute(
-			'href',
-			'?q=e2e'
-		);
+		await expect(await collectionRow(page, 'All collections')).toHaveAttribute('href', '?q=e2e');
+		await page.keyboard.press('Escape');
 
 		await page.getByRole('button', { name: 'Delete collection' }).click();
 		const step = page.getByRole('group', { name: `Delete ${renamed}?` });
 		await expect(step).toContainText('its recipes stay in your Cookbook');
 		await step.getByRole('button', { name: 'Delete collection' }).click();
 		await page.waitForURL(/\/cookbook$/);
-		await expect(collectionsNav(page).getByRole('link', { name: renamed })).toHaveCount(0);
+		await expect(await collectionRow(page, renamed)).toHaveCount(0);
 	});
 
 	test('a recipe joins a new collection from its page, leaves it in the Trash, and returns on restore', async ({
@@ -76,7 +82,7 @@ test.describe('Collections', () => {
 		await expect(row).toHaveAttribute('aria-checked', 'true');
 
 		await gotoHydrated(page, '/cookbook');
-		await collectionsNav(page).getByRole('link', { name }).click();
+		await (await collectionRow(page, name)).click();
 		await page.waitForURL(/collection=\d+/);
 		const collectionUrl = page.url();
 		const id = new URL(collectionUrl).searchParams.get('collection')!;
@@ -129,7 +135,7 @@ test.describe('Collections', () => {
 				'true'
 			);
 			await gotoHydrated(page, '/cookbook');
-			const href = await collectionsNav(page).getByRole('link', { name }).getAttribute('href');
+			const href = await (await collectionRow(page, name)).getAttribute('href');
 			id = new URLSearchParams(href!.split('?')[1]).get('collection');
 
 			/**
@@ -181,9 +187,7 @@ test.describe('Collections', () => {
 	}) => {
 		const dal = SEED.find((r) => r.slug === 'red-lentil-dal')!.versions.at(-1)!.title;
 		await gotoHydrated(page, '/cookbook');
-		await collectionsNav(page)
-			.getByRole('link', { name: /^To cook/ })
-			.click();
+		await (await collectionRow(page, 'To cook')).click();
 		await expect(page.getByRole('link', { name: dal })).toBeVisible();
 
 		// devcooks' Shakshuka: shared with friends, not saved by the seed user.
