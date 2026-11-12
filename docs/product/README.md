@@ -4,10 +4,11 @@ Fork is a recipe cookbook for serious home cooks, live at recipes.spencerfletche
 
 **Product promise:** a dependable home for your recipes that helps your cooking improve over time.
 
-## Where it stands (11 November 2026)
+## Where it stands (12 November 2026)
 
 - The minimum viable product (MVP) is in production: three recipe audiences with one access rule on every surface, friendships with unfriend, block, mute and report, the Journal with likes, the Friends feed, Discover, the Cookbook (All, Mine, Saved), new navigation, the recipe page redesign and the line editor with section headings.
-- In flight: a CSS simplification pass and a set of phone fixes.
+- Built since, most of it marked "awaiting publish" in the roadmap: settings, export, print, drafts, Trash, collections, Keep this version, search quality, notifications, moderation and rate limits, among others. Spencer published again on 12 November 2026 at a build before `089022a`; which rows that made live is not yet recorded (ROADMAP §2).
+- The CSS simplification and the phone fixes landed in git on 11 November.
 - No pilot invitations have been sent. No pricing is approved. The business goal is a sustainable solo operation.
 
 ## What matters next
@@ -46,3 +47,4 @@ Rules stay where they are: [DESIGN.md](../../DESIGN.md) (visual and interaction 
 - 2026-11-11: created; replaces the 8 November roadmap report and the two 10 November syntheses as the current plan.
 - 2026-11-11: first migration importer dropped from the P1 list (moved to P2, RM §14).
 - 2026-11-12: the UX review's recommended order noted under What matters next as proposed (RM §15 question 2); varied seed and cookie fixes noted (RM P1).
+- 2026-11-12: Where it stands refreshed: what is built since 11 Nov, the 12 Nov publish, the CSS and phone fixes landed.
