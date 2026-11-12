@@ -22,7 +22,7 @@ This is the core of the project, so it's worth being precise about what it does 
 
 ![Comparing v1 and v2 of a recipe: a changed vanilla measurement shown as a word-level inline diff, and an added espresso powder row](docs/screenshots/diff.png)
 
-**There is no branching and no merging.** History is a straight line per recipe, and a fork is a copy with a pointer home — not a branch that can be merged back. Pull requests are on the roadmap below, not in the codebase.
+**There is no branching and no merging.** History is a straight line per recipe, and a fork is a copy with a pointer home — not a branch that can be merged back. Pull requests are on the [roadmap](docs/product/ROADMAP.md), not in the codebase.
 
 A deliberate split in the schema supports this: the recipe's _settings_ (photo, tags, visibility) live on the `recipes` row and are edited in place, while its _content_ (title, description, servings, times, ingredients and steps) is versioned in `recipe_versions`. The `recipes` row also keeps a copy of the latest version's title, description, servings and times so search and list pages can read them without a join; those copies are written in the same transaction as the version and never edited alone. One Save button handles both: settings-only changes update in place, content changes append a version, and a save from a stale tab is refused rather than silently overwriting.
 
@@ -44,9 +44,9 @@ A deliberate split in the schema supports this: the recipe's _settings_ (photo, 
 
 ## Not built
 
-Listed here so the roadmap isn't mistaken for the feature set. None of this exists in the codebase:
+Listed here so the [roadmap](docs/product/ROADMAP.md) isn't mistaken for the feature set. None of this exists in the codebase:
 
-pull requests / recipe suggestions · merging · multi-hop lineage graphs · comments · following · collections · ratings · macros and price estimation · pantry search · any AI feature · recipe export
+pull requests / recipe suggestions · merging · multi-hop lineage graphs · comments · following · ratings · macros and price estimation · pantry search · any AI feature
 
 ## Stack
 

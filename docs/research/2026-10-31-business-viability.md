@@ -1,3 +1,5 @@
+> Folded into the 8 Nov roadmap report and through it into [docs/product](../product/README.md), the current plan. Kept as the research record.
+
 # Business viability and paths to scale — 31 October 2026
 
 Spencer's question: "is there a way to turn it into a business of scale? a viable product? ... what would we need?" Inputs: `docs/ROADMAP.md`, `PRODUCT.md`, `docs/research/2026-10-31-feature-research.md`, then web research on 31 October 2026.

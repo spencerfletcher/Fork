@@ -1,3 +1,5 @@
+> History: a build spec for work that has shipped; its status line and steps are not current. The current plan is [docs/product/ROADMAP.md](../../product/ROADMAP.md).
+
 # UI refresh — design
 
 Status: approved, not implemented.
