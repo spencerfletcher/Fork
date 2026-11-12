@@ -132,7 +132,7 @@ describe('Navbar signed in', () => {
 	});
 
 	// display:none at the other width, so a screen reader meets one of the two.
-	test('below 768 a + named New recipe sits before Search, a 44px target on a marigold square', () => {
+	test('below 768 a + named New recipe sits before Search, a 44px target drawn as a quiet outline', () => {
 		const { container } = render(Navbar, { props: { user: signedIn(), profile } });
 		const plus = screen.getByRole('link', { name: 'New recipe' });
 		expect(plus).toHaveAttribute('href', '/recipes/new');
@@ -143,7 +143,17 @@ describe('Navbar signed in', () => {
 		expect(container.querySelectorAll('a[href="/recipes/new"]')).toHaveLength(2);
 		expect(cssRule(source, '.nav-plus')).toMatch(/width:\s*44px/);
 		expect(cssRule(source, '.nav-plus')).toMatch(/height:\s*44px/);
-		expect(cssRule(source, '.nav-plus span')).toMatch(/background:\s*var\(--color-marigold\)/);
+		// An outline in Search's tan, cream on hover or when current: the bar's
+		// one marigold is the words' button, and Journal's Add sits right under it.
+		const square = cssRule(source, '.nav-plus span');
+		expect(square).not.toMatch(/marigold/);
+		expect(square).toMatch(/border:\s*1px solid currentColor/);
+		expect(square).toMatch(/background:\s*transparent/);
+		expect(cssRule(source, '.nav-plus')).toMatch(/color:\s*var\(--color-text-tan\)/);
+		expect(cssRule(source, '.nav-plus:hover')).toMatch(/color:\s*var\(--color-text-cream\)/);
+		expect(cssRule(source, ".nav-plus[aria-current='page']")).toMatch(
+			/color:\s*var\(--color-text-cream\)/
+		);
 	});
 
 	// An unlayered display on the link would beat Tailwind's layered md:hidden

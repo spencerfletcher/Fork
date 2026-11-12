@@ -196,15 +196,25 @@
 		outline-color: var(--color-marigold);
 	}
 
-	/* A phone's New recipe: the marigold square, 32px, centred in a 44px
-	   target, as the avatar's disc is. Its display is set below 768 only: an
-	   unlayered one here would beat md:hidden and show it beside the words. */
+	/* A phone's New recipe: a quiet 32px outline in Search's tan, centred in a
+	   44px target, as the avatar's disc is; cream on hover or when current, as
+	   Search is. Not marigold: on Journal it sits right above the full-width
+	   Add to Journal (owner, 12 November 2026: "phone top bar outline style").
+	   Its display is set below 768 only: an unlayered one here would beat
+	   md:hidden and show it beside the words. */
 	.nav-plus {
 		align-items: center;
 		justify-content: center;
 		width: 44px;
 		height: 44px;
 		border-radius: var(--radius-md);
+		color: var(--color-text-tan);
+		transition: color 0.15s ease;
+	}
+
+	.nav-plus:hover,
+	.nav-plus[aria-current='page'] {
+		color: var(--color-text-cream);
 	}
 
 	.nav-plus span {
@@ -213,16 +223,9 @@
 		justify-content: center;
 		width: 32px;
 		height: 32px;
-		/* Transparent, as .nav-cta's: the box under forced colours. */
-		border: 1px solid transparent;
+		border: 1px solid currentColor;
 		border-radius: var(--radius-md);
-		background: var(--color-marigold);
-		color: var(--color-text);
-		transition: background 0.15s ease;
-	}
-
-	.nav-plus:hover span {
-		background: var(--color-marigold-hover);
+		background: transparent;
 	}
 
 	.nav-icon {
