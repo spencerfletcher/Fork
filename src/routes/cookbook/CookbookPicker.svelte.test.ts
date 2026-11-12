@@ -5,7 +5,6 @@ import CookbookPicker from './CookbookPicker.svelte';
 import { COLLECTION_NAME_MAX } from '#lib/collections.js';
 import { plural } from '#lib/helpers.js';
 import { cssRule } from '#lib/testing/css.js';
-import source from './CookbookPicker.svelte?raw';
 import sheetSource from './CookbookSheet.svelte?raw';
 import tabBarSource from '#lib/components/ui/TabBar.svelte?raw';
 import navbarSource from '#lib/components/ui/Navbar.svelte?raw';

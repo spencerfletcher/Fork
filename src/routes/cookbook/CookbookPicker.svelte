@@ -1,4 +1,20 @@
+<script lang="ts" module>
+	// Shared with the page's View sheet, whose rows are this picker's rows.
+	export { mark };
+
+	/** A click for a new tab or window is the browser's. */
+	export const modified = (e: MouseEvent) => e.metaKey || e.ctrlKey || e.shiftKey || e.altKey;
+
+	/** Menu items take Space as well as Enter; a link alone takes Enter. */
+	export function spaceTakes(e: KeyboardEvent) {
+		if (e.key !== ' ') return;
+		e.preventDefault();
+		(e.currentTarget as HTMLElement).click();
+	}
+</script>
+
 <script lang="ts">
+	import type { Snippet } from 'svelte';
 	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
@@ -27,7 +43,9 @@
 		collection,
 		allTags,
 		selectedTags,
-		total
+		total,
+		beside,
+		viewPills = []
 	}: {
 		collections: { id: number; name: string; count: number }[];
 		collection: { id: number; name: string } | null;
@@ -36,6 +54,10 @@
 		selectedTags: string[];
 		/** The current list's count, for Show N recipes. */
 		total: number;
+		/** Drawn after the buttons, before the pills (a phone's View). */
+		beside?: Snippet;
+		/** A phone's further pills after the tags' (View's sort and Mine or Saved), each a link that undoes it; gone from 768, where the controls show it. */
+		viewPills?: { label: string; href: string }[];
 	} = $props();
 
 	type Group = 'collections' | 'tags';
@@ -119,27 +141,18 @@
 		if (closes) closePanel?.();
 	}
 
-	// A click for a new tab or window is the browser's.
-	const modified = (e: MouseEvent) => e.metaKey || e.ctrlKey || e.shiftKey || e.altKey;
-
-	// Menu items take Space as well as Enter; a link alone takes Enter.
-	function spaceTakes(e: KeyboardEvent) {
-		if (e.key !== ' ') return;
-		e.preventDefault();
-		(e.currentTarget as HTMLElement).click();
-	}
-
-	// A pill's tag dropped in place; focus to the pill now in its place, else
+	// A pill dropped in place; focus to the shown pill now in its place, else
 	// the one before, else Tags.
 	let pills: HTMLElement | undefined = $state();
 	let tagsButton: HTMLElement | undefined = $state();
-	async function dropTag(e: MouseEvent, slug: string) {
+	async function drop(e: MouseEvent, href: string, at: number) {
 		if (modified(e)) return;
-		const at = selectedTags.indexOf(slug);
 		e.preventDefault();
-		await goto(toggledHref(slug), { reset: false });
+		await goto(href, { reset: false });
 		await tick();
-		const left = pills?.querySelectorAll<HTMLElement>('a') ?? [];
+		const left = [...(pills?.querySelectorAll<HTMLElement>('a') ?? [])].filter(
+			(a) => a.checkVisibility?.() ?? true
+		);
 		(left[at] ?? left[at - 1] ?? tagsButton)?.focus();
 	}
 
@@ -334,21 +347,31 @@
 	</Dropdown>
 </div>
 
-{#if selectedTags.length > 0}
+{@render beside?.()}
+
+{#if selectedTags.length > 0 || viewPills.length > 0}
 	<div class="picker-pills" bind:this={pills}>
-		{#each selectedTags as slug (slug)}
+		{#each selectedTags as slug, i (slug)}
 			{@const tag = allTags.find((t) => t.slug === slug)}
-			<a
-				href={toggledHref(slug)}
-				class="tag picker-pill"
-				aria-label="Remove {tag?.name ?? slug}"
-				onclick={(e) => dropTag(e, slug)}>
-				{tag?.name ?? slug}
-				<span aria-hidden="true">×</span>
-			</a>
+			{@render pill(tag?.name ?? slug, toggledHref(slug), i, false)}
+		{/each}
+		{#each viewPills as p, i (p.label)}
+			{@render pill(p.label, p.href, selectedTags.length + i, true)}
 		{/each}
 	</div>
 {/if}
+
+{#snippet pill(label: string, href: string, at: number, phone: boolean)}
+	<a
+		{href}
+		class="tag picker-pill"
+		class:view-pill={phone}
+		aria-label="Remove {label}"
+		onclick={(e) => drop(e, href, at)}>
+		{label}
+		<span aria-hidden="true">×</span>
+	</a>
+{/snippet}
 
 <!-- Without script the panel never opens: the two groups as plain links. -->
 <noscript>
@@ -461,8 +484,9 @@
 
 	/* The words, then the chevron, centred on their line by the row. The
 	   select's own look (app.css), so the row's controls share one light edge
-	   with Sort beside them (owner, 12 November 2026: "lighten to match"). */
-	.picker-trigger {
+	   with Sort beside them (owner, 12 November 2026: "lighten to match").
+	   Global: a phone's View, the page's, is the same button. */
+	:global(.picker-trigger) {
 		display: inline-flex;
 		align-items: center;
 		gap: 8px;
@@ -473,8 +497,8 @@
 
 	/* Both buttons control the open panel; the band marks the group it shows,
 	   and the ghost's hover. */
-	.picker-trigger.showing,
-	.picker-trigger:hover {
+	:global(.picker-trigger.showing),
+	:global(.picker-trigger:hover) {
 		background: var(--color-band);
 	}
 
@@ -628,10 +652,24 @@
 		gap: 6px;
 	}
 
-	/* A phone: the buttons share their row half and half, and the panel is
-	   CookbookSheet's sheet. */
+	/* From 768, and without script, the Sort select and the segments show
+	   what these say. */
+	@media (min-width: 768px), (scripting: none) {
+		.view-pill {
+			display: none;
+		}
+	}
+
+	/* A phone: the buttons share their row half and half, less View's 44px
+	   beside them (the page's), the pills on their own lines under them; the
+	   panel is CookbookSheet's sheet. */
 	@media (max-width: 767px) {
 		.picker {
+			flex: 1 1 0;
+			min-width: 0;
+		}
+
+		.picker-pills {
 			flex: 1 1 100%;
 		}
 

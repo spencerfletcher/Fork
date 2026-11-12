@@ -4,8 +4,8 @@ import { tick } from 'svelte';
 import { draftKey, saveDraft, type DraftRecipe } from '#lib/drafts.js';
 import { draftOf } from '#lib/recipes/validation.js';
 import CookbookPage from './+page.svelte';
-import { COOKBOOK_FILTERS, COOKBOOK_VIEWS } from './filters.js';
-import type { CardSort } from '#lib/listPage.js';
+import { COOKBOOK_FILTERS, COOKBOOK_VIEWS, SORT_LABELS } from './filters.js';
+import { CARD_SORTS, type CardSort } from '#lib/listPage.js';
 import source from './+page.svelte?raw';
 import barSource from './SelectBar.svelte?raw';
 import { cssRule } from '#lib/testing/css.js';
@@ -332,27 +332,148 @@ describe('Cookbook page', () => {
 		expect(resultStatus()).toHaveTextContent('');
 	});
 
-	test('New recipe sits in the header over a full library', () => {
+	// The top bar's + carries it at every width (P2, owner, 12 November 2026);
+	// the empty cookbook keeps its own.
+	test('a full library has no New recipe of its own', () => {
 		renderCookbook(full);
-		expect(screen.getByRole('link', { name: 'New recipe' })).toHaveClass('btn-primary');
+		expect(screen.queryByRole('link', { name: /New recipe/ })).toBeNull();
+	});
+});
+
+// P2 with All · Mine · Saved folded in (owner, 12 November 2026: "tie all
+// mine and saved into the filter button … a 3 box selector (in one row)
+// below show as"). Below 768 alone; a desktop keeps its rows.
+describe('Cookbook View, a phone’s', () => {
+	const viewButton = () => screen.getByRole('button', { name: 'View' });
+	const sheet = () => document.getElementById('cookbook-view-sheet')!;
+	const phoneOnly = (selector: string) =>
+		cssRule(
+			style.slice(style.indexOf('@media (max-width: 767px) and (scripting: enabled)')),
+			selector
+		);
+
+	test('one View button after Collections and Tags, before the pills; closed', () => {
+		page.url = new URL('http://localhost/cookbook?tags=baking');
+		const tags = [{ id: 1, name: 'Baking', slug: 'baking' }];
+		renderCookbook({ ...full, allTags: tags, selectedTags: ['baking'] } as never);
+		const view = viewButton();
+		expect(view).toHaveAttribute('aria-expanded', 'false');
+		expect(view).not.toHaveAttribute('aria-controls');
+		expect(view.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
+		const tagsButton = screen.getByRole('button', { name: 'Tags' });
+		const pill = screen.getByRole('link', { name: 'Remove Baking' });
+		expect(tagsButton.compareDocumentPosition(view)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+		expect(view.compareDocumentPosition(pill)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
 	});
 
-	// Beside the title on a phone it is one line at the small size, 44px tall;
-	// the subtitle wraps under the title instead.
-	test('the header New recipe is the small button on one line', () => {
-		renderCookbook(full);
-		expect(screen.getByRole('link', { name: 'New recipe' })).toHaveClass('btn-sm');
-		expect(cssRule(style, '.cookbook-new')).toMatch(/white-space:\s*nowrap/);
+	// display:none takes each out of the accessibility tree, so a reader meets
+	// one set of controls at any width; without script a phone keeps the rows.
+	test('below 768 the rows go and View shows; from 768, or without script, the reverse', () => {
+		expect(phoneOnly('.cookbook-filters > .seg')).toMatch(/display:\s*none/);
+		expect(phoneOnly('.cookbook-view')).toMatch(/display:\s*none/);
+		const rest = style.slice(style.indexOf('@media (min-width: 768px), (scripting: none)'));
+		expect(cssRule(rest, '.view-menu')).toMatch(/display:\s*none/);
 	});
 
-	// Under 700 three rows: the title, the count at full width, then New recipe
-	// across the page (Spencer, 11 November 2026).
-	test('under 700 the header stacks and New recipe runs full width', () => {
-		const phone = style.slice(style.indexOf('@media (max-width: 699px)'));
-		expect(style).toContain('@media (max-width: 699px)');
-		expect(cssRule(phone, '.cookbook-head')).toMatch(/flex-direction:\s*column/);
-		expect(cssRule(phone, '.cookbook-head')).toMatch(/align-items:\s*stretch/);
-		expect(cssRule(phone, '.cookbook-new')).toMatch(/width:\s*100%/);
+	test('opened: Sort as five rows, the order ticked; Show as; All · Mine · Saved in one row; Select recipes; Show N recipes', async () => {
+		page.url = new URL('http://localhost/cookbook?filter=mine&sort=most');
+		renderCookbook({ ...full, sort: 'most', filter: 'mine' });
+		await fireEvent.click(viewButton());
+		expect(viewButton()).toHaveAttribute('aria-expanded', 'true');
+		expect(viewButton()).toHaveAttribute('aria-controls', 'cookbook-view-sheet');
+		const sorts = within(sheet()).getByRole('menu', { name: 'Sort' });
+		const rows = within(sorts).getAllByRole('menuitemradio');
+		expect(rows.map((r) => r.textContent?.trim())).toEqual(CARD_SORTS.map((s) => SORT_LABELS[s]));
+		expect(rows.filter((r) => r.getAttribute('aria-checked') === 'true')).toEqual([
+			within(sorts).getByRole('menuitemradio', { name: SORT_LABELS.most })
+		]);
+		// The first row takes focus: the arrows walk from there.
+		expect(rows[0]).toHaveFocus();
+		expect(rows[0]).toHaveAttribute('href', '?filter=mine');
+		const showAs = within(sheet()).getByRole('group', { name: 'Show as' });
+		expect(
+			within(showAs)
+				.getAllByRole('link')
+				.map((a) => a.textContent?.trim())
+		).toEqual(['Grid', 'List']);
+		const show = within(sheet()).getByRole('group', { name: 'Show' });
+		expect(
+			within(show)
+				.getAllByRole('link')
+				.map((a) => a.textContent?.replace(/\s+/g, ' ').trim())
+		).toEqual(['All 9', 'Mine 6', 'Saved 3']);
+		expect(showAs.compareDocumentPosition(show)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+		const select = within(sheet()).getByRole('menuitem', { name: 'Select recipes' });
+		expect(show.compareDocumentPosition(select)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+		expect(
+			within(sheet()).getByRole('button', { name: `Show ${full.recipes.length} recipes` })
+		).toBeInTheDocument();
+	});
+
+	test('the arrows walk the sort rows and Select recipes; Escape closes, focus back on View', async () => {
+		renderCookbook(full);
+		await fireEvent.click(viewButton());
+		const rows = within(sheet()).getAllByRole('menuitemradio');
+		await fireEvent.keyDown(rows[0], { key: 'ArrowUp' });
+		expect(within(sheet()).getByRole('menuitem', { name: 'Select recipes' })).toHaveFocus();
+		await fireEvent.keyDown(document.activeElement!, { key: 'Escape' });
+		expect(document.getElementById('cookbook-view-sheet')).toBeNull();
+		expect(viewButton()).toHaveFocus();
+	});
+
+	test('a choice goes in place, then the sheet closes with focus on View', async () => {
+		page.url = new URL('http://localhost/cookbook?filter=mine&page=2');
+		renderCookbook({ ...full, filter: 'mine' });
+		for (const [role, name, href] of [
+			['menuitemradio', SORT_LABELS.title, '?filter=mine&sort=title'],
+			['link', 'List', '?filter=mine&view=list'],
+			['link', /^Saved/, '?filter=saved']
+		] as const) {
+			goto.mockClear();
+			await fireEvent.click(viewButton());
+			await fireEvent.click(within(sheet()).getByRole(role, { name }));
+			await tick();
+			expect(goto).toHaveBeenCalledWith(href, { reset: false });
+			expect(document.getElementById('cookbook-view-sheet')).toBeNull();
+			expect(viewButton()).toHaveFocus();
+		}
+	});
+
+	test('while a search ranks, Sort reads Best match with no rows', async () => {
+		renderCookbook({ ...full, sort: 'most', searchQuery: 'dal' });
+		await fireEvent.click(viewButton());
+		expect(within(sheet()).queryAllByRole('menuitemradio')).toEqual([]);
+		expect(within(sheet()).getByText('Best match while you search')).toBeInTheDocument();
+	});
+
+	describe('pills for what the sheet holds', () => {
+		test('a sort other than the newest, and Mine or Saved, each a pill whose × undoes it', () => {
+			page.url = new URL('http://localhost/cookbook?sort=most&filter=saved&page=2');
+			renderCookbook({ ...full, sort: 'most', filter: 'saved' });
+			const sortPill = screen.getByRole('link', { name: `Remove ${SORT_LABELS.most}` });
+			expect(sortPill).toHaveAttribute('href', '?filter=saved');
+			expect(sortPill).toHaveClass('tag');
+			expect(screen.getByRole('link', { name: 'Remove Saved' })).toHaveAttribute(
+				'href',
+				'?sort=most'
+			);
+		});
+
+		test('All and the newest change show none; nor does a sort a search has set aside', () => {
+			const { unmount } = renderCookbook(full);
+			expect(screen.queryAllByRole('link', { name: /^Remove / })).toEqual([]);
+			unmount();
+			renderCookbook({ ...full, sort: 'most', searchQuery: 'dal' });
+			expect(screen.queryAllByRole('link', { name: /^Remove / })).toEqual([]);
+		});
+
+		test('a pill goes in place, as a tag pill does', async () => {
+			page.url = new URL('http://localhost/cookbook?sort=most&filter=mine');
+			renderCookbook({ ...full, sort: 'most', filter: 'mine' });
+			goto.mockClear();
+			await fireEvent.click(screen.getByRole('link', { name: `Remove ${SORT_LABELS.most}` }));
+			expect(goto).toHaveBeenCalledWith('?filter=mine', { reset: false });
+		});
 	});
 });
 
@@ -678,6 +799,28 @@ describe('Cookbook select mode', () => {
 		expect(select().parentElement).toHaveClass('cookbook-view');
 		expect(select().parentElement!.lastElementChild).toBe(select());
 		expect(cssRule(style, '.cookbook-select')).toMatch(/margin-left:\s*auto/);
+	});
+
+	// A phone's way in. The cards must not jump: outside the desktop row
+	// (display:none on a phone) the filters are the very same elements.
+	test('Select recipes in the View sheet closes it and starts the mode, nothing above the cards changing; Cancel hands focus to View', async () => {
+		const view = () => screen.getByRole('button', { name: 'View' });
+		const { container } = renderCookbook(full);
+		await tick();
+		const filters = container.querySelector('.cookbook-filters')!;
+		const phoneFilters = () =>
+			[...filters.querySelectorAll('*')].filter((el) => !el.closest('.cookbook-view'));
+		const before = phoneFilters();
+		await fireEvent.click(view());
+		await fireEvent.click(screen.getByRole('menuitem', { name: 'Select recipes' }));
+		await tick();
+		expect(document.getElementById('cookbook-view-sheet')).toBeNull();
+		expect(screen.getByRole('checkbox', { name: dal.title })).toBeInTheDocument();
+		expect(bar()).toContainElement(document.activeElement as HTMLElement);
+		expect(phoneFilters()).toEqual(before);
+		await fireEvent.click(within(bar()).getByRole('button', { name: 'Cancel' }));
+		await tick();
+		expect(view()).toHaveFocus();
 	});
 
 	// Owner, 12 November 2026: "hide select while selecting": Cancel is the one exit.

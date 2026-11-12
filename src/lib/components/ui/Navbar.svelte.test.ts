@@ -115,7 +115,7 @@ describe('Navbar signed in', () => {
 	// display:none at the other width, so a screen reader meets one of the two.
 	test('below 768 a + named New recipe sits before Search, a 44px target on a marigold square', () => {
 		const { container } = render(Navbar, { props: { user: signedIn(), profile } });
-		const plus = screen.getByRole('link', { name: 'New recipe', exact: true });
+		const plus = screen.getByRole('link', { name: 'New recipe' });
 		expect(plus).toHaveAttribute('href', '/recipes/new');
 		expect(plus).toHaveClass('md:hidden');
 		expect(plus.compareDocumentPosition(screen.getByRole('link', { name: 'Search' }))).toBe(
@@ -134,7 +134,7 @@ describe('Navbar signed in', () => {
 			'aria-current',
 			'page'
 		);
-		expect(screen.getByRole('link', { name: 'New recipe', exact: true })).toHaveAttribute(
+		expect(screen.getByRole('link', { name: 'New recipe' })).toHaveAttribute(
 			'aria-current',
 			'page'
 		);

@@ -3,6 +3,7 @@
 	import { page } from '$app/state';
 	import { oneOf } from '#lib/helpers.js';
 	import { CARD_SORTS, hrefWith, withoutPlace, type CardSort } from '#lib/listPage.js';
+	import { SORT_LABELS as LABELS } from './filters.js';
 
 	// The Cookbook's Sort (roadmap L04, C1): a native select that goes at once
 	// with JavaScript, keeping focus and scroll as a tag press does, and a GET
@@ -10,14 +11,6 @@
 	// While a search ranks the results it reads Best match and is disabled;
 	// the chosen sort stays in the URL for when the search is cleared.
 	let { sort, searching }: { sort: CardSort; searching: boolean } = $props();
-
-	const LABELS: Record<CardSort, string> = {
-		newest: 'Newest change',
-		cooked: 'Recently cooked',
-		most: 'Most cooked',
-		stale: 'Not cooked lately',
-		title: 'Title A to Z'
-	};
 
 	// Every param of the page's but the sort and the loaded place.
 	const otherParams = $derived(

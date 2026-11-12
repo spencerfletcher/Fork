@@ -45,6 +45,13 @@ describe('Cookbook, server rendered', () => {
 		expect(body).toContain('aria-label="View"');
 		expect(body).not.toMatch(/>\s*Select\s*</);
 		expect(body).not.toContain('aria-pressed');
+		// A phone without script keeps these rows (the style's scripting
+		// query): Sort's GET form, the segments, Grid | List. View's sheet is
+		// drawn only once opened, so the page never holds the controls twice.
+		expect(body).toContain('id="cookbook-sort"');
+		expect(body).toContain('aria-label="Show"');
+		expect(body).not.toContain('cookbook-view-sheet');
+		expect(body.match(/aria-label="View"/g)).toHaveLength(2);
 	});
 
 	// The picker's panel needs script; without it the two groups are plain links.

@@ -132,13 +132,54 @@ test.describe('Navbar at 768, signed in', () => {
 	});
 });
 
-test.describe('Cookbook segments on a phone', () => {
-	test('All, Mine and Saved are each a 44px target', async ({ page }) => {
+// P2: below 768 one View button beside Collections and Tags holds Sort,
+// Grid | List, All · Mine · Saved and Select, in the pickers' sheet.
+test.describe('Cookbook View on a phone', () => {
+	test.beforeEach(async ({ page }) => {
 		await page.setViewportSize({ width: 390, height: 844 });
-		await page.goto('/cookbook');
-		for (const link of await page.getByRole('group', { name: 'Show' }).getByRole('link').all()) {
-			expect((await link.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+		await gotoHydrated(page, '/cookbook');
+	});
+
+	test('the rows are gone; View is a 44px square on the pickers’ row', async ({ page }) => {
+		await expect(page.getByRole('group', { name: 'Show' })).toHaveCount(0);
+		await expect(page.getByRole('combobox', { name: 'Sort' })).toBeHidden();
+		await expect(page.getByRole('button', { name: 'Select', exact: true })).toBeHidden();
+		const view = (await page.getByRole('button', { name: 'View', exact: true }).boundingBox())!;
+		const tags = (await page.getByRole('button', { name: 'Tags', exact: true }).boundingBox())!;
+		expect(view.width).toBe(44);
+		expect(view.height).toBe(44);
+		expect(view.y).toBe(tags.y);
+		expect(view.x + view.width).toBeLessThanOrEqual(390 - 16);
+	});
+
+	test('the sheet: All, Mine and Saved one row of 44px targets; a sort goes as a pill', async ({
+		page
+	}) => {
+		await page.getByRole('button', { name: 'View', exact: true }).click();
+		const boxes = await Promise.all(
+			(await page.getByRole('group', { name: 'Show', exact: true }).getByRole('link').all()).map(
+				async (link) => (await link.boundingBox())!
+			)
+		);
+		expect(boxes).toHaveLength(3);
+		for (const box of boxes) {
+			expect(box.height).toBeGreaterThanOrEqual(44);
+			expect(box.y).toBe(boxes[0].y);
 		}
+		await page.getByRole('menuitemradio', { name: 'Most cooked' }).click();
+		await expect(page).toHaveURL(/[?&]sort=most\b/);
+		await expect(page.getByRole('button', { name: 'View', exact: true })).toBeFocused();
+		await page.getByRole('link', { name: 'Remove Most cooked' }).click();
+		await expect(page).not.toHaveURL(/sort=/);
+	});
+
+	test('Select recipes from the sheet leaves the cards where they were', async ({ page }) => {
+		const card = page.locator('.recipe-card').first();
+		const before = (await card.boundingBox())!.y;
+		await page.getByRole('button', { name: 'View', exact: true }).click();
+		await page.getByRole('menuitem', { name: 'Select recipes' }).click();
+		await expect(page.getByRole('region', { name: 'Selection' })).toBeVisible();
+		expect((await card.boundingBox())!.y).toBe(before);
 	});
 });
 
