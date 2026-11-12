@@ -152,8 +152,8 @@ test.describe('Recipe page entry points', () => {
 		await page.locator('article', { hasText: logged.dish }).locator('.jsource a').click();
 
 		// Cooked once in the seed: the one-entry wording, no count.
-		await expect(page.locator('.personal')).toHaveText(/^\s*You cooked this on\s+Sun 8 Nov\s*$/);
-		await expect(page.getByRole('link', { name: 'Sun 8 Nov' })).toHaveAttribute(
+		await expect(page.locator('.personal')).toHaveText(/^\s*You cooked this on\s+Sun\s8\sNov\s*$/);
+		await expect(page.getByRole('link', { name: /^Sun\s8\sNov$/ })).toHaveAttribute(
 			'href',
 			/\/journal#entry-\d+/
 		);
