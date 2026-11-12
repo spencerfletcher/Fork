@@ -96,7 +96,6 @@ describe('signup action', () => {
 			status: 429,
 			data: { error: 'Could not create the account. Try again.', code: 'auth_failed' }
 		});
-		expect(result).not.toMatchObject({ data: { registered: true, code: 'auth_failed' } });
 	});
 
 	test('falls back to 500 when Supabase gives no status', async () => {
@@ -107,16 +106,32 @@ describe('signup action', () => {
 		expect(result).toMatchObject({ status: 500 });
 	});
 
-	test('an already registered email is flagged so the page can offer Log in', async () => {
-		signUp.mockResolvedValue({
-			data: { user: null },
-			error: { status: 422, message: 'User already registered' }
+	// A stranger must not learn whether an address has an account: a taken one
+	// gets the new one's next step, word for word, and makes no profile.
+	test('an already registered email ends exactly as a new one does', async () => {
+		const outcome = async (answer: unknown) => {
+			signUp.mockResolvedValue(answer);
+			const cookies = cookieJar();
+			const result = await invoke(
+				actions.default as never,
+				makeEvent(valid, '?redirectTo=%2Ffavorites', cookies)
+			);
+			return { result, remembered: cookies.set.mock.calls };
+		};
+		const fresh = await outcome({
+			data: { user: { id: 'user-1', identities: [{}] } },
+			error: null
 		});
-
-		const result = await invoke(actions.default as never, makeEvent(valid));
-
-		expect(result).toMatchObject({ status: 422, data: { registered: true } });
-		expect(ensureProfile).not.toHaveBeenCalled();
+		vi.clearAllMocks();
+		// With confirmations off Supabase says so; with them on it answers with an
+		// identity-less stand-in user.
+		for (const taken of [
+			{ data: { user: null }, error: { status: 422, message: 'User already registered' } },
+			{ data: { user: { id: 'stand-in', identities: [] } }, error: null }
+		]) {
+			expect(await outcome(taken)).toEqual(fresh);
+			expect(ensureProfile).not.toHaveBeenCalled();
+		}
 	});
 
 	test('creates a profile with the chosen username and redirects to the confirm-email page', async () => {

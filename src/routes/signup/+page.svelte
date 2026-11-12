@@ -16,7 +16,7 @@
 		form,
 		data
 	}: {
-		form: { error?: string; field?: 'username'; registered?: boolean } | null;
+		form: { error?: string; field?: 'username' } | null;
 		data: { redirectTo: string | null; email?: string | null };
 	} = $props();
 
@@ -76,9 +76,6 @@
 		{#if form?.error && !form.field}
 			<div class="auth-error" role="alert">
 				{form.error}
-				{#if form.registered}
-					<a class="inline-action" href={loginHref(data.redirectTo)}>Log in</a>
-				{/if}
 			</div>
 		{/if}
 
