@@ -19,7 +19,7 @@ Fork is a recipe cookbook for serious home cooks, live at recipes.spencerfletche
 4. Build the P1 cookbook: drafts, Trash, photo access by audience, collections, Keep this version, search quality, print, export.
 5. Settle the P1 design backlog and the open questions in the roadmap, one at a time.
 
-The [12 November UX review](../research/2026-11-12-ux-review.md) recommends a different emphasis for the next work: Journal recall at the next cook, an easy first recipe in an empty Cookbook, better featured recipes, then validation with full libraries and real meals. Its items are in the roadmap as **proposed**; whether they change this list is open question 2 there. Spencer has asked for a varied seed with many users as one of the next builds and approved fixing the cookie example's faults (ROADMAP P1).
+The [12 November UX review](../research/2026-11-12-ux-review.md) recommends a different emphasis for the next work: Journal recall at the next cook, an easy first recipe in an empty Cookbook, better featured recipes, then validation with full libraries and real meals. Its items are in the roadmap as **proposed**; whether they change this list is open question 2 there. Spencer has decided a varied seed of about 30 cooks for local and production, next after the cookie example's approved fix, with a production reseed (ROADMAP P1, §14).
 
 ## The set
 
