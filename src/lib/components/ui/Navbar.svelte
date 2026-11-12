@@ -3,7 +3,7 @@
 	import { enhance } from '$app/forms';
 	import type { Profile } from '#lib/server/db/schema.js';
 	import { DESTINATIONS, isCurrent } from './destinations.js';
-	import { searchIcon } from '#lib/components/Icons.svelte';
+	import { plusIcon, searchIcon } from '#lib/components/Icons.svelte';
 	import Avatar from '#lib/components/ui/Avatar.svelte';
 	import Dropdown from './Dropdown.svelte';
 	import { clearDrafts } from '#lib/drafts.js';
@@ -42,14 +42,22 @@
 			</div>
 
 			<div class="navbar-account flex min-w-0 shrink items-center gap-4 text-[0.875rem]">
-				<!-- Signed-in only, and from 768: the Cookbook header carries it on a
-			     phone. /recipes/new is behind the login wall. -->
+				<!-- Signed-in only (/recipes/new is behind the login wall): the words
+			     from 768, a + below it. Each is display:none at the other width, so
+			     one New recipe is ever in the accessibility tree. -->
 				{#if user}
 					<a
 						href="/recipes/new"
 						class="nav-cta hidden md:inline-block"
 						aria-current={current(path === '/recipes/new')}>
 						+ New recipe
+					</a>
+					<a
+						href="/recipes/new"
+						class="nav-plus md:hidden"
+						aria-label="New recipe"
+						aria-current={current(path === '/recipes/new')}>
+						<span>{@render plusIcon()}</span>
 					</a>
 				{/if}
 				<a
@@ -179,6 +187,35 @@
 	   Global, so it reaches every link in the bar. */
 	nav :global(:focus-visible) {
 		outline-color: var(--color-marigold);
+	}
+
+	/* A phone's New recipe: the marigold square, 32px, centred in a 44px
+	   target, as the avatar's disc is. */
+	.nav-plus {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 44px;
+		height: 44px;
+		border-radius: var(--radius-md);
+	}
+
+	.nav-plus span {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 32px;
+		height: 32px;
+		/* Transparent, as .nav-cta's: the box under forced colours. */
+		border: 1px solid transparent;
+		border-radius: var(--radius-md);
+		background: var(--color-marigold);
+		color: var(--color-text);
+		transition: background 0.15s ease;
+	}
+
+	.nav-plus:hover span {
+		background: var(--color-marigold-hover);
 	}
 
 	.nav-icon {
