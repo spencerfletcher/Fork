@@ -63,17 +63,11 @@
 		else if (target.closest('.current')) open = false;
 	}
 
-	// The header's "N versions" links here as #versions; landing opens the list.
-	// A second click on the same hash fires no hashchange, so it only scrolls.
-	function onHashChange() {
-		if (location.hash === '#versions') open = true;
-	}
-
 	const diff = (a: number, b: number) =>
 		`/recipes/${recipe.slug}/diff?from=${Math.min(a, b)}&to=${Math.max(a, b)}`;
 </script>
 
-<svelte:window onkeydown={onWindowKeydown} onhashchange={onHashChange} />
+<svelte:window onkeydown={onWindowKeydown} />
 
 <!-- The version bar: the hinge between the dish and the recipe, on lifted
      paper. One line names the version being read and its note; the
@@ -84,7 +78,6 @@
 {#if count > 1}
 	<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions (the toggle is the keyboard control) -->
 	<section
-		id="versions"
 		class="version-bar"
 		class:closed={!open}
 		aria-label="Version history"

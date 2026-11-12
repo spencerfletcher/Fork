@@ -4,7 +4,7 @@
 	import { plural } from '#lib/helpers.js';
 	import { dayLabel } from '#lib/journal.js';
 	import Details from './Details.svelte';
-	import { forkIcon, versionsIcon } from '#lib/components/Icons.svelte';
+	import { forkIcon } from '#lib/components/Icons.svelte';
 	import type { Recipe } from '#lib/server/db/schema.js';
 	import type { RecipeContent, TagChip } from '#lib/recipes/types.js';
 	import { sourceLabel } from '#lib/recipes/validation.js';
@@ -41,7 +41,6 @@
 		currentVersion,
 		storedServings,
 		forkCount,
-		versionCount,
 		tags,
 		actions,
 		journal = null,
@@ -54,8 +53,6 @@
 		storedServings?: number | null;
 		/** Forks the viewer can see: the public ones and their own. */
 		forkCount: number;
-		/** Every version of the recipe; the bar under the band lists them from two up. */
-		versionCount: number;
 		tags: TagChip[];
 		/** The action row (Cook, then Save and Fork or Edit), the last line of the header. */
 		actions?: Snippet;
@@ -64,7 +61,7 @@
 			lastEntry: { id: number; cookedOn: string; timesCooked: number } | null;
 			addHref: string;
 		} | null;
-		/** The forks and versions counts; off for a saver's kept copy, which has neither. */
+		/** The fork count; off for a saver's kept copy, which has neither. */
 		stats?: boolean;
 		/** The saver's own lines under the personal line: the version they keep, their note. */
 		saver?: Snippet;
@@ -145,9 +142,9 @@
 	{/if}
 
 	<!-- The stats row (Spencer, 31 October 2026: "I like the stats row 1b"):
-	     each count an icon and its words, no dots; the icons separate. A count
-	     links only where there is something to open: the forks list, and the
-	     version bar, which exists from two versions up. -->
+	     the fork count, an icon and its words, a link only when there are forks
+	     to open. The version count is the version bar's toggle alone (12 Nov
+	     2026: "cut from stats row"). -->
 	{#if stats}
 		<p class="stats font-sans">
 			<span class="stat">
@@ -156,14 +153,6 @@
 					<a class="hit-link" href="/recipes/{recipe.slug}/forks">{counted(forkCount, 'fork')}</a>
 				{:else}
 					{counted(forkCount, 'fork')}
-				{/if}
-			</span>
-			<span class="stat">
-				{@render versionsIcon()}
-				{#if versionCount > 1}
-					<a class="hit-link" href="#versions">{counted(versionCount, 'version')}</a>
-				{:else}
-					{counted(versionCount, 'version')}
 				{/if}
 			</span>
 		</p>
@@ -239,7 +228,7 @@
 		white-space: nowrap;
 	}
 
-	/* :global, because both icons come from Icons.svelte. */
+	/* :global, because the icon comes from Icons.svelte. */
 	.stat :global(svg) {
 		flex-shrink: 0;
 	}

@@ -33,7 +33,6 @@ function renderHeader(overrides: Partial<HeaderProps> = {}) {
 			recipe: makeRecipe(),
 			currentVersion: V1,
 			forkCount: 0,
-			versionCount: 1,
 			tags: [],
 			...overrides
 		}
@@ -248,22 +247,22 @@ describe('RecipeHeader byline', () => {
 // ─── The stats row ────────────────────────────────────────────────────────────
 
 describe('RecipeHeader stats row', () => {
-	// Spencer, 31 October 2026: "I like the stats row 1b". Forks and versions,
-	// each an icon and its words; the words carry the meaning, the icons are
-	// decoration. The save count moved onto the Save pill (9 Nov 2026).
+	// Spencer, 31 October 2026: "I like the stats row 1b": an icon and its
+	// words; the words carry the meaning, the icon is decoration. The save
+	// count moved onto the Save pill (9 Nov 2026); the version count left for
+	// the version bar's own toggle (12 Nov 2026: "cut from stats row").
 	const stats = (container: HTMLElement) =>
 		[...container.querySelectorAll('.stats > *')].map((el) =>
 			el.textContent!.replace(/\s+/g, ' ').trim()
 		);
 
-	test('reads forks then versions, under the tags: description, measure, tags, stats', () => {
+	test('reads the fork count alone, under the tags: description, measure, tags, stats', () => {
 		const { container } = renderHeader({
 			currentVersion: V3,
 			forkCount: 2,
-			versionCount: 3,
 			tags: [{ id: 1, name: 'Baking', slug: 'baking' }]
 		});
-		expect(stats(container)).toEqual(['2 forks', '3 versions']);
+		expect(stats(container)).toEqual(['2 forks']);
 		const order = ['.byline', '.description', '.details', '.tags', '.stats'].map((selector) =>
 			container.querySelector(selector)!
 		);
@@ -274,14 +273,20 @@ describe('RecipeHeader stats row', () => {
 		}
 	});
 
-	test('one of each is singular', () => {
-		const { container } = renderHeader({ forkCount: 1, versionCount: 1 });
-		expect(stats(container)).toEqual(['1 fork', '1 version']);
+	test('says nothing of versions: the version bar counts them', () => {
+		const { container } = renderHeader({ currentVersion: V3 });
+		expect(container.querySelector('.stats')!.textContent).not.toMatch(/version/i);
+		expect(container.querySelector('a[href="#versions"]')).toBeNull();
+	});
+
+	test('one is singular', () => {
+		const { container } = renderHeader({ forkCount: 1 });
+		expect(stats(container)).toEqual(['1 fork']);
 	});
 
 	test('none says so in words, and an empty count is not a link', () => {
-		const { container } = renderHeader({ forkCount: 0, versionCount: 1 });
-		expect(stats(container)).toEqual(['No forks', '1 version']);
+		const { container } = renderHeader({ forkCount: 0 });
+		expect(stats(container)).toEqual(['No forks']);
 		expect(container.querySelector('.stats a')).toBeNull();
 	});
 
@@ -293,45 +298,34 @@ describe('RecipeHeader stats row', () => {
 		);
 	});
 
-	test('the version count links to the version bar, which only exists with two or more', () => {
-		renderHeader({ versionCount: 3 });
-		expect(screen.getByRole('link', { name: '3 versions' })).toHaveAttribute('href', '#versions');
-	});
-
 	test('says nothing of saves or favorites: the count is on the Save pill', () => {
-		const { container } = renderHeader({ forkCount: 2, versionCount: 3 });
+		const { container } = renderHeader({ forkCount: 2 });
 		expect(container.querySelector('.stats')!.textContent).not.toMatch(/save|favorite/i);
 	});
 
-	test('each item carries a 16px icon hidden from assistive tech', () => {
-		const { container } = renderHeader({ forkCount: 2, versionCount: 3 });
+	test('the count carries a 16px icon hidden from assistive tech', () => {
+		const { container } = renderHeader({ forkCount: 2 });
 		const icons = container.querySelectorAll('.stats svg');
-		expect(icons).toHaveLength(2);
+		expect(icons).toHaveLength(1);
 		for (const icon of icons) {
 			expect(icon).toHaveAttribute('aria-hidden', 'true');
 			expect(icon).toHaveClass('size-4');
 		}
 	});
 
-	// Line art in one 1.5 stroke on a 16px box (decided 9 November 2026): the
-	// fork a handle and four single-stroke prongs, versions a stack of pages.
-	test('the icons are line art: one 1.5 stroke, no dots or fills, and distinct', () => {
-		const { container } = renderHeader({ forkCount: 2, versionCount: 3 });
-		const [fork, versions] = container.querySelectorAll('.stats svg');
-		for (const icon of [fork, versions]) {
-			expect(icon).toHaveAttribute('viewBox', '0 0 16 16');
-			expect(icon).toHaveAttribute('stroke-width', '1.5');
-			expect(icon).toHaveAttribute('fill', 'none');
-			expect(icon.querySelectorAll('circle, [fill]:not(svg)')).toHaveLength(0);
-		}
-		const d = (icon: Element) => [...icon.querySelectorAll('path')].map((p) => p.getAttribute('d'));
-		// Versions is straight strokes only.
-		for (const path of d(versions)) expect(path).toMatch(/^[MmHhVv\d.\s-]+$/);
+	// Line art in one 1.5 stroke on a 16px box (decided 9 November 2026).
+	test('the fork icon is line art: one 1.5 stroke, no dots or fills', () => {
+		const { container } = renderHeader({ forkCount: 2 });
+		const fork = container.querySelector('.stats svg')!;
+		expect(fork).toHaveAttribute('viewBox', '0 0 16 16');
+		expect(fork).toHaveAttribute('stroke-width', '1.5');
+		expect(fork).toHaveAttribute('fill', 'none');
+		expect(fork.querySelectorAll('circle, [fill]:not(svg)')).toHaveLength(0);
+		const d = [...fork.querySelectorAll('path')].map((p) => p.getAttribute('d')).join(' ');
 		// The fork (1A): the outer tines and their round shoulder as one stroke,
 		// the middle tine running on as the handle as the other.
-		expect(d(fork).join(' ').match(/M/g)).toHaveLength(2);
-		expect(d(fork).join(' ').match(/a/g)).toHaveLength(1);
-		expect(d(versions)).not.toEqual(d(fork));
+		expect(d.match(/M/g)).toHaveLength(2);
+		expect(d.match(/a/g)).toHaveLength(1);
 	});
 
 	test('the row takes the byline size, so the header keeps one metadata size', () => {

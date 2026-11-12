@@ -102,19 +102,13 @@ test.describe('Recipe detail page', () => {
 		);
 	});
 
-	test('the stats row counts forks and versions; the fork count opens the list of forks', async ({
-		page
-	}) => {
+	test('the stats row counts forks; the fork count opens the list of forks', async ({ page }) => {
 		await openCookies(page);
 		const stats = page.locator('.recipe-header .stats');
-		await expect(stats).toHaveText(/^\s*1 fork\s*3 versions\s*$/);
+		await expect(stats).toHaveText(/^\s*1 fork\s*$/);
 		await expect(page.locator('.byline')).not.toContainText('fork');
-		// The version count opens the bar's list.
-		await stats.getByRole('link', { name: '3 versions' }).click();
-		await expect(page.getByRole('button', { name: '3 versions' })).toHaveAttribute(
-			'aria-expanded',
-			'true'
-		);
+		// The versions are counted once, on the version bar's toggle.
+		await expect(page.getByRole('button', { name: '3 versions' })).toBeVisible();
 		await stats.getByRole('link', { name: '1 fork' }).click();
 		await expect(page).toHaveURL(/\/recipes\/[^/]+\/forks$/);
 		await expect(page.getByRole('heading', { level: 1 })).toContainText(`Forks of ${COOKIES}`);

@@ -11,7 +11,6 @@
 		likeIcon,
 		moreIcon,
 		forkIcon,
-		versionsIcon,
 		saveIcon,
 		journalIcon,
 		chevronIcon,
@@ -132,19 +131,6 @@
 
 <!-- Versions: a stack of pages, three offset strokes. Horizontal where the
      fork is vertical, so the two never read as one another. -->
-{#snippet versionsIcon()}
-	<svg
-		class="size-4"
-		viewBox="0 0 16 16"
-		aria-hidden="true"
-		fill="none"
-		stroke="currentColor"
-		stroke-width="1.5"
-		stroke-linecap="round">
-		<path d="M2 4h8M4 8h8M6 12h8" />
-	</svg>
-{/snippet}
-
 <!-- Save's bookmark: an outline, filled marigold while saved. -->
 {#snippet saveIcon(filled: boolean)}
 	<svg

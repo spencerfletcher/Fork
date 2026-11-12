@@ -203,7 +203,6 @@
 						currentVersion={{ ...currentVersion, servings: stored > 0 ? serves : null }}
 						storedServings={stored}
 						forkCount={data.forkCount}
-						versionCount={allVersions.length}
 						{tags}
 						journal={data.journal}
 						stats={!data.keptCopy}>
