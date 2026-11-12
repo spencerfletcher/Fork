@@ -86,6 +86,23 @@ describe('TabBar', () => {
 		expect(hover).toMatch(/background:\s*var\(--color-band\)/);
 	});
 
+	// At a large text size the four labels ran into each other ("CookbookDiscover").
+	test('a label never outgrows its tab: 0.75rem up to 16px, then an ellipsis as a last resort', () => {
+		expect(cssRule(source, '.tab-bar')).toMatch(
+			/grid-template-columns:\s*repeat\(4, minmax\(0, 1fr\)\)/
+		);
+		const label = cssRule(source, '.tab-label');
+		expect(label).toMatch(/font-size:\s*min\(0\.75rem, 16px\)/);
+		expect(label).toMatch(/max-width:\s*100%/);
+		expect(label).toMatch(/overflow:\s*hidden/);
+		expect(label).toMatch(/text-overflow:\s*ellipsis/);
+		expect(label).toMatch(/white-space:\s*nowrap/);
+		render(TabBar);
+		expect(
+			screen.getByRole('link', { name: 'Cookbook' }).querySelector('.tab-label')
+		).toHaveTextContent('Cookbook');
+	});
+
 	test('below 768 only', () => {
 		expect(source).toMatch(/@media \(min-width: 768px\)\s*\{\s*\.tab-bar\s*\{\s*display:\s*none/);
 	});

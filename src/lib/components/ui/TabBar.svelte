@@ -53,7 +53,7 @@
 						{/if}
 					</svg>
 				{/if}
-				{destination.label}
+				<span class="tab-label">{destination.label}</span>
 			</a>
 		{/each}
 	</nav>
@@ -70,7 +70,8 @@
 		left: 0;
 		z-index: 40;
 		display: grid;
-		grid-template-columns: repeat(4, 1fr);
+		/* minmax(0, …): a long label never widens its tab past a quarter. */
+		grid-template-columns: repeat(4, minmax(0, 1fr));
 		padding-bottom: env(safe-area-inset-bottom);
 		border-top: 1px solid var(--color-border-2);
 		background: var(--color-bg);
@@ -103,6 +104,17 @@
 		font-weight: 600;
 		line-height: 1.2;
 		color: var(--color-text-2);
+	}
+
+	/* The label follows the text size up to 16px, which "Cookbook" fits in a
+	   quarter of a 320px screen; past that it ellipsises rather than run into
+	   the next tab's. */
+	.tab-label {
+		max-width: 100%;
+		overflow: hidden;
+		font-size: min(0.75rem, 16px);
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 
 	.tab-bar a:hover {
