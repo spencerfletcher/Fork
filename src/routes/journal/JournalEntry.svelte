@@ -238,7 +238,6 @@
 	}
 
 	.lock-note :is(.arrow-link, .text-btn) {
-		margin-left: 4px;
 		white-space: nowrap;
 		font-weight: 600;
 	}

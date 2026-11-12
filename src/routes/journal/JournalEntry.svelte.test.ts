@@ -4,6 +4,8 @@ import { render, screen } from '@testing-library/svelte';
 import { tick, type ComponentProps } from 'svelte';
 import type { SubmitFunction } from '$app/forms';
 import JournalEntry from './JournalEntry.svelte';
+import source from './JournalEntry.svelte?raw';
+import { cssRule } from '#lib/testing/css.js';
 import { PRIVATE_RECIPE_HINT } from '#lib/journal.js';
 
 // Fork's enhance callback is captured so a test can play back a result.
@@ -143,5 +145,11 @@ describe('JournalEntry', () => {
 		expect(link).toHaveAttribute('href', url);
 		expect(link.closest('p')).toHaveTextContent(/^from seriouseats\.com$/);
 		expect(screen.queryByText('Improvised')).toBeNull();
+	});
+
+	// The space in the markup is the gap after the note; a margin as well
+	// would push a link that wraps to its own line in from the note's edge.
+	test("the note's link starts flush with the note when it wraps", () => {
+		expect(cssRule(source, '.lock-note :is(.arrow-link, .text-btn)')).not.toContain('margin-left');
 	});
 });
