@@ -184,25 +184,29 @@ describe('measurement action', () => {
 });
 
 describe('notifications action', () => {
-	const muting = (muted: string[], user: typeof ME | null = ME) =>
+	// A ticked box is a kind the cook hears; a native form posts only those.
+	const muting = (heard: string[], user: typeof ME | null = ME) =>
 		invokeAction(
 			actions.notifications as never,
-			formEvent({ fields: { muted }, locals: { user } })
+			formEvent({ fields: { heard }, locals: { user } })
 		);
 
-	test("stores the muted kinds, once each in the list's order, on the signed-in profile only", async () => {
-		const [first, second] = NOTIFICATION_KINDS;
+	test("stores the kinds left unticked as muted, in the list's order, on the signed-in profile only", async () => {
+		const [first, second, ...rest] = NOTIFICATION_KINDS;
 		const update = nextUpdate();
-		const result = await muting([second, first, second]);
+		const result = await muting([...rest].reverse().concat(rest[0]));
 		expect(update.set).toHaveBeenCalledWith({ mutedNotifications: [first, second] });
 		expect(update.where).toHaveBeenCalledWith(eq(profiles.id, 'me-1'));
 		expect(result).toEqual({ section: 'notifications', saved: true });
 	});
 
-	test('nothing ticked mutes nothing', async () => {
+	test('every kind ticked mutes nothing; none ticked mutes every kind', async () => {
 		const update = nextUpdate();
-		await muting([]);
+		await muting([...NOTIFICATION_KINDS]);
 		expect(update.set).toHaveBeenCalledWith({ mutedNotifications: [] });
+		const again = nextUpdate();
+		await muting([]);
+		expect(again.set).toHaveBeenCalledWith({ mutedNotifications: [...NOTIFICATION_KINDS] });
 	});
 
 	test('refuses a kind that is not one, nothing written', async () => {

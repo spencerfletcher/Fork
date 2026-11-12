@@ -90,18 +90,19 @@ export const actions: Actions = {
 		return saved('measurement');
 	},
 
-	// The kinds ticked to mute, one `muted` field each; none ticked hears every kind.
+	// The kinds ticked to hear, one `heard` field each, so a native form posts
+	// them; every kind left unticked is muted.
 	notifications: async ({ request, locals: { user } }) => {
 		if (!user) return signedOut('save again', { section: 'notifications' });
-		const ticked = (await request.formData()).getAll('muted');
+		const ticked = (await request.formData()).getAll('heard');
 		if (
 			!ticked.every((v): v is string => typeof v === 'string' && !!oneOf(NOTIFICATION_KINDS, v))
 		) {
-			return failure(400, 'invalid', 'Choose which notifications to mute.', {
+			return failure(400, 'invalid', 'Choose which notifications to hear about.', {
 				section: 'notifications'
 			});
 		}
-		const mutedNotifications = mutedKinds(ticked);
+		const mutedNotifications = NOTIFICATION_KINDS.filter((kind) => !ticked.includes(kind));
 		await db.update(profiles).set({ mutedNotifications }).where(eq(profiles.id, user.id));
 		return saved('notifications');
 	},
