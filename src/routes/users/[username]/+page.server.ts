@@ -50,7 +50,8 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 	const commitCount = commitResult[0]?.commitCount ?? 0;
 
 	return {
-		profile,
+		// What the page shows, picked: the row also holds the cook's settings.
+		profile: { id: profile.id, username: profile.username, createdAt: profile.createdAt },
 		recipes: cards,
 		next,
 		total,
