@@ -305,7 +305,7 @@
 			{@const tag = allTags.find((t) => t.slug === slug)}
 			<a
 				href={toggledHref(slug)}
-				class="tag hit-link picker-pill"
+				class="tag picker-pill"
 				aria-label="Remove {tag?.name ?? slug}"
 				onclick={(e) => dropTag(e, slug)}>
 				{tag?.name ?? slug}
@@ -491,6 +491,7 @@
 	}
 
 	.picker-pill {
+		position: relative;
 		display: inline-flex;
 		align-items: center;
 		gap: 6px;
@@ -540,6 +541,14 @@
 
 		.picker-show {
 			width: 100%;
+		}
+
+		/* The 24px pill reaches 44px for a finger, into the row gaps around it
+		   and not the layout (a hit-link's negative margin pulled it up). */
+		.picker-pill::after {
+			content: '';
+			position: absolute;
+			inset: -10px 0;
 		}
 	}
 </style>
