@@ -370,6 +370,21 @@ describe('save', () => {
 		expect(set).not.toHaveProperty('title');
 	});
 
+	test('tags alone: synced, editRevision bumped, updatedAt left where it was', async () => {
+		await save({ ...UNCHANGED, tags: ['Dessert'] });
+		expect(tx.insert).not.toHaveBeenCalled();
+		expect(syncTagsMock).toHaveBeenCalledWith(tx, 1, ['Dessert']);
+		expect(tx.update).toHaveBeenCalledTimes(1);
+		const set = tx.updateChain.set.mock.calls[0][0];
+		expect(set).toMatchObject({ editRevision: expect.anything() });
+		expect(set).not.toHaveProperty('updatedAt');
+	});
+
+	test('a message with only a tag change is a version: updatedAt moves', async () => {
+		await save({ ...UNCHANGED, tags: ['Dessert'], commitMessage: 'Tagged' });
+		expect(tx.updateChain.set.mock.calls[0][0]).toMatchObject({ updatedAt: expect.any(Date) });
+	});
+
 	test("going private grants the savers' kept copies first, from the audience it had, in the save's transaction", async () => {
 		await save({ ...UNCHANGED, visibility: 'private' });
 		expect(grantMock).toHaveBeenCalledWith(tx, {
