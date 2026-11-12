@@ -15,8 +15,12 @@ const cache = globalThis as typeof globalThis & { forkDbClient?: Client };
 
 function connect(): Client {
 	// Idle connections close after 20s, so a quiet dev server holds none.
+	// Supabase's session pooler gives the whole project 15 connections, and a
+	// frozen serverless instance keeps the ones it holds: at 10 each, two
+	// instances shut out every other request. Two each lets seven run.
+	const pooled = DATABASE_URL.includes('pooler.supabase.com');
 	const created = postgres(DATABASE_URL, {
-		max: DB_POOL_MAX ?? 10,
+		max: DB_POOL_MAX ?? (pooled ? 2 : 10),
 		idle_timeout: 20
 	});
 	// On shutdown, let running queries finish (up to 5s), then hand the
