@@ -116,7 +116,7 @@
 			<p class="empty">
 				{#if filtered}
 					No recipes match. Try another search or fewer filters.
-					<a class="inline-action" href="?">Clear filters</a>
+					<a class="inline-action hit-link" href="?">Clear filters</a>
 				{:else}
 					No recipes yet.
 				{/if}
@@ -296,10 +296,5 @@
 
 	.empty {
 		color: var(--color-text-3);
-	}
-
-	.empty a {
-		display: inline-block;
-		padding-block: 10px;
 	}
 </style>

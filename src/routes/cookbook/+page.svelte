@@ -261,7 +261,7 @@
 					<div class="cookbook-none">
 						{#if data.searchQuery}
 							<h2>No recipes match “{data.searchQuery}”.</h2>
-							<a class="inline-action" href={filterHref(data.filter, ['q'])}>Clear search</a>
+							<a class="inline-action hit-link" href={filterHref(data.filter, ['q'])}>Clear search</a>
 						{:else}
 							<!-- The pills, the picker and the segments undo each filter. -->
 							<h2>No recipes match these filters.</h2>
@@ -649,10 +649,10 @@
 		font-size: 1.375rem;
 	}
 
+	/* The words 28px under the heading; .hit-link's padding reaches the hit. */
 	.cookbook-none a {
 		display: inline-block;
-		margin-top: 18px;
-		padding-block: 10px;
+		margin-top: calc(28px - var(--hit));
 		font-weight: 600;
 	}
 </style>
