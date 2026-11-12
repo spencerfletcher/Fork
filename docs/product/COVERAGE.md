@@ -2,7 +2,7 @@
 
 Working file. Proves that every section, table row and bullet-level item in the sources landed in the current set. Destinations: RD README.md, RM ROADMAP.md, CO COMPETITIVE.md, BU BUSINESS.md, DE DESIGN-DIRECTION.md, IN INVENTORY.md; "§n" is the numbered section, "P0" to "P5" a phase table in RM §4. Status: **placed**; **superseded** (also in RM §16, item number given; the replacement is placed); **removed with approval** (removed from the set with Spencer's approval on 11 Nov 2026; recorded in RM §16, line given). Source-register tables (lists of citations) are one row each.
 
-Sources: R [roadmap report](../research/2026-11-08-product-roadmap/README.md); CM [cookbook market](../research/2026-11-08-product-roadmap/cookbook_market.md); AQ [advanced and quality](../research/2026-11-08-product-roadmap/advanced_and_quality.md); PA [product audit](../research/2026-11-08-product-roadmap/current_product_audit.md); DD [deep dive](../research/2026-11-09-cookbook-app-deep-dive/README.md); S1 [design and solo business](../research/2026-11-10-design-and-solo-business.md); S2 [finished product and revenue](../research/2026-11-10-finished-product-and-revenue.md); SL [social launch](../research/2026-11-08-social-launch/social_launch.md); US [US copyright](../research/2026-11-08-social-launch/us_copyright.md); CA [Canada copyright](../research/2026-11-08-social-launch/canada_copyright.md); Z [Zed reference](../research/2026-11-09-zed-design-reference/README.md); UX [UX review, 12 Nov](../research/2026-11-12-ux-review.md).
+Sources: R [roadmap report](../research/2026-11-08-product-roadmap/README.md); CM [cookbook market](../research/2026-11-08-product-roadmap/cookbook_market.md); AQ [advanced and quality](../research/2026-11-08-product-roadmap/advanced_and_quality.md); PA [product audit](../research/2026-11-08-product-roadmap/current_product_audit.md); DD [deep dive](../research/2026-11-09-cookbook-app-deep-dive/README.md); S1 [design and solo business](../research/2026-11-10-design-and-solo-business.md); S2 [finished product and revenue](../research/2026-11-10-finished-product-and-revenue.md); SL [social launch](../research/2026-11-08-social-launch/social_launch.md); US [US copyright](../research/2026-11-08-social-launch/us_copyright.md); CA [Canada copyright](../research/2026-11-08-social-launch/canada_copyright.md); Z [Zed reference](../research/2026-11-09-zed-design-reference/README.md); CD [cookbook design research, 8 Nov](../research/2026-11-08-cookbook-design-research/README.md), its README only, folded 12 Nov; UX [UX review, 12 Nov](../research/2026-11-12-ux-review.md).
 
 ## R: product roadmap report
 
@@ -701,6 +701,18 @@ Sources: R [roadmap report](../research/2026-11-08-product-roadmap/README.md); C
 | Z24 | Relationship to approved direction | DE identity | placed |
 | Z25 | Limits | DE From the Zed reference | placed |
 
+## CD: cookbook design research, 8 Nov 2026 (README)
+
+Folded on 12 Nov 2026; its identity and reference sections had already reached the set through S1, Z and DS, so only the forward items are rows.
+
+| # | Source item | Destination | Status |
+| --- | --- | --- | --- |
+| CD1 | Now: Cook keeps the hero, Fork outweighs Cook, history targets vanish in Cook | RM §6 Cook-mode distinction (closed 11 Nov) | superseded by the Cook redesign |
+| CD2 | Now: live homepage differs from local; a contrast pair below threshold | RM §16.23 (homepage); DE Accent roles (contrast checked per screen) | superseded in part (RM §16.23) |
+| CD3 | P0 to P5 rows of its friction table | RM §4 gates of P0, P1, P2 and P3 to P5 (same contracts) | placed |
+| CD4 | Draft design contract | DE Identity, Working contract | placed |
+| CD5 | Two learning tracks: formative usability with non-friends, then the friends pilot | RM §10 Formative usability track | placed |
+
 ## UX: UX review, 12 Nov 2026
 
 Every row is a recommendation; "proposed" in RM marks it undecided (RM §3).
@@ -725,9 +737,9 @@ Every row is a recommendation; "proposed" in RM marks it undecided (RM §3).
 
 Each table row above counts as one item, except rows that name a range (for example "R204 to R226", "DD15 to DD25"), which count as the number of items in the range; source-register rows count as one.
 
-- Items in the sources: 952 (R 308, CM 90, AQ 132, PA 56, DD 160, S1 52, S2 43, SL 47, US 13, CA 13, Z 25, UX 13), counted from the row numbers above.
-- Items placed in the current set: 947. This includes 26 rows marked superseded in whole or part (R8, R17, R37, R52, R56, R58, R61, R62, R64, R68, R80, R81, R97, R100, R103, R230, R238, CM38, CM40, CM47, CM61, AQ15, AQ44, PA29, SL1, SL7), plus superseded notes inside R204 to R226 (M4, M17, M20), PA3 to PA21 (visibility), S1-27 and S2-25 (purchased core); each is placed through its replacement.
-- Items removed with approval: 5 rows (R4, R201, PA1, S1-5, S2-12), RM §16 lines 23 to 27; line 24 comes from the design summary, which stays current and is not a reconciled source. Placed 947 plus removed 5 is 952.
+- Items in the sources: 957 (R 308, CM 90, AQ 132, PA 56, DD 160, S1 52, S2 43, SL 47, US 13, CA 13, Z 25, CD 5, UX 13), counted from the row numbers above.
+- Items placed in the current set: 952. This includes 28 rows marked superseded in whole or part (CD1, CD2, R8, R17, R37, R52, R56, R58, R61, R62, R64, R68, R80, R81, R97, R100, R103, R230, R238, CM38, CM40, CM47, CM61, AQ15, AQ44, PA29, SL1, SL7), plus superseded notes inside R204 to R226 (M4, M17, M20), PA3 to PA21 (visibility), S1-27 and S2-25 (purchased core); each is placed through its replacement.
+- Items removed with approval: 5 rows (R4, R201, PA1, S1-5, S2-12), RM §16 lines 23 to 27; line 24 comes from the design summary, which stays current and is not a reconciled source. Placed 952 plus removed 5 is 957.
 - Lines in RM §16: 29, of which 24 are dropped as superseded (several rows above share one line; lines 12, 15 and 17 replace wording in R254, R253 and the design summary) and 5 are removals with approval (lines 23 to 27).
 - Items kept with removal proposed: 0.
 - Unplaced: 0.
@@ -738,3 +750,4 @@ Each table row above counts as one item, except rows that name a range (for exam
 - 2026-11-11: five kept-with-removal-proposed rows now removed with approval (RM §16.23, 25 to 27); counts updated.
 - 2026-11-11: rows moved by Spencer's 11 Nov answers (RM §14): migration importer to P2 (R64, CM47 superseded, RM §16.28), purchased core superseded (RM §16.29), search and drafts rows point at §14; §15 references updated; counts updated.
 - 2026-11-12: UX section added (U1 to U13, the 12 Nov UX review); counts updated.
+- 2026-11-12: CD section added (the 8 Nov cookbook design research README); counts updated.

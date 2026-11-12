@@ -6,6 +6,8 @@ The identity Fork keeps, what "excellent" means for it, and the refinements stil
 
 A warm annotated cookbook with the precision of a great productivity app: cream paper, espresso structure, clay as the only text accent, marigold as the single fill, Bitter for titles and dish names, Source Sans 3 for reading, forms and explanations, JetBrains Mono only for identifiers (handles, version ids, diffs). No shadows at rest, no gradients or glass. Photography leads Cookbook and Discover; the working recipe leads Cook. Saved state and audience are always said in words. No wholesale rebrand or replacement font; recipe detail is the strongest expression of the direction. Font or palette replacement would be a separate decision (S1, S2, Z, DS).
 
+Working contract (CD): food leads discovery; the working recipe leads Cook; controls stay predictable; emphasis has consistent meaning; quantities and source survive every view; saved state is truthful; recovery limits are clear; audience is explicit. A proposal to change the baseline names the observed problem, compares alternatives with equal content and shows the improvement.
+
 Preserved decisions: desktop ingredient and method columns; the editable servings control near Ingredients without ×2 and ÷2 clutter; phone Ingredients and Method switching; progressively disclosed history; no equal-weight Recipe, History and Forks tabs (R).
 
 ## Quality ambition
@@ -78,3 +80,4 @@ Settle during implementation (Z): keep Bitter, improving scale, weight and spaci
 - 2026-11-11: removed the numeric quality score; quality stays described as observed behaviour (RM §16.25).
 - 2026-11-12: the 12 Nov UX review's page refinements added to Metadata, Discover, Cookbook, Recipe detail and Journal, marked UX and proposed.
 - 2026-11-12: statuses rechecked against git: phone fixes landed, cook-mode distinction closed, L05 kept position and settings built, drafts built.
+- 2026-11-12: the 8 Nov cookbook design research's working contract added under Identity (CD).

@@ -1,3 +1,5 @@
+> Folded into [docs/product](../../product/README.md) on 12 November 2026 (source key CD in the roadmap). Kept as the research record.
+
 # Guide Fork with cookbook design research
 
 **Design direction for serious home cooks · 8 November 2026**
