@@ -35,18 +35,21 @@ A deliberate split in the schema supports this: the recipe's _settings_ (photo, 
 | Versioning | Version history per recipe, optional commit messages (generated when blank), version-to-version compare including title, servings and times |
 | Editing | Ingredients and steps are typed as plain text, one ingredient per line and one step per paragraph, and parsed into structure on save; lines that don't parse are kept as written |
 | Diffing | Ingredient and step diffs with word-level inline highlighting |
-| Forking | Fork any public recipe, lineage via `parent_id`, fork counts, attribution on the recipe page |
-| Recipes | Create, edit, image upload to Supabase Storage, public/private visibility |
-| Discovery | Postgres full-text search (`tsvector` + GIN) ranked with ingredient matching, tag pages, tag filtering |
-| Social | Favorites, user profile pages with public recipes and a commit count |
-| Auth | Email/password via Supabase Auth, SSR session handling, auth-gated routes and actions |
-| Utility | Gram weights shown beside ingredients from a local density and per-item table; whole-item weights are marked as estimates |
+| Forking | Fork any recipe you can open, from any version; lineage via `parent_id` and `parent_version`; a fork starts Only me and never widens its source's audience; fork counts and attribution naming the copied version |
+| Recipes | Create, edit, image upload to Supabase Storage with location metadata stripped, three audiences (Only me, Friends, Public) under one access rule, restore an old version as a new one, print, on-device drafts |
+| Discovery | Discover (lead card, Recent changes, friends, person and tag filters), search over every version's text through GIN indexes on SQL functions (`drizzle/0019_search-functions.sql`) with matches explained, tag pages, tag filtering |
+| Cookbook | All, Mine and Saved; collections; Keep this version and read-only kept copies; grid and list, sort, select mode with bulk actions; Trash for 30 days; JSON and Markdown export |
+| Journal | Log entries with dish, date, optional recipe and version, scale, photo, private next-time note and audience; likes; a last-12-months summary |
+| Social | Friendships with requests, unfriend, block and mute; the Friends feed; Save with counts; in-app notifications; profile pages with recipes and a change count |
+| Safety | Report a cook (Friends ⋯) and `/report`, which needs no account; moderator hide and restore with `/moderation`, rate limits on writes |
+| Auth | Email/password via Supabase Auth with a confirmation page, SSR session handling, auth-gated routes and actions; Settings (username change, default audience, measurement, notifications, delete account) |
+| Utility | Gram weights shown beside ingredients from a local density and per-item table, whole-item weights marked as estimates; metric or US display; scaling by servings, Makes or a multiplier |
 
 ## Not built
 
 Listed here so the [roadmap](docs/product/ROADMAP.md) isn't mistaken for the feature set. None of this exists in the codebase:
 
-pull requests / recipe suggestions · merging · multi-hop lineage graphs · comments · following · ratings · macros and price estimation · pantry search · any AI feature
+pull requests / recipe suggestions · merging · multi-hop lineage graphs · comments · one-way following (friendships exist) · ratings · macros and price estimation · pantry search · any AI feature
 
 ## Stack
 
