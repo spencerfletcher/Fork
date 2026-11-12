@@ -116,6 +116,17 @@ describe('Cookbook picker', () => {
 		expect(within(menu()).queryByRole('menuitemradio', { name: /All collections/ })).toBeNull();
 	});
 
+	test('while typing, a polite status says how many of each the find box left', async () => {
+		makePicker();
+		await fireEvent.click(trigger(/^Tags$/));
+		const status = screen.getByRole('status');
+		expect(status).toHaveTextContent(/^$/);
+		await fireEvent.input(findBox(), { target: { value: 'ba' } });
+		expect(status).toHaveTextContent(`${plural(1, 'collection')}, ${plural(1, 'tag')}`);
+		await fireEvent.input(findBox(), { target: { value: 'bakng' } });
+		expect(status).toHaveTextContent(`${plural(0, 'collection')}, ${plural(0, 'tag')}`);
+	});
+
 	test('while typing, a group with no match shows no heading', async () => {
 		makePicker();
 		await fireEvent.click(trigger(/^Tags$/));

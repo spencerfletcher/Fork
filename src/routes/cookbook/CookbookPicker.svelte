@@ -73,6 +73,9 @@
 			typed ? (g === 'collections' ? shownCollections : shownTags).length > 0 : g === first
 		)
 	);
+	const matches = $derived(
+		`${plural(shownCollections.length, 'collection')}, ${plural(shownTags.length, 'tag')}`
+	);
 	const nothingFound = $derived(!!typed && shownCollections.length + shownTags.length === 0);
 
 	// Opened from one button with the panel already up, the panel turns to it,
@@ -258,6 +261,10 @@
 						</div>
 					{/each}
 				</div>
+				<!-- Said to a screen reader as the find box narrows, as ResultStatus says a list's count. -->
+				<p class="sr-only" role="status">
+					{#if typed}{matches}{/if}
+				</p>
 				{#if nothingFound}
 					<p class="picker-none">No collection or tag called “{query.trim()}”.</p>
 				{/if}
