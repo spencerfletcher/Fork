@@ -32,23 +32,16 @@ import {
 import { keptVersionsOf } from './keptCopies.js';
 import { numberMessages, type Result } from '#lib/recipes/validation.js';
 import { oneOf, text, wholeNumber } from '#lib/helpers.js';
-import { day, MAX_LINK, MOST_COOKED, sourceHref, summaryMonths } from '#lib/journal.js';
-
-export const MAX_DISH = 200;
-export const MAX_ENTRY_TEXT = 2000;
-
-/** What the Add to Journal form says, in the editor's voice. */
-export const ENTRY_MESSAGES = {
-	dishRequired: 'Dish is required',
-	dishTooLong: `Dish is too long (${MAX_DISH} characters max)`,
-	dateRequired: 'Date is required',
-	dateInvalid: 'Date must be a real date',
-	captionTooLong: `Caption is too long (${MAX_ENTRY_TEXT.toLocaleString('en-US')} characters max)`,
-	noteTooLong: `Note is too long (${MAX_ENTRY_TEXT.toLocaleString('en-US')} characters max)`,
-	recipeUnavailable: "That recipe isn't available. Choose another, or leave it out.",
-	linkInvalid: 'Link must be a web address starting with http:// or https://',
-	linkTooLong: `Link is too long (${MAX_LINK.toLocaleString('en-US')} characters max)`
-} as const;
+import {
+	day,
+	ENTRY_MESSAGES,
+	MAX_DISH,
+	MAX_ENTRY_TEXT,
+	MAX_LINK,
+	MOST_COOKED,
+	sourceHref,
+	summaryMonths
+} from '#lib/journal.js';
 
 export type EntryFields = {
 	dish: string;

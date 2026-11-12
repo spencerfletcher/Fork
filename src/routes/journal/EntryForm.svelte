@@ -5,10 +5,13 @@
 	import PhotoField from '#lib/components/recipes/PhotoField.svelte';
 	import FormActions from '#lib/components/ui/FormActions.svelte';
 	import ChoiceGroup from '#lib/components/ui/ChoiceGroup.svelte';
+	import FieldError from '#lib/components/ui/FieldError.svelte';
+	import { fieldErrors } from '#lib/recipes/fieldErrors.svelte.js';
 	import { audienceIcon, lockIcon } from '#lib/components/Icons.svelte';
 	import { AUDIENCE_LABEL } from '#lib/audience.js';
 	import {
 		AUDIENCE_SENTENCE,
+		ENTRY_MESSAGES,
 		KEEP_SOURCE,
 		MAX_LINK,
 		PRIVATE_RECIPE_HINT,
@@ -59,6 +62,14 @@
 	let removeImage = $state(false);
 	let chosen = $state(false);
 	const saving = pendingEnhance({ reset: false });
+	// Inline errors in the server's wording, as the recipe editor has them; a
+	// refused save still says its message above the form.
+	const fields = fieldErrors(null, undefined, {
+		dish: ENTRY_MESSAGES.dishRequired,
+		cookedOn: ENTRY_MESSAGES.dateRequired,
+		link: ENTRY_MESSAGES.linkInvalid
+	});
+	const { errors, aria } = fields;
 
 	onMount(() => {
 		if (useLocalToday) cookedOn = localToday();
@@ -128,7 +139,10 @@
 	method="POST"
 	{action}
 	enctype="multipart/form-data"
-	use:enhance={saving.submit}>
+	use:enhance={saving.submit}
+	onfocusout={fields.onfocusout}
+	oninvalidcapture={fields.onInvalid}
+	oninput={fields.oninput}>
 	{#if error}
 		<p class="form-error" role="alert">{error}</p>
 	{/if}
@@ -137,7 +151,15 @@
 		<label for="dish">
 			Dish <span class="field-required" aria-hidden="true">Required</span>
 		</label>
-		<input id="dish" name="dish" type="text" required maxlength="200" value={values.dish} />
+		<input
+			id="dish"
+			name="dish"
+			type="text"
+			required
+			maxlength="200"
+			value={values.dish}
+			{...aria('dish')} />
+		<FieldError name="dish" error={errors.dish} />
 	</div>
 
 	<div class="two-up">
@@ -145,7 +167,14 @@
 			<label for="cookedOn">
 				Date <span class="field-required" aria-hidden="true">Required</span>
 			</label>
-			<input id="cookedOn" name="cookedOn" type="date" required bind:value={cookedOn} />
+			<input
+				id="cookedOn"
+				name="cookedOn"
+				type="date"
+				required
+				bind:value={cookedOn}
+				{...aria('cookedOn')} />
+			<FieldError name="cookedOn" error={errors.cookedOn} />
 		</div>
 		<div class="field">
 			<label for="servings">Servings</label>
@@ -155,7 +184,9 @@
 				type="text"
 				inputmode="numeric"
 				pattern="[0-9]*"
-				value={values.servings} />
+				value={values.servings}
+				{...aria('servings')} />
+			<FieldError name="servings" error={errors.servings} />
 		</div>
 	</div>
 
@@ -226,9 +257,11 @@
 				inputmode="url"
 				maxlength={MAX_LINK}
 				placeholder="https://"
-				aria-describedby="link-hint"
-				value={values.link} />
+				value={values.link}
+				aria-invalid={errors.link ? 'true' : undefined}
+				aria-describedby={errors.link ? 'link-hint link-error' : 'link-hint'} />
 			<p class="form-hint" id="link-hint">The page it came from, shown by its site's name.</p>
+			<FieldError name="link" error={errors.link} />
 		</div>
 	{/if}
 

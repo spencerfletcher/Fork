@@ -10,7 +10,7 @@ import {
 } from '#lib/testing/actions.js';
 import { loginHref } from '#lib/auth/loginHref.js';
 import { PHOTO_SIZE_MESSAGE, PHOTO_MAX_BYTES } from '#lib/recipes/validation.js';
-import { ENTRY_MESSAGES } from '#lib/server/journal.js';
+import { ENTRY_MESSAGES } from '#lib/journal.js';
 import { actions, load } from './+page.server';
 import type { PageData } from './$types';
 import { LIMITED, LIMITED_FAILURE } from '#lib/testing/rateLimit.js';

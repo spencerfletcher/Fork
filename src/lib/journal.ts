@@ -11,6 +11,22 @@ export const AUDIENCE_SENTENCE: Record<LogAudience, string> = {
 /** The longest page link an entry may carry, as a URL's practical limit. */
 export const MAX_LINK = 2048;
 
+export const MAX_DISH = 200;
+export const MAX_ENTRY_TEXT = 2000;
+
+/** What the Add to Journal form says, in the editor's voice: the server's refusals and the form's inline errors. */
+export const ENTRY_MESSAGES = {
+	dishRequired: 'Dish is required',
+	dishTooLong: `Dish is too long (${MAX_DISH} characters max)`,
+	dateRequired: 'Date is required',
+	dateInvalid: 'Date must be a real date',
+	captionTooLong: `Caption is too long (${MAX_ENTRY_TEXT.toLocaleString('en-US')} characters max)`,
+	noteTooLong: `Note is too long (${MAX_ENTRY_TEXT.toLocaleString('en-US')} characters max)`,
+	recipeUnavailable: "That recipe isn't available. Choose another, or leave it out.",
+	linkInvalid: 'Link must be a web address starting with http:// or https://',
+	linkTooLong: `Link is too long (${MAX_LINK.toLocaleString('en-US')} characters max)`
+} as const;
+
 /**
  * The recipe field's value that keeps an edited entry's stored source as it is.
  * The colon is one slugify strips, so no recipe slug can equal it.

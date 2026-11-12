@@ -33,8 +33,8 @@ export function typedMessage(name: string, value: string, before?: string): stri
 	return '';
 }
 
-function validityMessage(name: string, v: ValidityState): string {
-	if (v.valueMissing) return REQUIRED_MESSAGES[name as keyof typeof REQUIRED_MESSAGES];
+function validityMessage(name: string, v: ValidityState, boxMessages: BoxMessages): string {
+	if (name in boxMessages && (v.valueMissing || v.typeMismatch)) return boxMessages[name];
 	// A custom message is typedMessage's, read from the value: the validity
 	// lags the keystroke being checked.
 	if (v.valid || v.customError) return '';
@@ -42,6 +42,9 @@ function validityMessage(name: string, v: ValidityState): string {
 	const messages = numberMessages(name as NumberField);
 	return v.rangeUnderflow && !v.stepMismatch ? messages.belowMin : messages.whole;
 }
+
+/** What a box the browser holds empty or mistyped says, by field name. */
+type BoxMessages = Readonly<Record<string, string>>;
 
 /** Focuses a field, first opening the fold it sits in (the phone editor's
  *  details), so a blocked or refused save lands in it in one action. */
@@ -52,18 +55,22 @@ export function focusField(el: HTMLElement | null) {
 }
 
 /**
- * The recipe editor's inline errors, one per field name, in the server's own
- * wording. A field is checked when it is left after an edit, when it blocks a
- * submit, and on every keystroke once it carries an error, so the message and
+ * A form's inline errors (the recipe editor's, the Journal entry's), one per
+ * field name, in the server's own wording. A field is checked when it is left
+ * after an edit, when it blocks a submit, and on every keystroke once it
+ * carries an error, so the message and
  * the browser's :user-invalid state come from the same validity and clear
  * together. Passing through an untouched field says nothing, as the auth
  * pages do. A server-rendered reply shows a field's message too, as the draft
  * is shown: `form` seeds the initial state, since no effect runs there.
  * `before` is what the capped boxes started with, for typedMessage.
+ * `boxMessages` is what an empty or mistyped box says: the editor's required
+ * fields by default; the Journal's entry form passes its own.
  */
 export function fieldErrors(
 	form: { error: string } | null,
-	before?: Pick<RecipeDraft, 'title' | 'description'>
+	before?: Pick<RecipeDraft, 'title' | 'description'>,
+	boxMessages: BoxMessages = REQUIRED_MESSAGES
 ) {
 	const serverField = form ? fieldOfMessage(form.error) : undefined;
 	const errors = $state<Record<string, string>>(
@@ -83,8 +90,8 @@ export function fieldErrors(
 		const typed = typedMessage(name, el.value, started);
 		if (typed || name in TIME_FIELDS || name === 'sourceUrl' || name in CAP_MESSAGES)
 			errors[name] = typed;
-		if (!typed && (name in REQUIRED_MESSAGES || name in NUMBER_FIELDS))
-			errors[name] = validityMessage(name, el.validity);
+		if (!typed && (name in boxMessages || name in NUMBER_FIELDS))
+			errors[name] = validityMessage(name, el.validity, boxMessages);
 	}
 
 	return {
@@ -111,11 +118,14 @@ export function fieldErrors(
 			event.preventDefault();
 			blocked = true;
 			validate(event.target);
-			const bad = event.currentTarget.querySelector<HTMLInputElement | HTMLTextAreaElement>(
-				':is(input, textarea):invalid'
+			// Read from validity, not :invalid, which jsdom misses on a box with maxlength.
+			const bad = [...event.currentTarget.elements].find(
+				(el): el is HTMLInputElement | HTMLTextAreaElement =>
+					(el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) &&
+					!el.validity.valid
 			);
 			// A text box's textarea is hidden behind its live box, which has taken its id.
-			focusField(bad?.hidden ? document.getElementById(bad.name) : bad);
+			focusField(bad?.hidden ? document.getElementById(bad.name) : (bad ?? null));
 		},
 		aria: (name: string) =>
 			errors[name] ? { 'aria-invalid': 'true' as const, 'aria-describedby': `${name}-error` } : {}

@@ -2,15 +2,12 @@ import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { chain } from '#lib/testing/drizzle.js';
 import { formOf } from '#lib/testing/actions.js';
 import { numberMessages } from '#lib/recipes/validation.js';
-import { MAX_LINK } from '#lib/journal.js';
+import { ENTRY_MESSAGES, MAX_DISH, MAX_ENTRY_TEXT, MAX_LINK } from '#lib/journal.js';
 
 const { selectMock } = vi.hoisted(() => ({ selectMock: vi.fn() }));
 vi.mock('#lib/server/db/index.js', () => ({ db: { select: selectMock } }));
 
 import {
-	ENTRY_MESSAGES,
-	MAX_DISH,
-	MAX_ENTRY_TEXT,
 	canSeeEntry,
 	defaultAudience,
 	parseEntryForm,

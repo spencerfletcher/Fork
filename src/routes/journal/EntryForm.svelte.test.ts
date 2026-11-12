@@ -1,8 +1,14 @@
 import { describe, test, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/svelte';
-import { createRawSnippet } from 'svelte';
+import { createRawSnippet, tick } from 'svelte';
 import EntryForm from './EntryForm.svelte';
-import { AUDIENCE_SENTENCE, KEEP_SOURCE, MAX_LINK, PRIVATE_RECIPE_HINT } from '#lib/journal.js';
+import {
+	AUDIENCE_SENTENCE,
+	ENTRY_MESSAGES,
+	KEEP_SOURCE,
+	MAX_LINK,
+	PRIVATE_RECIPE_HINT
+} from '#lib/journal.js';
 import type { EntryValues } from './entryForm';
 
 vi.mock('$app/forms', () => ({ enhance: () => ({ destroy: () => {} }) }));
@@ -165,5 +171,54 @@ describe('EntryForm', () => {
 		const row = save.closest('.form-actions')!;
 		expect(row.querySelector('.other')).not.toBeNull();
 		expect(container.querySelector('form form')).toBeNull();
+	});
+
+	describe('inline errors, as the recipe editor has them', () => {
+		const dish = () => screen.getByRole('textbox', { name: 'Dish' });
+		const date = () => document.querySelector<HTMLInputElement>('#cookedOn')!;
+
+		test('a blocked submit gets no browser bubble: each message under its box, the first bad box focused', async () => {
+			renderForm(makeValues({ dish: '', cookedOn: '' }));
+			// The browser fires invalid on each bad field in order, cancelable.
+			const events = [dish(), date()].map((el) => {
+				const event = new Event('invalid', { cancelable: true });
+				el.dispatchEvent(event);
+				return event;
+			});
+			await tick();
+			expect(events.map((e) => e.defaultPrevented)).toEqual([true, true]);
+			expect(dish()).toHaveFocus();
+			expect(dish()).toHaveAttribute('aria-invalid', 'true');
+			expect(dish()).toHaveAccessibleDescription(ENTRY_MESSAGES.dishRequired);
+			expect(date()).toHaveAccessibleDescription(ENTRY_MESSAGES.dateRequired);
+			expect(screen.getAllByRole('alert').map((el) => el.textContent?.trim())).toEqual([
+				ENTRY_MESSAGES.dishRequired,
+				ENTRY_MESSAGES.dateRequired
+			]);
+		});
+
+		test('leaving an edited Dish empty says so before any save, and typing clears it', async () => {
+			renderForm();
+			await fireEvent.focusIn(dish());
+			await fireEvent.focusOut(dish());
+			expect(dish()).not.toHaveAttribute('aria-invalid');
+			await fireEvent.input(dish(), { target: { value: '' } });
+			await fireEvent.focusOut(dish());
+			expect(dish()).toHaveAccessibleDescription(ENTRY_MESSAGES.dishRequired);
+			await fireEvent.input(dish(), { target: { value: 'Dal' } });
+			expect(dish()).not.toHaveAttribute('aria-invalid');
+			expect(dish()).not.toHaveAccessibleDescription();
+		});
+
+		test('a link that is no web address says it in the server’s words', async () => {
+			renderForm(makeValues({ recipe: '', version: '' }));
+			const link = screen.getByLabelText(/Link/);
+			await fireEvent.input(link, { target: { value: 'not a link' } });
+			await fireEvent.focusOut(link);
+			expect(link).toHaveAttribute('aria-invalid', 'true');
+			expect(link).toHaveAccessibleDescription(
+				`The page it came from, shown by its site's name. ${ENTRY_MESSAGES.linkInvalid}`
+			);
+		});
 	});
 });
