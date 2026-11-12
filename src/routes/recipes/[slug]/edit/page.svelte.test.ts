@@ -457,7 +457,7 @@ describe('Edit page form', () => {
 		expect(field).toHaveAttribute('aria-invalid', 'true');
 		// The message first, then the format hint the row shares.
 		expect(field).toHaveAccessibleDescription(
-			expect.stringMatching(new RegExp(`^${RegExp.escape(timeMessages(name)[kind])} Like`))
+			expect.stringMatching(new RegExp(`^${RegExp.escape(timeMessages(name)[kind])} Overnight`))
 		);
 		// The browser blocks the save on it too.
 		expect(field.validity.valid).toBe(false);
@@ -482,7 +482,7 @@ describe('Edit page form', () => {
 		).toBeTruthy();
 		expect(document.getElementById('cookTimeMinutes')).not.toHaveAttribute('aria-invalid');
 		// The format hint describes every box in the row.
-		expect(document.getElementById('cookTimeMinutes')).toHaveAccessibleDescription(/^Like 45 min/);
+		expect(document.getElementById('cookTimeMinutes')).toHaveAccessibleDescription(/^Overnight is/);
 	});
 
 	test('a source link that is not a web address is refused under its box', async () => {

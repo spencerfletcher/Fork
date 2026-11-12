@@ -31,7 +31,7 @@ describe('StepEditor', () => {
 		render(StepEditor, { props: { value: '' } });
 		const hint = screen.getByText(/blank line/i);
 		// Bold in the hint's sans, never mono (Spencer: "it should all be sans").
-		for (const keyword of ['tip:', 'warning:', 'substitution:', '# Bake']) {
+		for (const keyword of ['tip:', 'warning:', 'substitution:']) {
 			expect(within(hint).getByText(keyword).tagName).toBe('B');
 		}
 	});
@@ -46,7 +46,7 @@ describe('StepEditor', () => {
 		render(StepEditor, { props: { value: '' } });
 		expect(box()).not.toHaveAttribute('aria-invalid');
 		expect(box()).toHaveAccessibleDescription(
-			/^Separate steps with a blank line\..*on its own line\. A line like # Bake starts a group\.$/
+			/^Separate steps with a blank line\..*on its own line\.$/
 		);
 	});
 
@@ -79,11 +79,11 @@ describe('StepEditor', () => {
 			expect(box().getAttribute('aria-describedby')).toContain('steps-readback');
 		});
 
-		test('no "# Name" line, no read-back; the hint names the syntax', () => {
+		// Section heading and the placeholder show the group syntax; the hint does not repeat it.
+		test('no "# Name" line, no read-back; the hint leaves groups to Section heading', () => {
 			render(StepEditor, { props: { value: 'Mix.' } });
 			expect(document.getElementById('steps-readback')).toBeNull();
-			const hint = screen.getByText(/blank line/i);
-			expect(hint).toHaveTextContent('A line like # Bake starts a group.');
+			expect(screen.getByText(/blank line/i)).not.toHaveTextContent('starts a group');
 		});
 	});
 });

@@ -54,7 +54,7 @@ describe('IngredientEditor', () => {
 		const { container } = render(IngredientEditor, { props: { value: '' } });
 		expect(box()).not.toHaveAttribute('aria-invalid');
 		expect(box()).toHaveAccessibleDescription(
-			'One per line: quantity, unit, ingredient — 2¼ cups flour. A line like # Dough starts a group.'
+			'One per line: quantity, unit, ingredient — 2¼ cups flour.'
 		);
 		expect(container.querySelector('#ingredients-note')).toBeNull();
 	});
@@ -148,15 +148,14 @@ describe('IngredientEditor', () => {
 			expect(document.getElementById('ingredients-readback')).toHaveTextContent(/Filling\s*empty/);
 		});
 
-		test('no "# Name" line, no read-back; the hint names the syntax', () => {
+		// Section heading and the placeholder's # Dough show the group syntax.
+		test('no "# Name" line, no read-back; the hint is the line format alone', () => {
 			render(IngredientEditor, { props: { value: '1 cup flour' } });
 			expect(document.getElementById('ingredients-readback')).toBeNull();
 			const hint = document.getElementById('ingredients-hint')!;
 			expect(hint).toHaveTextContent(
-				'One per line: quantity, unit, ingredient — 2¼ cups flour. A line like # Dough starts a group.'
+				/^One per line: quantity, unit, ingredient — 2¼ cups flour\.$/
 			);
-			// Sans like the prose around it (Spencer: "it should all be sans"); mono is for identifiers.
-			expect(hint.querySelector('b')).toHaveTextContent('# Dough');
 			expect(hint.querySelector('code')).toBeNull();
 		});
 

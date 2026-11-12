@@ -43,6 +43,6 @@
 	<!-- prettier-ignore -->
 	<p class="form-hint" id="steps-hint">
 		Separate steps with a blank line. Add a note under a step with <b>tip:</b>, <b>warning:</b> or
-		<b>substitution:</b> on its own line. A line like <b># Bake</b> starts a group.
+		<b>substitution:</b> on its own line.
 	</p>
 </div>

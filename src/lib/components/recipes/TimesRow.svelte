@@ -46,7 +46,6 @@
 		<FieldError {name} error={errors[name]} />
 	{/each}
 	<p class="form-hint" id="times-hint">
-		Like 45 min, 1 h 30 or 2 days; overnight is {formatDuration(OVERNIGHT_MINUTES)}. Rest is rising,
-		chilling or marinating.
+		Overnight is {formatDuration(OVERNIGHT_MINUTES)}. Rest is rising, chilling or marinating.
 	</p>
 </div>
