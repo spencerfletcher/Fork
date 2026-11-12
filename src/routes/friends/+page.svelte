@@ -83,7 +83,6 @@
 	<div class="page-inner">
 		<div class="page-head">
 			<h1>Friends</h1>
-			{#if data.feed.length > 0}<p class="page-sub">Newest first</p>{/if}
 		</div>
 		<!-- Accept and Decline post here; the ⋯ menu shows its own refusals. -->
 		{#if form && 'error' in form}

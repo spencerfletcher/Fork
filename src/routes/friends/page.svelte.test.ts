@@ -42,7 +42,7 @@ describe('Friends page', () => {
 		expect(container.querySelector('.rail')).toBeNull();
 	});
 
-	test('with a feed: Newest first, the recipe event linking its diff, and the rail with the invite link', () => {
+	test('with a feed: no order line under the h1, the recipe event linking its diff, and the rail with the invite link', () => {
 		const event = {
 			kind: 'event',
 			id: 'event-1',
@@ -54,7 +54,8 @@ describe('Friends page', () => {
 			username: 'maria'
 		};
 		render(Page, { props: { data: makeData({ feed: [event], friendCount: 1 }) } });
-		expect(screen.getByText('Newest first')).toBeInTheDocument();
+		// A feed reads newest first without being told.
+		expect(screen.queryByText('Newest first')).toBeNull();
 		expect(screen.getByRole('link', { name: 'v3 → v4' })).toHaveAttribute(
 			'href',
 			'/recipes/buns/diff?from=3&to=4'

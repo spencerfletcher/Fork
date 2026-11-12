@@ -183,7 +183,6 @@ test.describe('Friends', () => {
 		page
 	}) => {
 		await page.goto('/friends');
-		await expect(page.getByText('Newest first')).toBeVisible();
 		await expect(page.getByRole('heading', { name: friendsFirst.dish })).toBeVisible();
 		await expect(page.getByRole('heading', { name: onPrivateRecipe.dish })).toBeVisible();
 		await expect(
