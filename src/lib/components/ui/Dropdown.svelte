@@ -50,10 +50,27 @@
 		claim(e);
 		open = !open;
 		if (open) {
+			up = false;
 			onopen?.();
+			await tick();
+			up = opensUp();
 			await tick();
 			((root && focusOnOpen?.(root)) ?? controls()[0])?.focus();
 		}
+	}
+
+	// No room under the trigger but room over it: the panel opens upward. The
+	// screen's foot is less what a fixed bar covers there (the phone's tab bar,
+	// the select bar), which those bars give the page as scroll-padding-bottom
+	// (app.css). A fixed panel (the picker's phone sheet) has its own place.
+	let up = $state(false);
+	function opensUp(): boolean {
+		const panel = root?.querySelector<HTMLElement>('.menu-panel');
+		if (!root || !panel || getComputedStyle(panel).position === 'fixed') return false;
+		const covered = parseFloat(getComputedStyle(document.documentElement).scrollPaddingBottom);
+		const floor = window.innerHeight - (covered || 0);
+		const box = panel.getBoundingClientRect();
+		return box.bottom > floor && root.getBoundingClientRect().top - box.height >= 0;
 	}
 
 	function close() {
@@ -96,7 +113,7 @@
 	}} />
 
 <!-- svelte-ignore a11y_no_static_element_interactions (keys bubble up from the controls inside) -->
-<div class="dropdown" bind:this={root} {onkeydown} {onclick}>
+<div class="dropdown" class:up bind:this={root} {onkeydown} {onclick}>
 	{@render trigger({ 'aria-expanded': open, onclick: toggle }, claim)}
 	{#if open}
 		{@render panel(close)}
@@ -128,6 +145,12 @@
 		background: var(--color-bg);
 		border: 1px solid var(--color-text-2);
 		border-radius: var(--radius-md);
+	}
+
+	/* Opened upward (opensUp), its foot 4px over the trigger. */
+	.dropdown.up :global(.menu-panel) {
+		top: auto;
+		bottom: calc(100% + 4px);
 	}
 
 	.dropdown :global(.menu-row) {

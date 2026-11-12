@@ -1,4 +1,4 @@
-import { describe, test, expect, vi } from 'vitest';
+import { describe, test, expect, vi, afterEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/svelte';
 import { createRawSnippet, flushSync } from 'svelte';
 import Dropdown from './Dropdown.svelte';
@@ -132,5 +132,50 @@ describe('Dropdown', () => {
 		navigated.forEach((callback) => callback(nav('goto', '/cookbook', '/cookbook?page=2')));
 		flushSync();
 		expect(screen.getByRole('menu')).toBeInTheDocument();
+	});
+
+	describe('with no room below', () => {
+		const sheetPanel = createRawSnippet(() => ({
+			render: () =>
+				'<div class="menu-panel" role="menu"><button type="button" role="menuitem">Log out</button></div>'
+		}));
+
+		// The trigger 40px from the screen's foot, the panel 200px tall under it.
+		function measure(panelHeight = 200) {
+			const foot = window.innerHeight;
+			vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (
+				this: HTMLElement
+			) {
+				const box = this.classList.contains('menu-panel')
+					? { top: foot - 20, bottom: foot - 20 + panelHeight, height: panelHeight }
+					: { top: foot - 40, bottom: foot - 20, height: 20 };
+				return box as DOMRect;
+			});
+		}
+
+		afterEach(() => vi.restoreAllMocks());
+
+		test('it opens upward when there is room above', async () => {
+			measure();
+			render(Dropdown, { props: { trigger, panel: sheetPanel } });
+			await fireEvent.click(screen.getByRole('button', { name: 'Your account' }));
+			expect(document.querySelector('.dropdown')).toHaveClass('up');
+			expect(cssRule(source, '.dropdown.up :global(.menu-panel)')).toMatch(
+				/top:\s*auto;[\s\S]*bottom:\s*calc\(100% \+ 4px\)/
+			);
+		});
+
+		test('it stays below when there is no room above either', async () => {
+			measure(window.innerHeight);
+			render(Dropdown, { props: { trigger, panel: sheetPanel } });
+			await fireEvent.click(screen.getByRole('button', { name: 'Your account' }));
+			expect(document.querySelector('.dropdown')).not.toHaveClass('up');
+		});
+
+		test('with room below it opens downward', async () => {
+			render(Dropdown, { props: { trigger, panel: sheetPanel } });
+			await fireEvent.click(screen.getByRole('button', { name: 'Your account' }));
+			expect(document.querySelector('.dropdown')).not.toHaveClass('up');
+		});
 	});
 });
