@@ -164,6 +164,8 @@
 
 	const hasMenu = $derived(variant === 'cookbook' && !select);
 
+	const showSource = $derived(saved && variant === 'cookbook');
+
 	const isList = $derived(variant === 'list');
 
 	const description = $derived(showDescription && isList ? recipe.description?.trim() : '');
@@ -224,7 +226,7 @@
 	     Inert in select mode, so its handle is no link and a press is the card's. -->
 	<div class="card-text" inert={!!select}>
 		<!-- The ⋯ ends the first line under the photo: the title's, or on a
-		     panel the meta row's. -->
+		     panel whose a saved one is, else the meta row's. -->
 		{#if recipe.imageUrl}
 			<div class="card-line">
 				<h3 class="card-title">{@render title()}</h3>
@@ -232,23 +234,27 @@
 			</div>
 		{/if}
 
+		<!-- Whose a saved one is leads the meta, as on the list row. -->
+		{#if showSource}
+			<div class="card-line">
+				<p class="card-source">
+					{sourceWords(kept)}
+					{#if recipe.author}
+						<Username username={recipe.author.username} />
+					{:else}
+						{nobody(kept)}
+					{/if}
+				</p>
+				{#if hasMenu && !recipe.imageUrl}{@render more()}{/if}
+			</div>
+		{/if}
+
 		<div class="card-line">
 			<div class="meta-row dot-list dot-clip">
 				{#each metaParts as part (part.text)}{@render metaItem(part)}{/each}
 			</div>
-			{#if hasMenu && !recipe.imageUrl}{@render more()}{/if}
+			{#if hasMenu && !recipe.imageUrl && !showSource}{@render more()}{/if}
 		</div>
-
-		{#if saved && variant === 'cookbook'}
-			<p class="card-source">
-				{sourceWords(kept)}
-				{#if recipe.author}
-					<Username username={recipe.author.username} />
-				{:else}
-					{nobody(kept)}
-				{/if}
-			</p>
-		{/if}
 
 		<!-- At most one extra paragraph: no description, no line (Spencer, 31 October 2026).
 		     A search result that matched outside its title says where instead. -->
@@ -465,6 +471,7 @@
 	}
 
 	.card-line > .card-title,
+	.card-line > .card-source,
 	.card-line > .meta-row {
 		flex: 1;
 		min-width: 0;
@@ -529,7 +536,7 @@
 		height: 12px;
 	}
 
-	/* "Saved from @handle": the meta row's size and ink, under it. */
+	/* "Saved from @handle": the meta row's size and ink, above it. */
 	.card-source {
 		font-size: 0.8125rem;
 		line-height: 1.5;

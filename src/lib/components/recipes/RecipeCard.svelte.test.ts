@@ -376,6 +376,19 @@ describe('RecipeCard in the Cookbook', () => {
 		expect(link).toHaveClass('username');
 	});
 
+	test('whose it is comes before the meta row and its cooked fact, as the list row reads', () => {
+		const { container } = render(RecipeCard, {
+			props: {
+				recipe: { ...makeRecipe({ timesCooked: 1, lastCookedOn: '2026-11-08' }), author },
+				variant: 'cookbook',
+				saved: true
+			}
+		});
+		const sourceLine = container.querySelector('.card-source')!;
+		const meta = container.querySelector('.meta-row')!;
+		expect(sourceLine.compareDocumentPosition(meta) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+	});
+
 	test('a kept copy of a recipe its author withdrew says so, in place of whose it is', () => {
 		const { container } = render(RecipeCard, {
 			props: { recipe: { ...makeRecipe(), author }, variant: 'cookbook', saved: true, kept: true }
@@ -552,6 +565,13 @@ describe('RecipeCard in the Cookbook: the ⋯', () => {
 		card({}, { prepTimeMinutes: 10 });
 		const more = screen.getByRole('button', { name: 'More actions for Chocolate Cake' });
 		expect(more.closest('.card-line')!.querySelector('.meta-row')).not.toBeNull();
+	});
+
+	test('without a photo on a saved recipe it ends the first line, whose it is', () => {
+		card({ saved: true }, { prepTimeMinutes: 10, author: { id: 'u2', username: 'devcooks' } });
+		const more = screen.getByRole('button', { name: 'More actions for Chocolate Cake' });
+		expect(more.closest('.card-line')!.querySelector('.card-source')).not.toBeNull();
+		expect(screen.getAllByRole('button', { name: /^More actions/ })).toHaveLength(1);
 	});
 
 	test('sits above the stretched link, so pointing at it is not pointing at the recipe', () => {
