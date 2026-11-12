@@ -2,7 +2,7 @@
 	import type { Snippet } from 'svelte';
 	import type { Ingredient } from '#lib/recipes/types.js';
 	import type { GramResult } from '#lib/server/ingredientDensities.js';
-	import { FRACTIONS, formatGrams, scaleIngredient } from '#lib/recipes/scale.js';
+	import { FRACTIONS, SCALED_NOTES, formatGrams, scaleIngredient } from '#lib/recipes/scale.js';
 	import { convertIngredient } from '#lib/recipes/convert.js';
 	import { WEIGHED_NOTE, type Measurement } from '#lib/measurement.js';
 	import { groupStartingAt } from '#lib/recipes/groups.js';
@@ -63,16 +63,12 @@
 	}
 
 	const anyApproximate = $derived(grams.some((g) => g?.approximate));
-	const anyScaled = $derived(
-		ingredients.some((typed, i) => scaleIngredient(typed, grams[i], factor).ingredient !== typed)
-	);
 	const anyConverted = $derived(ingredients.some((typed, i) => shown(typed, i).written !== null));
 	const anyWeighed = $derived(ingredients.some((typed, i) => shown(typed, i).estimate));
-	// One note for whatever on the list is an estimate.
+	// One note for whatever on the list is an estimate. Scaled, it also says
+	// what the method keeps (pans, ovens), with or without a line rewritten.
 	const note = $derived.by(() => {
-		if (anyScaled && anyApproximate)
-			return 'Scaled quantities and whole-item weights are estimates.';
-		if (anyScaled) return 'Scaled quantities are estimates.';
+		if (factor !== 1) return anyApproximate ? SCALED_NOTES.weights : SCALED_NOTES.plain;
 		if (anyApproximate) return 'Whole-item weights are estimates, not exact.';
 		return null;
 	});

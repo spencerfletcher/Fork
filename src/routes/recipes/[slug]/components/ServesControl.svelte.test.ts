@@ -2,7 +2,8 @@ import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { lastShallowUrl } from '#lib/testing/navigation.js';
 import { render, screen, fireEvent } from '@testing-library/svelte';
 import ServesControl from './ServesControl.svelte';
-import { MIN_SERVES } from '#lib/recipes/scale.js';
+import { MAX_SCALE, SCALE_MESSAGES, scaling } from '#lib/recipes/scale.js';
+import { makeContent } from '#lib/recipes/fixtures.js';
 import source from './ServesControl.svelte?raw';
 import { cssRule } from '#lib/testing/css.js';
 
@@ -22,10 +23,10 @@ vi.mock('$app/state', () => ({ page }));
 const STORED = 4;
 
 /** Renders the control as the page does: it owns the serves and hands them back on change. */
-function renderControl(serves = STORED, stored = STORED) {
+function renderControl(serves = STORED, content = makeContent({ servings: STORED })) {
 	const onchange = vi.fn();
-	const view = render(ServesControl, { props: { stored, serves, onchange } });
-	const rerender = (next: number) => view.rerender({ stored, serves: next, onchange });
+	const view = render(ServesControl, { props: { scale: scaling(content, serves)!, onchange } });
+	const rerender = (next: number) => view.rerender({ scale: scaling(content, next)!, onchange });
 	return { ...view, onchange, rerender };
 }
 
@@ -53,7 +54,7 @@ describe('ServesControl', () => {
 		renderControl();
 		expect(box()).toHaveAttribute('type', 'number');
 		expect(box()).toHaveAttribute('step', 'any');
-		expect(box()).toHaveAttribute('min', String(MIN_SERVES));
+		expect(box()).toHaveAttribute('min', String(STORED / MAX_SCALE));
 	});
 
 	test('stepping up from the stored serves applies one more, as a change does', async () => {
@@ -139,6 +140,42 @@ describe('ServesControl', () => {
 		expect(onchange).not.toHaveBeenCalled();
 		expect(goto).not.toHaveBeenCalled();
 		expect(box()).toHaveValue(STORED);
+	});
+
+	test.each([
+		['0', 'zero'],
+		['-2', 'negative'],
+		[String(STORED * MAX_SCALE + 1), 'outOfRange']
+	] as const)('%j is refused out loud: the box goes back and says why', async (typed, reason) => {
+		const { onchange } = renderControl();
+		await fireEvent.change(box(), { target: { value: typed } });
+		expect(onchange).not.toHaveBeenCalled();
+		expect(box()).toHaveValue(STORED);
+		expect(screen.getByRole('alert')).toHaveTextContent(SCALE_MESSAGES[reason]);
+		expect(box()).toHaveAttribute('aria-describedby', 'scale-error');
+		await fireEvent.change(box(), { target: { value: '6' } });
+		expect(screen.queryByRole('alert')).toBeNull();
+	});
+
+	test('a Makes-only recipe counts its yield and writes ?makes=', async () => {
+		const { onchange } = renderControl(36, makeContent({ servings: null, makes: '36 cookies' }));
+		const count = screen.getByRole<HTMLInputElement>('spinbutton', { name: 'Makes' });
+		expect(screen.getByText('cookies')).toBeInTheDocument();
+		await fireEvent.change(count, { target: { value: '72' } });
+		expect(onchange).toHaveBeenCalledWith(72);
+		expect(lastShallowUrl(goto).searchParams.get('makes')).toBe('72');
+	});
+
+	test('a Makes with no count is a bare multiplier: ?scale=, and no separate note', async () => {
+		const loaf = makeContent({ servings: null, makes: 'one loaf' });
+		const { onchange, rerender } = renderControl(1, loaf);
+		const factor = screen.getByRole<HTMLInputElement>('spinbutton', { name: 'Scale' });
+		await fireEvent.change(factor, { target: { value: '2' } });
+		expect(onchange).toHaveBeenCalledWith(2);
+		expect(lastShallowUrl(goto).searchParams.get('scale')).toBe('2');
+		await rerender(2);
+		expect(screen.queryByText('2x')).toBeNull();
+		expect(screen.getByRole('button', { name: 'Reset' })).toBeInTheDocument();
 	});
 
 	test('Enter in the box blurs it, which applies it', async () => {

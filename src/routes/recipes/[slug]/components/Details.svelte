@@ -1,27 +1,23 @@
 <script lang="ts">
 	import type { RecipeContent } from '#lib/recipes/types.js';
-	import { scaleMakes } from '#lib/recipes/scale.js';
+	import { scaling, type Scaling } from '#lib/recipes/scale.js';
 	import { timeSpans } from '#lib/recipes/times.js';
 
 	let {
 		content,
-		storedServings
+		scale
 	}: {
 		content: Pick<
 			RecipeContent,
 			'prepTimeMinutes' | 'cookTimeMinutes' | 'restTimeMinutes' | 'servings' | 'makes'
 		>;
-		/** The version's own servings; when `content.servings` differs, they are scaled and read clay. */
-		storedServings?: number | null;
+		/** The page's scaling of `content`; scaled Serves and Makes read clay. Absent, as stored. */
+		scale?: Scaling | null;
 	} = $props();
 
-	const scaled = $derived(storedServings != null && content.servings !== storedServings);
-
-	// The yield follows the servings multiplier; it never sets it.
-	const factor = $derived(
-		storedServings && content.servings ? content.servings / storedServings : 1
-	);
-	const makes = $derived(content.makes ? scaleMakes(content.makes, factor) : null);
+	const shown = $derived(scale ?? scaling(content, null));
+	const scaled = $derived(!!shown?.scaled);
+	const makes = $derived(shown?.makes ?? null);
 
 	// The times value then label, the serves label then value, in two groups:
 	// "15 min prep · 13 min cook · 2 h rest" and "Serves 36 · Makes 36 cookies".
@@ -30,7 +26,7 @@
 		const all: [string, string | null][][] = [
 			timeSpans(content).map(({ value, word }) => [word, value]),
 			[
-				['Serves', content.servings ? String(content.servings) : null],
+				['Serves', shown?.serves ?? null],
 				['Makes', makes?.text ?? null]
 			]
 		];

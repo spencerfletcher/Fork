@@ -7,7 +7,7 @@ import { WEIGHED_NOTE } from '#lib/measurement.js';
 import source from './RecipeIngredients.svelte?raw';
 import { readFileSync } from 'node:fs';
 import { ticksKey, loadTicks, saveTicks } from './ticks';
-import { FRACTIONS } from '#lib/recipes/scale.js';
+import { FRACTIONS, SCALED_NOTES } from '#lib/recipes/scale.js';
 import { cssRules } from '#lib/testing/css.js';
 
 type GramResult = {
@@ -335,7 +335,7 @@ describe('RecipeIngredients', () => {
 		expect(screen.getByText('(562g)')).toHaveClass('text-accent');
 		expect(eggs.querySelector('.font-semibold')).toHaveClass('text-accent');
 		expect(salt.querySelector('.text-accent')).toBeNull();
-		expect(screen.getByText('Scaled quantities are estimates.')).toHaveClass('form-hint');
+		expect(screen.getByText(SCALED_NOTES.plain)).toHaveClass('form-hint');
 	});
 
 	test('unscaled, nothing is clay and there is no estimate note', () => {
@@ -345,7 +345,7 @@ describe('RecipeIngredients', () => {
 			null
 		]);
 		expect(document.querySelector('label .text-accent')).toBeNull();
-		expect(screen.queryByText(/Scaled quantities/)).toBeNull();
+		expect(screen.queryByText(/not scaled/)).toBeNull();
 	});
 
 	test('scaled with whole-item weights, one note says both', () => {
@@ -357,10 +357,22 @@ describe('RecipeIngredients', () => {
 				factor: 2
 			}
 		});
-		expect(
-			screen.getByText('Scaled quantities and whole-item weights are estimates.')
-		).toBeInTheDocument();
+		expect(screen.getByText(SCALED_NOTES.weights)).toBeInTheDocument();
 		expect(screen.queryByText('Whole-item weights are estimates, not exact.')).toBeNull();
+	});
+
+	// Pans and ovens are in the method, not the list, so the notice holds
+	// whenever the recipe is scaled, even with no line rewritten.
+	test('scaled with no line it could rewrite, the notice still shows', () => {
+		render(RecipeIngredients, {
+			props: {
+				ingredients: parseIngredientText('salt to taste'),
+				grams: [null],
+				storageKey: KEY,
+				factor: 2
+			}
+		});
+		expect(screen.getByText(SCALED_NOTES.plain)).toHaveClass('form-hint');
 	});
 });
 

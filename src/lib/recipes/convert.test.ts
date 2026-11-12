@@ -1,6 +1,6 @@
 import { describe, test, expect } from 'vitest';
 import { makeIngredient } from './fixtures';
-import { FRACTIONS, MIN_SERVES, formatGrams, scaleIngredient, splitMeasure } from './scale';
+import { FRACTIONS, MAX_SCALE, formatGrams, scaleIngredient, splitMeasure } from './scale';
 import { convertIngredient, MIN_SPOON_GRAMS, TOLERANCE, UNITS } from './convert';
 import { MEASUREMENTS, type Measurement } from '#lib/measurement.js';
 import { gramsFor } from '#lib/server/ingredientDensities.js';
@@ -350,10 +350,27 @@ describe('a nonzero quantity never renders as zero', () => {
 		'1 oz chocolate',
 		'3 lb beef',
 		'1 fl oz cream',
-		'1 gallon water'
+		'1 gallon water',
+		'800 g tomatoes',
+		'1.4 kg pork',
+		'2-3 g yeast'
 	];
-	// From the smallest serves of a recipe for twelve to twelve times it.
-	const FACTORS = [MIN_SERVES / 12, 1 / 8, 1 / 4, 1 / 3, 1 / 2, 2 / 3, 1, 1.5, 2, 3, 12];
+	// From the smallest scale to the largest, through the kitchen's fractions and odd thirds.
+	const FACTORS = [
+		1 / MAX_SCALE,
+		1 / 8,
+		1 / 4,
+		1 / 3,
+		1 / 2,
+		2 / 3,
+		1,
+		1.5,
+		2,
+		7 / 3,
+		3,
+		12,
+		MAX_SCALE
+	];
 	const CHOICES = [null, ...MEASUREMENTS];
 
 	// A shown number ("2", "0.03", "1½", "⅛", "1.36", or a typed "1/8") as its value, else NaN.
@@ -385,6 +402,9 @@ describe('a nonzero quantity never renders as zero', () => {
 		const where = `${line} ×${factor} ${to}: ${ingredient.text}`;
 		const measure = splitMeasure(ingredient)?.measure ?? ingredient.text;
 		for (const n of measure.split(/\s+/)[0].split(/[–-]/)) expectPositive(n, where);
+		// Scaled metric reads off a scale: no fraction glyphs (Spencer: "whole grams").
+		if (['g', 'kg', 'ml', 'dl', 'L'].includes(typed.unit))
+			expect(scaled.ingredient.text, where).not.toMatch(/[½⅓⅔¼¾⅛⅜⅝⅞]/);
 		if (grams) {
 			const weight = formatGrams(grams);
 			for (const g of weight.replace(/^≈|g$/g, '').split('–'))

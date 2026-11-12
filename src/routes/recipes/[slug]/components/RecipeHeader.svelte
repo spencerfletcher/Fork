@@ -8,6 +8,7 @@
 	import type { Recipe } from '#lib/server/db/schema.js';
 	import type { RecipeContent, TagChip } from '#lib/recipes/types.js';
 	import { sourceLabel } from '#lib/recipes/validation.js';
+	import type { Scaling } from '#lib/recipes/scale.js';
 
 	// Only what the header renders: the viewed version for the dish and the
 	// recipe row for where it lives. The version bar below the hero carries
@@ -39,7 +40,7 @@
 	let {
 		recipe,
 		currentVersion,
-		storedServings,
+		scale,
 		forkCount,
 		tags,
 		actions,
@@ -49,8 +50,8 @@
 	}: {
 		recipe: HeaderRecipe;
 		currentVersion: HeaderContent;
-		/** The version's own servings, when `currentVersion.servings` is the scaled serves. */
-		storedServings?: number | null;
+		/** The page's scaling, for the measure's Serves and Makes. */
+		scale?: Scaling | null;
 		/** Forks the viewer can see: the public ones and their own. */
 		forkCount: number;
 		tags: TagChip[];
@@ -130,7 +131,7 @@
 		<p class="description">{currentVersion.description}</p>
 	{/if}
 
-	<Details content={currentVersion} {storedServings} />
+	<Details content={currentVersion} {scale} />
 
 	{#if tags.length > 0}
 		<p class="tags text-text-2 font-sans">

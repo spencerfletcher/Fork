@@ -3,6 +3,7 @@ import { render } from '@testing-library/svelte';
 import Details from './Details.svelte';
 import source from './Details.svelte?raw';
 import { makeContent } from '#lib/recipes/fixtures.js';
+import { scaling } from '#lib/recipes/scale.js';
 import { cssRule } from '#lib/testing/css.js';
 
 function line(container: HTMLElement) {
@@ -57,14 +58,20 @@ describe('Details', () => {
 
 	test('the serves value reads clay while it differs from the stored serves, ink otherwise', () => {
 		const scaled = render(Details, {
-			props: { content: makeContent({ servings: 8 }), storedServings: 4 }
+			props: {
+				content: makeContent({ servings: 4 }),
+				scale: scaling(makeContent({ servings: 4 }), 8)
+			}
 		});
 		expect(scaled.getByText('8')).toHaveClass('text-accent');
 		expect(scaled.getByText('8')).not.toHaveClass('text-text');
 		scaled.unmount();
 
 		const stored = render(Details, {
-			props: { content: makeContent({ servings: 4 }), storedServings: 4 }
+			props: {
+				content: makeContent({ servings: 4 }),
+				scale: scaling(makeContent({ servings: 4 }), 4)
+			}
 		});
 		expect(stored.getByText('4')).toHaveClass('text-text');
 		expect(stored.getByText('4')).not.toHaveClass('text-accent');
@@ -150,13 +157,19 @@ describe('Details', () => {
 
 		test('scales with servings and reads clay while scaled, ink at the stored serves', () => {
 			const scaled = render(Details, {
-				props: { content: makeContent({ servings: 6, makes: '12 buns' }), storedServings: 4 }
+				props: {
+					content: makeContent({ servings: 4, makes: '12 buns' }),
+					scale: scaling(makeContent({ servings: 4, makes: '12 buns' }), 6)
+				}
 			});
 			expect(scaled.getByText('18 buns')).toHaveClass('text-accent');
 			scaled.unmount();
 
 			const stored = render(Details, {
-				props: { content: makeContent({ servings: 4, makes: '12 buns' }), storedServings: 4 }
+				props: {
+					content: makeContent({ servings: 4, makes: '12 buns' }),
+					scale: scaling(makeContent({ servings: 4, makes: '12 buns' }), 4)
+				}
 			});
 			expect(stored.getByText('12 buns')).toHaveClass('text-text');
 			expect(stored.getByText('12 buns')).not.toHaveClass('text-accent');
@@ -164,7 +177,10 @@ describe('Details', () => {
 
 		test('a pan size is left as typed, ink, and says "not scaled" in Ink 3 only while scaled', () => {
 			const scaled = render(Details, {
-				props: { content: makeContent({ servings: 8, makes: 'one 9x13 pan' }), storedServings: 4 }
+				props: {
+					content: makeContent({ servings: 4, makes: 'one 9x13 pan' }),
+					scale: scaling(makeContent({ servings: 4, makes: 'one 9x13 pan' }), 8)
+				}
 			});
 			expect(scaled.getByText('one 9x13 pan')).toHaveClass('text-text');
 			expect(scaled.getByText('not scaled')).toHaveClass('text-text-3');
@@ -174,14 +190,26 @@ describe('Details', () => {
 			scaled.unmount();
 
 			const stored = render(Details, {
-				props: { content: makeContent({ servings: 4, makes: 'one 9x13 pan' }), storedServings: 4 }
+				props: {
+					content: makeContent({ servings: 4, makes: 'one 9x13 pan' }),
+					scale: scaling(makeContent({ servings: 4, makes: 'one 9x13 pan' }), 4)
+				}
 			});
 			expect(stored.queryByText('not scaled')).toBeNull();
 		});
 
+		test('a Makes-only recipe scales its yield by its own count, clay while scaled', () => {
+			const content = makeContent({ servings: null, makes: '36 cookies' });
+			const { getByText } = render(Details, { props: { content, scale: scaling(content, 72) } });
+			expect(getByText('72 cookies')).toHaveClass('text-accent');
+		});
+
 		test('a yield with no number ("a dozen") is never flagged', () => {
 			const { queryByText } = render(Details, {
-				props: { content: makeContent({ servings: 8, makes: 'a dozen' }), storedServings: 4 }
+				props: {
+					content: makeContent({ servings: 4, makes: 'a dozen' }),
+					scale: scaling(makeContent({ servings: 4, makes: 'a dozen' }), 8)
+				}
 			});
 			expect(queryByText('not scaled')).toBeNull();
 		});

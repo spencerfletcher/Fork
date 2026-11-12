@@ -144,6 +144,16 @@ describe('recipe page scaling', () => {
 		expect(rows()[0]).toHaveTextContent(`${FRACTIONS['1/2']} cup (63g) flour`);
 	});
 
+	test('a Makes-only recipe gets the scaler: ?makes= doubles the batch, the header follows', () => {
+		const data = makeData();
+		const cookies = { ...data.currentVersion, servings: null, makes: '24 cookies' };
+		page.url = new URL('http://localhost/recipes/cookies?makes=48');
+		render(Page, { props: { data: { ...data, currentVersion: cookies } as PageData } });
+		expect(screen.getByRole('spinbutton', { name: 'Makes' })).toHaveValue(48);
+		expect(rows()[0]).toHaveTextContent('2 cups (250g) flour');
+		expect(document.querySelector('header .details')).toHaveTextContent('Makes 48 cookies');
+	});
+
 	test('an invalid ?serves= is ignored', () => {
 		load('?serves=lots');
 		expect(screen.getByRole('spinbutton', { name: 'Servings' })).toHaveValue(STORED);

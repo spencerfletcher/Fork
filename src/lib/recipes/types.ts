@@ -32,7 +32,8 @@ export type RecipeContent = {
 	description: string | null;
 	servings: number | null;
 	/** What one batch produces when that isn't portions ("12 buns"). Free
-	 *  text, never read as servings; the scale factor comes from servings alone. */
+	 *  text, never read as servings; with no servings, the scaler counts its
+	 *  leading number, or is a bare multiplier when it has none (scale.ts). */
 	makes: string | null;
 	/** Times in whole minutes, typed as words (times.ts). Each is its own
 	 *  span: no total is stored or shown, since they can overlap. */
