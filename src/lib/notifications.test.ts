@@ -66,11 +66,15 @@ describe('forYou', () => {
 				fork: { slug: 'dal-3', title: 'Dal 3' }
 			}
 		];
-		expect(forYou(forks)).toEqual([expect.objectContaining({ username: 'ana', others: 1, at: at(9) })]);
+		expect(forYou(forks)).toEqual([
+			expect.objectContaining({ username: 'ana', others: 1, at: at(9) })
+		]);
 	});
 
 	test('at most FOR_YOU_ROWS rows, newest first; the rest are not shown', () => {
-		const items = Array.from({ length: FOR_YOU_ROWS + 3 }, (_, i) => like(`l${i}`, 50 - i, 'ana', i));
+		const items = Array.from({ length: FOR_YOU_ROWS + 3 }, (_, i) =>
+			like(`l${i}`, 50 - i, 'ana', i)
+		);
 		expect(forYou(items).map((n) => n.id)).toEqual(items.slice(0, FOR_YOU_ROWS).map((n) => n.id));
 	});
 });

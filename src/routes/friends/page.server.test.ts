@@ -6,6 +6,7 @@ import { actions, load } from './+page.server';
 import { SESSION_ENDED } from '#lib/server/actions.js';
 import { ENTRIES_PER_PAGE } from '#lib/server/journal.js';
 import { LIMITED, LIMITED_FAILURE } from '#lib/testing/rateLimit.js';
+import { UNSEEN_MAX, forYou } from '#lib/notifications.js';
 
 const m = vi.hoisted(() => ({
 	findProfile: vi.fn(),
@@ -21,7 +22,14 @@ const m = vi.hoisted(() => ({
 	feedFor: vi.fn(),
 	requestsFor: vi.fn(),
 	friendIdsOf: vi.fn(),
-	rateLimited: vi.fn()
+	rateLimited: vi.fn(),
+	notificationsFor: vi.fn(),
+	markSeen: vi.fn()
+}));
+
+vi.mock('#lib/server/notifications.js', () => ({
+	notificationsFor: m.notificationsFor,
+	markSeen: m.markSeen
 }));
 
 vi.mock('#lib/server/db/index.js', () => ({
@@ -61,6 +69,7 @@ beforeEach(() => {
 	vi.clearAllMocks();
 	m.findProfile.mockResolvedValue(THEM);
 	m.rateLimited.mockResolvedValue(null);
+	m.notificationsFor.mockResolvedValue([]);
 });
 
 describe('rate limits', () => {
@@ -118,6 +127,43 @@ describe('friends load', () => {
 			per: ENTRIES_PER_PAGE
 		});
 		expect(data).toMatchObject({ next: 'cursor-2' });
+	});
+
+	test("For you: what is new, grouped by forYou from the cook's notifications", async () => {
+		m.feedFor.mockResolvedValue({ items: [], next: null });
+		m.requestsFor.mockResolvedValue([]);
+		m.friendIdsOf.mockResolvedValue([]);
+		const items = [
+			{
+				id: 'save-1-a',
+				kind: 'save',
+				at: new Date(),
+				unseen: true,
+				username: 'ana',
+				recipe: { slug: 'dal', title: 'Dal' }
+			},
+			{
+				id: 'save-1-b',
+				kind: 'save',
+				at: new Date(),
+				unseen: true,
+				username: 'bo',
+				recipe: { slug: 'dal', title: 'Dal' }
+			}
+		];
+		m.notificationsFor.mockResolvedValue(items);
+		const data = await load(loadEvent({ path: '/friends', user: ME }));
+		expect(m.notificationsFor).toHaveBeenCalledWith(ME, { limit: UNSEEN_MAX });
+		expect(data.notices).toEqual(forYou(items as never));
+	});
+
+	// A hover preloads this load; only the page, once mounted, marks things seen.
+	test('reading never marks anything seen', async () => {
+		m.feedFor.mockResolvedValue({ items: [], next: null });
+		m.requestsFor.mockResolvedValue([]);
+		m.friendIdsOf.mockResolvedValue([]);
+		await load(loadEvent({ path: '/friends', user: ME }));
+		expect(m.markSeen).not.toHaveBeenCalled();
 	});
 });
 
