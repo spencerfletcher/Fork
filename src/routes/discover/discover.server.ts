@@ -1,5 +1,5 @@
-import { and, count, desc, eq, gt, gte, inArray, ne, type SQL } from 'drizzle-orm';
-import { QueryBuilder } from 'drizzle-orm/pg-core';
+import { and, count, desc, eq, gt, gte, inArray, ne, notExists, type SQL } from 'drizzle-orm';
+import { alias, QueryBuilder } from 'drizzle-orm/pg-core';
 import { db } from '#lib/server/db/index.js';
 import { favorites, profiles, recipes, recipeVersions } from '#lib/server/db/schema.js';
 import { cardList } from '#lib/server/recipeCounts.js';
@@ -112,8 +112,23 @@ function mostSaved(inSet: SQL | undefined) {
 		.limit(1);
 }
 
-/** The newest edits (v2 on) to recipes in `inSet`, each to diff against its predecessor. */
+/**
+ * The newest edits (v2 on) to recipes in `inSet`, one per recipe (its latest
+ * version), each to diff against its predecessor.
+ */
 function recentChanges(inSet: SQL | undefined) {
+	const newer = alias(recipeVersions, 'newer');
+	const isLatest = notExists(
+		new QueryBuilder()
+			.select({ id: newer.id })
+			.from(newer)
+			.where(
+				and(
+					eq(newer.recipeId, recipeVersions.recipeId),
+					gt(newer.versionNumber, recipeVersions.versionNumber)
+				)
+			)
+	);
 	return db
 		.select({
 			versionNumber: recipeVersions.versionNumber,
@@ -125,7 +140,7 @@ function recentChanges(inSet: SQL | undefined) {
 		.from(recipeVersions)
 		.innerJoin(recipes, eq(recipes.id, recipeVersions.recipeId))
 		.leftJoin(profiles, eq(profiles.id, recipes.authorId))
-		.where(and(inSet, gt(recipeVersions.versionNumber, 1)))
+		.where(and(inSet, gt(recipeVersions.versionNumber, 1), isLatest))
 		.orderBy(desc(recipeVersions.createdAt))
 		.limit(RECENT_CHANGES);
 }

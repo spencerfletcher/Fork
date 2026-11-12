@@ -113,6 +113,34 @@ describe.skipIf(!localDb)('Discover paging with its lead, against the real datab
 		expect(data.total).toBe(1);
 	});
 
+	test('Recent changes lists each recipe once, at its newest change, newest first', async () => {
+		const { makeContent } = await import('#lib/recipes/fixtures.js');
+		const [a, b] = cookIds;
+		const at = (minute: number) => new Date(Date.UTC(2021, 0, 2, 0, minute));
+		const version = (recipeId: number, versionNumber: number, minute: number) => ({
+			recipeId,
+			versionNumber,
+			commitMessage: `v${versionNumber}`,
+			...makeContent(),
+			createdBy: ids.cook,
+			createdAt: at(minute)
+		});
+		await db
+			.insert(schema.recipeVersions)
+			.values([
+				version(a, 1, 0),
+				version(a, 2, 1),
+				version(b, 1, 0),
+				version(b, 2, 2),
+				version(a, 3, 3)
+			]);
+		const data = await discover(`q=${encodeURIComponent(`@${handle.cook}`)}`);
+		expect(data.recentChanges.map((c) => [c.slug, c.versionNumber])).toEqual([
+			[`dl-${run}-1`, 3],
+			[`dl-${run}-2`, 2]
+		]);
+	});
+
 	test('an empty set has no lead and no cards', async () => {
 		const data = await discover(`q=${encodeURIComponent(`@${handle.solo} nothingmatches`)}`);
 		expect(data.lead).toBeNull();
