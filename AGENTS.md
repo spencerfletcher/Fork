@@ -20,7 +20,7 @@ Planning and design docs: start at `docs/README.md`, which names the current pro
 - Never modify the schema without a migration file
 - To inspect the hosted database, use `pnpm db:read:prod "<sql>"`: read-only by construction, through the Management API with the Database: Read token in `.env` (`SUPABASE_ACCESS_TOKEN`)
 - Migrations are one-way — no rollback scripts means you need to get it right
-- Version history is append-only by design — don't add any logic that mutates past versions
+- A past version's recipe content never changes: no logic rewrites it. The labels and messages around a version (a fork's "Forked from" line, a version's message) may be derived at read time or corrected
 - Pre-production: no backward compatibility with stored data. When a JSONB shape changes, change the type, update the seed, reseed. No legacy types, no backfill or normalize helpers, no sanitising for data nothing writes any more
 - Store only what cannot be derived. Position in a list is its number; do not add a stored index field
 - Test schema changes locally against a copy of prod data structure before shipping
