@@ -4,6 +4,7 @@ import { db, type Tx } from './db/index.js';
 import { profiles, recipes, reports, type ReportTarget } from './db/schema.js';
 import type { Viewer } from './visibility.js';
 import { EMAIL_MESSAGE } from '#lib/auth/emailCheck.svelte.js';
+import { MAX_REPORT } from '#lib/moderation.js';
 
 /**
  * The viewer is a moderator: their user id is one of MODERATOR_IDS, a
@@ -85,9 +86,6 @@ export async function moderationList(conn: Tx | typeof db = db) {
 			.map(({ reason, reportedAt, reporter }) => ({ reason, reportedAt, reporter }))
 	}));
 }
-
-/** The longest report anyone writes, from the feed's menus or /report, in characters. */
-export const MAX_REPORT = 1000;
 
 /** The longest link and address /report takes, in characters. */
 export const LINK_MAX = 500;

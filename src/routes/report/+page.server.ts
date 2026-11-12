@@ -1,11 +1,10 @@
 import {
 	CONTACT_MAX,
-	MAX_REPORT,
 	fileLinkReport,
 	LINK_MAX,
 	REPORT_ERRORS
 } from '#lib/server/moderation.js';
-import { REPORT_HONEYPOT } from '#lib/moderation.js';
+import { MAX_REPORT, REPORT_HONEYPOT } from '#lib/moderation.js';
 import { rateLimited } from '#lib/server/rateLimit.js';
 import { ensureProfile } from '#lib/server/profiles.js';
 import { failure } from '#lib/server/actions.js';

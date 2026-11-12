@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { pendingEnhance } from '#lib/pendingEnhance.svelte.js';
+	import { MAX_REPORT } from '#lib/moderation.js';
 	import type { ReportTarget } from '#lib/server/db/schema.js';
 
 	// Report's step inside a ⋯ menu (the Friends feed's MoreMenu, a recipe's
@@ -28,7 +29,7 @@
 			name="reason"
 			rows="3"
 			required
-			maxlength="1000"
+			maxlength={MAX_REPORT}
 			{@attach (el) => el.focus()}>
 		</textarea>
 		<button type="submit" class="btn-ghost">Send report</button>

@@ -21,7 +21,8 @@ import { listPage } from '#lib/listPage.js';
 import { ensureProfile } from '#lib/server/profiles.js';
 import { failure, requireUser, signedOut } from '#lib/server/actions.js';
 import { rateLimited } from '#lib/server/rateLimit.js';
-import { MAX_REPORT } from '#lib/server/moderation.js';
+import { REPORT_ERRORS } from '#lib/server/moderation.js';
+import { MAX_REPORT } from '#lib/moderation.js';
 import { oneOf, text, wholeNumber } from '#lib/helpers.js';
 import type { Actions, PageServerLoad } from './$types';
 import { privatePage } from '#lib/seo.js';
@@ -140,8 +141,7 @@ export const actions: Actions = {
 		const reason = text(formData, 'reason').trim();
 		if (!targetType || !targetId) return invalid('Choose what to report.');
 		if (!reason) return invalid('Say what is wrong.');
-		if (reason.length > MAX_REPORT)
-			return invalid(`Keep the report under ${MAX_REPORT.toLocaleString('en-US')} characters.`);
+		if (reason.length > MAX_REPORT) return invalid(REPORT_ERRORS.what.tooLong);
 		const limited = await rateLimited('reports', user.id);
 		if (limited) return failure(429, 'rate_limited', limited);
 		await report(user.id, targetType, targetId, reason);

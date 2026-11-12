@@ -2,7 +2,7 @@ import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { invokeAction, formEvent, loadEvent, loadPage } from '#lib/testing/actions.js';
 import type { PageData } from './$types';
 import { OWN_LIKE } from '#lib/server/friends.js';
-import { MAX_REPORT } from '#lib/server/moderation.js';
+import { MAX_REPORT } from '#lib/moderation.js';
 import { actions, load } from './+page.server';
 import { SESSION_ENDED } from '#lib/server/actions.js';
 import { ENTRIES_PER_PAGE } from '#lib/server/journal.js';

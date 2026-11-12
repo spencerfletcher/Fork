@@ -1,8 +1,8 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { formEvent, invokeAction, loadEvent, loadPage } from '#lib/testing/actions.js';
 import { LIMITED, LIMITED_FAILURE } from '#lib/testing/rateLimit.js';
-import { CONTACT_MAX, LINK_MAX, MAX_REPORT, REPORT_ERRORS } from '#lib/server/moderation.js';
-import { REPORT_HONEYPOT } from '#lib/moderation.js';
+import { CONTACT_MAX, LINK_MAX, REPORT_ERRORS } from '#lib/server/moderation.js';
+import { MAX_REPORT, REPORT_HONEYPOT } from '#lib/moderation.js';
 import type { PageData } from './$types';
 
 const m = vi.hoisted(() => ({

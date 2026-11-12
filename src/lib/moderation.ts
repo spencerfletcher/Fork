@@ -12,5 +12,8 @@ export const HIDDEN_NOTE =
 export const HIDDEN_REFUSED =
 	'This recipe is hidden from other cooks, so it can’t be saved or forked.';
 
+/** The longest report anyone writes, from the feed's menus or /report, in characters. */
+export const MAX_REPORT = 1000;
+
 /** The /report form's hidden trap field: a person never sees it, a form-filling bot fills it. */
 export const REPORT_HONEYPOT = 'website';
