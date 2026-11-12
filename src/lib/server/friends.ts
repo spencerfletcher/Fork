@@ -93,7 +93,7 @@ export async function sendRequest(
 async function acceptIn(tx: Tx | typeof db, me: string, them: string) {
 	const rows = await tx
 		.update(friendships)
-		.set({ status: 'accepted' })
+		.set({ status: 'accepted', acceptedAt: sql`now()` })
 		.where(
 			and(
 				eq(friendships.requesterId, them),

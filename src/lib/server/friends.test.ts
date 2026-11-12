@@ -28,6 +28,12 @@ import { blockIn, feedFor, relationFrom, sendRequest, toggleLike, unblock } from
 const ME = 'me';
 const THEM = 'them';
 
+// The accept is dated by the database's clock, as created_at is: the "accepted your request" notification reads it.
+const ACCEPTED_NOW = {
+	status: 'accepted',
+	acceptedAt: expect.objectContaining({ queryChunks: expect.anything() })
+};
+
 type Status = 'pending' | 'accepted' | 'blocked';
 const makePair = (requesterId: string, status: Status) => ({
 	requesterId,
@@ -68,7 +74,7 @@ describe('sendRequest', () => {
 	test('a request they already sent is accepted in place, keeping their row', async () => {
 		selectMock.mockReturnValue(chain([makePair(THEM, 'pending')]));
 		expect(await sendRequest(ME, THEM)).toBe('accepted');
-		expect(updateMock.mock.results[0].value.set).toHaveBeenCalledWith({ status: 'accepted' });
+		expect(updateMock.mock.results[0].value.set).toHaveBeenCalledWith(ACCEPTED_NOW);
 		expect(insertMock).not.toHaveBeenCalled();
 	});
 
@@ -91,7 +97,7 @@ describe('sendRequest', () => {
 			.mockReturnValueOnce(chain([makePair(THEM, 'pending')]));
 		insertMock.mockReturnValue(chain([]));
 		expect(await sendRequest(ME, THEM)).toBe('accepted');
-		expect(updateMock.mock.results[0].value.set).toHaveBeenCalledWith({ status: 'accepted' });
+		expect(updateMock.mock.results[0].value.set).toHaveBeenCalledWith(ACCEPTED_NOW);
 	});
 
 	test('a race lost to a block is still refused', async () => {
