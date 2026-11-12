@@ -627,10 +627,12 @@
 
 	/* A wrapping dot row whose dots sit centred in the gap before each item,
 	   so the dot of an item that wraps falls left of the box and is clipped:
-	   no line starts or ends with one. Only the left edge clips. */
+	   no line starts or ends with one. Only the left edge clips, 4px out, so
+	   a leading link's focus ring (2px out, 2px wide) is whole while the dot,
+	   its ink 5px or more out in a gap of 13px or wider, is not. */
 	.dot-clip {
 		column-gap: var(--dot-gap);
-		clip-path: inset(-1em -1em -1em 0);
+		clip-path: inset(-1em -1em -1em -4px);
 		--dot-gap: 13px;
 	}
 

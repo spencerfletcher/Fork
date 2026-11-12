@@ -258,7 +258,7 @@ describe('app.css shared utilities', () => {
 
 	test('a clipped dot row centres each dot in the gap before its item and clips the box at its left, so no wrapped line starts with one', () => {
 		expect(body('.dot-clip')).toMatch(/column-gap:\s*var\(--dot-gap\)/);
-		expect(body('.dot-clip')).toMatch(/clip-path:\s*inset\([^)]*\s0\)/);
+		expect(body('.dot-clip')).toMatch(/clip-path:\s*inset\(-1em -1em -1em -4px\)/);
 		expect(body('.dot-clip > *')).toMatch(/position:\s*relative/);
 		const dot = body('.dot-clip > * + *::before');
 		expect(dot).toMatch(/position:\s*absolute/);
