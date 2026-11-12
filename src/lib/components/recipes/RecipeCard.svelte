@@ -72,8 +72,11 @@
 			parts.push({ text: `@${recipe.author.username}`, username: recipe.author.username });
 		}
 
-		// Each time its own part: they can overlap, so no total.
-		for (const { value, word } of timeSpans(recipe)) parts.push({ text: `${value} ${word}` });
+		// Each time its own part: they can overlap, so no total. Its number and
+		// unit keep together ("1 h 30 min"); the line may break before the word.
+		for (const { value, word } of timeSpans(recipe)) {
+			parts.push({ text: `${value.replaceAll(' ', '\u00a0')} ${word}` });
+		}
 
 		// From v2 only: v1 is every unedited recipe and says nothing.
 		if ((recipe.versionCount ?? 0) > 1) {

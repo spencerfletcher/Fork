@@ -38,7 +38,10 @@ export function dayLabel(value: string | Date, now: Date = new Date()): string {
 		month: 'short',
 		...(sameYear ? {} : { year: 'numeric' }),
 		timeZone: 'UTC'
-	}).replace(',', '');
+	})
+		.replace(',', '')
+		// No-break spaces, so a date never wraps mid-way ("Wed 11 / Nov").
+		.replaceAll(' ', '\u00a0');
 }
 
 /** A journal entry's recipe link, pinned to the version cooked when there is one. */

@@ -17,12 +17,15 @@ import {
 const NOW = new Date('2026-11-10T12:00:00Z');
 
 describe('dayLabel', () => {
+	// Its words joined by no-break spaces, so a date never wraps mid-way.
+	const words = (label: string) => label.split('\u00a0');
+
 	test('weekday, day and short month, no comma, in this year', () => {
-		expect(dayLabel('2026-11-08', NOW)).toBe('Sun 8 Nov');
+		expect(words(dayLabel('2026-11-08', NOW))).toEqual(['Sun', '8', 'Nov']);
 	});
 
 	test('adds the year when it is not this one', () => {
-		expect(dayLabel('2025-12-31', NOW)).toBe('Wed 31 Dec 2025');
+		expect(words(dayLabel('2025-12-31', NOW))).toEqual(['Wed', '31', 'Dec', '2025']);
 	});
 
 	test('a Date reads as its UTC day, the same as that day written out', () => {

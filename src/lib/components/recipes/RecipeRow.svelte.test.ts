@@ -102,8 +102,9 @@ describe('RecipeRow', () => {
 			{ tags: ['baking', 'cookies', 'dessert'], timesCooked: 9, lastCookedOn: last }
 		);
 		expect(container.querySelector('.row-tags')).toHaveTextContent('baking, cookies, dessert');
+		// The date's no-break spaces read as spaces in the matcher's normalised text.
 		expect(container.querySelector('.row-cooked')).toHaveTextContent(
-			`Cooked 9 times, last on ${dayLabel(last)}`
+			`Cooked 9 times, last on ${dayLabel(last)}`.replace(/\s/g, ' ')
 		);
 	});
 
@@ -118,7 +119,7 @@ describe('RecipeRow', () => {
 			'20 min prep',
 			'45 min cook',
 			'soup',
-			`Cooked on ${dayLabel('2026-10-28')}`
+			`Cooked on ${dayLabel('2026-10-28')}`.replace(/\s/g, ' ')
 		]);
 		expect(container.querySelector('.row-meta > .fold-tags')).toHaveTextContent('soup');
 		expect(container.querySelector('.row-meta > .fold-cooked')).toHaveTextContent(/^Cooked on/);

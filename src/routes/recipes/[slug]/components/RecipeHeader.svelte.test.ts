@@ -444,7 +444,7 @@ describe('RecipeHeader personal line', () => {
 		});
 		const line = container.querySelector('.personal')!;
 		expect(line.textContent!.replace(/\s+/g, ' ').trim()).toBe('You cooked this on Sun 8 Nov');
-		expect(screen.getByRole('link', { name: 'Sun 8 Nov' })).toHaveAttribute(
+		expect(screen.getByRole('link', { name: 'Sun\u00a08\u00a0Nov' })).toHaveAttribute(
 			'href',
 			'/journal#entry-12'
 		);
@@ -460,7 +460,7 @@ describe('RecipeHeader personal line', () => {
 		expect(line.textContent!.replace(/\s+/g, ' ').trim()).toBe(
 			'You cooked this 4 times, last on Tue 3 Nov'
 		);
-		expect(screen.getByRole('link', { name: 'Tue 3 Nov' })).toHaveAttribute(
+		expect(screen.getByRole('link', { name: 'Tue\u00a03\u00a0Nov' })).toHaveAttribute(
 			'href',
 			'/journal#entry-12'
 		);

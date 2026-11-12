@@ -61,6 +61,14 @@ describe('RecipeCard', () => {
 		expect(screen.getByText(`${formatDuration(90)} cook`)).toBeInTheDocument();
 	});
 
+	test('a time keeps its number and unit together, so "1 h 30 min" never splits across lines', () => {
+		const { container } = render(RecipeCard, {
+			props: { recipe: makeRecipe({ cookTimeMinutes: 90 }) }
+		});
+		const item = container.querySelector('.meta-row .meta-item')!;
+		expect(item.textContent).toBe(`${formatDuration(90).replaceAll(' ', '\u00a0')} cook`);
+	});
+
 	test('shows prep-only label when only prepTimeMinutes is set', () => {
 		render(RecipeCard, { props: { recipe: makeRecipe({ prepTimeMinutes: 15 }) } });
 		expect(screen.getByText('15 min prep')).toBeInTheDocument();
@@ -268,7 +276,7 @@ describe('RecipeCard', () => {
 		expect(screen.queryByText(/^v\d+$/)).toBeNull();
 		expect(container.querySelector('.vid')).toBeNull();
 		const row = container.querySelector('.meta-row')!;
-		expect([...row.children].map((el) => el.textContent)).toEqual(['28 min cook', '1 fork']);
+		expect([...row.children].map((el) => el.textContent)).toEqual(['28\u00a0min cook', '1 fork']);
 	});
 
 	test('the mark starts at v2', () => {
