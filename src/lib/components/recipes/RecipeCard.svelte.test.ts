@@ -4,7 +4,7 @@ import RecipeCard from './RecipeCard.svelte';
 import source from './RecipeCard.svelte?raw';
 import { formatDuration } from '#lib/recipes/times.js';
 import { dayLabel } from '#lib/journal.js';
-import { cssRule } from '#lib/testing/css.js';
+import { cssRule, cssRules } from '#lib/testing/css.js';
 import { MARK_END, MARK_START } from '#lib/highlight.js';
 
 const { mockGoto } = vi.hoisted(() => ({ mockGoto: vi.fn() }));
@@ -94,6 +94,13 @@ describe('RecipeCard', () => {
 
 	test('titles wrap normally, never balanced', () => {
 		expect(source).not.toMatch(/text-wrap: balance/);
+	});
+
+	test('a panel grows with its title at a large text size: only the photo is clipped to 4:3', () => {
+		expect(cssRules(source, '.card-panel').join('')).not.toMatch(/overflow:\s*hidden/);
+		expect(cssRules(source, '.card-img-wrap').join('')).toMatch(/overflow:\s*hidden/);
+		expect(cssRules(source, '.card-panel').join('')).toMatch(/aspect-ratio:\s*4 \/ 3/);
+		expect(cssRules(source, '.card-panel-title').join('')).toMatch(/overflow-wrap:\s*anywhere/);
 	});
 
 	test('the description clamps at two lines', () => {

@@ -316,10 +316,15 @@
 		z-index: 1;
 	}
 
+	/* A panel is 4:3 at least: unclipped, it grows with its title when the
+	   text is large, where a photo is cropped to the block. */
 	.card-img-wrap,
 	.card-panel {
 		aspect-ratio: 4 / 3;
 		border-radius: var(--radius-md);
+	}
+
+	.card-img-wrap {
 		overflow: hidden;
 	}
 
@@ -433,6 +438,7 @@
 		overflow: hidden;
 		color: var(--color-accent);
 		text-wrap: pretty;
+		overflow-wrap: anywhere;
 	}
 
 	.meta-row {
