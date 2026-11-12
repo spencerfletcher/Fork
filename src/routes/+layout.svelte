@@ -143,7 +143,8 @@
 	   leaves it so the page does not scroll for one line. */
 	.site-footer {
 		box-sizing: border-box;
-		max-width: var(--max-width);
+		/* The column plus .page's gutters, so the link starts on the content edge. */
+		max-width: calc(var(--max-width) + 2 * var(--space-5));
 		height: var(--footer-height);
 		margin: 0 auto;
 		padding: 0 var(--space-5);

@@ -18,6 +18,17 @@ test.describe('Report a problem, signed out', () => {
 		await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'noindex');
 	});
 
+	for (const width of [1280, 900, 390]) {
+		test(`the footer link starts on the page's content edge at ${width}px`, async ({ page }) => {
+			await page.setViewportSize({ width, height: 900 });
+			await gotoHydrated(page, '/discover');
+			const left = async (l: ReturnType<Page['locator']>) => (await l.boundingBox())?.x;
+			const footer = page.getByRole('link', { name: 'Report a problem', exact: true });
+			const title = page.getByRole('heading', { level: 1 });
+			expect(await left(footer)).toBe(await left(title));
+		});
+	}
+
 	test('refusals show inline beside each field, with what was typed kept', async ({ page }) => {
 		await gotoHydrated(page, '/report');
 		await link(page).fill('https://elsewhere.example/recipes/soup');
