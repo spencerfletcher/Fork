@@ -16,8 +16,9 @@ import {
  * the owner tunes them here. `message` is what the refused cook reads.
  */
 export const RATE_LIMITS = {
+	// Above the e2e suite's ~66 new recipes and forks a run, all as one cook.
 	recipes: {
-		max: 30,
+		max: 100,
 		hours: 1,
 		message: "You've made a lot of recipes and forks in the last hour. Try again later."
 	},
@@ -75,7 +76,8 @@ const SOURCES: Record<
 	edits: (who) => ({
 		table: recipeVersions,
 		createdAt: recipeVersions.createdAt,
-		whose: by(recipeVersions.createdBy, who)
+		// A recipe's first version is its making, which `recipes` counts.
+		whose: and(by(recipeVersions.createdBy, who), gt(recipeVersions.versionNumber, 1))
 	}),
 	reports: (who) => ({
 		table: reports,

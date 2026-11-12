@@ -42,7 +42,7 @@ describe.skipIf(!localDb)('rateLimited, against the real database', () => {
 				await tx.insert(schema.recipeVersions).values(
 					each.map((i) => ({
 						recipeId: r.id,
-						versionNumber: i + 1,
+						versionNumber: i + 2,
 						commitMessage: 'm',
 						title: 'R',
 						ingredients: [],
@@ -154,6 +154,33 @@ describe.skipIf(!localDb)('rateLimited, against the real database', () => {
 				}))
 			);
 			expect(await rl.rateLimited('linkReports', null, tx)).toBeNull();
+		});
+	});
+
+	test("edits: a recipe's first version is its making, not an edit", async () => {
+		await withProfiles(1, async (tx, [cook]) => {
+			const s = stamp();
+			const made = await tx
+				.insert(schema.recipes)
+				.values(
+					Array.from({ length: RATE_LIMITS.edits.max }, (_, i) => ({
+						slug: `rl-first-${s}-${i}`,
+						title: 'R'
+					}))
+				)
+				.returning({ id: schema.recipes.id });
+			await tx.insert(schema.recipeVersions).values(
+				made.map((r) => ({
+					recipeId: r.id,
+					versionNumber: 1,
+					commitMessage: 'Initial recipe',
+					title: 'R',
+					ingredients: [],
+					steps: [],
+					createdBy: cook
+				}))
+			);
+			expect(await rl.rateLimited('edits', cook, tx)).toBeNull();
 		});
 	});
 });
