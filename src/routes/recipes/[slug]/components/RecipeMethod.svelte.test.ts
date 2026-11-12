@@ -148,8 +148,7 @@ describe('RecipeMethod', () => {
 // off it, so no prop reaches this component. jsdom applies no component CSS,
 // so the rules are read from source; the e2e spec pins the computed sizes.
 describe('RecipeMethod while cooking', () => {
-	const style = source.slice(source.indexOf('<style>'));
-	const rule = (selector: string, from = style) => cssRule(from, selector);
+	const rule = (selector: string, from = source) => cssRule(from, selector);
 
 	test('the step row and its text carry the classes the cooking rules hang on', () => {
 		render(RecipeMethod, { props: { storageKey: KEY, steps: [makeStep('Mix.')] } });
@@ -161,8 +160,8 @@ describe('RecipeMethod while cooking', () => {
 	// Spencer, 11 November 2026: a little larger than 3B's 1.25rem and a little
 	// smaller than 3C's 1.375rem on a phone; the numeral hangs in clay Bitter.
 	test('on a phone the text is 1.3125rem on a 1.45 line, the numeral 1.625rem', () => {
-		const phone = style.slice(style.indexOf('@media (max-width: 699px)'));
-		expect(phone.length).toBeLessThan(style.length);
+		const phone = source.slice(source.indexOf('@media (max-width: 699px)'));
+		expect(phone.length).toBeLessThan(source.length);
 		expect(rule(':global([data-cooking]) .step-text', phone)).toMatch(/font-size:\s*1\.3125rem/);
 		expect(rule(':global([data-cooking]) .step-text', phone)).toMatch(/line-height:\s*1\.45/);
 		expect(rule(':global([data-cooking]) .step', phone)).toMatch(/font-size:\s*1\.625rem/);

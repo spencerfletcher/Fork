@@ -317,22 +317,21 @@ describe('TagInput caps', () => {
 });
 
 // jsdom applies no component CSS, so the declarations are read from the source.
-const style = source.slice(source.indexOf('<style>'));
 
 describe('TagInput tag pill remove button', () => {
 	// The button is the 16px glyph box, so its focus ring stays pill-sized; the
 	// hit grows outward on a ::before, so the pill keeps its size too.
 	test('is a 16px box with a 24px hit on a ::before with a mouse', () => {
-		expect(cssRule(style, '.tag-remove')).toMatch(
+		expect(cssRule(source, '.tag-remove')).toMatch(
 			/position:\s*relative[^}]*width:\s*16px[^}]*height:\s*16px/
 		);
-		expect(cssRule(style, '.tag-remove::before')).toMatch(
+		expect(cssRule(source, '.tag-remove::before')).toMatch(
 			/content:\s*''[^}]*position:\s*absolute[^}]*inset:\s*-4px/
 		);
 	});
 
 	test('is a 44px hit on a phone or under a coarse pointer, grown the same way', () => {
-		const media = style.slice(style.indexOf('@media (max-width: 699px), (pointer: coarse)'));
+		const media = source.slice(source.indexOf('@media (max-width: 699px), (pointer: coarse)'));
 		expect(cssRule(media, '.tag-remove::before')).toMatch(/inset:\s*-14px/);
 	});
 
@@ -355,7 +354,7 @@ describe('TagInput active option', () => {
 	// The hover tint is 1.09:1 on the list, too faint to find the arrowed-to option by.
 	test('is drawn with an accent line inside its edge, outside any media query', () => {
 		// Read before the forced-colours block: a top-level rule, not that one.
-		const topLevel = style.slice(0, style.indexOf('@media (forced-colors: active)'));
+		const topLevel = source.slice(0, source.indexOf('@media (forced-colors: active)'));
 		expect(cssRules(topLevel, ".tag-option[aria-selected='true']").join('\n')).toMatch(
 			/outline: 2px solid var\(--color-accent\);[^}]*outline-offset: -2px;/
 		);

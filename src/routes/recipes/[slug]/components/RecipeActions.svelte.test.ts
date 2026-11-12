@@ -239,8 +239,7 @@ describe('RecipeActions save button', () => {
 
 describe('RecipeActions favorited look', () => {
 	// jsdom applies no component CSS, so the rules are read from the source.
-	const style = source.slice(source.indexOf('<style>'));
-	const rule = (selector: string, from = style) => cssRule(from, selector);
+	const rule = (selector: string, from = source) => cssRule(from, selector);
 	const pressed = ".favorite[aria-pressed='true']";
 
 	test('the favorite button carries the class the pressed rules hang on', () => {
@@ -265,8 +264,8 @@ describe('RecipeActions favorited look', () => {
 	});
 
 	test('forced colours: pressed gets a 2px border and a Highlight star, like the ticks', () => {
-		const forced = style.slice(style.indexOf('@media (forced-colors: active)'));
-		expect(forced.length).toBeLessThan(style.length);
+		const forced = source.slice(source.indexOf('@media (forced-colors: active)'));
+		expect(forced.length).toBeLessThan(source.length);
 		expect(rule(pressed, forced)).toMatch(/border-width:\s*2px/);
 		// :global, because the star comes from Icons.svelte and scoped CSS would miss it.
 		const star = rule(`${pressed} :global(svg)`, forced);
@@ -426,8 +425,7 @@ describe('RecipeActions row', () => {
 
 	test('on a phone Cook and the login link span the row; a lone last pill spans too', () => {
 		// jsdom applies no component CSS, so the rules are read from the source.
-		const style = source.slice(source.indexOf('<style>'));
-		const phone = style.slice(style.indexOf('@media (max-width: 699px)'));
+		const phone = source.slice(source.indexOf('@media (max-width: 699px)'));
 		const spans = phone.match(/([^{}]*)\{[^}]*grid-column:\s*1 \/ -1/)![1];
 		for (const selector of ['.cook', '.login', '.log:nth-child(even)']) {
 			expect(spans).toContain(selector);
@@ -438,8 +436,7 @@ describe('RecipeActions row', () => {
 	});
 
 	test('on a phone More takes the end of Cook’s row, out of the pairing', () => {
-		const style = source.slice(source.indexOf('<style>'));
-		const phone = style.slice(style.indexOf('@media (max-width: 699px)'));
+		const phone = source.slice(source.indexOf('@media (max-width: 699px)'));
 		expect(cssRule(phone, '.actions > :global(.dropdown)')).toMatch(/position:\s*absolute/);
 		expect(cssRule(phone, '.actions > :global(.dropdown)')).toMatch(/right:\s*0/);
 		// Cook leaves the trigger's 44px and the row's 10px gap.

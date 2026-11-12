@@ -36,7 +36,6 @@ const profile = {
 	mutedNotifications: [],
 	createdAt: new Date()
 };
-const style = source.slice(source.indexOf('<style>'));
 
 afterEach(() => {
 	page.url = new URL('http://localhost/');
@@ -89,7 +88,7 @@ describe('Navbar', () => {
 		const search = screen.getByRole('link', { name: 'Search' });
 		expect(search).toHaveAttribute('href', '/search');
 		expect(search).toHaveAttribute('aria-current', 'page');
-		expect(style).not.toMatch(/\.nav-icon\s*{[^}]*display:\s*none/);
+		expect(source).not.toMatch(/\.nav-icon\s*{[^}]*display:\s*none/);
 	});
 
 	// No count and no live region: the link's name carries it, the dot is decoration.
@@ -142,17 +141,17 @@ describe('Navbar signed in', () => {
 			Node.DOCUMENT_POSITION_FOLLOWING
 		);
 		expect(container.querySelectorAll('a[href="/recipes/new"]')).toHaveLength(2);
-		expect(cssRule(style, '.nav-plus')).toMatch(/width:\s*44px/);
-		expect(cssRule(style, '.nav-plus')).toMatch(/height:\s*44px/);
-		expect(cssRule(style, '.nav-plus span')).toMatch(/background:\s*var\(--color-marigold\)/);
+		expect(cssRule(source, '.nav-plus')).toMatch(/width:\s*44px/);
+		expect(cssRule(source, '.nav-plus')).toMatch(/height:\s*44px/);
+		expect(cssRule(source, '.nav-plus span')).toMatch(/background:\s*var\(--color-marigold\)/);
 	});
 
 	// An unlayered display on the link would beat Tailwind's layered md:hidden
 	// and put a second New recipe beside the words at desktop.
 	test('the + takes its display only below 768, so md:hidden hides it from 768', () => {
-		const rules = style.split(/@media[^{]*\{/);
+		const rules = source.split(/@media[^{]*\{/);
 		expect(cssRule(rules[0], '.nav-plus')).not.toMatch(/display:/);
-		expect(style).toMatch(/@media \(max-width: 767px\) \{\s*\.nav-plus \{\s*display: flex;/);
+		expect(source).toMatch(/@media \(max-width: 767px\) \{\s*\.nav-plus \{\s*display: flex;/);
 	});
 
 	test('New recipe is current on /recipes/new only', () => {
@@ -267,7 +266,7 @@ describe('Navbar signed in', () => {
 });
 
 describe('Navbar layout', () => {
-	const rule = (selector: string) => cssRule(style, selector);
+	const rule = (selector: string) => cssRule(source, selector);
 
 	test('links and the action never wrap', () => {
 		expect(rule('.navbar-link')).toMatch(/white-space:\s*nowrap/);
@@ -303,19 +302,19 @@ describe('Navbar layout', () => {
 
 	// Log in and the brand are thumb targets on a phone.
 	test('below 768 the brand and the text links are 44px tall', () => {
-		const phone = style.match(/@media \(max-width: 767px\)\s*{([\s\S]*?)\n\t}/)![1];
+		const phone = source.match(/@media \(max-width: 767px\)\s*{([\s\S]*?)\n\t}/)![1];
 		const block = cssRule(phone, '.nav-brand, .navbar-link:not(.hidden)');
 		expect(block).toMatch(/min-height:\s*44px/);
 	});
 
 	test("the bar's marigold ring reaches every link in it", () => {
-		expect(style).toMatch(/nav :global\(:focus-visible\)\s*{[^}]*--color-marigold/);
+		expect(source).toMatch(/nav :global\(:focus-visible\)\s*{[^}]*--color-marigold/);
 	});
 
 	// Current is cream against tan, which forced colours flatten; an underline
 	// (an outline on the icon) keeps "you are here".
 	test('the current link and icon keep a mark under forced colours', () => {
-		const block = style.slice(style.lastIndexOf('@media (forced-colors: active)'));
+		const block = source.slice(source.lastIndexOf('@media (forced-colors: active)'));
 		const link = cssRule(block, ".navbar-link[aria-current='page']");
 		expect(link).toMatch(/text-decoration:\s*underline/);
 		const icon = cssRule(block, ".nav-icon[aria-current='page']:not(:focus-visible)");

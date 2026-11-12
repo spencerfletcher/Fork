@@ -12,7 +12,6 @@ import { makeContent } from '#lib/recipes/fixtures.js';
 import source from './ScalePanel.svelte?raw';
 import { cssRule } from '#lib/testing/css.js';
 
-const style = source.slice(source.indexOf('<style>'));
 
 const STORED = 3;
 
@@ -266,8 +265,8 @@ describe('ScalePanel', () => {
 	// 360px: 324px between the 18px gutters. The group is 32 + 72 + 32 plus
 	// its 2px border, the three text buttons 44 each, gaps 16 + 4 + 4: 294.
 	test('the steps are drawn narrow, with a thumb’s 44px reached by the hit pattern on a phone', () => {
-		const phone = style.slice(style.indexOf('@media (max-width: 699px), (pointer: coarse)'));
-		expect(cssRule(style, '.step')).toMatch(/width:\s*32px/);
+		const phone = source.slice(source.indexOf('@media (max-width: 699px), (pointer: coarse)'));
+		expect(cssRule(source, '.step')).toMatch(/width:\s*32px/);
 		expect(cssRule(phone, '.step')).toMatch(/--hit:\s*12px/);
 		expect(cssRule(phone, '.scale-row .text-btn')).toMatch(/min-width:\s*44px/);
 		// 44px inside its 1px border.
@@ -278,9 +277,9 @@ describe('ScalePanel', () => {
 	// "½× 2× Reset" together: 12px apart, 16px after the group. A phone's 44px
 	// boxes keep 4px, the row's 294 at 360.
 	test('the text buttons stand apart at a desktop and keep the phone row tight', () => {
-		const phone = style.slice(style.indexOf('@media (max-width: 699px), (pointer: coarse)'));
-		expect(cssRule(style, '.scale-row')).toMatch(/gap:\s*12px/);
-		expect(cssRule(style, '.scale-group')).toMatch(/margin-right:\s*4px/);
+		const phone = source.slice(source.indexOf('@media (max-width: 699px), (pointer: coarse)'));
+		expect(cssRule(source, '.scale-row')).toMatch(/gap:\s*12px/);
+		expect(cssRule(source, '.scale-group')).toMatch(/margin-right:\s*4px/);
 		expect(cssRule(phone, '.scale-row')).toMatch(/gap:\s*4px/);
 		expect(cssRule(phone, '.scale-group')).toMatch(/margin-right:\s*12px/);
 	});

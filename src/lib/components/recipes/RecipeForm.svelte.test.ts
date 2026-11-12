@@ -28,7 +28,6 @@ const scrollIntoView = vi.fn();
 const reduced = { matches: false };
 
 // jsdom applies no component CSS, so the declarations are read from the source.
-const style = source.slice(source.indexOf('<style>'));
 
 describe('RecipeForm photo input', () => {
 	test('offers the types a save stores', () => {
@@ -223,7 +222,7 @@ describe('RecipeForm title box', () => {
 
 	// field-sizing grows it; without it, rows="1" and this floor keep the input's height.
 	test("keeps the single-line boxes' height where field-sizing is unsupported, and no resize grip", () => {
-		const rule = cssRule(style, "textarea[name='title']");
+		const rule = cssRule(source, "textarea[name='title']");
 		expect(rule).toMatch(/min-height:\s*calc\(1lh \+ 20px\)/);
 		expect(rule).toMatch(/resize:\s*none/);
 	});
@@ -422,12 +421,12 @@ describe('RecipeForm phone details', () => {
 		renderWith({ makes: '36 cookies', visibility: 'public' });
 		// The dots are app.css's .dot-clip, centred in the gap and clipped at the left.
 		expect(summary().querySelector('.fold-facts')).toHaveClass('dot-list', 'dot-clip');
-		expect(cssRule(style, '.fold-facts')).toMatch(/overflow:\s*hidden/);
-		expect(cssRule(style, '.fold-facts')).toMatch(/--dot-gap:\s*14px/);
+		expect(cssRule(source, '.fold-facts')).toMatch(/overflow:\s*hidden/);
+		expect(cssRule(source, '.fold-facts')).toMatch(/--dot-gap:\s*14px/);
 	});
 
 	test('on a phone the folded summary sits one section gap, the form’s own, above Ingredients', () => {
-		const phone = style.slice(style.lastIndexOf('@media (max-width: 699px)'));
+		const phone = source.slice(source.lastIndexOf('@media (max-width: 699px)'));
 		expect(cssRule(phone, '.editor-top')).toMatch(/margin-bottom:\s*0/);
 	});
 
@@ -473,17 +472,15 @@ describe('RecipeForm save bar', () => {
 	});
 
 	test('the bar is pinned to the bottom on every size, and the page keeps a focused field above it', () => {
-		const barStyle = barSource.slice(barSource.indexOf('<style>'));
-		expect(cssRule(barStyle, '.save-bar')).toMatch(/position:\s*sticky/);
-		expect(cssRule(barStyle, ':global(html:has(.save-bar))')).toMatch(
+		expect(cssRule(barSource, '.save-bar')).toMatch(/position:\s*sticky/);
+		expect(cssRule(barSource, ':global(html:has(.save-bar))')).toMatch(
 			/scroll-padding-bottom:[^;]*env\(safe-area-inset-bottom\)/
 		);
 	});
 
 	// A border image's outset paints past the box without adding to the page's scroll width.
 	test("the bar's fill and rule run to the window's edges at every width, its contents on the column", () => {
-		const barStyle = barSource.slice(barSource.indexOf('<style>'));
-		const bar = cssRule(barStyle, '.save-bar');
+		const bar = cssRule(barSource, '.save-bar');
 		expect(bar).toMatch(
 			/border-image:\s*linear-gradient\(var\(--color-border\) 0 1px, var\(--color-surface\) 0\) 0 fill \/ 0 \/\s*0\s+100vw/
 		);
@@ -600,8 +597,7 @@ describe('RecipeForm length caps', () => {
 	});
 
 	test("What changed?'s message sits above the pinned bar from 700, so the bar keeps its height", () => {
-		const barStyle = barSource.slice(barSource.indexOf('<style>'));
-		const wide = barStyle.slice(barStyle.indexOf('@media (min-width: 700px)'));
+		const wide = barSource.slice(barSource.indexOf('@media (min-width: 700px)'));
 		expect(cssRule(wide, '.field-message :global(.field-error)')).toMatch(
 			/position:\s*absolute;\s*bottom:\s*calc\(100% - 1px\)/
 		);

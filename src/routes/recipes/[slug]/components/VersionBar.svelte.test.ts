@@ -204,12 +204,11 @@ describe('VersionBar', () => {
 	test("hover and focus outline each other version's row in Rule 2, never the current line", () => {
 		// jsdom applies no component CSS, so the rule is read from the source. The
 		// list holds only the other versions; the current line lives in .current.
-		const style = source.slice(source.indexOf('<style>'));
-		const rule = cssRule(style, '.history li:hover, .history li:focus-within');
+		const rule = cssRule(source, '.history li:hover, .history li:focus-within');
 		expect(rule).toMatch(/outline: 1px solid var\(--color-border-2\);/);
 		expect(rule).toMatch(/outline-offset: -1px;/);
-		expect(style).not.toMatch(/\.current[^{]*:hover[^{]*\{[^}]*outline/);
-		expect(style).toMatch(
+		expect(source).not.toMatch(/\.current[^{]*:hover[^{]*\{[^}]*outline/);
+		expect(source).toMatch(
 			/@media \(forced-colors: active\) \{\s*\.history li:hover,\s*\.history li:focus-within \{\s*outline-color: CanvasText;/
 		);
 	});
@@ -217,8 +216,7 @@ describe('VersionBar', () => {
 	// The Hover Rule (DESIGN.md): words that act deepen and underline, only
 	// where a pointer hovers; a history row underlines its note, never its chip.
 	test('the links and toggle underline on hover, the chip never', () => {
-		const style = source.slice(source.indexOf('<style>'));
-		const [outside, ...inside] = style.split('@media (hover: hover)');
+		const [outside, ...inside] = source.split('@media (hover: hover)');
 		expect(outside).not.toMatch(/:hover[^{]*\{[^}]*color:/);
 		const hover = inside.join('');
 		const UNDERLINE = /text-decoration-line:\s*underline/;
@@ -233,7 +231,7 @@ describe('VersionBar', () => {
 		const note = cssRule(hover, '.version-link:hover .message');
 		expect(note).toMatch(UNDERLINE);
 		expect(note).toMatch(/color:\s*var\(--color-text\)/);
-		expect(style).not.toMatch(/\.version-link:hover\s*\{[^}]*underline/);
+		expect(source).not.toMatch(/\.version-link:hover\s*\{[^}]*underline/);
 	});
 
 	test('the chip keeps its box in forced colours: a transparent outline, inset so nothing moves', () => {
@@ -246,14 +244,13 @@ describe('VersionBar', () => {
 
 	test('the toggle grows its hit on a pseudo, so its focus ring hugs the words', () => {
 		// jsdom applies no component CSS, so the rules are read from the source.
-		const style = source.slice(source.indexOf('<style>'));
-		const padded = [...style.matchAll(/([^{}]*)\{[^}]*padding: (?:4|11)px 0;[^}]*\}/g)].map(
+		const padded = [...source.matchAll(/([^{}]*)\{[^}]*padding: (?:4|11)px 0;[^}]*\}/g)].map(
 			(m) => m[1]
 		);
 		for (const selectors of padded) expect(selectors).not.toMatch(/\.versions-toggle\b(?!::)/);
-		expect(style).toMatch(/\.versions-toggle \{[^}]*position: relative;/);
-		expect(style).toMatch(/\.versions-toggle::before[^{]*\{[^}]*content: '';[^}]*inset: -4px 0;/);
-		const phone = style.slice(style.indexOf('@media (max-width: 699px)'));
+		expect(source).toMatch(/\.versions-toggle \{[^}]*position: relative;/);
+		expect(source).toMatch(/\.versions-toggle::before[^{]*\{[^}]*content: '';[^}]*inset: -4px 0;/);
+		const phone = source.slice(source.indexOf('@media (max-width: 699px)'));
 		expect(phone).toMatch(/\.versions-toggle::before[^{]*\{\s*inset: -11px 0;/);
 	});
 

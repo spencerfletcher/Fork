@@ -84,6 +84,7 @@ const stylesheets = readdirSync(new URL('.', import.meta.url), { recursive: true
 	.filter((f) => f.endsWith('.svelte') || f === 'app.css')
 	.map((f) => {
 		const source = readFileSync(new URL(f, import.meta.url), 'utf8');
+		// The whole stylesheet, not one rule: the sweeps below scan every rule for a pattern.
 		return { f, style: f === 'app.css' ? source : (source.split('<style>')[1] ?? '') };
 	});
 
@@ -316,6 +317,7 @@ describe('app.css shared utilities', () => {
 			.map(String)
 			.filter((f) => f.endsWith('.svelte'))
 			.filter((f) => {
+				// The whole <style>, not one rule: any component's own .vid rule is the offence.
 				const style = readFileSync(new URL(f, import.meta.url), 'utf8').split('<style>')[1] ?? '';
 				return /(^|\n)\s*\.vid\s*\{/.test(style);
 			});

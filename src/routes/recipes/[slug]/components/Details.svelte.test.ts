@@ -124,8 +124,7 @@ describe('Details', () => {
 		const { container } = render(Details, { props: { content: makeContent() } });
 		expect(container.querySelector('.details')).toHaveClass('dot-list');
 		expect(container.querySelector('.line')).toHaveClass('dot-list');
-		const style = source.slice(source.indexOf('<style>'));
-		const phone = style.slice(style.indexOf('@media (max-width: 699px)'));
+		const phone = source.slice(source.indexOf('@media (max-width: 699px)'));
 		expect(cssRule(phone, '.line')).toMatch(/display: block/);
 		expect(cssRule(phone, '.line + .line::before')).toMatch(/content: none/);
 	});

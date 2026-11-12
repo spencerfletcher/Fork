@@ -12,7 +12,6 @@ import { cssRule } from '#lib/testing/css.js';
 import { TRASH_DAYS } from '#lib/trash.js';
 import type { SubmitFunction } from '$app/forms';
 
-const style = source.slice(source.indexOf('<style>'));
 
 const { page, goto, submits } = vi.hoisted(() => ({
 	page: { url: new URL('http://localhost/cookbook') } as {
@@ -348,7 +347,7 @@ describe('Cookbook View, a phone’s', () => {
 	const sheet = () => document.getElementById('cookbook-view-sheet')!;
 	const phoneOnly = (selector: string) =>
 		cssRule(
-			style.slice(style.indexOf('@media (max-width: 767px) and (scripting: enabled)')),
+			source.slice(source.indexOf('@media (max-width: 767px) and (scripting: enabled)')),
 			selector
 		);
 
@@ -371,7 +370,7 @@ describe('Cookbook View, a phone’s', () => {
 	test('below 768 the rows go and View shows; from 768, or without script, the reverse', () => {
 		expect(phoneOnly('.cookbook-filters > .seg')).toMatch(/display:\s*none/);
 		expect(phoneOnly('.cookbook-view')).toMatch(/display:\s*none/);
-		const rest = style.slice(style.indexOf('@media (min-width: 768px), (scripting: none)'));
+		const rest = source.slice(source.indexOf('@media (min-width: 768px), (scripting: none)'));
 		expect(cssRule(rest, '.view-menu')).toMatch(/display:\s*none/);
 	});
 
@@ -798,7 +797,7 @@ describe('Cookbook select mode', () => {
 		expect(select()).toHaveClass('text-btn', 'text-btn--ink');
 		expect(select().parentElement).toHaveClass('cookbook-view');
 		expect(select().parentElement!.lastElementChild).toBe(select());
-		expect(cssRule(style, '.cookbook-select')).toMatch(/margin-left:\s*auto/);
+		expect(cssRule(source, '.cookbook-select')).toMatch(/margin-left:\s*auto/);
 	});
 
 	// A phone's way in. The cards must not jump: outside the desktop row
