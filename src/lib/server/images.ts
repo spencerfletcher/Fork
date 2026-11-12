@@ -85,6 +85,8 @@ function stripJpeg(b: Bytes): Bytes | null {
 		if (b[at] !== 0xff) return null;
 		const marker = b[at + 1];
 		// SOS: the compressed pixels follow, kept byte for byte to the end.
+		// ponytail: an image embedded after EOI (MPF, gain maps) keeps its own
+		// Exif; walk past EOI into it if phones are found to put GPS there.
 		if (marker === 0xda) return join([...parts, b.subarray(at)]);
 		const end = at + 2 + ((b[at + 2] << 8) | b[at + 3]);
 		if (end > b.length || end < at + 4) return null;
@@ -94,7 +96,8 @@ function stripJpeg(b: Bytes): Bytes | null {
 			// Without its Orientation a phone photo would show on its side, so an
 			// Exif that turns the picture is replaced by one that only turns it.
 			const orientation = exifOrientation(segment.subarray(4));
-			if (orientation !== null && orientation !== 1) parts.push(orientationSegment(orientation));
+			if (orientation !== null && orientation >= 2 && orientation <= 8)
+				parts.push(orientationSegment(orientation));
 		}
 		at = end;
 	}

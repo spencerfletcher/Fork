@@ -204,7 +204,7 @@ describe('stripMetadata', () => {
 	// Its first bytes vouched for the type; a structure that cannot be walked
 	// could hide anything, so it is refused rather than stored as if clean.
 	test('a structure that cannot be walked is null', () => {
-		const cases: [Uint8Array, (typeof PHOTO_TYPES)[number]][] = [
+		const cases: [Uint8Array<ArrayBuffer>, (typeof PHOTO_TYPES)[number]][] = [
 			[cat(SOI, [0xff, 0xe1, 0x40, 0x00, 1, 2]), 'image/jpeg'], // segment longer than the file
 			[cat(SOI, [0x00, 0x00]), 'image/jpeg'], // no marker where one must be
 			[cat(SOI, JFIF), 'image/jpeg'], // ends before any scan
