@@ -7,13 +7,13 @@
 </script>
 
 <script lang="ts">
-	import { deserialize, enhance } from '$app/forms';
+	import { deserialize } from '$app/forms';
 	import type { SubmitFunction } from '$app/forms';
 	import { onDestroy, onMount, tick } from 'svelte';
 	import FieldError from '#lib/components/ui/FieldError.svelte';
+	import NameStep from '#lib/components/ui/NameStep.svelte';
 	import { plusIcon } from '#lib/components/Icons.svelte';
 	import { pendingEnhance } from '#lib/pendingEnhance.svelte.js';
-	import { COLLECTION_NAME_MAX } from '#lib/collections.js';
 	import CollectionToggle from './CollectionToggle.svelte';
 
 	// A menu's Collections group: a check per collection (a recipe may be in
@@ -167,38 +167,17 @@
 			{/each}
 		</div>
 		{#if naming}
-			<form
-				method="POST"
+			<!-- Escape goes back to the list; a second Escape closes the menu. -->
+			<NameStep
+				id="new-collection"
+				label="New collection"
 				action={newAction}
-				class="name-step"
-				use:enhance={onOpen ? createOwn : creating.submit}>
-				{#each Object.entries(fields) as [field, value] (field)}
-					<input type="hidden" name={field} {value} />
-				{/each}
-				<label for="new-collection-name">New collection</label>
-				<input
-					id="new-collection-name"
-					name="name"
-					type="text"
-					maxlength={COLLECTION_NAME_MAX}
-					required
-					autocomplete="off"
-					aria-invalid={namingError ? true : undefined}
-					aria-describedby={namingError ? 'new-collection-error' : undefined}
-					onkeydown={(e) => {
-						// Back to the list; a second Escape closes the menu.
-						if (e.key === 'Escape') {
-							e.stopPropagation();
-							back();
-						}
-					}} />
-				<button
-					type="submit"
-					class="btn-primary btn-sm"
-					disabled={onOpen ? creatingOwn : creating.pending}>
-					Create
-				</button>
-			</form>
+				enhance={onOpen ? createOwn : creating.submit}
+				{fields}
+				error={namingError}
+				pending={onOpen ? creatingOwn : creating.pending}
+				submitLabel="Create"
+				onback={back} />
 		{:else}
 			<button type="button" class="menu-row new-row" role="menuitem" onclick={name}>
 				{@render plusIcon()}
@@ -206,7 +185,8 @@
 			</button>
 		{/if}
 	{/if}
-	<FieldError name="new-collection" error={refusal} />
+	<!-- A naming refusal is the step's own; a check's shows here. -->
+	{#if !(naming && namingError)}<FieldError name="new-collection" error={refusal} />{/if}
 </div>
 
 <style>
@@ -236,27 +216,9 @@
 		gap: 10px;
 	}
 
-	/* New collection sits under a rule, below the list. */
-	.new-row,
-	.name-step {
+	/* New collection sits under a rule, below the list, as its name step does. */
+	.new-row {
 		border-top: 1px solid var(--color-border);
-	}
-
-	.name-step {
-		display: flex;
-		flex-direction: column;
-		gap: 8px;
-		padding: 8px 6px 6px;
-	}
-
-	/* A form's button, not one of the row's pills, whose corner it would inherit. */
-	.collection-checks .name-step .btn-primary {
-		border-radius: var(--radius-md);
-	}
-
-	.name-step label {
-		font-size: 0.875rem;
-		font-weight: 600;
 	}
 
 	.collection-checks :global(.field-error) {

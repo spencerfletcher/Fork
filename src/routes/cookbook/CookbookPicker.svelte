@@ -15,17 +15,15 @@
 
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { tick } from 'svelte';
 	import ConfirmStep from '#lib/components/ui/ConfirmStep.svelte';
 	import Dropdown from '#lib/components/ui/Dropdown.svelte';
-	import FieldError from '#lib/components/ui/FieldError.svelte';
+	import NameStep from '#lib/components/ui/NameStep.svelte';
 	import { chevronIcon, plusIcon } from '#lib/components/Icons.svelte';
 	import CookbookSheet from './CookbookSheet.svelte';
 	import { pendingEnhance } from '#lib/pendingEnhance.svelte.js';
-	import { COLLECTION_NAME_MAX } from '#lib/collections.js';
 	import { hrefWith } from '#lib/listPage.js';
 	import { plural } from '#lib/helpers.js';
 	import { tagKey } from '#lib/recipes/tags.js';
@@ -314,33 +312,16 @@
 					<p class="picker-none">No collection or tag called “{query.trim()}”.</p>
 				{/if}
 				{#if naming}
-					<form
-						method="POST"
+					<!-- Escape goes back to the list; a second Escape closes the panel. -->
+					<NameStep
+						id="picker-new-collection"
+						label="New collection"
 						action="?/createCollection"
-						class="picker-naming"
-						use:enhance={creating.submit}>
-						<label for="picker-new-collection">New collection</label>
-						<input
-							id="picker-new-collection"
-							name="name"
-							type="text"
-							maxlength={COLLECTION_NAME_MAX}
-							required
-							autocomplete="off"
-							aria-invalid={creating.error ? true : undefined}
-							aria-describedby={creating.error ? 'picker-new-collection-error' : undefined}
-							onkeydown={(e) => {
-								// Back to the list; a second Escape closes the panel.
-								if (e.key === 'Escape') {
-									e.stopPropagation();
-									stopNaming();
-								}
-							}} />
-						<button type="submit" class="btn-primary btn-sm" disabled={creating.pending}>
-							Create
-						</button>
-						<FieldError name="picker-new-collection" error={creating.error} />
-					</form>
+						enhance={creating.submit}
+						error={creating.error}
+						pending={creating.pending}
+						submitLabel="Create"
+						onback={stopNaming} />
 				{/if}
 			</CookbookSheet>
 		{/snippet}
@@ -399,33 +380,19 @@
 <!-- Under the chosen collection's row: Rename and Delete, quiet, at the names' edge. -->
 {#snippet chosenActions(chosen: { id: number; name: string })}
 	{#if renaming}
-		<form
-			method="POST"
+		<!-- Escape goes back to the row; a second Escape closes the panel. -->
+		<NameStep
+			id="picker-rename"
+			label="Collection name"
+			labelHidden
 			action="?/renameCollection"
-			class="picker-naming picker-indent"
-			use:enhance={renamed.submit}>
-			<input type="hidden" name="id" value={chosen.id} />
-			<label for="picker-rename" class="sr-only">Collection name</label>
-			<input
-				id="picker-rename"
-				name="name"
-				type="text"
-				maxlength={COLLECTION_NAME_MAX}
-				required
-				autocomplete="off"
-				value={chosen.name}
-				aria-invalid={renamed.error ? true : undefined}
-				aria-describedby={renamed.error ? 'picker-rename-error' : undefined}
-				onkeydown={(e) => {
-					// Back to the row; a second Escape closes the panel.
-					if (e.key === 'Escape') {
-						e.stopPropagation();
-						stopRenaming();
-					}
-				}} />
-			<button type="submit" class="btn-primary btn-sm" disabled={renamed.pending}>Save</button>
-			<FieldError name="picker-rename" error={renamed.error} />
-		</form>
+			enhance={renamed.submit}
+			value={chosen.name}
+			fields={{ id: String(chosen.id) }}
+			error={renamed.error}
+			pending={renamed.pending}
+			submitLabel="Save"
+			onback={stopRenaming} />
 	{:else}
 		<div class="picker-chosen picker-indent">
 			{#if !deleting}
@@ -613,29 +580,6 @@
 	.picker-none {
 		padding: 10px 12px;
 		color: var(--color-text-2);
-	}
-
-	.picker-naming {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 8px;
-		padding: 8px 6px 6px;
-		border-top: 1px solid var(--color-border);
-	}
-
-	.picker-naming label {
-		flex-basis: 100%;
-		font-size: 0.875rem;
-		font-weight: 600;
-	}
-
-	.picker-naming input {
-		flex: 1 1 10rem;
-		min-width: 0;
-	}
-
-	.picker-naming :global(.field-error) {
-		flex-basis: 100%;
 	}
 
 	.picker-pills {
