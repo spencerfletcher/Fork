@@ -178,6 +178,12 @@ describe('layout footer', () => {
 		renderLayout('/recipes/[slug]', null, undefined, 'http://localhost/recipes/dal?cook=1');
 		expect(screen.queryByRole('link', { name: 'Report a problem' })).toBeNull();
 	});
+
+	// The report form is the page the link opens, so it does not link to itself.
+	test('the report page has no footer link to itself', () => {
+		renderLayout('/report', null, undefined, 'http://localhost/report');
+		expect(screen.queryByRole('link', { name: 'Report a problem' })).toBeNull();
+	});
 });
 
 describe('layout hydration mark', () => {

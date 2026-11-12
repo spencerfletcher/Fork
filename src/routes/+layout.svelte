@@ -105,8 +105,9 @@
 		{@render children()}
 		<!-- Inside main, so it ends clear of the phone tab bar and the select bar
 		     as the page does (app.css). For anyone, signed in or not. -->
-		{#if page.url.searchParams.get('cook') !== '1'}
-			<!-- Quiet: one Ink 3 line at the page's end; Cook mode is the recipe alone. -->
+		{#if page.url.searchParams.get('cook') !== '1' && page.url.pathname !== '/report'}
+			<!-- Quiet: one Ink 3 line at the page's end; Cook mode is the recipe alone,
+			     and the report page is where the link goes. -->
 			<footer class="site-footer">
 				<a class="hit-link" href="/report">Report a problem</a>
 			</footer>
