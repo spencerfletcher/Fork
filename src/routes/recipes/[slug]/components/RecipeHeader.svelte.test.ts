@@ -5,6 +5,7 @@ import RecipeHeader from './RecipeHeader.svelte';
 import source from './RecipeHeader.svelte?raw';
 import type { ComponentProps } from 'svelte';
 import { makeContent, makeVersion } from '#lib/recipes/fixtures.js';
+import { scaling } from '#lib/recipes/scale.js';
 import { cssRule } from '#lib/testing/css.js';
 
 vi.mock('$app/navigation', () => ({ afterNavigate: () => {} }));
@@ -356,8 +357,11 @@ describe('RecipeHeader content', () => {
 		expect(container.querySelector('header input, header button')).toBeNull();
 	});
 
-	test('hands the stored serves to the measure, so scaled serves read clay', () => {
-		renderHeader({ currentVersion: { ...V1, servings: 12 }, storedServings: 3 });
+	test('hands the scaling to the measure, so scaled serves read clay', () => {
+		renderHeader({
+			currentVersion: { ...V1, servings: 3 },
+			scale: scaling({ ...V1, servings: 3 }, 12)
+		});
 		expect(screen.getByText('12')).toHaveClass('text-accent');
 	});
 

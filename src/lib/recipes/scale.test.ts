@@ -1,15 +1,20 @@
 import { describe, test, expect } from 'vitest';
-import { makeIngredient } from './fixtures';
+import { makeContent, makeIngredient } from './fixtures';
 import {
 	FRACTIONS,
-	MIN_SERVES,
+	MAX_SCALE,
+	NOT_SCALED,
+	SCALED_NOTES,
+	SCALE_MESSAGES,
 	formatGrams,
 	formatScaled,
 	formatServes,
-	parseServes,
+	linkedCount,
+	readScale,
 	scaleIngredient,
 	scaleMakes,
-	scaleQuantity
+	scaleQuantity,
+	scaling
 } from './scale';
 
 const grams = (g: number, g2: number | null = null, approximate = false) => ({
@@ -90,31 +95,201 @@ describe('formatServes', () => {
 	});
 });
 
-describe('parseServes', () => {
+describe('readScale', () => {
+	// On a recipe that serves 4: a bare number is a count in the box's units.
+	const BASE = 4;
 	test.each([
-		['6', 6],
-		['1.5', 1.5],
-		['1,5', 1.5],
-		[' 8 ', 8],
-		[String(MIN_SERVES), MIN_SERVES],
-		['2.346', 2.35]
-	])('%j applies as %j', (param, expected) => {
-		expect(parseServes(param, 4)).toBe(expected);
+		['8', 8 / BASE],
+		['0.5', 0.5 / BASE],
+		['.5', 0.5 / BASE],
+		['1/2', 0.5 / BASE],
+		['1 1/2', 1.5 / BASE],
+		['1,5', 1.5 / BASE],
+		[' 6 ', 6 / BASE],
+		['2.346', 2.346 / BASE],
+		[FRACTIONS['1/2'], 0.5 / BASE],
+		[`1${FRACTIONS['1/4']}`, 1.25 / BASE],
+		[`2 ${FRACTIONS['3/4']}`, 2.75 / BASE],
+		[FRACTIONS['1/3'], 1 / 3 / BASE],
+		[FRACTIONS['2/3'], 2 / 3 / BASE],
+		['2x', 2],
+		['2 x', 2],
+		['x2', 2],
+		['X2', 2],
+		['×1.5', 1.5],
+		['1.5×', 1.5],
+		['1/2x', 0.5],
+		[`${FRACTIONS['1/2']}x`, 0.5],
+		['1,5x', 1.5],
+		['50%', 0.5],
+		['150 %', 1.5],
+		[`${MAX_SCALE}x`, MAX_SCALE],
+		[`${1 / MAX_SCALE}x`, 1 / MAX_SCALE]
+	])('%j reads as ×%d', (typed, factor) => {
+		const read = readScale(typed, BASE);
+		expect(read.ok && read.factor).toBeCloseTo(factor, 10);
+	});
+
+	test('with no count to scale by (a base of 1), a bare number is the multiplier', () => {
+		expect(readScale('2', 1)).toEqual({ ok: true, factor: 2 });
 	});
 
 	test.each([
-		[null],
-		[''],
-		['abc'],
-		['0'],
-		['-2'],
-		[String(MIN_SERVES / 2)],
-		['1e3'],
-		['0x10'],
-		['Infinity'],
-		['6abc']
-	])('%j is ignored: the stored serves stand', (param) => {
-		expect(parseServes(param, 4)).toBe(4);
+		['', 'unreadable'],
+		['lots', 'unreadable'],
+		['x', 'unreadable'],
+		['2x2', 'unreadable'],
+		['2xx', 'unreadable'],
+		['1e3', 'unreadable'],
+		['0x10', 'unreadable'],
+		['Infinity', 'unreadable'],
+		['1/0', 'unreadable'],
+		['6abc', 'unreadable'],
+		['%', 'unreadable'],
+		['0', 'zero'],
+		['0x', 'zero'],
+		['0%', 'zero'],
+		['0/2', 'zero'],
+		['-2', 'negative'],
+		['−2', 'negative'],
+		['-50%', 'negative'],
+		['-x2', 'negative'],
+		[`${MAX_SCALE * 1.01}x`, 'outOfRange'],
+		[String(MAX_SCALE * BASE + 1), 'outOfRange'],
+		[`${MAX_SCALE * 100 + 1}%`, 'outOfRange'],
+		[`${1 / MAX_SCALE / 2}x`, 'outOfRange']
+	] as const)('%j is refused as %s, with its message', (typed, reason) => {
+		expect(readScale(typed, BASE)).toEqual({ ok: false, reason });
+		expect(SCALE_MESSAGES[reason]).toMatch(/\S/);
+	});
+});
+
+describe('scaling', () => {
+	const serves4 = makeContent({ servings: 4, makes: '12 buns' });
+	const cookies = makeContent({ servings: null, makes: '36 cookies' });
+	const loaf = makeContent({ servings: null, makes: 'one 9-inch loaf' });
+	const pan = makeContent({ servings: null, makes: 'one 9x13 pan' });
+	const params = (search: string) => new URLSearchParams(search);
+
+	test('Serves drives and Makes follows: ?serves= is the count', () => {
+		expect(scaling(serves4, linkedCount(serves4, params('?serves=6')))).toEqual({
+			by: 'serves',
+			base: 4,
+			count: 6,
+			factor: 1.5,
+			scaled: true,
+			unit: 'servings',
+			serves: '6',
+			makes: { text: '18 buns', scaled: true, flagged: false }
+		});
+	});
+
+	test('a typed multiplier in ?serves= reads too; ?scale= is not a Serves recipe’s param', () => {
+		expect(linkedCount(serves4, params('?serves=2x'))).toBe(8);
+		expect(linkedCount(serves4, params('?scale=2'))).toBeNull();
+	});
+
+	test('unscaled, everything is as stored', () => {
+		expect(scaling(serves4, null)).toMatchObject({
+			count: 4,
+			factor: 1,
+			scaled: false,
+			serves: '4',
+			makes: { text: '12 buns', scaled: false, flagged: false }
+		});
+	});
+
+	test('one serving is singular', () => {
+		expect(scaling(serves4, 1)?.unit).toBe('serving');
+	});
+
+	test('Makes alone with a count scales by it: ?makes=72 is twice the batch', () => {
+		expect(scaling(cookies, linkedCount(cookies, params('?makes=72')))).toEqual({
+			by: 'makes',
+			base: 36,
+			count: 72,
+			factor: 2,
+			scaled: true,
+			unit: 'cookies',
+			serves: null,
+			makes: { text: '72 cookies', scaled: true, flagged: false }
+		});
+		expect(linkedCount(cookies, params('?makes=x0.5'))).toBe(18);
+		expect(linkedCount(cookies, params('?serves=8'))).toBeNull();
+	});
+
+	test('Makes with no leading number scales by a multiplier only: ?scale=2', () => {
+		expect(scaling(loaf, linkedCount(loaf, params('?scale=2')))).toEqual({
+			by: 'scale',
+			base: 1,
+			count: 2,
+			factor: 2,
+			scaled: true,
+			unit: 'x',
+			serves: null,
+			makes: { text: 'one 9-inch loaf', scaled: false, flagged: false }
+		});
+	});
+
+	test('a Makes with a pan size scales by multiplier, flagged as not scaled', () => {
+		expect(scaling(pan, 2)).toMatchObject({
+			by: 'scale',
+			makes: { text: 'one 9x13 pan', scaled: false, flagged: true }
+		});
+	});
+
+	test('no Serves and no Makes: nothing to scale', () => {
+		const none = makeContent({ servings: null, makes: null });
+		expect(scaling(none, null)).toBeNull();
+		expect(linkedCount(none, params('?scale=2'))).toBeNull();
+	});
+
+	test('an unreadable or refused link is ignored', () => {
+		for (const bad of ['lots', '0', '-2', String(MAX_SCALE * 4 + 1)])
+			expect(linkedCount(serves4, params(`?serves=${bad}`))).toBeNull();
+	});
+
+	test('the count is kept to two decimals, and the factor follows the count kept', () => {
+		const third = scaling(serves4, linkedCount(serves4, params('?serves=1/3')))!;
+		expect(third.count).toBe(0.33);
+		expect(third.factor).toBe(0.33 / 4);
+	});
+});
+
+describe('scaled metric quantities', () => {
+	// Spencer: "rounding to whole grams". Under 1 g or ml, one decimal, then
+	// one significant digit: never 0.
+	test.each([
+		['800 g tomatoes', 7 / 3, '1867 g tomatoes'],
+		['800 g tomatoes', 0.5, '400 g tomatoes'],
+		['250 ml milk', 1 / 3, '83 ml milk'],
+		['5 g salt', 0.5, '3 g salt'],
+		['3 g salt', 1 / 4, '0.8 g salt'],
+		['1 g saffron', 1 / 50, '0.02 g saffron'],
+		['2-3 g yeast', 1.5, '3–5 g yeast'],
+		['1.4 kg pork', 4 / 3, '1.87 kg pork'],
+		['1 kg flour', 1.5, '1.5 kg flour'],
+		['2 L stock', 1 / 3, '0.67 L stock'],
+		['0.006 kg saffron', 0.25 / 12, '0.0001 kg saffron'],
+		['1 dl cream', 1 / 3, '0.33 dl cream']
+	])('%j ×%d reads %j', (line, factor, text) => {
+		expect(scaleIngredient(makeIngredient(line), null, factor).ingredient.text).toBe(text);
+	});
+
+	test('cups, spoons and counts keep their glyphs', () => {
+		expect(scaleIngredient(makeIngredient('1 cup sugar'), null, 2 / 3).ingredient.text).toBe(
+			`${FRACTIONS['2/3']} cup sugar`
+		);
+		expect(scaleIngredient(makeIngredient('3 eggs'), null, 0.5).ingredient.text).toBe(
+			`1${FRACTIONS['1/2']} eggs`
+		);
+	});
+});
+
+describe('the scaled notice', () => {
+	test('keeps the owner’s sentence as its core, in both forms', () => {
+		expect(NOT_SCALED).toBe('Pan sizes and oven temperatures are not scaled');
+		for (const note of Object.values(SCALED_NOTES)) expect(note.startsWith(NOT_SCALED)).toBe(true);
 	});
 });
 

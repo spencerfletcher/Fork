@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { formatServes, scaleMakes } from '#lib/recipes/scale.js';
+	import { formatServes, type Scaling } from '#lib/recipes/scale.js';
 	import { timeSpans } from '#lib/recipes/times.js';
 	import type { RecipeContent } from '#lib/recipes/types.js';
 
@@ -10,8 +10,7 @@
 		recipe,
 		content,
 		versionNumber,
-		stored,
-		serves,
+		scale,
 		href
 	}: {
 		recipe: {
@@ -25,7 +24,6 @@
 			RecipeContent,
 			| 'title'
 			| 'description'
-			| 'makes'
 			| 'prepTimeMinutes'
 			| 'cookTimeMinutes'
 			| 'restTimeMinutes'
@@ -33,25 +31,22 @@
 			| 'sourceUrl'
 		>;
 		versionNumber: number;
-		/** The version's own servings, 0 when it has none. */
-		stored: number;
-		/** The serves the list is scaled to. */
-		serves: number;
-		/** The page's address as printed: version and serves kept, cooking dropped. */
+		/** The page's scaling; null with neither Serves nor Makes. */
+		scale: Scaling | null;
+		/** The page's address as printed: version and scale kept, cooking dropped. */
 		href: string;
 	} = $props();
 
-	const factor = $derived(stored > 0 ? serves / stored : 1);
-
-	// "v3 · Serves 6, scaled 1.5x · Makes 18 buns"
-	const measure = $derived(
-		[
-			`v${versionNumber}`,
-			stored > 0 &&
-				`Serves ${formatServes(serves)}${factor !== 1 ? `, scaled ${formatServes(factor)}x` : ''}`,
-			content.makes && `Makes ${scaleMakes(content.makes, factor).text}`
-		].filter(Boolean)
-	);
+	// "v3 · Serves 6, scaled 1.5x · Makes 18 buns"; the multiplier follows
+	// the first yield, so a Makes-only recipe says it too.
+	const measure = $derived.by(() => {
+		const yields = [
+			scale?.serves && `Serves ${scale.serves}`,
+			scale?.makes && `Makes ${scale.makes.text}`
+		].filter((part) => !!part);
+		if (scale?.scaled && yields.length > 0) yields[0] += `, scaled ${formatServes(scale.factor)}x`;
+		return [`v${versionNumber}`, ...yields];
+	});
 
 	const times = $derived(timeSpans(content).map(({ value, word }) => `${value} ${word}`));
 

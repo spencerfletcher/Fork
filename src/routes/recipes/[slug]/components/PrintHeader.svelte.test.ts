@@ -2,7 +2,7 @@ import { describe, test, expect } from 'vitest';
 import { render } from '@testing-library/svelte';
 import PrintHeader from './PrintHeader.svelte';
 import { makeContent } from '#lib/recipes/fixtures.js';
-import { formatServes } from '#lib/recipes/scale.js';
+import { formatServes, scaling } from '#lib/recipes/scale.js';
 
 const HREF = 'https://fork.test/recipes/cookies-abc?serves=6';
 
@@ -18,8 +18,7 @@ function renderHeader(overrides: Partial<Parameters<typeof render<typeof PrintHe
 				cookTimeMinutes: 13
 			}),
 			versionNumber: 3,
-			stored: 4,
-			serves: 4,
+			scale: scaling({ servings: 4, makes: '12 cookies' }, null),
 			href: HREF,
 			...overrides
 		}
@@ -60,7 +59,9 @@ describe('PrintHeader', () => {
 
 	test('scaled, it says the serves in effect and the multiplier, and scales the yield', () => {
 		const [stored, serves] = [4, 6];
-		const { lines } = renderHeader({ stored, serves });
+		const { lines } = renderHeader({
+			scale: scaling({ servings: stored, makes: '12 cookies' }, serves)
+		});
 		expect(lines[2]).toBe(
 			`v3 · Serves ${serves}, scaled ${formatServes(serves / stored)}x · Makes 18 cookies`
 		);
@@ -109,7 +110,14 @@ describe('PrintHeader', () => {
 	});
 
 	test('a recipe with no servings prints its version alone', () => {
-		const { lines } = renderHeader({ stored: 0, serves: 0 });
+		const { lines } = renderHeader({
+			scale: scaling({ servings: null, makes: '12 cookies' }, null)
+		});
 		expect(lines[2]).toBe('v3 · Makes 12 cookies');
+	});
+
+	test('a Makes-only recipe scaled says its multiplier after the yield', () => {
+		const { lines } = renderHeader({ scale: scaling({ servings: null, makes: '12 cookies' }, 24) });
+		expect(lines[2]).toBe(`v3 · Makes 24 cookies, scaled ${formatServes(24 / 12)}x`);
 	});
 });

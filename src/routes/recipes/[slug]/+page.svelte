@@ -15,7 +15,7 @@
 	import SectionSwitch, { type Tab } from './components/SectionSwitch.svelte';
 	import { ticksKey } from './components/ticks';
 	import { setShallowParam } from './components/shallowParam';
-	import { parseServes } from '#lib/recipes/scale.js';
+	import { linkedCount, scaling } from '#lib/recipes/scale.js';
 	import { changedGroups } from '#lib/recipes/content.js';
 	import { wholeNumber } from '#lib/helpers.js';
 	import { loginHref as buildLoginHref } from '#lib/auth/loginHref.js';
@@ -58,12 +58,13 @@
 		user || isViewingHistory ? undefined : buildLoginHref(url.pathname + url.search)
 	);
 
-	// Serving scaling: a multiplier on the list, never saved. ?serves= sets it
-	// on load (server render included); the control writes it back with a
-	// shallow replace.
-	const stored = $derived(currentVersion.servings ?? 0);
-	let serves = $derived(parseServes(url.searchParams.get('serves'), stored));
-	const factor = $derived(stored > 0 ? serves / stored : 1);
+	// Scaling: a multiplier on the list, never saved, by the Serves, else the
+	// Makes count, else a bare multiplier. The recipe's own param (?serves=,
+	// ?makes= or ?scale=) sets it on load (server render included); the
+	// control writes it back with a shallow replace.
+	let count = $derived(linkedCount(currentVersion, url.searchParams));
+	const scale = $derived(scaling(currentVersion, count));
+	const factor = $derived(scale?.factor ?? 1);
 	// The cook's Settings units, on the latest version (or the one they keep)
 	// only: a past version is a record and reads as written. Signed out or
 	// unset, null.
@@ -153,8 +154,7 @@
 		{recipe}
 		content={currentVersion}
 		versionNumber={currentVersion.versionNumber}
-		{stored}
-		{serves}
+		{scale}
 		href={printHref} />
 	<!-- Cooking, the band, its actions, the stats and the tags give way to the
 	     cooking header: the title and the serves being cooked, and Exit. -->
@@ -200,8 +200,8 @@
 					<!-- The measure says the serves the list is scaled to, so it stays true. -->
 					<RecipeHeader
 						{recipe}
-						currentVersion={{ ...currentVersion, servings: stored > 0 ? serves : null }}
-						storedServings={stored}
+						{currentVersion}
+						{scale}
 						forkCount={data.forkCount}
 						{tags}
 						journal={data.journal}
@@ -278,10 +278,10 @@
 							grams={data.grams}
 							{factor}
 							{measurement}
-							control={stored > 0 ? scaler : undefined}
+							control={scale ? scaler : undefined}
 							storageKey={ticksKey(recipe.slug, currentVersion.versionNumber, 'ingredients')} />
 						{#snippet scaler()}
-							<ServesControl {stored} {serves} onchange={(next) => (serves = next)} />
+							{#if scale}<ServesControl {scale} onchange={(next) => (count = next)} />{/if}
 						{/snippet}
 					</div>
 				</aside>

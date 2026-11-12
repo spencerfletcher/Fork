@@ -1,33 +1,43 @@
 <script lang="ts">
 	import { setShallowParam } from './shallowParam';
-	import { MIN_SERVES, formatServes, parseServes } from '#lib/recipes/scale.js';
+	import FieldError from '#lib/components/ui/FieldError.svelte';
+	import {
+		MAX_SCALE,
+		SCALE_MESSAGES,
+		formatServes,
+		readScale,
+		type Scaling
+	} from '#lib/recipes/scale.js';
 
 	let {
-		stored,
-		serves,
+		scale,
 		onchange
 	}: {
-		/** The version's own servings: the multiplier's 1. */
-		stored: number;
-		serves: number;
-		onchange: (serves: number) => void;
+		/** The page's scaling: what the box counts (servings, the Makes count or the multiplier) and its 1x. */
+		scale: Scaling;
+		onchange: (count: number) => void;
 	} = $props();
 
-	// The URL carries the serves so a scaled link shares, and drops them at
-	// the stored value.
+	const NAMES = { serves: 'Servings', makes: 'Makes', scale: 'Scale' } as const;
+
+	// The URL carries the count so a scaled link shares, in the recipe's own
+	// param (?serves=, ?makes= or ?scale=), and drops it at the recipe's own.
 	function set(next: number) {
 		const rounded = Number(formatServes(next));
 		onchange(rounded);
-		setShallowParam('serves', rounded === stored ? null : formatServes(rounded));
+		setShallowParam(scale.by, rounded === scale.base ? null : formatServes(rounded));
 	}
 
 	// Applied on change (blur, Enter, which blurs, or a step of the spinner or
-	// an arrow key). An entry that does not read as servings is put back to the
-	// current value.
+	// an arrow key). An entry that does not read is put back to the current
+	// count, and says why.
+	let error: string | null = $state(null);
 	function apply(input: HTMLInputElement) {
-		const next = parseServes(input.value, serves);
+		const read = readScale(input.value, scale.base);
+		error = read.ok ? null : SCALE_MESSAGES[read.reason];
+		const next = read.ok ? Number(formatServes(read.factor * scale.base)) : scale.count;
 		input.value = formatServes(next);
-		if (next !== serves) set(next);
+		if (next !== scale.count) set(next);
 	}
 
 	// Reset leaves with the scaling, so focus moves to the box rather than
@@ -35,7 +45,8 @@
 	let box: HTMLInputElement | undefined = $state();
 	function reset(e: MouseEvent) {
 		box?.focus({ preventScroll: e.detail > 0 });
-		set(stored);
+		error = null;
+		set(scale.base);
 	}
 </script>
 
@@ -49,20 +60,24 @@
 		bind:this={box}
 		type="number"
 		step="any"
-		min={MIN_SERVES}
+		min={scale.base / MAX_SCALE}
 		inputmode="decimal"
-		aria-label="Servings"
-		value={formatServes(serves)}
+		aria-label={NAMES[scale.by]}
+		aria-invalid={error ? true : undefined}
+		aria-describedby={error ? 'scale-error' : undefined}
+		value={formatServes(scale.count)}
 		onchange={(e) => apply(e.currentTarget)}
 		onkeydown={(e) => {
 			if (e.key === 'Enter') e.currentTarget.blur();
 		}} />
-	<span class="label">{serves === 1 ? 'serving' : 'servings'}</span>
-	{#if serves !== stored}
-		<span class="factor">{formatServes(serves / stored)}x</span>
+	<span class="label">{scale.unit}</span>
+	{#if scale.scaled}
+		<!-- A bare multiplier's box is already the multiplier. -->
+		{#if scale.by !== 'scale'}<span class="factor">{formatServes(scale.factor)}x</span>{/if}
 		<button type="button" class="text-btn reset" onclick={reset}>Reset</button>
 	{/if}
 </span>
+<FieldError name="scale" {error} />
 
 <style>
 	/* After the Ingredients eyebrow, at the row's start (Spencer, 11 November

@@ -4,11 +4,10 @@
 // and a volume to a volume, except that Metric leads with the gram estimate
 // for a volume of something weighed (flour, sugar, honey: not a likeWater), and
 // only when the rounded result is within TOLERANCE of the true one.
-import { unitsOfMeasure } from 'parse-ingredient';
 import type { Ingredient } from './types.js';
 import type { GramResult } from '#lib/server/ingredientDensities.js';
 import type { Measurement } from '#lib/measurement.js';
-import { formatScaled, splitMeasure, unitFor } from './scale.js';
+import { formatScaled, splitMeasure, unitFor, unitOfMeasure } from './scale.js';
 
 /**
  * The units that convert, by parse-ingredient's unit id: the system each
@@ -103,14 +102,9 @@ function kitchenRound(value: number, dimension: Dimension): number {
 	return whole + nearest;
 }
 
-// The stored unit as typed ("cups", "Tbsp", "T", "mL") to its id: exact
-// first, so "T" (tablespoon) and "t" (teaspoon) stay apart, then ignoring case.
+// The stored unit as typed to its id, when it is one that converts.
 export function unitId(unit: string): UnitId | undefined {
-	const find = (u: string) =>
-		Object.entries(unitsOfMeasure).find(
-			([id, d]) => id === u || d.short === u || d.plural === u || !!d.alternates?.includes(u)
-		)?.[0];
-	const id = find(unit) ?? find(unit.toLowerCase());
+	const id = unitOfMeasure(unit);
 	return id !== undefined && id in UNITS ? (id as UnitId) : undefined;
 }
 
