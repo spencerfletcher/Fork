@@ -91,6 +91,26 @@ describe('Navbar', () => {
 		expect(search).toHaveAttribute('aria-current', 'page');
 		expect(style).not.toMatch(/\.nav-icon\s*{[^}]*display:\s*none/);
 	});
+
+	// No count and no live region: the link's name carries it, the dot is decoration.
+	test('something unseen: a dot by Friends, which the link names', () => {
+		page.url = new URL('http://localhost/cookbook');
+		render(Navbar, { props: { user: signedIn(), profile, unseen: true } });
+		const friends = screen.getByRole('link', { name: 'Friends, new activity' });
+		expect(friends.querySelector('.new-dot')).toHaveAttribute('aria-hidden', 'true');
+		expect(document.querySelectorAll('.new-dot')).toHaveLength(1);
+	});
+
+	test('nothing unseen, or on Friends itself: no dot', () => {
+		page.url = new URL('http://localhost/friends');
+		const { unmount } = render(Navbar, { props: { user: signedIn(), profile, unseen: true } });
+		expect(screen.getByRole('link', { name: 'Friends' })).toBeInTheDocument();
+		expect(document.querySelector('.new-dot')).toBeNull();
+		unmount();
+		page.url = new URL('http://localhost/cookbook');
+		render(Navbar, { props: { user: signedIn(), profile, unseen: false } });
+		expect(document.querySelector('.new-dot')).toBeNull();
+	});
 });
 
 describe('Navbar signed out', () => {

@@ -94,4 +94,21 @@ describe('TabBar', () => {
 	test("gives way to the Cookbook's select bar", () => {
 		expect(cssRule(source, ':global(body:has(.select-bar)) .tab-bar')).toMatch(/display:\s*none/);
 	});
+
+	test('something unseen: a dot on the Friends icon, which the tab names', () => {
+		render(TabBar, { props: { unseen: true } });
+		const friends = screen.getByRole('link', { name: 'Friends, new activity' });
+		expect(friends.querySelector('.new-dot')).toHaveAttribute('aria-hidden', 'true');
+		expect(document.querySelectorAll('.new-dot')).toHaveLength(1);
+	});
+
+	test('on Friends, or nothing unseen: no dot', () => {
+		at('/friends', '/friends');
+		const { unmount } = render(TabBar, { props: { unseen: true } });
+		expect(document.querySelector('.new-dot')).toBeNull();
+		unmount();
+		at('/cookbook', '/cookbook');
+		render(TabBar);
+		expect(document.querySelector('.new-dot')).toBeNull();
+	});
 });

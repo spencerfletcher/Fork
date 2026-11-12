@@ -1,7 +1,10 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { DESTINATIONS, isCurrent } from './destinations.js';
+	import { DESTINATIONS, isCurrent, newActivityName } from './destinations.js';
 	import { friendsIcon, journalIcon } from '#lib/components/Icons.svelte';
+
+	// The root layout's: whether anything on Friends is unseen.
+	let { unseen = false }: { unseen?: boolean } = $props();
 
 	// Cook and the editor pin their own bars (Ingredients | Method; Save and
 	// Cancel), so the tab bar leaves the screen to them. Cook entered in place
@@ -16,11 +19,19 @@
 {#if !hidden}
 	<nav class="tab-bar" aria-label="Main">
 		{#each DESTINATIONS as destination (destination.href)}
-			<a href={destination.href} aria-current={isCurrent(destination, path) ? 'page' : undefined}>
+			{@const newName = newActivityName(destination, path, unseen)}
+			<a
+				href={destination.href}
+				aria-label={newName}
+				aria-current={isCurrent(destination, path) ? 'page' : undefined}>
 				<!-- Friends and Journal are drawn on their own 24 box, so 24 keeps
 				     their stroke the others' 1.5. -->
 				{#if destination.href === '/friends'}
-					{@render friendsIcon(24)}
+					<!-- The dot shares the icon's cell, at its top right corner. -->
+					<span class="icon-cell">
+						{@render friendsIcon(24)}
+						{#if newName}<span class="new-dot" aria-hidden="true"></span>{/if}
+					</span>
 				{:else if destination.href === '/journal'}
 					{@render journalIcon(24)}
 				{:else}
@@ -112,6 +123,22 @@
 	.tab-bar :global(svg) {
 		width: 22px;
 		height: 22px;
+	}
+
+	/* One grid cell for the icon and its dot, placed by alignment, never by offsets.
+	   A paper ring (an outline, not a shadow) keeps the dot off the icon's stroke. */
+	.icon-cell {
+		display: grid;
+	}
+
+	.icon-cell > :global(*) {
+		grid-area: 1 / 1;
+	}
+
+	.icon-cell .new-dot {
+		justify-self: end;
+		align-self: start;
+		outline: 2px solid var(--color-bg);
 	}
 
 	/* Forced colours paint every transparent edge; Canvas hides all but the current one. */

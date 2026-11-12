@@ -2,13 +2,17 @@
 	import { page } from '$app/state';
 	import { enhance } from '$app/forms';
 	import type { Profile } from '#lib/server/db/schema.js';
-	import { DESTINATIONS, isCurrent } from './destinations.js';
+	import { DESTINATIONS, isCurrent, newActivityName } from './destinations.js';
 	import { searchIcon } from '#lib/components/Icons.svelte';
 	import Avatar from '#lib/components/ui/Avatar.svelte';
 	import Dropdown from './Dropdown.svelte';
 	import { clearDrafts } from '#lib/drafts.js';
 
-	let { user, profile = null }: { user: App.PageData['user']; profile?: Profile | null } = $props();
+	let {
+		user,
+		profile = null,
+		unseen = false
+	}: { user: App.PageData['user']; profile?: Profile | null; unseen?: boolean } = $props();
 
 	// The four destinations sit here from 768; a phone has the tab bar instead.
 	const path = $derived(page.url.pathname);
@@ -29,12 +33,15 @@
 				<a href="/" class="nav-brand">Fork<span class="text-marigold">.</span></a>
 				<ul class="navbar-links hidden gap-6 md:flex">
 					{#each DESTINATIONS as destination (destination.href)}
+						{@const newName = newActivityName(destination, path, unseen)}
 						<li>
 							<a
 								href={destination.href}
 								class="navbar-link"
+								aria-label={newName}
 								aria-current={current(isCurrent(destination, path))}>
 								{destination.label}
+								{#if newName}<span class="new-dot" aria-hidden="true"></span>{/if}
 							</a>
 						</li>
 					{/each}
@@ -220,6 +227,13 @@
 	.navbar-link:hover,
 	.navbar-link[aria-current='page'] {
 		color: var(--color-text-cream);
+	}
+
+	/* The dot after Friends sits on the word's middle by the row's alignment. */
+	.navbar-link:has(.new-dot) {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
 	}
 
 	/* A phone has no menu: Log in and the brand are thumb targets,

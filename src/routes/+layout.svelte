@@ -99,7 +99,7 @@
 
 <div class="flex min-h-dvh flex-col">
 	<a href="#{skipTarget}" class="skip-link" onclick={skip}>{skipLabel}</a>
-	<Navbar user={data.user} profile={data.profile} />
+	<Navbar user={data.user} profile={data.profile} unseen={data.unseen} />
 
 	<main id="main" class="flex-grow outline-none" tabindex="-1">
 		{@render children()}
@@ -113,7 +113,7 @@
 		{/if}
 	</main>
 	<!-- Phone only; it hides itself in Cook and the editor. -->
-	<TabBar />
+	<TabBar unseen={data.unseen} />
 </div>
 
 <style>

@@ -1294,6 +1294,24 @@
 		color: var(--color-text-3);
 	}
 
+	/* Something on Friends the cook has not seen: an 8px marigold dot by
+	   Friends in the top bar and on its tab. Decoration: the link's name says
+	   it. No count, no motion. Forced colours keep it as CanvasText. */
+	.new-dot {
+		flex-shrink: 0;
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+		background: var(--color-marigold);
+	}
+
+	@media (forced-colors: active) {
+		.new-dot {
+			forced-color-adjust: none;
+			background: CanvasText;
+		}
+	}
+
 	/* The recipe page's strike rows: the picture of a visually hidden native
 	   checkbox (the row is its label). An Ink 3 circle at rest, an Ink 2 edge
 	   while the row is hovered, marigold with an ink check once ticked. */
