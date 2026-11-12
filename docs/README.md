@@ -24,6 +24,7 @@ Start here. The product set in `product/` holds the current plan; everything els
 - `design/`: dated design work. `2026-10-27-redesign` (the shipped redesign), `2026-11-08-mvp` (first MVP mockups), `2026-11-10-offline-review` (a self-contained review pack with its own worksheet), `2026-11-10-decision-pack` (the MVP direction).
 - [Cookbook design research](research/2026-11-08-cookbook-design-research/README.md) (8 Nov 2026): its working contract and learning tracks folded into `product/` on 12 Nov (source CD).
 - `research/`: dated research notes, Oct to Nov 2026, including the cookbook-app deep dive, the Zed reference, the cookbook design research and the social launch and copyright notes.
+- `../.impeccable/critique/`: tool-generated per-screen critiques, 28 Oct to 8 Nov 2026; not a source for the plan.
 - `superpowers/plans` and `superpowers/specs`: build plans and specs from Aug to Oct 2026, for features that have shipped except the pull-requests design (M1), which the roadmap places in P4 to P5.
 - `history/supabase-migrations`: the pre-Drizzle migration chain, superseded by `drizzle/`.
 - `screenshots/`: the images the root README shows.

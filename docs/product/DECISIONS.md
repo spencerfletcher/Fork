@@ -50,6 +50,7 @@ Spencer's product decisions, what they replaced, and removals awaiting his appro
 - 12 Nov: the cookie example's seed faults are fixed (OD).
 - 12 Nov: seeded cooks are not labelled as demo; they are removed at public launch (OD: "no label needed").
 - 12 Nov: the next builds, in order: varied seed data, Journal recall (UX 1), the empty Cookbook entry point (UX 2), easy import starting with an options page (UX 2), onboarding; this accepts the UX review's order. Featured recipe content (UX 3) is carried by the cookie fix and the varied seed; real-meal validation (UX 4) waits on the public-launch prerequisites (OD: "build order good").
+- 12 Nov: the build order gains a design quality pass, second: 1 varied seed data; 2 design quality pass (DESIGN-DIRECTION.md's Quality ambition as the bar, its backlog, partly done, reproduce and test rows as the checklist, on the varied seed, phone and desktop; then `.impeccable/design.json` regenerated and the `cream-palette` ignore removed); 3 Journal recall; 4 empty Cookbook entry point; 5 easy import; 6 onboarding; 7 the public-launch prerequisites with a short final design pass (real phones, first impression, empty states, the signed-out landing page) before the pilot. Design nits continue with every build (OD: "sounds good").
 - 12 Nov: the `pluralize` npm package is approved for a yield's free-text noun after a whole-number count ("2 loaf" reads "2 loaves"), used only there; tracked in the roadmap's Scaler workstream (OD: "add pluralize").
 
 ## 2. Dropped as superseded
@@ -85,6 +86,7 @@ Each line: the old text, what replaced it, and the source of the replacement.
 27. The 8 Nov evidence labels for the pre-MVP product state (R, PA) → [ROADMAP.md](ROADMAP.md) section 2 states the shipped state; the audit stays as the research record (removed with Spencer's approval, 11 Nov 2026).
 28. "First competitor migration importer" in P1 (R, CM) → all importers P2, the first migration importer with paste, URL and file import (OD, 11 Nov).
 29. "A purchased core plus recurring services" as an option for the first paid offer (DD) → one annual plan, no tiers at first (OD, 11 Nov).
+30. The first 12 Nov build order (varied seed, Journal recall, entry point, easy import, onboarding) → the same with a design quality pass second and the public-launch prerequisites seventh (OD, 12 Nov).
 
 ## 3. Proposed removals, awaiting Spencer's approval
 
@@ -94,3 +96,4 @@ None pending.
 
 - 2026-11-12: created from ROADMAP.md sections 14 (now 1), 16 (now 2) and 17 (now 3); earlier history is in ROADMAP.md's changelog and git.
 - 2026-11-12: the build order and `pluralize` recorded.
+- 2026-11-12: build order revised with the design quality pass (section 1; section 2 line 30).

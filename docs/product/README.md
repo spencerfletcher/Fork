@@ -19,7 +19,7 @@ Fork is a recipe cookbook for serious home cooks, live at recipes.spencerfletche
 4. Build the P1 cookbook: drafts, Trash, photo access by audience, collections, Keep this version, search quality, print, export.
 5. Settle the P1 design backlog and the open questions in the roadmap, one at a time.
 
-**Next builds, in order** (Spencer, 12 Nov 2026, accepting the [12 November UX review](../research/2026-11-12-ux-review.md)'s order): varied seed data; Journal recall; the empty Cookbook entry point; easy import, starting with an options page; onboarding. The cookie example's fix comes before the seed. Real-meal validation waits on the public-launch prerequisites (ROADMAP P0, Two-tier environments).
+**Next builds, in order** (Spencer, 12 Nov 2026; [DECISIONS.md](DECISIONS.md) section 1): varied seed data; a design quality pass against [DESIGN-DIRECTION.md](DESIGN-DIRECTION.md); Journal recall; the empty Cookbook entry point; easy import, starting with an options page; onboarding; then the public-launch prerequisites with a short final design pass, before the pilot. The cookie example's fix comes before the seed. The order follows the [12 November UX review](../research/2026-11-12-ux-review.md), with real-meal validation waiting on public launch.
 
 ## Release log
 
@@ -64,3 +64,4 @@ Rules stay where they are: [DESIGN.md](../../DESIGN.md) (visual and interaction 
 - 2026-11-12: the 12 Nov publish recorded as build `9593a3d`.
 - 2026-11-12: Next builds in order (DECISIONS §1); the UX review paragraph replaced.
 - 2026-11-12: Release log added; roadmap rows no longer carry publish status.
+- 2026-11-12: Next builds include the design quality pass (second) and the final design pass with the public-launch prerequisites.

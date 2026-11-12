@@ -772,7 +772,7 @@ Each table row above counts as one item, except rows that name a range (for exam
 - Items in the sources: 957 (R 308, CM 90, AQ 132, PA 56, DD 160, S1 52, S2 43, SL 47, US 13, CA 13, Z 25, CD 5, UX 13), counted from the row numbers above.
 - Items placed in the current set: 952. This includes 28 rows marked superseded in whole or part (CD1, CD2, R8, R17, R37, R52, R56, R58, R61, R62, R64, R68, R80, R81, R97, R100, R103, R230, R238, CM38, CM40, CM47, CM61, AQ15, AQ44, PA29, SL1, SL7), plus superseded notes inside R204 to R226 (M4, M17, M20), PA3 to PA21 (visibility), S1-27 and S2-25 (purchased core); each is placed through its replacement.
 - Items removed with approval: 5 rows (R4, R201, PA1, S1-5, S2-12), DC §2 lines 23 to 27; line 24 comes from the design summary, which stays current and is not a reconciled source. Placed 952 plus removed 5 is 957.
-- Lines in DC §2: 29, of which 24 are dropped as superseded (several rows above share one line; lines 12, 15 and 17 replace wording in R254, R253 and the design summary) and 5 are removals with approval (lines 23 to 27).
+- Lines in DC §2: 30, of which 25 are dropped as superseded (line 30, the first 12 Nov build order, is a decision record, not a source item) (several rows above share one line; lines 12, 15 and 17 replace wording in R254, R253 and the design summary) and 5 are removals with approval (lines 23 to 27).
 - Items kept with removal proposed: 0.
 - Unplaced: 0.
 

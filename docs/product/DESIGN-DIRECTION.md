@@ -14,6 +14,8 @@ Preserved decisions: desktop ingredient and method columns; the editable serving
 
 Fork aims for the care of excellent independent apps and leading consumer products, with Apple and NYT Cooking as quality references, not templates or scores to match. Excellent is judged by observed behaviour, not screenshots: real-device cooking on phone and tablet; keyboard and screen-reader use; enlarged text; large and imperfect libraries; long titles, missing photos, grouped recipes and odd yields; imports; interruptions and return visits; account and audience boundaries; complete error and recovery states. An elegant screen with fragile behaviour does not meet it. Finishing this list does not establish product-market fit, and the pilot does not wait for polish. Prioritize trust, capture, reading and cooking, and retrieval before decoration; the strongest cross-page improvement is continuity, so a source, group, scale or private note keeps its meaning from entry through cooking and recall (S1).
 
+**The design quality pass** (ROADMAP P1, build order 2, after varied seed data and before Journal recall; Spencer, 12 Nov 2026) works through this file on the varied seed, phone and desktop: this section is its bar, and every row below whose status is backlog, partly done, reproduce or test is rechecked in that pass and given a current status.
+
 ## System-level refinements
 
 Status against the app published on 11 Nov 2026 and the git log. Items from the earlier live review (S1) are marked "reproduce" where the redesign may already have fixed them: reproduce before fixing.
@@ -81,3 +83,4 @@ Settle during implementation (Z): keep Bitter, improving scale, weight and spaci
 - 2026-11-12: the 12 Nov UX review's page refinements added to Metadata, Discover, Cookbook, Recipe detail and Journal, marked UX and proposed.
 - 2026-11-12: statuses rechecked against git: phone fixes landed, cook-mode distinction closed, L05 kept position and settings built, drafts built.
 - 2026-11-12: the 8 Nov cookbook design research's working contract added under Identity (CD).
+- 2026-11-12: the design quality pass is scheduled (ROADMAP P1, build order 2) with this file as its bar and checklist.
