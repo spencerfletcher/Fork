@@ -254,6 +254,12 @@
 			grid-template-columns: 1fr 1fr;
 		}
 
+		/* Save and Fork sit in their forms: a grid form stretches its button
+		   to the cell, as the links fill theirs. */
+		.actions > form {
+			display: grid;
+		}
+
 		.actions > :global(.dropdown) {
 			position: absolute;
 			top: 0;

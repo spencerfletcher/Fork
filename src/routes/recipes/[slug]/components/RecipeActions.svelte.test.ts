@@ -443,6 +443,11 @@ describe('RecipeActions row', () => {
 		expect(cssRules(phone, '.cook').join()).toMatch(/margin-right:\s*54px/);
 	});
 
+	test("on a phone Save's and Fork's forms are grids, so each button fills its cell", () => {
+		const phone = source.slice(source.indexOf('@media (max-width: 699px)'));
+		expect(cssRule(phone, '.actions > form')).toMatch(/display:\s*grid/);
+	});
+
 	test('on a phone Add to Journal spans only when it would sit alone after Cook', () => {
 		const lone = (overrides: Record<string, unknown>) => {
 			const { unmount } = render(RecipeActions, {
