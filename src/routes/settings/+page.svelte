@@ -184,7 +184,7 @@
 			<form
 				method="POST"
 				action="?/username"
-				class="form setting-body"
+				class="form-col setting-body"
 				use:enhance={usernameSave.submit}>
 				<div class="field">
 					<label for="username">
@@ -221,7 +221,7 @@
 			<form
 				method="POST"
 				action="?/audience"
-				class="form setting-body"
+				class="form-col setting-body"
 				use:enhance={audienceSave.submit}>
 				<ChoiceGroup
 					name="defaultVisibility"
@@ -246,7 +246,7 @@
 			<form
 				method="POST"
 				action="?/measurement"
-				class="form setting-body"
+				class="form-col setting-body"
 				use:enhance={measurementSave.submit}>
 				<ChoiceGroup
 					name="measurement"
@@ -275,7 +275,7 @@
 			<form
 				method="POST"
 				action="?/notifications"
-				class="form setting-body"
+				class="form-col setting-body"
 				use:enhance={notificationsSave.submit}>
 				<fieldset class="kinds">
 					<legend class="field-legend">Tell me about</legend>
@@ -443,12 +443,6 @@
 
 	dd {
 		overflow-wrap: anywhere;
-	}
-
-	.form {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-4);
 	}
 
 	.save-row {
