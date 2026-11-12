@@ -116,6 +116,14 @@ describe('Cookbook picker', () => {
 		expect(within(menu()).queryByRole('menuitemradio', { name: /All collections/ })).toBeNull();
 	});
 
+	test('while typing, a group with no match shows no heading', async () => {
+		makePicker();
+		await fireEvent.click(trigger(/^Tags$/));
+		await fireEvent.input(findBox(), { target: { value: 'week' } });
+		expect(within(menu()).getAllByRole('group')).toHaveLength(1);
+		expect(group('Collections')).toBeInTheDocument();
+	});
+
 	test('no match says so in one line', async () => {
 		makePicker();
 		await fireEvent.click(trigger(/^Tags$/));
@@ -144,6 +152,27 @@ describe('Cookbook picker', () => {
 		expect(goto).toHaveBeenCalledExactlyOnceWith('?tags=quick&collection=8', { reset: false });
 		await vi.waitFor(() => expect(screen.queryByRole('menu')).toBeNull());
 		expect(trigger(/^Collections$/)).toHaveFocus();
+	});
+
+	test('a modified click (a new tab) is the browser’s, not a navigation here', async () => {
+		makePicker();
+		await fireEvent.click(trigger(/^Tags$/));
+		await fireEvent.click(within(group('Tags')).getByRole('menuitemcheckbox', { name: 'Quick' }), {
+			metaKey: true
+		});
+		expect(goto).not.toHaveBeenCalled();
+	});
+
+	test('Escape in the New collection box goes back to its row', async () => {
+		makePicker();
+		await fireEvent.click(trigger(/^Collections$/));
+		await fireEvent.click(screen.getByRole('menuitem', { name: 'New collection' }));
+		await tick();
+		await fireEvent.keyDown(screen.getByRole('textbox', { name: 'New collection' }), {
+			key: 'Escape'
+		});
+		await tick();
+		expect(screen.getByRole('menuitem', { name: 'New collection' })).toHaveFocus();
 	});
 
 	test('Space takes a row, as Enter does', async () => {

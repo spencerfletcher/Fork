@@ -69,7 +69,9 @@
 		(first === 'collections'
 			? (['collections', 'tags'] as const)
 			: (['tags', 'collections'] as const)
-		).filter((g) => g === first || typed)
+		).filter((g) =>
+			typed ? (g === 'collections' ? shownCollections : shownTags).length > 0 : g === first
+		)
 	);
 	const nothingFound = $derived(!!typed && shownCollections.length + shownTags.length === 0);
 
@@ -94,10 +96,14 @@
 	// A row is a link (no script: it simply goes); with script it stays on the
 	// page. A collection returns to the recipes; a tag leaves the panel open.
 	async function choose(e: MouseEvent, href: string, closes: boolean) {
+		if (modified(e)) return;
 		e.preventDefault();
 		await goto(href, { reset: false });
 		if (closes) closePanel?.();
 	}
+
+	// A click for a new tab or window is the browser's.
+	const modified = (e: MouseEvent) => e.metaKey || e.ctrlKey || e.shiftKey || e.altKey;
 
 	// Menu items take Space as well as Enter; a link alone takes Enter.
 	function spaceTakes(e: KeyboardEvent) {
@@ -111,6 +117,7 @@
 	let pills: HTMLElement | undefined = $state();
 	let tagsButton: HTMLElement | undefined = $state();
 	async function dropTag(e: MouseEvent, slug: string) {
+		if (modified(e)) return;
 		const at = selectedTags.indexOf(slug);
 		e.preventDefault();
 		await goto(toggledHref(slug), { reset: false });
@@ -121,6 +128,12 @@
 
 	// Made, the action redirects to the new collection; the panel closes on it.
 	const creating = pendingEnhance({ keepFailure: true, done: () => closePanel?.() });
+
+	async function stopNaming() {
+		naming = false;
+		await tick();
+		document.querySelector<HTMLElement>('.picker-new')?.focus();
+	}
 
 	async function startNaming() {
 		naming = true;
@@ -260,7 +273,7 @@
 								// Back to the list; a second Escape closes the panel.
 								if (e.key === 'Escape') {
 									e.stopPropagation();
-									naming = false;
+									stopNaming();
 								}
 							}} />
 						<button type="submit" class="btn-primary btn-sm" disabled={creating.pending}>
@@ -370,7 +383,7 @@
 
 	/* Under the buttons from their left edge, wider than a menu. Dropdown's
 	   panel look; only its place and width are the picker's. */
-	.picker :global(.picker-panel) {
+	.picker :global(.menu-panel.picker-panel) {
 		right: auto;
 		left: 0;
 		top: calc(100% + 6px);
@@ -492,7 +505,7 @@
 			min-width: 0;
 		}
 
-		.picker :global(.picker-panel) {
+		.picker :global(.menu-panel.picker-panel) {
 			position: fixed;
 			top: auto;
 			right: 0;
