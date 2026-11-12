@@ -2,7 +2,7 @@
 
 Working file. Proves that every section, table row and bullet-level item in the sources landed in the current set. Destinations: RD README.md, RM ROADMAP.md, DC DECISIONS.md, CV this file (M1 to M23), CO COMPETITIVE.md, BU BUSINESS.md, DE DESIGN-DIRECTION.md, IN INVENTORY.md; "§n" is the numbered section, "P0" to "P5" a phase table in RM §4. Status: **placed**; **superseded** (also in DC §2, item number given; the replacement is placed); **removed with approval** (removed from the set with Spencer's approval on 11 Nov 2026; recorded in DC §2, line given); **overtaken** (the code already does it, checked by one grep or listing on 12 Nov 2026; nothing to fold). Source-register tables (lists of citations) are one row each.
 
-Sources: R [roadmap report](../research/2026-11-08-product-roadmap/README.md); CM [cookbook market](../research/2026-11-08-product-roadmap/cookbook_market.md); AQ [advanced and quality](../research/2026-11-08-product-roadmap/advanced_and_quality.md); PA [product audit](../research/2026-11-08-product-roadmap/current_product_audit.md); DD [deep dive](../research/2026-11-09-cookbook-app-deep-dive/README.md); S1 [design and solo business](../research/2026-11-10-design-and-solo-business.md); S2 [finished product and revenue](../research/2026-11-10-finished-product-and-revenue.md); SL [social launch](../research/2026-11-08-social-launch/social_launch.md); US [US copyright](../research/2026-11-08-social-launch/us_copyright.md); CA [Canada copyright](../research/2026-11-08-social-launch/canada_copyright.md); Z [Zed reference](../research/2026-11-09-zed-design-reference/README.md); CD [cookbook design research, 8 Nov](../research/2026-11-08-cookbook-design-research/README.md), its README only, folded 12 Nov; UX [UX review, 12 Nov](../research/2026-11-12-ux-review.md); CL [Cooklang research, 23 Oct](../research/2026-10-23-cooklang.md); PS [package sweep, 12 Nov](../research/2026-11-12-package-sweep.md).
+Sources: R [roadmap report](../research/2026-11-08-product-roadmap/README.md); CM [cookbook market](../research/2026-11-08-product-roadmap/cookbook_market.md); AQ [advanced and quality](../research/2026-11-08-product-roadmap/advanced_and_quality.md); PA [product audit](../research/2026-11-08-product-roadmap/current_product_audit.md); DD [deep dive](../research/2026-11-09-cookbook-app-deep-dive/README.md); S1 [design and solo business](../research/2026-11-10-design-and-solo-business.md); S2 [finished product and revenue](../research/2026-11-10-finished-product-and-revenue.md); SL [social launch](../research/2026-11-08-social-launch/social_launch.md); US [US copyright](../research/2026-11-08-social-launch/us_copyright.md); CA [Canada copyright](../research/2026-11-08-social-launch/canada_copyright.md); Z [Zed reference](../research/2026-11-09-zed-design-reference/README.md); CD [cookbook design research, 8 Nov](../research/2026-11-08-cookbook-design-research/README.md), its README only, folded 12 Nov; UX [UX review, 12 Nov](../research/2026-11-12-ux-review.md); CL [Cooklang research, 23 Oct](../research/2026-10-23-cooklang.md); PS [package sweep, 12 Nov](../research/2026-11-12-package-sweep.md); FR [feature research, 31 Oct](../research/2026-10-31-feature-research.md); BV [business viability, 31 Oct](../research/2026-10-31-business-viability.md).
 
 ## R: product roadmap report
 
@@ -788,6 +788,74 @@ Folded on 12 Nov 2026. Nothing in it is decided except `pluralize` (DC §1, 12 N
 | PS45 | Part B: staging on a second Supabase project and Netlify branch deploys | RM P0 Two-tier environments (already there) | placed |
 | PS46 | Risks and things not verified | RM §11 (run the suite after the bump); the unverified notes in each row above | placed |
 
+## FR: feature wishlist and competitor gaps, 31 Oct 2026
+
+The roadmap report (R) read this note as leads; this section, added 12 Nov 2026, traces every item, including those R did not carry. New folds are proposed in RM.
+
+| # | Source item | Destination | Status |
+| --- | --- | --- | --- |
+| FR1 | Method: self-hoster vote counts as a lower bound; Reddit unread | CO §5 (self-selected requests) | placed |
+| FR2 | Candidate 1: cook mode with step timers | RM P2 Timers, Cooking session (Cook is live) | placed |
+| FR3 | Candidate 2: units and °C/°F; a comparison in the reader's units | RM P1 Measurement preference, P2 Units and temperature | placed |
+| FR4 | Candidate 3: "I cooked this" log | RM P2 Journal | placed |
+| FR5 | Candidate 4: URL import | RM P2 Easy import | placed |
+| FR6 | Candidate 5: quantities in steps and totals | RM P4 Ingredient quantities in steps | placed |
+| FR7 | Candidate 6: print and export | RM P1 Print, Export and archive | placed |
+| FR8 | Candidate 7: alternatives, optional ingredients, substitutions with evidence | RM P3 Optional ingredients, P5 Substitutions | placed |
+| FR9 | Candidate 8: subrecipes | RM P4 Subrecipes | placed |
+| FR10 | Candidate 9: variants grouped under a parent | RM P4 Grouped variations | placed |
+| FR11 | Candidate 10: household and friend sharing | RM P3 Household cookbook, P2 Friends | placed |
+| FR12 | Candidate 11: several photos, step photos, cooks' photos | RM P4 Step photos and links, P3 Richer diary | placed |
+| FR13 | Candidate 12: grocery list by aisle | RM P3 Grocery list | placed |
+| FR14 | Candidate 13: nutrition | RM P4 Nutrition, gated | placed |
+| FR15 | Candidate 14: photo and PDF import | RM P5 OCR and capture assistance | placed |
+| FR16 | Candidate 15: meal plan with calendar export | RM P3 Meal queue and calendar | placed |
+| FR17 | Seen, not ranked: translation, excluding tags, equipment, ranges, the onion scaling bug | RM P5 Translation, P2 Global search, §7 Content fidelity, §8 Acceptance library | placed |
+| FR18 | Gap 1: the cook log tied to the version | RM P2 Journal, CO §2 | placed |
+| FR19 | Gap 2: substitutions with evidence | RM P5 Substitutions | placed |
+| FR20 | Gap 3: subrecipes pinned to a version | RM P4 Subrecipes | placed |
+| FR21 | Gap 4: a screen-reader cook mode | RM P2 Cooking session | placed |
+| FR22 | Gap 5: formatting for neurodivergent cooks | RM Not yet phased, Reading options | placed |
+| FR23 | Sketch 1: the atom is a cook | RM P2 Journal | placed |
+| FR24 | Sketch 2: tweaks become a fork crediting the cook | RM §7 Recipe, cook and revision | placed |
+| FR25 | Sketch 3: the feed shows friends' cooks with a change chip | RM P2 Friends, Feed card title | placed |
+| FR26 | Sketch 4: kudos as one tap | RM P2 Like and Save on the feed | superseded wording (DC §2.16) |
+| FR27 | Sketch 5: "cooked 14 times · 3 takes" | RM P1 Last and times cooked | placed |
+| FR28 | Sketch 6: a diary grid and year in review | RM P3 Richer diary | placed |
+| FR29 | Sketch 7: "better or worse than last time?" | RM P2 Private ratings | placed |
+| FR30 | Sketch 8: trends (most forked, most cooked, most common tweak) | RM P2 Discover (lead card), P5 Substitutions | placed |
+| FR31 | Sketch 9: an opt-in yearly cooking goal | RM §12 Streaks and posting pressure (deferred) | placed (deferred with streaks) |
+| FR32 | Sketch 10: Feed, Cookbook, Diary as navigation | DC §1 9 Nov navigation | superseded (DC §2.5) |
+| FR33 | Accessibility and reach (10 bullets) | RM §8 Accessibility and Kitchen ergonomics, P2 Cooking session, Not yet phased Reading options, P5 Translation, read-aloud, P2 Units, P2 Offline saved reading, P4 Nutrition (estimates only) | placed |
+| FR34 | Sources | research note only | placed |
+
+## BV: business viability, 31 Oct 2026
+
+Read by the roadmap report (R, AQ) and superseded as a business plan by BUSINESS.md; this section, added 12 Nov 2026, traces every item.
+
+| # | Source item | Destination | Status |
+| --- | --- | --- | --- |
+| BV1 | Verdict 1 to 6: outcome bands, venture scale unlikely, storage prices, conversion medians, SEO decline | BU §3, §4 (recomputed through R and AQ), CO §2 | placed |
+| BV2 | Verdict 7: what would have to be true, including weekly-logger and payment thresholds | DC §2.26 | removed with approval (DC §2.26) |
+| BV3 | Verdict 8: the asset is versions with reasons | CO §2 | placed |
+| BV4 | Verdict 9 and strategy 1: the baker's notebook wedge | RM §10 (recruit repeat and adapting cooks; S1: bakers are not assumed to be the only market), BU §5, §6 | placed (the baker-only wedge yields to S1) |
+| BV5 | Verdict 10 and (e): decide in six months against kill criteria | DC §2.26 | removed with approval (DC §2.26) |
+| BV6 | Strategy 1's build list: share cards, year in review, iOS push | RM Not yet phased Share cards, P3 Richer diary, P5 Native apps | placed |
+| BV7 | Strategy 2: the household cookbook | RM P3, BU §5 | placed |
+| BV8 | Strategy 3: creators | RM P5 Creator tools, BU §5, §8 | placed |
+| BV9 | Models ruled out: ads, hardware, data licensing | RM §12 | placed |
+| BV10 | Comparables table and pattern | CO §3 (through R) | placed |
+| BV11 | What we would need, product 1 to 8 | RM P2 Journal and Cooking, P2 Easy import, Not yet phased Share cards, P2 Friends, P3 Richer diary, P0 Private first, BU §2 | placed |
+| BV12 | Distribution | BU §6 | placed |
+| BV13 | Costs by band; photos behind a CDN at scale | BU §7 | placed |
+| BV14 | Copyright: imports private, source kept, a DMCA agent | BU §8, RM §7 Recipe supply | placed |
+| BV15 | Children and GDPR basics | RM P0 Public-launch prerequisites, BU §8 | placed |
+| BV16 | Moderation before a public feed: reports, admin hide, rate limits, abuse hashing | RM P0 Moderation foundations, P2 Abuse basics, P0 Public-launch prerequisites | placed |
+| BV17 | Terms, privacy and refund policies before money | BU §2, RM P0 Public-launch prerequisites | placed |
+| BV18 | Native app thresholds; iOS web push | RM P5 Native apps (measured friction decides, not a user count) | placed |
+| BV19 | No cofounder needed to test | BU §1 (a solo operation, DC §1 10 Nov) | placed |
+| BV20 | Sources | research note only | placed |
+
 ## M1 to M23: October milestones
 
 Where each milestone of the [October milestones](../history/2026-10-milestones.md) went in the current plan. Moved here from ROADMAP.md section 13 on 12 November 2026.
@@ -824,9 +892,9 @@ Other preserved preferences: warm cookbook styling, desktop two-column reading, 
 
 Each table row above counts as one item, except rows that name a range (for example "R204 to R226", "DD15 to DD25"), which count as the number of items in the range; source-register rows count as one.
 
-- Items in the sources: 1,018 (R 308, CM 90, AQ 132, PA 56, DD 160, S1 52, S2 43, SL 47, US 13, CA 13, Z 25, CD 5, UX 13, CL 15, PS 46), counted from the row numbers above.
-- Items placed in the current set: 1,011. This includes 28 rows marked superseded in whole or part (CD1, CD2, R8, R17, R37, R52, R56, R58, R61, R62, R64, R68, R80, R81, R97, R100, R103, R230, R238, CM38, CM40, CM47, CM61, AQ15, AQ44, PA29, SL1, SL7), plus superseded notes inside R204 to R226 (M4, M17, M20), PA3 to PA21 (visibility), S1-27 and S2-25 (purchased core); each is placed through its replacement.
-- Items removed with approval: 5 rows (R4, R201, PA1, S1-5, S2-12), DC §2 lines 23 to 27; line 24 comes from the design summary, which stays current and is not a reconciled source. Placed 1,011 plus removed 5 plus overtaken 2 is 1,018.
+- Items in the sources: 1,072 (R 308, CM 90, AQ 132, PA 56, DD 160, S1 52, S2 43, SL 47, US 13, CA 13, Z 25, CD 5, UX 13, CL 15, PS 46, FR 34, BV 20), counted from the row numbers above.
+- Items placed in the current set: 1,063. This includes 30 rows marked superseded in whole or part (FR26, FR32, CD1, CD2, R8, R17, R37, R52, R56, R58, R61, R62, R64, R68, R80, R81, R97, R100, R103, R230, R238, CM38, CM40, CM47, CM61, AQ15, AQ44, PA29, SL1, SL7), plus superseded notes inside R204 to R226 (M4, M17, M20), PA3 to PA21 (visibility), S1-27 and S2-25 (purchased core); each is placed through its replacement.
+- Items removed with approval: 7 rows (R4, R201, PA1, S1-5, S2-12, BV2, BV5), DC §2 lines 23 to 27; line 24 comes from the design summary, which stays current and is not a reconciled source. Placed 1,063 plus removed 7 plus overtaken 2 is 1,072.
 - Lines in DC §2: 30, of which 25 are dropped as superseded (line 30, the first 12 Nov build order, is a decision record, not a source item) (several rows above share one line; lines 12, 15 and 17 replace wording in R254, R253 and the design summary) and 5 are removals with approval (lines 23 to 27).
 - Items overtaken by the code: 2 (CL2, PS37).
 - Items kept with removal proposed: 0.
@@ -841,3 +909,4 @@ Each table row above counts as one item, except rows that name a range (for exam
 - 2026-11-12: CD section added (the 8 Nov cookbook design research README); counts updated.
 - 2026-11-12: CL section added (the 23 Oct Cooklang research); status **overtaken** defined; counts updated.
 - 2026-11-12: PS section added (the 12 Nov package sweep); counts updated.
+- 2026-11-12: FR and BV sections added (the 31 Oct feature research and business viability notes); counts updated.
