@@ -13,7 +13,6 @@
 	import CookbookSort from './CookbookSort.svelte';
 	import SelectBar from './SelectBar.svelte';
 	import { selection } from './selection.svelte.js';
-	import { plural } from '#lib/helpers.js';
 	import { hrefWith, withoutPlace } from '#lib/listPage.js';
 	import { pagedList } from '#lib/pagedList.svelte.js';
 	import {
@@ -124,12 +123,6 @@
 			<div>
 				<!-- Focusable for the Drafts list, which hands focus here once its last row goes. -->
 				<h1 tabindex="-1">Cookbook</h1>
-				{#if data.counts.all > 0}
-					<p class="page-sub">
-						{plural(data.counts.all, 'recipe')}: {data.counts.mine} yours, {data.counts.saved} saved from
-						other cooks.
-					</p>
-				{/if}
 				<!-- What a card's ⋯ just took away; empty until then, so it is heard when it fills. -->
 				<p class="page-sub" role="status">
 					{#if removed?.how === 'trash'}
@@ -303,7 +296,7 @@
 		gap: var(--space-4);
 	}
 
-	/* One line beside the title; the subtitle wraps under the title instead. */
+	/* One line beside the title. */
 	.cookbook-new {
 		white-space: nowrap;
 	}
@@ -314,8 +307,7 @@
 		}
 	}
 
-	/* Three rows on a phone: the title, the count at full width, then New
-	   recipe across the page, so the count no longer squeezes beside it. */
+	/* On a phone New recipe takes its own row under the title, across the page. */
 	@media (max-width: 699px) {
 		.cookbook-head {
 			flex-direction: column;

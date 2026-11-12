@@ -291,7 +291,7 @@ Small, consistent corners: 4px on chips and icon buttons, 6px on buttons, inputs
 - **Primary:** marigold fill, ink text, 600 weight, 11px 16px padding inside a 1px transparent border (the border is there so forced colours keep the button a box when the fill is stripped; the height stays 48.8). Hover darkens to marigold deep over 0.15s; no opacity fade.
 - **Ghost:** transparent with a 1px ink border, 600 weight like the primary, 11px 16px. Hover fills the band, ink text (decided 9 November 2026: the clay tint read as no hover at all).
 - **Focus:** the global ring, 2px clay with 2px offset; marigold inside the navbar.
-- **Navbar action:** "+ New recipe", marigold, 0.875rem 600, 6px 13px inside a 1px transparent border (the primary button's forced-colours box; the size is unchanged). The only fill in the bar. It shows from 768 only; below that the Cookbook header carries it: beside the title from 700 to 767, and below 700 as a third row under the title and the count sentence, full page width (Spencer, 11 November 2026: "a 3 row setup").
+- **Navbar action:** "+ New recipe", marigold, 0.875rem 600, 6px 13px inside a 1px transparent border (the primary button's forced-colours box; the size is unchanged). The only fill in the bar. It shows from 768 only; below that the Cookbook header carries it: beside the title from 700 to 767, and below 700 as a row under the title, full page width (Spencer, 11 November 2026). No count line sits under the Cookbook title: the All / Mine / Saved segments carry the counts (Spencer, 12 November 2026: "this app should be powerful but never seem busy").
 
 **The closed set (decided 9 November 2026).** Every clickable control on the site is one of these, by its shared class or component, and nothing else:
 

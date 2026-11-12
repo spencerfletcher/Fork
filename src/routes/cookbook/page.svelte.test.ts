@@ -139,9 +139,9 @@ describe('Cookbook page', () => {
 		}
 	});
 
-	test('the count sentence says how many are yours and how many saved', () => {
+	test('no count line under the title: the segments already say it', () => {
 		renderCookbook(full);
-		expect(screen.getByText('9 recipes: 6 yours, 3 saved from other cooks.')).toBeInTheDocument();
+		expect(screen.queryByText(/saved from other cooks/)).toBeNull();
 	});
 
 	test('one grid: own cards carry no owner line, saved cards say whose', () => {
@@ -163,7 +163,7 @@ describe('Cookbook page', () => {
 		expect(links.find((a) => a.getAttribute('aria-current') === 'page')).toHaveTextContent('Saved');
 	});
 
-	test('inside a collection the segments count it, the line under the title the whole library', () => {
+	test('inside a collection the segments count it', () => {
 		renderCookbook({
 			...full,
 			collection: { id: 4, name: 'Quick' },
@@ -171,7 +171,6 @@ describe('Cookbook page', () => {
 		});
 		const group = screen.getByRole('group', { name: 'Show' });
 		expect(group).toHaveTextContent(/All\s*2\s*Mine\s*1\s*Saved\s*1/);
-		expect(screen.getByText(/^9 recipes: 6 yours, 3 saved/)).toBeInTheDocument();
 		expect(screen.getByRole('heading', { level: 2, name: 'Quick' })).toBeInTheDocument();
 	});
 
