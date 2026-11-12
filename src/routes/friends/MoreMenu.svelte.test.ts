@@ -47,6 +47,10 @@ describe('MoreMenu', () => {
 			'Report',
 			'Block'
 		]);
+		// The row is a flex box, which would drop the space between two of its
+		// children ("Mute@devcooks"), so the words are one child.
+		expect(items[0].children).toHaveLength(1);
+		expect(items[0].children[0].textContent?.trim()).toBe('Mute @devcooks');
 		expect(items[0]).toHaveFocus();
 		await fireEvent.keyDown(items[0], { key: 'ArrowDown' });
 		expect(items[1]).toHaveFocus();

@@ -64,7 +64,9 @@
 					<form method="POST" action="/friends?/mute" role="none" use:enhance={acting.submit}>
 						<input type="hidden" name="userId" value={userId} />
 						<button type="submit" class="menu-row" role="menuitem">
-							Mute <span class="handle">@{username}</span>
+							<span>
+								Mute <span class="handle">@{username}</span>
+							</span>
 						</button>
 					</form>
 				{/if}
