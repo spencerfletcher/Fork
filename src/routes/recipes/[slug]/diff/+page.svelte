@@ -199,7 +199,9 @@
 		color: var(--color-text-3);
 	}
 
+	/* The mono line's typed " · " was about 24px wide; the drawn dot keeps it. */
 	.version-card__by {
+		--dot-gap: 24px;
 		display: flex;
 		flex-wrap: wrap;
 		align-items: baseline;

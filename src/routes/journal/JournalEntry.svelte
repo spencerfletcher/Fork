@@ -197,9 +197,11 @@
 	}
 
 	.aud,
+	/* The words set the baseline, not the icon's foot, so the line's drawn
+	   dot sits on the text; the icon is centred on its own. */
 	.aud-inline {
 		display: inline-flex;
-		align-items: center;
+		align-items: baseline;
 		gap: 6px;
 	}
 
@@ -209,6 +211,7 @@
 	}
 
 	.aud-inline :global(.icon) {
+		align-self: center;
 		color: var(--color-text-3);
 	}
 
