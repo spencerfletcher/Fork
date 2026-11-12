@@ -24,6 +24,7 @@ import { SEED, SEED_LOG, type SeedUsername } from './seedData';
 import { parseIngredientText } from '#lib/recipes/ingredients.js';
 import { parseStepText } from '#lib/recipes/steps.js';
 import { loadEnv, required, targetFromEnv } from './env';
+import { allAuthUsers } from './seedAuth';
 
 // `pnpm db:seed` targets the local stack, `pnpm db:seed:e2e` the suite's fork_e2e
 // and `pnpm db:seed:prod` the hosted project; loadEnv refuses a mix of local and hosted before anything is deleted.
@@ -68,23 +69,24 @@ async function seed() {
 		console.log('Created recipe-images bucket');
 	}
 
-	// ── Wipe existing seed data ──────────────────────────────────────────────
-	console.log('Clearing existing data...');
-	await db.delete(recipesToTags);
-	await db.delete(recipeVersions);
-	await db.delete(recipes);
-	// These outlive their profile (owner set null), so the cascade no longer clears them.
-	await db.delete(formerUsernames);
-	await db.delete(reports);
-	await db.delete(profiles);
-
-	// ── Create seed users (replacing any earlier ones in Auth) ───────────────
-	const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
-	async function createSeedUser(email: string, username: SeedUsername): Promise<string> {
-		const existing = existingUsers?.users?.find((u) => u.email === email);
-		if (existing) {
-			console.log(`Deleting existing ${email} from Auth...`);
-			await supabaseAdmin.auth.admin.deleteUser(existing.id);
+	// ── Seed logins, before anything is deleted ──────────────────────────────
+	// Every way the run can fail outside the data (Auth unreachable, a login
+	// refused) fails here, while the database is untouched. A login that already
+	// exists is kept, its password reset, so a rerun after any failure finishes.
+	const existing = await allAuthUsers(async (page, perPage) => {
+		const { data, error } = await supabaseAdmin.auth.admin.listUsers({ page, perPage });
+		if (error) throw new Error(`Could not list Auth users: ${error.message}`);
+		return data.users;
+	});
+	const idByEmail = new Map(existing.map((u) => [u.email?.toLowerCase(), u.id]));
+	async function seedLogin(email: string): Promise<string> {
+		const id = idByEmail.get(email.toLowerCase());
+		if (id) {
+			const { error } = await supabaseAdmin.auth.admin.updateUserById(id, {
+				password: SEED_USER_PASSWORD
+			});
+			if (error) throw new Error(`Failed to update seed user ${email}: ${error.message}`);
+			return id;
 		}
 		const { data, error } = await supabaseAdmin.auth.admin.createUser({
 			email,
@@ -92,148 +94,171 @@ async function seed() {
 			email_confirm: true
 		});
 		if (error || !data.user) throw new Error(`Failed to create seed user: ${error?.message}`);
-		await db.insert(profiles).values({ id: data.user.id, username });
-		console.log(`Created user @${username} (${data.user.id})`);
 		return data.user.id;
 	}
 	const userIds: Record<SeedUsername, string> = {
-		spencerfletcher: await createSeedUser(SEED_USER_EMAIL, 'spencerfletcher'),
-		devcooks: await createSeedUser(SEED_USER2_EMAIL, 'devcooks'),
-		priyabakes: await createSeedUser(SEED_USER3_EMAIL, 'priyabakes')
+		spencerfletcher: await seedLogin(SEED_USER_EMAIL),
+		devcooks: await seedLogin(SEED_USER2_EMAIL),
+		priyabakes: await seedLogin(SEED_USER3_EMAIL)
 	};
-	await db.insert(friendships).values([
-		{
-			requesterId: userIds.devcooks,
-			addresseeId: userIds.spencerfletcher,
-			status: 'accepted',
-			acceptedAt: new Date()
-		},
-		{
-			requesterId: userIds.priyabakes,
-			addresseeId: userIds.spencerfletcher,
-			status: 'pending',
-			createdAt: new Date('2026-11-07T12:00:00Z')
-		}
-	]);
 
-	// ── Seed tags ─────────────────────────────────────────────────────────────
-	console.log('Seeding tags...');
-	const tagRows = await db
-		.insert(tags)
-		.values(
-			[
-				'Dessert',
-				'Baking',
-				'American',
-				'Dinner',
-				'Indian',
-				'Spicy',
-				// Deliberately orphaned — attached to no recipe below. Exercises the
-				// search loader's innerJoin, which hides tags with zero recipes.
-				'Unused'
-			].map((name) => ({ name, slug: slugify(name) }))
-		)
-		// The incoming slug wins, so a reseed repairs a tag stored with a bad one.
-		.onConflictDoUpdate({ target: tags.name, set: { slug: sql`excluded.slug` } })
-		.returning({ id: tags.id, name: tags.name });
+	// ── The database, in one transaction: a failure leaves it as it was ─────
+	await db.transaction(async (tx) => {
+		// ── Wipe existing seed data ──────────────────────────────────────────────
+		console.log('Clearing existing data...');
+		await tx.delete(recipesToTags);
+		await tx.delete(recipeVersions);
+		await tx.delete(recipes);
+		// These outlive their profile (owner set null), so the cascade no longer clears them.
+		await tx.delete(formerUsernames);
+		await tx.delete(reports);
+		await tx.delete(profiles);
 
-	const tagId = (name: string) => tagRows.find((t) => t.name === name)!.id;
+		await tx.insert(profiles).values(
+			(Object.keys(userIds) as SeedUsername[]).map((username) => ({
+				id: userIds[username],
+				username
+			}))
+		);
+		await tx.insert(friendships).values([
+			{
+				requesterId: userIds.devcooks,
+				addresseeId: userIds.spencerfletcher,
+				status: 'accepted',
+				acceptedAt: new Date()
+			},
+			{
+				requesterId: userIds.priyabakes,
+				addresseeId: userIds.spencerfletcher,
+				status: 'pending',
+				createdAt: new Date('2026-11-07T12:00:00Z')
+			}
+		]);
 
-	// ── Recipes ──────────────────────────────────────────────────────────────
-	const idBySlug = new Map<string, number>();
-	// Each recipe's version ids, oldest first, for the Journal's links.
-	const versionIdsBySlug = new Map<string, number[]>();
-	for (const recipe of SEED) {
-		const latest = recipe.versions.at(-1)!;
-		const userId = userIds[recipe.author ?? 'spencerfletcher'];
-		console.log(`Seeding ${latest.title}...`);
-		const [row] = await db
-			.insert(recipes)
-			.values({
-				authorId: userId,
-				slug: `${recipe.slug}-${randomSuffix()}`,
-				// Copies of the latest version, per the ownership rule in schema.ts.
-				...recipeCopies(latest),
-				visibility: recipe.visibility,
-				parentId: recipe.forkOf ? idBySlug.get(recipe.forkOf.slug) : null,
-				parentVersion: recipe.forkOf?.version ?? null,
-				// Dated like its versions, so Recent and the feed order the seed the
-				// way real data would, not by insert order.
-				createdAt: new Date(recipe.versions[0].createdAt),
-				updatedAt: new Date(latest.createdAt)
-			})
-			.returning({ id: recipes.id });
-		idBySlug.set(recipe.slug, row.id);
-
-		await db
-			.insert(recipesToTags)
-			.values(recipe.tags.map((name) => ({ recipeId: row.id, tagId: tagId(name) })));
-
-		const versionRows = await db
-			.insert(recipeVersions)
+		// ── Seed tags ─────────────────────────────────────────────────────────────
+		console.log('Seeding tags...');
+		const tagRows = await tx
+			.insert(tags)
 			.values(
-				recipe.versions.map(({ createdAt, ingredientsText, stepsText, ...version }, i) => ({
-					...version,
-					ingredients: parseIngredientText(ingredientsText),
-					steps: parseStepText(stepsText),
-					recipeId: row.id,
-					versionNumber: i + 1,
-					createdBy: userId,
-					createdAt: new Date(createdAt)
+				[
+					'Dessert',
+					'Baking',
+					'American',
+					'Dinner',
+					'Indian',
+					'Spicy',
+					// Deliberately orphaned — attached to no recipe below. Exercises the
+					// search loader's innerJoin, which hides tags with zero recipes.
+					'Unused'
+				].map((name) => ({ name, slug: slugify(name) }))
+			)
+			// The incoming slug wins, so a reseed repairs a tag stored with a bad one.
+			.onConflictDoUpdate({ target: tags.name, set: { slug: sql`excluded.slug` } })
+			.returning({ id: tags.id, name: tags.name });
+
+		const tagId = (name: string) => tagRows.find((t) => t.name === name)!.id;
+
+		// ── Recipes ──────────────────────────────────────────────────────────────
+		const idBySlug = new Map<string, number>();
+		// Each recipe's version ids, oldest first, for the Journal's links.
+		const versionIdsBySlug = new Map<string, number[]>();
+		for (const recipe of SEED) {
+			const latest = recipe.versions.at(-1)!;
+			const userId = userIds[recipe.author ?? 'spencerfletcher'];
+			console.log(`Seeding ${latest.title}...`);
+			const [row] = await tx
+				.insert(recipes)
+				.values({
+					authorId: userId,
+					slug: `${recipe.slug}-${randomSuffix()}`,
+					// Copies of the latest version, per the ownership rule in schema.ts.
+					...recipeCopies(latest),
+					visibility: recipe.visibility,
+					parentId: recipe.forkOf ? idBySlug.get(recipe.forkOf.slug) : null,
+					parentVersion: recipe.forkOf?.version ?? null,
+					// Dated like its versions, so Recent and the feed order the seed the
+					// way real data would, not by insert order.
+					createdAt: new Date(recipe.versions[0].createdAt),
+					updatedAt: new Date(latest.createdAt)
+				})
+				.returning({ id: recipes.id });
+			idBySlug.set(recipe.slug, row.id);
+
+			await tx
+				.insert(recipesToTags)
+				.values(recipe.tags.map((name) => ({ recipeId: row.id, tagId: tagId(name) })));
+
+			const versionRows = await tx
+				.insert(recipeVersions)
+				.values(
+					recipe.versions.map(({ createdAt, ingredientsText, stepsText, ...version }, i) => ({
+						...version,
+						ingredients: parseIngredientText(ingredientsText),
+						steps: parseStepText(stepsText),
+						recipeId: row.id,
+						versionNumber: i + 1,
+						createdBy: userId,
+						createdAt: new Date(createdAt)
+					}))
+				)
+				.returning({ id: recipeVersions.id, versionNumber: recipeVersions.versionNumber });
+			versionIdsBySlug.set(
+				recipe.slug,
+				versionRows.sort((a, b) => a.versionNumber - b.versionNumber).map((v) => v.id)
+			);
+		}
+
+		// ── Collections ──────────────────────────────────────────────────────────
+		// The first cook's starters already made and filled, plus one of their own;
+		// the others get theirs when they first open the Cookbook.
+		console.log('Seeding collections...');
+		await tx
+			.update(profiles)
+			.set({ startersMadeAt: new Date() })
+			.where(eq(profiles.id, userIds.spencerfletcher));
+		const shelves = await tx
+			.insert(collections)
+			.values(
+				['To cook', 'Favorites', 'Weeknight'].map((name) => ({
+					ownerId: userIds.spencerfletcher,
+					name
 				}))
 			)
-			.returning({ id: recipeVersions.id, versionNumber: recipeVersions.versionNumber });
-		versionIdsBySlug.set(
-			recipe.slug,
-			versionRows.sort((a, b) => a.versionNumber - b.versionNumber).map((v) => v.id)
-		);
-	}
+			.returning({ id: collections.id, name: collections.name });
+		const shelf = (name: string) => shelves.find((c) => c.name === name)!.id;
+		await tx.insert(collectionRecipes).values([
+			{ collectionId: shelf('To cook'), recipeId: idBySlug.get('chicken-tikka-masala')! },
+			{ collectionId: shelf('To cook'), recipeId: idBySlug.get('red-lentil-dal')! },
+			{
+				collectionId: shelf('Favorites'),
+				recipeId: idBySlug.get('classic-chocolate-chip-cookies')!
+			},
+			{ collectionId: shelf('Weeknight'), recipeId: idBySlug.get('red-lentil-dal')! }
+		]);
 
-	// ── Collections ──────────────────────────────────────────────────────────
-	// The first cook's starters already made and filled, plus one of their own;
-	// the others get theirs when they first open the Cookbook.
-	console.log('Seeding collections...');
-	await db
-		.update(profiles)
-		.set({ startersMadeAt: new Date() })
-		.where(eq(profiles.id, userIds.spencerfletcher));
-	const shelves = await db
-		.insert(collections)
-		.values(
-			['To cook', 'Favorites', 'Weeknight'].map((name) => ({
-				ownerId: userIds.spencerfletcher,
-				name
-			}))
-		)
-		.returning({ id: collections.id, name: collections.name });
-	const shelf = (name: string) => shelves.find((c) => c.name === name)!.id;
-	await db.insert(collectionRecipes).values([
-		{ collectionId: shelf('To cook'), recipeId: idBySlug.get('chicken-tikka-masala')! },
-		{ collectionId: shelf('To cook'), recipeId: idBySlug.get('red-lentil-dal')! },
-		{ collectionId: shelf('Favorites'), recipeId: idBySlug.get('classic-chocolate-chip-cookies')! },
-		{ collectionId: shelf('Weeknight'), recipeId: idBySlug.get('red-lentil-dal')! }
-	]);
-
-	// ── Journal ──────────────────────────────────────────────────────────────
-	console.log('Seeding log entries...');
-	const entryRows = await db
-		.insert(logEntries)
-		.values(
-			SEED_LOG.map(({ user, recipe, version, createdAt, ...entry }) => {
-				const versionIds = recipe ? versionIdsBySlug.get(recipe)! : [];
-				return {
-					...entry,
-					userId: userIds[user],
-					recipeId: recipe ? idBySlug.get(recipe)! : null,
-					versionId: recipe ? versionIds[(version ?? versionIds.length) - 1] : null,
-					createdAt: new Date(createdAt)
-				};
-			})
-		)
-		.returning({ id: logEntries.id, userId: logEntries.userId, dish: logEntries.dish });
-	// spencerfletcher has liked devcooks' Shakshuka, so the feed shows a count.
-	const shakshuka = entryRows.find((e) => e.userId === userIds.devcooks && e.dish === 'Shakshuka')!;
-	await db.insert(likes).values({ userId: userIds.spencerfletcher, logEntryId: shakshuka.id });
+		// ── Journal ──────────────────────────────────────────────────────────────
+		console.log('Seeding log entries...');
+		const entryRows = await tx
+			.insert(logEntries)
+			.values(
+				SEED_LOG.map(({ user, recipe, version, createdAt, ...entry }) => {
+					const versionIds = recipe ? versionIdsBySlug.get(recipe)! : [];
+					return {
+						...entry,
+						userId: userIds[user],
+						recipeId: recipe ? idBySlug.get(recipe)! : null,
+						versionId: recipe ? versionIds[(version ?? versionIds.length) - 1] : null,
+						createdAt: new Date(createdAt)
+					};
+				})
+			)
+			.returning({ id: logEntries.id, userId: logEntries.userId, dish: logEntries.dish });
+		// spencerfletcher has liked devcooks' Shakshuka, so the feed shows a count.
+		const shakshuka = entryRows.find(
+			(e) => e.userId === userIds.devcooks && e.dish === 'Shakshuka'
+		)!;
+		await tx.insert(likes).values({ userId: userIds.spencerfletcher, logEntryId: shakshuka.id });
+	});
 
 	console.log('✅ Seeding complete.');
 	console.log(
