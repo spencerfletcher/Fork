@@ -182,11 +182,13 @@
 		font-weight: 600;
 	}
 
-	/* A wrapped recipe line drops its dot rather than leading with it. */
+	/* A wrapped recipe line drops its dot rather than leading with it.
+	   Centred, not baseline: the icon row's baseline is the icon's foot,
+	   which would lift it and its dot. A title that wraps takes its own line. */
 	.jsource.dot-clip {
 		display: flex;
 		flex-wrap: wrap;
-		align-items: baseline;
+		align-items: center;
 	}
 
 	.jmeta {
@@ -197,11 +199,9 @@
 	}
 
 	.aud,
-	/* The words set the baseline, not the icon's foot, so the line's drawn
-	   dot sits on the text; the icon is centred on its own. */
 	.aud-inline {
 		display: inline-flex;
-		align-items: baseline;
+		align-items: center;
 		gap: 6px;
 	}
 
@@ -211,7 +211,6 @@
 	}
 
 	.aud-inline :global(.icon) {
-		align-self: center;
 		color: var(--color-text-3);
 	}
 
