@@ -5,7 +5,7 @@ import { db, closeDb } from './index';
 import { PHOTO_MAX_BYTES, PHOTO_TYPES } from '#lib/recipes/validation.js';
 import type { SeedUsername } from './seedData';
 import { loadEnv, required, targetFromEnv } from './env';
-import { loadsVaried } from './target';
+import { loadsVaried, printedPassword, seedPassword } from './target';
 import { allAuthUsers } from './seedAuth';
 import { loadBase, wipe } from './seed/base';
 import { loadVaried } from './seed/load';
@@ -20,7 +20,8 @@ const SUPABASE_URL = env.SUPABASE_URL;
 // Only the seed needs the secret key (it creates the seed user); migrate and drizzle-kit run without it.
 const SUPABASE_SECRET_KEY = required('SUPABASE_SECRET_KEY');
 const TARGET = env.description;
-const SEED_USER_PASSWORD = process.env.SEED_USER_PASSWORD ?? 'Fork-Demo-2025!';
+// Refuses a hosted target without a password of its own, before any Auth call or delete.
+const SEED_USER_PASSWORD = seedPassword(target, process.env.SEED_USER_PASSWORD);
 // Auth is one schema per stack, shared by the dev and e2e databases, so each
 // seeds its own user (.env.e2e sets e2e@fork.local) and only that one is replaced.
 const SEED_USER_EMAIL = process.env.SEED_USER_EMAIL ?? 'spencer@fork.dev';
@@ -105,7 +106,7 @@ async function seed() {
 
 	console.log('✅ Seeding complete.');
 	console.log(
-		`\nSeed user credentials:\n  Email: ${SEED_USER_EMAIL}\n  Password: ${SEED_USER_PASSWORD}`
+		`\nSeed user credentials:\n  Email: ${SEED_USER_EMAIL}\n  Password: ${printedPassword(target, SEED_USER_PASSWORD)}`
 	);
 
 	await closeDb();

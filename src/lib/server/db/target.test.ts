@@ -1,5 +1,11 @@
 import { describe, test, expect } from 'vitest';
-import { describeDbTarget, loadsVaried } from './target';
+import {
+	PUBLIC_SEED_PASSWORD,
+	describeDbTarget,
+	loadsVaried,
+	printedPassword,
+	seedPassword
+} from './target';
 
 const LOCAL_DB = 'postgresql://postgres:pw@127.0.0.1:54322/postgres';
 const LOCAL_API = 'http://127.0.0.1:54321';
@@ -63,6 +69,33 @@ describe('describeDbTarget', () => {
 	test('e2e target refuses a hosted database or API', () => {
 		expect(() => describeDbTarget('e2e', POOLER_DB, LOCAL_API, REF)).toThrow(/local stack/);
 		expect(() => describeDbTarget('e2e', E2E_DB, HOSTED_API, REF)).toThrow(/local stack/);
+	});
+});
+
+describe('seedPassword', () => {
+	test('the local stack falls back to the public password, or takes the one set', () => {
+		expect(seedPassword('local', undefined)).toBe(PUBLIC_SEED_PASSWORD);
+		expect(seedPassword('e2e', undefined)).toBe(PUBLIC_SEED_PASSWORD);
+		expect(seedPassword('local', 'own-pass-1')).toBe('own-pass-1');
+	});
+
+	test('a hosted target takes only a password set in the environment', () => {
+		expect(seedPassword('prod', 'own-pass-1')).toBe('own-pass-1');
+	});
+
+	test('a hosted target refuses an unset, empty or public password, naming the variable not a value', () => {
+		for (const typed of [undefined, '', PUBLIC_SEED_PASSWORD]) {
+			expect(() => seedPassword('prod', typed)).toThrow(/SEED_USER_PASSWORD/);
+		}
+		expect(() => seedPassword('prod', PUBLIC_SEED_PASSWORD)).not.toThrow(
+			new RegExp(PUBLIC_SEED_PASSWORD)
+		);
+	});
+
+	test('the password is printed on the local stack only', () => {
+		expect(printedPassword('local', 'own-pass-1')).toBe('own-pass-1');
+		expect(printedPassword('e2e', 'own-pass-1')).toBe('own-pass-1');
+		expect(printedPassword('prod', 'own-pass-1')).toBe('from SEED_USER_PASSWORD');
 	});
 });
 

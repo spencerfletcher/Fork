@@ -63,3 +63,27 @@ export function describeDbTarget(
  * one, sits beside prod in DbTarget and describeDbTarget, with its own project ref.
  */
 export const loadsVaried = (target: DbTarget): boolean => target !== 'e2e';
+
+/** The base cooks' password on the local stack when none is set; it is in this public repo. */
+export const PUBLIC_SEED_PASSWORD = 'Fork-Demo-2025!';
+
+const onLocalStack = (target: DbTarget): boolean => target === 'local' || target === 'e2e';
+
+/**
+ * The base cooks' shared password, from SEED_USER_PASSWORD. Off the local
+ * stack, a public password would let anyone sign in as them, so it must be set
+ * and differ from PUBLIC_SEED_PASSWORD; the seed reads this before any Auth call or delete.
+ */
+export function seedPassword(target: DbTarget, fromEnv: string | undefined): string {
+	if (onLocalStack(target)) return fromEnv ?? PUBLIC_SEED_PASSWORD;
+	if (!fromEnv || fromEnv === PUBLIC_SEED_PASSWORD) {
+		throw new Error(
+			`DB_TARGET=${target} needs SEED_USER_PASSWORD set to a password of its own, not the public default`
+		);
+	}
+	return fromEnv;
+}
+
+/** What the seed prints for the password: the password itself on the local stack only. */
+export const printedPassword = (target: DbTarget, password: string): string =>
+	onLocalStack(target) ? password : 'from SEED_USER_PASSWORD';
