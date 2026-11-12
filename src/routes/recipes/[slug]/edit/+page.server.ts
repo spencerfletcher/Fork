@@ -150,10 +150,16 @@ export const actions: Actions = {
 					await appendVersion(tx, recipe.id, user.id, latest, submitted, commitMessage);
 				}
 
-				await commitSave(tx, recipe.id, {
-					...(changed ? copies : {}),
-					...(visibilityChanged ? { visibility } : {})
-				});
+				await commitSave(
+					tx,
+					recipe.id,
+					{
+						...(changed ? copies : {}),
+						...(visibilityChanged ? { visibility } : {})
+					},
+					// Tags alone leave the recipe's place in Recent.
+					changed || !!message || visibilityChanged
+				);
 				return 'saved';
 			});
 		} catch (e) {

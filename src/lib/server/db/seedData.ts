@@ -373,7 +373,9 @@ export const SEED: SeedRecipe[] = [
 				ingredientsText: BROWN_BUTTER_INGREDIENTS,
 				stepsText: BROWN_BUTTER_STEPS,
 				imageUrl: 'https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=800&q=80',
-				commitMessage: 'Swapped melted butter for brown butter, added flaky sea salt topping',
+				// A fork's v1 stores no message, as the fork action writes it: its
+				// line is read from the parent (withForkLine).
+				commitMessage: '',
 				createdAt: '2026-03-01'
 			}
 		]

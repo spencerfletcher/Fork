@@ -56,7 +56,7 @@ async function playBack(
 
 function makeProps(overrides: Record<string, unknown> = {}) {
 	return {
-		recipe: { slug: 'cookies', title: 'Cookies', authorId: 'author-1' },
+		recipe: { id: 7, slug: 'cookies', title: 'Cookies', authorId: 'author-1' },
 		canFork: false,
 		canFavorite: true,
 		canEdit: false,
@@ -123,6 +123,28 @@ describe('RecipeActions More actions', () => {
 		expect(hrefs).toEqual(
 			rows ? EXPORT_FORMATS.map((f) => exportHref(f, 'brown-butter-buns')) : []
 		);
+		page.data.user = null;
+	});
+});
+
+describe('RecipeActions Report', () => {
+	test.each([
+		['a signed-in reader of another cook’s recipe', 'someone-else', true],
+		['the author', 'author-1', false],
+		['someone signed out', null, false]
+	])('%s: a Report row in the menu, or none', async (_, viewer, offered) => {
+		page.data.user = viewer ? { id: viewer } : null;
+		render(RecipeActions, { props: makeProps() });
+		await fireEvent.click(screen.getByRole('button', { name: 'More actions' }));
+		await tick();
+		const row = screen.queryByRole('menuitem', { name: 'Report' });
+		if (!offered) expect(row).toBeNull();
+		else {
+			await fireEvent.click(row!);
+			await tick();
+			const form = screen.getByRole('textbox', { name: "What's wrong?" }).closest('form')!;
+			expect(form.querySelector('[name="targetId"]')).toHaveValue('7');
+		}
 		page.data.user = null;
 	});
 });

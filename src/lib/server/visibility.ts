@@ -69,6 +69,27 @@ export async function canViewRow(
 	return canView(row, user, needsFriends ? await friends() : []);
 }
 
+/** A fork's parent's author by handle: that one column of their profile, current after a rename. */
+export const PARENT_AUTHOR = { columns: { username: true } } as const;
+
+/**
+ * A fork's parent as `user` may know it: the row when they may open it, else
+ * null, and whether it was deleted. parentId has no FK, so a deleted parent
+ * leaves it pointing at no row; one in the Trash reads as deleted too, until
+ * it is restored. The byline and v1's line (`withForkLine`) both read this.
+ */
+export async function lineageFor<P extends Row>(
+	recipe: { parentId: number | null; parent: P | null },
+	user: Viewer,
+	friends: () => Promise<string[]> = friendIdsOnce(user)
+): Promise<{ parent: P | null; parentDeleted: boolean }> {
+	const visible = recipe.parent !== null && (await canViewRow(recipe.parent, user, friends));
+	return {
+		parent: visible ? recipe.parent : null,
+		parentDeleted: recipe.parentId !== null && (recipe.parent === null || !!recipe.parent.deletedAt)
+	};
+}
+
 type Schema = ExtractTablesWithRelations<typeof schema>;
 type RecipeWith = NonNullable<DBQueryConfig<'one', true, Schema, Schema['recipes']>['with']>;
 type RecipeRow<W extends RecipeWith> = BuildQueryResult<Schema, Schema['recipes'], { with: W }>;

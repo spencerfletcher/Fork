@@ -55,15 +55,22 @@ export async function appendVersion(
  * Ends a save in one update: the copies when the content changed, any setting
  * that moved, and always the revision bump, so an open form goes stale.
  * Several recipes at once for a setting alone (the Cookbook's bulk tag).
+ * `touched` false (a change to tags alone) leaves updatedAt, so a tag does not
+ * move the recipe up the lists ordered by its newest change.
  */
 export async function commitSave(
 	tx: Tx,
 	recipeId: number | number[],
-	set: Partial<ReturnType<typeof recipeCopies> & Pick<Recipe, 'visibility'>>
+	set: Partial<ReturnType<typeof recipeCopies> & Pick<Recipe, 'visibility'>>,
+	touched = true
 ): Promise<void> {
 	await tx
 		.update(recipes)
-		.set({ ...set, editRevision: sql`${recipes.editRevision} + 1`, updatedAt: new Date() })
+		.set({
+			...set,
+			editRevision: sql`${recipes.editRevision} + 1`,
+			...(touched ? { updatedAt: new Date() } : {})
+		})
 		.where(Array.isArray(recipeId) ? inArray(recipes.id, recipeId) : eq(recipes.id, recipeId));
 }
 

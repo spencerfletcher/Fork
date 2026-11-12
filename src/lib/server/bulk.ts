@@ -178,7 +178,7 @@ export async function tagAll(
 				.insert(recipesToTags)
 				.values(taking.flatMap((recipeId) => tagIds.map((tagId) => ({ recipeId, tagId }))))
 				.onConflictDoNothing();
-			await commitSave(tx, taking, {});
+			await commitSave(tx, taking, {}, false);
 		}
 		return { changed: taking.length, already: already.length, full: full.length, skipped };
 	});

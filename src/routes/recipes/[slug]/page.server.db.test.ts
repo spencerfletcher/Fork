@@ -206,9 +206,15 @@ describe.skipIf(!localDb)('forking a version, against the real database', () => 
 				versionNumber: 1,
 				title: 'wombat stew',
 				imageUrl: photo(2),
-				commitMessage: `Forked from @ex-author-${run}, v2`
+				// No handle stored: v1's line is read from the parent.
+				commitMessage: ''
 			}
 		]);
+		const data = await pageOf(row!.slug, { id: forker });
+		expect(data.allVersions.map((v) => v.commitMessage)).toEqual([
+			`Forked from @ex-author-${run}, v2`
+		]);
+		expect(data.currentVersion.commitMessage).toBe(`Forked from @ex-author-${run}, v2`);
 		const latest = await fork();
 		expect(latest.row).toMatchObject({ parentVersion: 3, title: 'platypus stew' });
 	});
@@ -298,6 +304,13 @@ describe.skipIf(!localDb)('forking a version, against the real database', () => 
 		const data = await pageOf(row!.slug, { id: other });
 		// The profile join's one column, nothing else of the profile.
 		expect(data.recipe.parent?.author).toEqual({ username: renamed });
+		// The history's first entry follows the rename too, as does the export.
+		expect(data.currentVersion.commitMessage).toBe(`Forked from @${renamed}, v2`);
+		const { exportFor } = await import('#lib/server/export.js');
+		const { toMarkdown } = await import('#lib/export/markdown.js');
+		const mine = await exportFor(forker, 'https://x', row!.id);
+		expect(mine.recipes[0].versions[0].message).toBe(`Forked from @${renamed}, v2`);
+		expect(toMarkdown(mine)).toContain(`· Forked from @${renamed}, v2`);
 
 		await db
 			.update(schema.recipes)
@@ -307,6 +320,7 @@ describe.skipIf(!localDb)('forking a version, against the real database', () => 
 			for (const viewer of [{ id: other }, null]) {
 				const hidden = await pageOf(row!.slug, viewer);
 				expect(hidden.recipe.parent).toBeNull();
+				expect(hidden.currentVersion.commitMessage).toBe('Forked from a private recipe, v2');
 				expect(JSON.stringify(hidden)).not.toContain(`"username":"${renamed}"`);
 			}
 		} finally {
@@ -337,6 +351,7 @@ describe.skipIf(!localDb)('forking a version, against the real database', () => 
 		expect(removed.join(' ')).not.toContain(`${run}-v2.png`);
 		const data = await pageOf(row!.slug, { id: forker });
 		expect(data.recipe).toMatchObject({ parentVersion: 2, parent: null, parentDeleted: true });
+		expect(data.currentVersion.commitMessage).toBe('Forked from a deleted recipe, v2');
 		expect(data.currentVersion.imageUrl).toBe(photo(2));
 	});
 });

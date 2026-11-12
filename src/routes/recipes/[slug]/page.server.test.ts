@@ -291,7 +291,7 @@ describe('fork', () => {
 		expect(tx.delete).not.toHaveBeenCalled();
 	});
 
-	test('inserts version 1 as the complete latest content of the source, with a message naming where it came from', async () => {
+	test('inserts version 1 as the complete latest content of the source, with no stored message: v1’s line is read from the parent', async () => {
 		findRecipeMock.mockResolvedValue({
 			...SOURCE_RECIPE,
 			versions: [{ id: 3, versionNumber: 3, commitMessage: 'Chill the dough', ...LATEST }]
@@ -309,7 +309,7 @@ describe('fork', () => {
 		expect(versionValues).toMatchObject({
 			recipeId: 99,
 			versionNumber: 1,
-			commitMessage: 'Forked from @chef, v3',
+			commitMessage: '',
 			createdBy: FORKER.id,
 			...LATEST
 		});
@@ -344,7 +344,7 @@ describe('fork', () => {
 		);
 
 		const versionValues = tx.insertChain.values.mock.calls[2][0];
-		expect(versionValues.commitMessage).toBe('Forked from @chef, v1');
+		expect(versionValues.commitMessage).toBe('');
 	});
 });
 

@@ -179,6 +179,8 @@ describe.skipIf(!localDb)('Cookbook bulk actions, against the real database', ()
 
 			const after = await tx.query.recipes.findFirst({ where: eq(schema.recipes.id, r.own1) });
 			expect(after!.editRevision).toBe(before!.editRevision + 1);
+			// A tag is no change to the recipe: it keeps its place in Recent.
+			expect(after!.updatedAt).toEqual(before!.updatedAt);
 			const versions = await tx
 				.select({ n: schema.recipeVersions.versionNumber })
 				.from(schema.recipeVersions)
