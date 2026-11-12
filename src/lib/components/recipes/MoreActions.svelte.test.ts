@@ -3,6 +3,7 @@ import { render, screen, fireEvent, within } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import MoreActions from './MoreActions.svelte';
 import source from './CollectionChecks.svelte?raw';
+import moreSource from './MoreActions.svelte?raw';
 import { cssRule } from '#lib/testing/css.js';
 import { COLLECTION_NAME_MAX } from '#lib/collections.js';
 import { SESSION_ENDED } from '#lib/server/actions.js';
@@ -166,6 +167,11 @@ describe('More actions: collections', () => {
 		expect(rows.map((r) => r.getAttribute('aria-checked'))).toEqual(['true', 'false']);
 		expect(rows[0]).toHaveClass('menu-row');
 		expect(rows[0]).toHaveFocus();
+	});
+
+	// ConfirmStep draws Move to Trash, outside this component's scoped styles.
+	test('every icon row, Move to Trash’s included, keeps the 10px between icon and words', () => {
+		expect(cssRule(moreSource, '.more-panel :global(.icon-row)')).toMatch(/gap:\s*10px/);
 	});
 
 	test('many collections scroll inside the menu, New collection and Print staying in view', () => {

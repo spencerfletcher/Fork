@@ -287,7 +287,8 @@
 		--menu-top: calc(100% + 4px);
 	}
 
-	.icon-row {
+	/* :global, so ConfirmStep's trigger (Move to Trash) takes it too. */
+	.more-panel :global(.icon-row) {
 		gap: 10px;
 	}
 
