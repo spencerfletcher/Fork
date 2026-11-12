@@ -13,6 +13,7 @@ The single current plan for Fork, a recipe cookbook with version history, a cook
 | S1 | [Design refinement and solo-business review, 10 Nov 2026](../research/2026-11-10-design-and-solo-business.md) |
 | S2 | [Finished product and revenue synthesis, 10 Nov 2026](../research/2026-11-10-finished-product-and-revenue.md) |
 | Z | [Zed design reference, 9 Nov 2026](../research/2026-11-09-zed-design-reference/README.md) |
+| UX | [UX review, 12 Nov 2026](../research/2026-11-12-ux-review.md): recommendations, not decisions; item numbers are its recommended order (UX 1 to UX 4) |
 | OD | Spencer's decisions in conversation, 9 to 11 Nov 2026, listed under section 14 |
 | M1 to M23 | Milestones of the [October roadmap](../ROADMAP.md), mapped in section 13 |
 
@@ -53,27 +54,7 @@ The differentiating experience is continuity: a recipe travels from capture thro
 
 **Known gaps in the shipped product** (from the audit and code, still true): recipe photos are served from public storage URLs whatever the recipe's audience; ingredient search matches every historical version, not only the current one; there is no settings route, export, print styling, collections, drafts or Trash; tag slugs drop non-Latin characters (PA). Present test results, authenticated journeys, real phones, screen readers, production mail, private-media policy and field performance are unverified (R).
 
-### 12 November 2026 UX review and recommended next work
-
-**Assessment.** Visual direction 8.5/10, overall experience 7.5/10 (editorial judgments). The warm paper, espresso navigation, serif titles and restrained clay and brass accents suit a personal cookbook. The larger gap is between a first visit with little history and a return visit with a recipe worth making again. Give the food, the time it needs and the cook's own experience more prominence than author handles, version numbers and other metadata.
-
-**Evidence.** The signed-in walkthrough covered Discover, a recipe, Cook and the Journal handoff. Scaling chicken tikka masala from four to five servings produced 2½ lb of chicken, and Finish carried the date, v3 and five servings into the new entry. Implementation review at `9593a3d7` supplied the larger-library and recovery observations. The review account had three owned recipes and an empty Journal and Friends view. Large-library usability, physical-phone performance and repeat use still need observation.
-
-| Surface | What is working | Refinement |
-|---|---|---|
-| Discover and versions | Recent changes, keeping a saved version, following the latest and attribution to the source version give adaptations a history. | Feature one original and a genuinely different adaptation. Explain what changed in cooking terms, such as less sugar for crisp edges. Let someone see why they would choose one version. |
-| Cookbook | Grid/list, sort and searchable collections and tags support both recognition and retrieval. Draft continuation, Trash, restore and export make the archive easier to trust. | Keep the dense phone grid and list option. Check long titles, missing photos and similar dishes at realistic volume. Make device-local draft storage clear near Continue until synced drafts ship. |
-| Recipe and Cook | The continuous method permits looking ahead. On phones, switching between Method and Ingredients preserves the cook's place. Desktop keeps both in view. | Give yield, elapsed time and Cook priority in the first scan. Give version information more weight when the cook has a decision to make, such as whether to use an update. |
-| Journal and return visits | Automatic cook details, the annual summary, most-cooked links and a link from the recipe to the last entry reward logging. | Put the optional private observation first in the completion form, with photo and sharing below. Allow saving the cook with no writing. Bring the observation back beside Cook when it can inform the next meal. |
-
-**Recommended order within the existing phase gates**
-
-1. **Complete the repeat-cook flow (P2 Journal recall).** Show the cook's most recent relevant private observation with its date, version and a link to the entry. Keep it distinct from a standing note on a saved recipe. Verify that a cook can record “less ginger next time,” reopen the dish a week later and see that advice before starting. Check whole servings, fractional scaling and batch yields across Finish and Journal. Only the whole-serving handoff was verified live.
-2. **Get one personally meaningful recipe into the Cookbook (P1 entry point, P2 import).** From an empty Cookbook, make the existing editor easy to find. For P2, prioritize a paste/import preview that lets people correct what Fork read. Try a family recipe copied from Notes and one from a website. Check ingredient groups, quantities, order and yield against the original and record how much correction each needed.
-3. **Improve the featured recipes.** Fix the cookie example that preheats before a two-hour chill, reconcile the 13-minute header with the 9–11-minute baking step, and use “Makes 36 cookies” where that is the intended yield. Show waiting time where it affects dinner planning. Use the featured adaptation to demonstrate these editorial standards and the value of a fork.
-4. **Validate with full libraries and real meals.** Exercise a library of 50–100 mixed recipes and several drafts. Have pilot cooks bring a dish, cook it on their phone, leave an optional observation and make it on another day. Record where they lose their place, how they find a quantity, and whether they notice and use their note without help. Check deployment logs for the earlier intermittent 500 responses. A clean retest left the cause open.
-
-Defer extra social surfaces, permanent cooking-history filter chips and a standalone Recently viewed section while validating this path. Revisit Cook again when it can return someone to a specific version with the scale and observation they wanted to reuse. See §10 for the broader pilot and its measures.
+**12 November 2026 UX review** (UX): a signed-in walkthrough of the live site and an implementation review, kept as research in [2026-11-12-ux-review.md](../research/2026-11-12-ux-review.md). Its recommendations are folded into the rows marked UX below; none is decided until Spencer says so (§15).
 
 ## 3. How the plan works
 
@@ -526,3 +507,4 @@ None pending.
 - 2026-11-11: saved Friends-only recipes are removed, not copied, when a friendship ends.
 - 2026-11-11: Account lifecycle: Delete account built; the 30-day username reservation and auth-user removal wait on a schema change and a service key.
 - 2026-11-12: added the signed-in UX review and four recommended next steps in §2, with evidence limits and pilot checks.
+- 2026-11-12: moved the UX review out of §2 to [research](../research/2026-11-12-ux-review.md), source key UX; §2 keeps a pointer.

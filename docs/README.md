@@ -18,6 +18,7 @@ Start here. The product set in `product/` holds the current plan; everything els
 
 - [Product roadmap report](research/2026-11-08-product-roadmap/README.md) (8 to 10 Nov 2026) and its three research notes: the previous current plan, folded into `product/`.
 - [Design refinement and solo-business viability](research/2026-11-10-design-and-solo-business.md) and [Finished product and revenue](research/2026-11-10-finished-product-and-revenue.md) (10 Nov 2026): syntheses folded into `product/`.
+- [UX review](research/2026-11-12-ux-review.md) (12 Nov 2026): a signed-in walkthrough and implementation review with a recommended order of next work, folded into `product/` as recommendations (source UX).
 - [ROADMAP.md](ROADMAP.md): the Oct 2026 milestone list M1 to M23 and earlier priority orders; the product roadmap maps every milestone.
 - `design/`: dated design work. `2026-10-27-redesign` (the shipped redesign), `2026-11-08-mvp` (first MVP mockups), `2026-11-10-offline-review` (a self-contained review pack with its own worksheet), `2026-11-10-decision-pack` (the MVP direction).
 - `research/`: dated research notes, Oct to Nov 2026, including the cookbook-app deep dive, the Zed reference, the cookbook design research and the social launch and copyright notes.
