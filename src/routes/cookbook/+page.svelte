@@ -472,7 +472,8 @@
 		align-items: center;
 		justify-content: center;
 		gap: 4px;
-		min-height: 38px;
+		/* 44px with the strip's border and padding: the tools row's one height. */
+		min-height: 36px;
 		padding: 0 14px;
 		border-radius: 4px;
 		font-size: 0.9375rem;

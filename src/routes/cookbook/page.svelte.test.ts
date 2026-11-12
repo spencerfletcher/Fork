@@ -799,6 +799,22 @@ describe('Cookbook select mode', () => {
 		expect(cssRule(source, '.cookbook-select')).toMatch(/margin-left:\s*auto/);
 	});
 
+	// One block size on the tools row (the pickers' .btn-sm is 44px): the
+	// strip's 1px border and 3px padding around a 36px segment, and the select
+	// held to 44px, so every control shares a top. jsdom lays nothing out.
+	test('the tools row is one 44px height: the pickers, Sort and Grid | List', async () => {
+		const { default: sortSource } = await import('./CookbookSort.svelte?raw');
+		const strip = cssRule(source, '.seg');
+		const px = (rule: string, prop: string) =>
+			Number(new RegExp(`${prop}:\\s*(\\d+)px`).exec(rule)![1]);
+		expect(
+			2 * px(strip, 'border') +
+				2 * px(strip, 'padding') +
+				px(cssRule(source, '.seg a'), 'min-height')
+		).toBe(44);
+		expect(cssRule(sortSource, 'select')).toMatch(/min-height:\s*44px/);
+	});
+
 	// A phone's way in. The cards must not jump: outside the desktop row
 	// (display:none on a phone) the filters are the very same elements.
 	test('Select recipes in the View sheet closes it and starts the mode, nothing above the cards changing; Cancel hands focus to View', async () => {

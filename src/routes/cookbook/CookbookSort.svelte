@@ -58,10 +58,12 @@
 		white-space: nowrap;
 	}
 
-	/* The input's look (app.css), sized to the longest order, not the row. */
+	/* The input's look (app.css), sized to the longest order, not the row,
+	   and the tools row's 44px, so it shares the pickers' top. */
 	select {
 		width: auto;
 		min-width: 13rem;
+		min-height: 44px;
 	}
 
 	/* A phone shares the row with Grid | List. */
