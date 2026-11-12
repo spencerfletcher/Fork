@@ -127,7 +127,7 @@ Planning and design docs: start at `docs/README.md`, which names the current pro
 - Build recipe content fixtures with the helpers in `src/lib/recipes/fixtures.ts`, never with hand-written object literals, so a shape change touches one file
 - When a stored type changes shape, do the type and every reader as one vertical slice so `svelte-check` is green at the end of the task; server-first ordering is for new features
 - Run `pnpm test:unit` before committing; don't commit with failing unit tests
-- `pnpm test:e2e` runs against its own `fork_e2e` database, reset to the seed every run, so e2e tests may assume the seed; the dev database is never touched
+- `pnpm test:e2e` runs against its own `fork_e2e` database, reset to the base seed (`src/lib/server/db/seedData.ts`) every run, so e2e tests may assume it; the varied set (`src/lib/server/db/seed/`) loads only on local and production (`loadsVaried`, `target.ts`), so no spec may rely on it. The dev database is never touched
 
 ## Deployment
 

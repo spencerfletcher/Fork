@@ -86,7 +86,7 @@ src/
       recipes/                 recipe, editor and version components
       ui/                      app shell, search and tag input components
     server/db/schema.ts        Drizzle schema — single source of truth
-    server/db/seed.ts          demo data
+    server/db/seed.ts          seed data: the base (seedData.ts) and the varied set (seed/)
 ```
 
 Load functions and form actions do the data work; `hooks.server.ts` attaches the Supabase client and the user to `event.locals` on every request. The diff engine in `lib/recipes/diff.ts` is deliberately free of framework and database dependencies, which is why it's the most heavily tested file in the repo.
@@ -110,13 +110,17 @@ Start Supabase for Auth, Storage and an empty Postgres, then build the schema an
 supabase start                 # prints your local API URL, anon key, and service role key
 # paste those into .env.local, then:
 pnpm db:migrate                # apply the Drizzle migrations in drizzle/
-pnpm db:seed                   # demo user + three recipes, one a fork with two versions
+pnpm db:seed                   # the base seed plus the varied set: 34 cooks, 81 recipes, a year of the Journal
 pnpm dev
 ```
 
 `.env.local` is the local stack and `.env` the hosted project. Every database script takes the local one unless it ends in `:prod`, and the `:prod` scripts refuse to run unless `SUPABASE_PROJECT_ID` names the project both URLs point at.
 
 The app runs at `http://localhost:5173`. The seeded account is `spencer@fork.dev` with the password from `SEED_USER_PASSWORD` (default `Fork-Demo-2025!`).
+
+The seed comes in two datasets, chosen by the target (`loadsVaried` in `src/lib/server/db/target.ts`). The **base** (`src/lib/server/db/seedData.ts`: three cooks, six recipes) is all the e2e suite's `fork_e2e` gets, since its specs assume it. Local and production (`pnpm db:seed`, `pnpm db:seed:prod`) add the **varied** set (`src/lib/server/db/seed/`): 31 invented cooks, 75 more recipes with versions, forks and restores, friendships in every state, saves and kept copies, collections, a year of Journal entries, reports and one moderator-hidden recipe, so `spencer@fork.dev` has a full Cookbook. Its content is fixed; its dates count back from the day it runs, so the Journal's twelve months and the Trash's 30 days always hold. `src/lib/server/db/seed/recipes.test.ts` holds every recipe to the editor's validation and to its own header (no oven heating through a long chill, times that cover the method), and `load.db.test.ts` checks the seeded local database for the invariants the app's write paths keep (run `pnpm db:seed` first).
+
+The seed resolves every login before it deletes anything, then wipes and writes the database in one transaction, so a failure leaves it as it was and a rerun finishes. It runs on one connection, through `scripts/app-env.ts`, which lets a script load the app's server modules. The invented cooks sign in with nothing: each login is `<username>@fork-seed.example` (`SEEDED_EMAIL_DOMAIN`, `src/lib/server/db/seed/cooks.ts`) with a random password that is never stored or printed. `pnpm db:seed:clear` (or `:prod`) lists those accounts, and with `--apply` deletes each through `deleteAccount`, as Settings' Delete account would: real cooks and the base accounts stay, and a real cook's save of a seeded recipe stays as a kept copy.
 
 To point at a hosted Supabase project instead, skip `supabase start` and fill `.env` from your project's dashboard — `DATABASE_URL` should be the **session pooler** connection string (`aws-0-<region>.pooler.supabase.com:5432`, user `postgres.<ref>`): the direct `db.<ref>` host is IPv6-only and unreachable from most home networks and from serverless runtimes. Set `SUPABASE_PROJECT_ID` to the project ref; `pnpm db:seed:prod` refuses to run unless both URLs name it.
 
@@ -152,7 +156,7 @@ pnpm lint            # eslint + prettier
 
 Unit tests live next to their source (`Foo.svelte` → `Foo.svelte.test.ts`). Server logic runs in a Node environment, component tests in jsdom; the split is configured in `vite.config.ts`. CI runs type checking, linting, and the unit suite on every push. The Playwright job starts a local Supabase, which replays the migration chain from empty, seeds it, and runs the e2e suite against it.
 
-The e2e suite owns a database: `fork_e2e`, on the same local Supabase stack as the dev database. Before every run, `e2e/global-setup.ts` creates it if missing, applies the migrations and reseeds it (`pnpm db:migrate:e2e`, `pnpm db:seed:e2e`), so tests can assume the seed. The stack's URL and keys come from `.env.local`; the committed `.env.e2e`, which holds no keys, overrides the database and users. The suite previews on port 4174 (`E2E_PORT=4175 pnpm test:e2e` moves it when something else holds that port) and never reuses a running server. The dev `postgres` database is never touched. Auth is shared across the stack, so the suite signs in as its own user, `e2e@fork.local`, and the seed replaces only that one auth user.
+The e2e suite owns a database: `fork_e2e`, on the same local Supabase stack as the dev database. Before every run, `e2e/global-setup.ts` creates it if missing, applies the migrations and reseeds it (`pnpm db:migrate:e2e`, `pnpm db:seed:e2e`), so tests can assume the seed. The stack's URL and keys come from `.env.local`; the committed `.env.e2e`, which holds no keys, overrides the database and users. The suite previews on port 4174 (`E2E_PORT=4175 pnpm test:e2e` moves it when something else holds that port) and never reuses a running server. The dev `postgres` database is never touched. Auth is shared across the stack, so the suite signs in as its own user, `e2e@fork.local`, and the seed resets only that user's password.
 
 ## License
 
