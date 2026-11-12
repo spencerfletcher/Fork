@@ -12,7 +12,6 @@ import { makeContent } from '#lib/recipes/fixtures.js';
 import source from './ScalePanel.svelte?raw';
 import { cssRule } from '#lib/testing/css.js';
 
-
 const STORED = 3;
 
 /** The panel as Details renders it: Details owns the count and hands it back. */

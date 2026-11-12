@@ -12,7 +12,6 @@ import { cssRule } from '#lib/testing/css.js';
 import { TRASH_DAYS } from '#lib/trash.js';
 import type { SubmitFunction } from '$app/forms';
 
-
 const { page, goto, submits } = vi.hoisted(() => ({
 	page: { url: new URL('http://localhost/cookbook') } as {
 		url: URL;

@@ -261,7 +261,9 @@
 					<div class="cookbook-none">
 						{#if data.searchQuery}
 							<h2>No recipes match “{data.searchQuery}”.</h2>
-							<a class="inline-action hit-link" href={filterHref(data.filter, ['q'])}>Clear search</a>
+							<a class="inline-action hit-link" href={filterHref(data.filter, ['q'])}>
+								Clear search
+							</a>
 						{:else}
 							<!-- The pills, the picker and the segments undo each filter. -->
 							<h2>No recipes match these filters.</h2>

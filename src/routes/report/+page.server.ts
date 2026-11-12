@@ -1,9 +1,4 @@
-import {
-	CONTACT_MAX,
-	fileLinkReport,
-	LINK_MAX,
-	REPORT_ERRORS
-} from '#lib/server/moderation.js';
+import { CONTACT_MAX, fileLinkReport, LINK_MAX, REPORT_ERRORS } from '#lib/server/moderation.js';
 import { MAX_REPORT, REPORT_HONEYPOT } from '#lib/moderation.js';
 import { rateLimited } from '#lib/server/rateLimit.js';
 import { ensureProfile } from '#lib/server/profiles.js';
