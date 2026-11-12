@@ -301,6 +301,7 @@
 	.btns {
 		flex: none;
 		display: flex;
+		flex-wrap: wrap;
 		align-items: center;
 		gap: 20px;
 	}

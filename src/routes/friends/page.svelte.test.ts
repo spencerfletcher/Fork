@@ -3,6 +3,8 @@ import { SESSION_ENDED } from '#lib/server/actions.js';
 import { render, screen, within } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import Page from './+page.svelte';
+import source from './+page.svelte?raw';
+import { cssRule } from '#lib/testing/css.js';
 
 const { page } = vi.hoisted(() => ({ page: { url: new URL('https://fork.test/friends') } }));
 vi.mock('$app/state', () => ({ page }));
@@ -253,5 +255,11 @@ describe('For you', () => {
 		const { rerender } = render(Page, { props: { data: makeData({ notices }) } });
 		await rerender({ data: makeData({ notices: [] }) });
 		expect(within(forYou()!).getByText(/accepted your request/)).toBeInTheDocument();
+	});
+
+	// At 200% zoom a phone is 195px wide: Decline takes the next line rather
+	// than running out of the band.
+	test('Accept and Decline wrap rather than overflow a narrow screen', () => {
+		expect(cssRule(source, '.btns')).toContain('flex-wrap: wrap');
 	});
 });
