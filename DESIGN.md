@@ -327,7 +327,7 @@ A control that does not fit one of these rows is a design decision, not a local 
 | Inline link | clay | Clay Deep | bare `a` (app.css) |
 | Title link | ink, Bitter | clay, never underlined | per component: `.card-title` (RecipeCard), `.lead-title`, `.change-title` (Discover) |
 | Arrow link | clay, typed "→" | Clay Deep, underlined | `.arrow-link`: 24px hit, 44px on a phone |
-| Sentence action | clay, underlined | Clay Deep, underlined | `.inline-action`: Search's and Discover's "Clear filters", Search's and the Cookbook's "Clear search", Search's "All recipes", the Cookbook's "Show all recipes", a tag page's "Explore all →", the auth pages' switch links ("Create one", "Log in"), "Send again", the sign-up alert's "Log in" |
+| Sentence action | clay, underlined | Clay Deep, underlined | `.inline-action`: Search's and Discover's "Clear filters", Search's and the Cookbook's "Clear search", Search's "All recipes", a tag page's "Explore all →", the auth pages' switch links ("Create one", "Log in"), "Send again", the sign-up alert's "Log in" |
 | Inline hit | the link's own | the link's own | `.hit-link`: a 24px / 44px hit for any inline link, text unmoved |
 | Back link | Ink 3, 0.875rem | Ink 3, underlined | `.back-link` |
 

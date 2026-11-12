@@ -241,11 +241,10 @@
 					<div class="cookbook-none">
 						{#if data.searchQuery}
 							<h2>No recipes match “{data.searchQuery}”.</h2>
-							<p>Search looks at titles, descriptions and ingredients.</p>
 							<a class="inline-action" href={filterHref(data.filter, ['q'])}>Clear search</a>
 						{:else}
+							<!-- The pills, the picker and the segments undo each filter. -->
 							<h2>No recipes match these filters.</h2>
-							<a class="inline-action" href={filterHref('all', ['tags'])}>Show all recipes</a>
 						{/if}
 					</div>
 				{/if}
@@ -490,11 +489,6 @@
 
 	.cookbook-none h2 {
 		font-size: 1.375rem;
-	}
-
-	.cookbook-none p {
-		margin: 6px 0 0;
-		color: var(--color-text-2);
 	}
 
 	.cookbook-none a {

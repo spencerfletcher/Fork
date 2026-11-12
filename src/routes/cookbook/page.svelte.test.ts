@@ -306,6 +306,15 @@ describe('Cookbook page', () => {
 		expect(resultStatus()).toHaveClass('sr-only');
 		expect(screen.getByRole('heading', { name: 'No recipes match “saffron”.' })).toBeVisible();
 		expect(screen.getByRole('link', { name: 'Clear search' })).toHaveAttribute('href', '/cookbook');
+		// The search box's placeholder says what it looks at.
+		expect(screen.queryByText(/Search looks at/)).toBeNull();
+	});
+
+	// The tag pills, the picker and the segments undo each filter themselves.
+	test('nothing matching the filters alone says so, with no Show all recipes', () => {
+		renderCookbook({ ...full, recipes: [], selectedTags: ['baking'] });
+		expect(screen.getByRole('heading', { name: 'No recipes match these filters.' })).toBeVisible();
+		expect(screen.queryByRole('link', { name: 'Show all recipes' })).toBeNull();
 	});
 
 	test('a filter with matches announces the count to screen readers only', () => {
