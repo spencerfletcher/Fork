@@ -269,6 +269,7 @@ describe('ScalePanel', () => {
 		expect(cssRule(style, '.step')).toMatch(/width:\s*32px/);
 		expect(cssRule(phone, '.step')).toMatch(/--hit:\s*12px/);
 		expect(cssRule(phone, '.scale-row .text-btn')).toMatch(/min-width:\s*44px/);
-		expect(cssRule(phone, '.scale-group')).toMatch(/height:\s*44px/);
+		// 44px inside its 1px border.
+		expect(cssRule(phone, '.scale-group')).toMatch(/height:\s*46px/);
 	});
 });

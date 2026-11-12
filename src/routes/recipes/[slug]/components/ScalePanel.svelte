@@ -282,11 +282,12 @@
 		margin-top: 6px;
 	}
 
-	/* A thumb's 44px: the group's height, the steps' hit, and each text
-	   button a 44px box (its label centred, nothing drawn round it). */
+	/* A thumb's 44px: inside the group's 1px border, the field and the
+	   steps' hit; each text button a 44px box (its label centred, nothing
+	   drawn round it). */
 	@media (max-width: 699px), (pointer: coarse) {
 		.scale-group {
-			height: 44px;
+			height: 46px;
 			margin-right: 12px;
 		}
 
