@@ -14,7 +14,9 @@ declare global {
 		}
 
 		interface PageData {
-			user: User | null;
+			// The root layout's viewer: the auth user cut to what pages read,
+			// since page data is serialised into the HTML.
+			user: { id: string; email?: string } | null;
 		}
 	}
 }
