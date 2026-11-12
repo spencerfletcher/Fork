@@ -216,28 +216,14 @@ describe('New recipe page editor state', () => {
 		expect(method).toHaveAttribute('contenteditable', 'true');
 	});
 
-	test('the header line says the save makes v1, while typing too, and no helper sits beside Create', async () => {
+	test('the header line is empty at rest, promising no version, and no helper sits beside Create', async () => {
 		render(NewPage, { props: { data, form: null } });
-		const line = editingLine('saves as v1');
+		const line = editingLine('');
 		expect(line).toHaveAttribute('aria-live', 'polite');
 		expect(line.closest('.editor-header')).not.toBeNull();
-		expect(within(line).getByText('v1')).toBeInTheDocument();
 		await fireEvent.input(screen.getByLabelText(/title/i), { target: { value: 'Brownies' } });
-		expect(line).toHaveTextContent('saves as v1');
-		expect(document.querySelector('.form-actions .form-hint')).toBeNull();
-	});
-
-	test('the header line promises v1 only while no field carries an error', async () => {
-		render(NewPage, { props: { data, form: null } });
-		const line = editingLine('saves as v1');
-		const title = screen.getByLabelText(/^title/i);
-		await fireEvent.input(title, { target: { value: 'Brownies' } });
-		await fireEvent.input(title, { target: { value: '' } });
-		await fireEvent.focusOut(title);
-		expect(title).toHaveAttribute('aria-invalid', 'true');
 		expect(line).toHaveTextContent(/^$/);
-		await fireEvent.input(title, { target: { value: 'Brownies' } });
-		expect(line).toHaveTextContent('saves as v1');
+		expect(document.querySelector('.form-actions .form-hint')).toBeNull();
 	});
 
 	test('a blocked Create on the empty form counts the required fields in the header line', async () => {
@@ -286,7 +272,7 @@ describe('New recipe page draft on this device', () => {
 		render(NewPage, { props: { data: signedIn, form: null } });
 		expect(screen.getByRole('textbox', { name: 'Title' })).toHaveValue('Soup');
 		expect(document.querySelector('.editing')).toHaveTextContent(
-			'saves as v1 · Draft from just now restored. Discard draft'
+			/^Draft from just now restored\. Discard draft$/
 		);
 	});
 

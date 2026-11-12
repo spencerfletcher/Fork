@@ -24,14 +24,14 @@
 			submitLabel="Create recipe"
 			cancelHref="/cookbook"
 			draftKey={data.user ? draftKey(data.user.id, 'new') : undefined}>
-			{#snippet header(outcome, draftNote, invalid)}
+			{#snippet header(outcome, draftNote)}
 				<div class="editor-header">
 					<div class="editor-title">
 						<h1>New Recipe</h1>
 						<!-- Always in the DOM, so the outcome is announced when it changes.
-						     No promise while a field shows an error, as Edit makes none. -->
+						     Empty at rest: a new recipe is v1, said by nothing but its save. -->
 						<span class="editing" aria-live="polite">
-							{#each `${outcome || (invalid ? '' : 'saves as v1')}${draftNote && (outcome || !invalid) ? ' · ' : ''}`.split(/(v\d+)/) as part, i (i)}
+							{#each `${outcome}${draftNote && outcome ? ' · ' : ''}`.split(/(v\d+)/) as part, i (i)}
 								{#if i % 2}<span class="mono-id">{part}</span>{:else}{part}{/if}
 							{/each}{@render draftNote?.()}
 						</span>
