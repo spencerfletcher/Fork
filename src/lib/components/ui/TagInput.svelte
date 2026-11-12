@@ -4,6 +4,7 @@
 	import type { TagChip } from '#lib/recipes/types.js';
 	import { tagsCapError } from '#lib/recipes/validation.js';
 	import FieldError from './FieldError.svelte';
+	import { removeIcon } from '#lib/components/Icons.svelte';
 
 	let {
 		allTags,
@@ -140,7 +141,7 @@
 	{#if selected.length > 0}
 		<div class="flex flex-wrap gap-2">
 			{#each selected as tag (tag)}
-				<span class="tag inline-flex items-center gap-1">
+				<span class="tag inline-flex items-center gap-1.5">
 					<input type="hidden" name="tags" value={tag} />
 					{tag}
 					<button
@@ -148,7 +149,7 @@
 						onclick={() => remove(tag)}
 						class="tag-remove"
 						aria-label="Remove {tag}">
-						×
+						{@render removeIcon('pill-x')}
 					</button>
 				</span>
 			{/each}
@@ -258,8 +259,6 @@
 		/* The 16px glyph box, so the focus ring stays pill-sized. */
 		width: 16px;
 		height: 16px;
-		font-size: 1rem;
-		line-height: 1;
 		color: var(--color-text-3);
 		transition: color 0.15s ease;
 	}

@@ -1015,6 +1015,14 @@
 		border-color: var(--color-tag);
 	}
 
+	/* A removable pill's × (removeIcon), a touch above the pill's x-height so it
+	   reads as a control; centred by the pill's row, never nudged. */
+	.pill-x {
+		flex: none;
+		width: 1.25em;
+		height: 1.25em;
+	}
+
 	/* ── Back link ── */
 
 	/* As wide as its text, not the column, with .hit-link's 24px and 44px hit

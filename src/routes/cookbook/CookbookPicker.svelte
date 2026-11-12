@@ -21,7 +21,7 @@
 	import ConfirmStep from '#lib/components/ui/ConfirmStep.svelte';
 	import Dropdown from '#lib/components/ui/Dropdown.svelte';
 	import NameStep from '#lib/components/ui/NameStep.svelte';
-	import { chevronIcon, plusIcon } from '#lib/components/Icons.svelte';
+	import { chevronIcon, plusIcon, removeIcon } from '#lib/components/Icons.svelte';
 	import CookbookSheet from './CookbookSheet.svelte';
 	import { pendingEnhance } from '#lib/pendingEnhance.svelte.js';
 	import { hrefWith } from '#lib/listPage.js';
@@ -350,7 +350,7 @@
 		aria-label="Remove {label}"
 		onclick={(e) => drop(e, href, at)}>
 		{label}
-		<span aria-hidden="true">×</span>
+		{@render removeIcon('pill-x')}
 	</a>
 {/snippet}
 

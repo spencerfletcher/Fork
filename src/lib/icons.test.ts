@@ -42,6 +42,31 @@ describe('the shared drawings', () => {
 	});
 });
 
+// Owner, 12 November 2026: "pill x bigger". Every removable pill (the
+// Cookbook's tag, sort and Mine or Saved pills, the editor's tag pills) draws
+// one ×, sized in em by the shared .pill-x, never a typed glyph.
+describe("the removable pill's ×", () => {
+	const app = sources.find((s) => s.file === 'app.css')!.text;
+	const drawers = ['routes/cookbook/CookbookPicker.svelte', 'lib/components/ui/TagInput.svelte'];
+
+	test('is one drawing, a cross on the 16px box', () => {
+		expect(snippet('removeIcon')).toContain('d="M4.5 4.5l7 7M11.5 4.5l-7 7"');
+	});
+
+	test.each(drawers)('%s draws it through .pill-x, with no typed ×', (file) => {
+		const text = sources.find((s) => s.file === file)!.text;
+		expect(text).toContain("{@render removeIcon('pill-x')}");
+		expect(text).not.toMatch(/^\s*(?:<span[^>]*>)?×(?:<\/span>)?\s*$/m);
+	});
+
+	test('sized in em, a touch above the pill text, and centred by its row with no offset', () => {
+		const rule = app.match(/\.pill-x\s*\{([^}]*)\}/)?.[1] ?? '';
+		expect(rule).toMatch(/width:\s*1\.25em/);
+		expect(rule).toMatch(/height:\s*1\.25em/);
+		expect(rule).not.toMatch(NUDGE);
+	});
+});
+
 describe('icons beside text', () => {
 	test('no icon is placed by a vertical offset', () => {
 		const nudged = sources.flatMap(({ file, text }) =>

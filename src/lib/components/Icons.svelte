@@ -17,6 +17,7 @@
 		searchIcon,
 		imageIcon,
 		plusIcon,
+		removeIcon,
 		editIcon
 	};
 </script>
@@ -233,6 +234,20 @@
 		stroke-linecap="round"
 		stroke-linejoin="round">
 		<path d="M8 3.5v9M3.5 8h9" />
+	</svg>
+{/snippet}
+
+<!-- A cross: a removable pill's ×, sized by the caller's class (.pill-x). -->
+{#snippet removeIcon(className: string)}
+	<svg
+		class={className}
+		viewBox="0 0 16 16"
+		aria-hidden="true"
+		fill="none"
+		stroke="currentColor"
+		stroke-width="1.5"
+		stroke-linecap="round">
+		<path d="M4.5 4.5l7 7M11.5 4.5l-7 7" />
 	</svg>
 {/snippet}
 
