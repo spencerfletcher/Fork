@@ -1335,8 +1335,9 @@
 		}
 	}
 
-	/* The recipe page's strike rows: the picture of a visually hidden native
-	   checkbox (the row is its label). An Ink 3 circle at rest, an Ink 2 edge
+	/* The picture of a visually hidden native checkbox (the row is its label):
+	   the recipe page's strike rows, the Cookbook list's select (RecipeRow), the
+	   card's select disc (RecipeCard) and Settings' notification kinds. An Ink 3 circle at rest, an Ink 2 edge
 	   while the row is hovered, marigold with an ink check once ticked. */
 	.tick {
 		position: relative;
