@@ -98,4 +98,14 @@
 		gap: 8px;
 		margin-top: 8px;
 	}
+
+	/* Where a text button is 44px tall (app.css), its box holds 10px above
+	   the line; Add a note takes that from its margin, so it sits 24px under
+	   Keep this version as that sits under the personal line, and the two
+	   44px boxes meet without overlapping. */
+	@media (max-width: 699px), (pointer: coarse) {
+		.saver-note > .text-btn {
+			margin-top: -10px;
+		}
+	}
 </style>

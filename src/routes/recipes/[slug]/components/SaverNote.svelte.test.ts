@@ -3,6 +3,8 @@ import { render, screen, fireEvent } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import SaverNote from './SaverNote.svelte';
 import { NOTE_MAX } from '#lib/saves.js';
+import { cssRule } from '#lib/testing/css.js';
+import source from './SaverNote.svelte?raw';
 
 vi.mock('$app/forms', () => ({ enhance: () => ({ destroy: () => {} }) }));
 
@@ -37,5 +39,11 @@ describe('SaverNote', () => {
 		await fireEvent.click(screen.getByRole('button', { name: 'Add a note' }));
 		await fireEvent.keyDown(screen.getByRole('textbox'), { key: 'Escape' });
 		expect(screen.queryByRole('textbox')).toBeNull();
+	});
+
+	test('where a text button is 44px tall, Add a note rises into its margin: 24px under the line above, as Keep this version sits', () => {
+		// jsdom applies no component CSS, so the rule is read from the source.
+		const touch = source.slice(source.indexOf('@media (max-width: 699px), (pointer: coarse)'));
+		expect(cssRule(touch, '.saver-note > .text-btn')).toMatch(/margin-top: -10px;/);
 	});
 });
