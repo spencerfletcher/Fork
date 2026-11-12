@@ -7,6 +7,7 @@
 	import Dropdown from '#lib/components/ui/Dropdown.svelte';
 	import FieldError from '#lib/components/ui/FieldError.svelte';
 	import { chevronIcon, plusIcon } from '#lib/components/Icons.svelte';
+	import CookbookSheet from './CookbookSheet.svelte';
 	import { pendingEnhance } from '#lib/pendingEnhance.svelte.js';
 	import { COLLECTION_NAME_MAX } from '#lib/collections.js';
 	import { hrefWith } from '#lib/listPage.js';
@@ -209,18 +210,13 @@
 			</div>
 		{/snippet}
 		{#snippet panel(close)}
-			<!-- A phone's backdrop: the page and the tab bar under the sheet read as
-			     inactive, and a press on them closes it. Inside the dropdown, so the
-			     press is the picker's own. -->
-			<div class="picker-scrim" aria-hidden="true" onclick={close}></div>
-			<div
-				class="menu-panel picker-panel"
-				id={PANEL_ID}
-				{@attach () => {
-					closePanel = close;
-					return () => (closePanel = undefined);
-				}}>
-				<div class="picker-find">
+			<CookbookSheet id={PANEL_ID} class="picker-panel" {total} {close}>
+				<div
+					class="picker-find"
+					{@attach () => {
+						closePanel = close;
+						return () => (closePanel = undefined);
+					}}>
 					<label for="picker-find" class="sr-only">Find a collection or tag</label>
 					<input
 						id="picker-find"
@@ -333,13 +329,7 @@
 						<FieldError name="picker-new-collection" error={creating.error} />
 					</form>
 				{/if}
-				<!-- A phone's way back to the recipes, the count as it stands now. -->
-				<div class="picker-foot">
-					<button type="button" class="btn-primary picker-show" onclick={close}>
-						Show {plural(total, 'recipe')}
-					</button>
-				</div>
-			</div>
+			</CookbookSheet>
 		{/snippet}
 	</Dropdown>
 </div>
@@ -502,13 +492,16 @@
 	}
 
 	/* Under the buttons from their left edge, wider than a menu. Dropdown's
-	   panel look; only its place and width are the picker's. */
-	.picker :global(.menu-panel.picker-panel) {
-		right: auto;
-		left: 0;
-		top: calc(100% + 6px);
-		width: 22rem;
-		max-width: calc(100vw - 36px);
+	   panel look; only its place and width are the picker's. A phone's is
+	   CookbookSheet's. */
+	@media (min-width: 768px) {
+		.picker :global(.menu-panel.picker-panel) {
+			right: auto;
+			left: 0;
+			top: calc(100% + 6px);
+			width: 22rem;
+			max-width: calc(100vw - 36px);
+		}
 	}
 
 	.picker-find {
@@ -621,13 +614,6 @@
 		flex-basis: 100%;
 	}
 
-	/* Show N recipes and the backdrop are a phone's; a desktop panel closes on
-	   a press outside. */
-	.picker-foot,
-	.picker-scrim {
-		display: none;
-	}
-
 	.picker-pills {
 		display: flex;
 		flex-wrap: wrap;
@@ -642,9 +628,8 @@
 		gap: 6px;
 	}
 
-	/* A phone: the buttons share their row half and half, and the panel is a
-	   sheet over the foot of the screen, over the tab bar (z-index 40), so
-	   neither the bar nor anything else covers Show N recipes. */
+	/* A phone: the buttons share their row half and half, and the panel is
+	   CookbookSheet's sheet. */
 	@media (max-width: 767px) {
 		.picker {
 			flex: 1 1 100%;
@@ -657,45 +642,10 @@
 			min-width: 0;
 		}
 
-		.picker :global(.menu-panel.picker-panel) {
-			position: fixed;
-			top: auto;
-			right: 0;
-			bottom: 0;
-			left: 0;
-			z-index: 51;
-			width: auto;
-			max-width: none;
-			max-height: 80dvh;
-			padding-bottom: calc(6px + env(safe-area-inset-bottom));
-			border-width: 1px 0 0;
-			border-radius: var(--radius-md) var(--radius-md) 0 0;
-		}
-
-		/* Over the tab bar (40) and the top bar (50, earlier in the page, so
-		   the same layer covers it), under the sheet; the page's ink, faint. */
-		.picker-scrim {
-			display: block;
-			position: fixed;
-			inset: 0;
-			z-index: 50;
-			background: color-mix(in srgb, var(--color-text) 32%, transparent);
-		}
-
 		.picker-lists {
 			max-height: none;
 			flex: 1 1 auto;
 			min-height: 0;
-		}
-
-		.picker-foot {
-			display: block;
-			padding: 8px 6px 2px;
-			border-top: 1px solid var(--color-border);
-		}
-
-		.picker-show {
-			width: 100%;
 		}
 
 		/* The 24px pill reaches 44px for a finger, into the row gaps around it

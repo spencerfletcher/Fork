@@ -6,6 +6,7 @@ import { COLLECTION_NAME_MAX } from '#lib/collections.js';
 import { plural } from '#lib/helpers.js';
 import { cssRule } from '#lib/testing/css.js';
 import source from './CookbookPicker.svelte?raw';
+import sheetSource from './CookbookSheet.svelte?raw';
 import tabBarSource from '#lib/components/ui/TabBar.svelte?raw';
 import navbarSource from '#lib/components/ui/Navbar.svelte?raw';
 
@@ -259,21 +260,22 @@ describe('Cookbook picker', () => {
 	test('the sheet has a backdrop, hidden from assistive tech, that closes the picker when pressed', async () => {
 		const { container } = makePicker();
 		await fireEvent.click(trigger(/^Tags$/));
-		const scrim = container.querySelector('.picker-scrim')!;
+		const scrim = container.querySelector('.sheet-scrim')!;
 		expect(scrim).toHaveAttribute('aria-hidden', 'true');
 		await fireEvent.click(scrim);
 		expect(screen.queryByRole('menu')).toBeNull();
 		expect(trigger(/^Tags$/)).toHaveFocus();
 	});
 
+	// The shared sheet (CookbookSheet), which View opens too.
 	test('the backdrop is a phone’s, over the tab bar and the top bar, under the sheet', () => {
-		const phone = source.slice(source.indexOf('@media (max-width: 767px)'));
-		expect(cssRule(source, '.picker-scrim')).toMatch(/display:\s*none/);
-		const rule = cssRule(phone, '.picker-scrim');
+		const phone = sheetSource.slice(sheetSource.indexOf('@media (max-width: 767px)'));
+		expect(cssRule(sheetSource, '.sheet-scrim')).toMatch(/display:\s*none/);
+		const rule = cssRule(phone, '.sheet-scrim');
 		expect(rule).toMatch(/display:\s*block/);
 		expect(rule).toMatch(/position:\s*fixed/);
 		const z = (css: string) => Number(css.match(/z-index:\s*(\d+)/)?.[1]);
-		const sheet = cssRule(phone, '.picker :global(.menu-panel.picker-panel)');
+		const sheet = cssRule(phone, ':global(.dropdown) .menu-panel.sheet');
 		expect(z(rule)).toBeGreaterThan(TAB_BAR_Z);
 		expect(z(rule)).toBeGreaterThanOrEqual(NAV_Z);
 		expect(z(rule)).toBeLessThan(z(sheet));
