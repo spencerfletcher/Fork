@@ -51,9 +51,10 @@ const renderJournal = (overrides: Partial<typeof data> = {}) =>
 	render(JournalPage, { props: { data: { ...data, ...overrides } } as never });
 
 describe('Journal page', () => {
-	test('the summary counts the whole Journal from its oldest month, not the entries shown', () => {
+	// The last-12-months summary says it; the h1 stands alone.
+	test('no count line under the h1', () => {
 		renderJournal();
-		expect(screen.getByText('40 entries since May')).toBeInTheDocument();
+		expect(screen.queryByText(/entries since/)).toBeNull();
 	});
 
 	test('Logged names the day the server found, on this page or not', () => {

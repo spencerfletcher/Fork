@@ -1,9 +1,8 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { dayLabel, groupByMonth, monthLabel } from '#lib/journal.js';
+	import { dayLabel, groupByMonth } from '#lib/journal.js';
 	import EmptyPanel from '#lib/components/ui/EmptyPanel.svelte';
 	import ShowMore from '#lib/components/ui/ShowMore.svelte';
-	import { plural } from '#lib/helpers.js';
 	import { pagedList } from '#lib/pagedList.svelte.js';
 	import JournalEntry from './JournalEntry.svelte';
 	import JournalTwelveMonths from './JournalTwelveMonths.svelte';
@@ -21,11 +20,6 @@
 	const groups = $derived(groupByMonth(list.items));
 	// The whole Journal's, not the entries shown.
 	const count = $derived(data.total);
-	const summary = $derived(
-		data.oldest
-			? `${plural(count, 'entry', 'entries')} since ${monthLabel(data.oldest).split(' ')[0]}`
-			: ''
-	);
 
 	// The form lands here with ?logged=<id>, the delete with ?deleted=1.
 	const logged = $derived(data.logged);
@@ -37,7 +31,6 @@
 		<div class="page-head j-head">
 			<div>
 				<h1>Journal</h1>
-				{#if summary}<p class="page-sub">{summary}</p>{/if}
 				<p class="status" role="status">
 					{#if logged}<strong>Logged</strong>
 						· {dayLabel(logged.cookedOn)}{:else if deleted}Entry deleted.{/if}
