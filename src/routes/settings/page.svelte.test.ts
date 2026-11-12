@@ -2,6 +2,8 @@ import { describe, test, expect, vi } from 'vitest';
 import { fireEvent, render, screen, within } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import SettingsPage from './+page.svelte';
+import source from './+page.svelte?raw';
+import { cssRule } from '#lib/testing/css.js';
 import { AUDIENCE_LABEL, AUDIENCE_NOTE } from '#lib/audience.js';
 import { FORMER_USERNAME_DAYS, USERNAME_TAKEN } from '#lib/auth/rules.js';
 import { SESSION_ENDED } from '#lib/server/actions.js';
@@ -300,5 +302,14 @@ describe('Delete account section', () => {
 		renderPage({ section: 'delete', code: 'invalid', error: TYPE_USERNAME });
 		expect(within(del()).getByRole('alert')).toHaveTextContent(TYPE_USERNAME);
 		expect(within(section('Username')).queryByRole('alert')).toBeNull();
+	});
+});
+
+describe('Delete account', () => {
+	// The label is an uppercase eyebrow; the handle in it is typed as written.
+	test('the handle to type keeps its case and spacing', () => {
+		const rule = cssRule(source, '.confirm-name .handle');
+		expect(rule).toContain('text-transform: none');
+		expect(rule).toContain('letter-spacing: normal');
 	});
 });

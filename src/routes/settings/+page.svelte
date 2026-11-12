@@ -511,4 +511,10 @@
 	.confirm-name {
 		flex-basis: 100%;
 	}
+
+	/* The handle to type, as it is typed: never the label's uppercase. */
+	.confirm-name .handle {
+		text-transform: none;
+		letter-spacing: normal;
+	}
 </style>
