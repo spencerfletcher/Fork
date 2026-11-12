@@ -172,4 +172,13 @@ describe('FeedEntry', () => {
 		// The handle's line is 15px × 1.35; 12px above and below make it 44.
 		expect(cssRules(source, '.who-line :global(.hit-link)').join('')).toContain('--hit: 12px');
 	});
+
+	// The Like and Save buttons stand taller than their words (44px on a
+	// phone); the actions row gives that back, so an entry's space under its
+	// last words matches the space over its first.
+	test("the actions row gives back its buttons' height under their words", () => {
+		const rules = cssRules(source, '.actions').join('');
+		expect(rules).toContain('margin-bottom: -5px');
+		expect(rules).toContain('margin-bottom: -10px');
+	});
 });

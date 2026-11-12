@@ -175,8 +175,11 @@
 		color: var(--color-text-3);
 	}
 
+	/* The buttons stand taller than their words; the bottom margin gives that
+	   back, so the space under the last words matches the space over the first. */
 	.actions {
 		margin-top: 12px;
+		margin-bottom: -5px;
 		display: flex;
 		flex-wrap: wrap;
 		align-items: center;
@@ -194,6 +197,11 @@
 	@media (max-width: 699px) {
 		.dish {
 			font-size: 1.25rem;
+		}
+
+		/* The phone's 44px buttons. */
+		.actions {
+			margin-bottom: -10px;
 		}
 
 		/* 44px: the handle's 20px line and 12px each side, given back in margin. */
