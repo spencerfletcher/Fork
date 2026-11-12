@@ -210,7 +210,12 @@
 
 <svelte:window {onkeydown} />
 
-<section class="select-bar" aria-label="Selection" bind:this={root} bind:offsetHeight={height}>
+<section
+	class="select-bar"
+	class:in-step={step === 'tag'}
+	aria-label="Selection"
+	bind:this={root}
+	bind:offsetHeight={height}>
 	<div class="bar-in">
 		<p class="bar-count" role="status">
 			{count > 0 ? `${count} selected` : 'None selected'}
@@ -487,8 +492,18 @@
 			margin-left: 0;
 		}
 
+		/* The box its own line, Add and Cancel halves of the next; the count
+		   gives way, as the step's sentence says it and the list opens over it. */
 		.tag-box {
-			flex: 1 1 18rem;
+			flex: 1 1 100%;
+		}
+
+		.tag-step > button {
+			flex: 1 1 0;
+		}
+
+		.in-step .bar-count {
+			display: none;
 		}
 	}
 </style>

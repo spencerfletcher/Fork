@@ -715,10 +715,15 @@ describe('Cookbook select mode', () => {
 
 	// A growable box made the step's fit-to-content width too narrow for its
 	// own row, so Add and Cancel wrapped under it with the bar half empty.
-	test('the tag step keeps its box a fixed 18rem beside Add and Cancel; a phone lets it fill', () => {
+	// On a phone Cancel wrapped alone and the upward list covered "3 selected":
+	// the box takes its own line, Add and Cancel share the next, and the count
+	// gives way to the step's sentence, which says it.
+	test('the tag step keeps its box a fixed 18rem beside Add and Cancel; a phone gives each its line', () => {
 		expect(cssRule(barSource, '.tag-box')).toMatch(/flex:\s*0 0 18rem/);
 		const phone = barSource.slice(barSource.indexOf('@media (max-width: 699px)'));
-		expect(cssRule(phone, '.tag-box')).toMatch(/flex:\s*1 1 18rem/);
+		expect(cssRule(phone, '.tag-box')).toMatch(/flex:\s*1 1 100%/);
+		expect(cssRule(phone, '.tag-step > button')).toMatch(/flex:\s*1 1 0/);
+		expect(cssRule(phone, '.in-step .bar-count')).toMatch(/display:\s*none/);
 	});
 
 	test('with only saved recipes chosen, Add tag and Move to Trash are not offered', async () => {
@@ -797,6 +802,7 @@ describe('Cookbook select mode', () => {
 		const box = within(bar()).getByRole('combobox', { name: 'Search or create a tag' });
 		expect(box).toHaveFocus();
 		expect(bar()).toHaveTextContent('Adds to your 1 recipe; the 1 saved one stays as it is.');
+		expect(bar()).toHaveClass('in-step');
 		await fireEvent.input(box, { target: { value: 'Quick' } });
 		await fireEvent.keyDown(box, { key: 'Enter' });
 		await tick();
