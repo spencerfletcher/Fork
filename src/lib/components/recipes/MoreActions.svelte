@@ -18,8 +18,8 @@
 	// New collection, named in place and made with this recipe in it; then each
 	// row its host asks for, in this order: Print, Add to Journal, Edit recipe,
 	// the Exports, Fork, the one that takes the recipe out of the Cookbook,
-	// asked twice in place, and last Report, asked in place (ReportStep). One flat menu, so the arrow keys walk
-	// every row and a toggle leaves it open. Every form posts to the recipe's
+	// asked twice in place, and last Report, asked in place (ReportStep). One
+	// flat menu, so the arrow keys walk every row and a toggle leaves it open. Every form posts to the recipe's
 	// own route by its full path, so a host page keeps its query. The
 	// Collections group is CollectionChecks, shared with select mode's bar.
 	let {
