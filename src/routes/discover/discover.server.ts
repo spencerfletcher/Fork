@@ -4,7 +4,7 @@ import { db } from '#lib/server/db/index.js';
 import { favorites, profiles, recipes, recipeVersions } from '#lib/server/db/schema.js';
 import { cardList } from '#lib/server/recipeCounts.js';
 import { tagSelection, visibleTags } from '#lib/server/tagFilter.js';
-import { authorIsFriendOf, visibleTo, type Viewer } from '#lib/server/visibility.js';
+import { authorIsFriendOf, visibleTo } from '#lib/server/visibility.js';
 import { parseFilters, textSearch } from '#lib/server/recipeSearch.js';
 import { namedBy } from '#lib/server/profiles.js';
 import { listPage } from '#lib/listPage.js';

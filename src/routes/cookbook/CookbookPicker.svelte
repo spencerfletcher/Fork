@@ -212,7 +212,6 @@
 			<!-- A phone's backdrop: the page and the tab bar under the sheet read as
 			     inactive, and a press on them closes it. Inside the dropdown, so the
 			     press is the picker's own. -->
-			<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions (a pointer convenience: Escape and Show N recipes close it from the keyboard) -->
 			<div class="picker-scrim" aria-hidden="true" onclick={close}></div>
 			<div
 				class="menu-panel picker-panel"
