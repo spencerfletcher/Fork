@@ -125,7 +125,9 @@ describe.skipIf(!localDb)('the varied seed, against the real database', () => {
 				.where(and(isNotNull(s.logEntries.versionId), inArray(s.logEntries.userId, seeded))))
 				expect(versions.find((v) => v.id === e.versionId)?.recipeId).toBe(e.recipeId);
 
-			// Collections hold only recipes in their owner's library.
+			// Collections hold only recipes in their owner's library. Only the seed's
+			// recipes count: other tests file theirs into the seeded cooks' collections.
+			const seedRecipe = (id: number) => rows.some((r) => r.id === id);
 			for (const c of await tx
 				.select()
 				.from(s.collections)
@@ -135,11 +137,22 @@ describe.skipIf(!localDb)('the varied seed, against the real database', () => {
 					.from(s.collectionRecipes)
 					.where(eq(s.collectionRecipes.collectionId, c.id));
 				const visible = await recipeIdsIn({ id: c.ownerId }, c.id, tx);
-				expect(visible?.length, c.name).toBe(members.length);
+				expect((visible ?? []).filter(seedRecipe).length, c.name).toBe(
+					members.filter((m) => seedRecipe(m.recipeId)).length
+				);
 			}
 
 			// The main cook's Cookbook is a full one.
-			const library = await tx.$count(s.recipes, inLibraryOf({ id: ids.spencerfletcher }));
+			const library = await tx.$count(
+				s.recipes,
+				and(
+					inLibraryOf({ id: ids.spencerfletcher }),
+					inArray(
+						s.recipes.id,
+						rows.map((r) => r.id)
+					)
+				)
+			);
 			expect(library).toBeGreaterThanOrEqual(50);
 			expect(library).toBeLessThanOrEqual(100);
 
