@@ -312,4 +312,9 @@ describe('Delete account', () => {
 		expect(rule).toContain('text-transform: none');
 		expect(rule).toContain('letter-spacing: normal');
 	});
+
+	// Unbulleted, the list lines up with the paragraphs around it.
+	test('what goes is flush with the section, not indented', () => {
+		expect(cssRule(source, '.goes')).not.toContain('padding-left');
+	});
 });

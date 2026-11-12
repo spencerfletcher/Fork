@@ -470,7 +470,6 @@
 		display: flex;
 		flex-direction: column;
 		gap: var(--space-1);
-		padding-left: 1.25em;
 	}
 
 	.kinds {
