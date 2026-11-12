@@ -7,3 +7,11 @@
 export const NOTIFICATION_KINDS = ['request', 'accepted', 'like', 'save', 'fork'] as const;
 
 export type NotificationKind = (typeof NOTIFICATION_KINDS)[number];
+
+/** The most unseen notifications counted (unseenCount); the UI may show it as "99+". */
+export const UNSEEN_MAX = 99;
+
+/** The muted kinds a profile stores, in the list's order; anything not a kind (one since removed) is ignored. */
+export function mutedKinds(stored: readonly string[]): NotificationKind[] {
+	return NOTIFICATION_KINDS.filter((kind) => stored.includes(kind));
+}

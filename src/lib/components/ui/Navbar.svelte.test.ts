@@ -32,6 +32,8 @@ const profile = {
 	defaultVisibility: 'private' as const,
 	measurement: null,
 	startersMadeAt: null,
+	notificationsSeenAt: null,
+	mutedNotifications: [],
 	createdAt: new Date()
 };
 const style = source.slice(source.indexOf('<style>'));

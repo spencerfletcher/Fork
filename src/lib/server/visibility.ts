@@ -177,6 +177,12 @@ export function eitherWay(
 	return sql`(least(${requester}, ${addressee}) = least(${a}, ${b}) and greatest(${requester}, ${addressee}) = greatest(${a}, ${b}))`;
 }
 
+/** `a` and `b` are in a block, whichever of them blocked, as a query condition. */
+export function inBlock(a: SQLWrapper | string, b: SQLWrapper | string): SQL {
+	const bk = (column: { name: string }) => onAlias('bk', column);
+	return sql`exists (select 1 from ${friendships} "bk" where ${bk(friendships.status)} = ${'blocked' satisfies FriendshipStatus} and ${eitherWay([bk(friendships.requesterId), bk(friendships.addresseeId)], a, b)})`;
+}
+
 /**
  * The recipe's author has an accepted friendship with `userId`, whichever of
  * them asked, as a query condition on `recipes`. visibleTo's friends rule, and
