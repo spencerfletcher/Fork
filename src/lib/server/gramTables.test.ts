@@ -1,13 +1,13 @@
 import { describe, test, expect } from 'vitest';
 import { parseIngredientText } from '#lib/recipes/ingredients.js';
-import { gramsFor } from './ingredientDensities';
+import { gramsFor, weighedInMetric } from './ingredientDensities';
 import { GRAMS_PER_WEIGHT_UNIT, ML_PER_UNIT } from './gramTables';
 import { UNITS, unitId } from '#lib/recipes/convert.js';
 import { SEED } from './db/seedData';
 
 const seedIngredients = SEED.flatMap((recipe) => recipe.versions)
 	.flatMap((version) => parseIngredientText(version.ingredientsText))
-	.filter((ingredient) => ingredient.quantity !== null);
+	.filter((ingredient) => ingredient.quantity !== null && !weighedInMetric(ingredient.unit));
 
 describe('gram tables', () => {
 	// Matching is whole-name, so a new seed ingredient the tables do not know

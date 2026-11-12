@@ -1,7 +1,13 @@
 import { describe, test, expect } from 'vitest';
 import { gramsFor, lookupGrams, lookupPieceGrams, mlIsGrams } from './ingredientDensities';
 import { makeIngredient } from '#lib/recipes/fixtures.js';
-import { DENSITIES, ML_IS_GRAMS_TOLERANCE, ML_PER_UNIT, WEIGHED_NEAR_WATER } from './gramTables';
+import {
+	DENSITIES,
+	GRAMS_PER_WEIGHT_UNIT,
+	ML_IS_GRAMS_TOLERANCE,
+	ML_PER_UNIT,
+	WEIGHED_NEAR_WATER
+} from './gramTables';
 
 describe('lookupPieceGrams', () => {
 	test('multiplies the quantity by the per-item weight', () => {
@@ -147,6 +153,15 @@ describe('gramsFor', () => {
 			approximate: true,
 			likeWater: false
 		});
+	});
+
+	test('a line already weighed in metric has no gram hint; ounces and pounds keep theirs', () => {
+		for (const line of ['250 g unsalted butter', '1.5 kg potatoes', '2 kilograms flour'])
+			expect(gramsFor(makeIngredient(line)), line).toBeNull();
+		expect(gramsFor(makeIngredient('8 oz cream cheese'))?.grams).toBeCloseTo(
+			8 * GRAMS_PER_WEIGHT_UNIT.oz
+		);
+		expect(gramsFor(makeIngredient('1 lb butter'))?.grams).toBeCloseTo(GRAMS_PER_WEIGHT_UNIT.lb);
 	});
 
 	test('returns null for an unparsed line', () => {

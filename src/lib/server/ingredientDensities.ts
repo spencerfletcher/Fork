@@ -7,6 +7,7 @@ import {
 	WEIGHED_NEAR_WATER
 } from './gramTables.js';
 import type { Ingredient } from '#lib/recipes/types.js';
+import { UNITS, unitId } from '#lib/recipes/convert.js';
 
 /** grams2 is the upper end when the line gave a range such as "1-2 cups".
  * likeWater: a liquid whose millilitres are its grams (likeWater below). */
@@ -140,15 +141,23 @@ function convert(quantity: number, unit: string, name: string): GramResult | nul
 	return grams === null ? null : { grams, grams2: null, approximate: true, likeWater: false };
 }
 
+/** A line weighed in metric already reads in grams: "250 g butter", not "250 g (250g)". */
+export function weighedInMetric(unit: string): boolean {
+	const id = unitId(unit);
+	return id !== undefined && UNITS[id].system === 'metric' && UNITS[id].dimension === 'mass';
+}
+
 /**
  * Weight for one parsed ingredient line from the local tables only, or null
- * when the line has no quantity or the tables do not know it. Measured lines
+ * when the line has no quantity, is already weighed in metric (g, kg, mg) or
+ * the tables do not know it. Measured lines
  * are conversions; counted lines are typical whole-item weights and are
  * flagged approximate.
  */
 export function gramsFor(ingredient: Ingredient): GramResult | null {
 	const { quantity, quantity2, unit, name } = ingredient;
 	if (quantity === null) return null;
+	if (weighedInMetric(unit)) return null;
 	const result = convert(quantity, unit, name);
 	if (result === null) return null;
 	const grams2 = quantity2 === null ? null : (convert(quantity2, unit, name)?.grams ?? null);
