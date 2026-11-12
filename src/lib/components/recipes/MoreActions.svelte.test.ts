@@ -174,10 +174,11 @@ describe('More actions: collections', () => {
 		expect(cssRule(moreSource, '.more-panel :global(.icon-row)')).toMatch(/gap:\s*10px/);
 	});
 
-	test('many collections scroll inside the menu, New collection and Print staying in view', () => {
-		// jsdom lays nothing out, so the cap is read from the source.
+	test('many collections scroll inside the menu past three and a half rows, the actions below staying in view', () => {
+		// jsdom lays nothing out, so the cap is read from the source. The half
+		// row shows there is more to scroll.
 		const rows = cssRule(source, '.collection-rows');
-		expect(rows).toMatch(/max-height:\s*calc\(44px \* 6\.5\)/);
+		expect(rows).toMatch(/max-height:\s*calc\(44px \* 3\.5\)/);
 		expect(rows).toMatch(/overflow-y:\s*auto/);
 	});
 

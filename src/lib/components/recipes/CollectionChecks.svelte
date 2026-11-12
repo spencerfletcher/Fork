@@ -208,7 +208,7 @@
 	.collection-rows {
 		display: flex;
 		flex-direction: column;
-		max-height: calc(44px * 6.5);
+		max-height: calc(44px * 3.5);
 		overflow-y: auto;
 	}
 
