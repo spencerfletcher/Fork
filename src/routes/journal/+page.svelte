@@ -31,9 +31,10 @@
 		<div class="page-head j-head">
 			<div>
 				<h1>Journal</h1>
-				<p class="status" role="status">
-					{#if logged}<strong>Logged</strong>
-						· {dayLabel(logged.cookedOn)}{:else if deleted}Entry deleted.{/if}
+				<!-- No space before the day: its dot is drawn and never leads a line. -->
+				<p class="status dot-list" role="status">
+					{#if logged}<strong>Logged</strong><span>{dayLabel(logged.cookedOn)}</span
+						>{:else if deleted}Entry deleted.{/if}
 				</p>
 			</div>
 			{#if count > 0}

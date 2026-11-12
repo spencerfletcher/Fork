@@ -27,13 +27,13 @@
 		<h3 class="jdish">{entry.dish}</h3>
 		<!-- A recipe the reader may no longer see (an unfriend) shows no source at all. -->
 		{#if source.kind === 'recipe'}
-			<p class="jsource">
+			<p class="jsource dot-list dot-clip">
 				<a class="hit-link" href={sourceHref(source)}>
 					{source.title}
 					{#if source.versionNumber}<span class="mono-id">v{source.versionNumber}</span>{/if}
 				</a>
 				{#if privateRecipe}
-					· <span class="aud-inline">{@render lockIcon()}Only me recipe</span>
+					<span class="aud-inline">{@render lockIcon()}Only me recipe</span>
 				{/if}
 			</p>
 		{:else if source.kind === 'link'}
@@ -180,6 +180,13 @@
 
 	.jsource a {
 		font-weight: 600;
+	}
+
+	/* A wrapped recipe line drops its dot rather than leading with it. */
+	.jsource.dot-clip {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
 	}
 
 	.jmeta {

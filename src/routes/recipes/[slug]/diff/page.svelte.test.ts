@@ -230,7 +230,9 @@ describe('Diff page', () => {
 			}
 		});
 		const head = container.querySelector('article.version-card .version-card__head')!;
-		expect(head.textContent?.replace(/\s+/g, ' ').trim()).toBe('v1 @chef · 28 Feb 2026');
+		// The dot between them is drawn by .dot-list, not typed.
+		expect(head.textContent?.replace(/\s+/g, ' ').trim()).toBe('v1 @chef 28 Feb 2026');
+		expect(head.querySelector('.dot-list > .username + span')).toHaveTextContent('28 Feb 2026');
 		expect(head.querySelector('.username')).toHaveAttribute('href', '/users/chef');
 	});
 

@@ -73,10 +73,9 @@
 	<article class="version-card" class:version-card--to={isTo}>
 		<div class="version-card__head">
 			<a href={versionHref(v)} class="version-card__number">v{v.versionNumber}</a>
-			<span>
+			<span class="dot-list dot-clip version-card__by">
 				{#if v.creator}<Username username={v.creator.username} class="hit-link" />{/if}
-				{#if v.creator}·{/if}
-				{formatDate(v.createdAt)}
+				<span>{formatDate(v.createdAt)}</span>
 			</span>
 		</div>
 		<p class="version-card__message">{v.commitMessage}</p>
@@ -198,6 +197,13 @@
 		font-family: var(--font-mono);
 		font-size: 0.875rem;
 		color: var(--color-text-3);
+	}
+
+	.version-card__by {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		min-width: 0;
 	}
 
 	.version-card__number {
