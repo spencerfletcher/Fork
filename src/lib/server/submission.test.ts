@@ -183,6 +183,14 @@ describe('storePhoto', () => {
 		expect(stored.ok && stored.image?.path).toMatch(/\.jpg$/);
 	});
 
+	test('a photo whose structure cannot be walked is refused as invalid, before any upload', async () => {
+		const broken = new File([new Uint8Array([0xff, 0xd8, 0xff, 0xe1, 0x40, 0])], 'a.jpg', {
+			type: 'image/jpeg'
+		});
+		const stored = await storePhoto(form({}, broken), storage('never asked'), 'user-1');
+		expect(stored).toEqual({ ok: false, code: 'invalid', error: PHOTO_TYPE_MESSAGE });
+	});
+
 	test('a refused upload says so, for the caller to shape', async () => {
 		expect(await storePhoto(form({}, PHOTO), storage('denied'), 'user-1')).toEqual({
 			ok: false,
