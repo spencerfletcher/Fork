@@ -140,22 +140,21 @@ test.describe('Cooking', () => {
 		await openCookies(page);
 		await page.getByRole('link', { name: 'Cook', exact: true }).click();
 		await expect(page).toHaveURL(/[?&]cook=1/);
-		await segment(page, 'Ingredients').click();
-		const servings = page.getByRole('spinbutton', { name: 'Servings' });
+		// The yield with Scale in the cooking header is the one place it reads.
+		const header = page.locator('header.cook-header');
+		await header.getByRole('button', { name: 'Scale', exact: true }).click();
+		const servings = page.getByRole('textbox', { name: 'Servings', exact: true });
 		await servings.fill('8');
-		await servings.press('Enter');
 		await expect(page).toHaveURL(/serves=8/);
 		await expect(page).toHaveURL(/[?&]cook=1/);
-		// The scaler says it; the header does not repeat it.
-		await expect(servings).toHaveValue('8');
-		await expect(page.locator('header.cook-header')).not.toContainText('Serves');
+		await expect(header.locator('.details')).toContainText(/Serves 8\s*Scale/);
+		await expect(page.locator('.details')).toHaveCount(1);
 
 		await page.reload();
 		await expect(page.getByRole('button', { name: 'Exit' })).toBeVisible();
 		await expect(segment(page, 'Method')).toHaveAttribute('aria-pressed', 'true');
 		await expect(page.locator('.version-bar')).toHaveCount(0);
-		await segment(page, 'Ingredients').click();
-		await expect(servings).toHaveValue('8');
+		await expect(header.locator('.details')).toContainText('Serves 8');
 		await expect.poll(() => wakeLockLog(page)).toMatchObject({ requests: 1 });
 	});
 

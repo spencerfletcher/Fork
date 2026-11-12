@@ -1,8 +1,15 @@
 import { expect, test, type Page } from '@playwright/test';
 import { SEED } from '../src/lib/server/db/seedData';
-import { COOKIES, COOKIES_RE, cookiesLink, gotoHydrated, openCookies } from './helpers';
+import {
+	COOKIES,
+	COOKIES_RE,
+	cookiesLink,
+	cookiesPath,
+	gotoHydrated,
+	openCookies
+} from './helpers';
 import { parseIngredientLine } from '../src/lib/recipes/ingredients';
-import { scaleIngredient } from '../src/lib/recipes/scale';
+import { SCALE_MESSAGES, formatServes, scaleIngredient } from '../src/lib/recipes/scale';
 
 // These tests assume the DB has been seeded with the demo data in seedData.ts:
 // cookies (3 versions, renamed in v3), a brown-butter fork of it, and a tikka
@@ -862,10 +869,8 @@ test.describe('Recipe detail page', () => {
 				})
 			)
 			.toBe(true);
-		// The next Tab lands on the scale control at the list's head, not back in
-		// the header; past its box, the first ingredient.
-		await page.keyboard.press('Tab');
-		await expect(page.getByRole('spinbutton', { name: 'Servings' })).toBeFocused();
+		// The next Tab lands on the first ingredient, not back in the header:
+		// the scaler is in the facts line now.
 		await page.keyboard.press('Tab');
 		await expect(page.locator('#ingredients input[type="checkbox"]').first()).toBeFocused();
 	});
@@ -1658,108 +1663,159 @@ test.describe('Usernames', () => {
 
 test.describe('Serving scaling', () => {
 	const latest = SEED[0].versions.at(-1)!;
+	const serves = latest.servings!;
 	const flour = parseIngredientLine(latest.ingredientsText.trim().split('\n')[0]);
 	const doubled = scaleIngredient(flour, null, 2).ingredient;
 	// The bold measure: the line less its name, since the weight sits between them.
 	const measure = ({ text, name }: { text: string; name: string }) =>
 		text.slice(0, text.length - name.length).trim();
+	// Exact names: "Scale" is also inside "Scale this recipe".
+	const facts = (page: Page) => page.locator('header .details');
+	const scaleButton = (page: Page) =>
+		facts(page).getByRole('button', { name: 'Scale', exact: true });
+	const field = (page: Page) => page.getByRole('textbox', { name: 'Servings', exact: true });
+	const panelButton = (page: Page, name: string) =>
+		page
+			.getByRole('group', { name: 'Scale this recipe' })
+			.getByRole('button', { name, exact: true });
+	const flourMeasure = (page: Page) =>
+		page.locator('#ingredients label').first().locator('.font-semibold');
 
-	test('the up and down keys step the serves by one and apply at once', async ({ page }) => {
+	test('Scale beside the yield opens the field focused and selected; arrows step; Escape closes', async ({
+		page
+	}) => {
 		await page.setViewportSize({ width: 1280, height: 900 });
 		await openCookies(page);
-		const servings = page.getByRole('spinbutton', { name: 'Servings' });
-		await servings.press('ArrowUp');
-		await expect(servings).toHaveValue(String(latest.servings! + 1));
-		await expect(page).toHaveURL(new RegExp(`serves=${latest.servings! + 1}`));
-		await expect(page.locator('header .details')).toContainText(`Serves ${latest.servings! + 1}`);
-		await servings.press('ArrowDown');
+		await expect(facts(page)).toContainText(new RegExp(`Serves ${serves}\\s*Scale`));
+		// Nothing scaler-related on the Ingredients rule at rest.
+		await expect(page.locator('#ingredients').getByRole('textbox')).toHaveCount(0);
+		await expect(scaleButton(page)).toHaveAttribute('aria-expanded', 'false');
+		await scaleButton(page).click();
+		await expect(scaleButton(page)).toHaveAttribute('aria-expanded', 'true');
+		await expect(field(page)).toBeFocused();
+		expect(
+			await field(page).evaluate((el: HTMLInputElement) => [el.selectionStart, el.selectionEnd])
+		).toEqual([0, String(serves).length]);
+
+		await field(page).press('ArrowUp');
+		await expect(field(page)).toHaveValue(String(serves + 1));
+		await expect(page).toHaveURL(new RegExp(`serves=${serves + 1}`));
+		await expect(facts(page)).toContainText(`Serves ${serves + 1}`);
+		await field(page).press('ArrowDown');
+		await expect(page).not.toHaveURL(/serves=/);
+
+		await field(page).press('Escape');
+		await expect(field(page)).toHaveCount(0);
+		await expect(scaleButton(page)).toBeFocused();
+	});
+
+	for (const [typed, count] of [
+		['2x', serves * 2],
+		['1/2x', serves / 2],
+		['50%', serves / 2],
+		// A bare number is a count: "1/2" is half a serving.
+		['1/2', 0.5]
+	] as const) {
+		test(`typing ${typed} applies as typed: the line, the facts line and the link`, async ({
+			page
+		}) => {
+			await page.setViewportSize({ width: 1280, height: 900 });
+			await openCookies(page);
+			await scaleButton(page).click();
+			await field(page).fill(typed);
+			const shown = formatServes(count);
+			await expect(facts(page)).toContainText(`Serves ${shown}`);
+			await expect(facts(page).getByText(shown, { exact: true })).toHaveClass(/text-accent/);
+			await expect(page).toHaveURL(new RegExp(`serves=${shown.replace('.', '\\.')}`));
+			if (typed === '2x') await expect(flourMeasure(page)).toHaveText(measure(doubled));
+		});
+	}
+
+	test('an unreadable entry keeps the last good scale and says why', async ({ page }) => {
+		await page.setViewportSize({ width: 1280, height: 900 });
+		await openCookies(page);
+		await scaleButton(page).click();
+		await field(page).fill('2x');
+		await expect(facts(page)).toContainText(`Serves ${serves * 2}`);
+		await field(page).fill('two cups');
+		const error = page.getByRole('alert');
+		await expect(error).toHaveText(SCALE_MESSAGES.unreadable);
+		await expect(field(page)).toHaveAttribute('aria-describedby', 'scale-error');
+		await expect(facts(page)).toContainText(`Serves ${serves * 2}`);
+		await expect(flourMeasure(page)).toHaveText(measure(doubled));
+	});
+
+	test('½× then 2× comes back to the start; Reset, open or closed, returns to as written', async ({
+		page
+	}) => {
+		await page.setViewportSize({ width: 1280, height: 900 });
+		await openCookies(page);
+		await scaleButton(page).click();
+		await expect(panelButton(page, 'Reset')).toBeDisabled();
+		await panelButton(page, 'Halve').click();
+		await expect(facts(page)).toContainText(`Serves ${formatServes(serves / 2)}`);
+		await panelButton(page, 'Double').click();
+		await expect(facts(page)).toContainText(`Serves ${serves}`);
+		await expect(page).not.toHaveURL(/serves=/);
+
+		await panelButton(page, 'Double').click();
+		await panelButton(page, 'Reset').click();
+		await expect(facts(page)).toContainText(`Serves ${serves}`);
+		await expect(flourMeasure(page)).toHaveText(measure(flour));
+
+		// Closed while scaled, the facts line alone says so and undoes it.
+		await panelButton(page, 'Double').click();
+		await scaleButton(page).click();
+		const reset = facts(page).getByRole('button', { name: 'Reset', exact: true });
+		await expect(reset).toBeVisible();
+		await expect(page.getByText(/Pan sizes and oven temperatures are not scaled/)).toBeVisible();
+		await reset.click();
+		await expect(reset).toHaveCount(0);
+		await expect(scaleButton(page)).toBeFocused();
 		await expect(page).not.toHaveURL(/serves=/);
 	});
 
-	test('typing double the serves doubles a quantity, the header and the URL, Reset clears them; 44px hits on a phone', async ({
-		page
-	}) => {
-		await page.setViewportSize({ width: 390, height: 900 });
-		await openCookies(page);
-		const ingredients = page.locator('#ingredients');
-		const flourMeasure = ingredients.locator('label').first().locator('.font-semibold');
-		const measureLine = page.locator('header .details');
-		await expect(flourMeasure).toHaveText(measure(flour));
-		await expect(measureLine).toContainText(`Serves ${latest.servings}`);
-		// The header is plain text; the control lives with the list it scales.
-		await expect(page.locator('header').getByRole('textbox')).toHaveCount(0);
-		await expect(page.locator('header').getByRole('spinbutton')).toHaveCount(0);
-
-		const servings = ingredients.getByRole('spinbutton', { name: 'Servings' });
-		await servings.fill(String(latest.servings! * 2));
-		await servings.press('Enter');
-		await expect(servings).toHaveValue(String(latest.servings! * 2));
-		await expect(flourMeasure).toHaveText(measure(doubled));
-		await expect(measureLine).toContainText(`Serves ${latest.servings! * 2}`);
-		expect(new URL(page.url()).searchParams.get('serves')).toBe(String(latest.servings! * 2));
-
-		const reset = (await page.getByRole('button', { name: 'Reset' }).boundingBox())!;
-		expect(reset.width).toBeGreaterThanOrEqual(44);
-		expect(reset.height).toBeGreaterThanOrEqual(44);
-		const input = (await page.getByRole('spinbutton', { name: 'Servings' }).boundingBox())!;
-		expect(input.height).toBeGreaterThanOrEqual(44);
-		// Its own row at the start of the column, level with the list's edge,
-		// above the list's first line; its line as far from the tabs' rule above
-		// as from the list's rule below.
-		const control = (await ingredients.locator('.serves').boundingBox())!;
-		const firstRow = (await ingredients.locator('label').first().boundingBox())!;
-		expect(control.x).toBeCloseTo(firstRow.x, 0);
-		expect(control.y + control.height).toBeLessThanOrEqual(firstRow.y);
-		const tabs = (await page.locator('.section-tabs').boundingBox())!;
-		const line = (await ingredients.locator('.serves .label').boundingBox())!;
-		const rule = (await ingredients
-			.locator('.serves')
-			.evaluate((el) => el.parentElement!.getBoundingClientRect().bottom))!;
-		expect(
-			Math.abs(line.y - (tabs.y + tabs.height) - (rule - (line.y + line.height)))
-		).toBeLessThanOrEqual(2);
-
-		await page.getByRole('button', { name: 'Reset' }).click();
-		await expect(flourMeasure).toHaveText(measure(flour));
-		await expect(measureLine).toContainText(`Serves ${latest.servings}`);
-		expect(new URL(page.url()).searchParams.has('serves')).toBe(false);
+	test('the link carries the scale across a reload', async ({ page }) => {
+		await page.setViewportSize({ width: 1280, height: 900 });
+		await gotoHydrated(page, `${await cookiesPath(page)}?serves=${serves * 2}`);
+		await page.reload();
+		await expect(facts(page)).toContainText(`Serves ${serves * 2}`);
+		await expect(flourMeasure(page)).toHaveText(measure(doubled));
+		await scaleButton(page).click();
+		await expect(field(page)).toHaveValue(String(serves * 2));
 	});
 
-	test('on a desktop the control is borderless text just after the eyebrow, and the two rules line up', async ({
+	test('at 360px the five controls share one row, 44px to a thumb, and the keyboard stays down', async ({
 		page
 	}) => {
-		await page.setViewportSize({ width: 1280, height: 900 });
+		await page.setViewportSize({ width: 360, height: 800 });
 		await openCookies(page);
-		const ingredients = page.locator('#ingredients');
-		const blank = await ingredients.getByRole('spinbutton', { name: 'Servings' }).evaluate((el) => {
-			const s = getComputedStyle(el);
-			return [
-				s.borderTopWidth,
-				s.borderLeftWidth,
-				s.borderBottomWidth,
-				s.backgroundColor,
-				s.backgroundImage
-			];
-		});
-		// No box: the underline is drawn, not a border.
-		expect(blank.slice(0, 4)).toEqual(['0px', '0px', '0px', 'rgba(0, 0, 0, 0)']);
-		expect(blank[4]).toContain('linear-gradient');
-
-		const eyebrow = (await ingredients
-			.getByRole('heading', { name: 'Ingredients' })
-			.boundingBox())!;
-		const control = (await ingredients.locator('.serves').boundingBox())!;
-		const row = (await ingredients
-			.locator('.serves')
-			.evaluate((el) => el.parentElement!.getBoundingClientRect()))!;
-		const method = (await page.getByRole('heading', { name: 'Method' }).boundingBox())!;
-		// One line: the control beside the eyebrow, straight after it.
-		expect(control.y).toBeLessThan(eyebrow.y + eyebrow.height);
-		expect(control.x).toBeGreaterThan(eyebrow.x + eyebrow.width);
-		expect(control.x).toBeLessThan(eyebrow.x + eyebrow.width + 24);
-		expect(control.x + control.width).toBeLessThan(row.x + row.width);
-		// The rule under both sits level with the Method rule.
-		expect(row.y + row.height).toBeCloseTo(method.y + method.height, 0);
+		await scaleButton(page).click();
+		// A phone focuses the first live button, not the field.
+		await expect(field(page)).not.toBeFocused();
+		await expect(panelButton(page, 'Fewer servings')).toBeFocused();
+		const controls = [
+			panelButton(page, 'Fewer servings'),
+			field(page),
+			panelButton(page, 'More servings'),
+			panelButton(page, 'Halve'),
+			panelButton(page, 'Double'),
+			panelButton(page, 'Reset')
+		];
+		const boxes = await Promise.all(controls.map(async (c) => (await c.boundingBox())!));
+		const middle = (b: { y: number; height: number }) => b.y + b.height / 2;
+		for (const box of boxes) {
+			expect(Math.abs(middle(box) - middle(boxes[1]))).toBeLessThanOrEqual(2);
+			expect(box.height).toBeGreaterThanOrEqual(44);
+			expect(box.x + box.width).toBeLessThanOrEqual(360);
+		}
+		// Each button a thumb wide too, the steps by their reach past the group.
+		for (const box of [boxes[0], ...boxes.slice(2)]) expect(box.width).toBeGreaterThanOrEqual(44);
+		const doc = await page.evaluate(() => [
+			document.documentElement.scrollWidth,
+			document.documentElement.clientWidth
+		]);
+		expect(doc[0]).toBeLessThanOrEqual(doc[1]);
 	});
 });
 
