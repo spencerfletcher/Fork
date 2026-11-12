@@ -75,6 +75,15 @@ describe('Collections for a selection', () => {
 		expect(row('Soups')).toHaveAttribute('aria-checked', 'false');
 	});
 
+	test('every row draws its mark, so the list reads as a checklist: a tick, a dash, an empty box', async () => {
+		await renderGroup();
+		const mark = (name: string) => row(name).querySelector('svg.check')!;
+		expect(mark('Weeknight').querySelector('path')).toHaveAttribute('d', 'm3.5 8.5 3 3 6-7');
+		expect(mark('Baking').querySelector('path')).toHaveAttribute('d', 'M4 8h8');
+		expect(mark('Soups').querySelector('path')).toBeNull();
+		expect(mark('Soups').querySelector('rect')).not.toBeNull();
+	});
+
 	test('a mixed row pressed puts them all in; refused, it is mixed again', async () => {
 		await renderGroup();
 		const form = row('Baking').closest('form')!;

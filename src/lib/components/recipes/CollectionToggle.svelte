@@ -48,7 +48,7 @@
 	<button type="submit" class="menu-row" role="menuitemcheckbox" aria-checked={checked}>
 		<svg
 			class="check"
-			class:on={checked !== false}
+			class:empty={checked === false}
 			width="16"
 			height="16"
 			viewBox="0 0 16 16"
@@ -60,8 +60,10 @@
 			stroke-linejoin="round">
 			{#if checked === 'mixed'}
 				<path d="M4 8h8" />
-			{:else}
+			{:else if checked}
 				<path d="m3.5 8.5 3 3 6-7" />
+			{:else}
+				<rect x="2.5" y="2.5" width="11" height="11" rx="2" />
 			{/if}
 		</svg>
 		{collection.name}
@@ -69,7 +71,8 @@
 </form>
 
 <style>
-	/* The check's room is kept while unchecked, so the names line up. */
+	/* A mark on every row, in one 16px box, so the names line up and the list
+	   reads as a checklist: a tick, a dash for some, an empty box for none. */
 	.menu-row {
 		gap: 10px;
 		overflow-wrap: anywhere;
@@ -77,10 +80,10 @@
 
 	.check {
 		flex: none;
-		visibility: hidden;
 	}
 
-	.check.on {
-		visibility: visible;
+	.check.empty {
+		color: var(--color-text-3);
+		stroke-width: 1.25;
 	}
 </style>
