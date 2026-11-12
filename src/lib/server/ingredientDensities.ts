@@ -7,7 +7,7 @@ import {
 	WEIGHED_NEAR_WATER
 } from './gramTables.js';
 import type { Ingredient } from '#lib/recipes/types.js';
-import { UNITS, unitId } from '#lib/recipes/convert.js';
+import { UNITS, unitId } from '../recipes/convert.js';
 
 /** grams2 is the upper end when the line gave a range such as "1-2 cups".
  * likeWater: a liquid whose millilitres are its grams (likeWater below). */
