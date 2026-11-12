@@ -273,4 +273,15 @@ describe('ScalePanel', () => {
 		// 44px inside its 1px border.
 		expect(cssRule(phone, '.scale-group')).toMatch(/height:\s*46px/);
 	});
+
+	// At a desktop the text buttons are their words alone, so 4px would run
+	// "½× 2× Reset" together: 12px apart, 16px after the group. A phone's 44px
+	// boxes keep 4px, the row's 294 at 360.
+	test('the text buttons stand apart at a desktop and keep the phone row tight', () => {
+		const phone = style.slice(style.indexOf('@media (max-width: 699px), (pointer: coarse)'));
+		expect(cssRule(style, '.scale-row')).toMatch(/gap:\s*12px/);
+		expect(cssRule(style, '.scale-group')).toMatch(/margin-right:\s*4px/);
+		expect(cssRule(phone, '.scale-row')).toMatch(/gap:\s*4px/);
+		expect(cssRule(phone, '.scale-group')).toMatch(/margin-right:\s*12px/);
+	});
 });

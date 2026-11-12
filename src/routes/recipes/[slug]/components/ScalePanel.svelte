@@ -194,10 +194,12 @@
 		margin-top: 8px;
 	}
 
+	/* At a desktop the text buttons are their words alone: 12px apart, 16px
+	   after the group, so "½× 2× Reset" never runs together. */
 	.scale-row {
 		display: flex;
 		align-items: center;
-		gap: 4px;
+		gap: 12px;
 	}
 
 	/* − field + as one bordered Fork input: the field's surface, border and
@@ -206,7 +208,7 @@
 		display: inline-flex;
 		align-items: stretch;
 		height: 36px;
-		margin-right: 8px;
+		margin-right: 4px;
 		background: var(--color-surface);
 		border: 1px solid var(--color-input-border);
 		border-radius: var(--radius-md);
@@ -286,6 +288,10 @@
 	   steps' hit; each text button a 44px box (its label centred, nothing
 	   drawn round it). */
 	@media (max-width: 699px), (pointer: coarse) {
+		.scale-row {
+			gap: 4px;
+		}
+
 		.scale-group {
 			height: 46px;
 			margin-right: 12px;
