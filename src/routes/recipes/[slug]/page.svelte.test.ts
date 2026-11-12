@@ -324,11 +324,10 @@ describe('recipe page cooking mode', () => {
 		expect(headings[0]).toHaveTextContent(data.currentVersion.title);
 	});
 
-	test('the cooking header says the serves being cooked', () => {
+	// The scaler, a line below, says the serves being cooked.
+	test('the cooking header leaves the serves to the scaler', () => {
 		load('?cook=1&serves=6');
-		expect(cookHeader()!.querySelector('.serves')!.textContent!.replace(/\s+/g, ' ')).toMatch(
-			/Serves 6 1\.5x/
-		);
+		expect(cookHeader()).not.toHaveTextContent('Serves');
 	});
 
 	test('Exit leaves cooking for the reading view, drops ?cook and keeps the ticks', async () => {

@@ -146,8 +146,9 @@ test.describe('Cooking', () => {
 		await servings.press('Enter');
 		await expect(page).toHaveURL(/serves=8/);
 		await expect(page).toHaveURL(/[?&]cook=1/);
-		// The header says it: Serves 8 and the multiplier, in clay.
-		await expect(page.locator('header.cook-header .serves .text-accent').first()).toHaveText('8');
+		// The scaler says it; the header does not repeat it.
+		await expect(servings).toHaveValue('8');
+		await expect(page.locator('header.cook-header')).not.toContainText('Serves');
 
 		await page.reload();
 		await expect(page.getByRole('button', { name: 'Exit' })).toBeVisible();

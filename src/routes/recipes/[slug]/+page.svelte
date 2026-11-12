@@ -159,7 +159,7 @@
 	<!-- Cooking, the band, its actions, the stats and the tags give way to the
 	     cooking header: the title and the serves being cooked, and Exit. -->
 	{#if cooking}
-		<CookHeader title={currentVersion.title} {stored} {serves} onexit={exit} />
+		<CookHeader title={currentVersion.title} onexit={exit} />
 	{:else}
 		<!-- The title band: the recipe's words on deeper cream, its photo inset at
 	     the right. Title, byline and deck first, so a stranger reads what this

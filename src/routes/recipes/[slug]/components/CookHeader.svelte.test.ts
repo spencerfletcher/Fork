@@ -4,16 +4,12 @@ import { tick } from 'svelte';
 import CookHeader from './CookHeader.svelte';
 import source from './CookHeader.svelte?raw';
 import { cssRule } from '#lib/testing/css.js';
-import { formatServes } from '#lib/recipes/scale.js';
 
 const TITLE = 'Chicken Tikka Masala';
 
 function makeProps(overrides: Record<string, unknown> = {}) {
-	return { title: TITLE, stored: 4, serves: 4, onexit: () => {}, ...overrides };
+	return { title: TITLE, onexit: () => {}, ...overrides };
 }
-
-const servesLine = () =>
-	document.querySelector('.serves')!.textContent!.replace(/\s+/g, ' ').trim();
 
 describe('CookHeader', () => {
 	test('a small Cooking label, then the title as the page heading', () => {
@@ -22,26 +18,11 @@ describe('CookHeader', () => {
 		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(TITLE);
 	});
 
-	test('unscaled: Serves and the stored number, no multiplier, nothing clay', () => {
-		render(CookHeader, { props: makeProps() });
-		expect(servesLine()).toBe('Serves 4');
-		expect(document.querySelector('.serves .text-accent')).toBeNull();
-	});
-
-	test('scaled: the serves and the multiplier in clay, as the scaler writes it', () => {
-		const stored = 4;
-		const serves = 6;
-		render(CookHeader, { props: makeProps({ stored, serves }) });
-		const factor = `${formatServes(serves / stored)}x`;
-		expect(servesLine()).toBe(`Serves ${serves} ${factor}`);
-		// The dot is drawn for the eye only, by app.css's .dot-list.
-		expect(document.querySelector('.serves')).toHaveClass('dot-list');
-		const clay = [...document.querySelectorAll('.serves .text-accent')].map((e) => e.textContent);
-		expect(clay).toEqual([String(serves), factor]);
-	});
-
-	test('a version with no servings has no serves line', () => {
-		render(CookHeader, { props: makeProps({ stored: 0, serves: 0 }) });
+	// The scaler, one line below, says the serves; the header does not repeat it.
+	test('no serves line under the title', () => {
+		// Even handed a scale, as the page once passed one.
+		render(CookHeader, { props: makeProps({ stored: 4, serves: 6 }) });
+		expect(screen.queryByText(/^Serves/)).toBeNull();
 		expect(document.querySelector('.serves')).toBeNull();
 	});
 

@@ -1,22 +1,12 @@
 <script lang="ts">
-	import { formatServes } from '#lib/recipes/scale.js';
-
 	let {
 		title,
-		stored,
-		serves,
 		onexit
 	}: {
 		title: string;
-		/** The version's own servings; 0 when it has none, and then there is no serves line. */
-		stored: number;
-		/** The serves the list is scaled to. */
-		serves: number;
 		/** Leaves cooking with the ticks kept. */
 		onexit: () => void;
 	} = $props();
-
-	const scaled = $derived(stored > 0 && serves !== stored);
 
 	// Mounted only while cooking, so the screen stays awake for as long as the
 	// header is there. The browser drops the lock when the tab hides, so coming
@@ -56,23 +46,13 @@
 </script>
 
 <!-- Cooking's own header (Spencer, 11 November 2026): paper, compact, the
-     title in Bitter under a small "Cooking" label, the serves being cooked,
-     and a quiet Exit. Not pinned: the bottom switch is the one pinned bar. -->
+     title in Bitter under a small "Cooking" label, and a quiet Exit; the
+     scaler below says the serves. Not pinned: the bottom switch is the one pinned bar. -->
 <header class="cook-header page">
 	<div class="page-inner cook-inner">
 		<div class="min-w-0">
 			<p class="eyebrow-label">Cooking</p>
 			<h1 class="title">{title}</h1>
-			{#if stored > 0}
-				<!-- Scaled, the number and the multiplier are clay, the Dynamic Is Clay
-				     Rule; the multiplier is written as the scaler writes it. -->
-				<p class="serves dot-list">
-					Serves <b class={[scaled && 'text-accent']}>{formatServes(serves)}</b>
-					{#if scaled}
-						<span class="text-accent">{formatServes(serves / stored)}x</span>
-					{/if}
-				</p>
-			{/if}
 		</div>
 		<button type="button" class="text-btn text-btn--ink exit" onclick={onexit}>Exit</button>
 	</div>
@@ -112,25 +92,6 @@
 		-webkit-line-clamp: 2;
 		line-clamp: 2;
 		overflow: hidden;
-	}
-
-	/* The measure's voice: the label Ink 2, the value 600. */
-	.serves {
-		margin-top: 2px;
-		font-size: 1rem;
-		line-height: 1.5;
-		color: var(--color-text-2);
-		/* The space before the dot is typed, so the pad sits after it. */
-		--dot-space: 0 0.25em 0 0;
-	}
-
-	.serves b {
-		font-weight: 600;
-		color: var(--color-text);
-	}
-
-	.serves b.text-accent {
-		color: var(--color-accent);
 	}
 
 	.exit {
