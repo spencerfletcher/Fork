@@ -92,7 +92,7 @@ describe('/cookbook load', () => {
 
 		const result = await loadResult('?filter=saved');
 
-		expect(result.counts).toEqual({ all: 3, mine: 2, saved: 1, trash: 4 });
+		expect(result.counts).toEqual({ all: 3, trash: 4 });
 		const libraryWhere = sqlOf(countsChain.where.mock.calls[0][0]);
 		// Own by author id, saved through the favourites subquery, both under visibleTo.
 		expect(libraryWhere.sql).toContain('"favorites"');
@@ -245,7 +245,7 @@ describe('/cookbook load, within a collection', () => {
 		expect(collectionsMock.recipeIdsIn).toHaveBeenCalledWith(USER, QUICK.id);
 		expect(result.collection).toEqual({ id: QUICK.id, name: QUICK.name });
 		expect(result.inView).toEqual({ all: 2, mine: 1, saved: 1 });
-		expect(result.counts).toMatchObject({ all: 3, mine: 2, saved: 1 });
+		expect(result.counts).toMatchObject({ all: 3 });
 		expect(sqlOf(findManyMock.mock.calls[0][0].where).params).toEqual(
 			expect.arrayContaining([2, 3])
 		);

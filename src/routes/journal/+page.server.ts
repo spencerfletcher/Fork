@@ -15,7 +15,7 @@ import { todayFor } from '#lib/server/timeZone.js';
 export const load: PageServerLoad = async ({ url, cookies, locals: { user } }) => {
 	requireUser(url, user);
 	const slice = listPage(url, ENTRIES_PER_PAGE);
-	const [{ entries, next }, { total, oldest }, twelveMonths] = await Promise.all([
+	const [{ entries, next }, { total }, twelveMonths] = await Promise.all([
 		journalOf(user, slice),
 		journalSummary(user.id),
 		// Show more fetches the next page by its cursor; the page keeps the summary it loaded.
@@ -31,7 +31,6 @@ export const load: PageServerLoad = async ({ url, cookies, locals: { user } }) =
 		entries,
 		next,
 		total,
-		oldest,
 		twelveMonths,
 		logged: logged && { cookedOn: logged.cookedOn },
 		meta: privatePage('Journal')

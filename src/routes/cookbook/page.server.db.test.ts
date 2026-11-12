@@ -202,7 +202,7 @@ describe.skipIf(!localDb)('the Cookbook filters and counts, against the real dat
 
 	test('counts the whole library by segment, newest change first', async () => {
 		const data = await shelf();
-		expect(data.counts).toMatchObject({ all: 4, mine: 2, saved: 2 });
+		expect(data.counts).toMatchObject({ all: 4 });
 		expect(data.inView).toEqual({ all: 4, mine: 2, saved: 2 });
 		expect(titles(data)).toEqual(['Kept soup', 'Theirs gamma', 'Mine beta', 'Mine alpha']);
 	});
@@ -262,7 +262,7 @@ describe.skipIf(!localDb)('the Cookbook filters and counts, against the real dat
 		const data = await shelf(`?q=dal&tags=${tag(1).slug}`, lonely);
 		expect(data).toMatchObject({
 			recipes: [],
-			counts: { all: 0, mine: 0, saved: 0 },
+			counts: { all: 0 },
 			searchQuery: '',
 			selectedTags: []
 		});

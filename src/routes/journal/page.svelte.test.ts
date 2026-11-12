@@ -32,7 +32,6 @@ const data = {
 	entries: [entry(3, '2026-11-08'), entry(2, '2026-10-20')],
 	next: 'c2' as string | null,
 	total: 40,
-	oldest: '2024-05-01',
 	logged: null as { cookedOn: string } | null,
 	twelveMonths: null as null | {
 		months: { month: string; cooks: number }[];

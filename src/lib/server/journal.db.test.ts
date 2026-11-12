@@ -207,8 +207,8 @@ describe.skipIf(!localDb)("the Journal's pages, against the real database", () =
 		expect(seen).toEqual([[ids[1], ids[0]], [ids[2], ids[3]], [ids[4]]]);
 	});
 
-	test('the summary counts every entry and names the oldest day, whatever the page', async () => {
-		expect(await journal.journalSummary(cook)).toEqual({ total: 5, oldest: '2025-12-24' });
+	test('the summary counts every entry, whatever the page', async () => {
+		expect(await journal.journalSummary(cook)).toEqual({ total: 5 });
 	});
 });
 

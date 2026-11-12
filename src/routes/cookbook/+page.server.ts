@@ -50,7 +50,7 @@ const VIEW_COOKIE_OPTIONS = {
 } as const;
 
 /**
- * The library's counts by segment, whole and inside `inCollection`: one pass
+ * The library's size, and its counts by segment inside `inCollection`: one pass
  * over the library that returns counts, never the rows.
  */
 async function shelfCounts(user: { id: string }, inCollection: SQL | undefined) {
@@ -60,14 +60,13 @@ async function shelfCounts(user: { id: string }, inCollection: SQL | undefined) 
 	const [row] = await db
 		.select({
 			all: count(),
-			mine: counting(mine),
 			inAll: counting(inCollection),
 			inMine: counting(and(inCollection, mine))
 		})
 		.from(recipes)
 		.where(inLibraryOf(user));
 	const split = (all: number, own: number) => ({ all, mine: own, saved: all - own });
-	return { library: split(row.all, row.mine), inView: split(row.inAll, row.inMine) };
+	return { libraryAll: row.all, inView: split(row.inAll, row.inMine) };
 }
 
 export const load: PageServerLoad = async ({ url, cookies, locals: { user, supabase } }) => {
@@ -101,11 +100,11 @@ export const load: PageServerLoad = async ({ url, cookies, locals: { user, supab
 	// Chips come from the whole library, not the filtered subset, or narrowing
 	// would remove the chips needed to widen again (as Favorites did). A kept
 	// copy lends none: tags follow the recipe's visibility.
-	const [{ library, inView }, allTags] = await Promise.all([
+	const [{ libraryAll, inView }, allTags] = await Promise.all([
 		shelfCounts(user, inCollection),
 		visibleTags(and(inLibraryOf(user), notKept))
 	]);
-	const counts = { ...library, trash };
+	const counts = { all: libraryAll, trash };
 	const collection = memberIds ? (collections.find((c) => c.id === collectionId) ?? null) : null;
 	const shelf = {
 		collections,
@@ -115,7 +114,7 @@ export const load: PageServerLoad = async ({ url, cookies, locals: { user, supab
 
 	// With nothing in the library a query or tags filter nothing: the page hears
 	// of neither, so it shows the empty cookbook rather than "0 recipes match".
-	if (library.all === 0) {
+	if (libraryAll === 0) {
 		return {
 			recipes: [],
 			next: null,

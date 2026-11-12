@@ -30,7 +30,7 @@ const journalPage = (search = '') =>
 beforeEach(() => {
 	vi.clearAllMocks();
 	journal.journalOf.mockResolvedValue({ entries: [entry(2), entry(1)], next: 'c1' });
-	journal.journalSummary.mockResolvedValue({ total: 80, oldest: '2024-05-01' });
+	journal.journalSummary.mockResolvedValue({ total: 80 });
 	journal.ownEntry.mockResolvedValue(null);
 	journal.journalTwelveMonths.mockResolvedValue(SUMMARY);
 	tz.todayFor.mockReturnValue(COOK_DAY);
@@ -51,7 +51,7 @@ describe('/journal load', () => {
 			per: journal.ENTRIES_PER_PAGE
 		});
 		expect(journal.journalSummary).toHaveBeenCalledWith(USER.id);
-		expect(data).toMatchObject({ next: 'c1', total: 80, oldest: '2024-05-01' });
+		expect(data).toMatchObject({ next: 'c1', total: 80 });
 		expect(data.entries).toHaveLength(2);
 	});
 

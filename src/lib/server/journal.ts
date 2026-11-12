@@ -8,7 +8,6 @@ import {
 	inArray,
 	isNotNull,
 	max,
-	min,
 	sql,
 	type SQL
 } from 'drizzle-orm';
@@ -350,10 +349,10 @@ export async function journalOf(
 	};
 }
 
-/** How many entries someone's Journal holds and its oldest cooked day, for the summary line. */
+/** How many entries someone's Journal holds, for the summary line. */
 export async function journalSummary(userId: string) {
 	const [row] = await db
-		.select({ total: count(), oldest: min(logEntries.cookedOn) })
+		.select({ total: count() })
 		.from(logEntries)
 		.where(eq(logEntries.userId, userId));
 	return row;

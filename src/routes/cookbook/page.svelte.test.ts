@@ -53,7 +53,7 @@ function makeRecipe(overrides: Record<string, unknown> = {}) {
 
 const base = {
 	recipes: [] as ReturnType<typeof makeRecipe>[],
-	counts: { all: 0, mine: 0, saved: 0, trash: 0 },
+	counts: { all: 0, trash: 0 },
 	inView: { all: 0, mine: 0, saved: 0 },
 	collections: [] as { id: number; name: string; count: number }[],
 	collection: null as { id: number; name: string } | null,
@@ -91,7 +91,7 @@ const full = {
 			author: { id: 's', username: 'samlind' }
 		})
 	],
-	counts: { all: 9, mine: 6, saved: 3, trash: 0 },
+	counts: { all: 9, trash: 0 },
 	inView: { all: 9, mine: 6, saved: 3 },
 	collections: [{ id: 4, name: 'Quick', count: 2 }]
 };
@@ -601,7 +601,7 @@ describe('Cookbook drafts on this device', () => {
 
 	test('shows on an empty Cookbook too', async () => {
 		seed('new', 'Soup', MINUTE);
-		signedIn({ recipes: [], counts: { all: 0, mine: 0, saved: 0, trash: 0 } });
+		signedIn({ recipes: [], counts: { all: 0, trash: 0 } });
 		await tick();
 		expect(within(drafts()).getByText('Soup')).toBeInTheDocument();
 		expect(screen.getByText('Your cookbook is empty')).toBeInTheDocument();
