@@ -2,6 +2,7 @@
 // Nothing here is saved; the stored line stays the source of truth and is
 // what shows at the recipe's own serves.
 import { unitsOfMeasure } from 'parse-ingredient';
+import pluralize from 'pluralize';
 import type { Ingredient, RecipeContent } from './types.js';
 import type { GramResult } from '#lib/server/ingredientDensities.js';
 
@@ -233,6 +234,45 @@ function leadingCount(makes: string): { before: string; value: number; after: st
 	return { before: match[1] ?? '', value, after: makes.slice(match[0].length) };
 }
 
+// Words that count rather than name ("2 dozen cookies"), and the words that end
+// a yield's noun phrase ("loaves of bread", "rolls, about 80 g each").
+const COUNT_WORDS = new Set(['dozen', 'score', 'hundred', 'thousand']);
+const PHRASE_END = new Set(['of', 'for', 'with', 'to', 'in', 'each', 'per', 'and', 'or', 'about']);
+const WORD = /^(?:\d+-)?[A-Za-z][A-Za-z'-]*$/;
+// parse-ingredient's sizes ("1 large egg") are adjectives in a yield ("12 large rolls").
+const SIZES = new Set(['small', 'medium', 'large']);
+// pluralize reads "-ies" as "-y" ("cookies" → "cooky"): the food nouns it gets wrong.
+for (const noun of ['cookie', 'brownie', 'blondie', 'smoothie', 'hoagie', 'quiche']) {
+	pluralize.addIrregularRule(noun, `${noun}s`);
+}
+
+/**
+ * The words after a yield's count with the head noun (the last word of the
+ * phrase before "of", a comma or the end) singular at a count of one or less,
+ * else plural: "loaf" at 2 is "2 loaves", "36 cookies" at 1 "1 cookie", "½ loaf",
+ * "1½ loaves". A unit or abbreviation first ("1.8 L", "500 ml sauce"), a count
+ * word ("dozen") or a noun pluralize cannot read is left as typed.
+ * ponytail: English only (pluralize's rules), and a phrase whose head is not
+ * its last plain word ("2 pies, 9-inch") stays as typed; a per-language table if yields go multilingual.
+ */
+function inflectHead(after: string, count: number): string {
+	const words = after.split(/(\s+|,)/);
+	let head = -1;
+	for (let i = 0; i < words.length; i++) {
+		const word = words[i];
+		if (word === '' || /^\s+$/.test(word)) continue;
+		if (!WORD.test(word) || PHRASE_END.has(word.toLowerCase())) break;
+		const unit = unitOfMeasure(word);
+		if (head === -1 && ((unit && !SIZES.has(unit)) || word === word.toUpperCase())) return after;
+		if (COUNT_WORDS.has(word.toLowerCase())) return after;
+		head = i;
+	}
+	if (head === -1 || /^\d/.test(words[head])) return after;
+	// Rounded as formatScaled shows it, so a count that reads "1" is one.
+	words[head] = pluralize(words[head], Math.round(count * 10) / 10 > 1 ? 2 : 1);
+	return words.join('');
+}
+
 export type MakesScaled = { text: string; scaled: boolean; flagged: boolean };
 
 /**
@@ -248,7 +288,8 @@ export function scaleMakes(makes: string, factor: number): MakesScaled {
 	if (hasMeasure(makes)) return { ...unchanged, flagged: true };
 	const count = leadingCount(makes);
 	if (!count) return unchanged;
-	const text = count.before + formatScaled(count.value * factor) + count.after;
+	const scaled = count.value * factor;
+	const text = count.before + formatScaled(scaled) + inflectHead(count.after, scaled);
 	return { text, scaled: true, flagged: false };
 }
 
@@ -344,7 +385,14 @@ export function scaling(content: Yield, count: number | null): Scaling | null {
 		count: shown,
 		factor,
 		scaled: factor !== 1,
-		unit: by === 'serves' ? (shown === 1 ? 'serving' : 'servings') : at.unit,
+		unit:
+			by === 'serves'
+				? shown === 1
+					? 'serving'
+					: 'servings'
+				: by === 'makes' && factor !== 1
+					? inflectHead(at.unit, shown)
+					: at.unit,
 		serves: by === 'serves' ? formatServes(shown) : null,
 		makes: content.makes ? scaleMakes(content.makes, factor) : null
 	};

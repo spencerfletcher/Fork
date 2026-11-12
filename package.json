@@ -46,6 +46,7 @@
 		"@testing-library/jest-dom": "^7.0.1",
 		"@testing-library/svelte": "^5.4.2",
 		"@types/node": "^24.19.2",
+		"@types/pluralize": "0.0.33",
 		"drizzle-kit": "^0.31.11",
 		"eslint": "^10.13.0",
 		"eslint-config-prettier": "^10.1.8",
@@ -70,6 +71,7 @@
 		"diff": "^9.0.0",
 		"drizzle-orm": "^0.45.4",
 		"parse-ingredient": "3.0.0",
+		"pluralize": "8.0.0",
 		"postgres": "^3.4.9",
 		"zod": "^4.6.7"
 	},

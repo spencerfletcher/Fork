@@ -438,3 +438,56 @@ describe('scaleMakes', () => {
 		expect(scaleMakes(makes, 1)).toEqual({ text: makes, scaled: false, flagged: false });
 	});
 });
+
+// The yield's head noun follows the scaled count: one or less singular, more plural.
+describe('scaleMakes inflects the head noun', () => {
+	test.each([
+		['1 loaf', 2, '2 loaves'],
+		['36 cookies', 1 / 36, '1 cookie'],
+		['1 loaf', 0.5, '½ loaf'],
+		['1 loaf', 1.5, '1½ loaves'],
+		['2 loaves', 0.5, '1 loaf'],
+		['about 12 buns', 1 / 12, 'about 1 bun'],
+		['≈ 2 loaves', 0.5, '≈ 1 loaf'],
+		['2 loaves of bread', 0.5, '1 loaf of bread'],
+		['1 loaf of bread', 3, '3 loaves of bread'],
+		['12 large rolls', 1 / 12, '1 large roll'],
+		['1 small round loaf, about 500 g', 2, '2 small round loaves, about 500 g'],
+		['2 9-inch pies', 0.5, '1 9-inch pie'],
+		['1 Loaf', 2, '2 Loaves'],
+		['6 tortillas', 2, '12 tortillas'],
+		['16 brownies', 1 / 16, '1 brownie'],
+		['2 quiches', 0.5, '1 quiche'],
+		['1 medium pizza', 2, '2 medium pizzas'],
+		['1 sheet cake', 0.5, '½ sheet cake']
+	])('%j at ×%d reads %j', (makes, factor, text) => {
+		expect(scaleMakes(makes, factor).text).toBe(text);
+	});
+
+	test.each([
+		['about 1.8 L', 0.5, 'about 0.9 L'],
+		['500 ml sauce', 2, '1000 ml sauce'],
+		['2 kg', 0.5, '1 kg'],
+		['1 cup', 2, '2 cup'],
+		['1 1/2 dozen', 1.5, '2¼ dozen'],
+		['2 dozen cookies', 0.5, '1 dozen cookies'],
+		['1 PBJ', 2, '2 PBJ'],
+		['2 pcs.', 0.5, '1 pcs.'],
+		['12 餃子', 0.5, '6 餃子']
+	])(
+		'%j at ×%d reads %j: a unit, abbreviation, count word or non-Latin noun is left as typed',
+		(makes, factor, text) => {
+			expect(scaleMakes(makes, factor).text).toBe(text);
+		}
+	);
+
+	test('the stored text is never rewritten unscaled', () => {
+		expect(scaleMakes('1 loaves', 1).text).toBe('1 loaves');
+	});
+
+	test('the scaler’s unit follows its count', () => {
+		const loaf = makeContent({ servings: null, makes: '1 loaf' });
+		expect(scaling(loaf, 2)?.unit).toBe('loaves');
+		expect(scaling(loaf, null)?.unit).toBe('loaf');
+	});
+});
