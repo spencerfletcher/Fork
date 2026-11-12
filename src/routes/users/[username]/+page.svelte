@@ -133,7 +133,7 @@
 <style>
 	.profile-header {
 		display: flex;
-		align-items: center;
+		align-items: flex-start;
 		gap: 20px;
 		margin-bottom: var(--space-5);
 	}

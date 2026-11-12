@@ -6,6 +6,7 @@ import type { SubmitFunction } from '$app/forms';
 import { BLOCK_SENTENCE } from '#lib/journal.js';
 import ProfilePage from './+page.svelte';
 import source from './+page.svelte?raw';
+import { cssRule } from '#lib/testing/css.js';
 
 // Each form's enhance callback is kept by its action, so a test can play back a result.
 const { submits } = vi.hoisted(() => ({ submits: new Map<string, SubmitFunction>() }));
@@ -231,5 +232,11 @@ describe('Profile relationship control', () => {
 		renderProfile({ relation });
 		expect(screen.queryByRole('button', { name: /friend|request/i })).toBeNull();
 		expect(screen.queryByText(/Request sent|Friends ✓/)).toBeNull();
+	});
+
+	// Centred, the avatar would follow the text block down as a relation
+	// control (Add friend, Friends ✓) grows it, away from the handle.
+	test('the avatar sits at the top of the header, wherever the controls under the handle', () => {
+		expect(cssRule(source, '.profile-header')).toContain('align-items: flex-start');
 	});
 });
