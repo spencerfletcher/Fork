@@ -2,7 +2,7 @@
 
 Working file. Proves that every section, table row and bullet-level item in the sources landed in the current set. Destinations: RD README.md, RM ROADMAP.md, DC DECISIONS.md, CV this file (M1 to M23), CO COMPETITIVE.md, BU BUSINESS.md, DE DESIGN-DIRECTION.md, IN INVENTORY.md; "§n" is the numbered section, "P0" to "P5" a phase table in RM §4. Status: **placed**; **superseded** (also in DC §2, item number given; the replacement is placed); **removed with approval** (removed from the set with Spencer's approval on 11 Nov 2026; recorded in DC §2, line given); **overtaken** (the code already does it, checked by one grep or listing on 12 Nov 2026; nothing to fold). Source-register tables (lists of citations) are one row each.
 
-Sources: R [roadmap report](../research/2026-11-08-product-roadmap/README.md); CM [cookbook market](../research/2026-11-08-product-roadmap/cookbook_market.md); AQ [advanced and quality](../research/2026-11-08-product-roadmap/advanced_and_quality.md); PA [product audit](../research/2026-11-08-product-roadmap/current_product_audit.md); DD [deep dive](../research/2026-11-09-cookbook-app-deep-dive/README.md); S1 [design and solo business](../research/2026-11-10-design-and-solo-business.md); S2 [finished product and revenue](../research/2026-11-10-finished-product-and-revenue.md); SL [social launch](../research/2026-11-08-social-launch/social_launch.md); US [US copyright](../research/2026-11-08-social-launch/us_copyright.md); CA [Canada copyright](../research/2026-11-08-social-launch/canada_copyright.md); Z [Zed reference](../research/2026-11-09-zed-design-reference/README.md); CD [cookbook design research, 8 Nov](../research/2026-11-08-cookbook-design-research/README.md), its README only, folded 12 Nov; UX [UX review, 12 Nov](../research/2026-11-12-ux-review.md); CL [Cooklang research, 23 Oct](../research/2026-10-23-cooklang.md).
+Sources: R [roadmap report](../research/2026-11-08-product-roadmap/README.md); CM [cookbook market](../research/2026-11-08-product-roadmap/cookbook_market.md); AQ [advanced and quality](../research/2026-11-08-product-roadmap/advanced_and_quality.md); PA [product audit](../research/2026-11-08-product-roadmap/current_product_audit.md); DD [deep dive](../research/2026-11-09-cookbook-app-deep-dive/README.md); S1 [design and solo business](../research/2026-11-10-design-and-solo-business.md); S2 [finished product and revenue](../research/2026-11-10-finished-product-and-revenue.md); SL [social launch](../research/2026-11-08-social-launch/social_launch.md); US [US copyright](../research/2026-11-08-social-launch/us_copyright.md); CA [Canada copyright](../research/2026-11-08-social-launch/canada_copyright.md); Z [Zed reference](../research/2026-11-09-zed-design-reference/README.md); CD [cookbook design research, 8 Nov](../research/2026-11-08-cookbook-design-research/README.md), its README only, folded 12 Nov; UX [UX review, 12 Nov](../research/2026-11-12-ux-review.md); CL [Cooklang research, 23 Oct](../research/2026-10-23-cooklang.md); PS [package sweep, 12 Nov](../research/2026-11-12-package-sweep.md).
 
 ## R: product roadmap report
 
@@ -755,6 +755,39 @@ Folded on 12 Nov 2026. Every row is a recommendation; "proposed" in RM marks it 
 | CL14 | Where not to compete; the target cook as a hypothesis | CO §3 Cooklang row | placed |
 | CL15 | Immediate implications 1 to 3 | 1 as CL2; 2 RM §7; 3 RM §7 AI | placed |
 
+## PS: package sweep, 12 Nov 2026
+
+Folded on 12 Nov 2026. Nothing in it is decided except `pluralize` (DC §1, 12 Nov); RM marks the rest proposed.
+
+| # | Source item | Destination | Status |
+| --- | --- | --- | --- |
+| PS1 | Summary: adopt now, `parse-ingredient` 3.2.0 then `pluralize` | RM §11 (`parse-ingredient` upgrade); RM P2 Scaler workstream and DC §1 (`pluralize`, approved) | placed |
+| PS2 | Summary: adopt when the feature is built (`fflate`, `htmlparser2` and `ipaddr.js`, `@cooklang/cooklang`, error reporting, faker) | the rows of PS25 to PS45 | placed |
+| PS3 | Summary: keep ours | RM §11 Dependency posture | placed |
+| PS4 | Summary: the platform does it (wake lock, timers, PWA, signed URLs, staging, mail) | the rows of PS25 to PS45 | placed |
+| PS5 | Summary: posture, seven runtime dependencies | RM §11 Dependency posture | placed |
+| PS6 | Part A: `parse-ingredient` 3.0.0 to 3.2.0, then `MAX_LINE` | RM §11 | placed |
+| PS7 to PS24 | Part A: keep ours (scaling, conversion, unit plurals, counted nouns, durations, photo sniffing and stripping, rate limits, validation, diffing, slugs, highlighting, Markdown export, JSON-LD, sitemap, time zones, drafts, the pool, UI primitives; 18 rows) | RM §11 Dependency posture; the rate-limit race and the embedded-Exif limit in RM P2 Abuse basics; `schema-dts` in RM P1 Public recipe metadata; `<dialog>` and `popover` first, and `fieldErrors` without its own tests, in RM §11 | placed |
+| PS25 to PS28 | Part B: paste and Markdown files, URL import with `htmlparser2`, the safe fetch on `ipaddr.js`, no rendered HTML | RM P2 Easy import | placed |
+| PS29 | Part B: the Paprika importer with `fflate` | RM P2 First migration importer | placed |
+| PS30 | Part B: photo bundling in export with `fflate`, streamed | RM P1 Export and archive | placed |
+| PS31 | Part B: `@cooklang/cooklang` | RM P4 Cooklang import and export | placed |
+| PS32 | Part B: varied seed, built or faker as a dev dependency | RM P1 Varied seed data | placed |
+| PS33 | Part B: onboarding is product flow, no package | RM P2 Onboarding (no change) | placed |
+| PS34 | Part B: mail through Supabase SMTP and a provider's HTTP API | RM P2 Email notifications; P0 Account access (production mail) | placed |
+| PS35 | Part B: offline reading through SvelteKit's service worker | RM P2 Offline saved reading | placed |
+| PS36 | Part B: timers and wake lock are browser APIs | RM §7 Timers and offline truth | placed |
+| PS37 | Part B: print through `@media print` | RM P1 Print (live) | overtaken |
+| PS38 | Part B: grocery combining built on Fork's units | RM P3 Grocery list | placed |
+| PS39 | Part B: nutrition from USDA FoodData Central | RM P4 Nutrition, gated | placed |
+| PS40 | Part B: OCR and AI repair through `fetch` | RM P5 OCR and capture assistance | placed |
+| PS41 | Part B: private photos by signed URLs | RM P1 Photo access follows audience | placed |
+| PS42 | Part B: comment moderation is report and delete, no profanity filter | RM P2 Comments (no change) | placed |
+| PS43 | Part B: payments with the `stripe` SDK | RM §11 Dependency posture | placed |
+| PS44 | Part B: error reporting before public launch | RM §11 Dependency posture, P0 Public-launch prerequisites | placed |
+| PS45 | Part B: staging on a second Supabase project and Netlify branch deploys | RM P0 Two-tier environments (already there) | placed |
+| PS46 | Risks and things not verified | RM §11 (run the suite after the bump); the unverified notes in each row above | placed |
+
 ## M1 to M23: October milestones
 
 Where each milestone of the [October milestones](../history/2026-10-milestones.md) went in the current plan. Moved here from ROADMAP.md section 13 on 12 November 2026.
@@ -791,11 +824,11 @@ Other preserved preferences: warm cookbook styling, desktop two-column reading, 
 
 Each table row above counts as one item, except rows that name a range (for example "R204 to R226", "DD15 to DD25"), which count as the number of items in the range; source-register rows count as one.
 
-- Items in the sources: 972 (R 308, CM 90, AQ 132, PA 56, DD 160, S1 52, S2 43, SL 47, US 13, CA 13, Z 25, CD 5, UX 13, CL 15), counted from the row numbers above.
-- Items placed in the current set: 966. This includes 28 rows marked superseded in whole or part (CD1, CD2, R8, R17, R37, R52, R56, R58, R61, R62, R64, R68, R80, R81, R97, R100, R103, R230, R238, CM38, CM40, CM47, CM61, AQ15, AQ44, PA29, SL1, SL7), plus superseded notes inside R204 to R226 (M4, M17, M20), PA3 to PA21 (visibility), S1-27 and S2-25 (purchased core); each is placed through its replacement.
-- Items removed with approval: 5 rows (R4, R201, PA1, S1-5, S2-12), DC §2 lines 23 to 27; line 24 comes from the design summary, which stays current and is not a reconciled source. Placed 966 plus removed 5 plus overtaken 1 is 972.
+- Items in the sources: 1,018 (R 308, CM 90, AQ 132, PA 56, DD 160, S1 52, S2 43, SL 47, US 13, CA 13, Z 25, CD 5, UX 13, CL 15, PS 46), counted from the row numbers above.
+- Items placed in the current set: 1,011. This includes 28 rows marked superseded in whole or part (CD1, CD2, R8, R17, R37, R52, R56, R58, R61, R62, R64, R68, R80, R81, R97, R100, R103, R230, R238, CM38, CM40, CM47, CM61, AQ15, AQ44, PA29, SL1, SL7), plus superseded notes inside R204 to R226 (M4, M17, M20), PA3 to PA21 (visibility), S1-27 and S2-25 (purchased core); each is placed through its replacement.
+- Items removed with approval: 5 rows (R4, R201, PA1, S1-5, S2-12), DC §2 lines 23 to 27; line 24 comes from the design summary, which stays current and is not a reconciled source. Placed 1,011 plus removed 5 plus overtaken 2 is 1,018.
 - Lines in DC §2: 30, of which 25 are dropped as superseded (line 30, the first 12 Nov build order, is a decision record, not a source item) (several rows above share one line; lines 12, 15 and 17 replace wording in R254, R253 and the design summary) and 5 are removals with approval (lines 23 to 27).
-- Items overtaken by the code: 1 (CL2).
+- Items overtaken by the code: 2 (CL2, PS37).
 - Items kept with removal proposed: 0.
 - Unplaced: 0.
 
@@ -807,3 +840,4 @@ Each table row above counts as one item, except rows that name a range (for exam
 - 2026-11-12: UX section added (U1 to U13, the 12 Nov UX review); counts updated.
 - 2026-11-12: CD section added (the 8 Nov cookbook design research README); counts updated.
 - 2026-11-12: CL section added (the 23 Oct Cooklang research); status **overtaken** defined; counts updated.
+- 2026-11-12: PS section added (the 12 Nov package sweep); counts updated.
