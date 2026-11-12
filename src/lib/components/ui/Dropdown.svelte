@@ -12,13 +12,16 @@
 	let {
 		trigger,
 		panel,
-		onopen
+		onopen,
+		focusOnOpen
 	}: {
 		/** The consumer's button: spread the props onto it. */
 		trigger: Snippet<[{ 'aria-expanded': boolean; onclick: (e: MouseEvent) => void }]>;
 		/** Rendered only while open; `close` shuts it and hands focus back (Print). */
 		panel: Snippet<[close: () => void]>;
 		onopen?: () => void;
+		/** What opening focuses, found in the dropdown's root; the panel's first control when unset or null. */
+		focusOnOpen?: (root: HTMLElement) => HTMLElement | null | undefined;
 	} = $props();
 
 	let open = $state(false);
@@ -36,7 +39,7 @@
 		if (open) {
 			onopen?.();
 			await tick();
-			controls()[0]?.focus();
+			((root && focusOnOpen?.(root)) ?? controls()[0])?.focus();
 		}
 	}
 
@@ -66,7 +69,9 @@
 		e.preventDefault();
 		const at = items.indexOf(document.activeElement as HTMLElement);
 		const step = e.key === 'ArrowDown' ? 1 : -1;
-		items[(at + step + items.length) % items.length].focus();
+		// From outside the items (a find box above them), Up is the last.
+		const next = at === -1 && step === -1 ? items.length - 1 : at + step;
+		items[(next + items.length) % items.length].focus();
 	}
 </script>
 
