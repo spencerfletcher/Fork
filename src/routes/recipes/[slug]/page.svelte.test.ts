@@ -340,7 +340,7 @@ describe('recipe page cooking mode', () => {
 		expect(cookHeader()).toHaveTextContent(/Serves 6\s+Scale\s+Reset/);
 		expect(document.querySelectorAll('.details')).toHaveLength(1);
 		await fireEvent.click(screen.getByRole('button', { name: 'Scale' }));
-		await fireEvent.click(screen.getByRole('button', { name: 'Double' }));
+		await fireEvent.click(screen.getByRole('button', { name: '2× (double)' }));
 		expect(cookHeader()).toHaveTextContent('Serves 12');
 		expect(new URL(goto.mock.lastCall![0]).searchParams.get('cook')).toBe('1');
 	});

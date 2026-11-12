@@ -298,11 +298,11 @@ describe('Details with the scaler', () => {
 	test('a change scales the line in clay and writes ?serves= by a shallow replace; 1x drops it', async () => {
 		const { onscale } = renderScaler();
 		await fireEvent.click(trigger());
-		await fireEvent.click(screen.getByRole('button', { name: 'Double' }));
+		await fireEvent.click(screen.getByRole('button', { name: '2× (double)' }));
 		expect(onscale).toHaveBeenLastCalledWith(STORED * 2);
 		expect(lastShallowUrl(goto).searchParams.get('serves')).toBe(String(STORED * 2));
 		expect(screen.getByText(String(STORED * 2))).toHaveClass('text-accent');
-		await fireEvent.click(screen.getByRole('button', { name: 'Halve' }));
+		await fireEvent.click(screen.getByRole('button', { name: '½× (halve)' }));
 		expect(lastShallowUrl(goto).searchParams.has('serves')).toBe(false);
 	});
 
@@ -323,7 +323,7 @@ describe('Details with the scaler', () => {
 		page.shallow = { url: new URL('http://localhost/recipes/cookies?cook=1') };
 		renderScaler();
 		await fireEvent.click(trigger());
-		await fireEvent.click(screen.getByRole('button', { name: 'Double' }));
+		await fireEvent.click(screen.getByRole('button', { name: '2× (double)' }));
 		expect(lastShallowUrl(goto).searchParams.get('cook')).toBe('1');
 		expect(lastShallowUrl(goto).searchParams.get('serves')).toBe(String(STORED * 2));
 	});
@@ -366,13 +366,13 @@ describe('Details with the scaler', () => {
 		test('a Makes says its scaled yield; a bare multiplier its scale', async () => {
 			const cookies = renderScaler(makeContent({ servings: null, makes: '36 cookies' }));
 			await fireEvent.click(trigger());
-			await fireEvent.click(screen.getByRole('button', { name: 'Double' }));
+			await fireEvent.click(screen.getByRole('button', { name: '2× (double)' }));
 			await vi.advanceTimersByTimeAsync(TYPING_PAUSE_MS);
 			expect(status()).toHaveTextContent('Makes 72 cookies');
 			cookies.unmount();
 			renderScaler(makeContent({ servings: null, makes: 'one loaf' }));
 			await fireEvent.click(trigger());
-			await fireEvent.click(screen.getByRole('button', { name: 'Double' }));
+			await fireEvent.click(screen.getByRole('button', { name: '2× (double)' }));
 			await vi.advanceTimersByTimeAsync(TYPING_PAUSE_MS);
 			expect(status()).toHaveTextContent('Scaled 2x');
 		});

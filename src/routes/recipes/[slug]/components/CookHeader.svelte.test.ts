@@ -44,7 +44,7 @@ describe('CookHeader', () => {
 		const facts = document.querySelector('.cook-header .details')!;
 		expect(facts.textContent!.replace(/\s+/g, ' ').trim()).toBe('Serves 6 Scale Reset');
 		await fireEvent.click(screen.getByRole('button', { name: 'Scale' }));
-		await fireEvent.click(screen.getByRole('button', { name: 'Double' }));
+		await fireEvent.click(screen.getByRole('button', { name: '2× (double)' }));
 		expect(onscale).toHaveBeenLastCalledWith(12);
 	});
 

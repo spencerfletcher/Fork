@@ -54,16 +54,17 @@ describe('ScalePanel', () => {
 			'Fewer servings',
 			'Servings',
 			'More servings',
-			'Halve',
-			'Double',
+			'½× (halve)',
+			'2× (double)',
 			'Reset'
 		]);
 		const group = row.querySelector('.scale-group')!;
 		expect(group).toContainElement(field());
 		expect(group).toContainElement(button('Fewer servings'));
 		expect(group).toContainElement(button('More servings'));
-		expect(button('Halve')).toHaveTextContent('½×');
-		expect(button('Double')).toHaveTextContent('2×');
+		// Label in name: each spoken name starts with the glyphs on the button.
+		expect(button('½× (halve)')).toHaveTextContent('½×');
+		expect(button('2× (double)')).toHaveTextContent('2×');
 	});
 
 	test.each([
@@ -179,22 +180,22 @@ describe('ScalePanel', () => {
 
 	test('½× and 2× act on the current amount, so each undoes the other', async () => {
 		const { onchange, rerender } = renderPanel(STORED);
-		await fireEvent.click(button('Double'));
+		await fireEvent.click(button('2× (double)'));
 		expect(onchange).toHaveBeenLastCalledWith(STORED * 2);
 		await rerender(STORED * 2);
-		await fireEvent.click(button('Halve'));
+		await fireEvent.click(button('½× (halve)'));
 		expect(onchange).toHaveBeenLastCalledWith(STORED);
 		await rerender(STORED);
-		await fireEvent.click(button('Halve'));
+		await fireEvent.click(button('½× (halve)'));
 		expect(onchange).toHaveBeenLastCalledWith(STORED / 2);
 		await rerender(STORED / 2);
-		await fireEvent.click(button('Double'));
+		await fireEvent.click(button('2× (double)'));
 		expect(onchange).toHaveBeenLastCalledWith(STORED);
 	});
 
 	test('2× is off past MAX_SCALE', () => {
 		renderPanel(STORED * MAX_SCALE);
-		expect(button('Double')).toBeDisabled();
+		expect(button('2× (double)')).toBeDisabled();
 		expect(button('More servings')).toBeDisabled();
 	});
 

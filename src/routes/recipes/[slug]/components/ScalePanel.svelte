@@ -165,7 +165,7 @@
 		<button
 			type="button"
 			class="text-btn"
-			aria-label="Halve"
+			aria-label="½× (halve)"
 			disabled={!fits(rounded(scale.count / 2))}
 			onclick={() => go(scale.count / 2)}>
 			½×
@@ -173,7 +173,7 @@
 		<button
 			type="button"
 			class="text-btn"
-			aria-label="Double"
+			aria-label="2× (double)"
 			disabled={!fits(rounded(scale.count * 2))}
 			onclick={() => go(scale.count * 2)}>
 			2×

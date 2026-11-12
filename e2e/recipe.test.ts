@@ -1752,19 +1752,19 @@ test.describe('Serving scaling', () => {
 		await openCookies(page);
 		await scaleButton(page).click();
 		await expect(panelButton(page, 'Reset')).toBeDisabled();
-		await panelButton(page, 'Halve').click();
+		await panelButton(page, '½× (halve)').click();
 		await expect(facts(page)).toContainText(`Serves ${formatServes(serves / 2)}`);
-		await panelButton(page, 'Double').click();
+		await panelButton(page, '2× (double)').click();
 		await expect(facts(page)).toContainText(`Serves ${serves}`);
 		await expect(page).not.toHaveURL(/serves=/);
 
-		await panelButton(page, 'Double').click();
+		await panelButton(page, '2× (double)').click();
 		await panelButton(page, 'Reset').click();
 		await expect(facts(page)).toContainText(`Serves ${serves}`);
 		await expect(flourMeasure(page)).toHaveText(measure(flour));
 
 		// Closed while scaled, the facts line alone says so and undoes it.
-		await panelButton(page, 'Double').click();
+		await panelButton(page, '2× (double)').click();
 		await scaleButton(page).click();
 		const reset = facts(page).getByRole('button', { name: 'Reset', exact: true });
 		await expect(reset).toBeVisible();
@@ -1798,8 +1798,8 @@ test.describe('Serving scaling', () => {
 			panelButton(page, 'Fewer servings'),
 			field(page),
 			panelButton(page, 'More servings'),
-			panelButton(page, 'Halve'),
-			panelButton(page, 'Double'),
+			panelButton(page, '½× (halve)'),
+			panelButton(page, '2× (double)'),
 			panelButton(page, 'Reset')
 		];
 		const boxes = await Promise.all(controls.map(async (c) => (await c.boundingBox())!));
