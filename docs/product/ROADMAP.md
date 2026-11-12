@@ -49,7 +49,7 @@ The differentiating experience is continuity: a recipe travels from capture thro
 - Kept from before: append-only versions with commit notes, any-two-version comparison, versioned photos, failed-save input retention, unsaved-change warning, stale-write protection, render-only scaling with ranges and fractions, Cook with wake lock, and ingredient and step ticks kept for 12 hours per version (PA).
 - Engineering: a shared component set and a closed set of controls, the `code-health` skill and two audits (section 11).
 
-**In flight, not yet landed:** a CSS simplification pass with no visible change; phone fixes (status-bar and top-bar colour on iOS Safari, New recipe button height, the servings control moved left with a smaller gap, the "Friends' recipes" toggle moved into the tag row as one filter bar).
+**In flight, not yet landed:** a CSS simplification pass with no visible change; phone fixes (status-bar and top-bar colour on iOS Safari, New recipe button height, the servings control moved left with a smaller gap).
 
 **Known gaps in the shipped product** (from the audit and code, still true): recipe photos are served from public storage URLs whatever the recipe's audience; ingredient search matches every historical version, not only the current one; there is no settings route, export, print styling, collections, drafts or Trash; tag slugs drop non-Latin characters (PA). Present test results, authenticated journeys, real phones, screen readers, production mail, private-media policy and field performance are unverified (R).
 
@@ -160,7 +160,7 @@ Cookbook lane:
 | Item | What it is | Status | Source |
 | --- | --- | --- | --- |
 | Mobile cooking refinement | Obvious blockers earlier; keep overview and place; zoom; tick affordance compared side by side on real cooking tasks (16px marigold circle with 44px phone hit stays until then) | later | R, DS, M18, M20, C10 |
-| Scaler workstream | S01 to S08: one field for `50%`, `1/2`, `0.5` plus a slider, scale to an ingredient on hand, persistent scaled state, faithful ranges. S01 (one field) and S04 (persistent scaled state, explicit Reset) built 12 November 2026 | later | DD |
+| Scaler workstream | S01 to S08: one field for `50%`, `1/2`, `0.5` plus a slider, scale to an ingredient on hand, persistent scaled state, faithful ranges. S01 (one field) and S04 (persistent scaled state, explicit Reset) built 12 November 2026 | in flight (S01, S04 built; redesign built 12 Nov 2026, awaiting publish) | DD |
 | Units and temperature | Reversible display conversion; exact same-dimension math first; density estimates need ingredient and preparation context; carefully sourced gram coverage | later | R, CM, M12 |
 | Timers | Several named timers with persisted deadlines (C01 to C05); honest about browser alarm limits | later | R, DD, M11 |
 | Cooking session | Version, scale, ticks and position kept when switching (C06); columns and optional focus (C08); type size and keep-awake (C11) | later | DD |
