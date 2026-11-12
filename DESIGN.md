@@ -491,7 +491,7 @@ Spencer's rule: reuse where the shape is the same; never force a component onto 
 ### Don't:
 
 - **Don't** add a second dark surface, a gradient, a blur or a glow.
-- **Don't** fill anything with clay (the editor's checkbox is the one exception), or colour text marigold.
+- **Don't** fill anything with clay (the audience radios in Settings and the Journal form are the one exception), or colour text marigold.
 - **Don't** put a shadow on a card, strip or button at rest.
 - **Don't** invent proof: no ratings, counts, testimonials or press.
 - **Don't** let the version UI crowd the recipe; where it harms reading, reduce it on that surface rather than the whole system.
