@@ -465,16 +465,22 @@
 		gap: 8px;
 	}
 
-	/* The words, then the chevron, centred on their line by the row. */
+	/* The words, then the chevron, centred on their line by the row. The
+	   select's own look (app.css), so the row's controls share one light edge
+	   with Sort beside them (owner, 12 November 2026: "lighten to match"). */
 	.picker-trigger {
 		display: inline-flex;
 		align-items: center;
 		gap: 8px;
 		max-width: 16rem;
+		border-color: var(--color-input-border);
+		background: var(--color-surface);
 	}
 
-	/* Both buttons control the open panel; the band marks the group it shows. */
-	.picker-trigger.showing {
+	/* Both buttons control the open panel; the band marks the group it shows,
+	   and the ghost's hover. */
+	.picker-trigger.showing,
+	.picker-trigger:hover {
 		background: var(--color-band);
 	}
 
