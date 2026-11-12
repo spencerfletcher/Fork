@@ -4,9 +4,10 @@ import { gotoHydrated } from './helpers';
 // Signed out, as a rights holder who is not a cook on Fork would come. The
 // words are written out: e2e files cannot import the app's #lib modules.
 
-const link = (page: Page) => page.getByLabel('Link on Fork', { exact: true });
-const what = (page: Page) => page.getByLabel("What's wrong", { exact: true });
-const contact = (page: Page) => page.getByLabel('Your email', { exact: true });
+// By the box's name: each label also carries its Required mark.
+const link = (page: Page) => page.getByRole('textbox', { name: 'Link on Fork', exact: true });
+const what = (page: Page) => page.getByRole('textbox', { name: "What's wrong", exact: true });
+const contact = (page: Page) => page.getByRole('textbox', { name: 'Your email', exact: true });
 const send = (page: Page) => page.getByRole('button', { name: 'Send report', exact: true });
 
 test.describe('Report a problem, signed out', () => {
