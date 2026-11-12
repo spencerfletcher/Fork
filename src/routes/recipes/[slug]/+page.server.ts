@@ -22,6 +22,7 @@ import { VERSION_NOT_FOUND } from './versionError.js';
 import { BAD_FORM, failure, requireUser, signedOut } from '#lib/server/actions.js';
 import { STALE_MESSAGE } from '#lib/server/submission.js';
 import { restoreVersion } from '#lib/server/versions.js';
+import { rateLimited } from '#lib/server/rateLimit.js';
 import { keepVersion, removeCopy, setNote } from '#lib/server/keptCopies.js';
 import { deleteForever } from '#lib/server/trash.js';
 import {
@@ -253,6 +254,8 @@ export const actions: Actions = {
 		if (!user) return signedOut();
 		const name = text(await request.formData(), 'name');
 		const recipe = await libraryRecipe(params.slug, user);
+		const limited = await rateLimited('collections', user.id);
+		if (limited) return failure(429, 'rate_limited', limited, { name });
 		const created = await createCollection(user.id, name);
 		if ('error' in created) return failure(400, 'invalid', created.error, { name });
 		if (!(await setMembership(user, created.id, recipe.id, true)))
@@ -334,6 +337,9 @@ export const actions: Actions = {
 		const from = source.author ? `@${source.author.username}, ` : '';
 		const commitMessage = `Forked from ${from}v${copied.versionNumber}`;
 
+		const limited = await rateLimited('recipes', user.id);
+		if (limited) return failure(429, 'rate_limited', limited);
+
 		await ensureProfile(user);
 
 		// One snapshot of the copied version is the whole content of the fork;
@@ -394,6 +400,8 @@ export const actions: Actions = {
 		const editRevision = wholeNumber(text(formData, 'editRevision'));
 		if (versionNumber === null || editRevision === null) return failure(400, 'invalid', BAD_FORM);
 		if (recipe.editRevision !== editRevision) return failure(409, 'stale', STALE_MESSAGE);
+		const limited = await rateLimited('edits', user.id);
+		if (limited) return failure(429, 'rate_limited', limited);
 
 		const outcome = await db.transaction((tx) =>
 			restoreVersion(tx, recipe.id, user.id, editRevision, versionNumber)

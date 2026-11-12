@@ -11,6 +11,10 @@ import { LOST_PARENT_ACCESS, NOT_AUTHORIZED, WIDENS_PARENT } from '#lib/server/v
 import { PgDialect } from 'drizzle-orm/pg-core';
 import type { SQL } from 'drizzle-orm';
 import { recipes } from '#lib/server/db/schema.js';
+import { LIMITED, LIMITED_FAILURE } from '#lib/testing/rateLimit.js';
+
+const { rateLimitedMock } = vi.hoisted(() => ({ rateLimitedMock: vi.fn() }));
+vi.mock('#lib/server/rateLimit.js', () => ({ rateLimited: rateLimitedMock }));
 
 // ─── Hoisted mocks (must be available inside vi.mock factory) ─────────────────
 
@@ -199,6 +203,16 @@ describe('save', () => {
 		expect(tx.update).not.toHaveBeenCalled();
 		expect(syncTagsMock).not.toHaveBeenCalled();
 	};
+
+	test('past the cap on edits, the draft comes back and nothing is uploaded or written', async () => {
+		rateLimitedMock.mockResolvedValueOnce(LIMITED);
+		const result = await save({ ...UNCHANGED, servings: '8' }, { file: photoFile('a.png') });
+		expect(result).toMatchObject(LIMITED_FAILURE);
+		expect(result.data).toMatchObject({ draft: { servings: '8' } });
+		expect(rateLimitedMock).toHaveBeenCalledWith('edits', OWNER.id);
+		expect(uploadMock).not.toHaveBeenCalled();
+		expect(transactionMock).not.toHaveBeenCalled();
+	});
 
 	test('a lapsed session returns 401 with the draft, so nothing typed is lost', async () => {
 		const result = await save({ ...UNCHANGED, servings: '8' }, { user: null });

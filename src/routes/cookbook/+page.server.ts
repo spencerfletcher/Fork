@@ -36,6 +36,7 @@ import {
 	type CookbookView
 } from './filters.js';
 import type { Actions, PageServerLoad } from './$types';
+import { rateLimited } from '#lib/server/rateLimit.js';
 import { privatePage } from '#lib/seo.js';
 
 const META = privatePage('Cookbook');
@@ -222,6 +223,8 @@ export const actions: Actions = {
 	createCollection: async ({ request, locals: { user } }) => {
 		if (!user) return signedOut();
 		const name = text(await request.formData(), 'name');
+		const limited = await rateLimited('collections', user.id);
+		if (limited) return failure(429, 'rate_limited', limited, { name, intent: 'create' });
 		const result = await createCollection(user.id, name);
 		if ('error' in result) return failure(400, 'invalid', result.error, { name, intent: 'create' });
 		throw redirect(303, `/cookbook?collection=${result.id}`);
@@ -278,6 +281,8 @@ export const actions: Actions = {
 		const { form, ids } = await selection(request);
 		const name = text(form, 'name');
 		if (!ids) return failure(400, 'invalid', BAD_FORM);
+		const limited = await rateLimited('collections', user.id);
+		if (limited) return failure(429, 'rate_limited', limited, { name });
 		const made = await newCollectionWith(user, name, ids);
 		if ('error' in made) return failure(400, 'invalid', made.error, { name });
 		const { id, ...counts } = made;
