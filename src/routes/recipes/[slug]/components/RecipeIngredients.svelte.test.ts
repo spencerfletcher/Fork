@@ -284,15 +284,13 @@ describe('RecipeIngredients', () => {
 		expect(rows()[0]).toHaveTextContent('½ onion (≈55g)');
 	});
 
-	// The scaler moved to the facts line (12 November 2026): the eyebrow row
-	// holds the heading alone, above the one rule.
-	test('the eyebrow row holds the heading alone, above the one rule', () => {
+	// The rule is the heading's own border, as Method's is, so below 1024,
+	// where the tabs stand in for the h2s and hide them, no empty rule is left.
+	test('the one rule is the heading’s own border, with no wrapper row', () => {
 		renderWith(LINES, [null, null, null]);
 		const heading = screen.getByRole('heading', { name: 'Ingredients' });
-		const row = heading.parentElement!;
-		expect(row.children).toHaveLength(1);
-		expect(row).toHaveClass('border-b');
-		expect(heading).not.toHaveClass('border-b');
+		expect(heading).toHaveClass('border-b');
+		expect(heading.parentElement!.tagName).toBe('SECTION');
 	});
 
 	// Spencer: scaled items in the accent "to show that it's an estimate".

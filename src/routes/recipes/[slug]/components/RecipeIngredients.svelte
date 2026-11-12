@@ -71,10 +71,9 @@
 </script>
 
 <section id="ingredients" class="mb-3 scroll-mt-14">
-	<!-- The eyebrow above the one rule; the scaler is in the facts line. -->
-	<div class="border-border mb-1 flex flex-wrap items-baseline gap-x-4 border-b pb-2">
-		<h2 class="eyebrow-label">Ingredients</h2>
-	</div>
+	<!-- The rule is the heading's own, as Method's, so it hides with the h2
+	     below 1024 where the tabs stand in for it. -->
+	<h2 class="eyebrow-label border-border mb-1 border-b pb-2">Ingredients</h2>
 	<div>
 		{#each ingredients as typed, i (i)}
 			{@const { ingredient, grams: result, written, scaled: scaledRow } = shown(typed, i)}
