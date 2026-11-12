@@ -197,9 +197,9 @@
 	}
 
 	/* A phone's New recipe: the marigold square, 32px, centred in a 44px
-	   target, as the avatar's disc is. */
+	   target, as the avatar's disc is. Its display is set below 768 only: an
+	   unlayered one here would beat md:hidden and show it beside the words. */
 	.nav-plus {
-		display: flex;
 		align-items: center;
 		justify-content: center;
 		width: 44px;
@@ -276,6 +276,10 @@
 	/* A phone has no menu: Log in and the brand are thumb targets,
 	   44px tall inside the 52px bar, text where it was. */
 	@media (max-width: 767px) {
+		.nav-plus {
+			display: flex;
+		}
+
 		/* :not(.hidden): Sign up stays a desktop link. */
 		.nav-brand,
 		.navbar-link:not(.hidden) {

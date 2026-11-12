@@ -92,6 +92,22 @@ test.describe('Cookbook filter row', () => {
 	}
 });
 
+test('one New recipe in the bar at each width: the words from 768, the + below', async ({
+	page
+}) => {
+	const bar = page.getByRole('navigation', { name: 'Site' });
+	for (const [width, name] of [
+		[1280, '+ New recipe'],
+		[768, '+ New recipe'],
+		[390, 'New recipe']
+	] as const) {
+		await page.setViewportSize({ width, height: 900 });
+		await gotoHydrated(page, '/cookbook');
+		await expect(bar.getByRole('link', { name: /New recipe/ })).toHaveCount(1);
+		await expect(bar.getByRole('link', { name, exact: true })).toBeVisible();
+	}
+});
+
 test.describe('Navbar at 768, signed in', () => {
 	test('the bar holds one row: links, the initial and the action fit', async ({ page }) => {
 		await page.setViewportSize({ width: 768, height: 900 });

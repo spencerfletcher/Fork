@@ -147,6 +147,14 @@ describe('Navbar signed in', () => {
 		expect(cssRule(style, '.nav-plus span')).toMatch(/background:\s*var\(--color-marigold\)/);
 	});
 
+	// An unlayered display on the link would beat Tailwind's layered md:hidden
+	// and put a second New recipe beside the words at desktop.
+	test('the + takes its display only below 768, so md:hidden hides it from 768', () => {
+		const rules = style.split(/@media[^{]*\{/);
+		expect(cssRule(rules[0], '.nav-plus')).not.toMatch(/display:/);
+		expect(style).toMatch(/@media \(max-width: 767px\) \{\s*\.nav-plus \{\s*display: flex;/);
+	});
+
 	test('New recipe is current on /recipes/new only', () => {
 		page.url = new URL('http://localhost/recipes/new');
 		render(Navbar, { props: { user: signedIn(), profile } });
