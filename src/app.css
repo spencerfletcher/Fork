@@ -1242,6 +1242,14 @@
 		grid-column: 1 / -1;
 	}
 
+	/* Link open, the Add button gone: Source takes the whole column too, not
+	   the box beside an empty column and its gap. */
+	@media (max-width: 899px) {
+		.field-row.source-row:has(> .field + .field) {
+			grid-template-columns: minmax(0, 1fr);
+		}
+	}
+
 	.field-row > .add-line {
 		align-self: end;
 		min-height: 41px;
