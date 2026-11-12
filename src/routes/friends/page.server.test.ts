@@ -4,6 +4,7 @@ import { MAX_REPORT, OWN_LIKE } from '#lib/server/friends.js';
 import { actions, load } from './+page.server';
 import { SESSION_ENDED } from '#lib/server/actions.js';
 import { ENTRIES_PER_PAGE } from '#lib/server/journal.js';
+import { LIMITED, LIMITED_FAILURE } from '#lib/testing/rateLimit.js';
 
 const m = vi.hoisted(() => ({
 	findProfile: vi.fn(),
@@ -18,7 +19,8 @@ const m = vi.hoisted(() => ({
 	report: vi.fn(),
 	feedFor: vi.fn(),
 	requestsFor: vi.fn(),
-	friendIdsOf: vi.fn()
+	friendIdsOf: vi.fn(),
+	rateLimited: vi.fn()
 }));
 
 vi.mock('#lib/server/db/index.js', () => ({
@@ -42,6 +44,7 @@ vi.mock('#lib/server/visibility.js', async (importOriginal) => ({
 	...(await importOriginal<typeof import('#lib/server/visibility.js')>()),
 	friendIdsOf: m.friendIdsOf
 }));
+vi.mock('#lib/server/rateLimit.js', () => ({ rateLimited: m.rateLimited }));
 vi.mock('#lib/server/profiles.js', () => ({ ensureProfile: vi.fn().mockResolvedValue(undefined) }));
 
 const ME = { id: 'me' };
@@ -56,6 +59,24 @@ const run = (
 beforeEach(() => {
 	vi.clearAllMocks();
 	m.findProfile.mockResolvedValue(THEM);
+	m.rateLimited.mockResolvedValue(null);
+});
+
+describe('rate limits', () => {
+	test('a friend request past the cap is refused before it is sent', async () => {
+		m.rateLimited.mockResolvedValue(LIMITED);
+		expect(await run('request', { userId: THEM.id })).toMatchObject(LIMITED_FAILURE);
+		expect(m.rateLimited).toHaveBeenCalledWith('friendRequests', ME.id);
+		expect(m.sendRequest).not.toHaveBeenCalled();
+	});
+
+	test('a report past the cap is refused before it is filed', async () => {
+		m.rateLimited.mockResolvedValue(LIMITED);
+		const fields = { targetType: 'log_entry', targetId: '5', reason: 'Spam' };
+		expect(await run('report', fields)).toMatchObject(LIMITED_FAILURE);
+		expect(m.rateLimited).toHaveBeenCalledWith('reports', ME.id);
+		expect(m.report).not.toHaveBeenCalled();
+	});
 });
 
 describe('friends load', () => {
@@ -192,6 +213,8 @@ describe('report', () => {
 
 	test.each([
 		[{ targetType: 'comment', targetId: '5', reason: 'x' }],
+		// /report's own target, never the feed's.
+		[{ targetType: 'link', targetId: '/x', reason: 'x' }],
 		[{ targetType: 'user', targetId: 'them', reason: ' ' }],
 		[{ targetType: 'user', targetId: 'them', reason: 'x'.repeat(MAX_REPORT + 1) }]
 	])('%o is refused', async (fields) => {
