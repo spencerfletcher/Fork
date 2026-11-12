@@ -124,7 +124,7 @@ describe('Navbar signed out', () => {
 });
 
 describe('Navbar signed in', () => {
-	test('New recipe, from 768: the Cookbook header carries it on a phone', () => {
+	test('New recipe, from 768: the words, marigold', () => {
 		render(Navbar, { props: { user: signedIn(), profile } });
 		const cta = screen.getByRole('link', { name: '+ New recipe' });
 		expect(cta).toHaveAttribute('href', '/recipes/new');
@@ -132,10 +132,29 @@ describe('Navbar signed in', () => {
 		expect(cta).toHaveClass('md:inline-block');
 	});
 
+	// display:none at the other width, so a screen reader meets one of the two.
+	test('below 768 a + named New recipe sits before Search, a 44px target on a marigold square', () => {
+		const { container } = render(Navbar, { props: { user: signedIn(), profile } });
+		const plus = screen.getByRole('link', { name: 'New recipe' });
+		expect(plus).toHaveAttribute('href', '/recipes/new');
+		expect(plus).toHaveClass('md:hidden');
+		expect(plus.compareDocumentPosition(screen.getByRole('link', { name: 'Search' }))).toBe(
+			Node.DOCUMENT_POSITION_FOLLOWING
+		);
+		expect(container.querySelectorAll('a[href="/recipes/new"]')).toHaveLength(2);
+		expect(cssRule(style, '.nav-plus')).toMatch(/width:\s*44px/);
+		expect(cssRule(style, '.nav-plus')).toMatch(/height:\s*44px/);
+		expect(cssRule(style, '.nav-plus span')).toMatch(/background:\s*var\(--color-marigold\)/);
+	});
+
 	test('New recipe is current on /recipes/new only', () => {
 		page.url = new URL('http://localhost/recipes/new');
 		render(Navbar, { props: { user: signedIn(), profile } });
 		expect(screen.getByRole('link', { name: '+ New recipe' })).toHaveAttribute(
+			'aria-current',
+			'page'
+		);
+		expect(screen.getByRole('link', { name: 'New recipe' })).toHaveAttribute(
 			'aria-current',
 			'page'
 		);

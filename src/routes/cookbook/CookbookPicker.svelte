@@ -1,4 +1,20 @@
+<script lang="ts" module>
+	// Shared with the page's View sheet, whose rows are this picker's rows.
+	export { mark };
+
+	/** A click for a new tab or window is the browser's. */
+	export const modified = (e: MouseEvent) => e.metaKey || e.ctrlKey || e.shiftKey || e.altKey;
+
+	/** Menu items take Space as well as Enter; a link alone takes Enter. */
+	export function spaceTakes(e: KeyboardEvent) {
+		if (e.key !== ' ') return;
+		e.preventDefault();
+		(e.currentTarget as HTMLElement).click();
+	}
+</script>
+
 <script lang="ts">
+	import type { Snippet } from 'svelte';
 	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
@@ -7,6 +23,7 @@
 	import Dropdown from '#lib/components/ui/Dropdown.svelte';
 	import FieldError from '#lib/components/ui/FieldError.svelte';
 	import { chevronIcon, plusIcon } from '#lib/components/Icons.svelte';
+	import CookbookSheet from './CookbookSheet.svelte';
 	import { pendingEnhance } from '#lib/pendingEnhance.svelte.js';
 	import { COLLECTION_NAME_MAX } from '#lib/collections.js';
 	import { hrefWith } from '#lib/listPage.js';
@@ -26,7 +43,9 @@
 		collection,
 		allTags,
 		selectedTags,
-		total
+		total,
+		beside,
+		viewPills = []
 	}: {
 		collections: { id: number; name: string; count: number }[];
 		collection: { id: number; name: string } | null;
@@ -35,6 +54,10 @@
 		selectedTags: string[];
 		/** The current list's count, for Show N recipes. */
 		total: number;
+		/** Drawn after the buttons, before the pills (a phone's View). */
+		beside?: Snippet;
+		/** A phone's further pills after the tags' (View's sort and Mine or Saved), each a link that undoes it; gone from 768, where the controls show it. */
+		viewPills?: { label: string; href: string }[];
 	} = $props();
 
 	type Group = 'collections' | 'tags';
@@ -118,27 +141,18 @@
 		if (closes) closePanel?.();
 	}
 
-	// A click for a new tab or window is the browser's.
-	const modified = (e: MouseEvent) => e.metaKey || e.ctrlKey || e.shiftKey || e.altKey;
-
-	// Menu items take Space as well as Enter; a link alone takes Enter.
-	function spaceTakes(e: KeyboardEvent) {
-		if (e.key !== ' ') return;
-		e.preventDefault();
-		(e.currentTarget as HTMLElement).click();
-	}
-
-	// A pill's tag dropped in place; focus to the pill now in its place, else
+	// A pill dropped in place; focus to the shown pill now in its place, else
 	// the one before, else Tags.
 	let pills: HTMLElement | undefined = $state();
 	let tagsButton: HTMLElement | undefined = $state();
-	async function dropTag(e: MouseEvent, slug: string) {
+	async function drop(e: MouseEvent, href: string, at: number) {
 		if (modified(e)) return;
-		const at = selectedTags.indexOf(slug);
 		e.preventDefault();
-		await goto(toggledHref(slug), { reset: false });
+		await goto(href, { reset: false });
 		await tick();
-		const left = pills?.querySelectorAll<HTMLElement>('a') ?? [];
+		const left = [...(pills?.querySelectorAll<HTMLElement>('a') ?? [])].filter(
+			(a) => a.checkVisibility?.() ?? true
+		);
 		(left[at] ?? left[at - 1] ?? tagsButton)?.focus();
 	}
 
@@ -209,18 +223,13 @@
 			</div>
 		{/snippet}
 		{#snippet panel(close)}
-			<!-- A phone's backdrop: the page and the tab bar under the sheet read as
-			     inactive, and a press on them closes it. Inside the dropdown, so the
-			     press is the picker's own. -->
-			<div class="picker-scrim" aria-hidden="true" onclick={close}></div>
-			<div
-				class="menu-panel picker-panel"
-				id={PANEL_ID}
-				{@attach () => {
-					closePanel = close;
-					return () => (closePanel = undefined);
-				}}>
-				<div class="picker-find">
+			<CookbookSheet id={PANEL_ID} class="picker-panel" {total} {close}>
+				<div
+					class="picker-find"
+					{@attach () => {
+						closePanel = close;
+						return () => (closePanel = undefined);
+					}}>
 					<label for="picker-find" class="sr-only">Find a collection or tag</label>
 					<input
 						id="picker-find"
@@ -333,32 +342,36 @@
 						<FieldError name="picker-new-collection" error={creating.error} />
 					</form>
 				{/if}
-				<!-- A phone's way back to the recipes, the count as it stands now. -->
-				<div class="picker-foot">
-					<button type="button" class="btn-primary picker-show" onclick={close}>
-						Show {plural(total, 'recipe')}
-					</button>
-				</div>
-			</div>
+			</CookbookSheet>
 		{/snippet}
 	</Dropdown>
 </div>
 
-{#if selectedTags.length > 0}
+{@render beside?.()}
+
+{#if selectedTags.length > 0 || viewPills.length > 0}
 	<div class="picker-pills" bind:this={pills}>
-		{#each selectedTags as slug (slug)}
+		{#each selectedTags as slug, i (slug)}
 			{@const tag = allTags.find((t) => t.slug === slug)}
-			<a
-				href={toggledHref(slug)}
-				class="tag picker-pill"
-				aria-label="Remove {tag?.name ?? slug}"
-				onclick={(e) => dropTag(e, slug)}>
-				{tag?.name ?? slug}
-				<span aria-hidden="true">×</span>
-			</a>
+			{@render pill(tag?.name ?? slug, toggledHref(slug), i, false)}
+		{/each}
+		{#each viewPills as p, i (p.label)}
+			{@render pill(p.label, p.href, selectedTags.length + i, true)}
 		{/each}
 	</div>
 {/if}
+
+{#snippet pill(label: string, href: string, at: number, phone: boolean)}
+	<a
+		{href}
+		class="tag picker-pill"
+		class:view-pill={phone}
+		aria-label="Remove {label}"
+		onclick={(e) => drop(e, href, at)}>
+		{label}
+		<span aria-hidden="true">×</span>
+	</a>
+{/snippet}
 
 <!-- Without script the panel never opens: the two groups as plain links. -->
 <noscript>
@@ -471,8 +484,9 @@
 
 	/* The words, then the chevron, centred on their line by the row. The
 	   select's own look (app.css), so the row's controls share one light edge
-	   with Sort beside them (owner, 12 November 2026: "lighten to match"). */
-	.picker-trigger {
+	   with Sort beside them (owner, 12 November 2026: "lighten to match").
+	   Global: a phone's View, the page's, is the same button. */
+	:global(.picker-trigger) {
 		display: inline-flex;
 		align-items: center;
 		gap: 8px;
@@ -483,8 +497,8 @@
 
 	/* Both buttons control the open panel; the band marks the group it shows,
 	   and the ghost's hover. */
-	.picker-trigger.showing,
-	.picker-trigger:hover {
+	:global(.picker-trigger.showing),
+	:global(.picker-trigger:hover) {
 		background: var(--color-band);
 	}
 
@@ -502,13 +516,16 @@
 	}
 
 	/* Under the buttons from their left edge, wider than a menu. Dropdown's
-	   panel look; only its place and width are the picker's. */
-	.picker :global(.menu-panel.picker-panel) {
-		right: auto;
-		left: 0;
-		top: calc(100% + 6px);
-		width: 22rem;
-		max-width: calc(100vw - 36px);
+	   panel look; only its place and width are the picker's. A phone's is
+	   CookbookSheet's. */
+	@media (min-width: 768px) {
+		.picker :global(.menu-panel.picker-panel) {
+			right: auto;
+			left: 0;
+			top: calc(100% + 6px);
+			width: 22rem;
+			max-width: calc(100vw - 36px);
+		}
 	}
 
 	.picker-find {
@@ -621,13 +638,6 @@
 		flex-basis: 100%;
 	}
 
-	/* Show N recipes and the backdrop are a phone's; a desktop panel closes on
-	   a press outside. */
-	.picker-foot,
-	.picker-scrim {
-		display: none;
-	}
-
 	.picker-pills {
 		display: flex;
 		flex-wrap: wrap;
@@ -642,11 +652,24 @@
 		gap: 6px;
 	}
 
-	/* A phone: the buttons share their row half and half, and the panel is a
-	   sheet over the foot of the screen, over the tab bar (z-index 40), so
-	   neither the bar nor anything else covers Show N recipes. */
+	/* From 768, and without script, the Sort select and the segments show
+	   what these say. */
+	@media (min-width: 768px), (scripting: none) {
+		.view-pill {
+			display: none;
+		}
+	}
+
+	/* A phone: the buttons share their row half and half, less View's 44px
+	   beside them (the page's), the pills on their own lines under them; the
+	   panel is CookbookSheet's sheet. */
 	@media (max-width: 767px) {
 		.picker {
+			flex: 1 1 0;
+			min-width: 0;
+		}
+
+		.picker-pills {
 			flex: 1 1 100%;
 		}
 
@@ -657,45 +680,10 @@
 			min-width: 0;
 		}
 
-		.picker :global(.menu-panel.picker-panel) {
-			position: fixed;
-			top: auto;
-			right: 0;
-			bottom: 0;
-			left: 0;
-			z-index: 51;
-			width: auto;
-			max-width: none;
-			max-height: 80dvh;
-			padding-bottom: calc(6px + env(safe-area-inset-bottom));
-			border-width: 1px 0 0;
-			border-radius: var(--radius-md) var(--radius-md) 0 0;
-		}
-
-		/* Over the tab bar (40) and the top bar (50, earlier in the page, so
-		   the same layer covers it), under the sheet; the page's ink, faint. */
-		.picker-scrim {
-			display: block;
-			position: fixed;
-			inset: 0;
-			z-index: 50;
-			background: color-mix(in srgb, var(--color-text) 32%, transparent);
-		}
-
 		.picker-lists {
 			max-height: none;
 			flex: 1 1 auto;
 			min-height: 0;
-		}
-
-		.picker-foot {
-			display: block;
-			padding: 8px 6px 2px;
-			border-top: 1px solid var(--color-border);
-		}
-
-		.picker-show {
-			width: 100%;
 		}
 
 		/* The 24px pill reaches 44px for a finger, into the row gaps around it

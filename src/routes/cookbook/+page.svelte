@@ -8,16 +8,19 @@
 	import EmptyPanel from '#lib/components/ui/EmptyPanel.svelte';
 	import ResultStatus from '#lib/components/ui/ResultStatus.svelte';
 	import ShowMore from '#lib/components/ui/ShowMore.svelte';
+	import Dropdown from '#lib/components/ui/Dropdown.svelte';
 	import CookbookDrafts from './CookbookDrafts.svelte';
-	import CookbookPicker from './CookbookPicker.svelte';
+	import CookbookPicker, { mark, modified, spaceTakes } from './CookbookPicker.svelte';
+	import CookbookSheet from './CookbookSheet.svelte';
 	import CookbookSort from './CookbookSort.svelte';
 	import SelectBar from './SelectBar.svelte';
 	import { selection } from './selection.svelte.js';
-	import { hrefWith, withoutPlace } from '#lib/listPage.js';
+	import { CARD_SORTS, hrefWith, withoutPlace, type CardSort } from '#lib/listPage.js';
 	import { pagedList } from '#lib/pagedList.svelte.js';
 	import {
 		COOKBOOK_FILTERS,
 		COOKBOOK_VIEWS,
+		SORT_LABELS,
 		type CookbookFilter,
 		type CookbookView
 	} from './filters.js';
@@ -51,6 +54,33 @@
 	// Grid is named too, not dropped: the device may remember List, and the
 	// URL wins over it (the server keeps the choice for this device).
 	const viewHref = (view: CookbookView) => hrefWith(page.url, { view });
+
+	// The newest change is the bare order, as the Sort select writes it.
+	const sortHref = (sort: CardSort) =>
+		hrefWith(page.url, { sort: sort === 'newest' ? null : sort });
+
+	// A phone's View sheet holds the order and All · Mine · Saved; with it
+	// closed, a choice other than the default still shows, as a pill that
+	// undoes it. A sort a search has set aside waits unshown.
+	const viewPills = $derived([
+		...(data.sort !== 'newest' && !data.searchQuery
+			? [{ label: SORT_LABELS[data.sort], href: sortHref('newest') }]
+			: []),
+		...(data.filter !== 'all' ? [{ label: LABELS[data.filter], href: filterHref('all') }] : [])
+	]);
+
+	const VIEW_SHEET = 'cookbook-view-sheet';
+	let viewButton = $state<HTMLButtonElement>();
+
+	// A link in the View sheet goes in place, as the picker's rows do, then
+	// the sheet closes with focus back on View.
+	async function pick(e: MouseEvent, close: () => void) {
+		const link = e.target instanceof Element ? e.target.closest('a[href]') : null;
+		if (!link || modified(e)) return;
+		e.preventDefault();
+		await goto(link.getAttribute('href')!, { reset: false });
+		close();
+	}
 
 	// The library changed (a card's ⋯, select mode's bar). The page loads
 	// again at the URL the address bar shows, `?page=N` from Show more
@@ -100,15 +130,22 @@
 	const sel = selection(() => withoutPlace(page.url.searchParams).toString());
 	const chosen = $derived(list.items.filter((r) => sel.has(r.id)));
 	let selectButton = $state<HTMLButtonElement>();
+	// Where leaving hands focus: the row's Select, or a phone's View.
+	let selectFrom: 'row' | 'view' = 'row';
 
 	// Select needs script, so it is drawn only once the page has it.
 	let hydrated = $state(false);
 	onMount(() => (hydrated = true));
 
+	function startSelect(from: 'row' | 'view') {
+		selectFrom = from;
+		sel.start();
+	}
+
 	async function leaveSelect() {
 		sel.stop();
 		await tick();
-		selectButton?.focus();
+		(selectFrom === 'view' ? viewButton : selectButton)?.focus();
 	}
 
 	const choosing = (recipe: { id: number }) =>
@@ -119,26 +156,21 @@
 
 <div class="page">
 	<div class="page-inner">
-		<div class="page-head cookbook-head">
-			<div>
-				<!-- Focusable for the Drafts list, which hands focus here once its last row goes. -->
-				<h1 tabindex="-1">Cookbook</h1>
-				<!-- What a card's ⋯ just took away; empty until then, so it is heard when it fills. -->
-				<p class="page-sub" role="status">
-					{#if removed?.how === 'trash'}
-						Moved {removed.title} to your Trash.
-						<a href="/cookbook/trash" class="inline-action">Open Trash</a>
-					{:else if removed?.how === 'collection'}
-						Removed {removed.title} from {removed.from}.
-					{:else if removed}
-						Removed your copy of {removed.title}.
-					{/if}
-				</p>
-			</div>
-			<!-- The top bar carries New recipe from 768; a phone's tab bar has no room. -->
-			{#if data.counts.all > 0}
-				<a href="/recipes/new" class="btn-primary btn-sm cookbook-new">New recipe</a>
-			{/if}
+		<!-- New recipe is the top bar's, at every width. -->
+		<div class="page-head">
+			<!-- Focusable for the Drafts list, which hands focus here once its last row goes. -->
+			<h1 tabindex="-1">Cookbook</h1>
+			<!-- What a card's ⋯ just took away; empty until then, so it is heard when it fills. -->
+			<p class="page-sub" role="status">
+				{#if removed?.how === 'trash'}
+					Moved {removed.title} to your Trash.
+					<a href="/cookbook/trash" class="inline-action">Open Trash</a>
+				{:else if removed?.how === 'collection'}
+					Removed {removed.title} from {removed.from}.
+				{:else if removed}
+					Removed your copy of {removed.title}.
+				{/if}
+			</p>
 		</div>
 
 		{#if data.user}<CookbookDrafts userId={data.user.id} />{/if}
@@ -156,20 +188,16 @@
 			{#if data.collection && data.inView.all === 0}
 				<!-- No filters over an empty collection, as over an empty cookbook, but
 				     the picker, the way to another collection. -->
-				<div class="cookbook-tools alone">{@render picker()}</div>
+				<div class="cookbook-tools alone">{@render picker(false)}</div>
 				<EmptyPanel title="Nothing in {data.collection.name} yet">
 					Open a recipe from your Cookbook and choose this collection in its ⋯ menu.
 				</EmptyPanel>
 			{:else}
+				<!-- One set of controls in the tree at any width: below 768 (with
+				     script) the segments and the Sort row are display:none and View's
+				     sheet draws the same pieces; from 768 View is display:none. -->
 				<div class="cookbook-filters">
-					<div class="seg" role="group" aria-label="Show">
-						{#each COOKBOOK_FILTERS as f (f)}
-							<a href={filterHref(f)} aria-current={data.filter === f ? 'page' : undefined}>
-								{LABELS[f]}
-								<span class="n">{data.inView[f]}</span>
-							</a>
-						{/each}
-					</div>
+					{@render showSegments()}
 					<!-- The search alone: no tags given, so no tag tabs; the chosen tags
 					     still ride along with a search, as the URL's other params do. -->
 					<SearchFilters
@@ -177,24 +205,17 @@
 						initialTags={data.selectedTags}
 						availableTags={[]} />
 					<div class="cookbook-tools">
-						{@render picker()}
+						{@render picker(true)}
 						<div class="cookbook-view">
 							<CookbookSort sort={data.sort} searching={!!data.searchQuery} />
-							<div class="seg" role="group" aria-label="View">
-								{#each COOKBOOK_VIEWS as v (v)}
-									<a href={viewHref(v)} aria-current={data.view === v ? 'page' : undefined}>
-										{@render viewIcon(v)}
-										{VIEW_LABELS[v]}
-									</a>
-								{/each}
-							</div>
+							{@render viewSegments()}
 							<!-- Gone while selecting: the bar's Cancel is the one way out. -->
 							{#if hydrated && !sel.on}
 								<button
 									type="button"
 									class="text-btn text-btn--ink cookbook-select"
 									bind:this={selectButton}
-									onclick={sel.start}>
+									onclick={() => startSelect('row')}>
 									Select
 								</button>
 							{/if}
@@ -271,13 +292,133 @@
 		onleave={leaveSelect} />
 {/if}
 
-{#snippet picker()}
+<!-- An empty collection has the picker alone, so no View and no pills of its. -->
+{#snippet picker(withView: boolean)}
 	<CookbookPicker
 		collections={data.collections}
 		collection={data.collection}
 		allTags={data.allTags}
 		selectedTags={data.selectedTags}
-		total={data.total} />
+		total={data.total}
+		beside={withView ? viewMenu : undefined}
+		viewPills={withView ? viewPills : []} />
+{/snippet}
+
+<!-- All · Mine · Saved; the page's group from 768, the sheet's (labelled by its heading) below. -->
+{#snippet showSegments(labelledby?: string)}
+	<div
+		class="seg"
+		role="group"
+		aria-label={labelledby ? undefined : 'Show'}
+		aria-labelledby={labelledby}>
+		{#each COOKBOOK_FILTERS as f (f)}
+			<a href={filterHref(f)} aria-current={data.filter === f ? 'page' : undefined}>
+				{LABELS[f]}
+				<span class="n">{data.inView[f]}</span>
+			</a>
+		{/each}
+	</div>
+{/snippet}
+
+<!-- Grid | List, the same two places. -->
+{#snippet viewSegments(labelledby?: string)}
+	<div
+		class="seg"
+		role="group"
+		aria-label={labelledby ? undefined : 'View'}
+		aria-labelledby={labelledby}>
+		{#each COOKBOOK_VIEWS as v (v)}
+			<a href={viewHref(v)} aria-current={data.view === v ? 'page' : undefined}>
+				{@render viewIcon(v)}
+				{VIEW_LABELS[v]}
+			</a>
+		{/each}
+	</div>
+{/snippet}
+
+<!-- A phone's View (P2; owner, 12 November 2026): one button beside the
+     pickers opening their sheet with Sort, Show as, All · Mine · Saved and
+     Select recipes. Every choice is a link to its URL, so a reload and Back
+     keep it. Without script a phone keeps the rows instead (the style). -->
+{#snippet viewMenu()}
+	<div class="view-menu">
+		<Dropdown>
+			{#snippet trigger({ 'aria-expanded': open, onclick })}
+				<button
+					type="button"
+					class="btn-ghost btn-sm picker-trigger view-button"
+					class:showing={open}
+					aria-label="View"
+					aria-expanded={open}
+					aria-controls={open ? VIEW_SHEET : undefined}
+					bind:this={viewButton}
+					{onclick}>
+					{@render slidersIcon()}
+				</button>
+			{/snippet}
+			{#snippet panel(close)}
+				<CookbookSheet id={VIEW_SHEET} total={data.total} {close}>
+					<!-- Clicks from the links inside, Enter on a link included. -->
+					<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
+					<div class="view-sheet" onclick={(e) => pick(e, close)}>
+						<p id="view-sort" class="eyebrow-label view-heading">Sort</p>
+						{#if data.searchQuery}
+							<p class="view-note">Best match while you search</p>
+						{:else}
+							<div role="menu" aria-labelledby="view-sort">
+								{#each CARD_SORTS as s (s)}
+									<a
+										href={sortHref(s)}
+										class="menu-row view-row"
+										role="menuitemradio"
+										aria-checked={data.sort === s}
+										onkeydown={spaceTakes}>
+										{@render mark(data.sort === s)}
+										{SORT_LABELS[s]}
+									</a>
+								{/each}
+							</div>
+						{/if}
+						<p id="view-as" class="eyebrow-label view-heading">Show as</p>
+						{@render viewSegments('view-as')}
+						<p id="view-show" class="eyebrow-label view-heading">Show</p>
+						{@render showSegments('view-show')}
+						<div class="view-select" role="menu" aria-label="Selection">
+							<button
+								type="button"
+								class="menu-row"
+								role="menuitem"
+								onclick={() => {
+									close();
+									startSelect('view');
+								}}>
+								Select recipes
+							</button>
+						</div>
+					</div>
+				</CookbookSheet>
+			{/snippet}
+		</Dropdown>
+	</div>
+{/snippet}
+
+<!-- View's mark, the sliders: drawn here alone, the 16px line art. -->
+{#snippet slidersIcon()}
+	<svg
+		class="icon"
+		width="16"
+		height="16"
+		viewBox="0 0 24 24"
+		aria-hidden="true"
+		fill="none"
+		stroke="currentColor"
+		stroke-width="2.25"
+		stroke-linecap="round"
+		stroke-linejoin="round">
+		<path d="M4 7h9M19 7h1M4 17h3M11 17h9" />
+		<circle cx="16" cy="7" r="2.5" />
+		<circle cx="9" cy="17" r="2.5" />
+	</svg>
 {/snippet}
 
 <!-- Drawn here alone, so not in Icons.svelte; its line art and 16px box. -->
@@ -305,36 +446,6 @@
 {/snippet}
 
 <style>
-	.cookbook-head {
-		display: flex;
-		align-items: flex-start;
-		justify-content: space-between;
-		gap: var(--space-4);
-	}
-
-	/* One line beside the title. */
-	.cookbook-new {
-		white-space: nowrap;
-	}
-
-	@media (min-width: 768px) {
-		.cookbook-new {
-			display: none;
-		}
-	}
-
-	/* On a phone New recipe takes its own row under the title, across the page. */
-	@media (max-width: 699px) {
-		.cookbook-head {
-			flex-direction: column;
-			align-items: stretch;
-		}
-
-		.cookbook-new {
-			width: 100%;
-		}
-	}
-
 	/* A step under the grid's 32px row gap: the first cards belong to the tags
 	   above them (Spencer, 10 November 2026: "maybe a bit tighter"). */
 	.cookbook-filters {
@@ -431,8 +542,8 @@
 		margin-left: auto;
 	}
 
-	/* A phone: the strip spans the column, three equal segments, each a 44px
-	   target inside the strip's 52px (its 3px padding and 1px border). */
+	/* A phone: a strip spans its column, equal segments, each a 44px target
+	   inside the strip's 52px (its 3px padding and 1px border). */
 	@media (max-width: 767px) {
 		.cookbook-filters > .seg {
 			align-self: stretch;
@@ -443,15 +554,70 @@
 			min-height: 44px;
 		}
 
-		/* Sort, Grid | List and Select take their own row under the pickers. */
+		/* Without script, Sort, Grid | List and Select take their own row under
+		   the pickers. */
 		.cookbook-view {
 			flex: 1 1 100%;
 		}
 
-		/* The words alone, so Sort keeps room for its longest order on the row. */
-		.seg a :global(.icon) {
+		/* The words alone there, so Sort keeps room for its longest order. */
+		.cookbook-view .seg a :global(.icon) {
 			display: none;
 		}
+
+		/* Collections, Tags and View on one row, 8px apart as the two are. */
+		.cookbook-tools {
+			column-gap: 8px;
+		}
+	}
+
+	/* With script a phone's segments and Sort row are View's sheet instead
+	   (display:none, so out of the accessibility tree too). The pickers' row
+	   is then the last before the pills and the cards. */
+	@media (max-width: 767px) and (scripting: enabled) {
+		.cookbook-filters > .seg,
+		.cookbook-view {
+			display: none;
+		}
+	}
+
+	/* And from 768, or without script, View is gone. */
+	@media (min-width: 768px), (scripting: none) {
+		.view-menu {
+			display: none;
+		}
+	}
+
+	/* A 44px square, the sliders centred by the button's own row. */
+	.view-button {
+		width: 44px;
+		padding: 0;
+		justify-content: center;
+	}
+
+	.view-heading {
+		padding: 10px 12px 6px;
+	}
+
+	.view-row {
+		gap: 10px;
+	}
+
+	.view-note {
+		padding: 0 12px 6px;
+		color: var(--color-text-2);
+	}
+
+	/* The two strips across the sheet, inset to the rows' text. */
+	.view-sheet .seg {
+		display: flex;
+		margin: 0 6px;
+	}
+
+	.view-select {
+		margin-top: 10px;
+		border-top: 1px solid var(--color-border);
+		padding-top: 4px;
 	}
 
 	/* At the tools' end, wherever they wrap. */
