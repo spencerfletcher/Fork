@@ -184,6 +184,14 @@ describe('recipe page title band', () => {
 		);
 		expect(cssRule(pageSource, '.recipe-photo img')).toMatch(/aspect-ratio: 4 \/ 3;/);
 	});
+
+	test("on a phone a focused row's foot clears the tab bar, not only the screen's edge", () => {
+		// The page's 6px would otherwise override app.css's room for the bar.
+		expect(cssRule(pageSource, ':global(html:has(#recipe))')).toMatch(/scroll-padding-block: 6px;/);
+		expect(pageSource).toMatch(
+			/@media \(max-width: 767px\) \{\s*:global\(html:has\(#recipe\)\) \{\s*scroll-padding-bottom: calc\(63px \+ env\(safe-area-inset-bottom\)\);/
+		);
+	});
 });
 
 describe('recipe page signed in', () => {

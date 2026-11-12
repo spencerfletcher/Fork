@@ -318,6 +318,15 @@
 		scroll-padding-block: 6px;
 	}
 
+	/* Phone: clear of the pinned tab bar too, its 57px (app.css,
+	   html:has(.tab-bar)) and the same 6px, for a focused row and for the
+	   room the ⋯ menu measures below it. */
+	@media (max-width: 767px) {
+		:global(html:has(#recipe)) {
+			scroll-padding-bottom: calc(63px + env(safe-area-inset-bottom));
+		}
+	}
+
 	/* The list pages' box, .page's gutters around .page-inner, so the edges
 	   match Cookbook's: the band full-bleed outside it, the body below. Each
 	   sets its own spacing above and below. */
