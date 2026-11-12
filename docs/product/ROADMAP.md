@@ -160,7 +160,7 @@ Cookbook lane:
 | Item | What it is | Status | Source |
 | --- | --- | --- | --- |
 | Mobile cooking refinement | Obvious blockers earlier; keep overview and place; zoom; tick affordance compared side by side on real cooking tasks (16px marigold circle with 44px phone hit stays until then) | later | R, DS, M18, M20, C10 |
-| Scaler workstream | S01 to S08: one field for `50%`, `1/2`, `0.5` plus a slider, scale to an ingredient on hand, persistent scaled state, faithful ranges | later | DD |
+| Scaler workstream | S01 to S08: one field for `50%`, `1/2`, `0.5` plus a slider, scale to an ingredient on hand, persistent scaled state, faithful ranges. S01 (one field) and S04 (persistent scaled state, explicit Reset) built 12 November 2026 | later | DD |
 | Units and temperature | Reversible display conversion; exact same-dimension math first; density estimates need ingredient and preparation context; carefully sourced gram coverage | later | R, CM, M12 |
 | Timers | Several named timers with persisted deadlines (C01 to C05); honest about browser alarm limits | later | R, DD, M11 |
 | Cooking session | Version, scale, ticks and position kept when switching (C06); columns and optional focus (C08); type size and keep-awake (C11) | later | DD |
@@ -253,7 +253,7 @@ Items waiting on Spencer's eye. Rules live in [DESIGN.md](../../DESIGN.md); the 
 | --- | --- | --- | --- |
 | Fork icon and logo | Logo decided 11 November 2026: the F. mark (G4, C3) is the logo, favicon and app icon, at G3 spacing for the period (12 Nov), and the bar and share image read "Fork."; see DESIGN.md, Logo. 1A (three tines on a round shoulder) remains the stats row's fork icon; open there: a deeper head and a handle widening toward its end, upright or on the diagonal | P1 | R, OD |
 | Cook-mode distinction | Closed 11 November 2026: Spencer's direction from the Call 3 options is built (paper cooking header, bottom Ingredients \| Method switch, Finish cooking); see DESIGN.md, Cooking | done | R, OD |
-| Serving scaler redesign | The control does not feel like Fork; a design round, with the S01 to S08 behaviour | P2 | R |
+| Serving scaler redesign | Built 12 November 2026: Scale beside the yield in the facts line opens an in-flow panel (− field +, ½×, 2×, Reset), applied as typed, with Reset in the line while scaled and closed; the cooking header carries the same; see DESIGN.md, Scale control. S01 and S04 built with it; S02's slider and S03, S05 to S08 remain | done | R, OD |
 | Tick affordance | Revisit candidate (M20) | P2 | DS |
 | Three-voice type stack | Eyebrow, Bitter heading and sans rows: keep where each adds information | revisit | DS, Z |
 | Brassier yellow | Explore a slightly less saturated yellow within the identity through full-screen comparisons; no replacement token chosen | revisit | S1, S2 |
