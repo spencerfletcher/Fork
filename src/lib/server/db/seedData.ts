@@ -4,6 +4,7 @@
 // ingredient and step text is parsed by seed.ts at insert time.
 import type { RecipeContent } from '../../recipes/types.js';
 import type { Visibility } from '../../recipes/validation.js';
+import type { LogAudience } from './schema.js';
 
 // ─── Seed data ────────────────────────────────────────────────────────────────
 
@@ -497,7 +498,7 @@ export type SeedLogEntry = {
 	photoUrl: string | null;
 	caption: string | null;
 	note: string | null;
-	audience: 'private' | 'friends';
+	audience: LogAudience;
 	createdAt: string;
 };
 
