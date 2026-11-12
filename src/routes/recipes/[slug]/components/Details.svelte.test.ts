@@ -122,10 +122,12 @@ describe('Details', () => {
 		// jsdom applies no component CSS, so the rules are read from the source.
 		// The dots are app.css's .dot-list, between the lines and between the pairs.
 		const { container } = render(Details, { props: { content: makeContent() } });
-		expect(container.querySelector('.details')).toHaveClass('dot-list');
-		expect(container.querySelector('.line')).toHaveClass('dot-list');
+		// .dot-clip: a pair or line that wraps never starts its row with a dot.
+		expect(container.querySelector('.details')).toHaveClass('dot-list', 'dot-clip');
+		expect(container.querySelector('.line')).toHaveClass('dot-list', 'dot-clip');
+		expect(cssRule(source, '.details, .line')).toMatch(/display: flex;\s*flex-wrap: wrap;/);
 		const phone = source.slice(source.indexOf('@media (max-width: 699px)'));
-		expect(cssRule(phone, '.line')).toMatch(/display: block/);
+		expect(cssRule(phone, '.line')).toMatch(/flex-basis: 100%/);
 		expect(cssRule(phone, '.line + .line::before')).toMatch(/content: none/);
 	});
 

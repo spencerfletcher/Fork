@@ -80,11 +80,11 @@
      label. A pair never splits. The dots between pairs are drawn by CSS, never
      typed. A phone gives the times and the yield a line each. -->
 {#if lines.length > 0}
-	<p class="details dot-list text-text-2 font-sans text-base leading-[1.5]">
+	<p class="details dot-list dot-clip text-text-2 font-sans text-base leading-[1.5]">
 		{#each lines as line, l (l)}
 			<!-- eslint-disable-next-line svelte/no-useless-mustaches -- a bare space between blocks is dropped -->
 			{#if l > 0}{' '}{/if}
-			<span class="line dot-list">
+			<span class="line dot-list dot-clip">
 				{#each line as [label, value], i (label)}
 					<!-- eslint-disable-next-line svelte/no-useless-mustaches -- a bare space between blocks is dropped -->
 					{#if i > 0}{' '}{/if}
@@ -139,11 +139,20 @@
 {/if}
 
 <style>
-	/* Ink 3: Rule 2 vanished into the paper (29 October 2026). The right side
-	   stands in for the typed space that used to follow the dot. Empty alt
-	   text, so a screen reader does not read it out. */
-	.details {
-		--dot-space: 0 12px 0 8px;
+	/* The lines, and the pairs in each, wrap as rows whose dots sit in the
+	   gap and clip at the paragraph's left edge (.dot-clip, app.css), so no
+	   row starts with a dot. The paragraph clips for both: a line that wraps
+	   starts at its edge. The dots are Ink 3 (Rule 2 vanished into the paper,
+	   29 October 2026); the gap is what their padding and a typed space were. */
+	.details,
+	.line {
+		display: flex;
+		flex-wrap: wrap;
+		--dot-gap: 24px;
+	}
+
+	.line {
+		clip-path: none;
 	}
 
 	/* In the line, at its size: a text button's look on the line's height,
@@ -160,7 +169,7 @@
 
 	@media (max-width: 699px) {
 		.line {
-			display: block;
+			flex-basis: 100%;
 		}
 
 		.line + .line::before {
