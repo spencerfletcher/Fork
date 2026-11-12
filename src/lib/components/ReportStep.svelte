@@ -6,8 +6,9 @@
 
 	// Report's step inside a ⋯ menu (the Friends feed's MoreMenu, a recipe's
 	// MoreActions): what's wrong, filed by the Friends route's report action,
-	// then the thanks in its place. The box takes focus as the step opens. A
-	// refusal (a lapsed session) is shown above the form, where the press was.
+	// then the thanks in its place. The box takes focus as the step opens and
+	// the form scrolls into view. A refusal (a lapsed session) is shown above
+	// the form, where the press was.
 	let { target }: { target: { type: ReportTarget; id: string } } = $props();
 
 	let reported = $state(false);
@@ -30,7 +31,12 @@
 			rows="3"
 			required
 			maxlength={MAX_REPORT}
-			{@attach (el) => el.focus()}>
+			{@attach (el) => {
+				el.focus();
+				// Focus shows the box alone; the whole step, Send report too, comes
+				// into view in the menu's panel and the page. Instant, as scrolling is.
+				el.form?.scrollIntoView?.({ block: 'nearest' });
+			}}>
 		</textarea>
 		<button type="submit" class="btn-ghost">Send report</button>
 	</form>
