@@ -1046,7 +1046,7 @@ test.describe('Recipe detail page', () => {
 		await openCookies(page);
 		// Three times the seed's rows: well past a 700px screen.
 		await page.evaluate(() => {
-			const list = document.querySelector('#ingredients div:has(> h2) + div')!;
+			const list = document.querySelector('#ingredients h2 + div')!;
 			for (let i = 0; i < 2; i++) list.append(...[...list.children].map((c) => c.cloneNode(true)));
 		});
 		const sticky = page.locator('.sidebar-sticky');
@@ -1080,7 +1080,7 @@ test.describe('Recipe detail page', () => {
 		// Three times the rows on a 700px screen: the hidden rows are signalled.
 		await page.setViewportSize({ width: 1280, height: 700 });
 		await page.evaluate(() => {
-			const list = document.querySelector('#ingredients div:has(> h2) + div')!;
+			const list = document.querySelector('#ingredients h2 + div')!;
 			for (let i = 0; i < 2; i++) list.append(...[...list.children].map((c) => c.cloneNode(true)));
 		});
 		// The fade follows a scroll timeline, which updates on the next frame.
@@ -1098,15 +1098,14 @@ test.describe('Recipe detail page', () => {
 		await openCookies(page);
 		// 25 rows: well past a 700px screen, as a long real recipe would be.
 		await page.evaluate(() => {
-			const list = document.querySelector('#ingredients div:has(> h2) + div')!;
+			const list = document.querySelector('#ingredients h2 + div')!;
 			const rows = [...list.children];
 			for (let i = 0; list.children.length < 25; i++)
 				list.append(rows[i % rows.length].cloneNode(true));
 		});
 		await page.keyboard.press('Tab');
 		await page.keyboard.press('Enter');
-		// Past the scale control's box; the loop's first Tab reaches row 1.
-		await page.keyboard.press('Tab');
+		// The loop's first Tab reaches row 1: nothing sits on the Ingredients rule.
 		const rows = page.locator('#ingredients label');
 		await expect(rows).toHaveCount(25);
 		for (let i = 0; i < 25; i++) {
@@ -1136,8 +1135,8 @@ test.describe('Recipe detail page', () => {
 			await openCookies(page);
 			await page.keyboard.press('Tab');
 			await page.keyboard.press('Enter');
-			// Past the scale control's box to the first ingredient.
-			for (let i = 0; i < 2; i++) await page.keyboard.press('Tab');
+			// Nothing sits on the Ingredients rule: the next Tab is the first ingredient.
+			await page.keyboard.press('Tab');
 			const row = page.locator('#ingredients label').first();
 			await expect(row.locator('input')).toBeFocused();
 			const m = await row.evaluate((el) => {
