@@ -15,8 +15,17 @@
 		onopen,
 		focusOnOpen
 	}: {
-		/** The consumer's button: spread the props onto it. */
-		trigger: Snippet<[{ 'aria-expanded': boolean; onclick: (e: MouseEvent) => void }]>;
+		/**
+		 * The consumer's button: spread the props onto it. `claim` makes a
+		 * pressed button the one closing hands focus back to, the panel left as
+		 * it is: a second trigger that turns an open panel (the Cookbook picker).
+		 */
+		trigger: Snippet<
+			[
+				{ 'aria-expanded': boolean; onclick: (e: MouseEvent) => void },
+				claim: (e: MouseEvent) => void
+			]
+		>;
 		/** Rendered only while open; `close` shuts it and hands focus back (Print). */
 		panel: Snippet<[close: () => void]>;
 		onopen?: () => void;
@@ -33,8 +42,12 @@
 			(el) => el !== button
 		);
 
-	async function toggle(e: MouseEvent) {
+	function claim(e: MouseEvent) {
 		if (e.currentTarget instanceof HTMLElement) button = e.currentTarget;
+	}
+
+	async function toggle(e: MouseEvent) {
+		claim(e);
 		open = !open;
 		if (open) {
 			onopen?.();
@@ -84,7 +97,7 @@
 
 <!-- svelte-ignore a11y_no_static_element_interactions (keys bubble up from the controls inside) -->
 <div class="dropdown" bind:this={root} {onkeydown} {onclick}>
-	{@render trigger({ 'aria-expanded': open, onclick: toggle })}
+	{@render trigger({ 'aria-expanded': open, onclick: toggle }, claim)}
 	{#if open}
 		{@render panel(close)}
 	{/if}

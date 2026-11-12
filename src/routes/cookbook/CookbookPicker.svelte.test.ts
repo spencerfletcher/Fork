@@ -203,6 +203,15 @@ describe('Cookbook picker', () => {
 		expect(within(menu()).queryByRole('group', { name: 'Collections' })).toBeNull();
 	});
 
+	test('turned to the other group, Escape hands focus back to the button that turned it', async () => {
+		makePicker();
+		await fireEvent.click(trigger(/^Collections$/));
+		await fireEvent.click(trigger(/^Tags$/));
+		await fireEvent.keyDown(findBox(), { key: 'Escape' });
+		expect(screen.queryByRole('menu')).toBeNull();
+		expect(trigger(/^Tags$/)).toHaveFocus();
+	});
+
 	test('on a phone the keyboard stays down: the first row takes focus, not the find box', async () => {
 		vi.stubGlobal('matchMedia', (query: string) => ({ matches: query === '(max-width: 767px)' }));
 		makePicker();

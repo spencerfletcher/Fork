@@ -75,12 +75,18 @@
 	);
 	const nothingFound = $derived(!!typed && shownCollections.length + shownTags.length === 0);
 
-	// Opened from one button with the panel already up, the panel turns to it.
-	function opener(group: Group, toggle: (e: MouseEvent) => void, open: boolean) {
+	// Opened from one button with the panel already up, the panel turns to it,
+	// and Escape then hands focus back to that button.
+	function opener(
+		group: Group,
+		toggle: (e: MouseEvent) => void,
+		claim: (e: MouseEvent) => void,
+		open: boolean
+	) {
 		return (e: MouseEvent) => {
 			const turning = open && first !== group;
 			first = group;
-			if (turning) return;
+			if (turning) return claim(e);
 			query = '';
 			naming = false;
 			toggle(e);
@@ -144,7 +150,7 @@
 
 <div class="picker">
 	<Dropdown {focusOnOpen}>
-		{#snippet trigger({ 'aria-expanded': open, onclick })}
+		{#snippet trigger({ 'aria-expanded': open, onclick }, claim)}
 			<div class="picker-buttons">
 				<button
 					type="button"
@@ -152,7 +158,7 @@
 					aria-expanded={open}
 					aria-controls={open ? PANEL_ID : undefined}
 					aria-label={collection ? `Collection: ${collection.name}` : undefined}
-					onclick={opener('collections', onclick, open)}>
+					onclick={opener('collections', onclick, claim, open)}>
 					<span class="picker-label">{collection?.name ?? 'Collections'}</span>
 					{@render chevronIcon(open && first === 'collections')}
 				</button>
@@ -162,7 +168,7 @@
 					aria-expanded={open}
 					aria-controls={open ? PANEL_ID : undefined}
 					bind:this={tagsButton}
-					onclick={opener('tags', onclick, open)}>
+					onclick={opener('tags', onclick, claim, open)}>
 					Tags
 					{@render chevronIcon(open && first === 'tags')}
 				</button>
