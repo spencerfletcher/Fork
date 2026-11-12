@@ -1,8 +1,28 @@
 import { describe, test, expect } from 'vitest';
-import { DESTINATIONS, isCurrent } from './destinations';
+import { DESTINATIONS, isCurrent, newActivityName } from './destinations';
 
 const current = (path: string) =>
 	DESTINATIONS.filter((d) => isCurrent(d, path)).map((d) => d.label);
+
+describe('newActivityName', () => {
+	const named = (path: string, unseen: boolean) =>
+		DESTINATIONS.map((d) => newActivityName(d, path, unseen));
+
+	test('Friends alone says it has something new, while the cook has anything unseen', () => {
+		expect(named('/cookbook', true)).toEqual([
+			undefined,
+			undefined,
+			undefined,
+			'Friends, new activity'
+		]);
+		expect(named('/cookbook', false).every((n) => n === undefined)).toBe(true);
+	});
+
+	// The page being looked at is the one that clears it.
+	test('not on Friends itself', () => {
+		expect(named('/friends', true).every((n) => n === undefined)).toBe(true);
+	});
+});
 
 describe('DESTINATIONS', () => {
 	// Cookbook first (Spencer, 12 November 2026), the bar and the tab bar alike.

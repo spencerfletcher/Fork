@@ -25,16 +25,25 @@ import { MAX_REPORT } from '#lib/server/moderation.js';
 import { oneOf, text, wholeNumber } from '#lib/helpers.js';
 import type { Actions, PageServerLoad } from './$types';
 import { privatePage } from '#lib/seo.js';
+import { notificationsFor } from '#lib/server/notifications.js';
+import { UNSEEN_MAX, forYou } from '#lib/notifications.js';
 
 export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 	requireUser(url, user);
-	const [friendIds, requests] = await Promise.all([friendIdsOf(user.id), requestsFor(user.id)]);
+	// Nothing here marks the notifications seen: a hover preloads this load.
+	// The page posts /notifications?/seen once it is mounted.
+	const [friendIds, requests, notifications] = await Promise.all([
+		friendIdsOf(user.id),
+		requestsFor(user.id),
+		notificationsFor(user, { limit: UNSEEN_MAX })
+	]);
 	// A page as long as the Journal's: the feed is mostly friends' entries.
 	const { items, next } = await feedFor(user, friendIds, listPage(url, ENTRIES_PER_PAGE));
 	return {
 		feed: items,
 		next,
 		requests,
+		notices: forYou(notifications),
 		friendCount: friendIds.length,
 		meta: privatePage('Friends')
 	};

@@ -22,6 +22,12 @@
 		type MeasurementChoice
 	} from '#lib/measurement.js';
 	import { EXPORT_FORMATS, FORMAT_LABEL, exportHref } from '#lib/export/archive.js';
+	import {
+		NOTIFICATION_KINDS,
+		NOTIFICATION_LABEL,
+		NOTIFICATION_NOTE,
+		type NotificationKind
+	} from '#lib/notifications.js';
 	import type { PageData } from './$types';
 	import type { Section } from './+page.server';
 
@@ -44,6 +50,7 @@
 	const usernameSave = pendingEnhance({ reset: false, keepOnError: true });
 	const audienceSave = pendingEnhance({ reset: false, keepOnError: true });
 	const measurementSave = pendingEnhance({ reset: false, keepOnError: true });
+	const notificationsSave = pendingEnhance({ reset: false, keepOnError: true });
 	const deletion = pendingEnhance({ reset: false, keepOnError: true });
 	// This device's editor drafts go with the account, once the server has deleted it.
 	const deleteAccount: SubmitFunction = async (input) => {
@@ -62,6 +69,12 @@
 	const storedMeasurement = $derived<MeasurementChoice>(data.settings.measurement ?? AS_WRITTEN);
 	// svelte-ignore state_referenced_locally
 	let measurement = $state<MeasurementChoice>(storedMeasurement);
+	// Ticked: the kinds the cook hears, every kind not muted.
+	const storedHeard = $derived(
+		NOTIFICATION_KINDS.filter((kind) => !data.settings.mutedNotifications.includes(kind))
+	);
+	// svelte-ignore state_referenced_locally
+	let heard = $state<NotificationKind[]>(storedHeard);
 
 	const resultFor = (section: Section) => (form?.section === section ? form : null);
 
@@ -82,6 +95,9 @@
 	);
 	const audienceProblem = $derived(audienceSave.error ?? resultFor('audience')?.error);
 	const measurementProblem = $derived(measurementSave.error ?? resultFor('measurement')?.error);
+	const notificationsProblem = $derived(
+		notificationsSave.error ?? resultFor('notifications')?.error
+	);
 	const deleteProblem = $derived(deletion.error ?? resultFor('delete')?.error ?? null);
 
 	// "Saved." until the value moves away from what was saved.
@@ -93,6 +109,10 @@
 	);
 	const measurementSaved = $derived(
 		!!resultFor('measurement')?.saved && measurement === storedMeasurement
+	);
+	const notificationsSaved = $derived(
+		!!resultFor('notifications')?.saved &&
+			NOTIFICATION_KINDS.every((kind) => heard.includes(kind) === storedHeard.includes(kind))
 	);
 
 	// Save was disabled while the request was out, so focus fell to the body;
@@ -113,6 +133,9 @@
 	});
 	$effect(() => {
 		if (measurementSave.error) focusProblem('measurement');
+	});
+	$effect(() => {
+		if (notificationsSave.error) focusProblem('notifications');
 	});
 </script>
 
@@ -241,6 +264,47 @@
 					measurementSaved,
 					measurementProblem,
 					'measurement-problem'
+				)}
+			</form>
+		</section>
+
+		<section class="setting" aria-labelledby="notifications-heading">
+			<div class="setting-head">
+				<h2 id="notifications-heading">Notifications</h2>
+				<p class="setting-note">What shows as new on Friends.</p>
+			</div>
+			<form
+				method="POST"
+				action="?/notifications"
+				class="form setting-body"
+				use:enhance={notificationsSave.submit}>
+				<fieldset class="kinds">
+					<legend class="field-legend">Tell me about</legend>
+					<!-- The strike rows' checkbox: a hidden native box, the row its label. -->
+					{#each NOTIFICATION_KINDS as kind (kind)}
+						<label class="kind">
+							<input
+								type="checkbox"
+								class="sr-only"
+								name="heard"
+								value={kind}
+								bind:group={heard}
+								aria-labelledby="heard-{kind}"
+								aria-describedby="heard-{kind}-note" />
+							<span class="kind-word">
+								<span class="tick" aria-hidden="true"></span>
+								<b id="heard-{kind}">{NOTIFICATION_LABEL[kind]}</b>
+							</span>
+							<span class="kind-note" id="heard-{kind}-note">{NOTIFICATION_NOTE[kind]}</span>
+						</label>
+					{/each}
+				</fieldset>
+				<p class="form-hint">To hear less from one cook, mute them from their ⋯ on Friends.</p>
+				{@render saveRow(
+					notificationsSave.pending,
+					notificationsSaved,
+					notificationsProblem,
+					'notifications-problem'
 				)}
 			</form>
 		</section>
@@ -414,6 +478,40 @@
 		flex-direction: column;
 		gap: var(--space-1);
 		padding-left: 1.25em;
+	}
+
+	.kinds {
+		display: flex;
+		flex-direction: column;
+	}
+
+	/* A 44px row: the tick centred on the word's line, the sentence under the word. */
+	.kind {
+		display: block;
+		min-height: 44px;
+		padding: 8px 0;
+		cursor: pointer;
+	}
+
+	.kind-word {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		font-weight: 600;
+	}
+
+	/* Under the word, past the 16px tick and its 12px gap. */
+	.kind-note {
+		display: block;
+		padding-left: 28px;
+		font-size: 0.875rem;
+		line-height: 1.45;
+		color: var(--color-text-2);
+	}
+
+	.kind:has(:focus-visible) .tick {
+		outline: 2px solid var(--color-accent);
+		outline-offset: 2px;
 	}
 
 	/* The typed name takes the step's first line, the buttons the next. */

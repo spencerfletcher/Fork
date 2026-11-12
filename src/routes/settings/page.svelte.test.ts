@@ -16,12 +16,14 @@ import {
 	type Measurement
 } from '#lib/measurement.js';
 
+import { NOTIFICATION_KINDS, NOTIFICATION_LABEL, NOTIFICATION_NOTE } from '#lib/notifications.js';
+
 vi.mock('$app/forms', () => ({ enhance: () => ({ destroy: () => {} }) }));
 
 const data = (defaultVisibility: Visibility = 'friends') =>
 	({
 		email: 'cook@example.com',
-		settings: { username: 'cook', defaultVisibility, measurement: null }
+		settings: { username: 'cook', defaultVisibility, measurement: null, mutedNotifications: [] }
 	}) as never;
 
 const renderPage = (form: unknown = null, d = data()) =>
@@ -78,12 +80,69 @@ describe('Your data section', () => {
 	});
 });
 
+describe('Notifications section', () => {
+	const group = () => screen.getByRole('group', { name: 'Tell me about' });
+	const withMuted = (mutedNotifications: string[]) =>
+		({
+			email: 'cook@example.com',
+			settings: {
+				username: 'cook',
+				defaultVisibility: 'friends',
+				measurement: null,
+				mutedNotifications
+			}
+		}) as never;
+
+	test('one box per kind, in its words and sentence, ticked unless muted', () => {
+		const [muted] = NOTIFICATION_KINDS.slice(-1);
+		renderPage(null, withMuted([muted]));
+		expect(
+			within(section('Notifications')).getByText('What shows as new on Friends.')
+		).toBeInTheDocument();
+		for (const kind of NOTIFICATION_KINDS) {
+			const box = within(group()).getByRole('checkbox', { name: NOTIFICATION_LABEL[kind] });
+			expect(box).toHaveAccessibleDescription(NOTIFICATION_NOTE[kind]);
+			expect(box).toHaveProperty('checked', kind !== muted);
+			expect(box).toHaveAttribute('name', 'heard');
+			expect(box).toHaveAttribute('value', kind);
+		}
+		expect(group().closest('form')).toHaveAttribute('action', '?/notifications');
+	});
+
+	test('a save says Saved in this section only, until a box changes', async () => {
+		renderPage({ section: 'notifications', saved: true }, withMuted([]));
+		const saved = within(section('Notifications')).getByRole('status');
+		expect(saved).toHaveTextContent('Saved.');
+		expect(within(section('Measurement')).queryByText('Saved.')).toBeNull();
+		await fireEvent.click(
+			within(group()).getByRole('checkbox', { name: NOTIFICATION_LABEL[NOTIFICATION_KINDS[0]] })
+		);
+		expect(saved).toHaveTextContent('');
+	});
+
+	test('a refusal shows in this section, focused', async () => {
+		renderPage(
+			{ section: 'notifications', code: 'unauthenticated', error: SESSION_ENDED('save again') },
+			withMuted([])
+		);
+		await tick();
+		const alert = within(section('Notifications')).getByRole('alert');
+		expect(alert).toHaveTextContent(SESSION_ENDED('save again'));
+		expect(alert).toHaveFocus();
+	});
+});
+
 describe('Measurement section', () => {
 	const group = () => screen.getByRole('group', { name: 'Show quantities in' });
 	const withMeasurement = (measurement: Measurement | null) =>
 		({
 			email: 'cook@example.com',
-			settings: { username: 'cook', defaultVisibility: 'friends', measurement }
+			settings: {
+				username: 'cook',
+				defaultVisibility: 'friends',
+				measurement,
+				mutedNotifications: []
+			}
 		}) as never;
 
 	test('As written, Metric and US, in their words and sentences; unset is As written', () => {

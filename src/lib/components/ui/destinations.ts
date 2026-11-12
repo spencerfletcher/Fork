@@ -16,3 +16,17 @@ export function isCurrent(destination: Destination, path: string): boolean {
 	if (destination.href === '/discover' && (path === '/' || path.startsWith('/tags/'))) return true;
 	return path === destination.href || path.startsWith(`${destination.href}/`);
 }
+
+/**
+ * Friends' name while it has something the cook has not seen (`unseen`, the
+ * root layout's), else undefined: the bar and the tab bar then draw the dot,
+ * which is decoration. Never on Friends itself, which is what clears it.
+ */
+export function newActivityName(
+	destination: Destination,
+	path: string,
+	unseen: boolean
+): string | undefined {
+	if (!unseen || destination.href !== '/friends' || isCurrent(destination, path)) return undefined;
+	return `${destination.label}, new activity`;
+}

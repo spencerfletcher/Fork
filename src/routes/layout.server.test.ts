@@ -1,11 +1,51 @@
-import { vi, describe, test, expect } from 'vitest';
+import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { loadEvent, loadPage } from '#lib/testing/actions.js';
 import { load } from './+layout.server';
 
-const { findProfileMock } = vi.hoisted(() => ({ findProfileMock: vi.fn() }));
+const { findProfileMock, unseenCountMock } = vi.hoisted(() => ({
+	findProfileMock: vi.fn(),
+	unseenCountMock: vi.fn()
+}));
 vi.mock('#lib/server/db/index.js', () => ({
 	db: { query: { profiles: { findFirst: findProfileMock } } }
 }));
+vi.mock('#lib/server/notifications.js', () => ({ unseenCount: unseenCountMock }));
+
+beforeEach(() => {
+	unseenCountMock.mockReset().mockResolvedValue(0);
+});
+
+describe('the dot by Friends', () => {
+	test('lit when the signed-in cook has anything unseen', async () => {
+		unseenCountMock.mockResolvedValue(3);
+		const data = await loadPage<{ unseen: boolean }>(load, loadEvent({ user: { id: 'me' } }));
+		expect(unseenCountMock).toHaveBeenCalledExactlyOnceWith({ id: 'me' });
+		expect(data.unseen).toBe(true);
+	});
+
+	test('dark when nothing is', async () => {
+		const data = await loadPage<{ unseen: boolean }>(load, loadEvent({ user: { id: 'me' } }));
+		expect(data.unseen).toBe(false);
+	});
+
+	test('never read for a signed-out visitor', async () => {
+		const data = await loadPage<{ unseen: boolean }>(load, loadEvent());
+		expect(unseenCountMock).not.toHaveBeenCalled();
+		expect(data.unseen).toBe(false);
+	});
+
+	// SvelteKit reruns a server load on navigation only for what it read; the
+	// path makes it rerun on each page, so the dot is gone once Friends was seen.
+	test('reads the path, so it reruns on every navigation', async () => {
+		const read: PropertyKey[] = [];
+		const event = loadEvent({ user: { id: 'me' } }) as { url: URL };
+		event.url = new Proxy(event.url, {
+			get: (url, key) => (read.push(key), Reflect.get(url, key))
+		});
+		await load(event as never);
+		expect(read).toContain('pathname');
+	});
+});
 
 describe('root layout load', () => {
 	// Every page reads the viewer's settings from here: the recipe page's
