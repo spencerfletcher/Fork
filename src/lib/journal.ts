@@ -32,16 +32,18 @@ export const day = (iso: string) => new Date(`${iso}T00:00:00Z`);
 export function dayLabel(value: string | Date, now: Date = new Date()): string {
 	const date = typeof value === 'string' ? day(value) : value;
 	const sameYear = date.getUTCFullYear() === now.getUTCFullYear();
-	return formatDate(date, {
-		weekday: 'short',
-		day: 'numeric',
-		month: 'short',
-		...(sameYear ? {} : { year: 'numeric' }),
-		timeZone: 'UTC'
-	})
-		.replace(',', '')
-		// No-break spaces, so a date never wraps mid-way ("Wed 11 / Nov").
-		.replaceAll(' ', '\u00a0');
+	return (
+		formatDate(date, {
+			weekday: 'short',
+			day: 'numeric',
+			month: 'short',
+			...(sameYear ? {} : { year: 'numeric' }),
+			timeZone: 'UTC'
+		})
+			.replace(',', '')
+			// No-break spaces, so a date never wraps mid-way ("Wed 11 / Nov").
+			.replaceAll(' ', '\u00a0')
+	);
 }
 
 /** A journal entry's recipe link, pinned to the version cooked when there is one. */

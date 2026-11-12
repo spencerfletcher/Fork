@@ -386,7 +386,9 @@ describe('RecipeCard in the Cookbook', () => {
 		});
 		const sourceLine = container.querySelector('.card-source')!;
 		const meta = container.querySelector('.meta-row')!;
-		expect(sourceLine.compareDocumentPosition(meta) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+		expect(
+			sourceLine.compareDocumentPosition(meta) & Node.DOCUMENT_POSITION_FOLLOWING
+		).toBeTruthy();
 	});
 
 	test('a kept copy of a recipe its author withdrew says so, in place of whose it is', () => {
