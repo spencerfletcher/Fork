@@ -209,6 +209,11 @@
 			</div>
 		{/snippet}
 		{#snippet panel(close)}
+			<!-- A phone's backdrop: the page and the tab bar under the sheet read as
+			     inactive, and a press on them closes it. Inside the dropdown, so the
+			     press is the picker's own. -->
+			<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions (a pointer convenience: Escape and Show N recipes close it from the keyboard) -->
+			<div class="picker-scrim" aria-hidden="true" onclick={close}></div>
 			<div
 				class="menu-panel picker-panel"
 				id={PANEL_ID}
@@ -617,8 +622,10 @@
 		flex-basis: 100%;
 	}
 
-	/* Show N recipes is a phone's; a desktop panel closes on a press outside. */
-	.picker-foot {
+	/* Show N recipes and the backdrop are a phone's; a desktop panel closes on
+	   a press outside. */
+	.picker-foot,
+	.picker-scrim {
 		display: none;
 	}
 
@@ -664,6 +671,15 @@
 			padding-bottom: calc(6px + env(safe-area-inset-bottom));
 			border-width: 1px 0 0;
 			border-radius: var(--radius-md) var(--radius-md) 0 0;
+		}
+
+		/* Over the tab bar (40), under the sheet (50); the page's ink, faint. */
+		.picker-scrim {
+			display: block;
+			position: fixed;
+			inset: 0;
+			z-index: 45;
+			background: color-mix(in srgb, var(--color-text) 32%, transparent);
 		}
 
 		.picker-lists {

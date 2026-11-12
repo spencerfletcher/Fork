@@ -4,6 +4,9 @@ import { tick } from 'svelte';
 import CookbookPicker from './CookbookPicker.svelte';
 import { COLLECTION_NAME_MAX } from '#lib/collections.js';
 import { plural } from '#lib/helpers.js';
+import { cssRule } from '#lib/testing/css.js';
+import source from './CookbookPicker.svelte?raw';
+import tabBarSource from '#lib/components/ui/TabBar.svelte?raw';
 
 const { page, goto } = vi.hoisted(() => ({
 	page: { url: new URL('http://localhost/cookbook') },
@@ -12,6 +15,9 @@ const { page, goto } = vi.hoisted(() => ({
 vi.mock('$app/navigation', () => ({ goto, afterNavigate: vi.fn() }));
 vi.mock('$app/state', () => ({ page }));
 vi.mock('$app/forms', () => ({ enhance: () => ({ destroy: () => {} }) }));
+
+// The tab bar's layer, read from its own style.
+const TAB_BAR_Z = Number(cssRule(tabBarSource, '.tab-bar').match(/z-index:\s*(\d+)/)?.[1]);
 
 const WEEKNIGHT = { id: 3, name: 'Weeknight', count: 37 };
 const BAKING_SHELF = { id: 8, name: 'Baking', count: 52 };
@@ -243,6 +249,30 @@ describe('Cookbook picker', () => {
 		await fireEvent.click(show);
 		expect(screen.queryByRole('menu')).toBeNull();
 		expect(trigger(/^Tags$/)).toHaveFocus();
+	});
+
+	// Owner, 12 November 2026: "phone sheet dim backdrop": the page under the
+	// sheet reads as inactive, the tab bar under it too, and a press on it closes.
+	test('the sheet has a backdrop, hidden from assistive tech, that closes the picker when pressed', async () => {
+		const { container } = makePicker();
+		await fireEvent.click(trigger(/^Tags$/));
+		const scrim = container.querySelector('.picker-scrim')!;
+		expect(scrim).toHaveAttribute('aria-hidden', 'true');
+		await fireEvent.click(scrim);
+		expect(screen.queryByRole('menu')).toBeNull();
+		expect(trigger(/^Tags$/)).toHaveFocus();
+	});
+
+	test('the backdrop is a phone’s, over the tab bar and under the sheet', () => {
+		const phone = source.slice(source.indexOf('@media (max-width: 767px)'));
+		expect(cssRule(source, '.picker-scrim')).toMatch(/display:\s*none/);
+		const rule = cssRule(phone, '.picker-scrim');
+		expect(rule).toMatch(/display:\s*block/);
+		expect(rule).toMatch(/position:\s*fixed/);
+		const z = (css: string) => Number(css.match(/z-index:\s*(\d+)/)?.[1]);
+		const sheet = cssRule(phone, '.picker :global(.menu-panel.picker-panel)');
+		expect(z(rule)).toBeGreaterThan(TAB_BAR_Z);
+		expect(z(rule)).toBeLessThan(z(sheet));
 	});
 
 	test('chosen tags are pills after the buttons, each a link that drops its tag', () => {
