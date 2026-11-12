@@ -288,5 +288,11 @@
 		.jdish {
 			font-size: 1.125rem;
 		}
+
+		/* 44px wide to the thumb, given back in margin so the row stays put. */
+		.edit {
+			padding-inline: 9px;
+			margin-inline: -9px;
+		}
 	}
 </style>

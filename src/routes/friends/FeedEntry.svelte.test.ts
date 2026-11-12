@@ -3,7 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/svelte';
 import type { ComponentProps } from 'svelte';
 import FeedEntry from './FeedEntry.svelte';
 import source from './FeedEntry.svelte?raw';
-import { cssRule } from '#lib/testing/css.js';
+import { cssRule, cssRules } from '#lib/testing/css.js';
 import { BLOCK_SENTENCE } from '#lib/journal.js';
 
 // enhance runs the submit callback the component hands it, so the optimistic
@@ -162,5 +162,14 @@ describe('FeedEntry', () => {
 		expect(link).toHaveAttribute('href', url);
 		expect(link).toHaveAttribute('rel', 'noopener noreferrer nofollow ugc');
 		expect(link.closest('p')).toHaveTextContent(/^from seriouseats\.com$/);
+	});
+
+	// A phone tap target is 44px: app.css's hit-link pads a link by --hit and
+	// takes it back in margin, so nothing moves.
+	test('the dish link and the handle are 44px tap targets on a phone', () => {
+		render(FeedEntry, { props: { item: makeItem() } });
+		expect(screen.getByRole('link', { name: 'Beet and Feta Salad' })).toHaveClass('hit-link');
+		// The handle's line is 15px × 1.35; 12px above and below make it 44.
+		expect(cssRules(source, '.who-line :global(.hit-link)').join('')).toContain('--hit: 12px');
 	});
 });

@@ -5,7 +5,7 @@ import { tick, type ComponentProps } from 'svelte';
 import type { SubmitFunction } from '$app/forms';
 import JournalEntry from './JournalEntry.svelte';
 import source from './JournalEntry.svelte?raw';
-import { cssRule } from '#lib/testing/css.js';
+import { cssRule, cssRules } from '#lib/testing/css.js';
 import { PRIVATE_RECIPE_HINT } from '#lib/journal.js';
 
 // Fork's enhance callback is captured so a test can play back a result.
@@ -151,5 +151,13 @@ describe('JournalEntry', () => {
 	// would push a link that wraps to its own line in from the note's edge.
 	test("the note's link starts flush with the note when it wraps", () => {
 		expect(cssRule(source, '.lock-note :is(.arrow-link, .text-btn)')).not.toContain('margin-left');
+	});
+
+	// Edit is one short word: on a phone it is padded to 44px wide and the
+	// padding taken back in margin, so the row does not move.
+	test('Edit is a 44px wide tap target on a phone', () => {
+		const phone = cssRules(source, '.edit').find((rule) => rule.includes('padding-inline'));
+		expect(phone).toContain('padding-inline: 9px');
+		expect(phone).toContain('margin-inline: -9px');
 	});
 });

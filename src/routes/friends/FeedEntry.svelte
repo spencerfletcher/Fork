@@ -50,7 +50,7 @@
 	     November 2026); the version bar there says which one it is. -->
 	<h2 class="dish">
 		{#if source.kind === 'recipe'}
-			<a href={sourceHref(source)}>{entry.dish}</a>
+			<a class="hit-link" href={sourceHref(source)}>{entry.dish}</a>
 		{:else}
 			{entry.dish}
 		{/if}
@@ -194,6 +194,11 @@
 	@media (max-width: 699px) {
 		.dish {
 			font-size: 1.25rem;
+		}
+
+		/* 44px: the handle's 20px line and 12px each side, given back in margin. */
+		.who-line :global(.hit-link) {
+			--hit: 12px;
 		}
 	}
 </style>
