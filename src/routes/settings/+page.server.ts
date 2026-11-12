@@ -18,20 +18,26 @@ import {
 import { VISIBILITIES } from '#lib/recipes/validation.js';
 import { AS_WRITTEN, MEASUREMENTS } from '#lib/measurement.js';
 import { privatePage } from '#lib/seo.js';
+import { NOTIFICATION_KINDS, mutedKinds } from '#lib/notifications.js';
 
 /** Each section is its own form, so a result names the one it belongs to. */
-export type Section = 'username' | 'audience' | 'measurement' | 'delete';
+export type Section = 'username' | 'audience' | 'measurement' | 'notifications' | 'delete';
 
 export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 	requireUser(url, user);
 	await ensureProfile(user);
 	const settings = await db.query.profiles.findFirst({
 		where: eq(profiles.id, user.id),
-		columns: { username: true, defaultVisibility: true, measurement: true }
+		columns: {
+			username: true,
+			defaultVisibility: true,
+			measurement: true,
+			mutedNotifications: true
+		}
 	});
 	return {
 		email: user.email ?? '',
-		settings: settings!,
+		settings: { ...settings!, mutedNotifications: mutedKinds(settings!.mutedNotifications) },
 		meta: privatePage('Settings')
 	};
 };
@@ -82,6 +88,22 @@ export const actions: Actions = {
 		}
 		await db.update(profiles).set({ measurement }).where(eq(profiles.id, user.id));
 		return saved('measurement');
+	},
+
+	// The kinds ticked to mute, one `muted` field each; none ticked hears every kind.
+	notifications: async ({ request, locals: { user } }) => {
+		if (!user) return signedOut('save again', { section: 'notifications' });
+		const ticked = (await request.formData()).getAll('muted');
+		if (
+			!ticked.every((v): v is string => typeof v === 'string' && !!oneOf(NOTIFICATION_KINDS, v))
+		) {
+			return failure(400, 'invalid', 'Choose which notifications to mute.', {
+				section: 'notifications'
+			});
+		}
+		const mutedNotifications = mutedKinds(ticked);
+		await db.update(profiles).set({ mutedNotifications }).where(eq(profiles.id, user.id));
+		return saved('notifications');
 	},
 
 	// The typed username is the confirmation: unmistakable, and the one thing
