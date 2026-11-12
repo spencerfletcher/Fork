@@ -192,6 +192,13 @@ describe('recipe page title band', () => {
 			/@media \(max-width: 767px\) \{\s*:global\(html:has\(#recipe\)\) \{\s*scroll-padding-bottom: calc\(63px \+ env\(safe-area-inset-bottom\)\);/
 		);
 	});
+
+	test('below 1024 only the Ingredients and Method headings hide behind the tabs, not Notes', () => {
+		expect(() => cssRule(pageSource, '.content-layout :global(h2)')).toThrow();
+		expect(cssRule(pageSource, '.content-layout :global(:is(#ingredients, #method) > h2)')).toMatch(
+			/clip-path: inset\(50%\);/
+		);
+	});
 });
 
 describe('recipe page signed in', () => {

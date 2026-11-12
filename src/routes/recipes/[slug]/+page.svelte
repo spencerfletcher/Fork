@@ -510,9 +510,9 @@
 			display: none;
 		}
 
-		/* The tabs are the section headings here; the h2s stay for readers of
-		   the outline, out of sight. */
-		.content-layout :global(h2) {
+		/* The tabs are the section headings here; their h2s stay for readers
+		   of the outline, out of sight. Notes keeps its heading: no tab names it. */
+		.content-layout :global(:is(#ingredients, #method) > h2) {
 			position: absolute;
 			width: 1px;
 			height: 1px;
