@@ -46,4 +46,30 @@ describe('Cookbook, server rendered', () => {
 		expect(body).not.toMatch(/>\s*Select\s*</);
 		expect(body).not.toContain('aria-pressed');
 	});
+
+	// The picker's panel needs script; without it the two groups are plain links.
+	test('without script the collections and tags are links to their lists', () => {
+		const { body } = render(CookbookPage, {
+			props: {
+				data: {
+					recipes: [recipe],
+					next: null,
+					total: 1,
+					counts: { all: 1, mine: 1, saved: 0, trash: 0 },
+					inView: { all: 1, mine: 1, saved: 0 },
+					collections: [{ id: 4, name: 'Quick', count: 1 }],
+					collection: null,
+					filter: 'all',
+					view: 'grid',
+					sort: 'newest',
+					allTags: [{ id: 2, name: 'Baking', slug: 'baking' }],
+					searchQuery: '',
+					selectedTags: []
+				}
+			} as never
+		});
+		const fallback = body.slice(body.indexOf('<noscript>'), body.indexOf('</noscript>'));
+		expect(fallback).toContain('href="?collection=4"');
+		expect(fallback).toContain('href="?tags=baking"');
+	});
 });

@@ -1,164 +1,91 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { page } from '$app/state';
 	import { tick } from 'svelte';
 	import ConfirmStep from '#lib/components/ui/ConfirmStep.svelte';
 	import FieldError from '#lib/components/ui/FieldError.svelte';
 	import { pendingEnhance } from '#lib/pendingEnhance.svelte.js';
 	import { COLLECTION_NAME_MAX } from '#lib/collections.js';
-	import { hrefWith } from '#lib/listPage.js';
 
-	// The cook's collections as a row of tabs over the Cookbook's filters, a
-	// way to make one, and for the chosen one its name with Rename and Delete.
-	// A collection is a view of the Cookbook (`?collection=`), so the segments,
-	// search and tags keep working inside it.
-	let {
-		collections,
-		collection
-	}: {
-		collections: { id: number; name: string; count: number }[];
-		collection: { id: number; name: string } | null;
-	} = $props();
+	// The chosen collection under the Cookbook's filters: its name, Rename and
+	// Delete. Choosing one, and New collection, are the picker's
+	// (CookbookPicker). A collection is a view of the Cookbook
+	// (`?collection=`), so the segments, search and tags keep working inside it.
+	let { collection }: { collection: { id: number; name: string } } = $props();
 
-	// The page's other filters kept, the list started over; null is the whole Cookbook.
-	function hrefFor(id: number | null): string {
-		return hrefWith(page.url, { collection: id === null ? null : String(id) });
-	}
-
-	let creating = $state(false);
 	let renaming = $state(false);
-	let newButton: HTMLButtonElement | undefined = $state();
 	let renameButton: HTMLButtonElement | undefined = $state();
 	let box: HTMLInputElement | undefined = $state();
 
-	const create = pendingEnhance({ keepFailure: true, done: () => (creating = false) });
 	const rename = pendingEnhance({ keepFailure: true, done: () => (renaming = false) });
 	const deleting = pendingEnhance({ keepOnError: true, keepFailure: true });
 
-	async function open(which: 'create' | 'rename') {
-		if (which === 'create') creating = true;
-		else renaming = true;
+	async function open() {
+		renaming = true;
 		await tick();
 		box?.focus();
 		box?.select();
 	}
 
-	async function close(which: 'create' | 'rename') {
-		if (which === 'create') creating = false;
-		else renaming = false;
+	async function close() {
+		renaming = false;
 		await tick();
-		(which === 'create' ? newButton : renameButton)?.focus();
+		renameButton?.focus();
 	}
 </script>
 
-{#snippet nameForm(which: 'create' | 'rename', state: typeof create)}
-	<form
-		method="POST"
-		action={which === 'create' ? '?/createCollection' : '?/renameCollection'}
-		class="name-form"
-		use:enhance={state.submit}>
-		{#if which === 'rename' && collection}
+<section class="collection-bar" aria-label="Collection">
+	{#if renaming}
+		<form method="POST" action="?/renameCollection" class="name-form" use:enhance={rename.submit}>
 			<input type="hidden" name="id" value={collection.id} />
-		{/if}
-		<label for="collection-{which}" class="sr-only">Collection name</label>
-		<input
-			id="collection-{which}"
-			name="name"
-			type="text"
-			maxlength={COLLECTION_NAME_MAX}
-			required
-			autocomplete="off"
-			value={which === 'rename' ? collection?.name : ''}
-			placeholder={which === 'create' ? 'Like Quick or Good for parties' : undefined}
-			aria-invalid={state.error ? true : undefined}
-			aria-describedby={state.error ? `collection-${which}-error` : undefined}
-			bind:this={box}
-			onkeydown={(e) => {
-				if (e.key === 'Escape') close(which);
-			}} />
-		<button type="submit" class="btn-primary btn-sm" disabled={state.pending}>
-			{which === 'create' ? 'Create' : 'Save'}
-		</button>
-		<button type="button" class="btn-ghost btn-sm" onclick={() => close(which)}>Cancel</button>
-		<FieldError name="collection-{which}" error={state.error} />
-	</form>
-{/snippet}
-
-<section class="cookbook-collections" aria-labelledby="collections-heading">
-	<div class="collections-head">
-		<h2 id="collections-heading" class="eyebrow-label">Collections</h2>
-		{#if !creating}
-			<button type="button" class="text-btn" bind:this={newButton} onclick={() => open('create')}>
-				New collection
+			<label for="collection-rename" class="sr-only">Collection name</label>
+			<input
+				id="collection-rename"
+				name="name"
+				type="text"
+				maxlength={COLLECTION_NAME_MAX}
+				required
+				autocomplete="off"
+				value={collection.name}
+				aria-invalid={rename.error ? true : undefined}
+				aria-describedby={rename.error ? 'collection-rename-error' : undefined}
+				bind:this={box}
+				onkeydown={(e) => {
+					if (e.key === 'Escape') close();
+				}} />
+			<button type="submit" class="btn-primary btn-sm" disabled={rename.pending}>Save</button>
+			<button type="button" class="btn-ghost btn-sm" onclick={close}>Cancel</button>
+			<FieldError name="collection-rename" error={rename.error} />
+		</form>
+	{:else}
+		<h2 class="collection-name">{collection.name}</h2>
+		<div class="collection-actions">
+			<button
+				type="button"
+				class="text-btn text-btn--ink"
+				aria-label="Rename {collection.name}"
+				bind:this={renameButton}
+				onclick={open}>
+				Rename
 			</button>
-		{/if}
-	</div>
-	{#if creating}{@render nameForm('create', create)}{/if}
-
-	<nav class="tag-tabs" aria-label="Collections">
-		<a href={hrefFor(null)} aria-current={collection ? undefined : 'page'}>All recipes</a>
-		{#each collections as c (c.id)}
-			<a href={hrefFor(c.id)} aria-current={collection?.id === c.id ? 'page' : undefined}>
-				{c.name}
-				<span class="n">{c.count}</span>
-			</a>
-		{/each}
-	</nav>
-
-	{#if collection}
-		<div class="collection-bar">
-			{#if renaming}
-				{@render nameForm('rename', rename)}
-			{:else}
-				<h2 class="collection-name">{collection.name}</h2>
-				<div class="collection-actions">
-					<button
-						type="button"
-						class="text-btn text-btn--ink"
-						aria-label="Rename {collection.name}"
-						bind:this={renameButton}
-						onclick={() => open('rename')}>
-						Rename
-					</button>
-					<ConfirmStep
-						trigger="Delete collection"
-						triggerClass="text-btn text-btn--ink"
-						label="Delete {collection.name}?"
-						explanation="Only the collection goes; its recipes stay in your Cookbook."
-						confirmLabel="Delete collection"
-						pendingLabel="Deleting…"
-						keepLabel="Keep"
-						action="?/deleteCollection"
-						enhance={deleting.submit}
-						pending={deleting.pending}
-						error={deleting.error}>
-						{#snippet fields()}<input type="hidden" name="id" value={collection.id} />{/snippet}
-					</ConfirmStep>
-				</div>
-			{/if}
+			<ConfirmStep
+				trigger="Delete collection"
+				triggerClass="text-btn text-btn--ink"
+				label="Delete {collection.name}?"
+				explanation="Only the collection goes; its recipes stay in your Cookbook."
+				confirmLabel="Delete collection"
+				pendingLabel="Deleting…"
+				keepLabel="Keep"
+				action="?/deleteCollection"
+				enhance={deleting.submit}
+				pending={deleting.pending}
+				error={deleting.error}>
+				{#snippet fields()}<input type="hidden" name="id" value={collection.id} />{/snippet}
+			</ConfirmStep>
 		</div>
 	{/if}
 </section>
 
 <style>
-	.cookbook-collections {
-		margin-bottom: var(--space-5);
-	}
-
-	.collections-head {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: var(--space-4);
-		margin-bottom: var(--space-2);
-	}
-
-	.tag-tabs .n {
-		margin-left: 4px;
-		font-weight: 400;
-		color: var(--color-text-3);
-	}
-
 	.name-form {
 		display: flex;
 		flex-wrap: wrap;
@@ -183,7 +110,7 @@
 		flex-wrap: wrap;
 		align-items: center;
 		gap: var(--space-2) var(--space-5);
-		margin-top: var(--space-5);
+		margin-bottom: var(--space-5);
 	}
 
 	.collection-bar .name-form {

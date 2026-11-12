@@ -3,7 +3,7 @@
 	import type { TagChip } from '#lib/recipes/types.js';
 
 	// Two uses, one look. Tag pages link: `active` is the current tag's slug,
-	// null means "All", which is Discover. Search, Cookbook and Discover toggle:
+	// null means "All", which is Discover. Search and Discover toggle:
 	// `selected` holds every pressed slug, and the parent navigates on each press;
 	// `leading` is any other filter, first in the row (Discover's friends).
 	type Props = { tags: TagChip[] } & (

@@ -139,9 +139,9 @@ describe('Cookbook page', () => {
 		}
 	});
 
-	test('the count sentence says how many are yours and how many saved', () => {
+	test('no count line under the title: the segments already say it', () => {
 		renderCookbook(full);
-		expect(screen.getByText('9 recipes: 6 yours, 3 saved from other cooks.')).toBeInTheDocument();
+		expect(screen.queryByText(/saved from other cooks/)).toBeNull();
 	});
 
 	test('one grid: own cards carry no owner line, saved cards say whose', () => {
@@ -163,7 +163,7 @@ describe('Cookbook page', () => {
 		expect(links.find((a) => a.getAttribute('aria-current') === 'page')).toHaveTextContent('Saved');
 	});
 
-	test('inside a collection the segments count it, the line under the title the whole library', () => {
+	test('inside a collection the segments count it', () => {
 		renderCookbook({
 			...full,
 			collection: { id: 4, name: 'Quick' },
@@ -171,7 +171,6 @@ describe('Cookbook page', () => {
 		});
 		const group = screen.getByRole('group', { name: 'Show' });
 		expect(group).toHaveTextContent(/All\s*2\s*Mine\s*1\s*Saved\s*1/);
-		expect(screen.getByText(/^9 recipes: 6 yours, 3 saved/)).toBeInTheDocument();
 		expect(screen.getByRole('heading', { level: 2, name: 'Quick' })).toBeInTheDocument();
 	});
 
@@ -187,19 +186,45 @@ describe('Cookbook page', () => {
 			screen.getByText('Open a recipe from your Cookbook and choose this collection in its ⋯ menu.')
 		).toBeInTheDocument();
 		expect(screen.queryByRole('searchbox')).toBeNull();
-		expect(screen.getByRole('navigation', { name: 'Collections' })).toBeInTheDocument();
+		// The way out: the picker stays, to choose another collection.
+		expect(screen.getByRole('button', { name: 'Collection: Quick' })).toBeInTheDocument();
 	});
 
-	test('the collections sit over the filters, not over an empty cookbook', () => {
-		const { unmount } = renderCookbook(full);
-		const nav = screen.getByRole('navigation', { name: 'Collections' });
+	test('one filter row: Collections and Tags after the search, then Sort; no strips, none over an empty cookbook', () => {
+		const tags = [{ id: 1, name: 'Baking', slug: 'baking' }];
+		const { unmount } = renderCookbook({ ...full, allTags: tags } as never);
+		const collections = screen.getByRole('button', { name: 'Collections' });
+		const after = (a: Element, b: Element) =>
+			!!(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
+		expect(after(screen.getByRole('searchbox'), collections)).toBe(true);
+		expect(after(collections, screen.getByRole('button', { name: 'Tags' }))).toBe(true);
 		expect(
-			nav.compareDocumentPosition(screen.getByRole('group', { name: 'Show' })) &
-				Node.DOCUMENT_POSITION_FOLLOWING
-		).toBeTruthy();
+			after(
+				screen.getByRole('button', { name: 'Tags' }),
+				screen.getByRole('combobox', { name: 'Sort' })
+			)
+		).toBe(true);
+		// The old collection strip and tag tabs are gone; the tags are the picker's.
+		expect(screen.queryByRole('navigation', { name: 'Collections' })).toBeNull();
+		expect(screen.queryByRole('group', { name: 'Filters' })).toBeNull();
+		expect(screen.queryByRole('button', { name: 'Baking' })).toBeNull();
 		unmount();
 		renderCookbook({ collections: full.collections });
-		expect(screen.queryByRole('navigation', { name: 'Collections' })).toBeNull();
+		expect(screen.queryByRole('button', { name: 'Collections' })).toBeNull();
+	});
+
+	test('the search keeps the chosen tags and collection', () => {
+		page.url = new URL('http://localhost/cookbook?tags=baking&collection=4');
+		const { container } = renderCookbook({
+			...full,
+			collection: { id: 4, name: 'Quick' },
+			inView: { all: 2, mine: 1, saved: 1 },
+			selectedTags: ['baking']
+		});
+		const form = screen.getByRole('searchbox').closest('form')!;
+		expect(form.querySelector('input[name="tags"]')).toHaveValue('baking');
+		expect(form.querySelector('input[name="collection"]')).toHaveValue('4');
+		expect(container.querySelector('.tag-tabs')).toBeNull();
 	});
 
 	test('the filter links keep the search and the tags', () => {

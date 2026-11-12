@@ -57,7 +57,7 @@ test.describe('Cookbook filters', () => {
 
 test.describe('Cookbook filter row', () => {
 	for (const width of [1280, 834]) {
-		test(`at ${width} the segments and the search box share a row, the box to the row's end or to Sort`, async ({
+		test(`at ${width} the segments and the search box share a row, the pickers and the tools the row under it`, async ({
 			page
 		}) => {
 			await page.setViewportSize({ width, height: 900 });
@@ -76,15 +76,18 @@ test.describe('Cookbook filter row', () => {
 			expect(Math.round(select.x + select.width)).toBe(Math.round(inner.x + inner.width));
 			expect(select.x).toBeGreaterThan(views.x + views.width);
 			expect(Math.abs(select.y + select.height / 2 - (views.y + views.height / 2))).toBeLessThan(2);
-			if (width >= 1100) {
-				// Sort, Grid | List and Select end the first row, after the box.
-				expect(sort.x).toBeGreaterThan(search.x + search.width);
-				expect(Math.abs(views.y + views.height / 2 - (seg.y + seg.height / 2))).toBeLessThan(2);
-			} else {
-				// The box takes the row; Sort and Grid | List sit under the tags.
-				expect(Math.round(search.x + search.width)).toBe(Math.round(inner.x + inner.width));
-				expect(sort.y).toBeGreaterThan(search.y + search.height);
-			}
+			// The box takes its row to the end; Collections and Tags lead the row
+			// under it, Sort on their line.
+			expect(Math.round(search.x + search.width)).toBe(Math.round(inner.x + inner.width));
+			const collections = (await page
+				.getByRole('button', { name: 'Collections', exact: true })
+				.boundingBox())!;
+			expect(Math.round(collections.x)).toBe(Math.round(inner.x));
+			expect(collections.y).toBeGreaterThan(search.y + search.height);
+			expect(sort.x).toBeGreaterThan(collections.x + collections.width);
+			expect(
+				Math.abs(sort.y + sort.height / 2 - (collections.y + collections.height / 2))
+			).toBeLessThan(2);
 		});
 	}
 });

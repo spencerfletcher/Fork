@@ -38,6 +38,37 @@ function renderOpen() {
 }
 
 describe('Dropdown', () => {
+	test('focusOnOpen names what opening focuses, in place of the first control', async () => {
+		const found = createRawSnippet(() => ({
+			render: () => '<div><button type="button">First</button><input aria-label="Find" /></div>'
+		}));
+		render(Dropdown, {
+			props: {
+				trigger,
+				panel: found,
+				focusOnOpen: (root: HTMLElement) => root.querySelector('input')
+			}
+		});
+		await fireEvent.click(screen.getByRole('button', { name: 'Your account' }));
+		expect(screen.getByRole('textbox', { name: 'Find' })).toHaveFocus();
+	});
+
+	test('from outside the items (a find box), Down goes to the first and Up to the last', async () => {
+		const found = createRawSnippet(() => ({
+			render: () =>
+				'<div><input aria-label="Find" /><div role="menu"><a href="#a" role="menuitemradio">A</a><a href="#b" role="menuitemradio">B</a><a href="#c" role="menuitemcheckbox">C</a></div></div>'
+		}));
+		render(Dropdown, { props: { trigger, panel: found } });
+		await fireEvent.click(screen.getByRole('button', { name: 'Your account' }));
+		const box = screen.getByRole('textbox', { name: 'Find' });
+		box.focus();
+		await fireEvent.keyDown(box, { key: 'ArrowUp' });
+		expect(screen.getByRole('menuitemcheckbox', { name: 'C' })).toHaveFocus();
+		box.focus();
+		await fireEvent.keyDown(box, { key: 'ArrowDown' });
+		expect(screen.getByRole('menuitemradio', { name: 'A' })).toHaveFocus();
+	});
+
 	test('the arrow keys walk every item, checkable ones included, wrapping at the ends', async () => {
 		const checks = createRawSnippet(() => ({
 			render: () =>

@@ -10,10 +10,10 @@
 	import ShowMore from '#lib/components/ui/ShowMore.svelte';
 	import CookbookDrafts from './CookbookDrafts.svelte';
 	import CookbookCollections from './CookbookCollections.svelte';
+	import CookbookPicker from './CookbookPicker.svelte';
 	import CookbookSort from './CookbookSort.svelte';
 	import SelectBar from './SelectBar.svelte';
 	import { selection } from './selection.svelte.js';
-	import { plural } from '#lib/helpers.js';
 	import { hrefWith, withoutPlace } from '#lib/listPage.js';
 	import { pagedList } from '#lib/pagedList.svelte.js';
 	import {
@@ -124,12 +124,6 @@
 			<div>
 				<!-- Focusable for the Drafts list, which hands focus here once its last row goes. -->
 				<h1 tabindex="-1">Cookbook</h1>
-				{#if data.counts.all > 0}
-					<p class="page-sub">
-						{plural(data.counts.all, 'recipe')}: {data.counts.mine} yours, {data.counts.saved} saved from
-						other cooks.
-					</p>
-				{/if}
 				<!-- What a card's ⋯ just took away; empty until then, so it is heard when it fills. -->
 				<p class="page-sub" role="status">
 					{#if removed?.how === 'trash'}
@@ -160,9 +154,11 @@
 				{/snippet}
 			</EmptyPanel>
 		{:else}
-			<CookbookCollections collections={data.collections} collection={data.collection} />
 			{#if data.collection && data.inView.all === 0}
-				<!-- No filters over an empty collection, as over an empty cookbook. -->
+				<!-- No filters over an empty collection, as over an empty cookbook, but
+				     the picker, the way to another collection. -->
+				<div class="cookbook-tools alone">{@render picker()}</div>
+				<CookbookCollections collection={data.collection} />
 				<EmptyPanel title="Nothing in {data.collection.name} yet">
 					Open a recipe from your Cookbook and choose this collection in its ⋯ menu.
 				</EmptyPanel>
@@ -176,32 +172,38 @@
 							</a>
 						{/each}
 					</div>
+					<!-- The search alone: no tags given, so no tag tabs; the chosen tags
+					     still ride along with a search, as the URL's other params do. -->
 					<SearchFilters
 						initialQuery={data.searchQuery}
 						initialTags={data.selectedTags}
-						availableTags={data.allTags} />
-					<div class="cookbook-view">
-						<CookbookSort sort={data.sort} searching={!!data.searchQuery} />
-						<div class="seg" role="group" aria-label="View">
-							{#each COOKBOOK_VIEWS as v (v)}
-								<a href={viewHref(v)} aria-current={data.view === v ? 'page' : undefined}>
-									{@render viewIcon(v)}
-									{VIEW_LABELS[v]}
-								</a>
-							{/each}
+						availableTags={[]} />
+					<div class="cookbook-tools">
+						{@render picker()}
+						<div class="cookbook-view">
+							<CookbookSort sort={data.sort} searching={!!data.searchQuery} />
+							<div class="seg" role="group" aria-label="View">
+								{#each COOKBOOK_VIEWS as v (v)}
+									<a href={viewHref(v)} aria-current={data.view === v ? 'page' : undefined}>
+										{@render viewIcon(v)}
+										{VIEW_LABELS[v]}
+									</a>
+								{/each}
+							</div>
+							{#if hydrated}
+								<button
+									type="button"
+									class="text-btn text-btn--ink cookbook-select"
+									aria-pressed={sel.on}
+									bind:this={selectButton}
+									onclick={() => (sel.on ? leaveSelect() : sel.start())}>
+									Select
+								</button>
+							{/if}
 						</div>
-						{#if hydrated}
-							<button
-								type="button"
-								class="text-btn text-btn--ink cookbook-select"
-								aria-pressed={sel.on}
-								bind:this={selectButton}
-								onclick={() => (sel.on ? leaveSelect() : sel.start())}>
-								Select
-							</button>
-						{/if}
 					</div>
 				</div>
+				{#if data.collection}<CookbookCollections collection={data.collection} />{/if}
 
 				<!-- Screen readers only (Spencer, 9 November 2026): the cards say the count. -->
 				<ResultStatus count={data.total} {filtered} />
@@ -271,6 +273,15 @@
 		onleave={leaveSelect} />
 {/if}
 
+{#snippet picker()}
+	<CookbookPicker
+		collections={data.collections}
+		collection={data.collection}
+		allTags={data.allTags}
+		selectedTags={data.selectedTags}
+		total={data.total} />
+{/snippet}
+
 <!-- Drawn here alone, so not in Icons.svelte; its line art and 16px box. -->
 {#snippet viewIcon(view: CookbookView)}
 	<svg
@@ -303,7 +314,7 @@
 		gap: var(--space-4);
 	}
 
-	/* One line beside the title; the subtitle wraps under the title instead. */
+	/* One line beside the title. */
 	.cookbook-new {
 		white-space: nowrap;
 	}
@@ -314,8 +325,7 @@
 		}
 	}
 
-	/* Three rows on a phone: the title, the count at full width, then New
-	   recipe across the page, so the count no longer squeezes beside it. */
+	/* On a phone New recipe takes its own row under the title, across the page. */
 	@media (max-width: 699px) {
 		.cookbook-head {
 			flex-direction: column;
@@ -375,8 +385,8 @@
 	}
 
 	/* From 768 the segments and the search box share a row, the box filling to
-	   the container's edge; the tag tabs keep the row below, and Sort and
-	   Grid | List a row under them. From 1100 those two end the first row. */
+	   the container's edge; the tools (Collections, Tags, their pills, then
+	   Sort, Grid | List and Select) take the row below. */
 	@media (min-width: 768px) {
 		.cookbook-filters {
 			display: grid;
@@ -393,31 +403,34 @@
 			max-width: none;
 		}
 
-		.cookbook-filters > :global(.search-filters > :not(form)),
-		.cookbook-view {
+		.cookbook-tools {
 			grid-column: 1 / -1;
 		}
 	}
 
-	@media (min-width: 1100px) {
-		.cookbook-filters {
-			grid-template-columns: auto minmax(0, 1fr) auto;
-		}
-
-		.cookbook-view {
-			grid-row: 1;
-			grid-column: 3;
-		}
+	/* The pickers and the pills first, Sort, Grid | List and Select at the
+	   row's end; wrapping, each keeps its line rather than squeezing. */
+	.cookbook-tools {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 12px 16px;
 	}
 
-	/* Sort, then Grid | List at the row's end; on the narrowest phone the
-	   switch wraps under the select rather than squeezing it. */
+	/* An empty collection: the pickers alone over its bar. */
+	.cookbook-tools.alone {
+		margin-bottom: var(--space-5);
+	}
+
+	/* Sort, then Grid | List; on the narrowest phone the switch wraps under
+	   the select rather than squeezing it. */
 	.cookbook-view {
 		display: flex;
 		flex-wrap: wrap;
 		align-items: center;
 		justify-content: space-between;
 		gap: 12px 16px;
+		margin-left: auto;
 	}
 
 	/* A phone: the strip spans the column, three equal segments, each a 44px
@@ -430,6 +443,11 @@
 		.seg a {
 			flex: 1;
 			min-height: 44px;
+		}
+
+		/* Sort, Grid | List and Select take their own row under the pickers. */
+		.cookbook-view {
+			flex: 1 1 100%;
 		}
 
 		/* The words alone, so Sort keeps room for its longest order on the row. */
