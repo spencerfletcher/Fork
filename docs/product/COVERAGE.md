@@ -870,7 +870,7 @@ Folded on 12 Nov 2026: [design principles](../research/2026-11-08-cookbook-desig
 | CD11 | References: capture, disclosure, editing and recovery (reversible interpretation, recovery is not history, recipe versus entry versus discussion) | DE Identity working contract, RM §7 Recipe, cook and revision, RM P1 Durable drafts | placed |
 | CD12 | References: eight mappings (action hierarchy per state, content carries warmth, editing resembles the recipe, capture first, Cook as focus, Journal beside the recipe, meaningful recovery, density by content) | DE Controls, Photography, New and edit, Cooking, Journal, History and comparison, Density | placed |
 | CD13 | Workflows §1: interruption (working hierarchy, context without a tunnel, counter-distance reading, state is a promise, hands-free as an enhancement, acceptance checks) | DE Cooking; RM P2 Cooking session, Mobile cooking refinement, §8 Kitchen ergonomics | placed |
-| CD14 | Workflows §2: precision (canonical quantity, inspectable scaling, subrecipe clarity, arithmetic is not authorship, timers belong to work, correction is core, the import fixture) | RM §7 Scaling, Subrecipes, Timers; RM P2 Easy import (read first) | placed |
+| CD14 | Workflows §2: precision (canonical quantity, inspectable scaling, subrecipe clarity, arithmetic is not authorship, timers belong to work, correction is core, the import fixture) | RM §7 Scaling, Subrecipes, Timers; RM P2 Easy import (the fixture, proposed; read first) | placed |
 | CD15 | Workflows §3: journal (finish into a record, name the intent, history answers cooking questions, explicit audience, acceptance checks) | RM §7 Recipe, cook and revision; RM P2 Journal, Journal recall (read first) | placed |
 
 ## SW: site sweeps, 29 Oct 2026
@@ -958,3 +958,4 @@ Each table row above counts as one item, except rows that name a range (for exam
 - 2026-11-12: PS section added (the 12 Nov package sweep); counts updated.
 - 2026-11-12: FR and BV sections added (the 31 Oct feature research and business viability notes); counts updated.
 - 2026-11-12: CD notes, SW and nothing-to-fold sections added (the three 8 Nov design notes, the 29 Oct site sweeps, the October design notes, the 9 Nov reuse sweeps and the pre-revision roadmap); counts updated.
+- 2026-11-12: CD14 points at the import fixture now in RM P2 Easy import.
