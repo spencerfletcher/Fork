@@ -130,14 +130,11 @@ describe('Discover', () => {
 	});
 
 	test('every grid card names its cook above the photo', () => {
-		// The lead is in the grid too, so the count is the grid's.
-		const lead = makeCard(9);
-		const recipes = [lead, makeCard(1), makeCard(2)];
-		const { container } = renderDiscover({ lead, recipes });
+		const recipes = [makeCard(1), makeCard(2)];
+		const { container } = renderDiscover({ lead: makeCard(9), recipes });
 		const cards = container.querySelectorAll('.discover-grid .recipe-card');
 		expect(cards).toHaveLength(recipes.length);
-		expect(cards[1].querySelector('.card-cook')).toHaveTextContent('@cook1');
-		expect(screen.getByText(`${recipes.length} recipes`)).toBeInTheDocument();
+		expect(cards[0].querySelector('.card-cook')).toHaveTextContent('@cook1');
 	});
 
 	test('the friends toggle shows only when the loader offers it', () => {
@@ -146,6 +143,31 @@ describe('Discover', () => {
 		unmount();
 		renderDiscover({ friendsOnly: false });
 		expect(screen.getByRole('button', { name: 'Friends’ recipes' })).toBeInTheDocument();
+	});
+
+	// The lead is not repeated in the grid, so the count over it says it is the
+	// whole set, lead included, and never reads as the grid's own.
+	test('Newest first counts every recipe on the page, the lead included, in words that say so', () => {
+		const recipes = [makeCard(1), makeCard(2)];
+		render(Discover, {
+			props: {
+				data: { ...base, lead: makeCard(9), recipes, total: recipes.length + 1, next: null }
+			} as never
+		});
+		expect(document.querySelector('.order')).toHaveTextContent(
+			`Newest first ${recipes.length + 1} recipes in all`
+		);
+	});
+
+	test('a set of one is the lead alone: no grid, and nothing says nothing matched', () => {
+		render(Discover, {
+			props: {
+				data: { ...base, searchQuery: 'buns', lead: makeCard(9), total: 1, next: null }
+			} as never
+		});
+		expect(screen.getByRole('link', { name: 'Recipe 9' })).toBeInTheDocument();
+		expect(document.querySelector('.grid-section')).toBeNull();
+		expect(screen.queryByText(/No recipes/)).toBeNull();
 	});
 
 	test('a filter with no match says so and offers to clear', () => {

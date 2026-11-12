@@ -1,4 +1,4 @@
-import { and, count, desc, eq, gt, gte, inArray, type SQL } from 'drizzle-orm';
+import { and, count, desc, eq, gt, gte, inArray, ne, type SQL } from 'drizzle-orm';
 import { QueryBuilder } from 'drizzle-orm/pg-core';
 import { db } from '#lib/server/db/index.js';
 import { favorites, profiles, recipes, recipeVersions } from '#lib/server/db/schema.js';
@@ -19,7 +19,8 @@ const HANDLE = /^@([\w-]+)$/;
 /**
  * Discover, for `/discover` and the signed-out `/`: every recipe the viewer may
  * see (visibleTo), newest first. A lead card and a Recent changes row come
- * first, drawn from the same set, filtered or not. Filters as Search, all
+ * first, drawn from the same set, filtered or not; the grid is the set less
+ * the lead, so no recipe shows twice, and `total` counts the whole set. Filters as Search, all
  * ANDed: `q` (an `@handle` word in it narrows to that cook), `tags`, and
  * `friends=1` when signed in.
  */
@@ -51,48 +52,51 @@ export async function loadDiscover(url: URL, user: { id: string } | null) {
 		tags.where,
 		text.where
 	);
-	// Show more's fetch (`after`) wants the next cards alone: no lead, no Recent changes.
+	// Show more's fetch (`after`) wants the next cards alone: no lead card, no
+	// Recent changes; but it still leaves the lead out, so no page repeats it.
+	// ponytail: the lead is found again on each fetch, so a save landing between
+	// two fetches can move it and show one recipe twice or not at all; carry the
+	// lead's id in the cursor if that ever matters.
 	const { after, limit } = listPage(url);
-	const [{ cards, next }, total, leadRows, recent] = await Promise.all([
-		cardList(inSet, text.rank, user, { after, limit }),
+	const leadId = await leadOf(inSet);
+	const grid = leadId === undefined ? inSet : and(inSet, ne(recipes.id, leadId));
+	const [{ cards, next }, total, leadCard, recent] = await Promise.all([
+		cardList(grid, text.rank, user, { after, limit }),
 		db.$count(recipes, inSet),
-		after ? [] : mostSaved(inSet),
+		after || leadId === undefined
+			? null
+			: cardList(and(inSet, eq(recipes.id, leadId)), [], user, { after: null, limit: 1 }),
 		after ? [] : recentChanges(inSet)
 	]);
-	const leadId = leadRows[0]?.recipeId;
-	// Unranked, the first card is the newest; a text query orders by relevance.
-	const lead = after
-		? null
-		: (cards.find((r) => r.id === leadId) ??
-			(leadId === undefined && text.rank.length === 0
-				? (cards[0] ?? null)
-				: await newestOrLead(inSet, leadId, user)));
 	return {
 		allTags,
 		searchQuery,
 		selectedTags: tags.selectedTags,
 		friendsOnly,
-		lead,
+		lead: leadCard?.cards[0] ?? null,
 		recentChanges: recent.map((v) => ({
 			...v,
 			href: `/recipes/${v.slug}/diff?from=${v.versionNumber - 1}&to=${v.versionNumber}`
 		})),
-		// The lead stays in the grid, so Newest first and its count are the whole set.
+		// The set less the lead; `total` is the whole set, lead included.
 		recipes: cards,
 		next,
 		total
 	};
 }
 
-/** The lead when it is not among the first cards: `leadId`'s card, else the set's newest. */
-async function newestOrLead(inSet: SQL | undefined, leadId: number | undefined, user: Viewer) {
-	const { cards } = await cardList(
-		and(inSet, leadId === undefined ? undefined : eq(recipes.id, leadId)),
-		[],
-		user,
-		{ after: null, limit: 1 }
-	);
-	return cards[0] ?? null;
+/** The lead's id: the most-saved recipe in `inSet` this week, else its newest change. */
+async function leadOf(inSet: SQL | undefined): Promise<number | undefined> {
+	const [saved] = await mostSaved(inSet);
+	if (saved) return saved.recipeId;
+	// cardList's unranked order: newest change, then id.
+	const [newest] = await db
+		.select({ id: recipes.id })
+		.from(recipes)
+		.where(inSet)
+		.orderBy(desc(recipes.updatedAt), desc(recipes.id))
+		.limit(1);
+	return newest?.id;
 }
 
 /** The recipe in `inSet` saved most often in the lead window, if any was saved. */

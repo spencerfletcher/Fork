@@ -26,14 +26,24 @@ const row = (id: number, username = 'maria') => ({
 });
 const ROWS = [row(1), row(2), row(3, 'devcooks')];
 
-/** The lead and recent-changes lookups, then the two count aggregates. */
-function mockSelects(lead: unknown[], recent: unknown[]) {
+/**
+ * The lead lookups (most saved, then the newest when nothing was saved), the
+ * recent-changes lookup, then the card aggregates. The newest is the first
+ * row's id unless given.
+ */
+function mockSelects(lead: unknown[], recent: unknown[], newest: unknown[] = [{ id: ROWS[0].id }]) {
 	const leadChain = chain(lead);
+	const newestChain = chain(newest);
 	const recentChain = chain(recent);
-	selectMock.mockReturnValueOnce(leadChain).mockReturnValueOnce(recentChain);
+	selectMock.mockReturnValueOnce(leadChain);
+	if (lead.length === 0) selectMock.mockReturnValueOnce(newestChain);
+	selectMock.mockReturnValueOnce(recentChain);
 	selectMock.mockReturnValue(chain([]));
-	return { leadChain, recentChain };
+	return { leadChain, newestChain, recentChain };
 }
+
+/** The grid's query: the first card read. */
+const gridWhere = () => sqlOf(findManyMock.mock.calls[0][0].where);
 
 beforeEach(() => {
 	vi.clearAllMocks();
@@ -42,30 +52,33 @@ beforeEach(() => {
 });
 
 describe('loadDiscover', () => {
-	test('reads one page of the grid, one card past it, and counts the whole set', async () => {
-		mockSelects([], []);
+	test('reads one page of the grid, one card past it, and counts the whole set, lead included', async () => {
+		mockSelects([{ recipeId: 3, saves: 4 }], []);
 		db.$count.mockResolvedValueOnce(130);
 
 		const result = await loadDiscover(url(), VIEWER);
 
 		expect(findManyMock.mock.calls[0][0].limit).toBe(CARDS_PER_PAGE + 1);
 		expect(result.total).toBe(130);
-		expect(sqlOf(db.$count.mock.calls[0][1])).toEqual(sqlOf(findManyMock.mock.calls[0][0].where));
+		expect(sqlOf(db.$count.mock.calls[0][1])).toEqual(sqlOf(visibleTo(VIEWER)));
 	});
 
-	test("Show more's fetch (after a cursor) reads the next cards alone: no lead, no Recent changes", async () => {
+	test("Show more's fetch (after a cursor) reads the next cards alone, still without the lead", async () => {
+		selectMock.mockReturnValueOnce(chain([{ recipeId: 3, saves: 4 }]));
 		selectMock.mockReturnValue(chain([]));
 
 		const result = await loadDiscover(url('?after=24'), VIEWER);
 
 		expect(result.lead).toBeNull();
 		expect(result.recentChanges).toEqual([]);
-		// The two card aggregates only: neither the lead's nor Recent changes' query ran.
-		expect(selectMock).toHaveBeenCalledTimes(2);
+		expect(gridWhere().params).toContain(3);
+		// The lead's id and the two card aggregates: no lead card, no Recent changes.
+		expect(findManyMock).toHaveBeenCalledTimes(1);
+		expect(selectMock).toHaveBeenCalledTimes(3);
 	});
 
 	test('lists what the viewer may see, newest first, as cards', async () => {
-		mockSelects([], []);
+		mockSelects([], [], []);
 
 		await loadDiscover(url(), VIEWER);
 
@@ -75,7 +88,8 @@ describe('loadDiscover', () => {
 	});
 
 	test('signed out, public only: the grid, the tags, the lead and Recent changes', async () => {
-		const { leadChain, recentChain } = mockSelects([], []);
+		// An empty set: no lead, so the grid's query is the set's alone.
+		const { leadChain, recentChain } = mockSelects([], [], []);
 
 		await loadDiscover(url(), null);
 
@@ -92,14 +106,17 @@ describe('loadDiscover', () => {
 		);
 	});
 
-	test('the lead is the most-saved visible recipe of the last week, and stays in the grid', async () => {
+	test('the lead is the most-saved visible recipe of the last week, left out of the grid', async () => {
+		findManyMock.mockResolvedValueOnce(ROWS).mockResolvedValueOnce([row(3)]);
 		const { leadChain } = mockSelects([{ recipeId: 3, saves: 4 }], []);
 		const before = Date.now();
 
 		const result = await loadDiscover(url(), VIEWER);
 
 		expect(result.lead?.id).toBe(3);
-		expect(result.recipes.map((r) => r.id)).toEqual(ROWS.map((r) => r.id));
+		expect(gridWhere().sql).toContain('<>');
+		expect(gridWhere().params).toContain(3);
+		expect(sqlOf(findManyMock.mock.calls[1][0].where).params).toContain(3);
 		const leadWhere = sqlOf(leadChain.where.mock.calls[0][0]);
 		expect(leadWhere.params).toContain(VIEWER.id);
 		const cutoff = leadWhere.params.find(
@@ -109,24 +126,15 @@ describe('loadDiscover', () => {
 		expect(days).toBeCloseTo(LEAD_WINDOW_DAYS, 2);
 	});
 
-	test('a most-saved recipe past the first page is read on its own to lead', async () => {
-		findManyMock.mockResolvedValueOnce(ROWS).mockResolvedValueOnce([row(80)]);
-		mockSelects([{ recipeId: 80, saves: 9 }], []);
+	test('with no saves this week the newest recipe leads, left out of the grid', async () => {
+		findManyMock.mockResolvedValueOnce(ROWS).mockResolvedValueOnce([row(1)]);
+		const { newestChain } = mockSelects([], []);
 
 		const result = await loadDiscover(url(), VIEWER);
 
-		expect(result.lead?.id).toBe(80);
-		expect(result.recipes.map((r) => r.id)).toEqual(ROWS.map((r) => r.id));
-		expect(sqlOf(findManyMock.mock.calls[1][0].where).params).toContain(80);
-	});
-
-	test('with no saves this week the newest recipe leads', async () => {
-		mockSelects([], []);
-
-		const result = await loadDiscover(url(), VIEWER);
-
-		expect(result.lead?.id).toBe(ROWS[0].id);
-		expect(result.recipes.map((r) => r.id)).toEqual(ROWS.map((r) => r.id));
+		expect(result.lead?.id).toBe(1);
+		expect(gridWhere().params).toContain(1);
+		expect(newestChain.limit).toHaveBeenCalledWith(1);
 	});
 
 	test('recent changes: newest later versions of visible recipes, linking to their diff', async () => {
@@ -160,12 +168,12 @@ describe('loadDiscover', () => {
 	});
 
 	test('a filter narrows the lead and Recent changes to the filtered set too', async () => {
+		findManyMock.mockResolvedValueOnce(ROWS).mockResolvedValueOnce([row(2)]);
 		const { leadChain, recentChain } = mockSelects([{ recipeId: 2, saves: 3 }], []);
 
 		const result = await loadDiscover(url('?q=dal'), VIEWER);
 
 		expect(result.lead?.id).toBe(2);
-		expect(result.recipes.map((r) => r.id)).toEqual(ROWS.map((r) => r.id));
 		expect(sqlOf(findManyMock.mock.calls[0][0].where).params).toContain('dal');
 		expect(sqlOf(leadChain.where.mock.calls[0][0]).params).toContain('dal');
 		expect(sqlOf(recentChain.where.mock.calls[0][0]).params).toContain('dal');
@@ -182,18 +190,15 @@ describe('loadDiscover', () => {
 	});
 
 	test('filtered with no saves this week, the newest recipe in the set leads', async () => {
-		// Text search orders by relevance, so the newest is read on its own.
-		findManyMock.mockResolvedValueOnce([row(3), row(1), row(2)]).mockResolvedValueOnce([row(1)]);
-		mockSelects([], []);
+		findManyMock.mockResolvedValueOnce([row(3), row(2)]).mockResolvedValueOnce([row(1)]);
+		const { newestChain } = mockSelects([], [], [{ id: 1 }]);
 
 		const result = await loadDiscover(url('?q=dal'), VIEWER);
 
 		expect(result.lead?.id).toBe(1);
-		expect(result.recipes.map((r) => r.id)).toEqual([3, 1, 2]);
-		const newest = findManyMock.mock.calls[1][0];
-		expect(newest.limit).toBe(2);
-		expect(newest.orderBy).toHaveLength(2);
-		expect(sqlOf(newest.where).params).toContain('dal');
+		expect(result.recipes.map((r) => r.id)).toEqual([3, 2]);
+		expect(sqlOf(newestChain.where.mock.calls[0][0]).params).toContain('dal');
+		expect(gridWhere().params).toEqual(expect.arrayContaining(['dal', 1]));
 	});
 
 	test('an @handle in the query narrows to that cook and leaves the rest as text', async () => {
@@ -253,7 +258,9 @@ describe('loadDiscover', () => {
 
 	test('fork counts follow the viewer', async () => {
 		const forkChain = chain([]);
+		// Most saved, newest (none: an empty set), Recent changes, versions, then forks.
 		selectMock
+			.mockReturnValueOnce(chain([]))
 			.mockReturnValueOnce(chain([]))
 			.mockReturnValueOnce(chain([]))
 			.mockReturnValueOnce(chain([]))

@@ -99,9 +99,10 @@
 
 		{#if list.items.length > 0}
 			<section class="grid-section">
+				<!-- The grid is the set less the lead, so the count says it is the whole set. -->
 				<p class="order">
 					<span class="eyebrow-label">Newest first</span>
-					<span>{plural(data.total, 'recipe')}</span>
+					<span>{plural(data.total, 'recipe')} in all</span>
 				</p>
 				<div class="discover-grid" bind:this={grid}>
 					{#each list.items as recipe, i (recipe.id)}
@@ -111,7 +112,7 @@
 				</div>
 				<ShowMore {list} container={grid} noun="recipe" />
 			</section>
-		{:else}
+		{:else if !lead}
 			<p class="empty">
 				{#if filtered}
 					No recipes match. Try another search or fewer filters.

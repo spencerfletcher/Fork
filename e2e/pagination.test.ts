@@ -48,6 +48,29 @@ test.describe('Show more, signed out', () => {
 		await expect(cards(page)).toHaveCount(2);
 	});
 
+	// The lead is not repeated in the grid: walked to the end, every card is a
+	// different recipe, none the lead, and with the lead they are the count.
+	test('the lead never comes back in the grid, on any page, and the count is the lead and the cards', async ({
+		page
+	}) => {
+		await gotoHydrated(page, '/discover?per=3');
+		const lead = await page.locator('.lead a[href^="/recipes/"]').getAttribute('href');
+		const total = Number(
+			(await page.locator('.order').innerText()).match(/(\d+) recipes? in all/)![1]
+		);
+		while ((await showMore(page).count()) > 0) {
+			const before = await cards(page).count();
+			await showMore(page).click();
+			await expect.poll(() => cards(page).count()).toBeGreaterThan(before);
+		}
+		const hrefs = await cards(page)
+			.locator('a.card-stretched-link')
+			.evaluateAll((links) => links.map((a) => a.getAttribute('href')));
+		expect(hrefs).not.toContain(lead);
+		expect(new Set(hrefs).size).toBe(hrefs.length);
+		expect(hrefs.length + 1).toBe(total);
+	});
+
 	test('a filter starts the list over at its first page', async ({ page }) => {
 		await gotoHydrated(page, '/discover?per=1');
 		await showMore(page).click();
