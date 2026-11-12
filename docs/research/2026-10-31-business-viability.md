@@ -2,7 +2,7 @@
 
 # Business viability and paths to scale — 31 October 2026
 
-Spencer's question: "is there a way to turn it into a business of scale? a viable product? ... what would we need?" Inputs: `docs/ROADMAP.md`, `PRODUCT.md`, `docs/research/2026-10-31-feature-research.md`, then web research on 31 October 2026.
+Spencer's question: "is there a way to turn it into a business of scale? a viable product? ... what would we need?" Inputs: `docs/history/2026-10-milestones.md`, `PRODUCT.md`, `docs/research/2026-10-31-feature-research.md`, then web research on 31 October 2026.
 
 Source marks: **(F)** a page fetched and read for this note; **(S)** a search-engine summary, not opened, so treat as unverified; **(E)** an estimate, mine or a third party's, with no disclosure behind it. Reddit, Inc.com, uxdesign.cc and the Copyright Office PDF could not be read (403 or binary).
 
@@ -48,7 +48,7 @@ Source marks: **(F)** a page fetched and read for this note; **(S)** a search-en
 - **Fork must build:** creator pages, embeds for Substack and blogs, paid recipes (Stripe), email to followers on a new version, per-recipe analytics, schema.org output.
 - **Risk:** creators want traffic and money, and are entrenched in WordPress (WP Recipe Maker 50K+ installs, S) and Substack; one developer cannot sell and support a B2B product while building consumer features. Best kept as a later layer on strategy 1.
 
-Models ruled out: **ads** (rejected in `docs/ROADMAP.md`, and session revenue is shrinking industry-wide, People Inc session revenue −1% in Q1 2026, F); **hardware tie-ins** (Cookidoo's 6M+ subscribers at about €60 a year exist because of the Thermomix, S, [Vorwerk](https://www.businessforhome.org/2026/05/vorwerk-increases-2025-revenue-to-a-record-eur-3-6-billion/)); **data licensing** (needs scale first).
+Models ruled out: **ads** (rejected in `docs/history/2026-10-milestones.md`, and session revenue is shrinking industry-wide, People Inc session revenue −1% in Q1 2026, F); **hardware tie-ins** (Cookidoo's 6M+ subscribers at about €60 a year exist because of the Thermomix, S, [Vorwerk](https://www.businessforhome.org/2026/05/vorwerk-increases-2025-revenue-to-a-record-eur-3-6-billion/)); **data licensing** (needs scale first).
 
 ## (c) Comparables
 

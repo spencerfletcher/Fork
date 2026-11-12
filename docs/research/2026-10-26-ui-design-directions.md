@@ -1,6 +1,6 @@
 # UI design directions
 
-2026-10-26. Research input for the UI redesign (priority 2 in `../ROADMAP.md`). Three candidate directions with palettes checked against WCAG AA, a set of principles that hold whichever direction wins, and a recommendation. Companion visual: the "Fork design directions" canvas at https://claude.ai/artifact/UhvxNv69Z7KGBpviCJcXpe (private to Spencer), which renders a recipe card, an ingredient row and a diff row in each direction, light and dark.
+2026-10-26. Research input for the UI redesign (priority 2 in `../history/2026-10-milestones.md`). Three candidate directions with palettes checked against WCAG AA, a set of principles that hold whichever direction wins, and a recommendation. Companion visual: the "Fork design directions" canvas at https://claude.ai/artifact/UhvxNv69Z7KGBpviCJcXpe (private to Spencer), which renders a recipe card, an ingredient row and a diff row in each direction, light and dark.
 
 Private notes that fed this: `../todo/DESIGN.md` (parchment and green stash, design-brief rules) and `../todo/TODO_UI.md` (reference sites).
 

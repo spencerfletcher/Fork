@@ -1,6 +1,6 @@
 # Design ideas
 
-Input to the UI redesign, priority 2 in `docs/ROADMAP.md`. Nothing here is applied; it is a palette and a set of observations to weigh when the redesign starts. See `TODO_UI.md` beside it for reference sites.
+Input to the UI redesign, priority 2 in `docs/history/2026-10-milestones.md`. Nothing here is applied; it is a palette and a set of observations to weigh when the redesign starts. See `TODO_UI.md` beside it for reference sites.
 
 ## Alternate palette: warm parchment with vivid green and golden tags
 

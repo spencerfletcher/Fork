@@ -117,7 +117,7 @@ Importers = non-test files importing the component by path (the component's own 
 - Top 10 #1, #2 and #7, and the cookbook `.seg` comment above.
 - `drift:` the decision pack's deviation list says "Discover's lead card and Recent changes hide while a filter is active". DESIGN.md:211 says they stay and draw from the filtered set, and so does the code: Discover.svelte:44,71 have no `filtered` guard. Add a one-line "superseded by DESIGN.md Layout, 9 Nov" note, since docs/README.md calls the pack current. [docs/design/2026-11-10-decision-pack/DESIGN-SUMMARY.md:106] (S)
 - AGENTS.md shared helpers: all 30 named exports exist where stated (scripted check, 0 missing). Not listed: `loadPage` (src/lib/testing/actions.ts, 6 files use it), which the 10 Nov report named as the owner for typed load results. Optional one-line add.
-- `docs/README.md`: every link and every backticked path resolves, including the six `docs/product/*.md` files. The three superseded planning docs and `docs/ROADMAP.md` each open with a pointer to `docs/product/`. No doc mentions the Supabase services trimmed in 5424b36.
+- `docs/README.md`: every link and every backticked path resolves, including the six `docs/product/*.md` files. The three superseded planning docs and `docs/history/2026-10-milestones.md` each open with a pointer to `docs/product/`. No doc mentions the Supabase services trimmed in 5424b36.
 
 ### Hygiene
 

@@ -374,7 +374,7 @@ For the portfolio, demonstrate one coherent story: a friend posts an actual cook
 
 ### Preserve earlier commitments while replacing obsolete sequencing
 
-This report supersedes the active ordering and estimates in the historical roadmap. It preserves ideas explicitly accepted by Spencer; “later” means delayed with a dependency or decision gate, not silently cancelled. The September blanket social deferral was superseded in October. Spencer’s explicit 8 November approval now establishes social as a defining pillar and an early friends pilot; cookbook quality remains a parallel commitment, not a reason to defer basic social until P5. ([Preserved historical roadmap](../../ROADMAP.md))
+This report supersedes the active ordering and estimates in the historical roadmap. It preserves ideas explicitly accepted by Spencer; “later” means delayed with a dependency or decision gate, not silently cancelled. The September blanket social deferral was superseded in October. Spencer’s explicit 8 November approval now establishes social as a defining pillar and an early friends pilot; cookbook quality remains a parallel commitment, not a reason to defer basic social until P5. ([Preserved historical roadmap](../../history/2026-10-milestones.md))
 
 | Earlier milestone | Current disposition |
 |---|---|

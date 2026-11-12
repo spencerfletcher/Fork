@@ -261,7 +261,7 @@ git commit -m "Recipe form on the locked system: two columns, eyebrow labels, gr
 **Files:**
 
 - Modify: `e2e/authenticated.test.ts` (Save button name; append two tests)
-- Modify: `docs/research/2026-10-26-ui-design-directions.md`, `docs/ROADMAP.md`
+- Modify: `docs/research/2026-10-26-ui-design-directions.md`, `docs/history/2026-10-milestones.md`
 
 - [ ] **Step 1: Update and add e2e**
 
@@ -326,9 +326,9 @@ Dev server signed in (the seed user; use the e2e auth state or sign in by hand),
 
 - [ ] **Step 4: Record and close out**
 
-One paragraph after the "Compare page, as built" paragraph in the design doc: the helper line and the placeholder are computed from the same change groups the server uses, so they agree with the generated message; a settings-only save says so; the guard uses the browser's confirm and lets the browser handle tab-close itself; TagInput keeps chips above the input rather than inside it. `docs/ROADMAP.md`: mark the redesign item done with the date and list what moved to the backlog during it (in-place tag filter, section overflow, None.png removal, nav highlight on tag pages).
+One paragraph after the "Compare page, as built" paragraph in the design doc: the helper line and the placeholder are computed from the same change groups the server uses, so they agree with the generated message; a settings-only save says so; the guard uses the browser's confirm and lets the browser handle tab-close itself; TagInput keeps chips above the input rather than inside it. `docs/history/2026-10-milestones.md`: mark the redesign item done with the date and list what moved to the backlog during it (in-place tag filter, section overflow, None.png removal, nav highlight on tag pages).
 
 ```bash
-git add e2e/authenticated.test.ts docs/research/2026-10-26-ui-design-directions.md docs/ROADMAP.md
+git add e2e/authenticated.test.ts docs/research/2026-10-26-ui-design-directions.md docs/history/2026-10-milestones.md
 git commit -m "Editor e2e for the guard, the helper line and the growing textarea; redesign closed out in the docs"
 ```

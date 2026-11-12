@@ -2,7 +2,7 @@
 
 # Feature wishlist and competitor gaps — 31 October 2026
 
-Inputs: `docs/ROADMAP.md`, `PRODUCT.md`, then web research. **Reddit could not be read**: reddit.com and old.reddit.com refuse this crawler, so no Reddit thread is cited. Frequency instead comes from vote counts on the public trackers of the two biggest open-source recipe managers, read with the GitHub API on 31 October 2026: Mealie feature-request discussions (upvotes, all 1,372 discussions ranked) and Tandoor issues (thumbs-up). Hacker News comments come from the Algolia API. Votes measure self-hosters, a technical crowd; treat them as a lower bound on mainstream demand, not a survey.
+Inputs: `docs/history/2026-10-milestones.md`, `PRODUCT.md`, then web research. **Reddit could not be read**: reddit.com and old.reddit.com refuse this crawler, so no Reddit thread is cited. Frequency instead comes from vote counts on the public trackers of the two biggest open-source recipe managers, read with the GitHub API on 31 October 2026: Mealie feature-request discussions (upvotes, all 1,372 discussions ranked) and Tandoor issues (thumbs-up). Hacker News comments come from the Algolia API. Votes measure self-hosters, a technical crowd; treat them as a lower bound on mainstream demand, not a survey.
 
 ## (a) Top 15 candidates, ranked by user value against build cost
 

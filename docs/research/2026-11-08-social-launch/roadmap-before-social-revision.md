@@ -269,7 +269,7 @@ For the portfolio, demonstrate one coherent story: capture a family dough recipe
 
 ### Preserve earlier commitments while replacing obsolete sequencing
 
-This report supersedes the active ordering and estimates in the historical roadmap. It preserves ideas explicitly accepted by Spencer; “later” means delayed with a dependency or decision gate, not silently cancelled. The September blanket social deferral was superseded in October; today’s core-first request changes sequence again. ([Preserved historical roadmap](../../ROADMAP.md))
+This report supersedes the active ordering and estimates in the historical roadmap. It preserves ideas explicitly accepted by Spencer; “later” means delayed with a dependency or decision gate, not silently cancelled. The September blanket social deferral was superseded in October; today’s core-first request changes sequence again. ([Preserved historical roadmap](../../history/2026-10-milestones.md))
 
 | Earlier milestone | Current disposition |
 |---|---|

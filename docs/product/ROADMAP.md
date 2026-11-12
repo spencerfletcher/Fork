@@ -16,7 +16,7 @@ The single current plan for Fork, a recipe cookbook with version history, a cook
 | CD | [Cookbook design research, 8 Nov 2026](../research/2026-11-08-cookbook-design-research/README.md): its working contract and learning tracks, folded 12 Nov 2026 |
 | UX | [UX review, 12 Nov 2026](../research/2026-11-12-ux-review.md): recommendations, not decisions; item numbers are its recommended order (UX 1 to UX 4) |
 | OD | Spencer's decisions in conversation, 9 to 11 Nov 2026, listed under section 14 |
-| M1 to M23 | Milestones of the [October roadmap](../ROADMAP.md), mapped in section 13 |
+| M1 to M23 | Milestones of the [October roadmap](../history/2026-10-milestones.md), mapped in section 13 |
 
 ## 1. The finished product
 
