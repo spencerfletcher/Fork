@@ -167,6 +167,14 @@ describe('layout footer', () => {
 		const links = screen.getAllByRole('link', { name: 'Report a problem' });
 		expect(links).toHaveLength(1);
 		expect(links[0]).toHaveAttribute('href', '/report');
+		// Quiet: Ink 3 words, not a clay sentence action.
+		expect(links[0]).not.toHaveClass('inline-action');
+	});
+
+	// Cooking is the recipe alone, as the tab bar steps aside for it.
+	test('Cook mode has no footer', () => {
+		renderLayout('/recipes/[slug]', null, undefined, 'http://localhost/recipes/dal?cook=1');
+		expect(screen.queryByRole('link', { name: 'Report a problem' })).toBeNull();
 	});
 });
 

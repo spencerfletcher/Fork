@@ -105,9 +105,12 @@
 		{@render children()}
 		<!-- Inside main, so it ends clear of the phone tab bar and the select bar
 		     as the page does (app.css). For anyone, signed in or not. -->
-		<footer class="site-footer">
-			<a class="inline-action" href="/report">Report a problem</a>
-		</footer>
+		{#if page.url.searchParams.get('cook') !== '1'}
+			<!-- Quiet: one Ink 3 line at the page's end; Cook mode is the recipe alone. -->
+			<footer class="site-footer">
+				<a class="hit-link" href="/report">Report a problem</a>
+			</footer>
+		{/if}
 	</main>
 	<!-- Phone only; it hides itself in Cook and the editor. -->
 	<TabBar />
@@ -136,11 +139,27 @@
 		transform: none;
 	}
 
+	/* Its height is --footer-height (app.css), which a screen-tall auth page
+	   leaves it so the page does not scroll for one line. */
 	.site-footer {
+		box-sizing: border-box;
 		max-width: var(--max-width);
+		height: var(--footer-height);
 		margin: 0 auto;
-		padding: var(--space-5);
+		padding: 0 var(--space-5);
+		display: flex;
+		align-items: center;
 		font-size: 0.875rem;
+	}
+
+	.site-footer a {
+		color: var(--color-text-3);
+	}
+
+	@media (hover: hover) {
+		.site-footer a:hover {
+			text-decoration-line: underline;
+		}
 	}
 
 	@media (max-width: 699px) {

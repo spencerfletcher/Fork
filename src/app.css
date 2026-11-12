@@ -279,6 +279,8 @@
 
 	/* Layout */
 	--max-width: 1200px;
+	/* The site footer's one line (+layout.svelte). */
+	--footer-height: 48px;
 }
 
 @layer base {
@@ -912,7 +914,7 @@
 
 		/* A screen-tall auth or error page leaves that room too, or it scrolls for nothing. */
 		body:has(.tab-bar) .auth-page {
-			min-height: calc(100dvh - 56px - 57px - env(safe-area-inset-bottom));
+			min-height: calc(100dvh - 56px - 57px - var(--footer-height) - env(safe-area-inset-bottom));
 		}
 	}
 
@@ -1388,7 +1390,7 @@
 
 	/* Under the 56px navbar, so the page does not scroll. */
 	.auth-page {
-		min-height: calc(100dvh - 56px);
+		min-height: calc(100dvh - 56px - var(--footer-height));
 		display: flex;
 		align-items: center;
 		justify-content: center;

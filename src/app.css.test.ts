@@ -110,6 +110,13 @@ describe('app.css hovers', () => {
 		expect(rule).toMatch(/pointer-events:\s*none/);
 	});
 
+	// The footer sits under a screen-tall auth page; its height comes off, or the page scrolls.
+	test('a screen-tall auth page leaves the footer its height', () => {
+		for (const rule of cssRules(css, '.auth-page').filter((r) => /min-height/.test(r)))
+			expect(rule).toMatch(/var\(--footer-height\)/);
+		expect(cssRules(css, 'body:has(.tab-bar) .auth-page').join()).toMatch(/var\(--footer-height\)/);
+	});
+
 	// The ⋯ is a box like the ghost and the menu rows (Spencer, 11 November 2026: "… to band").
 	test('the ⋯ trigger fills with the band while hovered or open', () => {
 		const rule = body(".more-button:hover, .more-button[aria-expanded='true']");
