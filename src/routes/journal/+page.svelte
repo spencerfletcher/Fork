@@ -31,10 +31,9 @@
 		<div class="page-head j-head">
 			<div>
 				<h1>Journal</h1>
-				<!-- No space before the day: its dot is drawn and never leads a line. -->
-				<p class="status dot-list" role="status">
-					{#if logged}<strong>Logged</strong><span>{dayLabel(logged.cookedOn)}</span
-						>{:else if deleted}Entry deleted.{/if}
+				<p class="status dot-list dot-clip" role="status">
+					{#if logged}<strong>Logged</strong>
+						<span>{dayLabel(logged.cookedOn)}</span>{:else if deleted}Entry deleted.{/if}
 				</p>
 			</div>
 			{#if count > 0}
@@ -76,7 +75,10 @@
 		gap: 16px;
 	}
 
+	/* A flex row, so its drawn dot is dropped, never leading a wrapped line. */
 	.status {
+		display: flex;
+		flex-wrap: wrap;
 		margin: 4px 0 0;
 		color: var(--color-text-2);
 	}
