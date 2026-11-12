@@ -664,7 +664,7 @@
 			right: 0;
 			bottom: 0;
 			left: 0;
-			z-index: 50;
+			z-index: 51;
 			width: auto;
 			max-width: none;
 			max-height: 80dvh;
@@ -673,12 +673,13 @@
 			border-radius: var(--radius-md) var(--radius-md) 0 0;
 		}
 
-		/* Over the tab bar (40), under the sheet (50); the page's ink, faint. */
+		/* Over the tab bar (40) and the top bar (50, earlier in the page, so
+		   the same layer covers it), under the sheet; the page's ink, faint. */
 		.picker-scrim {
 			display: block;
 			position: fixed;
 			inset: 0;
-			z-index: 45;
+			z-index: 50;
 			background: color-mix(in srgb, var(--color-text) 32%, transparent);
 		}
 

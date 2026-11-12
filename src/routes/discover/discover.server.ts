@@ -20,8 +20,8 @@ const HANDLE = /^@([\w-]+)$/;
  * Discover, for `/discover` and the signed-out `/`: every recipe the viewer may
  * see (visibleTo), newest first. A lead card and a Recent changes row come
  * first, drawn from the same set, filtered or not; the grid is the set less
- * the lead, so no recipe shows twice, and `total` counts the whole set. Filters as Search, all
- * ANDed: `q` (an `@handle` word in it narrows to that cook), `tags`, and
+ * the lead, so no recipe shows twice, and `total` counts the whole set.
+ * Filters as Search, all ANDed: `q` (an `@handle` word in it narrows to that cook), `tags`, and
  * `friends=1` when signed in.
  */
 export async function loadDiscover(url: URL, user: { id: string } | null) {
