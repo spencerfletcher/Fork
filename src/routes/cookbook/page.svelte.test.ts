@@ -171,7 +171,9 @@ describe('Cookbook page', () => {
 		});
 		const group = screen.getByRole('group', { name: 'Show' });
 		expect(group).toHaveTextContent(/All\s*2\s*Mine\s*1\s*Saved\s*1/);
-		expect(screen.getByRole('heading', { level: 2, name: 'Quick' })).toBeInTheDocument();
+		// Named once on screen, by its button; the outline still hears it.
+		expect(screen.getByRole('heading', { level: 2, name: 'Quick' })).toHaveClass('sr-only');
+		expect(screen.queryByRole('button', { name: 'Rename Quick' })).toBeNull();
 	});
 
 	test('an empty collection says how to fill it, with no filters over it', () => {

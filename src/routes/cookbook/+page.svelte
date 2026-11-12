@@ -9,7 +9,6 @@
 	import ResultStatus from '#lib/components/ui/ResultStatus.svelte';
 	import ShowMore from '#lib/components/ui/ShowMore.svelte';
 	import CookbookDrafts from './CookbookDrafts.svelte';
-	import CookbookCollections from './CookbookCollections.svelte';
 	import CookbookPicker from './CookbookPicker.svelte';
 	import CookbookSort from './CookbookSort.svelte';
 	import SelectBar from './SelectBar.svelte';
@@ -158,7 +157,6 @@
 				<!-- No filters over an empty collection, as over an empty cookbook, but
 				     the picker, the way to another collection. -->
 				<div class="cookbook-tools alone">{@render picker()}</div>
-				<CookbookCollections collection={data.collection} />
 				<EmptyPanel title="Nothing in {data.collection.name} yet">
 					Open a recipe from your Cookbook and choose this collection in its ⋯ menu.
 				</EmptyPanel>
@@ -203,7 +201,8 @@
 						</div>
 					</div>
 				</div>
-				{#if data.collection}<CookbookCollections collection={data.collection} />{/if}
+				<!-- The page outline names the collection; its button shows the name once. -->
+				{#if data.collection}<h2 class="sr-only">{data.collection.name}</h2>{/if}
 
 				<!-- Screen readers only (Spencer, 9 November 2026): the cards say the count. -->
 				<ResultStatus count={data.total} {filtered} />
@@ -416,7 +415,7 @@
 		gap: 12px 16px;
 	}
 
-	/* An empty collection: the pickers alone over its bar. */
+	/* An empty collection: the pickers alone over its empty panel. */
 	.cookbook-tools.alone {
 		margin-bottom: var(--space-5);
 	}

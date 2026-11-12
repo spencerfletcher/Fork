@@ -35,7 +35,6 @@ test.describe('Collections', () => {
 		await page.getByRole('textbox', { name: 'New collection' }).fill(name);
 		await page.getByRole('button', { name: 'Create', exact: true }).click();
 		await page.waitForURL(/\/cookbook\?collection=\d+$/);
-		await expect(page.getByRole('heading', { level: 2, name, exact: true })).toBeVisible();
 		await expect(page.getByText(`Nothing in ${name} yet`)).toBeVisible();
 		// Made, the picker closes; its button names the collection.
 		await expect(page.getByRole('menu', { name: 'Collections and tags' })).toHaveCount(0);
@@ -44,21 +43,24 @@ test.describe('Collections', () => {
 		).toBeVisible();
 
 		// A search inside the collection, so the rename has a whole query to keep.
+		// Rename and Delete are the picker's, under the chosen collection's row.
 		await gotoHydrated(page, `${page.url()}&q=e2e`);
-		await page.getByRole('button', { name: `Rename ${name}` }).click();
+		await page.getByRole('button', { name: `Collection: ${name}`, exact: true }).click();
+		await page.getByRole('menuitem', { name: `Rename ${name}` }).click();
 		await page.getByRole('textbox', { name: 'Collection name' }).fill(renamed);
 		await page.getByRole('button', { name: 'Save', exact: true }).click();
-		// Still inside the collection, with its search, after the rename.
-		await expect(page.getByRole('heading', { level: 2, name: renamed, exact: true })).toBeVisible();
+		// Still inside the collection, with its search, after the rename; the picker closed.
+		await expect(
+			page.getByRole('button', { name: `Collection: ${renamed}`, exact: true })
+		).toBeVisible();
+		await expect(page.getByRole('menu', { name: 'Collections and tags' })).toHaveCount(0);
 		await expect(page).toHaveURL(/\/cookbook\?collection=\d+&q=e2e$/);
 
 		// Reloaded at ?page=3 (Show more wrote it), leaving the collection starts
 		// the list at its first page, the search kept.
 		await gotoHydrated(page, `${page.url()}&page=3`);
 		await expect(await collectionRow(page, 'All collections')).toHaveAttribute('href', '?q=e2e');
-		await page.keyboard.press('Escape');
-
-		await page.getByRole('button', { name: 'Delete collection' }).click();
+		await page.getByRole('menuitem', { name: 'Delete collection' }).click();
 		const step = page.getByRole('group', { name: `Delete ${renamed}?` });
 		await expect(step).toContainText('its recipes stay in your Cookbook');
 		await step.getByRole('button', { name: 'Delete collection' }).click();

@@ -3,6 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { tick } from 'svelte';
+	import ConfirmStep from '#lib/components/ui/ConfirmStep.svelte';
 	import Dropdown from '#lib/components/ui/Dropdown.svelte';
 	import FieldError from '#lib/components/ui/FieldError.svelte';
 	import { chevronIcon, plusIcon } from '#lib/components/Icons.svelte';
@@ -17,7 +18,9 @@
 	// November 2026): two buttons opening one panel, a find box over both
 	// groups, the group whose button opened it first. One collection at a
 	// time; tags are ticks. Every row is a link to its filtered URL, so a
-	// reload, Back and a shared link all land on the same list.
+	// reload, Back and a shared link all land on the same list. The chosen
+	// collection's Rename and Delete sit under its row (owner, 12 November
+	// 2026: "drop the heading"), so its name shows once, on its button.
 	let {
 		collections,
 		collection,
@@ -41,6 +44,8 @@
 	let first = $state<Group>('collections');
 	let query = $state('');
 	let naming = $state(false);
+	let renaming = $state(false);
+	let deleting = $state(false);
 	let closePanel: (() => void) | undefined;
 
 	const collectionHref = (id: number | null) =>
@@ -92,6 +97,8 @@
 			if (turning) return claim(e);
 			query = '';
 			naming = false;
+			renaming = false;
+			deleting = false;
 			toggle(e);
 		};
 	}
@@ -142,6 +149,28 @@
 		naming = false;
 		await tick();
 		document.querySelector<HTMLElement>('.picker-new')?.focus();
+	}
+
+	// Renamed or deleted, the panel closes; its button names what is chosen now.
+	const renamed = pendingEnhance({ keepFailure: true, done: () => closePanel?.() });
+	const removed = pendingEnhance({
+		keepOnError: true,
+		keepFailure: true,
+		done: () => closePanel?.()
+	});
+
+	async function stopRenaming() {
+		renaming = false;
+		await tick();
+		document.querySelector<HTMLElement>('.picker-rename')?.focus();
+	}
+
+	async function startRenaming() {
+		renaming = true;
+		await tick();
+		const box = document.getElementById('picker-rename') as HTMLInputElement | null;
+		box?.focus();
+		box?.select();
 	}
 
 	async function startNaming() {
@@ -231,6 +260,9 @@
 											<span class="picker-note">Replaces {collection.name}</span>
 										{/if}
 									</a>
+									{#if !typed && collection?.id === c.id}
+										{@render chosenActions(collection)}
+									{/if}
 								{/each}
 								{#if !typed && !naming}
 									<button
@@ -347,6 +379,68 @@
 	</nav>
 </noscript>
 
+<!-- Under the chosen collection's row: Rename and Delete, quiet, at the names' edge. -->
+{#snippet chosenActions(chosen: { id: number; name: string })}
+	{#if renaming}
+		<form
+			method="POST"
+			action="?/renameCollection"
+			class="picker-naming picker-indent"
+			use:enhance={renamed.submit}>
+			<input type="hidden" name="id" value={chosen.id} />
+			<label for="picker-rename" class="sr-only">Collection name</label>
+			<input
+				id="picker-rename"
+				name="name"
+				type="text"
+				maxlength={COLLECTION_NAME_MAX}
+				required
+				autocomplete="off"
+				value={chosen.name}
+				aria-invalid={renamed.error ? true : undefined}
+				aria-describedby={renamed.error ? 'picker-rename-error' : undefined}
+				onkeydown={(e) => {
+					// Back to the row; a second Escape closes the panel.
+					if (e.key === 'Escape') {
+						e.stopPropagation();
+						stopRenaming();
+					}
+				}} />
+			<button type="submit" class="btn-primary btn-sm" disabled={renamed.pending}>Save</button>
+			<FieldError name="picker-rename" error={renamed.error} />
+		</form>
+	{:else}
+		<div class="picker-chosen picker-indent">
+			{#if !deleting}
+				<button
+					type="button"
+					class="menu-row picker-quiet picker-rename"
+					role="menuitem"
+					aria-label="Rename {chosen.name}"
+					onclick={startRenaming}>
+					Rename
+				</button>
+			{/if}
+			<ConfirmStep
+				bind:open={deleting}
+				trigger="Delete collection"
+				triggerClass="menu-row picker-quiet"
+				triggerRole="menuitem"
+				label="Delete {chosen.name}?"
+				explanation="Only the collection goes; its recipes stay in your Cookbook."
+				confirmLabel="Delete collection"
+				pendingLabel="Deleting…"
+				keepLabel="Keep"
+				action="?/deleteCollection"
+				enhance={removed.submit}
+				pending={removed.pending}
+				error={removed.error}>
+				{#snippet fields()}<input type="hidden" name="id" value={chosen.id} />{/snippet}
+			</ConfirmStep>
+		</div>
+	{/if}
+{/snippet}
+
 <!-- The check of a chosen row; its room kept while unchosen, so the names line up. -->
 {#snippet mark(on: boolean)}
 	<svg
@@ -458,6 +552,35 @@
 
 	.picker-new {
 		border-top: 1px solid var(--color-border);
+	}
+
+	/* The chosen collection's actions start at its name: the row's 12px side,
+	   the 16px check and the row's 10px gap. */
+	.picker-indent {
+		padding-left: 38px;
+	}
+
+	.picker-chosen {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+	}
+
+	/* Quiet: Ink 2 at the row's weight less a step, as wide as their words. */
+	.picker-chosen :global(.picker-quiet) {
+		width: auto;
+		padding: 0 10px;
+		font-size: 0.875rem;
+		font-weight: 400;
+		color: var(--color-text-2);
+	}
+
+	.picker-chosen :global(.picker-quiet:first-child) {
+		margin-left: -10px;
+	}
+
+	.picker-chosen :global(.confirm-step) {
+		padding: 6px 6px 6px 0;
 	}
 
 	.picker-none {

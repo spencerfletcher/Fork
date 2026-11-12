@@ -268,6 +268,58 @@ describe('Cookbook picker', () => {
 		expect(box.closest('form')).toHaveAttribute('action', '?/createCollection');
 	});
 
+	// Owner, 12 November 2026: "drop the heading"; Rename and Delete live in
+	// the picker, under the chosen collection's row.
+	test('the chosen collection carries Rename and Delete under its row; none other does', async () => {
+		makePicker({ collection: WEEKNIGHT });
+		await fireEvent.click(trigger(/^Collection: Weeknight$/));
+		const rows = [...group('Collections').querySelectorAll('[role^="menuitem"]')];
+		const names = rows.map((r) => r.getAttribute('aria-label') ?? r.textContent!.trim());
+		const at = names.findIndex((n) => n.startsWith('Weeknight'));
+		expect(names.slice(at + 1, at + 3)).toEqual(['Rename Weeknight', 'Delete collection']);
+		expect(screen.getAllByRole('menuitem', { name: /^Rename/ })).toHaveLength(1);
+	});
+
+	test('no collection chosen, or typing, there is no Rename or Delete', async () => {
+		makePicker();
+		await fireEvent.click(trigger(/^Collections$/));
+		expect(screen.queryByRole('menuitem', { name: /^Rename/ })).toBeNull();
+		expect(screen.queryByRole('menuitem', { name: 'Delete collection' })).toBeNull();
+	});
+
+	test('Rename edits the name in place, posts the collection’s id, and Escape goes back to it', async () => {
+		makePicker({ collection: WEEKNIGHT });
+		await fireEvent.click(trigger(/^Collection: Weeknight$/));
+		await fireEvent.click(screen.getByRole('menuitem', { name: 'Rename Weeknight' }));
+		await tick();
+		const box = screen.getByRole('textbox', { name: 'Collection name' });
+		expect(box).toHaveValue('Weeknight');
+		expect(box).toHaveFocus();
+		expect(box).toHaveAttribute('maxlength', String(COLLECTION_NAME_MAX));
+		const form = box.closest('form')!;
+		expect(form).toHaveAttribute('action', '?/renameCollection');
+		expect(form.querySelector('input[name="id"]')).toHaveValue('3');
+
+		await fireEvent.keyDown(box, { key: 'Escape' });
+		await tick();
+		expect(screen.getByRole('menuitem', { name: 'Rename Weeknight' })).toHaveFocus();
+		expect(menu()).toBeInTheDocument();
+	});
+
+	test('Delete is asked twice, saying the recipes stay', async () => {
+		makePicker({ collection: WEEKNIGHT });
+		await fireEvent.click(trigger(/^Collection: Weeknight$/));
+		await fireEvent.click(screen.getByRole('menuitem', { name: 'Delete collection' }));
+		await tick();
+		const step = screen.getByRole('group', { name: 'Delete Weeknight?' });
+		expect(step).toHaveAccessibleDescription(
+			'Only the collection goes; its recipes stay in your Cookbook.'
+		);
+		const form = within(step).getByRole('button', { name: 'Delete collection' }).closest('form')!;
+		expect(form).toHaveAttribute('action', '?/deleteCollection');
+		expect(form.querySelector('input[name="id"]')).toHaveValue('3');
+	});
+
 	test('fifty of each: the lists scroll inside the panel', async () => {
 		render(CookbookPicker, {
 			props: {

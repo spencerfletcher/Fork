@@ -114,9 +114,7 @@ test.describe('a Cookbook card’s ⋯', () => {
 			);
 			await expect(card).toHaveCount(0);
 			await expect(await collectionRow(page, name)).toContainText('0');
-			await page.keyboard.press('Escape');
-
-			await page.getByRole('button', { name: 'Delete collection' }).click();
+			await page.getByRole('menuitem', { name: 'Delete collection' }).click();
 			await page.getByRole('button', { name: 'Delete collection' }).click();
 			await page.waitForURL(/\/cookbook$/);
 			await expect(await collectionRow(page, name)).toHaveCount(0);
