@@ -1,5 +1,6 @@
 import { vi, describe, test, expect, beforeEach } from 'vitest';
-import { invokeAction, formEvent, loadEvent } from '#lib/testing/actions.js';
+import { invokeAction, formEvent, loadEvent, loadPage } from '#lib/testing/actions.js';
+import type { PageData } from './$types';
 import { OWN_LIKE } from '#lib/server/friends.js';
 import { MAX_REPORT } from '#lib/server/moderation.js';
 import { actions, load } from './+page.server';
@@ -152,7 +153,7 @@ describe('friends load', () => {
 			}
 		];
 		m.notificationsFor.mockResolvedValue(items);
-		const data = await load(loadEvent({ path: '/friends', user: ME }));
+		const data = await loadPage<PageData>(load, loadEvent({ path: '/friends', user: ME }));
 		expect(m.notificationsFor).toHaveBeenCalledWith(ME, { limit: UNSEEN_MAX });
 		expect(data.notices).toEqual(forYou(items as never));
 	});

@@ -29,7 +29,9 @@ function renderLayout(
 	state.page.error = error;
 	state.page.data = { meta };
 	state.page.url = new URL(url);
-	return render(Layout, { props: { data: { user: null, profile: null }, children } });
+	return render(Layout, {
+		props: { data: { user: null, profile: null, unseen: false }, children }
+	});
 }
 
 const head = (selector: string) => document.head.querySelector(selector);
