@@ -33,6 +33,8 @@ const RECIPE = {
 	visibility: 'public',
 	authorId: 'author',
 	author: { id: 'author', username: 'chef' },
+	parentId: null,
+	parent: null,
 	versions: [version(1), version(2), version(3)]
 };
 
@@ -154,5 +156,39 @@ describe('compare page visibility', () => {
 		selectMock.mockReturnValueOnce(chain([]));
 		const result = await loadWith('', { id: 'stranger' }).catch((e: unknown) => e);
 		expect(result).toMatchObject({ status: 404 });
+	});
+
+	test("a fork's v1 reads its line from the parent, by the author's current handle; the parent is not sent", async () => {
+		const parent = {
+			slug: 'p',
+			visibility: 'public',
+			authorId: 'ana-id',
+			deletedAt: null,
+			suppressedAt: null,
+			author: { username: 'ana-renamed' }
+		};
+		findRecipeMock.mockResolvedValue({ ...RECIPE, parentId: 9, parentVersion: 4, parent });
+		const data = (await loadWith('?from=1&to=2')) as {
+			recipe: object;
+			fromVersion: { commitMessage: string };
+			allVersions: { commitMessage: string }[];
+		};
+		expect(data.fromVersion.commitMessage).toBe('Forked from @ana-renamed, v4');
+		expect(data.allVersions.map((v) => v.commitMessage)).toEqual([
+			'Forked from @ana-renamed, v4',
+			'Version 2',
+			'Version 3'
+		]);
+		expect(data.recipe).not.toHaveProperty('parent');
+
+		findRecipeMock.mockResolvedValue({
+			...RECIPE,
+			parentId: 9,
+			parentVersion: 4,
+			parent: { ...parent, visibility: 'private' }
+		});
+		const hidden = (await loadWith('?from=1&to=2')) as { fromVersion: { commitMessage: string } };
+		expect(hidden.fromVersion.commitMessage).toBe('Forked from a private recipe, v4');
+		expect(JSON.stringify(hidden)).not.toContain('ana-renamed');
 	});
 });

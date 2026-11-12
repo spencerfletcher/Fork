@@ -18,7 +18,7 @@ export const FORMAT_LABEL: Record<ExportFormat, string> = { json: 'JSON', md: 'M
 /** Another record's pointer at a recipe: its slug, link, title and its author's handle (null for a deleted account). */
 export type RecipeRef = { slug: string; url: string; title: string; author: string | null };
 
-/** One version, exactly as stored: `content` is the RecipeContent the editor saved. */
+/** One version, exactly as stored: `content` is the RecipeContent the editor saved; a fork's v1 `message` is its line from the parent (`forkedFromLine`). */
 export type ExportVersion = {
 	number: number;
 	date: string;

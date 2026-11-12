@@ -2,7 +2,7 @@ import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { chain } from '#lib/testing/drizzle.js';
 import { loadEvent } from '#lib/testing/actions.js';
 import { and, desc, eq, inArray, isNull } from 'drizzle-orm';
-import { recipes, recipeVersions } from '#lib/server/db/schema.js';
+import { recipes } from '#lib/server/db/schema.js';
 
 const { findFirstMock, findManyMock, selectMock } = vi.hoisted(() => ({
 	findFirstMock: vi.fn(),
@@ -123,24 +123,19 @@ describe('/recipes/[slug]/forks load', () => {
 		);
 	});
 
-	test('loads each fork’s first commit note in the same query', async () => {
-		await run();
-		expect(forksQuery().with.versions).toEqual({
-			where: eq(recipeVersions.versionNumber, 1),
-			columns: { commitMessage: true }
-		});
-	});
-
-	test('gives each fork its first commit note, and null without one', async () => {
-		const note = 'Forked from @owner’s v3';
+	test("each fork's note is read from this recipe, its parent: the author's current handle and the version copied", async () => {
+		findFirstMock.mockResolvedValue({ ...RECIPE, author: { username: 'owner-renamed' } });
 		findManyMock.mockResolvedValue([
-			{ id: 7, slug: 'my-cookies', versions: [{ commitMessage: note }] },
-			{ id: 8, slug: 'bare', versions: [] }
+			{ id: 7, slug: 'my-cookies', parentVersion: 3 },
+			{ id: 8, slug: 'old', parentVersion: null }
 		]);
 		const data = (await run()) as { forks: Record<string, unknown>[] };
-		expect(data.forks[0]).toMatchObject({ id: 7, forkNote: note });
-		expect(data.forks[1]).toMatchObject({ id: 8, forkNote: null });
-		expect(data.forks[0]).not.toHaveProperty('versions');
+		expect(findFirstMock.mock.calls[0][0].with).toEqual({
+			author: { columns: { username: true } }
+		});
+		expect(data.forks[0]).toMatchObject({ id: 7, forkNote: 'Forked from @owner-renamed, v3' });
+		expect(data.forks[1]).toMatchObject({ id: 8, forkNote: 'Forked from @owner-renamed' });
+		expect(forksQuery().with).not.toHaveProperty('versions');
 	});
 
 	test('titles the page after the recipe', async () => {

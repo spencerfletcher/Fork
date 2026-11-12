@@ -10,6 +10,7 @@ import { canView, friendIdsOf, inLibraryOf } from './visibility.js';
 import { keptVersionsOf } from './keptCopies.js';
 import { wholeJournalOf, type EntrySource } from './journal.js';
 import { versionContent } from '#lib/recipes/content.js';
+import { forkedFromLine } from '#lib/recipes/forkedFrom.js';
 import { oneOf } from '#lib/helpers.js';
 import { toMarkdown } from '#lib/export/markdown.js';
 import type { FailureCode } from './actions.js';
@@ -91,7 +92,14 @@ export async function exportFor(
 			versions: r.versions.map((v) => ({
 				number: v.versionNumber,
 				date: v.createdAt.toISOString(),
-				message: v.commitMessage,
+				// A fork's v1 stores no message: its line is read from forkedFrom.
+				message:
+					forkedFrom !== null && v.versionNumber === 1
+						? forkedFromLine(
+								typeof forkedFrom === 'string' ? forkedFrom : { author: forkedFrom.author },
+								r.parentVersion
+							)
+						: v.commitMessage,
 				content: versionContent(v)
 			}))
 		};

@@ -2,21 +2,37 @@ import { error, redirect } from '@sveltejs/kit';
 import { recipeVersions } from '#lib/server/db/schema.js';
 import { asc } from 'drizzle-orm';
 import { diffIngredients, diffMeta, diffSteps } from '#lib/recipes/diff.js';
-import { viewableRecipe } from '#lib/server/visibility.js';
+import {
+	friendIdsOnce,
+	lineageFor,
+	PARENT_AUTHOR,
+	viewableRecipe
+} from '#lib/server/visibility.js';
+import { withForkLine } from '#lib/recipes/forkedFrom.js';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params, url, locals }) => {
-	const recipe = await viewableRecipe(params.slug, locals.user, {
-		versions: {
-			orderBy: [asc(recipeVersions.versionNumber)],
-			with: { creator: true }
+	const friends = friendIdsOnce(locals.user);
+	const recipe = await viewableRecipe(
+		params.slug,
+		locals.user,
+		{
+			versions: {
+				orderBy: [asc(recipeVersions.versionNumber)],
+				with: { creator: true }
+			},
+			parent: { with: { author: PARENT_AUTHOR } }
 		},
-		author: true
-	});
+		friends
+	);
 	if (!recipe) throw error(404, 'Recipe not found');
 	if (recipe.versions.length < 2) throw error(400, 'Need at least two versions to compare');
 
-	const allVersions = recipe.versions;
+	// The parent is read only for a fork's v1 line, and never sent to the page.
+	const allVersions = withForkLine(recipe.versions, {
+		...recipe,
+		...(await lineageFor(recipe, locals.user, friends))
+	});
 
 	const fromParam = url.searchParams.get('from');
 	const toParam = url.searchParams.get('to');
@@ -54,7 +70,7 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 	const metaDiff = diffMeta(fromVersion, toVersion);
 
 	return {
-		recipe,
+		recipe: { slug: recipe.slug, title: recipe.title },
 		fromVersion,
 		toVersion,
 		metaDiff,

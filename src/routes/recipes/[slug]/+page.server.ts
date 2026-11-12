@@ -9,13 +9,15 @@ import { recipeCopies, versionContent } from '#lib/recipes/content.js';
 import { recipeMeta } from '#lib/seo.js';
 import { gramsFor } from '#lib/server/ingredientDensities.js';
 import {
-	canViewRow,
 	friendIdsOnce,
 	keptCopy,
+	lineageFor,
 	NOT_AUTHORIZED,
 	ownRecipe,
+	PARENT_AUTHOR,
 	viewableRecipe
 } from '#lib/server/visibility.js';
+import { withForkLine } from '#lib/recipes/forkedFrom.js';
 import { attachRecipeCounts } from '#lib/server/recipeCounts.js';
 import { lastEntryFor } from '#lib/server/journal.js';
 import { VERSION_NOT_FOUND } from './versionError.js';
@@ -37,9 +39,6 @@ import type { PageServerLoad, Actions } from './$types';
 /** A collection gone meanwhile, or a recipe no longer in the reader's library. */
 const NOT_IN_COLLECTIONS =
 	'That collection or recipe is no longer in your Cookbook. Reload the page.';
-
-/** The byline names the parent's author by handle: that one column of their profile, current after a rename. */
-const PARENT_AUTHOR = { columns: { username: true } } as const;
 
 export const load: PageServerLoad = async ({ params, url, locals: { user } }) => {
 	const recipeSlug = params.slug;
@@ -93,14 +92,9 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 
 	// A public fork can come from a private recipe. Readers who can't see that
 	// recipe get no parent data at all; parentId alone lets the page say so.
-	// parentId has no FK, so a deleted parent leaves it pointing at no row; one
-	// in the Trash reads as deleted too, until it is restored.
-	const parentVisible = recipe.parent !== null && (await canViewRow(recipe.parent, user, friends));
-	const visibleRecipe = {
-		...recipe,
-		parent: parentVisible ? recipe.parent : null,
-		parentDeleted: recipe.parentId !== null && (recipe.parent === null || !!recipe.parent.deletedAt)
-	};
+	// A fork's v1 reads its history line from that same parent.
+	const lineage = { ...recipe, ...(await lineageFor(recipe, user, friends)) };
+	const visibleRecipe = { ...lineage, versions: withForkLine(recipe.versions, lineage) };
 
 	// Independent lookups, one round trip. The fork count is the forks the
 	// viewer can see, the cards' and the forks page's rule (visibleTo), so no
@@ -121,11 +115,13 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 	// Resolve which version's content to display: ?version= when asked, else
 	// the version the saver keeps, else the latest. Creation and forking write
 	// a version in the same transaction as the recipe, so every recipe has one.
-	const latestVersion = recipe.versions[0];
+	const latestVersion = visibleRecipe.versions[0];
 	const keptVersion = copy ? null : (favorite?.keptVersion ?? null);
 	const arrival = requestedVersion ?? keptVersion;
 	const currentVersion =
-		arrival === null ? latestVersion : recipe.versions.find((v) => v.versionNumber === arrival);
+		arrival === null
+			? latestVersion
+			: visibleRecipe.versions.find((v) => v.versionNumber === arrival);
 	if (!currentVersion) throw error(404, VERSION_NOT_FOUND);
 
 	// Add to collection is for a recipe in the reader's library: their own, or saved.
@@ -143,7 +139,7 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 		// Weights come from local tables at load time, so the page never pays for
 		// an external lookup; lines the tables do not know get null.
 		grams: currentVersion.ingredients.map(gramsFor),
-		allVersions: recipe.versions,
+		allVersions: visibleRecipe.versions,
 		isFavorited,
 		collections,
 		/** The reader's own save: the version they keep and their note; null when not saved. */
@@ -319,8 +315,7 @@ export const actions: Actions = {
 				orderBy: [desc(recipeVersions.versionNumber)],
 				limit: 1
 			},
-			recipesToTags: true,
-			author: true
+			recipesToTags: true
 		});
 		if (!source) throw error(404, 'Source recipe not found');
 		// For its author and moderators too: a fork would be a copy nobody hid.
@@ -329,10 +324,11 @@ export const actions: Actions = {
 		const copied = source.versions[0];
 		if (!copied) return failure(404, 'not_found', `This recipe has no v${version}.`);
 
-		// Forking is one click. The first version says where the copy came from;
-		// the forker writes a message of their own when they change something.
-		const from = source.author ? `@${source.author.username}, ` : '';
-		const commitMessage = `Forked from ${from}v${copied.versionNumber}`;
+		// Forking is one click. The first version stores no message: where the
+		// copy came from is read from parentId and parentVersion (withForkLine),
+		// so the parent's author reads by their current handle. The forker
+		// writes a message of their own when they change something.
+		const commitMessage = '';
 
 		await ensureProfile(user);
 
