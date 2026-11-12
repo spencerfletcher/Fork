@@ -12,18 +12,19 @@ Start here. The product set in `product/` holds the current plan; everything els
 - **MVP design direction:** [Design summary](design/2026-11-10-decision-pack/DESIGN-SUMMARY.md) (decided 9 Nov 2026), with its build record. Open `design/2026-11-10-decision-pack/index.html` for the screens, comparisons and the live editor prototype. `WORKSHEET.md` beside it holds Spencer's review notes.
 - **Design inspiration:** [design/INSPIRATION.md](design/INSPIRATION.md), a living list of products to look at when a screen is designed or revisited.
 - **Rules:** [DESIGN.md](../DESIGN.md) (visual and interaction rules, tokens in `src/app.css`), [PRODUCT.md](../PRODUCT.md) (audience, purpose, principles), [AGENTS.md](../AGENTS.md) (how to work in the repo).
+- **Research:** [research/README.md](research/README.md), every note with its status: live notes (folded, and still read first by the builds their roadmap rows name) in `research/`, archived ones in `research/archive/`.
 - **Engineering state:** `audits/`, dated sweeps from the `code-health` skill; the latest is [code_health_2026-11-12.md](audits/code_health_2026-11-12.md).
 
-## History / research that fed the current set
+## History and research that fed the current set
 
 - [Product roadmap report](research/2026-11-08-product-roadmap/README.md) (8 to 10 Nov 2026) and its three research notes: the previous current plan, folded into `product/`.
 - [Design refinement and solo-business viability](research/2026-11-10-design-and-solo-business.md) and [Finished product and revenue](research/2026-11-10-finished-product-and-revenue.md) (10 Nov 2026): syntheses folded into `product/`.
-- [Package sweep](research/2026-11-12-package-sweep.md) (12 Nov 2026): a survey of dependencies, written by another pass.
+- [Package sweep](research/2026-11-12-package-sweep.md) (12 Nov 2026): hand-built code against packages, and packages for later needs, folded into `product/` as recommendations (source key PS).
 - [UX review](research/2026-11-12-ux-review.md) (12 Nov 2026): a signed-in walkthrough and implementation review with a recommended order of next work, folded into `product/` as recommendations (source UX).
 - [October milestones](history/2026-10-milestones.md) (once `docs/ROADMAP.md`): the Oct 2026 milestone list M1 to M23 and earlier priority orders; the product roadmap maps every milestone.
 - `design/`: dated design work. `2026-10-27-redesign` (the shipped redesign), `2026-11-08-mvp` (first MVP mockups), `2026-11-10-offline-review` (a self-contained review pack with its own worksheet), `2026-11-10-decision-pack` (the MVP direction).
 - [Cookbook design research](research/2026-11-08-cookbook-design-research/README.md) (8 Nov 2026): its working contract and learning tracks folded into `product/` on 12 Nov (source CD).
-- `research/`: dated research notes, Oct to Nov 2026, including the cookbook-app deep dive, the Zed reference, the cookbook design research and the social launch and copyright notes.
+- `research/`: dated research notes, Oct to Nov 2026, including the Cooklang note, the cookbook-app deep dive, the Zed reference, the cookbook design research and the social launch and copyright notes; all folded into `product/` (the 12 Nov sweep traced every note, COVERAGE.md). `research/archive/`: the October design directions, palette, page critique and site sweeps, the 31 Oct feature and business notes, the pre-revision roadmap draft and the 9 Nov reuse sweeps. [research/README.md](research/README.md) lists them all.
 - `../.impeccable/critique/`: tool-generated per-screen critiques, 28 Oct to 8 Nov 2026; not a source for the plan.
 - `superpowers/plans` and `superpowers/specs`: build plans and specs from Aug to Oct 2026, for features that have shipped except the pull-requests design (M1), which the roadmap places in P4 to P5.
 - `history/supabase-migrations`: the pre-Drizzle migration chain, superseded by `drizzle/`.
@@ -31,4 +32,4 @@ Start here. The product set in `product/` holds the current plan; everything els
 
 ## Conventions
 
-One dated folder or file per piece of research or design work, `YYYY-MM-DD-topic`. A folder's entry point is `README.md` (research) or `DESIGN-SUMMARY.md` / `index.html` (design). The `product/` set is the exception: undated, edited in place, with a dated changelog in each file; new research is folded into it, never amended in place. Links are relative. When a doc stops being current, this index moves it under History rather than deleting it.
+One dated folder or file per piece of research or design work, `YYYY-MM-DD-topic`. A folder's entry point is `README.md` (research) or `DESIGN-SUMMARY.md` / `index.html` (design). The `product/` set is the exception: undated, edited in place, with a dated changelog in each file; new research is folded into it, never amended in place. Links are relative. When a doc stops being current, this index moves it under History rather than deleting it. A research note whose conclusions are all in the product set or the code, that is superseded, or whose fixes shipped, and that no build needs to read first, moves to `research/archive/` with `git mv`, keeping its dated name, with one line at its top saying where its conclusions live; [research/README.md](research/README.md) moves its row and every link to it is fixed.

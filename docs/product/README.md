@@ -19,7 +19,7 @@ Fork is a recipe cookbook for serious home cooks, live at recipes.spencerfletche
 4. Build the P1 cookbook: drafts, Trash, photo access by audience, collections, Keep this version, search quality, print, export.
 5. Settle the P1 design backlog and the open questions in the roadmap, one at a time.
 
-**Next builds, in order** (Spencer, 12 Nov 2026; [DECISIONS.md](DECISIONS.md) section 1): varied seed data; a design quality pass against [DESIGN-DIRECTION.md](DESIGN-DIRECTION.md); Journal recall; the empty Cookbook entry point; easy import, starting with an options page; onboarding; then the public-launch prerequisites with a short final design pass, before the pilot. The cookie example's fix comes before the seed. The order follows the [12 November UX review](../research/2026-11-12-ux-review.md), with real-meal validation waiting on public launch.
+**Next builds, in order** (Spencer, 12 Nov 2026; [DECISIONS.md](DECISIONS.md) section 1): varied seed data; a design quality pass against [DESIGN-DIRECTION.md](DESIGN-DIRECTION.md); Journal recall; the empty Cookbook entry point; easy import, starting with an options page; onboarding; then the public-launch prerequisites with a short final design pass, before the pilot. The cookie example's fix comes before the seed. The order follows the [12 November UX review](../research/2026-11-12-ux-review.md), with real-meal validation waiting on public launch. Each next build's roadmap row names the research a builder reads first; [research/README.md](../research/README.md) lists every note and where its conclusions live.
 
 ## Release log
 
@@ -50,7 +50,7 @@ Rules stay where they are: [DESIGN.md](../../DESIGN.md) (visual and interaction 
 
 - This is the one current set. Edit it in place; never add an amendment section.
 - Each file ends with a dated changelog, one line per change.
-- New research goes in `docs/research/` as a dated note, then is folded into these files. Research notes are never amended in place to change the plan.
+- New research goes in `docs/research/` as a dated note, then is folded into these files, with a source key and a COVERAGE section. Research notes are never amended in place to change the plan; a note no build needs to read moves to `docs/research/archive/` ([research/README.md](../research/README.md)).
 - A decision by Spencer goes into the Decided list in DECISIONS.md with its date, and into the item it changes.
 - A publish to production gets a row in the release log above; roadmap rows only say live, built and so on, never which publish.
 - Nothing is removed without Spencer's approval unless a later decision replaces it; replacements go in "Dropped as superseded", other candidates in "Proposed removals".
@@ -65,3 +65,4 @@ Rules stay where they are: [DESIGN.md](../../DESIGN.md) (visual and interaction 
 - 2026-11-12: Next builds in order (DECISIONS §1); the UX review paragraph replaced.
 - 2026-11-12: Release log added; roadmap rows no longer carry publish status.
 - 2026-11-12: Next builds include the design quality pass (second) and the final design pass with the public-launch prerequisites.
+- 2026-11-12: research sweep: every note traced (COVERAGE), next builds name their read-first research, the research index and archive linked.
