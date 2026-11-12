@@ -2,7 +2,6 @@ import { eq } from 'drizzle-orm';
 import { db } from '#lib/server/db/index.js';
 import { profiles, type ReportTarget } from '#lib/server/db/schema.js';
 import {
-	MAX_REPORT,
 	OWN_LIKE,
 	acceptRequest,
 	block,
@@ -22,6 +21,7 @@ import { listPage } from '#lib/listPage.js';
 import { ensureProfile } from '#lib/server/profiles.js';
 import { failure, requireUser, signedOut } from '#lib/server/actions.js';
 import { rateLimited } from '#lib/server/rateLimit.js';
+import { MAX_REPORT } from '#lib/server/moderation.js';
 import { oneOf, text, wholeNumber } from '#lib/helpers.js';
 import type { Actions, PageServerLoad } from './$types';
 import { privatePage } from '#lib/seo.js';

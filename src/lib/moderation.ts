@@ -11,3 +11,6 @@ export const HIDDEN_NOTE =
 /** What Fork and Save are told on a hidden recipe. */
 export const HIDDEN_REFUSED =
 	'This recipe is hidden from other cooks, so it can’t be saved or forked.';
+
+/** The /report form's hidden trap field: a person never sees it, a form-filling bot fills it. */
+export const REPORT_HONEYPOT = 'website';
