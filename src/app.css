@@ -1523,11 +1523,11 @@
 		text-shadow: none !important;
 	}
 
-	/* The site's chrome, the band and cooking's header (the print header says
-	   what they did), the version bar's controls, the phone tabs and the
-	   bottom switch, Finish cooking, the scaler (the print header says the
-	   serves), and the ticks' circles: a numbered step
-	   and a ruled row are enough on paper. */
+	/* The site's chrome, the band and cooking's header with the scaler in
+	   them (the print header says what they did, the serves included), the
+	   version bar's controls, the phone tabs and the bottom switch, Finish
+	   cooking, and the ticks' circles: a numbered step and a ruled row are
+	   enough on paper. */
 	.nav-shell,
 	.tab-bar,
 	.skip-link,
@@ -1537,7 +1537,6 @@
 	.section-tabs,
 	.finish,
 	.clear-ticks,
-	#recipe .serves,
 	#recipe .tick,
 	#recipe .form-hint a {
 		display: none !important;

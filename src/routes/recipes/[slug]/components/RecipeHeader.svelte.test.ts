@@ -365,6 +365,13 @@ describe('RecipeHeader content', () => {
 		expect(screen.getByText('12')).toHaveClass('text-accent');
 	});
 
+	test('handed the page’s count setter, the measure offers Scale beside the yield', () => {
+		renderHeader({ scale: scaling(V1, null), onscale: vi.fn() });
+		expect(screen.getByRole('button', { name: 'Scale' }).closest('.details')).toHaveTextContent(
+			/Serves\s+4\s+Scale/
+		);
+	});
+
 	test('a blank servings on the viewed version shows no serves', () => {
 		renderHeader({ currentVersion: { ...V1, servings: null } });
 		expect(screen.queryByText(/Serves/)).toBeNull();

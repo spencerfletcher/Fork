@@ -1,8 +1,16 @@
+<script module lang="ts">
+	/** A pause in typing: how long an unreadable entry sits before the field
+	 *  says why, and how long the facts line waits to announce a new yield, so
+	 *  "1/" on the way to "1/2x" is never refused nor "1" on the way to "12" said. */
+	export const TYPING_PAUSE_MS = 1000;
+</script>
+
 <script lang="ts">
-	import { setShallowParam } from './shallowParam';
+	import { onMount, untrack } from 'svelte';
 	import FieldError from '#lib/components/ui/FieldError.svelte';
 	import {
 		MAX_SCALE,
+		SCALE_HINT,
 		SCALE_MESSAGES,
 		formatServes,
 		readScale,
@@ -11,169 +19,284 @@
 
 	let {
 		scale,
-		onchange
+		onchange,
+		onclose
 	}: {
-		/** The page's scaling: what the box counts (servings, the Makes count or the multiplier) and its 1x. */
+		/** The page's scaling: what the field counts (servings, the Makes count or the multiplier) and its 1x. */
 		scale: Scaling;
+		/** A new count, already rounded to two decimals. */
 		onchange: (count: number) => void;
+		/** Escape: the facts line closes the panel and takes focus back. */
+		onclose: () => void;
 	} = $props();
 
+	// The facts line above says Serves or Makes; the field names it for a
+	// screen reader only, as the old control did.
 	const NAMES = { serves: 'Servings', makes: 'Makes', scale: 'Scale' } as const;
+	const counted = $derived(scale.by === 'serves' ? 'servings' : scale.unit);
+	const stepNames = $derived(
+		scale.by === 'scale' ? ['Scale down', 'Scale up'] : [`Fewer ${counted}`, `More ${counted}`]
+	);
 
-	// The URL carries the count so a scaled link shares, in the recipe's own
-	// param (?serves=, ?makes= or ?scale=), and drops it at the recipe's own.
-	function set(next: number) {
-		const rounded = Number(formatServes(next));
-		onchange(rounded);
-		setShallowParam(scale.by, rounded === scale.base ? null : formatServes(rounded));
+	// One serving; a Makes of a dozen or fewer one at a time; a bigger batch
+	// (36 cookies) or a bare multiplier half a batch, so a step is a real change.
+	const step = $derived(
+		scale.by === 'serves' ? 1 : scale.by === 'makes' && scale.base <= 12 ? 1 : scale.base / 2
+	);
+	const rounded = (n: number) => Number(formatServes(n));
+	const fits = (n: number) =>
+		n > 0 && n / scale.base <= MAX_SCALE && n / scale.base >= 1 / MAX_SCALE;
+	function go(next: number) {
+		const count = rounded(next);
+		if (fits(count) && count !== scale.count) onchange(count);
 	}
 
-	// Applied on change (blur, Enter, which blurs, or a step of the spinner or
-	// an arrow key). An entry that does not read is put back to the current
-	// count, and says why.
+	// The field's text, kept while typing ("2x" stays "2x"); a change from
+	// anywhere else (a step, Reset) writes the new count into it.
+	let typed = $state(untrack(() => formatServes(scale.count)));
 	let error: string | null = $state(null);
-	function apply(input: HTMLInputElement) {
-		const read = readScale(input.value, scale.base);
+	let mine = untrack(() => scale.count);
+	$effect(() => {
+		if (scale.count === mine) return;
+		mine = scale.count;
+		typed = formatServes(scale.count);
+		error = null;
+	});
+
+	// Applied as typed: every entry that reads scales at once. One that does
+	// not leaves the last good scale and says why on Enter, on leaving the
+	// field, or after TYPING_PAUSE_MS without a keystroke, so "1/" on the way to
+	// "1/2x" is never refused. An emptied field is mid-edit until Enter or blur.
+	let pause: ReturnType<typeof setTimeout> | undefined;
+	function refuse() {
+		clearTimeout(pause);
+		const read = readScale(typed, scale.base);
 		error = read.ok ? null : SCALE_MESSAGES[read.reason];
-		const next = read.ok ? Number(formatServes(read.factor * scale.base)) : scale.count;
-		input.value = formatServes(next);
-		if (next !== scale.count) set(next);
+	}
+	function input(e: Event & { currentTarget: HTMLInputElement }) {
+		typed = e.currentTarget.value;
+		clearTimeout(pause);
+		const read = readScale(typed, scale.base);
+		if (read.ok) {
+			error = null;
+			mine = rounded(read.factor * scale.base);
+			go(read.factor * scale.base);
+		} else if (typed.trim() !== '') pause = setTimeout(refuse, TYPING_PAUSE_MS);
+	}
+	function commit() {
+		refuse();
+		if (!error) typed = formatServes(scale.count);
+	}
+	$effect(() => () => clearTimeout(pause));
+
+	function keydown(e: KeyboardEvent) {
+		if (e.key === 'Enter') commit();
+		else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+			e.preventDefault();
+			go(scale.count + (e.key === 'ArrowUp' ? step : -step));
+		}
 	}
 
-	// Reset leaves with the scaling, so focus moves to the box rather than
-	// dropping to the page. A mouse click (detail > 0) keeps the page still.
-	let box: HTMLInputElement | undefined = $state();
+	// Reset leaves 1x with the button off, so a keyboard's focus goes to the
+	// field rather than dropping to the page; a tap (detail > 0) leaves it.
 	function reset(e: MouseEvent) {
-		box?.focus({ preventScroll: e.detail > 0 });
-		error = null;
-		set(scale.base);
+		if (e.detail === 0) field?.focus();
+		go(scale.base);
 	}
+
+	// Opening: a desktop types at once, the count selected so typing replaces
+	// it; a touch screen focuses the first live button, so no keyboard comes
+	// up until the field is tapped (the Cookbook picker's rule).
+	let field: HTMLInputElement | undefined = $state();
+	let row: HTMLElement | undefined = $state();
+	onMount(() => {
+		if (window.matchMedia?.('(max-width: 699px), (pointer: coarse)').matches) {
+			row?.querySelector<HTMLButtonElement>('button:enabled')?.focus();
+		} else {
+			field?.focus();
+			field?.select();
+		}
+	});
 </script>
 
-<!-- The native spinner: the arrows and the up and down keys step by 1, and
-     step="any" keeps a typed 1.5 valid (Spencer, 31 October 2026: "add an up
-     down selector ... regular HTML one is fine"). The multiplier and Reset come
-     last: the control is left-aligned, so what appears or changes width grows
-     rightward and the box stays under the cursor (Spencer, 31 October 2026). -->
-<span class="serves">
-	<input
-		bind:this={box}
-		type="number"
-		step="any"
-		min={scale.base / MAX_SCALE}
-		inputmode="decimal"
-		aria-label={NAMES[scale.by]}
-		aria-invalid={error ? true : undefined}
-		aria-describedby={error ? 'scale-error' : undefined}
-		value={formatServes(scale.count)}
-		onchange={(e) => apply(e.currentTarget)}
-		onkeydown={(e) => {
-			if (e.key === 'Enter') e.currentTarget.blur();
-		}} />
-	<span class="label">{scale.unit}</span>
-	{#if scale.scaled}
-		<!-- A bare multiplier's box is already the multiplier. -->
-		{#if scale.by !== 'scale'}<span class="factor">{formatServes(scale.factor)}x</span>{/if}
-		<button type="button" class="text-btn reset" onclick={reset}>Reset</button>
+<!-- In flow under the facts line, pushing what follows down: no sheet, no
+     popover, no Done (Spencer, 12 November 2026). -->
+<!-- Escape from any control in it, as the key bubbles up. -->
+<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+<div
+	id="scale-panel"
+	class="scale-panel"
+	role="group"
+	aria-label="Scale this recipe"
+	onkeydown={(e) => {
+		if (e.key === 'Escape') onclose();
+	}}>
+	<div class="scale-row" bind:this={row}>
+		<span class="scale-group">
+			<button
+				type="button"
+				class="step minus"
+				aria-label={stepNames[0]}
+				disabled={!fits(rounded(scale.count - step))}
+				onclick={() => go(scale.count - step)}>
+				−
+			</button>
+			<input
+				bind:this={field}
+				value={typed}
+				type="text"
+				inputmode="decimal"
+				autocomplete="off"
+				aria-label={NAMES[scale.by]}
+				aria-invalid={error ? true : undefined}
+				aria-describedby={error ? 'scale-error' : 'scale-hint'}
+				oninput={input}
+				onblur={commit}
+				onkeydown={keydown} />
+			<button
+				type="button"
+				class="step plus"
+				aria-label={stepNames[1]}
+				disabled={!fits(rounded(scale.count + step))}
+				onclick={() => go(scale.count + step)}>
+				+
+			</button>
+		</span>
+		<button
+			type="button"
+			class="text-btn"
+			aria-label="Halve"
+			disabled={!fits(rounded(scale.count / 2))}
+			onclick={() => go(scale.count / 2)}>
+			½×
+		</button>
+		<button
+			type="button"
+			class="text-btn"
+			aria-label="Double"
+			disabled={!fits(rounded(scale.count * 2))}
+			onclick={() => go(scale.count * 2)}>
+			2×
+		</button>
+		<!-- Off as written rather than gone, so the row never changes width as
+		     the count crosses 1x. -->
+		<button type="button" class="text-btn" disabled={!scale.scaled} onclick={reset}>Reset</button>
+	</div>
+	{#if error}
+		<FieldError name="scale" {error} />
+	{:else}
+		<p class="form-hint" id="scale-hint">{SCALE_HINT}</p>
 	{/if}
-</span>
-<FieldError name="scale" {error} />
+</div>
 
 <style>
-	/* After the Ingredients eyebrow, at the row's start (Spencer, 11 November
-	   2026: left, not right), nothing boxed: the number is an underlined blank.
-	   Parts are 24px tall. The negative margins leave the row the eyebrow's
-	   height, so its rule lines up with the Method rule beside it. */
-	.serves {
-		display: inline-flex;
-		align-items: baseline;
-		gap: 6px;
-		margin: -8px 0;
-		font-size: 0.9375rem;
-		line-height: 24px;
-		color: var(--color-text-2);
-		white-space: nowrap;
+	.scale-panel {
+		margin-top: 8px;
 	}
 
-	input {
-		box-sizing: border-box;
-		/* Room for two digits and the spinner's arrows beside them. */
-		width: 5ch;
-		height: 24px;
-		padding: 0;
+	.scale-row {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+	}
+
+	/* − field + as one bordered Fork input: the field's surface, border and
+	   corners on the group, the focus ring on it while the field is focused. */
+	.scale-group {
+		display: inline-flex;
+		align-items: stretch;
+		height: 36px;
+		margin-right: 8px;
+		background: var(--color-surface);
+		border: 1px solid var(--color-input-border);
+		border-radius: var(--radius-md);
+	}
+
+	.scale-group:has(input:focus-visible) {
+		outline: 2px solid var(--color-accent);
+		outline-offset: 2px;
+	}
+
+	.scale-group input {
+		width: 4.5rem;
+		height: 100%;
+		padding: 0 4px;
 		border: 0;
 		border-radius: 0;
-		/* The underline is drawn, not a border, so on a phone it can sit under
-		   the number with the box's hit room below it. */
-		--underline: var(--color-text-3);
-		background: linear-gradient(var(--underline), var(--underline)) left bottom / 100% 1px no-repeat;
-		font: inherit;
+		background: transparent;
 		font-weight: 600;
-		/* Ink while scaled too: the reader edits it, it is not an output. */
-		color: var(--color-text);
 		font-variant-numeric: tabular-nums;
 		text-align: center;
 	}
 
-	input:focus {
-		--underline: var(--color-text-2);
+	/* The group carries the ring, so the field draws none of its own. */
+	.scale-group input:focus-visible {
+		outline: none;
 	}
 
-	/* Forced colours drop the drawn line; a border keeps the blank visible. */
-	@media (forced-colors: active) {
-		input {
-			border-bottom: 1px solid CanvasText;
+	.scale-group input[aria-invalid='true'] {
+		color: var(--color-remove);
+	}
+
+	/* Drawn narrow: a glyph in a 32px cell. On a phone the hit reaches out
+	   past the group's outer edge by the .hit-link pattern on the inline
+	   axis (padding out, the same margin back), so each is 44 by 44 and the
+	   layout does not move. */
+	.step {
+		--hit: 0px;
+		box-sizing: content-box;
+		width: 32px;
+		padding: 0;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 1.125rem;
+		font-weight: 600;
+		line-height: 1;
+		color: var(--color-text);
+	}
+
+	.minus {
+		padding-left: var(--hit);
+		margin-left: calc(-1 * var(--hit));
+	}
+
+	.plus {
+		padding-right: var(--hit);
+		margin-right: calc(-1 * var(--hit));
+	}
+
+	.step:disabled {
+		opacity: 0.6;
+		cursor: default;
+	}
+
+	@media (hover: hover) {
+		.step:enabled:hover {
+			color: var(--color-accent);
 		}
 	}
 
-	.factor {
-		font-size: 0.75rem;
-		font-variant-numeric: tabular-nums;
-		color: var(--color-text-2);
-		/* The note belongs to the count, not the box: a step more room before it. */
-		margin-left: 4px;
+	.scale-panel :global(.field-error),
+	.form-hint {
+		margin-top: 6px;
 	}
 
-	/* An iPad: the section tabs stand in for the eyebrow, so the control is
-	   the row. Up through the content's 26px top padding, 10px under the tabs'
-	   rule, as far from the list's rule below. */
-	@media (min-width: 700px) and (max-width: 1023px) {
-		.serves {
-			margin: -16px 0 0;
-		}
-	}
-
-	/* A thumb's 44px on a phone. Reset is a real 44px box, which reads as
-	   space since nothing is drawn; the number's box reaches 10px above and
-	   below its line, the underline under the number. A pseudo cannot grow an
-	   input. The box spans the tabs' rule to the list's: up through the
-	   content's 18px top padding, down through the row's 8px, so the line
-	   sits 10px from each rule. */
-	@media (max-width: 699px) {
-		.serves {
-			margin: -18px 0 -8px;
-			gap: 0;
+	/* A thumb's 44px: the group's height, the steps' hit, and each text
+	   button a 44px box (its label centred, nothing drawn round it). */
+	@media (max-width: 699px), (pointer: coarse) {
+		.scale-group {
+			height: 44px;
+			margin-right: 12px;
 		}
 
-		.reset {
+		.step {
+			--hit: 12px;
+		}
+
+		.scale-row .text-btn {
 			min-width: 44px;
-			height: 44px;
-		}
-
-		input {
-			height: 44px;
-			padding: 10px 0;
-			background-position: left bottom 10px;
-			/* iOS zooms into a field under 16px. */
-			font-size: 1rem;
-		}
-
-		.label {
-			margin-left: 6px;
-		}
-
-		.factor {
-			margin-inline: 6px 4px;
+			justify-content: center;
 		}
 	}
 </style>

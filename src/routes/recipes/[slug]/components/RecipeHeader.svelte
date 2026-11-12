@@ -41,6 +41,7 @@
 		recipe,
 		currentVersion,
 		scale,
+		onscale,
 		forkCount,
 		tags,
 		actions,
@@ -52,6 +53,8 @@
 		currentVersion: HeaderContent;
 		/** The page's scaling, for the measure's Serves and Makes. */
 		scale?: Scaling | null;
+		/** The page's count setter: the measure offers Scale beside the yield. */
+		onscale?: (count: number) => void;
 		/** Forks the viewer can see: the public ones and their own. */
 		forkCount: number;
 		tags: TagChip[];
@@ -131,7 +134,7 @@
 		<p class="description">{currentVersion.description}</p>
 	{/if}
 
-	<Details content={currentVersion} {scale} />
+	<Details content={currentVersion} {scale} {onscale} />
 
 	{#if tags.length > 0}
 		<p class="tags text-text-2 font-sans">

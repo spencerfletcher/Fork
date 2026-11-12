@@ -27,7 +27,6 @@ describe('the print stylesheet', () => {
 		'.section-tabs',
 		'.finish',
 		'.clear-ticks',
-		'#recipe .serves',
 		'#recipe .tick',
 		'#recipe .form-hint a'
 	])('hides %s', (selector) => {

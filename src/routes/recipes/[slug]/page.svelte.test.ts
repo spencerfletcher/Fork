@@ -13,7 +13,7 @@ import { tick } from 'svelte';
 import { ticksKey, saveTicks } from './components/ticks';
 
 // The page owns the serves: read from ?serves= on load, scaled into the
-// ingredient list. The control's own behaviour is in ServesControl's tests.
+// ingredient list. The scaler's own behaviour is in Details' and ScalePanel's tests.
 const { goto, page } = vi.hoisted(() => ({
 	goto: vi.fn(),
 	page: {
@@ -94,69 +94,69 @@ describe('recipe page measurement', () => {
 });
 
 describe('recipe page scaling', () => {
-	test('at the stored serves the box reads them and the lines are as typed', () => {
+	const scaleButton = () => screen.getByRole('button', { name: 'Scale' });
+	const field = (name = 'Servings') => screen.getByRole<HTMLInputElement>('textbox', { name });
+	const facts = () => document.querySelector('header .details');
+
+	test('at the stored serves the facts line reads them with Scale, and the lines are as typed', () => {
 		load();
-		expect(screen.getByRole('spinbutton', { name: 'Servings' })).toHaveValue(STORED);
+		expect(facts()).toHaveTextContent(new RegExp(`Serves ${STORED}\\s+Scale$`));
 		expect(rows()[0]).toHaveTextContent('1 cup (125g) flour');
 	});
 
-	test('the control sits in the Ingredients section; the header says Serves N as text', () => {
+	test('nothing scaler-related sits in the Ingredients section', () => {
 		const { container } = load();
 		const ingredients = container.querySelector('#ingredients')!;
-		expect(ingredients).toContainElement(screen.getByRole('spinbutton', { name: 'Servings' }));
-		const header = container.querySelector('header')!;
-		expect(header.querySelector('input, .serves')).toBeNull();
-		expect(header.querySelector('.details')).toHaveTextContent(`Serves ${STORED}`);
+		expect(ingredients.querySelector('input:not([type="checkbox"]), [aria-controls]')).toBeNull();
+		expect(ingredients).not.toHaveTextContent(/\bScale\b/);
 	});
 
-	test('typing double the serves doubles the quantities; the unscalable line stays', async () => {
+	test('typing double the serves doubles the quantities at once; the unscalable line stays', async () => {
 		load();
-		await fireEvent.change(screen.getByRole('spinbutton', { name: 'Servings' }), {
-			target: { value: String(STORED * 2) }
-		});
-		expect(screen.getByRole('spinbutton', { name: 'Servings' })).toHaveValue(STORED * 2);
+		await fireEvent.click(scaleButton());
+		await fireEvent.input(field(), { target: { value: String(STORED * 2) } });
 		expect(rows()[0]).toHaveTextContent('2 cups (250g) flour');
 		expect(rows()[1]).toHaveTextContent('salt to taste');
 		// The header stays truthful: it says the serves the list is scaled to.
-		expect(document.querySelector('header .details')).toHaveTextContent(`Serves ${STORED * 2}`);
+		expect(facts()).toHaveTextContent(`Serves ${STORED * 2}`);
 	});
 
-	test('typing 6 shows 1.5x and scales', async () => {
+	test('typing 1/2x halves the list', async () => {
 		load();
-		await fireEvent.change(screen.getByRole('spinbutton', { name: 'Servings' }), {
-			target: { value: '6' }
-		});
-		expect(screen.getByText('1.5x')).toBeInTheDocument();
-		expect(rows()[0]).toHaveTextContent(`1${FRACTIONS['1/2']} cups (188g) flour`);
+		await fireEvent.click(scaleButton());
+		await fireEvent.input(field(), { target: { value: '1/2x' } });
+		expect(rows()[0]).toHaveTextContent(`${FRACTIONS['1/2']} cup (63g) flour`);
 	});
 
-	test('Reset restores the stored serves and the typed lines', async () => {
+	test('Reset in the facts line restores the stored serves and the typed lines', async () => {
 		load('?serves=8');
 		await fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
-		expect(screen.getByRole('spinbutton', { name: 'Servings' })).toHaveValue(STORED);
+		expect(facts()).toHaveTextContent(`Serves ${STORED}`);
 		expect(rows()[0]).toHaveTextContent('1 cup (125g) flour');
 		expect(new URL(goto.mock.lastCall![0]).searchParams.has('serves')).toBe(false);
 	});
 
-	test('?serves= on load applies', () => {
+	test('?serves= on load applies, and the open panel holds it', async () => {
 		load('?serves=2');
-		expect(screen.getByRole('spinbutton', { name: 'Servings' })).toHaveValue(2);
 		expect(rows()[0]).toHaveTextContent(`${FRACTIONS['1/2']} cup (63g) flour`);
+		await fireEvent.click(scaleButton());
+		expect(field()).toHaveValue('2');
 	});
 
-	test('a Makes-only recipe gets the scaler: ?makes= doubles the batch, the header follows', () => {
+	test('a Makes-only recipe gets the scaler: ?makes= doubles the batch, the header follows', async () => {
 		const data = makeData();
 		const cookies = { ...data.currentVersion, servings: null, makes: '24 cookies' };
 		page.url = new URL('http://localhost/recipes/cookies?makes=48');
 		render(Page, { props: { data: { ...data, currentVersion: cookies } as PageData } });
-		expect(screen.getByRole('spinbutton', { name: 'Makes' })).toHaveValue(48);
 		expect(rows()[0]).toHaveTextContent('2 cups (250g) flour');
-		expect(document.querySelector('header .details')).toHaveTextContent('Makes 48 cookies');
+		expect(facts()).toHaveTextContent('Makes 48 cookies');
+		await fireEvent.click(scaleButton());
+		expect(field('Makes')).toHaveValue('48');
 	});
 
 	test('an invalid ?serves= is ignored', () => {
 		load('?serves=lots');
-		expect(screen.getByRole('spinbutton', { name: 'Servings' })).toHaveValue(STORED);
+		expect(facts()).toHaveTextContent(`Serves ${STORED}`);
 		expect(rows()[0]).toHaveTextContent('1 cup (125g) flour');
 	});
 });
@@ -285,7 +285,7 @@ describe('recipe page after a shallow replace', () => {
 
 	test('the serves and Cook come from the shallow URL', () => {
 		loadShallow('?serves=8&cook=1');
-		expect(screen.getByRole('spinbutton', { name: 'Servings' })).toHaveValue(8);
+		expect(document.querySelector('header.cook-header')).toHaveTextContent('Serves 8');
 		expect(document.querySelector('article')).toHaveAttribute('data-cooking');
 	});
 
@@ -334,10 +334,15 @@ describe('recipe page cooking mode', () => {
 		expect(headings[0]).toHaveTextContent(data.currentVersion.title);
 	});
 
-	// The scaler, a line below, says the serves being cooked.
-	test('the cooking header leaves the serves to the scaler', () => {
+	// The yield with Scale is the one place cooking says the serves.
+	test('the cooking header says the serves being cooked, with Scale; once', async () => {
 		load('?cook=1&serves=6');
-		expect(cookHeader()).not.toHaveTextContent('Serves');
+		expect(cookHeader()).toHaveTextContent(/Serves 6\s+Scale\s+Reset/);
+		expect(document.querySelectorAll('.details')).toHaveLength(1);
+		await fireEvent.click(screen.getByRole('button', { name: 'Scale' }));
+		await fireEvent.click(screen.getByRole('button', { name: 'Double' }));
+		expect(cookHeader()).toHaveTextContent('Serves 12');
+		expect(new URL(goto.mock.lastCall![0]).searchParams.get('cook')).toBe('1');
 	});
 
 	test('Exit leaves cooking for the reading view, drops ?cook and keeps the ticks', async () => {
@@ -456,7 +461,7 @@ describe('recipe page cooking mode', () => {
 		render(Page, { props: { data: { ...data, currentVersion: data.allVersions[1] } } });
 		expect(article()).toHaveAttribute('data-cooking');
 		expect(article()).toHaveAttribute('data-version', '1');
-		expect(screen.getByRole('spinbutton', { name: 'Servings' })).toHaveValue(8);
+		expect(cookHeader()).toHaveTextContent('Serves 8');
 		expect(screen.getByRole('button', { name: 'Method' })).toHaveAttribute('aria-pressed', 'true');
 	});
 
@@ -467,7 +472,7 @@ describe('recipe page cooking mode', () => {
 
 	test('cooking keeps the ticks, the scaler and the section switch', () => {
 		load('?cook=1');
-		expect(screen.getByRole('spinbutton', { name: 'Servings' })).toBeInTheDocument();
+		expect(screen.getByRole('button', { name: 'Scale' })).toBeInTheDocument();
 		expect(screen.getAllByRole('checkbox').length).toBeGreaterThan(0);
 		expect(screen.getByRole('navigation', { name: 'Recipe sections' })).toBeInTheDocument();
 	});
