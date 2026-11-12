@@ -16,14 +16,16 @@ export const AUTH_FILE = path.join('e2e', '.auth', 'user.json');
 /** Specs that change the seed user's settings or saves; see the chromium-account project. */
 const ACCOUNT_SPECS = /(settings|measurement|keep-version)\.authenticated\.test\.ts/;
 
+const PORT = Number(process.env.E2E_PORT) || 4174;
+
 export default defineConfig({
 	globalSetup: './e2e/global-setup.ts',
 
 	webServer: {
 		// Its own port, never reused: a preview already running on 4173 serves
-		// the dev database.
-		command: 'pnpm build && pnpm preview --port 4174 --strictPort',
-		port: 4174,
+		// the dev database. E2E_PORT moves it when something else holds 4174.
+		command: `pnpm build && pnpm preview --port ${PORT} --strictPort`,
+		port: PORT,
 		reuseExistingServer: false
 	},
 
