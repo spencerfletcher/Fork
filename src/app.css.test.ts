@@ -102,6 +102,14 @@ describe('app.css hovers', () => {
 		expect(body('.btn-ghost:hover')).toMatch(/background:\s*var\(--color-band\)/);
 	});
 
+	// Opacity 0.6, as the editor's tools and a disabled choice box (Add to
+	// collection with nothing selected read as live).
+	test('a disabled ghost or text button dims and takes no hover', () => {
+		const rule = body('.btn-ghost:disabled, .text-btn:disabled');
+		expect(rule).toMatch(/opacity:\s*0\.6/);
+		expect(rule).toMatch(/pointer-events:\s*none/);
+	});
+
 	// The ⋯ is a box like the ghost and the menu rows (Spencer, 11 November 2026: "… to band").
 	test('the ⋯ trigger fills with the band while hovered or open', () => {
 		const rule = body(".more-button:hover, .more-button[aria-expanded='true']");

@@ -1055,6 +1055,14 @@
 		}
 	}
 
+	/* Disabled reads as off: dimmed as the editor's tools are, and no hover
+	   (no band, no underline) to say it would do something. */
+	.btn-ghost:disabled,
+	.text-btn:disabled {
+		opacity: 0.6;
+		pointer-events: none;
+	}
+
 	/* ── Form / editor shared styles ── */
 
 	.form {
