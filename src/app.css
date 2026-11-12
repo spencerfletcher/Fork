@@ -625,6 +625,27 @@
 		font-weight: 400;
 	}
 
+	/* A wrapping dot row whose dots sit centred in the gap before each item,
+	   so the dot of an item that wraps falls left of the box and is clipped:
+	   no line starts or ends with one. Only the left edge clips. */
+	.dot-clip {
+		column-gap: var(--dot-gap);
+		clip-path: inset(-1em -1em -1em 0);
+		--dot-gap: 13px;
+	}
+
+	.dot-clip > * {
+		position: relative;
+	}
+
+	.dot-clip > * + *::before {
+		position: absolute;
+		right: 100%;
+		width: var(--dot-gap);
+		padding: 0;
+		text-align: center;
+	}
+
 	/* A handle inside a link that holds more than it (avatar and handle):
 	   Username's look without its own link. Mono one notch under the line, clay. */
 	.handle {

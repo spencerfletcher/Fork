@@ -230,7 +230,7 @@
 		{/if}
 
 		<div class="card-line">
-			<div class="meta-row dot-list">
+			<div class="meta-row dot-list dot-clip">
 				{#each metaParts as part (part.text)}{@render metaItem(part)}{/each}
 			</div>
 			{#if hasMenu && !recipe.imageUrl}{@render more()}{/if}
@@ -439,8 +439,7 @@
 		display: flex;
 		flex-wrap: wrap;
 		align-items: center;
-		gap: 5px;
-		--dot-space: 0 5px 0 0;
+		row-gap: 5px;
 	}
 
 	.card-text {

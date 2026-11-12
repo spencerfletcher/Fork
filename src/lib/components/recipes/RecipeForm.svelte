@@ -399,7 +399,7 @@
 
 				<details class="fold" bind:open={foldOpen}>
 					<summary class="fold-summary">
-						<span class="fold-facts dot-list">
+						<span class="fold-facts dot-list dot-clip">
 							{#each summary.facts as fact, i (i)}<span>{fact}</span>{/each}
 						</span>
 						<span class="text-btn">{summary.action}{@render chevronIcon(foldOpen)}</span>
@@ -521,27 +521,12 @@
 		min-width: 0;
 		display: flex;
 		flex-wrap: wrap;
-		gap: 0 14px;
+		--dot-gap: 14px;
 		max-height: 3em;
 		overflow: hidden;
 		font-size: 0.9375rem;
 		line-height: 1.5;
 		color: var(--color-text-2);
-	}
-
-	/* The house dots (.dot-list), each centred in the gap before its fact
-	   rather than beside it, so the dot of a fact that wraps to the next line
-	   falls left of the box and is clipped: no line starts or ends with one. */
-	.fold-facts > span {
-		position: relative;
-	}
-
-	.fold-facts > span + span::before {
-		position: absolute;
-		right: 100%;
-		width: 14px;
-		padding: 0;
-		text-align: center;
 	}
 
 	.fold-summary .text-btn {

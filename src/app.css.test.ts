@@ -256,6 +256,29 @@ describe('app.css shared utilities', () => {
 		expect(body('.dot-list > * + *::before')).toContain("content: '·' / ''");
 	});
 
+	test('a clipped dot row centres each dot in the gap before its item and clips the box at its left, so no wrapped line starts with one', () => {
+		expect(body('.dot-clip')).toMatch(/column-gap:\s*var\(--dot-gap\)/);
+		expect(body('.dot-clip')).toMatch(/clip-path:\s*inset\([^)]*\s0\)/);
+		expect(body('.dot-clip > *')).toMatch(/position:\s*relative/);
+		const dot = body('.dot-clip > * + *::before');
+		expect(dot).toMatch(/position:\s*absolute/);
+		expect(dot).toMatch(/right:\s*100%/);
+		expect(dot).toMatch(/width:\s*var\(--dot-gap\)/);
+	});
+
+	test('the card, row and editor fold meta rows use the clipped dots', () => {
+		const read = (p: string) => readFileSync(new URL(p, import.meta.url), 'utf8');
+		expect(read('./lib/components/recipes/RecipeCard.svelte')).toMatch(
+			/class="meta-row dot-list dot-clip"/
+		);
+		expect(read('./lib/components/recipes/RecipeRow.svelte')).toMatch(
+			/class="row-meta dot-list dot-clip"/
+		);
+		expect(read('./lib/components/recipes/RecipeForm.svelte')).toMatch(
+			/class="fold-facts dot-list dot-clip"/
+		);
+	});
+
 	test('an inline link is a 24px hit at desktop and 44px on a phone, without moving', () => {
 		const [desktop, phone] = cssRules(css, '.hit-link');
 		expect(desktop).toMatch(/--hit:\s*4px;/);

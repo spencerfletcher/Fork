@@ -84,7 +84,7 @@
 				</a>{/if}
 		</h3>
 		<!-- Inert in select mode, so its handle is no link and a press is the row's. -->
-		<p class="row-meta dot-list" inert={!!select}>
+		<p class="row-meta dot-list dot-clip" inert={!!select}>
 			{#each parts as part (part.text)}{@render metaItem(part)}{/each}
 			{#if tagLine}{@render metaItem({ text: tagLine }, 'fold-tags')}{/if}
 			{#if cooked}{@render metaItem({ text: cooked }, 'fold-cooked')}{/if}
@@ -197,12 +197,11 @@
 		display: flex;
 		flex-wrap: wrap;
 		align-items: center;
-		gap: 5px;
+		row-gap: 5px;
 		margin-top: 2px;
 		font-size: 0.8125rem;
 		line-height: 1.5;
 		color: var(--color-text-3);
-		--dot-space: 0 5px 0 0;
 	}
 
 	.row-meta > :global(.fold-tags),
