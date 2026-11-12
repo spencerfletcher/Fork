@@ -63,6 +63,10 @@ describe('Friends page', () => {
 			'href',
 			'/recipes/buns/diff?from=3&to=4'
 		);
+		// The comma hugs the title, with no space before it.
+		expect(
+			screen.getByRole('link', { name: 'v3 → v4' }).closest('p')?.textContent?.replace(/\s+/g, ' ')
+		).toContain('changed Cardamom buns, v3 → v4');
 		expect(screen.getByLabelText('Your invite link')).toHaveValue(
 			'https://fork.test/users/spencerfletcher'
 		);

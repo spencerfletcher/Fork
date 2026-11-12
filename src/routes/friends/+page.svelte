@@ -170,8 +170,10 @@
 											shared <a class="hit-link" href="/recipes/{item.slug}">{item.title}</a>
 											{item.visibility === 'friends' ? 'with friends' : 'publicly'}
 										{:else}
-											changed <a class="hit-link" href="/recipes/{item.slug}">{item.title}</a>
-											,
+											changed
+											<!-- The comma against the title: prettier would break the line before it. -->
+											<!-- prettier-ignore -->
+											<span><a class="hit-link" href="/recipes/{item.slug}">{item.title}</a>,</span>
 											<a
 												class="diff hit-link"
 												href="/recipes/{item.slug}/diff?from={item.versionNumber -
