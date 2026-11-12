@@ -40,8 +40,7 @@ function renderOpen() {
 describe('Dropdown', () => {
 	test('focusOnOpen names what opening focuses, in place of the first control', async () => {
 		const found = createRawSnippet(() => ({
-			render: () =>
-				'<div><button type="button">First</button><input aria-label="Find" /></div>'
+			render: () => '<div><button type="button">First</button><input aria-label="Find" /></div>'
 		}));
 		render(Dropdown, {
 			props: {
