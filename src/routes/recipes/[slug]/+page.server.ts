@@ -250,8 +250,6 @@ export const actions: Actions = {
 		if (!user) return signedOut();
 		const name = text(await request.formData(), 'name');
 		const recipe = await libraryRecipe(params.slug, user);
-		const limited = await rateLimited('collections', user.id);
-		if (limited) return failure(429, 'rate_limited', limited, { name });
 		const created = await createCollection(user.id, name);
 		if ('error' in created) return failure(400, 'invalid', created.error, { name });
 		if (!(await setMembership(user, created.id, recipe.id, true)))

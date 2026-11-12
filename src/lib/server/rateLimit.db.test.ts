@@ -95,11 +95,6 @@ describe.skipIf(!localDb)('rateLimited, against the real database', () => {
 				);
 				return;
 			}
-			case 'collections':
-				await tx
-					.insert(schema.collections)
-					.values(each.map((i) => ({ ownerId: who, name: `C ${s} ${i}`, createdAt: at })));
-				return;
 		}
 	}
 

@@ -1,14 +1,7 @@
 import { and, eq, gt, isNull, sql, type SQL } from 'drizzle-orm';
 import type { PgColumn, PgTable } from 'drizzle-orm/pg-core';
 import { db, type Tx } from './db/index.js';
-import {
-	collections,
-	friendships,
-	logEntries,
-	recipes,
-	recipeVersions,
-	reports
-} from './db/schema.js';
+import { friendships, logEntries, recipes, recipeVersions, reports } from './db/schema.js';
 
 /**
  * How many rows each write may add in its window (hours), counted from the
@@ -16,17 +9,19 @@ import {
  * the owner tunes them here. `message` is what the refused cook reads.
  */
 export const RATE_LIMITS = {
-	// Above the e2e suite's ~66 new recipes and forks a run, all as one cook.
+	// Caps on a cook's own work are runaway-script backstops, high enough for a
+	// bulk import of a few hundred recipes; a future importer gets its own path.
 	recipes: {
-		max: 100,
+		max: 1000,
 		hours: 1,
 		message: "You've made a lot of recipes and forks in the last hour. Try again later."
 	},
 	edits: {
-		max: 120,
+		max: 1000,
 		hours: 1,
 		message: "You've saved a lot of changes in the last hour. Try again later."
 	},
+	// Caps on what reaches other people (reports, friend requests) guard them.
 	reports: {
 		max: 20,
 		hours: 24,
@@ -38,8 +33,9 @@ export const RATE_LIMITS = {
 		hours: 1,
 		message: 'Fork has had a lot of reports in the last hour. Try again later.'
 	},
+	// A backstop: a cook backfilling past cooks must pass; friends can mute.
 	journal: {
-		max: 60,
+		max: 300,
 		hours: 24,
 		message: "You've added a lot of Journal entries today. Try again later."
 	},
@@ -47,11 +43,6 @@ export const RATE_LIMITS = {
 		max: 40,
 		hours: 24,
 		message: "You've sent a lot of friend requests today. Try again later."
-	},
-	collections: {
-		max: 40,
-		hours: 24,
-		message: "You've made a lot of collections today. Try again later."
 	}
 } as const;
 
@@ -98,11 +89,6 @@ const SOURCES: Record<
 		table: friendships,
 		createdAt: friendships.createdAt,
 		whose: by(friendships.requesterId, who)
-	}),
-	collections: (who) => ({
-		table: collections,
-		createdAt: collections.createdAt,
-		whose: by(collections.ownerId, who)
 	})
 };
 

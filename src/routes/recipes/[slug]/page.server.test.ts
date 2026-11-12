@@ -1047,20 +1047,6 @@ describe('collect and newCollection', () => {
 		expect(result).toEqual({ collected: 9 });
 	});
 
-	test('newCollection past the cap makes nothing and keeps the name', async () => {
-		rateLimitedMock.mockResolvedValueOnce(LIMITED);
-		const result = await invoke(
-			actions.newCollection as never,
-			makeEvent({ user: FORKER, fields: { name: 'Italian' } })
-		);
-		expect(result).toMatchObject({
-			...LIMITED_FAILURE,
-			data: { ...LIMITED_FAILURE.data, name: 'Italian' }
-		});
-		expect(rateLimitedMock).toHaveBeenCalledWith('collections', FORKER.id);
-		expect(collectionsMock.createCollection).not.toHaveBeenCalled();
-	});
-
 	test('newCollection with a refused name says why and makes nothing', async () => {
 		collectionsMock.createCollection.mockResolvedValue({ error: 'Name the collection.' });
 		const result = await invoke(

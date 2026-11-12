@@ -2,10 +2,6 @@ import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { chain, sqlOf } from '#lib/testing/drizzle.js';
 import { cookieJar, loadEvent, loadPage } from '#lib/testing/actions.js';
 import { VIEW_COOKIE } from './filters.js';
-import { LIMITED, LIMITED_FAILURE } from '#lib/testing/rateLimit.js';
-
-const { rateLimitedMock } = vi.hoisted(() => ({ rateLimitedMock: vi.fn() }));
-vi.mock('#lib/server/rateLimit.js', () => ({ rateLimited: rateLimitedMock }));
 
 const db = await vi.hoisted(async () => ({
 	...(await import('#lib/testing/drizzle.js')).mockDb(),
@@ -287,17 +283,6 @@ describe('/cookbook collection actions', () => {
 		expect(result).toMatchObject({ status: 303, location: '/cookbook?collection=77' });
 	});
 
-	test('past the cap on collections, nothing is made and the name comes back', async () => {
-		rateLimitedMock.mockResolvedValueOnce(LIMITED);
-		const result = await act('createCollection', { name: 'Italian' });
-		expect(result).toMatchObject({
-			...LIMITED_FAILURE,
-			data: { ...LIMITED_FAILURE.data, name: 'Italian', intent: 'create' }
-		});
-		expect(rateLimitedMock).toHaveBeenCalledWith('collections', USER.id);
-		expect(collectionsMock.createCollection).not.toHaveBeenCalled();
-	});
-
 	test('a refused name comes back as the form’s error, with the name as typed', async () => {
 		const error = COLLECTION_NAME_ERROR.taken('Quick');
 		collectionsMock.createCollection.mockResolvedValue({ error });
@@ -426,16 +411,6 @@ describe('/cookbook bulk actions, for select mode', () => {
 			status: 404,
 			data: { code: 'not_found' }
 		});
-	});
-
-	test('past the cap on collections, the selection makes none', async () => {
-		rateLimitedMock.mockResolvedValueOnce(LIMITED);
-		expect(await act('bulkNewCollection', { ids: '3,5', name: 'Sunday' })).toMatchObject({
-			...LIMITED_FAILURE,
-			data: { ...LIMITED_FAILURE.data, name: 'Sunday' }
-		});
-		expect(rateLimitedMock).toHaveBeenCalledWith('collections', USER.id);
-		expect(bulkMock.newCollectionWith).not.toHaveBeenCalled();
 	});
 
 	test('a new collection is made with the selection in it; a refused name says why', async () => {
