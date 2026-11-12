@@ -1,6 +1,6 @@
 <script lang="ts" module>
-	/** The room a panel wants below its trigger before it would rather open upward: about seven rows. */
-	export const PANEL_ROOM = 320;
+	/** The room a panel wants below its trigger before it would rather open upward: a recipe menu with a few collections, about eleven rows. */
+	export const PANEL_ROOM = 480;
 </script>
 
 <script lang="ts">
