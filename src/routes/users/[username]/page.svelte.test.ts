@@ -76,6 +76,16 @@ describe('Profile page', () => {
 		expect(container.querySelector('.recipe-grid')).not.toBeNull();
 	});
 
+	// The h1 is the handle; every card repeating it is noise. Other lists keep it.
+	test('the cards carry no author line', () => {
+		const author = { id: 'u1', username: 'chefmaria' };
+		const { container } = renderProfile({
+			recipes: data.recipes.map((r) => ({ ...r, author }))
+		});
+		expect(container.querySelectorAll('.recipe-card')).toHaveLength(2);
+		expect(container.querySelector('.recipe-grid .meta-author')).toBeNull();
+	});
+
 	// A long profile is paged: the count is the whole list's, Show more links the next page.
 	test('counts every recipe it lists and ends a long list in Show more', () => {
 		renderProfile({ total: 61, next: '2026-11-03 10:00:00~42' });

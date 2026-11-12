@@ -114,7 +114,11 @@
 		</header>
 
 		{#if list.items.length > 0}
-			<RecipeGrid recipes={list.items} total={data.total} more={list} />
+			<!-- Without their author: the h1 is that handle, so no card repeats it. -->
+			<RecipeGrid
+				recipes={list.items.map((r) => ({ ...r, author: null }))}
+				total={data.total}
+				more={list} />
 		{:else}
 			<p class="empty-state">No public recipes yet.</p>
 		{/if}
