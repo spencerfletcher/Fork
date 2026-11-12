@@ -49,6 +49,7 @@ describe('Forgot password page', () => {
 		expect(screen.queryByText(EMAIL_RULE)).toBeNull();
 		await fireEvent.blur(email());
 		expect(screen.getByText(EMAIL_RULE)).toHaveClass('field-error');
+		expect(screen.getByText(EMAIL_RULE)).toHaveAttribute('role', 'alert');
 		expect(email()).toHaveAttribute('aria-invalid', 'true');
 		expect(email()).toHaveAttribute('aria-describedby', 'email-error');
 		expect(email()).toHaveAccessibleDescription(EMAIL_RULE);

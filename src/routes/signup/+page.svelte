@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import FieldError from '#lib/components/ui/FieldError.svelte';
 	import { pendingEnhance } from '#lib/pendingEnhance.svelte.js';
 	import { EMAIL_MESSAGE, emailCheck, firstInvalid } from '#lib/auth/emailCheck.svelte.js';
 	import { loginHref } from '#lib/auth/loginHref.js';
@@ -95,9 +96,7 @@
 						emailField.field.oninput(e);
 						suggest();
 					}} />
-				{#if emailField.shown}
-					<p class="field-error" id="email-error">{EMAIL_MESSAGE}</p>
-				{/if}
+				<FieldError name="email" error={emailField.shown ? EMAIL_MESSAGE : null} />
 			</div>
 
 			<div class="field">
@@ -127,9 +126,8 @@
 						: ruleShown
 							? 'username-rule username-hint'
 							: 'username-hint'} />
-				{#if usernameError}
-					<p class="field-error" id="username-error">{usernameError}</p>
-				{:else if ruleShown}
+				<FieldError name="username" error={usernameError} />
+				{#if ruleShown}
 					<!-- The server's wording. -->
 					<p class="field-error" id="username-rule">{USERNAME_MESSAGE}</p>
 				{/if}

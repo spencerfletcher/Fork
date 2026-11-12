@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import FieldError from '#lib/components/ui/FieldError.svelte';
 	import { pendingEnhance } from '#lib/pendingEnhance.svelte.js';
 	import { EMAIL_MESSAGE, emailCheck } from '#lib/auth/emailCheck.svelte.js';
 
@@ -72,9 +73,7 @@
 							if (again) field.focus();
 						}}
 						{...emailField.field} />
-					{#if emailField.shown}
-						<p class="field-error" id="email-error">{EMAIL_MESSAGE}</p>
-					{/if}
+					<FieldError name="email" error={emailField.shown ? EMAIL_MESSAGE : null} />
 				</div>
 
 				<button

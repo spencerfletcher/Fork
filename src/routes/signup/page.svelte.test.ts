@@ -90,7 +90,8 @@ describe('Sign-up page', () => {
 		expect(username()).toHaveAttribute('aria-invalid', 'true');
 		expect(username()).toHaveAccessibleDescription(/That username is taken/);
 		expect(screen.getByText('That username is taken')).toHaveClass('field-error');
-		expect(screen.queryByRole('alert')).toBeNull();
+		// The one alert is the field's own line: the alert block keeps Supabase failures.
+		expect(screen.getByRole('alert')).toHaveAttribute('id', 'username-error');
 	});
 
 	// The submit button was disabled while the request was out, so focus fell to
@@ -165,6 +166,7 @@ describe('Sign-up page', () => {
 		expect(screen.queryByText(EMAIL_RULE)).toBeNull();
 		await fireEvent.blur(email());
 		expect(screen.getByText(EMAIL_RULE)).toHaveClass('field-error');
+		expect(screen.getByText(EMAIL_RULE)).toHaveAttribute('role', 'alert');
 		expect(email()).toHaveAttribute('aria-invalid', 'true');
 		expect(email()).toHaveAttribute('aria-describedby', 'email-error');
 		expect(email()).toHaveAccessibleDescription(EMAIL_RULE);

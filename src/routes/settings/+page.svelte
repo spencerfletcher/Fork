@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import FieldError from '#lib/components/ui/FieldError.svelte';
 	import { pendingEnhance } from '#lib/pendingEnhance.svelte.js';
 	import ChoiceGroup from '#lib/components/ui/ChoiceGroup.svelte';
 	import ConfirmStep from '#lib/components/ui/ConfirmStep.svelte';
@@ -201,9 +202,7 @@
 						bind:value={username}
 						aria-invalid={usernameError ? 'true' : undefined}
 						aria-describedby={usernameError ? 'username-error username-hint' : 'username-hint'} />
-					{#if usernameError}
-						<p class="field-error" id="username-error">{usernameError}</p>
-					{/if}
+					<FieldError name="username" error={usernameError} />
 					<p class="form-hint" id="username-hint">
 						{USERNAME_MIN} to {USERNAME_MAX} letters, digits, - or _. Old links to your profile work for
 						{FORMER_USERNAME_DAYS} days. You can change it {changesAllowed} in {FORMER_USERNAME_DAYS}

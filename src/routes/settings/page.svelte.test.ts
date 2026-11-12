@@ -207,7 +207,8 @@ describe('Username section', () => {
 		await tick();
 		expect(field()).toHaveAttribute('aria-invalid', 'true');
 		expect(field()).toHaveAccessibleDescription(new RegExp(error));
-		expect(within(section('Username')).queryByRole('alert')).toBeNull();
+		// The one alert is the field's own line, not the section's.
+		expect(within(section('Username')).getByRole('alert')).toHaveAttribute('id', 'username-error');
 	});
 
 	test('a refusal sits under the field, described, invalid and focused', async () => {
@@ -216,6 +217,7 @@ describe('Username section', () => {
 		expect(field()).toHaveValue('maria');
 		expect(field()).toHaveAttribute('aria-invalid', 'true');
 		expect(field()).toHaveAccessibleDescription(new RegExp(USERNAME_TAKEN));
+		expect(within(section('Username')).getByRole('alert')).toHaveAttribute('id', 'username-error');
 		expect(field()).toHaveFocus();
 	});
 

@@ -1,5 +1,5 @@
 import { describe, test, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/svelte';
+import { render, screen, fireEvent } from '@testing-library/svelte';
 import ConfirmEmailPage from './+page.svelte';
 
 vi.mock('$app/forms', () => ({ enhance: () => ({ destroy: () => {} }) }));
@@ -41,6 +41,17 @@ describe('Confirm email page', () => {
 		expect(email).toHaveAttribute('type', 'email');
 		expect(email).toBeRequired();
 		expect(screen.queryByRole('link', { name: 'Sign up again' })).toBeNull();
+	});
+
+	test('a bad email, once edited and left, is announced under the field and describes it', async () => {
+		renderPage();
+		const email = screen.getByLabelText('Email');
+		await fireEvent.input(email, { target: { value: 'jane@' } });
+		await fireEvent.blur(email);
+		const rule = 'Enter an email address like name@example.com';
+		expect(screen.getByRole('alert')).toHaveTextContent(rule);
+		expect(email).toHaveAttribute('aria-invalid', 'true');
+		expect(email).toHaveAccessibleDescription(rule);
 	});
 
 	test('the way on is "Log in", carrying the redirectTo signup handed on', () => {

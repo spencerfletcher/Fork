@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import FieldError from '#lib/components/ui/FieldError.svelte';
 	import { pendingEnhance } from '#lib/pendingEnhance.svelte.js';
 	import { authHref } from '#lib/auth/loginHref.js';
 	import { EMAIL_MESSAGE, emailCheck, firstInvalid } from '#lib/auth/emailCheck.svelte.js';
@@ -59,9 +60,7 @@
 					autocomplete="email"
 					placeholder="you@example.com"
 					{...emailField.field} />
-				{#if emailField.shown}
-					<p class="field-error" id="email-error">{EMAIL_MESSAGE}</p>
-				{/if}
+				<FieldError name="email" error={emailField.shown ? EMAIL_MESSAGE : null} />
 			</div>
 
 			<div class="field">
