@@ -87,6 +87,34 @@ describe('ScalePanel', () => {
 		expect(field()).toHaveValue(String(STORED * 2));
 	});
 
+	test('Enter writes the amount it read, never the multiplier typed', async () => {
+		const { onchange, rerender } = renderPanel();
+		await type('1/2x');
+		await rerender(onchange.mock.lastCall![0]);
+		await fireEvent.keyDown(field(), { key: 'Enter' });
+		// The facts line's formatting, so the two always agree.
+		expect(field()).toHaveValue(formatServes(STORED / 2));
+	});
+
+	test.each([
+		// From the typed 2x, so each acts on twice STORED.
+		['½× (halve)', STORED],
+		['2× (double)', STORED * 4],
+		['More servings', STORED * 2 + 1]
+	])('after typing, %s writes the amount, not what was typed', async (name, count) => {
+		const { onchange, rerender } = renderPanel();
+		await type('2x');
+		await rerender(onchange.mock.lastCall![0]);
+		await fireEvent.click(button(name));
+		await rerender(onchange.mock.lastCall![0]);
+		expect(field()).toHaveValue(formatServes(count));
+	});
+
+	test('reopened while scaled, the field holds the amount', () => {
+		renderPanel(STORED / 2);
+		expect(field()).toHaveValue(formatServes(STORED / 2));
+	});
+
 	describe('an entry that cannot be read', () => {
 		beforeEach(() => vi.useFakeTimers());
 		afterEach(() => vi.useRealTimers());

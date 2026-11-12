@@ -1727,6 +1727,10 @@ test.describe('Serving scaling', () => {
 			await expect(facts(page).getByText(shown, { exact: true })).toHaveClass(/text-accent/);
 			await expect(page).toHaveURL(new RegExp(`serves=${shown.replace('.', '\\.')}`));
 			if (typed === '2x') await expect(flourMeasure(page)).toHaveText(measure(doubled));
+			// What was typed stays while typing; Enter writes the amount.
+			await expect(field(page)).toHaveValue(typed);
+			await field(page).press('Enter');
+			await expect(field(page)).toHaveValue(shown);
 		});
 	}
 
@@ -1753,8 +1757,10 @@ test.describe('Serving scaling', () => {
 		await expect(panelButton(page, 'Reset')).toBeDisabled();
 		await panelButton(page, '½× (halve)').click();
 		await expect(facts(page)).toContainText(`Serves ${formatServes(serves / 2)}`);
+		await expect(field(page)).toHaveValue(formatServes(serves / 2));
 		await panelButton(page, '2× (double)').click();
 		await expect(facts(page)).toContainText(`Serves ${serves}`);
+		await expect(field(page)).toHaveValue(String(serves));
 		await expect(page).not.toHaveURL(/serves=/);
 
 		await panelButton(page, '2× (double)').click();

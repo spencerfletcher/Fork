@@ -712,8 +712,11 @@ test.describe('A Makes-only recipe', () => {
 			await page.getByRole('button', { name: 'More cookies', exact: true }).click();
 			await expect(facts).toContainText('Makes 54 cookies');
 			await expect(page).toHaveURL(/[?&]makes=54/);
+			await expect(field).toHaveValue('54');
 			await field.fill('2x');
 			await expect(facts).toContainText('Makes 72 cookies');
+			await field.press('Enter');
+			await expect(field).toHaveValue('72');
 			await expect(page.getByText(/4 cups/).first()).toBeVisible();
 		} finally {
 			if (url) await deleteRecipe(page, url);
