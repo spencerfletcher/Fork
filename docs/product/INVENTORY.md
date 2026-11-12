@@ -30,12 +30,12 @@ How to read it:
 
 | ID | Entry | Evidence | Disposition | Phase | Status |
 | --- | --- | --- | --- | --- | --- |
-| S01 | One multiplier field accepts `50%`, `1/2`, `0.5`; useful errors for zero, negative, malformed, non-finite, zero denominators. **Selected choice (with S02).** | Paprika T; Spencer's preference | Refine P2 scaler; all forms give the same factor | P2 | later |
+| S01 | One multiplier field accepts `50%`, `1/2`, `0.5`; useful errors for zero, negative, malformed, non-finite, zero denominators. **Selected choice (with S02).** | Paprika T; Spencer's preference | Refine P2 scaler; all forms give the same factor | P2 | later (reader built: `readScale`; the panel's field to come) |
 | S02 | Slider and exact entry drive the same scale; show multiplier, servings and Makes together; keyboard entry stays. **Selected choice (with S01).** | Crouton V/T; Spencer's preference | Refine P2 scaler; slider bounds do not limit typed values | P2 | later |
 | S03 | Scale to servings or to an amount of one ingredient on hand; pick the ingredient first; explain incompatible units | Crouton T | Adopt in scaler backlog; unknown base quantity cannot set a ratio | P2 | later |
 | S04 | Persistent "Scaled ×…" state and explicit Reset; closing the control never resets it | Crouton T; Paprika T; Recipe Keeper T/V | Refine; temporary scaling makes no version | P2 | later |
 | S05 | Range-, fraction- and count-aware display; keep "to taste", "divided", optional items, packages; never round half an egg to one | All three T | Refine correctness; full precision inside, round only for display | P2 | later |
-| S06 | Serves and Makes stay separate; scale supported yields, keep pan sizes, temperatures and method wording, with the agreed notice | Paprika T; all three T | Refine accepted behaviour; no multiply-every-number rule | P2 | later (notice shipped) |
+| S06 | Serves and Makes stay separate; scale supported yields, keep pan sizes, temperatures and method wording, with the agreed notice | Paprika T; all three T | Refine accepted behaviour; no multiply-every-number rule | P2 | later (notice shipped; Makes alone scales by its count, or a bare multiplier) |
 | S07 | Unit conversion near scaling but distinct; keep authored units; separate US measures and density-based mass and volume | Paprika V/D; Recipe Keeper V | Adopt P2 conversion; units must not jump while dragging | P2 | later |
 | S08 | "Use for this cook" versus a lasting revision; a permanent serving change previews and makes a version | Recipe Keeper T/V; Fork proposal | Refine version semantics; scale, unit display and edits stay separate | P2 | later |
 
