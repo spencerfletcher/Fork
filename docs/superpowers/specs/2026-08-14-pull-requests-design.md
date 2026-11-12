@@ -1,4 +1,4 @@
-> History: M1's design sketch, never built. The current plan places it in P4 to P5 as a reviewed "Suggest a change" and asks for a rewrite under current schema rules (§13 of [docs/product/ROADMAP.md](../../product/ROADMAP.md)).
+> History: M1's design sketch, never built. The current plan places it in P4 to P5 as a reviewed "Suggest a change" and asks for a rewrite under current schema rules (M1 to M23 in [docs/product/COVERAGE.md](../../product/COVERAGE.md)).
 
 # Pull requests — design and estimate
 

@@ -1,6 +1,6 @@
 # Coverage of the reconciliation
 
-Working file. Proves that every section, table row and bullet-level item in the sources landed in the current set. Destinations: RD README.md, RM ROADMAP.md, CO COMPETITIVE.md, BU BUSINESS.md, DE DESIGN-DIRECTION.md, IN INVENTORY.md; "§n" is the numbered section, "P0" to "P5" a phase table in RM §4. Status: **placed**; **superseded** (also in RM §16, item number given; the replacement is placed); **removed with approval** (removed from the set with Spencer's approval on 11 Nov 2026; recorded in RM §16, line given). Source-register tables (lists of citations) are one row each.
+Working file. Proves that every section, table row and bullet-level item in the sources landed in the current set. Destinations: RD README.md, RM ROADMAP.md, DC DECISIONS.md, CV this file (M1 to M23), CO COMPETITIVE.md, BU BUSINESS.md, DE DESIGN-DIRECTION.md, IN INVENTORY.md; "§n" is the numbered section, "P0" to "P5" a phase table in RM §4. Status: **placed**; **superseded** (also in DC §2, item number given; the replacement is placed); **removed with approval** (removed from the set with Spencer's approval on 11 Nov 2026; recorded in DC §2, line given). Source-register tables (lists of citations) are one row each.
 
 Sources: R [roadmap report](../research/2026-11-08-product-roadmap/README.md); CM [cookbook market](../research/2026-11-08-product-roadmap/cookbook_market.md); AQ [advanced and quality](../research/2026-11-08-product-roadmap/advanced_and_quality.md); PA [product audit](../research/2026-11-08-product-roadmap/current_product_audit.md); DD [deep dive](../research/2026-11-09-cookbook-app-deep-dive/README.md); S1 [design and solo business](../research/2026-11-10-design-and-solo-business.md); S2 [finished product and revenue](../research/2026-11-10-finished-product-and-revenue.md); SL [social launch](../research/2026-11-08-social-launch/social_launch.md); US [US copyright](../research/2026-11-08-social-launch/us_copyright.md); CA [Canada copyright](../research/2026-11-08-social-launch/canada_copyright.md); Z [Zed reference](../research/2026-11-09-zed-design-reference/README.md); CD [cookbook design research, 8 Nov](../research/2026-11-08-cookbook-design-research/README.md), its README only, folded 12 Nov; UX [UX review, 12 Nov](../research/2026-11-12-ux-review.md).
 
@@ -11,11 +11,11 @@ Sources: R [roadmap report](../research/2026-11-08-product-roadmap/README.md); C
 | R1 | Lead: three pillars, loop, pilot before full parity, US/Canada, validate before growth | RM §1, §3 | placed |
 | R2 | §1 Audience decision (serious home cook, chefs adjacent, meez, restaurant ops out) | RM §1, §12 | placed |
 | R3 | Pushback against breadth; convergence is positive evidence | RM §1 | placed |
-| R4 | Implementation substantial; evidence labels Built locally / Observed live / Unverified; deployment recheck | RM §16.27 | removed with approval (RM §16.27) |
+| R4 | Implementation substantial; evidence labels Built locally / Observed live / Unverified; deployment recheck | DC §2.27 | removed with approval (DC §2.27) |
 | R5 | State: Editor and history | RM §2, P1 drafts | placed |
 | R6 | State: Cooking and scaling | RM §2, P2 cookbook lane | placed |
-| R7 | State: Organization; ingredient search over history | RM §2, P1 search, P2 global search, §14 (11 Nov) | placed |
-| R8 | State: Visibility and lineage (public default, inherit, no source-version ref, media) | RM §2, P0 exact origins, media check | superseded in part (RM §16.18) |
+| R7 | State: Organization; ingredient search over history | RM §2, P1 search, P2 global search, DC §1 (11 Nov) | placed |
+| R8 | State: Visibility and lineage (public default, inherit, no source-version ref, media) | RM §2, P0 exact origins, media check | superseded in part (DC §2.18) |
 | R9 | State: Missing cookbook breadth | RM §2 known gaps | placed |
 | R10 | State: Quality unverified | RM §2 | placed |
 | R11 | Public Storage URL is a policy check, public default not a bypass | RM P0 media access check | placed |
@@ -24,7 +24,7 @@ Sources: R [roadmap report](../research/2026-11-08-product-roadmap/README.md); C
 | R14 | Loop: Prepare | RM §1.2, P3 | placed |
 | R15 | Loop: Cook | RM §1.3, P2 cookbook lane | placed |
 | R16 | Loop: Remember and improve | RM §1.4, §7 recipe, cook and revision | placed |
-| R17 | Loop: Connect and inspire ("Follow approved friends") | RM §1.5, P2 Friends | superseded wording (RM §16.16) |
+| R17 | Loop: Connect and inspire ("Follow approved friends") | RM §1.5, P2 Friends | superseded wording (DC §2.16) |
 | R18 | Loop: Share and leave | RM P1 export, P3 household, BU §2 never paywalled | placed |
 | R19 | Awkward acceptance library; Schema.org | RM §8 acceptance library | placed |
 | R20 | §2 Matrix caveats (documented, prices 8 Nov, tiers) | CO §1, §3 | placed |
@@ -43,8 +43,8 @@ Sources: R [roadmap report](../research/2026-11-08-product-roadmap/README.md); C
 | R33 | Request: concurrent timers, totals versus allocations | CO §5 | placed |
 | R34 | Request: variant clutter, reusable components | CO §5 | placed |
 | R35 | Self-selected accounts; no market shares | CO §5, §7 | placed |
-| R36 | §3 MVP-first decision 8 Nov | RM §14 (8 Nov) | placed |
-| R37 | MVP-first: drafts post-MVP, revisit if long authoring | RM P1 drafts | superseded (RM §16.7, §16.19) |
+| R36 | §3 MVP-first decision 8 Nov | DC §1 (8 Nov) | placed |
+| R37 | MVP-first: drafts post-MVP, revisit if long authoring | RM P1 drafts | superseded (DC §2.7, DC §2.19) |
 | R38 | Sizes S/M/L; gates persist | RM §3 | placed |
 | R39 | Phase P0 row | RM P0 | placed |
 | R40 | Phase P1 row | RM P1 | placed |
@@ -59,23 +59,23 @@ Sources: R [roadmap report](../research/2026-11-08-product-roadmap/README.md); C
 | R49 | Immediate pilot slice (cook event, friends, feed, comments, notifications, moderation, interim export) | RM P2 pilot lane, §10 | placed |
 | R50 | Implementation recommendations (vertical changes, Drizzle, append-only, deletion, suppression) | RM §3 | placed |
 | R51 | Disposition: existing save and conflict state | RM P0 save state | placed |
-| R52 | Disposition: durable drafts post-MVP | RM P1 drafts | superseded (RM §16.7) |
+| R52 | Disposition: durable drafts post-MVP | RM P1 drafts | superseded (DC §2.7) |
 | R53 | Disposition: privacy, source version, safe adaptation | RM P0 | placed |
 | R54 | Disposition: account settings, username, confirmation | RM P0 account access, P1 settings | placed |
 | R55 | Disposition: recipe deletion | RM P0 recipe deletion | placed |
-| R56 | Disposition: Trash post-MVP | RM P1 Trash | superseded (RM §16.8) |
+| R56 | Disposition: Trash post-MVP | RM P1 Trash | superseded (DC §2.8) |
 | R57 | Disposition: account lifecycle | RM P0 account lifecycle | placed |
-| R58 | Disposition: groups, yield, source, notes, preview (Insert toolbar) | RM P1 groups, source, preview in P2 | superseded in part (RM §16.11) |
+| R58 | Disposition: groups, yield, source, notes, preview (Insert toolbar) | RM P1 groups, source, preview in P2 | superseded in part (DC §2.11) |
 | R59 | Disposition: collections, want-to-cook, sorting, pagination, bulk | RM P1 collections, library growth | placed |
 | R60 | Disposition: search relevance and highlighting, non-Latin slugs | RM P1 search quality | placed |
-| R61 | Disposition: version-pinned saves and private notes | RM P1 Keep this version | superseded wording (RM §16.14) |
-| R62 | Disposition: whole-recipe paste, URL, files P1 | RM P2 easy import | superseded (RM §16.10) |
+| R61 | Disposition: version-pinned saves and private notes | RM P1 Keep this version | superseded wording (DC §2.14) |
+| R62 | Disposition: whole-recipe paste, URL, files P1 | RM P2 easy import | superseded (DC §2.10) |
 | R63 | Disposition: readable export, archive, print | RM P1 print, export | placed |
-| R64 | Disposition: first competitor migration importer | RM P2, §14 (11 Nov) | superseded (RM §16.28) |
+| R64 | Disposition: first competitor migration importer | RM P2, DC §1 (11 Nov) | superseded (DC §2.28) |
 | R65 | Disposition: mobile cooking, tick affordance, zoom | RM P2 mobile cooking refinement | placed |
 | R66 | Disposition: scaling, units, temperature | RM P2 units | placed |
 | R67 | Disposition: named timers, offline reading | RM P2 timers, offline | placed |
-| R68 | Disposition: ingredient quantities beside steps P2 | RM P4 | superseded (RM §16.9) |
+| R68 | Disposition: ingredient quantities beside steps P2 | RM P4 | superseded (DC §2.9) |
 | R69 | Disposition: Journal, note, photo, rating | RM P2 Journal, private ratings | placed |
 | R70 | Disposition: grocery list and alternatives | RM P3 grocery, optional ingredients | placed |
 | R71 | Disposition: meal queue, calendar export | RM P3 | placed |
@@ -87,8 +87,8 @@ Sources: R [roadmap report](../research/2026-11-08-product-roadmap/README.md); C
 | R77 | Disposition: nutrition and diet filters | RM P4 | placed |
 | R78 | Disposition: extra and step photos, richer diary | RM P2 Journal photo, P3 richer diary, P4 step photos | placed |
 | R79 | Disposition: Cooklang import and export | RM P4 | placed |
-| R80 | Disposition: comments and suggested changes | RM P2 comments, P4 suggested changes | superseded in part (RM §16.2) |
-| R81 | Disposition: profiles, following, feed, appreciation | RM P2 Friends | superseded wording (RM §16.16) |
+| R80 | Disposition: comments and suggested changes | RM P2 comments, P4 suggested changes | superseded in part (DC §2.2) |
+| R81 | Disposition: profiles, following, feed, appreciation | RM P2 Friends | superseded wording (DC §2.16) |
 | R82 | Disposition: privacy, report, mute, block, moderation | RM P0 moderation, P2 rights operations | placed |
 | R83 | Disposition: public ratings, algorithmic discovery | RM P5 | placed |
 | R84 | Disposition: graphical view and timeline | RM P4 | placed |
@@ -104,13 +104,13 @@ Sources: R [roadmap report](../research/2026-11-08-product-roadmap/README.md); C
 | R94 | Disposition: restaurant operations | RM §12 | placed |
 | R95 | Disposition: ads, prep-time estimates, grams made | RM §12 | placed |
 | R96 | Interface: keep warm direction, layouts, no tabs, 550px hero test | DE identity, page Recipe detail | placed |
-| R97 | Interface: Cookbook / Journal / Friends as a task model to test | RM §14 navigation | superseded (RM §16.5) |
+| R97 | Interface: Cookbook / Journal / Friends as a task model to test | DC §1 navigation | superseded (DC §2.5) |
 | R98 | Interface: Cookbook filters, search explains match, tag scorer, taxonomy waits | RM P1 search, DE page Search | placed |
 | R99 | Interface: editor paste-first, preview, keyboard reorder, cooking hierarchy, no auto-split | DE page New and edit, Cooking; RM §7 content | placed |
-| R100 | Accepted editor direction: collapsible Insert toolbar | RM P1 section heading tool | superseded (RM §16.11) |
+| R100 | Accepted editor direction: collapsible Insert toolbar | RM P1 section heading tool | superseded (DC §2.11) |
 | R101 | Section lines larger, `#` visible, Cooklang optional | RM P1 section heading tool | placed |
 | R102 | Focused editor slice and acceptance | RM P1 section heading tool (shipped) | placed |
-| R103 | Familiar verbs ("Save to cookbook", "Make my version") | RM §7 plain language | superseded (RM §16.1) |
+| R103 | Familiar verbs ("Save to cookbook", "Make my version") | RM §7 plain language | superseded (DC §2.1) |
 | R104 | Moving favourite versus pinned save; access policy; distinct source records | RM §7 saves and access | placed |
 | R105 | Gate: Trust | RM §8 | placed |
 | R106 | Gate: Accessibility | RM §8 | placed |
@@ -208,25 +208,25 @@ Sources: R [roadmap report](../research/2026-11-08-product-roadmap/README.md); C
 | R198 | Investment: bounded AI import help | BU §5 | placed |
 | R199 | Acquisition measurement sequence | BU §6 | placed |
 | R200 | Price testing; private text never for analytics | BU §2, §7 | placed |
-| R201 | April 2027 deadline, 200 weekly loggers | RM §16.26 | removed with approval (RM §16.26) |
+| R201 | April 2027 deadline, 200 weekly loggers | DC §2.26 | removed with approval (DC §2.26) |
 | R202 | Portfolio story | RM §10 demonstration | placed |
-| R203 | Ledger: preserve commitments; social deferral superseded | RM §3, §13, §14 | placed |
-| R204 to R226 | M1 to M23 (23 rows, one each) | RM §13 (same milestone) | placed (M4 wording RM §16.16; M17 placement RM §16.6; M20 RM §16.22) |
-| R227 | Other preserved preferences | RM §13 | placed |
-| R228 | Nonblocking product calls | RM §14 (11 Nov), §15 deferred decisions; navigation and Made it settled | placed |
-| R229 | Reconciliation 9 Nov: summary wins | RM §14 | placed |
-| R230 | Recon: verbs | RM §14 | superseded (RM §16.1) |
-| R231 | Recon: no Comment | RM §14, P2 comments | placed |
-| R232 | Recon: likes count | RM §14 | placed |
-| R233 | Recon: three audiences | RM §14, P0 | placed |
-| R234 | Recon: navigation plus Discover | RM §14 | placed |
-| R235 | Recon: Add to Journal placement | RM §14, P2 | placed |
-| R236 | Recon: 16px tick stays, M20 revisit | RM §14, §6 | placed |
+| R203 | Ledger: preserve commitments; social deferral superseded | RM §3, CV M1 to M23, DC §1 | placed |
+| R204 to R226 | M1 to M23 (23 rows, one each) | CV M1 to M23 (same milestone) | placed (M4 wording DC §2.16; M17 placement DC §2.6; M20 DC §2.22) |
+| R227 | Other preserved preferences | CV M1 to M23 | placed |
+| R228 | Nonblocking product calls | DC §1 (11 Nov), RM §13 deferred decisions; navigation and Made it settled | placed |
+| R229 | Reconciliation 9 Nov: summary wins | DC §1 | placed |
+| R230 | Recon: verbs | DC §1 | superseded (DC §2.1) |
+| R231 | Recon: no Comment | DC §1, P2 comments | placed |
+| R232 | Recon: likes count | DC §1 | placed |
+| R233 | Recon: three audiences | DC §1, P0 | placed |
+| R234 | Recon: navigation plus Discover | DC §1 | placed |
+| R235 | Recon: Add to Journal placement | DC §1, P2 | placed |
+| R236 | Recon: 16px tick stays, M20 revisit | DC §1, §6 | placed |
 | R237 | Recon: inline quantities to P4 | RM P4 | placed |
-| R238 | Recon: Save is moving favourite; pinned save P1 own control | RM P1 Keep this version | superseded wording (RM §16.14) |
+| R238 | Recon: Save is moving favourite; pinned save P1 own control | RM P1 Keep this version | superseded wording (DC §2.14) |
 | R239 | Recon: no public scores; rating a recipe feature | RM P2 private ratings, not yet phased | placed |
 | R240 | Recon: drafts, Trash, Party mode, graphical view, AI out of MVP | RM P1, P3, P4, P5 | placed |
-| R241 | Settled same evening: forks never widen, ticks, Cook pinned, lead card | RM §14, P0, P2 | placed |
+| R241 | Settled same evening: forks never widen, ticks, Cook pinned, lead card | DC §1, P0, P2 | placed |
 | R242 | Collections v1 manual; rule-based later; rule column | RM P1 collections, not yet phased | placed |
 | R243 | Still owed: interim export, moderation, profile, P1 cookbook items | RM P2, P1 | placed |
 | R244 | Backlog: durable drafts P1 | RM P1 | placed |
@@ -256,14 +256,14 @@ Sources: R [roadmap report](../research/2026-11-08-product-roadmap/README.md); C
 | R268 | Backlog: dropdown background | RM §6 | placed |
 | R269 | Backlog: hover colours, Clay Deep | RM §6 | placed |
 | R270 | Backlog: ingredient search scaling | RM P2 global search | placed |
-| R271 | Backlog: search in place | RM P2 global search, §14 (11 Nov) | placed |
+| R271 | Backlog: search in place | RM P2 global search, DC §1 (11 Nov) | placed |
 | R272 | Unfriend bullet | RM §7 | placed |
 | R273 | Ex-friend forks bullet | RM §7 | placed |
 | R274 | Journal after unfriend bullet | RM §7 | placed |
 | R275 | Block bullet | RM §7 | placed |
 | R276 | Mute bullet | RM §7 | placed |
 | R277 | Tags, collections, filters | RM §7 saves and access | placed |
-| R278 | Save and collections, starter collections | RM P1 collections, §7, §14 | placed |
+| R278 | Save and collections, starter collections | RM P1 collections, §7, DC §1 | placed |
 | R279 | Save version, Keep this version | RM P1 | placed |
 | R280 | Retain all 87 entries | RM §5, IN | placed |
 | R281 to R289 | Inventory workstream rows E, S, C, L, I, X, G and M, A, Q (9 rows) | IN sections, RM §5 | placed |
@@ -276,7 +276,7 @@ Sources: R [roadmap report](../research/2026-11-08-product-roadmap/README.md); C
 | R296 | Paprika: advanced search L03, L10 | RM §5, IN | placed |
 | R297 | Paprika: companion surfaces A07 | RM §5, IN | placed |
 | R298 | Paprika: references, not compatibility | RM §5 | placed |
-| R299 | Zed accepted for next design pass | RM §14, DE | placed |
+| R299 | Zed accepted for next design pass | DC §1, DE | placed |
 | R300 | Zed: typography hierarchy | DE system Typography roles | placed |
 | R301 | Zed: editor composition alignment | DE system Grid | placed |
 | R302 | Zed: spacing and fine rules | DE system Grouping | placed |
@@ -314,16 +314,16 @@ Sources: R [roadmap report](../research/2026-11-08-product-roadmap/README.md); C
 | CM35 | Standard: Cooklang conventions | CO §5 | placed |
 | CM36 | Standard: King Arthur reduction | CO §5 | placed |
 | CM37 | Standard: Tandoor formats | CO §5 | placed |
-| CM38 | Disposition: draft recovery build first | RM P1 drafts | superseded (RM §16.21) |
+| CM38 | Disposition: draft recovery build first | RM P1 drafts | superseded (DC §2.21) |
 | CM39 | Disposition: groups, yield, notes, source | RM P1 | placed |
-| CM40 | Disposition: paste and URL capture | RM P2 easy import | superseded phase (RM §16.10) |
+| CM40 | Disposition: paste and URL capture | RM P2 easy import | superseded phase (DC §2.10) |
 | CM41 | Disposition: collections, filters, ingredient search | RM P1 | placed |
 | CM42 | Disposition: scale and conversion | RM P2 | placed |
 | CM43 | Disposition: cook readability, progress, print | RM P2 cookbook lane, P1 print | placed |
 | CM44 | Disposition: multiple named timers | RM P2 | placed |
 | CM45 | Disposition: offline saved recipes | RM P2 | placed |
 | CM46 | Disposition: export | RM P1 | placed |
-| CM47 | Disposition: first migration importer | RM P2 | superseded (RM §16.28) |
+| CM47 | Disposition: first migration importer | RM P2 | superseded (DC §2.28) |
 | CM48 | Disposition: grocery list | RM P3 | placed |
 | CM49 | Disposition: meal queue | RM P3 | placed |
 | CM50 | Disposition: private cook log bound to version | RM P2 Journal (shipped) | placed |
@@ -337,7 +337,7 @@ Sources: R [roadmap report](../research/2026-11-08-product-roadmap/README.md); C
 | CM58 | Disposition: nutrition | RM P4 | placed |
 | CM59 | Disposition: baker's percentages | RM P4 | placed |
 | CM60 | Disposition: full pantry inventory later | RM §12 | placed |
-| CM61 | Disposition: public feed, ranking, badges later | RM P2 Friends; ranking P5; RM §12 | superseded for the feed (RM §16.20) |
+| CM61 | Disposition: public feed, ranking, badges later | RM P2 Friends; ranking P5; RM §12 | superseded for the feed (DC §2.20) |
 | CM62 | Disposition: graphical timeline prototype later | RM P4 | placed |
 | CM63 | Disposition: reject universal conversion, silent AI, allergen guesses | RM §12 | placed |
 | CM64 | Disposition: restaurant operations | RM §12 | placed |
@@ -378,7 +378,7 @@ Sources: R [roadmap report](../research/2026-11-08-product-roadmap/README.md); C
 | AQ12 | Finding: FoodData Central | RM §7 AI | placed |
 | AQ13 | Finding: SSRF | RM §8 URL import | placed |
 | AQ14 | Base gate 1: private, one access rule | RM P0 | placed |
-| AQ15 | Base gate 2: draft recovery before growth | RM P1 drafts | superseded (RM §16.21) |
+| AQ15 | Base gate 2: draft recovery before growth | RM P1 drafts | superseded (DC §2.21) |
 | AQ16 | Base gate 3: portability | RM P1 export | placed |
 | AQ17 | Base gate 4: support matrix | RM §8 | placed |
 | AQ18 | Base gate 5: WCAG target, cooking hit areas, undo ticks | RM §8 | placed |
@@ -392,7 +392,7 @@ Sources: R [roadmap report](../research/2026-11-08-product-roadmap/README.md); C
 | AQ31 | Gap: conversion depends on source | RM §7 scaling | placed |
 | AQ32 | Gap: no proof of offline editing or native need | RM P2 offline, P5 native | placed |
 | AQ33 | Takeaway 2: recipe that became yours | RM §1 | placed |
-| AQ34 | Finding: earlier milestones M17, M21 to M23 | RM §13 | placed |
+| AQ34 | Finding: earlier milestones M17, M21 to M23 | CV M1 to M23 | placed |
 | AQ35 | Finding: prior business note estimates | BU §4 | placed |
 | AQ36 | Finding: baker's percentages | RM P4 | placed |
 | AQ37 | Finding: meez | CO §3 | placed |
@@ -402,7 +402,7 @@ Sources: R [roadmap report](../research/2026-11-08-product-roadmap/README.md); C
 | AQ41 | Milestone C: organization and sharing | RM P1, P3 | placed |
 | AQ42 | Milestone D: recipe development | RM P4 | placed |
 | AQ43 | Milestone E: targeted assistance | RM P5 | placed |
-| AQ44 | Milestone F: community after recurring sharing | RM P2 | superseded (RM §16.20) |
+| AQ44 | Milestone F: community after recurring sharing | RM P2 | superseded (DC §2.20) |
 | AQ45 | Interleaving; quality in every phase | RM §3 | placed |
 | AQ46 | Cooking-log design | RM §7 | placed |
 | AQ47 | Subrecipes over decorative lineage | RM §7 | placed |
@@ -460,17 +460,17 @@ Sources: R [roadmap report](../research/2026-11-08-product-roadmap/README.md); C
 
 | # | Source item | Destination | Status |
 | --- | --- | --- | --- |
-| PA1 | Takeaway and live recheck; homepage copy differs | RM §16.23 | removed with approval (RM §16.23) |
+| PA1 | Takeaway and live recheck; homepage copy differs | DC §2.23 | removed with approval (DC §2.23) |
 | PA2 | Product scope from PRODUCT.md | RM §1 | placed |
-| PA3 to PA21 | Capability rows: create/edit, parser, failed-save recovery, durable draft, concurrency, history/diff, restore, forking, favorites, scaling, cooking, search, organization, visibility, auth, sharing, import/export/print, structured richness, advanced (19) | RM §2 shipped and known gaps; open items in P0, P1 | placed (visibility row superseded, RM §16.18) |
+| PA3 to PA21 | Capability rows: create/edit, parser, failed-save recovery, durable draft, concurrency, history/diff, restore, forking, favorites, scaling, cooking, search, organization, visibility, auth, sharing, import/export/print, structured richness, advanced (19) | RM §2 shipped and known gaps; open items in P0, P1 | placed (visibility row superseded, DC §2.18) |
 | PA22 | Inference: portfolio assets | RM §10 demonstration | placed |
-| PA23 | Inference: ingredient search contract | RM §14 (11 Nov), P2 global search | placed |
+| PA23 | Inference: ingredient search contract | DC §1 (11 Nov), P2 global search | placed |
 | PA24 | Inference: pinned saves fit the model | RM P1 Keep this version | placed |
 | PA25 | Gap: unverified runtime | RM §2 | placed |
 | PA26 | Gap: no accessibility claim | RM §8 | placed |
 | PA27 | Takeaway 2: trust and completeness | RM §3 | placed |
 | PA28 | Finding: writing not durably recoverable | RM P1 drafts | placed |
-| PA29 | Finding: publication defaults on | RM P0 private first | superseded (RM §16.18) |
+| PA29 | Finding: publication defaults on | RM P0 private first | superseded (DC §2.18) |
 | PA30 | Finding: private-image guarantee | RM P0 media access, P1 photo access | placed |
 | PA31 | Finding: lifecycle design | RM P0 deletion, P1 Trash | placed |
 | PA32 | Finding: accessibility work to preserve | RM §8 | placed |
@@ -483,16 +483,16 @@ Sources: R [roadmap report](../research/2026-11-08-product-roadmap/README.md); C
 | PA39 | Order 5: cooking reliability | RM P2 cookbook lane | placed |
 | PA40 | Order 6: cooking memory | RM P2 Journal, §7 | placed |
 | PA41 | Shared UX gate | RM §8 | placed |
-| PA42 | Gap: open product proposals | RM §14 (11 Nov), P1 drafts, Trash, Keep this version | placed |
+| PA42 | Gap: open product proposals | DC §1 (11 Nov), P1 drafts, Trash, Keep this version | placed |
 | PA43 | Gap: unit correctness | RM §7 scaling | placed |
-| PA44 | Takeaway 3: decision ledger | RM §13 | placed |
-| PA45 | Preserve cook-first principles | RM §13 preferences | placed |
+| PA44 | Takeaway 3: decision ledger | CV M1 to M23 | placed |
+| PA45 | Preserve cook-first principles | CV M1 to M23 preferences | placed |
 | PA46 | Preserve visual decisions, no tabs | DE identity, RM §12 | placed |
 | PA47 | Preserve strategic ideas | RM P1, P2, P4 | placed |
-| PA48 | Social revived 29 Oct | RM §14 (8 Nov) | placed |
+| PA48 | Social revived 29 Oct | DC §1 (8 Nov) | placed |
 | PA49 | Preserve rejected ads, estimates, grams made | RM §12 | placed |
 | PA50 | Supersede documentation errors (README) | RM §11 code-health sweeps | placed |
-| PA51 | Supersede old technical recipes and estimates | RM §13 | placed |
+| PA51 | Supersede old technical recipes and estimates | CV M1 to M23 | placed |
 | PA52 | Prior market research as leads | CO §7 | placed |
 | PA53 | Inference: reasons to defer | RM §1 | placed |
 | PA54 | Inference: bounded versions of later features | RM P3, §12 | placed |
@@ -516,7 +516,7 @@ Sources: R [roadmap report](../research/2026-11-08-product-roadmap/README.md); C
 | DD36 to DD48 | C01 to C13 | IN (same ID) | placed |
 | DD49 | Per-session timer identity is Fork's adaptation | RM §7 timers | placed |
 | DD50 to DD60 | L01 to L11 | IN (same ID) | placed |
-| DD61 | Keep Save, Cookbook, Collections; no separate Favorite system | RM §7, §14 | placed |
+| DD61 | Keep Save, Cookbook, Collections; no separate Favorite system | RM §7, DC §1 | placed |
 | DD62 to DD69 | I01 to I08 | IN (same ID) | placed |
 | DD70 to DD74 | X01 to X05 | IN (same ID) | placed |
 | DD75 | Capture tools not verified compatibility | CO §7 | placed |
@@ -552,7 +552,7 @@ Sources: R [roadmap report](../research/2026-11-08-product-roadmap/README.md); C
 | S1-2 | Authority statement | RM source key, RD | placed |
 | S1-3 | Sources; review coverage; reproduce before fixing | DE system intro, DE page | placed |
 | S1-4 | Preserve the direction | DE identity | placed |
-| S1-5 | Apple and NYT references; 8/10 and 9 to 9.5 | RM §16.25 | removed with approval (RM §16.25) |
+| S1-5 | Apple and NYT references; 8/10 and 9 to 9.5 | DC §2.25 | removed with approval (DC §2.25) |
 | S1-6 | System: palette | DE system Palette, Accent roles | placed |
 | S1-7 | System: typography | DE system Typography roles | placed |
 | S1-8 | System: layout and spacing | DE system Layout | placed |
@@ -574,7 +574,7 @@ Sources: R [roadmap report](../research/2026-11-08-product-roadmap/README.md); C
 | S1-24 | Competitive: Paprika 4 already covered | CO §2 | placed |
 | S1-25 | Competitive: fidelity fixtures, not defect rates | CO §4 | placed |
 | S1-26 | Competitive: 87 entries not 87 features | IN, RM §5 | placed |
-| S1-27 | Model is a scenario; prices not approved; purchased core open | BU §2 | placed (purchased core superseded, RM §16.29) |
+| S1-27 | Model is a scenario; prices not approved; purchased core open | BU §2 | placed (purchased core superseded, DC §2.29) |
 | S1-28 to S1-31 | Month-24 rows: registrations, entitlements, ARR, contribution | BU §4 | placed |
 | S1-32 | Model: 5.6%, $0.70, $19.92, 73, 3,223, $96,690 | BU §3 | placed |
 | S1-33 | Exclusions; cash is not earned revenue | BU §4 | placed |
@@ -601,13 +601,13 @@ Sources: R [roadmap report](../research/2026-11-08-product-roadmap/README.md); C
 | S2-9 | Continuity; product promise | RM §1, RD | placed |
 | S2-10 | Look and feel: keep direction, brassier yellow | DE identity, system Palette | placed |
 | S2-11 | Refinement is consistency and restraint | DE system | placed |
-| S2-12 | 8/10 subjective; 9 to 9.5 ambition | RM §16.25 | removed with approval (RM §16.25) |
+| S2-12 | 8/10 subjective; 9 to 9.5 ambition | DC §2.25 | removed with approval (DC §2.25) |
 | S2-13 | Quality requires observed success | DE quality ambition | placed |
 | S2-14 to S2-21 | Business rows (8): capture, search, cooking, Journal, planning, friends, development tools, design and reliability | BU §5 | placed |
 | S2-22 | Broadens audience; no uplift; test early | RM §9, BU §5 | placed |
 | S2-23 | Recall at the next cook | RM §9 | placed |
 | S2-24 | First week | RM §9 | placed |
-| S2-25 | Coherent paid offer; $36; $48; purchased core | BU §2 | placed (purchased core superseded, RM §16.29) |
+| S2-25 | Coherent paid offer; $36; $48; purchased core | BU §2 | placed (purchased core superseded, DC §2.29) |
 | S2-26 | Repeatable route to customers | BU §6 | placed |
 | S2-27 | Manageable operation | BU §7, RM §9 | placed |
 | S2-28 | USD; billing units; no timeline | BU §3 | placed |
@@ -624,13 +624,13 @@ Sources: R [roadmap report](../research/2026-11-08-product-roadmap/README.md); C
 
 | # | Source item | Destination | Status |
 | --- | --- | --- | --- |
-| SL1 | Scope and Cookbook / Journal / Community naming | RM §1 | superseded naming (RM §16.17) |
+| SL1 | Scope and Cookbook / Journal / Community naming | RM §1 | superseded naming (DC §2.17) |
 | SL2 | Takeaway 1 | RM §1 | placed |
 | SL3 | Finding: Strava audiences | RM §10 (pattern), INSPIRATION | placed |
 | SL4 | Finding: Strava feeds and comments | RM P2 | placed |
 | SL5 | Finding: Samsung communities | CO §2, §3 | placed |
 | SL6 | Minimum pilot product | RM P2, §10 | placed |
-| SL7 | Community: approved friends, kudos, comments, audiences | RM P2 | superseded wording (RM §16.16) |
+| SL7 | Community: approved friends, kudos, comments, audiences | RM P2 | superseded wording (DC §2.16) |
 | SL8 | Useful flow; empty Community | RM §1, DE page Friends | placed |
 | SL9 | Admission gate | RM §10 | placed |
 | SL10 | Proposed pilot | RM §10 | placed |
@@ -708,7 +708,7 @@ Folded on 12 Nov 2026; its identity and reference sections had already reached t
 | # | Source item | Destination | Status |
 | --- | --- | --- | --- |
 | CD1 | Now: Cook keeps the hero, Fork outweighs Cook, history targets vanish in Cook | RM §6 Cook-mode distinction (closed 11 Nov) | superseded by the Cook redesign |
-| CD2 | Now: live homepage differs from local; a contrast pair below threshold | RM §16.23 (homepage); DE Accent roles (contrast checked per screen) | superseded in part (RM §16.23) |
+| CD2 | Now: live homepage differs from local; a contrast pair below threshold | DC §2.23 (homepage); DE Accent roles (contrast checked per screen) | superseded in part (DC §2.23) |
 | CD3 | P0 to P5 rows of its friction table | RM §4 gates of P0, P1, P2 and P3 to P5 (same contracts) | placed |
 | CD4 | Draft design contract | DE Identity, Working contract | placed |
 | CD5 | Two learning tracks: formative usability with non-friends, then the friends pilot | RM §10 Formative usability track | placed |
@@ -733,14 +733,46 @@ Every row is a recommendation; "proposed" in RM marks it undecided (RM §3).
 | U12 | Recommendation 4: intermittent 500s, cause left open | RM §11 | placed |
 | U13 | Deferrals: extra social surfaces, cooking-history chips, Recently viewed; revisit Cook with version, scale and observation | RM §10, P1 Library growth, P2 Cooking session | placed |
 
+## M1 to M23: October milestones
+
+Where each milestone of the [October milestones](../history/2026-10-milestones.md) went in the current plan. Moved here from ROADMAP.md section 13 on 12 November 2026.
+
+| Milestone | Disposition |
+| --- | --- |
+| M1 Pull requests | P4 to P5 reviewed "Suggest a change"; keep concurrency, permission and attribution; rewrite the old sketch under current schema rules |
+| M2 Per-page metadata | Built; verify public previews, add Recipe structured data in P1 |
+| M3 Version comments | Simple cook comments in P2 once the feed has use; version-review comments P4 |
+| M4 Following and feed | Friends and the chronological feed shipped; algorithmic discovery P5 |
+| M5 Lineage visualization | P4 prototype, P5 decision; the fork list is built |
+| M6 Collections | P1 personal, P3 household |
+| M7 Fuzzy diff matching | P4 bounded quality work |
+| M8 Search ranking | P1 known-item relevance across every version; popularity is a public-discovery signal |
+| M9 Optimistic concurrency | Built; preserved in P0; extends to suggestions later |
+| M10 Drizzle migrations | Shipped infrastructure; current rules govern every slice |
+| M11 Timers | P2 named persistent-deadline timers, replacing the component-local sketch |
+| M12 Gram tables | P2 carefully sourced conversion coverage; broader data P4 with ingredient and preparation matching |
+| M13 User weights | P4 explicit overrides |
+| M14 iOS | P2 web and offline improvements; P5 native decision on measured limits |
+| M15 Import | P2 first migration and easy import; P4 Cooklang subset; P5 OCR and social capture |
+| M16 Export | P1, before import dependency; history, provenance and later logs |
+| M17 Attempts | Shipped as the Journal; last and times cooked P1 |
+| M18 Cook mode | Built; P2 validation and refinement |
+| M19 Match highlighting | P1 |
+| M20 Tick affordance | Shipped 16px circle stays; P2 side-by-side revisit |
+| M21 Pantry matching | P3 bounded experiment |
+| M22 Subrecipes | P4 committed |
+| M23 Graphical cooking view and timeline | P4 optional dependency view, separate from M5 lineage; no near-term date |
+
+Other preserved preferences: warm cookbook styling, desktop two-column reading, intentional phone, iPad and desktop layouts, monospace diff pages, the editable serving input without ×2 and ÷2 clutter, username settings, private-first publishing and honest traction. Earlier code snippets, enum and migration directions and hour estimates are history, not instructions (R).
+
 ## Counts
 
 Each table row above counts as one item, except rows that name a range (for example "R204 to R226", "DD15 to DD25"), which count as the number of items in the range; source-register rows count as one.
 
 - Items in the sources: 957 (R 308, CM 90, AQ 132, PA 56, DD 160, S1 52, S2 43, SL 47, US 13, CA 13, Z 25, CD 5, UX 13), counted from the row numbers above.
 - Items placed in the current set: 952. This includes 28 rows marked superseded in whole or part (CD1, CD2, R8, R17, R37, R52, R56, R58, R61, R62, R64, R68, R80, R81, R97, R100, R103, R230, R238, CM38, CM40, CM47, CM61, AQ15, AQ44, PA29, SL1, SL7), plus superseded notes inside R204 to R226 (M4, M17, M20), PA3 to PA21 (visibility), S1-27 and S2-25 (purchased core); each is placed through its replacement.
-- Items removed with approval: 5 rows (R4, R201, PA1, S1-5, S2-12), RM §16 lines 23 to 27; line 24 comes from the design summary, which stays current and is not a reconciled source. Placed 952 plus removed 5 is 957.
-- Lines in RM §16: 29, of which 24 are dropped as superseded (several rows above share one line; lines 12, 15 and 17 replace wording in R254, R253 and the design summary) and 5 are removals with approval (lines 23 to 27).
+- Items removed with approval: 5 rows (R4, R201, PA1, S1-5, S2-12), DC §2 lines 23 to 27; line 24 comes from the design summary, which stays current and is not a reconciled source. Placed 952 plus removed 5 is 957.
+- Lines in DC §2: 29, of which 24 are dropped as superseded (several rows above share one line; lines 12, 15 and 17 replace wording in R254, R253 and the design summary) and 5 are removals with approval (lines 23 to 27).
 - Items kept with removal proposed: 0.
 - Unplaced: 0.
 
