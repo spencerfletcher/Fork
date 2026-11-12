@@ -176,6 +176,23 @@
 		overscroll-behavior: contain;
 		padding: 6px;
 		background: var(--color-bg);
+		/* Cut short by its room, it scrolls inside: a shade at the edge that
+		   has more rows says so. The paper covers move with the rows (local)
+		   and hide the shades (scroll, fixed to the panel) at either end. */
+		--menu-shade: color-mix(in srgb, var(--color-text) 16%, transparent);
+		background-image:
+			linear-gradient(var(--color-bg) 40%, transparent),
+			linear-gradient(transparent, var(--color-bg) 60%),
+			linear-gradient(var(--menu-shade), transparent),
+			linear-gradient(transparent, var(--menu-shade));
+		background-position: top, bottom, top, bottom;
+		background-size:
+			100% 32px,
+			100% 32px,
+			100% 16px,
+			100% 16px;
+		background-repeat: no-repeat;
+		background-attachment: local, local, scroll, scroll;
 		border: 1px solid var(--color-text-2);
 		border-radius: var(--radius-md);
 	}

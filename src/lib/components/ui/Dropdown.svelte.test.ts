@@ -109,6 +109,18 @@ describe('Dropdown', () => {
 		);
 	});
 
+	// A panel cut short by its room scrolls inside; a shade at the edge that
+	// has more says so. Paper covers that scroll with the rows (local) hide the
+	// shades (fixed to the panel) at either end, in both directions, no script.
+	test('a scrolling panel shades the edge that has more rows, and only that one', () => {
+		const panel = cssRule(source, '.dropdown :global(.menu-panel)');
+		expect(panel).toMatch(
+			/background-image:\s*linear-gradient\(var\(--color-bg\)[^,]*, transparent\),\s*linear-gradient\(transparent, var\(--color-bg\)[^)]*\),\s*linear-gradient\(var\(--menu-shade\), transparent\),\s*linear-gradient\(transparent, var\(--menu-shade\)\)/
+		);
+		expect(panel).toMatch(/background-attachment:\s*local,\s*local,\s*scroll,\s*scroll/);
+		expect(panel).toMatch(/background-position:\s*top,\s*bottom,\s*top,\s*bottom/);
+	});
+
 	test('a navigation closes the menu', async () => {
 		await renderOpen();
 		expect(screen.getByRole('menu')).toBeInTheDocument();
