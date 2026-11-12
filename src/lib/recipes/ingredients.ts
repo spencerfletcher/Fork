@@ -21,7 +21,15 @@ function unparsed(text: string): Ingredient {
 /** One typed line to its structured form; the whole line becomes the name when it does not parse. */
 export function parseIngredientLine(line: string): Ingredient {
 	const text = line.trim();
-	const [parsed] = parseIngredient(text, OPTIONS);
+	let [parsed] = parseIngredient(text, OPTIONS);
+	// The parser lifts a unit from after a bracketed size ("1 (15 oz) can
+	// chickpeas" as can of "(15 oz) chickpeas"), a name that no longer ends the
+	// line, so it could not be rescaled; read again with that unit as a word.
+	if (parsed?.unitOfMeasure && !text.endsWith(parsed.description)) {
+		[parsed] = parseIngredient(text, {
+			ignoreUOMs: [...OPTIONS.ignoreUOMs, parsed.unitOfMeasure]
+		});
+	}
 	// The parser reads "-1 egg" as 1 with no name, dropping the sign and the
 	// egg; no quantity is negative, so such a line is kept as written.
 	if (!parsed || /^[-−]\s*[\d.]/.test(text)) {

@@ -16,6 +16,11 @@ describe('parseIngredientLine', () => {
 		['juice of half a lemon', null, null, '', 'juice of half a lemon'],
 		['flaky sea salt, for topping', null, null, '', 'flaky sea salt, for topping'],
 		['1 cup', 1, null, '', 'cup'],
+		// The parser takes the unit from after a can's size, leaving a name that
+		// no longer ends the line, which nothing can rescale; the size stays in the name.
+		['1 (15 oz) can chickpeas', 1, null, '', '(15 oz) can chickpeas'],
+		['2 (14-ounce) cans coconut milk', 2, null, '', '(14-ounce) cans coconut milk'],
+		['1 cup (240 ml) milk', 1, null, 'cup', '(240 ml) milk'],
 		// A typed zero is the cook's number: kept, and shown as typed.
 		['0 cups flour', 0, null, 'cups', 'flour'],
 		// The parser drops a minus sign and the name with it ("-1 egg" read as

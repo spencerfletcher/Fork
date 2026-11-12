@@ -307,6 +307,11 @@ describe('scaleIngredient', () => {
 		expect(row.grams).toEqual(grams(100));
 	});
 
+	test("a can's size in brackets is part of the name: the count scales, the size stays", () => {
+		const row = scaleIngredient(makeIngredient('1 (15 oz) can chickpeas'), null, 2);
+		expect(row.ingredient.text).toBe('2 (15 oz) can chickpeas');
+	});
+
 	test('a plural unit goes singular at one or less', () => {
 		const row = scaleIngredient(makeIngredient('2 cups chocolate chips'), null, 0.5);
 		expect(row.ingredient.text).toBe('1 cup chocolate chips');

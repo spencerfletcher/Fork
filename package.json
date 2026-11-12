@@ -72,7 +72,7 @@
 		"@supabase/supabase-js": "^2.118.0",
 		"diff": "^9.0.0",
 		"drizzle-orm": "^0.45.4",
-		"parse-ingredient": "3.0.0",
+		"parse-ingredient": "3.2.0",
 		"pluralize": "8.0.0",
 		"postgres": "^3.4.9",
 		"zod": "^4.6.7"
