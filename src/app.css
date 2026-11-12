@@ -829,6 +829,32 @@
 		}
 	}
 
+	/* From 700 the row keeps to the column but for 4px either side, a focused
+	   tab's ring (2px at a 2px offset). Its scrollbar is hidden, so while tags
+	   lie to the right its last 24px fade: the recipe aside's scroll-driven
+	   fade, so a row that fits has no timeline and no fade, the fade lifts at
+	   the end, and without scroll timelines there is none. A tab reached by
+	   Tab scrolls clear of the fade. */
+	@media (min-width: 700px) {
+		.tag-tabs {
+			margin-inline: -4px;
+			padding-inline: 4px;
+			scroll-padding-inline: 4px 28px;
+			animation: tag-row-fade linear both;
+			animation-timeline: scroll(self inline);
+		}
+	}
+
+	@keyframes tag-row-fade {
+		0%,
+		99% {
+			mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent);
+		}
+		100% {
+			mask-image: none;
+		}
+	}
+
 	.tag-tabs a,
 	.tag-tabs button {
 		flex-shrink: 0;

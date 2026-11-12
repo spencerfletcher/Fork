@@ -332,6 +332,30 @@ describe('app.css phone tab bar', () => {
 	});
 });
 
+describe('app.css tag row from 700px', () => {
+	const wide = css.split('@media (min-width: 700px)').slice(1);
+	const rule = wide
+		.map((b) => b.slice(0, b.indexOf('}') + 1))
+		.find((b) => /^\s*\{\s*\.tag-tabs\s*\{/.test(b));
+
+	test('keeps to the column but for the 4px a focused tab’s ring needs', () => {
+		expect(rule).toBeDefined();
+		expect(rule).toMatch(/margin-inline:\s*-4px/);
+		expect(rule).toMatch(/padding-inline:\s*4px/);
+	});
+
+	// Its scrollbar is hidden, so a fade says more tags lie to the right.
+	test('fades its right edge while it scrolls, and a tabbed-to tab stops clear of the fade', () => {
+		expect(rule).toMatch(/animation:\s*tag-row-fade linear both/);
+		expect(rule).toMatch(/animation-timeline:\s*scroll\(self inline\)/);
+		expect(rule).toMatch(/scroll-padding-inline:\s*4px 28px/);
+		const frames = css.slice(css.indexOf('@keyframes tag-row-fade'));
+		expect(frames).toMatch(
+			/mask-image:\s*linear-gradient\(to right, #000 calc\(100% - 24px\), transparent\)/
+		);
+	});
+});
+
 describe('app.css forced colours', () => {
 	// Every tag tab carries a transparent 2px underline, which forced colours
 	// would paint, marking every tab current. Canvas hides it again, so only
