@@ -13,7 +13,8 @@ The single current plan for Fork, a recipe cookbook with version history, a cook
 | S1 | [Design refinement and solo-business review, 10 Nov 2026](../research/2026-11-10-design-and-solo-business.md) |
 | S2 | [Finished product and revenue synthesis, 10 Nov 2026](../research/2026-11-10-finished-product-and-revenue.md) |
 | Z | [Zed design reference, 9 Nov 2026](../research/2026-11-09-zed-design-reference/README.md) |
-| CD | [Cookbook design research, 8 Nov 2026](../research/2026-11-08-cookbook-design-research/README.md): its working contract and learning tracks, folded 12 Nov 2026 |
+| CD | [Cookbook design research, 8 Nov 2026](../research/2026-11-08-cookbook-design-research/README.md): its working contract and learning tracks, folded 12 Nov 2026, and its three notes (design principles, product references, cooking workflows), folded the same day |
+| SW | [Site sweeps, 29 Oct 2026](../research/2026-10-29-site-sweeps.md): the per-surface critiques after the redesign; its still-open items folded 12 Nov 2026 as recommendations |
 | UX | [UX review, 12 Nov 2026](../research/2026-11-12-ux-review.md): recommendations, not decisions; item numbers are its recommended order (UX 1 to UX 4) |
 | CL | [Cooklang research, 23 Oct 2026](../research/2026-10-23-cooklang.md): structure and portability to borrow, the adaptation bar; folded 12 Nov 2026 as recommendations |
 | PS | [Package sweep, 12 Nov 2026](../research/2026-11-12-package-sweep.md): hand-built code against packages, and packages for later needs; every adoption is Spencer's call |
@@ -437,3 +438,4 @@ Prioritize trust, capture, reading and cooking, and retrieval refinements before
 - 2026-11-12: source key CL (23 Oct Cooklang research): fixed quantities explicit (Scaler workstream), running timers as session state (§7), the CookBot benchmark and adaptation bar (§7 AI), Cooklang parser evaluation (P4), no piecemeal markup (P4), all proposed.
 - 2026-11-12: source key PS (12 Nov package sweep): its adopt-when-built packages in their rows (photo access, export zip, metadata types, varied seed, abuse limits, email, easy import, migration importer, offline reading, Cooklang, nutrition data, OCR), the `parse-ingredient` 3.2.0 upgrade and the dependency posture in §11, all proposed.
 - 2026-11-12: source keys FR and BV (31 Oct feature research and business viability): P0 Public-launch prerequisites (build order 7) with terms, privacy policy, minimum age, error reporting and abuse hashing as proposed additions; FR leads in Cooking session, Units, Private ratings, Richer diary, Substitutions, Native apps, Global search, §8 and two Not yet phased rows (Reading options, Share cards), all proposed.
+- 2026-11-12: source key SW (29 Oct site sweeps); CD now covers its three notes.

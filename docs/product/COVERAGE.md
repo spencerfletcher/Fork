@@ -2,7 +2,7 @@
 
 Working file. Proves that every section, table row and bullet-level item in the sources landed in the current set. Destinations: RD README.md, RM ROADMAP.md, DC DECISIONS.md, CV this file (M1 to M23), CO COMPETITIVE.md, BU BUSINESS.md, DE DESIGN-DIRECTION.md, IN INVENTORY.md; "§n" is the numbered section, "P0" to "P5" a phase table in RM §4. Status: **placed**; **superseded** (also in DC §2, item number given; the replacement is placed); **removed with approval** (removed from the set with Spencer's approval on 11 Nov 2026; recorded in DC §2, line given); **overtaken** (the code already does it, checked by one grep or listing on 12 Nov 2026; nothing to fold). Source-register tables (lists of citations) are one row each.
 
-Sources: R [roadmap report](../research/2026-11-08-product-roadmap/README.md); CM [cookbook market](../research/2026-11-08-product-roadmap/cookbook_market.md); AQ [advanced and quality](../research/2026-11-08-product-roadmap/advanced_and_quality.md); PA [product audit](../research/2026-11-08-product-roadmap/current_product_audit.md); DD [deep dive](../research/2026-11-09-cookbook-app-deep-dive/README.md); S1 [design and solo business](../research/2026-11-10-design-and-solo-business.md); S2 [finished product and revenue](../research/2026-11-10-finished-product-and-revenue.md); SL [social launch](../research/2026-11-08-social-launch/social_launch.md); US [US copyright](../research/2026-11-08-social-launch/us_copyright.md); CA [Canada copyright](../research/2026-11-08-social-launch/canada_copyright.md); Z [Zed reference](../research/2026-11-09-zed-design-reference/README.md); CD [cookbook design research, 8 Nov](../research/2026-11-08-cookbook-design-research/README.md), its README only, folded 12 Nov; UX [UX review, 12 Nov](../research/2026-11-12-ux-review.md); CL [Cooklang research, 23 Oct](../research/2026-10-23-cooklang.md); PS [package sweep, 12 Nov](../research/2026-11-12-package-sweep.md); FR [feature research, 31 Oct](../research/2026-10-31-feature-research.md); BV [business viability, 31 Oct](../research/2026-10-31-business-viability.md).
+Sources: R [roadmap report](../research/2026-11-08-product-roadmap/README.md); CM [cookbook market](../research/2026-11-08-product-roadmap/cookbook_market.md); AQ [advanced and quality](../research/2026-11-08-product-roadmap/advanced_and_quality.md); PA [product audit](../research/2026-11-08-product-roadmap/current_product_audit.md); DD [deep dive](../research/2026-11-09-cookbook-app-deep-dive/README.md); S1 [design and solo business](../research/2026-11-10-design-and-solo-business.md); S2 [finished product and revenue](../research/2026-11-10-finished-product-and-revenue.md); SL [social launch](../research/2026-11-08-social-launch/social_launch.md); US [US copyright](../research/2026-11-08-social-launch/us_copyright.md); CA [Canada copyright](../research/2026-11-08-social-launch/canada_copyright.md); Z [Zed reference](../research/2026-11-09-zed-design-reference/README.md); CD [cookbook design research, 8 Nov](../research/2026-11-08-cookbook-design-research/README.md), its README only, folded 12 Nov; UX [UX review, 12 Nov](../research/2026-11-12-ux-review.md); CL [Cooklang research, 23 Oct](../research/2026-10-23-cooklang.md); PS [package sweep, 12 Nov](../research/2026-11-12-package-sweep.md); FR [feature research, 31 Oct](../research/2026-10-31-feature-research.md); BV [business viability, 31 Oct](../research/2026-10-31-business-viability.md); SW [site sweeps, 29 Oct](../research/2026-10-29-site-sweeps.md); the CD notes and the notes reviewed with nothing to fold are linked in their sections.
 
 ## R: product roadmap report
 
@@ -856,6 +856,53 @@ Read by the roadmap report (R, AQ) and superseded as a business plan by BUSINESS
 | BV19 | No cofounder needed to test | BU §1 (a solo operation, DC §1 10 Nov) | placed |
 | BV20 | Sources | research note only | placed |
 
+## CD notes: cookbook design research, 8 Nov 2026 (three notes)
+
+Folded on 12 Nov 2026: [design principles](../research/2026-11-08-cookbook-design-research/design_principles.md), [product references](../research/2026-11-08-cookbook-design-research/product_references.md) and [cooking workflows](../research/2026-11-08-cookbook-design-research/cooking_workflows.md). Most of their substance reached the set through the README (CD1 to CD5), S1 and Z; the rows below place what each adds.
+
+| # | Source item | Destination | Status |
+| --- | --- | --- | --- |
+| CD6 | Principles §1: aesthetics and usability measured apart; seven judgments (palette as a hypothesis, photography's range, clay and marigold roles, task text direct, grouping before boxes, paired screens) | DE Identity, Accent roles, Typography roles, Grouping, Photography; RM §10 Formative usability track | placed |
+| CD7 | Principles §2: the editor and cooking acceptance table (common editing, advanced operations, save semantics, failure, reversal, focus, touch, cooking layout, motion) and the WCAG 2.2 selection | DE Feedback and states, New and edit, Cooking; RM §8 Accessibility, Kitchen ergonomics; RM P0 Save state and recovery | placed |
+| CD8 | Principles §3: the formative study plan and its record | RM §10 Formative usability track | placed |
+| CD9 | Principles gaps: contrast on actual pairs and states; the 4.46:1 pair to verify | DE Accent roles, Palette (real pairs in every state) | placed |
+| CD10 | References: Bear, Things, Linear as mechanisms; Todoist, Obsidian, Claude as light signals | CO §6, [INSPIRATION.md](../design/INSPIRATION.md), DE Identity | placed |
+| CD11 | References: capture, disclosure, editing and recovery (reversible interpretation, recovery is not history, recipe versus entry versus discussion) | DE Identity working contract, RM §7 Recipe, cook and revision, RM P1 Durable drafts | placed |
+| CD12 | References: eight mappings (action hierarchy per state, content carries warmth, editing resembles the recipe, capture first, Cook as focus, Journal beside the recipe, meaningful recovery, density by content) | DE Controls, Photography, New and edit, Cooking, Journal, History and comparison, Density | placed |
+| CD13 | Workflows §1: interruption (working hierarchy, context without a tunnel, counter-distance reading, state is a promise, hands-free as an enhancement, acceptance checks) | DE Cooking; RM P2 Cooking session, Mobile cooking refinement, §8 Kitchen ergonomics | placed |
+| CD14 | Workflows §2: precision (canonical quantity, inspectable scaling, subrecipe clarity, arithmetic is not authorship, timers belong to work, correction is core, the import fixture) | RM §7 Scaling, Subrecipes, Timers; RM P2 Easy import (read first) | placed |
+| CD15 | Workflows §3: journal (finish into a record, name the intent, history answers cooking questions, explicit audience, acceptance checks) | RM §7 Recipe, cook and revision; RM P2 Journal, Journal recall (read first) | placed |
+
+## SW: site sweeps, 29 Oct 2026
+
+Folded on 12 Nov 2026. The sweeps' fixes shipped the same week (checked: the `::placeholder` rule and the card title's `text-wrap: balance` in `src/app.css`); the screens they scored have since been redesigned (Favorites is the Cookbook's Saved, the landing page is Discover).
+
+| # | Source item | Destination | Status |
+| --- | --- | --- | --- |
+| SW1 | Method and the morning scores | research note only | placed |
+| SW2 | Cross-cutting findings (placeholders, titles, navbar targets, case, font shift, chip meaning, widows, card shadow, DESIGN.md drift) | applied 29 Oct (Shared fixes, Final batch) | overtaken |
+| SW3 to SW9 | Applied rounds: compare, browse and landing, profile and favorites, editor, recipe page, shared fixes, final batches | the code | overtaken |
+| SW10 | Wave and final-run score tables | research note only | placed |
+| SW11 | Still open, recipe page: Clear ticks without undo, silent 12-hour ticks (Spencer's calls) | DE Cooking | placed |
+| SW12 | Still open, compare: no key for the marks; case-only changes | DE History and comparison | placed |
+| SW13 | Still open, auth: show-password (Spencer's call), no confirm field, announcements | DE Profile and account; DE design quality pass checklist | placed |
+| SW14 | Still open, browse: no `srcset` | DE Photography | placed |
+| SW15 | Still open, profile: no sort past about twelve recipes; "8 changes" as a link | RM P2 Profile redesign | placed |
+| SW16 | Hosted recovery template, redirect allow-list and SMTP (Spencer's one-way doors) | RM P0 Account access (verified production mail) | placed |
+| SW17 | The rest of the P3 list | DE design quality pass (the still-open list as a checklist) | placed |
+| SW18 | Flaky e2e under machine load | research note only | placed |
+
+## Notes reviewed 12 Nov 2026 with nothing to fold
+
+| # | Note | Why nothing is folded | Status |
+| --- | --- | --- | --- |
+| UD | [UI design directions, 26 Oct](../research/2026-10-26-ui-design-directions.md) | Direction C with the clay and marigold roles was built on 27 Oct and is DESIGN.md; directions A and B, the other accents and the espresso hero were rejected there; dark mode's recorded set is RM Not yet phased, Dark mode | overtaken |
+| AP | [Alternate palette ideas, 27 Oct](../research/2026-10-27-alternate-palette-ideas.md) | A stashed March palette and the 2025 brief, both replaced by the shipped tokens; tags no longer share the action colour | overtaken |
+| RC | [Recipe page critique, 28 Oct](../research/2026-10-28-recipe-page-critique.md) | Its composition shipped 28 to 29 Oct; its parked ideas are built (fork from an older version, Keep this version) or replaced (Save and Fork pills, DS) | overtaken |
+| RS1 | [UI reuse sweep, 9 Nov](../research/2026-11-09-ui-reuse-sweep.md) | Extracted: `ConfirmStep`, `FormActions`, `ChoiceGroup`, `Avatar`, `EmptyPanel`, `ResultStatus` in `src/lib/components/ui/` | overtaken |
+| RS2 | [Server reuse sweep, 9 Nov](../research/2026-11-09-server-reuse-sweep.md) | Extracted: `viewableRecipe`, `ownRecipe`, `inLibraryOf`, `cardList`, `failure` and the testing helpers (AGENTS.md, Shared helpers) | overtaken |
+| RB | [Roadmap before the social revision, 8 Nov](../research/2026-11-08-social-launch/roadmap-before-social-revision.md) | An earlier draft of the roadmap report, replaced by its revision (R), which this file traces | superseded (by R) |
+
 ## M1 to M23: October milestones
 
 Where each milestone of the [October milestones](../history/2026-10-milestones.md) went in the current plan. Moved here from ROADMAP.md section 13 on 12 November 2026.
@@ -892,11 +939,11 @@ Other preserved preferences: warm cookbook styling, desktop two-column reading, 
 
 Each table row above counts as one item, except rows that name a range (for example "R204 to R226", "DD15 to DD25"), which count as the number of items in the range; source-register rows count as one.
 
-- Items in the sources: 1,072 (R 308, CM 90, AQ 132, PA 56, DD 160, S1 52, S2 43, SL 47, US 13, CA 13, Z 25, CD 5, UX 13, CL 15, PS 46, FR 34, BV 20), counted from the row numbers above.
-- Items placed in the current set: 1,063. This includes 30 rows marked superseded in whole or part (FR26, FR32, CD1, CD2, R8, R17, R37, R52, R56, R58, R61, R62, R64, R68, R80, R81, R97, R100, R103, R230, R238, CM38, CM40, CM47, CM61, AQ15, AQ44, PA29, SL1, SL7), plus superseded notes inside R204 to R226 (M4, M17, M20), PA3 to PA21 (visibility), S1-27 and S2-25 (purchased core); each is placed through its replacement.
-- Items removed with approval: 7 rows (R4, R201, PA1, S1-5, S2-12, BV2, BV5), DC §2 lines 23 to 27; line 24 comes from the design summary, which stays current and is not a reconciled source. Placed 1,063 plus removed 7 plus overtaken 2 is 1,072.
+- Items in the sources: 1,106 (R 308, CM 90, AQ 132, PA 56, DD 160, S1 52, S2 43, SL 47, US 13, CA 13, Z 25, CD 5, UX 13, CL 15, PS 46, FR 34, BV 20, CD notes 10, SW 18, notes with nothing to fold 6), counted from the row numbers above.
+- Items placed in the current set: 1,084. This includes 31 rows marked superseded in whole or part (RB, FR26, FR32, CD1, CD2, R8, R17, R37, R52, R56, R58, R61, R62, R64, R68, R80, R81, R97, R100, R103, R230, R238, CM38, CM40, CM47, CM61, AQ15, AQ44, PA29, SL1, SL7), plus superseded notes inside R204 to R226 (M4, M17, M20), PA3 to PA21 (visibility), S1-27 and S2-25 (purchased core); each is placed through its replacement.
+- Items removed with approval: 7 rows (R4, R201, PA1, S1-5, S2-12, BV2, BV5), DC §2 lines 23 to 27; line 24 comes from the design summary, which stays current and is not a reconciled source. Placed 1,084 plus removed 7 plus overtaken 15 is 1,106.
 - Lines in DC §2: 30, of which 25 are dropped as superseded (line 30, the first 12 Nov build order, is a decision record, not a source item) (several rows above share one line; lines 12, 15 and 17 replace wording in R254, R253 and the design summary) and 5 are removals with approval (lines 23 to 27).
-- Items overtaken by the code: 2 (CL2, PS37).
+- Items overtaken by the code: 15 (CL2, PS37, SW2, SW3 to SW9, UD, AP, RC, RS1, RS2).
 - Items kept with removal proposed: 0.
 - Unplaced: 0.
 
@@ -910,3 +957,4 @@ Each table row above counts as one item, except rows that name a range (for exam
 - 2026-11-12: CL section added (the 23 Oct Cooklang research); status **overtaken** defined; counts updated.
 - 2026-11-12: PS section added (the 12 Nov package sweep); counts updated.
 - 2026-11-12: FR and BV sections added (the 31 Oct feature research and business viability notes); counts updated.
+- 2026-11-12: CD notes, SW and nothing-to-fold sections added (the three 8 Nov design notes, the 29 Oct site sweeps, the October design notes, the 9 Nov reuse sweeps and the pre-revision roadmap); counts updated.
