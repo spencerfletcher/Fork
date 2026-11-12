@@ -129,7 +129,7 @@ export async function declineRequest(me: string, them: string): Promise<void> {
  * so an editor open on the fork cannot save the old audience back. A withdrawal
  * like any other, so each fork's savers who still see it keep a copy.
  */
-export async function privatiseForksIn(tx: Tx, a: string, b: string): Promise<void> {
+async function privatiseForksIn(tx: Tx, a: string, b: string): Promise<void> {
 	const parent = alias(recipes, 'parent');
 	for (const [owner, forker] of [
 		[a, b],

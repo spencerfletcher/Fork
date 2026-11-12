@@ -19,7 +19,7 @@ export type EntryValues = {
 /** One recipe the form offers; its latestVersion is shown beside the title, and picking it links that version. */
 export type RecipeChoice = Awaited<ReturnType<typeof recipeChoices>>[number];
 
-export function valuesOf(formData: FormData): EntryValues {
+function valuesOf(formData: FormData): EntryValues {
 	return {
 		dish: text(formData, 'dish'),
 		cookedOn: text(formData, 'cookedOn'),
