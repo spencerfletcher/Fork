@@ -22,9 +22,9 @@ test.describe('Cookbook select mode', () => {
 			const listUrl = `/cookbook?q=${encodeURIComponent(word)}`;
 			await gotoHydrated(page, listUrl);
 			const select = page.getByRole('button', { name: 'Select', exact: true });
-			await expect(select).toHaveAttribute('aria-pressed', 'false');
 			await select.click();
-			await expect(select).toHaveAttribute('aria-pressed', 'true');
+			// Gone while selecting: the bar's Cancel is the one way out.
+			await expect(select).toHaveCount(0);
 
 			const bar = page.getByRole('region', { name: 'Selection' });
 			const selectAll = bar.getByRole('button', { name: 'Select all 2 shown', exact: true });

@@ -188,13 +188,13 @@
 									</a>
 								{/each}
 							</div>
-							{#if hydrated}
+							<!-- Gone while selecting: the bar's Cancel is the one way out. -->
+							{#if hydrated && !sel.on}
 								<button
 									type="button"
 									class="text-btn text-btn--ink cookbook-select"
-									aria-pressed={sel.on}
 									bind:this={selectButton}
-									onclick={() => (sel.on ? leaveSelect() : sel.start())}>
+									onclick={sel.start}>
 									Select
 								</button>
 							{/if}
@@ -457,13 +457,6 @@
 	/* At the tools' end, wherever they wrap. */
 	.cookbook-select {
 		margin-left: auto;
-	}
-
-	/* Pressed, it reads as the mode it is in: underlined, as on hover. */
-	.cookbook-select[aria-pressed='true'] {
-		text-decoration: underline;
-		text-decoration-thickness: 1px;
-		text-underline-offset: 3px;
 	}
 
 	@media (forced-colors: active) {

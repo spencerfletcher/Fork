@@ -670,19 +670,20 @@ describe('Cookbook select mode', () => {
 		await tick();
 	}
 
-	test('Select is a toggle at the end of the filter tools, with Sort and Grid | List', async () => {
+	test('Select is a button at the end of the filter tools, with Sort and Grid | List', async () => {
 		renderCookbook(full);
 		await tick();
-		expect(select()).toHaveAttribute('aria-pressed', 'false');
+		expect(select()).not.toHaveAttribute('aria-pressed');
 		expect(select()).toHaveClass('text-btn', 'text-btn--ink');
 		expect(select().parentElement).toHaveClass('cookbook-view');
 		expect(select().parentElement!.lastElementChild).toBe(select());
 		expect(cssRule(style, '.cookbook-select')).toMatch(/margin-left:\s*auto/);
 	});
 
-	test('pressed, every card is a checkbox named for its recipe, no link; the bar takes focus', async () => {
+	// Owner, 12 November 2026: "hide select while selecting": Cancel is the one exit.
+	test('pressed, Select goes and every card is a checkbox named for its recipe, no link; the bar takes focus', async () => {
 		await selecting();
-		expect(select()).toHaveAttribute('aria-pressed', 'true');
+		expect(screen.queryByRole('button', { name: 'Select' })).toBeNull();
 		for (const r of full.recipes) {
 			expect(screen.getByRole('checkbox', { name: r.title })).not.toBeChecked();
 			expect(screen.queryByRole('link', { name: r.title })).toBeNull();
