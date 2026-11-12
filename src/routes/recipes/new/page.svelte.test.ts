@@ -1,6 +1,6 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { contentDraft, REQUIRED_MESSAGES } from '#lib/recipes/validation.js';
-import { render, screen, fireEvent, within } from '@testing-library/svelte';
+import { render, screen, fireEvent } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import type { SubmitFunction } from '$app/forms';
 import NewPage from './+page.svelte';
