@@ -267,11 +267,12 @@ describe('Edit page form', () => {
 		expect(editingLine('Editing v2 · saves as v3')).toBeInTheDocument();
 	});
 
-	test('the placeholder falls back when nothing has changed', () => {
+	// An example, not the label again.
+	test('the placeholder falls back to an example when nothing has changed', () => {
 		render(EditPage, { props: { data: makeData(), form: null } });
 		expect(screen.getByLabelText(/what changed/i)).toHaveAttribute(
 			'placeholder',
-			'What changed in this version?'
+			'Less salt, longer bake'
 		);
 	});
 

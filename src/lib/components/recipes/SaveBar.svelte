@@ -31,7 +31,7 @@
 		submitButton?: HTMLButtonElement;
 	} = $props();
 
-	const placeholder = $derived(generated ?? 'What changed in this version?');
+	const placeholder = $derived(generated ?? 'Less salt, longer bake');
 	// A blank message saves the generated one, as the server trims; say so.
 	const savesGenerated = $derived(generated !== null && !commitMessage.trim());
 
