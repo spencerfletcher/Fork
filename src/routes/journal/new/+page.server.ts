@@ -11,6 +11,7 @@ import { prepareEntry } from '../save.server.js';
 import type { Actions, PageServerLoad } from './$types';
 import { privatePage } from '#lib/seo.js';
 import { todayFor } from '#lib/server/timeZone.js';
+import { rateLimited } from '#lib/server/rateLimit.js';
 
 const digits = (value: string | null) => (value && wholeNumber(value) !== null ? value : '');
 
@@ -68,6 +69,10 @@ export const actions: Actions = {
 			console.error('Could not ensure profile', e);
 			return entryFailure(500, 'save_failed', 'Could not save the entry. Try again.', formData);
 		}
+
+		// Before the upload, so a refusal stores no photo.
+		const limited = await rateLimited('journal', user.id);
+		if (limited) return entryFailure(429, 'rate_limited', limited, formData);
 
 		const prepared = await prepareEntry(formData, user, supabase);
 		if (!prepared.ok) return prepared.failure;

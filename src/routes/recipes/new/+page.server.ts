@@ -12,6 +12,7 @@ import type { RecipeContent } from '#lib/recipes/types.js';
 import { recipeCopies } from '#lib/recipes/content.js';
 import { ensureProfile } from '#lib/server/profiles.js';
 import { privatePage } from '#lib/seo.js';
+import { rateLimited } from '#lib/server/rateLimit.js';
 
 export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 	requireUser(url, user);
@@ -40,6 +41,10 @@ export const actions: Actions = {
 			console.error('Could not ensure profile', e);
 			return failure(500, 'save_failed', 'Could not save the recipe. Try again.', { draft });
 		}
+
+		// Before the upload, so a refusal stores no photo.
+		const limited = await rateLimited('recipes', user.id);
+		if (limited) return failure(429, 'rate_limited', limited, { draft });
 
 		const upload = await uploadPhoto(formData, supabase, user.id, draft);
 		if (!upload.ok) return upload.failure;

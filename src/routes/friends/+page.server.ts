@@ -1,8 +1,7 @@
 import { eq } from 'drizzle-orm';
 import { db } from '#lib/server/db/index.js';
-import { profiles, REPORT_TARGETS } from '#lib/server/db/schema.js';
+import { profiles, type ReportTarget } from '#lib/server/db/schema.js';
 import {
-	MAX_REPORT,
 	OWN_LIKE,
 	acceptRequest,
 	block,
@@ -21,6 +20,8 @@ import { ENTRIES_PER_PAGE } from '#lib/server/journal.js';
 import { listPage } from '#lib/listPage.js';
 import { ensureProfile } from '#lib/server/profiles.js';
 import { failure, requireUser, signedOut } from '#lib/server/actions.js';
+import { rateLimited } from '#lib/server/rateLimit.js';
+import { MAX_REPORT } from '#lib/server/moderation.js';
 import { oneOf, text, wholeNumber } from '#lib/helpers.js';
 import type { Actions, PageServerLoad } from './$types';
 import { privatePage } from '#lib/seo.js';
@@ -40,6 +41,9 @@ export const load: PageServerLoad = async ({ url, locals: { user } }) => {
 };
 
 const invalid = (error: string) => failure(400, 'invalid', error);
+
+/** What the feed's menus report; a link is /report's alone. */
+const FEED_REPORT_TARGETS = ['log_entry', 'recipe', 'user'] as const satisfies ReportTarget[];
 
 /**
  * The signed-in viewer and the other person a relationship form names, who
@@ -66,6 +70,8 @@ export const actions: Actions = {
 	request: async ({ request, locals: { user } }) => {
 		const p = await pair(request, user);
 		if (!p.ok) return p.failure;
+		const limited = await rateLimited('friendRequests', p.me);
+		if (limited) return failure(429, 'rate_limited', limited);
 		const outcome = await sendRequest(p.me, p.them);
 		if (outcome === 'refused') return invalid("A friend request can't be sent here.");
 		return { outcome };
@@ -120,13 +126,15 @@ export const actions: Actions = {
 	report: async ({ request, locals: { user } }) => {
 		if (!user) return signedOut();
 		const formData = await request.formData();
-		const targetType = oneOf(REPORT_TARGETS, text(formData, 'targetType'));
+		const targetType = oneOf(FEED_REPORT_TARGETS, text(formData, 'targetType'));
 		const targetId = text(formData, 'targetId').trim();
 		const reason = text(formData, 'reason').trim();
 		if (!targetType || !targetId) return invalid('Choose what to report.');
 		if (!reason) return invalid('Say what is wrong.');
 		if (reason.length > MAX_REPORT)
 			return invalid(`Keep the report under ${MAX_REPORT.toLocaleString('en-US')} characters.`);
+		const limited = await rateLimited('reports', user.id);
+		if (limited) return failure(429, 'rate_limited', limited);
 		await report(user.id, targetType, targetId, reason);
 		return { reported: true };
 	}

@@ -14,6 +14,7 @@ import {
 	SOURCE_URL_MESSAGES
 } from '#lib/recipes/validation.js';
 import { OVERNIGHT_MINUTES } from '#lib/recipes/times.js';
+import { LIMITED, LIMITED_FAILURE } from '#lib/testing/rateLimit.js';
 
 const invoke = (event: unknown) => invokeAction(actions.default as never, event);
 
@@ -35,6 +36,8 @@ vi.mock('#lib/server/images.js', async (importOriginal) => ({
 }));
 vi.mock('#lib/server/tags.js', () => ({ syncTags: syncTagsMock }));
 vi.mock('#lib/server/profiles.js', () => ({ ensureProfile: ensureProfileMock }));
+const { rateLimitedMock } = vi.hoisted(() => ({ rateLimitedMock: vi.fn() }));
+vi.mock('#lib/server/rateLimit.js', () => ({ rateLimited: rateLimitedMock }));
 
 /** A tx whose first insert is the recipe (returns id 42) and second is the version. */
 function makeTx() {
@@ -314,5 +317,17 @@ describe('new recipe load', () => {
 			status: 303,
 			location: loginHref(path)
 		});
+	});
+});
+
+describe('rate limit', () => {
+	test('past the cap on new recipes, the draft comes back and nothing is uploaded or written', async () => {
+		rateLimitedMock.mockResolvedValueOnce(LIMITED);
+		const result = await invoke(makeEvent({ fields: FULL, file: PNG() }));
+		expect(result).toMatchObject(LIMITED_FAILURE);
+		expect(result.data).toMatchObject({ draft: { title: FULL.title } });
+		expect(rateLimitedMock).toHaveBeenCalledWith('recipes', USER.id);
+		expect(uploadMock).not.toHaveBeenCalled();
+		expect(transactionMock).not.toHaveBeenCalled();
 	});
 });

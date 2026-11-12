@@ -1,5 +1,5 @@
 import { error } from '@sveltejs/kit';
-import { isModerator, moderationList } from '#lib/server/moderation.js';
+import { isModerator, linkReportList, moderationList } from '#lib/server/moderation.js';
 import { privatePage } from '#lib/seo.js';
 import type { PageServerLoad } from './$types';
 
@@ -8,5 +8,6 @@ import type { PageServerLoad } from './$types';
 // post to the recipe page's own actions, which check again.
 export const load: PageServerLoad = async ({ locals: { user } }) => {
 	if (!isModerator(user)) throw error(404, 'Not Found');
-	return { recipes: await moderationList(), meta: privatePage('Moderation') };
+	const [recipes, links] = await Promise.all([moderationList(), linkReportList()]);
+	return { recipes, links, meta: privatePage('Moderation') };
 };

@@ -89,4 +89,42 @@ describe.skipIf(!localDb)('the moderation list, against the real database', () =
 			expect(list.length).toBeLessThanOrEqual(moderation.MODERATION_LIMIT);
 		});
 	});
+
+	test('link reports: newest first, each with its path, text, contact, day and reporter, at most MODERATION_LIMIT; a recipe report is not one', async () => {
+		await withProfiles(1, async (tx, [cook]) => {
+			await tx.delete(schema.reports);
+			await moderation.fileLinkReport(null, '/recipes/old-1', 'a@example.com', 'Old', tx);
+			await moderation.fileLinkReport(cook, '/users/x?tab=1', 'b@example.com', 'Line\ntwo', tx);
+			await tx.insert(schema.reports).values({
+				reporterId: cook,
+				targetType: 'recipe',
+				targetId: '1',
+				reason: 'Not a link'
+			});
+			// Same instant inside the transaction: the later id is newer.
+			const list = await moderation.linkReportList(tx);
+			const username = (await tx.query.profiles.findFirst({ where: eq(schema.profiles.id, cook) }))
+				?.username;
+			expect(list).toEqual([
+				{
+					path: '/users/x?tab=1',
+					text: 'Line\ntwo',
+					contact: 'b@example.com',
+					reportedAt: expect.any(Date),
+					reporter: username
+				},
+				{
+					path: '/recipes/old-1',
+					text: 'Old',
+					contact: 'a@example.com',
+					reportedAt: expect.any(Date),
+					reporter: null
+				}
+			]);
+
+			for (let i = 0; i < moderation.MODERATION_LIMIT; i++)
+				await moderation.fileLinkReport(null, `/r/${i}`, 'c@example.com', 'More', tx);
+			expect(await moderation.linkReportList(tx)).toHaveLength(moderation.MODERATION_LIMIT);
+		});
+	});
 });

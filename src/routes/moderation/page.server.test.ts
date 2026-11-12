@@ -3,7 +3,8 @@ import { invokeAction, loadEvent, loadPage } from '#lib/testing/actions.js';
 
 const moderation = vi.hoisted(() => ({
 	isModerator: vi.fn(),
-	moderationList: vi.fn()
+	moderationList: vi.fn(),
+	linkReportList: vi.fn()
 }));
 vi.mock('#lib/server/moderation.js', () => moderation);
 
@@ -12,11 +13,21 @@ import type { PageData } from './$types';
 
 const MODERATOR = { id: 'mod-id' };
 const LIST = [{ slug: 'soup', title: 'Soup', author: 'cook', hidden: false, reports: [] }];
+const LINKS = [
+	{
+		path: '/recipes/soup',
+		text: 'My photo',
+		contact: 'me@example.com',
+		reportedAt: new Date(),
+		reporter: null
+	}
+];
 
 beforeEach(() => {
 	vi.clearAllMocks();
 	moderation.isModerator.mockImplementation((user: { id: string } | null) => user?.id === 'mod-id');
 	moderation.moderationList.mockResolvedValue(LIST);
+	moderation.linkReportList.mockResolvedValue(LINKS);
 });
 
 describe('/moderation load', () => {
@@ -26,6 +37,7 @@ describe('/moderation load', () => {
 			expect(result).toMatchObject({ status: 404, body: { message: 'Not Found' } });
 		}
 		expect(moderation.moderationList).not.toHaveBeenCalled();
+		expect(moderation.linkReportList).not.toHaveBeenCalled();
 	});
 
 	test('a moderator reads the list, noindex', async () => {
@@ -35,6 +47,7 @@ describe('/moderation load', () => {
 		);
 		expect(moderation.isModerator).toHaveBeenCalledWith(MODERATOR);
 		expect(data.recipes).toEqual(LIST);
+		expect(data.links).toEqual(LINKS);
 		expect(data.meta).toEqual({ title: 'Moderation', noindex: true });
 	});
 });

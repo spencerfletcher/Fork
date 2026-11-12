@@ -5,6 +5,7 @@ import { draftOf } from '#lib/recipes/validation.js';
 import { and, eq, desc, isNull } from 'drizzle-orm';
 import { appendVersion, commitSave, lockForSave } from '#lib/server/versions.js';
 import type { PageServerLoad, Actions } from './$types';
+import { rateLimited } from '#lib/server/rateLimit.js';
 import {
 	changedGroups,
 	generatedCommitMessage,
@@ -104,6 +105,8 @@ export const actions: Actions = {
 		// that counts is the one under the row lock below.
 		if (recipe.editRevision !== editRevision)
 			return failure(409, 'stale', STALE_MESSAGE, { draft });
+		const limited = await rateLimited('edits', user.id);
+		if (limited) return failure(429, 'rate_limited', limited, { draft });
 
 		const upload = await uploadPhoto(formData, supabase, user.id, draft);
 		if (!upload.ok) return upload.failure;

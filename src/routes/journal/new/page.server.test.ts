@@ -13,6 +13,10 @@ import { PHOTO_SIZE_MESSAGE, PHOTO_MAX_BYTES } from '#lib/recipes/validation.js'
 import { ENTRY_MESSAGES } from '#lib/server/journal.js';
 import { actions, load } from './+page.server';
 import type { PageData } from './$types';
+import { LIMITED, LIMITED_FAILURE } from '#lib/testing/rateLimit.js';
+
+const { rateLimitedMock } = vi.hoisted(() => ({ rateLimitedMock: vi.fn() }));
+vi.mock('#lib/server/rateLimit.js', () => ({ rateLimited: rateLimitedMock }));
 
 const { insertMock, resolveMock, choicesMock, audienceMock, uploadMock, removeMock } = vi.hoisted(
 	() => ({
@@ -118,6 +122,16 @@ describe('journal/new load', () => {
 });
 
 describe('journal/new action', () => {
+	test('past the cap on entries, the values come back and nothing is uploaded or written', async () => {
+		rateLimitedMock.mockResolvedValueOnce(LIMITED);
+		const result = await invoke({ dish: 'Fried rice', cookedOn: '2026-11-06' }, photoFile('a.png'));
+		expect(result).toMatchObject(LIMITED_FAILURE);
+		expect(result.data).toMatchObject({ values: { dish: 'Fried rice' } });
+		expect(rateLimitedMock).toHaveBeenCalledWith('journal', USER.id);
+		expect(uploadMock).not.toHaveBeenCalled();
+		expect(insertMock).not.toHaveBeenCalled();
+	});
+
 	test('Dish and Date alone are logged, Only me, and land on the Journal', async () => {
 		const result = await invoke({ dish: 'Fried rice', cookedOn: '2026-11-06' });
 		expect(result).toMatchObject({ status: 303, location: '/journal?logged=99' });

@@ -227,8 +227,6 @@ export async function mute(me: string, them: string): Promise<void> {
 	await db.insert(mutes).values({ muterId: me, mutedId: them }).onConflictDoNothing();
 }
 
-export const MAX_REPORT = 1000;
-
 /** A report for someone to read by hand. */
 export async function report(
 	me: string,

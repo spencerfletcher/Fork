@@ -20,8 +20,26 @@ const recipes = [
 	},
 	{ slug: 'stew', title: 'Stew', author: 'cook', hidden: true, reports: [] }
 ];
-const renderPage = (list = recipes) =>
-	render(Page, { props: { data: { recipes: list, meta: { title: 'Moderation' } } as never } });
+const links = [
+	{
+		path: '/recipes/soup?version=2',
+		text: 'That photo is mine.\nPlease take it down.',
+		contact: 'me@example.com',
+		reportedAt: DAY,
+		reporter: null
+	},
+	{
+		path: '/users/x',
+		text: 'Rude',
+		contact: 'cook@example.com',
+		reportedAt: DAY,
+		reporter: 'priya'
+	}
+];
+const renderPage = (list = recipes, linkList: typeof links = []) =>
+	render(Page, {
+		props: { data: { recipes: list, links: linkList, meta: { title: 'Moderation' } } as never }
+	});
 
 describe('/moderation', () => {
 	test('each recipe links to itself, names its author and how many reports, and lists them', () => {
@@ -53,5 +71,24 @@ describe('/moderation', () => {
 	test('with nothing reported or hidden, it says so', () => {
 		renderPage([]);
 		expect(screen.getByRole('heading', { name: 'Nothing to review' })).toBeTruthy();
+	});
+
+	test('reported links, as listed: each path a link, what was written, the contact and the day', () => {
+		renderPage([], links);
+		expect(screen.queryByRole('heading', { name: 'Nothing to review' })).toBeNull();
+		const section = screen.getByRole('region', { name: 'Reported links' });
+		const [first, second] = within(section).getAllByRole('listitem');
+		expect(within(first).getByRole('link', { name: links[0].path })).toHaveAttribute(
+			'href',
+			links[0].path
+		);
+		expect(first.textContent).toContain(links[0].text);
+		expect(within(first).getByRole('link', { name: links[0].contact })).toHaveAttribute(
+			'href',
+			`mailto:${links[0].contact}`
+		);
+		expect(first.textContent).toContain('Anonymous');
+		expect(first.textContent).toContain(dayLabel(DAY));
+		expect(within(second).getByRole('link', { name: '@priya' })).toBeTruthy();
 	});
 });

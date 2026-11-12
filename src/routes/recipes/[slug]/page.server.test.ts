@@ -14,6 +14,7 @@ import { HIDDEN_REFUSED } from '#lib/moderation.js';
 import { loginHref } from '#lib/auth/loginHref.js';
 import { NOTE_MAX, NOTE_TOO_LONG } from '#lib/saves.js';
 import type { PageMeta } from '#lib/seo.js';
+import { LIMITED, LIMITED_FAILURE } from '#lib/testing/rateLimit.js';
 
 // ─── Hoisted mocks ────────────────────────────────────────────────────────────
 
@@ -88,6 +89,8 @@ const collectionsMock = vi.hoisted(() => ({
 	leaveCollections: vi.fn()
 }));
 vi.mock('#lib/server/collections.js', () => collectionsMock);
+const { rateLimitedMock } = vi.hoisted(() => ({ rateLimitedMock: vi.fn() }));
+vi.mock('#lib/server/rateLimit.js', () => ({ rateLimited: rateLimitedMock }));
 
 // The slug suffix must be deterministic so we can predict slugs.
 vi.spyOn(crypto, 'randomUUID').mockReturnValue('abc12345-0000-4000-8000-000000000000');
@@ -178,6 +181,15 @@ const SOURCE_RECIPE = {
 
 describe('fork', () => {
 	beforeEach(() => vi.clearAllMocks());
+
+	test('past the cap on new recipes, nothing is copied', async () => {
+		findRecipeMock.mockResolvedValue(SOURCE_RECIPE);
+		rateLimitedMock.mockResolvedValueOnce(LIMITED);
+		const result = await invoke(actions.fork as never, makeEvent({ user: FORKER }));
+		expect(result).toMatchObject(LIMITED_FAILURE);
+		expect(rateLimitedMock).toHaveBeenCalledWith('recipes', FORKER.id);
+		expect(transactionMock).not.toHaveBeenCalled();
+	});
 
 	test('signed out is a 401 form failure saying the session ended', async () => {
 		const result = await invoke(actions.fork as never, makeEvent({ user: null }));
@@ -821,6 +833,13 @@ describe('restore', () => {
 		});
 	const VALID = { version: '2', editRevision: String(SOURCE_RECIPE.editRevision) };
 
+	test('past the cap on edits, nothing is restored', async () => {
+		rateLimitedMock.mockResolvedValueOnce(LIMITED);
+		expect(await restore(VALID)).toMatchObject(LIMITED_FAILURE);
+		expect(rateLimitedMock).toHaveBeenCalledWith('edits', OWNER.id);
+		expect(transactionMock).not.toHaveBeenCalled();
+	});
+
 	test('restores the asked version at the loaded revision and lands on the latest', async () => {
 		const result = await restore(VALID);
 		expect(result).toMatchObject({ status: 303, location: '/recipes/classic-cookies' });
@@ -1026,6 +1045,20 @@ describe('collect and newCollection', () => {
 		expect(collectionsMock.createCollection).toHaveBeenCalledWith(FORKER.id, 'Italian');
 		expect(collectionsMock.setMembership).toHaveBeenCalledWith(FORKER, 9, SOURCE_RECIPE.id, true);
 		expect(result).toEqual({ collected: 9 });
+	});
+
+	test('newCollection past the cap makes nothing and keeps the name', async () => {
+		rateLimitedMock.mockResolvedValueOnce(LIMITED);
+		const result = await invoke(
+			actions.newCollection as never,
+			makeEvent({ user: FORKER, fields: { name: 'Italian' } })
+		);
+		expect(result).toMatchObject({
+			...LIMITED_FAILURE,
+			data: { ...LIMITED_FAILURE.data, name: 'Italian' }
+		});
+		expect(rateLimitedMock).toHaveBeenCalledWith('collections', FORKER.id);
+		expect(collectionsMock.createCollection).not.toHaveBeenCalled();
 	});
 
 	test('newCollection with a refused name says why and makes nothing', async () => {

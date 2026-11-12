@@ -179,7 +179,8 @@ export const mutes = pgTable(
 	(table) => [primaryKey({ columns: [table.muterId, table.mutedId] })]
 ).enableRLS();
 
-export const REPORT_TARGETS = ['log_entry', 'recipe', 'user'] as const;
+// 'link' is the /report form's: target_id is a path on Fork, from anyone, signed in or not.
+export const REPORT_TARGETS = ['log_entry', 'recipe', 'user', 'link'] as const;
 
 export type ReportTarget = (typeof REPORT_TARGETS)[number];
 

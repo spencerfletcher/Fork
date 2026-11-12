@@ -119,7 +119,9 @@ To point at a hosted Supabase project instead, skip `supabase start` and fill `.
 
 Uploaded photos are stored without their location and other metadata (Exif, XMP, IPTC, PNG text chunks); a turned JPEG keeps only its orientation. `pnpm photos:strip` (`photos:strip:prod` for the hosted project) lists the photos already in the bucket that still carry metadata, using `SUPABASE_SECRET_KEY`; `--apply` re-uploads each stripped one to its own path.
 
-Moderators are the auth user ids in `MODERATOR_IDS`, comma-separated, a server-only variable (set it in Netlify's environment for the live site; a change takes effect on the next deploy or restart). Unset or empty, nobody is a moderator. A moderator sees Hide from others and Restore on a recipe page, and reviews reported and hidden recipes at `/moderation` (linked from nowhere; anyone else gets the 404 of an address with no page).
+Moderators are the auth user ids in `MODERATOR_IDS`, comma-separated, a server-only variable (set it in Netlify's environment for the live site; a change takes effect on the next deploy or restart). Unset or empty, nobody is a moderator. A moderator sees Hide from others and Restore on a recipe page, and reviews reported and hidden recipes, and the reports anyone sends from `/report`, at `/moderation` (linked from nowhere; anyone else gets the 404 of an address with no page).
+
+Writes that add rows (new recipes and forks, edits, reports, Journal entries, friend requests, collections) are rate limited by counting the cook's recent rows; the caps are `RATE_LIMITS` in `src/lib/server/rateLimit.ts`.
 
 ## Database changes
 
