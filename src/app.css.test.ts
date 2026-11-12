@@ -326,9 +326,13 @@ describe('app.css shared utilities', () => {
 });
 
 describe('app.css phone tab bar', () => {
-	test('focus scrolls clear of the fixed tab bar, by the room the page ends with', () => {
-		const room = cssRule(css, 'body:has(.tab-bar) main').match(/padding-bottom:\s*([^;]+);/)![1];
-		expect(cssRule(css, 'html:has(.tab-bar)')).toContain(`scroll-padding-bottom: ${room};`);
+	test('focus scrolls clear of the fixed tab bar and a focus ring, 6px past the room the page ends with', () => {
+		const room = cssRule(css, 'body:has(.tab-bar) main').match(
+			/padding-bottom:\s*calc\((\d+)px/
+		)![1];
+		expect(cssRule(css, 'html:has(.tab-bar)')).toContain(
+			`scroll-padding-bottom: calc(${Number(room) + 6}px + env(safe-area-inset-bottom));`
+		);
 	});
 });
 

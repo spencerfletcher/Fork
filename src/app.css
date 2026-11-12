@@ -955,10 +955,11 @@
 			padding-bottom: calc(57px + env(safe-area-inset-bottom));
 		}
 
-		/* The same room when focus scrolls the page, so a focused control (a
-		   card's ⋯ menu opening near the foot) never sits under the bar. */
+		/* The same room and 6px more when focus scrolls the page, so a focused
+		   control (a card's ⋯ menu opening near the foot) never sits under the
+		   bar, its ring (2px at a 2px offset) and a pixel to spare included. */
 		html:has(.tab-bar) {
-			scroll-padding-bottom: calc(57px + env(safe-area-inset-bottom));
+			scroll-padding-bottom: calc(63px + env(safe-area-inset-bottom));
 		}
 
 		/* A screen-tall auth or error page leaves that room too, or it scrolls for nothing. */
