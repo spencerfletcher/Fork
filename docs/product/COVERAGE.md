@@ -2,7 +2,7 @@
 
 Working file. Proves that every section, table row and bullet-level item in the sources landed in the current set. Destinations: RD README.md, RM ROADMAP.md, CO COMPETITIVE.md, BU BUSINESS.md, DE DESIGN-DIRECTION.md, IN INVENTORY.md; "§n" is the numbered section, "P0" to "P5" a phase table in RM §4. Status: **placed**; **superseded** (also in RM §16, item number given; the replacement is placed); **removed with approval** (removed from the set with Spencer's approval on 11 Nov 2026; recorded in RM §16, line given). Source-register tables (lists of citations) are one row each.
 
-Sources: R [roadmap report](../research/2026-11-08-product-roadmap/README.md); CM [cookbook market](../research/2026-11-08-product-roadmap/cookbook_market.md); AQ [advanced and quality](../research/2026-11-08-product-roadmap/advanced_and_quality.md); PA [product audit](../research/2026-11-08-product-roadmap/current_product_audit.md); DD [deep dive](../research/2026-11-09-cookbook-app-deep-dive/README.md); S1 [design and solo business](../research/2026-11-10-design-and-solo-business.md); S2 [finished product and revenue](../research/2026-11-10-finished-product-and-revenue.md); SL [social launch](../research/2026-11-08-social-launch/social_launch.md); US [US copyright](../research/2026-11-08-social-launch/us_copyright.md); CA [Canada copyright](../research/2026-11-08-social-launch/canada_copyright.md); Z [Zed reference](../research/2026-11-09-zed-design-reference/README.md).
+Sources: R [roadmap report](../research/2026-11-08-product-roadmap/README.md); CM [cookbook market](../research/2026-11-08-product-roadmap/cookbook_market.md); AQ [advanced and quality](../research/2026-11-08-product-roadmap/advanced_and_quality.md); PA [product audit](../research/2026-11-08-product-roadmap/current_product_audit.md); DD [deep dive](../research/2026-11-09-cookbook-app-deep-dive/README.md); S1 [design and solo business](../research/2026-11-10-design-and-solo-business.md); S2 [finished product and revenue](../research/2026-11-10-finished-product-and-revenue.md); SL [social launch](../research/2026-11-08-social-launch/social_launch.md); US [US copyright](../research/2026-11-08-social-launch/us_copyright.md); CA [Canada copyright](../research/2026-11-08-social-launch/canada_copyright.md); Z [Zed reference](../research/2026-11-09-zed-design-reference/README.md); UX [UX review, 12 Nov](../research/2026-11-12-ux-review.md).
 
 ## R: product roadmap report
 
@@ -701,13 +701,33 @@ Sources: R [roadmap report](../research/2026-11-08-product-roadmap/README.md); C
 | Z24 | Relationship to approved direction | DE identity | placed |
 | Z25 | Limits | DE From the Zed reference | placed |
 
+## UX: UX review, 12 Nov 2026
+
+Every row is a recommendation; "proposed" in RM marks it undecided (RM §3).
+
+| # | Source item | Destination | Status |
+| --- | --- | --- | --- |
+| U1 | Assessment: scores, the first-visit versus return-visit gap | research note only (an editorial judgment, not a plan item) | placed |
+| U2 | Assessment: food, time and the cook's experience over handles and version numbers | RM §6 First-scan emphasis; DE Metadata | placed |
+| U3 | Evidence and its limits (three recipes, empty Journal and Friends, unobserved large library, phones, repeat use) | RM §10 validation paragraph | placed |
+| U4 | Surface: Discover and versions (original plus a different adaptation, change in cooking terms) | RM P1 Featured recipe content; DE Discover | placed |
+| U5 | Surface: Cookbook (dense phone grid and list, realistic volume, device-local drafts near Continue) | RM P1 Durable drafts, Library growth; DE Cookbook | placed |
+| U6 | Surface: Recipe and Cook (yield, elapsed time and Cook first; version weight at a decision) | RM §6 First-scan emphasis; DE Recipe detail | placed |
+| U7 | Surface: Journal (observation first, save with no writing, observation beside Cook) | RM P2 Journal recall; DE Journal | placed |
+| U8 | Recommendation 1: repeat-cook flow, its verification and scale checks | RM P2 Journal recall, §9 Recall | placed |
+| U9 | Recommendation 2: empty Cookbook entry point; import preview and its two trial recipes | RM P1 Empty Cookbook entry point, P2 Easy import, Onboarding, §9 First week | placed |
+| U10 | Recommendation 3: cookie faults, waiting time, the featured adaptation | RM P1 Featured recipe content (cookie faults approved 12 Nov, OD) | placed |
+| U11 | Recommendation 4: library of 50 to 100 recipes and drafts; pilot cooks' real meals and what to record | RM §10 validation paragraph; RM P1 Varied seed data (OD) | placed |
+| U12 | Recommendation 4: intermittent 500s, cause left open | RM §11 | placed |
+| U13 | Deferrals: extra social surfaces, cooking-history chips, Recently viewed; revisit Cook with version, scale and observation | RM §10, P1 Library growth, P2 Cooking session | placed |
+
 ## Counts
 
 Each table row above counts as one item, except rows that name a range (for example "R204 to R226", "DD15 to DD25"), which count as the number of items in the range; source-register rows count as one.
 
-- Items in the sources: 939 (R 308, CM 90, AQ 132, PA 56, DD 160, S1 52, S2 43, SL 47, US 13, CA 13, Z 25), counted from the row numbers above.
-- Items placed in the current set: 934. This includes 26 rows marked superseded in whole or part (R8, R17, R37, R52, R56, R58, R61, R62, R64, R68, R80, R81, R97, R100, R103, R230, R238, CM38, CM40, CM47, CM61, AQ15, AQ44, PA29, SL1, SL7), plus superseded notes inside R204 to R226 (M4, M17, M20), PA3 to PA21 (visibility), S1-27 and S2-25 (purchased core); each is placed through its replacement.
-- Items removed with approval: 5 rows (R4, R201, PA1, S1-5, S2-12), RM §16 lines 23 to 27; line 24 comes from the design summary, which stays current and is not a reconciled source. Placed 934 plus removed 5 is 939.
+- Items in the sources: 952 (R 308, CM 90, AQ 132, PA 56, DD 160, S1 52, S2 43, SL 47, US 13, CA 13, Z 25, UX 13), counted from the row numbers above.
+- Items placed in the current set: 947. This includes 26 rows marked superseded in whole or part (R8, R17, R37, R52, R56, R58, R61, R62, R64, R68, R80, R81, R97, R100, R103, R230, R238, CM38, CM40, CM47, CM61, AQ15, AQ44, PA29, SL1, SL7), plus superseded notes inside R204 to R226 (M4, M17, M20), PA3 to PA21 (visibility), S1-27 and S2-25 (purchased core); each is placed through its replacement.
+- Items removed with approval: 5 rows (R4, R201, PA1, S1-5, S2-12), RM §16 lines 23 to 27; line 24 comes from the design summary, which stays current and is not a reconciled source. Placed 947 plus removed 5 is 952.
 - Lines in RM §16: 29, of which 24 are dropped as superseded (several rows above share one line; lines 12, 15 and 17 replace wording in R254, R253 and the design summary) and 5 are removals with approval (lines 23 to 27).
 - Items kept with removal proposed: 0.
 - Unplaced: 0.
@@ -717,3 +737,4 @@ Each table row above counts as one item, except rows that name a range (for exam
 - 2026-11-11: created with the product set.
 - 2026-11-11: five kept-with-removal-proposed rows now removed with approval (RM §16.23, 25 to 27); counts updated.
 - 2026-11-11: rows moved by Spencer's 11 Nov answers (RM §14): migration importer to P2 (R64, CM47 superseded, RM §16.28), purchased core superseded (RM §16.29), search and drafts rows point at §14; §15 references updated; counts updated.
+- 2026-11-12: UX section added (U1 to U13, the 12 Nov UX review); counts updated.
