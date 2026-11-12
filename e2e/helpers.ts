@@ -44,6 +44,20 @@ export async function openCookies(page: Page) {
 	await gotoHydrated(page, await cookiesPath(page));
 }
 
+/** The seed's tikka, which has a Serves (the cookies have a Makes). */
+export const TIKKA = SEED.find((r) => r.slug === 'chicken-tikka-masala')!.versions.at(-1)!.title;
+
+/** The tikka's own link on Discover (slugs carry a random suffix per seed). */
+export async function openTikka(page: Page, search = '') {
+	await page.goto('/discover');
+	const href = await page
+		.getByRole('link', { name: new RegExp(TIKKA, 'i') })
+		.and(page.locator(':not([href*="/diff"])'))
+		.first()
+		.getAttribute('href');
+	await gotoHydrated(page, `${href}${search}`);
+}
+
 /** `label` and a suffix no other test or run shares. */
 export const uniqueTitle = (label: string) =>
 	`${label} ${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;

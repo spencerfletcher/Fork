@@ -52,9 +52,10 @@ Drop rounded tablespoons of dough onto prepared baking sheets. Bake 9–11 minut
 // has a step that acts on it — the sugar ratio shifts, and the chill and the
 // salt are what that ratio needs.
 //
-// It deliberately edits the two existing steps in place rather than inserting a
-// new one: diffSteps matches by position, so inserting mid-list renumbers
-// everything after it and renders as a cascade of unrelated changes. It also
+// It deliberately edits existing steps in place rather than inserting or
+// removing one (the preheat moves to the last step, after the chill, while the
+// tray lining keeps step 1): diffSteps matches by position, so inserting or
+// removing a step renumbers everything after it and renders as a cascade of unrelated changes. It also
 // avoids renaming an ingredient, which diffIngredients reports as a removal plus
 // an addition rather than one modification. Both are documented limitations in
 // lib/recipes/diff.ts.
@@ -73,7 +74,7 @@ const COOKIE_INGREDIENTS_V3 = `
 `;
 
 const COOKIE_STEPS_V3 = `
-Preheat oven to 375°F (190°C). Line two baking sheets with parchment paper.
+Line two baking sheets with parchment paper.
 
 Whisk flour, baking soda, and salt in a medium bowl. Set aside.
 
@@ -83,7 +84,7 @@ Add eggs one at a time, beating well after each addition. Beat in vanilla extrac
 
 Gradually stir in the flour mixture until just combined. Fold in chocolate chips, reserving a handful to press into the tops. Cover and chill the dough at least 2 hours — cold dough spreads less, so the extra brown sugar reads as chew rather than sprawl.
 
-Drop rounded tablespoons of chilled dough onto prepared baking sheets, pressing the reserved chips into the tops. Bake 9–11 minutes until edges are golden. Sprinkle with flaky sea salt while still hot, then cool on baking sheet for 5 minutes before transferring.
+Preheat oven to 375°F (190°C). Drop rounded tablespoons of chilled dough onto prepared baking sheets, pressing the reserved chips into the tops. Bake 12–13 minutes until edges are golden. Sprinkle with flaky sea salt while still hot, then cool on baking sheet for 5 minutes before transferring.
 `;
 
 const BROWN_BUTTER_INGREDIENTS = `
@@ -291,8 +292,8 @@ const COOKIE_META = {
 	title: 'Classic Chocolate Chip Cookies',
 	description:
 		'The definitive chocolate chip cookie — crisp edges, chewy centers, and pockets of melted chocolate in every bite.',
-	servings: 48,
-	makes: null,
+	servings: null,
+	makes: '48 cookies',
 	prepTimeMinutes: 15,
 	cookTimeMinutes: 11,
 	imageUrl: 'https://images.unsplash.com/photo-1499636136210-6f4ee915583e?w=800&q=80'
@@ -338,7 +339,7 @@ export const SEED: SeedRecipe[] = [
 			{
 				...COOKIE_META,
 				title: 'Thick and Chewy Chocolate Chip Cookies',
-				servings: 36,
+				makes: '36 cookies',
 				cookTimeMinutes: 13,
 				restTimeMinutes: 120,
 				notes:
@@ -367,8 +368,8 @@ export const SEED: SeedRecipe[] = [
 				title: 'Brown Butter Chocolate Chip Cookies',
 				description:
 					'A fork of the classic — brown butter adds a deep, nutty complexity that takes these cookies to another level.',
-				servings: 36,
-				makes: null,
+				servings: null,
+				makes: '36 cookies',
 				prepTimeMinutes: 20,
 				cookTimeMinutes: 11,
 				ingredientsText: BROWN_BUTTER_INGREDIENTS,

@@ -1,13 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { SEED } from '../src/lib/server/db/seedData';
-import {
-	COOKIES,
-	COOKIES_RE,
-	cookiesLink,
-	cookiesPath,
-	gotoHydrated,
-	openCookies
-} from './helpers';
+import { COOKIES, COOKIES_RE, cookiesLink, gotoHydrated, openCookies, openTikka } from './helpers';
 import { parseIngredientLine } from '../src/lib/recipes/ingredients';
 import { SCALE_MESSAGES, formatServes, scaleIngredient } from '../src/lib/recipes/scale';
 
@@ -1323,7 +1316,7 @@ test.describe('Recipe detail page', () => {
 				.evaluateAll((els) => els.map((el) => getComputedStyle(el, '::before').content));
 		await page.setViewportSize({ width: 1280, height: 900 });
 		await openCookies(page);
-		// None typed. Prep · cook · rest is one group, Serves the other; on a
+		// None typed. Prep · cook · rest is one group, Makes the other; on a
 		// desktop a dot is drawn between pairs and between the groups, in Ink 3.
 		expect(await details.textContent()).not.toContain('·');
 		expect(await dots('.pair')).toEqual(['none', '"·" / ""', '"·" / ""', 'none']);
@@ -1661,7 +1654,8 @@ test.describe('Usernames', () => {
 });
 
 test.describe('Serving scaling', () => {
-	const latest = SEED[0].versions.at(-1)!;
+	// The tikka: the cookies scale by their Makes count, not by Serves.
+	const latest = SEED.find((r) => r.slug === 'chicken-tikka-masala')!.versions.at(-1)!;
 	const serves = latest.servings!;
 	const flour = parseIngredientLine(latest.ingredientsText.trim().split('\n')[0]);
 	const doubled = scaleIngredient(flour, null, 2).ingredient;
@@ -1684,7 +1678,7 @@ test.describe('Serving scaling', () => {
 		page
 	}) => {
 		await page.setViewportSize({ width: 1280, height: 900 });
-		await openCookies(page);
+		await openTikka(page);
 		await expect(facts(page)).toContainText(new RegExp(`Serves ${serves}\\s*Scale`));
 		// Nothing scaler-related on the Ingredients rule at rest.
 		await expect(page.locator('#ingredients').getByRole('textbox')).toHaveCount(0);
@@ -1719,7 +1713,7 @@ test.describe('Serving scaling', () => {
 			page
 		}) => {
 			await page.setViewportSize({ width: 1280, height: 900 });
-			await openCookies(page);
+			await openTikka(page);
 			await scaleButton(page).click();
 			await field(page).fill(typed);
 			const shown = formatServes(count);
@@ -1736,7 +1730,7 @@ test.describe('Serving scaling', () => {
 
 	test('an unreadable entry keeps the last good scale and says why', async ({ page }) => {
 		await page.setViewportSize({ width: 1280, height: 900 });
-		await openCookies(page);
+		await openTikka(page);
 		await scaleButton(page).click();
 		await field(page).fill('2x');
 		await expect(facts(page)).toContainText(`Serves ${serves * 2}`);
@@ -1752,7 +1746,7 @@ test.describe('Serving scaling', () => {
 		page
 	}) => {
 		await page.setViewportSize({ width: 1280, height: 900 });
-		await openCookies(page);
+		await openTikka(page);
 		await scaleButton(page).click();
 		await expect(panelButton(page, 'Reset')).toBeDisabled();
 		await panelButton(page, '½× (halve)').click();
@@ -1782,7 +1776,7 @@ test.describe('Serving scaling', () => {
 
 	test('the link carries the scale across a reload', async ({ page }) => {
 		await page.setViewportSize({ width: 1280, height: 900 });
-		await gotoHydrated(page, `${await cookiesPath(page)}?serves=${serves * 2}`);
+		await openTikka(page, `?serves=${serves * 2}`);
 		await page.reload();
 		await expect(facts(page)).toContainText(`Serves ${serves * 2}`);
 		await expect(flourMeasure(page)).toHaveText(measure(doubled));
@@ -1794,7 +1788,7 @@ test.describe('Serving scaling', () => {
 		page
 	}) => {
 		await page.setViewportSize({ width: 360, height: 800 });
-		await openCookies(page);
+		await openTikka(page);
 		await scaleButton(page).click();
 		// A phone focuses the first live button, not the field.
 		await expect(field(page)).not.toBeFocused();

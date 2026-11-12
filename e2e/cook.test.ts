@@ -1,6 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { SEED } from '../src/lib/server/db/seedData';
-import { gotoHydrated, openCookies } from './helpers';
+import { TIKKA, openCookies, openTikka } from './helpers';
 
 // Cooking (Spencer, 11 November 2026): a paper header with Exit, the whole
 // method in one scrolling list, an Ingredients | Method switch at the bottom
@@ -8,19 +7,6 @@ import { gotoHydrated, openCookies } from './helpers';
 // 1024, and Finish cooking after the last step. Headless Chromium has no
 // screen to keep awake, so the Screen Wake Lock API is replaced in the page
 // by a stand-in that counts requests and releases.
-
-const TIKKA = SEED.find((r) => r.slug === 'chicken-tikka-masala')!.versions.at(-1)!.title;
-
-/** The tikka's own link on Discover (slugs carry a random suffix per seed). */
-async function openTikka(page: Page, search = '') {
-	await page.goto('/discover');
-	const href = await page
-		.getByRole('link', { name: new RegExp(TIKKA, 'i') })
-		.and(page.locator(':not([href*="/diff"])'))
-		.first()
-		.getAttribute('href');
-	await gotoHydrated(page, `${href}${search}`);
-}
 
 async function mockWakeLock(page: Page) {
 	await page.addInitScript(() => {
@@ -137,7 +123,7 @@ test.describe('Cooking', () => {
 	}) => {
 		await page.setViewportSize({ width: 390, height: 844 });
 		await mockWakeLock(page);
-		await openCookies(page);
+		await openTikka(page);
 		await page.getByRole('link', { name: 'Cook', exact: true }).click();
 		await expect(page).toHaveURL(/[?&]cook=1/);
 		// The yield with Scale in the cooking header is the one place it reads.

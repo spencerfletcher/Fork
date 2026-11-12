@@ -21,7 +21,8 @@ test('on a phone, the filled cookie recipe takes a fix to its last step’s bake
 	await gotoHydrated(page, '/recipes/new');
 	await page.locator('textarea[name="title"]').fill(title);
 	await page.getByLabel('Description').fill(COOKIES.description!);
-	await page.getByLabel('Serves').fill(String(COOKIES.servings));
+	await page.getByRole('button', { name: 'Add Makes' }).click();
+	await page.getByLabel(/^Makes/).fill(COOKIES.makes!);
 	await page.getByLabel('Prep', { exact: true }).fill(`${COOKIES.prepTimeMinutes} min`);
 	await page.getByLabel('Cook', { exact: true }).fill(`${COOKIES.cookTimeMinutes} min`);
 	await page.getByLabel('Rest', { exact: true }).fill(`${COOKIES.restTimeMinutes} min`);
@@ -46,35 +47,35 @@ test('on a phone, the filled cookie recipe takes a fix to its last step’s bake
 		await gotoHydrated(page, `${url}/edit`);
 		// The facts are one summary line, so Ingredients is on the first screen.
 		const summary = page.locator('summary');
-		await expect(summary).toContainText(`Serves ${COOKIES.servings}`);
+		await expect(summary).toContainText(`Makes ${COOKIES.makes}`);
 		await expect(summary).toContainText('Only me');
 		await expect(summary).toContainText('Edit details');
 		await expect(page.getByRole('textbox', { name: 'Ingredients', exact: true })).toBeInViewport();
 
-		// The last step's "Bake 9–11 minutes" becomes 10–12, typed over in place.
+		// The last step's "Bake 12–13 minutes" becomes 14–15, typed over in place.
 		const method = page.getByRole('textbox', { name: 'Method', exact: true });
-		const line = method.getByText(/Bake 9–11 minutes/);
+		const line = method.getByText(/Bake 12–13 minutes/);
 		await line.click();
 		await method.evaluate((box) => {
 			const walker = document.createTreeWalker(box, NodeFilter.SHOW_TEXT);
 			for (let node = walker.nextNode(); node; node = walker.nextNode()) {
-				const at = node.textContent!.indexOf('9–11');
+				const at = node.textContent!.indexOf('12–13');
 				if (at < 0) continue;
 				const range = document.createRange();
 				range.setStart(node, at);
-				range.setEnd(node, at + '9–11'.length);
+				range.setEnd(node, at + '12–13'.length);
 				getSelection()!.removeAllRanges();
 				getSelection()!.addRange(range);
 				return;
 			}
 			throw new Error('No bake time in the method');
 		});
-		await page.keyboard.type('10–12');
+		await page.keyboard.type('14–15');
 
 		// The line being typed in stays above the pinned bar.
 		const save = page.getByRole('button', { name: 'Save', exact: true });
 		await expect(save).toBeInViewport();
-		const edited = method.getByText(/Bake 10–12 minutes/);
+		const edited = method.getByText(/Bake 14–15 minutes/);
 		await expect(edited).toBeInViewport();
 		const barTop = (await page.locator('.actions-bar').boundingBox())!.y;
 		const lineBox = (await edited.boundingBox())!;
@@ -83,7 +84,7 @@ test('on a phone, the filled cookie recipe takes a fix to its last step’s bake
 		await save.click();
 		await page.waitForURL(url);
 		await expect(page.locator('.version-bar .current .version-number')).toContainText('v2');
-		await expect(page.locator('#method')).toContainText('Bake 10–12 minutes');
+		await expect(page.locator('#method')).toContainText('Bake 14–15 minutes');
 	} finally {
 		await deleteRecipe(page, url);
 	}

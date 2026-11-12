@@ -18,7 +18,7 @@ async function recipeData(page: Page) {
 test.describe('Public recipe metadata', () => {
 	test('a public recipe previews with absolute URLs and carries Recipe data', async ({ page }) => {
 		const path = await cookiesPath(page);
-		await page.goto(`${path}?serves=96`);
+		await page.goto(`${path}?makes=96`);
 		const origin = new URL(page.url()).origin;
 
 		expect(await page.locator('link[rel="canonical"]').getAttribute('href')).toBe(origin + path);

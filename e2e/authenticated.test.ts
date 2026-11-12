@@ -421,18 +421,24 @@ test.describe('Edit recipe page', () => {
 	test('an Add button sits level with the box beside it, centred by the row, at every width', async ({
 		page
 	}) => {
-		for (const width of [1280, 834, 390]) {
-			await page.setViewportSize({ width, height: 900 });
-			await gotoHydrated(page, `${await cookiesPath(page)}/edit`);
-			if (width < 700) await page.locator('details.fold summary').click();
-			for (const [box, button] of [
-				['servings', 'Add Makes'],
-				['sourceName', 'Add Link']
-			]) {
-				const b = (await page.locator(`input[name="${box}"]`).boundingBox())!;
-				const a = (await page.getByRole('button', { name: button }).boundingBox())!;
-				expect(Math.abs(a.y + a.height / 2 - (b.y + b.height / 2))).toBeLessThanOrEqual(1);
+		// A Serves with no Makes and no source link, so both Add buttons show.
+		const url = await createRecipe(page, 'E2E Add Level', { servings: '4' });
+		try {
+			for (const width of [1280, 834, 390]) {
+				await page.setViewportSize({ width, height: 900 });
+				await gotoHydrated(page, `${url}/edit`);
+				if (width < 700) await page.locator('details.fold summary').click();
+				for (const [box, button] of [
+					['servings', 'Add Makes'],
+					['sourceName', 'Add Link']
+				]) {
+					const b = (await page.locator(`input[name="${box}"]`).boundingBox())!;
+					const a = (await page.getByRole('button', { name: button }).boundingBox())!;
+					expect(Math.abs(a.y + a.height / 2 - (b.y + b.height / 2))).toBeLessThanOrEqual(1);
+				}
 			}
+		} finally {
+			await deleteRecipe(page, url);
 		}
 	});
 

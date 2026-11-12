@@ -5,7 +5,9 @@ import { SEED } from '../src/lib/server/db/seedData';
 // The recipe page on paper (DESIGN.md, Print), through print media emulation.
 
 const DAL = SEED.find((r) => r.slug === 'red-lentil-dal')!.versions.at(-1)!.title;
-const COOKIE_SERVES = SEED[0].versions.at(-1)!.servings!;
+const COOKIE_MAKES = SEED[0].versions.at(-1)!.makes!;
+// The count the cookies' Makes leads with, and the words after it ("36", "cookies").
+const [COOKIE_COUNT, COOKIE_UNIT] = [parseInt(COOKIE_MAKES), COOKIE_MAKES.replace(/^\d+\s*/, '')];
 
 async function dalPath(page: Page) {
 	await page.goto('/discover');
@@ -51,12 +53,14 @@ for (const width of [390, 1280]) {
 		});
 
 		test('a scaled recipe prints the scale in effect, from cooking too', async ({ page }) => {
-			const serves = COOKIE_SERVES * 2;
-			await page.goto(`${await cookiesPath(page)}?cook=1&serves=${serves}`);
+			const makes = COOKIE_COUNT * 2;
+			await page.goto(`${await cookiesPath(page)}?cook=1&makes=${makes}`);
 			await page.emulateMedia({ media: 'print' });
 
 			await expect(page.locator('.cook-header')).toBeHidden();
-			await expect(page.locator('.print-header')).toContainText(`Serves ${serves}, scaled 2x`);
+			await expect(page.locator('.print-header')).toContainText(
+				`Makes ${makes} ${COOKIE_UNIT}, scaled 2x`
+			);
 			await expect(page.locator('.print-header')).not.toContainText('cook=1');
 			await expect(page.locator('#ingredients')).toBeVisible();
 			await expect(page.locator('#method')).toBeVisible();
@@ -88,7 +92,7 @@ test('signed out, the ⋯ menu offers Print alone; it closes the menu and prints
 		(window as unknown as { printed: number }).printed = 0;
 		window.print = () => void (window as unknown as { printed: number }).printed++;
 	});
-	const url = `${await cookiesPath(page)}?serves=${COOKIE_SERVES * 2}`;
+	const url = `${await cookiesPath(page)}?makes=${COOKIE_COUNT * 2}`;
 	await gotoHydrated(page, url);
 	const more = page.getByRole('button', { name: 'More actions' });
 	await more.click();
@@ -98,5 +102,5 @@ test('signed out, the ⋯ menu offers Print alone; it closes the menu and prints
 	await expect(menu).toBeHidden();
 	await expect(more).toBeFocused();
 	expect(await page.evaluate(() => (window as unknown as { printed: number }).printed)).toBe(1);
-	await expect(page).toHaveURL(new RegExp(`\\?serves=${COOKIE_SERVES * 2}$`));
+	await expect(page).toHaveURL(new RegExp(`\\?makes=${COOKIE_COUNT * 2}$`));
 });
