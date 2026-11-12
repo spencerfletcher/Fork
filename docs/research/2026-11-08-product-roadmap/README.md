@@ -538,7 +538,7 @@ Keep Fork's approved warm palette, Bitter/Source Sans typography and photography
 | [Advanced/quality/economics research](advanced_and_quality.md) | Standards, platform constraints, AI risks and unchanged scenario derivation; its older social sequencing is superseded here. |
 | [Social launch research](../2026-11-08-social-launch/social_launch.md) | Friend pilot, supply/permissions and acquisition recommendations; checked 8 Nov, no invitations or permissions assumed. |
 | [US copyright research](../2026-11-08-social-launch/us_copyright.md), [Canada copyright research](../2026-11-08-social-launch/canada_copyright.md) | Primary legal sources and qualified workflow guidance, checked 8 Nov; entity/territorial application and individual claims need counsel. Canadian consolidation retrieved current to 19 Oct; no exhaustive case-law audit. |
-| [Prior feature research](../2026-10-31-feature-research.md), [prior business research](../2026-10-31-business-viability.md) | Historical leads and decisions. Fresh audit/primary evidence supersedes obsolete competitive exclusivity, prices, thresholds and estimates. |
+| [Prior feature research](../archive/2026-10-31-feature-research.md), [prior business research](../archive/2026-10-31-business-viability.md) | Historical leads and decisions. Fresh audit/primary evidence supersedes obsolete competitive exclusivity, prices, thresholds and estimates. |
 | Vendor pages and official release/App Store links above | Accessed 8 Nov 2026; Paprika release dated 6 Nov. Tier/platform/promotional differences apply. |
 | GitHub requests, standards and domain guidance above | Concrete jobs, implementation evidence and technical constraints; not representative demand, clinical advice or universal legal conclusions. |
 

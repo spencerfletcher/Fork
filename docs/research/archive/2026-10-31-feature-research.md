@@ -1,4 +1,4 @@
-> Folded into the 8 Nov roadmap report and through it into [docs/product](../product/README.md), the current plan. Kept as the research record.
+> Folded into the 8 Nov roadmap report and through it into [docs/product](../../product/README.md), the current plan. Kept as the research record.
 
 # Feature wishlist and competitor gaps — 31 October 2026
 

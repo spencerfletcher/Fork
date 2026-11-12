@@ -1,3 +1,5 @@
+> Archived 12 Nov 2026: direction C was built on 27 Oct 2026 and its rules live in [DESIGN.md](../../../DESIGN.md); the other directions and accents were explored and rejected. Kept as the research record.
+
 # UI design directions
 
 2026-10-26. Research input for the UI redesign (priority 2 in `../history/2026-10-milestones.md`). Three candidate directions with palettes checked against WCAG AA, a set of principles that hold whichever direction wins, and a recommendation. Companion visual: the "Fork design directions" canvas at https://claude.ai/artifact/UhvxNv69Z7KGBpviCJcXpe (private to Spencer), which renders a recipe card, an ingredient row and a diff row in each direction, light and dark.

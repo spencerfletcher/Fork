@@ -6,7 +6,7 @@ A living list of products, sites and books worth looking at when a Fork screen g
 
 | What | Look at | Source |
 |---|---|---|
-| Salt Fat Acid Heat (Samin Nosrat) | Terracotta, Zilla Slab, dotted rules (the origin of Fork's "fired clay"); margin notes in a different hand. | research/2026-10-26-ui-design-directions |
+| Salt Fat Acid Heat (Samin Nosrat) | Terracotta, Zilla Slab, dotted rules (the origin of Fork's "fired clay"); margin notes in a different hand. | research/archive/2026-10-26-ui-design-directions |
 | Ottolenghi books | One headnote, bold measures. | .impeccable/critique 29 Oct |
 | Diana Henry, Nigel Slater | No tags; a "see also" at the foot of the recipe. | .impeccable/critique 29 Oct |
 | The Food Lab | Burnt orange, letterspaced serif caps, compact ingredients, display-face method numbers. | ui-design-directions |

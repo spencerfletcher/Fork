@@ -10,7 +10,7 @@
 
 **Tech Stack:** SvelteKit 2, Svelte 5, Tailwind 4 (`@theme inline`), Vitest, `@fontsource/*`.
 
-**Spec:** `docs/research/2026-10-26-ui-design-directions.md`, sections "Round 4" and "Round 5", and the canvas at https://claude.ai/artifact/QFTDpwCLRwuknh754yNPzc (Focus ring board, mobile nav on every 390px board).
+**Spec:** `docs/research/archive/2026-10-26-ui-design-directions.md`, sections "Round 4" and "Round 5", and the canvas at https://claude.ai/artifact/QFTDpwCLRwuknh754yNPzc (Focus ring board, mobile nav on every 390px board).
 
 ## Global Constraints
 
@@ -259,9 +259,9 @@ Run: `pnpm lint` Expected: no errors.
 
 - [ ] **Step 3: Record the shipped remove value**
 
-In `docs/research/2026-10-26-ui-design-directions.md`, after the Round 5 external-review paragraph, one sentence: the shipped remove text is `#922D23` because removed diff rows render at 0.85 opacity and the locked `#A3362B` blends under 4.5:1; return to the locked value when the compare step drops the opacity.
+In `docs/research/archive/2026-10-26-ui-design-directions.md`, after the Round 5 external-review paragraph, one sentence: the shipped remove text is `#922D23` because removed diff rows render at 0.85 opacity and the locked `#A3362B` blends under 4.5:1; return to the locked value when the compare step drops the opacity.
 
 ```bash
-git add docs/research/2026-10-26-ui-design-directions.md
+git add docs/research/archive/2026-10-26-ui-design-directions.md
 git commit -m "Design directions: shipped remove tone and why"
 ```

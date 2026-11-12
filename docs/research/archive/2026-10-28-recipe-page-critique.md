@@ -1,3 +1,5 @@
+> Archived 12 Nov 2026: its composition shipped on 28 and 29 Oct 2026 ([DESIGN.md](../../../DESIGN.md)); its parked ideas are built or replaced ([COVERAGE.md](../../product/COVERAGE.md), row RC). Kept as the research record.
+
 # Recipe page: critique report
 
 Date: 28 October 2026. Scope: the recipe page (`src/routes/recipes/[slug]/+page.svelte`) as it ships on master, and the four mockup boards (Main, Option A, Option B, Option C) on the design canvas. Inputs: the Impeccable dual-agent critique of the live page, the Impeccable dual-agent critique of the boards, the tasteskill site review applied earlier this week, and the Impeccable detector on source and in the browser. Palette throughout is the 28 October pass: clay #b23c00, marigold #eca620 (see DESIGN.md, "Colour pass, 28 October 2026").

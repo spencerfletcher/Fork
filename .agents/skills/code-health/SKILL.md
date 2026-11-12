@@ -56,7 +56,7 @@ Score = (reach × spread) / effort. Reach: how many changes per month touch it (
 3. Component status table (every shared component, one row).
 4. Long tail by area (the §1 table order).
 5. What could not be verified.
-6. Delta vs the previous report (items closed, items new). The previous report is the newest `docs/audits/code_health_*.md`; the first run's predecessors are `docs/research/2026-11-09-ui-reuse-sweep.md` and `2026-11-09-server-reuse-sweep.md`.
+6. Delta vs the previous report (items closed, items new). The previous report is the newest `docs/audits/code_health_*.md`; the first run's predecessors are `docs/research/archive/2026-11-09-ui-reuse-sweep.md` and `2026-11-09-server-reuse-sweep.md`.
 
 Written once; never maintained. The NEXT sweep writes a new dated file and reads the old one for the delta. A finding that becomes work gets a line in the roadmap report's backlog or a builder brief, not a report edit.
 

@@ -1,3 +1,5 @@
+> Archived 12 Nov 2026: its extractions shipped (`src/lib/components/ui/`, shared classes in `src/app.css`); later sweeps are under [docs/audits](../../audits/). Kept as the research record.
+
 # UI reuse sweep · 9 Nov 2026
 
 Read-only audit of `src/` after the five MVP slices landed, asked for by Spencer ("reuse components where the shape is the same; don't force a component onto a different item"). Line numbers are as of master `9c21877`. The refactor slice works from this list; items are ordered safest first.

@@ -1,6 +1,6 @@
 # Cookbook market, core workflows, and competitive position
 
-Research checked 8 November 2026. Audience: serious home cooks first, including enthusiastic bakers and people developing their own recipes. This is evidence and product judgment for the roadmap, not a hands-on certification of competing apps. Existing `docs/history/2026-10-milestones.md` and `docs/research/2026-10-31-feature-research.md` were read as background. Their vote rankings, absence claims, and estimates are not accepted as current evidence without verification.
+Research checked 8 November 2026. Audience: serious home cooks first, including enthusiastic bakers and people developing their own recipes. This is evidence and product judgment for the roadmap, not a hands-on certification of competing apps. Existing `docs/history/2026-10-milestones.md` and `docs/research/archive/2026-10-31-feature-research.md` were read as background. Their vote rankings, absence claims, and estimates are not accepted as current evidence without verification.
 
 ## What does an excellent recipe book need to cover, and what do competitors establish?
 

@@ -1,8 +1,8 @@
-> Folded into the 8 Nov roadmap report and through it into [docs/product](../product/README.md), the current plan. Kept as the research record.
+> Folded into the 8 Nov roadmap report and through it into [docs/product](../../product/README.md), the current plan. Kept as the research record.
 
 # Business viability and paths to scale — 31 October 2026
 
-Spencer's question: "is there a way to turn it into a business of scale? a viable product? ... what would we need?" Inputs: `docs/history/2026-10-milestones.md`, `PRODUCT.md`, `docs/research/2026-10-31-feature-research.md`, then web research on 31 October 2026.
+Spencer's question: "is there a way to turn it into a business of scale? a viable product? ... what would we need?" Inputs: `docs/history/2026-10-milestones.md`, `PRODUCT.md`, `docs/research/archive/2026-10-31-feature-research.md`, then web research on 31 October 2026.
 
 Source marks: **(F)** a page fetched and read for this note; **(S)** a search-engine summary, not opened, so treat as unverified; **(E)** an estimate, mine or a third party's, with no disclosure behind it. Reddit, Inc.com, uxdesign.cc and the Copyright Office PDF could not be read (403 or binary).
 

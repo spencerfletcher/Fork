@@ -10,7 +10,7 @@
 
 **Tech Stack:** SvelteKit 2 (`beforeNavigate`), Svelte 5 runes, zod schema already in `validation.ts`, scoped CSS on tokens, Vitest + Testing Library, Playwright.
 
-**Spec:** `docs/research/2026-10-26-ui-design-directions.md`, "Round 5" (fixes adopted, final corrections, external review) and the "as built" paragraphs; the canvas at https://claude.ai/artifact/QFTDpwCLRwuknh754yNPzc, boards "Edit" and "Edit — 390px". Tokens: the foundation plan's Global Constraints.
+**Spec:** `docs/research/archive/2026-10-26-ui-design-directions.md`, "Round 5" (fixes adopted, final corrections, external review) and the "as built" paragraphs; the canvas at https://claude.ai/artifact/QFTDpwCLRwuknh754yNPzc, boards "Edit" and "Edit — 390px". Tokens: the foundation plan's Global Constraints.
 
 ## Global Constraints
 
@@ -261,7 +261,7 @@ git commit -m "Recipe form on the locked system: two columns, eyebrow labels, gr
 **Files:**
 
 - Modify: `e2e/authenticated.test.ts` (Save button name; append two tests)
-- Modify: `docs/research/2026-10-26-ui-design-directions.md`, `docs/history/2026-10-milestones.md`
+- Modify: `docs/research/archive/2026-10-26-ui-design-directions.md`, `docs/history/2026-10-milestones.md`
 
 - [ ] **Step 1: Update and add e2e**
 
@@ -329,6 +329,6 @@ Dev server signed in (the seed user; use the e2e auth state or sign in by hand),
 One paragraph after the "Compare page, as built" paragraph in the design doc: the helper line and the placeholder are computed from the same change groups the server uses, so they agree with the generated message; a settings-only save says so; the guard uses the browser's confirm and lets the browser handle tab-close itself; TagInput keeps chips above the input rather than inside it. `docs/history/2026-10-milestones.md`: mark the redesign item done with the date and list what moved to the backlog during it (in-place tag filter, section overflow, None.png removal, nav highlight on tag pages).
 
 ```bash
-git add e2e/authenticated.test.ts docs/research/2026-10-26-ui-design-directions.md docs/history/2026-10-milestones.md
+git add e2e/authenticated.test.ts docs/research/archive/2026-10-26-ui-design-directions.md docs/history/2026-10-milestones.md
 git commit -m "Editor e2e for the guard, the helper line and the growing textarea; redesign closed out in the docs"
 ```

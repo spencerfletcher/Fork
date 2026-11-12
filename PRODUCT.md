@@ -51,7 +51,7 @@ Three things together, which a neighbouring recipe site cannot claim at once: a 
 
 - Four seed recipes with real content in `src/lib/server/db/seedData.ts`; three carry Unsplash photos, one has none.
 - Screenshots in `docs/screenshots/`.
-- A design research note in `docs/research/2026-10-26-ui-design-directions.md`.
+- A design research note in `docs/research/archive/2026-10-26-ui-design-directions.md`.
 - No testimonials, no user counts, no press, no ratings. None may be invented.
 
 ## Product Principles

@@ -10,7 +10,7 @@
 
 **Tech Stack:** SvelteKit 2, Svelte 5 runes, Tailwind 4 utilities on the foundation tokens, Vitest with `@testing-library/svelte`, Playwright.
 
-**Spec:** `docs/research/2026-10-26-ui-design-directions.md`, "Round 4" and "Round 5"; the canvas at https://claude.ai/artifact/QFTDpwCLRwuknh754yNPzc, boards "Recipe" and "Recipe — 390px". Foundation tokens: `docs/superpowers/plans/2026-10-27-redesign-foundation.md`, Global Constraints.
+**Spec:** `docs/research/archive/2026-10-26-ui-design-directions.md`, "Round 4" and "Round 5"; the canvas at https://claude.ai/artifact/QFTDpwCLRwuknh754yNPzc, boards "Recipe" and "Recipe — 390px". Foundation tokens: `docs/superpowers/plans/2026-10-27-redesign-foundation.md`, Global Constraints.
 
 ## Global Constraints
 
@@ -406,7 +406,7 @@ git commit -m "Recipe page: paper layout, sticky sidebar first in the DOM, mobil
 
 **Files:**
 
-- Modify: `docs/research/2026-10-26-ui-design-directions.md` (one paragraph after the Round 5 notes)
+- Modify: `docs/research/archive/2026-10-26-ui-design-directions.md` (one paragraph after the Round 5 notes)
 
 - [ ] **Step 1: Screenshots**
 
@@ -417,6 +417,6 @@ Run the dev server and screenshot the cookies recipe at 1200 and 390 wide, the f
 One paragraph: no placeholder panel on the page without a photo (title already the headline); the version history opens as a toggle panel rather than a page, since no history page exists; fork count is public forks only; the DOM puts the sidebar before the recipe at every width so the mobile order needs no `order` tricks.
 
 ```bash
-git add docs/research/2026-10-26-ui-design-directions.md
+git add docs/research/archive/2026-10-26-ui-design-directions.md
 git commit -m "Design directions: recipe page rulings"
 ```

@@ -10,7 +10,7 @@
 
 **Tech Stack:** SvelteKit 2, Svelte 5 runes, scoped CSS on tokens from `src/app.css`, Vitest + Testing Library, Playwright.
 
-**Spec:** `docs/research/2026-10-26-ui-design-directions.md`, "Round 5" and the "as built" paragraphs; the canvas at https://claude.ai/artifact/QFTDpwCLRwuknh754yNPzc, boards "Compare" and "Compare — 390px". Tokens: the foundation plan's Global Constraints.
+**Spec:** `docs/research/archive/2026-10-26-ui-design-directions.md`, "Round 5" and the "as built" paragraphs; the canvas at https://claude.ai/artifact/QFTDpwCLRwuknh754yNPzc, boards "Compare" and "Compare — 390px". Tokens: the foundation plan's Global Constraints.
 
 ## Global Constraints
 
@@ -187,7 +187,7 @@ git commit -m "Compare page: inline pickers, two version cards with the snapshot
 **Files:**
 
 - Modify: `e2e/recipe.test.ts:577-588` (the one-column test) and append one test
-- Modify: `docs/research/2026-10-26-ui-design-directions.md`
+- Modify: `docs/research/archive/2026-10-26-ui-design-directions.md`
 
 - [ ] **Step 1: Rewrite the one-column e2e and add the phone test**
 
@@ -244,6 +244,6 @@ Dev server, screenshots of the cookies diff at 1200 and 390 and the landing page
 One paragraph after the "Card and browse, as built" paragraph in the design doc: the compare column is 784px, wider than the round-2 reading column, so the diff splits as the board shows; the version cards show the snapshot (title, serves, times, ingredient count) and the author stays on the phone card; removed rows are back on the locked tone at full opacity, and the "shipped remove text" note below becomes history. Edit that note's last sentence to say the compare step did drop the opacity on 2026-10-27.
 
 ```bash
-git add e2e/recipe.test.ts docs/research/2026-10-26-ui-design-directions.md
+git add e2e/recipe.test.ts docs/research/archive/2026-10-26-ui-design-directions.md
 git commit -m "Compare e2e for the two-column diff and the phone width; design directions rulings"
 ```

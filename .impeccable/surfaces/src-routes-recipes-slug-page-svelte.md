@@ -19,7 +19,7 @@ A cook arrives from search, the feed, a tag page, a profile or a shared link, us
 
 ## Outcome and proof
 
-Primary task: read and cook. Secondary: fork (visitor), edit (owner), favorite, open history, compare versions. Success is Ingredients on screen by about 600px at 1280 and inside the first screen's reach on a phone, the current commit message read before any chrome, and a visitor seeing Fork without logging in. The product-specific truth on the page is the commit message written as a cook's note, the version count, the fork count and the Compare link; nothing else is invented. Decisions 1 to 12 are recorded in `docs/research/2026-10-28-recipe-page-critique.md`, section 9, and bind this brief.
+Primary task: read and cook. Secondary: fork (visitor), edit (owner), favorite, open history, compare versions. Success is Ingredients on screen by about 600px at 1280 and inside the first screen's reach on a phone, the current commit message read before any chrome, and a visitor seeing Fork without logging in. The product-specific truth on the page is the commit message written as a cook's note, the version count, the fork count and the Compare link; nothing else is invented. Decisions 1 to 12 are recorded in `docs/research/archive/2026-10-28-recipe-page-critique.md`, section 9, and bind this brief.
 
 ## Selected direction
 

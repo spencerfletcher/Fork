@@ -10,7 +10,7 @@
 
 **Tech Stack:** SvelteKit 2, Svelte 5 runes, Tailwind 4 on the foundation tokens, Vitest, Playwright.
 
-**Spec:** `docs/research/2026-10-26-ui-design-directions.md`, "Round 4", "Round 5" and the review notes; the canvas at https://claude.ai/artifact/QFTDpwCLRwuknh754yNPzc, boards "Browse" and "Browse — 390px". Tokens: the foundation plan's Global Constraints.
+**Spec:** `docs/research/archive/2026-10-26-ui-design-directions.md`, "Round 4", "Round 5" and the review notes; the canvas at https://claude.ai/artifact/QFTDpwCLRwuknh754yNPzc, boards "Browse" and "Browse — 390px". Tokens: the foundation plan's Global Constraints.
 
 ## Global Constraints
 
@@ -289,7 +289,7 @@ git commit -m "Browse: tag tabs, Recent and Most forked sections; tag page share
 **Files:**
 
 - Modify: `e2e/tags.test.ts` (append two tests)
-- Modify: `docs/research/2026-10-26-ui-design-directions.md`
+- Modify: `docs/research/archive/2026-10-26-ui-design-directions.md`
 
 - [ ] **Step 1: Write the two e2e tests**
 
@@ -333,6 +333,6 @@ Dev server, screenshots of `/recipes` and `/tags/dessert` at 1200 and 390, and `
 One paragraph after the recipe-page paragraph in the design doc: cards drop the description, tag pills and the "Forked" badge (fork count and the recipe page carry lineage); tabs link to the existing tag pages rather than filtering in place; the browse sections are Recent (8), Most forked (4, only with forks) and All recipes (the rest), each omitted when empty; a signed-in user's own list keeps one grid and no tabs.
 
 ```bash
-git add e2e/tags.test.ts docs/research/2026-10-26-ui-design-directions.md
+git add e2e/tags.test.ts docs/research/archive/2026-10-26-ui-design-directions.md
 git commit -m "Browse e2e for tabs and the phone tab row; design directions rulings"
 ```

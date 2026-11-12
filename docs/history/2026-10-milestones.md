@@ -7,7 +7,7 @@
 ## Priority order — 2026-10-23
 
 1. ~~One save, versioned content~~ shipped 2026-10-27 (`superpowers/specs/2026-10-23-one-save-design.md`), together with M10 Drizzle migrations and the operational cleanup.
-2. ~~UI redesign~~ built 2026-10-27 on the `redesign` branch (tokens, nav and shell, recipe page, card and grid, compare, edit and new), each step reviewed; the "as built" paragraphs in `research/2026-10-26-ui-design-directions.md` record what differs from the boards. Moved to the backlog during the build: in-place tag filtering, browse sections past their caps, dark mode. Older inputs: `todo/DESIGN.md`, `todo/TODO_UI.md`.
+2. ~~UI redesign~~ built 2026-10-27 on the `redesign` branch (tokens, nav and shell, recipe page, card and grid, compare, edit and new), each step reviewed; the "as built" paragraphs in `research/archive/2026-10-26-ui-design-directions.md` record what differs from the boards. Moved to the backlog during the build: in-place tag filtering, browse sections past their caps, dark mode. Older inputs: `todo/DESIGN.md`, `todo/TODO_UI.md`.
 3. ~~Serving scaling on the recipe page (temporary multiplier, no version written)~~ shipped 2026-10-31: a serves box in the Ingredients eyebrow row, editable for any amount from 0.25 (its ÷2 and ×2 steps cut the same day as clutter), the header's measure saying the scaled serves, quantities and grams scaled on the page only, `?serves=` in the URL (`src/lib/recipes/scale.ts`, DESIGN.md Scale control).
 4. Cooklang-derived items from `research/2026-10-23-cooklang.md`: cooking attempts (M17), export (M16), `.cook` import (M15 stage 6), ingredient use in steps.
 5. Social features (added 2026-10-29): pull requests back to the source recipe (M1), comments on versions (M3), following and a feed (M4), collections (M6), with the sharing defaults below settled first. The 2026-09 deferral of feeds and graph work no longer stands; order within the set is open.
@@ -312,7 +312,7 @@ Spencer, 31 October 2026: "feature idea to add to roadmap: pantry tracker, and a
 
 # M22 — Recipe as an ingredient (sub-recipes) (M to L)
 
-Spencer, 31 October 2026: "this is something i wanted to add tying recipes and ingredients together, especially useful for things like homemade dough or whatever ... yes let's add that definitely." Demand: Mealie's second most-upvoted request, [#1761](https://github.com/mealie-recipes/mealie/discussions/1761) (101 votes; `research/2026-10-31-feature-research.md`, candidate 8).
+Spencer, 31 October 2026: "this is something i wanted to add tying recipes and ingredients together, especially useful for things like homemade dough or whatever ... yes let's add that definitely." Demand: Mealie's second most-upvoted request, [#1761](https://github.com/mealie-recipes/mealie/discussions/1761) (101 votes; `research/archive/2026-10-31-feature-research.md`, candidate 8).
 
 - An ingredient line can reference another Fork recipe, with a serving multiple of it ("1× Pie dough").
 - The referencing version pins the sub-recipe's version, the way a lockfile pins a dependency, so a later change to the dough does not silently change the pie.
@@ -334,7 +334,7 @@ Data it needs first: steps that carry their dependencies (which earlier steps ea
 
 ## Apps to keep eyes on
 
-Added 31 October 2026 from `research/2026-10-31-feature-research.md`. Check each quarterly; note what they ship that Fork lacks.
+Added 31 October 2026 from `research/archive/2026-10-31-feature-research.md`. Check each quarterly; note what they ship that Fork lacks.
 
 - **Fava** (iOS, no site beyond a privacy page): cook log with photos, streaks, follows, likes and comments. The closest thing to the cook-log half of M17 and the social feed.
 - **Morsel**: "Letterboxd for what friends are cooking", the same framing as Fork's social direction.

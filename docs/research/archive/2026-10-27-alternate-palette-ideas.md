@@ -1,3 +1,5 @@
+> Archived 12 Nov 2026: a palette replaced by the shipped tokens in [DESIGN.md](../../../DESIGN.md); nothing here is current. Kept as the research record.
+
 # Design ideas
 
 Input to the UI redesign, priority 2 in `docs/history/2026-10-milestones.md`. Nothing here is applied; it is a palette and a set of observations to weigh when the redesign starts. See `TODO_UI.md` beside it for reference sites.

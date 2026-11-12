@@ -1,3 +1,5 @@
+> Archived 12 Nov 2026: an earlier draft of the [roadmap report](../2026-11-08-product-roadmap/README.md), which replaced it; the current plan is [docs/product](../../product/README.md). Kept as the research record.
+
 # Make Fork the Cookbook That Improves
 
 **Authoritative product direction · 8 November 2026 · serious home cooks first**
@@ -308,7 +310,7 @@ Nonblocking product calls remain: exact Cookbook grouping language, local versus
 | [Current product audit](../2026-11-08-product-roadmap/current_product_audit.md) | Source-linked local capability inventory and bounded live checks, 8 Nov 2026; not authenticated/runtime certification. |
 | [Cookbook market research](../2026-11-08-product-roadmap/cookbook_market.md) | Primary competitor documentation/prices and public cooking requests checked 8 Nov; documentation breadth is not hands-on quality. |
 | [Advanced/quality/economics research](../2026-11-08-product-roadmap/advanced_and_quality.md) | Standards, platform constraints, AI risks and explicit scenario derivation; product and revenue hypotheses are labeled. |
-| [Prior feature research](../2026-10-31-feature-research.md), [prior business research](../2026-10-31-business-viability.md) | Historical leads and decisions. Fresh audit/primary evidence supersedes obsolete competitive exclusivity, prices, thresholds and estimates. |
+| [Prior feature research](2026-10-31-feature-research.md), [prior business research](2026-10-31-business-viability.md) | Historical leads and decisions. Fresh audit/primary evidence supersedes obsolete competitive exclusivity, prices, thresholds and estimates. |
 | Vendor pages and official release/App Store links above | Accessed 8 Nov 2026; Paprika release dated 6 Nov. Tier/platform/promotional differences apply. |
 | GitHub requests, standards and domain guidance above | Concrete jobs, implementation evidence and technical constraints; not representative demand, clinical advice or universal legal conclusions. |
 

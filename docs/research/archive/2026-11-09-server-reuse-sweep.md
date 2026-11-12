@@ -1,3 +1,5 @@
+> Archived 12 Nov 2026: its extractions shipped and are listed in [AGENTS.md](../../../AGENTS.md), Shared helpers; later sweeps are under [docs/audits](../../audits/). Kept as the research record.
+
 # Server and shared-code reuse sweep · 9 Nov 2026
 
 Companion to `2026-11-09-ui-reuse-sweep.md`, covering `src/lib/server`, `src/lib`, every `+page.server.ts`, and the tests. Read-only audit on master `f3bdd95`; the refactor slice works from it. Line numbers as of that commit.

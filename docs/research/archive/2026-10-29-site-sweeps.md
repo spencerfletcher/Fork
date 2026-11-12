@@ -1,3 +1,5 @@
+> Archived 12 Nov 2026: its fixes shipped on 29 and 30 Oct 2026; the still-open items are folded into [DESIGN-DIRECTION.md](../../product/DESIGN-DIRECTION.md) (source key SW). Kept as the research record.
+
 # Site sweeps, 29 October 2026
 
 One Impeccable critique (scored) and one polish evidence walk per surface, run at the end of the recipe page redesign against master at 4333b53, so the next design sessions can start from a list instead of a look. Each surface's full report is a snapshot in `.impeccable/critique/`, named by date and slug; this file is the index and the cross-cutting findings. Nothing here has been acted on except where the recipe page says so.

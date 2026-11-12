@@ -126,7 +126,7 @@
 /* ── Design token registration ────────────────────────────────────────────────
    @theme inline: generates Tailwind utilities (bg-accent, text-text-2, etc.)
    that reference our CSS custom properties. Dark mode is deferred; the dark
-   set is recorded in docs/research/2026-10-26-ui-design-directions.md.
+   set is recorded in docs/research/archive/2026-10-26-ui-design-directions.md.
 ────────────────────────────────────────────────────────────────────────────── */
 @theme inline {
 	/* Backgrounds */

@@ -160,12 +160,12 @@ Usages = files rendering `<Name` (component's own file excluded); importers coun
 
 **Decided, not drift:** grey text turning ink on hover; the diff page's mono commit message; `VISIBILITIES` in `src/lib/recipes/validation.ts`.
 
-UI sweep (`docs/research/2026-11-09-ui-reuse-sweep.md`):
+UI sweep (`docs/research/archive/2026-11-09-ui-reuse-sweep.md`):
 - Closed: ConfirmStep (3 users), FormActions (2), ChoiceGroup (2), Avatar (6), `Username` takes `class` + `.handle`, EmptyPanel (3), ResultStatus (3), `sourceHref` (JournalEntry, FeedEntry), `optimisticToggle` (RecipeActions, FeedEntry), one Icons file (12 importers, one Friends drawing), `.text-btn` base (app.css:484), `.page-inner--narrow`, `.page-head`/`.page-sub`, `.dot-list`, `.hit-link`, `.lock-note`, `dayLabel(string | Date)`, `compactCount`, `plural` with an irregular form.
 - Remain: Discover's empty line and the match/found wording; ReadBack's dot copy; local 44px overrides on shared buttons (friends `.btn-sm`, users `.relation`, PhotoField); RecipeCard handles (in flight).
 - New: menu CSS twin (#1), avatar+handle link (#10), Journal drawn two ways, dead BrowseSections and dead app.css rules.
 
-Server sweep (`docs/research/2026-11-09-server-reuse-sweep.md`):
+Server sweep (`docs/research/archive/2026-11-09-server-reuse-sweep.md`):
 - Closed: `viewableRecipe`/`ownRecipe`/`inLibraryOf` (AGENTS wording drifted, #6); `cardList`, `tagSelection`; forks page now passes `user` (forks/+page.server.ts:31); `failure()` + `FAILURE_CODES` in app routes (`entryFailure` and friends' `invalid` wrap it); `storePhoto`; `oneOf`, `wholeNumber` (0 `/^\d+$/` left); `eitherWay`; `Viewer` declared once (visibility.ts:21); `RecipeChoice` inferred (entryForm.ts:20); `loadEvent` (21 test importers), `formOf`, `inRollback`, e2e `COOKIES_RE`/`openCookies`/`gotoHydrated`.
 - Remain: 6 `error(401)` (#7); `ensureProfile` wrapped two ways (left, with reason); one inline ISO day (journal/new:44); literal message strings in tests (`Not authorized` ×6); `mockDb` adopted by 3 of 20 mocked files.
 - New: auth routes outside the `{ error, code }` shape (#5); the `sqlOf` copies; `as any` in the users test.
