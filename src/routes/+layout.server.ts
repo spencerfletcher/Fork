@@ -8,5 +8,6 @@ export const load: LayoutServerLoad = async ({ locals: { user } }) => {
 	if (user) {
 		profile = (await db.query.profiles.findFirst({ where: eq(profiles.id, user.id) })) ?? null;
 	}
-	return { user, profile };
+	// The id, and the email the Navbar falls back on before a profile exists.
+	return { user: user ? { id: user.id, email: user.email } : null, profile };
 };

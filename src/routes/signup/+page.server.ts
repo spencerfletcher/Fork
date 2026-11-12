@@ -53,20 +53,19 @@ export const actions: Actions = {
 			options: { emailRedirectTo: confirmLink(url.origin) }
 		});
 
-		if (err) {
-			const registered = /already registered/i.test(err.message);
-			return failure(
-				err.status || 500,
-				'auth_failed',
-				registered
-					? 'That email already has an account.'
-					: 'Could not create the account. Try again.',
-				{ registered }
-			);
+		// An address that already has an account ends as a new one does, on the
+		// check-your-inbox page, so a stranger cannot learn who has signed up.
+		// Supabase says "already registered" with confirmations off; with them on,
+		// it answers with a stand-in user that has no identities.
+		const registered = err
+			? /already registered/i.test(err.message)
+			: data.user?.identities?.length === 0;
+		if (err && !registered) {
+			return failure(err.status || 500, 'auth_failed', 'Could not create the account. Try again.');
 		}
 
 		// Best effort: the email may not be confirmed yet, but the profile row can exist.
-		if (data.user) await ensureProfile(data.user, username);
+		if (data.user && !registered) await ensureProfile(data.user, username);
 
 		// The confirm page names the address; a cookie keeps it out of the URL.
 		rememberAddress(cookies, email);

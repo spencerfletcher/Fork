@@ -135,6 +135,27 @@ describe('users/[username] load', () => {
 		expect(result.profile.username).toBe('chefmaria');
 	});
 
+	// The page shows the handle and the month joined; the cook's settings are
+	// theirs alone, and the page does not need them even for its owner.
+	test.each([
+		['a stranger', null],
+		['the owner', 'user-1']
+	])('hands %s only what the page shows, never the settings', async (_who, viewer) => {
+		const row = makeProfile({
+			defaultVisibility: 'friends',
+			measurement: 'us',
+			startersMadeAt: new Date(),
+			avatarUrl: 'https://cdn.test/a.png'
+		});
+		findProfileMock.mockResolvedValue(row);
+		const result = await loadPage<PageData>(load as never, makeLoadEvent('chefmaria', viewer));
+		expect(result.profile).toEqual({
+			id: row.id,
+			username: row.username,
+			createdAt: row.createdAt
+		});
+	});
+
 	test('lists what the viewer may see: public to strangers, friends recipes to friends, everything to the owner', async () => {
 		findProfileMock.mockResolvedValue(makeProfile());
 		findRecipesMock.mockResolvedValue([]);

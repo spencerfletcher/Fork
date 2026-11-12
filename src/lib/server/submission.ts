@@ -11,6 +11,7 @@ import {
 	imageFileFrom,
 	photoTypeOf,
 	uploadRecipeImage,
+	UnreadablePhoto,
 	type UploadedImage
 } from '#lib/server/images.js';
 import { failure, type FailureCode } from '#lib/server/actions.js';
@@ -69,7 +70,9 @@ export async function storePhoto(
 	if (type === null) return { ok: false, code: 'invalid', error: PHOTO_TYPE_MESSAGE };
 	try {
 		return { ok: true, image: await uploadRecipeImage(supabase, userId, file, type) };
-	} catch {
+	} catch (e) {
+		if (e instanceof UnreadablePhoto)
+			return { ok: false, code: 'invalid', error: PHOTO_TYPE_MESSAGE };
 		return { ok: false, code: 'upload_failed', error: PHOTO_UPLOAD_FAILED };
 	}
 }

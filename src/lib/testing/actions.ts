@@ -29,14 +29,38 @@ export const PHOTO_MAGIC = {
 	'image/webp': [...'RIFF\0\0\0\0WEBP'].map((c) => c.charCodeAt(0))
 } as const;
 
-/** A photo whose bytes start as `type` really does, padded to `size` bytes. */
+// The smallest file of each type whose structure the upload's metadata strip
+// can walk: a JPEG straight to its scan, a PNG of IEND alone, a simple WebP.
+const PHOTO_BODY = {
+	'image/jpeg': [0xff, 0xd8, 0xff, 0xda, 0x00, 0x02],
+	'image/png': [
+		...PHOTO_MAGIC['image/png'],
+		0,
+		0,
+		0,
+		0,
+		0x49,
+		0x45,
+		0x4e,
+		0x44,
+		0xae,
+		0x42,
+		0x60,
+		0x82
+	],
+	'image/gif': PHOTO_MAGIC['image/gif'],
+	'image/webp': [...'RIFF\0\0\0\0WEBPVP8L'].map((c) => c.charCodeAt(0))
+} as const;
+
+/** A photo whose bytes really are `type`'s, padded to `size` bytes (or its type's smallest). */
 export function photoFile(
 	name = 'a.png',
 	type: keyof typeof PHOTO_MAGIC = 'image/png',
 	size = 16
 ): File {
-	const bytes = new Uint8Array(size);
-	bytes.set(PHOTO_MAGIC[type]);
+	const body = PHOTO_BODY[type];
+	const bytes = new Uint8Array(Math.max(size, body.length));
+	bytes.set(body);
 	return new File([bytes], name, { type });
 }
 

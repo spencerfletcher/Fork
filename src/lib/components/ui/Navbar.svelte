@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { enhance } from '$app/forms';
-	import type { User } from '@supabase/supabase-js';
 	import type { Profile } from '#lib/server/db/schema.js';
 	import { DESTINATIONS, isCurrent } from './destinations.js';
 	import { searchIcon } from '#lib/components/Icons.svelte';
@@ -9,7 +8,7 @@
 	import Dropdown from './Dropdown.svelte';
 	import { clearDrafts } from '#lib/drafts.js';
 
-	let { user, profile = null }: { user: User | null; profile?: Profile | null } = $props();
+	let { user, profile = null }: { user: App.PageData['user']; profile?: Profile | null } = $props();
 
 	// The four destinations sit here from 768; a phone has the tab bar instead.
 	const path = $derived(page.url.pathname);
