@@ -9,6 +9,7 @@
 	import { pendingEnhance } from '#lib/pendingEnhance.svelte.js';
 	import { EXPORT_FORMATS, FORMAT_LABEL, exportHref } from '#lib/export/archive.js';
 	import { TRASH_DAYS } from '#lib/trash.js';
+	import ReportStep from '#lib/components/ReportStep.svelte';
 	import CollectionChecks, { type Collection } from './CollectionChecks.svelte';
 
 	// The one ⋯ menu for a recipe: the recipe page's action row ends in it, and
@@ -16,8 +17,8 @@
 	// their collections first, each a check (a recipe may be in several), and
 	// New collection, named in place and made with this recipe in it; then each
 	// row its host asks for, in this order: Print, Add to Journal, Edit recipe,
-	// the Exports, Fork, and last the one that takes the recipe out of the
-	// Cookbook, asked twice in place. One flat menu, so the arrow keys walk
+	// the Exports, Fork, the one that takes the recipe out of the Cookbook,
+	// asked twice in place, and last Report, asked in place (ReportStep). One flat menu, so the arrow keys walk
 	// every row and a toggle leaves it open. Every form posts to the recipe's
 	// own route by its full path, so a host page keeps its query. The
 	// Collections group is CollectionChecks, shared with select mode's bar.
@@ -33,6 +34,7 @@
 		fork = false,
 		trash = false,
 		removeCopy = false,
+		report,
 		onremoved,
 		oncollected
 	}: {
@@ -57,6 +59,8 @@
 		trash?: boolean;
 		/** A kept copy's Remove from Cookbook. */
 		removeCopy?: boolean;
+		/** The recipe's id: a Report row, for a signed-in reader who is not its author. */
+		report?: number;
 		/** The recipe left the reader's library; the host takes it off the page. */
 		onremoved?: (how: 'trash' | 'copy') => void;
 		/** A collection was checked, unchecked or made from the menu; the host reloads its counts. */
@@ -66,6 +70,7 @@
 	const base = $derived(`/recipes/${slug}`);
 
 	let confirming = $state(false);
+	let reporting = $state(false);
 	// The group's New collection box is open: the panel is a form, not a menu.
 	let naming = $state(false);
 
@@ -104,6 +109,7 @@
 	onopen={() => {
 		naming = false;
 		confirming = false;
+		reporting = false;
 		leaveError = null;
 	}}>
 	{#snippet trigger(props)}
@@ -114,7 +120,7 @@
 	{#snippet panel(close)}
 		<div
 			class="menu-panel more-panel"
-			role={naming || confirming ? undefined : 'menu'}
+			role={naming || confirming || reporting ? undefined : 'menu'}
 			aria-label="More actions">
 			{#if collections !== null}
 				<CollectionChecks
@@ -229,6 +235,31 @@
 						enhance={leave('copy', 'Could not remove your copy. Try again.')}
 						pending={leaving}
 						error={leaveError} />
+				{/if}
+			{/if}
+			{#if report !== undefined}
+				<hr class="rule" />
+				{#if reporting}
+					<ReportStep target={{ type: 'recipe', id: String(report) }} />
+				{:else}
+					<button
+						type="button"
+						class="menu-row icon-row"
+						role="menuitem"
+						onclick={() => (reporting = true)}>
+						<svg
+							class="size-4"
+							viewBox="0 0 16 16"
+							aria-hidden="true"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="1.5"
+							stroke-linecap="round"
+							stroke-linejoin="round">
+							<path d="M3.5 14V2.5M3.5 3h8l-1.5 3 1.5 3h-8" />
+						</svg>
+						Report
+					</button>
 				{/if}
 			{/if}
 		</div>

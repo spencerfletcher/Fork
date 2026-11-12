@@ -127,6 +127,38 @@ describe('More actions: Export', () => {
 });
 
 describe('More actions: collections', () => {
+	test('Report, last, asks what is wrong in place and files a report on this recipe by its id', async () => {
+		render(MoreActions, { props: { ...PAGE, collections: null, report: 42 } });
+		await fireEvent.click(screen.getByRole('button', { name: 'More actions' }));
+		await tick();
+		const menu = screen.getByRole('menu', { name: 'More actions' });
+		expect(rowsOf(menu).map((r) => r.textContent?.trim())).toEqual(['Print', 'Report']);
+
+		await fireEvent.click(within(menu).getByRole('menuitem', { name: 'Report' }));
+		await tick();
+		const reason = screen.getByRole('textbox', { name: "What's wrong?" });
+		expect(reason).toHaveFocus();
+		const form = reason.closest('form')!;
+		expect(form).toHaveAttribute('action', '/friends?/report');
+
+		await playBack(form, { type: 'failure', data: { code: 'unauthenticated', error: 'Log in.' } });
+		expect(screen.getByRole('alert')).toHaveTextContent('Log in.');
+
+		await fireEvent.input(reason, { target: { value: 'Spam' } });
+		const sent = await playBack(form, { type: 'success' });
+		expect(Object.fromEntries(sent)).toEqual({
+			targetType: 'recipe',
+			targetId: '42',
+			reason: 'Spam'
+		});
+		expect(screen.getByRole('status')).toHaveTextContent('Reported. Thanks; someone will read it.');
+	});
+
+	test('without a report id there is no Report row', async () => {
+		const menu = await openMenu(null);
+		expect(within(menu).queryByRole('menuitem', { name: 'Report' })).toBeNull();
+	});
+
 	test('each collection is a checkable row, checked where the recipe is, focus on the first', async () => {
 		const menu = await openMenu();
 		const rows = within(menu).getAllByRole('menuitemcheckbox');

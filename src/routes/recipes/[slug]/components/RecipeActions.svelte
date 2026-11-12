@@ -23,7 +23,7 @@
 		journalHref,
 		collections = null
 	}: {
-		recipe: Pick<Recipe, 'slug' | 'title' | 'authorId'>;
+		recipe: Pick<Recipe, 'id' | 'slug' | 'title' | 'authorId'>;
 		canFork: boolean;
 		/** The version being read, which Fork copies; absent copies the latest. */
 		forkVersion?: number;
@@ -47,6 +47,8 @@
 	// The export is the whole recipe, so the owner gets it on every version,
 	// not only the latest where Edit shows. `page.data.user` is the layout's.
 	const isOwner = $derived(!!page.data?.user && page.data.user.id === recipe.authorId);
+	// Report is any other signed-in reader's.
+	const canReport = $derived(!!page.data?.user && !isOwner);
 	// The click flips it optimistically; it resets to the prop whenever the
 	// page loads another recipe or reloads this one.
 	const favorite = optimisticToggle(() => initialFavorited, {
@@ -175,7 +177,13 @@
 		</a>
 	{/if}
 	<!-- Everyone, last: the reader's collections (in their library) and Print. -->
-	<MoreActions slug={recipe.slug} title={recipe.title} {collections} print exports={isOwner} />
+	<MoreActions
+		slug={recipe.slug}
+		title={recipe.title}
+		{collections}
+		print
+		exports={isOwner}
+		report={canReport ? recipe.id : undefined} />
 
 	{#if error}
 		<p class="form-error basis-full" role="alert">{error}</p>

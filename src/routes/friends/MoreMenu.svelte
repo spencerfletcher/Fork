@@ -3,6 +3,7 @@
 	import { tick } from 'svelte';
 	import { moreIcon } from '#lib/components/Icons.svelte';
 	import Dropdown from '#lib/components/ui/Dropdown.svelte';
+	import ReportStep from '#lib/components/ReportStep.svelte';
 	import { BLOCK_SENTENCE } from '#lib/journal.js';
 	import { pendingEnhance } from '#lib/pendingEnhance.svelte.js';
 	import type { ReportTarget } from '#lib/server/db/schema.js';
@@ -28,7 +29,7 @@
 		items?: ('mute' | 'unfriend' | 'report' | 'block')[];
 	} = $props();
 
-	let step = $state<'menu' | 'report' | 'block' | 'reported'>('menu');
+	let step = $state<'menu' | 'report' | 'block'>('menu');
 	let panelEl: HTMLElement | undefined = $state();
 
 	async function go(next: typeof step) {
@@ -41,8 +42,7 @@
 
 	// A refusal (a lapsed session) is shown in the panel, where the press was.
 	const acting = pendingEnhance({ keepFailure: true });
-	const reporting = pendingEnhance({ keepFailure: true, done: () => (step = 'reported') });
-	const refusal = $derived(acting.error ?? reporting.error);
+	const refusal = $derived(acting.error);
 </script>
 
 <Dropdown onopen={() => (step = 'menu')}>
@@ -85,21 +85,7 @@
 					</button>
 				{/if}
 			{:else if step === 'report'}
-				<form method="POST" action="/friends?/report" class="step" use:enhance={reporting.submit}>
-					<input type="hidden" name="targetType" value={target.type} />
-					<input type="hidden" name="targetId" value={target.id} />
-					<label for="reason-{target.type}-{target.id}">What's wrong?</label>
-					<textarea
-						id="reason-{target.type}-{target.id}"
-						name="reason"
-						rows="3"
-						required
-						maxlength="1000">
-					</textarea>
-					<button type="submit" class="btn-ghost">Send report</button>
-				</form>
-			{:else if step === 'reported'}
-				<p class="step" role="status">Reported. Thanks; someone will read it.</p>
+				<ReportStep {target} />
 			{:else}
 				<form method="POST" action="/friends?/block" class="step" use:enhance={acting.submit}>
 					<input type="hidden" name="userId" value={userId} />
@@ -141,11 +127,6 @@
 	.step p {
 		font-size: 0.875rem;
 		color: var(--color-text-2);
-	}
-
-	.step label {
-		font-size: 0.875rem;
-		font-weight: 600;
 	}
 
 	@media (max-width: 699px) {
