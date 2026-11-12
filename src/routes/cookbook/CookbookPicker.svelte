@@ -155,6 +155,7 @@
 				<button
 					type="button"
 					class="btn-ghost btn-sm picker-trigger"
+					class:showing={open && first === 'collections'}
 					aria-expanded={open}
 					aria-controls={open ? PANEL_ID : undefined}
 					aria-label={collection ? `Collection: ${collection.name}` : undefined}
@@ -165,6 +166,7 @@
 				<button
 					type="button"
 					class="btn-ghost btn-sm picker-trigger"
+					class:showing={open && first === 'tags'}
 					aria-expanded={open}
 					aria-controls={open ? PANEL_ID : undefined}
 					bind:this={tagsButton}
@@ -370,7 +372,8 @@
 		max-width: 16rem;
 	}
 
-	.picker-trigger[aria-expanded='true'] {
+	/* Both buttons control the open panel; the band marks the group it shows. */
+	.picker-trigger.showing {
 		background: var(--color-band);
 	}
 

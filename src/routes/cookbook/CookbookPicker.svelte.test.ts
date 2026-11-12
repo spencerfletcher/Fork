@@ -201,6 +201,9 @@ describe('Cookbook picker', () => {
 		await fireEvent.click(trigger(/^Tags$/));
 		expect(group('Tags')).toBeInTheDocument();
 		expect(within(menu()).queryByRole('group', { name: 'Collections' })).toBeNull();
+		// The band marks the button whose group shows, not both.
+		expect(trigger(/^Tags$/)).toHaveClass('showing');
+		expect(trigger(/^Collections$/)).not.toHaveClass('showing');
 	});
 
 	test('turned to the other group, Escape hands focus back to the button that turned it', async () => {
