@@ -9,8 +9,8 @@
 	let { data }: { data: PageData } = $props();
 </script>
 
-<!-- Reported and hidden recipes, for moderators only (isModerator); reached by
-     its address, linked from nowhere. -->
+<!-- Reported and hidden recipes, then reports from /report, for moderators
+     only (isModerator); reached by its address, linked from nowhere. -->
 <div class="page">
 	<div class="page-inner">
 		<div class="page-head">
@@ -19,9 +19,9 @@
 				<p class="page-sub">Reported recipes, newest report first, then hidden ones.</p>
 			{/if}
 		</div>
-		{#if data.recipes.length === 0}
+		{#if data.recipes.length === 0 && data.links.length === 0}
 			<EmptyPanel title="Nothing to review">No recipe is reported or hidden.</EmptyPanel>
-		{:else}
+		{:else if data.recipes.length > 0}
 			<ul class="row-list">
 				{#each data.recipes as recipe (recipe.slug)}
 					<li class="list-row">
@@ -58,6 +58,31 @@
 				{/each}
 			</ul>
 		{/if}
+		{#if data.links.length > 0}
+			<section class="links" aria-labelledby="links-heading">
+				<h2 id="links-heading">Reported links</h2>
+				<p class="page-sub">From Report a problem, newest first. Reply by email.</p>
+				<ul class="row-list">
+					{#each data.links as link, i (i)}
+						<li class="list-row">
+							<div class="list-row-what">
+								<h3 class="list-row-title"><a class="hit-link" href={link.path}>{link.path}</a></h3>
+								<p class="reason">{link.text}</p>
+								<p class="list-row-meta dot-list">
+									{#if link.contact}<span>
+											<a href="mailto:{link.contact}">{link.contact}</a>
+										</span>{/if}
+									<span>
+										{#if link.reporter}<Username username={link.reporter} />{:else}Anonymous{/if}
+									</span>
+									<span>{dayLabel(link.reportedAt)}</span>
+								</p>
+							</div>
+						</li>
+					{/each}
+				</ul>
+			</section>
+		{/if}
 	</div>
 </div>
 
@@ -66,6 +91,19 @@
 		margin-top: var(--space-3);
 		display: grid;
 		gap: var(--space-3);
+	}
+
+	.links {
+		margin-top: var(--space-7);
+	}
+
+	.links .row-list {
+		margin-top: var(--space-5);
+	}
+
+	/* A path is one long word. */
+	.links .list-row-title {
+		overflow-wrap: anywhere;
 	}
 
 	.reason {
