@@ -8,9 +8,30 @@
 	import ShowMore from '#lib/components/ui/ShowMore.svelte';
 	import { pagedList } from '#lib/pagedList.svelte.js';
 	import FeedEntry from './FeedEntry.svelte';
+	import { onMount } from 'svelte';
+	import { plural } from '#lib/helpers.js';
+	import type { Notice } from '#lib/notifications.js';
 	import type { ActionData, PageData } from './$types';
 
 	let { data, form }: { data: PageData; form?: ActionData } = $props();
+
+	// The rows new on arrival. Accept, Decline or a Like reloads the data with
+	// everything seen by then, so the band keeps what it showed.
+	// svelte-ignore state_referenced_locally
+	const notices = data.notices;
+	const hasBand = $derived(data.requests.length > 0 || notices.length > 0);
+
+	// Seen once the page is really shown: the loader also runs for a hover's
+	// preload, which must not mark anything seen. A failure leaves the dot for
+	// the next visit to clear.
+	onMount(() => {
+		if (!data.unseen) return;
+		fetch('/notifications?/seen', {
+			method: 'POST',
+			body: new FormData(),
+			headers: { accept: 'application/json' }
+		}).catch(() => {});
+	});
 
 	const list = pagedList(
 		() => data,
@@ -34,17 +55,20 @@
 	}
 </script>
 
-{#snippet requests()}
-	<section class="rail-sec" aria-labelledby="requests-heading">
-		<h2 class="eyebrow-label" id="requests-heading">Requests</h2>
-		{#if data.requests.length === 0}
-			<p>No requests waiting.</p>
-		{/if}
+{#snippet who(notice: Notice)}
+	{#if notice.username}<Username username={notice.username} class="hit-link" />{:else}A cook{/if}
+	{#if notice.others > 0}and {plural(notice.others, 'other')}{/if}
+{/snippet}
+
+<!-- Requests until answered, then what is new since the cook last looked; no band when neither. -->
+{#snippet forYou()}
+	<section class="for-you" aria-labelledby="for-you-heading">
+		<h2 class="eyebrow-label" id="for-you-heading">For you</h2>
 		{#each data.requests as request (request.id)}
-			<div class="req">
-				<Avatar username={request.username} size={32} />
-				<p class="nm">
-					<Username username={request.username} class="hit-link" />
+			<div class="event req">
+				<Avatar username={request.username} size={36} />
+				<p>
+					<Username username={request.username} class="hit-link" /> wants to be friends
 					<small>Sent {dayLabel(request.sentAt)}</small>
 				</p>
 				<div class="btns">
@@ -62,6 +86,30 @@
 					</form>
 				</div>
 			</div>
+		{/each}
+		{#each notices as notice (notice.id)}
+			<article class="event">
+				<Avatar username={notice.username ?? '?'} size={36} />
+				<p>
+					{@render who(notice)}
+					{#if notice.kind === 'accepted'}
+						accepted your {notice.others > 0 ? 'requests' : 'request'}
+					{:else if notice.kind === 'like'}
+						liked your entry
+						<a class="hit-link" href="/journal#entry-{notice.entry.id}">{notice.entry.dish}</a>
+					{:else if notice.kind === 'save'}
+						saved <a class="hit-link" href="/recipes/{notice.recipe.slug}">{notice.recipe.title}</a>
+					{:else if notice.kind === 'fork'}
+						forked <a class="hit-link" href="/recipes/{notice.recipe.slug}">
+							{notice.recipe.title}
+						</a>
+						{#if notice.fork && notice.others === 0}
+							as <a class="hit-link" href="/recipes/{notice.fork.slug}">{notice.fork.title}</a>
+						{/if}
+					{/if}
+					<small>{dayLabel(notice.at)}</small>
+				</p>
+			</article>
 		{/each}
 	</section>
 {/snippet}
@@ -91,8 +139,8 @@
 
 		{#if data.feed.length === 0}
 			<!-- A waiting request is the fastest way out of empty, so it comes first. -->
-			{#if data.requests.length > 0}
-				<div class="empty-req">{@render requests()}</div>
+			{#if hasBand}
+				<div class="empty-req">{@render forYou()}</div>
 			{/if}
 			<EmptyPanel title={data.friendCount === 0 ? 'No friends yet' : 'Nothing from friends yet'}>
 				When friends share what they cook, it shows up here, newest first.
@@ -107,6 +155,7 @@
 			</EmptyPanel>
 		{:else}
 			<div class="f-layout">
+				{#if hasBand}{@render forYou()}{/if}
 				<div class="feed-col">
 					<div class="feed" bind:this={feed}>
 						{#each list.items as item (item.id)}
@@ -140,8 +189,7 @@
 					</div>
 					<ShowMore {list} container={feed} noun="update" />
 				</div>
-				<aside class="rail" aria-label="Requests and invite">
-					{@render requests()}
+				<aside class="rail" aria-label="Invite">
 					{@render invite()}
 				</aside>
 			</div>
@@ -154,8 +202,45 @@
 	.f-layout {
 		display: grid;
 		grid-template-columns: minmax(0, 1fr) 280px;
+		grid-template-areas: 'feed rail';
 		gap: 64px;
 		align-items: start;
+	}
+
+	/* For you heads the feed's column; the rail stays at the top beside both. */
+	.f-layout:has(> .for-you) {
+		grid-template-areas: 'band rail' 'feed rail';
+		grid-template-rows: auto 1fr;
+		row-gap: var(--space-6);
+	}
+
+	.f-layout > .for-you {
+		grid-area: band;
+	}
+
+	.feed-col {
+		grid-area: feed;
+	}
+
+	/* Lifted paper on the page's paper, a step in tone with a Rule edge. */
+	.for-you {
+		padding: 16px 20px 0;
+		background: var(--color-surface);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-lg);
+	}
+
+	.for-you > h2 + .event {
+		border-top: 0;
+	}
+
+	.req {
+		align-items: center;
+	}
+
+	.req p {
+		flex: 1;
+		min-width: 0;
 	}
 
 	.feed > :global(:first-child) {
@@ -187,6 +272,7 @@
 	}
 
 	.rail {
+		grid-area: rail;
 		position: sticky;
 		top: 24px;
 		display: flex;
@@ -210,27 +296,8 @@
 		color: var(--color-text-2);
 	}
 
-	.req {
-		display: grid;
-		grid-template-columns: auto minmax(0, 1fr);
-		gap: 10px 12px;
-		align-items: center;
-	}
-
-	.req .nm {
-		min-width: 0;
-		line-height: 1.35;
-		color: var(--color-text);
-	}
-
-	.req small {
-		display: block;
-		font-size: 0.8125rem;
-		color: var(--color-text-3);
-	}
-
 	.btns {
-		grid-column: 2;
+		flex: none;
 		display: flex;
 		align-items: center;
 		gap: 20px;
@@ -270,20 +337,22 @@
 		margin-bottom: var(--space-6);
 	}
 
-	/* Below 1024 the rail becomes a strip above the feed: two columns on a
-	   tablet, stacked on a phone; the invite drops its sentence. */
+	/* Below 1024 the rail becomes a strip above the feed, under For you; the
+	   invite drops its sentence. */
 	@media (max-width: 1023px) {
 		.f-layout {
 			grid-template-columns: minmax(0, 1fr);
+			grid-template-areas: 'rail' 'feed';
 			gap: var(--space-5);
+		}
+
+		.f-layout:has(> .for-you) {
+			grid-template-areas: 'band' 'rail' 'feed';
+			grid-template-rows: none;
 		}
 
 		.rail {
 			position: static;
-			order: -1;
-			display: grid;
-			grid-template-columns: 1fr 1fr;
-			gap: var(--space-5);
 			padding-bottom: var(--space-5);
 			border-bottom: 1px solid var(--color-border-2);
 		}
@@ -302,8 +371,18 @@
 	}
 
 	@media (max-width: 699px) {
-		.rail {
-			grid-template-columns: minmax(0, 1fr);
+		.for-you {
+			padding-inline: 16px;
+		}
+
+		/* Accept and Decline take their own line, under the words. */
+		.req {
+			flex-wrap: wrap;
+		}
+
+		.req .btns {
+			width: 100%;
+			padding-left: 48px;
 		}
 
 		.link-row {
