@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import { describeDbTarget } from './target';
+import { describeDbTarget, loadsVaried } from './target';
 
 const LOCAL_DB = 'postgresql://postgres:pw@127.0.0.1:54322/postgres';
 const LOCAL_API = 'http://127.0.0.1:54321';
@@ -63,5 +63,13 @@ describe('describeDbTarget', () => {
 	test('e2e target refuses a hosted database or API', () => {
 		expect(() => describeDbTarget('e2e', POOLER_DB, LOCAL_API, REF)).toThrow(/local stack/);
 		expect(() => describeDbTarget('e2e', E2E_DB, HOSTED_API, REF)).toThrow(/local stack/);
+	});
+});
+
+describe('loadsVaried', () => {
+	test('local and the hosted project load the varied set; e2e keeps the base alone', () => {
+		expect(loadsVaried('local')).toBe(true);
+		expect(loadsVaried('prod')).toBe(true);
+		expect(loadsVaried('e2e')).toBe(false);
 	});
 });

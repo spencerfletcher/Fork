@@ -56,3 +56,10 @@ export function describeDbTarget(
 	}
 	return `hosted project ${expectedRef}`;
 }
+
+/**
+ * Whether a target's seed adds the varied set (seed/) to the base: the e2e
+ * suite's specs assume the small base alone. A staging target, when there is
+ * one, sits beside prod in DbTarget and describeDbTarget, with its own project ref.
+ */
+export const loadsVaried = (target: DbTarget): boolean => target !== 'e2e';
