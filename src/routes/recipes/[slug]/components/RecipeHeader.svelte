@@ -4,7 +4,7 @@
 	import { plural } from '#lib/helpers.js';
 	import { dayLabel } from '#lib/journal.js';
 	import Details from './Details.svelte';
-	import { forkIcon } from '#lib/components/Icons.svelte';
+	import { forkIcon, lockIcon } from '#lib/components/Icons.svelte';
 	import type { Recipe } from '#lib/server/db/schema.js';
 	import type { RecipeContent, TagChip } from '#lib/recipes/types.js';
 	import { sourceLabel } from '#lib/recipes/validation.js';
@@ -63,6 +63,13 @@
 		/** Signed in: the personal line under the actions; null signed out. */
 		journal?: {
 			lastEntry: { id: number; cookedOn: string; timesCooked: number } | null;
+			/** The reader's newest Journal note for next time on this recipe (lastNoteFor). */
+			lastNote?: {
+				id: number;
+				cookedOn: string;
+				versionNumber: number | null;
+				note: string;
+			} | null;
 			addHref: string;
 		} | null;
 		/** The fork count; off for a saver's kept copy, which has neither. */
@@ -179,6 +186,22 @@
 		</p>
 	{/if}
 
+	<!-- The recall line: the reader's own latest note for next time, before
+	     they cook again; the day and version link to its entry. Private to
+	     them, apart from a saver's standing note below it. -->
+	{#if journal?.lastNote}
+		{@const recall = journal.lastNote}
+		<p class="personal-line recall font-sans">
+			{@render lockIcon()}
+			Next time, from
+			<a class="hit-link" href="/journal#entry-{recall.id}">
+				{dayLabel(recall.cookedOn)}{#if recall.versionNumber},
+					<span class="mono-id">v{recall.versionNumber}</span>{/if}
+			</a>
+			: {recall.note}
+		</p>
+	{/if}
+
 	{@render saver?.()}
 </header>
 
@@ -275,7 +298,19 @@
 
 	/* The personal line (app.css) at the byline's size, its link clay and 600
 	   like the stats row's. */
-	.personal a {
+	.personal a,
+	.recall a {
 		font-weight: 600;
+	}
+
+	/* The cook's own words, whole: a note runs to a line or two. */
+	.recall {
+		overflow-wrap: anywhere;
+	}
+
+	.recall :global(svg) {
+		display: inline;
+		vertical-align: -2px;
+		margin-right: 4px;
 	}
 </style>

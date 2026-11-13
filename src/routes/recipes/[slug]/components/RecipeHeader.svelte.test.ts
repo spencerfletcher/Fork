@@ -480,6 +480,55 @@ describe('RecipeHeader personal line', () => {
 	});
 });
 
+// ─── The recall line ──────────────────────────────────────────────────────────
+
+describe('RecipeHeader recall line', () => {
+	const ADD = '/journal/new?recipe=my-fork&version=1';
+	const lastEntry = { id: 14, cookedOn: '2026-11-08', timesCooked: 2 };
+	const recallText = (container: HTMLElement) =>
+		container.querySelector('.recall')?.textContent!.replace(/\s+/g, ' ').trim();
+
+	test("the reader's last note for next time, its day and version linking to the entry", () => {
+		const { container } = renderHeader({
+			journal: {
+				lastEntry,
+				lastNote: { id: 12, cookedOn: '2026-11-01', versionNumber: 3, note: 'Less ginger' },
+				addHref: ADD
+			}
+		});
+		expect(recallText(container)).toBe('Next time, from Sun 1 Nov, v3: Less ginger');
+		expect(screen.getByRole('link', { name: 'Sun 1 Nov, v3' })).toHaveAttribute(
+			'href',
+			'/journal#entry-12'
+		);
+		// Under the personal line, after the actions: beside Cook.
+		const personal = container.querySelector('.personal')!;
+		expect(
+			personal.compareDocumentPosition(container.querySelector('.recall')!) &
+				Node.DOCUMENT_POSITION_FOLLOWING
+		).toBeTruthy();
+	});
+
+	test('an entry with no version linked names the day alone', () => {
+		const { container } = renderHeader({
+			journal: {
+				lastEntry,
+				lastNote: { id: 12, cookedOn: '2026-11-01', versionNumber: null, note: 'Less ginger' },
+				addHref: ADD
+			}
+		});
+		expect(recallText(container)).toBe('Next time, from Sun 1 Nov: Less ginger');
+	});
+
+	test('no note, or signed out: no line', () => {
+		const none = renderHeader({ journal: { lastEntry, lastNote: null, addHref: ADD } });
+		expect(none.container.querySelector('.recall')).toBeNull();
+		none.unmount();
+		const signedOut = renderHeader({ journal: null });
+		expect(signedOut.container.querySelector('.recall')).toBeNull();
+	});
+});
+
 // ─── Source ───────────────────────────────────────────────────────────────────
 
 describe('RecipeHeader source', () => {
