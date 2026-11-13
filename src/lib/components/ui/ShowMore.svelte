@@ -78,7 +78,7 @@
 			href={nextHref}
 			onclick={more}
 			aria-busy={pending || undefined}
-			data-sveltekit-preload-data="off">
+			data-sveltekit-preload-data="false">
 			{pending ? 'Loading…' : 'Show more'}
 		</a>
 	</p>

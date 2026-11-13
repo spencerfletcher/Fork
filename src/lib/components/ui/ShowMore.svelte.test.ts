@@ -55,6 +55,11 @@ describe('ShowMore', () => {
 		expect(link()).toHaveClass('btn-ghost');
 	});
 
+	test('opts out of hover preload with a value SvelteKit accepts', () => {
+		setup();
+		expect(link()).toHaveAttribute('data-sveltekit-preload-data', 'false');
+	});
+
 	test('counts on from the pages already in the URL', () => {
 		page.url = new URL('http://localhost/discover?q=soup&page=3');
 		setup();
