@@ -47,6 +47,53 @@ async function chooseRecipe(typed: string) {
 const renderForm = (values = makeValues()) =>
 	render(EntryForm, { props: { values, choices: CHOICES, submitLabel: 'Add to Journal' } });
 
+/** The form's fields by name, in document order. */
+const fieldOrder = (container: HTMLElement, names: string[]) =>
+	[...container.querySelectorAll<HTMLInputElement>('[name]')]
+		.map((el) => el.name)
+		.filter((name, i, all) => names.includes(name) && all.indexOf(name) === i);
+
+describe('EntryForm order', () => {
+	const NAMES = ['note', 'dish', 'cookedOn', 'servings', 'image', 'caption', 'audience'];
+
+	test('after a cook (noteFirst), the note for next time comes first; photo, caption and who sees come below', () => {
+		const { container } = render(EntryForm, {
+			props: {
+				values: makeValues(),
+				choices: CHOICES,
+				submitLabel: 'Add to Journal',
+				noteFirst: true
+			}
+		});
+		expect(fieldOrder(container, NAMES)).toEqual(NAMES);
+	});
+
+	test('otherwise the facts lead, and the note still comes before the photo, caption and who sees', () => {
+		const { container } = renderForm();
+		expect(fieldOrder(container, NAMES)).toEqual([
+			'dish',
+			'cookedOn',
+			'servings',
+			'note',
+			'image',
+			'caption',
+			'audience'
+		]);
+	});
+
+	test('nothing to write: with the dish and date prefilled, the form is ready to save as it is', () => {
+		const { container } = render(EntryForm, {
+			props: {
+				values: makeValues(),
+				choices: CHOICES,
+				submitLabel: 'Add to Journal',
+				noteFirst: true
+			}
+		});
+		expect(container.querySelector('form')!.checkValidity()).toBe(true);
+	});
+});
+
 describe('EntryForm', () => {
 	test('Only me by default, each choice with its sentence; the button reads Add to Journal', () => {
 		renderForm();

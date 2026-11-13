@@ -29,6 +29,7 @@
 		action,
 		submitLabel,
 		useLocalToday = false,
+		noteFirst = false,
 		actions
 	}: {
 		values: EntryValues;
@@ -42,6 +43,8 @@
 		submitLabel: string;
 		/** A new entry: the date defaults to the reader's own today, not the server's. */
 		useLocalToday?: boolean;
+		/** After a cook: the note for next time leads, the cook's facts already filled in below it. */
+		noteFirst?: boolean;
 		/** The edit page's Delete entry, its own form, pinned right on the actions row. */
 		actions?: Snippet;
 	} = $props();
@@ -146,6 +149,25 @@
 	{#if error}
 		<p class="form-error" role="alert">{error}</p>
 	{/if}
+
+	<!-- The one thing worth writing after a cook, private, ahead of the photo
+	     and who sees the entry; after a cook it leads the form. -->
+	{#snippet noteField()}
+		<div class="field lock-note">
+			<label for="note">
+				{@render lockIcon()}Note for next time
+			</label>
+			<textarea
+				id="note"
+				name="note"
+				rows="2"
+				maxlength="2000"
+				aria-describedby="note-hint">{values.note}</textarea>
+			<p class="form-hint" id="note-hint">Only you ever see this.</p>
+		</div>
+	{/snippet}
+
+	{#if noteFirst}{@render noteField()}{/if}
 
 	<div class="field">
 		<label for="dish">
@@ -265,6 +287,8 @@
 		</div>
 	{/if}
 
+	{#if !noteFirst}{@render noteField()}{/if}
+
 	<PhotoField imageUrl={photoUrl} bind:removeImage bind:chosen hadPhoto={false} />
 
 	<div class="field">
@@ -276,19 +300,6 @@
 			maxlength="2000"
 			aria-describedby="caption-hint">{values.caption}</textarea>
 		<p class="form-hint" id="caption-hint">Whoever sees this entry sees the caption.</p>
-	</div>
-
-	<div class="field lock-note">
-		<label for="note">
-			{@render lockIcon()}Note for next time
-		</label>
-		<textarea
-			id="note"
-			name="note"
-			rows="2"
-			maxlength="2000"
-			aria-describedby="note-hint">{values.note}</textarea>
-		<p class="form-hint" id="note-hint">Only you ever see this.</p>
 	</div>
 
 	<ChoiceGroup

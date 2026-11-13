@@ -9,12 +9,15 @@
 	<div class="page-inner page-inner--narrow">
 		<a class="back-link" href="/journal">← Journal</a>
 		<h1>Add to Journal</h1>
+		<!-- Reached from a recipe (Finish cooking, Add to Journal), the facts come
+		     filled in, so the note for next time leads. -->
 		<EntryForm
 			values={form?.values ?? data.values}
 			choices={data.choices}
 			error={form?.error ?? null}
 			submitLabel="Add to Journal"
-			useLocalToday={!form} />
+			useLocalToday={!form}
+			noteFirst={!!data.values.recipe} />
 	</div>
 </div>
 
