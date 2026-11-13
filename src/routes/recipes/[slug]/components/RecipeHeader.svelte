@@ -193,12 +193,8 @@
 		{@const recall = journal.lastNote}
 		<p class="personal-line recall font-sans">
 			{@render lockIcon()}
-			Next time, from
-			<a class="hit-link" href="/journal#entry-{recall.id}">
-				{dayLabel(recall.cookedOn)}{#if recall.versionNumber},
-					<span class="mono-id">v{recall.versionNumber}</span>{/if}
-			</a>
-			: {recall.note}
+			<!-- prettier-ignore -->
+			<span>Next time, from <a class="hit-link" href="/journal#entry-{recall.id}">{dayLabel(recall.cookedOn)}{#if recall.versionNumber}, <span class="mono-id">v{recall.versionNumber}</span>{/if}</a>: {recall.note}</span>
 		</p>
 	{/if}
 

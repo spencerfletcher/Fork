@@ -485,8 +485,9 @@ describe('RecipeHeader personal line', () => {
 describe('RecipeHeader recall line', () => {
 	const ADD = '/journal/new?recipe=my-fork&version=1';
 	const lastEntry = { id: 14, cookedOn: '2026-11-08', timesCooked: 2 };
+	// Exact but for the lead-in whitespace: a stray space before the colon fails.
 	const recallText = (container: HTMLElement) =>
-		container.querySelector('.recall')?.textContent!.replace(/\s+/g, ' ').trim();
+		container.querySelector('.recall')?.textContent!.trim();
 
 	test("the reader's last note for next time, its day and version linking to the entry", () => {
 		const { container } = renderHeader({
@@ -496,7 +497,7 @@ describe('RecipeHeader recall line', () => {
 				addHref: ADD
 			}
 		});
-		expect(recallText(container)).toBe('Next time, from Sun 1 Nov, v3: Less ginger');
+		expect(recallText(container)).toBe('Next time, from Sun\u00a01\u00a0Nov, v3: Less ginger');
 		expect(screen.getByRole('link', { name: 'Sun 1 Nov, v3' })).toHaveAttribute(
 			'href',
 			'/journal#entry-12'
@@ -517,7 +518,7 @@ describe('RecipeHeader recall line', () => {
 				addHref: ADD
 			}
 		});
-		expect(recallText(container)).toBe('Next time, from Sun 1 Nov: Less ginger');
+		expect(recallText(container)).toBe('Next time, from Sun\u00a01\u00a0Nov: Less ginger');
 	});
 
 	test('no note, or signed out: no line', () => {
