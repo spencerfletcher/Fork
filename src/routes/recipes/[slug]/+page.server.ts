@@ -19,7 +19,7 @@ import {
 } from '#lib/server/visibility.js';
 import { withForkLine } from '#lib/recipes/forkedFrom.js';
 import { attachRecipeCounts } from '#lib/server/recipeCounts.js';
-import { lastEntryFor } from '#lib/server/journal.js';
+import { lastEntryFor, lastNoteFor } from '#lib/server/journal.js';
 import { VERSION_NOT_FOUND } from './versionError.js';
 import { BAD_FORM, failure, requireUser, signedOut } from '#lib/server/actions.js';
 import { STALE_MESSAGE } from '#lib/server/submission.js';
@@ -100,7 +100,7 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 	// Independent lookups, one round trip. The fork count is the forks the
 	// viewer can see, the cards' and the forks page's rule (visibleTo), so no
 	// fork they cannot open shows in the number.
-	const [favorite, [{ forkCount }], favoriteCount, lastEntry] = await Promise.all([
+	const [favorite, [{ forkCount }], favoriteCount, lastEntry, lastNote] = await Promise.all([
 		user
 			? db.query.favorites.findFirst({
 					where: and(eq(favorites.userId, user.id), eq(favorites.recipeId, recipe.id))
@@ -109,7 +109,9 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 		attachRecipeCounts([recipe], user),
 		db.$count(favorites, eq(favorites.recipeId, recipe.id)),
 		// The personal line: the reader's latest log entry of this recipe.
-		user ? lastEntryFor(user.id, recipe.id) : null
+		user ? lastEntryFor(user.id, recipe.id) : null,
+		// The recall line: the reader's own latest note for next time, theirs alone.
+		user ? lastNoteFor(user.id, recipe.id) : null
 	]);
 	const isFavorited = !!favorite;
 
@@ -155,6 +157,7 @@ export const load: PageServerLoad = async ({ params, url, locals: { user } }) =>
 		journal: user
 			? {
 					lastEntry,
+					lastNote,
 					// Add to Journal prefills the version being read.
 					addHref: `/journal/new?recipe=${encodeURIComponent(recipe.slug)}&version=${currentVersion.versionNumber}`
 				}

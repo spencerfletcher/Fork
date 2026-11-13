@@ -451,6 +451,34 @@ export async function lastEntryFor(userId: string, recipeId: number, tx: Tx | ty
 	return row ?? null;
 }
 
+/**
+ * The recipe page's recall line: the viewer's newest entry of a recipe that
+ * carries a "Note for next time", with its day and the version cooked (null
+ * when none was linked). Reads `userId`'s own entries alone, so the note,
+ * private to its writer, can never show anyone else.
+ */
+export async function lastNoteFor(userId: string, recipeId: number, tx: Tx | typeof db = db) {
+	const [row] = await tx
+		.select({
+			id: logEntries.id,
+			cookedOn: logEntries.cookedOn,
+			versionNumber: recipeVersions.versionNumber,
+			note: sql<string>`${logEntries.note}`
+		})
+		.from(logEntries)
+		.leftJoin(recipeVersions, eq(recipeVersions.id, logEntries.versionId))
+		.where(
+			and(
+				eq(logEntries.userId, userId),
+				eq(logEntries.recipeId, recipeId),
+				isNotNull(logEntries.note)
+			)
+		)
+		.orderBy(desc(logEntries.cookedOn), desc(logEntries.createdAt))
+		.limit(1);
+	return row ?? null;
+}
+
 export type Cooked = { timesCooked: number; lastCookedOn: string };
 
 /**

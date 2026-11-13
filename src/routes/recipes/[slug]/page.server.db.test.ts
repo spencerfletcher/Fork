@@ -104,6 +104,51 @@ describe.skipIf(!localDb)('a kept copy in the page data, against the real databa
 		const data = await pageOf(liveSlug, saver);
 		expect(data.recipe).not.toHaveProperty('fts');
 	});
+
+	test("the recall line is the reader's own note for next time; another cook's never reaches their page data", async () => {
+		const live = await db.query.recipes.findFirst({ where: eq(schema.recipes.slug, liveSlug) });
+		const entries = await db
+			.insert(schema.logEntries)
+			.values([
+				{
+					userId: author,
+					recipeId: live!.id,
+					dish: 'Soup',
+					cookedOn: '2026-11-01',
+					note: `Wombat ${run}`
+				},
+				{
+					userId: saver,
+					recipeId: live!.id,
+					dish: 'Soup',
+					cookedOn: '2026-11-02',
+					note: `Less ginger ${run}`
+				}
+			])
+			.returning({ id: schema.logEntries.id });
+		try {
+			const [mine, theirs] = await Promise.all([pageOf(liveSlug, saver), pageOf(liveSlug, author)]);
+			expect(mine.journal?.lastNote).toMatchObject({
+				note: `Less ginger ${run}`,
+				versionNumber: null
+			});
+			expect(JSON.stringify(mine)).not.toContain('Wombat');
+			expect(theirs.journal?.lastNote).toMatchObject({ note: `Wombat ${run}` });
+			expect(JSON.stringify(theirs)).not.toContain('Less ginger');
+			const signedOut = await loadPage<PageData>(
+				load,
+				loadEvent({ path: `/recipes/${liveSlug}`, params: { slug: liveSlug } })
+			);
+			expect(JSON.stringify(signedOut)).not.toMatch(/Wombat|Less ginger/);
+		} finally {
+			await db.delete(schema.logEntries).where(
+				inArray(
+					schema.logEntries.id,
+					entries.map((e) => e.id)
+				)
+			);
+		}
+	});
 });
 
 describe.skipIf(!localDb)("a fork's page data, against the real database", () => {

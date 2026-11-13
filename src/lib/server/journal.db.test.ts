@@ -96,6 +96,45 @@ describe.skipIf(!localDb)('times and last cooked, against the real database', ()
 			expect(await journal.lastEntryFor(`nobody-${me}`, one, tx)).toBeNull();
 		});
 	});
+
+	test('the recall line reads the cook’s newest note for the recipe, with its day and version; never another cook’s', async () => {
+		await withKitchen(async (tx, me, other, [one, two]) => {
+			const { makeContent } = await import('#lib/recipes/fixtures.js');
+			const [v3] = await tx
+				.insert(schema.recipeVersions)
+				.values({
+					recipeId: one,
+					versionNumber: 3,
+					commitMessage: 'v',
+					...makeContent(),
+					createdBy: me
+				})
+				.returning({ id: schema.recipeVersions.id });
+			const [noted] = await tx
+				.insert(schema.logEntries)
+				.values([
+					{ ...entry(me, one, '2026-11-03'), versionId: v3.id, note: 'Less ginger next time' },
+					// Older, and a later cook with nothing written: neither displaces it.
+					{ ...entry(me, one, '2026-10-01'), note: 'More salt' },
+					entry(me, one, '2026-11-05'),
+					// Another cook's newer note, and the cook's own on another recipe.
+					{ ...entry(other, one, '2026-11-09'), note: 'Theirs alone' },
+					{ ...entry(me, two, '2026-11-10'), note: 'Other dish' }
+				])
+				.returning({ id: schema.logEntries.id });
+			expect(await journal.lastNoteFor(me, one, tx)).toEqual({
+				id: noted.id,
+				cookedOn: '2026-11-03',
+				versionNumber: 3,
+				note: 'Less ginger next time'
+			});
+			expect(await journal.lastNoteFor(other, one, tx)).toMatchObject({ note: 'Theirs alone' });
+			expect(await journal.lastNoteFor(`nobody-${me}`, one, tx)).toBeNull();
+			// Cooked, but nothing written: no line.
+			await tx.insert(schema.logEntries).values(entry(other, two, '2026-11-11'));
+			expect(await journal.lastNoteFor(other, two, tx)).toBeNull();
+		});
+	});
 });
 
 // The saver's kept copy of a withdrawn recipe in the Journal form: committed

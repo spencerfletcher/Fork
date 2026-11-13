@@ -29,6 +29,7 @@ const {
 	transactionMock,
 	ensureProfileMock,
 	lastEntryMock,
+	lastNoteMock,
 	restoreMock
 } = vi.hoisted(() => ({
 	restoreMock: vi.fn(),
@@ -41,7 +42,8 @@ const {
 	dbDelete: vi.fn(),
 	transactionMock: vi.fn(),
 	ensureProfileMock: vi.fn().mockResolvedValue(undefined),
-	lastEntryMock: vi.fn().mockResolvedValue(null)
+	lastEntryMock: vi.fn().mockResolvedValue(null),
+	lastNoteMock: vi.fn().mockResolvedValue(null)
 }));
 
 vi.mock('#lib/server/db/index.js', () => ({
@@ -80,7 +82,10 @@ vi.mock('#lib/server/keptCopies.js', () => ({
 	removeCopy: keptMock.removeCopy
 }));
 vi.mock('#lib/server/trash.js', () => ({ deleteForever: keptMock.deleteForever }));
-vi.mock('#lib/server/journal.js', () => ({ lastEntryFor: lastEntryMock }));
+vi.mock('#lib/server/journal.js', () => ({
+	lastEntryFor: lastEntryMock,
+	lastNoteFor: lastNoteMock
+}));
 vi.mock('#lib/server/versions.js', () => ({ restoreVersion: restoreMock }));
 const collectionsMock = vi.hoisted(() => ({
 	collectionsOf: vi.fn(),
@@ -616,18 +621,23 @@ describe('load: the personal line', () => {
 		const data = (await load(makeLoadEvent() as never)) as { journal: unknown };
 		expect(data.journal).toBeNull();
 		expect(lastEntryMock).not.toHaveBeenCalled();
+		expect(lastNoteMock).not.toHaveBeenCalled();
 	});
 
 	test("signed in: the reader's latest entry of this recipe, and Add to Journal for the version read", async () => {
 		const reader = { id: 'reader', email: 'r@test.com' };
 		const latest = { id: 12, cookedOn: '2026-11-08' };
+		const lastNote = { id: 9, cookedOn: '2026-11-01', versionNumber: 1, note: 'Less ginger' };
 		lastEntryMock.mockResolvedValue(latest);
+		lastNoteMock.mockResolvedValue(lastNote);
 		const data = (await load(makeLoadEvent(reader, '/recipes/the-fork?version=1'))) as {
 			journal: unknown;
 		};
 		expect(lastEntryMock).toHaveBeenCalledWith(reader.id, 99);
+		expect(lastNoteMock).toHaveBeenCalledWith(reader.id, 99);
 		expect(data.journal).toEqual({
 			lastEntry: latest,
+			lastNote,
 			addHref: '/journal/new?recipe=the-fork&version=1'
 		});
 	});
