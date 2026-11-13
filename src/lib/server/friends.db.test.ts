@@ -466,4 +466,21 @@ describe.skipIf(!localDb)('the Friends feed, page by page, against the real data
 			expect((await feed(tx, me, null, 50)).items).toEqual([]);
 		});
 	});
+
+	test("a friend's shared entry reaches the feed without its note for next time, which is its writer's alone", async () => {
+		await withProfiles(2, async (tx, [me, friend]) => {
+			await befriend(tx, me, friend);
+			await tx.insert(schema.logEntries).values({
+				userId: friend,
+				dish: 'Dal',
+				cookedOn: '2026-11-01',
+				caption: 'Shared words',
+				note: 'Less ginger next time',
+				audience: 'friends'
+			});
+			const page = await feed(tx, me, null, 50);
+			expect(JSON.stringify(page)).toContain('Shared words');
+			expect(JSON.stringify(page)).not.toContain('Less ginger');
+		});
+	});
 });
