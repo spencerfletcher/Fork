@@ -99,12 +99,20 @@ beforeEach(() => {
 });
 
 describe('Cookbook page', () => {
-	test('an empty library: the copy, New recipe and the way to Discover; no search box', () => {
+	test('an empty library: a recipe the cook already makes, New recipe first, then the way to Discover; no search box', () => {
 		renderCookbook();
-		expect(screen.getByRole('heading', { level: 2, name: 'Your cookbook is empty' })).toBeVisible();
 		expect(
-			screen.getByText('Recipes you write and recipes you save from others live here.')
+			screen.getByRole('heading', { level: 2, name: 'Start with a dish you already make' })
+		).toBeVisible();
+		// Capture first, enrich next: what the editor needs, and what can wait.
+		expect(
+			screen.getByText(
+				'A title, its ingredients and the steps are enough. Photos, times and notes can come later.'
+			)
 		).toBeInTheDocument();
+		const [first, second] = screen.getAllByRole('link');
+		expect(first).toHaveAccessibleName('New recipe');
+		expect(second).toHaveAccessibleName('Explore Discover →');
 		expect(screen.getByRole('link', { name: 'New recipe' })).toHaveAttribute(
 			'href',
 			'/recipes/new'
@@ -315,6 +323,12 @@ describe('Cookbook page', () => {
 		renderCookbook({ ...full, recipes: [], selectedTags: ['baking'] });
 		expect(screen.getByRole('heading', { name: 'No recipes match these filters.' })).toBeVisible();
 		expect(screen.queryByRole('link', { name: 'Show all recipes' })).toBeNull();
+	});
+
+	test('an empty Mine over a library of saves is a filter, not the empty library', () => {
+		renderCookbook({ ...full, recipes: [], filter: 'mine', inView: { all: 3, mine: 0, saved: 3 } });
+		expect(screen.getByRole('heading', { name: 'No recipes match these filters.' })).toBeVisible();
+		expect(screen.queryByText('Start with a dish you already make')).toBeNull();
 	});
 
 	test('a filter with matches announces the count to screen readers only', () => {
@@ -725,7 +739,7 @@ describe('Cookbook drafts on this device', () => {
 		signedIn({ recipes: [], counts: { all: 0, trash: 0 } });
 		await tick();
 		expect(within(drafts()).getByText('Soup')).toBeInTheDocument();
-		expect(screen.getByText('Your cookbook is empty')).toBeInTheDocument();
+		expect(screen.getByText('Start with a dish you already make')).toBeInTheDocument();
 	});
 
 	test('the rows are the shared list rows, Continue and Discard text buttons', async () => {

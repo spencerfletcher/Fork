@@ -176,9 +176,11 @@
 		{#if data.user}<CookbookDrafts userId={data.user.id} />{/if}
 
 		{#if data.counts.all === 0}
-			<!-- No filters over an empty library (decided 29 October 2026). -->
-			<EmptyPanel title="Your cookbook is empty" centered>
-				Recipes you write and recipes you save from others live here.
+			<!-- No filters over an empty library (decided 29 October 2026). It asks
+			     for one recipe the cook already makes, capture first: the editor
+			     needs only these three (docs/product/ROADMAP.md, Empty Cookbook entry point). -->
+			<EmptyPanel title="Start with a dish you already make" centered>
+				A title, its ingredients and the steps are enough. Photos, times and notes can come later.
 				{#snippet action()}
 					<a href="/recipes/new" class="btn-primary">New recipe</a>
 					<a href="/discover" class="arrow-link">Explore Discover →</a>
