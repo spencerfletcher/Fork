@@ -450,6 +450,26 @@ describe('recipe page cooking mode', () => {
 		expect(screen.getByRole('link', { name: 'Add to Journal' })).toHaveAttribute('href', ADD);
 	});
 
+	test('a scaled batch (?makes=) is no count of servings: Finish opens the entry with Servings left blank', async () => {
+		const ADD = '/journal/new?recipe=cookies&version=2';
+		const data = makeData();
+		const cookies = { ...data.currentVersion, servings: null, makes: '24 cookies' };
+		page.url = new URL('http://localhost/recipes/cookies?cook=1&makes=48');
+		render(Page, {
+			props: {
+				data: {
+					...data,
+					currentVersion: cookies,
+					user: { id: 'v' },
+					journal: { lastEntry: null, addHref: ADD }
+				} as PageData
+			}
+		});
+		await fireEvent.click(screen.getByRole('button', { name: 'Finish cooking' }));
+		await tick();
+		expect(goto.mock.lastCall).toEqual([ADD]);
+	});
+
 	test('cooking, the article names the version being read; not cooking, it does not', () => {
 		const { unmount } = load();
 		expect(article()).not.toHaveAttribute('data-version');
