@@ -13,8 +13,8 @@ loadEnv('e2e');
 
 export const AUTH_FILE = path.join('e2e', '.auth', 'user.json');
 
-/** Specs that change the seed user's settings or saves; see the chromium-account project. */
-const ACCOUNT_SPECS = /(settings|measurement|keep-version)\.authenticated\.test\.ts/;
+/** Specs that change the seed user's settings, saves or Journal; see the chromium-account project. */
+const ACCOUNT_SPECS = /(settings|measurement|keep-version|journal-recall)\.authenticated\.test\.ts/;
 
 const PORT = Number(process.env.E2E_PORT) || 4174;
 
@@ -77,7 +77,8 @@ export default defineConfig({
 
 		// ── 4. Tests that change the seed user's own settings ─────────────────────
 		// A rename, a default audience or a measurement preference shows on every
-		// page the other signed-in tests read, so these run once those are done.
+		// page the other signed-in tests read, and new Journal entries change the
+		// Journal's lists and counts, so these run once those are done.
 		// Running one of them alone still runs those first: every run reseeds the
 		// database, so the sign-in from an earlier run is no longer valid.
 		{
